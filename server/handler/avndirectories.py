@@ -110,8 +110,36 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
     AVNDirectoryHandlerBase.__init__(self, param, "overlay")
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'overlayDir', "overlays")
 
+class AVNIconHandler(AVNDirectoryHandlerBase):
+  PREFIX = "/icons"
+  @classmethod
+  def getPrefix(cls):
+    return cls.PREFIX
+
+  @classmethod
+  def canDelete(self):
+    return False
+
+  @classmethod
+  def canUpload(self):
+    return False
+
+  @classmethod
+  def canDownload(self):
+    return False
+
+  def __init__(self,param):
+    AVNDirectoryHandlerBase.__init__(self, param, "icons")
+
+  def startInstance(self, navdata):
+    super().startInstance(navdata)
+    self.baseDir=os.path.join(self.httpServer.handlePathmapping('viewer'),'images')
+
+
+
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)
 avnav_handlerList.registerHandler(AVNUserHandler)
 avnav_handlerList.registerHandler(AVNImagesHandler)
+avnav_handlerList.registerHandler(AVNIconHandler)
 

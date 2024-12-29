@@ -67,6 +67,15 @@ export const getList=(list,current)=> {
 
 export const ParamValueInput=(props)=>{
     let param=props.param;
+    if (typeof(param.render) === 'function'){
+        return param.render(
+            {
+                ...props,
+                onChange: (paramWithVal) => {
+                    props.onChange(props.onlyOwnParam?{...paramWithVal}:{...props.currentValues,...paramWithVal});
+                }
+            });
+    }
     let ValueInput=undefined;
     let current=param.getValueForDisplay(props.currentValues);
     let addClass=props.className?(" "+props.className):"";

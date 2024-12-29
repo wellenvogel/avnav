@@ -3,67 +3,46 @@
  */
 
 import React from "react";
-import compare from '../util/compare';
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
-import Helper from '../util/helper.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
-
-class ActiveRouteWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-    }
-    shouldComponentUpdate(nextProps,nextState){
-        return Helper.compareProperties(this.props,nextProps,ActiveRouteWidget.storeKeys);
-    }
-    componentDidUpdate(){
-
-    }
-
-    render() {
-        if (!this.props.routeName && ! this.props.isEditing) return null;
-        let self = this;
-        let classes = "widget activeRouteWidget " + this.props.className || "";
-        if (this.props.isApproaching) classes += " approach ";
+const ActiveRouteWidget =(props)=>{
+        if (!props.routeName && ! props.isEditing) return null;
+        let classes = "activeRouteWidget";
+        if (props.isApproaching) classes += " approach ";
         return (
-            <div className={classes} onClick={this.props.onClick} style={this.props.style}>
-                <div className="infoLeft">RTE</div>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
                 <div className="widgetData">
-                    <div className="routeName">{this.props.routeName}</div>
+                    <div className="routeName">{props.routeName}</div>
                     <div>
-                        <span className="routeRemain">{Formatter.formatDistance(this.props.remain)}</span>
+                        <span className="routeRemain">{Formatter.formatDistance(props.remain)}</span>
                         <span className='unit'>nm</span>
                     </div>
-                    <div className="routeEta">{Formatter.formatTime(this.props.eta)}</div>
-                    { this.props.isApproaching ?
+                    <div className="routeEta">{Formatter.formatTime(props.eta)}</div>
+                    { props.isApproaching ?
                         <div className="routeNext">
                             <span
-                                className="routeNextCourse">{Formatter.formatDirection(this.props.nextCourse)}</span>
+                                className="routeNextCourse">{Formatter.formatDirection(props.nextCourse)}</span>
                             <span className='unit'>&#176;</span>
                         </div>
                         : <div></div>
                     }
                 </div>
-            </div>
+            </WidgetFrame>
         );
     }
 
-}
 
 ActiveRouteWidget.propTypes={
-    //formatter: React.PropTypes.func,
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    updateCallback: PropTypes.func,
+    ...WidgetProps,
     isAproaching: PropTypes.bool,
     routeName: PropTypes.string,
     eta: PropTypes.objectOf(Date),
     remain: PropTypes.number,
-    nextCourse: PropTypes.number
-
+    nextCourse: PropTypes.number,
+    isEditing: PropTypes.bool
 };
 ActiveRouteWidget.storeKeys={
     isApproaching: keys.nav.route.isApproaching,

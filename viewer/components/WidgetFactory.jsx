@@ -15,6 +15,7 @@ import {createEditableParameter, EditableParameter} from "./EditableParameters";
 import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
 import MapWidget from "./MapWidget";
+import {CombinedWidget} from "./CombinedWidget";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -22,7 +23,12 @@ export const filterByEditables=(editableParameters,values)=>{
     editableParameters.forEach((param)=>{
         if (! param.canEdit()) return;
         let v=param.getValue(values);
-        param.setValue(rt,v);
+        if (v === undefined){
+            param.setDefault(rt);
+        }
+        else {
+            param.setValue(rt, v);
+        }
     });
     let fixed=['name','weight'];
     fixed.forEach((fp)=>{
@@ -90,7 +96,7 @@ class ArrayWidgetParameter extends EditableParameter {
     }
     getValueForDisplay(widget,opt_placeHolder){
         let rt=this.getValue(widget);
-        if (rt === undefined)  CloneDeep(rt=this.default);
+        if (rt === undefined)  rt=CloneDeep(this.default);
         if (rt === undefined) rt=opt_placeHolder;
         if (! rt) return "";
         if (rt instanceof Array){
@@ -183,16 +189,17 @@ class ReadOnlyWidgetParameter extends EditableParameter {
     }
 }
 
+
 //must be different from editable parameter types
 const WidgetParameter_TYPE={
     KEY:30,
     DISPLAY: 40,
     ARRAY: 50,
-    FORMATTER_PARAM: 60,
+    FORMATTER_PARAM: 60
 };
 
 
-export const createWidgetParameter=(name,type,list,displayName)=>{
+const createWidgetParameter=(name,type,list,displayName)=>{
     if (typeof(type) === 'string'){
         let wtype=WidgetParameter_TYPE[type];
         if (wtype === undefined) return createEditableParameter(name,type,list,displayName)
@@ -231,6 +238,7 @@ const getDefaultParameter=(name)=>{
         }
         return fl;
     });
+    if (name === 'children') return createWidgetParameter('children',WidgetParameter_TYPE.CHILDREN_PARAM);
 };
 
 
@@ -246,7 +254,6 @@ export const getFormatterParameters=(widget)=>{
         }
     }
 }
-
 
 
 
@@ -295,6 +302,13 @@ class WidgetFactory{
         for (let pname in editableParameters){
             let pdefinition=editableParameters[pname];
             if (pdefinition === undefined || pdefinition === false ) continue;
+            if (pdefinition instanceof EditableParameter){
+                //allow for a complete own parameter definition in widget classes
+                if (wClass.editableParameters && wClass.editableParameters[pname] instanceof EditableParameter){
+                    rt.push(pdefinition);
+                    continue;
+                }
+            }
             //get a fresh (i.e. copied) default parameter
             let predefined=getDefaultParameter(pname);
             if (! predefined && (typeof(pdefinition) !== 'object')){
@@ -387,26 +401,26 @@ class WidgetFactory{
     createWidget(props, opt_properties) {
         let self = this;
         if (!props.name) return;
-        let e = this.findWidget(props.name,true);
-        if (!e ) {
+        let e = this.findWidget(props.name, true);
+        if (!e) {
             return;
         }
-        let editables=this.getEditableWidgetParameters(e);
-        let filteredProps=props;
-        if (editables){
-            filteredProps=filterByEditables(editables,props);
+        let editables = this.getEditableWidgetParameters(e);
+        let filteredProps = props;
+        if (editables) {
+            filteredProps = filterByEditables(editables, props);
         }
         let mergedProps = assign({}, e, filteredProps, opt_properties);
         //we need a special handling for the store keys as the simple assign above will not merge them
         let mergedStoreKeys;
-        [e,filteredProps,opt_properties].forEach((p)=>{
-            if (p && p.storeKeys){
-                if (! mergedStoreKeys) mergedStoreKeys={};
-                assign(mergedStoreKeys,p.storeKeys);
+        [e, filteredProps, opt_properties].forEach((p) => {
+            if (p && p.storeKeys) {
+                if (!mergedStoreKeys) mergedStoreKeys = {};
+                assign(mergedStoreKeys, p.storeKeys);
             }
         });
-        if (mergedStoreKeys){
-            mergedProps.storeKeys=mergedStoreKeys;
+        if (mergedStoreKeys) {
+            mergedProps.storeKeys = mergedStoreKeys;
         }
         if (mergedProps.key === undefined) mergedProps.key = props.name;
         if (mergedProps.formatter) {
@@ -427,48 +441,34 @@ class WidgetFactory{
             }
 
         }
+
         return function (props) {
-            let wprops = assign({}, props, mergedProps);
-            delete wprops.editableParameters;
-            let {style,...childProperties}=opt_properties||{}; //filter out style for children
-            if (mergedProps.children) {
-                let cidx=0;
-                let className=(mergedProps.className||'')+" widget combinedWidget";
-                return <div {...wprops} className={className} >
-                    {mergedProps.children.map((item)=> {
-                        let Item = self.createWidget(item, childProperties);
-                        cidx++;
-                        return <Item key={cidx} onClick={wprops.onClick}/>
-                    })}
-                </div>
+            let wprops = {...props, ...mergedProps};
+            wprops.childProperties = opt_properties;
+            let RenderWidget = mergedProps.wclass || DirectWidget;
+            let storeKeys = mergedProps.storeKeys;
+            if (wprops.className) wprops.className += " " + wprops.name;
+            else wprops.className = wprops.name;
+            if (!storeKeys) {
+                storeKeys = RenderWidget.storeKeys;
             }
-            else {
-                let RenderWidget = mergedProps.wclass || DirectWidget;
-                let storeKeys = mergedProps.storeKeys;
-                if (wprops.className) wprops.className+=" "+wprops.name;
-                else wprops.className=wprops.name;
-                if (!storeKeys) {
-                    storeKeys = RenderWidget.storeKeys;
-                }
-                if (wprops.handleVisible){
-                    RenderWidget=Visible(RenderWidget);
-                    delete wprops.handleVisible;
-                }
-                if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)){
-                    if (storeKeys === undefined){
-                        storeKeys={nightMode:keys.properties.nightMode}
-                    }
-                    else{
-                        storeKeys=assign({nightMode: keys.properties.nightMode},storeKeys)
-                    }
-                }
-                if (storeKeys) {
-                    RenderWidget = Dynamic(RenderWidget, {storeKeys:storeKeys});
-                }
-                delete wprops.storeKeys;
-                return <RenderWidget {...wprops}/>
+            if (wprops.handleVisible) {
+                RenderWidget = Visible(RenderWidget);
+                delete wprops.handleVisible;
             }
-        };
+            if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)) {
+                if (storeKeys === undefined) {
+                    storeKeys = {nightMode: keys.properties.nightMode}
+                } else {
+                    storeKeys = assign({nightMode: keys.properties.nightMode}, storeKeys)
+                }
+            }
+            if (storeKeys) {
+                RenderWidget = Dynamic(RenderWidget, {storeKeys: storeKeys});
+            }
+            delete wprops.storeKeys;
+            return <RenderWidget {...wprops}/>
+        }
     }
     getWidget(index){
         if (index < 0 || index >= this.widgetDefinitions.length) return undefined;
@@ -642,5 +642,6 @@ WidgetFactory.prototype.registerFormatter=function(name,formatterFunction){
     Formatter[name]=formatterFunction;
 }
 
+const theFactory=new WidgetFactory();
 
-export default  new WidgetFactory();
+export default  theFactory;

@@ -3,34 +3,20 @@
  */
 
 import React from "react";
-import PropTypes from 'prop-types';
-import Helper from '../util/helper.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
-class UndefinedWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget")
-    }
-    shouldComponentUpdate(nextProps,nextState) {
-        return false;
-    }
-    render(){
-        let classes="widget undefinedWidget";
-        return (
-        <div className={classes} onClick={this.props.onClick} style={this.props.style}>
-            <div className="resize">
+const UndefinedWidget=(props)=>{
+    return (
+        <WidgetFrame {...props} addClass="undefinedWidget" caption="Undefined Widget">
             <div className='widgetData'>
-                {this.props.name}
+                {props.name}
             </div>
-            </div>
-            <div className='infoLeft'>Undefined Widget</div>
-        </div>
+        </WidgetFrame>
         );
     }
-}
 
 UndefinedWidget.propTypes={
+    ...WidgetProps
 };
 
 

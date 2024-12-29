@@ -8,6 +8,74 @@ import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 import defaultLayout from '../layout/default.json';
 const DEFAULT_NAME="system.default";
+
+const ACTION_MOVE=1;
+const ACTION_ADD=2;
+const ACTION_REPLACE=3;
+const ACTION_DELETE=4;
+
+/**
+ * allow pagename to be an object with the mane being in location
+ * @param page
+ * @returns {*|string}
+ */
+const getPagename=(page)=>{
+    if (page === undefined) return;
+    if (typeof(page) === 'string') return page;
+    return page.layoutPage || page.location;
+}
+
+class LayoutAction{
+    constructor(action,page,panel,options){
+        this.action=action;
+        this.page=page;
+        this.panel=panel;
+        this.options=options;
+    }
+    run(handler){
+        if (this.action === ACTION_MOVE){
+            return handler.moveItem(this.page,this.panel,this.options.oldIndex,this.options.newIndex,this.options.newPanel)
+        }
+        if (this.action === ACTION_REPLACE){
+            return handler.replaceItem(this.page,this.panel,this.options.index,this.options.item)
+        }
+        if (this.action === ACTION_DELETE){
+            return handler.replaceItem(this.page,this.panel,this.options.index)
+        }
+        if (this.action === ACTION_ADD){
+            return handler.replaceItem(this.page,this.panel,this.options.index,this.options.item,this.options.addMode)
+        }
+        return false;
+    }
+}
+
+class LayoutTransaction{
+    constructor(pageWithProps) {
+        if (typeof(pageWithProps) === 'string'){
+            this.pageWithProps={
+                location: pageWithProps
+            }
+        }
+        else {
+            this.pageWithProps = pageWithProps;
+        }
+        this.actions=[];
+    }
+    add(action){
+        this.actions.push(action);
+    }
+    run(handler){
+        let rt=false;
+        this.actions.forEach((action)=>{
+            if (action.run(handler)) rt=true;
+        })
+        return rt;
+    }
+    hasActions(){
+        return this.actions.length > 0;
+    }
+}
+
 class LayoutHandler{
     constructor(){
         this.layout=undefined;
@@ -21,6 +89,8 @@ class LayoutHandler{
         this.hiddenPanels={}; //panels we removed during editing
         this.temporaryOptions={}; //options being set during edit
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
+        this.actions=[];
+        this.currentTransaction=undefined;
     }
     dataChanged(skeys){
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
@@ -122,6 +192,7 @@ class LayoutHandler{
     }
     _setEditing(on){
         this.editing=on;
+        this.resetActions();
         globalStore.storeData(keys.gui.global.layoutEditing,on);
     }
 
@@ -334,7 +405,8 @@ class LayoutHandler{
         this.hiddenPanels={};
     }
 
-    getPageData(page,opt_add){
+    getPageData(pageWithOptions,opt_add){
+        let page=getPagename(pageWithOptions);
         let widgets=this.getLayoutWidgets();
         if (!widgets) return;
         let pageData=widgets[page];
@@ -392,7 +464,8 @@ class LayoutHandler{
      * @param options object with the keys being LayoutHandler.prototype.OPTIONS
      * @returns an object with {name:panelName, list: the data}
      */
-    getPanelData(page,basename,options){
+    getPanelData(pageWithOptions,basename,options){
+        let page=getPagename(pageWithOptions);
         let pageData=this.getPageData(page);
         if (!pageData) return {name:basename};
         let tryList=this.getPanelTryList(basename,options);
@@ -403,19 +476,23 @@ class LayoutHandler{
         return {name:basename};
     }
 
-
+    splitPanelName(panel){
+        return panel.split(":");
+    }
     /**
      * get the data for a panel (name already includes options)
      * if opt_add is true and we are editing - just add the structure if it is not there
      * @param page
-     * @param panel
+     * @param panel - the panel name, optionally with :n:m... being indices of items with child properties
      * @param opt_add if set to true: create the panel (only possible if we are editing)
      * @return {*}
      */
-    getDirectPanelData(page,panel,opt_add){
+    getDirectPanelData(pageWithOptions,panel,opt_add){
+        let page=getPagename(pageWithOptions);
         let pageData=this.getPageData(page,opt_add);
         if (! pageData) return;
-        let panelData=pageData[panel];
+        const panelParts=this.splitPanelName(panel);
+        let panelData=pageData[panelParts[0]];
         if (! panelData) {
             if ((! opt_add) || (! this.isEditing())) return ;
             panelData=[];
@@ -425,16 +502,23 @@ class LayoutHandler{
             if (!opt_add) return;
             this._setHiddenPanel(page,panel,false);
         }
+        for (let i=1;i<panelParts.length;i++){
+            let item=panelData[panelParts[i]];
+            if (item === undefined || item.children === undefined) return;
+            panelData=item.children;
+        }
         return panelData;
     }
 
-    removePanel(pagename,panel){
+    removePanel(pageWithOptions,panel){
         if (!this.isEditing()) return false;
+        let pagename=getPagename(pageWithOptions);
         this._setHiddenPanel(pagename,panel,true);
         return true;
     }
 
-    getItem(page,panel,index){
+    getItem(pageWithOptions,panel,index){
+        let page=getPagename(pageWithOptions);
         if (! this.isEditing()) return ;
         let panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return;
@@ -442,7 +526,8 @@ class LayoutHandler{
         return panelData[index];
     }
 
-    getPagePanels(pagename){
+    getPagePanels(pageWithOptions){
+        let pagename=getPagename(pageWithOptions);
         let rt=[];
         let pageData=this.getPageData(pagename);
         if (! pageData) return rt;
@@ -457,7 +542,7 @@ class LayoutHandler{
 
     /**
      * replace/add/remove a widget
-     * @param page the page
+     * @param pageWithOptions the page
      * @param panel the panel
      * @param index the item index, if opt_add is set: <0 insert at start, >= 0 append
      * @param item the item to be inserted, if undefined: remove
@@ -465,7 +550,8 @@ class LayoutHandler{
      * @type ADD_MODES
      * @return {boolean} true if success
      */
-    replaceItem(page,panel,index,item,opt_add){
+    replaceItem(pageWithOptions,panel,index,item,opt_add){
+        const page=getPagename(pageWithOptions);
         if (! this.isEditing()) return false;
         let allowAdd=opt_add !== undefined && opt_add !== this.ADD_MODES.noAdd;
         if (allowAdd && ! item) return false;
@@ -485,57 +571,117 @@ class LayoutHandler{
             if (opt_add == this.ADD_MODES.beginning) {
                 //insert at the beginning
                 panelData.splice(0, 0, layoutItem);
+                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    index:0
+                }));
                 this.incrementSequence();
                 return true;
             }
             if (opt_add == this.ADD_MODES.end) {
                 //append
                 panelData.push(layoutItem);
+                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    index: panelData.length-1
+                }));
                 this.incrementSequence();
                 return true;
             }
         }
-        if (index < 0 || index >= panelData.length){
+        if (index < 0 ){
             return false;
         }
         if (allowAdd){
             if (opt_add == this.ADD_MODES.afterIndex){
                 if (index == (panelData.length-1)){
                     panelData.push(layoutItem);
+                    this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                        index: panelData.length-1
+                    }));
                 }
                 else {
                     panelData.splice(index + 1, 0, layoutItem)
+                    this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                        index: index+1
+                    }));
                 }
                 this.incrementSequence();
                 return true;
             }
             if (opt_add == this.ADD_MODES.beforeIndex){
                 panelData.splice(index,0,layoutItem);
+                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    index: index
+                }));
                 this.incrementSequence();
                 return true;
             }
             return false; //invalid add mode
         }
+        const old=panelData[index];
         if (item) {
             panelData.splice(index, 1, layoutItem);
+            this._addAction(new LayoutAction(ACTION_REPLACE,page,panel,{
+                index: index,
+                item: old
+            }));
         }
         else{
             panelData.splice(index, 1);
+            this._addAction(new LayoutAction(ACTION_ADD,page,panel,{
+                index: index,
+                item: old
+            }));
         }
         this.incrementSequence();
         return true;
     }
 
-    moveItem(page,panel,oldIndex,newIndex){
-        if (oldIndex == newIndex) return true;
+    moveItem(pageWithOptions,panel,oldIndex,newIndex,opt_newPanel){
+        console.log("moveItem",pageWithOptions,panel,oldIndex,newIndex,opt_newPanel);
+        if (oldIndex == newIndex && (opt_newPanel === undefined || panel === opt_newPanel)) return true;
         if (! this.isEditing()) return false;
+        const page=getPagename(pageWithOptions);
         let panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return false;
         if (oldIndex < 0 || oldIndex >= panelData.length) return false;
-        if (newIndex < 0 || newIndex >= panelData.length) return false;
+        if (newIndex < 0) return false;
+        let newPanelData=panelData;
+        if (opt_newPanel !== undefined && opt_newPanel !== panel){
+            newPanelData=this.getDirectPanelData(page,opt_newPanel);
+            if (! newPanelData) return false;
+        }
+        //for the fallback we have to recompute panel and indices if the insertion or removal
+        //affects the indices - only if the panels have sub-indices
+        let revertSourcePanel=opt_newPanel||panel;
+        let revertSourceParts=this.splitPanelName(revertSourcePanel);
+        let revertOldIndex=newIndex;
+        let revertNewIndex=oldIndex;
+        let revertTargetPanel=panel;
+        let revertTargetParts=this.splitPanelName(revertTargetPanel);
+        if (revertTargetParts[0] === revertSourceParts[0] && revertTargetParts.length !== revertSourceParts.length) {
+            if (revertTargetParts.length > revertSourceParts.length){
+                //in this case the target could be inserted before the original source
+                //so for reverting the source index increases
+                let idx=revertSourceParts.length;
+                if (newIndex <= revertTargetParts[idx]) revertTargetParts[idx]++;
+            }
+            else{
+                //in this case the source panel could be moved to lower if the source
+                //was located before the source panel
+                let idx=revertTargetParts.length;
+                if (oldIndex < revertSourceParts[idx]) revertSourceParts[idx]--;
+            }
+            revertTargetPanel=revertTargetParts.join(":");
+            revertSourcePanel=revertSourceParts.join(":");
+        }
+        this._addAction(new LayoutAction(ACTION_MOVE,page,revertSourcePanel,{
+            oldIndex: revertOldIndex,
+            newIndex: revertNewIndex,
+            newPanel: revertTargetPanel
+        }));
         let item=panelData[oldIndex];
         panelData.splice(oldIndex,1);
-        panelData.splice(newIndex,0,item);
+        newPanelData.splice(newIndex,0,item);
         this.incrementSequence();
         return true;
     }
@@ -647,6 +793,60 @@ class LayoutHandler{
             }
         });
         return rt;
+    }
+
+    resetActions(){
+        this.actions=[];
+        this.currentTransaction=undefined;
+        globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
+    }
+    hasRevertableActions(){
+        return this.isEditing() && this.actions.length > 0;
+    }
+    revertAction(pageCallback){
+        if (! this.hasRevertableActions() || this.currentTransaction) return false;
+        const action=this.actions.pop();
+        globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
+        let rt=action.run(this);
+        if (rt && pageCallback && action.pageWithProps) pageCallback(action.pageWithProps);
+        return rt;
+    }
+    _addAction(action){
+        if (this.currentTransaction) {
+            this.currentTransaction.add(action);
+        }
+    }
+    withTransaction(pageWithOptions, callback){
+        this.currentTransaction=new LayoutTransaction(pageWithOptions);
+        let rt=false;
+        try{
+            rt=callback(this);
+        }
+        finally{
+            if (this.currentTransaction.hasActions()){
+                this.actions.push(this.currentTransaction);
+                globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
+            }
+            this.currentTransaction=undefined;
+        }
+        return rt;
+    }
+
+    revertButtonDef(pageCallback){
+        return{
+            name: 'RevertLayout',
+            onClick: ()=>this.revertAction(pageCallback),
+            editOnly: true,
+            overflow: true,
+            storeKeys:{
+                reverts: keys.gui.global.layoutReverts
+            },
+            updateFunction:(state)=>{
+              return {
+                  disabled: state.reverts < 1
+              }
+            }
+        }
     }
 
 }

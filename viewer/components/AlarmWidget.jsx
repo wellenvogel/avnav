@@ -5,76 +5,69 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
-import compare from '../util/compare.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import AlarmHandler from '../nav/alarmhandler.js';
+import {WidgetFrame} from "./WidgetBase";
 
 
-class  AlarmWidget extends React.Component{
-    constructor(props){
-        super(props);
-        this.onClick=this.onClick.bind(this);
-        let self=this;
-        GuiHelper.keyEventHandler(this,(component,action)=>{
-            if (action == 'stop'){
-                if (self.props.onClick) self.props.onClick();
-            }
-        },"alarm",["stop"])
-    }
-    componentDidMount(){
-
-    }
-    shouldComponentUpdate(nextProps,nextState){
-        return ! AlarmHandler.compareAlarms(nextProps.alarmInfo,this.props.alarmInfo);
-    }
-    render(){
-        if (this.props.disabled) return null;
-        let classes="widget alarmWidget "+this.props.className||"";
-        let alarmText=undefined;
-        if (this.props.alarmInfo){
-            let list=AlarmHandler.sortedActiveAlarms(this.props.alarmInfo)
-            list.forEach((al)=>{
-                if (alarmText){
-                    alarmText+=","+al.name;
-                }
-                else {
-                    alarmText=al.name;
-                }
-            })
-        }
-        if (! alarmText) {
-            if (! this.props.isEditing || ! this.props.mode) return null;
-            return <div className={classes} onClick={this.props.onClick} style={this.props.style}>
-                <div className="infoLeft">Alarm</div>
-                </div>;
-        }
-        return (
-        <div className={classes} onClick={this.onClick} style={this.props.style}>
-            <div className="infoLeft">Alarm</div>
-            <div>
-                <span className="alarmInfo">{alarmText}</span>
-            </div>
-        </div>
-        );
-    }
-    onClick(ev){
-        if (this.props.onClick){
-            this.props.onClick(ev);
+//TODO: compare alarm info correctly
+const AlarmWidget = (props) => {
+    useKeyEventHandler({name: 'stop'}, "alarm", () => {
+        if (props.onClick) props.onClick();
+    })
+    const onClick = (ev) => {
+        if (props.onClick) {
+            props.onClick(ev);
         }
         ev.stopPropagation();
     }
-
+    if (props.disabled) return null;
+    let alarmText = undefined;
+    if (props.alarmInfo) {
+        let list = AlarmHandler.sortedActiveAlarms(props.alarmInfo)
+        list.forEach((al) => {
+            if (alarmText) {
+                alarmText += "," + al.name;
+            } else {
+                alarmText = al.name;
+            }
+        })
+    }
+    if (! alarmText){
+        if (! props.isEditing || ! props.mode) return null;
+    }
+    const Content = () => {
+        if (!alarmText) return null;
+        return <div>
+            <span className="alarmInfo">{alarmText}</span>
+        </div>
+    }
+    return (
+        <WidgetFrame
+            {...props}
+            addClass="alarmWidget"
+            caption="Alarm"
+            unit={undefined}
+            onClick={onClick}
+        >
+            <Content/>
+        </WidgetFrame>
+    );
 }
 
-AlarmWidget.propTypes={
+
+AlarmWidget.propTypes = {
     className: PropTypes.string,
     onClick: PropTypes.func,
     alarmInfo: PropTypes.object,
     isEditing: PropTypes.bool,
-    style: PropTypes.object
+    style: PropTypes.object,
+    dragId: PropTypes.string,
+    disabled: PropTypes.bool,
+    mode: PropTypes.string
 };
 
-AlarmWidget.storeKeys={
+AlarmWidget.storeKeys = {
     alarmInfo: keys.nav.alarms.all,
     isEditing: keys.gui.global.layoutEditing,
     disabled: keys.gui.global.preventAlarms

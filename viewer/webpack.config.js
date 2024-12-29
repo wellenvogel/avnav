@@ -116,7 +116,7 @@ module.exports = (env, argv) => {
             clean: cleanOutput
         },
         resolve: {
-            extensions: ['.jsx', '.scss', '.js', '.json'],
+            extensions: ['.jsx', '.scss', '.js', '.json','.tsx','.ts'],
             alias: resolveAlias
         },
         module: {
@@ -154,6 +154,7 @@ module.exports = (env, argv) => {
                     }
 
                 },
+                { test: /\.tsx?$|\.ts$/, loader: 'ts-loader' },
 
                 {
                     test: /\.css$/,

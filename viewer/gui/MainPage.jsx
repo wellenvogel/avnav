@@ -24,8 +24,7 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
-import LeaveHandler from '../util/leavehandler';
-
+import LayoutHandler from "../util/layouthandler";
 
 
 const getImgSrc=function(color){
@@ -126,7 +125,6 @@ class MainPage extends React.Component {
         this.timer=GuiHelper.lifecycleTimer(this,(sequence)=>{
             this.fillList(sequence);
         },3000,true);
-        let self=this;
         this.selectChart(0);
         GuiHelper.keyEventHandler(this,(component,action)=>{
             if (action == "selectChart"){
@@ -137,10 +135,10 @@ class MainPage extends React.Component {
                 }
             }
             if (action == "nextChart"){
-                self.selectChart(1);
+                this.selectChart(1);
             }
             if (action == "previousChart"){
-                self.selectChart(-1);
+                this.selectChart(-1);
             }
         },"page",["selectChart","nextChart","previousChart"]);
         this.showNavpage=this.showNavpage.bind(this);
@@ -217,6 +215,11 @@ class MainPage extends React.Component {
             },
             Mob.mobDefinition(this.props.history),
             LayoutFinishedDialog.getButtonDef(),
+            LayoutHandler.revertButtonDef((pageWithOptions)=>{
+                if (pageWithOptions.location !== this.props.location){
+                    this.props.history.push(pageWithOptions.location,pageWithOptions.options);
+                }
+            }),
 
             {
                 name: 'NavOverlays',
@@ -258,7 +261,6 @@ class MainPage extends React.Component {
     }
 
     ChartItem(props){
-        let self=this;
         let cls="chartItem";
         if (props.selected) cls+=" activeEntry";
         if (props.originalScheme) cls+=" userAction";
@@ -274,7 +276,7 @@ class MainPage extends React.Component {
                     onClick={(ev)=>{
                         ev.stopPropagation();
                         EditOverlaysDialog.createDialog(props,()=>{
-                            self.fillList();
+                            this.fillList();
                         });
                     }}
                 />}
@@ -395,10 +397,9 @@ class MainPage extends React.Component {
 
 
     render() {
-        let self = this;
         return (
             <Page
-                {...self.props}
+                {...this.props}
                   id="mainpage"
                   title={"AvNav "+ LocalStorage.getPrefix()}
                   mainContent={
@@ -420,8 +421,8 @@ class MainPage extends React.Component {
                   bottomContent={
                     <BottomLine />
                     }
-                  buttonList={self.getButtons()}
-                  dummy={self.state.status}
+                  buttonList={this.getButtons()}
+                  dummy={this.state.status}
                 />
         );
 
@@ -431,7 +432,9 @@ class MainPage extends React.Component {
 
 }
 
-
+MainPage.propTypes= {
+    ...Page.pageProperties
+}
 
 
 

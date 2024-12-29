@@ -3,9 +3,9 @@
  */
 
 import React from 'react';
-import GuiHelper from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropTypes from "prop-types";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const rad2deg=(rad,inDeg)=>{
     if (inDeg) return parseFloat(rad);
@@ -14,47 +14,37 @@ const rad2deg=(rad,inDeg)=>{
 
 const DegreeFormatter = (value,inDeg)=> {
       if (value === undefined) return "???";
-      return avnav.api.formatter.formatDecimal(Math.abs(rad2deg(value,inDeg)), 4, 0);
+      return Formatter.formatDecimal(Math.abs(rad2deg(value,inDeg)), 4, 0,false,false);
   };
 
-export class SKRollWidget extends React.Component{
-
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-    }
-
-    render(){
-        let value=DegreeFormatter(this.props.value,this.props.inDegree);
-        let degreeArrow = "-";
-          if (this.props.value == 0) {
-              degreeArrow = "0";
-          } else if (this.props.value < 0) {
-              degreeArrow = "\u21D0" + value;
-          } else if (this.props.value > 0) {
-              degreeArrow = value + "\xA0\u21D2";
-          }
-        let classes="widget SKRollWidget "+this.props.className||"";
+export const SKRollWidget=(props)=>{
+        let degreeArrow = "---";
+        if (props.value !== undefined) {
+            let value = DegreeFormatter(props.value, props.inDegree);
+            degreeArrow = value + "";
+            // arrow left + Wert
+            if (props.value < 0 && value != 0) {
+                degreeArrow = "\u21D0" + degreeArrow;
+            }
+            // value + space + arrow right
+            if (props.value > 0 && value != 0) {
+                degreeArrow = degreeArrow + "\xA0\u21D2";
+            }
+        }
         let wdClasses="widgetData";
-        if (Math.abs(rad2deg(this.props.value,this.props.inDegree)) >= this.props.criticalValue){
+        if (Math.abs(rad2deg(props.value,props.inDegree)) >= props.criticalValue){
             wdClasses+=" critical";
         }
         return (
-            <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-                <div className='infoLeft'>{this.props.caption}</div>
-                <div className='infoRight'>{this.props.unit}</div>
+            <WidgetFrame {...props} addClass="SKRollWidget" >
                 <div className={wdClasses}>{degreeArrow}</div>
-            </div>
+            </WidgetFrame>
         );
     }
 
-}
 
 SKRollWidget.propTypes={
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    style: PropTypes.object,
-    caption: PropTypes.string,
+    ...WidgetProps,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
     criticalValue: PropTypes.number,
@@ -70,44 +60,33 @@ SKRollWidget.editableParameters={
     caption: {type:'STRING',default:'Roll'}
 }
 
-export class SKPitchWidget extends React.Component{
-
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-    }
-
-    render(){
-        let value=DegreeFormatter(this.props.value,this.props.inDegree);
-        let degreeArrow = "-";
-        if (this.props.value == 0) {
-            degreeArrow = "0";
-        } else if (this.props.value < 0) {
-            degreeArrow = value + "\xA0\u21D3";
-        } else if (this.props.value > 0) {
-            degreeArrow = value + "\xA0\u21D1";
+export const SKPitchWidget = (props) => {
+    let degreeArrow = "---";
+    if (props.value !== undefined) {
+        let value = DegreeFormatter(props.value, props.inDegree);
+        degreeArrow = value + "";
+        // arrow left + Wert
+        if (props.value < 0 && value != 0) {
+            degreeArrow += "\xA0\u21D3";
         }
-        let classes="widget SKPitchWidget "+this.props.className||"";
-        let wdClasses="widgetData";
-        if (Math.abs(rad2deg(this.props.value,this.props.inDegree)) >= this.props.criticalValue){
-            wdClasses+=" critical";
+        // value + space + arrow right
+        if (props.value > 0 && value != 0) {
+            degreeArrow += "\xA0\u21D1";
         }
-        return (
-            <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-                <div className='infoLeft'>{this.props.caption}</div>
-                <div className='infoRight'>{this.props.unit}</div>
-                <div className={wdClasses}>{degreeArrow}</div>
-            </div>
-        );
     }
-
+    let wdClasses = "widgetData";
+    if (Math.abs(rad2deg(props.value, props.inDegree)) >= props.criticalValue) {
+        wdClasses += " critical";
+    }
+    return (
+        <WidgetFrame {...props} addClass="SKPitchWidget">
+            <div className={wdClasses}>{degreeArrow}</div>
+        </WidgetFrame>
+    );
 }
 
 SKPitchWidget.propTypes={
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    style: PropTypes.object,
-    caption: PropTypes.string,
+    ...WidgetProps,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
     criticalValue: PropTypes.number,

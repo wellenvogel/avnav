@@ -437,8 +437,6 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let lostTime=globalStore.getData(keys.properties.aisLostTime,0);
     let minDRspeed=globalStore.getData(keys.properties.aisMinDisplaySpeed,0);
     // own ship
-    let lat=globalStore.getData(keys.nav.gps.lat,0);
-    let lon=globalStore.getData(keys.nav.gps.lon,0);
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
     // ais target
@@ -503,8 +501,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         }
 
         if (rmvRange>0 && onMap && style.courseVector !== false) { // relative motion vector
-            let distance=NavCompute.computeDistance({lat:lat,lon:lon},{lat:target.lat,lon:target.lon}).dts/1852;
-            if (distance<=rmvRange && (target_sog || sog)) {
+            if (target.distance<=rmvRange && (target_sog || sog)) {
                 if (curved) {
                     drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
@@ -543,10 +540,10 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
-    return {pix:curpix, scale:scale, style: style};
+    return {pix:curpix, scale:scale, style: style, rot: target_hdg};
 };
 
-AisLayer.prototype.computeTextOffsets=function(drawing, target,textIndex, opt_baseOffset,opt_iconScale){
+AisLayer.prototype.computeTextOffsets=function(drawing, targetRot,textIndex, opt_baseOffset,opt_iconScale){
     let scale=(opt_iconScale === undefined)?1:opt_iconScale;
     let rt=[opt_baseOffset?opt_baseOffset[0]:10,opt_baseOffset?opt_baseOffset[1]:0];
     amul(rt,scale);
@@ -555,17 +552,22 @@ AisLayer.prototype.computeTextOffsets=function(drawing, target,textIndex, opt_ba
     if (drawing.getUseHdpi()){
         hoffset*=drawing.getDevPixelRatio();
     }
-    if (! target.course || (0 <= target.course  &&  target.course < 90 )){
+    let course=targetRot;
+    if (course){
+        while (course >= 360) course-=360;
+        while (course < 0) course+=360;
+    }
+    if (! course || (0 <= course  &&  course < 90 )){
         rt[1]+=(textIndex+0.5)*hoffset;
     }
     else{
-        if (target.course >= 90 && target.course < 180){
+        if (course >= 90 && course < 180){
             rt[1]+=-(textIndex+0.5)*hoffset;
         }
-        if (target.course >= 180 && target.course < 270){
+        if (course >= 180 && course < 270){
             rt[1]+=(textIndex+0.5)*hoffset;
         }
-        if (target.course >= 270 && target.course < 360){
+        if (course >= 270 && course < 360){
             rt[1]+=-(textIndex+0.5)*hoffset;
         }
     }
@@ -604,18 +606,18 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         let textOffsetScale=drawn.scale;
         let text=AisFormatter.format(firstLabel,current,true);
         if (text) {
-            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,current, 0,drawn.style.textOffset,textOffsetScale),alpha));
+            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,drawn.rot, 0,drawn.style.textOffset,textOffsetScale),alpha));
         }
         if (secondLabel !== firstLabel) {
             text=AisFormatter.format(secondLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,current, 1,drawn.style.textOffset,textOffsetScale),alpha));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,drawn.rot, 1,drawn.style.textOffset,textOffsetScale),alpha));
             }
         }
         if (thirdLabel !== firstLabel && thirdLabel !== secondLabel){
             text=AisFormatter.format(thirdLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,current, 2,drawn.style.textOffset,textOffsetScale),alpha));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,drawn.rot, 2,drawn.style.textOffset,textOffsetScale),alpha));
             }
         }
     }

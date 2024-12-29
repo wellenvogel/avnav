@@ -121,7 +121,7 @@ Helper.keysToStr=(dict)=>{
 
 Helper.getParam=(key)=>{
     // Find the key and everything up to the ampersand delimiter
-    let value=RegExp(""+key+"[^&]+").exec(window.location.search);
+    let value=RegExp("[?&]"+key+"=[^?&]*").exec(window.location.search);
 
     // Return the unescaped value minus everything starting from the equals sign or an empty string
     return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
@@ -161,6 +161,36 @@ Helper.addPolar=(a,b)=>{
   b=Helper.toCart(b);
   return Helper.toPol([a[0]+b[0],a[1]+b[1]]);
 }
+class IdGen{
+    constructor(opt_iv) {
+        this.value=opt_iv||0;
+    }
+    next(){
+        this.value++;
+        return this.value;
+    }
+}
+Helper.idGen=IdGen;
+export const concat=(...args)=>{
+    let rt="";
+    args.forEach((a)=>{
+        if (a !== undefined) rt+=a;
+    });
+    return rt;
+}
+export const concatsp=(...args)=>{
+    let rt="";
+    args.forEach((a)=>{
+        if (a !== undefined) rt+=" "+a;
+    });
+    return rt;
+}
+export const unsetOrTrue=(item)=>{
+    return !!(item === undefined || item);
+}
+Helper.concat=concat;
+Helper.concatsp=concatsp;
+Helper.unsetorTrue=unsetOrTrue;
 
 export default Helper;
 

@@ -316,7 +316,7 @@ task release{
         println "all release packages have been build"
     }
     dependsOn testGit, releaseRpm, releaseDeb,raspiDeb
-    dependsOn windowsBuild
+    dependsOn windowsBuild, buildZip
     if (buildAndroid){
         dependsOn assembleReleaseAndroid
     }
@@ -328,7 +328,7 @@ task beta{
         println "all beta packages have been build"
     }
     dependsOn releaseRpm, releaseDeb,raspiDeb
-    dependsOn windowsBuild
+    dependsOn windowsBuild, buildZip
     if (buildAndroid){
         dependsOn assembleBetaAndroid
     }

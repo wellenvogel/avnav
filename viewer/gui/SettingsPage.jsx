@@ -533,10 +533,18 @@ class SettingsPage extends React.Component{
      */
     confirmAbortOrDo(){
         if (this.hasChanges()) {
-            return OverlayDialog.confirm("discard changes?");
+            return new Promise((resolve)=>{
+                OverlayDialog.confirm("discard changes?")
+                    .then(()=>{
+                        resolve(0);
+                    })
+                    .catch((e)=>{
+                        console.log(e);
+                    })
+            })
         }
         else {
-            return new Promise((resolve,reject)=>{
+            return new Promise((resolve)=>{
                 resolve(0);
             });
         }

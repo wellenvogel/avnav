@@ -28,6 +28,7 @@ import {Input, InputSelect} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
 import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
+import Page from "../components/Page";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -328,7 +329,6 @@ class EditRoutePage extends React.Component{
             showWpButtons:false,
             lastCenteredWp: undefined
         }
-        let self=this;
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
         this.checkEmptyRoute();
@@ -420,12 +420,11 @@ class EditRoutePage extends React.Component{
     };
 
     getWaypointButtons(){
-        let self=this;
         let waypointButtons=[
             {
                 name:'WpLocate',
                 onClick:()=>{
-                    self.wpTimer.startTimer();
+                    this.wpTimer.startTimer();
                     let currentEditor=getCurrentEditor();
                     MapHolder.setCenter(currentEditor.getPointAt());
                     this.setState({lastCenteredWp:currentEditor.getIndex()});
@@ -434,7 +433,7 @@ class EditRoutePage extends React.Component{
             {
                 name:'WpEdit',
                 onClick:()=>{
-                    self.wpTimer.startTimer();
+                    this.wpTimer.startTimer();
                     let currentEditor=getCurrentEditor();
                     startWaypointDialog(currentEditor.getPointAt(),currentEditor.getIndex());
                 }
@@ -446,7 +445,7 @@ class EditRoutePage extends React.Component{
                     return {disabled:! StateHelper.hasPointAtOffset(state,1)};
                 },
                 onClick:()=>{
-                    self.wpTimer.startTimer();
+                    this.wpTimer.startTimer();
                     let currentEditor=getCurrentEditor();
                     currentEditor.moveIndex(1);
                     MapHolder.setCenter(currentEditor.getPointAt());
@@ -460,7 +459,7 @@ class EditRoutePage extends React.Component{
                     return {disabled:!StateHelper.hasPointAtOffset(state,-1)}
                 },
                 onClick:()=>{
-                    self.wpTimer.startTimer();
+                    this.wpTimer.startTimer();
                     let currentEditor=getCurrentEditor();
                     currentEditor.moveIndex(-1);
                     MapHolder.setCenter(currentEditor.getPointAt());
@@ -713,6 +712,11 @@ class EditRoutePage extends React.Component{
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,[LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
+            LayoutHandler.revertButtonDef((pageWithOptions)=>{
+                if (pageWithOptions.location !== this.props.location){
+                    this.props.history.replace(pageWithOptions.location,pageWithOptions.options);
+                }
+            }),
             {
                 name: 'Cancel',
                 onClick: ()=>{this.props.history.pop()}
@@ -721,7 +725,6 @@ class EditRoutePage extends React.Component{
         return rt;
     }
     render(){
-        let self=this;
         let isSmall=(this.state.dimensions||{width:0}).width
             < globalStore.getData(keys.properties.smallBreak);
         let overlayContent=(isSmall || this.state.showWpButtons)?
@@ -731,19 +734,22 @@ class EditRoutePage extends React.Component{
             />
             :
             null;
-        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
+        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,this.props);
         return (
             <MapPage
                 {...pageProperties}
                 id={PAGENAME}
-                mapEventCallback={self.mapEvent}
+                mapEventCallback={this.mapEvent}
                 onItemClick={this.widgetClick}
                 panelCreator={getPanelList}
-                buttonList={self.getButtons()}
+                buttonList={this.getButtons()}
                 overlayContent={overlayContent}
                 />
         );
     }
+}
+EditRoutePage.propTypes={
+    ...Page.pageProperties
 }
 
 export default EditRoutePage;

@@ -36,6 +36,7 @@ import avnav_handlerList
 from avnav_store import AVNStore
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 from avnav_util import AVNLog, AVNUtil
+from avnav_nmea import NMEAParser
 
 
 class TimeSource(object):
@@ -199,7 +200,7 @@ class AVNBaseConfig(AVNWorker):
 
   def fetchGpsTime(self):
     try:
-      curGpsTime=self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".time",includeInfo=True)
+      curGpsTime=self.navdata.getSingleValue(NMEAParser.K_TIME.getKey(),includeInfo=True)
       if curGpsTime is None:
         return None,None
       dt=AVNUtil.gt(curGpsTime.value)
@@ -275,16 +276,16 @@ class AVNBaseConfig(AVNWorker):
       lat=None
       lon=None
       try:
-        lat=self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS+".lat")
-        lon = self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".lon")
+        lat=self.navdata.getSingleValue(NMEAParser.K_LAT.getKey(),includeInfo=True)
+        lon = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(),includeInfo=True)
       except Exception as e:
         AVNLog.error("Exception when getting curGpsData: %s",traceback.format_exc())
       if ( lat is not None) and (lon is not None):
         #we have some position
         if not hasFix:
-          AVNLog.info("new GPS fix lat=%f lon=%f",lat,lon)
+          AVNLog.info("new GPS fix lat=%f[%s] lon=%f[%s]",lat.value,lat.source,lon.value,lon.source)
           hasFix=True
-        self.setInfo(self.GPSPOS_CHILD,"GPS fix lat=%f lon=%f"%(lat,lon),WorkerStatus.NMEA)
+        self.setInfo(self.GPSPOS_CHILD,"GPS fix lat=%f[%s] lon=%f[%s]"%(lat.value,lat.source,lon.value,lon.source),WorkerStatus.NMEA)
       else:
         self.setInfo(self.GPSPOS_CHILD,'no valid position',WorkerStatus.ERROR)
         if hasFix:

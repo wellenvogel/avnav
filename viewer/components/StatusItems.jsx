@@ -40,7 +40,7 @@ export const EditIcon=(props)=>{
 }
 export const ChildStatus=(props)=>{
     let canEdit=props.canEdit && props.connected;
-    let sub=props.sub || (props.name && props.name.match(/:#:/));
+    let sub=props.sub || (props.name && (typeof(props.name.match) === 'function') && props.name.match(/:#:/));
     let name=sub?props.name.replace(/^.*:#:/,''):props.name;
     let clName="childStatus";
     if (sub) clName+=" sub";

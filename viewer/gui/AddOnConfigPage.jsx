@@ -10,6 +10,7 @@ import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
 import assign from "object-assign";
+import {showPromiseDialog} from "../components/OverlayDialog";
 
 
 const AddonItem=(props)=>{
@@ -52,7 +53,9 @@ class AddonConfigPage extends React.Component{
             {
                 name: 'AddonConfigPlus',
                 onClick: ()=> {
-                    UserAppDialog.showUserAppDialog({}, {},true)
+                    showPromiseDialog(undefined,(props)=>
+                        <UserAppDialog {...props}/>
+                    )
                         .then(()=>this.readAddons())
                         .catch(()=>this.readAddons());
                 }
@@ -101,7 +104,9 @@ class AddonConfigPage extends React.Component{
                 }}
                 onItemClick={(item)=>{
                     let itemUrl=(item.originalUrl !== undefined)?item.originalUrl:item.url;
-                    UserAppDialog.showUserAppDialog(assign(item,{url:itemUrl}),{name:item.name},true)
+                    showPromiseDialog(undefined,(props)=>
+                        <UserAppDialog {...props} fixed={{name:item.name}} addon={{...item,url:itemUrl}}/>
+                    )
                         .then(()=>self.readAddons())
                         .catch(()=>self.readAddons());
                 }}

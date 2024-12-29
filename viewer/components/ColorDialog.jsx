@@ -1,54 +1,16 @@
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import ColorPicker from '../components/ColorPicker.jsx';
 import DB from './DialogButton.jsx';
+import {DialogButtons, DialogFrame} from "./OverlayDialog";
 
-class ColorDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            value: props.value
-        };
-        if (!this.state.value) this.state.value="#ffffff";
-        this.valueChange=this.valueChange.bind(this);
-        this.buttonClick=this.buttonClick.bind(this);
-        this.onColorChange=this.onColorChange.bind(this);
-        this.colorInput=this.colorInput.bind(this);
-    }
-    valueChange(ev){
-        this.setState({value: ev.target.value});
-    }
-    buttonClick(ev){
-        let button=ev.target.name;
-        if (button == 'ok'){
-            if (this.props.okCallback) this.props.okCallback(this.state.value);
-        }
-        if (button == 'unset'){
-            if (this.props.okCallback) this.props.okCallback();
-        }
-        if (button == 'reset'){
-            this.setState({
-                value: this.props.default
-            });
-            return;
-        }
-        this.props.closeCallback();
-    }
-    onColorChange(color,c){
-        this.setState({
-            value: color
-        })
-    }
-    colorInput(ev){
-        this.setState({
-            value:ev.target.value
-        })
-    }
-    render() {
+const ColorDialog =(props)=>{
+        const [value,setValue]=useState(props.value||"#ffffff");
+    const ok=props.resolveFunction||props.okCallback;
         let style={
-            backgroundColor:this.state.value,
+            backgroundColor:value,
             width: 30,
             height: 30
         };
@@ -72,35 +34,31 @@ class ColorDialog extends React.Component{
         }
         if (pickerProperties.saturationWidth < 50 ) pickerProperties.saturationWidth=50;
         return (
-            <div className="settingsDialog colorDialog inner">
-                {this.props.title?<h3>{this.props.title}</h3>:null}
-                <ColorPicker value={this.state.value} onChange={this.onColorChange} {...pickerProperties}/>
+            <DialogFrame className="settingsDialog colorDialog" title={props.title}>
+                <ColorPicker value={value} onChange={(v)=>setValue(v)} {...pickerProperties}/>
                 <div className="colorFrame">
                     <div style={style} className="colorValue"></div>
                     <input className="colorName"
-                           onChange={this.colorInput}
-                           value={this.state.value}/>
+                           onChange={(ev)=>setValue(ev.target.value)}
+                           value={value}/>
                 </div>
-                <div className="dialogButtons">
-                    {(this.props.default !== undefined) ?
-                        <DB name="reset" onClick={this.buttonClick}>Reset</DB>
+                <DialogButtons>
+                    {(props.default !== undefined) ?
+                        <DB name="reset" onClick={()=>setValue(props.default)} close={false}>Reset</DB>
                         :
                         null}
-                    {(this.props.showUnset !== undefined) ?
-                        <DB name="unset" onClick={this.buttonClick}>Unset</DB>
+                    {(props.showUnset !== undefined) ?
+                        <DB name="unset" onClick={()=>ok()}>Unset</DB>
                         :
                         null}
-                    <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
-                    <DB name="ok" onClick={this.buttonClick}>Ok</DB>
-                </div>
-            </div>
+                    <DB name="cancel">Cancel</DB>
+                    <DB name="ok" onClick={()=>ok(value)}>Ok</DB>
+                </DialogButtons>
+            </DialogFrame>
         );
-    }
-
 }
 
 ColorDialog.propTypes={
-    closeCallback: PropTypes.func.isRequired,
     okCallback: PropTypes.func,
     value: PropTypes.string.isRequired,
     default: PropTypes.string,

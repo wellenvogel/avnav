@@ -9,7 +9,7 @@ import Visible from '../hoc/Visible.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React from 'react';
+import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -27,7 +27,6 @@ import mapholder from "../map/mapholder.js";
 import Helper from "../util/helper";
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
-import {anchorWatchDialog, isWatchActive} from "./AnchorWatchDialog";
 import {DynamicTitleIcons} from "./TitleIcons";
 
 const SHOW_MODE={
@@ -94,13 +93,19 @@ const widgetCreator=(widget,mode)=>{
 };
 
 class MapPage extends React.Component{
+    mapRef=createRef();
     constructor(props){
         super(props);
-        let self=this;
         this.mapEvent=this.mapEvent.bind(this);
         this.subscribeToken=undefined;
         this.bottomContainer=undefined;
 
+    }
+    getLayoutPage(){
+        return {
+            location: this.props.location||this.props.id,
+            options: this.props.options
+        }
     }
     mapEvent(evdata){
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
@@ -142,7 +147,7 @@ class MapPage extends React.Component{
                     setShown(chartEntry.url,INFO_TYPES.info);
                 }
             }
-            MapHolder.loadMap(this.refs.map, this.props.preventCenterDialog).
+            MapHolder.loadMap(this.mapRef.current, this.props.preventCenterDialog).
                 then((result)=>{
                     this.computeScalePosition();
                 }).
@@ -183,16 +188,20 @@ class MapPage extends React.Component{
                     self.props.onItemClick(item,data,panelItems.name,invertEditDirection)
                     }}
                 onClick={()=>{
-                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
+                    EditWidgetDialog.createDialog(undefined,this.getLayoutPage(),panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
                 }}
                 dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
                 horizontal={mode === 'horizontal'}
-                onSortEnd={(oldIndex,newIndex)=>LayoutHandler.moveItem(self.props.id,panelItems.name,oldIndex,newIndex)}
+                allowOther={true}
+                dragFrame={panelItems.name}
+                onSortEnd={(oldIndex,newIndex,frameId,targetFrameId)=>{
+                    LayoutHandler.withTransaction(this.getLayoutPage(),(handler)=>handler.moveItem(self.props.id, frameId, oldIndex, newIndex,targetFrameId))
+                    }}
                 />
         };
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        let map=<div className="map" ref="map" style={{opacity:mapOpacity}}>
+        let map=<div className="map" ref={this.mapRef} style={{opacity:mapOpacity}}>
             <DynamicTitleIcons/>
         </div>;
         let className=self.props.className?self.props.className+" mapPage":"mapPage";
@@ -254,7 +263,8 @@ class MapPage extends React.Component{
     }
 }
 
-MapPage.propertyTypes=assign({},Page.pageProperties,{
+MapPage.propertyTypes={
+    ...Page.pageProperties,
     buttonList:         PropTypes.array,
     panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name
                                                     //and must return {name: panelName, list:widget list}
@@ -268,7 +278,7 @@ MapPage.propertyTypes=assign({},Page.pageProperties,{
     widgetFontSize:     PropTypes.number,
     mapFloat:           PropTypes.bool
 
-});
+};
 
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     let current=MapHolder.getCurrentMergedOverlayConfig();

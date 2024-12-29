@@ -25,6 +25,9 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
+import struct
+
+import netifaces
 
 from socketbase import *
 
@@ -40,6 +43,11 @@ class AVNUdpReader(AVNWorker):
                          description="the local listener port")
   P_MINTIME=WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
                             description='wait this time before reading new data (ms)')
+  P_ALLOWMC=WorkerParameter('joinMulticast',0,type=WorkerParameter.T_BOOLEAN,
+                            description='join a multicast group')
+  P_MCADDR=WorkerParameter('multicastAddr','224.0.0.1', type=WorkerParameter.T_STRING,
+                           description="join this multicast group on all interfaces",
+                           condition={P_ALLOWMC.name:True})
   
   @classmethod
   def getConfigParam(cls, child=None):
@@ -51,7 +59,9 @@ class AVNUdpReader(AVNWorker):
                cls.P_PORT,
                cls.P_MINTIME,
                cls.FILTER_PARAM,
-               SocketReader.P_STRIP_LEADING
+               SocketReader.P_STRIP_LEADING,
+               cls.P_ALLOWMC,
+               cls.P_MCADDR
     ]
     return rt
 
@@ -85,6 +95,22 @@ class AVNUdpReader(AVNWorker):
     if self.P_PORT.name in param:
       self.checkUsedResource(UsedResource.T_UDP,self.P_PORT.fromDict(param))
 
+  def joinGroup(self,mcgroup):
+    interfaces=netifaces.interfaces()
+    for intf in interfaces:
+      intfaddr=netifaces.ifaddresses(intf)
+      if intfaddr is not None:
+        ips=intfaddr.get(netifaces.AF_INET)
+        if ips is not None:
+          for ip in ips:
+            addr=ip.get('addr')
+            if addr is not None:
+              try:
+                mreq = struct.pack("4s4s", socket.inet_aton(mcgroup), socket.inet_aton(addr))
+                self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+              except:
+                pass
+
   #thread run method - just try forever
   def run(self):
     for p in (self.P_PORT, self.P_LADDR):
@@ -101,7 +127,12 @@ class AVNUdpReader(AVNWorker):
         info = "%s:%d" % (host,port)
         self.setInfo(INAME,"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,True)
         self.socket.bind((host, port))
+        if self.getWParam(self.P_ALLOWMC):
+          mcgroup=self.getWParam(self.P_MCADDR)
+          self.joinGroup(mcgroup)
+          info+="[%s]"%mcgroup
         self.setInfo(INAME,"listening at %s"%(info,),WorkerStatus.RUNNING)
       except:
         AVNLog.info("exception while trying to listen at %s:%d %s",host,port,traceback.format_exc())
@@ -122,6 +153,7 @@ class AVNUdpReader(AVNWorker):
                           minTime=self.P_MINTIME.fromDict(self.param))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
+
 avnav_handlerList.registerHandler(AVNUdpReader)
 
         

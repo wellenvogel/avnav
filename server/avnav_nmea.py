@@ -82,6 +82,7 @@ class NMEAParser(object):
   K_DEPTHT=Key('depthBelowTransducer','depthBelowTransducer in m','m','environment.depth.belowTransducer')
   K_DEPTHW=Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface')
   K_DEPTHK=Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel')
+  K_TIME=Key('time','the received GPS time',signalK='navigation.datetime')
   #we will add the GPS base to all entries
   GPS_DATA=[
     K_LAT,
@@ -98,7 +99,7 @@ class NMEAParser(object):
     K_DEPTHT,
     K_DEPTHW,
     K_DEPTHK,
-    Key('time','the received GPS time',signalK='navigation.datetime'),
+    K_TIME,
     Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count'),
     Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites'),
     Key('transducers.*','transducer data from xdr'),

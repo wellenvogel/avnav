@@ -6,44 +6,27 @@ import React from "react";
 import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
-import Helper from '../util/helper.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
-class DateTimeWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
+const DateTimeWidget = (props) => {
+    let time = "----";
+    if (props.time) {
+        time = Formatter.formatTime(props.time);
     }
-    shouldComponentUpdate(nextProps,nextState) {
-        return Helper.compareProperties(this.props,nextProps,DateTimeWidget.storeKeys);
+    let date = "----";
+    if (props.time) {
+        date = Formatter.formatDate(props.time);
     }
-    render(){
-        let self=this;
-        let classes="widget dateTimeWidget "+this.props.className||"";
-        let time="----";
-        if (this.props.time){
-            time=Formatter.formatTime(this.props.time);
-        }
-        let date="----";
-        if (this.props.time){
-            date=Formatter.formatDate(this.props.time);
-        }
-        return (
-        <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-            <div className='infoLeft'>Date</div>
-            <div className="resize">
+    return (
+        <WidgetFrame {...props} addClass="dateTimeWidget" caption="Date" unit={undefined}>
                 <div className="widgetData date">{date}</div>
                 <div className="widgetData time">{time}</div>
-            </div>
-        </div>
-        );
-    }
-
-};
+        </WidgetFrame>
+    );
+}
 
 DateTimeWidget.propTypes={
-    onClick: PropTypes.func,
-    className: PropTypes.string,
+    ...WidgetProps,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool
 };

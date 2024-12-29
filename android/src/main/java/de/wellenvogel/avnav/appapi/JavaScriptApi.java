@@ -447,4 +447,16 @@ public class JavaScriptApi {
         return socket.isOpen();
     }
 
+    @JavascriptInterface
+    public boolean dataDownload(String dataUrl, String fileName, String mimeType){
+        try {
+            mainActivity.startDataDownload(dataUrl,fileName,mimeType);
+        } catch (Exception e) {
+            AvnLog.e("dataDownload error ",e);
+            return false;
+        }
+        return true;
+
+    }
+
 }

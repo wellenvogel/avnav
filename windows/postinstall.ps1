@@ -19,7 +19,7 @@ try {
             installCmd              = "python";
             pathFile                = "python37._pth"
         }
-        [PSCustomObject]@{"urlBase" = "https://bootstrap.pypa.io/";
+        [PSCustomObject]@{"urlBase" = "https://bootstrap.pypa.io/pip/3.7";
             name                    = "get-pip.py";
             exe                     = "$pythonDir\Scripts\pip.exe";
         }        

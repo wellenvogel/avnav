@@ -2,14 +2,12 @@
  * Created by andreas on 23.02.16.
  */
 
-import React from "react";
+import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
-import Helper from '../util/helper.js';
-import Value from './Value.jsx';
-import GuiHelper from '../util/GuiHelpers.js';
 import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 export const getTicks=(minValue,maxValue,number)=>{
     if (minValue === undefined || maxValue === undefined || number === undefined) return;
@@ -23,7 +21,7 @@ export const getTicks=(minValue,maxValue,number)=>{
 }
 //refer to https://canvas-gauges.com/documentation/user-guide/configuration
 const defaultTranslateFunction=(props)=>{
-    let rt=props;
+    let rt={...props};
     let defaultColors=props.nightMode?nightColors:normalColors;
     if (! rt.colorText) rt.colorText=defaultColors.text;
     let textColorNames=['colorTitle','colorUnits','colorNumbers','colorStrokeTicks','colorMajorTicks','colorMinorTicks','colorValueText'];
@@ -51,68 +49,44 @@ const nightColors={
     needle: 'rgba(252, 11, 11, 0.6)'
 }
 
-class Gauge extends React.Component{
-    constructor(props){
-        super(props);
-        this.canvasRef=this.canvasRef.bind(this);
-        this.renderCanvas=this.renderCanvas.bind(this);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-        this.gauge=undefined;
+const getProps=(props)=>{
+    let rt=props.translateFunction?defaultTranslateFunction({...props,...props.translateFunction({...props})}):defaultTranslateFunction(props);
+    for (let k in rt){
+        if (rt[k] === undefined) delete rt[k];
     }
-    getProps(){
-        let props=assign({},this.props);
-        let rt=this.props.translateFunction?defaultTranslateFunction(this.props.translateFunction(props)):defaultTranslateFunction(props);
-        for (let k in rt){
-            if (rt[k] === undefined) delete rt[k];
+    if (rt.minValue !== undefined) rt.minValue=parseFloat(rt.minValue);
+    if (rt.maxValue !== undefined) rt.maxValue=parseFloat(rt.maxValue);
+    return rt;
+}
+
+const Gauge =(rprops)=>{
+    let canvas = useRef(null);
+    let gauge = useRef(undefined);
+    useEffect(()=>{
+        return ()=>{
+            if (gauge.current) gauge.current.destroy();
         }
-        if (props.minValue !== undefined) props.minValue=parseFloat(props.minValue);
-        if (props.maxValue !== undefined) props.maxValue=parseFloat(props.maxValue);
-        return rt;
+    },[])
+    let frame = useRef(null);
+    let value=useRef(null);
+    const props=getProps(rprops);
+    let nvalue=props.value;
+    if (typeof (props.formatter) === 'function'){
+        nvalue=props.formatter(nvalue);
     }
-    render(){
-        let props=this.getProps();
-        let defaultColors=props.nightMode?nightColors:normalColors;
-        let classes="widget canvasGauge";
-        if (props.className) classes+=" "+props.className;
-        if (props.typeClass) classes+=" "+props.typeClass;
-        let style=props.style||{};
-        let value=props.value;
-        if (typeof (this.props.formatter) === 'function'){
-            value=this.props.formatter(value);
-        }
-        let textColor=props.colorText?props.colorText:defaultColors.text;
-        let textStyle={color:textColor};
-        return (
-        <div className={classes} onClick={props.onClick} style={style}>
-            <div className="canvasFrame" ref="frame">
-                {props.drawValue?
-                <div className="gaugeValue" ref="value" style={textStyle}>{value}</div>:null}
-                <canvas className='widgetData' ref={this.canvasRef}></canvas>
-            </div>
-            {(props.caption !== undefined )?<div className='infoLeft'>{props.caption}</div>:null}
-            {(props.unit !== undefined)?
-                <div className='infoRight'>{props.unit}</div>
-                :null}
-        </div>
-        );
-    }
-    componentDidUpdate(){
-        this.renderCanvas();
-    }
-    canvasRef(item){
-        this.canvas=item;
-        setTimeout(this.renderCanvas,0);
-    }
-    renderCanvas(){
-        if (! this.canvas) return;
+    nvalue=parseFloat(nvalue);
+    if (nvalue < props.minValue) nvalue=props.minValue;
+    if (nvalue > props.maxValue) nvalue=props.maxValue;
+    const renderCanvas=()=>{
+        if (!canvas.current) return;
         let rect=undefined;
-        if (this.refs.frame){
-            rect=this.refs.frame.getBoundingClientRect();
+        if (frame.current){
+            rect=frame.current.getBoundingClientRect();
         }
         else {
-            rect = this.canvas.getBoundingClientRect();
+            rect = canvas.current.getBoundingClientRect();
         }
-        let props=this.getProps();
+        let props=getProps(rprops);
         if (props.minValue === undefined) return;
         if (props.maxValue === undefined) return;
         let makeSquare=(props.makeSquare === undefined) || props.makeSquare;
@@ -123,48 +97,64 @@ class Gauge extends React.Component{
             width=wh;
             height=wh;
         }
-        if (this.refs.value){
+        if (value.current){
             try {
                 let factor=parseFloat(props.valueFontFactor||12);
-                let fs = parseFloat(window.getComputedStyle(this.refs.value).fontSize);
+                let fs = parseFloat(window.getComputedStyle(value.current).fontSize);
                 if (fs != wh/factor) {
-                    this.refs.value.style.fontSize=(wh/factor)+"px";
+                    value.current.style.fontSize=(wh/factor)+"px";
                 }
                 else{
-                    this.refs.value.style.fontSize=undefined;
+                    value.current.style.fontSize=undefined;
                 }
             }catch(e){}
 
         }
-        let value=props.value;
-        if (typeof (props.formatter) === 'function'){
-            value=props.formatter(value);
-        }
-        value=parseFloat(value);
-        if (value < props.minValue) value=props.minValue;
-        if (value > props.maxValue) value=props.maxValue;
-        if (! this.gauge){
+        if (!gauge.current){
             try {
-                let options = assign({}, props, {renderTo: this.canvas,width:width,height:height,value:value});
-                this.gauge = new this.props.gauge(options).draw();
+                let options = {...props, renderTo: canvas.current,width:width,height:height,value:nvalue};
+                gauge.current = new props.gauge(options).draw();
                 return;
             }catch(e){
                 base.log("gauge error:"+e);
             }
         }
-        if (! this.gauge) return;
-        this.gauge.value=value;
-        this.gauge.update(assign({},props,{width:width,height:height,value:value}));
+        if (! gauge.current) return;
+        gauge.current.value=nvalue;
+        gauge.current.update({...props,width:width,height:height,value:nvalue});
     }
+    const canvasRef = (item) => {
+        if (item ) {
+            if (item !== canvas.current) {
+                if (gauge.current) gauge.current.destroy();
+                gauge.current=undefined;
+            }
+            canvas.current = item;
+            setTimeout(renderCanvas, 0);
+        }
+    }
+    let defaultColors=props.nightMode?nightColors:normalColors;
+    let classes="canvasGauge";
+    if (props.typeClass) classes+=" "+props.typeClass;
+    let style=props.style||{};
+    let textColor=props.colorText?props.colorText:defaultColors.text;
+    let textStyle={color:textColor};
+    return (
+        <WidgetFrame {...props} addClass={classes} style={style}>
+            <div className="canvasFrame" ref={frame}>
+                {props.drawValue?
+                <div className="gaugeValue" ref={value} style={textStyle}>{nvalue}</div>:null}
+                <canvas className='widgetData' ref={canvasRef}></canvas>
+            </div>
+        </WidgetFrame>
+        );
 };
 
 Gauge.propTypes={
+    ...WidgetProps,
     gauge: PropTypes.oneOfType([PropTypes.object,PropTypes.func]).isRequired,
     name: PropTypes.string,
     unit: PropTypes.string,
-    caption: PropTypes.string,
-    onClick: PropTypes.func,
-    className: PropTypes.string,
     typeClass: PropTypes.string,
     style: PropTypes.object,
     default: PropTypes.string,
@@ -174,7 +164,9 @@ Gauge.propTypes={
     formatter: PropTypes.oneOfType([PropTypes.string,PropTypes.func]),
     formatterParameters: PropTypes.array,
     translateFunction: PropTypes.func, //if set: a function to translate options
-    valueFontFactor: PropTypes.number
+    valueFontFactor: PropTypes.number,
+    minValue: PropTypes.number,
+    maxValue: PropTypes.number
     //all the options from canvas-gauges, see
     //https://canvas-gauges.com/documentation/user-guide/configuration
 };

@@ -4,23 +4,18 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
-class EmptyWidget extends React.Component{
-    render(){
-        let classes="widget "+this.props.classes||"";
-        if (this.props.className) classes+=" "+this.props.className;
-        let style=this.props.style||{};
+const EmptyWidget =(props)=>{
         return (
-        <div className={classes} onClick={this.props.onClick} style={style}>
-        </div>
+        <WidgetFrame {...props} >
+        </WidgetFrame>
         );
     }
 
-}
-
 EmptyWidget.propTypes={
-        onClick: PropTypes.func,
-        classes: PropTypes.string
+    ...WidgetProps,
+    classes: PropTypes.string
 };
 
 export default EmptyWidget;

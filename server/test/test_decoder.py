@@ -44,14 +44,19 @@ class ApiImpl(AVNApi):
         return
     print("@@DATA@@:%s->%s"%(path,value))
 
-import os, glob, imp
+import os, glob, importlib.util
 
+def loadModule(name,path):
+  spec = importlib.util.spec_from_file_location(name, path)
+  module = importlib.util.module_from_spec(spec)
+  spec.loader.exec_module(module)
+  return module
 def loadModulesFromDir(dir,logger,prefix=''):
   modules = {}
   for path in glob.glob(os.path.join(dir, '[!_]*.py')):
     name, ext = os.path.splitext(os.path.basename(path))
     try:
-      modules[prefix+name] = imp.load_source(prefix + name, path)
+      modules[prefix+name] = loadModule(prefix + name, path)
       logger.log("loaded %s as %s",path, prefix+name)
     except:
       logger.error("unable to load %s:%s",path,traceback.format_exc())

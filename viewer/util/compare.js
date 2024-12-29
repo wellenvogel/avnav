@@ -1,8 +1,7 @@
 /**
  * Created by andreas on 25.09.17.
  */
-import equalsObjects from 'shallow-equal/objects';
-import equalsArrays from 'shallow-equal/arrays';
+import {shallowEqualObjects as equalsObjects, shallowEqualArrays as equalsArrays} from 'shallow-equal';
 
 let Compare=function(oldData, newData){
     if (oldData === undefined && newData === undefined) return true;

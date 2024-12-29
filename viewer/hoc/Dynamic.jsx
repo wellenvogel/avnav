@@ -9,8 +9,7 @@
 
 import globalStore from "../util/globalstore.jsx";
 import React from 'react';
-import assign from 'object-assign';
-
+import {KeyHelper} from "../util/keys";
 
 
 export default  function(Component,opt_options,opt_store){
@@ -34,28 +33,30 @@ export default  function(Component,opt_options,opt_store){
             if (! updateFunction && opt_options) updateFunction=opt_options.changeCallback;
             if (! updateFunction) return;
             let {storeKeys,uf,changeCallback,...forwardProps}=this.props;
-            let childprops=assign({},forwardProps,data);
+            let childprops={...forwardProps,...data};
             updateFunction(childprops);
         }
         getStoreKeys(){
             let storeKeys=this.props.storeKeys;
             if (opt_options && opt_options.storeKeys) {
-                storeKeys=assign({},opt_options.storeKeys,storeKeys);
+                storeKeys={...opt_options.storeKeys,...storeKeys};
             }
             if (!storeKeys) return ;
-            if (storeKeys instanceof Array) return storeKeys;
-            if (storeKeys instanceof Object) return Object.values(storeKeys);
-            return [storeKeys];
+            if (! (storeKeys instanceof Object)){
+                throw Error("store keys is no object",storeKeys);
+            }
+            return KeyHelper.removeNodeInfo(storeKeys);
         }
         getTranslatedStoreValues(){
-            if (! this.getStoreKeys()) return {};
-            let values=store.getMultiple(this.props.storeKeys||opt_options.storeKeys);
+            const keys=this.getStoreKeys();
+            if (! keys) return {};
+            let values=store.getMultiple(keys);
             let updateFunction=this.props.updateFunction;
             if (! updateFunction){
                 if (opt_options && opt_options.updateFunction) updateFunction=opt_options.updateFunction;
             }
             if (updateFunction) {
-                return updateFunction(values,this.getStoreKeys());
+                return updateFunction(values,keys);
             }
             return values;
             }
@@ -92,9 +93,9 @@ export default  function(Component,opt_options,opt_store){
         }
         render(){
             let {storeKeys,updateFunction,changeCallback,...forwardProps}=this.props;
-            let childprops=assign({},forwardProps,this.state);
+            let childprops={...forwardProps,...this.state};
             return <Component {...childprops}/>
         }
-    };
+    }
     return Dynamic;
 };

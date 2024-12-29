@@ -1,6 +1,6 @@
 import React from 'react';
 import ColorDialog from './ColorDialog.jsx';
-import OverlayDialog from './OverlayDialog.jsx';
+import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
@@ -19,9 +19,17 @@ const DEFAULT_TYPES={
     label: PropTypes.string,
     className: PropTypes.string,
     onChange: PropTypes.func,
-    dialogRow: PropTypes.bool
+    dialogRow: PropTypes.bool,
+    mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func])
 };
 
+export const valueMissing=(check,value)=>{
+    if (!check) return false;
+    if (typeof check === 'function'){
+        return check(value);
+    }
+    return value === undefined || value === null;
+}
 
 export const Input=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
@@ -37,6 +45,7 @@ export const Input=(props)=>{
     if (props.checkFunction){
         if (! props.checkFunction(props.value)) className+=" error";
     }
+    if (valueMissing(props.mandatory,props.value)) className+=" missing";
     return <div className={className} >
         <span className="inputLabel">{props.label}</span>
         <input size={size} type={props.type||"text"} value={props.value} onChange={
@@ -112,6 +121,7 @@ export const InputReadOnly=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
     if (! props.onClick) className+=" disabled";
+    if (valueMissing(props.mandatory,props.value)) className+=" missing";
     let frameClick=props.frameClick?props.onClick:undefined;
     return <div className={className}  onClick={frameClick}>
         <span className="inputLabel">{props.label}</span>
@@ -121,6 +131,7 @@ export const InputReadOnly=(props)=>{
 };
 
 export const InputSelect=(props)=>{
+    const dialogContext=useDialogContext();
     let onClick=props.onClick;
     let {value,...forwardProps}=props;
     let label=value;
@@ -136,13 +147,7 @@ export const InputSelect=(props)=>{
             };
             let resetCallback= props.resetCallback?props.resetCallback:undefined;
             const showDialog=(finalList)=>{
-                let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged,undefined,resetCallback);
-                if (props.showDialogFunction) {
-                    props.showDialogFunction(d);
-                }
-                else{
-                    OverlayDialog.dialog(d);
-                }
+                dialogContext.showDialog(OverlayDialog.createSelectDialog(props.label, finalList, valueChanged,undefined,resetCallback));
             }
             let finalList;
             if (typeof(displayList) === 'function') finalList = displayList(props.value);
@@ -175,13 +180,13 @@ export const InputSelect=(props)=>{
 InputSelect.propTypes=assign({},DEFAULT_TYPES,{
     onChange: PropTypes.func, //if set  and if prop.list is set: show the select dialog
     list: PropTypes.any,      //array of items to show or a function to create the list
-    showDialogFunction: PropTypes.func, //if set: use this function to display the select dialog
     changeOnlyValue: PropTypes.bool, //only return the value property of the list element in onChange
     resetCallback: PropTypes.func //if set - show a reset button an call this on reset
 });
 
 
 export const ColorSelector=(props)=>{
+    const dialogContext=useDialogContext();
     let onClick=props.onClick;
     if (props.onChange){
         //show the dialog and call onChange
@@ -190,36 +195,30 @@ export const ColorSelector=(props)=>{
         };
         onClick=(ev)=>{
             ev.stopPropagation();
-            let d=(p)=>{
+            dialogContext.showDialog(()=>{
                 return <ColorDialog
-                    {...p}
                     value={props.value}
                     okCallback={colorChange}
                     showUnset={props.showUnset}
                     default={props.default}
                     />
-            };
-            if (props.showDialogFunction){
-                props.showDialogFunction(d);
-            }
-            else{
-                OverlayDialog.dialog(d);
-            }
+            })
         }
     }
     let style=props.style||{backgroundColor:props.value};
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
+    let ipClass="input";
+    if (valueMissing(props.mandatory,props.value)) ipClass+=" missing";
     return <div className={className+ " colorSelector"}
               onClick={onClick}>
             <span className="inputLabel">{props.label}</span>
             <div className="colorValue" style={style}></div>
-            <div className="input">{props.value}</div>
+            <div className={ipClass}>{props.value}</div>
         {props.children}
   </div>;
 };
 ColorSelector.propTypes=assign({},DEFAULT_TYPES,{
     onClick: PropTypes.func, //if onChange is not set, call this function when clicked
-    showDialogFunction: PropTypes.func,//if set - use this function to display the color dialog
     style: PropTypes.object //if set use this style for the color display
 });

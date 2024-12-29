@@ -2,14 +2,11 @@
  * Created by andreas on 23.02.16.
  */
 
-import React from "react";
+import React, {useEffect, useRef, useState} from "react";
 import PropTypes from 'prop-types';
-import Helper from '../util/helper.js';
-import Value from './Value.jsx';
-import GuiHelper from '../util/GuiHelpers.js';
 import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.js';
-import assign from 'object-assign';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
     ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
@@ -55,39 +52,45 @@ const transform=(self,node,index)=>{
     return convertNodeToElement(node,index,(node,index)=>{transform(self,node,index)});
 };
 
-class ExternalWidget extends React.Component{
-    constructor(props){
-        super(props);
-        let self=this;
-        this.state={updateCount:1};
-        this.canvasRef=this.canvasRef.bind(this);
-        this.renderCanvas=this.renderCanvas.bind(this);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-        this.userData={
-            eventHandler:[],
-            triggerRedraw: ()=>{self.setState({updateCount:self.state.updateCount+1})}
-        };
-        if (typeof(this.props.initFunction) === 'function'){
-            this.props.initFunction.call(this.userData,this.userData,this.props);
+export const ExternalWidget =(props)=>{
+    let [,setUpdateCount]=useState(1);
+    const initialCalled=useRef(false);
+    const canvasRef=useRef(null);
+    const getProps=()=>{
+        if (props.translateFunction) return {...props,...props.translateFunction({...props})};
+        return props;
+    };
+    const userData=useRef( {
+        eventHandler: [],
+        triggerRedraw: () => {
+            setUpdateCount((previousCount)=>previousCount+1)
         }
+    });
+    if (! initialCalled.current && typeof (props.initFunction) === 'function') {
+        initialCalled.current=true;
+        props.initFunction.call(userData.current, userData.current, getProps());
     }
-    getProps(){
-        if (! this.props.translateFunction){
-            return this.props;
+    //called once after mount/after unmount
+    useEffect(() => {
+        return ()=>{
+            if (initialCalled.current &&  typeof(props.finalizeFunction) === 'function'){
+                props.finalizeFunction.call(userData.current,userData.current,getProps());
+            }
+            initialCalled.current=false;
         }
-        else{
-            return this.props.translateFunction(assign({},this.props));
+    }, []);
+    //called after every render
+    useEffect(()=>{
+        if (canvasRef.current && props.renderCanvas){
+            props.renderCanvas.apply(userData.current,[canvasRef.current,getProps()]);
         }
-    }
-    render(){
-        let convertedProps=this.getProps()
-        let classes="widget externalWidget";
-        if (convertedProps.className) classes+=" "+convertedProps.className;
-        let style=convertedProps.style||{};
+    })
+    
+        let convertedProps=getProps();
         let innerHtml=null;
-        if (this.props.renderHtml){
+        if (props.renderHtml){
             try {
-                innerHtml = this.props.renderHtml.apply(this.userData,[convertedProps]);
+                innerHtml = props.renderHtml.apply(userData.current,[convertedProps]);
             }catch (e){
                 base.log("External Widget: render error "+e);
                 innerHtml="<p>render error </p>";
@@ -97,49 +100,19 @@ class ExternalWidget extends React.Component{
             }
         }
         let userHtml=(innerHtml!=null)?ReactHtmlParser(innerHtml,
-            {transform:(node,index)=>{transform(this.userData,node,index);}}):null;
+            {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
         return (
-        <div className={classes} onClick={this.props.onClick} style={style}>
-            {this.props.renderCanvas?<canvas className='widgetData' ref={this.canvasRef}></canvas>:null}
-            <div className="resize">
+        <WidgetFrame {...convertedProps} addClass="externalWidget" onClick={props.onClick} >
+            {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
                 {userHtml}
-            </div>
-            {(convertedProps.caption !== undefined )?<div className='infoLeft'>{convertedProps.caption}</div>:null}
-            {(convertedProps.unit !== undefined)?
-                <div className='infoRight'>{convertedProps.unit}</div>
-                :null}
-        </div>
+        </WidgetFrame>
         );
-    }
-    componentDidUpdate(){
-        this.renderCanvas();
-    }
-    componentWillUnmount(){
-        if (typeof(this.props.finalizeFunction) === 'function'){
-            this.props.finalizeFunction.call(this.userData,this.userData,this.getProps());
-        }
-    }
-    canvasRef(item){
-        this.canvas=item;
-        setTimeout(this.renderCanvas,0);
-    }
-    renderCanvas(){
-        if (! this.canvas) return;
-        try {
-            this.props.renderCanvas.apply(this.userData,[this.canvas, this.getProps()]);
-        }catch (e){
-            base.log("GaugeRadial: canvas render error "+e);
-        }
-    }
-};
+}
 
 ExternalWidget.propTypes={
+    ...WidgetProps,
     name: PropTypes.string,
     unit: PropTypes.string,
-    caption: PropTypes.string,
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    style: PropTypes.object,
     default: PropTypes.string,
     renderHtml: PropTypes.func,
     renderCanvas: PropTypes.func,

@@ -1,6 +1,11 @@
-import React from 'react';
+import React, {useState} from 'react';
 import NavData from '../nav/navdata.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {
+    DialogButtons,
+    DialogFrame,
+    showPromiseDialog,
+    useDialogContext
+} from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Toast from '../components/Toast.jsx';
@@ -8,14 +13,13 @@ import AlarmHandler from '../nav/alarmhandler.js';
 import RouteEdit from '../nav/routeeditor.js';
 import {Input, InputReadOnly} from "./Inputs";
 import DialogButton from "./DialogButton";
-import assign from "object-assign";
 import MapHolder from '../map/mapholder';
 import NavCompute from "../nav/navcompute";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
-export const stopAnchorWithConfirm=(opt_resolveOnInact)=>{
+export const stopAnchorWithConfirm=(opt_resolveOnInact,opt_dialogContext)=>{
     return new Promise((resolve,reject)=>{
         if (activeRoute.anchorWatch() === undefined) {
             if (opt_resolveOnInact){
@@ -26,24 +30,18 @@ export const stopAnchorWithConfirm=(opt_resolveOnInact)=>{
             }
             return;
         }
-        OverlayDialog.confirm("Really stop the anchor watch?")
+        showPromiseDialog(opt_dialogContext,OverlayDialog.createConfirmDialog("Really stop the anchor watch?"))
             .then(() => resolve(true))
             .catch((e)=>reject(e));
     })
 }
-class WatchDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        let defDistance = globalStore.getData(keys.properties.anchorWatchDefault);
-        this.state={
-            radius: defDistance,
-            bearing: 0,
-            distance: 0,
-            refPoint: undefined
-        }
-    }
-    computeRefPoint(sv,fromCenter){
-        let cv=assign({},sv);
+const WatchDialog=(props)=> {
+    const [radius,setRadius]=useState(globalStore.getData(keys.properties.anchorWatchDefault));
+    const [bearing,setBearing]=useState(0);
+    const [distance,setDistance]=useState(0);
+    const dialogContext=useDialogContext();
+    const computeRefPoint=(sv,fromCenter)=>{
+        let cv={radius,bearing,distance,refPoint};
         if (fromCenter){
             cv.refPoint=MapHolder.getCenter();
         }
@@ -57,29 +55,27 @@ class WatchDialog extends React.Component{
         }
         return cv;
     }
-    render(){
-        let title=this.props.active?"Update Anchor Watch":"Start Anchor Watch";
-        let hasPosition=this.props.position !== undefined;
-    return <div className="AnchorWatchDialog flexInner" >
-        <h3 className="dialogTitle">{title}</h3>
+    let title=props.active?"Update Anchor Watch":"Start Anchor Watch";
+        let hasPosition=props.position !== undefined;
+    return <DialogFrame className="AnchorWatchDialog" title={title} >
         {hasPosition &&
         <React.Fragment>
             <Input dialogRow={true}
                    type='number'
-                   value={this.state.radius}
-                   onChange={(v) => this.setState({radius: parseFloat(v)})}
+                   value={radius}
+                   onChange={(v) => setRadius(parseFloat(v))}
                    label="Radius(m)"
             />
             <Input dialogRow={true}
                    type="number"
-                   value={this.state.distance}
-                   onChange={(v) => this.setState({distance: parseFloat(v)})}
+                   value={distance}
+                   onChange={(v) => setDistance(parseFloat(v))}
                    label="Distance(m)"
             />
             <Input dialogRow={true}
                    type="number"
-                   value={this.state.bearing}
-                   onChange={(v) => this.setState({bearing: parseFloat(v)})}
+                   value={bearing}
+                   onChange={(v) => setBearing(parseFloat(v))}
                    label="Bearing(°)"
             />
         </React.Fragment>}
@@ -87,25 +83,24 @@ class WatchDialog extends React.Component{
             label="No Position"
             dialogRow={true}
         />}
-        < div className="dialogButtons">
+        < DialogButtons>
             {hasPosition && <React.Fragment>
             <DialogButton name={'boat'}
                           onClick={()=>{
-                              this.props.closeCallback();
-                              this.props.setCallback(this.computeRefPoint(this.state,false));
+                              props.setCallback(computeRefPoint(false));
                           }}>Boat</DialogButton>
                 <DialogButton name={'center'}
                               onClick={()=>{
-                                  this.props.closeCallback();
-                                  this.props.setCallback(this.computeRefPoint(this.state,true));
+                                  props.setCallback(computeRefPoint(true));
                               }}>Center</DialogButton>
             </React.Fragment>}
-            {this.props.active && <DialogButton name={'stop'}
+            {props.active && <DialogButton name={'stop'}
+                                           close={false}
                                      onClick={() => {
-                                         stopAnchorWithConfirm()
+                                         stopAnchorWithConfirm(undefined,dialogContext)
                                              .then(() => {
-                                                 this.props.stopCallback();
-                                                 this.props.closeCallback();
+                                                 props.stopCallback();
+                                                 dialogContext.closeDialog();
                                              })
                                              .catch(() => {
                                              })
@@ -113,14 +108,12 @@ class WatchDialog extends React.Component{
                                      }}>Stop</DialogButton>
             }
                 <DialogButton name={'cancel'}
-                          onClick={()=>this.props.closeCallback()}
                           >Cancel</DialogButton>
-        </div>
-    </div>
-    }
+        </DialogButtons>
+    </DialogFrame>
 }
 
-export const anchorWatchDialog = (overlayContainer)=> {
+export const anchorWatchDialog = (opt_dialogContext)=> {
     let router = NavData.getRoutingHandler();
     let pos = NavData.getCurrentPosition();
     let isActive=false;
@@ -131,7 +124,8 @@ export const anchorWatchDialog = (overlayContainer)=> {
         Toast("no gps position");
         return;
     }
-    OverlayDialog.dialog((props)=>{
+    const show=opt_dialogContext?opt_dialogContext.showDialog: OverlayDialog.dialog;
+    show((props)=>{
         return <WatchDialog
             {...props}
             active={isActive}
@@ -160,7 +154,7 @@ export const isWatchActive=(state)=>{
     }
     return state.watchDistance !== undefined;
 };
-export default  (opt_hide)=>{
+export default  (opt_hide,opt_dialogContext)=>{
     return{
         name: "AnchorWatch",
         storeKeys: AnchorWatchKeys,
@@ -175,7 +169,7 @@ export default  (opt_hide)=>{
             return rt;
         },
         onClick: ()=>{
-            anchorWatchDialog(undefined);
+            anchorWatchDialog(opt_dialogContext);
         },
         editDisable:true
     }

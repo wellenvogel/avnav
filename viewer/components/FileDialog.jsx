@@ -22,14 +22,21 @@
  #
  ###############################################################################
  */
-import React from "react";
+import React, {useEffect, useState} from "react";
 import keys from '../util/keys.jsx';
 import {Input, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog, {dialogHelper, InfoItem} from "./OverlayDialog";
+import OverlayDialog, {
+    DialogButtons,
+    DialogFrame,
+    dialogHelper,
+    DialogRow,
+    InfoItem,
+    showPromiseDialog
+} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
@@ -39,13 +46,12 @@ import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
-import TrackInfoDialog, {TrackConvertDialog} from "./TrackInfoDialog";
+import {TrackConvertDialog} from "./TrackInfoDialog";
 import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
-import {stateHelper} from "../util/GuiHelpers";
 import Formatter from '../util/formatter';
 import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
@@ -426,120 +432,105 @@ const INFO_FUNCTIONS={
     track: getTrackInfo,
     route: getRouteInfo
 };
-export default  class FileDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            changed:false,
-            existingName:false,
-            name:props.current.name,
-            scheme:props.current.scheme,
-            allowed:ItemActions.create(props.current,globalStore.getData(keys.properties.connectedMode,true))
-        };
-        this.onChange=this.onChange.bind(this);
-        this.extendedInfo=stateHelper(this,{},'extendedInfo');
-    }
-    componentDidMount() {
-        let f=INFO_FUNCTIONS[this.props.current.type];
+const infoRowDisplay=(row,data)=>{
+    let v=data[row.value];
+    if (v === undefined) return null;
+    if (row.formatter) v=row.formatter(v,data);
+    if (v === undefined) return null;
+    return <InfoItem label={row.label} value={v}/>
+}
+export const FileDialog =(props)=>{
+        const [changed,setChanged]=useState(false);
+        const [existingName,setExistingName]=useState(false);
+        const [name,setName]=useState(props.current.name);
+        const [scheme,setScheme]=useState(props.current.scheme);
+        const [allowed,setAllowed]=useState(ItemActions.create(props.current,globalStore.getData(keys.properties.connectedMode,true)))
+        const [extendedInfo,setExtendedInfo]=useState({});
+    useEffect(() => {
+        let f=INFO_FUNCTIONS[props.current.type];
         if (f){
-            f(this.props.current.name).then((info)=>{
-                this.extendedInfo.setState(info,true);
+            f(props.current.name).then((info)=>{
+                setExtendedInfo(info);
             }).catch(()=>{});
         }
-    }
+    }, []);
 
-    infoRowDisplay(row,data){
-        let v=data[row.value];
-        if (v === undefined) return null;
-        if (row.formatter) v=row.formatter(v,data);
-        if (v === undefined) return null;
-        return <InfoItem label={row.label} value={v}/>
-    }
-    onChange(newName){
-        if (newName === this.state.name) return;
-        if (newName === this.props.current.name){
-            this.setState({
-                changed:false,
-                existingName:false,
-                name:newName
-            });
+    const onChange=(newName)=>{
+        if (newName === name) return;
+        if (newName === props.current.name){
+            setChanged(false);
+            setExistingName(false);
+            setName(newName);
             return;
         }
-        let newState={name:newName,changed:true};
-        if (this.props.checkName){
-            newState.existingName=this.props.checkName(newName);
-        }
-        this.setState(newState)
+        setName(newName);
+        setChanged(true);
+        if (props.checkName) setExistingName(props.checkName(newName));
     }
-    render(){
-        let self=this;
-        let cn=this.state.existingName?"existing":"";
-        let rename=this.state.changed && ! this.state.existingName && (this.state.name !== this.props.current.name);
-        let schemeChanged=this.state.allowed.showScheme && (((this.props.current.scheme||"tms") !== this.state.scheme)|| this.props.current.originalScheme);
-        let extendedInfoRows=TYPE_INFO_ROWS[this.props.current.type];
+        let cn=existingName?"existing":"";
+        let rename=changed && ! existingName && (name !== props.current.name);
+        let schemeChanged=allowed.showScheme && (((props.current.scheme||"tms") !== scheme)|| props.current.originalScheme);
+        let extendedInfoRows=TYPE_INFO_ROWS[props.current.type];
         return(
-            <React.Fragment>
-                <div className="fileDialog flexInner">
-                    <h3 className="dialogTitle">{this.props.current.name}</h3>
-                    {this.props.current.info !== undefined?
-                        <div className="dialogRow">
-                            <span className="itemInfo">{this.props.current.info}</span>
-                        </div>
+            <DialogFrame className="fileDialog" title={props.current.name}>
+                    {props.current.info !== undefined?
+                        <DialogRow>
+                            <span className="itemInfo">{props.current.info}</span>
+                        </DialogRow>
                         :
                         null
                     }
                     {INFO_ROWS.map((row)=>{
-                        return this.infoRowDisplay(row,this.props);
+                        return infoRowDisplay(row,props);
                     })}
                     {extendedInfoRows && extendedInfoRows.map((row)=>{
-                        return this.infoRowDisplay(row,this.extendedInfo.getState());
+                        return infoRowDisplay(row,extendedInfo);
                     })}
-                    {(this.state.allowed.showScheme && this.props.current.originalScheme) &&
-                    <div className="dialogRow userAction">
+                    {(allowed.showScheme && props.current.originalScheme) &&
+                    <DialogRow className="userAction">
                     <span className="inputLabel">
                         original DB scheme
                     </span>
                         <span className="value">
-                        {this.props.current.originalScheme}
+                        {props.current.originalScheme}
                     </span>
 
-                    </div>
+                    </DialogRow>
                     }
-                    {this.state.allowed.showScheme &&
+                    {allowed.showScheme &&
                     <Radio
                         label="scheme"
-                        value={this.state.scheme}
-                        onChange={(v)=>{this.setState({changed:true,scheme:v})}}
+                        value={scheme}
+                        onChange={(v)=>{setChanged(true);setScheme(v)}}
                         itemList={[{label:"xyz",value:"xyz"},{label:"tms",value:"tms"}]}
                         className="mbtilesType"/>
 
                     }
-                    {this.state.allowed.showRename ?
+                    {allowed.showRename ?
                         <div className="dialogRow">
                             <Input
-                                label={this.state.existingName?"existing":"new name"}
+                                label={existingName?"existing":"new name"}
                                 className={cn}
-                                value={this.state.name}
-                                onChange={this.onChange}
+                                value={name}
+                                onChange={onChange}
                             />
                         </div>
                         : null
                     }
-                    <div className="dialogButtons">
-                        {(this.state.allowed.showRename || this.state.allowed.showScheme)?
+                    <DialogButtons>
+                        {(allowed.showRename || allowed.showScheme)?
                             <DB name="ok"
                                 onClick={()=>{
-                                    self.props.closeCallback();
                                     let action="";
                                     if (rename) action+="rename";
                                     if (schemeChanged){
-                                        if (this.props.current.scheme !== this.state.scheme) {
+                                        if (props.current.scheme !== scheme) {
                                             if (action === "") action = "scheme";
                                             else action += ",scheme";
                                         }
                                     }
-                                    self.props.okFunction(action,
-                                        assign({},this.props.current,{name:this.state.name,scheme:this.state.scheme}));
+                                    props.okFunction(action,
+                                        {...props.current,name:name,scheme:scheme});
                                 }}
                                 disabled={!rename && ! schemeChanged}
                             >
@@ -548,74 +539,69 @@ export default  class FileDialog extends React.Component{
                             :
                             null
                         }
-                        {this.state.allowed.showDelete?
+                        {allowed.showDelete?
                             <DB name="delete"
                                 onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('delete',this.props.current.name);
+                                    props.okFunction('delete',props.current.name);
                                 }}
-                                disabled={this.state.changed}
+                                disabled={changed}
                             >
                                 Delete
                             </DB>
                             :
                             null
                         }
-                    </div>
-                    <div className="dialogButtons">
-                        {this.state.allowed.showImportLog &&
+                    </DialogButtons>
+                    <DialogButtons >
+                        {allowed.showImportLog &&
                             <DB name={'log'}
                                 onClick={()=>{
-                                    this.props.closeCallback();
                                     OverlayDialog.dialog((dprops)=>{
                                         return <LogDialog {...dprops}
-                                                          baseUrl={getImportLogUrl(this.props.current.name)}
+                                                          baseUrl={getImportLogUrl(props.current.name)}
                                                           title={'Import Log'}
                                         />
                                     })
                                 }}
                                 >Log</DB>
                         }
-                        {this.state.allowed.showConvertFunction &&
+                        {allowed.showConvertFunction &&
                             <DB name="toroute"
                                 onClick={()=>{
-                                    this.props.closeCallback()
-                                    this.props.okFunction('convert',this.props.current);
+                                    props.okFunction('convert',props.current);
                                 }}
                                 >Convert</DB>
                         }
-                        {(this.state.allowed.showView )?
+                        {(allowed.showView )?
                             <DB name="view"
                                 onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('view',this.props.current);
+                                    props.okFunction('view',props.current);
                                 }}
-                                disabled={this.state.changed}
+                                disabled={changed}
                             >
                                 View
                             </DB>
                             :
                             null}
-                        {(this.state.allowed.showEdit)?
+                        {(allowed.showEdit)?
                             <DB name="edit"
                                 onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('edit',this.props.current);
+                                    props.closeCallback();
+                                    props.okFunction('edit',props.current);
                                 }}
-                                disabled={this.state.changed}
+                                disabled={changed}
                             >
                                 Edit
                             </DB>
                             :
                             null
                         }
-                        {(this.state.allowed.showOverlay)?
+                        {(allowed.showOverlay)?
                             <DB name="overlays"
                                 onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('overlay',this.props.current);
+                                    props.okFunction('overlay',props.current);
                                 }}
-                                disabled={this.state.changed}
+                                disabled={changed}
                             >
                                 Overlays
                             </DB>
@@ -624,35 +610,31 @@ export default  class FileDialog extends React.Component{
                         }
                         <ItemDownloadButton
                             name="download"
-                            disabled={this.state.changed}
-                            item={this.props.current || {}}
+                            disabled={changed}
+                            item={props.current || {}}
                             useDialogButton={true}
-                            onClick={this.props.closeCallback}
                         >
                             Download
                         </ItemDownloadButton>
-                        {(this.state.allowed.showApp) &&
+                        {(allowed.showApp) &&
                         <DB name="userApp"
                             onClick={()=>{
-                                this.props.closeCallback();
-                                this.props.okFunction('userapp',this.props.current);
+                                props.okFunction('userapp',props.current);
                             }}
-                            disabled={this.state.changed}
+                            disabled={changed}
                         >
                             App
                         </DB>
 
                         }
                         <DB name="cancel"
-                            onClick={self.props.closeCallback}
                         >
                             Cancel
                         </DB>
-                    </div>
-                </div>
-            </React.Fragment>
+                    </DialogButtons>
+            </DialogFrame>
         );
-    }
+
 }
 const buildRequestParameters=(request,item,opt_additional)=>{
     return assign({},Helper.filteredAssign(additionalUrlParameters,item),
@@ -780,9 +762,13 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
             return;
         }
         if (action === 'userapp'){
-            UserAppDialog.showUserAppDialog(undefined, {url:item.url})
-                .then((data)=>doneAction())
-                .catch((error)=>doneAction());
+            if (item.url) {
+                showPromiseDialog(undefined, (props) =>
+                    <UserAppDialog {...props} fixed={{url: item.url}}/>
+                )
+                    .then((data) => doneAction())
+                    .catch((error) => doneAction());
+            }
         }
         if (action === 'delete'){
             return deleteItem(item,()=>doneAction());

@@ -172,7 +172,6 @@ body{
 }
 
 .more {
-  display: none;
   float: right;
   width: 1em;
   height: 1em;
@@ -329,6 +328,9 @@ body{
       .nightBackFade(fade(@colorRed,50%));
     }
   }
+  .errorText{
+    .nightForeFade(@colorRed)
+  }
 
 }
 
@@ -363,6 +365,10 @@ body{
     .inputLabel{
       overflow: hidden;
     }
+  }
+  .childWidgets {
+    border-top: 1px dashed;
+    margin-top: 0.2em;
   }
 
 }
@@ -406,6 +412,22 @@ body{
     .nightBorderColorGR(40);
     margin-top: 0.5em;
     padding-top: 0.5em;
+  }
+}
+
+.selectIconDialog{
+  .checkBoxRow{
+    .inputLabel{
+      width: unset;
+      margin-right: unset;
+      margin-left: 1em;
+    }
+  }
+  .listEntry{
+    .flex-wrap(wrap);
+  }
+  .selectedItem {
+    .nightBackFade(@colorSelection);
   }
 }
 
@@ -636,6 +658,7 @@ body{
   padding: 1em;
   .nightBorderColorGR(30);
   .flex-display();
+  .flex-align-items(center);
 }
 .activeEntry{
   .nightBackColor(@colorSelection);
@@ -759,6 +782,7 @@ span.valuePrefix{
   background-size: contain;
   display: inline-block;
   background-repeat: no-repeat;
+  background-position: center;
   .nightOPacity();
 }
 .iconImage(@url){
@@ -955,59 +979,12 @@ span.valuePrefix{
       padding: 0;
       margin: 0;
       .flex-direction(column);
-    }
-    .widget:not(.combinedWidget){
-      width: 100%;
-      .flex-display();
-      .flex-direction(column);
-      .flex(none);
-      .flex-justify-content(space-evenly);
-      padding-top: 1.3em;
-      &.canvasGauge.linear{
-        padding-top: 0.85em;
-      }
-    }
-    .widget{
-      .flex-grow(0);
-      .flex-shrink(0);
-      .flex(none);
-      margin: 0;
-    }
-    .infoLeft {
-      left: 0;
-      padding-left: 8px;
-      border-bottom: 1px solid;
-      border-top: 1px solid;
-      .nightBackFade(#E2DFDF);
-      width: 100%;
-      font-size: 0.7em;
-    }
-    .widgetData{
-      padding-top: 0;
-      display: block;
-      white-space: pre;
-    }
-    .centeredWidget {
-      .widgetData{
-        text-align: center;
-      }
-    }
-    .combinedWidget{
-      .flex-display();
-      .flex-direction(row);
-      .widget {
-        height: 100%;
-        .flex-grow(1);
-        .flex-shrink(1);
-        min-width: 0;
-        .flex(1);
-      }
+      .flex-align-items(stretch);
     }
   }
-  .resize{
+  .resize,.noresize{
     .flex-display();
     .flex-direction(column);
-    .flex(1);
     .flex-justify-content(space-evenly);
     max-height: 100%;
     min-width: 0;
@@ -1406,6 +1383,15 @@ span.valuePrefix{
   }
 }
 
+.editFileDialog{
+  width: 90vw;
+  height: 90vh;
+  .edit{
+    .flex(1);
+    position: relative;
+  }
+}
+
 #settingspage{
     .leftSection{
       .flex-display();
@@ -1626,12 +1612,23 @@ span.valuePrefix{
       .flex-direction(row);
     }
   }
+  &.editing{
+    .bottomLeft {
+      border-right: 0.3em solid;
+      .nightBorderFade(@editingColor);
+    }
+    .bottomRight {
+      border-left: 0.3em solid;
+      .nightBorderFade(@editingColor);
+    }
+  }
   .widgetContainer.left{
     position: absolute;
     bottom:0;
     left:0;
     max-height: 100%;
     z-index: 3;
+    width:  @navLeftWidgetWidth;
   }
   .widgetContainer.top{
     z-index: 3;

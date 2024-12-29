@@ -23,6 +23,7 @@ import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {DynamicTitleIcons} from "../components/TitleIcons";
+import layouthandler from "../util/layouthandler.js";
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -36,22 +37,32 @@ const widgetCreator=(widget,weightSum)=>{
     return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
 };
 
+const getLayoutPage=(opt_pageNum)=>{
+    let pageNum=(opt_pageNum !== undefined)?opt_pageNum:globalStore.getData(keys.gui.gpspage.pageNumber,1);
+    const base="gpspage";
+    return{
+        location: base,
+        layoutPage: base+pageNum,
+        options: {pageNumber: pageNum}
+    }
+}
+
 const getPanelList=(panel,pageNum)=>{
-    let basename="gpspage"+pageNum;
-    let rt=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.ANCHOR]));
-    rt.page=basename;
+    let page=getLayoutPage(pageNum);
+    let rt=LayoutHandler.getPanelData(page,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.ANCHOR]));
+    rt.page=page;
     return rt;
 
 };
 
 const hasPageEntries=(pageNum)=>{
-    let basename="gpspage"+pageNum;
-    let page=LayoutHandler.getPageData(basename);
+    let layoutPage=getLayoutPage(pageNum);
+    let page=LayoutHandler.getPageData(layoutPage);
     if (! page) return false;
     let panels=PANEL_LIST;
     for (let p in panels){
         let panel=panels[p];
-        let panelData=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getAllOptions());
+        let panelData=LayoutHandler.getPanelData(layoutPage,panel,LayoutHandler.getAllOptions());
         if (panelData.list && panelData.list.length > 0) return true;
     }
     return false;
@@ -66,8 +77,6 @@ const getWeightSum=(list)=>{
     });
     return sum;
 };
-
-const layoutBase="gpspage";
 const findPageWithWidget=(name)=>{
     let pnums=[1,2,3,4,5];
     let panels=PANEL_LIST;
@@ -96,7 +105,6 @@ const layoutBaseParam={
 class GpsPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         this.buttons=[
             {
                 name: 'Cancel',
@@ -114,6 +122,9 @@ class GpsPage extends React.Component{
                 globalStore.storeData(keys.gui.gpspage.pageNumber,pagenNum);
             }
         }
+        if (props.options && props.options.pageNumber !== undefined){
+            globalStore.storeData(keys.gui.gpspage.pageNumber,props.options.pageNumber);
+        }
         let oldNum=globalStore.getData(keys.gui.gpspage.pageNumber);
         if (oldNum === undefined || ! hasPageEntries(oldNum)){
             globalStore.storeData(keys.gui.gpspage.pageNumber,1);
@@ -130,7 +141,6 @@ class GpsPage extends React.Component{
     }
 
     getButtons(){
-        let self=this;
         return[
             {
                 name:'GpsCenter',
@@ -151,7 +161,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(1) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(1);
+                    this.setPageNumber(1);
                 },
                 overflow: true
             },
@@ -166,7 +176,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(2) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(2);
+                    this.setPageNumber(2);
                 },
                 overflow: true
             },
@@ -181,7 +191,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(3) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(3);
+                    this.setPageNumber(3);
                 },
                 overflow: true
             },
@@ -196,7 +206,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(4) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(4);
+                    this.setPageNumber(4);
                 },
                 overflow: true
             },
@@ -211,17 +221,29 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(5) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(5);
+                    this.setPageNumber(5);
                 },
                 overflow: true
             },
             anchorWatch(),
             RemoteChannelDialog({overflow:true}),
             Mob.mobDefinition(this.props.history),
-            EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
+            EditPageDialog.getButtonDef(getLayoutPage().layoutPage,
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
+            LayoutHandler.revertButtonDef((pageWithOptions)=>{
+                let current=getLayoutPage();
+                if (pageWithOptions.location !== current.location){
+                    this.props.history.replace(pageWithOptions.location,pageWithOptions.options);
+                    return;
+                }
+                if (current.layoutPage !== pageWithOptions.layoutPage){
+                    if (pageWithOptions.options && pageWithOptions.options.pageNumber !== undefined){
+                        this.setPageNumber(pageWithOptions.options.pageNumber);
+                    }
+                }
+            }),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {
@@ -231,7 +253,7 @@ class GpsPage extends React.Component{
         ];
     }
     onItemClick(item,data,panelInfo){
-        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
+        if (EditWidgetDialog.createDialog(item,getLayoutPage(),panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             this.props.history.push("aisinfopage",{mmsi:mmsi});
@@ -241,7 +263,6 @@ class GpsPage extends React.Component{
     }
 
     componentDidMount(){
-        let self=this;
         resizeFont();
 
     }
@@ -255,7 +276,6 @@ class GpsPage extends React.Component{
         }
     }
     render(){
-        let self=this;
         let autohide=undefined;
         if (globalStore.getData(keys.properties.autoHideGpsPage)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
@@ -275,19 +295,24 @@ class GpsPage extends React.Component{
             }
             let panelList=[];
             PANEL_LIST.forEach((panelName)=> {
-                let panelData = getPanelList(panelName, self.props.pageNum || 1);
+                let panelData = getPanelList(panelName, this.props.pageNum || 1);
                 if (! panelData.list) return;
                 let sum = getWeightSum(panelData.list);
                 let prop={
-                    name: panelName,
+                    name: panelData.name,
+                    dragFrame: panelData.name,
+                    allowOther: true,
                     className: 'widgetContainer',
                     itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
                     itemList: panelData.list,
                     fontSize: fontSize,
-                    onItemClick: (item,data) => {self.onItemClick(item,data,panelData);},
-                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true,types:["!map"]});},
+                    onItemClick: (item,data) => {this.onItemClick(item,data,panelData);},
+                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,getLayoutPage(),panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
-                    onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(panelData.page,panelData.name,oldIndex,newIndex)
+                    onSortEnd: (oldIndex,newIndex,frameId,targetFrameId)=>{
+                        LayoutHandler.withTransaction(getLayoutPage(),
+                        (handler)=>handler.moveItem(panelData.page,frameId,oldIndex,newIndex,targetFrameId));
+                    }
                 };
                 panelList.push(prop);
             });
@@ -310,12 +335,12 @@ class GpsPage extends React.Component{
         };
 
         return <Page
-                {...self.props}
+                {...this.props}
                 id="gpspage"
                 mainContent={
                             <MainContent/>
                         }
-                buttonList={self.getButtons()}
+                buttonList={this.getButtons()}
                 autoHideButtons={autohide}
                 buttonWidthChanged={()=>{
                     resizeFont();
@@ -326,6 +351,7 @@ class GpsPage extends React.Component{
 }
 
 GpsPage.propTypes={
+    ...Page.pageProperties,
     pageNum: PropTypes.number
 };
 
