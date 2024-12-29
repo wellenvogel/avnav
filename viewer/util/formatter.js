@@ -4,6 +4,8 @@
 
 import navcompute from '../nav/navcompute.js';
 import {extendCoordinate} from "ol/extent";
+import Helper from "./helper.js";
+import {OpenLocationCode} from "open-location-code";
 
 function pad(num, size) {
     var s = '000000' + num;
@@ -63,12 +65,15 @@ const formatLonLats=function(lonlat,format='DDM'){
     if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
+    if(format=='OLC') {
+      return new OpenLocationCode().encode(lonlat.lat,lonlat.lon);
+    }
     let lat=this.formatLonLatsDecimal(lonlat.lat, 'lat', format);
     let lon=this.formatLonLatsDecimal(lonlat.lon, 'lon', format);
     return lat + ' ' + lon;
 };
 formatLonLats.parameters=[
-    {name:'format',type:'SELECT',list:['DD','DDM','DMS'],default:'DDM'}
+    {name:'format',type:'SELECT',list:['DD','DDM','DMS','OLC'],default:'DDM'}
 ];
 
 /**

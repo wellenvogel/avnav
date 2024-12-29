@@ -77,7 +77,7 @@ let widgetList=[
     },
     {
         name: 'Position',
-        default: "-------------",
+        default: "---",
         caption: 'BOAT',
         storeKeys:{
             value: keys.nav.gps.position,
@@ -201,7 +201,7 @@ let widgetList=[
             return {...props,
                 value:wind.windSpeed,
                 caption:captions[wind.suffix],
-                unit: props.formatterParameters[0],
+                unit: props.formatterParameters.length ? props.formatterParameters[0] : props.unit,
             }
         }
     },
