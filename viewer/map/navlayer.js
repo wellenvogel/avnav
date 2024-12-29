@@ -161,17 +161,16 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let gps=globalStore.getMultiple(positionKeys);
     let boatRotation=gps.boatDirection;
     let useHdg=gps.directionMode !== 'cog';
-    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(useHdg?this.boatStyleHdg:this.boatStyle));
-    let course=gps.course;
-    if (course === undefined) course=0;
-    if (boatStyle.rotate === false){
-        boatStyle.rotation=0;
+    let boatStyle=assign({}, useHdg ? this.boatStyleHdg : (gps.isSteady ? this.boatStyleSteady : this.boatStyle));
+    if (boatRotation === undefined) {
+        boatStyle=this.boatStyleSteady;
     }
-    else {
-        if (boatRotation !== undefined){
+    if (boatStyle.rotate === false) {
+        boatStyle.rotation = 0;
+    } else {
+        if (boatRotation !== undefined) {
             boatStyle.rotation = boatRotation  * Math.PI / 180;
-        }
-        else{
+        } else {
             boatStyle.rotation = 0;
         }
     }
@@ -189,9 +188,9 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
                 courseVectorStyle.color = boatStyle.courseVectorColor;
             }
             if (boatStyle.courseVector !== false) {
-                let courseVectorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
+                let courseVectorDistance=(gps.speed === undefined || gps.course === undefined)?0:gps.speed*courseVectorTime;
                 if (courseVectorDistance > 0) {
-                    other = this.computeTarget(boatPosition, course, courseVectorDistance);
+                    other = this.computeTarget(boatPosition, gps.course, courseVectorDistance);
                     drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
                 }
                 if (useHdg && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
@@ -206,17 +205,17 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         if (! anchorDistance) {
             let radius1 = parseInt(globalStore.getData(keys.properties.navCircle1Radius));
             if (radius1 > 10) {
-                other = this.computeTarget(boatPosition, course, radius1);
+                other = this.computeTarget(boatPosition, 0, radius1);
                 drawing.drawCircleToContext(boatPosition, other, this.circleStyle);
             }
             let radius2 = parseInt(globalStore.getData(keys.properties.navCircle2Radius));
             if (radius2 > 10 && radius2 > radius1) {
-                other = this.computeTarget(boatPosition, course, radius2);
+                other = this.computeTarget(boatPosition, 0, radius2);
                 drawing.drawCircleToContext(boatPosition, other, this.circleStyle);
             }
             let radius3 = parseInt(globalStore.getData(keys.properties.navCircle3Radius));
             if (radius3 > 10 && radius3 > radius2 && radius3 > radius1) {
-                other = this.computeTarget(boatPosition, course, radius3);
+                other = this.computeTarget(boatPosition, 0, radius3);
                 drawing.drawCircleToContext(boatPosition, other, this.circleStyle);
             }
         }
