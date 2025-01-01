@@ -495,13 +495,12 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         };
 
         if (curved) {
+            var turn_angle=courseVectorTime*target_rot/60;
             var turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
             var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
-            var turn_angle=Helper.degrees(target_sog*courseVectorTime/turn_radius);
         }
-
-        if (rmvRange>0 && onMap && style.courseVector !== false) { // relative motion vector
-            if (target.distance<=rmvRange && (target_sog || sog)) {
+        if (rmvRange>0 && onMap && style.courseVectorColor !== false) { // relative motion vector
+            if (target.distance/1852<=rmvRange && (target_sog || sog)) {
                 if (curved) {
                     drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
@@ -514,10 +513,10 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             }
         }
 
-        if (useCourseVector && style.courseVector !== false) {
+        if (useCourseVector && style.courseVectorColor !== false) {
             if (target_sog) { // true motion vector
                 if(curved && onMap) { // curved TMV
-                    //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
+//                    drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
                     drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth});
                 } else {
@@ -532,11 +531,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             if (curved) {
                 let a=Helper.degrees(target_sog*age/turn_radius);
                 var pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-a),turn_radius);
-                //if (style.rotateWithView) { style.rotation+=Helper.radians(target_rot_sgn*a); } // TODO rotate DR icon only
             } else {
                 var pos=drawTargetFunction(xy,target_cog,target_sog*age);
             }
-            drawing.drawImageToContext(pos,symbol.ghostImage,style);
+            drawing.drawImageToContext(pos,symbol.ghostImage,{
+                ...style,
+                rotation: style.rotation + Math.radians(target_rot_sgn*target_rot*age/60),
+            });
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
