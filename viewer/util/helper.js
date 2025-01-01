@@ -135,7 +135,7 @@ Helper.to360=(a)=>{
 };
 
 Helper.to180=(a)=>{
-    return to360(a+180)-180;
+    return Helper.to360(a+180)-180;
 };
 
 Helper.radians=(a)=>{

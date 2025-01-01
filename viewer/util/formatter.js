@@ -19,7 +19,7 @@ function pad(num, size) {
  * @returns {string}
  */
 const formatLonLatsDecimal=function(coordinate,axis,format='DDM'){
-    coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
+    coordinate = Helper.to180(coordinate); // normalize to ±180°
     var deg = Math.abs(coordinate);
     if (axis == "lon") {
         var padding = 3;
@@ -203,14 +203,14 @@ formatSpeed.parameters=[
     {name:'unit',type:'SELECT',list:['kn','ms','kmh','bft','m/s','km/s'],default:'kn'}
 ];
 
-const formatDirection=function(dir,opt_rad){
-    if (opt_rad){
-        dir=180*dir/Math.PI;
-    }
+const formatDirection=function(dir,opt_rad,opt_180=false){
+    dir=opt_rad ? Helper.degrees(dir) : dir;
+    dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
     return formatDecimal(dir,3,0);
 };
 formatDirection.parameters=[
-    {name:'inputRadian',type:'BOOLEAN',default:false}
+    {name:'inputRadian',type:'BOOLEAN',default:false},
+    {name:'range180',type:'BOOLEAN',default:false}
 ];
 
 /**
