@@ -51,7 +51,6 @@ export const getWindData=(props)=>{
 
 const WindWidget = (props) => {
     useKeyEventHandler(props, "widget");
-    let wind = getWindData(props);
     const names = {
         A: {
             speed: 'AWS',
