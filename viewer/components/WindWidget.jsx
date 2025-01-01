@@ -9,6 +9,7 @@ import keys from '../util/keys.jsx';
 import navcompute from '../nav/navcompute.js';
 import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 import Helper from '../util/helper.js';
+import {useKeyEventHandler} from "../util/GuiHelpers";
 
 export const getWindData=(props)=>{
     let kind = props.kind;
