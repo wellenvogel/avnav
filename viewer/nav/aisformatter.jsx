@@ -10,9 +10,10 @@ export const AIS_CLASSES={
     Station:'S',
     Aton:'T'
 };
+
 const aisparam={
     nameOrmmsi: {
-        headline: 'name/mmsi',
+        headline: 'Name/MMSI',
         format: function (v) {
             if (v.type == 21){
                 if (v.name && v.name !== 'unknown') return v.name;
@@ -22,66 +23,67 @@ const aisparam={
         }
     },
     distance: {
-        headline: 'dist(nm)',
+        headline: 'DST',
         format: function (v) {
-            return Formatter.formatDistance(v.distance || 0);
+            return Formatter.formatDistance(v.distance);
         },
         unit: 'nm'
 
     },
     heading: {
-        headline: 'hdg',
+        headline: 'HDT',
         format: function (v) {
             if (v.heading === undefined) return '---';
-            return Formatter.formatDirection(v.heading );
+            return Formatter.formatDirection(v.heading);
         },
         unit: '°',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     turn: {
-        headline: 'rot(°/min)',
+        headline: 'ROT',
         format: function (v) {
             if (v.turn === undefined) return '-';
             return Formatter.formatDecimal(v.turn,1,0);
         },
-        unit: '°',
+        unit: '°/min',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     speed: {
-        headline: 'speed(kn)',
+        headline: 'SOG',
         format: function (v) {
-            return Formatter.formatSpeed(v.speed || 0);
+            return Formatter.formatSpeed(v.speed);
         },
         unit: 'kn',
         classes:[AIS_CLASSES.A,AIS_CLASSES.B]
     },
     course: {
-        headline: 'course',
+        headline: 'COG',
         format: function (v) {
-            return Formatter.formatDirection(v.course || 0);
+            return Formatter.formatDirection(v.course);
         },
         unit: '°',
         classes:[AIS_CLASSES.A,AIS_CLASSES.B]
     },
     headingTo:{
-        headline: 'hdt',
+        headline: 'BRG',
         format: function (v) {
-            return Formatter.formatDirection(v.headingTo || 0);
+            return Formatter.formatDirection(v.headingTo);
         },
         unit: '°'
     },
     cpa: {
-        headline: 'cpa',
+        headline: 'DCPA',
             format: function (v) {
             if (v.cpa === undefined) return '----';
-            return Formatter.formatDistance(v.cpa || 0);
-        }
+            return Formatter.formatDistance(v.cpa);
+        },
+        unit: 'nm',
     },
     tcpa: {
-        headline: 'tcpa',
+        headline: 'TCPA',
             format: function (v) {
             if (v.tcpa === undefined) return "---------";
-            let tval = parseFloat(v.tcpa || 0);
+            let tval = parseFloat(v.tcpa);
             let sign = "";
             if (tval < 0) {
                 sign = "-";
@@ -94,7 +96,7 @@ const aisparam={
         }
     },
     passFront: {
-        headline: 'pass',
+        headline: 'we pass',
             format: function (v) {
             if (!v.cpa) return "-";
             if (v.passFront !== undefined) {
@@ -106,7 +108,7 @@ const aisparam={
         }
     },
     shipname: {
-        headline: 'name',
+        headline: 'Name',
             format: function (v) {
             if ((v.shipname === undefined || v.shipname === 'unknown') && v.type == 21) return v.name;
             return v.shipname;
@@ -114,20 +116,20 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B,AIS_CLASSES.Aton]
     },
     callsign: {
-        headline: 'call',
+        headline: 'Callsign',
             format: function (v) {
             return v.callsign;
         },
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     mmsi: {
-        headline: 'mmsi',
+        headline: 'MMSI',
             format: function (v) {
             return v.mmsi;
         }
     },
     shiptype: {
-        headline: 'type',
+        headline: 'Type',
             format: function (v) {
             let t = 0;
             try {
@@ -159,7 +161,7 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     status:{
-        headline: 'status',
+        headline: 'Status',
         format: function(v){
             if (v.status === undefined){
                 return "----";
@@ -187,7 +189,7 @@ const aisparam={
         classes:[AIS_CLASSES.A,AIS_CLASSES.B]
     },
     age: {
-        headline: 'age',
+        headline: 'Age',
         format: function(v){
             if (v.age === undefined) return '----';
             let age=v.age;
@@ -200,13 +202,13 @@ const aisparam={
         unit: 's'
     },
     position: {
-        headline: 'position',
+        headline: 'Position',
             format: function (v) {
             return Formatter.formatLonLats({lon: v.lon, lat: v.lat});
         }
     },
     destination: {
-        headline: 'destination',
+        headline: 'Destination',
             format: function (v) {
             let d = v.destination;
             if (d) return d;
@@ -215,19 +217,19 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     warning: {
-        headline: 'warning',
+        headline: 'Warning',
             format: function (v) {
             return v.warning || false
         }
     },
     nearest: {
-        headline: 'nearest',
+        headline: 'Nearest',
             format: function (v) {
             return v.nearest || false
         }
     },
     clazz: {
-        headline: 'class',
+        headline: 'Class',
         format: function(v){
             if (typeof(v) !== 'object') return '';
             if (v.type == 1 || v.type == 2 || v.type == 3) return AIS_CLASSES.A;
@@ -238,7 +240,7 @@ const aisparam={
         }
     },
     length: {
-        headline: 'length',
+        headline: 'Length',
         format: function(v){
             if (v.length === undefined) return '---';
             return Formatter.formatDecimal(v.length,3)
@@ -246,7 +248,7 @@ const aisparam={
         unit: 'm'
     },
     beam: {
-        headline: 'beam',
+        headline: 'Beam',
         format: function(v){
             if (v.beam === undefined) return '---';
             return Formatter.formatDecimal(v.beam,3);
@@ -254,7 +256,7 @@ const aisparam={
         unit: 'm'
     },
     draught: {
-        headline: 'draught',
+        headline: 'Draught',
         format: function(v){
             if (v.draught === undefined) return '---';
             return Formatter.formatDecimal(v.draught,2,1);
@@ -263,7 +265,7 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     aid_type: {
-        headline: 'type',
+        headline: 'Type',
         format: function (v){
             if (v.aid_type === undefined) return '---';
             let type=parseInt(v.aid_type);
@@ -351,6 +353,11 @@ const AisFormatter={
         let d=aisparam[key];
         if (! d) return ;
         return d.headline;
+    },
+    getUnit:function(key){
+        let d=aisparam[key];
+        if (! d) return ;
+        return d.unit;
     },
     format(key,aisobject,inlcudeUnit){
         let d=aisparam[key];

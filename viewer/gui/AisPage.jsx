@@ -19,46 +19,15 @@ import navdata from "../nav/navdata";
 import Dialogs from "../components/OverlayDialog.jsx";
 
 const aisInfos=[
-    [
-        {name:'shiptype',label:'Type'},
-        {name:'aid_type',label:'Type'},
-        {name:'callsign',label:'Call'},
-        {name:'destination',label:'Dest'},
-    ],
-    [
-        {name:'status',label:'Status'},
-        {name:'age',label:'Age',len:3},
-    ],
-    [
-        {name:'headingTo',label:'BRG',unit:'°',len:3},
-        {name:'distance',label:'DST',unit:'nm',len:5},
-        {name:'cpa',label:'DCPA',unit:'nm',len:5},
-        {name:'tcpa',label:'TCPA',unit:'h',len:8},
-    ],
-    [
-        {name:'course',label:'COG',unit:'°',len:3},
-        {name:'speed',label:'SOG',unit:'kn',len:5},
-        {name:'heading',label:'HDT',unit:'°',len:3},
-    ],
-    [
-        {name:'length',label:'Length',len:3},
-        {name:'beam',label:'Beam',len:3},
-        {name:'draught',label:'Draught',len:3},
-    ],
+    [ 'status', 'age', ],
+    [ 'shiptype', 'aid_type', 'callsign', 'destination', ],
+    [ 'headingTo', 'distance', 'cpa', 'tcpa', ],
+    [ 'course', 'speed', 'heading', 'turn', ],
+    [ 'length', 'beam', 'draught', ],
 ];
 const reducedAisInfos=[
-    aisInfos[0]
+    [ 'headingTo', 'distance', 'cpa', 'tcpa', 'course', 'speed', ],
 ];
-const fieldToLabel=(field)=>{
-    let rt;
-    aisInfos.map((l1)=>{
-        l1.map((l2)=>{
-            if (l2.name == field) rt=l2.label;
-        })
-    });
-    return rt||field;
-};
-
 
 const aisSortCreator=(sortField)=>{
     return (a,b)=> {
@@ -82,20 +51,20 @@ const aisSortCreator=(sortField)=>{
     };
 };
 
-const formatFixed=(val,len)=>{
+const pad=(val,len)=>{
     let str = (''+val).trim();
     str = ' '.repeat(Math.max(0,len-str.length)) + str;
-    console.log(val,len,str);
     return str;
 }
 
 
 const sortDialog=(sortField)=>{
     let list=[
-        {label:'CPA', value:'cpa'},
+        {label:'DCPA', value:'cpa'},
         {label:'TCPA',value:'tcpa'},
         {label:'DST',value:'distance'},
-        {label:'Shipname',value:'shipname'}
+        {label:'Name',value:'shipname'},
+        {label:'MMSI',value:'mmsi'},
     ];
     for (let i in list){
         if (list[i].value === sortField) list[i].selected=true;
@@ -122,17 +91,18 @@ const AisItem=(props)=>{
         if (newLine) txt+="\n";
         newLine=false;
         infoLine.forEach((info)=>{
-            if (! fmt.shouldShow(info.name,props)) return;
+            if (! fmt.shouldShow(info,props)) return;
+            if (newLine) txt+=reduceDetails ? "  " : "   ";
+            txt+=(fmt.getHeadline(info)+": ");
+            let val=(fmt.format(info,props)||'')
+            val=pad(val,reduceDetails ? 1 : 4);
+            let unit=fmt.getUnit(info)
+            if(unit && !reduceDetails) val+=unit;
+            txt+=val;
             newLine=true;
-            txt+=(info.label+": ").replace(/ /g,'\xa0');
-            let val=(fmt.format(info.name,props)||'');
-            if (info.len){
-                val=formatFixed(val,info.len);
-            }
-            txt+=val.replace(/ /g,'\xa0');
-            txt+="  ";
         })
     })
+    txt=txt.replace(/ /g,'\xa0');
     return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
                 <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
@@ -306,7 +276,7 @@ class AisPage extends React.Component{
                     <span className="aisNumTargets">{props.numTargets} Targets</span>
                     {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                               onClick={this.scrollWarning}/>}
-                    <span>sorted by {fieldToLabel(this.state.sortField)}</span>
+                    <span>sorted by {AisFormatter.getHeadline(this.state.sortField)}</span>
                     {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
                 </div>
             );
