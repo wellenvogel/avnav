@@ -20,31 +20,31 @@ import Dialogs from "../components/OverlayDialog.jsx";
 
 const aisInfos=[
     [
-        {name:'distance',label:'Dst ',unit:'nm',len:6},
-        {name:'cpa',label:'Cpa ',unit:'nm',len:6},
-        {name:'headingTo',label:'Brg ',unit:'°',len:3},
-        {name:'tcpa',label:'Tcpa',unit:'h',len:8}
-    ],
-    [
-        {name:'course',label:'Cog ',unit:'°',len:6},
-        {name:'speed',label:'Sog ',unit:'kn',len:6},
-        {name:'heading',label:'Hdg ',unit:'°',len:3}
-    ],
-    [
-        {name:'length',label:'Len ',len:6},
-        {name:'beam',label:'Beam',len:6},
-        {name:'draught',label:'Drau',len:8}
-    ],
-    [
-        {name:'age',label:'Age ',len:6},
-        {name:'status',label:'Stat'}
-    ],
-    [
         {name:'shiptype',label:'Type'},
         {name:'aid_type',label:'Type'},
         {name:'callsign',label:'Call'},
-        {name:'destination',label:'Dest'}
-    ]
+        {name:'destination',label:'Dest'},
+    ],
+    [
+        {name:'status',label:'Status'},
+        {name:'age',label:'Age',len:3},
+    ],
+    [
+        {name:'headingTo',label:'BRG',unit:'°',len:3},
+        {name:'distance',label:'DST',unit:'nm',len:5},
+        {name:'cpa',label:'DCPA',unit:'nm',len:5},
+        {name:'tcpa',label:'TCPA',unit:'h',len:8},
+    ],
+    [
+        {name:'course',label:'COG',unit:'°',len:3},
+        {name:'speed',label:'SOG',unit:'kn',len:5},
+        {name:'heading',label:'HDT',unit:'°',len:3},
+    ],
+    [
+        {name:'length',label:'Length',len:3},
+        {name:'beam',label:'Beam',len:3},
+        {name:'draught',label:'Draught',len:3},
+    ],
 ];
 const reducedAisInfos=[
     aisInfos[0]
@@ -83,13 +83,11 @@ const aisSortCreator=(sortField)=>{
 };
 
 const formatFixed=(val,len)=>{
-    let str=new Array(len+1).join(' ')+val;
-    return str.substr(str.length-len);
-
+    let str = (''+val).trim();
+    str = ' '.repeat(Math.max(0,len-str.length)) + str;
+    console.log(val,len,str);
+    return str;
 }
-
-
-
 
 
 const sortDialog=(sortField)=>{

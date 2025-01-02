@@ -27,19 +27,19 @@ const displayItems = [
     {name: 'status', label: 'Status'},
     {name: 'destination', label: 'Destination'},
     {name: 'position', label: 'Position'},
-    {name: 'course', label: 'COG(°)'},
-    {name: 'speed', label: 'SOG(kn)'},
-    {name: 'heading', label: 'HDG(°)'},
-    {name: 'turn', label: 'ROT(°/min)'},
-    {name: 'headingTo', label: 'BRG(°)'},
-    {name: 'distance', label: 'Distance(nm)'},
-    {name: 'cpa', label: 'CPA(nm)'},
-    {name: 'tcpa', label: 'TCPA(h:min:sec)'},
+    {name: 'course', label: 'COG', unit: '°'},
+    {name: 'speed', label: 'SOG', unit: 'kn'},
+    {name: 'heading', label: 'HDG', unit: '°'},
+    {name: 'turn', label: 'ROT', unit: '°/min'},
+    {name: 'headingTo', label: 'BRG', unit: '°'},
+    {name: 'distance', label: 'DST', unit: 'nm'},
+    {name: 'cpa', label: 'DCPA', unit: 'nm'},
+    {name: 'tcpa', label: 'TCPA'},
     {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
-    {name: 'length', label: 'Length(m)'},
-    {name: 'beam',label: 'Beam(m)'},
-    {name: 'draught',label: 'Draught(m)'},
-    {name: 'age',label: 'Age(s)'}
+    {name: 'length', label: 'Length', unit: 'm'},
+    {name: 'beam',label: 'Beam', unit: 'm'},
+    {name: 'draught',label: 'Draught', unit: 'm'},
+    {name: 'age',label: 'Age', unit: 's'}
 ];
 
 const createUpdateFunction=(config,mmsi)=>{
@@ -60,8 +60,8 @@ const createItem=(config,mmsi)=>{
         }
         return (
         <div className="aisInfoRow">
-            <div className='label '>{props.label}</div>
-            <div className={cl}>{AisFormatter.format(props.name, props.current)}</div>
+            <div className='label'>{props.label}</div>
+            <div className={cl}>{AisFormatter.format(props.name, props.current)}{props.unit && <span className='unit'>&thinsp;{props.unit}</span>}</div>
         </div>
         );
     },{
