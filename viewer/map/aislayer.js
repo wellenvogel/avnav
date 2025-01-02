@@ -531,13 +531,14 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             if (curved) {
                 let a=Helper.degrees(target_sog*age/turn_radius);
                 var pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-a),turn_radius);
+                drawing.drawImageToContext(pos,symbol.ghostImage,{
+                    ...style,
+                    rotation: style.rotation + Math.radians(target_rot_sgn*target_rot*age/60),
+                });
             } else {
                 var pos=drawTargetFunction(xy,target_cog,target_sog*age);
+                drawing.drawImageToContext(pos,symbol.ghostImage,style);
             }
-            drawing.drawImageToContext(pos,symbol.ghostImage,{
-                ...style,
-                rotation: style.rotation + Math.radians(target_rot_sgn*target_rot*age/60),
-            });
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
