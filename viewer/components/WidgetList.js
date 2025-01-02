@@ -77,7 +77,7 @@ let widgetList=[
     },
     {
         name: 'Position',
-        default: "-------------",
+        default: "---",
         caption: 'BOAT',
         storeKeys:{
             value: keys.nav.gps.position,
@@ -150,55 +150,59 @@ let widgetList=[
         caption: 'Wind Angle',
         storeKeys:{
             windAngle:keys.nav.gps.windAngle,
+            windAngleTrue: keys.nav.gps.trueWindAngle,
             windDirectionTrue: keys.nav.gps.trueWindDirection,
-            windAngleTrue: keys.nav.gps.trueWindAngle
         },
         formatter: 'formatDirection',
         editableParameters: {
-            formatterParameters: false,
+            formatterParameters: true,
             value: false,
             caption: false,
+            unit: false,
             kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
         },
         translateFunction: (props)=>{
             const captions={
                 A:'AWA',
+                TA: 'TWA',
                 TD: 'TWD',
-                TA: 'TWA'
             };
             let wind=getWindData(props);
-            return {...props,value:wind.windAngle, caption:captions[wind.suffix] }
+            return {...props,
+              value:wind.windAngle,
+              caption:captions[wind.suffix]
+            }
         }
     },
     {
         name: 'WindSpeed',
         default: "---",
-        unit: "m/s",
+        unit: "kn",
         caption: 'Wind Speed',
         storeKeys:{
             windSpeed:keys.nav.gps.windSpeed,
             windSpeedTrue: keys.nav.gps.trueWindSpeed,
-            showKnots: keys.properties.windKnots
         },
         formatter: 'formatSpeed',
+        formatterParameters: ['kn'],
         editableParameters: {
-            formatterParameters: false,
+            formatterParameters: true,
             value: false,
             caption: false,
+            unit: false,
             kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
         },
         translateFunction: (props)=>{
             const captions={
                 A:'AWS',
+                TA: 'TWS',
                 TD: 'TWS',
-                TA: 'TWS'
             };
             let wind=getWindData(props);
             return {...props,
                 value:wind.windSpeed,
                 caption:captions[wind.suffix],
-                formatterParameters: props.showKnots?'k':'m',
-                unit: props.showKnots?'kn':'m/s'
+                unit: props.formatterParameters.length ? props.formatterParameters[0] : props.unit,
             }
         }
     },
@@ -319,28 +323,54 @@ let widgetList=[
         name: 'WindDisplay',
         caption: 'Wind',
         wclass: WindWidget,
-        storeKeys: WindWidget.storeKeys
+        storeKeys: WindWidget.storeKeys,
+        formatter: WindWidget.formatter,
+    },
+    {
+        name: 'WindGraphics',
+        wclass: WindGraphics,
+        storeKeys: WindGraphics.storeKeys,
+        formatter: WindGraphics.formatter,
     },
     {
         name: 'DepthDisplay',
         caption: 'DPT',
         unit: 'm',
         storeKeys:{
-            value:keys.nav.gps.depthBelowTransducer,
-            visible: keys.properties.showDepth
+            DBK: keys.nav.gps.depthBelowKeel,
+            DBS: keys.nav.gps.depthBelowWaterline,
+            DBT: keys.nav.gps.depthBelowTransducer,
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1,true]
+        formatter: 'formatDistance',
+        formatterParameters: ['m'],
+        translateFunction: (props)=>{
+            var kind=props.kind;
+            if(kind=='auto') {
+              kind='DBT';
+              if(props.DBK !== undefined) kind='DBK';
+              if(props.DBS !== undefined) kind='DBS';
+            }
+            if(kind=='DBT') var depth=props.DBT;
+            if(kind=='DBK') var depth=props.DBK;
+            if(kind=='DBS') var depth=props.DBS;
+            return {...props,
+              value: depth,
+              caption: kind,
+              unit: props.formatterParameters.length ? props.formatterParameters[0] : props.unit,
+            }
+        },
+        editableParameters:{
+            formatterParameters: true,
+            unit: false,
+            value: false,
+            caption: false,
+            kind: {type:'SELECT',list:['auto','DBT','DBK','DBS'],default:'auto'}
+        },
     },
     {
         name: 'XteDisplay',
         wclass: XteWidget,
         storeKeys: XteWidget.storeKeys
-    },
-    {
-        name: 'WindGraphics',
-        wclass: WindGraphics,
-        storeKeys: WindGraphics.storeKeys
     },
     {
         name: "DateTime",

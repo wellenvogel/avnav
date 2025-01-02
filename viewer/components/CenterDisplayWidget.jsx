@@ -21,7 +21,7 @@ const CenterDisplayWidget = (props) => {
     }
     return (
         <WidgetFrame {...props} addClass="centerDisplayWidget" caption="Center" unit={undefined}>
-            {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
+            {!small && <div className="widgetData Position">{Formatter.formatLonLats(props.centerPosition,props.positionFmt)}</div>}
             {(measurePosition !== undefined) &&
                 <div className="widgetData">
                     <div className="label measure"></div>
@@ -33,8 +33,8 @@ const CenterDisplayWidget = (props) => {
                         /
                     </div>
                     <div className="value">
-                        <span>{Formatter.formatDistance(measureValues.dts)}</span>
-                        <span className="unit">nm</span>
+                        <span>{Formatter.formatDistance(measureValues.dts,props.distanceUnit)}</span>
+                        <span className="unit">{props.distanceUnit}</span>
                     </div>
                 </div>
             }
@@ -48,8 +48,8 @@ const CenterDisplayWidget = (props) => {
                     /
                 </div>
                 <div className="value">
-                    <span>{Formatter.formatDistance(props.markerDistance)}</span>
-                    <span className="unit">nm</span>
+                    <span>{Formatter.formatDistance(props.markerDistance,props.distanceUnit)}</span>
+                    <span className="unit">{props.distanceUnit}</span>
                 </div>
             </div>
             <div className="widgetData">
@@ -62,9 +62,8 @@ const CenterDisplayWidget = (props) => {
                     /
                 </div>
                 <div className="value">
-                    <span>{Formatter.formatDistance(props.centerDistance)}</span>
-                    <span className="unit">nm</span>
-
+                    <span>{Formatter.formatDistance(props.centerDistance,props.distanceUnit)}</span>
+                    <span className="unit">{props.distanceUnit}</span>
                 </div>
             </div>
         </WidgetFrame>
@@ -94,4 +93,10 @@ CenterDisplayWidget.propTypes={
     style: PropTypes.object,
     mode: PropTypes.string
 };
+
+CenterDisplayWidget.editableParameters={
+    positionFmt: Formatter.formatLonLats.parameters[0],
+    distanceUnit: Formatter.formatDistance.parameters[0],
+};
+
 export default CenterDisplayWidget;
