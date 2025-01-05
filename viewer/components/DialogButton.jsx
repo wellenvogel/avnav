@@ -27,6 +27,7 @@ const DialogButton=(props)=>{
             <button
                 {...forward}
                 {...add}
+                name={name}
                 onClick={(ev)=>{
                     if (! onClick || close) dialogContext.closeDialog();
                     if (onClick) onClick(ev);
