@@ -5,15 +5,15 @@
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
-import React from 'react';
+import React, {useState} from 'react';
 import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {DialogButtons, DialogFrame, useDialogContext} from '../components/OverlayDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly} from '../components/Inputs.jsx';
+import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly, Input} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
@@ -40,11 +40,11 @@ const settingsSections={
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit],
-    AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
+    AIS:        [keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
         keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
         keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
-        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRange,keys.properties.style.aisNormalColor,
+        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRang,keys.properties.style.aisNormalColor,
         keys.properties.style.aisNearestColor, keys.properties.style.aisWarningColor,keys.properties.style.aisTrackingColor,
         keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowA,
         keys.properties.aisShowB,keys.properties.aisShowOther,keys.properties.aisUseHeading,
@@ -125,67 +125,48 @@ const CheckBoxListSettingsItem=(lprops)=>{
     </div>);
 };
 
-const rangeItemDialog=(item)=>{
-    class Dialog extends React.Component{
-        constructor(props){
-            super(props);
-            this.state={
-                value: item.value
-            };
-            this.valueChange=this.valueChange.bind(this);
-            this.buttonClick=this.buttonClick.bind(this);
-        }
-        valueChange(ev){
-            this.setState({value: ev.target.value});
-        }
 
-        buttonClick(ev){
-            let button=ev.target.name;
-            if (button == 'ok'){
-                if (this.state.value < item.values[0]|| this.state.value > item.values[1]){
-                    Toast("out of range");
-                    return;
-                }
-                item.onClick(this.state.value);
-            }
-            if (button == 'reset'){
-                this.setState({
-                    value: item.defaultv
-                });
-                return;
-            }
-            hideToast();
-            this.props.closeCallback();
-        }
-        render() {
-            let range=item.values[0]+"..."+item.values[1];
+const RangeItemDialog=({value,values,defaultv,label,resolveFunction})=>{
+            const [cvalue,setValue]=useState(value);
+            let range=values[0]+"..."+values[1];
+            const dialogContext=useDialogContext();
             return(
-                <div className="settingsDialog inner">
-                    <h3><span >{item.label}</span></h3>
+                <DialogFrame className="settingsDialog" title={label}>
                     <div className="settingsRange">Range: {range}</div>
-                    <div className="dialogRow">
-                        <span className="inputLabel">Value</span>
-                            <input type="number"
-                                   min={item.values[0]}
-                                   max={item.values[1]}
-                                   step={item.values[2]||1}
-                                   name="value" onChange={this.valueChange} value={this.state.value}/>
-                    </div>
-                    <div className="dialogButtons">
-                        <DB name="reset" onClick={this.buttonClick}>Reset</DB>
-                        <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
-                        <DB name="ok" onClick={this.buttonClick}>OK</DB>
-                    </div>
-                </div>
+                    <Input
+                        dialogRow={true}
+                        type={"number"}
+                        label={"Value"}
+                        min={values[0]} max={values[1]} step={values[2]||1}
+                        value={cvalue}
+                        onChange={(v)=>setValue(v)}
+                    />
+                    <DialogButtons >
+                        <DB name="reset" onClick={()=>setValue(defaultv)} close={false} visible={defaultv !== undefined} >Reset</DB>
+                        <DB name="cancel" >Cancel</DB>
+                        <DB name="ok" onClick={()=>{
+                            if (cvalue < values[0]|| cvalue > values[1]) {
+                                Toast("out of range");
+                                return;
+                            }
+                            dialogContext.closeDialog();
+                            resolveFunction(cvalue);
+                        }}
+                            close={false}
+                        >OK</DB>
+                    </DialogButtons>
+                </DialogFrame>
             );
-        }
-    };
-    OverlayDialog.dialog(Dialog);
-};
+        };
 const RangeSettingsItem=(properties)=> {
+    const dialogContext=useDialogContext();
     return <div className={properties.className}
-                onClick={function(ev){
-                            rangeItemDialog(properties);
+                onClick={()=>{
+                        dialogContext.showDialog(()=>{
+                            return <RangeItemDialog
+                                {...properties}
+                                resolveFunction={(nv)=>properties.onClick(nv)}/>
+                        })
                         }}>
         <div className="label">{properties.label}</div>
         <div className="value">{properties.value}</div>
