@@ -18,28 +18,28 @@ import NavData from '../nav/navdata';
 
 
 const displayItems = [
-    {name: 'mmsi', label: 'MMSI'},
-    {name: 'shipname', label: 'Name'},
-    {name: 'callsign', label: 'Callsign'},
-    {name: 'shiptype', label: 'Type'},
-    {name: 'aid_type', label: 'Type'},
-    {name: 'clazz', label: 'Class'},
-    {name: 'status', label: 'Status'},
-    {name: 'destination', label: 'Destination'},
-    {name: 'position', label: 'Position'},
-    {name: 'course', label: 'COG(°)'},
-    {name: 'speed', label: 'SOG(kn)'},
-    {name: 'heading', label: 'HDG(°)'},
-    {name: 'turn', label: 'ROT(°/min)'},
-    {name: 'headingTo', label: 'BRG(°)'},
-    {name: 'distance', label: 'Distance(nm)'},
-    {name: 'cpa', label: 'CPA(nm)'},
-    {name: 'tcpa', label: 'TCPA(h:min:sec)'},
-    {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
-    {name: 'length', label: 'Length(m)'},
-    {name: 'beam',label: 'Beam(m)'},
-    {name: 'draught',label: 'Draught(m)'},
-    {name: 'age',label: 'Age(s)'}
+    {name: 'mmsi'},
+    {name: 'shipname'},
+    {name: 'callsign'},
+    {name: 'shiptype'},
+    {name: 'aid_type'},
+    {name: 'clazz'},
+    {name: 'status'},
+    {name: 'destination'},
+    {name: 'position'},
+    {name: 'course'},
+    {name: 'speed'},
+    {name: 'heading'},
+    {name: 'turn'},
+    {name: 'headingTo'},
+    {name: 'distance'},
+    {name: 'cpa'},
+    {name: 'tcpa'},
+    {name: 'passFront', addClass: 'aisFront'},
+    {name: 'length'},
+    {name: 'beam'},
+    {name: 'draught'},
+    {name: 'age'},
 ];
 
 const createUpdateFunction=(config,mmsi)=>{
@@ -55,13 +55,15 @@ const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
     return Dynamic((props)=> {
-        if (! AisFormatter.shouldShow(props.name,props.current)){
+        var key = props.name;
+        if (! AisFormatter.shouldShow(key,props.current)){
             return null;
         }
+        var unit = AisFormatter.getUnit(props.name);
         return (
         <div className="aisInfoRow">
-            <div className='label '>{props.label}</div>
-            <div className={cl}>{AisFormatter.format(props.name, props.current)}</div>
+            <div className='label'>{AisFormatter.getHeadline(key)}</div>
+            <div className={cl}>{AisFormatter.format(key, props.current)}{unit && <span className='unit'>&thinsp;{unit}</span>}</div>
         </div>
         );
     },{
