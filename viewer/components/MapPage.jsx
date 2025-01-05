@@ -112,7 +112,6 @@ class MapPage extends React.Component{
         return this.props.mapEventCallback(evdata);
     }
     componentWillUnmount(){
-        NavHandler.setAisCenterMode(navobjects.AisCenterMode.GPS);
         MapHolder.renderTo();
         if (this.subscribeToken !== undefined){
             MapHolder.unsubscribe(this.subscribeToken);
@@ -137,7 +136,6 @@ class MapPage extends React.Component{
     }
     componentDidMount(){
         let self=this;
-        NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
         this.subscribeToken=MapHolder.subscribe(this.mapEvent);
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
         let showMap=()=>{
