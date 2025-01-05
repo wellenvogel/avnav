@@ -202,7 +202,7 @@ let widgetList=[
             return {...props,
                 value:wind.windSpeed,
                 caption:captions[wind.suffix],
-                unit: props.formatterParameters.length ? props.formatterParameters[0] : props.unit,
+                unit: ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : props.unit,
             }
         }
     },
@@ -356,7 +356,7 @@ let widgetList=[
             return {...props,
               value: depth,
               caption: kind,
-              unit: props.formatterParameters.length ? props.formatterParameters[0] : props.unit,
+              unit: ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : props.unit,
             }
         },
         editableParameters:{
