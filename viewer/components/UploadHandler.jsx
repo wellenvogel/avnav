@@ -61,7 +61,15 @@ class UploadHandler extends React.Component{
                 resolve({name: name});
             });
         }
-        return this.props.checkNameCallback(name);
+        let rt=this.props.checkNameCallback(name);
+        if (rt instanceof Promise) return rt;
+        return new Promise((resolve,reject)=>{
+            if (typeof(rt) === 'object') {
+                if (!rt.error) resolve(rt);
+                else reject(rt.error);
+            }
+            else reject(rt);
+        })
     }
     upload(file){
         let self=this;

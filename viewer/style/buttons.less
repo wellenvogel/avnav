@@ -121,6 +121,13 @@
   padding-left:1.3em;
   font-size: 0.9em;
 }
+.dialogTextButton(@text){
+  font-size: 0.9em;
+  padding-left:1.3em;
+  > span:after{
+    content: @text;
+  }
+}
 
 button{
   &.Cancel {
@@ -569,6 +576,9 @@ button{
   .editOverlaysDialog &.hide{
     .dialogIconButton('visibility_off.svg');
   }
+  .editOverlaysDialog &.show{
+    .dialogIconButton('visibility.svg');
+  }
 
   .FeatureInfoDialog &.info{
     .dialogIconButton('ic_info.svg');
@@ -661,5 +671,14 @@ button{
   }
   &.disable{
     .dialogIconButton('ic_hide.svg')
+  }
+  &.upload{
+    .dialogIconButton('ic_file_upload.svg')
+  }
+  &.new{
+    .dialogTextButton('+');
+  }
+  &.save{
+    .dialogIconButton('save.svg')
   }
 }

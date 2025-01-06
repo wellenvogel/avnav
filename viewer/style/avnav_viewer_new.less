@@ -328,6 +328,9 @@ body{
       .nightBackFade(fade(@colorRed,50%));
     }
   }
+  .errorText{
+    .nightForeFade(@colorRed)
+  }
 
 }
 
@@ -409,6 +412,23 @@ body{
     .nightBorderColorGR(40);
     margin-top: 0.5em;
     padding-top: 0.5em;
+  }
+}
+
+.selectIconDialog{
+  .checkBoxRow{
+    .inputLabel{
+      width: unset;
+      margin-right: unset;
+      margin-left: 1em;
+    }
+  }
+  .listEntry{
+    .flex-wrap(wrap);
+    .flex-align-items(center);
+  }
+  .selectedItem {
+    .nightBackFade(@colorSelection);
   }
 }
 
@@ -762,6 +782,7 @@ span.valuePrefix{
   background-size: contain;
   display: inline-block;
   background-repeat: no-repeat;
+  background-position: center;
   .nightOPacity();
 }
 .iconImage(@url){
@@ -1359,6 +1380,15 @@ span.valuePrefix{
     width: auto;
      .flex(1);
     min-width: 10em;
+  }
+}
+
+.editFileDialog{
+  width: 90vw;
+  height: 90vh;
+  .edit{
+    .flex(1);
+    position: relative;
   }
 }
 

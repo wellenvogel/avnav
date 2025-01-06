@@ -6,7 +6,7 @@ import assign from 'object-assign';
 import shallowcompare from "./compare";
 import Requests from "./requests";
 import base from "../base";
-import {useEffect} from "react";
+import {useEffect, useRef, useState} from "react";
 
 
 
@@ -246,6 +246,68 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         }
     };
 };
+/**
+ *
+ * @param timercallback
+ * @param interval
+ * @param opt_autostart
+ * @returns {{guardedCall: ((function(*, *): (boolean))|*), setTimeout: *, startTimer: (function(*): boolean), currentSequence: (function(): number), stopTimer: (function(*): boolean)}}
+ */
+export const useTimer=(timercallback,interval,opt_autostart)=>{
+    const timer=useRef(undefined);
+    const currentSequence=useRef(0);
+    const currentInterval=useRef(interval);
+    //we must wrap this into a ref to ensure that always the current callback
+    //with an up to date closure is called
+    const callbackHandler=useRef(timercallback);
+    const startTimer=(sequence)=>{
+        if (sequence !== undefined && sequence !== currentSequence.current) return false;
+        if (timer.current !== undefined){
+            currentSequence.current++;
+            window.clearTimeout(timer.current);
+        }
+        const startSequence=currentSequence.current;
+        timer.current=window.setTimeout(()=>{
+            if (currentSequence.current !== startSequence) return;
+            timer.current=undefined;
+            callbackHandler.current(startSequence);
+        },currentInterval.current);
+        return true;
+    }
+    const stopTimer=(sequence)=>{
+        if (sequence !== undefined && sequence !== currentSequence.current) return false;
+        if (timer.current !== undefined){
+            currentSequence.current++;
+            window.clearTimeout(timer.current);
+            timer.current=undefined;
+        }
+    }
+    useEffect(() => {
+        callbackHandler.current=timercallback;
+    }, [timercallback]);
+    useEffect(() => {
+        if (opt_autostart){
+            startTimer(0); //only start the timer if this is really an initial call
+        }
+        return ()=>{
+            stopTimer();
+        }
+    }, []);
+    return {
+        startTimer:(sequence)=>startTimer(sequence),
+        stopTimer:(sequence)=>stopTimer(sequence),
+        setTimeout:(newInterval,opt_stop)=>{
+            if (opt_stop) stopTimer();
+            currentInterval.current=newInterval;
+        },
+        currentSequence:()=>currentSequence.current,
+        guardedCall:(sequence,callback)=>{
+            if (sequence !== undefined && sequence !== currentSequence.current) return false;
+            callback(currentSequence.current);
+            return true;
+        }
+    }
+}
 
 const keyEventHandler=(thisref,callback,component,action)=>{
     const handler=(cbComponent,cbAction)=>{
@@ -291,6 +353,9 @@ export const useKeyEventHandler=(props,component,opt_callback)=>{
         }
     },[])
 }
+export const useKeyEventHandlerPlain=(name,component,callback)=>{
+    return useKeyEventHandler({name:name},component,callback);
+}
 
 //from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
 //returns:
@@ -311,7 +376,7 @@ const scrollInContainer=(parent, element)=> {
     return 0;
 };
 
-const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
+const IMAGES=['png','jpg','jpeg','svg','bmp','tiff','gif'];
 
 /**
  * helper for maintaining an object inside a components state
@@ -388,6 +453,56 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
     return rt;
 
 };
+/**
+ * migration support for legacy code
+ * with useState the state helper is not really necessary any more - but to migrate old code this method could be helpful
+ * @param initialValues
+ * @returns {*|{}|{getValue(*, *): *, getState(*): *, getValues(*): (any), isChanged(): boolean, setValue: *, setState: *, reset(): void, isItemChanged(*): *}|boolean}
+ */
+export const useStateHelper=(initialValues)=>{
+    const [values,setValues]=useState(initialValues);
+    const [isChanged,setChanged]=useState(false);
+    return {
+        setValue:(key,value)=>{
+            if (values[key] === value) return;
+            let nv={};
+            nv[key]=value;
+            let nvalues={...values,nv};
+            nvalues[key]=value;
+            setValues(nvalues);
+            setChanged(true);
+        },
+        setState:(partialState,opt_overwrite)=>{
+            let nvalues=opt_overwrite?partialState:{...values,...partialState};
+            setChanged(!shallowcompare(values,initialValues));
+            setValues(nvalues);
+        },
+        isChanged(){
+            return isChanged;
+        },
+        isItemChanged(name){
+            return ! shallowcompare(values[name],initialValues[name]);
+        },
+        reset(){
+            setValues(initialValues);
+            setChanged(false);
+        },
+        getValues(opt_copy){
+            if (opt_copy){
+                return {...values};
+            }
+            return values;
+        },
+        getState(opt_copy){
+            return opt_copy?{...values}:values;
+        },
+        getValue(key,opt_default){
+            let rt=values[key];
+            if (rt !== undefined) return rt;
+            return opt_default;
+        }
+    }
+}
 
 const getServerCommand=(name)=>{
     return Requests.getJson({

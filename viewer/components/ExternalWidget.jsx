@@ -53,7 +53,7 @@ const transform=(self,node,index)=>{
 };
 
 export const ExternalWidget =(props)=>{
-    const [updateCount,setUpdateCount]=useState(1);
+    let [,setUpdateCount]=useState(1);
     const initialCalled=useRef(false);
     const canvasRef=useRef(null);
     const getProps=()=>{
@@ -63,23 +63,26 @@ export const ExternalWidget =(props)=>{
     const userData=useRef( {
         eventHandler: [],
         triggerRedraw: () => {
-            setUpdateCount(updateCount+1)
+            setUpdateCount((previousCount)=>previousCount+1)
         }
     });
     if (! initialCalled.current && typeof (props.initFunction) === 'function') {
         initialCalled.current=true;
         props.initFunction.call(userData.current, userData.current, getProps());
     }
-    useEffect(()=>{
-        if (canvasRef.current && props.renderCanvas){
-            props.renderCanvas.apply(userData.current,[canvasRef.current,getProps()]);
-        }
-
+    //called once after mount/after unmount
+    useEffect(() => {
         return ()=>{
             if (initialCalled.current &&  typeof(props.finalizeFunction) === 'function'){
                 props.finalizeFunction.call(userData.current,userData.current,getProps());
             }
             initialCalled.current=false;
+        }
+    }, []);
+    //called after every render
+    useEffect(()=>{
+        if (canvasRef.current && props.renderCanvas){
+            props.renderCanvas.apply(userData.current,[canvasRef.current,getProps()]);
         }
     })
     

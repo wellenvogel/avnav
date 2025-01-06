@@ -43,6 +43,7 @@ import OverlayDialog from "../components/OverlayDialog";
 import Helper from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
 import EditHandlerDialog from "../components/EditHandlerDialog";
+import DownloadButton from "../components/DownloadButton";
 
 const HANDLER_NAME='AVNImporter';
 
@@ -168,12 +169,11 @@ const ImportStatusDialog=(props)=>{
             >
                 Restart
             </DB>}
-            {props.canDownload && <DB name="download"
-                                      onClick={() => {
-                                          props.download(props.name);
-                                          props.closeCallback();
-                                      }}
-                                >Download</DB>
+            {props.canDownload && <DownloadButton name="download"
+                                                  close={false}
+                                                  useDialogButton={true}
+                                                  url={globalStore.getData(keys.properties.navUrl)+"?request=download&type=import&name="+encodeURIComponent(props.name)}
+                                >Download</DownloadButton>
             }
             {props.hasLog &&
             <DB name="log"
@@ -308,7 +308,6 @@ class ImporterPage extends React.Component{
         this.showEditDialog=this.showEditDialog.bind(this);
         this.checkNameForUpload=this.checkNameForUpload.bind(this);
         this.showEditHandlerDialog=this.showEditHandlerDialog.bind(this);
-        this.downloadFrame=undefined;
     }
     shouldComponentUpdate(nextProps, nextState, nextContext) {
         return !RecursiveCompare(this.state,nextState);
@@ -330,7 +329,6 @@ class ImporterPage extends React.Component{
                 {...props}
                 {...converter}
                 logCallback={()=>{
-                    if (!this.downloadFrame) return;
                     let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name=_current";
                     Dialogs.dialog((dlprops)=>{
                         return <LogDialog
@@ -359,7 +357,6 @@ class ImporterPage extends React.Component{
                 {...props}
                 {...item}
                 logCallback={(id)=>{
-                  if (!this.downloadFrame) return;
                   let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(id);
                   Dialogs.dialog((dlprops)=>{
                       return <LogDialog
@@ -368,11 +365,6 @@ class ImporterPage extends React.Component{
                           {...dlprops}
                       />
                   })
-                }}
-                download={(id)=>{
-                    if (!this.downloadFrame) return;
-                    let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type=import&name="+encodeURIComponent(id);
-                    this.downloadFrame.src=url;
                 }}
             />);
     }
@@ -446,15 +438,6 @@ class ImporterPage extends React.Component{
                         }
                     }}
                 />
-                <iframe
-                    className="downloadFrame"
-                    onLoad={(ev) => {
-                        let txt = ev.target.contentDocument.body.textContent;
-                        if (!txt) return;
-                        Toast(txt);
-                    }}
-                    src={undefined}
-                    ref={(el) => this.downloadFrame = el}/>
             </React.Fragment>;
         }
 

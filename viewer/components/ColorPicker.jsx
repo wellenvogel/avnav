@@ -6,7 +6,6 @@
 'use strict';
 
 import React from 'react';
-import reactCreateClass from 'create-react-class';
 import assign from 'object-assign';
 import tinycolor from 'tinycolor2';
 

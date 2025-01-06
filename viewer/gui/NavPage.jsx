@@ -8,7 +8,13 @@ import React from 'react';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog, {dialogDisplay} from '../components/OverlayDialog.jsx';
+import OverlayDialog, {
+    DBCancel,
+    DialogButtons,
+    dialogDisplay,
+    DialogFrame,
+    DialogText
+} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
@@ -696,14 +702,10 @@ class NavPage extends React.Component{
         let neededChart=this.needsChartLoad();
         if (neededChart){
             let Dialog=dialogDisplay((props)=>{
-                return (<div className="inner">
-                    <h3 className="dialogTitle">Waiting for chart</h3>
-
-                    <div className="dialogText">{neededChart}</div>
-                    <div className="dialogButtons">
-                        <DB name="cancel" onClick={()=>this.props.history.pop()}>Cancel</DB>
-                    </div>
-                </div>)
+                return (<DialogFrame title={"Waiting for chart"}>
+                    <DialogText >{neededChart}</DialogText>
+                    <DialogButtons buttonList={DBCancel()}/>
+                </DialogFrame>)
                 },
                 ()=>this.props.history.pop());
             return (

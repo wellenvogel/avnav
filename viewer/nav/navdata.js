@@ -53,9 +53,6 @@ const NavData=function(){
      */
     this.routeHandler=new RouteData();
 
-
-    this.aisMode=navobjects.AisCenterMode.GPS;
-
     this.speedAverage=new Average(10); //for steady detection
     this.mapAverageCog=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
     this.mapAverageHdt=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
@@ -240,32 +237,22 @@ NavData.prototype.computeValues=function() {
 
 /**
  * get the center for AIS queries
- * @returns {navobjects.Point}
+ * @returns {[navobjects.Point]}
  */
 NavData.prototype.getAisCenter=function(){
-    if (this.aisMode == navobjects.AisCenterMode.NONE) return undefined;
-    if (this.aisMode == navobjects.AisCenterMode.GPS) {
+    const mode=globalStore.getData(keys.properties.aisCenterMode);
+    if (mode === 'boat') {
         if (globalStore.getData(keys.nav.gps.valid)) return [globalStore.getData(keys.nav.gps.position)];
         return undefined;
     }
-    else{
-        if (globalStore.getData(keys.nav.gps.valid)){
+    else if (mode === 'map') {
+        return [globalStore.getData(keys.map.centerPosition)];
+    }
+    if (globalStore.getData(keys.nav.gps.valid)){
             return [globalStore.getData(keys.map.centerPosition),globalStore.getData(keys.nav.gps.position)]
-        }
     }
     return [globalStore.getData(keys.map.centerPosition)];
 };
-
-/**
- * set the mode for the AIS query
- * @param {navobjects.AisCenterMode} mode
- */
-NavData.prototype.setAisCenterMode=function(mode){
-    this.aisMode=mode;
-};
-
-
-
 
 /**
  * get the routing handler

@@ -1,6 +1,6 @@
 //avnav (C) wellenvogel 2019
 
-import React, {Component, createRef} from 'react';
+import React, {Component, createRef, useEffect} from 'react';
 import History from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
@@ -22,7 +22,12 @@ import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
-import OverlayDialog from './components/OverlayDialog.jsx';
+import OverlayDialog, {
+    DialogContext,
+    GlobalDialogDisplay,
+    setGlobalContext,
+    useDialog
+} from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
@@ -160,6 +165,45 @@ const ButtonSizer=(props)=>{
 
 
 let lastError={
+};
+
+let mainShowDialog=undefined;
+
+const GlobalDialog=()=>{
+    const [DialogDisplay, setDialog] = useDialog();
+    setGlobalContext(undefined,setDialog);
+    mainShowDialog=setDialog;
+    useEffect(() => {
+        return ()=>{
+            setGlobalContext();
+            mainShowDialog=undefined;
+        }
+    }, []);
+    return <DialogDisplay/>
+}
+
+const MainBody = ({location, options, history, nightMode}) => {
+
+    return (
+        <DialogContext
+            showDialog={mainShowDialog}
+        >
+            <GlobalDialog/>
+            <DynamicRouter
+                storeKeys={{
+                    sequence: keys.gui.global.propertySequence,
+                    dimensions: keys.gui.global.windowDimensions,
+                    dim: keys.gui.global.dimActive,
+                    isEditing: keys.gui.global.layoutEditing,
+                    ...keys.gui.capabilities
+                }}
+                location={location}
+                options={options}
+                history={history}
+                nightMode={nightMode}
+            />
+        </DialogContext>
+    )
 };
 
 class App extends React.Component {
@@ -471,12 +515,12 @@ class App extends React.Component {
                     {etext}
                 </div>
                 </div>
-        }
-        const Dialogs = OverlayDialog.getDialogContainer;
+        };
         let appClass="app";
         let layoutClass=(this.props.layoutName||"").replace(/[^0-9a-zA-Z]/g,'_');
         appClass+=" "+layoutClass;
         if (this.props.smallDisplay) appClass+=" smallDisplay";
+        if (this.props.nightMode) appClass+=" nightMode";
         let location=this.leftHistoryState.getValue('location');
         if (location !== "warningpage") {
             if (! this.titleSet) {
@@ -493,20 +537,12 @@ class App extends React.Component {
             style={{fontSize: this.props.fontSize+"px"}}
             tabIndex="0"
             >
-            <DynamicRouter
-                storeKeys={{
-                sequence: keys.gui.global.propertySequence,
-                dimensions: keys.gui.global.windowDimensions,
-                dim: keys.gui.global.dimActive,
-                isEditing:keys.gui.global.layoutEditing,
-                ...keys.gui.capabilities}}
+            <MainBody
                 location={location}
                 options={this.leftHistoryState.getValue('options')}
                 history={this.history}
                 nightMode={this.props.nightMode}
                 />
-            <Dialogs
-                className={this.props.nightMode?"nightMode":""}/>
             { ! (avnav.android || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}

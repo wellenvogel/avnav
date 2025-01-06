@@ -2,132 +2,122 @@
  * Created by andreas on 23.02.16.
  */
 
-import React from "react";
+import {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
-import GuiHelper from '../util/GuiHelpers.js';
-import assign from 'object-assign';
+import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import base from "../base";
 
 
 
-class MapWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-        this.drawing=undefined;
-        this.initUserContext();
-    }
-    initUserContext(){
-        let self=this;
-        this.userContext={};
+const MapWidget=(props)=>{
+        useKeyEventHandler(props,"widget");
+        const drawing=useRef(null);
+        const userContext=useRef({
         /**
          * convert lon, lat to canvas pixel
          * @param lon
          * @param lat
          * @returns {number[]|*} [x,y] pixel (starting upper left)
          */
-        this.userContext.lonLatToPixel=(lon,lat)=>{
-            if (! this.drawing) return[0,0];
-            let mapcoord=this.drawing.pointToMap([lon,lat]);
-            return this.drawing.pixelToDevice(this.drawing.pointToCssPixel(mapcoord));
-        }
+        lonLatToPixel:(lon,lat)=>{
+            if (! drawing.current) return[0,0];
+            let mapcoord=drawing.current.pointToMap([lon,lat]);
+            return drawing.current.pixelToDevice(drawing.current.pointToCssPixel(mapcoord));
+        },
         /**
          * invers to #lonLatToPixel
          * @param x
          * @param y
          * @returns {number[]|*} [lon,lat]
          */
-        this.userContext.pixelToLonLat=(x,y)=>{
-            if (! this.drawing) return [0,0];
-            x=x/this.drawing.getDevPixelRatio();
-            y=y/this.drawing.getDevPixelRatio();
-            return this.drawing.pointFromMap(this.drawing.cssPixelToCoord([x,y]));
-        }
+        pixelToLonLat:(x,y)=>{
+            if (! drawing.current) return [0,0];
+            x=x/drawing.current.getDevPixelRatio();
+            y=y/drawing.current.getDevPixelRatio();
+            return drawing.current.pointFromMap(drawing.current.cssPixelToCoord([x,y]));
+        },
         /**
          * get the scale factor for high dpi displays
          * 1 is the base
          * @returns {number|*|number|number}
          */
-        this.userContext.getScale=()=>{
-            if (! this.drawing) return 1;
-            return this.drawing.useHdpi?this.drawing.devPixelRatio:1;
-        }
+        getScale:()=>{
+            if (! drawing.current) return 1;
+            return drawing.current.useHdpi?drawing.current.devPixelRatio:1;
+        },
         /**
          * get the map rotation
          * @returns {number|*} rotation in rad!!!
          */
-        this.userContext.getRotation=()=>{
-            if (! this.drawing) return 0;
-            return this.drawing.getRotation();
-        }
+        getRotation:()=>{
+            if (! drawing.current) return 0;
+            return drawing.current.getRotation();
+        },
         /**
          * get the drawing context
          * @returns {*}
          */
-        this.userContext.getContext=()=>{
-            if (! this.drawing) return;
-            return this.drawing.getContext();
-        }
+        getContext:()=>{
+            if (! drawing.current) return;
+            return drawing.current.getContext();
+        },
         /**
          * get the canvas size
          * @returns {number[]} [width,height]
          */
-        this.userContext.getDimensions=()=>{
-            if (! this.drawing) return [0,0];
-            let cv=this.drawing.getContext().canvas;
-            return [cv.width*this.drawing.getDevPixelRatio(),cv.height*this.drawing.getDevPixelRatio()];
-        }
+        getDimensions:()=>{
+            if (! drawing.current) return [0,0];
+            let cv=drawing.current.getContext().canvas;
+            return [cv.width*drawing.current.getDevPixelRatio(),cv.height*drawing.current.getDevPixelRatio()];
+        },
         /**
          * function to trigger a new render of the map
          * this function can also be called outside the renderCanvas function - e.g. from a timer
          */
-        this.userContext.triggerRender=()=>{
-            window.setTimeout(()=>self.props.triggerRender(),0);
+        triggerRender:()=>{
+            window.setTimeout(()=>props.triggerRender(),0);
         }
-    }
-    getProps(){
-        if (! this.props.translateFunction){
-            return this.props;
+    });
+    const getProps=()=>{
+        if (! props.translateFunction){
+            return props;
         }
         else{
-            return {...this.props,...this.props.translateFunction(...this.props)};
+            return {...props,...props.translateFunction(...props)};
         }
     }
-    render() {
-        return null;
-    }
-    componentWillUnmount(){
-        if (typeof(this.props.finalizeFunction) === 'function'){
+    useEffect(() => {
+        if (typeof(props.initFunction) === 'function'){
             try {
-                this.props.finalizeFunction.call(this.userContext, this.userContext, this.getProps());
+                props.initFunction.call(userContext.current, userContext.current, getProps());
             }catch(e){
-                base.log("error in user finalize function for "+this.props.name+": "+e);
+                base.log("error in user init function for "+props.name+": "+e);
             }
         }
-        if (this.props.registerMap){
-            this.props.registerMap()
-        }
-    }
-    componentDidMount() {
-        if (typeof(this.props.initFunction) === 'function'){
-            try {
-                this.props.initFunction.call(this.userContext, this.userContext, this.getProps());
-            }catch(e){
-                base.log("error in user init function for "+this.props.name+": "+e);
-            }
-        }
-        if (this.props.registerMap){
-            this.props.registerMap((drawing,center)=>{
-                this.drawing=drawing;
+        if (props.registerMap){
+            props.registerMap((currentDrawing,center)=>{
+                drawing.current=currentDrawing;
                 try{
-                    this.props.renderCanvas.call(this.userContext,drawing.getContext().canvas,this.getProps());
+                    props.renderCanvas.call(userContext.current,drawing.current.getContext().canvas,getProps());
                 }catch(e){
-                    base.log("error in user renderCanvas function for "+this.props.name+": "+e);
+                    base.log("error in user renderCanvas function for "+props.name+": "+e);
                 }
-                this.drawing=undefined;
+                drawing.current=undefined;
             })
         }
-    }
+        return () => {
+            if (typeof (props.finalizeFunction) === 'function') {
+                try {
+                    props.finalizeFunction.call(userContext.current, userContext.current, getProps());
+                } catch (e) {
+                    base.log("error in user finalize function for " + props.name + ": " + e);
+                }
+            }
+            if (props.registerMap) {
+                props.registerMap()
+            }
+        }
+    },[] );
 }
 
 MapWidget.propTypes={
