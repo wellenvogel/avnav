@@ -1,2 +1,7 @@
 eclipse.preferences.version=1
+encoding//handler/httpserver.py=utf-8
+encoding//handler/signalkhandler.py=utf-8
+encoding/avnav_api.py=utf-8
 encoding/avnav_server.py=utf-8
+encoding/avnav_util.py=utf-8
+encoding/avnav_worker.py=utf-8
