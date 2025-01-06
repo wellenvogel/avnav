@@ -494,14 +494,15 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             drawing.drawLineToContext(points,style);
         };
 
-        if (curved) {
-            var turn_angle=courseVectorTime*target_rot/60;
-            var turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
-            var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
-        }
-        if (rmvRange>0 && onMap && style.courseVectorColor !== false) { // relative motion vector
-            if (target.distance/1852<=rmvRange && (target_sog || sog)) {
-                if (curved) {
+        if (useCourseVector && style.courseVector !== false) {
+            if (curved) {
+                var turn_angle=courseVectorTime*target_rot/60;
+                var turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
+                var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
+            }
+
+            if (rmvRange>0 && onMap && target.distance/1852<=rmvRange && (target_sog || sog)) { // relative motion vector
+                if (curved) { // curved RMV
                     drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
                             cog,-sog*courseVectorTime);
@@ -511,9 +512,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
                     drawing.drawLineToContext([xy,p],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
                 }
             }
-        }
 
-        if (useCourseVector && style.courseVectorColor !== false) {
             if (target_sog) { // true motion vector
                 if(curved && onMap) { // curved TMV
 //                    drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
