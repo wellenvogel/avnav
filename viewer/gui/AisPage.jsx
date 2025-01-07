@@ -19,46 +19,16 @@ import navdata from "../nav/navdata";
 import Dialogs from "../components/OverlayDialog.jsx";
 
 const aisInfos=[
-    [
-        {name:'distance',label:'Dst ',unit:'nm',len:6},
-        {name:'cpa',label:'Cpa ',unit:'nm',len:6},
-        {name:'headingTo',label:'Brg ',unit:'°',len:3},
-        {name:'tcpa',label:'Tcpa',unit:'h',len:8}
-    ],
-    [
-        {name:'course',label:'Cog ',unit:'°',len:6},
-        {name:'speed',label:'Sog ',unit:'kn',len:6},
-        {name:'heading',label:'Hdg ',unit:'°',len:3}
-    ],
-    [
-        {name:'length',label:'Len ',len:6},
-        {name:'beam',label:'Beam',len:6},
-        {name:'draught',label:'Drau',len:8}
-    ],
-    [
-        {name:'age',label:'Age ',len:6},
-        {name:'status',label:'Stat'}
-    ],
-    [
-        {name:'shiptype',label:'Type'},
-        {name:'aid_type',label:'Type'},
-        {name:'callsign',label:'Call'},
-        {name:'destination',label:'Dest'}
-    ]
+    [ 'status', 'age', ],
+    [ 'shiptype', 'aid_type', 'callsign', 'destination', ],
+    [ 'headingTo', 'distance', ],
+    [ 'tcpa', 'cpa', 'bcpa', ],
+    [ 'course', 'speed', 'heading', 'turn', ],
+    [ 'length', 'beam', 'draught', ],
 ];
 const reducedAisInfos=[
-    aisInfos[0]
+    [ 'distance', 'cpa', 'tcpa', 'course', 'speed', ],
 ];
-const fieldToLabel=(field)=>{
-    let rt;
-    aisInfos.map((l1)=>{
-        l1.map((l2)=>{
-            if (l2.name == field) rt=l2.label;
-        })
-    });
-    return rt||field;
-};
-
 
 const aisSortCreator=(sortField)=>{
     return (a,b)=> {
@@ -68,11 +38,7 @@ const aisSortCreator=(sortField)=>{
         if (sortField == 'tcpa') {
             if (fa < 0 && fb >= 0) return 1;
             if (fb < 0 && fa >= 0) return -1;
-            if (fa < 0 && fb < 0) {
-                if (fa < fb) return 1;
-                if (fa > fb) return -1;
-                return 0;
-            }
+            return Math.abs(fa)-Math.abs(fb);
         }
         if (typeof(fa) === 'string') fa=fa.toUpperCase();
         if (typeof(fb) === 'string') fb=fb.toUpperCase();
@@ -82,22 +48,20 @@ const aisSortCreator=(sortField)=>{
     };
 };
 
-const formatFixed=(val,len)=>{
-    let str=new Array(len+1).join(' ')+val;
-    return str.substr(str.length-len);
-
+const pad=(val,len)=>{
+    let str = (''+val).trim();
+    str = ' '.repeat(Math.max(0,len-str.length)) + str;
+    return str;
 }
-
-
-
 
 
 const sortDialog=(sortField)=>{
     let list=[
-        {label:'CPA', value:'cpa'},
+        {label:'DCPA', value:'cpa'},
         {label:'TCPA',value:'tcpa'},
         {label:'DST',value:'distance'},
-        {label:'Shipname',value:'shipname'}
+        {label:'Name',value:'shipname'},
+        {label:'MMSI',value:'mmsi'},
     ];
     for (let i in list){
         if (list[i].value === sortField) list[i].selected=true;
@@ -124,17 +88,18 @@ const AisItem=(props)=>{
         if (newLine) txt+="\n";
         newLine=false;
         infoLine.forEach((info)=>{
-            if (! fmt.shouldShow(info.name,props)) return;
+            if (! fmt.shouldShow(info,props)) return;
+            if (newLine) txt+=reduceDetails ? "  " : "   ";
+            txt+=(fmt.getHeadline(info)+": ");
+            let val=(fmt.format(info,props)||'')
+            val=pad(val,reduceDetails ? 1 : 4);
+            let unit=fmt.getUnit(info)
+            if(unit && !reduceDetails) val+=unit;
+            txt+=val;
             newLine=true;
-            txt+=(info.label+": ").replace(/ /g,'\xa0');
-            let val=(fmt.format(info.name,props)||'');
-            if (info.len){
-                val=formatFixed(val,info.len);
-            }
-            txt+=val.replace(/ /g,'\xa0');
-            txt+="  ";
         })
     })
+    txt=txt.replace(/ /g,'\xa0');
     return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
                 <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
@@ -308,7 +273,7 @@ class AisPage extends React.Component{
                     <span className="aisNumTargets">{props.numTargets} Targets</span>
                     {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                               onClick={this.scrollWarning}/>}
-                    <span>sorted by {fieldToLabel(this.state.sortField)}</span>
+                    <span>sorted by {AisFormatter.getHeadline(this.state.sortField)}</span>
                     {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
                 </div>
             );

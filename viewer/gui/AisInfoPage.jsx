@@ -33,8 +33,9 @@ const displayItems = [
     {name: 'turn', label: 'ROT(°/min)'},
     {name: 'headingTo', label: 'BRG(°)'},
     {name: 'distance', label: 'Distance(nm)'},
+    {name: 'tcpa'},
     {name: 'cpa', label: 'CPA(nm)'},
-    {name: 'tcpa', label: 'TCPA(h:min:sec)'},
+    {name: 'bcpa', label: 'TCPA(h:min:sec)'},
     {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
     {name: 'length', label: 'Length(m)'},
     {name: 'beam',label: 'Beam(m)'},
@@ -55,14 +56,24 @@ const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
     return Dynamic((props)=> {
-        if (! AisFormatter.shouldShow(props.name,props.current)){
+        var key = props.name;
+        if (! AisFormatter.shouldShow(key,props.current)){
             return null;
         }
+        var unit = AisFormatter.getUnit(props.name);
+        var clazz = 'aisInfoRow';
+        var warning = props.current.warning && (key.includes('cpa') || key.includes('pass'));
+        let target = props.current;
+        let warningDist = globalStore.getData(keys.properties.aisWarningCpa);
+        let warningTime = globalStore.getData(keys.properties.aisWarningTpa);
+        if(key.includes('pass') && warning || 0 < target.tcpa && (key=='cpa' && target.cpa < warningDist || key=='tcpa' && target.tcpa < warningTime)) {
+          clazz += ' warning';
+        }
         return (
-        <div className="aisInfoRow">
-            <div className='label '>{props.label}</div>
-            <div className={cl}>{AisFormatter.format(props.name, props.current)}</div>
-        </div>
+          <div className={clazz}>
+              <div className='label'>{AisFormatter.getHeadline(key)}</div>
+              <div className={cl}>{AisFormatter.format(key, props.current)}{unit && <span className='unit'>&thinsp;{unit}</span>}</div>
+          </div>
         );
     },{
         storeKeys:storeKeys,

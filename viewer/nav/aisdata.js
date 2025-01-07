@@ -97,34 +97,38 @@ class AisData {
         ais.warning = false;
         ais.tracking = false;
         ais.nearest = false;
-        let computeProperties = globalStore.getMultiple({
-            minAISspeed: keys.properties.minAISspeed
-        });
-        let dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0)), useRhumbLine);
+        let aispos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
+        // correct for the age of the ais data by forwarding the position to current time
+        let aisCourse = parseFloat(ais.course || 0);
+        let aisSpeed = parseFloat(ais.speed || 0);
+        aispos = NavCompute.computeTarget(aispos, aisCourse, (ais.age||0)*aisSpeed, useRhumbLine);
+        let dst = NavCompute.computeDistance(boatPos, aispos, useRhumbLine);
+        ais.distance = dst.dts;
+        ais.headingTo = dst.course;
+        let computeProperties = globalStore.getMultiple({ minAISspeed: keys.properties.minAISspeed });
         let cpadata = NavCompute.computeCpa({
                 lon: boatPos.lon,
                 lat: boatPos.lat,
-                course: boatPos.course || 0,
+                course: boatPos.course || 0, // TODO does this make sense? If these values are not present, CPA computation is not possible
                 speed: boatPos.speed || 0
             },
             {
-                lon: parseFloat(ais.lon || 0),
-                lat: parseFloat(ais.lat || 0),
-                course: parseFloat(ais.course || 0),
-                speed: parseFloat(ais.speed || 0)
+                lon: aispos.lon, // TODO same as ^^^
+                lat: aispos.lat,
+                course: aisCourse,
+                speed: aisSpeed
             },
             computeProperties,
             useRhumbLine
         );
-        ais.distance = dst.dts;
-        ais.headingTo = dst.course;
-        if (cpadata.tcpa !== undefined && cpadata.cpa !== undefined) {
+//        if (cpadata.tcpa !== undefined && cpadata.cpa !== undefined) {
             ais.cpa = cpadata.cpa;
             ais.tcpa = cpadata.tcpa;
-        } else {
-            ais.cpa = 0;
-            ais.tcpa = 0;
-        }
+        ais.bcpa = cpadata.bcpa;
+//} else {
+    //            ais.cpa = 0; // TODO does this make sense? undefined != 0
+    //        ais.tcpa = 0;
+    //        }
         ais.passFront = cpadata.front;
         if (!ais.shipname) ais.shipname = "unknown";
         if (!ais.callsign) ais.callsign = "????";
@@ -145,7 +149,6 @@ class AisData {
         let showOther = globalStore.getData(keys.properties.aisShowOther, false);
         let aisMinSpeed = parseFloat(globalStore.getData(keys.properties.aisMinDisplaySpeed, 0));
         let hideTime = parseFloat(globalStore.getData(keys.properties.aisHideTime, 30)) * 1000;
-        let foundTrackedTarget = false;
         let now = (new Date()).getTime();
         for (let aisidx in this.currentAis) {
             let ais = this.currentAis[aisidx];
@@ -178,24 +181,21 @@ class AisData {
             aisTargets.push(ais);
             if (boatPos.valid) {
                 this._computeAisTarget(boatPos, ais);
-                let warningCpa = globalStore.getData(keys.properties.aisWarningCpa);
-                if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < globalStore.getData(keys.properties.aisWarningTpa)) {
+                let warningDist = globalStore.getData(keys.properties.aisWarningCpa)*1; // meter
+                let warningTime = globalStore.getData(keys.properties.aisWarningTpa)*1; // seconds
+                if (ais.cpa && ais.cpa <= warningDist && ais.tcpa <= warningTime && 0 <= ais.tcpa) {
+                    ais.warning = true;
                     if (aisWarningAis) {
-                        if (ais.tcpa >= 0) {
-                            if (aisWarningAis.tcpa > ais.tcpa || aisWarningAis.tcpa < 0) aisWarningAis = ais;
-                        } else {
-                            if (aisWarningAis.tcpa < 0 && aisWarningAis.tcpa < ais.tcpa) aisWarningAis = ais;
-                        }
+                      if (Math.abs(ais.tcpa) < Math.abs(aisWarningAis.tcpa)) aisWarningAis = ais;
                     } else aisWarningAis = ais;
                 }
             }
-            if (ais.mmsi == this.trackedAIStarget) {
-                foundTrackedTarget = true;
+        if (ais.mmsi == this.trackedAIStarget) {
                 ais.tracking = true;
                 trackedTarget = ais;
             }
         }
-        if (!foundTrackedTarget) this.trackedAIStarget = null;
+        if (trackedTarget==null) this.trackedAIStarget = null;
         if (aisTargets) {
             aisTargets.sort(this.aisSort);
             if (aisTargets.length) {
@@ -249,9 +249,7 @@ class AisData {
      */
     aisSort(a, b) {
         try {
-            if (a.distance == b.distance) return 0;
-            if (a.distance < b.distance) return -1;
-            return 1;
+            return a.distance-b.distance;
         } catch (err) {
             return 0;
         }
