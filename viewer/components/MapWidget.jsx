@@ -2,7 +2,7 @@
  * Created by andreas on 23.02.16.
  */
 
-import {useEffect, useRef} from "react";
+import {useCallback, useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import base from "../base";
@@ -12,6 +12,8 @@ import base from "../base";
 const MapWidget=(props)=>{
         useKeyEventHandler(props,"widget");
         const drawing=useRef(null);
+        const currentProps=useRef(props);
+        currentProps.current=props;
         const userContext=useRef({
         /**
          * convert lon, lat to canvas pixel
@@ -78,14 +80,14 @@ const MapWidget=(props)=>{
             window.setTimeout(()=>props.triggerRender(),0);
         }
     });
-    const getProps=()=>{
+    const getProps=useCallback( ()=>{
         if (! props.translateFunction){
-            return props;
+            return currentProps.current;
         }
         else{
-            return {...props,...props.translateFunction(...props)};
+            return {...currentProps.current,...props.translateFunction(...currentProps.current)};
         }
-    }
+    },[]);
     useEffect(() => {
         if (typeof(props.initFunction) === 'function'){
             try {
