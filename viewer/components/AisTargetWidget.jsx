@@ -31,24 +31,38 @@ const AisTargetWidget = (props) => {
         return (
             <WidgetFrame {...props} addClass="aisTargetWidget" style={style} onClick={click} unit={undefined} caption='AIS' >
                 <div className="aisPart">
-                    {!small && <div className="widgetData">
+                    {!small &&
+                    <div className="widgetData">
                         <span className="aisData">{AisFormatter.format('nameOrmmsi', target)}</span>
                     </div>}
-                    {!small && <div className="widgetData">
-                        <span className='label '>{AisFormatter.getHeadline('distance')}</span>
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('distance')} </span>
                         <span className="aisData">{AisFormatter.format('distance', target)}</span>
-                        <span className="unit">nm</span>
-                    </div>}
-                    {target.tcpa && <div className="widgetData">
-                        <span className='label '>{AisFormatter.getHeadline('cpa')}</span>
+                        <span className="unit">{AisFormatter.getUnit('distance')}</span>
+                    </div>
+                </div>
+                {target.tcpa>0 &&
+                <div className="aisPart">
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
                         <span className="aisData">{AisFormatter.format('cpa', target)}</span>
-                        <span className="unit">nm</span>
-                    </div>}
-                    {target.tcpa && <div className="widgetData">
-                            <span className='label '>{AisFormatter.getHeadline('tcpa')}</span>
-                            <span className="aisData"> {AisFormatter.format('tcpa', target)}</span>
-                            <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
-                    </div>}
+                        <span className="unit">{AisFormatter.getUnit('cpa')}</span>
+                    </div>
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
+                        <span className="aisData"> {AisFormatter.format('tcpa', target)}</span>
+                        <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
+                    </div>
+                </div>}
+                {!(target.tcpa>0) &&
+                <div className="aisPart">
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
+                        <span className="aisData">{AisFormatter.format('headingTo', target)}</span>
+                        <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
+                    </div>
+                </div>}
+                <div className="aisPart">
                     <div className="widgetData">
                         <span className='aisFront aisData'>{front}</span>
                     </div>
