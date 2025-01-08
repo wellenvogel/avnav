@@ -19,25 +19,56 @@ import navdata from "../nav/navdata";
 import Dialogs from "../components/OverlayDialog.jsx";
 
 const aisInfos=[
-    [ 'status', 'age', ],
-    [ 'shiptype', 'aid_type', 'callsign', 'destination', ],
-    [ 'headingTo', 'distance', ],
-    [ 'tcpa', 'cpa', 'bcpa', ],
-    [ 'course', 'speed', 'heading', 'turn', ],
-    [ 'length', 'beam', 'draught', ],
+    [ 'cpa', 'tcpa', 'bcpa', ],
+    [ 'distance', 'headingTo', 'course', 'speed', ],
+//     [ 'headingTo', 'distance', ],
+//     [ 'course', 'speed', 'heading', 'turn', ],
+    [ 'status', ],
+//     [ 'status', 'age', ],
+    [ 'shiptype', 'aid_type', 'length', ],
+//     [ 'shiptype', 'aid_type', 'callsign', 'destination', ],
+//     [ 'length', 'beam', 'draught', ],
 ];
 const reducedAisInfos=[
-    [ 'distance', 'cpa', 'tcpa', 'course', 'speed', ],
+    [ 'cpa', 'tcpa', 'distance', 'course', 'speed', ],
 ];
 
+const sortFields = [
+    {label:'Priority', value:'prio'},
+    {label:'DCPA', value:'cpa'},
+    {label:'TCPA',value:'tcpa'},
+    {label:'DST',value:'distance'},
+    {label:'Name',value:'shipname'},
+    {label:'MMSI',value:'mmsi'},
+];
+
+const fieldToLabel=(field)=>{
+    let rt;
+    sortFields.forEach((e)=>{ if(e.value==field) rt=e.label; });
+    return rt||field;
+};
+
 const aisSortCreator=(sortField)=>{
+    let warningDist = globalStore.getData(keys.properties.aisWarningCpa); // meter
+    let warningTime = globalStore.getData(keys.properties.aisWarningTpa); // seconds
     return (a,b)=> {
-        let useFmt=sortField === 'shipname';
-        let fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
-        let fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
-        if (sortField == 'tcpa') {
-            if (fa < 0 && fb >= 0) return 1;
-            if (fb < 0 && fa >= 0) return -1;
+        if (sortField=='prio') {
+            // combined relative distance of CPA
+            var fa = a.tcpa/warningTime + a.cpa/warningDist;
+            var fb = b.tcpa/warningTime + b.cpa/warningDist;
+        } else {
+            let useFmt=sortField === 'shipname';
+            var fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
+            var fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
+        }
+        if (sortField.includes('cpa') || sortField=='prio') {
+            // pull warnings up
+            if (b.warning && !a.warning) return 1;
+            if (a.warning && !b.warning) return -1;
+            // push passed CPAs down
+            let ta = a.tcpa, tb = b.tcpa;
+            if (ta < 0 && tb >= 0) return 1;
+            if (tb < 0 && ta >= 0) return -1;
             return Math.abs(fa)-Math.abs(fb);
         }
         if (typeof(fa) === 'string') fa=fa.toUpperCase();
@@ -54,23 +85,15 @@ const pad=(val,len)=>{
     return str;
 }
 
-
 const sortDialog=(sortField)=>{
-    let list=[
-        {label:'DCPA', value:'cpa'},
-        {label:'TCPA',value:'tcpa'},
-        {label:'DST',value:'distance'},
-        {label:'Name',value:'shipname'},
-        {label:'MMSI',value:'mmsi'},
-    ];
-    for (let i in list){
-        if (list[i].value === sortField) list[i].selected=true;
+    for (let i in sortFields){
+        if (sortFields[i].value === sortField) sortFields[i].selected=true;
     }
-    return OverlayDialog.selectDialogPromise('Sort Order',list);
+    return OverlayDialog.selectDialogPromise('Sort Order',sortFields);
 };
 
 const AisItem=(props)=>{
-    let reduceDetails=globalStore.getData(keys.properties.aisReducedList,true);
+    let reduceDetails=globalStore.getData(keys.properties.aisReducedList,false);
     let fmt=AisFormatter;
     let fb=fmt.format('passFront',props);
     let style={
@@ -89,12 +112,14 @@ const AisItem=(props)=>{
         newLine=false;
         infoLine.forEach((info)=>{
             if (! fmt.shouldShow(info,props)) return;
-            if (newLine) txt+=reduceDetails ? "  " : "   ";
-            txt+=(fmt.getHeadline(info)+": ");
-            let val=(fmt.format(info,props)||'')
-            val=pad(val,reduceDetails ? 1 : 4);
-            let unit=fmt.getUnit(info)
-            if(unit && !reduceDetails) val+=unit;
+            if (newLine) txt+='  ';
+            let lbl=fmt.getHeadline(info)+":";
+            lbl=pad(lbl,reduceDetails?1:5);
+            txt+=lbl+' ';
+            let val=(fmt.format(info,props)||'');
+            let unit=fmt.getUnit(info);
+            if(!reduceDetails && unit) val+=unit;
+            val=pad(val,reduceDetails?1:6);
             txt+=val;
             newLine=true;
         })
@@ -129,7 +154,7 @@ class AisPage extends React.Component{
         if (props.options && props.options.mmsi){
             this.initialMmsi=props.options.mmsi;
         }
-        let sortField='cpa';
+        let sortField=sortFields[0].value;
         if (props.options && props.options.sortField){
             sortField=props.options.sortField;
         }
@@ -273,7 +298,7 @@ class AisPage extends React.Component{
                     <span className="aisNumTargets">{props.numTargets} Targets</span>
                     {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                               onClick={this.scrollWarning}/>}
-                    <span>sorted by {AisFormatter.getHeadline(this.state.sortField)}</span>
+                    <span>sorted by {fieldToLabel(this.state.sortField)}</span>
                     {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
                 </div>
             );

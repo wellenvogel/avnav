@@ -113,7 +113,7 @@ class AisData {
                 speed: boatPos.speed || 0
             },
             {
-                lon: aispos.lon, // TODO same as ^^^
+                lon: aispos.lon,
                 lat: aispos.lat,
                 course: aisCourse,
                 speed: aisSpeed
@@ -121,14 +121,9 @@ class AisData {
             computeProperties,
             useRhumbLine
         );
-//        if (cpadata.tcpa !== undefined && cpadata.cpa !== undefined) {
-            ais.cpa = cpadata.cpa;
-            ais.tcpa = cpadata.tcpa;
+        ais.cpa = cpadata.cpa;
+        ais.tcpa = cpadata.tcpa;
         ais.bcpa = cpadata.bcpa;
-//} else {
-    //            ais.cpa = 0; // TODO does this make sense? undefined != 0
-    //        ais.tcpa = 0;
-    //        }
         ais.passFront = cpadata.front;
         if (!ais.shipname) ais.shipname = "unknown";
         if (!ais.callsign) ais.callsign = "????";
@@ -181,8 +176,8 @@ class AisData {
             aisTargets.push(ais);
             if (boatPos.valid) {
                 this._computeAisTarget(boatPos, ais);
-                let warningDist = globalStore.getData(keys.properties.aisWarningCpa)*1; // meter
-                let warningTime = globalStore.getData(keys.properties.aisWarningTpa)*1; // seconds
+                let warningDist = globalStore.getData(keys.properties.aisWarningCpa); // meter
+                let warningTime = globalStore.getData(keys.properties.aisWarningTpa); // seconds
                 if (ais.cpa && ais.cpa <= warningDist && ais.tcpa <= warningTime && 0 <= ais.tcpa) {
                     ais.warning = true;
                     if (aisWarningAis) {
