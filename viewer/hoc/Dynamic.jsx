@@ -17,6 +17,9 @@ export const useStore=(props,opt_options)=>{
     if (! opt_options) opt_options= {};
     const usedStoreKeys=KeyHelper.removeNodeInfo({...opt_options.storeKeys,...storeKeys});
     if (! usedStoreKeys) return props;
+    if (typeof(usedStoreKeys) !== 'object'){
+        throw Error("invalid type of storeKeys: "+typeof(usedStoreKeys));
+    }
     const store=opt_options.store||globalStore;
     const lastUpdate=useRef(0);
     const timer=useRef(undefined);
