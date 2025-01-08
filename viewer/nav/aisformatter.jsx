@@ -33,7 +33,6 @@ const aisparam={
     heading: {
         headline: 'HDT',
         format: function (v) {
-            if (v.heading === undefined) return '---';
             return Formatter.formatDirection(v.heading);
         },
         unit: '°',
@@ -42,8 +41,7 @@ const aisparam={
     turn: {
         headline: 'ROT',
         format: function (v) {
-            if (v.turn === undefined) return '-';
-            return Formatter.formatDecimal(v.turn,1,0);
+            return Formatter.formatDecimal(v.turn,2,0);
         },
         unit: '°/min',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
@@ -74,7 +72,6 @@ const aisparam={
     cpa: {
         headline: 'DCPA',
             format: function (v) {
-            if (v.cpa === undefined) return '----';
             return Formatter.formatDistance(v.cpa);
         },
         unit: 'nm',
@@ -82,18 +79,14 @@ const aisparam={
     tcpa: {
         headline: 'TCPA',
             format: function (v) {
-              if (v.tcpa === undefined) return "---";
-              let t = parseFloat(v.tcpa);
-              return Formatter.formatDecimal(t/60,3,Math.abs(t)>60?0:2);
+              return Formatter.formatDecimal(v.tcpa/60,3,Math.abs(v.tcpa)>60?0:2);
         },
         unit: 'min',
     },
     bcpa: {
         headline: 'BCPA',
             format: function (v) {
-              if (v.bcpa === undefined) return "---";
-              let b = parseFloat(v.bcpa);
-              return Formatter.formatDirection(b);
+              return Formatter.formatDirection(v.bcpa);
         },
         unit: '°',
     },
@@ -165,9 +158,7 @@ const aisparam={
     status:{
         headline: 'Status',
         format: function(v){
-            if (v.status === undefined){
-                return "----";
-            }
+            if (v.status === undefined) return "----";
             let st=parseInt(v.status);
             switch (st){
                 case 0: return 'Under way using engine';
@@ -244,7 +235,6 @@ const aisparam={
     length: {
         headline: 'Length',
         format: function(v){
-            if (v.length === undefined) return '---';
             return Formatter.formatDecimal(v.length,3)
         },
         unit: 'm'
@@ -252,7 +242,6 @@ const aisparam={
     beam: {
         headline: 'Beam',
         format: function(v){
-            if (v.beam === undefined) return '---';
             return Formatter.formatDecimal(v.beam,3);
         },
         unit: 'm'
@@ -260,7 +249,6 @@ const aisparam={
     draught: {
         headline: 'Draught',
         format: function(v){
-            if (v.draught === undefined) return '---';
             return Formatter.formatDecimal(v.draught,2,1);
         },
         unit: 'm',
