@@ -181,11 +181,6 @@ NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
         cpasrc.rhumbBearingTo(cpadst):
         cpasrc.initialBearingTo(cpadst);
 
-//    if (rt.cpa > distance || appr.tm < 0){
-//        rt.cpa=distance;
-//        rt.tcpa=1;
-//    }
-
     rt.front=0;
     if (appr.td!==undefined && appr.ts!==undefined){
         if(appr.ts>=0 && appr.ts<appr.td) rt.front=1; // we will cross track of target in front of target
@@ -217,7 +212,6 @@ NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
  *        dmd - distance dest to cpa point
  */
 NavCompute.computeApproach=function(bearing,distance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
-    //courses
     let rt={};
     const deg = Math.PI/180;
     let ca=(bearing-srcCourse)*deg;
@@ -227,15 +221,11 @@ NavCompute.computeApproach=function(bearing,distance,srcCourse,srcSpeed,dstCours
     let cosa=Math.cos(ca);
     let sinb=Math.sin(cb);
     let cosb=Math.cos(cb);
-//    let sinc=Math.sin(cc);
-//    let cosc=Math.cos(cc);
 
     if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed){
         try { //
             rt.td = distance / (dstSpeed * (cosa / sina * sinb - cosb));
             rt.ts = distance / (srcSpeed * (cosa - sina * cosb / sinb));
-//            rt.ts = distance/srcSpeed * sinb/sinc;
-//            rt.td = distance/dstSpeed * sina/sinc;
         }catch(e){
             //TODO: exception handling
         }
@@ -253,7 +243,6 @@ NavCompute.computeApproach=function(bearing,distance,srcCourse,srcSpeed,dstCours
         }
     }
     let denom=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
-//    let denom = srcSpeed*srcSpeed + dstSpeed*dstSpeed - 2*srcSpeed*dstSpeed*cosc;
     if (Math.abs(denom) < 1e-6){
         rt.tm=undefined;
         return rt;
