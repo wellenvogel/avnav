@@ -8,7 +8,7 @@
  */
 
 import globalStore from "../util/globalstore.jsx";
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {Children, cloneElement, useCallback, useEffect, useRef, useState} from 'react';
 import {KeyHelper} from "../util/keys";
 
 export const useStore=(props,opt_options)=>{
@@ -60,11 +60,17 @@ export const useStore=(props,opt_options)=>{
     return computeValues(values);
 }
 
+export const DynamicFrame=(props)=>{
+    const values=useStore(props);
+    return <React.Fragment>
+        {Children.map(props.children,(child)=>cloneElement(child,values))}
+    </React.Fragment>
+}
+
 export default  function(Component,opt_options,opt_store){
     let store=opt_store||globalStore;
-    const Dynamic =(props)=>{
+     return (props)=>{
         const currentValues=useStore(props,{...opt_options,store:store});
         return <Component {...currentValues}/>
     }
-    return Dynamic;
 }

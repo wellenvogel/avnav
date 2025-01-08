@@ -27,7 +27,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {anchorWatchDialog, AnchorWatchKeys} from "./AnchorWatchDialog";
 import keys from '../util/keys';
-import Dynamic from "../hoc/Dynamic";
+import Dynamic, {DynamicFrame} from "../hoc/Dynamic";
 import globalstore from "../util/globalstore";
 import OverlayDialog from "./OverlayDialog";
 import globalStore from "../util/globalstore";
@@ -55,4 +55,5 @@ TitleIcons.propTypes={
 }
 TitleIcons.storeKeys=Object.assign({},AnchorWatchKeys,{show:keys.properties.titleIcons});
 
-export const DynamicTitleIcons=Dynamic(TitleIcons,{storeKeys:TitleIcons.storeKeys});
+//export const DynamicTitleIcons=Dynamic(TitleIcons,{storeKeys:TitleIcons.storeKeys});
+export const DynamicTitleIcons=(props)=><DynamicFrame {...props} storeKeys={TitleIcons.storeKeys}><TitleIcons/></DynamicFrame>;
