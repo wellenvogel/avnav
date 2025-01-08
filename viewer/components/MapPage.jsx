@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {showPromiseDialog} from '../components/OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
@@ -153,7 +153,7 @@ class MapPage extends React.Component{
         };
         if (chartEntry.eulaMode !== undefined){
             if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
-                EulaDialog.createDialog(chartEntry.name,chartEntry.url+"/eula")
+                showPromiseDialog(undefined,(props)=><EulaDialog {...props} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)
                     .then(()=>{
                         setShown(chartEntry.url,INFO_TYPES.eula);
                         showMap();
