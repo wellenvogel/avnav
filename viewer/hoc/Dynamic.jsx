@@ -21,14 +21,15 @@ export const useStore=(props,opt_options)=>{
     const lastUpdate=useRef(0);
     const timer=useRef(undefined);
     const [values,setValues]=useState(store.getMultiple(usedStoreKeys));
-    const usedChangeCallback=opt_options.changeCallback||changeCallback;
+    const usedChangeCallback=changeCallback||opt_options.changeCallback;
     const computeValues=useCallback((data)=>{
         const usedUpdateFunction=opt_options.updateFunction||updateFunction;
         if (usedUpdateFunction) return {...forward,...usedUpdateFunction({...data},storeKeys)};
         return {...forward,...data};
-    },[])
+    },[forward,updateFunction,opt_options])
     const doSetValues=(data)=>{
         setValues(data);
+        lastUpdate.current=(new Date()).getTime();
         if (usedChangeCallback) usedChangeCallback(computeValues(data));
     }
     const dataChanged=useCallback(()=>{
