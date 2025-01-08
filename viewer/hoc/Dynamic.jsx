@@ -15,7 +15,7 @@ export const useStore=(props,opt_options)=>{
     if (! props) return;
     const {storeKeys,updateFunction,minTime,changeCallback,...forward}=props;
     if (! opt_options) opt_options= {};
-    const usedStoreKeys=KeyHelper.removeNodeInfo(opt_options.storeKeys||storeKeys);
+    const usedStoreKeys=KeyHelper.removeNodeInfo({...opt_options.storeKeys,...storeKeys});
     if (! usedStoreKeys) return props;
     const store=opt_options.store||globalStore;
     const lastUpdate=useRef(0);
@@ -24,7 +24,7 @@ export const useStore=(props,opt_options)=>{
     const usedChangeCallback=opt_options.changeCallback||changeCallback;
     const computeValues=useCallback((data)=>{
         const usedUpdateFunction=opt_options.updateFunction||updateFunction;
-        if (usedUpdateFunction) return usedUpdateFunction({...forward,...data},storeKeys);
+        if (usedUpdateFunction) return {...forward,...usedUpdateFunction({...data},storeKeys)};
         return {...forward,...data};
     },[])
     const doSetValues=(data)=>{
@@ -51,6 +51,11 @@ export const useStore=(props,opt_options)=>{
         store.register(dataChanged,usedStoreKeys);
         return ()=>store.deregister(dataChanged);
     }, [usedStoreKeys]);
+    if (usedChangeCallback){
+        useEffect(() => {
+            usedChangeCallback(computeValues(values));
+        }, []);
+    }
     return computeValues(values);
 }
 
