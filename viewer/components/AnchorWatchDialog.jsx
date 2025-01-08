@@ -41,7 +41,7 @@ const WatchDialog=(props)=> {
     const [distance,setDistance]=useState(0);
     const dialogContext=useDialogContext();
     const computeRefPoint=(sv,fromCenter)=>{
-        let cv={radius,bearing,distance,refPoint};
+        let cv={radius,bearing,distance};
         if (fromCenter){
             cv.refPoint=MapHolder.getCenter();
         }
