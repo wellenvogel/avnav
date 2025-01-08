@@ -50,7 +50,7 @@ class Button extends React.Component {
 Button.propTypes={
     onClick: PropTypes.func,
     className: PropTypes.string,
-    toggle: PropTypes.bool,
+    toggle: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]),
     name: PropTypes.string.isRequired,
     icon: PropTypes.string,
     style: PropTypes.object,
