@@ -53,23 +53,28 @@ const aisSortCreator=(sortField)=>{
     let warningTime = globalStore.getData(keys.properties.aisWarningTpa); // seconds
     return (a,b)=> {
         if (sortField=='prio') {
-            // combined relative distance of CPA
-            var fa = a.tcpa/warningTime + a.cpa/warningDist;
-            var fb = b.tcpa/warningTime + b.cpa/warningDist;
-        } else {
-            let useFmt=sortField === 'shipname';
-            var fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
-            var fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
-        }
-        if (sortField.includes('cpa') || sortField=='prio') {
             // pull warnings up
             if (b.warning && !a.warning) return 1;
             if (a.warning && !b.warning) return -1;
-            // push passed CPAs down
+            // combined relative distance of CPA, if passed use distance
+            let fa = a.tcpa<0 ? 2*a.distance/warningDist : a.tcpa/warningTime + a.cpa/warningDist;
+            let fb = b.tcpa<0 ? 2*b.distance/warningDist : b.tcpa/warningTime + b.cpa/warningDist;
+            return fa-fb;
+        }
+        let useFmt=sortField === 'shipname';
+        var fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
+        var fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
+        if (sortField.includes('cpa')) {
+            // pull warnings up
+            if (b.warning && !a.warning) return 1;
+            if (a.warning && !b.warning) return -1;
+            // push down passed CPAs
             let ta = a.tcpa, tb = b.tcpa;
             if (ta < 0 && tb >= 0) return 1;
             if (tb < 0 && ta >= 0) return -1;
-            return Math.abs(fa)-Math.abs(fb);
+            // if both passed CPA, sort by distance
+            if (ta < 0 && tb < 0) { fa=a.distance; fb=b.distance; }
+            return fa-fb;
         }
         if (typeof(fa) === 'string') fa=fa.toUpperCase();
         if (typeof(fb) === 'string') fb=fb.toUpperCase();
