@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Requests from '../util/requests.js';
-import OverlayDialog, {DialogButtons, DialogFrame, DialogRow} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, DialogRow} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 
 const EulaDialog=(props)=>{
@@ -39,21 +39,6 @@ EulaDialog.propTypes={
     eulaUrl: PropTypes.string,
     name: PropTypes.string,
     resolveFunction: PropTypes.func.isRequired
-};
-
-EulaDialog.createDialog=(name,eulaUrl)=>{
-    return new Promise((resolve,reject)=>{
-        OverlayDialog.dialog((props)=> {
-            return <EulaDialog
-                {...props}
-                okCallback={()=>{
-                        resolve(0)
-                   }}
-                name={name}
-                eulaUrl={eulaUrl}
-                />
-        },undefined,()=>{reject("")});
-    });
 };
 
 export default  EulaDialog;
