@@ -108,7 +108,7 @@ const getDownloadUrl=(item)=>{
 }
 
 const showConvertFunctions = {
-    track: (history,item) => {
+    track: (dialogContext,history,item) => {
         TrackConvertDialog.showDialog(history,item.name);
     }
 }
@@ -759,11 +759,9 @@ export const FileDialogWithActions=(props)=>{
         }
         if (action === 'userapp'){
             if (item.url) {
-                showPromiseDialog(undefined, (props) =>
-                    <UserAppDialog {...props} fixed={{url: item.url}}/>
-                )
-                    .then((data) => doneAction())
-                    .catch((error) => doneAction());
+                dialogContext.replaceDialog((props) =>
+                    <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={()=>{}}/>
+                ,()=>doneAction())
             }
         }
         if (action === 'delete'){
@@ -789,7 +787,7 @@ export const FileDialogWithActions=(props)=>{
         if ( action === 'convert'){
             let convertFunction=showConvertFunctions[newItem.type];
             if (convertFunction){
-                convertFunction(history,newItem);
+                convertFunction(dialogContext,history,newItem);
             }
             return;
         }
