@@ -276,9 +276,13 @@ export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
         },
         getRender(){
             if (!thisref.state[stateName]) return null;
-            return dialogDisplay(thisref.state[stateName],()=>{
-                this.hideDialog()
-            });
+            const D=thisref.state[stateName];
+            return (
+                <DialogDisplay closeCallback={()=>{
+                    this.hideDialog()
+                }}>
+                    <D/>
+                </DialogDisplay> );
         },
         isShowing(){
             return !!thisref.state[stateName];
