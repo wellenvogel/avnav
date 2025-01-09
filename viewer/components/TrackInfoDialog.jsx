@@ -281,16 +281,14 @@ const AskEditRoute=(props)=>{
             route &nbsp;<span>{props.route.name}</span>&nbsp; successfully created
         </div>
         <div className="dialogButtons">
-            <DB name="cancel"
-                onClick={props.closeCallback}>
+            <DB name="cancel">
                 Cancel
             </DB>
             <DB name="editRoute"
                 onClick={()=>{
-                    props.closeCallback();
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                     editor.setNewRoute(props.route,0);
-                    this.props.history.push('editroutepage',{center:true});
+                    props.history.push('editroutepage',{center:true});
                 }}
             >Edit</DB>
         </div>
@@ -362,6 +360,7 @@ export class TrackConvertDialog extends React.Component{
                     OverlayDialog.dialog((props)=>{
                         return <AskEditRoute
                             {...props}
+                            history={this.props.history}
                             route={route}
                             />
                     })
@@ -424,6 +423,7 @@ export class TrackConvertDialog extends React.Component{
                 <div className="dialogButtons">
                     <DB name="convert"
                         onClick={this.convert}
+                        close={false}
                         >Compute</DB>
                 </div>
             </div>

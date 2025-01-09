@@ -109,7 +109,7 @@ const getDownloadUrl=(item)=>{
 
 const showConvertFunctions = {
     track: (dialogContext,history,item) => {
-        TrackConvertDialog.showDialog(history,item.name);
+        TrackConvertDialog.showDialog(history,item.name,dialogContext.replaceDialog);
     }
 }
 const buildRequestParameters=(request,item,opt_additional)=>{
