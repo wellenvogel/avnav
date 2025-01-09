@@ -10,7 +10,7 @@ import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
 import OverlayDialog, {
     DBCancel,
-    DialogButtons,
+    DialogButtons, DialogDisplay,
     dialogDisplay,
     DialogFrame,
     DialogText
@@ -701,19 +701,23 @@ class NavPage extends React.Component{
         let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         let neededChart=this.needsChartLoad();
         if (neededChart){
-            let Dialog=dialogDisplay((props)=>{
-                return (<DialogFrame title={"Waiting for chart"}>
-                    <DialogText >{neededChart}</DialogText>
-                    <DialogButtons buttonList={DBCancel()}/>
-                </DialogFrame>)
-                },
-                ()=>this.props.history.pop());
+            const Dialog = () => {
+                return (
+                    <DialogDisplay
+                        closeCallback={() => this.props.history.pop()}>
+                        <DialogFrame title={"Waiting for chart"}>
+                            <DialogText>{neededChart}</DialogText>
+                            <DialogButtons buttonList={DBCancel()}/>
+                        </DialogFrame>
+                    </DialogDisplay>
+                )
+            };
             return (
                 <Page
                     {...pageProperties}
                     id={PAGENAME}
                     buttonList={self.getButtons()}
-                    mainContent={Dialog}
+                    mainContent={<Dialog/>}
                     />
             );
         }

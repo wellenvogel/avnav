@@ -17,16 +17,13 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
-import {Input,InputReadOnly,Checkbox} from '../components/Inputs.jsx';
-import DB from '../components/DialogButton.jsx';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {
-    showFileDialog,
     deleteItem,
-    ItemDownloadButton, ItemActions
+    ItemDownloadButton, ItemActions, FileDialogWithActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase"
@@ -514,16 +511,20 @@ class DownloadPage extends React.Component{
                                     EditOverlaysDialog.createDialog(item,()=>this.fillData());
                                     return;
                                 }
-                                showFileDialog(this.props.history,item,
-                                    (action,item,pageChanged)=>{
-                                        if (pageChanged) return;
-                                        if (action === 'userapp') this.readAddOns()
-                                        else this.fillData();
-                                    },
-                                    (newName)=>{
-                                        //checkExisting
-                                        return this.entryExists(newName);
-                                    });
+                                OverlayDialog.showDialog(undefined,()=>
+                                 <FileDialogWithActions
+                                     item={item}
+                                     history={this.props.history}
+                                     doneCallback={(action,item,pageChanged)=>{
+                                         if (pageChanged) return;
+                                         if (action === 'userapp') this.readAddOns()
+                                         else this.fillData();
+                                     }}
+                                     checkExists={(newName)=>{
+                                         //checkExisting
+                                         return this.entryExists(newName);
+                                     }}
+                                 />);
                             }}
                         />
                         <UploadHandler

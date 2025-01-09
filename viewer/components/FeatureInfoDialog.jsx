@@ -211,11 +211,8 @@ FeatureInfoDialog.propTypes={
     additionalInfoRows: PropTypes.array //array of name,value,formatter
 }
 
-FeatureInfoDialog.showDialog=(history,info,opt_showDialogFunction)=>{
-    if (!opt_showDialogFunction) {
-        opt_showDialogFunction = OverlayDialog.dialog;
-    }
-    return opt_showDialogFunction((props)=>{
+FeatureInfoDialog.showDialog=(history,info,opt_dialogContext)=>{
+    return OverlayDialog.showDialog(opt_dialogContext,(props)=>{
             return <FeatureInfoDialog
                 {...info}
                 history={history}

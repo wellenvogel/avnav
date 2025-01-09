@@ -83,6 +83,7 @@ const DownloadButton=(props)=>{
                 }
                 <Bt
                     {...forward}
+                    close={useDialogButton?false:undefined}
                     onClick={(ev) => {
                         ev.stopPropagation();
                         if (!url) {
