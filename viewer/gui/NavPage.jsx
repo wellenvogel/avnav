@@ -30,7 +30,7 @@ import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorW
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
-import {TrackConvertDialog} from "../components/TrackInfoDialog";
+import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
@@ -481,7 +481,7 @@ class NavPage extends React.Component{
                    name:'toroute',
                    label: 'Convert',
                    onClick:(props)=>{
-                       TrackConvertDialog.showDialog(this.props.history, props.overlayName)
+                       OverlayDialog.showDialog(undefined,()=><TrackConvertDialog history={this.props.history} name={props.overlayName}/>)
                    }
                 });
             }

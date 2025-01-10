@@ -44,8 +44,8 @@ import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
-import {TrackConvertDialog} from "./TrackInfoDialog";
-import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
+import {TrackConvertDialog} from "./TrackConvertDialog";
+import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
@@ -109,7 +109,7 @@ const getDownloadUrl=(item)=>{
 
 const showConvertFunctions = {
     track: (dialogContext,history,item) => {
-        TrackConvertDialog.showDialog(history,item.name,dialogContext.replaceDialog);
+        dialogContext.replaceDialog(()=><TrackConvertDialog history={history} name={item.name}/>);
     }
 }
 const buildRequestParameters=(request,item,opt_additional)=>{
