@@ -628,12 +628,7 @@ class SettingsPage extends React.Component{
             }).catch(()=>{});
         }
         else{
-            LayoutFinishedDialog.createDialog()
-                .then((result)=>{
-                    //we need to write the changed value also in our display values
-                    self.changeItem({name:keys.properties.layoutName},LayoutHandler.name);
-                })
-                .catch((error)=>{});
+            OverlayDialog.showDialog(undefined,()=><LayoutFinishedDialog finishCallback={()=>this.changeItem({name:keys.properties.layoutName},LayoutHandler.name)}/> )
         }
     };
 
