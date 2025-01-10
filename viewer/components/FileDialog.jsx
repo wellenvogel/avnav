@@ -46,7 +46,7 @@ import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import {TrackConvertDialog} from "./TrackInfoDialog";
 import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
-import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
+import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";

@@ -35,7 +35,7 @@ import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import NavCompute from "../nav/navcompute";
 import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
-import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
+import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
 import assign from 'object-assign';
 import {stateHelper} from "../util/GuiHelpers";
