@@ -602,7 +602,7 @@ class EditRoutePage extends React.Component{
                     }
                 }
             }
-            FeatureInfoDialog.showDialog(this.props.history,feature);
+            OverlayDialog.showDialog(undefined,()=><FeatureInfoDialog history={this.props.history} {...feature}/>)
             return true;
         }
 

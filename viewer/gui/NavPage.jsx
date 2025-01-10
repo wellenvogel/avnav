@@ -466,7 +466,7 @@ class NavPage extends React.Component{
                         }
                     );
                 }
-                FeatureInfoDialog.showDialog(this.props.history,feature);
+                OverlayDialog.showDialog(undefined,()=><FeatureInfoDialog history={this.props.history} {...feature}/>)
             }
             if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
