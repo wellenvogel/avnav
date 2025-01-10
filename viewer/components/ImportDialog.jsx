@@ -22,89 +22,74 @@
  #
  ###############################################################################
  */
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import {Checkbox, Input, InputReadOnly} from "./Inputs";
-import DB from "./DialogButton";
 import helper from '../util/helper'
-import assign from 'object-assign';
-import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Requests from "../util/requests";
-class ImportDialog extends React.Component{
-    constructor(props){
-        super(props);
-        let name=props.name;
-        let ext=helper.getExt(name);
-        name=name.substr(0,name.length-ext.length-1);
-        this.state={
-            subdir:props.subdir,
-            useSubdir:props.subdir?true:false,
-            name:name,
-            ext: ext
-        };
-    }
-    render(){
+import {DialogButtons, DialogFrame} from "./OverlayDialog";
+import DB from "./DialogButton";
+import globalStore from "../util/globalstore";
+const ImportDialog =(props)=>{
+        const [subdir,setSubdir]=useState(props.subdir);
+        const [useSubdir,setUseSubdir]=useState(props.subdir?true:false);
+        const [name,setName]=useState(()=> {
+            let iname=props.name;
+            let iext=helper.getExt(iname);
+            return iname.substring(0, iname.length - iext.length - 1)
+        });
+        const [ext,setExt]=useState(()=>helper.getExt(props.name));
         return (
-            <React.Fragment>
-                <div className="importDialog flexInner">
-                    <h3 className="dialogTitle">Upload Chart to Importer</h3>
-                    {!this.props.allowNameChange && <InputReadOnly
+                <DialogFrame className="importDialog" title={"Upload Chart to Importer"}>
+                    {!props.allowNameChange && <InputReadOnly
                         dialogRow={true}
                         label="name"
-                        value={this.state.name}>
-                        <span className="ext">.{this.state.ext}</span>
+                        value={name}>
+                        <span className="ext">.{ext}</span>
                     </InputReadOnly>
                     }
                     {
-                        this.props.allowNameChange && <Input
+                        props.allowNameChange && <Input
                             dialogRow={true}
-                            value={this.state.name}
+                            value={name}
                             onChange={(nv)=>{
-                                this.setState({name:nv})
+                                setName(nv)
                             }}
                             label="name">
-                            <span className="ext">.{this.state.ext}</span>
+                            <span className="ext">.{ext}</span>
                         </Input>
                     }
-                    {this.props.allowSubDir && <Checkbox
+                    {props.allowSubDir && <Checkbox
                         dialogRow={true}
                         label="use set name"
-                        value={this.state.useSubdir}
-                        onChange={(nv)=>this.setState({useSubdir:nv})}
+                        value={useSubdir}
+                        onChange={(nv)=>setUseSubdir(nv)}
                     />}
-                    {this.props.allowSubDir && this.state.useSubdir?<Input
+                    {props.allowSubDir && useSubdir?<Input
                             dialogRow={true}
                             label="set name"
-                            value={this.state.subdir}
-                            onChange={(nv)=>{this.setState({subdir:nv})}}
+                            value={subdir}
+                            onChange={(nv)=>{setSubdir(nv)}}
                         />
                         :
                         null}
 
-                    <div className="dialogButtons">
+                    <DialogButtons className="dialogButtons">
                         <DB name="cancel"
-                            onClick={()=>{
-                                this.props.cancelFunction();
-                                this.props.closeCallback();
-                            }}
                         >Cancel</DB>
                         <DB name="ok"
                             onClick={()=>{
-                                this.props.okFunction(assign({},this.props,{name:this.state.name+"."+this.state.ext}),this.state.useSubdir?this.state.subdir:undefined);
-                                this.props.closeCallback();
+                                props.okFunction({...props,name:name+"."+ext},useSubdir?subdir:undefined);
                             }}
-                            disabled={this.state.useSubdir && !this.state.subdir}
+                            disabled={useSubdir && !subdir}
                         >OK</DB>
-                    </div>
-                </div>
-            </React.Fragment>
+                    </DialogButtons>
+                </DialogFrame>
         );
-    }
 }
 ImportDialog.propTypes={
     okFunction: PropTypes.func.isRequired,
-    cancelFunction: PropTypes.func.isRequired,
     subdir: PropTypes.string,
     name: PropTypes.string.isRequired,
     allowSubDir: PropTypes.bool,

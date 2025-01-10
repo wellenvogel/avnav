@@ -235,7 +235,6 @@ const ConverterDialog=(props)=>{
 }
 
 const ScannerDialog=(props)=>{
-    let isRunning=props.status === 'NMEA';
     return <div className="importScannerDialog flexInner">
         <h3 className="dialogTitle">Scanner</h3>
         <div className="dialogRow childStatus">
@@ -295,6 +294,9 @@ class ImporterPage extends React.Component{
             chartImportExtensions:[],
             disabled:true
         };
+        if (props.options && props.options.subdir){
+            this.state.importSubDir=props.options.subdir;
+        }
         this.timer=GuiHelpers.lifecycleTimer(this,(seq)=>{
             Requests.getJson({
             request:'list',
@@ -383,24 +385,25 @@ class ImporterPage extends React.Component{
                 let ext = Helper.getExt(name);
                 let importConfig=checkExt(ext,this.state.chartImportExtensions);
                 if (importConfig.allow) {
-                    OverlayDialog.dialog((props) => {
+                    let resolved=false;
+                    OverlayDialog.showDialog(undefined,(props) => {
                         return (
                             <ImportDialog
                                 {...props}
                                 allowNameChange={true}
                                 okFunction={(props, subdir) => {
+                                    resolved=true;
                                     if (subdir !== this.state.importSubDir) {
                                         this.setState({importSubDir: subdir});
                                     }
                                     resolve({name: props.name, type: 'import', uploadParameters: {subdir: subdir}});
                                 }}
-                                cancelFunction={() => reject("canceled")}
                                 name={name}
                                 allowSubDir={importConfig.subdir}
                                 subdir={this.state.importSubDir}
                             />
                         );
-                    });
+                    },()=>window.setTimeout(()=>{if (! resolved) reject("canceled")},0));
                     return;
                 } else reject("unknown chart type " + ext);
             }
@@ -469,4 +472,5 @@ class ImporterPage extends React.Component{
     }
 }
 
+ImporterPage.propTypes=Page.propTypes;
 export default ImporterPage;

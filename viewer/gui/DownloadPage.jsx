@@ -401,13 +401,15 @@ class DownloadPage extends React.Component{
                     //check for import
                     let importConfig=checkExt(ext,this.state.chartImportExtensions);
                     if (importConfig.allow) {
-                        OverlayDialog.dialog((props)=>{
+                        let resolved=false;
+                        OverlayDialog.showDialog(undefined,(dprops)=>{
                             return(
                                 <ImportDialog
-                                    {...props}
+                                    {...dprops}
                                     allowNameChange={true}
                                     allowSubDir={importConfig.subdir}
                                     okFunction={(props,subdir)=>{
+                                        resolved=true;
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});
                                         }
@@ -418,7 +420,7 @@ class DownloadPage extends React.Component{
                                     subdir={this.state.importSubDir}
                                 />
                             );
-                        });
+                        },()=>window.setTimeout(()=>{if (! resolved) reject("cancelled")},0));
                         return;
                     }
                     else{
@@ -532,7 +534,11 @@ class DownloadPage extends React.Component{
                             type={this.state.type}
                             doneCallback={(param)=>{
                                 if (param.param && param.param.showImportPage){
-                                    this.props.history.push('importerpage');
+                                    let options={};
+                                    if (param.param.uploadParameters && param.param.uploadParameters.subdir) {
+                                        options.subdir=param.param.uploadParameters.subdir;
+                                    }
+                                    this.props.history.push('importerpage',options);
                                 }
                                 localDoneFunction?localDoneFunction(param):this.fillData(param)
                             }}

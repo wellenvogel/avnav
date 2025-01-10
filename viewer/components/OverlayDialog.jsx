@@ -524,9 +524,9 @@ const Dialogs = {
         return addDialog(html,opt_cancelCallback,opt_timeout);
     },
 
-    showDialog: function(opt_dialogContext,dialog){
-        if (! opt_dialogContext) addGlobalDialog(dialog);
-        else opt_dialogContext.showDialog(dialog);
+    showDialog: function(opt_dialogContext,dialog,opt_cancelCallback){
+        if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
+        else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
     }
 
 };
