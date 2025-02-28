@@ -316,15 +316,15 @@ let keys={
         courseAverageInterval: new Property(0, "Course average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
         speedAverageInterval: new Property(0, "Speed average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
         positionAverageInterval: new Property(0, "Position average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
-        bearingColor: new Property("#DDA01F", "Color", PropertyType.COLOR),
-        bearingWidth: new Property(3, "Width", PropertyType.RANGE, [1, 10]),
+        bearingColor: new Property("#DDA01F", "Bearing Color", PropertyType.COLOR),
+        bearingWidth: new Property(3, "Bearing Width", PropertyType.RANGE, [1, 10]),
         routeColor: new Property("#27413B", "Color", PropertyType.COLOR),
         routeWidth: new Property(2, "Width", PropertyType.RANGE, [1, 10]),
         routeWpSize: new Property(7, "WPSize", PropertyType.RANGE, [5, 30]),
         routeApproach: new Property(200, "Approach(m)", PropertyType.RANGE, [20, 2000]),
         routeShowLL: new Property(false, "showLatLon", PropertyType.CHECKBOX), //show latlon or leg course/len
-        navCircleColor: new Property("#D71038", "Circle Color", PropertyType.COLOR),
-        navCircleWidth: new Property(1, "Circle Width", PropertyType.RANGE, [1, 10]),
+        navCircleColor: new Property("#D71038", "Vector / Circle Color", PropertyType.COLOR),
+        navCircleWidth: new Property(1, "Vector / Circle Width", PropertyType.RANGE, [1, 10]),
         navBoatCourseTime: new Property(600,"Boat Course Vector Length(sec)", PropertyType.RANGE,[1,3600]),
         anchorCircleColor: new Property("#D71038", "Anchor Circle Color", PropertyType.COLOR),
         anchorCircleWidth: new Property(1, "Anchor Circle Width", PropertyType.RANGE, [1, 10]),
