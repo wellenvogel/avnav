@@ -134,65 +134,68 @@ NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
     let rt = new navobjects.Cpa();
     let llsrc = new LatLon(src.lat, src.lon);
     let lldst = new LatLon(dst.lat, dst.lon);
-    let curdistance=opt_useRhumbLine?llsrc.rhumbDistanceTo(lldst):llsrc.distanceTo(lldst); //m
-    if (curdistance < 0.1){
-        let x=curdistance;
-    }
-    rt.curdistance=curdistance;
+    let distance=opt_useRhumbLine?
+        llsrc.rhumbDistanceTo(lldst):
+        llsrc.distanceTo(lldst); //m
+    rt.curdistance=distance;
     let courseToTarget=opt_useRhumbLine?
         llsrc.rhumbBearingTo(lldst):
         llsrc.initialBearingTo(lldst); //in deg
     //default to our current distance
     rt.tcpa=0;
-    rt.cpa=curdistance;
-    let maxDistance=6371e3*1000*Math.PI; //half earth
-    let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed,dst.course,dst.speed,properties.minAISspeed,maxDistance);
+    rt.cpa=distance;
+    let maxDistance=6371e6*Math.PI; //half earth
+    let appr=NavCompute.computeApproach(courseToTarget,distance,src.course,src.speed,dst.course,dst.speed,properties.minAISspeed,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
         let xpoint = opt_useRhumbLine?
-            llsrc.rhumbDestinationPoint(appr.dd,src.course):
-            llsrc.destinationPoint(appr.dd,src.course);
+            llsrc.rhumbDestinationPoint(appr.ds,src.course):
+            llsrc.destinationPoint(appr.ds,src.course);
         rt.crosspoint = new navobjects.Point(xpoint.lon, xpoint.lat);
     }
-    if (!appr.tm){
-        rt.tcpa=0; //better undefined
-        rt.cpa=curdistance;
+    if (appr.tm==undefined){
+        rt.cpa=undefined;
+        rt.tcpa=undefined;
         rt.front=undefined;
         return rt;
     }
 
     let cpasrc = opt_useRhumbLine?
         llsrc.rhumbDestinationPoint(appr.dms,src.course):
-        llsrc.destinationPoint(appr.dms,src.course );
+        llsrc.destinationPoint(appr.dms,src.course);
+    rt.src.lon=cpasrc.lon;
+    rt.src.lat=cpasrc.lat;
+
     let cpadst = opt_useRhumbLine?
         lldst.rhumbDestinationPoint(appr.dms,dst.course):
         lldst.destinationPoint(appr.dmd,dst.course);
-    rt.src.lon=cpasrc.lon;
-    rt.src.lat=cpasrc.lat;
     rt.dst.lon=cpadst.lon;
     rt.dst.lat=cpadst.lat;
+
+    rt.tcpa = appr.tm;
+
     rt.cpa = opt_useRhumbLine?
         cpasrc.rhumbDistanceTo(cpadst):
         cpasrc.distanceTo(cpadst);
-    rt.tcpa = appr.tm;
-    if (rt.cpa > curdistance || appr.tm < 0){
-        rt.cpa=curdistance;
-        //rt.tcpa=0;
+
+    rt.bcpa = opt_useRhumbLine?
+        cpasrc.rhumbBearingTo(cpadst):
+        cpasrc.initialBearingTo(cpadst);
+
+    rt.front=0;
+    if (appr.td!==undefined && appr.ts!==undefined){
+        if(appr.ts>=0 && appr.ts<appr.td) rt.front=1; // we will cross track of target in front of target
+        else if(appr.ts>=0 && appr.ts>appr.td) rt.front=-1; // we will cross track of target astern of target
+        else rt.front=0; // we have crossed the track of the target already
     }
-    if (appr.td !==undefined && appr.ts!==undefined){
-        rt.front=(appr.ts<appr.td)?1:0;
-    }
-    else{
-        if (appr.tm >0) rt.front=-1; //we do not cross but will still aproach
-        else rt.front=undefined;
-    }
+    if (rt.front==0 && appr.tm<0) rt.front=undefined; // we have crossed the track and have passed CPA
     return rt;
 };
 
 /**
  * do the computation of the cross point and the closest approach
  * all units are Si units (m, s,...), angles in degrees
- * @param courseToTarget
- * @param curdistance
+ * @param bearing
+ * @param distance
  * @param srcCourse
  * @param srcSpeed
  * @param dstCourse
@@ -200,34 +203,35 @@ NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
  * @param minAisSpeed - minimal speed we allow for crossing computation
  * @param maxDistance
  * @returns {object} an object with the properties
- *        td - time dest to crosspoint (if crossing)
+ *        td - time dst to crosspoint (if crossing)
  *        ts - time src to crosspoint (if crossing)
- *        dd - distance destination to crosspoint
+ *        dd - distance dst to crosspoint
  *        ds - distance src to crosspoint
  *        tm - TCPA
  *        dms - distance src to cpa point
  *        dmd - distance dest to cpa point
  */
-NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
-    //courses
+NavCompute.computeApproach=function(bearing,distance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
     let rt={};
-    let ca=(courseToTarget-srcCourse)/180*Math.PI; //rad
-    let cb=(courseToTarget-dstCourse)/180*Math.PI;
-    let cosa=Math.cos(ca);
+    const deg = Math.PI/180;
+    let ca=(bearing-srcCourse)*deg;
+    let cb=(bearing-dstCourse)*deg;
+    let cc=(srcCourse-dstCourse)*deg;
     let sina=Math.sin(ca);
-    let cosb=Math.cos(cb);
+    let cosa=Math.cos(ca);
     let sinb=Math.sin(cb);
-    if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed ){
-        //compute crossing
-        try {
-            rt.td = curdistance / (dstSpeed * (cosa / sina * sinb - cosb));
-            rt.ts=curdistance/(srcSpeed*(cosa-sina*cosb/sinb));
+    let cosb=Math.cos(cb);
+
+    if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed){
+        try { //
+            rt.td = distance / (dstSpeed * (cosa / sina * sinb - cosb));
+            rt.ts = distance / (srcSpeed * (cosa - sina * cosb / sinb));
         }catch(e){
             //TODO: exception handling
         }
         if (rt.td !== undefined && rt.ts !== undefined){
-            rt.ds=srcSpeed*rt.ts; //in m
-            rt.dd=dstSpeed*rt.td; //in m
+            rt.ds = srcSpeed*rt.ts; //in m
+            rt.dd = dstSpeed*rt.td; //in m
             if (maxDistance !== undefined){
                 if (Math.abs(rt.ds) > maxDistance || Math.abs(rt.dd) > maxDistance){
                     rt.td=undefined;
@@ -238,14 +242,14 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
             }
         }
     }
-    let quot=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
-    if (quot < 1e-6 && quot > -1e-6){
+    let denom=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
+    if (Math.abs(denom) < 1e-6){
         rt.tm=undefined;
         return rt;
     }
-    rt.tm=curdistance*(cosa*srcSpeed-cosb*dstSpeed)/quot;
-    rt.dms=srcSpeed*rt.tm;
-    rt.dmd=dstSpeed*rt.tm;
+    rt.tm = distance * (srcSpeed*cosa - dstSpeed*cosb) / denom; // TCPA
+    rt.dms = srcSpeed*rt.tm;
+    rt.dmd = dstSpeed*rt.tm;
     return rt;
 };
 
