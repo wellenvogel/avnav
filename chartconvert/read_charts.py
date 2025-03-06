@@ -1811,6 +1811,8 @@ def main(argv):
     log("copying %s to %s"%(tmpgemf,outname))
     outtmp=outname+".tmp"
     try:
+      if not os.path.isdir(os.path.dirname(outtmp)):
+        os.mkdir(os.path.dirname(outtmp))
       shutil.copy(tmpgemf,outtmp)
       os.replace(outtmp,outname)
       os.unlink(tmpgemf)
