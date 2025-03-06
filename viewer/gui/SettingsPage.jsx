@@ -44,7 +44,7 @@ const settingsSections={
         keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
         keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
-        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRang,keys.properties.style.aisNormalColor,
+        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRange,keys.properties.style.aisNormalColor,
         keys.properties.style.aisNearestColor, keys.properties.style.aisWarningColor,keys.properties.style.aisTrackingColor,
         keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowA,
         keys.properties.aisShowB,keys.properties.aisShowOther,keys.properties.aisUseHeading,
