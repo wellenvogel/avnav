@@ -17,16 +17,13 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
-import {Input,InputReadOnly,Checkbox} from '../components/Inputs.jsx';
-import DB from '../components/DialogButton.jsx';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {
-    showFileDialog,
     deleteItem,
-    ItemDownloadButton, ItemActions
+    ItemDownloadButton, ItemActions, FileDialogWithActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase"
@@ -404,13 +401,15 @@ class DownloadPage extends React.Component{
                     //check for import
                     let importConfig=checkExt(ext,this.state.chartImportExtensions);
                     if (importConfig.allow) {
-                        OverlayDialog.dialog((props)=>{
+                        let resolved=false;
+                        OverlayDialog.showDialog(undefined,(dprops)=>{
                             return(
                                 <ImportDialog
-                                    {...props}
+                                    {...dprops}
                                     allowNameChange={true}
                                     allowSubDir={importConfig.subdir}
                                     okFunction={(props,subdir)=>{
+                                        resolved=true;
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});
                                         }
@@ -421,7 +420,7 @@ class DownloadPage extends React.Component{
                                     subdir={this.state.importSubDir}
                                 />
                             );
-                        });
+                        },()=>window.setTimeout(()=>{if (! resolved) reject("cancelled")},0));
                         return;
                     }
                     else{
@@ -514,16 +513,20 @@ class DownloadPage extends React.Component{
                                     EditOverlaysDialog.createDialog(item,()=>this.fillData());
                                     return;
                                 }
-                                showFileDialog(this.props.history,item,
-                                    (action,item,pageChanged)=>{
-                                        if (pageChanged) return;
-                                        if (action === 'userapp') this.readAddOns()
-                                        else this.fillData();
-                                    },
-                                    (newName)=>{
-                                        //checkExisting
-                                        return this.entryExists(newName);
-                                    });
+                                OverlayDialog.showDialog(undefined,()=>
+                                 <FileDialogWithActions
+                                     item={item}
+                                     history={this.props.history}
+                                     doneCallback={(action,item,pageChanged)=>{
+                                         if (pageChanged) return;
+                                         if (action === 'userapp') this.readAddOns()
+                                         else this.fillData();
+                                     }}
+                                     checkExists={(newName)=>{
+                                         //checkExisting
+                                         return this.entryExists(newName);
+                                     }}
+                                 />);
                             }}
                         />
                         <UploadHandler
@@ -531,7 +534,11 @@ class DownloadPage extends React.Component{
                             type={this.state.type}
                             doneCallback={(param)=>{
                                 if (param.param && param.param.showImportPage){
-                                    this.props.history.push('importerpage');
+                                    let options={};
+                                    if (param.param.uploadParameters && param.param.uploadParameters.subdir) {
+                                        options.subdir=param.param.uploadParameters.subdir;
+                                    }
+                                    this.props.history.push('importerpage',options);
                                 }
                                 localDoneFunction?localDoneFunction(param):this.fillData(param)
                             }}

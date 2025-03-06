@@ -8,94 +8,72 @@
  */
 
 import globalStore from "../util/globalstore.jsx";
-import React from 'react';
+import React, {Children, cloneElement, useCallback, useEffect, useRef, useState} from 'react';
 import {KeyHelper} from "../util/keys";
 
+export const useStore=(props,opt_options)=>{
+    if (! props) return;
+    const {storeKeys,updateFunction,minTime,changeCallback,...forward}=props;
+    if (! opt_options) opt_options= {};
+    const usedStoreKeys=KeyHelper.removeNodeInfo({...opt_options.storeKeys,...storeKeys});
+    if (! usedStoreKeys) return props;
+    if (typeof(usedStoreKeys) !== 'object'){
+        throw Error("invalid type of storeKeys: "+typeof(usedStoreKeys));
+    }
+    const store=opt_options.store||globalStore;
+    const lastUpdate=useRef(0);
+    const timer=useRef(undefined);
+    const [values,setValues]=useState(store.getMultiple(usedStoreKeys));
+    const usedChangeCallback=changeCallback||opt_options.changeCallback;
+    const computeValues=useCallback((data)=>{
+        const usedUpdateFunction=opt_options.updateFunction||updateFunction;
+        if (usedUpdateFunction) return {...forward,...usedUpdateFunction({...data},storeKeys)};
+        return {...forward,...data};
+    },[forward,updateFunction,opt_options])
+    const doSetValues=(data)=>{
+        setValues(data);
+        lastUpdate.current=(new Date()).getTime();
+        if (usedChangeCallback) usedChangeCallback(computeValues(data));
+    }
+    const dataChanged=useCallback(()=>{
+        const usedMinTime=opt_options.minTime||minTime;
+        if (usedMinTime){
+            if (timer.current !== undefined){
+                window.clearTimeout(timer.current);
+                timer.current=undefined;
+            }
+            const now=(new Date()).getTime();
+            const tdiff=now-(lastUpdate.current + usedMinTime);
+            if (tdiff < 0){
+                timer.current=window.setTimeout(()=>doSetValues(store.getMultiple(usedStoreKeys)),-tdiff);
+                return;
+            }
+        }
+        doSetValues(store.getMultiple(usedStoreKeys));
+    },[usedStoreKeys])
+    useEffect(() => {
+        store.register(dataChanged,usedStoreKeys);
+        return ()=>store.deregister(dataChanged);
+    }, [usedStoreKeys]);
+    if (usedChangeCallback){
+        useEffect(() => {
+            usedChangeCallback(computeValues(values));
+        }, []);
+    }
+    return computeValues(values);
+}
+
+export const DynamicFrame=(props)=>{
+    const values=useStore(props);
+    return <React.Fragment>
+        {Children.map(props.children,(child)=>cloneElement(child,values))}
+    </React.Fragment>
+}
 
 export default  function(Component,opt_options,opt_store){
     let store=opt_store||globalStore;
-    class Dynamic extends React.Component{
-        constructor(props){
-            super(props);
-            this.getTranslatedStoreValues=this.getTranslatedStoreValues.bind(this);
-            this.getStoreKeys=this.getStoreKeys.bind(this);
-            this.dataChanged=this.dataChanged.bind(this);
-            let keys=this.getStoreKeys();
-            if (keys) store.register(this,keys);
-            this.lastUpdate=0;
-            this.state=this.getTranslatedStoreValues();
-            this.updateCallback(this.state);
-            this.timer=undefined;
-        }
-        updateCallback(data){
-            this.lastUpdate=(new Date()).getTime();
-            let updateFunction=this.props.changeCallback;
-            if (! updateFunction && opt_options) updateFunction=opt_options.changeCallback;
-            if (! updateFunction) return;
-            let {storeKeys,uf,changeCallback,...forwardProps}=this.props;
-            let childprops={...forwardProps,...data};
-            updateFunction(childprops);
-        }
-        getStoreKeys(){
-            let storeKeys=this.props.storeKeys;
-            if (opt_options && opt_options.storeKeys) {
-                storeKeys={...opt_options.storeKeys,...storeKeys};
-            }
-            if (!storeKeys) return ;
-            if (! (storeKeys instanceof Object)){
-                throw Error("store keys is no object",storeKeys);
-            }
-            return KeyHelper.removeNodeInfo(storeKeys);
-        }
-        getTranslatedStoreValues(){
-            const keys=this.getStoreKeys();
-            if (! keys) return {};
-            let values=store.getMultiple(keys);
-            let updateFunction=this.props.updateFunction;
-            if (! updateFunction){
-                if (opt_options && opt_options.updateFunction) updateFunction=opt_options.updateFunction;
-            }
-            if (updateFunction) {
-                return updateFunction(values,keys);
-            }
-            return values;
-            }
-        doUpdate(){
-            let data=this.getTranslatedStoreValues()||{};
-            this.setState(data);
-            this.updateCallback(data);
-        }
-        dataChanged(){
-            if (opt_options && opt_options.minTime){
-                let now=(new Date()).getTime();
-                let tdiff=this.lastUpdate+opt_options.minTime -now;
-                if (tdiff > 0){
-                    if (this.timer){
-                        window.clearTimeout(this.timer);
-                        this.timer=undefined;
-                    }
-                    this.timer=window.setTimeout(()=>{
-                        this.timer=undefined;
-                        this.doUpdate();
-                    },tdiff);
-                    return;
-                }
-            }
-            this.doUpdate();
-        }
-        componentDidMount(){
-            let keys=this.getStoreKeys();
-            if (!keys) return;
-            store.register(this,keys);
-        }
-        componentWillUnmount(){
-            store.deregister(this);
-        }
-        render(){
-            let {storeKeys,updateFunction,changeCallback,...forwardProps}=this.props;
-            let childprops={...forwardProps,...this.state};
-            return <Component {...childprops}/>
-        }
+     return (props)=>{
+        const currentValues=useStore(props,{...opt_options,store:store});
+        return <Component {...currentValues}/>
     }
-    return Dynamic;
-};
+}

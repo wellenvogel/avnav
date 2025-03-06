@@ -68,6 +68,14 @@
     min-width: 0;
     min-height: 0;
   }
+  & > .resize, & > .noresize{
+    .flex-display();
+    .flex-direction(column);
+  }
+  .horizontal > & > .resize, .horizontal > & > .noresize{
+    .flex-direction(row);
+  }
+
 }
 //----- dashboard pages (gps page) ------
 .hfield .widgetContainer .widget{
@@ -336,7 +344,6 @@
         .horizontal &{
           text-align: left;
           display: block;
-          margin-top: 0.5em;
         }
       }
       .horizontal &{
@@ -346,7 +353,9 @@
       }
 
     }
-
+    .vertical &{
+      min-height: 8em;
+    }
   }
 
   &.centerDisplayWidget{
@@ -477,7 +486,7 @@
       z-index: 101;
       color: red;
     }
-    .listContainer {
+    & > .listContainer {
       .flex-display();
       .flex-direction(row);
       height: 100%;
@@ -500,7 +509,7 @@
 
     }
     &.vertical {
-      .listContainer {
+      & > .listContainer {
         .flex-direction(column);
       }
 

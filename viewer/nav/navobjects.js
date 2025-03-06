@@ -5,24 +5,6 @@ import base from '../base.js';
 import assign from 'object-assign';
 let navobjects={};
 
-
-
-/**
- * the center mode for ais
- * @type {{NONE: number, GPS: number, MAP: number}}
- */
-navobjects.AisCenterMode={
-    NONE:0,
-    GPS:1,
-    MAP:2
-};
-
-
-
-
-
-
-
 /**
  * a point lon,lat
  * @param lon

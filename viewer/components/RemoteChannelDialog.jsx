@@ -1,61 +1,50 @@
-import React from 'react';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import React, {useState} from 'react';
+import OverlayDialog, {DialogButtons, DialogFrame} from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys, {KeyHelper} from '../util/keys.jsx';
-import {Checkbox, Input, InputSelect} from "./Inputs";
+import {Checkbox, InputSelect} from "./Inputs";
 import DialogButton from "./DialogButton";
 import cloneDeep from 'clone-deep';
 import assign from "object-assign";
 
 
-class RemoteChannelDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            channel: props.channel,
-            read: props.read,
-            write: props.write
-        }
-    }
-    render(){
-    return <div className="RemoteChannelDialog flexInner" >
-        <h3 className="dialogTitle">RemoteChannel</h3>
+const RemoteChannelDialog=(props)=> {
+    const [channel,setChannel]=useState(props.channel);
+    const [read,setRead]=useState(props.read);
+    const [write,setWrite]=useState(props.write);
+    return <DialogFrame className="RemoteChannelDialog" title={"RemoteChannel"}>
         <InputSelect dialogRow={true}
-               value={this.state.channel}
-               onChange={(v)=>this.setState({channel:v})}
+               value={channel}
+               onChange={(v)=>setChannel(v)}
                label="Channel"
                changeOnlyValue={true}
                list={KeyHelper.getKeyDescriptions(true)[keys.properties.remoteChannelName].values.map((x)=>{return {label:x,value:x}})}
                />
         <Checkbox dialogRow={true}
-               value={this.state.read}
-               onChange={(v)=>this.setState({read:!!v})}
+               value={read}
+               onChange={(v)=>setRead(!!v)}
                label="Read"
                />
         <Checkbox dialogRow={true}
-               value={this.state.write}
-               onChange={(v)=>this.setState({write:!!v})}
+               value={write}
+               onChange={(v)=>setWrite(!!v)}
                label="Write"
         />
-        < div className="dialogButtons">
+        <DialogButtons >
             <DialogButton name={'disconnect'}
-                          disabled={ !this.props.read && !this.props.write}
+                          disabled={ !props.read && !props.write}
                           onClick={()=>{
-                              this.props.closeCallback();
-                              this.props.setCallback({});
+                              props.setCallback({});
                           }}>Disconnect</DialogButton>
                 <DialogButton name={'connect'}
-                              disabled={ ! (this.state.read|| this.state.write)}
+                              disabled={ ! (read|| write)}
                               onClick={()=>{
-                                  this.props.closeCallback();
-                                  this.props.setCallback(cloneDeep(this.state));
+                                  props.setCallback({channel:channel,read:read,write:write});
                               }}>Connect</DialogButton>
                 <DialogButton name={'cancel'}
-                          onClick={()=>this.props.closeCallback()}
                           >Cancel</DialogButton>
-        </div>
-    </div>
-    }
+        </DialogButtons>
+    </DialogFrame>
 }
 const storeKeys={
     available:keys.gui.capabilities.remoteChannel,
@@ -65,30 +54,8 @@ const storeKeys={
     read: keys.properties.remoteChannelRead,
     connected: keys.properties.connectedMode
 };
-export const remoteChannelDialog = (showDialogFunction)=> {
-    const dialog=(props)=>{
-        let current=globalStore.getMultiple(storeKeys);
-        return <RemoteChannelDialog
-            {...current}
-            {...props}
-            setCallback={(values)=>{
-                if (! values.read && ! values.write){
-                    globalStore.storeMultiple({read:false,write:false},storeKeys,false,true); //omit undefined
-                }
-                else{
-                    globalStore.storeMultiple(values,storeKeys,false,true); //omit undefined
-                }
-            }}
-        />};
-    if (showDialogFunction){
-        showDialogFunction(dialog)
-    }
-    else {
-        OverlayDialog.dialog(dialog);
-    }
-};
 
-export default  (options)=>{
+export default  (options, opt_dialogContext)=>{
     return assign({
         name: "RemoteChannel",
         storeKeys: storeKeys,
@@ -100,7 +67,18 @@ export default  (options)=>{
             }
         },
         onClick: ()=>{
-            remoteChannelDialog(undefined);
+            const current=globalStore.getMultiple(storeKeys);
+            OverlayDialog.showDialog(opt_dialogContext,()=><RemoteChannelDialog
+                {...current}
+                setCallback={(values)=>{
+                    if (! values.read && ! values.write){
+                        globalStore.storeMultiple({read:false,write:false},storeKeys,false,true); //omit undefined
+                    }
+                    else{
+                        globalStore.storeMultiple(values,storeKeys,false,true); //omit undefined
+                    }
+                }}
+            />)
         },
         editDisable:true
     },options);

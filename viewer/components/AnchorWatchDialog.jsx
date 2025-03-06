@@ -41,7 +41,7 @@ const WatchDialog=(props)=> {
     const [distance,setDistance]=useState(0);
     const dialogContext=useDialogContext();
     const computeRefPoint=(sv,fromCenter)=>{
-        let cv={radius,bearing,distance,refPoint};
+        let cv={radius,bearing,distance};
         if (fromCenter){
             cv.refPoint=MapHolder.getCenter();
         }
@@ -124,8 +124,7 @@ export const anchorWatchDialog = (opt_dialogContext)=> {
         Toast("no gps position");
         return;
     }
-    const show=opt_dialogContext?opt_dialogContext.showDialog: OverlayDialog.dialog;
-    show((props)=>{
+    OverlayDialog.showDialog(opt_dialogContext,(props)=>{
         return <WatchDialog
             {...props}
             active={isActive}

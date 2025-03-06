@@ -48,7 +48,7 @@ export const Input=(props)=>{
     if (valueMissing(props.mandatory,props.value)) className+=" missing";
     return <div className={className} >
         <span className="inputLabel">{props.label}</span>
-        <input size={size} type={props.type||"text"} value={props.value} onChange={
+        <input size={size} type={props.type||"text"} value={props.value} min={props.min} max={props.max} step={props.step} onChange={
             (ev)=>{ev.stopPropagation();props.onChange(ev.target.value);}
             }/>
         {props.children}

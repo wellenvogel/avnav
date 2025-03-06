@@ -24,14 +24,8 @@
  * display the infos of a route
  */
 
-import React from 'react';
-import PropTypes from 'prop-types';
-import DB from "./DialogButton";
-import OverlayDialog,{InfoItem} from "./OverlayDialog";
-import Toast from "./Toast";
 import NavCompute from "../nav/navcompute";
 import Formatter from '../util/formatter';
-import assign from 'object-assign';
 import navdata from "../nav/navdata";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
@@ -88,54 +82,3 @@ export const getRouteInfo = (routeName,opt_waypoint) => {
         );
     })
 }
-class RouteInfoDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            loaded:false,
-            name:this.props.name
-        }
-    }
-
-    componentDidMount() {
-        getRouteInfo(this.props.name)
-            .then((values)=>{
-                this.setState(assign({loaded: true},values));
-            })
-            .catch((error)=>Toast(error));
-    }
-
-    render(){
-       return  <div className="RouteInfoDialog flexInner">
-            <h3 className="dialogTitle">Route Info</h3>
-            {INFO_ROWS.map((row)=>{
-                let v=this.state[row.value];
-                if (v === undefined) return null;
-                if (row.formatter) v=row.formatter(v,this.state);
-                if (v === undefined) return null;
-                return <InfoItem label={row.label} value={v}/>
-            })}
-            <div className="dialogButtons">
-                <DB name={"cancel"}
-                    onClick={this.props.closeCallback}
-                >Cancel</DB>
-            </div>
-        </div>
-    }
-}
-
-RouteInfoDialog.PropTypes={
-    name: PropTypes.string.isRequired
-}
-RouteInfoDialog.showDialog=(info,opt_showDialogFunction)=>{
-    if (!opt_showDialogFunction) {
-        opt_showDialogFunction = OverlayDialog.dialog;
-    }
-    return opt_showDialogFunction((props)=>{
-        return <RouteInfoDialog
-            {...info}
-            {...props}/>
-    });
-}
-
-export default RouteInfoDialog;

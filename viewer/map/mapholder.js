@@ -986,7 +986,8 @@ MapHolder.prototype.initMap=function(){
             view: new olView({
                 center: this.transformToMap([13.8, 54.1]),
                 zoom: 9,
-                extent: this.transformToMap([-200, -89, 200, 89])
+                extent: this.transformToMap([-200, -89, 200, 89]),
+                constrainRotation:false
             })
 
         });
@@ -1503,7 +1504,9 @@ MapHolder.prototype.setMapRotation=function(rotation,opt_anchor){
     let view=this.getView();
     if (! view) return;
     let rot=rotation==0?0:(360-rotation)*Math.PI/180;
-    let delta=rot-view.getRotation();
+    let maprot=view.getRotation();
+    let delta=rot-maprot;
+    //console.log("rot",rot,"maprot",maprot,"delta",delta);
     view.adjustRotation(delta,this.transformToMap(opt_anchor !== undefined?opt_anchor:this.referencePoint));
 };
 

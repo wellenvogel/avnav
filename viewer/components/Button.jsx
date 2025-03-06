@@ -1,56 +1,49 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 
-class Button extends React.Component {
-    constructor(props){
-        super(props);
-        let self=this;
-        GuiHelper.keyEventHandler(this,(component,action)=>{
-            if (self.props.onClick && ! self.props.disabled) self.props.onClick();
-        },"button",this.props.name);
-        this.spanRef=this.spanRef.bind(this);
-    }
-    spanRef(item){
-        if (! item) return;
+const Button = (props) => {
+    useKeyEventHandlerPlain(props.name, "button", (component, action) => {
+        if (props.onClick && !props.disabled) props.onClick();
+    });
+    const spanRef = useCallback((item) => {
+        if (!item) return;
         /* very dirty workaround for button images not showing up
            on chrome android on some devices
            was unable to find out about the reason - but it seems that
            setting the image url again solves the issue
          */
-        let current=window.getComputedStyle(item).backgroundImage;
-        if (current){
-            item.style.backgroundImage=current;
+        let current = window.getComputedStyle(item).backgroundImage;
+        if (current) {
+            item.style.backgroundImage = current;
         }
+    },[]);
+    let className = props.className || "";
+    className += " button " + props.name;
+    if (props.toggle !== undefined) {
+        let toggle = (typeof (props.toggle) === 'function') ? props.toggle() : props.toggle;
+        className += toggle ? " active" : " inactive";
     }
-    render() {
-        let className = this.props.className || "";
-        className += " button " + this.props.name;
-        if (this.props.toggle !== undefined) {
-            let toggle=(typeof(this.props.toggle) === 'function')?this.props.toggle():this.props.toggle;
-            className += toggle ? " active" : " inactive";
-        }
-        let {toggle,icon,style,disabled,overflow,editDisable,editOnly,visible,dummy,...forward}=this.props;
-        let spanStyle={};
-        if (icon !== undefined) {
-            spanStyle.backgroundImage = "url(" + icon + ")";
-        }
-        let add = {};
-        if (disabled) {
-            add.disabled = "disabled";
-        }
-        return (
-            <button {...forward} {...add} className={className}>
-            <span style={spanStyle} ref={this.spanRef}/>
-            </button>
-        );
+    let {toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, dummy, ...forward} = props;
+    let spanStyle = {};
+    if (icon !== undefined) {
+        spanStyle.backgroundImage = "url(" + icon + ")";
     }
+    let add = {};
+    if (disabled) {
+        add.disabled = "disabled";
+    }
+    return (
+        <button {...forward} {...add} className={className}>
+            <span style={spanStyle} ref={spanRef}/>
+        </button>
+    );
 }
 
 Button.propTypes={
     onClick: PropTypes.func,
     className: PropTypes.string,
-    toggle: PropTypes.bool,
+    toggle: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]),
     name: PropTypes.string.isRequired,
     icon: PropTypes.string,
     style: PropTypes.object,

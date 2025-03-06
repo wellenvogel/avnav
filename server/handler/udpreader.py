@@ -27,7 +27,12 @@
 import socket
 import struct
 
-import netifaces
+hasNetifaces=False
+try:
+  import netifaces
+  hasNetifaces=True
+except:
+  pass
 
 from socketbase import *
 
@@ -59,10 +64,11 @@ class AVNUdpReader(AVNWorker):
                cls.P_PORT,
                cls.P_MINTIME,
                cls.FILTER_PARAM,
-               SocketReader.P_STRIP_LEADING,
-               cls.P_ALLOWMC,
-               cls.P_MCADDR
+               SocketReader.P_STRIP_LEADING
     ]
+    if hasNetifaces:
+      rt.append(cls.P_ALLOWMC)
+      rt.append(cls.P_MCADDR)
     return rt
 
   @classmethod
@@ -96,6 +102,8 @@ class AVNUdpReader(AVNWorker):
       self.checkUsedResource(UsedResource.T_UDP,self.P_PORT.fromDict(param))
 
   def joinGroup(self,mcgroup):
+    if not hasNetifaces:
+      return
     interfaces=netifaces.interfaces()
     for intf in interfaces:
       intfaddr=netifaces.ifaddresses(intf)

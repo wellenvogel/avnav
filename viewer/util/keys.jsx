@@ -361,6 +361,7 @@ let keys={
         aisReducedList: new Property(false,"reduce details in list",PropertyType.CHECKBOX),
         aisHideTime: new Property(15,"hide time(s)",PropertyType.RANGE,[1,3600]),
         aisLostTime: new Property(600,"lost time (s)",PropertyType.RANGE, [1,3600]),
+        aisCenterMode: new Property('both',"center for AIS range",PropertyType.LIST,['both','boat','map']),
         aisListLock: new Property(false,"lock ais list",PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
