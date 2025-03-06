@@ -23,7 +23,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 #  parts from this software (AIS decoding) are taken from the gpsd project
-#  so refer to this BSD licencse also (see ais.py) or omit ais.py 
+#  so refer to this BSD license also (see ais.py) or omit ais.py
 ###############################################################################
 import datetime
 import logging.handlers
@@ -307,9 +307,9 @@ def main(argv):
     AVNLog.error("Exception in main %s",traceback.format_exc())
   AVNLog.info("stopping")
   sighandler(None, None)
-   
+
 if __name__ == "__main__":
     main(sys.argv)
-    
-         
-  
+
+
+

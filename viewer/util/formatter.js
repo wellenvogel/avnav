@@ -4,6 +4,13 @@
 
 import navcompute from '../nav/navcompute.js';
 import {extendCoordinate} from "ol/extent";
+import Helper from "./helper.js";
+import {OpenLocationCode} from "open-location-code";
+
+function pad(num, size) {
+    var s = '000000' + num;
+    return s.substr(s.length-size);
+}
 
 /**
  *
@@ -11,35 +18,40 @@ import {extendCoordinate} from "ol/extent";
  * @param axis
  * @returns {string}
  */
-const formatLonLatsDecimal=function(coordinate,axis){
-    coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
-
-    let abscoordinate = Math.abs(coordinate);
-    let coordinatedegrees = Math.floor(abscoordinate);
-
-    let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-    let numdecimal=2;
-    //correctly handle the toFixed(x) - will do math rounding
-    if (coordinateminutes.toFixed(numdecimal) == 60){
-        coordinatedegrees+=1;
-        coordinateminutes=0;
-    }
-    if( coordinatedegrees < 10 ) {
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    if (coordinatedegrees < 100 && axis == 'lon'){
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    let str = coordinatedegrees + "\u00B0";
-
-    if( coordinateminutes < 10 ) {
-        str +="0";
-    }
-    str += coordinateminutes.toFixed(numdecimal) + "'";
+const formatLonLatsDecimal=function(coordinate,axis,format='DDM'){
+    coordinate = Helper.to180(coordinate); // normalize to ±180°
+    var deg = Math.abs(coordinate);
     if (axis == "lon") {
-        str += coordinate < 0 ? "W" :"E";
+        var padding = 3;
+        var str = coordinate < 0 ? "W" :"E";
     } else {
-        str += coordinate < 0 ? "S" :"N";
+        var padding = 2;
+        var str = coordinate < 0 ? "S\u00A0" :"N\u00A0";
+    }
+    if(format=='DD') {
+      str += pad(deg.toFixed(5),padding+6) + "\u00B0";
+    } else if(format=='DMS') {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      let MIN = Math.floor(min);
+      let sec = 60*(min-MIN);
+      if (sec.toFixed(1).startsWith('60.')){
+          MIN+=1;
+          sec=0;
+          if(MIN==60){
+            MIN=0;
+            DEG+=1;
+          }
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(MIN,2) + "'" + pad(sec.toFixed(1),4) + '"';
+    } else {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      if (min.toFixed(3).startsWith('60.')){
+          DEG+=1;
+          min=0;
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(min.toFixed(3),6) + "'";
     }
     return str;
 };
@@ -49,15 +61,20 @@ const formatLonLatsDecimal=function(coordinate,axis){
  * @param {Point} lonlat
  * @returns {string}
  */
-const formatLonLats=function(lonlat){
+const formatLonLats=function(lonlat,format='DDM'){
     if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
-    let ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
-    let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
-    return ns + ', ' + ew;
+    if(format=='OLC') {
+      return new OpenLocationCode().encode(lonlat.lat,lonlat.lon);
+    }
+    let lat=this.formatLonLatsDecimal(lonlat.lat, 'lat', format);
+    let lon=this.formatLonLatsDecimal(lonlat.lon, 'lon', format);
+    return lat + ' ' + lon;
 };
-formatLonLats.parameters=[];
+formatLonLats.parameters=[
+    {name:'format',type:'SELECT',list:['DD','DDM','DMS','OLC'],default:'DDM'}
+];
 
 /**
  * format a number with a fixed number of fractions
@@ -115,8 +132,8 @@ const formatDecimalOpt=function(number,fix,fract,addSpace){
 
 formatDecimalOpt.parameters=[
     {name:'fix',type:'NUMBER'},
-    {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'}
+    {name:'fract',type:'NUMBER'},
+    {name:'addSpace',type:'BOOLEAN'}
 ];
 
 /**
@@ -127,11 +144,13 @@ formatDecimalOpt.parameters=[
  */
 const formatDistance=function(distance,opt_unit){
     let number=parseFloat(distance);
-    if (isNaN(number)) return "    -"; //4 spaces
+    if (isNaN(number)) return "---";
     let factor=navcompute.NM;
+    if (opt_unit == 'ft') factor=1/3.280839895; // feet
+    if (opt_unit == 'yd') factor=3/3.280839895; // yards
     if (opt_unit == 'm') factor=1;
     if (opt_unit == 'km') factor=1000;
-    number=number/factor;
+    number/=factor;
     if (number < 1){
         return formatDecimal(number,3,2);
     }
@@ -141,23 +160,39 @@ const formatDistance=function(distance,opt_unit){
     return formatDecimal(number,5,0);
 };
 formatDistance.parameters=[
-    {name:'unit',type:'SELECT',list:['nm','m','km'],default:'nm'}
+    {name:'unit',type:'SELECT',list:['nm','m','km','ft','yd'],default:'nm'}
 ];
 
 /**
  *
  * @param speed in m/s
- * @param opt_unit one of kn,ms,kmh
+ * @param opt_unit one of kn,ms,kmh,bft
  * @returns {*}
  */
 
 const formatSpeed=function(speed,opt_unit){
     let number=parseFloat(speed);
-    if (isNaN(number)) return "  -"; //2 spaces
+    if (isNaN(number)) return "---";
+    if (opt_unit == 'bft') {
+      let v=number*3600/navcompute.NM;
+      if(v<=1) return '0';
+      if(v<=3) return '1';
+      if(v<=6) return '2';
+      if(v<=10) return '3';
+      if(v<=16) return '4';
+      if(v<=21) return '5';
+      if(v<=27) return '6';
+      if(v<=33) return '7';
+      if(v<=40) return '8';
+      if(v<=47) return '9';
+      if(v<=55) return '10';
+      if(v<=63) return '11';
+      return '12';
+    }
     let factor=3600/navcompute.NM;
-    if (opt_unit == 'ms') factor=1;
-    if (opt_unit == 'kmh') factor=3.6;
-    number=number*factor;
+    if (opt_unit == 'ms' || opt_unit == 'm/s') factor=1;
+    if (opt_unit == 'kmh' || opt_unit == 'km/h') factor=3.6;
+    number*=factor;
     if (number < 100){
         return formatDecimal(number,2,1);
     }
@@ -165,17 +200,17 @@ const formatSpeed=function(speed,opt_unit){
 };
 
 formatSpeed.parameters=[
-    {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
+    {name:'unit',type:'SELECT',list:['kn','ms','kmh','bft','m/s','km/s'],default:'kn'}
 ];
 
-const formatDirection=function(dir,opt_rad){
-    if (opt_rad){
-        dir=180*dir/Math.PI;
-    }
+const formatDirection=function(dir,opt_rad,opt_180=false){
+    dir=opt_rad ? Helper.degrees(dir) : dir;
+    dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
     return formatDecimal(dir,3,0);
 };
 formatDirection.parameters=[
-    {name:'inputRadian',type:'BOOLEAN',default:false}
+    {name:'inputRadian',type:'BOOLEAN',default:false},
+    {name:'range180',type:'BOOLEAN',default:false}
 ];
 
 /**
