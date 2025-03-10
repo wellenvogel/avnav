@@ -241,7 +241,7 @@ resampling_map={
     'nearest':  Image.NEAREST,
     'bilinear': Image.BILINEAR,
     'bicubic':  Image.BICUBIC,
-    'antialias':Image.ANTIALIAS,
+    'antialias':Image.LANCZOS,
     }
 def resampling_lst(): return list(resampling_map.keys())
     
