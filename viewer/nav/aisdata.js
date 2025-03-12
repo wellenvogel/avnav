@@ -127,9 +127,8 @@ class AisData {
         }
         ais.passFront = cpadata.front;
         if (!ais.shipname) ais.shipname = "unknown";
-        if (!ais.callsign) ais.callsign = "????";
+        if (!ais.callsign) ais.callsign = "----";
     }
-
     /**
      * compute all the cpa data...
      * @private
