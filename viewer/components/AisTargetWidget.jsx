@@ -13,50 +13,59 @@ import {WidgetFrame, WidgetProps} from "./WidgetBase";
 const AisTargetWidget = (props) => {
     const click = (ev) => {
         if (ev.stopPropagation) ev.stopPropagation();
-        props.onClick({...props, mmsi: props.current ? props.current.mmsi : undefined});
+        props.onClick({...props, mmsi: props.target ? props.target.mmsi : undefined});
     }
-    let current = props.current || {};
+    let target = props.target || {};
     let small = (props.mode === "horizontal");
     let aisProperties = {};
     let color = undefined;
-    if (current.mmsi && current.mmsi !== "") {
-        aisProperties.warning = current.warning || false;
-        aisProperties.nearest = current.nearest || false;
-        aisProperties.tracking = (current.mmsi === props.trackedMmsi);
+    if (target.mmsi && target.mmsi !== "") {
+        aisProperties.warning = target.warning || false;
+        aisProperties.nearest = target.nearest || false;
+        aisProperties.tracking = (target.mmsi === props.trackedMmsi);
         color = PropertyHandler.getAisColor(aisProperties);
     }
-    let front = AisFormatter.format('passFront', current);
-    if (current.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
+    let front = AisFormatter.format('passFront', target);
+    if (target.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
         const style = {...props.style, backgroundColor: color};
         return (
-            <WidgetFrame {...props} addClass="aisTargetWidget" style={style}
-                 onClick={click} unit={undefined} caption='AIS'
-            >
+            <WidgetFrame {...props} addClass="aisTargetWidget" style={style} onClick={click} unit={undefined} caption='AIS' >
                 <div className="aisPart">
-                    {!small && <div className="widgetData">
-                        <span className='label '>D</span>
-                        <span className="aisData">{AisFormatter.format('distance', current)}</span>
-                        <span className="unit">nm</span>
+                    {!small &&
+                    <div className="widgetData">
+                        <span className="aisData">{AisFormatter.format('nameOrmmsi', target)}</span>
                     </div>}
-                    {!small && <div className="widgetData">
-                        <span className='label '>C</span>
-                        <span className="aisData">{AisFormatter.format('cpa', current)}</span>
-                        <span className="unit">nm</span>
-                    </div>}
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('distance')} </span>
+                        <span className="aisData">{AisFormatter.format('distance', target)}</span>
+                        <span className="unit">{AisFormatter.getUnit('distance')}</span>
+                    </div>
                 </div>
+                {target.tcpa>0 &&
                 <div className="aisPart">
-                    {current.mmsi !== undefined &&
-                        <div className="widgetData">
-                            <span className='label '>T</span>
-                            <span className="aisData">{AisFormatter.format('tcpa', current)}</span>
-                            <span className="unit">h</span>
-                        </div>
-                    }
-                    {current.mmsi !== undefined &&
-                        <div className="widgetData">
-                            <span className='aisFront aisData'>{front}</span>
-                        </div>
-                    }
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
+                        <span className="aisData">{AisFormatter.format('cpa', target)}</span>
+                        <span className="unit">{AisFormatter.getUnit('cpa')}</span>
+                    </div>
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
+                        <span className="aisData"> {AisFormatter.format('tcpa', target)}</span>
+                        <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
+                    </div>
+                </div>}
+                {!(target.tcpa>0) &&
+                <div className="aisPart">
+                    <div className="widgetData">
+                        <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
+                        <span className="aisData">{AisFormatter.format('headingTo', target)}</span>
+                        <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
+                    </div>
+                </div>}
+                <div className="aisPart">
+                    <div className="widgetData">
+                        <span className='aisFront aisData'>{front}</span>
+                    </div>
                 </div>
             </WidgetFrame>
         );
@@ -67,7 +76,7 @@ const AisTargetWidget = (props) => {
 }
 
 AisTargetWidget.storeKeys = {
-    current: keys.nav.ais.nearest,
+    target: keys.nav.ais.nearest,
     isEditing: keys.gui.global.layoutEditing,
     trackedMmsi: keys.nav.ais.trackedMmsi
 };
@@ -75,7 +84,7 @@ AisTargetWidget.storeKeys = {
 AisTargetWidget.propTypes = {
     ...WidgetProps,
     isEditing: PropTypes.bool,
-    current: PropTypes.object,
+    target: PropTypes.object,
     trackedMmsi: PropTypes.string
 };
 

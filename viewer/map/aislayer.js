@@ -445,6 +445,8 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let target_hdg=(useHeading && target.heading!==undefined?target.heading:target.course)||0;
     let target_rot_sgn=Math.sign(target.turn||0);
     let target_rot=Math.abs(target.turn||0); // °/min
+    let now=(new Date()).getTime();
+    let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
     curved = curved && isFinite(target_rot) && target_rot>0.5;
 
     let symbol=this.getStyleEntry(target);
@@ -463,7 +465,6 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     if (hidden){
         style.alpha=0.2;
     }
-    let now=(new Date()).getTime();
     if (classbShrink != 1 && AisFormatter.format('clazz',target) === 'B'){
         scale=scale*classbShrink;
     }
@@ -494,31 +495,35 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             drawing.drawLineToContext(points,style);
         };
 
-        if (curved) {
-            var turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
-            var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
-            var turn_angle=Helper.degrees(target_sog*courseVectorTime/turn_radius);
-        }
+        if (useCourseVector && style.courseVector !== false) {
+            if (curved) {
+                var rot = target_rot/60;
+                var arot = age*rot;
+                var turn_radius=target_sog/Helper.radians(rot); // m, SOG=[m/s]
+                var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
+            }
 
-        if (rmvRange>0 && onMap && style.courseVector !== false) { // relative motion vector
-            if (target.distance<=rmvRange && (target_sog || sog)) {
-                if (curved) {
-                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+            if (rmvRange>0 && onMap && target.distance/1852<=rmvRange && (target_sog || sog)) { // relative motion vector
+                let time = courseVectorTime - age;
+                if (curved) { // curved RMV
+                    let xyt = drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-arot),turn_radius); // position corrected for age
+                    let tcog = target_cog+target_rot_sgn*arot; // adjust COG corrected for age
+                    let center = drawTargetFunction(xyt,tcog+target_rot_sgn*90,turn_radius); // turn center corrected for age
+                    drawArc(xyt,center,turn_radius,tcog-target_rot_sgn*90,target_rot_sgn*time*rot,
                             {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
-                            cog,-sog*courseVectorTime);
+                            cog,-sog*time);
                 } else {
-                    let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
-                    p=drawTargetFunction(p,cog,-sog*courseVectorTime);
-                    drawing.drawLineToContext([xy,p],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
+                    let xyt = drawTargetFunction(xy,target_cog,target_sog*age); // position corrected for age
+                    let p = drawTargetFunction(xyt,target_cog,target_sog*time);  // projected absolute motion
+                    p = drawTargetFunction(p,cog,-sog*time); // subtract own motion to get relative motion
+                    drawing.drawLineToContext([xyt,p],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
                 }
             }
-        }
 
-        if (useCourseVector && style.courseVector !== false) {
             if (target_sog) { // true motion vector
                 if(curved && onMap) { // curved TMV
-                    //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
-                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+//                    drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
+                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*courseVectorTime*rot,
                             {color:style.courseVectorColor,width:courseVectorWidth});
                 } else {
                     let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
@@ -528,15 +533,16 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         }
 
         if (drawEstimated && symbol.ghostImage && target_sog >= minDRspeed){ // DR position of target
-            let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
             if (curved) {
-                let a=Helper.degrees(target_sog*age/turn_radius);
-                var pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-a),turn_radius);
-                //if (style.rotateWithView) { style.rotation+=Helper.radians(target_rot_sgn*a); } // TODO rotate DR icon only
+                let pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-arot),turn_radius);
+                drawing.drawImageToContext(pos,symbol.ghostImage,{
+                    ...style,
+                    rotation: style.rotation + Math.radians(target_rot_sgn*arot),
+                });
             } else {
-                var pos=drawTargetFunction(xy,target_cog,target_sog*age);
+                let pos=drawTargetFunction(xy,target_cog,target_sog*age);
+                drawing.drawImageToContext(pos,symbol.ghostImage,style);
             }
-            drawing.drawImageToContext(pos,symbol.ghostImage,style);
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
