@@ -71,9 +71,6 @@ class AVNAlarmHandler(AVNWorker):
   P_CRITICALSOUND=WorkerParameter('criticalSound',type=WorkerParameter.T_SELECT,default='anchorAlarm.mp3',
                               description='sound to be played for critical Alarms (only if no explicit config)',
                               rangeOrList=[])
-  P_STOPALARMPIN=WorkerParameter('stopAlarmPin',type=WorkerParameter.T_NUMBER,
-                                 description='a gpio pin (board numbering!) to switch off alarms when it goes low',
-                                 mandatory=False)
   P_DEFAULTCOMMAND=WorkerParameter('defaultCommand',type=WorkerParameter.T_SELECT,
                                    default='sound',
                                    description='a command that is configured at AVNCommandhandler',
