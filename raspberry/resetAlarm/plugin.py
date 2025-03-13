@@ -66,13 +66,14 @@ class Plugin(object):
     self.api = api # type: AVNApi
     self.api.registerRestart(self.stop)
     self.api.registerEditableParameters([self.P_PIN],self.changeData)
+    self.api.registerRestart(self.stop)
     self.changeSequence=0
 
   def changeData(self,changed):
     self.api.saveConfigValues(changed)
     self.changeSequence+=1
   def stop(self):
-    pass
+    self.changeSequence+=1
 
   def _runImpl(self):
     seq=self.changeSequence
