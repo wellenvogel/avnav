@@ -588,7 +588,7 @@ class AVNPluginHandler(AVNWorker):
     plugin = self.createdPlugins.get(name)
     api = self.createdApis[name]
     if api is None:
-      AVNLog.error("internal error: api not created for plugin %s", name)
+      self.setInfo(name,'internal error: api not created for plugin',WorkerStatus.ERROR)
       return
     enabled = api.isEnabled()
     if not enabled:
@@ -747,12 +747,11 @@ class AVNPluginHandler(AVNWorker):
     api = self.createdApis.get(child)
     if api is None:
       raise Exception("plugin %s not found"%child)
-    checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
-    if 'enabled' in checked:
-      newEnabled=AVNUtil.getBool(checked.get('enabled'),True)
+    if self.ENABLE_PARAMETER.name in param:
+      newEnabled=self.ENABLE_PARAMETER.fromDict(param)
       current=api.isEnabled()
       if newEnabled != current:
-        self.changeChildConfigDict(child, {'enabled': newEnabled})
+        self.changeChildConfigDict(child, {self.ENABLE_PARAMETER.name: newEnabled})
         if not newEnabled:
           if api.stopHandler is None and not api.jsCssOnly:
             raise Exception("plugin %s cannot stop during runtime")
@@ -763,18 +762,19 @@ class AVNPluginHandler(AVNWorker):
           api.stop()
           if api.jsCssOnly:
             self.setInfo(child,"disabled by config",WorkerStatus.INACTIVE)
-        else:
-          self.startPluginThread(child)
-          pass
-      del checked['enabled']
-      if len(list(checked.keys())) < 1:
-        return
-
+      del param['enabled']
+    if len(list(param.keys())) < 1:
+      #startPluginThread is intelligent enough to know if we must start
+      self.startPluginThread(child)
+      return
+    checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
     if api.paramChange is None:
       raise Exception("unable to change parameters")
     api.paramChange(checked)
     #maybe allowKeyOverrides has changed...
     api.registerKeys()
+    #startPluginThread is intelligent enough to know if we must start
+    self.startPluginThread(child)
 
   def getStatusProperties(self):
     rt={}
