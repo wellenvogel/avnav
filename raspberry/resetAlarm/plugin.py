@@ -38,6 +38,19 @@ class Plugin(object):
     'default':None,
     'description': 'the gpio to be used to reset alarm (board numbering)'
   }
+  P_LOW={
+    'name':'lowActive',
+    'type':'BOOLEAN',
+    'default': True,
+    'description': 'if true the input will be active low, else high'
+  }
+  P_PUD={
+    'name':'pullUpDown',
+    'type':'BOOLEAN',
+    'default':True,
+    'description':'activate a pull up/down resistor at the pin'
+  }
+  P_ALL=[P_PIN,P_LOW,P_PUD]
   @classmethod
   def pluginInfo(cls):
     """
@@ -65,7 +78,7 @@ class Plugin(object):
     """
     self.api = api # type: AVNApi
     self.api.registerRestart(self.stop)
-    self.api.registerEditableParameters([self.P_PIN],self.changeData)
+    self.api.registerEditableParameters(self.P_ALL,self.changeData)
     self.api.registerRestart(self.stop)
     self.changeSequence=0
 
@@ -74,10 +87,26 @@ class Plugin(object):
     self.changeSequence+=1
   def stop(self):
     self.changeSequence+=1
-
+  def getConfig(self,param):
+    rt=self.api.getConfigValue(param['name'],param['default'])
+    if param['type'].lower()=='boolean':
+      if rt is None:
+        return False
+      if isinstance(rt,bool):
+        return rt
+      if isinstance(rt,int):
+        return rt != 0
+      return rt.lower() == 'true'
+    if param['type'].lower()=='number':
+      if rt is None:
+        return None
+      return int(rt)
+    return rt
   def _runImpl(self):
     seq=self.changeSequence
-    pin=self.api.getConfigValue(self.P_PIN['name'],None)
+    pin=self.getConfig(self.P_PIN)
+    actLow=self.getConfig(self.P_LOW)
+    pud=self.getConfig(self.P_PUD)
     if pin is None or int(pin) == 0:
       self.api.setStatus('DISABLED','no gpio pin configured')
       time.sleep(0.5)
@@ -85,9 +114,15 @@ class Plugin(object):
     try:
       pin=int(pin)
       GPIO.setmode(GPIO.BOARD)
-      GPIO.setup(pin,GPIO.IN,pull_up_down=GPIO.PUD_UP)
-      GPIO.add_event_detect(pin,GPIO.FALLING,callback=self._gpioCmd,bouncetime=100)
-      self.api.setStatus('NMEA','activated pin %s for alarm reset'%str(pin))
+      pull=GPIO.PUD_OFF
+      pudstr="off"
+      if pud:
+        pull=GPIO.PUD_UP if actLow else GPIO.PUD_DOWN
+        pudstr="pull up" if actLow else "pull down"
+      GPIO.setup(pin,GPIO.IN,pull_up_down=pull)
+      edge=GPIO.FALLING if actLow else GPIO.RISING
+      GPIO.add_event_detect(pin,edge,callback=self._gpioCmd,bouncetime=100)
+      self.api.setStatus('NMEA','activated pin %s (act=%s,pud=%s) for alarm reset'%(str(pin),"low" if actLow else "high",pudstr))
     except Exception as e:
       try:
         GPIO.cleanup(pin)
