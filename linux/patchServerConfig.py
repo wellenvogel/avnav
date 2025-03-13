@@ -6,10 +6,12 @@ import sys
 import getopt
 import tempfile
 import traceback
-
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    sys.stderr.flush()
 
 def usage():
-  print("usage: %s -f filename -h handler -c child [-k keyname=keyValue...] [-d] name=value"%sys.argv[0])
+  eprint("usage: %s -f filename -h handler -c child [-k keyname=keyValue...] [-d] name=value"%sys.argv[0])
 
 class ConfigItem:
   def __init__(self, handler:str = None, child:str = None):
@@ -18,6 +20,7 @@ class ConfigItem:
     self.keys={}
     self.attributes={}
     self.doDelete=False
+    self.printOnly=False
   def hasKeys(self):
     return len(self.keys) > 0
   def matchesKeys(self,element):
@@ -27,6 +30,10 @@ class ConfigItem:
       if (not element.hasAttribute(k) or element.getAttribute(k) != v):
         return False
     return True
+  def printAttributes(self,element):
+    for k,v in self.attributes.items():
+      if element.hasAttribute(k):
+        print("%s=%s"%(k,element.getAttribute(k)))
   def setAttributes(self,element,includeKeys=False):
     hasChanges=False
     if includeKeys:
@@ -36,18 +43,23 @@ class ConfigItem:
         hasChanges=True
         element.setAttribute(k,v)
     for k,v in self.attributes.items():
-      if element.hasAttribute(k) and element.getAttribute(k) == v:
-        continue
-      hasChanges=True
-      element.setAttribute(k,v)
+      if self.doDelete:
+        if element.hasAttribute(k):
+          element.removeAttribute(k)
+          hasChanges=True
+      else:
+        if element.hasAttribute(k) and element.getAttribute(k) == v:
+          continue
+        hasChanges=True
+        element.setAttribute(k,v)
     return hasChanges
+  def hasAttributes(self):
+    return len(self.attributes)>0
   def check(self):
     if self.handler is None:
       raise Exception("missing parameter handler")
     if len(self.keys) == 0 and len(self.attributes) == 0 and not self.doDelete:
       raise Exception("missing parameter keys and/or attributes")
-    if self.doDelete and len(self.attributes) != 0:
-      raise Exception("no attributes allowed for delete")
   def __str__(self):
     return "handler={handler}, child={child}, keys={xkeys}, doDelete={doDelete} attributes={xattributes}".\
       format(**self.__dict__,xkeys=str(self.keys),xattributes=str(self.attributes))
@@ -70,7 +82,7 @@ def changeDom(domObject, cfg: ConfigItem):
     if len(foundHandlers) > 0:
       handler=foundHandlers[0]
     if handler is None:
-      if cfg.doDelete:
+      if cfg.doDelete or cfg.printOnly:
         return False
       nl=domObject.createTextNode("\n")
       nl2=domObject.createTextNode("\n")
@@ -93,7 +105,7 @@ def changeDom(domObject, cfg: ConfigItem):
           raise Exception("more then one child node %s matches keys"%cfg.child)
         handler=foundChildren[0]
       else:
-        if cfg.doDelete:
+        if cfg.doDelete or cfg.printOnly:
           #no matching child found - consider delete to be oK
           return False
         #create child node
@@ -103,24 +115,27 @@ def changeDom(domObject, cfg: ConfigItem):
         handler.appendChild(child)
         handler.appendChild(nl)
         handler=child
-    if cfg.doDelete:
+    if cfg.doDelete and not cfg.hasAttributes():
       nextNode=handler.nextSibling
       if nextNode.nodeType == dom.Node.TEXT_NODE:
         if nextNode.data == '\n':
           handler.parentNode.removeChild(nextNode)
       handler.parentNode.removeChild(handler)
       return True
+    if cfg.printOnly:
+      cfg.printAttributes(handler)
+      return False
     changed=cfg.setAttributes(handler,isNew)
     return changed or isNew
 
 def spNV(data):
   spl=data.split('=',2)
   if len(spl) != 2:
-    return None
+    spl.append("")
   return spl
 
 def err(txt,printUsage=True):
-  print("ERROR",txt)
+  eprint("ERROR",txt)
   if printUsage:
     usage()
   sys.exit(1)
@@ -129,7 +144,7 @@ if __name__ == '__main__':
   cfg=ConfigItem()
   filename=None
   debug=0
-  optlist,args=getopt.getopt(sys.argv[1:],'h:c:k:f:vd')
+  optlist,args=getopt.getopt(sys.argv[1:],'h:c:k:f:vdp')
   for opt in optlist:
     if opt[0] == '-h':
       cfg.handler=opt[1]
@@ -147,6 +162,8 @@ if __name__ == '__main__':
         cfg.keys[spl[0]]=spl[1]
       else:
         err("invalid -k parameter %s"%opt[1])
+    elif opt[0] == '-p':
+      cfg.printOnly=True
   for arg in args:
     spl=spNV(arg)
     if spl is not None:
@@ -168,7 +185,7 @@ if __name__ == '__main__':
   try:
     cfg.check()
   except Exception as e:
-    print("Error: ",str(e))
+    err(str(e))
     usage()
     sys.exit(1)
   if debug:
@@ -181,8 +198,8 @@ if __name__ == '__main__':
   except Exception as e:
     if (debug):
       print(traceback.format_exc())
-    err(str(e))
-  if changed:
+    err(str(e),printUsage=False)
+  if changed and not cfg.printOnly:
     domObject.writexml(tmpfile)
     tmpfile.flush()
     os.chown(tmpfile.name,curState.st_uid,curState.st_gid)

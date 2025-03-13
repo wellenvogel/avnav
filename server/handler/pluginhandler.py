@@ -29,6 +29,7 @@ import inspect
 import json
 from typing import Dict, Any
 
+from alarmhandler import AVNAlarmHandler
 from avnav_api import AVNApi, ConverterApi
 from avnav_store import AVNStore
 
@@ -453,6 +454,13 @@ class ApiImpl(AVNApi):
     name=self.prefix if name is None else self.prefix+":"+name
     self.converters.remove(name)
     importer.deregisterConverter(name)
+
+  def clearAlarms(self):
+    alarmhandler=AVNWorker.findHandlerByName(AVNAlarmHandler.getConfigName()) # type: AVNAlarmHandler
+    if alarmhandler is None:
+      raise Exception("cannot find alarm handler")
+    self.log("clearing all alarms")
+    alarmhandler.stopAll()
 
 
 class AVNPluginHandler(AVNWorker):
