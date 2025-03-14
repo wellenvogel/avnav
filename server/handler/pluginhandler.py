@@ -585,6 +585,14 @@ class AVNPluginHandler(AVNWorker):
       api.setStatus(WorkerStatus.ERROR,"plugin exception %s"%str(e))
 
   def startPluginThread(self,name):
+    current=self.startedThreads.get(name)
+    if current is not None:
+      if current.is_alive():
+        return
+      try:
+        del self.startedThreads[name]
+      except:
+        pass
     plugin = self.createdPlugins.get(name)
     api = self.createdApis[name]
     if api is None:
