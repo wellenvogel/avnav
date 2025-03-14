@@ -30,7 +30,7 @@ const specialHandling=[
  */
 const GpsData=function(){
 
-   
+
     this.timer=null;
 
     this.gpsErrors=0;
@@ -156,7 +156,12 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         for (let k in data){
             if (ignoredKeys.indexOf(k)>=0) continue;
             if (this.filteredStoreKeys[k]) continue; //ignore any key we use internally
-            this.additionalKeys[k]=this.computeKeys(k,data[k],base);
+            let keys=this.computeKeys(k,data[k],base);
+            if(typeof(keys)=="object" && typeof(this.additionalKeys[k])=="object") {
+              keys = assign(this.additionalKeys[k],keys);
+            } else {
+              this.additionalKeys[k]=keys;
+            }
             gpsdata[k]=data[k];
         }
         this.writeToStore(gpsdata,this.additionalKeys);
