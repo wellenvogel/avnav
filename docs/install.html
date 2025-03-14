@@ -73,12 +73,20 @@
     </p>
     <a href="../configGen/index.html"><img src="ConfigImagesUi.png" class="image"></a>
     <p>Die Bedeutung der Felder:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
           <td>Default</td>
           <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td><a name="configSEQUENCE"></a>ConfigSequence</td>
+          <td>1</td>
+          <td>Wenn man erreichen möchte, das die Einstellungen aus avnav.conf
+            noch einmal neu im System aktiviert werden sollen, kann man diesen
+            Wert erhöhen. AvNav merkt sich sonst, welche Einstellungen bereits
+            aufgesetzt wurden und setzt diese nicht erneut.</td>
         </tr>
         <tr>
           <td style="width: 187px;">Wifi SSID</td>
@@ -624,7 +632,7 @@ sudo apt install openplotter-avnav</div>
     <p><img src="windows-notification-1.png" alt=""></p>
     <p><img src="windows-notification-2.png" alt=""></p>
     <p>Das service Menü hat die folgenden Einträge:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Bezeichnung</td>
