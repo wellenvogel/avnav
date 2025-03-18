@@ -1588,9 +1588,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         Decoder decoder=getDecoder();
         if (decoder != null) {
             Decoder.SatStatus st = decoder.getSatStatus();
-            Location loc = decoder.getLocation();
-            nmea.put("source", decoder.getLastPositionSource());
-            if (loc != null) {
+            nmea.put("source", st.getSource());
+            if (st.hasValidPosition()) {
                 nmea.put("status", "green");
                 nmea.put("info", "sats: " + st.getNumSat() + " / " + st.getNumUsed());
             } else {
