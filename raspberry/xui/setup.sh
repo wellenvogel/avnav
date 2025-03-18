@@ -67,13 +67,6 @@ chown pi:pi $HOME/.xinitrc
 
 copyErr $pdir/Xwrapper.config /etc/X11 
 
-ffprofile="$HOME/.mozilla/firefox/avnav"
-
-if [ ! -d "$ffprofile" ] ; then
-    mkdir -p "$ffprofile" || err "unable to create $ffprofile"
-fi
-cp -r $pdir/firefox-profile/* "$ffprofile" || err "unable to copy profile data"
-chown -R pi:pi "$HOME/.mozilla"
 
 cp $pdir/onboard.conf "$HOME"
 chown pi:pi "$HOME/onboard.conf"
