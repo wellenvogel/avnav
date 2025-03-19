@@ -83,6 +83,8 @@ class NMEAParser(object):
   K_DEPTHW=Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface')
   K_DEPTHK=Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel')
   K_TIME=Key('time','the received GPS time',signalK='navigation.datetime')
+  K_SATUSED=Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites')
+  K_SATVIEW=Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count')
   #we will add the GPS base to all entries
   GPS_DATA=[
     K_LAT,
@@ -100,8 +102,8 @@ class NMEAParser(object):
     K_DEPTHW,
     K_DEPTHK,
     K_TIME,
-    Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count'),
-    Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites'),
+    K_SATVIEW,
+    K_SATUSED,
     Key('transducers.*','transducer data from xdr'),
     K_HDGC,
     K_HDGM,
@@ -290,9 +292,9 @@ class NMEAParser(object):
     basePriority=sourcePriority*10
     valAndSum=data.rstrip().split("*")
     if len(valAndSum) > 1:
-      sum=self.nmeaChecksum(valAndSum[0])
-      if sum != valAndSum[1].upper():
-        AVNLog.error("invalid checksum in %s, expected %s"%(data,sum))
+      csum=self.nmeaChecksum(valAndSum[0])
+      if csum != valAndSum[1].upper():
+        AVNLog.error("invalid checksum in %s, expected %s"%(data,csum))
         return
     darray=valAndSum[0].split(",")
     if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
@@ -316,12 +318,17 @@ class NMEAParser(object):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[2],darray[3])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[4],darray[5])
         if darray[7]:
-          rt['satUsed']=int(darray[7])
+          rt[self.K_SATUSED.key]=int(darray[7])
+        self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
+        return True
+      if tag == 'GSA':
+        numUsed=sum(1 for i in range(3,15) if darray[i])
+        rt[self.K_SATUSED.key]=numUsed
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
         return True
       if tag=='GSV':
         if darray[3]:
-          rt['satInview']=int(darray[3])
+          rt[self.K_SATVIEW.key]=int(darray[3])
         else:
           return False
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
