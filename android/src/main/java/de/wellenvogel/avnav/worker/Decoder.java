@@ -212,7 +212,7 @@ public class Decoder extends Worker {
         NmeaEntry de=new NmeaEntry(key,value,qe,SystemClock.uptimeMillis()+maxAge);
         return addNmeaData(de);
     }
-    private synchronized void mergeNameData(JSONObject json) throws JSONException {
+    private synchronized void mergeNmeaData(JSONObject json) throws JSONException {
         long now=SystemClock.uptimeMillis();
         for (NmeaEntry e: nmeaData.values()){
             if (!e.valid(now)) continue;
@@ -835,8 +835,8 @@ public class Decoder extends Worker {
         Location rt=new Location((String)null);
         for (NmeaEntry e:pos){
             if (! e.valid(current)) return null;
-            if (e.key == K_LAT) rt.setLatitude((double)e.value);
-            if (e.key == K_LON) rt.setLongitude((double)e.value);
+            if (K_LAT.equals(e.key)) rt.setLatitude((double)e.value);
+            if (K_LON.equals(e.key)) rt.setLongitude((double)e.value);
         }
         return rt;
     }
@@ -848,7 +848,7 @@ public class Decoder extends Worker {
      */
     JSONObject getGpsData() throws JSONException{
         JSONObject rt=new JSONObject();
-        mergeNameData(rt);
+        mergeNmeaData(rt);
         AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;
     }
@@ -944,13 +944,6 @@ public class Decoder extends Worker {
         nmeaData.clear();
     }
 
-    public String getLastPositionSource() {
-        List<NmeaEntry> pos=getEntries(K_LAT,K_LON);
-        for (NmeaEntry e:pos){
-            if (e.valid()) return e.source;
-        }
-        return null;
-    }
 
     public String getLastAisSource() {
         return lastAisSource;
