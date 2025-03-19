@@ -6,9 +6,11 @@ import android.util.Log;
 
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.parser.SentenceParser;
 import net.sf.marineapi.nmea.sentence.DBTSentence;
 import net.sf.marineapi.nmea.sentence.DPTSentence;
 import net.sf.marineapi.nmea.sentence.DateSentence;
+import net.sf.marineapi.nmea.sentence.DepthSentence;
 import net.sf.marineapi.nmea.sentence.GGASentence;
 import net.sf.marineapi.nmea.sentence.GLLSentence;
 import net.sf.marineapi.nmea.sentence.GSASentence;
@@ -26,6 +28,7 @@ import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
 import net.sf.marineapi.nmea.sentence.VDRSentence;
 import net.sf.marineapi.nmea.sentence.VHWSentence;
+import net.sf.marineapi.nmea.sentence.VTGSentence;
 import net.sf.marineapi.nmea.sentence.VWRSentence;
 import net.sf.marineapi.nmea.sentence.XDRSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
@@ -39,6 +42,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -393,10 +397,54 @@ public class Decoder extends Worker {
             return angle;
         }
 
+        public static final class EVTGParser extends net.sf.marineapi.nmea.parser.SentenceParser{
+            public EVTGParser(String nmea) {
+                super(nmea);
+            }
+
+            public EVTGParser(TalkerId talker) {
+                super(talker,"VTG",9);
+            }
+
+            double getCOG() {
+                return getDoubleValue(0);
+            }
+            double getSOG(){
+                if ("T".equals(getStringValue(1))){
+                    //new style
+                    return getDoubleValue(4);
+                }
+                return getDoubleValue(2);
+            }
+        }
+
+        public static class EDepthParser extends SentenceParser implements DepthSentence{
+
+            public EDepthParser(String nmea) {
+                super(nmea);
+            }
+            public EDepthParser(TalkerId id){
+                super(id,"DBx",1);
+            }
+
+            @Override
+            public double getDepth() {
+                return getDoubleValue(2);
+            }
+
+            @Override
+            public void setDepth(double depth) {
+
+            }
+        }
+
         @Override
         public void run(int startSequence) throws JSONException {
             store=new AisStore(OWN_MMSI.fromJson(parameters));
             SentenceFactory factory = SentenceFactory.getInstance();
+            factory.registerParser("VTG", EVTGParser.class);
+            factory.registerParser("DBK",EDepthParser.class);
+            factory.registerParser("DBS", EDepthParser.class);
             HashMap<String,AisPacketParser> aisparsers=new HashMap<>();
             Thread cleanupThread=new Thread(new Runnable() {
                 @Override
@@ -471,7 +519,7 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof MWVSentence) {
                                     MWVSentence m = (MWVSentence) s;
-                                    AvnLog.d("%s: MWV sentence",getTypeName() );
+                                    AvnLog.dfs("%s: MWV sentence",getTypeName() );
                                     WindKeys keys=new WindKeys(m.isTrue()?WindKeys.TRUEA:WindKeys.APP);
                                     try {
                                         addNmeaData(keys.angle, m.getAngle(),entry,posAge);
@@ -490,7 +538,7 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof MWDSentence){
                                     MWDSentence m = (MWDSentence) s;
-                                    AvnLog.d("%s: MWD sentence",getTypeName() );
+                                    AvnLog.dfs("%s: MWD sentence",getTypeName() );
                                     WindKeys keys=new WindKeys(WindKeys.TRUED);
                                     double direction=m.getTrueWindDirection();
                                     if (Double.isNaN(direction)){
@@ -513,7 +561,7 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof VWRSentence){
                                     VWRSentence w=(VWRSentence)s;
-                                    AvnLog.d("%s: VWR sentence",getTypeName() );
+                                    AvnLog.dfs("%s: VWR sentence",getTypeName() );
                                     WindKeys keys=new WindKeys(WindKeys.APP);
                                     try {
                                         double wangle = w.getWindAngle();
@@ -534,7 +582,7 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof DPTSentence) {
                                     DPTSentence d = (DPTSentence) s;
-                                    AvnLog.d("%s: DPT sentence",getTypeName() );
+                                    AvnLog.dfs("%s: DPT sentence",getTypeName() );
                                     try {
                                         double depth=d.getDepth();
                                         addNmeaData(K_DEPTHT, depth, entry, posAge);
@@ -547,16 +595,19 @@ public class Decoder extends Worker {
                                     } catch (DataNotAvailableException ignored){}
                                     continue;
                                 }
-                                if (s instanceof DBTSentence) {
-                                    DBTSentence d = (DBTSentence) s;
-                                    AvnLog.d("%s: DBT sentence",getTypeName() );
+                                if (s instanceof DepthSentence) {
+                                    DepthSentence d = (DepthSentence) s;
+                                    AvnLog.dfs("%s: depth(%s) sentence",getTypeName(), s.getSentenceId() );
                                     double depth = d.getDepth();
-                                    addNmeaData(K_DEPTHT, depth,entry,posAge);
+                                    String k=K_DEPTHT;
+                                    if ("DBK".equals(s.getSentenceId())) k=K_DEPTHK;
+                                    if ("DBS".equals(s.getSentenceId())) k=K_DEPTHW;
+                                    addNmeaData(k, depth,entry,posAge);
                                     continue;
                                 }
                                 if (s instanceof MTWSentence) {
                                     MTWSentence d = (MTWSentence) s;
-                                    AvnLog.d("%s: MTW sentence",getTypeName() );
+                                    AvnLog.dfs("%s: MTW sentence",getTypeName() );
                                     try {
                                         double waterTemp = d.getTemperature() + 273.15;
                                         addNmeaData(this.K_VWTT, waterTemp, entry, posAge);
@@ -634,6 +685,15 @@ public class Decoder extends Worker {
                                     }catch(Exception h2e){}
                                     continue;
                                 }
+                                if (s instanceof EVTGParser){
+                                    EVTGParser vtg=(EVTGParser) s;
+                                    try{
+                                        addNmeaData(K_COURSE,vtg.getCOG(),entry,now+posAge);
+                                    }catch (DataNotAvailableException i){}
+                                    try{
+                                        addNmeaData(K_SPEED,vtg.getSOG()/ AvnUtil.msToKn,entry,posAge);
+                                    }catch (DataNotAvailableException i){}
+                                }
                                 Position p = null;
                                 if (s instanceof PositionSentence) {
                                     //we need to verify the position quality
@@ -647,7 +707,9 @@ public class Decoder extends Worker {
                                             if (isValid) {
                                                 try {
                                                     double mvar = rmc.getVariation();
-                                                    addNmeaData(K_MAGVAR, mvar, entry, posAge);
+                                                    //the RMC parser inverts the variation if the direction is E
+                                                    //this seems to be wrong (and different to the python code)
+                                                    addNmeaData(K_MAGVAR, -mvar, entry, posAge);
                                                 } catch (DataNotAvailableException re) {
                                                 }
                                             }
@@ -658,9 +720,17 @@ public class Decoder extends Worker {
                                                     getTypeName(), isValid);
                                         }
                                         if (s instanceof GGASentence) {
-                                            int qual = ((GGASentence) s).getFixQuality().toInt();
-                                            isValid = qual > 0;
-                                            AvnLog.dfs("%s: GGA sentence, quality=%d, valid=%s", getTypeName(), qual, isValid);
+                                            GGASentence gga=(GGASentence) s;
+                                            try {
+                                                int qual = gga.getFixQuality().toInt();
+                                                isValid = qual > 0;
+                                                AvnLog.dfs("%s: GGA sentence, quality=%d, valid=%s", getTypeName(), qual, isValid);
+                                            }catch (DataNotAvailableException i){}
+                                            try{
+                                                int satUsed=gga.getSatelliteCount();
+                                                GSVStore gsv=gsvStores.getStore(entry.source,entry.priority);
+                                                gsv.setNumUsed(satUsed);
+                                            }catch(DataNotAvailableException i){}
                                         }
                                     } catch (DataNotAvailableException ignored) {
                                     }
@@ -687,9 +757,11 @@ public class Decoder extends Worker {
                                                     NmeaEntry e=nmeaData.get(IK_DATE);
                                                     if (e!= null && e.valid()){
                                                         date=(net.sf.marineapi.nmea.util.Date)e.value;
-                                                        addNmeaData(K_TIME,dateFormat.format(AvnUtil.toTimeStamp(date,time)),entry,posAge);
                                                     }
                                                 }
+                                            }
+                                            if (date != null){
+                                                addNmeaData(K_TIME,dateFormat.format(AvnUtil.toTimeStamp(date,time)),entry,posAge);
                                             }
                                         }
                                     } catch (DataNotAvailableException e) {
