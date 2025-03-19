@@ -10,6 +10,7 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 
+from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
 from avnav_util import AVNUtil, AVNLog, AVNDownload
 from avnav_websocket import HTTPWebSocketsHandler
@@ -423,16 +424,16 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rtv = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
     # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
     status = "red"
-    if rtv.get("lat") is not None and rtv.get('lon') is not None:
+    if rtv.get(NMEAParser.K_LAT.key) is not None and rtv.get(NMEAParser.K_LON.key) is not None:
       status = "green"
-    info = self.server.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".lat",includeInfo=True)  # we just want the last source of position
+    info = self.server.navdata.getSingleValue(NMEAParser.K_LON.getKey(),includeInfo=True)  # we just want the last source of position
     src='unknown'
     if info is not None:
       src=info.source
-    satInview = rtv.get('satInview')
+    satInview = rtv.get(NMEAParser.K_SATVIEW.key)
     if satInview is None:
       satInview=0
-    satUsed   = rtv.get('satUsed')
+    satUsed   = rtv.get(NMEAParser.K_SATUSED.key)
     if satUsed is None:
       satUsed=0
     statusNmea = {"status": status, "source": src, "info": "Sat %d visible/%d used" % (int(satInview), int(satUsed))}
