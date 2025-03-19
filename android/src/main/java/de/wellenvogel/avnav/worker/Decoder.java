@@ -41,7 +41,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
@@ -128,7 +127,7 @@ public class Decoder extends Worker {
           return now <= timeout;
       }
       public boolean valid(){
-            return timeout <= SystemClock.uptimeMillis();
+            return timeout >= SystemClock.uptimeMillis();
         }
     };
     private static class NoJsonNmeaEntry extends NmeaEntry{
@@ -445,6 +444,8 @@ public class Decoder extends Worker {
                     continue;
                 }
                 String line = entry.data;
+                long now=SystemClock.uptimeMillis();
+
                 try {
                     if (line.startsWith("$")) {
                         //NMEA
@@ -673,13 +674,13 @@ public class Decoder extends Worker {
                                 if (s instanceof DateSentence) {
                                     try {
                                         date = ((DateSentence) s).getDate();
-                                        addNmeaData(new NoJsonNmeaEntry(IK_DATE,date,entry,posAge));
+                                        addNmeaData(new NoJsonNmeaEntry(IK_DATE,date,entry,now+posAge));
                                     } catch (DataNotAvailableException ignored){}
                                 }
                                 if (s instanceof TimeSentence) {
                                     try {
                                         time = ((TimeSentence) s).getTime();
-                                        if (addNmeaData(new NoJsonNmeaEntry(IK_TIME,time,entry,posAge))) {
+                                        if (addNmeaData(new NoJsonNmeaEntry(IK_TIME,time,entry,now+posAge))) {
                                             if (date == null) {
                                                 //check if we have a date received
                                                 synchronized (this){
@@ -697,13 +698,17 @@ public class Decoder extends Worker {
                                 }
                                 ArrayList<NmeaEntry> posEntries=new ArrayList<>();
                                 if (p != null){
-                                    long timeout=SystemClock.uptimeMillis()+posAge;
+                                    long timeout=now+posAge;
                                     posEntries.add(new NmeaEntry(K_LAT,p.getLatitude(),entry,timeout));
                                     posEntries.add(new NmeaEntry(K_LON,p.getLongitude(),entry,timeout));
                                     if (s instanceof RMCSentence) {
-                                        double speed=((RMCSentence) s).getSpeed() / AvnUtil.msToKn;
-                                        posEntries.add(new NmeaEntry(K_SPEED,speed,entry,timeout));
-                                        posEntries.add(new NmeaEntry(K_COURSE,((RMCSentence) s).getCourse(),entry,timeout));
+                                        try {
+                                            double speed = ((RMCSentence) s).getSpeed() / AvnUtil.msToKn;
+                                            posEntries.add(new NmeaEntry(K_SPEED, speed, entry, timeout));
+                                        }catch (DataNotAvailableException i){}
+                                        try {
+                                            posEntries.add(new NmeaEntry(K_COURSE, ((RMCSentence) s).getCourse(), entry, timeout));
+                                        }catch(DataNotAvailableException i2){}
                                     }
                                     addNmeaData(posEntries);
                                 }
@@ -810,7 +815,7 @@ public class Decoder extends Worker {
             rt=new SatStatus(gsv.getSatCount(),gsv.getNumUsed(),fetcher.hasData(),gsv.getSource(),posValid);
         }
         else {
-            rt = new SatStatus(0, 0, fetcher.hasData(),null,posValid);
+            rt = new SatStatus(0, 0, fetcher.hasData(),pSource,posValid);
         }
         return rt;
     }
