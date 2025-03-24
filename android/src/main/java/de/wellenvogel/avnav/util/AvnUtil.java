@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -158,8 +159,8 @@ public class AvnUtil {
         return rt;
     }
 
-    public static long toTimeStamp(net.sf.marineapi.nmea.util.Date date, net.sf.marineapi.nmea.util.Time time){
-        if (date == null) return 0;
+    public static Date toTimeStamp(net.sf.marineapi.nmea.util.Date date, net.sf.marineapi.nmea.util.Time time){
+        if (date == null) return null;
         Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.set(Calendar.YEAR, date.getYear());
         cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
@@ -169,8 +170,7 @@ public class AvnUtil {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         cal.add(Calendar.MILLISECOND, (int) (time.getMilliseconds()));
-        long millis=cal.getTime().getTime();
-        return millis;
+        return cal.getTime();
     }
 
     public static InetAddress getLocalHost() throws UnknownHostException {

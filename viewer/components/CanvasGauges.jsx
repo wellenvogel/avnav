@@ -186,6 +186,7 @@ Gauge.editableParameters=
 
 export const GaugeRadial=(props)=>{
     return <Gauge
+        useMinPath={true}
         {...props}
         gauge={RadialGauge}
         typeClass="radial"
