@@ -56,14 +56,15 @@ const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
     return Dynamic((props)=> {
-        var key = props.name;
+        let key = props.name;
         if (! AisFormatter.shouldShow(key,props.current)){
             return null;
         }
-        var unit = AisFormatter.getUnit(props.name);
-        var clazz = 'aisInfoRow';
-        var warning = props.current.warning && (key.includes('cpa') || key.includes('pass'));
         let target = props.current;
+        if (typeof(target) == 'undefined') { return null; }
+        let unit = AisFormatter.getUnit(props.name);
+        let clazz = 'aisInfoRow';
+        let warning = target.warning && (key.includes('cpa') || key.includes('pass'));
         let warningDist = globalStore.getData(keys.properties.aisWarningCpa);
         let warningTime = globalStore.getData(keys.properties.aisWarningTpa);
         if(key.includes('pass') && warning || 0 < target.tcpa && (key=='cpa' && target.cpa < warningDist || key=='tcpa' && target.tcpa < warningTime)) {
@@ -78,7 +79,6 @@ const createItem=(config,mmsi)=>{
     },{
         storeKeys:storeKeys,
         updateFunction:createUpdateFunction(config,mmsi)
-
     });
 };
 const GuardedList=MapEventGuard(ItemList);
