@@ -92,7 +92,7 @@ const pad=(val,len)=>{
 
 const sortDialog=(sortField)=>{
     for (let i in sortFields){
-        if (sortFields[i].value === sortField) sortFields[i].selected=true;
+        sortFields[i].selected=sortFields[i].value === sortField;
     }
     return OverlayDialog.selectDialogPromise('Sort Order',sortFields);
 };
