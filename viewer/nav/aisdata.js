@@ -98,9 +98,9 @@ class AisData {
         ais.tracking = false;
         ais.nearest = false;
         let aispos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
-        // correct for the age of the ais data by forwarding the position to current time
         let aisCourse = parseFloat(ais.course || 0);
         let aisSpeed = parseFloat(ais.speed || 0);
+        // correct for the age of the ais data by forwarding the position to current time
         aispos = NavCompute.computeTarget(aispos, aisCourse, (ais.age||0)*aisSpeed, useRhumbLine);
         let dst = NavCompute.computeDistance(boatPos, aispos, useRhumbLine);
         ais.distance = dst.dts;

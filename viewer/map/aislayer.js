@@ -504,16 +504,26 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             }
 
             if (rmvRange>0 && onMap && target.distance/1852<=rmvRange && (target_sog || sog)) { // relative motion vector
-                let time = courseVectorTime - age;
+                let rmvMode = 0; // 0=RMV with past, 1=starting at DR position
+                let time = courseVectorTime - rmvMode*age;
                 if (curved) { // curved RMV
-                    let xyt = drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-arot),turn_radius); // position corrected for age
-                    let tcog = target_cog+target_rot_sgn*arot; // adjust COG corrected for age
-                    let center = drawTargetFunction(xyt,tcog+target_rot_sgn*90,turn_radius); // turn center corrected for age
-                    drawArc(xyt,center,turn_radius,tcog-target_rot_sgn*90,target_rot_sgn*time*rot,
-                            {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
-                            cog,-sog*time);
+                    if (rmvMode) {
+                      let xyt = drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-arot),turn_radius); // position corrected for age
+                      let tcog = target_cog+target_rot_sgn*arot; // adjust COG corrected for age
+                      let center = drawTargetFunction(xyt,tcog+target_rot_sgn*90,turn_radius); // turn center corrected for age
+                      drawArc(xyt,center,turn_radius,tcog-target_rot_sgn*90,target_rot_sgn*time*rot,
+                              {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
+                               cog,-sog*time);
+                    } else {
+                      let xyt = drawTargetFunction(xy,cog,sog*age); // position corrected for age
+                      let center = drawTargetFunction(turn_center,cog,sog*age); // turn center corrected for age
+                      drawArc(xyt,center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*courseVectorTime*rot,
+                              {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
+                               cog,-sog*time);
+                    }
                 } else {
-                    let xyt = drawTargetFunction(xy,target_cog,target_sog*age); // position corrected for age
+                    let xyt = rmvMode ? drawTargetFunction(xy,target_cog,target_sog*age) // position corrected for age
+                                      : drawTargetFunction(xy,cog,sog*age);
                     let p = drawTargetFunction(xyt,target_cog,target_sog*time);  // projected absolute motion
                     p = drawTargetFunction(p,cog,-sog*time); // subtract own motion to get relative motion
                     drawing.drawLineToContext([xyt,p],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
