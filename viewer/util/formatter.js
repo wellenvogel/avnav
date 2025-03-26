@@ -200,7 +200,7 @@ const formatSpeed=function(speed,opt_unit){
 };
 
 formatSpeed.parameters=[
-    {name:'unit',type:'SELECT',list:['kn','ms','kmh','bft','m/s','km/s'],default:'kn'}
+    {name:'unit',type:'SELECT',list:['kn','ms','kmh','bft','m/s','km/h'],default:'kn'}
 ];
 
 const formatDirection=function(dir,opt_rad,opt_180=false){
