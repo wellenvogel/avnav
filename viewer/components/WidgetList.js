@@ -344,15 +344,16 @@ let widgetList=[
         formatter: 'formatDistance',
         formatterParameters: ['m'],
         translateFunction: (props)=>{
-            var kind=props.kind;
+            let kind=props.kind;
             if(kind=='auto') {
               kind='DBT';
               if(props.DBK !== undefined) kind='DBK';
               if(props.DBS !== undefined) kind='DBS';
             }
-            if(kind=='DBT') var depth=props.DBT;
-            if(kind=='DBK') var depth=props.DBK;
-            if(kind=='DBS') var depth=props.DBS;
+            let depth=undefined;
+            if(kind=='DBT') depth=props.DBT;
+            if(kind=='DBK') depth=props.DBK;
+            if(kind=='DBS') depth=props.DBS;
             return {...props,
               value: depth,
               caption: kind,

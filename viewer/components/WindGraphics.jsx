@@ -141,10 +141,10 @@ const WindGraphics = (props) => {
     }
     setTimeout(drawWind, 0);
     let wind = getWindData(props);
-    var a180 = !(props.show360 || wind.suffix.endsWith('D'));
-    var angle = Formatter.formatDirection(wind.windAngle,false,a180);
-    var unit = ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : 'kn';
-    var speed = Formatter.formatSpeed(wind.windSpeed,unit);
+    let a180 = !(props.show360 || wind.suffix.endsWith('D'));
+    let angle = Formatter.formatDirection(wind.windAngle,false,a180);
+    let unit = ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : 'kn';
+    let speed = Formatter.formatSpeed(wind.windSpeed,unit);
     return (
         <WidgetFrame {...props} addClass="windGraphics" unit={unit} caption="Wind" resize={false}>
             <canvas className='widgetData' ref={canvasRef}></canvas>

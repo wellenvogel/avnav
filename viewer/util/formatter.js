@@ -8,7 +8,7 @@ import Helper from "./helper.js";
 import {OpenLocationCode} from "open-location-code";
 
 function pad(num, size) {
-    var s = '000000' + num;
+    let s = '000000' + num;
     return s.substr(s.length-size);
 }
 
@@ -20,13 +20,12 @@ function pad(num, size) {
  */
 const formatLonLatsDecimal=function(coordinate,axis,format='DDM'){
     coordinate = Helper.to180(coordinate); // normalize to ±180°
-    var deg = Math.abs(coordinate);
+    let deg = Math.abs(coordinate);
+    let padding = 2;
+    let str = coordinate < 0 ? "S\u00A0" :"N\u00A0";
     if (axis == "lon") {
-        var padding = 3;
-        var str = coordinate < 0 ? "W" :"E";
-    } else {
-        var padding = 2;
-        var str = coordinate < 0 ? "S\u00A0" :"N\u00A0";
+        padding = 3;
+        str = coordinate < 0 ? "W" :"E";
     }
     if(format=='DD') {
       str += pad(deg.toFixed(5),padding+6) + "\u00B0";

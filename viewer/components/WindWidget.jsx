@@ -68,10 +68,10 @@ const WindWidget = (props) => {
     }
     let classes = "widget windWidget " + props.className || "";
     let wind = getWindData(props);
-    var a180 = !(props.show360 || wind.suffix.endsWith('D'));
-    var angle = Formatter.formatDirection(wind.windAngle,false,a180);
-    var unit = ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : 'kn';
-    var speed = Formatter.formatSpeed(wind.windSpeed,unit);
+    let a180 = !(props.show360 || wind.suffix.endsWith('D'));
+    let angle = Formatter.formatDirection(wind.windAngle,false,a180);
+    let unit = ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : 'kn';
+    let speed = Formatter.formatSpeed(wind.windSpeed,unit);
     return (
         <WidgetFrame {...props} addClass="windWidget" caption={undefined} unit={undefined}>
             {(props.mode === 'horizontal') ?
