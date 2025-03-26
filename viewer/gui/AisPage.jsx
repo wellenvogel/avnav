@@ -56,7 +56,9 @@ const aisSortCreator=(sortField)=>{
             // pull warnings up
             if (b.warning && !a.warning) return 1;
             if (a.warning && !b.warning) return -1;
-            // combined relative distance of CPA, if passed use distance
+            // both have warning flag: sort by TCPA
+            if (a.warning && b.warning) return a.tcpa-b.tcpa;
+            // combined relative distance of CPA, if passed use distance only
             let fa = a.tcpa<0 ? 2*a.distance/warningDist : a.tcpa/warningTime + a.cpa/warningDist;
             let fb = b.tcpa<0 ? 2*b.distance/warningDist : b.tcpa/warningTime + b.cpa/warningDist;
             return fa-fb;
