@@ -188,66 +188,6 @@ NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
     return rt;
 };
 
-/**
- * do the computation of the cross point and the closest approach
- * all units are Si units (m, s,...), angles in degrees
- * @param courseToTarget
- * @param curdistance
- * @param srcCourse
- * @param srcSpeed
- * @param dstCourse
- * @param dstSpeed
- * @param minAisSpeed - minimal speed we allow for crossing computation
- * @param maxDistance
- * @returns {object} an object with the properties
- *        td - time dest to crosspoint (if crossing)
- *        ts - time src to crosspoint (if crossing)
- *        dd - distance destination to crosspoint
- *        ds - distance src to crosspoint
- *        tm - TCPA
- *        dms - distance src to cpa point
- *        dmd - distance dest to cpa point
- */
-NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
-    //courses
-    let rt={};
-    let ca=(courseToTarget-srcCourse)/180*Math.PI; //rad
-    let cb=(courseToTarget-dstCourse)/180*Math.PI;
-    let cosa=Math.cos(ca);
-    let sina=Math.sin(ca);
-    let cosb=Math.cos(cb);
-    let sinb=Math.sin(cb);
-    if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed ){
-        //compute crossing
-        try {
-            rt.td = curdistance / (dstSpeed * (cosa / sina * sinb - cosb));
-            rt.ts=curdistance/(srcSpeed*(cosa-sina*cosb/sinb));
-        }catch(e){
-            //TODO: exception handling
-        }
-        if (rt.td !== undefined && rt.ts !== undefined){
-            rt.ds=srcSpeed*rt.ts; //in m
-            rt.dd=dstSpeed*rt.td; //in m
-            if (maxDistance !== undefined){
-                if (Math.abs(rt.ds) > maxDistance || Math.abs(rt.dd) > maxDistance){
-                    rt.td=undefined;
-                    rt.ts=undefined;
-                    rt.ds=undefined;
-                    rt.dd=undefined;
-                }
-            }
-        }
-    }
-    let quot=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
-    if (quot < 1e-6 && quot > -1e-6){
-        rt.tm=undefined;
-        return rt;
-    }
-    rt.tm=curdistance*(cosa*srcSpeed-cosb*dstSpeed)/quot;
-    rt.dms=srcSpeed*rt.tm;
-    rt.dmd=dstSpeed*rt.tm;
-    return rt;
-};
 
 /**
  * compute a new point (in lon/lat) traveling from a given point

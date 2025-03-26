@@ -205,13 +205,18 @@ navobjects.Cpa=function(){
      * distance in m
      * @type {number}
      */
-    this.cpa=0;
+    this.cpa=undefined;
 
     /**
      * time till cpa in s
      * @type {number}
      */
-    this.tcpa=-1;
+    this.tcpa=undefined;
+    /**
+     * bearing to CPA point
+     * @type {number|undefined}
+     */
+    this.bcpa=undefined;
     /**
      *
      * @type {number|undefined}: 0-back,1-front,-1 parallel,undefined-parallel crossed

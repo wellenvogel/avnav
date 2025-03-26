@@ -8,7 +8,7 @@ import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
-import AisFormatter, {AIS_CLASSES} from '../nav/aisformatter.jsx';
+import AisFormatter, {AIS_CLASSES, aisproxy} from '../nav/aisformatter.jsx';
 import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
@@ -591,7 +591,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let thirdLabel=globalStore.getData(keys.properties.aisThirdLabel,'');
     let drawEstimated=globalStore.getData(keys.properties.aisShowEstimated,false);
     for (i in aisList){
-        let current=aisList[i];
+        let current=aisproxy(aisList[i]);
         let alpha={alpha: current.hidden?0.2:undefined};
         let pos=current.mapPos;
         if (! pos){

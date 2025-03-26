@@ -9,7 +9,7 @@ import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import Page from '../components/Page.jsx';
-import AisFormatter from '../nav/aisformatter.jsx';
+import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
@@ -254,7 +254,7 @@ class AisPage extends React.Component{
         let sortFunction=aisSortCreator(this.state.sortField||'cpa');
         aisList.sort(sortFunction);
         for( let aisidx in aisList){
-            let ais=aisList[aisidx];
+            let ais=aisproxy(aisList[aisidx]);
             if (! ais.mmsi) continue;
             if (this.state.searchActive){
                 let found=false;

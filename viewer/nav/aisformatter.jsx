@@ -340,6 +340,22 @@ const aisparam={
 
 };
 
+const aisProxyHandler={
+    get(target,prop,receiver){
+        if (target[prop]!== undefined) return target[prop];
+        if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
+        if (target.received !== undefined) return target.received[prop];
+    }
+};
+/**
+ *
+ * @param aisobject
+ * @returns {Proxy<AISItem>}
+ */
+export const aisproxy=(aisobject)=>{
+    return new Proxy(aisobject,aisProxyHandler);
+}
+
 const AisFormatter={
     /**
      * the formatter for AIS data
@@ -356,7 +372,13 @@ const AisFormatter={
         let d=aisparam[key];
         if (! d) return ;
         if (aisobject === undefined) return;
-        let rt=d.format(aisobject);
+        /**
+         * allow to use the new style {@link AISItem}
+         * we create a proxy and forward get access to either the cpadata or the received data if not at the base level
+         */
+
+        let op=aisproxy(aisobject);
+        let rt=d.format(op);
         if (inlcudeUnit && d.unit !== undefined){
             rt+=" "+d.unit;
         }
@@ -393,7 +415,7 @@ const AisFormatter={
         return rt;
     },
     shouldShow(key,item){
-        let cl=aisparam.clazz.format(item);
+        let cl=this.format('clazz',item);
         let param=aisparam[key];
         if (! param) return;
         if ( param.classes === undefined) return true;
