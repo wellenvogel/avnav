@@ -212,18 +212,17 @@ NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
  *        dmd - distance dest to cpa point
  */
 NavCompute.computeApproach=function(bearing,distance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
-    let rt={};
     const deg = Math.PI/180;
+    let rt={};
     let ca=(bearing-srcCourse)*deg;
     let cb=(bearing-dstCourse)*deg;
-    let cc=(srcCourse-dstCourse)*deg;
-    let sina=Math.sin(ca);
     let cosa=Math.cos(ca);
-    let sinb=Math.sin(cb);
+    let sina=Math.sin(ca);
     let cosb=Math.cos(cb);
+    let sinb=Math.sin(cb);
 
     if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed){
-        try { //
+        try { // compute track crossing time
             rt.td = distance / (dstSpeed * (cosa / sina * sinb - cosb));
             rt.ts = distance / (srcSpeed * (cosa - sina * cosb / sinb));
         }catch(e){
@@ -247,7 +246,7 @@ NavCompute.computeApproach=function(bearing,distance,srcCourse,srcSpeed,dstCours
         rt.tm=undefined;
         return rt;
     }
-    rt.tm = distance * (srcSpeed*cosa - dstSpeed*cosb) / denom; // TCPA
+    rt.tm = distance * (cosa*srcSpeed-cosb*dstSpeed) / denom; // TCPA
     rt.dms = srcSpeed*rt.tm;
     rt.dmd = dstSpeed*rt.tm;
     return rt;
