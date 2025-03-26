@@ -24,17 +24,23 @@
  * display the infos of a track
  */
 
-import React from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import DB from "./DialogButton";
-import OverlayDialog, {InfoItem} from "./OverlayDialog";
+import {
+    DBCancel,
+    DialogButtons,
+    DialogFrame,
+    DialogRow,
+    InfoItem,
+    useDialogContext
+} from "./OverlayDialog";
 import Requests from '../util/requests';
 import Toast from "./Toast";
 import Helper from "../util/helper";
 import navobjects from "../nav/navobjects";
 import NavCompute from "../nav/navcompute";
 import Formatter from '../util/formatter';
-import assign from 'object-assign';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {Input} from "./Inputs";
@@ -43,7 +49,6 @@ import navdata from "../nav/navdata";
 import routeobjects from "../nav/routeobjects";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
-import {stateHelper} from "../util/GuiHelpers";
 
 const RouteHandler=navdata.getRoutingHandler();
 
@@ -281,87 +286,88 @@ const AskEditRoute=(props)=>{
             route &nbsp;<span>{props.route.name}</span>&nbsp; successfully created
         </div>
         <div className="dialogButtons">
-            <DB name="cancel"
-                onClick={props.closeCallback}>
+            <DB name="cancel">
                 Cancel
             </DB>
             <DB name="editRoute"
                 onClick={()=>{
-                    props.closeCallback();
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                     editor.setNewRoute(props.route,0);
-                    this.props.history.push('editroutepage',{center:true});
+                    props.history.push('editroutepage',{center:true});
                 }}
             >Edit</DB>
         </div>
     </div>
 }
 
-export class TrackConvertDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            points:this.props.points,
-            convertedPoints:this.props.points,
-            routeName: "Track-"+this.props.name,
-            loaded:false,
-            processing:false,
-            routesLoaded:false,
-            currentRoutes:[],
-            maxXte: props.maxXte||20
-        }
-        this.info=stateHelper(this,{},'info');
-        this.originalInfo=stateHelper(this,{},'originalInfo');
-        this.okClicked=this.okClicked.bind(this);
-        this.convert=this.convert.bind(this);
+const getRowValue=(data,description)=>{
+    let v=data[description.value];
+    if (v === undefined) return null;
+    if (description.formatter){
+        v=description.formatter(v,data);
+        if (v === undefined) return null;
     }
+    return <InfoItem label={description.label} value={v}/>
+}
 
-    componentDidMount() {
-        getInfoForList(this.state.points)
-            .then((values)=>{
-                this.setState({loaded:true});
-                this.info.setState(values,true);
-                this.originalInfo.setState(values,true);
+export const TrackConvertDialog=(props)=> {
+    const [points,setPoints]=useState([]);
+    const [convertedPoints,setConvertedPoints]=useState(props.points);
+    const [name,setName]=useState("Track-"+props.name);
+    const [loaded,setLoaded]=useState(false);
+    const [processing,setProcessing]=useState(false);
+    const [currentRoutes,setCurrentRoutes]=useState([]);
+    const [maxXte,setMaxXte]=useState(props.maxXte||20);
+    const [info,setInfo]=useState({});
+    const [originalInfo,setOriginalInfo]=useState({});
+    const dialogContext=useDialogContext();
+    useEffect(() => {
+        getTrackInfo(props.name)
+            .then((info) => {
+                setPoints(info.points||[])
+                setLoaded(true);
+                return info.points||[]
             })
-            .catch((error)=>Toast(error));
+            .then((lpoints)=>{
+                getInfoForList(lpoints)
+                    .then((values)=>{
+                        setInfo(values);
+                        setOriginalInfo(values);
+                    })
+                    .catch((error)=>Toast(error));
+            })
+            .catch((error) => Toast(error));
+    }, []);
+    useEffect(() => {
         RouteHandler.listRoutes(true)
             .then((routes)=>{
-                this.setState({currentRoutes:routes,routesLoaded:true});
+                setCurrentRoutes(routes);
             })
             .catch((error)=>{Toast(error)});
-    }
-    existsRoute(name){
-        if (! this.state.routesLoaded) return false;
+    },[]);
+    const existsRoute=useCallback((name)=>{
         if (Helper.getExt(name) !== 'gpx') name+='.gpx';
-        for (let i=0;i<this.state.currentRoutes.length;i++){
-            if (this.state.currentRoutes[i].name === name) return true;
+        for (let i=0;i<currentRoutes.length;i++){
+            if (currentRoutes[i].name === name) return true;
         }
         return false;
-    }
-    getRowValue(data,description){
-        let v=data[description.value];
-        if (v === undefined) return null;
-        if (description.formatter){
-            v=description.formatter(v,data);
-            if (v === undefined) return null;
-        }
-        return <InfoItem label={description.label} value={v}/>
-    }
-    okClicked(){
-        let name=this.state.routeName.replace(/\.gpx$/,"");
-        let route=new routeobjects.Route(name);
+    },[currentRoutes]);
+
+    const okClicked=useCallback(()=>{
+        let rname=name.replace(/\.gpx$/,"");
+        let route=new routeobjects.Route(rname);
         let idx=1;
-        this.state.convertedPoints.forEach((point)=>{
+        convertedPoints.forEach((point)=>{
             idx=route.addPoint(idx,point);
             idx++;
         })
         RouteHandler.saveRoute(route,true)
             .then(()=>{
-                this.props.closeCallback();
+                dialogContext.closeDialog();
                 if (mapholder.getCurrentChartEntry()){
-                    OverlayDialog.dialog((props)=>{
+                    dialogContext.replaceDialog(()=>{
                         return <AskEditRoute
-                            {...props}
+                            history={props.history}
                             route={route}
                             />
                     })
@@ -370,42 +376,47 @@ export class TrackConvertDialog extends React.Component{
             .catch((error)=>{
                 Toast(error);
             })
-    }
-    convert(){
-        let converter=new SimpleRouteFilter(this.state.points,false,undefined,this.state.maxXte);
-        this.setState({processing:true});
+    },[name,convertedPoints]);
+    const convert=useCallback(()=>{
+        let converter=new SimpleRouteFilter(points,false,undefined,maxXte);
+        setProcessing(true);
         window.setTimeout(()=>{
             let newPoints=converter.process()
             getInfoForList(newPoints).then((info)=>{
-                this.info.setState(info,true);
-                this.setState({convertedPoints: newPoints,processing:false});
+                setInfo(info);
+                setConvertedPoints(newPoints);
+                setProcessing(false);
             })
         },10);
-    }
-    render(){
-        let maxroute=this.props.maxroute||50;
-        let currentPoints=this.info.getValue('numPoints');
-        let existingName=this.existsRoute(this.state.routeName);
-        let displayName=this.state.routeName.replace(/\.gpx$/,'');
-        return  <div className="TrackConvertDialog flexInner">
-            <h3 className="dialogTitle">Convert Track to Route</h3>
+    },[points,maxXte]);
+        let maxroute=props.maxroute||50;
+        let currentPoints=info.numPoints||0;
+        let existingName=existsRoute(name);
+        let displayName=name.replace(/\.gpx$/,'');
+        if (! loaded){
+            return <DialogFrame className="TrackConvertDialog" title={"Convert Track to Route"}>
+                <DialogRow>{"loading "+props.name}</DialogRow>
+                <DialogButtons buttonList={[DBCancel()]}></DialogButtons>
+            </DialogFrame>
+        }
+        return  <DialogFrame className="TrackConvertDialog" title={"Convert Track to Route"}>
             <Input
                 dialogRow={true}
                 label="route name"
                 value={displayName}
-                onChange={(nv)=>this.setState({routeName:nv+".gpx"})}
+                onChange={(nv)=>setName(nv+".gpx")}
                 />
             {existingName && <div className="warning">Name already exists</div>}
             <div className="originalPoints">
                 <div className="heading dialogRow">original points</div>
                 {CONVERT_INFO_ROWS.map((row)=>{
-                    return this.getRowValue(this.originalInfo.getState(),row);
+                    return getRowValue(originalInfo,row);
                 })}
             </div>
             <div className="computedPoints">
                 <div className="heading dialogRow">optimized points</div>
                 {CONVERT_INFO_ROWS.map((row)=>{
-                    return this.getRowValue(this.info.getState(),row);
+                    return getRowValue(info,row);
                 })}
             </div>
             <div className="converter">
@@ -418,115 +429,32 @@ export class TrackConvertDialog extends React.Component{
                 <Input
                     dialogRow={true}
                     label="max Xte"
-                    value={this.state.maxXte}
-                    onChange={(nv)=>this.setState({maxXte:nv})}
+                    value={maxXte}
+                    onChange={(nv)=>setMaxXte(nv)}
                     />
-                <div className="dialogButtons">
+                <DialogButtons>
                     <DB name="convert"
-                        onClick={this.convert}
+                        onClick={convert}
+                        close={false}
                         >Compute</DB>
-                </div>
+                </DialogButtons>
             </div>
-            <div className="dialogButtons">
+            <DialogButtons>
                 <DB name={"cancel"}
-                    onClick={this.props.closeCallback}
                 >Cancel</DB>
                 {existingName?<DB name={"ok"}
-                    onClick={this.okClicked}
+                    onClick={okClicked}
+                    close={false}
                 >Overwrite</DB>:
                 <DB name={"ok"}
-                    onClick={this.okClicked}
+                    onClick={okClicked}
+                    close={false}
                 >Save</DB>}
-            </div>
-        </div>
-    }
+            </DialogButtons>
+        </DialogFrame>
 }
 
 TrackConvertDialog.propTypes={
     history: PropTypes.object.isRequired,
-    points: PropTypes.array.isRequired,
     name: PropTypes.string.isRequired
 }
-
-TrackConvertDialog.showDialog=(history,name,opt_showDialogFunction)=>{
-    if (!opt_showDialogFunction){
-        opt_showDialogFunction=OverlayDialog.dialog;
-    }
-    getTrackInfo(name)
-        .then((info) => {
-            opt_showDialogFunction((props) => {
-                return <TrackConvertDialog
-                    {...props}
-                    history={history}
-                    points={info.points} name={name}/>;
-            });
-        })
-        .catch((error) => Toast(error));
-}
-
-class TrackInfoDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            points:[],
-            loaded:false,
-            name:this.props.name
-        }
-        this.showConvertDialog=this.showConvertDialog.bind(this);
-    }
-
-    componentDidMount() {
-        getTrackInfo(this.props.name)
-            .then((values)=>{
-                this.setState(assign({loaded: true},values));
-            })
-            .catch((error)=>Toast(error));
-    }
-    showConvertDialog(){
-        this.props.closeCallback();
-        OverlayDialog.dialog((props)=>{
-            return <TrackConvertDialog
-                {...props}
-                points={this.state.points}
-                name={this.props.name}/>
-        })
-    }
-    render(){
-       return  <div className="TrackInfoDialog flexInner">
-            <h3 className="dialogTitle">Track Info</h3>
-            {INFO_ROWS.map((row)=>{
-                let v=this.state[row.value];
-                if (v === undefined) return null;
-                if (row.formatter) v=row.formatter(v,this.state);
-                if (v === undefined) return null;
-                return <InfoItem label={row.label} value={v}/>
-            })}
-            <div className="dialogButtons">
-                <DB name={"toroute"}
-                    onClick={this.showConvertDialog}
-                    disabled={!this.state.loaded}
-                >
-                    Convert</DB>
-                <DB name={"cancel"}
-                    onClick={this.props.closeCallback}
-                >Cancel</DB>
-            </div>
-        </div>
-    }
-}
-
-TrackInfoDialog.PropTypes={
-    name: PropTypes.string.isRequired
-}
-TrackInfoDialog.showDialog=(info,opt_showDialogFunction)=>{
-    if (!opt_showDialogFunction) {
-        opt_showDialogFunction = OverlayDialog.dialog;
-    }
-    return opt_showDialogFunction((props)=>{
-        return <TrackInfoDialog
-            {...info}
-            {...props}/>
-    });
-}
-
-export default TrackInfoDialog;

@@ -446,7 +446,7 @@ const UserAppDialog = (props) => {
 UserAppDialog.propTypes = {
     fixed: PropTypes.object.isRequired,
     addon: PropTypes.object,
-    resolveFunction: PropTypes.func
+    resolveFunction: PropTypes.func.isRequired
 };
 
 export default UserAppDialog;

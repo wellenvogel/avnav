@@ -264,11 +264,12 @@ class EditRouteDialog extends React.Component{
                             inverted: newInverted
                         })
                     }}
+                    close={false}
                 >Invert</DB>
                 {this.props.editAction &&
                 <DB name="edit"
                     onClick={()=>{
-                        this.props.closeCallback();
+                        this.save();
                         this.props.editAction();
                     }}
                     >
@@ -278,23 +279,25 @@ class EditRouteDialog extends React.Component{
             <div className="dialogButtons">
                 < DB name="load"
                      onClick={this.loadNewRoute}
+                     close={false}
                      >Load</DB>
                 { canDelete && <DB name="delete"
-                    onClick={() => {this.delete(); }}
+                    onClick={() => {this.delete(); }} close={false}
                 >Delete</DB>}
                 <DB name="copy"
                     onClick={() => this.save(true)}
+                    close={false}
                     disabled={(!this.state.nameChanged || existingName)}
                 >
                     Save As
                 </DB>
                 <DB name="cancel"
-                    onClick={this.props.closeCallback}
                 >Cancel</DB>
                 {this.state.nameChanged ?
                     <DB name="ok"
                         onClick={() => this.save()}
                         disabled={existingName}
+                        close={false}
                     >
                         Rename
                     </DB> :
@@ -599,7 +602,7 @@ class EditRoutePage extends React.Component{
                     }
                 }
             }
-            FeatureInfoDialog.showDialog(this.props.history,feature);
+            OverlayDialog.showDialog(undefined,()=><FeatureInfoDialog history={this.props.history} {...feature}/>)
             return true;
         }
 

@@ -22,9 +22,10 @@ if [ "$1" = "prepare" ] ; then
   #TODO: postinstall?
   usermod -a -G tty pi
   cache=$HOME/.cache
-  if [ -d $cache ] ; then
-    chown -R pi $cache
+  if [ ! -d $cache ] ; then
+    mkdir -p "$cache"
   fi
+  chown -R pi:pi $cache
   cp -p `dirname $0`/.xinitrc $HOME
   chown pi:pi $HOME/.xinitrc
   update-menus

@@ -22,7 +22,7 @@
  #
  ###############################################################################
  */
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import keys from '../util/keys.jsx';
 import {Input, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
@@ -32,23 +32,21 @@ import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY}
 import OverlayDialog, {
     DialogButtons,
     DialogFrame,
-    dialogHelper,
     DialogRow,
     InfoItem,
-    showPromiseDialog
+    showPromiseDialog, useDialogContext
 } from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
-import assign from 'object-assign';
 import LayoutHandler from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
-import {TrackConvertDialog} from "./TrackInfoDialog";
-import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
-import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
+import {TrackConvertDialog} from "./TrackConvertDialog";
+import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
+import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
@@ -110,11 +108,18 @@ const getDownloadUrl=(item)=>{
 }
 
 const showConvertFunctions = {
-    track: (history,item) => {
-        TrackConvertDialog.showDialog(history,item.name);
+    track: (dialogContext,history,item) => {
+        dialogContext.replaceDialog(()=><TrackConvertDialog history={history} name={item.name}/>);
     }
 }
-
+const buildRequestParameters=(request,item,opt_additional)=>{
+    return {...Helper.filteredAssign(additionalUrlParameters,item),
+            ...opt_additional,
+            request: request,
+            type: item.type,
+            name:item.name
+        }
+}
 export class ItemActions{
     constructor(type) {
         this.type=type;
@@ -307,119 +312,113 @@ const getImportLogUrl=(name)=>{
 }
 
 
-class AddRemoveOverlayDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={};
-        this.state.chartList=[DEFAULT_OVERLAY_CHARTENTRY];
-        this.state.chart=DEFAULT_OVERLAY_CHARTENTRY.chartKey
-        this.state.action='add';
-        this.state.changed=false;
-        this.titles={add:"Add to Charts",remove:"Remove from Charts"}
-        this.dialogHelper=dialogHelper(this);
-    }
-    componentDidMount() {
-        Requests.getJson('',{},{
-            request:'list',
-            type:'chart'
+const AddRemoveOverlayDialog = (props) => {
+    const [chartList, setChartList] = useState([DEFAULT_OVERLAY_CHARTENTRY]);
+    const [chart, setChart] = useState(DEFAULT_OVERLAY_CHARTENTRY.chartKey);
+    const [action, setAction] = useState('add');
+    const [changed, setChanged] = useState(false);
+    let titles = {add: "Add to Charts", remove: "Remove from Charts"}
+    useEffect(() => {
+        Requests.getJson('', {}, {
+            request: 'list',
+            type: 'chart'
         })
-            .then((data)=>{
-                this.setState({
-                    chartList:this.state.chartList.concat(data.items)
-                })
+            .then((data) => {
+                setChartList(
+                    chartList.concat(data.items)
+                )
             })
-            .catch((error)=>Toast("unable to read chart list: "+error));
-    }
+            .catch((error) => Toast("unable to read chart list: " + error));
 
-    action(){
-        if (this.state.action === 'remove'){
-            Requests.getJson('',{},{
+    }, []);
+    const findChart = useCallback((chartKey) => {
+        for (let i = 0; i < chartList.length; i++) {
+            if (chartList[i].chartKey === chartKey) return chartList[i];
+        }
+    }, [chartList]);
+    const execute = useCallback(() => {
+        if (action === 'remove') {
+            Requests.getJson('', {}, {
                 request: 'api',
-                type:'chart',
-                command:'deleteFromOverlays',
-                name:this.props.current.name,
-                itemType:this.props.current.type
+                type: 'chart',
+                command: 'deleteFromOverlays',
+                name: props.current.name,
+                itemType: props.current.type
             })
-                .then(()=>{})
-                .catch((error)=>{Toast(error)})
+                .then(() => {
+                })
+                .catch((error) => {
+                    Toast(error)
+                })
             return;
         }
-        if (this.state.action === 'add'){
-            let chart=this.findChart(this.state.chart);
-            if (! chart) return;
-            EditOverlaysDialog.createDialog(chart,
+        if (action === 'add') {
+            let chartInfo = findChart(chart);
+            if (!chartInfo) return;
+            EditOverlaysDialog.createDialog(chartInfo,
                 undefined,
-                this.props.current
-                );
+                props.current
+            );
             return;
         }
-    }
-    findChart(chartKey){
-        for (let i=0;i<this.state.chartList.length;i++){
-            if (this.state.chartList[i].chartKey === chartKey) return this.state.chartList[i];
+    }, [action,chart]);
+    const getChartSelectionList = useCallback(() => {
+        if (action === 'remove') {
+            return {label: DEFAULT_OVERLAY_CHARTENTRY.name, value: DEFAULT_OVERLAY_CHARTENTRY.chartKey};
         }
-    }
-    getChartSelectionList(){
-        if (this.state.action === 'remove'){
-            return {label:DEFAULT_OVERLAY_CHARTENTRY.name,value:DEFAULT_OVERLAY_CHARTENTRY.chartKey};
-        }
-        let rt=[];
-        this.state.chartList.forEach((chart)=>{
-            if (! chart.chartKey) return;
-            rt.push({label:chart.name,value:chart.chartKey});
+        let rt = [];
+        chartList.forEach((chart) => {
+            if (!chart.chartKey) return;
+            rt.push({label: chart.name, value: chart.chartKey});
         })
         return rt;
-    }
-    getCurrentChartValue(){
-        if (this.state.action === 'remove'){
-            return {label:'All Charts',value:undefined};
+    }, [action, chartList]);
+    const getCurrentChartValue = useCallback(() => {
+        if (action === 'remove') {
+            return {label: 'All Charts', value: undefined};
         }
-        return(
-            {
-                label:(this.findChart(this.state.chart) || {}).name,
-                value:this.state.chart
-            })
-    }
-    render(){
         return (
-            <div className="AddRemoveOverlayDialog flexInner">
-                <h3 className="dialogTitle">On Charts</h3>
-                <div className={"dialogRow"}>
-                    <span className="itemInfo">{this.props.current.name}</span>
-                </div>
-                <Radio
-                    dialogRow={true}
-                    label={"Action"}
-                    value={this.state.action}
-                    onChange={(v)=>{this.setState({changed:true,action:v})}}
-                    itemList={[{label:this.titles.add,value:"add"},{label:this.titles.remove,value:"remove"}]}
-                    />
-                <InputSelect
-                    dialogRow={true}
-                    label="Chart"
-                    value={this.getCurrentChartValue()}
-                    onChange={(v) => {
-                        this.setState({changed: true, chart: v})
-                    }}
-                    changeOnlyValue={true}
-                    showDialogFunction={this.dialogHelper.showDialog}
-                    itemList={this.getChartSelectionList()}
-                />
-                <div className="dialogButtons">
-                    <DB name="cancel"
-                        onClick={()=>{
-                            this.props.closeCallback();
-                        }}
-                        >Cancel</DB>
-                    <DB name="ok"
-                        onClick={()=>{
-                            this.action();
-                            this.props.closeCallback()
-                        }}>Ok</DB>
-                </div>
-            </div>
-        )
-    }
+            {
+                label: (findChart(chart) || {}).name,
+                value: chart
+            })
+    }, [action, chart]);
+    return (
+        <DialogFrame className="AddRemoveOverlayDialog" title={"On Charts"}>
+            <DialogRow>
+                <span className="itemInfo">{props.current.name}</span>
+            </DialogRow>
+            <Radio
+                dialogRow={true}
+                label={"Action"}
+                value={action}
+                onChange={(v) => {
+                    setChanged(true);
+                    setAction(v);
+                }}
+                itemList={[{label: titles.add, value: "add"}, {label: titles.remove, value: "remove"}]}
+            />
+            <InputSelect
+                dialogRow={true}
+                label="Chart"
+                value={getCurrentChartValue()}
+                onChange={(v) => {
+                    setChanged(true);
+                    setChart(v);
+                }}
+                changeOnlyValue={true}
+                itemList={getChartSelectionList()}
+            />
+            <DialogButtons>
+                <DB name="cancel"
+                >Cancel</DB>
+                <DB name="ok"
+                    onClick={() => {
+                        execute();
+                    }}>Ok</DB>
+            </DialogButtons>
+        </DialogFrame>
+    )
 }
 const INFO_ROWS=[
 
@@ -439,25 +438,27 @@ const infoRowDisplay=(row,data)=>{
     if (v === undefined) return null;
     return <InfoItem label={row.label} value={v}/>
 }
-export const FileDialog =(props)=>{
-        const [changed,setChanged]=useState(false);
-        const [existingName,setExistingName]=useState(false);
-        const [name,setName]=useState(props.current.name);
-        const [scheme,setScheme]=useState(props.current.scheme);
-        const [allowed,setAllowed]=useState(ItemActions.create(props.current,globalStore.getData(keys.properties.connectedMode,true)))
-        const [extendedInfo,setExtendedInfo]=useState({});
+export const FileDialog = (props) => {
+    const [changed, setChanged] = useState(false);
+    const [existingName, setExistingName] = useState(false);
+    const [name, setName] = useState(props.current.name);
+    const [scheme, setScheme] = useState(props.current.scheme);
+    const [allowed, setAllowed] = useState(ItemActions.create(props.current, globalStore.getData(keys.properties.connectedMode, true)))
+    const [extendedInfo, setExtendedInfo] = useState({});
+    const dialogContext = useDialogContext();
     useEffect(() => {
-        let f=INFO_FUNCTIONS[props.current.type];
-        if (f){
-            f(props.current.name).then((info)=>{
+        let f = INFO_FUNCTIONS[props.current.type];
+        if (f) {
+            f(props.current.name).then((info) => {
                 setExtendedInfo(info);
-            }).catch(()=>{});
+            }).catch(() => {
+            });
         }
     }, []);
 
-    const onChange=(newName)=>{
+    const onChange = (newName) => {
         if (newName === name) return;
-        if (newName === props.current.name){
+        if (newName === props.current.name) {
             setChanged(false);
             setExistingName(false);
             setName(newName);
@@ -467,183 +468,176 @@ export const FileDialog =(props)=>{
         setChanged(true);
         if (props.checkName) setExistingName(props.checkName(newName));
     }
-        let cn=existingName?"existing":"";
-        let rename=changed && ! existingName && (name !== props.current.name);
-        let schemeChanged=allowed.showScheme && (((props.current.scheme||"tms") !== scheme)|| props.current.originalScheme);
-        let extendedInfoRows=TYPE_INFO_ROWS[props.current.type];
-        return(
-            <DialogFrame className="fileDialog" title={props.current.name}>
-                    {props.current.info !== undefined?
-                        <DialogRow>
-                            <span className="itemInfo">{props.current.info}</span>
-                        </DialogRow>
-                        :
-                        null
-                    }
-                    {INFO_ROWS.map((row)=>{
-                        return infoRowDisplay(row,props);
-                    })}
-                    {extendedInfoRows && extendedInfoRows.map((row)=>{
-                        return infoRowDisplay(row,extendedInfo);
-                    })}
-                    {(allowed.showScheme && props.current.originalScheme) &&
-                    <DialogRow className="userAction">
+    let cn = existingName ? "existing" : "";
+    let rename = changed && !existingName && (name !== props.current.name);
+    let schemeChanged = allowed.showScheme && (((props.current.scheme || "tms") !== scheme) || props.current.originalScheme);
+    let extendedInfoRows = TYPE_INFO_ROWS[props.current.type];
+    return (
+        <DialogFrame className="fileDialog" title={props.current.name}>
+            {props.current.info !== undefined ?
+                <DialogRow>
+                    <span className="itemInfo">{props.current.info}</span>
+                </DialogRow>
+                :
+                null
+            }
+            {INFO_ROWS.map((row) => {
+                return infoRowDisplay(row, props);
+            })}
+            {extendedInfoRows && extendedInfoRows.map((row) => {
+                return infoRowDisplay(row, extendedInfo);
+            })}
+            {(allowed.showScheme && props.current.originalScheme) &&
+                <DialogRow className="userAction">
                     <span className="inputLabel">
                         original DB scheme
                     </span>
-                        <span className="value">
+                    <span className="value">
                         {props.current.originalScheme}
                     </span>
 
-                    </DialogRow>
-                    }
-                    {allowed.showScheme &&
-                    <Radio
-                        label="scheme"
-                        value={scheme}
-                        onChange={(v)=>{setChanged(true);setScheme(v)}}
-                        itemList={[{label:"xyz",value:"xyz"},{label:"tms",value:"tms"}]}
-                        className="mbtilesType"/>
+                </DialogRow>
+            }
+            {allowed.showScheme &&
+                <Radio
+                    label="scheme"
+                    value={scheme}
+                    onChange={(v) => {
+                        setChanged(true);
+                        setScheme(v)
+                    }}
+                    itemList={[{label: "xyz", value: "xyz"}, {label: "tms", value: "tms"}]}
+                    className="mbtilesType"/>
 
-                    }
-                    {allowed.showRename ?
-                        <div className="dialogRow">
-                            <Input
-                                label={existingName?"existing":"new name"}
-                                className={cn}
-                                value={name}
-                                onChange={onChange}
-                            />
-                        </div>
-                        : null
-                    }
-                    <DialogButtons>
-                        {(allowed.showRename || allowed.showScheme)?
-                            <DB name="ok"
-                                onClick={()=>{
-                                    let action="";
-                                    if (rename) action+="rename";
-                                    if (schemeChanged){
-                                        if (props.current.scheme !== scheme) {
-                                            if (action === "") action = "scheme";
-                                            else action += ",scheme";
-                                        }
-                                    }
-                                    props.okFunction(action,
-                                        {...props.current,name:name,scheme:scheme});
-                                }}
-                                disabled={!rename && ! schemeChanged}
-                            >
-                                Change
-                            </DB>
-                            :
-                            null
-                        }
-                        {allowed.showDelete?
-                            <DB name="delete"
-                                onClick={()=>{
-                                    props.okFunction('delete',props.current.name);
-                                }}
-                                disabled={changed}
-                            >
-                                Delete
-                            </DB>
-                            :
-                            null
-                        }
-                    </DialogButtons>
-                    <DialogButtons >
-                        {allowed.showImportLog &&
-                            <DB name={'log'}
-                                onClick={()=>{
-                                    OverlayDialog.dialog((dprops)=>{
-                                        return <LogDialog {...dprops}
-                                                          baseUrl={getImportLogUrl(props.current.name)}
-                                                          title={'Import Log'}
-                                        />
-                                    })
-                                }}
-                                >Log</DB>
-                        }
-                        {allowed.showConvertFunction &&
-                            <DB name="toroute"
-                                onClick={()=>{
-                                    props.okFunction('convert',props.current);
-                                }}
-                                >Convert</DB>
-                        }
-                        {(allowed.showView )?
-                            <DB name="view"
-                                onClick={()=>{
-                                    props.okFunction('view',props.current);
-                                }}
-                                disabled={changed}
-                            >
-                                View
-                            </DB>
-                            :
-                            null}
-                        {(allowed.showEdit)?
-                            <DB name="edit"
-                                onClick={()=>{
-                                    props.closeCallback();
-                                    props.okFunction('edit',props.current);
-                                }}
-                                disabled={changed}
-                            >
-                                Edit
-                            </DB>
-                            :
-                            null
-                        }
-                        {(allowed.showOverlay)?
-                            <DB name="overlays"
-                                onClick={()=>{
-                                    props.okFunction('overlay',props.current);
-                                }}
-                                disabled={changed}
-                            >
-                                Overlays
-                            </DB>
-                            :
-                            null
-                        }
-                        <ItemDownloadButton
-                            name="download"
-                            disabled={changed}
-                            item={props.current || {}}
-                            useDialogButton={true}
-                        >
-                            Download
-                        </ItemDownloadButton>
-                        {(allowed.showApp) &&
-                        <DB name="userApp"
-                            onClick={()=>{
-                                props.okFunction('userapp',props.current);
-                            }}
-                            disabled={changed}
-                        >
-                            App
-                        </DB>
+            }
+            {allowed.showRename ?
+                <div className="dialogRow">
+                    <Input
+                        label={existingName ? "existing" : "new name"}
+                        className={cn}
+                        value={name}
+                        onChange={onChange}
+                    />
+                </div>
+                : null
+            }
+            <DialogButtons>
+                {(allowed.showRename || allowed.showScheme) ?
+                    <DB name="ok"
+                        onClick={() => {
+                            let action = "";
+                            if (rename) action += "rename";
+                            if (schemeChanged) {
+                                if (props.current.scheme !== scheme) {
+                                    if (action === "") action = "scheme";
+                                    else action += ",scheme";
+                                }
+                            }
+                            props.okFunction(action,
+                                {...props.current, name: name, scheme: scheme});
+                        }}
+                        disabled={!rename && !schemeChanged}
+                    >
+                        Change
+                    </DB>
+                    :
+                    null
+                }
+                {allowed.showDelete ?
+                    <DB name="delete"
+                        onClick={() => {
+                            props.okFunction('delete', props.current.name);
+                        }}
+                        disabled={changed}
+                    >
+                        Delete
+                    </DB>
+                    :
+                    null
+                }
+            </DialogButtons>
+            <DialogButtons>
+                {allowed.showImportLog &&
+                    <DB name={'log'}
+                        onClick={() => {
+                            dialogContext.replaceDialog((dprops) => {
+                                return <LogDialog {...dprops}
+                                                  baseUrl={getImportLogUrl(props.current.name)}
+                                                  title={'Import Log'}
+                                />
+                            })
+                        }}
+                    >Log</DB>
+                }
+                {allowed.showConvertFunction &&
+                    <DB name="toroute"
+                        onClick={() => {
+                            props.okFunction('convert', props.current);
+                        }}
+                    >Convert</DB>
+                }
+                {(allowed.showView) ?
+                    <DB name="view"
+                        onClick={() => {
+                            props.okFunction('view', props.current);
+                        }}
+                        disabled={changed}
+                    >
+                        View
+                    </DB>
+                    :
+                    null}
+                {(allowed.showEdit) ?
+                    <DB name="edit"
+                        onClick={() => {
+                            props.okFunction('edit', props.current);
+                        }}
+                        disabled={changed}
+                    >
+                        Edit
+                    </DB>
+                    :
+                    null
+                }
+                {(allowed.showOverlay) ?
+                    <DB name="overlays"
+                        onClick={() => {
+                            props.okFunction('overlay', props.current);
+                        }}
+                        disabled={changed}
+                    >
+                        Overlays
+                    </DB>
+                    :
+                    null
+                }
+                <ItemDownloadButton
+                    name="download"
+                    disabled={changed}
+                    item={props.current || {}}
+                    useDialogButton={true}
+                >
+                    Download
+                </ItemDownloadButton>
+                {(allowed.showApp) &&
+                    <DB name="userApp"
+                        onClick={() => {
+                            props.okFunction('userapp', props.current);
+                        }}
+                        disabled={changed}
+                    >
+                        App
+                    </DB>
 
-                        }
-                        <DB name="cancel"
-                        >
-                            Cancel
-                        </DB>
-                    </DialogButtons>
-            </DialogFrame>
-        );
+                }
+                <DB name="cancel"
+                >
+                    Cancel
+                </DB>
+            </DialogButtons>
+        </DialogFrame>
+    );
 
-}
-const buildRequestParameters=(request,item,opt_additional)=>{
-    return assign({},Helper.filteredAssign(additionalUrlParameters,item),
-        opt_additional,
-        {
-            request: request,
-            type: item.type,
-            name:item.name
-        })
 }
 export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
@@ -697,14 +691,16 @@ export const deleteItem=(info,opt_resultCallback)=> {
     });
 };
 
-export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
-    let actionFunction=(action,newItem)=>{
+export const FileDialogWithActions=(props)=>{
+    const {doneCallback,item,history,checkExists,...forward}=props;
+    const dialogContext=useDialogContext();
+    const actionFunction=(action,newItem)=>{
         let doneAction=(pageChanged)=>{
-            if (opt_doneCallback){
-                opt_doneCallback(action,newItem,pageChanged)
+            if (doneCallback){
+                doneCallback(action,newItem,pageChanged)
             }
         };
-        let schemeAction=(newScheme)=>{
+        const schemeAction=(newScheme)=>{
             return Requests.getJson('',{},
                 buildRequestParameters('api',item,
                     {command:'scheme',newScheme:newScheme}));
@@ -763,11 +759,9 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
         }
         if (action === 'userapp'){
             if (item.url) {
-                showPromiseDialog(undefined, (props) =>
-                    <UserAppDialog {...props} fixed={{url: item.url}}/>
-                )
-                    .then((data) => doneAction())
-                    .catch((error) => doneAction());
+                dialogContext.replaceDialog((props) =>
+                    <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={()=>{}}/>
+                ,()=>doneAction())
             }
         }
         if (action === 'delete'){
@@ -779,13 +773,13 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
                 return EditOverlaysDialog.createDialog(item )
             }
             else{
-                OverlayDialog.dialog((props)=>{
+                dialogContext.replaceDialog((props)=>{
                     return(
                         <AddRemoveOverlayDialog
                             {...props}
                             current={item}
-                            />
-                        )
+                        />
+                    )
                 });
                 return;
             }
@@ -793,19 +787,14 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
         if ( action === 'convert'){
             let convertFunction=showConvertFunctions[newItem.type];
             if (convertFunction){
-                convertFunction(history,newItem);
+                convertFunction(dialogContext,history,newItem);
             }
             return;
         }
     };
-    OverlayDialog.dialog((props)=>{
-        return(
-            <FileDialog
-                {...props}
-                okFunction={actionFunction}
-                current={item}
-                checkName={opt_checkExists}
-            />
-        );
-    });
-};
+    return <FileDialog
+        {...forward}
+        current={item}
+        okFunction={actionFunction}
+        checkName={checkExists}/>
+}

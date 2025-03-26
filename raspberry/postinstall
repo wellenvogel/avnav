@@ -8,10 +8,11 @@ systemctl stop check_wlan || echo "check_wlan not running"
 rm -f /etc/init.d/avnav
 rm -f /etc/init.d/check_wlan
 rm -f /etc/init.d/check_parts
-VERSIONFILE=/usr/lib/avnav/raspberry/raspi.version
+VERSIONFILE=$BASE/raspi.version
 if [ -f $VERSIONFILE ] ; then
     . $VERSIONFILE
 fi
+PATCHCMD=$BASE/patchServerConfig.py
 systemctl daemon-reload
 systemctl enable avnav
 echo stopping and disabling gpsd
@@ -24,7 +25,20 @@ if [ -f $CONFIG ] ; then
         cp $CONFIG $CONFIG.save
         chown pi $CONFIG.save
     fi
-    sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh"?' $CONFIG
+    if [ -x "$PATCHCMD" ] ; then
+        "$PATCHCMD" -v -f "$CONFIG" -h AVNConfig "settimecmd=/usr/lib/avnav/raspberry/settime.sh"
+        newBt=`"$PATCHCMD" -p -f "$CONFIG" -h AVNPluginHandler -c system-resetAlarm gpio`
+        if [ "$newBt" = "" ] ; then
+            oldBt=`"$PATCHCMD" -p -f "$CONFIG" -h AVNAlarmHandler stopAlarmPin | sed 's/.*=//'`
+            if [ "$?" = 0 -a "$oldBt" != "" ] ; then
+                echo "migrating setting for stop alarm pin $oldBt"
+                "$PATCHCMD" -v -d -f "$CONFIG" -h AVNAlarmHandler stopAlarmPin
+                "$PATCHCMD" -v -f "$CONFIG" -h AVNPluginHandler -c system-resetAlarm "gpio=$oldBt"
+            fi
+        fi
+    else
+        sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh"?' $CONFIG
+    fi
 else
     echo "no old config $CONFIG found to migrate"
 fi
@@ -85,9 +99,10 @@ systemctl disable dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl stop dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl disable dhcpcd || echo "dhcpcd not running, dont need to disable"
 systemctl stop dhcpcd || echo "dhcpcd not running, dont need to disable"
-systemctl disable ntp || echo "ntp not running, dont need to disable"
+systemctl disable --now ntp || echo "ntp not running, dont need to disable"
 systemctl mask ntp || echo "ntp not running, dont need to mask"
-systemctl stop ntp.service || echo "ntp not running, dont need to disable"
+systemctl disable --now ntpsec || echo "ntpsec not running, dont need to disable"
+systemctl mask ntpsec || echo "ntpsec not running, dont need to mask"
 
 
 systemctl daemon-reload

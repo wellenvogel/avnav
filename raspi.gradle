@@ -81,6 +81,9 @@ ospackage {
             include versionFileName
         }
     }
+    into('/usr/lib/avnav/plugins/resetAlarm'){
+        from('raspberry/resetAlarm')
+    }
     into('/usr/lib/systemd/system/avnav.service.d'){
         from('raspberry'){
             include "raspberry.conf"

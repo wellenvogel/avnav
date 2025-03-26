@@ -295,7 +295,7 @@ public class AisStore {
         aisData.clear();
     }
 
-    public int numAisEntries(){
+    public synchronized int numAisEntries(){
         return aisData.size();
     }
 }

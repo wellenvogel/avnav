@@ -7,6 +7,7 @@
   </head>
   <body data-order="1200">
     <h1>The Navigation Page</h1>
+    <div class="toc" data-maxlevel="3"> </div>
     <p>This page is the one normally used for navigation. In the screenshot an
       active waypoint is shown and the chart is locked to the boat position
       (i.e. will move with the boat).</p>
@@ -304,6 +305,82 @@
       and RMVs are then displayed as curved lines. The curved vectors may
       indicate a potential collision much earlier than the uncurved vectors.</p>
     <p><img src="aisvectors-curved.png" alt="curved vectors" class="image"></p>
+    <h3>CPA and Motion Vector Computations</h3>
+    <p>To compute the CPA data and the motion vectors AvNav considers the
+      received data of an AIS target (position,COG,SOG, HDG) and the data of the
+      own boat (position, COG, SOG).</p>
+    <p>Before version 2025xxxx the computation uses the AIS target data as shown
+      on the map and the boat data as shown when this data is computed.</p>
+    <p>AvNav computes:</p>
+    <ul>
+      <li>the point where both tracks cross (our track and the target's track,
+        ground tracks)</li>
+      <li>the point, where both (we and target) reach minimum distance to each
+        other, the CPA</li>
+    </ul>
+    <p>It also computes the times needed to reach these points. Negative times
+      mean, that the point has already been passed.<br>
+      Derived from this data we decide how we pass the target:</p>
+    <ul>
+      <li>front = we will cross track of target in front of target</li>
+      <li>back = we will cross track of target astern of target</li>
+      <li>pass = we have crossed the track of the target already or crossing
+        point could not be calculated (stationary target)</li>
+      <li>done = we have crossed the track and have passed CPA</li>
+    </ul>
+    <p>Based on the computed DCPA (minimal distance at the CPA point) and TCPA
+      (time to reach this point) AvNav sets a warning flag at the target if the
+      values are below the configured threshold.</p>
+    <p>#TODO: priority</p>
+    <p>The used computation approach has some drawbacks:</p>
+    <p>The AIS target normally moves and AIS messages are only received at
+      certain time intervals. Moreover the AvNav viewer part (in the browser)
+      only fetches the AIS data every nn seconds (settings/UpdateTimes/AIS -
+      default 5 seconds). So the AIS symbol on the map is drawn at a position it
+      already had some time in the past. And the same way the computation will
+      give results that are not completely correct - it uses the boat
+      position/course/speed at the time of computation and the AIS
+      position/course/speed from a time when the AIS message has been sent by
+      the target.</p>
+    <p>If you have a "classic" situation with some AIS target that you will
+      approach in the near future you will observe a constant change in the
+      computed CPA (and motion vector) data - even if the target keeps
+      course/speed and your vessel also keeps course and speed.</p>
+    <p>Starting from version 2025xxxx AvNav will give you the option (activated
+      by default, settings/AIS/CPA from estimated) to compute the CPA and motion
+      vector data from an estimated position of the AIS target. This position is
+      the same as the one drawn on the map as a "shadow". The estimation simply
+      assumes that the AIS target keeps course (COG) and speed over time and
+      considers the age of the ais information.</p>
+    <p>This age is computed by considering:</p>
+    <ol>
+      <li>The time the AIS message has spent in the AvNav server from receiving
+        it till the viewer (the browser) fetches the data. If the data is
+        received by <a href="../hints/CanboatAndSignalk.html">SignalK</a>&nbsp;
+        it also considers the time it already has spent in SignalK.</li>
+      <li>The time from receiving it in the browser till the computation (could
+        at most be the AIS update time - settings/UpdateTimes/AIS - 5s).</li>
+    </ol>
+    <p>By using this computation you will normally get a constant CPA if your
+      course/speed and the AIS target course/speed remain constant. So in most
+      situation this could give you a better result.</p>
+    <p>But there are still 2 problems that cannot be addressed with this
+      computation:</p>
+    <ol>
+      <li>If the computation of the time between receiving the AIS message and
+        sending it to the browser is wrong (e.g. missing time sync between
+        SignalK and AvNav) you will always get wrong results. Potentially you
+        will not really notice this if the difference remains the same over
+        time.</li>
+      <li>If the AIS target changes course/speed the estimated position is
+        wrong. This normally should only be an intermediate problem that will go
+        away once course and speed are stable again.<br>
+        In principle we could also consider the ROT (rate of turn) of a target -
+        but the ROT to be constant over longer time most probably is not very
+        likely - so this is not used to compute the estimated position. </li>
+    </ol>
+    <p>As both computations have their limits AvNav leaves the decision to the
+      user - defaulting to use the estimated position.</p>
     <h2>Displays (Widgets)</h2>
     <p></p>
     <p></p>

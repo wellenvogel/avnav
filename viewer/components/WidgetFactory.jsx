@@ -15,7 +15,6 @@ import {createEditableParameter, EditableParameter} from "./EditableParameters";
 import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
 import MapWidget from "./MapWidget";
-import {CombinedWidget} from "./CombinedWidget";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};

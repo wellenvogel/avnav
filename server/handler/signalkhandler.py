@@ -840,7 +840,9 @@ class AVNSignalKHandler(AVNWorker):
 
   CHARTHANDLER_PREFIX="signalk"
   def run(self):
-    self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
+    key=self.PATH+".*"
+    if not self.navdata.isKeyRegistered(key):
+      self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
     self.migrateConfig()
     self.alarmhandler=self.findHandlerByName(AVNAlarmHandler.getConfigName())
     charthandler = self.findHandlerByName(AVNChartHandler.getConfigName())
@@ -1631,7 +1633,7 @@ class AVNSignalKHandler(AVNWorker):
   def iterateToValue(self,node,prefix,callback):
     if not type(node) is dict:
       return
-    if 'value' in node:
+    if 'value' in node and 'timestamp' in node and '$source' in node:
       callback(prefix,node.get('value'),node.get('$source'),node.get('timestamp'))
       return
     for k,v in node.items():

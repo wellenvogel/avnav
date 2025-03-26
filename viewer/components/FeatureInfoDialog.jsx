@@ -24,18 +24,18 @@
  * display the infos of a feature
  */
 
-import React from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import OverlayDialog, {InfoItem} from "./OverlayDialog";
+import OverlayDialog, {DialogButtons, DialogFrame, InfoItem, useDialogContext} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import NavCompute from "../nav/navcompute";
-import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
-import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
+import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
+import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
 import assign from 'object-assign';
 import {stateHelper} from "../util/GuiHelpers";
@@ -106,96 +106,94 @@ const INFO_DISPLAY={
     route: ROUTE_INFO_ROWS
 }
 
-class FeatureInfoDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.linkAction=this.linkAction.bind(this);
-        this.hideAction=this.hideAction.bind(this);
-        this.extendedInfo=stateHelper(this,{},'trackInfo');
-    }
-    linkAction(){
-        if (! this.props.link && ! this.props.htmlInfo) return;
-        this.props.closeCallback();
-        let url=this.props.link;
-        if (this.props.htmlInfo){
-            this.props.history.push('viewpage',{html:this.props.htmlInfo,name:this.props.name||'featureInfo'});
+const InfoRowDisplay=({row,data})=>{
+    let v=data[row.value];
+    if (v === undefined) return null;
+    if (row.formatter) v=row.formatter(v,data);
+    if (v === undefined) return null;
+    return <InfoItem label={row.label} value={v}/>
+}
+
+const FeatureInfoDialog = (props) => {
+    const [extendedInfo, setExtendedInfo] = useState({});
+    const dialogContext = useDialogContext();
+    const linkAction = useCallback(() => {
+        if (!props.link && !props.htmlInfo) return;
+        dialogContext.closeDialog();
+        let url = props.link;
+        if (props.htmlInfo) {
+            props.history.push('viewpage', {html: props.htmlInfo, name: props.name || 'featureInfo'});
             return;
         }
-        this.props.history.push('viewpage',{url:url,name:this.props.name,useIframe:true});
-    }
-    hideAction(){
-        if (! this.props.overlaySource) return;
-        this.props.closeCallback();
-        this.props.overlaySource.setEnabled(false,true);
-    }
-    componentDidMount() {
-        let infoFunction=INFO_FUNCTIONS[this.props.overlayType]
-        let infoCoordinates=this.props.nextTarget?this.props.nextTarget:this.props.coordinates;
-        if (infoFunction){
-            infoFunction(this.props.overlayName,
-                new navobjects.WayPoint(infoCoordinates[0],infoCoordinates[1])
-                )
-                .then((info)=>{
-                    this.extendedInfo.setState(info,true)
+        props.history.push('viewpage', {url: url, name: props.name, useIframe: true});
+    }, [props]);
+    const hideAction = useCallback(() => {
+        if (!props.overlaySource) return;
+        dialogContext.closeDialog();
+        props.overlaySource.setEnabled(false, true);
+    }, [props]);
+    useEffect(() => {
+        let infoFunction = INFO_FUNCTIONS[props.overlayType]
+        let infoCoordinates = props.nextTarget ? props.nextTarget : props.coordinates;
+        if (infoFunction) {
+            infoFunction(props.overlayName,
+                new navobjects.WayPoint(infoCoordinates[0], infoCoordinates[1])
+            )
+                .then((info) => {
+                    setExtendedInfo(info)
                 })
-                .catch((error)=>Toast(error));
+                .catch((error) => Toast(error));
         }
-    }
-    infoRowDisplay(row,data){
-        let v=data[row.value];
-        if (v === undefined) return null;
-        if (row.formatter) v=row.formatter(v,data);
-        if (v === undefined) return null;
-        return <InfoItem label={row.label} value={v}/>
-    }
-    render(){
-        let link=this.props.link||this.props.htmlInfo;
-        let extendedInfoRows=INFO_DISPLAY[this.props.overlayType];
-        let merged=assign({},this.props,this.extendedInfo.getState());
-        return (
-            <div className="FeatureInfoDialog flexInner" >
-                <h3 className="dialogTitle">
-                    {this.props.icon &&
-                        <span className="icon" style={{backgroundImage:"url('"+this.props.icon+"')"}}/>
+    }, []);
+    let link = props.link || props.htmlInfo;
+    let extendedInfoRows = INFO_DISPLAY[props.overlayType];
+    let merged = {...props, ...extendedInfo};
+    return (
+        <DialogFrame className="FeatureInfoDialog">
+            <h3 className="dialogTitle">
+                {props.icon &&
+                    <span className="icon" style={{backgroundImage: "url('" + props.icon + "')"}}/>
+                }
+                Feature Info
+            </h3>
+            {INFO_ROWS.map((row) => {
+                return <InfoRowDisplay row={row} data={props}/>;
+            })}
+            {extendedInfoRows && extendedInfoRows.map((row) => {
+                return <InfoRowDisplay row={row} data={extendedInfo}/>;
+            })}
+            {props.additionalInfoRows && props.additionalInfoRows.map((row) => {
+                return <InfoRowDisplay row={row} data={merged}/>;
+            })}
+            <DialogButtons>
+                {props.additionalActions && props.additionalActions.map((action) => {
+                    if (typeof (action.condition) === "function") {
+                        if (!action.condition(merged)) return null;
                     }
-                    Feature Info
-                </h3>
-                {INFO_ROWS.map((row)=>{
-                    return this.infoRowDisplay(row,this.props);
+                    if (action.condition !== undefined && !action.condition) return null;
+                    return <DB
+                        name={action.name}
+                        onClick={() => {
+                            action.onClick(merged)
+                        }}>
+                        {action.label}
+                    </DB>
                 })}
-                {extendedInfoRows && extendedInfoRows.map((row)=>{
-                    return this.infoRowDisplay(row,this.extendedInfo.getState());
-                })}
-                {this.props.additionalInfoRows && this.props.additionalInfoRows.map((row)=>{
-                    return this.infoRowDisplay(row,merged);
-                })}
-                <div className={"dialogButtons"}>
-                    {this.props.additionalActions && this.props.additionalActions.map((action)=>{
-                        if ( typeof(action.condition) === "function" ){
-                            if (! action.condition(merged)) return null;
-                        }
-                        if (action.condition !== undefined && ! action.condition) return null;
-                        return <DB
-                            name={action.name}
-                            onClick={()=>{this.props.closeCallback();action.onClick(merged)}}>
-                            {action.label}
-                        </DB>
-                    })}
-                    {link && <DB
-                        name="info"
-                        onClick={this.linkAction}
-                        >Info</DB>}
-                    {this.props.overlaySource &&
+                {link && <DB
+                    name="info"
+                    onClick={linkAction}
+                    close={false}
+                >Info</DB>}
+                {props.overlaySource &&
                     <DB name="hide"
-                        onClick={this.hideAction}
-                        >Hide</DB>}
-                    <DB name={"cancel"}
-                        onClick={this.props.closeCallback}
-                        >Cancel</DB>
-                </div>
-            </div>
-        );
-    }
+                        onClick={hideAction}
+                        close={false}
+                    >Hide</DB>}
+                <DB name={"cancel"}
+                >Cancel</DB>
+            </DialogButtons>
+        </DialogFrame>
+    );
 }
 
 FeatureInfoDialog.propTypes={
@@ -209,18 +207,6 @@ FeatureInfoDialog.propTypes={
     overlayUrl: PropTypes.string,
     additionalActions: PropTypes.array, //array of objects with: name,label,onClick,condition
     additionalInfoRows: PropTypes.array //array of name,value,formatter
-}
-
-FeatureInfoDialog.showDialog=(history,info,opt_showDialogFunction)=>{
-    if (!opt_showDialogFunction) {
-        opt_showDialogFunction = OverlayDialog.dialog;
-    }
-    return opt_showDialogFunction((props)=>{
-            return <FeatureInfoDialog
-                {...info}
-                history={history}
-                {...props}/>
-        });
 }
 
 export default FeatureInfoDialog;

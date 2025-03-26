@@ -1112,6 +1112,12 @@
           <td>Barometer</td>
         </tr>
         <tr>
+          <td>offsetPress</td>
+          <td>X</td>
+          <td>addiere diesen Wert (in hPa) zum gemessenen Druck</td>
+          <td>0</td>
+        </tr>
+        <tr>
           <td>nameHumid</td>
           <td>X</td>
           <td>XDR Transducer Name für Feuchtigkeit</td>
@@ -1189,6 +1195,12 @@
           <td>Barometer</td>
         </tr>
         <tr>
+          <td>offsetPress</td>
+          <td>X</td>
+          <td>addiere diesen Wert (in hPa) zum gemessenen Druck</td>
+          <td>0</td>
+        </tr>
+        <tr>
           <td>nameTemp</td>
           <td>X</td>
           <td>XDR transducer Name für Temperatur</td>
@@ -1253,6 +1265,12 @@
           <td>X</td>
           <td>XDR Transducer Name für Luftdruck</td>
           <td>Barometer</td>
+        </tr>
+        <tr>
+          <td>offsetPress</td>
+          <td>X</td>
+          <td>addiere diesen Wert (in hPa) zum gemessenen Druck</td>
+          <td>0</td>
         </tr>
         <tr>
           <td>nameHumid</td>
@@ -1545,7 +1563,8 @@
         </tr>
       </tbody>
     </table>
-    <a name="AVNCommandHandler"></a><h3>AVNCommandHandler</h3>
+    <a name="AVNCommandHandler"></a>
+    <h3>AVNCommandHandler</h3>
     <p>Ausführen von Kommandos, u.a. für Alarme. Kategorie 2 (einmalig, nicht
       notwendig).</p>
     <p>Der AVNCommandHandler selbst hat keine Parameter. Es können jedoch
@@ -1692,10 +1711,14 @@
           <td>sound</td>
         </tr>
         <tr>
-          <td>stopAlarmPin</td>
+          <td><span style="text-decoration: line-through;">stopAlarmPin</span></td>
           <td>X</td>
-          <td>Nur auf Raspberry Pi. Wenn gesetzt (board Nummerierung), schaltet
-            ein Low an diesem Pin Alarme aus</td>
+          <td><span style="text-decoration: line-through;">Nur auf Raspberry Pi.
+              Wenn gesetzt (board Nummerierung), schaltet ein Low an diesem Pin
+              Alarme aus.</span><br>
+            Ab Version 2025xxxx gibt es ein separates plugin "<a href="#pluginResetAlarm">resetAlarm</a>"
+            und eine Konfiguration muss dort erfolgen. Eine vorhandene
+            Einstellung wird bei der Installation migriert.</td>
           <td>leer</td>
         </tr>
       </tbody>
@@ -1808,6 +1831,42 @@
         </tr>
       </tbody>
     </table>
+    <h4><a name="pluginResetAlarm" id="pluginResetAlarm"></a>Parameter für
+      system-resetAlarm (nur mit dem Paket avnav-raspi)</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>online</td>
+          <td>Beschreibung</td>
+          <td>default</td>
+        </tr>
+        <tr>
+          <td>gpio</td>
+          <td>X</td>
+          <td>GPIO pin (Bord Nummerierung) an dem ein Taster zum Rücksetzen von
+            Alarmen angeschlossen ist</td>
+          <td>--</td>
+        </tr>
+        <tr>
+          <td>lowActive</td>
+          <td>X</td>
+          <td>Wenn gesetzt ist der Eingang L-aktiv, d.h. die Alarme werden mit
+            einem L an diesem Eingang zurück gesetzt</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>pullUpDown</td>
+          <td>X</td>
+          <td>Wenn gesetzt wird für den Eingang ein pull-up bzw. pull-down
+            Widerstand aktiviert, so dass nur ein externer Taster angeschlossen
+            werden muss.</td>
+          <td>true</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
     <h3>AVNChartHandler</h3>
     <p>Verwaltung der Karten. Kategorie 2 (einmal, muss nicht enthalten sein)</p>
     <table style="width: 100%" border="1">

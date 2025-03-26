@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {showPromiseDialog} from '../components/OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
@@ -24,7 +24,7 @@ import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import {getOverlayConfigName} from "../map/chartsourcebase";
 import mapholder from "../map/mapholder.js";
-import Helper from "../util/helper";
+import Helper, {concatsp} from "../util/helper";
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import {DynamicTitleIcons} from "./TitleIcons";
@@ -153,7 +153,7 @@ class MapPage extends React.Component{
         };
         if (chartEntry.eulaMode !== undefined){
             if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
-                EulaDialog.createDialog(chartEntry.name,chartEntry.url+"/eula")
+                showPromiseDialog(undefined,(props)=><EulaDialog {...props} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)
                     .then(()=>{
                         setShown(chartEntry.url,INFO_TYPES.eula);
                         showMap();
@@ -197,9 +197,11 @@ class MapPage extends React.Component{
                     }}
                 />
         };
+        let chartEntry=MapHolder.getCurrentChartEntry()||{};
+        let mapClass=concatsp("map",chartEntry.chartKey?chartEntry.chartKey.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        let map=<div className="map" ref={this.mapRef} style={{opacity:mapOpacity}}>
+        let map=<div className={mapClass} ref={this.mapRef} style={{opacity:mapOpacity}}>
             <DynamicTitleIcons/>
         </div>;
         let className=self.props.className?self.props.className+" mapPage":"mapPage";

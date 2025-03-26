@@ -10,7 +10,7 @@ import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
 import OverlayDialog, {
     DBCancel,
-    DialogButtons,
+    DialogButtons, DialogDisplay,
     dialogDisplay,
     DialogFrame,
     DialogText
@@ -30,7 +30,7 @@ import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorW
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
-import {TrackConvertDialog} from "../components/TrackInfoDialog";
+import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
@@ -466,7 +466,7 @@ class NavPage extends React.Component{
                         }
                     );
                 }
-                FeatureInfoDialog.showDialog(this.props.history,feature);
+                OverlayDialog.showDialog(undefined,()=><FeatureInfoDialog history={this.props.history} {...feature}/>)
             }
             if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
@@ -481,7 +481,7 @@ class NavPage extends React.Component{
                    name:'toroute',
                    label: 'Convert',
                    onClick:(props)=>{
-                       TrackConvertDialog.showDialog(this.props.history, props.overlayName)
+                       OverlayDialog.showDialog(undefined,()=><TrackConvertDialog history={this.props.history} name={props.overlayName}/>)
                    }
                 });
             }
@@ -701,19 +701,23 @@ class NavPage extends React.Component{
         let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         let neededChart=this.needsChartLoad();
         if (neededChart){
-            let Dialog=dialogDisplay((props)=>{
-                return (<DialogFrame title={"Waiting for chart"}>
-                    <DialogText >{neededChart}</DialogText>
-                    <DialogButtons buttonList={DBCancel()}/>
-                </DialogFrame>)
-                },
-                ()=>this.props.history.pop());
+            const Dialog = () => {
+                return (
+                    <DialogDisplay
+                        closeCallback={() => this.props.history.pop()}>
+                        <DialogFrame title={"Waiting for chart"}>
+                            <DialogText>{neededChart}</DialogText>
+                            <DialogButtons buttonList={DBCancel()}/>
+                        </DialogFrame>
+                    </DialogDisplay>
+                )
+            };
             return (
                 <Page
                     {...pageProperties}
                     id={PAGENAME}
                     buttonList={self.getButtons()}
-                    mainContent={Dialog}
+                    mainContent={<Dialog/>}
                     />
             );
         }

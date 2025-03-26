@@ -639,6 +639,27 @@ class MySlurper extends XmlSlurper{
     }
 }
 
+def checkOnlineLink(url){
+    try{
+        def urlc=new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) urlc.openConnection()
+        connection.setRequestMethod("HEAD")
+        connection.setConnectTimeout(10000)
+        connection.connect()
+        if (connection.responseCode == 200 || connection.responseCode == 201 || connection.responseCode == 301 || connection.responseCode == 302 ) {
+            logger.info("check for ${url} ok")
+            return true;
+        } else {
+            println("check for ${url} failed: ${connection.responseCode}")
+        }
+    } catch (Throwable t){
+        logger.info("exception while testing ${url}: ${t}")
+        return false;
+    }
+    return false
+}
+def ONLINEBASE="https://www.wellenvogel.de/software/avnav"
+def ONLINEPATTERN=['downloads','configGen','viewern']
 task findBrokenLinks(type: DefaultTask){
     def baseDir="docs"
     def list=fileTree(baseDir,{
@@ -672,7 +693,15 @@ task findBrokenLinks(type: DefaultTask){
             if (link.isEmpty()) link=node.@href
             if (link.isEmpty()) return;
             link=link.toString()
-            if (link.startsWith("http")) return; //TODO: check online links?
+            if (link.startsWith("http")) {
+                if (project.hasProperty("noOnlineCheck")){
+                    return
+                }
+                if (!checkOnlineLink(link)){
+                    println("##$pageName:$line:$link")
+                }
+                return
+            }
             if (link.startsWith("mailto:")) return;
             link=link.replaceAll("[?].*","")
             def parts=link.split('#')
@@ -680,10 +709,20 @@ task findBrokenLinks(type: DefaultTask){
             if (pageLink.endsWith("html")){
                 pageLink=pageLink.replaceAll("/([^/]*)\$","/"+prefix+'$1')
             }
-            if (!pageLink.isEmpty()){        
-                def target=file("$baseDir/$relPath$pageLink")
+            if (!pageLink.isEmpty()){ 
+                def urlbase="$baseDir/$relPath$pageLink"       
+                def target=file("$urlbase")
                 if (!target.exists()){
-                    println("##$pageName:$line:$relPath$pageLink")
+                    def checkOnline=false
+                    if (! project.hasProperty("noOnlineCheck")){
+                        ONLINEPATTERN.each { op ->
+                            if (urlbase.indexOf(op) >= 0){checkOnline=true;}
+                        }
+                    }
+                    def url="$ONLINEBASE/$urlbase"
+                    if (! checkOnline ||  ! checkOnlineLink(url)){
+                        println("##$pageName:$line:$relPath$pageLink")
+                    }
                 }
             }
             if (parts.length > 1){

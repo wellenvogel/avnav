@@ -29,13 +29,6 @@ import time
 from avndirectories import AVNUserHandler
 from commandhandler import AVNCommandHandler
 
-hasGpio=False
-try:
-  import RPi.GPIO as GPIO
-  hasGpio=True
-except:
-  pass
-
 from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
@@ -78,9 +71,6 @@ class AVNAlarmHandler(AVNWorker):
   P_CRITICALSOUND=WorkerParameter('criticalSound',type=WorkerParameter.T_SELECT,default='anchorAlarm.mp3',
                               description='sound to be played for critical Alarms (only if no explicit config)',
                               rangeOrList=[])
-  P_STOPALARMPIN=WorkerParameter('stopAlarmPin',type=WorkerParameter.T_NUMBER,
-                                 description='a gpio pin (board numbering!) to switch off alarms when it goes low',
-                                 mandatory=False)
   P_DEFAULTCOMMAND=WorkerParameter('defaultCommand',type=WorkerParameter.T_SELECT,
                                    default='sound',
                                    description='a command that is configured at AVNCommandhandler',
@@ -162,8 +152,6 @@ class AVNAlarmHandler(AVNWorker):
           cls.P_CRITICALSOUND.copy(rangeOrList=cls.listAlarmSounds),
           cls.P_DEFAULTCOMMAND.copy(rangeOrList=cls.listCommands),
           cls.P_DEFAULTPARAM]
-      if hasGpio:
-        rt.append(cls.P_STOPALARMPIN)
       return rt
     if child == "Alarm":
       return {
@@ -187,23 +175,12 @@ class AVNAlarmHandler(AVNWorker):
   def canEdit(cls):
     return True
 
-  def _gpioCmd(self,channel):
-    self.stopAll()
   def run(self):
     self.commandHandler=self.findHandlerByName(AVNCommandHandler.getConfigName())
     if self.commandHandler is None:
       self.setInfo('main',"no command handler found",WorkerStatus.ERROR)
       return
     self.setInfo('main',"running",WorkerStatus.NMEA)
-    gpioPin=self.P_STOPALARMPIN.fromDict(self.param)
-    if gpioPin is not None and gpioPin != 0:
-      if not hasGpio:
-        AVNLog.error("gpio pin for stopAlarm defined but no GPIO support found")
-      else:
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(gpioPin,GPIO.IN,pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(gpioPin,GPIO.FALLING,callback=self._gpioCmd,bouncetime=100)
-        AVNLog.info("set gpio pin %d as reset alarm",gpioPin)
     while not self.shouldStop():
       self.wait(0.5)
       deletes=[]

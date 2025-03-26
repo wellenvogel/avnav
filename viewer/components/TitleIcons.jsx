@@ -27,12 +27,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {anchorWatchDialog, AnchorWatchKeys} from "./AnchorWatchDialog";
 import keys from '../util/keys';
-import Dynamic from "../hoc/Dynamic";
+import Dynamic, {DynamicFrame, useStore} from "../hoc/Dynamic";
 import globalstore from "../util/globalstore";
 import OverlayDialog from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 
-const TitleIcons=(props)=>{
+export const DynamicTitleIcons=(iprops)=>{
+    const props=useStore(iprops,{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons }})
     if (! props.show) return null;
     let cl="iconContainer ";
     if (props.className) cl+=props.className;
@@ -47,12 +48,8 @@ const TitleIcons=(props)=>{
         }}/>}
     </div>
 }
-export default TitleIcons;
-TitleIcons.propTypes={
+DynamicTitleIcons.propTypes={
     watchDistance: PropTypes.number,
     connected: PropTypes.bool,
     show: PropTypes.bool
 }
-TitleIcons.storeKeys=Object.assign({},AnchorWatchKeys,{show:keys.properties.titleIcons});
-
-export const DynamicTitleIcons=Dynamic(TitleIcons,{storeKeys:TitleIcons.storeKeys});

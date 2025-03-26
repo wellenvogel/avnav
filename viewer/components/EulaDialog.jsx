@@ -1,69 +1,44 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Requests from '../util/requests.js';
-import OverlayDialog from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, DialogRow} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 
-class EulaDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            eula:undefined
-        };
-    }
-    componentDidMount(){
-        Requests.getHtmlOrText(this.props.eulaUrl)
+const EulaDialog=(props)=>{
+    const [eula,setEula]=useState(undefined);
+    useEffect(() => {
+        Requests.getHtmlOrText(props.eulaUrl)
             .then((html)=>{
-                this.setState({eula:html});
+                setEula(html);
             })
             .catch((error)=>{});
-    }
-    render () {
+    }, []);
+
         return (
-            <div className="inner EulaDialog">
-                <h3 className="dialogTitle">{'EULA'}</h3>
-                <div className="dialogRow">{this.props.name}</div>
-                <div className="dialogRow eulaContainer">
-                    {this.state.eula?
-                        <div className="eula" dangerouslySetInnerHTML={{__html: this.state.eula}}></div>
+            <DialogFrame className="EulaDialog" title={'EULA'}>
+                <DialogRow>{props.name}</DialogRow>
+                <DialogRow className="eulaContainer">
+                    {eula?
+                        <div className="eula" dangerouslySetInnerHTML={{__html: eula}}></div>
                         :
-                        <div className="dialogRow">Loading EULA</div>
+                        <DialogRow >Loading EULA</DialogRow>
                     }
 
-                </div>
-                <div className="dialogButtons">
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                </DialogRow>
+                <DialogButtons>
+                    <DB name="cancel">Cancel</DB>
                     <DB name="ok" onClick={() => {
-                        this.props.okCallback(this.state.value);
-                        this.props.closeCallback();
+                        props.resolveFunction(1);
                     }}>Accept</DB>
-                </div>
-            </div>
+                </DialogButtons>
+            </DialogFrame>
         );
-
-    }
 }
 
 EulaDialog.propTypes={
     eulaUrl: PropTypes.string,
     name: PropTypes.string,
-    okCallback: PropTypes.func.isRequired,
-    closeCallback: PropTypes.func.isRequired
-};
-
-EulaDialog.createDialog=(name,eulaUrl)=>{
-    return new Promise((resolve,reject)=>{
-        OverlayDialog.dialog((props)=> {
-            return <EulaDialog
-                {...props}
-                okCallback={()=>{
-                        resolve(0)
-                   }}
-                name={name}
-                eulaUrl={eulaUrl}
-                />
-        },undefined,()=>{reject("")});
-    });
+    resolveFunction: PropTypes.func.isRequired
 };
 
 export default  EulaDialog;
