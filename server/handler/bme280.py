@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
+# Modif pour offset barometre
 ###############################################################################
 # Copyright (c) 2012,2013-2021 Andreas Vogel andreas@wellenvogel.net
 #
@@ -196,6 +197,7 @@ class AVNBME280Reader(AVNWorker):
                              description="write XDR records")
   P_NAMEPRESS=WorkerParameter('namePress','Barometer',
                               description="XDR transducer name for pressure")
+  P_OFFSET=WorkerParameter('offsetPress','0',type=WorkerParameter.T_FLOAT,description="Offset pressure  HPa")
   P_NAMEHUMID=WorkerParameter('nameHumid','Humidity',
                               description="XDR transducer name for humidity")
   P_NAMETEMP=WorkerParameter('nameTemp', 'TempAir',
@@ -216,6 +218,7 @@ class AVNBME280Reader(AVNWorker):
       cls.P_WRITEMDA,
       cls.P_WRITEXDR,
       cls.P_NAMEPRESS,
+      cls.P_OFFSET,
       cls.P_NAMEHUMID,
       cls.P_NAMETEMP,
       cls.P_ADDR
@@ -255,6 +258,7 @@ class AVNBME280Reader(AVNWorker):
     self.setInfo('main', "reading BME280", WorkerStatus.NMEA)
     while True:
       addr = self.getWParam(self.P_ADDR)
+      offsetpress = self.getWParam(self.P_OFFSET)
       priority=self.getWParam(self.PRIORITY_PARAM_DESCRIPTION)
       (chip_id, chip_version) = readBME280ID(bus,addr)
       info = "Using BME280 Chip: %d Version: %d" % (chip_id, chip_version)
@@ -263,9 +267,10 @@ class AVNBME280Reader(AVNWorker):
       source = self.getSourceName(addr)
       try:
         temperature,pressure,humidity = readBME280All(bus,addr)
+        pressure+=offsetpress
         if self.getWParam(self.P_WRITEMDA):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
-          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( (pressure) / 1000.)
           AVNLog.debug("BME280:MDA %s", mda)
           self.queue.addNMEA(mda,source,addCheckSum=True,sourcePriority=priority)
           """$AVMTA,19.50,C*2B"""
@@ -274,7 +279,7 @@ class AVNBME280Reader(AVNWorker):
           self.queue.addNMEA(mta,source,addCheckSum=True,sourcePriority=priority)
         if self.getWParam(self.P_WRITEXDR):
           tn=self.getWParam(self.P_NAMEPRESS)
-          xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)
+          xdr = '$AVXDR,P,%.5f,B,%s' % ((pressure) / 1000.,tn)
           AVNLog.debug("BME280:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.getWParam(self.P_NAMETEMP)

@@ -52,6 +52,7 @@ class AVNSenseHatReader(AVNWorker):
   P_NPRESS=WorkerParameter('namePress', 'Baro',
                            description="XDR transducer name for pressure",
                            condition={P_XDR.name:True})
+  P_OFFSET=WorkerParameter('offsetPress','0',type=WorkerParameter.T_FLOAT,description="Offset pressure  HPa")
   P_NHUMID=WorkerParameter('nameHumid', 'Humidity',
                            description="XDR transducer name for humidity",
                            condition={P_XDR.name:True})
@@ -79,6 +80,7 @@ class AVNSenseHatReader(AVNWorker):
       cls.P_MDA,
       cls.P_XDR,
       cls.P_NPRESS,
+      cls.P_OFFSET,
       cls.P_NHUMID,
       cls.P_NTEMP,
       cls.P_NROLL,
@@ -112,13 +114,14 @@ class AVNSenseHatReader(AVNWorker):
     hasError=False
     while True:
       priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
+      offsetpress = self.getWParam(self.P_OFFSET)
       source = self.getSourceName()
       hasRead=False
       try:
         if self.P_MDA.fromDict(self.param):
           hasRead=True
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
-          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure/1000.)
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure+offsetpress/1000.)
           AVNLog.debug("SenseHat:MDA %s", mda)
           self.queue.addNMEA(mda,source,addCheckSum=True,sourcePriority=priority)
           """$AVMTA,19.50,C*2B"""
@@ -128,7 +131,7 @@ class AVNSenseHatReader(AVNWorker):
         if self.P_XDR.fromDict(self.param):
           hasRead=True
           tn = self.P_NPRESS.fromDict(self.param)
-          xdr = '$AVXDR,P,%.5f,B,%s' % (sense.pressure/ 1000.,tn)
+          xdr = '$AVXDR,P,%.5f,B,%s' % (sense.pressure+offsetpress/ 1000.,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.P_NTEMP.fromDict(self.param)

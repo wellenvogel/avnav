@@ -154,6 +154,7 @@ class AVNBMP180Reader(AVNWorker):
                              description="write XDR records")
   P_NAMEPRESS=WorkerParameter('namePress', 'Barometer',
                               description="XDR transducer name for pressure")
+  P_OFFSET=WorkerParameter('offsetPress','0',type=WorkerParameter.T_FLOAT,description="Offset pressure  HPa")
   P_NAMETEMP=WorkerParameter('nameTemp', 'TempAir',
                              description="XDR transducer name for temperature")
   P_ADDR=ParamHex('addr', '0x77',
@@ -169,6 +170,7 @@ class AVNBMP180Reader(AVNWorker):
       cls.P_WRITEMDA,
       cls.P_WRITEXDR,
       cls.P_NAMEPRESS,
+      cls.P_OFFSET,
       cls.P_NAMETEMP,
       cls.P_ADDR
     ]
@@ -206,11 +208,13 @@ class AVNBMP180Reader(AVNWorker):
     while True:
       addr = self.getWParam(self.P_ADDR)
       priority=self.getWParam(self.PRIORITY_PARAM_DESCRIPTION)
+      offsetpress = self.getWParam(self.P_OFFSET)
       (chip_id, chip_version) = readBmp180Id(bus,addr)
       self.setInfo('main', "reading BMP180 id=%d, version=%d"%(chip_id,chip_version), WorkerStatus.NMEA)
       source = self.getSourceName(addr)
       try:
         temperature,pressure = readBmp180(bus,addr)
+        pressure+=offsetpress
         if self.getWParam(self.P_WRITEMDA):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)

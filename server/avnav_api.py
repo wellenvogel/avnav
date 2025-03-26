@@ -449,3 +449,10 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented
+
+  def clearAlarms(self):
+    '''
+    clear all existing alarms
+    @return:
+    '''
+    raise NotImplemented

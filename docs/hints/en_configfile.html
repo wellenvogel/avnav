@@ -1089,6 +1089,12 @@
           <td>Barometer</td>
         </tr>
         <tr>
+          <td>offsetPress</td>
+          <td>X</td>
+          <td>add this value (hPa)to the measured pressure</td>
+          <td>0</td>
+        </tr>
+        <tr>
           <td>nameHumid</td>
           <td>X</td>
           <td>XDR transducer name for humidity</td>
@@ -1174,6 +1180,12 @@
           <td>Barometer</td>
         </tr>
         <tr>
+          <td>offsetPress</td>
+          <td>X</td>
+          <td>add this value (hPa)to the measured pressure</td>
+          <td>0</td>
+        </tr>
+        <tr>
           <td>nameTemp</td>
           <td>X</td>
           <td>XDR transducer name for temperature</td>
@@ -1235,10 +1247,16 @@
           <td>true</td>
         </tr>
         <tr>
-          <td>namePress</td>
+          <td></td>
           <td>X</td>
           <td>XDR transducer name for pressure</td>
           <td>Barometer</td>
+        </tr>
+        <tr>
+          <td>offsetPress</td>
+          <td>X</td>
+          <td>add this value (hPa)to the measured pressure</td>
+          <td>0</td>
         </tr>
         <tr>
           <td>nameTemp</td>
@@ -1518,7 +1536,8 @@
         </tr>
       </tbody>
     </table>
-    <a name="AVNCommandHandler"></a><h3>AVNCommandHandler</h3>
+    <a name="AVNCommandHandler"></a>
+    <h3>AVNCommandHandler</h3>
     <p>Execute commands (e.g. for alarms). category2 (once, optional).</p>
     <p>AVNCommandHandler itself has no parameters. There can be child
       configurations for various commands. The default configuration is:</p>
@@ -1662,10 +1681,14 @@
           <td>sound</td>
         </tr>
         <tr>
-          <td>stopAlarmPin</td>
+          <td><span style="text-decoration: line-through;">stopAlarmPin</span></td>
           <td>X</td>
-          <td>Only on Raspberry Pi. If set (board numbering), a low at this pin
-            will switch off all currently active alarms.</td>
+          <td><span style="text-decoration: line-through;">Only on Raspberry Pi.
+              If set (board numbering), a low at this pin will switch off all
+              currently active alarms.</span><br>
+            Since 2025xxxx there is a separate plugin "<a href="#pluginResetAlarm">resetAlarm</a>"
+            (if avnav-raspi is installed) and you must configure an alarm reset
+            pin there.</td>
           <td>leer</td>
         </tr>
       </tbody>
@@ -1777,6 +1800,41 @@
         </tr>
       </tbody>
     </table>
+    <h4><a name="pluginResetAlarm" id="pluginResetAlarm"></a>Parameters for
+      system-resetAlarm (only with package avnav-raspi)</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>online</td>
+          <td>Description</td>
+          <td>default</td>
+        </tr>
+        <tr>
+          <td>gpio</td>
+          <td>X</td>
+          <td>GPIO pin (board numbering) to connect a push button for resetting
+            all alarms.</td>
+          <td>--</td>
+        </tr>
+        <tr>
+          <td>lowActive</td>
+          <td>X</td>
+          <td>if true the input is low active, i.e. a low at the input clears
+            all alarms</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>pullUpDown</td>
+          <td>X</td>
+          <td>enable a pull up/pull down resistor at the input. When enabled you
+            only need to connect a simple button.</td>
+          <td>true</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
     <h3>AVNChartHandler</h3>
     <p>Management of charts. category 2 (once, optional)</p>
     <table style="width: 100%" border="1">
