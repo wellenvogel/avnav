@@ -332,7 +332,7 @@ const aisparam={
 
 };
 
-const aisProxyHandler={
+const aisProxyHandlerRo={
     get(target,prop,receiver){
         if (target[prop]!== undefined) return target[prop];
         if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
@@ -340,6 +340,17 @@ const aisProxyHandler={
     },
     set(target,prop,value){
       throw new Error("invalid set access to AIS data: "+prop+"="+value);
+    },
+    has(target,key){
+        if (key === Symbol.for("proxy")) return true;
+        return key in target || target.hasItem(key);
+    }
+};
+const aisProxyHandler={
+    get(target,prop,receiver){
+        if (target[prop]!== undefined) return target[prop];
+        if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
+        if (target.received !== undefined) return target.received[prop];
     },
     has(target,key){
         if (key === Symbol.for("proxy")) return true;
@@ -356,8 +367,8 @@ export const isAisProxy=(obj)=>{
  * @param aisobject
  * @returns {Proxy<AISItem>}
  */
-export const aisproxy=(aisobject)=>{
-    return new Proxy(aisobject,aisProxyHandler);
+export const aisproxy=(aisobject,opt_writable)=>{
+    return opt_writable?new Proxy(aisobject,aisProxyHandler):new Proxy(aisobject,aisProxyHandlerRo);
 }
 
 const AisFormatter={

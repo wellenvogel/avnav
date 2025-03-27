@@ -82,7 +82,7 @@ export class AISItem {
     constructor(received) {
         this.received = received;
         this.estimated = undefined;
-        this.cpadata = new navobjects.Cpa();
+        this.cpadata = new Cpa();
         this.timestamp = undefined; //last computed
         this.warning = false;
         this.nextWarning = false; //the warning target with the lowest tcps
@@ -263,6 +263,9 @@ const computeCpa=(src,dst,options)=>{
     if (rt.passFront===Cpa.PASS_BACK && appr.tm<0) rt.passFront=Cpa.PASS_DONE; // we have crossed the track and have passed CPA
     return rt;
 }
+const pow2=(x)=>{
+    return x*x;
+}
 /**
  *
  * @param aisData {Array<AISItem>} this list is filled with the estimated values and the CPA computation
@@ -329,9 +332,30 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                     if (Math.abs(aisItem.cpadata.tcpa) < Math.abs(aisWarningAis.cpadata.tcpa)) aisWarningAis = aisItem;
                 } else aisWarningAis = aisItem;
             }
+            //compute priority
+            //lower numbers are higher priority
+            //if the item has the warning flag set
+            //we use the tcpa (will always be >= 0 in this case)
+            //otherwise we use the relative dcpa/tcpa to their thresholds
+            if (aisItem.warning){
+                //aisItems with warning will set a negative priority (-2...-1)
+                //if we have a warning tcpa is <= warningTime
+                //so tcpa/warningTime is < 1
+                //tcpa == 0 will set priority -2
+                //other tcpa up to warningTime will set > -2 ... <-1
+                //tcpa == warningTime will set -1
+                aisItem.priority=-(1-aisItem.cpadata.tcpa/options.warningTime);
+            }
+            else{
+                //aisItems without warning will set priorities >= 0
+                if (aisItem.cpadata.tcpa < 0) aisItem.priority=2*(pow2(aisItem.distance/options.warningDist));
+                else aisItem.priority= pow2(aisItem.cpadata.tcpa/options.warningTime)+pow2(aisItem.cpadata.cpa/options.warningDist);
+            }
         }
     })
-    if (aisWarningAis !== undefined) aisWarningAis.nextWarning=true;
+    if (aisWarningAis !== undefined){
+        aisWarningAis.nextWarning=true;
+    }
     aisData.sort(aisSort);
     if (aisData.length) aisData[0].nearest=true;
 }
