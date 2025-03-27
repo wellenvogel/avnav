@@ -347,7 +347,7 @@ const aisProxyHandler={
     }
 };
 
-const isProxy=(obj)=>{
+export const isAisProxy=(obj)=>{
     if (! (obj instanceof Object)) return false;
     return Symbol.for("proxy") in obj;
 }
@@ -386,7 +386,7 @@ const AisFormatter={
          * we create a proxy and forward get access to either the cpadata or the received data if not at the base level
          */
 
-        let op=isProxy(aisobject)?aisobject:aisproxy(aisobject);
+        let op=isAisProxy(aisobject)?aisobject:aisproxy(aisobject);
         let rt=d.format(op);
         if (inlcudeUnit && d.unit !== undefined){
             rt+=" "+d.unit;
