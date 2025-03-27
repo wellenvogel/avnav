@@ -593,11 +593,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     for (i in aisList){
         let current=aisproxy(aisList[i]);
         let alpha={alpha: current.hidden?0.2:undefined};
-        let pos=current.mapPos;
-        if (! pos){
-            pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
-            current.mapPos=pos;
-        }
+        let pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
         if (! pos || isNaN(pos[0]) || isNaN(pos[1])) {
             continue;
         }
