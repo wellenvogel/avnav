@@ -75,7 +75,7 @@ export class Cpa{
          *
          * @type {number|undefined}: 0-back,1-front,-1 parallel,undefined-parallel crossed
          */
-        this.front=undefined;
+        this.passFront=undefined;
     }
 }
 export class AISItem {
@@ -233,7 +233,7 @@ const computeCpa=(src,dst,options)=>{
     if (!appr.tm){
         rt.tcpa=undefined;
         rt.cpa=curdistance;
-        rt.front=undefined;
+        rt.passFront=undefined;
         return rt;
     }
 
@@ -254,13 +254,13 @@ const computeCpa=(src,dst,options)=>{
     rt.bcpa = options.useRhumbLine?
         cpasrc.rhumbBearingTo(cpadst):
         cpasrc.initialBearingTo(cpadst);
-    rt.front=Cpa.PASS_BACK;
+    rt.passFront=Cpa.PASS_BACK;
     if (appr.td !==undefined && appr.ts!==undefined){
-        if(appr.ts>=0 && appr.ts<appr.td) rt.front=Cpa.PASS_FRONT; // we will cross track of target in front of target
-        else if(appr.ts>=0 && appr.ts>appr.td) rt.front=Cpa.PASS_PASS; // we will cross track of target astern of target
-        else rt.front=Cpa.PASS_BACK; // we have crossed the track of the target already
+        if(appr.ts>=0 && appr.ts<appr.td) rt.passFront=Cpa.PASS_FRONT; // we will cross track of target in front of target
+        else if(appr.ts>=0 && appr.ts>appr.td) rt.passFront=Cpa.PASS_PASS; // we will cross track of target astern of target
+        else rt.passFront=Cpa.PASS_BACK; // we have crossed the track of the target already
     }
-    if (rt.front===Cpa.PASS_BACK && appr.tm<0) rt.front=Cpa.PASS_DONE; // we have crossed the track and have passed CPA
+    if (rt.passFront===Cpa.PASS_BACK && appr.tm<0) rt.passFront=Cpa.PASS_DONE; // we have crossed the track and have passed CPA
     return rt;
 }
 /**
