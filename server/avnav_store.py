@@ -22,7 +22,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 #  parts from this software (AIS decoding) are taken from the gpsd project
-#  so refer to this BSD licencse also (see ais.py) or omit ais.py 
+#  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 
 
@@ -212,7 +212,7 @@ class AVNStore(object):
         if self.__useAisAge and "second" in data:
           sec=data.get("second",60) # 60=timestamp not available
           if 0<=sec<60: # use timestamp from ais seconds
-            delay = (now%60-sec)%60 # delay of message (up to 59s)
+            delay = (time.time()%60-sec)%60 # delay of message (up to 59s)
             existing.timestamp -= delay # shift timestamp back
       else:
         del data["type"] # do not update type from static data
@@ -452,7 +452,7 @@ class AVNStore(object):
 
 
 
-  
+
   def __str__(self):
     rt="%s \n"%self.__class__.__name__
     idx=0
