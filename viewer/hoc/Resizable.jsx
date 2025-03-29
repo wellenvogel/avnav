@@ -48,3 +48,26 @@ export const ResizeFrame=(props)=>{
     </div>
 }
 
+export const usePrevious=(item)=>{
+    const ref=useRef();
+    useEffect(() => {
+        ref.current=item;
+    });
+    return ref.current;
+}
+
+export const useStringsChanged=(items)=>{
+    const previous=usePrevious(items);
+    try {
+        if (previous === undefined && items !== undefined) return true;
+        if (items === undefined && previous !== undefined) return true;
+        if (items === undefined) return false;
+        if (Object.keys(previous).length !== Object.keys(items).length) return true;
+        for (let k in items){
+            if ((items[k]+"").length !== (previous[k]+"").length) return true;
+        }
+    }catch(e){ //ignore error
+    }
+    return false;
+}
+

@@ -8,7 +8,7 @@ import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
-import {useResize} from "../hoc/Resizable";
+import {useResize, useStringsChanged} from "../hoc/Resizable";
 
 
 const AisTargetWidget = (props) => {
@@ -27,13 +27,22 @@ const AisTargetWidget = (props) => {
         color = PropertyHandler.getAisColor(aisProperties);
     }
     let front = AisFormatter.format('passFront', target);
-    let numRows=target.tcpa>0?5:4;
-    let name=AisFormatter.format('nameOrmmsi', target);
-    let rowLen=name.length;
+    let display={};
+    display.name=AisFormatter.format('nameOrmmsi', target);
+    if (target.tcpa > 0) {
+        display.cpa=AisFormatter.format('cpa', target);
+        display.tcpa=AisFormatter.format('tcpa', target);
+    }
+    else{
+        display.headingTo=AisFormatter.format('headingTo', target);
+    }
     const resize=useResize();
+    const hasChanged=useStringsChanged(display);
     useEffect(() => {
-        resize.trigger();
-    }, [numRows,rowLen]);
+        if (hasChanged){
+            resize.trigger();
+        }
+    });
     if (target.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
         const style = {...props.style, backgroundColor: color};
         return (
@@ -41,7 +50,7 @@ const AisTargetWidget = (props) => {
                 <div className="aisPart">
                     {!small &&
                     <div className="widgetData">
-                        <span className="aisData">{name}</span>
+                        <span className="aisData">{display.name}</span>
                     </div>}
                     <div className="widgetData">
                         <span className='label'>{AisFormatter.getHeadline('distance')} </span>
@@ -53,12 +62,12 @@ const AisTargetWidget = (props) => {
                 <div className="aisPart">
                     <div className="widgetData">
                         <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
-                        <span className="aisData">{AisFormatter.format('cpa', target)}</span>
+                        <span className="aisData">{display.cpa}</span>
                         <span className="unit">{AisFormatter.getUnit('cpa')}</span>
                     </div>
                     <div className="widgetData">
                         <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
-                        <span className="aisData"> {AisFormatter.format('tcpa', target)}</span>
+                        <span className="aisData"> {display.tcpa}</span>
                         <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
                     </div>
                 </div>}
@@ -66,7 +75,7 @@ const AisTargetWidget = (props) => {
                 <div className="aisPart">
                     <div className="widgetData">
                         <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
-                        <span className="aisData">{AisFormatter.format('headingTo', target)}</span>
+                        <span className="aisData">{display.headingTo}</span>
                         <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
                     </div>
                 </div>}
