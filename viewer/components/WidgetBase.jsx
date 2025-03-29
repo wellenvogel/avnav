@@ -28,6 +28,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import {useKeyEventHandler} from "../util/GuiHelpers";
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {ResizeFrame} from "../hoc/Resizable";
 
 export const WidgetProps={
     onClick:    PropTypes.func,
@@ -65,12 +66,19 @@ export const WidgetFrame=(props)=> {
     if (props.isAverage) classes += " average";
     if (props.className) classes += " " + props.className;
     if (props.addClass) classes += " " + props.addClass;
-    const rsClass=(props.resize === false)?"noresize":"resize";
+    const resize=! (props.resize === false);
     return <div className={classes} onClick={props.onClick} {...sortableProps} style={props.style}>
         <WidgetHead {...props}/>
-        <div className={rsClass}>
-            {props.children}
-        </div>
+        {resize &&
+            <ResizeFrame>
+                {props.children}
+            </ResizeFrame>
+        }
+        {!resize &&
+            <div className="noresize">
+                {props.children}
+            </div>
+        }
     </div>
 }
 WidgetFrame.propTypes={
