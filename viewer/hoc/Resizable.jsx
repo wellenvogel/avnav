@@ -75,12 +75,16 @@ const isChanged=(previous,items)=>{
 /**
  * return a number that can be used as resizeSequence
  * @param items
- * @param canResize
+ * @param canResize {boolean|Object} - you can simply provide the widget props here
  * @returns {boolean}
  */
 export const useStringsChanged=(items,canResize)=>{
     const previous=usePrevious(items);
     const sequence=useRef(0);
+    if (typeof(canResize) === 'object'){
+        //we just provided the props here
+        canResize=canResize.mode === 'gps';
+    }
     if (canResize === false) return sequence.current;
     let changed=isChanged(previous,items);
     if (changed){
