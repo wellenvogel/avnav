@@ -7,24 +7,34 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {useStringsChanged} from "../hoc/Resizable";
 
 const ActiveRouteWidget =(props)=>{
         if (!props.routeName && ! props.isEditing) return null;
         let classes = "activeRouteWidget";
         if (props.isApproaching) classes += " approach ";
+        let display={
+            name:props.routeName,
+            remain: Formatter.formatDistance(props.remain),
+            eta: Formatter.formatTime(props.eta)
+        };
+        if (props.isAproaching){
+            display.next=Formatter.formatDirection(props.nextCourse);
+        }
+        const resizeSequence=useStringsChanged(display,props);
         return (
-            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence}>
                 <div className="widgetData">
-                    <div className="routeName">{props.routeName}</div>
+                    <div className="routeName">{display.name}</div>
                     <div>
-                        <span className="routeRemain">{Formatter.formatDistance(props.remain)}</span>
+                        <span className="routeRemain">{display.remain}</span>
                         <span className='unit'>nm</span>
                     </div>
-                    <div className="routeEta">{Formatter.formatTime(props.eta)}</div>
+                    <div className="routeEta">{display.eta}</div>
                     { props.isApproaching ?
                         <div className="routeNext">
                             <span
-                                className="routeNextCourse">{Formatter.formatDirection(props.nextCourse)}</span>
+                                className="routeNextCourse">{display.next}</span>
                             <span className='unit'>&#176;</span>
                         </div>
                         : <div></div>
