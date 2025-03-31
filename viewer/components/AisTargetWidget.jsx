@@ -36,17 +36,18 @@ const AisTargetWidget = (props) => {
     else{
         display.headingTo=AisFormatter.format('headingTo', target);
     }
-    const resize=useResize();
-    const hasChanged=useStringsChanged(display);
-    useEffect(() => {
-        if (hasChanged){
-            resize.trigger();
-        }
-    });
+    const dashMode=props.mode === "gps";
+    const resizeSequence=useStringsChanged(display,dashMode);
     if (target.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
         const style = {...props.style, backgroundColor: color};
         return (
-            <WidgetFrame {...props} addClass="aisTargetWidget" style={style} onClick={click} unit={undefined} caption='AIS' >
+            <WidgetFrame {...props}
+                         addClass="aisTargetWidget"
+                         resizeSequence={resizeSequence}
+                         style={style}
+                         onClick={click}
+                         unit={undefined}
+                         caption='AIS' >
                 <div className="aisPart">
                     {!small &&
                     <div className="widgetData">

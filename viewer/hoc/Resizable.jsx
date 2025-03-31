@@ -23,6 +23,7 @@
 import {createContext, useContext, useEffect, useRef} from "react";
 import React from "react";
 import GuiHelpers from "../util/GuiHelpers";
+import PropTypes from "prop-types";
 
 const ResizeableImpl = createContext({
     triggerResize: ()=>{}
@@ -38,7 +39,7 @@ export const ResizeFrame=(props)=>{
     }
     useEffect(() => {
         resizeFunction()
-    }, []);
+    }, [props.resizeSequence]);
     return <div className={'resize'} ref={frame}>
         <ResizeableImpl.Provider value={{
             triggerResize: resizeFunction
@@ -46,6 +47,9 @@ export const ResizeFrame=(props)=>{
             {props.children}
         </ResizeableImpl.Provider>
     </div>
+}
+ResizeFrame.propTypes={
+    resizeSequence: PropTypes.number
 }
 
 export const usePrevious=(item)=>{
@@ -55,9 +59,7 @@ export const usePrevious=(item)=>{
     });
     return ref.current;
 }
-
-export const useStringsChanged=(items)=>{
-    const previous=usePrevious(items);
+const isChanged=(previous,items)=>{
     try {
         if (previous === undefined && items !== undefined) return true;
         if (items === undefined && previous !== undefined) return true;
@@ -69,5 +71,21 @@ export const useStringsChanged=(items)=>{
     }catch(e){ //ignore error
     }
     return false;
+}
+/**
+ * return a number that can be used as resizeSequence
+ * @param items
+ * @param canResize
+ * @returns {boolean}
+ */
+export const useStringsChanged=(items,canResize)=>{
+    const previous=usePrevious(items);
+    const sequence=useRef(0);
+    if (canResize === false) return sequence.current;
+    let changed=isChanged(previous,items);
+    if (changed){
+        sequence.current++;
+    }
+    return sequence.current;
 }
 
