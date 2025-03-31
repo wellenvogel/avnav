@@ -3,6 +3,8 @@ import LatLon from "geodesy/latlon-spherical";
 import keys from "../util/keys";
 import NavCompute from "./navcompute";
 import aisformatter from "./aisformatter";
+import Helper from "../util/helper";
+import Navcompute from "./navcompute";
 
 /**
  *###############################################################################
@@ -78,10 +80,31 @@ export class Cpa{
         this.passFront=undefined;
     }
 }
+export class CourseVector{
+    static T_LINE=0;
+    static T_ARC=1;
+    constructor() {
+        this.type=CourseVector.T_LINE;
+        this.start=undefined;
+        this.end=undefined;
+        this.center=undefined;
+        this.startAngle=undefined;
+        this.arc=0;
+        this.radius=undefined;
+    }
+    static reset(item){
+        let o=new CourseVector();
+        for (let k in o){
+            item[k]=o[k];
+        }
+    }
+}
 export class AISItem {
     constructor(received) {
         this.received = received;
+        this.receivedPos=new navobjects.Point(undefined,undefined);
         this.estimated = undefined;
+        this.courseVector=undefined;
         this.cpadata = new Cpa();
         this.timestamp = undefined; //last computed
         this.warning = false;
@@ -89,11 +112,14 @@ export class AISItem {
         this.nearest = false;
         this.tracking = false;
         this.age = undefined; //age in seconds at the last computation
+        this.lost=false;
         this.distance = undefined; //distance to boat in m
         this.headingTo = undefined;
         this.shouldHandle = false;
         this.hidden = false;
         this.priority = undefined; //lowest
+        this.fromEstimated=false;
+        this.courseVector=undefined;
     }
 
     /**
@@ -131,7 +157,13 @@ export const AisOptionMappings={
     hideTime: {key: keys.properties.aisHideTime,f:parseFloat},
     cpaEstimated: keys.properties.aisCpaEstimated,
     warningDist: keys.properties.aisWarningCpa,
-    warningTime: keys.properties.aisWarningTpa
+    warningTime: keys.properties.aisWarningTpa,
+    rotEstimated: keys.properties.aisRotForEstimated,
+    courseVectorTime: keys.properties.navBoatCourseTime,
+    useCourseVector: keys.properties.aisUseCourseVector,
+    lostTime: keys.properties.aisLostTime,
+    curved: keys.properties.aisCurvedVectors,
+    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: parseFloat}
 }
 
 /**
@@ -268,6 +300,44 @@ const pow2=(x)=>{
 }
 /**
  *
+ * @param aisItem {AISItem}
+ * @param boatPos {navobjects.Point}
+ * @param options {object} keys are the same as in {@link AisOptionMappings}
+ */
+const computeCourseVectors=(aisItem,boatPos,options)=>{
+    if (! options.useCourseVector) return;
+    let target_cog=aisItem.received.course||0;
+    let target_sog=aisItem.received.speed||0;
+    if (target_sog <=0) return;
+    let target_rot=Math.abs(aisItem.received.turn||0); // °/min
+    const curved = options.curved && isFinite(target_rot) && target_rot>0.5;
+    let cvstart=aisItem.fromEstimated?aisItem.estimated:aisItem.receivedPos
+    if (! curved){
+        aisItem.courseVector=new CourseVector();
+        aisItem.courseVector.start=cvstart;
+        aisItem.courseVector.end=NavCompute.computeTarget(
+            cvstart,
+            target_cog,
+            target_sog*options.courseVectorTime,
+            options.useRhumbLine
+        )
+    }
+    else{
+        let target_rot_sgn=Math.sign(aisItem.received.turn||0);
+        let turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
+        let turn_center=Navcompute.computeTarget(cvstart,target_cog+target_rot_sgn*90,turn_radius);
+        let turn_angle=Helper.degrees(target_sog*options.courseVectorTime/turn_radius);
+        aisItem.courseVector=new CourseVector();
+        aisItem.courseVector.type=CourseVector.T_ARC;
+        aisItem.courseVector.start=cvstart;
+        aisItem.courseVector.center=turn_center;
+        aisItem.courseVector.radius=turn_radius;
+        aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
+        aisItem.courseVector.arc=target_rot_sgn*turn_angle;
+    }
+}
+/**
+ *
  * @param aisData {Array<AISItem>} this list is filled with the estimated values and the CPA computation
  * @param boatPos {navobjects.Point}
  * @param boatCog {number} in debrees
@@ -281,10 +351,12 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
     let aisWarningAis=undefined; //the most important warning
     aisData.forEach((aisItem)=>{
         AISItem.reset(aisItem);
+        aisItem.shouldHandle=false;
         if (! (aisItem.received instanceof Object)){
             return;
         }
         let ais=aisItem.received;
+        if (ais.lat === undefined || ais.lon === undefined) return;
         let aisSpeed = parseFloat(ais.speed || 0);
         aisItem.shouldHandle=!options.onlyShowMoving || aisSpeed >= options.minAISspeed;
         if (aisItem.shouldHandle){
@@ -301,13 +373,15 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         }
         aisItem.age=parseFloat(ais.age || 0);
         if (ais.receiveTime !== undefined) aisItem.age+= (now - ais.receiveTime)/1000;
-        let aispos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
+        if (aisItem.age > options.lostTime) aisItem.lost=true;
+        aisItem.receivedPos = new navobjects.Point(parseFloat(ais.lon || 0), parseFloat(ais.lat || 0));
         let aisCourse = parseFloat(ais.course || 0);
         if (aisSpeed >= options.minDisplaySpeed) {
-            aisItem.estimated = NavCompute.computeTarget(aispos, aisCourse, aisItem.age * aisSpeed, options.useRhumbLine);
+            aisItem.estimated = NavCompute.computeTarget(aisItem.receivedPos, aisCourse, aisItem.age * aisSpeed, options.useRhumbLine);
         }
-        if (boatPos.lat === undefined || boatPos.lon === undefined || boatCog === undefined || boatSpeed === undefined) returh;
-        let targetPos=(options.cpaEstimated && aisItem.estimated)?aisItem.estimated:aispos;
+        if (boatPos.lat === undefined || boatPos.lon === undefined || boatCog === undefined || boatSpeed === undefined) return;
+        aisItem.fromEstimated=(options.cpaEstimated && aisItem.estimated);
+        let targetPos=(aisItem.fromEstimated)?aisItem.estimated:aisItem.receivedPos;
         let dst=NavCompute.computeDistance(boatPos,targetPos,options.useRhumbLine);
         aisItem.distance=dst.dts;
         aisItem.headingTo=dst.course;
@@ -352,6 +426,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                 else aisItem.priority= pow2(aisItem.cpadata.tcpa/options.warningTime)+pow2(aisItem.cpadata.cpa/options.warningDist);
             }
         }
+        computeCourseVectors(aisItem,boatPos,options);
     })
     if (aisWarningAis !== undefined){
         aisWarningAis.nextWarning=true;

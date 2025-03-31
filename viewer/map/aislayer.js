@@ -14,6 +14,8 @@ import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
 import atonIcon from '../images/ais-aton.png';
 import cloneDeep from 'clone-deep';
+import {CourseVector} from "../nav/aiscomputations";
+import {fillOptions} from "../nav/aisdata";
 
 const DEFAULT_COLOR="#f7c204";
 
@@ -260,10 +262,18 @@ const AisLayer=function(mapholder){
     this.visible=globalStore.getData(keys.properties.layers.ais);
     globalStore.register(this,keys.gui.global.propertySequence);
     this.computeTarget=this.computeTarget.bind(this);
+    /**
+     *
+     * @type {Object} see {@link AisOptionMappings}
+     */
+    this.aisoptions= {};
+    this.displayOptions={};
+    this.fillOptions();
 
 };
 
 
+/**
 /**
  * create an AIS icon using a 2d context
  * @param {string} color - the css color
@@ -410,46 +420,14 @@ AisLayer.prototype.getStyleEntry=function(item){
     }
     let base=styleKeyFromItem(item);
     let styleMap=(cl === AIS_CLASSES.Aton)?this.atonStyles:this.symbolStyles;
-    return mergeStyles(styleMap["internal"+base],
+    let symbol= mergeStyles(styleMap["internal"+base],
         styleMap[base],
         (typeSuffix !== undefined)?styleMap[base+typeSuffix]:undefined,
         (statusSuffix!==undefined)?styleMap[base+statusSuffix]:undefined,
         (statusSuffix!==undefined)?styleMap[base+typeSuffix+statusSuffix]:undefined,
         );
-};
-
-const amul=(arr,fact)=>{
-    if (! arr) return;
-    for (let i=0;i<arr.length;i++){
-        arr[i]=arr[i]*fact;
-    }
-}
-
-AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunction,drawEstimated){
-    let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
-    let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    let curved=globalStore.getData(keys.properties.aisCurvedVectors,false);
-    let rmvRange=globalStore.getData(keys.properties.aisRelativeMotionVectorRange,0);
-    let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
-    let scale=globalStore.getData(keys.properties.aisIconScale,1);
-    let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
-    let useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
-    let lostTime=globalStore.getData(keys.properties.aisLostTime,0);
-    let minDRspeed=globalStore.getData(keys.properties.aisMinDisplaySpeed,0);
-    // own ship
-    let cog=globalStore.getData(keys.nav.gps.course,0);
-    let sog=globalStore.getData(keys.nav.gps.speed,0);
-    // ais target
-    let target_cog=target.course||0;
-    let target_sog=target.speed||0;
-    let target_hdg=(useHeading && target.heading!==undefined?target.heading:target.course)||0;
-    let target_rot_sgn=Math.sign(target.turn||0);
-    let target_rot=Math.abs(target.turn||0); // °/min
-    curved = curved && isFinite(target_rot) && target_rot>0.5;
-
-    let symbol=this.getStyleEntry(target);
     let style=cloneDeep(symbol.style);
-    if (! symbol.image || ! style.size) return;
+    if (! symbol.image || ! style.size) return [undefined,undefined,1];
     if (style.alpha !== undefined){
         style.alpha=parseFloat(style.alpha);
         if (isNaN(style.alpha)) {
@@ -459,13 +437,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             if (style.alpha > 1) style.alpha=1;
         }
     }
-    let hidden = target.hidden || lostTime && target.age>lostTime;
+    let hidden = item.hidden || item.lost;
     if (hidden){
         style.alpha=0.2;
     }
-    let now=(new Date()).getTime();
-    if (classbShrink != 1 && AisFormatter.format('clazz',target) === 'B'){
-        scale=scale*classbShrink;
+    let scale=this.displayOptions.scale;
+    if (this.displayOptions.classbShrink != 1 && AisFormatter.format('clazz',item) === 'B'){
+        scale=scale*this.displayOptions.classbShrink;
     }
     if (scale != 1){
         amul(style.size,scale);
@@ -475,71 +453,106 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         style.rotation = 0;
         style.rotateWithView=false;
     }else{
+        let target_hdg=(this.displayOptions.useHeading && item.heading!==undefined?item.heading:item.course)||0;
         style.rotation = Helper.radians(target_hdg);
         style.rotateWithView=true;
     }
-    if(!hidden){
-        let onMap=drawEstimated!==undefined; // true when drawing on map, false in ais info
+    return [style,symbol,scale]
+};
 
-        var drawArc=function(origin,center,radius,start,angle,style,shift_dir=0,shift_dst=0){
+const amul=(arr,fact)=>{
+    if (! arr) return;
+    for (let i=0;i<arr.length;i++){
+        arr[i]=arr[i]*fact;
+    }
+}
+
+/**
+ *
+ * @param drawing
+ * @param target {AISItem}
+ * @returns {{rot: (*|number), scale: *, style: *, pix}}
+ */
+AisLayer.prototype.drawTargetSymbol=function(drawing,target){
+    if (! target.shouldHandle) return ;
+    let useCourseVector=!!target.courseVector;
+    let curved=target.courseVector && target.courseVector.type===CourseVector.T_ARC;
+    // own ship
+    let cog=globalStore.getData(keys.nav.gps.course,0);
+    let sog=globalStore.getData(keys.nav.gps.speed,0);
+    // ais target
+    let target_cog=target.course||0;
+    let target_sog=target.speed||0;
+    let target_hdg=(this.displayOptions.useHeading && target.heading!==undefined?target.heading:target.course)||0;
+    let [style,symbol,scale]=this.getStyleEntry(target);
+    if(! target.hidden){
+        const drawArc=(origin,center,radius,start,angle,style,shift_dir=0,shift_dst=0)=>{
             // pass origin to mitigate error due to projection for large radii
             let segments=Math.max(3,Math.ceil(Math.abs(angle)/5));
             let da=angle/segments, dd=shift_dst/segments;
             let points=[];
             for(let i=0; i<=segments; i++){
-                let p=i==0?origin:drawTargetFunction(center,start+i*da,radius);
-                if (shift_dst) p=drawTargetFunction(p,shift_dir,i*dd);
-                points.push(p);
+                let p=i==0?origin:NavCompute.computeTarget(center,start+i*da,radius,this.aisoptions.useRhumbLine);
+                if (shift_dst) p=NavCompute.computeTarget(p,shift_dir,i*dd,this.aisoptions.useRhumbLine);
+                points.push(this.pointToMap(p));
             }
             drawing.drawLineToContext(points,style);
         };
 
-        if (curved) {
-            var turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
-            var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
-            var turn_angle=Helper.degrees(target_sog*courseVectorTime/turn_radius);
-        }
-
-        if (rmvRange>0 && onMap && style.courseVector !== false) { // relative motion vector
-            if (target.distance<=rmvRange && (target_sog || sog)) {
+        if (this.aisoptions.rmvRange>0 && style.courseVector !== false) { // relative motion vector
+            //TODO: move this to computation
+            if (target.distance<=this.aisoptions.rmvRange && (target_sog || sog)) {
                 if (curved) {
-                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
-                            {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
-                            cog,-sog*courseVectorTime);
+                    drawArc(target.courseVector.start,
+                        target.courseVector.center,
+                        target.courseVector.radius,
+                        target.courseVector.startAngle,
+                        target.courseVector.arc,
+                            {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth,dashed:true},
+                            cog,-sog* this.aisoptions.courseVectorTime);
                 } else {
-                    let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
-                    p=drawTargetFunction(p,cog,-sog*courseVectorTime);
-                    drawing.drawLineToContext([xy,p],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
+                    let p=NavCompute.computeTarget(
+                        target.courseVector.start,
+                        target_cog,
+                        target_sog* this.aisoptions.courseVectorTime,
+                        this.aisoptions.useRhumbLine);
+                    p=NavCompute.computeTarget(p,cog,-sog*this.aisoptions.courseVectorTime,this.aisoptions.useRhumbLine);
+                    drawing.drawLineToContext([this.pointToMap(target.courseVector.start),this.pointToMap(p)],{color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth,dashed:true});
                 }
             }
         }
 
         if (useCourseVector && style.courseVector !== false) {
             if (target_sog) { // true motion vector
-                if(curved && onMap) { // curved TMV
+                if(curved) { // curved TMV
                     //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
-                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
-                            {color:style.courseVectorColor,width:courseVectorWidth});
+                    drawArc(
+                        target.courseVector.start,
+                        target.courseVector.center,
+                        target.courseVector.radius,
+                        target.courseVector.startAngle,
+                        target.courseVector.arc,
+                            {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth});
                 } else {
-                    let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
-                    drawing.drawLineToContext([xy,p],{color:style.courseVectorColor,width:courseVectorWidth});
+                    drawing.drawLineToContext([
+                        this.pointToMap(target.courseVector.start),
+                        this.pointToMap(target.courseVector.end)
+                    ],{color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth});
+                }
+                if (target.fromEstimated){
+                    drawing.drawLineToContext([
+                        this.pointToMap(target.receivedPos),
+                        this.pointToMap(target.courseVector.start)
+                    ], {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth})
                 }
             }
         }
 
-        if (drawEstimated && symbol.ghostImage && target_sog >= minDRspeed){ // DR position of target
-            let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
-            if (curved) {
-                let a=Helper.degrees(target_sog*age/turn_radius);
-                var pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-a),turn_radius);
-                //if (style.rotateWithView) { style.rotation+=Helper.radians(target_rot_sgn*a); } // TODO rotate DR icon only
-            } else {
-                var pos=drawTargetFunction(xy,target_cog,target_sog*age);
-            }
-            drawing.drawImageToContext(pos,symbol.ghostImage,style);
+        if (symbol.ghostImage && target.estimated){ // DR position of target
+            drawing.drawImageToContext(this.pointToMap(target.estimated),symbol.ghostImage,style);
         }
     }
-    let curpix=drawing.drawImageToContext(xy,symbol.image,style);
+    let curpix=drawing.drawImageToContext(this.pointToMap(target.receivedPos),symbol.image,style);
     return {pix:curpix, scale:scale, style: style, rot: target_hdg};
 };
 
@@ -589,15 +602,12 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let firstLabel=globalStore.getData(keys.properties.aisFirstLabel,'');
     let secondLabel=globalStore.getData(keys.properties.aisSecondLabel,'');
     let thirdLabel=globalStore.getData(keys.properties.aisThirdLabel,'');
-    let drawEstimated=globalStore.getData(keys.properties.aisShowEstimated,false);
     for (i in aisList){
         let current=aisproxy(aisList[i]);
         let alpha={alpha: current.hidden?0.2:undefined};
-        let pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
-        if (! pos || isNaN(pos[0]) || isNaN(pos[1])) {
-            continue;
-        }
-        let drawn=this.drawTargetSymbol(drawing,pos,current,this.computeTarget, drawEstimated);
+        let pos=this.pointToMap(current.receivedPos);
+        let drawn=this.drawTargetSymbol(drawing,current);
+        if (! drawn) continue;
         pixel.push({pixel:drawn.pix,ais:current});
         let textOffsetScale=drawn.scale;
         let text=AisFormatter.format(firstLabel,current,true);
@@ -619,6 +629,14 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     }
     this.pixel=pixel;
 };
+AisLayer.prototype.fillOptions=function (){
+    this.displayOptions.classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
+    this.displayOptions.scale=globalStore.getData(keys.properties.aisIconScale,1);
+    this.displayOptions.useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
+    this.displayOptions.rmvRange=globalStore.getData(keys.properties.aisRelativeMotionVectorRange,0);
+    this.displayOptions.courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
+    this.aisoptions=fillOptions();
+}
 /**
  * handle changed properties
  * @param evdata
@@ -651,6 +669,17 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
         return [0,0];
     }
 };
+AisLayer.prototype.pointToMap=function(point){
+    try {
+        if (! (point instanceof navobjects.Point)) {
+            point=new navobjects.Point(point.lon,point.lat);
+        }
+        return this.mapholder.transformToMap(point.toCoord());
+    }catch(e){
+        //ignore
+    }
+    return [0,0]
+}
 /**
  * parse the user image styles
  * we can handle the following style entries:

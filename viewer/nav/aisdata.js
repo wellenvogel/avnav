@@ -3,15 +3,28 @@
  */
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
-import NavCompute from './navcompute';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
-import assign from "object-assign";
-import aisformatter, {aisproxy} from './aisformatter';
+import {aisproxy} from './aisformatter';
 import {AisOptionMappings, handleReceivedAisData, AISItem} from "./aiscomputations";
 
+
+export const fillOptions=()=>{
+    let rt={};
+    for (let k in AisOptionMappings){
+        let mapping=AisOptionMappings[k];
+        if (mapping instanceof Object){
+            let v=globalStore.getData(mapping.key);
+            rt[k]=mapping.f(v);
+        }
+        else{
+            rt[k]=globalStore.getData(mapping);
+        }
+    }
+    return rt;
+}
 
 /**
  * the handler for the ais data
@@ -69,23 +82,9 @@ class AisData {
          */
         this.lastAisCenter = undefined;
 
-        this.aisOptions=this.fillOptions();
+        this.aisOptions=fillOptions();
     }
 
-    fillOptions(){
-        let rt={};
-        for (let k in AisOptionMappings){
-            let mapping=AisOptionMappings[k];
-            if (mapping instanceof Object){
-                let v=globalStore.getData(mapping.key);
-                rt[k]=mapping.f(v);
-            }
-            else{
-                rt[k]=globalStore.getData(mapping);
-            }
-        }
-        return rt;
-    }
     /**
      * compute all the cpa data...
      * @private
@@ -150,7 +149,7 @@ class AisData {
     }
 
     dataChanged() {
-        this.aisOptions=this.fillOptions();
+        this.aisOptions=fillOptions();
         this.handleAisData();
     }
 

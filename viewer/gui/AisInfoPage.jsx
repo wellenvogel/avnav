@@ -173,17 +173,9 @@ class AisInfoPage extends React.Component{
         let rect=canvas.getBoundingClientRect();
         canvas.width=rect.width;
         canvas.height=rect.height;
-        MapHolder.aislayer.drawTargetSymbol(
-            drawing,
-            [rect.width/2,rect.height/2],
-            current,
-            (xy,rotation,distance)=>{
-                rotation=rotation/180*Math.PI;
-                return [
-                    rect.width/2*(1+Math.sin(rotation)),
-                    rect.height/2*(1-Math.cos(rotation))
-                ]
-            });
+        let [style,symbol,scale]=MapHolder.aislayer.getStyleEntry(current);
+        drawing.drawImageToContext([rect.width/2,rect.height/2],symbol.image,style);
+        //TODO: course vector
     }
 
     render(){
