@@ -135,7 +135,7 @@
   .flex-align-items(stretch);
   .widget{
     min-width: 0;
-    .flex-shrink(1);
+    .flex-shrink(0);
     margin-left: 0.1em;
     margin-right: 0.1em;
     padding-left: 0.1em;
@@ -143,6 +143,9 @@
     width: calc(100% - 0.2em);
   }
   .editing &{
+    .widget{
+      .flex-shrink(1);
+    }
     top: 0;
     min-width: 8em;
   }
