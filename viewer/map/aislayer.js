@@ -224,242 +224,12 @@ const estimatedImageOpacity=()=>{
     return globalStore.getData(keys.properties.aisShowEstimated,false)?
         globalStore.getData(keys.properties.aisEstimatedOpacity,0.4):undefined;
 }
-/**
- * a cover for the layer with the AIS display
- * @param {MapHolder} mapholder
- * @constructor
- */
-const AisLayer=function(mapholder){
-    /**
-     * @private
-     * @type {MapHolder}
-     */
-    this.mapholder=mapholder;
-
-    /**
-     * @private
-     * @type {olStroke}
-     */
-    this.textStyle ={};
-    this.setStyles();
-
-    this.symbolStyles={};
-    this.atonStyles={};
-
-    this.createInternalIcons();
-    this.computeStyles();
-
-    /**
-     * an array of pixel positions of the current ais data
-     * @type {Array.<{pixel:olCoordinate,ais:{}}
-     */
-    this.pixel=[];
-
-    /**
-     *
-     * @type {boolean}
-     */
-    this.visible=globalStore.getData(keys.properties.layers.ais);
-    globalStore.register(this,keys.gui.global.propertySequence);
-    this.computeTarget=this.computeTarget.bind(this);
-    /**
-     *
-     * @type {Object} see {@link AisOptionMappings}
-     */
-    this.aisoptions= {};
-    this.displayOptions={};
-    this.fillOptions();
-
-};
-
-
-/**
-/**
- * create an AIS icon using a 2d context
- * @param {string} color - the css color
- * @returns {*} - an image data uri
- */
-AisLayer.prototype.createIcon=function(color,useCourseVector){
-    let canvas = document.createElement("canvas");
-    if (! canvas) return undefined;
-    let offset=useCourseVector?0:200;
-    canvas.width=100;
-    canvas.height=offset+100;
-    let ctx=canvas.getContext('2d');
-    //drawing code created by http://www.professorcloud.com/svg-to-canvas/
-    //from ais-nearest.svg
-    ctx.strokeStyle = 'rgba(0,0,0,0)';
-    ctx.lineCap = 'butt';
-    ctx.lineJoin = 'miter';
-    ctx.lineWidth=parseInt(globalStore.getData(keys.properties.aisIconBorderWidth,1));
-    ctx.miterLimit = 4;
-    ctx.fillStyle = color;
-    ctx.strokeStyle = "#000000";
-    ctx.lineCap = "butt";
-    ctx.lineJoin = "miter";
-    ctx.beginPath();
-    ctx.moveTo(23.5, offset+97.875);
-    ctx.lineTo(50, offset);
-    ctx.lineTo(76.5, offset+97.875);
-    ctx.lineTo(23.5, offset+97.875);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    if (! useCourseVector) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0)";
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 4;
-        ctx.lineCap = "butt";
-        ctx.lineJoin = "miter";
-        ctx.beginPath();
-        ctx.moveTo(50, 200);
-        ctx.lineTo(50, 3);
-        ctx.fill();
-        ctx.stroke();
-    }
-    return canvas.toDataURL();
-};
-
 const styleToProps={
     nearest: 'aisNearestColor',
     warning: 'aisWarningColor',
     tracking: 'aisTrackingColor',
     normal: 'aisNormalColor'
 };
-
-/**
- * compute the icons for the AIS display
- * @private
- */
-AisLayer.prototype.createInternalIcons = function () {
-    let style = globalStore.getMultiple(keys.properties.style);
-    let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
-    let symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
-    let baseIcon=this.createIcon(DEFAULT_COLOR,useCourseVector);
-    for (let key in styleToProps) {
-        this.symbolStyles["internal"+key] = new StyleEntry(styleToProps[key],
-            baseIcon,
-            assign({}, symbolStyle, {courseVectorColor: style[styleToProps[key]]}),
-            DEFAULT_COLOR);
-        this.atonStyles["internal"+key] = new StyleEntry(styleToProps[key],
-            atonIcon,
-            assign({}, this.atonStyle, {courseVectorColor: style[styleToProps[key]]}),
-            DEFAULT_COLOR);
-    }
-};
-AisLayer.prototype.computeStyles=function(){
-    let ghostFactor=estimatedImageOpacity();
-    for (let k in this.symbolStyles){
-        let style=this.symbolStyles[k];
-        style.load(ghostFactor);
-    }
-    for (let k in this.atonStyles){
-        let style=this.atonStyles[k];
-        style.load(); //never have a ghost image
-    }
-}
-/**
- * find the AIS target that has been clicked
- * @param {olCoordinate} pixel the css pixel from the event
- */
-AisLayer.prototype.findTarget=function(pixel){
-    base.log("findAisTarget "+pixel[0]+","+pixel[1]);
-    if (! this.pixel) return undefined;
-    let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
-    let idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
-    if (idx >=0) return this.pixel[idx].ais;
-    return undefined;
-};
-
-
-AisLayer.prototype.setStyles=function(){
-    this.textStyle= {
-        stroke: '#fff',
-        color: '#000',
-        width: 3,
-        fontSize: globalStore.getData(keys.properties.aisTextSize),
-        fontBase: 'Calibri,sans-serif',
-        offsetY: 15,
-        align: 'left'
-    };
-    this.targetStyle={
-        anchor: [15, 60],
-        size: [30,90],
-        rotation: 0,
-        rotateWithView: true
-    };
-    this.targetStyleCourseVector={
-        anchor: [15, 0],
-        size: [30,30],
-        rotation: 0,
-        rotateWithView: true
-    };
-    this.atonStyle={
-       anchor: [15, 15],
-        size: [30,30],
-        rotation: 0,
-        rotateWithView: true
-    }
-};
-
-/**
- *
- * @param item
- * @returns {StyleEntry}
- */
-AisLayer.prototype.getStyleEntry=function(item){
-    let cl=AisFormatter.format('clazz',item);
-    let typeSuffix;
-    let statusSuffix;
-    if (cl === AIS_CLASSES.A || cl === AIS_CLASSES.B) {
-        typeSuffix = "-" + AisFormatter.format('shiptype', item);
-        statusSuffix = (item.status !== undefined) ? "-status" + parseInt(item.status) : undefined;
-    }
-    if (cl === AIS_CLASSES.Aton){
-        typeSuffix="-type"+item.aid_type;
-    }
-    let base=styleKeyFromItem(item);
-    let styleMap=(cl === AIS_CLASSES.Aton)?this.atonStyles:this.symbolStyles;
-    let symbol= mergeStyles(styleMap["internal"+base],
-        styleMap[base],
-        (typeSuffix !== undefined)?styleMap[base+typeSuffix]:undefined,
-        (statusSuffix!==undefined)?styleMap[base+statusSuffix]:undefined,
-        (statusSuffix!==undefined)?styleMap[base+typeSuffix+statusSuffix]:undefined,
-        );
-    let style=cloneDeep(symbol.style);
-    if (! symbol.image || ! style.size) return [undefined,undefined,1];
-    if (style.alpha !== undefined){
-        style.alpha=parseFloat(style.alpha);
-        if (isNaN(style.alpha)) {
-            style.alpha = undefined;
-        }else{
-            if (style.alpha < 0) style.alpha=0;
-            if (style.alpha > 1) style.alpha=1;
-        }
-    }
-    let hidden = item.hidden || item.lost;
-    if (hidden){
-        style.alpha=0.2;
-    }
-    let scale=this.displayOptions.scale;
-    if (this.displayOptions.classbShrink != 1 && AisFormatter.format('clazz',item) === 'B'){
-        scale=scale*this.displayOptions.classbShrink;
-    }
-    if (scale != 1){
-        amul(style.size,scale);
-        amul(style.anchor,scale);
-    }
-    if (style.rotate !== undefined && ! style.rotate) {
-        style.rotation = 0;
-        style.rotateWithView=false;
-    }else{
-        let target_hdg=(this.displayOptions.useHeading && item.heading!==undefined?item.heading:item.course)||0;
-        style.rotation = Helper.radians(target_hdg);
-        style.rotateWithView=true;
-    }
-    return [style,symbol,scale]
-};
-
 const amul=(arr,fact)=>{
     if (! arr) return;
     for (let i=0;i<arr.length;i++){
@@ -468,51 +238,285 @@ const amul=(arr,fact)=>{
 }
 
 /**
- *
- * @param drawing
- * @param target {AISItem}
- * @returns {{rot: (*|number), scale: *, style: *, pix}}
+ * a cover for the layer with the AIS display
+ * @param {MapHolder} mapholder
+ * @constructor
  */
-AisLayer.prototype.drawTargetSymbol=function(drawing,target){
-    if (! target.shouldHandle) return ;
-    let useCourseVector=!!target.courseVector;
-    let target_hdg=(this.displayOptions.useHeading && target.heading!==undefined?target.heading:target.course)||0;
-    let [style,symbol,scale]=this.getStyleEntry(target);
-    if(! target.hidden){
-        const drawArc=(origin,center,radius,start,angle,style,shift_dir=0,shift_dst=0)=>{
-            // pass origin to mitigate error due to projection for large radii
-            let segments=Math.max(3,Math.ceil(Math.abs(angle)/5));
-            let da=angle/segments, dd=shift_dst/segments;
-            let points=[];
-            for(let i=0; i<=segments; i++){
-                let p=i==0?origin:NavCompute.computeTarget(center,start+i*da,radius,this.aisoptions.useRhumbLine);
-                if (shift_dst) p=NavCompute.computeTarget(p,shift_dir,i*dd,this.aisoptions.useRhumbLine);
-                points.push(this.pointToMap(p));
-            }
-            drawing.drawLineToContext(points,style);
-        };
+class AisLayer{
+    constructor(mapholder) {
+        /**
+         * @private
+         * @type {MapHolder}
+         */
+        this.mapholder = mapholder;
 
-        if (target.rmv && style.courseVector !== false) { // relative motion vector
-            if (target.rmv.type===CourseVector.T_ARC) {
-                drawArc(target.rmv.start,
-                    target.rmv.center,
-                    target.rmv.radius,
-                    target.rmv.startAngle,
-                    target.rmv.arc,
-                    {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth, dashed: true},
-                    target.rmv.offsetDir, target.rmv.offsetDst);
+        /**
+         * @private
+         * @type {olStroke}
+         */
+        this.textStyle = {};
+        this.setStyles();
+
+        this.symbolStyles = {};
+        this.atonStyles = {};
+
+        this.createInternalIcons();
+        this.computeStyles();
+
+        /**
+         * an array of pixel positions of the current ais data
+         * @type {Array.<{pixel:olCoordinate,ais:{}}
+         */
+        this.pixel = [];
+
+        /**
+         *
+         * @type {boolean}
+         */
+        this.visible = globalStore.getData(keys.properties.layers.ais);
+        globalStore.register(this, keys.gui.global.propertySequence);
+        this.computeTarget = this.computeTarget.bind(this);
+        /**
+         *
+         * @type {Object} see {@link AisOptionMappings}
+         */
+        this.aisoptions = {};
+        this.displayOptions = {};
+        this.fillOptions();
+    }
+
+
+    /**
+     /**
+     * create an AIS icon using a 2d context
+     * @param {string} color - the css color
+     * @param useCourseVector
+     * @returns {*} - an image data uri
+     */
+    createIcon(color, useCourseVector) {
+        let canvas = document.createElement("canvas");
+        if (!canvas) return undefined;
+        let offset = useCourseVector ? 0 : 200;
+        canvas.width = 100;
+        canvas.height = offset + 100;
+        let ctx = canvas.getContext('2d');
+        //drawing code created by http://www.professorcloud.com/svg-to-canvas/
+        //from ais-nearest.svg
+        ctx.strokeStyle = 'rgba(0,0,0,0)';
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'miter';
+        ctx.lineWidth = parseInt(globalStore.getData(keys.properties.aisIconBorderWidth, 1));
+        ctx.miterLimit = 4;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = "#000000";
+        ctx.lineCap = "butt";
+        ctx.lineJoin = "miter";
+        ctx.beginPath();
+        ctx.moveTo(23.5, offset + 97.875);
+        ctx.lineTo(50, offset);
+        ctx.lineTo(76.5, offset + 97.875);
+        ctx.lineTo(23.5, offset + 97.875);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        if (!useCourseVector) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0)";
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.lineCap = "butt";
+            ctx.lineJoin = "miter";
+            ctx.beginPath();
+            ctx.moveTo(50, 200);
+            ctx.lineTo(50, 3);
+            ctx.fill();
+            ctx.stroke();
+        }
+        return canvas.toDataURL();
+    }
+
+
+    /**
+     * compute the icons for the AIS display
+     * @private
+     */
+    createInternalIcons() {
+        let style = globalStore.getMultiple(keys.properties.style);
+        let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
+        let symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
+        let baseIcon = this.createIcon(DEFAULT_COLOR, useCourseVector);
+        for (let key in styleToProps) {
+            this.symbolStyles["internal" + key] = new StyleEntry(styleToProps[key],
+                baseIcon,
+                assign({}, symbolStyle, {courseVectorColor: style[styleToProps[key]]}),
+                DEFAULT_COLOR);
+            this.atonStyles["internal" + key] = new StyleEntry(styleToProps[key],
+                atonIcon,
+                assign({}, this.atonStyle, {courseVectorColor: style[styleToProps[key]]}),
+                DEFAULT_COLOR);
+        }
+    }
+
+    computeStyles() {
+        let ghostFactor = estimatedImageOpacity();
+        for (let k in this.symbolStyles) {
+            let style = this.symbolStyles[k];
+            style.load(ghostFactor);
+        }
+        for (let k in this.atonStyles) {
+            let style = this.atonStyles[k];
+            style.load(); //never have a ghost image
+        }
+    }
+
+    /**
+     * find the AIS target that has been clicked
+     * @param {olCoordinate} pixel the css pixel from the event
+     */
+    findTarget(pixel) {
+        base.log("findAisTarget " + pixel[0] + "," + pixel[1]);
+        if (!this.pixel) return undefined;
+        let tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
+        let idx = this.mapholder.findTarget(pixel, this.pixel, tolerance);
+        if (idx >= 0) return this.pixel[idx].ais;
+        return undefined;
+    }
+
+
+    setStyles() {
+        this.textStyle = {
+            stroke: '#fff',
+            color: '#000',
+            width: 3,
+            fontSize: globalStore.getData(keys.properties.aisTextSize),
+            fontBase: 'Calibri,sans-serif',
+            offsetY: 15,
+            align: 'left'
+        };
+        this.targetStyle = {
+            anchor: [15, 60],
+            size: [30, 90],
+            rotation: 0,
+            rotateWithView: true
+        };
+        this.targetStyleCourseVector = {
+            anchor: [15, 0],
+            size: [30, 30],
+            rotation: 0,
+            rotateWithView: true
+        };
+        this.atonStyle = {
+            anchor: [15, 15],
+            size: [30, 30],
+            rotation: 0,
+            rotateWithView: true
+        }
+    }
+
+    /**
+     *
+     * @param item
+     * @returns {StyleEntry}
+     */
+    getStyleEntry(item) {
+        let cl = AisFormatter.format('clazz', item);
+        let typeSuffix;
+        let statusSuffix;
+        if (cl === AIS_CLASSES.A || cl === AIS_CLASSES.B) {
+            typeSuffix = "-" + AisFormatter.format('shiptype', item);
+            statusSuffix = (item.status !== undefined) ? "-status" + parseInt(item.status) : undefined;
+        }
+        if (cl === AIS_CLASSES.Aton) {
+            typeSuffix = "-type" + item.aid_type;
+        }
+        let base = styleKeyFromItem(item);
+        let styleMap = (cl === AIS_CLASSES.Aton) ? this.atonStyles : this.symbolStyles;
+        let symbol = mergeStyles(styleMap["internal" + base],
+            styleMap[base],
+            (typeSuffix !== undefined) ? styleMap[base + typeSuffix] : undefined,
+            (statusSuffix !== undefined) ? styleMap[base + statusSuffix] : undefined,
+            (statusSuffix !== undefined) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
+        );
+        let style = cloneDeep(symbol.style);
+        if (!symbol.image || !style.size) return [undefined, undefined, 1];
+        if (style.alpha !== undefined) {
+            style.alpha = parseFloat(style.alpha);
+            if (isNaN(style.alpha)) {
+                style.alpha = undefined;
             } else {
-                drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(target.rmv.end)], {
-                    color: style.courseVectorColor,
-                    width: this.displayOptions.courseVectorWidth,
-                    dashed: true
-                });
+                if (style.alpha < 0) style.alpha = 0;
+                if (style.alpha > 1) style.alpha = 1;
             }
         }
+        let hidden = item.hidden || item.lost;
+        if (hidden) {
+            style.alpha = 0.2;
+        }
+        let scale = this.displayOptions.scale;
+        if (this.displayOptions.classbShrink != 1 && AisFormatter.format('clazz', item) === 'B') {
+            scale = scale * this.displayOptions.classbShrink;
+        }
+        if (scale != 1) {
+            amul(style.size, scale);
+            amul(style.anchor, scale);
+        }
+        if (style.rotate !== undefined && !style.rotate) {
+            style.rotation = 0;
+            style.rotateWithView = false;
+        } else {
+            let target_hdg = (this.displayOptions.useHeading && item.heading !== undefined ? item.heading : item.course) || 0;
+            style.rotation = Helper.radians(target_hdg);
+            style.rotateWithView = true;
+        }
+        return [style, symbol, scale]
+    }
 
 
-        if (useCourseVector && style.courseVector !== false) {
-                if(target.courseVector.type === CourseVector.T_ARC) { // curved TMV
+    /**
+     *
+     * @param drawing
+     * @param target {AISItem}
+     * @returns {{rot: (*|number), scale: *, style: *, pix}}
+     */
+    drawTargetSymbol(drawing, target) {
+        if (!target.shouldHandle) return;
+        let useCourseVector = !!target.courseVector;
+        let target_hdg = (this.displayOptions.useHeading && target.heading !== undefined ? target.heading : target.course) || 0;
+        let [style, symbol, scale] = this.getStyleEntry(target);
+        if (!target.hidden) {
+            const drawArc = (origin, center, radius, start, angle, style, shift_dir = 0, shift_dst = 0) => {
+                // pass origin to mitigate error due to projection for large radii
+                let segments = Math.max(3, Math.ceil(Math.abs(angle) / 5));
+                let da = angle / segments, dd = shift_dst / segments;
+                let points = [];
+                for (let i = 0; i <= segments; i++) {
+                    let p = i == 0 ? origin : NavCompute.computeTarget(center, start + i * da, radius, this.aisoptions.useRhumbLine);
+                    if (shift_dst) p = NavCompute.computeTarget(p, shift_dir, i * dd, this.aisoptions.useRhumbLine);
+                    points.push(this.pointToMap(p));
+                }
+                drawing.drawLineToContext(points, style);
+            };
+
+            if (target.rmv && style.courseVector !== false) { // relative motion vector
+                if (target.rmv.type === CourseVector.T_ARC) {
+                    drawArc(target.rmv.start,
+                        target.rmv.center,
+                        target.rmv.radius,
+                        target.rmv.startAngle,
+                        target.rmv.arc,
+                        {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth, dashed: true},
+                        target.rmv.offsetDir, target.rmv.offsetDst);
+                } else {
+                    drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(target.rmv.end)], {
+                        color: style.courseVectorColor,
+                        width: this.displayOptions.courseVectorWidth,
+                        dashed: true
+                    });
+                }
+            }
+
+
+            if (useCourseVector && style.courseVector !== false) {
+                if (target.courseVector.type === CourseVector.T_ARC) { // curved TMV
                     //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
                     drawArc(
                         target.courseVector.start,
@@ -520,217 +524,220 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,target){
                         target.courseVector.radius,
                         target.courseVector.startAngle,
                         target.courseVector.arc,
-                            {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth});
+                        {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth});
                 } else {
                     drawing.drawLineToContext([
                         this.pointToMap(target.courseVector.start),
                         this.pointToMap(target.courseVector.end)
-                    ],{color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth});
+                    ], {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth});
                 }
-                if (target.fromEstimated){
+                if (target.fromEstimated) {
                     drawing.drawLineToContext([
                         this.pointToMap(target.receivedPos),
                         this.pointToMap(target.courseVector.start)
-                    ], {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth})
+                    ], {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth})
                 }
-        }
+            }
 
-        if (symbol.ghostImage && target.estimated){ // DR position of target
-            let curpix=drawing.drawImageToContext(this.pointToMap(target.estimated),symbol.ghostImage,style);
-            this.pixel.push({pixel:curpix,ais:target});
-        }
-    }
-    let curpix=drawing.drawImageToContext(this.pointToMap(target.receivedPos),symbol.image,style);
-    this.pixel.push({pixel:curpix,ais:target});
-    return {scale:scale, style: style, rot: target_hdg};
-};
-
-AisLayer.prototype.computeTextOffsets=function(drawing, targetRot,textIndex, opt_baseOffset,opt_iconScale){
-    let scale=(opt_iconScale === undefined)?1:opt_iconScale;
-    let rt=[opt_baseOffset?opt_baseOffset[0]:10,opt_baseOffset?opt_baseOffset[1]:0];
-    amul(rt,scale);
-    amul(rt,drawing.getDevPixelRatio()); //images are always scaled
-    let hoffset=Math.floor(this.textStyle.fontSize * 1.2); //https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
-    if (drawing.getUseHdpi()){
-        hoffset*=drawing.getDevPixelRatio();
-    }
-    let course=targetRot;
-    if (course){
-        while (course >= 360) course-=360;
-        while (course < 0) course+=360;
-    }
-    if (! course || (0 <= course  &&  course < 90 )){
-        rt[1]+=(textIndex+0.5)*hoffset;
-    }
-    else{
-        if (course >= 90 && course < 180){
-            rt[1]+=-(textIndex+0.5)*hoffset;
-        }
-        if (course >= 180 && course < 270){
-            rt[1]+=(textIndex+0.5)*hoffset;
-        }
-        if (course >= 270 && course < 360){
-            rt[1]+=-(textIndex+0.5)*hoffset;
-        }
-    }
-    //as the offsets will be multiplied with devPixelRatio later on we need to devide...
-    amul(rt,1/drawing.getDevPixelRatio());
-    return {offsetX:rt[0],offsetY:rt[1]};
-};
-
-/**
- *
- * @param {olCoordinate} center
- * @param {Drawing} drawing
- */
-AisLayer.prototype.onPostCompose=function(center,drawing){
-    if (! this.visible) return;
-    let i;
-    this.pixel=[];
-    let aisList=globalStore.getData(keys.nav.ais.list,[]);
-    let firstLabel=globalStore.getData(keys.properties.aisFirstLabel,'');
-    let secondLabel=globalStore.getData(keys.properties.aisSecondLabel,'');
-    let thirdLabel=globalStore.getData(keys.properties.aisThirdLabel,'');
-    for (i in aisList){
-        let current=aisproxy(aisList[i]);
-        let alpha={alpha: current.hidden?0.2:undefined};
-        let pos=this.pointToMap(current.receivedPos);
-        let drawn=this.drawTargetSymbol(drawing,current);
-        if (! drawn) continue;
-        let textOffsetScale=drawn.scale;
-        let text=AisFormatter.format(firstLabel,current,true);
-        if (text) {
-            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,drawn.rot, 0,drawn.style.textOffset,textOffsetScale),alpha));
-        }
-        if (secondLabel !== firstLabel) {
-            text=AisFormatter.format(secondLabel,current,true);
-            if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,drawn.rot, 1,drawn.style.textOffset,textOffsetScale),alpha));
+            if (symbol.ghostImage && target.estimated) { // DR position of target
+                let curpix = drawing.drawImageToContext(this.pointToMap(target.estimated), symbol.ghostImage, style);
+                this.pixel.push({pixel: curpix, ais: target});
             }
         }
-        if (thirdLabel !== firstLabel && thirdLabel !== secondLabel){
-            text=AisFormatter.format(thirdLabel,current,true);
-            if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,drawn.rot, 2,drawn.style.textOffset,textOffsetScale),alpha));
+        let curpix = drawing.drawImageToContext(this.pointToMap(target.receivedPos), symbol.image, style);
+        this.pixel.push({pixel: curpix, ais: target});
+        return {scale: scale, style: style, rot: target_hdg};
+    }
+
+    computeTextOffsets(drawing, targetRot, textIndex, opt_baseOffset, opt_iconScale) {
+        let scale = (opt_iconScale === undefined) ? 1 : opt_iconScale;
+        let rt = [opt_baseOffset ? opt_baseOffset[0] : 10, opt_baseOffset ? opt_baseOffset[1] : 0];
+        amul(rt, scale);
+        amul(rt, drawing.getDevPixelRatio()); //images are always scaled
+        let hoffset = Math.floor(this.textStyle.fontSize * 1.2); //https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
+        if (drawing.getUseHdpi()) {
+            hoffset *= drawing.getDevPixelRatio();
+        }
+        let course = targetRot;
+        if (course) {
+            while (course >= 360) course -= 360;
+            while (course < 0) course += 360;
+        }
+        if (!course || (0 <= course && course < 90)) {
+            rt[1] += (textIndex + 0.5) * hoffset;
+        } else {
+            if (course >= 90 && course < 180) {
+                rt[1] += -(textIndex + 0.5) * hoffset;
+            }
+            if (course >= 180 && course < 270) {
+                rt[1] += (textIndex + 0.5) * hoffset;
+            }
+            if (course >= 270 && course < 360) {
+                rt[1] += -(textIndex + 0.5) * hoffset;
             }
         }
-    }
-};
-AisLayer.prototype.fillOptions=function (){
-    this.displayOptions.classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
-    this.displayOptions.scale=globalStore.getData(keys.properties.aisIconScale,1);
-    this.displayOptions.useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
-    this.displayOptions.courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
-    this.aisoptions=fillOptions();
-}
-/**
- * handle changed properties
- * @param evdata
- */
-AisLayer.prototype.dataChanged=function(evdata){
-    this.visible=globalStore.getData(keys.properties.layers.ais);
-    this.setStyles();
-    this.createInternalIcons();
-    this.computeStyles();
-    this.fillOptions();
-};
-
-
-/**
- * compute a target point in map units from a given point
- * for drawing the circles
- * assumes "flatted" area around the point
- * @param {olCoordinate} pos in map coordinates
- * @param {number} course in degrees
- * @param {number} dist in m
- */
-AisLayer.prototype.computeTarget=function(pos,course,dist){
-    try {
-        let point = new navobjects.Point();
-        point.fromCoord(this.mapholder.transformFromMap(pos));
-        let tp = NavCompute.computeTarget(point, course, dist,globalstore.getData(keys.nav.routeHandler.useRhumbLine));
-        let tpmap = this.mapholder.transformToMap(tp.toCoord());
-        return tpmap;
-    }catch (e){
-        return [0,0];
-    }
-};
-AisLayer.prototype.pointToMap=function(point){
-    try {
-        if (! (point instanceof navobjects.Point)) {
-            point=new navobjects.Point(point.lon,point.lat);
-        }
-        return this.mapholder.transformToMap(point.toCoord());
-    }catch(e){
-        //ignore
-    }
-    return [0,0]
-}
-/**
- * parse the user image styles
- * we can handle the following style entries:
- * aisImage
- * aisNearestImage, aisNormalImage, aisWarningImage, aisTrackingImage
- * aisXXXImage-<shiptype> - e.g. aisNormalImage-Sail or aisImage-Sail
- * aisXXXImage-status<status> - e.g. aisImage-status5 for moored
- * aisXXXImage-<shiptype>-status<status> - e.g. aisImage-Sail-status5
- * aisatonXXXImage-type<aid_type> - e.g. aisatonImage-type9
- * for all styles you can provied the following entries:
- * src: an PNG/JPG icon url
- * anchor: [x,y] image anchor (i.e. where to position the image)
- * size: [width,height] image size
- * courseVectorColor: color - if given use this color for the course vector insetad of the default colors
- * courseVector: true|false - show/do not show a course vector
- * rotate: true|false - rotate by the ship course
- * replaceColor: color - if given, this color will be replaced by the user selected normal/tracking/nearest/warning color
- *               this way you can use the same icon image for all 4 display modes
- * whenever a style contains a src attribute but the source could not be loaded,
- * this style will be skipped completely and we fall back to the next matching (ending at the internal basic styles)
- * @param styles - the user images.json data
- */
-AisLayer.prototype.setImageStyles=function(styles){
-    let styleMaps={
-        symbolStyles:'',
-        atonStyles:'aton'
+        //as the offsets will be multiplied with devPixelRatio later on we need to devide...
+        amul(rt, 1 / drawing.getDevPixelRatio());
+        return {offsetX: rt[0], offsetY: rt[1]};
     };
-    for (let styleMap in styleMaps) {
-        let stylePrefix=styleMaps[styleMap];
-        let names = ['Normal', 'Warning', 'Nearest', 'Tracking'];
-        let allowedStyles = {
-            anchor: true,
-            size: true,
-            courseVectorColor: true,
-            courseVector: true,
-            rotate: true,
-            alpha: true,
-            textOffset: true
-        };
-        let iter = [''].concat(names);
-        for (let i in iter) {
-            let name = iter[i];
-            let styleProp = "ais"+stylePrefix + name + "Image";
-            let re = new RegExp("^" + styleProp);
-            for (let k in styles) {
-                if (re.exec(k)) {
-                    let suffix = k.replace(re, "");
-                    let prefixes = name === '' ? names : [name];
-                    prefixes.forEach((prefix) => {
-                        let styleKey = prefix.toLowerCase() + suffix;
-                        let dstyle = styles[k];
-                        if (typeof (dstyle) === 'object') {
-                            this[styleMap][styleKey] = new StyleEntry(
-                                'ais' + prefix + 'Color',
-                                dstyle.src,
-                                Helper.filteredAssign(allowedStyles, dstyle),
-                                dstyle.replaceColor);
-                        }
-                    });
+
+    /**
+     *
+     * @param {olCoordinate} center
+     * @param {Drawing} drawing
+     */
+    onPostCompose(center, drawing) {
+        if (!this.visible) return;
+        let i;
+        this.pixel = [];
+        let aisList = globalStore.getData(keys.nav.ais.list, []);
+        let firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
+        let secondLabel = globalStore.getData(keys.properties.aisSecondLabel, '');
+        let thirdLabel = globalStore.getData(keys.properties.aisThirdLabel, '');
+        for (i in aisList) {
+            let current = aisproxy(aisList[i]);
+            let alpha = {alpha: current.hidden ? 0.2 : undefined};
+            let pos = this.pointToMap(current.receivedPos);
+            let drawn = this.drawTargetSymbol(drawing, current);
+            if (!drawn) continue;
+            let textOffsetScale = drawn.scale;
+            let text = AisFormatter.format(firstLabel, current, true);
+            if (text) {
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing, drawn.rot, 0, drawn.style.textOffset, textOffsetScale), alpha));
+            }
+            if (secondLabel !== firstLabel) {
+                text = AisFormatter.format(secondLabel, current, true);
+                if (text) {
+                    drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing, drawn.rot, 1, drawn.style.textOffset, textOffsetScale), alpha));
+                }
+            }
+            if (thirdLabel !== firstLabel && thirdLabel !== secondLabel) {
+                text = AisFormatter.format(thirdLabel, current, true);
+                if (text) {
+                    drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing, drawn.rot, 2, drawn.style.textOffset, textOffsetScale), alpha));
                 }
             }
         }
-    }
-    this.computeStyles();
-};
+    };
 
+    fillOptions() {
+        this.displayOptions.classbShrink = globalStore.getData(keys.properties.aisClassbShrink, 1);
+        this.displayOptions.scale = globalStore.getData(keys.properties.aisIconScale, 1);
+        this.displayOptions.useHeading = globalStore.getData(keys.properties.aisUseHeading, true);
+        this.displayOptions.courseVectorWidth = globalStore.getData(keys.properties.navCircleWidth);
+        this.aisoptions = fillOptions();
+    }
+
+    /**
+     * handle changed properties
+     * @param evdata
+     */
+    dataChanged(evdata) {
+        this.visible = globalStore.getData(keys.properties.layers.ais);
+        this.setStyles();
+        this.createInternalIcons();
+        this.computeStyles();
+        this.fillOptions();
+    };
+
+
+    /**
+     * compute a target point in map units from a given point
+     * for drawing the circles
+     * assumes "flatted" area around the point
+     * @param {olCoordinate} pos in map coordinates
+     * @param {number} course in degrees
+     * @param {number} dist in m
+     */
+    computeTarget(pos, course, dist) {
+        try {
+            let point = new navobjects.Point();
+            point.fromCoord(this.mapholder.transformFromMap(pos));
+            let tp = NavCompute.computeTarget(point, course, dist, globalstore.getData(keys.nav.routeHandler.useRhumbLine));
+            let tpmap = this.mapholder.transformToMap(tp.toCoord());
+            return tpmap;
+        } catch (e) {
+            return [0, 0];
+        }
+    };
+
+    pointToMap(point) {
+        try {
+            if (!(point instanceof navobjects.Point)) {
+                point = new navobjects.Point(point.lon, point.lat);
+            }
+            return this.mapholder.transformToMap(point.toCoord());
+        } catch (e) {
+            //ignore
+        }
+        return [0, 0]
+    }
+
+    /**
+     * parse the user image styles
+     * we can handle the following style entries:
+     * aisImage
+     * aisNearestImage, aisNormalImage, aisWarningImage, aisTrackingImage
+     * aisXXXImage-<shiptype> - e.g. aisNormalImage-Sail or aisImage-Sail
+     * aisXXXImage-status<status> - e.g. aisImage-status5 for moored
+     * aisXXXImage-<shiptype>-status<status> - e.g. aisImage-Sail-status5
+     * aisatonXXXImage-type<aid_type> - e.g. aisatonImage-type9
+     * for all styles you can provied the following entries:
+     * src: an PNG/JPG icon url
+     * anchor: [x,y] image anchor (i.e. where to position the image)
+     * size: [width,height] image size
+     * courseVectorColor: color - if given use this color for the course vector insetad of the default colors
+     * courseVector: true|false - show/do not show a course vector
+     * rotate: true|false - rotate by the ship course
+     * replaceColor: color - if given, this color will be replaced by the user selected normal/tracking/nearest/warning color
+     *               this way you can use the same icon image for all 4 display modes
+     * whenever a style contains a src attribute but the source could not be loaded,
+     * this style will be skipped completely and we fall back to the next matching (ending at the internal basic styles)
+     * @param styles - the user images.json data
+     */
+    setImageStyles(styles) {
+        let styleMaps = {
+            symbolStyles: '',
+            atonStyles: 'aton'
+        };
+        for (let styleMap in styleMaps) {
+            let stylePrefix = styleMaps[styleMap];
+            let names = ['Normal', 'Warning', 'Nearest', 'Tracking'];
+            let allowedStyles = {
+                anchor: true,
+                size: true,
+                courseVectorColor: true,
+                courseVector: true,
+                rotate: true,
+                alpha: true,
+                textOffset: true
+            };
+            let iter = [''].concat(names);
+            for (let i in iter) {
+                let name = iter[i];
+                let styleProp = "ais" + stylePrefix + name + "Image";
+                let re = new RegExp("^" + styleProp);
+                for (let k in styles) {
+                    if (re.exec(k)) {
+                        let suffix = k.replace(re, "");
+                        let prefixes = name === '' ? names : [name];
+                        prefixes.forEach((prefix) => {
+                            let styleKey = prefix.toLowerCase() + suffix;
+                            let dstyle = styles[k];
+                            if (typeof (dstyle) === 'object') {
+                                this[styleMap][styleKey] = new StyleEntry(
+                                    'ais' + prefix + 'Color',
+                                    dstyle.src,
+                                    Helper.filteredAssign(allowedStyles, dstyle),
+                                    dstyle.replaceColor);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        this.computeStyles();
+    }
+}
 
 export default AisLayer;
