@@ -476,13 +476,6 @@ const amul=(arr,fact)=>{
 AisLayer.prototype.drawTargetSymbol=function(drawing,target){
     if (! target.shouldHandle) return ;
     let useCourseVector=!!target.courseVector;
-    let curved=target.courseVector && target.courseVector.type===CourseVector.T_ARC;
-    // own ship
-    let cog=globalStore.getData(keys.nav.gps.course,0);
-    let sog=globalStore.getData(keys.nav.gps.speed,0);
-    // ais target
-    let target_cog=target.course||0;
-    let target_sog=target.speed||0;
     let target_hdg=(this.displayOptions.useHeading && target.heading!==undefined?target.heading:target.course)||0;
     let [style,symbol,scale]=this.getStyleEntry(target);
     if(! target.hidden){
@@ -499,32 +492,27 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,target){
             drawing.drawLineToContext(points,style);
         };
 
-        if (this.aisoptions.rmvRange>0 && style.courseVector !== false) { // relative motion vector
-            //TODO: move this to computation
-            if (target.distance<=this.aisoptions.rmvRange && (target_sog || sog)) {
-                if (curved) {
-                    drawArc(target.courseVector.start,
-                        target.courseVector.center,
-                        target.courseVector.radius,
-                        target.courseVector.startAngle,
-                        target.courseVector.arc,
-                            {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth,dashed:true},
-                            cog,-sog* this.aisoptions.courseVectorTime);
-                } else {
-                    let p=NavCompute.computeTarget(
-                        target.courseVector.start,
-                        target_cog,
-                        target_sog* this.aisoptions.courseVectorTime,
-                        this.aisoptions.useRhumbLine);
-                    p=NavCompute.computeTarget(p,cog,-sog*this.aisoptions.courseVectorTime,this.aisoptions.useRhumbLine);
-                    drawing.drawLineToContext([this.pointToMap(target.courseVector.start),this.pointToMap(p)],{color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth,dashed:true});
-                }
+        if (target.rmv && style.courseVector !== false) { // relative motion vector
+            if (target.rmv.type===CourseVector.T_ARC) {
+                drawArc(target.rmv.start,
+                    target.rmv.center,
+                    target.rmv.radius,
+                    target.rmv.startAngle,
+                    target.rmv.arc,
+                    {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth, dashed: true},
+                    target.rmv.offsetDir, target.rmv.offsetDst);
+            } else {
+                drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(target.rmv.end)], {
+                    color: style.courseVectorColor,
+                    width: this.displayOptions.courseVectorWidth,
+                    dashed: true
+                });
             }
         }
 
+
         if (useCourseVector && style.courseVector !== false) {
-            if (target_sog) { // true motion vector
-                if(curved) { // curved TMV
+                if(target.courseVector.type === CourseVector.T_ARC) { // curved TMV
                     //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
                     drawArc(
                         target.courseVector.start,
@@ -545,7 +533,6 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,target){
                         this.pointToMap(target.courseVector.start)
                     ], {color:style.courseVectorColor,width:this.displayOptions.courseVectorWidth})
                 }
-            }
         }
 
         if (symbol.ghostImage && target.estimated){ // DR position of target

@@ -91,6 +91,8 @@ export class CourseVector{
         this.startAngle=undefined;
         this.arc=0;
         this.radius=undefined;
+        this.offsetDir=undefined;
+        this.offsetDst=undefined;
     }
     static reset(item){
         let o=new CourseVector();
@@ -98,13 +100,33 @@ export class CourseVector{
             item[k]=o[k];
         }
     }
+    clone(){
+        let o=new CourseVector();
+        for (let k in o){
+            o[k]=this[k];
+        }
+        return o;
+    }
 }
 export class AISItem {
     constructor(received) {
         this.received = received;
         this.receivedPos=new navobjects.Point(undefined,undefined);
+        /**
+         *
+         * @type {navobjects.Point}
+         */
         this.estimated = undefined;
+        /**
+         *
+         * @type {CourseVector}
+         */
         this.courseVector=undefined;
+        /**
+         *
+         * @type {CourseVector}
+         */
+        this.rmv=undefined;
         this.cpadata = new Cpa();
         this.timestamp = undefined; //last computed
         this.warning = false;
@@ -163,7 +185,7 @@ export const AisOptionMappings={
     useCourseVector: keys.properties.aisUseCourseVector,
     lostTime: keys.properties.aisLostTime,
     curved: keys.properties.aisCurvedVectors,
-    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: parseFloat}
+    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>parseFloat(v)*Navcompute.NM}
 }
 
 /**
@@ -302,9 +324,11 @@ const pow2=(x)=>{
  *
  * @param aisItem {AISItem}
  * @param boatPos {navobjects.Point}
+ * @param boatCog {number}
+ * @param boatSog {number}
  * @param options {object} keys are the same as in {@link AisOptionMappings}
  */
-const computeCourseVectors=(aisItem,boatPos,options)=>{
+const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
     if (! options.useCourseVector) return;
     let target_cog=aisItem.received.course||0;
     let target_sog=aisItem.received.speed||0;
@@ -334,6 +358,19 @@ const computeCourseVectors=(aisItem,boatPos,options)=>{
         aisItem.courseVector.radius=turn_radius;
         aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
         aisItem.courseVector.arc=target_rot_sgn*turn_angle;
+    }
+    if (options.rmvRange > 0 && aisItem.distance < options.rmvRange && (target_sog||boatSog)){
+        if (! curved){
+            aisItem.rmv=new CourseVector();
+            aisItem.rmv.start=cvstart;
+            aisItem.rmv.end=NavCompute.computeTarget(aisItem.courseVector.end,
+                boatCog,-boatSog*options.courseVectorTime);
+        }
+        else{
+            aisItem.rmv=aisItem.courseVector.clone();
+            aisItem.rmv.offsetDir=boatCog;
+            aisItem.rmv.offsetDst=-boatSog*options.courseVectorTime;
+        }
     }
 }
 /**
@@ -426,7 +463,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                 else aisItem.priority= pow2(aisItem.cpadata.tcpa/options.warningTime)+pow2(aisItem.cpadata.cpa/options.warningDist);
             }
         }
-        computeCourseVectors(aisItem,boatPos,options);
+        computeCourseVectors(aisItem,boatPos,boatCog,boatSpeed,options);
     })
     if (aisWarningAis !== undefined){
         aisWarningAis.nextWarning=true;
