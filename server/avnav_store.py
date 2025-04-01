@@ -72,7 +72,7 @@ class AVNStore(object):
       return self.value.get('mmsi')
 
   CHANGE_COUNTER = ['alarm', 'leg', 'route','config']
-  def __init__(self,expiryTime,aisExpiryTime,ownMMSI,useAisAge):
+  def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.__list={}
     self.__aisList={}
     self.__listLock=threading.Lock()
@@ -80,7 +80,6 @@ class AVNStore(object):
     self.__expiryTime=expiryTime
     self.__aisExpiryTime=aisExpiryTime
     self.__ownMMSI=ownMMSI
-    self.__useAisAge=useAisAge
     self.__prefixCounter={} #contains the number of entries for TPV, AIS,...
     # a description of the already registered keys
     self.__registeredKeys={} # type: dict
@@ -117,11 +116,10 @@ class AVNStore(object):
     return self.__expiryTime
   def getAisExpiryPeriod(self):
     return self.__aisExpiryTime
-  def updateBaseConfig(self,expiry,aisExpiry,ownMMSI,useAisAge):
+  def updateBaseConfig(self, expiry, aisExpiry, ownMMSI):
     self.__expiryTime=expiry
     self.__aisExpiryTime=aisExpiry
     self.__ownMMSI=ownMMSI
-    self.__useAisAge=useAisAge
 
   def updateChangeCounter(self,name):
     if not name in self.CHANGE_COUNTER:
@@ -209,11 +207,6 @@ class AVNStore(object):
         return
       if all(k in data for k in ("lat","lon")): # use timestamp is bound to dynamic data
         existing.timestamp = now if timestamp is None else timestamp
-        if self.__useAisAge and "second" in data:
-          sec=data.get("second",60) # 60=timestamp not available
-          if 0<=sec<60: # use timestamp from ais seconds
-            delay = (now%60-sec)%60 # delay of message (up to 59s)
-            existing.timestamp -= delay # shift timestamp back
       else:
         del data["type"] # do not update type from static data
       existing.value.update(data) # update existing data with new data
