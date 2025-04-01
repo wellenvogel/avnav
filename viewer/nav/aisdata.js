@@ -60,7 +60,10 @@ class AisData {
         this.trackedAIStarget = undefined;
 
 
-        globalStore.register(this, [keys.nav.gps, keys.nav.routeHandler.useRhumbLine]);
+        globalStore.register(this, [
+            keys.gui.global.propertySequence,
+            keys.nav.routeHandler.useRhumbLine
+        ]);
 
         /**
          * @private

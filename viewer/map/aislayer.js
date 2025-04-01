@@ -620,7 +620,6 @@ AisLayer.prototype.fillOptions=function (){
     this.displayOptions.classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     this.displayOptions.scale=globalStore.getData(keys.properties.aisIconScale,1);
     this.displayOptions.useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
-    this.displayOptions.rmvRange=globalStore.getData(keys.properties.aisRelativeMotionVectorRange,0);
     this.displayOptions.courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     this.aisoptions=fillOptions();
 }
@@ -633,7 +632,7 @@ AisLayer.prototype.dataChanged=function(evdata){
     this.setStyles();
     this.createInternalIcons();
     this.computeStyles();
-
+    this.fillOptions();
 };
 
 
