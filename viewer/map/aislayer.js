@@ -549,11 +549,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,target){
         }
 
         if (symbol.ghostImage && target.estimated){ // DR position of target
-            drawing.drawImageToContext(this.pointToMap(target.estimated),symbol.ghostImage,style);
+            let curpix=drawing.drawImageToContext(this.pointToMap(target.estimated),symbol.ghostImage,style);
+            this.pixel.push({pixel:curpix,ais:target});
         }
     }
     let curpix=drawing.drawImageToContext(this.pointToMap(target.receivedPos),symbol.image,style);
-    return {pix:curpix, scale:scale, style: style, rot: target_hdg};
+    this.pixel.push({pixel:curpix,ais:target});
+    return {scale:scale, style: style, rot: target_hdg};
 };
 
 AisLayer.prototype.computeTextOffsets=function(drawing, targetRot,textIndex, opt_baseOffset,opt_iconScale){
@@ -597,7 +599,7 @@ AisLayer.prototype.computeTextOffsets=function(drawing, targetRot,textIndex, opt
 AisLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
     let i;
-    let pixel=[];
+    this.pixel=[];
     let aisList=globalStore.getData(keys.nav.ais.list,[]);
     let firstLabel=globalStore.getData(keys.properties.aisFirstLabel,'');
     let secondLabel=globalStore.getData(keys.properties.aisSecondLabel,'');
@@ -608,7 +610,6 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         let pos=this.pointToMap(current.receivedPos);
         let drawn=this.drawTargetSymbol(drawing,current);
         if (! drawn) continue;
-        pixel.push({pixel:drawn.pix,ais:current});
         let textOffsetScale=drawn.scale;
         let text=AisFormatter.format(firstLabel,current,true);
         if (text) {
@@ -627,7 +628,6 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
             }
         }
     }
-    this.pixel=pixel;
 };
 AisLayer.prototype.fillOptions=function (){
     this.displayOptions.classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
