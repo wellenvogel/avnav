@@ -66,9 +66,10 @@ class AisData {
                 type:'boat',
                 boatPosition:globalStore.getData(keys.nav.gps.position),
                 boatSpeed: globalStore.getData(keys.nav.gps.speed),
-                boatCourse: globalStore.getData(keys.nav.gps.course)
+                boatCourse: globalStore.getData(keys.nav.gps.course),
+                trackedMMsi: globalStore.getData(keys.nav.ais.trackedMmsi)
             })
-        },[keys.nav.gps.position,keys.nav.gps.speed,keys.nav.gps.course])
+        },[keys.nav.gps.position,keys.nav.gps.speed,keys.nav.gps.course,keys.nav.ais.trackedMmsi])
 
         /**
          * @private
@@ -165,7 +166,7 @@ class AisData {
             if (! this.worker) {
                 this.worker = new Worker(new URL("./aisworker.js", import.meta.url));
                 this.worker.onmessage = ({data}) => {
-                    console.log("Aisdata: ", data);
+                    //console.log("Aisdata: ", data);
                     if (data.type === 'data') {
                         let storeKeys = {
                             nearestAisTarget: keys.nav.ais.nearest,
@@ -174,7 +175,17 @@ class AisData {
                         };
                         let nearestAisTarget;
                         if (data.data && data.data.length) {
-                            nearestAisTarget = aisproxy(data.data[0]);
+                            if (this.trackedAIStarget !== undefined){
+                                for (let i=0;i<data.data.length;i++){
+                                    if (data.data[i].received && data.data[i].received.mmsi == this.trackedAIStarget){
+                                        nearestAisTarget=aisproxy(data.data[i]);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (nearestAisTarget === undefined) {
+                                nearestAisTarget = aisproxy(data.data[0]);
+                            }
                         }
                         globalStore.storeMultiple({
                             nearestAisTarget: nearestAisTarget,
