@@ -60,6 +60,16 @@ class AisData {
             keys.nav.routeHandler.useRhumbLine
         ]);
 
+        globalStore.register(()=>{
+            if (! this.worker) return;
+            this.postWorker({
+                type:'boat',
+                boatPosition:globalStore.getData(keys.nav.gps.position),
+                boatSpeed: globalStore.getData(keys.nav.gps.speed),
+                boatCourse: globalStore.getData(keys.nav.gps.course)
+            })
+        },[keys.nav.gps.position,keys.nav.gps.speed,keys.nav.gps.course])
+
         /**
          * @private
          * @type {Formatter}
@@ -156,7 +166,7 @@ class AisData {
                 this.worker = new Worker(new URL("./aisworker.js", import.meta.url));
                 this.worker.onmessage = ({data}) => {
                     console.log("Aisdata: ", data);
-                    if (data.type === 'answer') {
+                    if (data.type === 'data') {
                         let storeKeys = {
                             nearestAisTarget: keys.nav.ais.nearest,
                             currentAis: keys.nav.ais.list,
@@ -172,8 +182,15 @@ class AisData {
                             updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1
                         }, storeKeys);
                     }
+                    if (data.type === 'error'){
+                        //TODO
+                    }
                 }
             }
+            this.postWorker({
+                type: 'config',
+                options:this.aisOptions
+            })
         }
         else{
             if (this.worker){
@@ -184,15 +201,11 @@ class AisData {
         this.handleAisData();
     }
 
-    postWorker(aisList){
+    postWorker(data){
+        if (! this.worker) return;
         this.workerSequence++;
         this.worker.postMessage({
-            type:'query',
-            data: aisList,
-            options: this.aisOptions,
-            boatPos: globalStore.getData(keys.nav.gps.position),
-            boatCourse: globalStore.getData(keys.nav.gps.course),
-            boatSpeed: globalStore.getData(keys.nav.gps.speed),
+            ...data,
             sequence: this.workerSequence
         })
     }
@@ -211,6 +224,18 @@ class AisData {
         }
         if (!center) {
             window.clearTimeout(this.timer);
+            this.timer = window.setTimeout(() => {
+                this.startQuery();
+            }, timeout);
+            return;
+        }
+        if (this.worker){
+            this.postWorker({
+                type:'query',
+                center:center,
+                distance: globalStore.getData(keys.properties.aisDistance),
+                timeout: timeout
+            })
             this.timer = window.setTimeout(() => {
                 this.startQuery();
             }, timeout);
