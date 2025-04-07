@@ -1,10 +1,6 @@
-/*
- # vim: ts=2 sw=2 et
- ###############################################################################
- # Copyright (c) 2014, Andreas Vogel andreas@wellenvogel.net
- # parts of software from movable-type
- # http://www.movable-type.co.uk/
- # for their license see the file latlon.js
+/**
+ *###############################################################################
+ # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
  #
  #  Permission is hereby granted, free of charge, to any person obtaining a
  #  copy of this software and associated documentation files (the "Software"),
@@ -19,40 +15,34 @@
  #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHERtime
  #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  #  DEALINGS IN THE SOFTWARE.
+ #
  ###############################################################################
-*/
-
-/**
- * the base for our namespace
- * @type {{}}
+ * AIS computations
  */
 
-let base={};
 
-base.log=function(txt){
-    if (! avnav || ! avnav.debugMode) return;
-    try{
-        console.log(txt);
-    }catch(e){}
-};
+import {handleReceivedAisData} from "./aiscomputations";
+import navobjects from "./navobjects";
 
-/**
- * inherit (or better: proto delegation)
- * @param child
- * @param parent
- */
-base.inherits = function (child, parent) {
-    if (parent === undefined) {
-        throw ("parent is undefined for inherit to " + child);
+self.onmessage=({data})=>{
+    if (data.type === 'query') {
+        let start = (new Date()).getTime();
+        let ais = handleReceivedAisData(
+            data.data,
+            new navobjects.Point(data.boatPos.lon, data.boatPos.lat),
+            data.boatCourse,
+            data.boatSpeed,
+            data.options);
+        let done = (new Date()).getTime();
+        self.postMessage({
+            type: 'answer',
+            time: done - start,
+            sequence: data.sequence,
+            data: ais
+        })
     }
-    child.prototype = Object.create(parent.prototype);
-    child.prototype.super_ = parent.prototype;
-    child.prototype.base_ = parent;
-};
-
-
-export default   base;
+}

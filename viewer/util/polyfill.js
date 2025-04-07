@@ -10,6 +10,11 @@
 //https://cdn.polyfill.io/v2/polyfill.js?features=requestAnimationFrame&ua=dummy&unknown=polyfill&flags=gated
 //and modified to avoid performance.now that is reset somehow...
 (function(undefined) {
+
+	if (! window.SVGElement){
+		//old safari on Playbook - measure will not work without this
+		window.SVGElement=function(){};
+	}
 if (!('Date' in this && 'now' in this.Date && 'getTime' in this.Date.prototype)) {
 
 // Date.now
