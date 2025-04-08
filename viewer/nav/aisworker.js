@@ -66,7 +66,7 @@ const queryData=async (distance,center,timeout)=>{
         param['lat' + sfx] = formatter.formatDecimal(center[idx].lat, 3, 5, false, true);
         param['lon' + sfx] = formatter.formatDecimal(center[idx].lon, 3, 5, false, true);
     }
-    return Requests.getJson(param, {checkOk: false, timeout: timeout}).then(
+    return Requests.getJson(param, {checkOk: false, timeout: timeout/2}).then(
         (data) => {
             aisErrors=0;
             let now = (new Date()).getTime();
@@ -94,12 +94,13 @@ const fillOptionsAndBoatData=(messageData)=>{
     if (messageData.options !== undefined) options=messageData.options;
 
 }
-
+let lastResponse=0;
 const computeResponse=(messageData)=>{
     fillOptionsAndBoatData(messageData);
     let start = (new Date()).getTime();
     let ais = computeAis();
     let done = (new Date()).getTime();
+    lastResponse=done;
     self.postMessage({
         type: 'data',
         time: done - start,
@@ -108,21 +109,54 @@ const computeResponse=(messageData)=>{
     })
 }
 
+const handleError=(error,sequence,inc)=>{
+    if (inc) aisErrors++;
+    self.postMessage({
+        type: 'error',
+        error: error,
+        count: aisErrors
+    })
+}
+
+let queryRunning=false;
+let overloadCount=0;
 self.onmessage=async ({data})=>{
     if (data.type === 'query') {
-        let received=await queryData(data.distance,data.center,data.timeout);
+        if (queryRunning){
+            handleError("ais query overload",data.sequence,true);
+            return;
+        }
+        let received;
+        try {
+            queryRunning=true;
+            received = await queryData(data.distance, data.center, data.timeout);
+        }
+        catch (e){
+            handleError(e,data.sequence,true);
+            return;
+        }
+        finally{
+            queryRunning=false;
+        }
         if (received.error){
-            self.postMessage({
-                type: 'error',
-                error: received.error,
-                count: aisErrors
-            })
+            handleError(received.error,data.sequence)
             return;
         }
         receivedAisData=received.data;
         computeResponse(data);
     }
     if (data.type === 'boat' ){
+        let now=(new Date()).getTime();
+        //we expect at last 10ms idle
+        if ((now-lastResponse) < 10){
+            fillOptionsAndBoatData(data);
+            overloadCount++;
+            if (overloadCount === 10) {
+                handleError("ais compute overload", data.sequence, true);
+            }
+            return;
+        }
+        overloadCount=0;
         computeResponse(data);
     }
     if (data.type === 'config'){
