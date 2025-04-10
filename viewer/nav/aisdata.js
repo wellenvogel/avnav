@@ -5,10 +5,9 @@ import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import Requests from '../util/requests.js';
-import base from '../base.js';
 import {aisproxy} from './aisformatter';
-import {AisOptionMappings, handleReceivedAisData, AISItem} from "./aiscomputations";
+import {AisOptionMappings} from "./aiscomputations";
+import Helper from "../util/helper";
 
 
 export const fillOptions=()=>{
@@ -92,124 +91,56 @@ class AisData {
         this.lastAisCenter = undefined;
 
         this.aisOptions=fillOptions();
-        this.workerSequence=0;
-        this.worker=undefined;
-    }
-
-    /**
-     * compute all the cpa data...
-     * @private
-     */
-    handleAisData() {
-        if (this.worker) return;
-        let boatPos = globalStore.getMultiple(keys.nav.gps);
-        let trackedTarget = undefined; //ref to tracked target
-        let aisWarningAis=undefined; //ref to most important warning
-        let currentAis=handleReceivedAisData(this.receivedAis,
-            boatPos.valid?new navobjects.Point(boatPos.lon,boatPos.lat):new navobjects.Point(undefined,undefined),
-            parseFloat(boatPos.course||0),
-            parseFloat(boatPos.speed||0),
-            this.aisOptions);
-        let hideTime = parseFloat(globalStore.getData(keys.properties.aisHideTime, 30)) * 1000;
-        let now = (new Date()).getTime();
-        for (let aisidx in currentAis) {
-            let ais = currentAis[aisidx];
-            let accessor=aisproxy(ais);
-            if (!ais.shouldHandle) continue;
-            let hidden = this.hiddenTargets[ais.received.mmsi];
-            if (hidden !== undefined) {
-                if (hidden > now || (hidden + hideTime) < now) {
-                    delete this.hiddenTargets[accessor.mmsi];
-                    hidden = undefined;
+        this.workerSequence = 0;
+        this.worker = new Worker(new URL("./aisworker.js", import.meta.url));
+        this.worker.onmessage = ({data}) => {
+            //console.log("Aisdata: ", data);
+            if (data.type === 'data') {
+                let storeKeys = {
+                    nearestAisTarget: keys.nav.ais.nearest,
+                    currentAis: keys.nav.ais.list,
+                    updateCount: keys.nav.ais.updateCount
+                };
+                let nearestAisTarget;
+                if (data.data && data.data.length) {
+                    if (this.trackedAIStarget !== undefined) {
+                        for (let i = 0; i < data.data.length; i++) {
+                            if (data.data[i].received && data.data[i].received.mmsi == this.trackedAIStarget) {
+                                nearestAisTarget = aisproxy(data.data[i]);
+                                break;
+                            }
+                        }
+                    }
+                    if (nearestAisTarget === undefined) {
+                        nearestAisTarget = aisproxy(data.data[0]);
+                    }
                 }
+                globalStore.storeMultiple({
+                    nearestAisTarget: nearestAisTarget,
+                    currentAis: data.data,
+                    updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1
+                }, storeKeys);
             }
-            if (hidden !== undefined) ais.hidden = true;
-            if (accessor.mmsi == this.trackedAIStarget) {
-                ais.tracking = true;
-                trackedTarget = accessor;
+            if (data.type === 'error') {
+                //TODO
             }
-            if (accessor.nextWarning){
-                aisWarningAis=accessor;
-            }
-        }
-        if (trackedTarget === undefined) this.trackedAIStarget = undefined;
-        //handling of the nearest target
-        //warning active - this one
-        //no tracked target set - nearest
-        //tracked set - this one
-        let nearestAisTarget=undefined;
-        if (currentAis.length) {
-            if (aisWarningAis) nearestAisTarget = aisWarningAis;
-            else {
-                if (trackedTarget) nearestAisTarget = trackedTarget;
-                else nearestAisTarget = aisproxy(currentAis[0]);
-            }
-        } else {
-            nearestAisTarget = undefined;
-        }
-        let storeKeys = {
-            nearestAisTarget: keys.nav.ais.nearest,
-            currentAis: keys.nav.ais.list,
-            updateCount: keys.nav.ais.updateCount
         };
-        globalStore.storeMultiple({
-            nearestAisTarget: nearestAisTarget,
-            currentAis: currentAis,
-            updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1
-        }, storeKeys);
-
+        this.postWorker({
+            type: 'config',
+            options:this.aisOptions
+        })
+        this.postWorker({
+            type:'hidden',
+            hiddenTargets: this.hiddenTargets
+        })
     }
 
     dataChanged() {
         this.aisOptions=fillOptions();
-        if (globalStore.getData(keys.properties.aisUseWorker)) {
-            if (! this.worker) {
-                this.worker = new Worker(new URL("./aisworker.js", import.meta.url));
-                this.worker.onmessage = ({data}) => {
-                    //console.log("Aisdata: ", data);
-                    if (data.type === 'data') {
-                        let storeKeys = {
-                            nearestAisTarget: keys.nav.ais.nearest,
-                            currentAis: keys.nav.ais.list,
-                            updateCount: keys.nav.ais.updateCount
-                        };
-                        let nearestAisTarget;
-                        if (data.data && data.data.length) {
-                            if (this.trackedAIStarget !== undefined){
-                                for (let i=0;i<data.data.length;i++){
-                                    if (data.data[i].received && data.data[i].received.mmsi == this.trackedAIStarget){
-                                        nearestAisTarget=aisproxy(data.data[i]);
-                                        break;
-                                    }
-                                }
-                            }
-                            if (nearestAisTarget === undefined) {
-                                nearestAisTarget = aisproxy(data.data[0]);
-                            }
-                        }
-                        globalStore.storeMultiple({
-                            nearestAisTarget: nearestAisTarget,
-                            currentAis: data.data,
-                            updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1
-                        }, storeKeys);
-                    }
-                    if (data.type === 'error'){
-                        //TODO
-                    }
-                }
-            }
-            this.postWorker({
-                type: 'config',
-                options:this.aisOptions
-            })
-        }
-        else{
-            if (this.worker){
-                this.worker.terminate();
-                this.worker=undefined;
-            }
-        }
-        this.handleAisData();
+        this.postWorker({
+            type: 'config',
+            options:this.aisOptions
+        })
     }
 
     postWorker(data){
@@ -240,67 +171,16 @@ class AisData {
             }, timeout);
             return;
         }
-        if (this.worker){
-            this.postWorker({
-                type:'query',
-                center:center,
-                distance: globalStore.getData(keys.properties.aisDistance),
-                timeout: timeout
-            })
-            this.timer = window.setTimeout(() => {
-                this.startQuery();
-            }, timeout);
-            return;
-        }
-        let param = {
-            request: 'ais',
-            distance: this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance) || 10, 4, 1)
-        };
-        for (let idx = 0; idx < center.length; idx++) {
-            if (!center[idx]) continue;
-            let sfx = idx !== 0 ? idx + "" : "";
-            param['lat' + sfx] = this.formatter.formatDecimal(center[idx].lat, 3, 5, false, true);
-            param['lon' + sfx] = this.formatter.formatDecimal(center[idx].lon, 3, 5, false, true);
-        }
-        Requests.getJson(param, {checkOk: false, timeout: timeout}).then(
-            (data) => {
-                let now=(new Date()).getTime();
-                this.aisErrors = 0;
-                let aisList = [];
-                if (data['class'] && data['class'] == "error") aisList = [];
-                else aisList = data;
-                aisList.forEach((ais)=>{ais.receiveTime=now;})
-                this.receivedAis = aisList;
-                if (this.worker) {
-                    this.postWorker(aisList);
-                }
-                else {
-                    try {
-                        this.handleAisData();
-                    } catch (e) {
-                        let x = e;
-                        throw (e);
-                    }
-                }
-                window.clearTimeout(this.timer);
-                this.timer = window.setTimeout( ()=> {
-                    this.startQuery();
-                }, timeout);
-            }
-        ).catch(
-            (error) => {
-                base.log("query ais error");
-                this.aisErrors += 1;
-                if (this.aisErrors >= globalStore.getData(keys.properties.maxAisErrors)) {
-                    this.this.receivedAis=[];
-                    this.handleAisData();
-                }
-                window.clearTimeout(this.timer);
-                this.timer = window.setTimeout(()=> {
-                    this.startQuery();
-                }, timeout);
-            }
-        );
+        this.postWorker({
+            type: 'query',
+            center: center,
+            distance: globalStore.getData(keys.properties.aisDistance),
+            timeout: timeout
+        })
+        this.timer = window.setTimeout(() => {
+            this.startQuery();
+        }, timeout);
+
     }
 
     /**
@@ -310,13 +190,12 @@ class AisData {
      */
     getAisByMmsi(mmsi) {
         if (!mmsi) {
-            return {...globalStore.getData(keys.nav.ais.nearest)}
+            return globalStore.getData(keys.nav.ais.nearest);
         }
         let currentAis=globalStore.getData(keys.nav.ais.list);
         for (let i in currentAis) {
-            let accessor = aisproxy(currentAis[i]);
-            if (accessor.mmsi === mmsi) {
-                return accessor;
+            if (currentAis[i].mmsi == mmsi) {
+                return aisproxy(currentAis[i]);
             }
         }
     }
@@ -341,30 +220,22 @@ class AisData {
     }
 
     setHidden(mmsi) {
-        let now = (new Date()).getTime();
-        this.hiddenTargets[mmsi] = now;
-        this.handleAisData();
+        this.hiddenTargets[mmsi] = Helper.now();
+        this.postWorker({
+            type: 'hidden',
+            hiddenTargets:this.hiddenTargets
+        })
     }
 
     unsetHidden(mmsi) {
         if (this.hiddenTargets[mmsi] !== undefined) {
             delete this.hiddenTargets[mmsi];
-            this.handleAisData();
+            this.postWorker({
+                type: 'hidden',
+                hiddenTargets:this.hiddenTargets
+            })
         }
     }
-
-    isHidden(mmsi) {
-        let now = (new Date()).getTime();
-        let hidden = this.hiddenTargets[mmsi];
-        if (hidden === undefined) return false;
-        if (hidden > now || (hidden + globalStore.getData(keys.properties.aisHideTime, 30) * 1000) < now) {
-            delete this.hiddenTargets[mmsi];
-            return false;
-        }
-        return true;
-
-    }
-
     /**
      * set the target to be tracked, 0 to use nearest
      * @param {number} mmsi
@@ -373,7 +244,10 @@ class AisData {
         if (this.trackedAIStarget == mmsi) return;
         this.trackedAIStarget = mmsi;
         globalStore.storeData(keys.nav.ais.trackedMmsi, mmsi);
-        this.handleAisData();
+        //just retrigger computation once
+        this.postWorker({
+            type: 'config'
+        })
     }
 }
 

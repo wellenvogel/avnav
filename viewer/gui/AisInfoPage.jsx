@@ -113,18 +113,24 @@ class AisInfoPage extends React.Component{
             {
                 name: 'AisInfoHide',
                 onClick: ()=>{
-                    if (!this.props.options || ! this.props.options.mmsi) return;
-                    if (globalStore.getData(keys.gui.aisinfopage.hidden)){
-                        NavData.getAisHandler().unsetHidden(this.props.options.mmsi);
+                    let target=this.getTarget();
+                    if (! target) return;
+                    if (target.hidden){
+                        NavData.getAisHandler().unsetHidden(target.mmsi);
                     }
                     else {
-                        NavData.getAisHandler().setHidden(this.props.options.mmsi);
+                        NavData.getAisHandler().setHidden(target.mmsi);
                     }
                     this.props.history.pop();
                 },
                 storeKeys: {
-                    toggle: keys.gui.aisinfopage.hidden
-                }
+                    dummy: storeKeys
+                },
+                updateFunction: ()=>{
+                    let target=this.getTarget()||{};
+                    return {toggle:target.hidden};
+                },
+                disabled: !this.props.options || ! this.props.options.mmsi
 
             },
             {
@@ -145,17 +151,15 @@ class AisInfoPage extends React.Component{
         this.checkNoTarget=this.checkNoTarget.bind(this);
         this.drawIcon=this.drawIcon.bind(this);
         this.timer=GuiHelpers.lifecycleTimer(this,this.checkNoTarget,5000,true);
-        let mmsi=(this.props.options||{}).mmsi;
-        if (mmsi) {
-            GuiHelpers.storeHelper(this, () => {
-                globalStore.storeData(keys.gui.aisinfopage.hidden,NavData.getAisHandler().isHidden(mmsi));
-            }, storeKeys, true)
-        }
     }
 
-    checkNoTarget(timerSequence){
+    getTarget(){
         let mmsi=this.props.options?this.props.options.mmsi:undefined;
-        if (! mmsi || ! NavData.getAisHandler().getAisByMmsi(mmsi)){
+        if (! mmsi) return;
+        return NavData.getAisHandler().getAisByMmsi(mmsi);
+    }
+    checkNoTarget(timerSequence){
+        if (! this.getTarget()){
             this.props.history.pop();
             return;
         }

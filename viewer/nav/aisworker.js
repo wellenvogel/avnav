@@ -31,6 +31,7 @@ import formatter from '../util/formatter';
 import Requests from "../util/requests";
 import {KeyHelper} from "../util/keys";
 import globalstore from "../util/globalstore";
+import Helper from "../util/helper";
 
 //workaround to initialize the global store with defaults
 //TODO: make navUrl a simple constant
@@ -69,7 +70,7 @@ const queryData=async (distance,center,timeout)=>{
     return Requests.getJson(param, {checkOk: false, timeout: timeout/2}).then(
         (data) => {
             aisErrors=0;
-            let now = (new Date()).getTime();
+            let now = Helper.now();
             let aisList = [];
             if (data['class'] && data['class'] == "error") aisList = [];
             else aisList = data;
@@ -95,12 +96,27 @@ const fillOptionsAndBoatData=(messageData)=>{
 
 }
 let lastResponse=0;
+let hiddenTargets={}
 const computeResponse=(messageData)=>{
     fillOptionsAndBoatData(messageData);
-    let start = (new Date()).getTime();
+    let start = Helper.now();
     let ais = computeAis();
-    let done = (new Date()).getTime();
-    lastResponse=done;
+    if (ais){
+        let hideTime=options.hideTime*1000;
+        ais.forEach((aisItem)=>{
+            if (! aisItem.warning){
+                let hidden=hiddenTargets[aisItem.mmsi];
+                if (hidden !== undefined){
+                    if ((hidden+hideTime)<Helper.now()){
+                        delete hiddenTargets[aisItem.mmsi];
+                        hidden=undefined;
+                    }
+                    if (hidden !== undefined) aisItem.hidden=true;
+                }
+            }
+        })
+    }
+    let done = Helper.now();
     self.postMessage({
         type: 'data',
         time: done - start,
@@ -146,8 +162,9 @@ self.onmessage=async ({data})=>{
         computeResponse(data);
     }
     if (data.type === 'boat' ){
-        let now=(new Date()).getTime();
+        let now=Helper.now();
         //we expect at last 10ms idle
+        //but we only limit the "boat" requests - all others are limited any way
         if ((now-lastResponse) < 10){
             fillOptionsAndBoatData(data);
             overloadCount++;
@@ -158,8 +175,14 @@ self.onmessage=async ({data})=>{
         }
         overloadCount=0;
         computeResponse(data);
+        lastResponse=now;
     }
     if (data.type === 'config'){
+        computeResponse(data);
+    }
+    if (data.type === 'hidden'){
+        if (data.hiddenTargets === undefined) return;
+        hiddenTargets=data.hiddenTargets;
         computeResponse(data);
     }
 }

@@ -188,9 +188,13 @@ export const concatsp=(...args)=>{
 export const unsetOrTrue=(item)=>{
     return !!(item === undefined || item);
 }
+export const now=()=>{
+    return (new Date()).getTime();
+}
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
+Helper.now=now;
 
 export default Helper;
 

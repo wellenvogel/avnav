@@ -110,7 +110,7 @@ export class CourseVector{
 }
 export class AISItem {
     constructor(received) {
-        this.received = received;
+        this.received = received||{};
         this.receivedPos=new navobjects.Point(undefined,undefined);
         /**
          *
@@ -142,6 +142,7 @@ export class AISItem {
         this.priority = undefined; //lowest
         this.fromEstimated=false;
         this.courseVector=undefined;
+        this.mmsi=this.received.mmsi; //we repeat the mmsi here as this is heavily used and we avoid additional checks
     }
 
     /**
@@ -152,6 +153,7 @@ export class AISItem {
         let helper = new AISItem();
         for (let k in helper)
             if (k !== 'received') item[k] = helper[k];
+        item.mmsi=(item.received||{}).mmsi;
     }
 
 }
@@ -185,7 +187,9 @@ export const AisOptionMappings={
     useCourseVector: keys.properties.aisUseCourseVector,
     lostTime: keys.properties.aisLostTime,
     curved: keys.properties.aisCurvedVectors,
-    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>parseFloat(v)*Navcompute.NM}
+    rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>parseFloat(v)*Navcompute.NM},
+    navUrl: keys.properties.navUrl,
+
 }
 
 /**

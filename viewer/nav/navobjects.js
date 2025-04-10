@@ -12,8 +12,8 @@ let navobjects={};
  * @constructor
  */
 navobjects.Point=function(lon,lat){
-    this.lon=lon||0;
-    this.lat=lat||0;
+    this.lon=lon;
+    this.lat=lat;
 };
 /**
  * convert ol3 coordinates to a point
