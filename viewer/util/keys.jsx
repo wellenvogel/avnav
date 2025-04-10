@@ -361,7 +361,7 @@ let keys={
         aisCenterMode: new Property('both',"center for AIS range",PropertyType.LIST,['both','boat','map']),
         aisListLock: new Property(false,"lock ais list",PropertyType.CHECKBOX),
         aisCpaEstimated: new Property(true,"CPA/BRG from estimated",PropertyType.CHECKBOX),
-        aisRotForEstimated: new Property(false,"ROT for estimated", PropertyType.CHECKBOX),
+        aisMarkAllWarning: new Property(true,"mark ALL warning targets", PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa

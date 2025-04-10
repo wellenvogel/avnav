@@ -182,14 +182,13 @@ export const AisOptionMappings={
     cpaEstimated: keys.properties.aisCpaEstimated,
     warningDist: keys.properties.aisWarningCpa,
     warningTime: keys.properties.aisWarningTpa,
-    rotEstimated: keys.properties.aisRotForEstimated,
     courseVectorTime: keys.properties.navBoatCourseTime,
     useCourseVector: keys.properties.aisUseCourseVector,
     lostTime: keys.properties.aisLostTime,
     curved: keys.properties.aisCurvedVectors,
     rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>parseFloat(v)*Navcompute.NM},
     navUrl: keys.properties.navUrl,
-
+    markAll: keys.properties.aisMarkAllWarning
 }
 
 /**

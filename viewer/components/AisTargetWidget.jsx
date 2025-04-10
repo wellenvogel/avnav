@@ -2,13 +2,13 @@
  * Created by andreas on 23.02.16.
  */
 
-import React, {useEffect, useState} from "react";
+import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
-import {useResize, useStringsChanged} from "../hoc/Resizable";
+import {useStringsChanged} from "../hoc/Resizable";
 
 
 const AisTargetWidget = (props) => {
@@ -18,13 +18,9 @@ const AisTargetWidget = (props) => {
     }
     let target = props.target || {};
     let small = (props.mode === "horizontal");
-    let aisProperties = {};
     let color = undefined;
     if (target.mmsi && target.mmsi !== "") {
-        aisProperties.warning = target.warning || false;
-        aisProperties.nearest = target.nearest || false;
-        aisProperties.tracking = (target.mmsi === props.trackedMmsi);
-        color = PropertyHandler.getAisColor(aisProperties);
+        color = PropertyHandler.getAisColor(target);
     }
     let front = AisFormatter.format('passFront', target);
     let display={};

@@ -183,12 +183,13 @@ class PropertyHandler {
 
     getAisColor(currentObject) {
         let color = "";
-        if (currentObject.warning) {
+        if ((currentObject.warning && globalStore.getData(keys.properties.aisMarkAllWarning))||
+            currentObject.nextWarning) {
             color = this.getColor('aisWarningColor');
         } else {
             if (currentObject.nearest) {
                 color = this.getColor('aisNearestColor');
-            } else if (currentObject.tracking) {
+            } else if (currentObject.mmsi === globalStore.getData(keys.nav.ais.trackedMmsi)) {
                 color = this.getColor('aisTrackingColor');
             } else {
                 color = this.getColor('aisNormalColor');

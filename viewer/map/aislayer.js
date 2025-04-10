@@ -145,7 +145,8 @@ const styleKeyFromItem=(item)=>{
     if (item.mmsi === globalStore.getData(keys.nav.ais.trackedMmsi)){
         rt="tracking";
     }
-    if (item.warning){
+    if ((item.warning && globalStore.getData(keys.properties.aisMarkAllWarning))||
+        item.nextWarning){
       rt="warning";
     }
     else{
