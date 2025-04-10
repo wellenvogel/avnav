@@ -185,12 +185,7 @@ const aisparam={
         headline: 'Age',
         format: function(v){
             if (v.age === undefined) return '----';
-            let age=v.age;
-            if (v.receiveTime !== undefined){
-                let now=(new Date()).getTime();
-                age+=(now-v.receiveTime)/1000.0;
-            }
-            return Formatter.formatDecimal(age,3,0);
+            return Formatter.formatDecimal(v.age,3,0);
         },
         unit: 's'
     },
