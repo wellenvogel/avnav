@@ -33,10 +33,6 @@ import {KeyHelper} from "../util/keys";
 import globalstore from "../util/globalstore";
 import Helper from "../util/helper";
 
-//workaround to initialize the global store with defaults
-//TODO: make navUrl a simple constant
-let defaults=KeyHelper.getDefaultKeyValues();
-globalstore.storeMultiple(defaults,undefined,true);
 
 let boatData={
     position: new navobjects.Point(undefined,undefined),
@@ -56,7 +52,7 @@ const computeAis=()=>{
     return handleReceivedAisData(receivedAisData,boatData.position,boatData.course,boatData.speed,options);
 }
 
-const queryData=async (distance,center,timeout)=>{
+const queryData=async (distance,center,timeout,navUrl)=>{
     let param = {
         request: 'ais',
         distance:  formatter.formatDecimal(distance, 4, 1)
@@ -67,7 +63,11 @@ const queryData=async (distance,center,timeout)=>{
         param['lat' + sfx] = formatter.formatDecimal(center[idx].lat, 3, 5, false, true);
         param['lon' + sfx] = formatter.formatDecimal(center[idx].lon, 3, 5, false, true);
     }
-    return Requests.getJson(param, {checkOk: false, timeout: timeout/2}).then(
+    return Requests.getJson(navUrl, {
+        checkOk: false,
+        timeout: timeout/2,
+        useNavUrl: false
+        },param).then(
         (data) => {
             aisErrors=0;
             let now = Helper.now();
@@ -145,7 +145,7 @@ self.onmessage=async ({data})=>{
         let received;
         try {
             queryRunning=true;
-            received = await queryData(data.distance, data.center, data.timeout);
+            received = await queryData(data.distance, data.center, data.timeout,options.navUrl);
         }
         catch (e){
             handleError(e,data.sequence,true);
