@@ -203,10 +203,16 @@ public class Resolver implements Runnable, Target.IResolver {
                     continue;
                 }
                 responseBuffer.flip();
-                byte[] bytes = new byte[responseBuffer.limit()];
-                responseBuffer.get(bytes, 0, responseBuffer.limit());
-                DatagramPacket responsePacket=new DatagramPacket(bytes,bytes.length);
-                Response resp=Response.createFrom(responsePacket);
+                Response resp=null;
+                try {
+                    byte[] bytes = new byte[responseBuffer.limit()];
+                    responseBuffer.get(bytes, 0, responseBuffer.limit());
+                    DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length);
+                    resp = Response.createFrom(responsePacket);
+                }catch (Exception e){
+                    AvnLog.e("unable to parse DNS packet",e);
+                    continue;
+                }
                 AvnLog.ifk(LPRFX,"response: %s",resp);
                 boolean hasA=false;
                 for (Record record : resp.getRecords()){
