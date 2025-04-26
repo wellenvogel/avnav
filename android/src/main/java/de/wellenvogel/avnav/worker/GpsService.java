@@ -1031,7 +1031,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         ArrayList<NsdServiceInfo> foundServices=new ArrayList<>();
         synchronized (services){
             for (NsdServiceInfo info:services){
-                if (type.equals(info.getServiceType())){
+                if (type == null || type.equals(info.getServiceType())){
                     foundServices.add(info);
                 }
             }
