@@ -17,6 +17,7 @@ public class Target {
 
     public static interface Callback{
         public void resolve(ResolveTarget target);
+        public void fail(ResolveTarget target);
     }
 
     public static abstract class ResolveTarget{
@@ -29,6 +30,9 @@ public class Target {
         void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException{
             this.address=addr;
             this.intf=intf;
+        }
+        public void setPort(int p){
+            port=p;
         }
         public InetAddress getAddress(){
             return address;
@@ -61,6 +65,7 @@ public class Target {
             return result;
         }
         public synchronized void resolve(ResolveTarget r){
+            if (resolved) return;
             resolved=true;
             result=r;
         }

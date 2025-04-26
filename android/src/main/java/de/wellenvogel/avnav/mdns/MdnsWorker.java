@@ -117,6 +117,11 @@ public class MdnsWorker extends Worker implements Target.IResolver {
                                     resolvedServices.add(target);
                                 }
                             }
+
+                            @Override
+                            public void fail(Target.ResolveTarget target) {
+
+                            }
                         });
                         Thread resolverThread=new Thread(new Runnable() {
                             @Override

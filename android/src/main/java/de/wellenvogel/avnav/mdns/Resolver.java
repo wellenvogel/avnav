@@ -241,7 +241,7 @@ public class Resolver implements Runnable, Target.IResolver {
                                 openRequests.add(request);
                             }
                             request.request.hostname=hostnameFromMdns(srv.getTarget());
-                            request.request.port=srv.getPort();
+                            request.request.setPort(srv.getPort());
                             Target.HostTarget host=resolvedHosts.get(request.request.hostname);
                             if (host != null) request.request.setAddress(host.address,intf);
                         }
