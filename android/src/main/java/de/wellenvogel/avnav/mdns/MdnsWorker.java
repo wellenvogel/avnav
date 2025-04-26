@@ -51,23 +51,34 @@ public class MdnsWorker extends Worker implements Target.IResolver {
             multicastLock = mgr.createMulticastLock("MdnsWorker");
         }
     }
+    static class IntfInfo{
+        NetworkInterface intf;
+        String info;
+        public IntfInfo(NetworkInterface f,String i){
+            intf=f;
+            info=i;
+        }
+    }
     private void checkMdnsResolvers() {
         try {
             ArrayList<InetAddress> newAddresses = new ArrayList<>();
-            HashMap<String, NetworkInterface> interfaces = new HashMap<>();
+            HashMap<String, IntfInfo> interfaces = new HashMap<>();
             Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
             while (intfs.hasMoreElements()) {
                 NetworkInterface intf = intfs.nextElement();
                 if (!intf.isUp() || !intf.supportsMulticast()) continue;
                 boolean hasIp4 = false;
+                StringBuilder info=new StringBuilder();
                 for (InterfaceAddress addr : intf.getInterfaceAddresses()) {
                     InetAddress ip = addr.getAddress();
                     if (!(ip instanceof Inet4Address)) continue;
                     newAddresses.add(ip);
+                    if (info.length()>0) info.append(",").append(ip);
+                    else info.append(ip);
                     hasIp4 = true;
                 }
                 if (!hasIp4) continue;
-                interfaces.put(intf.getName(), intf);
+                interfaces.put(intf.getName(),new IntfInfo(intf,info.toString()));
             }
             boolean mustRenew = false;
             synchronized (interfaceAddresses) {
@@ -110,7 +121,8 @@ public class MdnsWorker extends Worker implements Target.IResolver {
                     resolvedServices.clear();
                     status.removeChildren();
                     for (String ifname : interfaces.keySet()) {
-                        Resolver resolver=new Resolver(interfaces.get(ifname), new Target.Callback() {
+                        final IntfInfo info=interfaces.get(ifname);
+                        Resolver resolver=new Resolver(info.intf, new Target.Callback() {
                             @Override
                             public void resolve(Target.ResolveTarget target) {
                                 synchronized (mdnsResolvers){
@@ -126,7 +138,7 @@ public class MdnsWorker extends Worker implements Target.IResolver {
                         Thread resolverThread=new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                status.setChildStatus(ifname, WorkerStatus.Status.NMEA,"active");
+                                status.setChildStatus(ifname, WorkerStatus.Status.NMEA,"active ["+info.info+"]");
                                 try{
                                     resolver.run();
                                     status.unsetChildStatus(ifname);
@@ -170,7 +182,8 @@ public class MdnsWorker extends Worker implements Target.IResolver {
             checkMdnsResolvers();
             synchronized (mdnsResolvers) {
                 if (mdnsResolvers.size() > 0) {
-                    setStatus(WorkerStatus.Status.NMEA, mdnsResolvers.size() + " resolver(s) active");
+                    int numServices=gpsService.discoveredServices(null).size();
+                    setStatus(WorkerStatus.Status.NMEA, mdnsResolvers.size() + " resolver(s) active ["+numServices+" services]");
                 } else {
                     setStatus(WorkerStatus.Status.INACTIVE, "no interfaces for MDNS found");
                 }
@@ -180,7 +193,7 @@ public class MdnsWorker extends Worker implements Target.IResolver {
     }
 
     private void stopInternal(){
-        AvnLog.i("stooping MDNS resolvers");
+        AvnLog.i("stopping MDNS resolvers");
         if (multicastLock != null) {
             if (multicastLock.isHeld()) multicastLock.release();
         }
