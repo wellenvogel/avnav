@@ -80,12 +80,20 @@ public class Resolver implements Runnable, Target.IResolver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && intf != null) {
             channel =DatagramChannel.open(StandardProtocolFamily.INET);
             channel.setOption(StandardSocketOptions.IP_MULTICAST_IF,intf);
+            channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            channel.bind(new InetSocketAddress("0.0.0.0",MDNS_PORT));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                //it should still work on older devices if the server replies unicast
+                InetAddress group=Inet4Address.getByName(MDNS_IP4_ADDRESS);
+                channel.join(group,intf);
+            }
         }
         else{
+            //this will only work for remote devices that reply unicast
             channel =DatagramChannel.open();
+            channel.socket().bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),0));
         }
         //without this bind we continously receive 0 length packages (most probably until we send)
-        channel.socket().bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),0));
         mdnsGroupIPv4 = new InetSocketAddress(InetAddress.getByName(MDNS_IP4_ADDRESS),MDNS_PORT);
         this.defaultCallback=defaultCallback;
     }
@@ -195,10 +203,16 @@ public class Resolver implements Runnable, Target.IResolver {
                     continue;
                 }
                 responseBuffer.flip();
-                byte[] bytes = new byte[responseBuffer.limit()];
-                responseBuffer.get(bytes, 0, responseBuffer.limit());
-                DatagramPacket responsePacket=new DatagramPacket(bytes,bytes.length);
-                Response resp=Response.createFrom(responsePacket);
+                Response resp=null;
+                try {
+                    byte[] bytes = new byte[responseBuffer.limit()];
+                    responseBuffer.get(bytes, 0, responseBuffer.limit());
+                    DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length);
+                    resp = Response.createFrom(responsePacket);
+                }catch (Exception e){
+                    AvnLog.e("unable to parse DNS packet",e);
+                    continue;
+                }
                 AvnLog.ifk(LPRFX,"response: %s",resp);
                 boolean hasA=false;
                 for (Record record : resp.getRecords()){
@@ -233,7 +247,7 @@ public class Resolver implements Runnable, Target.IResolver {
                                 openRequests.add(request);
                             }
                             request.request.hostname=hostnameFromMdns(srv.getTarget());
-                            request.request.port=srv.getPort();
+                            request.request.setPort(srv.getPort());
                             Target.HostTarget host=resolvedHosts.get(request.request.hostname);
                             if (host != null) request.request.setAddress(host.address,intf);
                         }
@@ -306,7 +320,10 @@ public class Resolver implements Runnable, Target.IResolver {
     public void sendQuestion(Question question) throws IOException {
         ByteBuffer buffer = question.getBuffer();
         buffer.flip();
-        channel.send(buffer,mdnsGroupIPv4);
+        int rt=channel.send(buffer,mdnsGroupIPv4);
+        if (rt != buffer.limit()){
+            AvnLog.e("unable to send MDNS query on channel "+this.intf.toString()+" only "+rt+" bytes of "+buffer.limit(),null);
+        }
     }
 
     private static class CancelResolver<T extends Target.ResolveTarget>{

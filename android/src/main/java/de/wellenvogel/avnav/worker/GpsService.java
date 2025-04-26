@@ -36,6 +36,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,6 +57,7 @@ import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.mdns.MdnsWorker;
 import de.wellenvogel.avnav.mdns.Resolver;
+import de.wellenvogel.avnav.mdns.Target;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -990,13 +992,46 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
     }
 
+    public boolean resolveService(String name, String type, Target.Callback callback){
+        NsdServiceInfo service=null;
+        synchronized (services) {
+            for (NsdServiceInfo info : services) {
+                if (type.equals(info.getServiceType()) && name.equals(info.getServiceName())) {
+                    service = info;
+                    break;
+                }
+            }
+        }
+        if (service == null) return false;
+        if (nsdManager == null) return false;
+        nsdManager.resolveService(service, new NsdManager.ResolveListener() {
+            @Override
+            public void onResolveFailed(NsdServiceInfo nsdServiceInfo, int i) {
+                Target.ServiceTarget res = new Target.ServiceTarget(type,name);
+                callback.fail(res);
+            }
+
+            @Override
+            public void onServiceResolved(NsdServiceInfo nsdServiceInfo) {
+                Target.ServiceTarget res = new Target.ServiceTarget(type,name);
+                res.setPort(nsdServiceInfo.getPort());
+                try {
+                    res.setAddress(nsdServiceInfo.getHost(),null);
+                } catch (URISyntaxException e) {
+                    callback.fail(res);
+                }
+                callback.resolve(res);
+            }
+        });
+        return true;
+    }
 
     public List<String> discoveredServices(String type){
         ArrayList<String> rt=new ArrayList<>();
         ArrayList<NsdServiceInfo> foundServices=new ArrayList<>();
         synchronized (services){
             for (NsdServiceInfo info:services){
-                if (type.equals(info.getServiceType())){
+                if (type == null || type.equals(info.getServiceType())){
                     foundServices.add(info);
                 }
             }
