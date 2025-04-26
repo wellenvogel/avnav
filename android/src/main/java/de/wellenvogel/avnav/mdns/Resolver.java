@@ -80,12 +80,20 @@ public class Resolver implements Runnable, Target.IResolver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && intf != null) {
             channel =DatagramChannel.open(StandardProtocolFamily.INET);
             channel.setOption(StandardSocketOptions.IP_MULTICAST_IF,intf);
+            channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            channel.bind(new InetSocketAddress("0.0.0.0",MDNS_PORT));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                //it should still work on older devices if the server replies unicast
+                InetAddress group=Inet4Address.getByName(MDNS_IP4_ADDRESS);
+                channel.join(group,intf);
+            }
         }
         else{
+            //this will only work for remote devices that reply unicast
             channel =DatagramChannel.open();
+            channel.socket().bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),0));
         }
         //without this bind we continously receive 0 length packages (most probably until we send)
-        channel.socket().bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),0));
         mdnsGroupIPv4 = new InetSocketAddress(InetAddress.getByName(MDNS_IP4_ADDRESS),MDNS_PORT);
         this.defaultCallback=defaultCallback;
     }
@@ -306,7 +314,10 @@ public class Resolver implements Runnable, Target.IResolver {
     public void sendQuestion(Question question) throws IOException {
         ByteBuffer buffer = question.getBuffer();
         buffer.flip();
-        channel.send(buffer,mdnsGroupIPv4);
+        int rt=channel.send(buffer,mdnsGroupIPv4);
+        if (rt != buffer.limit()){
+            AvnLog.e("unable to send MDNS query on channel "+this.intf.toString()+" only "+rt+" bytes of "+buffer.limit(),null);
+        }
     }
 
     private static class CancelResolver<T extends Target.ResolveTarget>{
