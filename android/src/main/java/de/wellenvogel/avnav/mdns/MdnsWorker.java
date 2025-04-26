@@ -1,5 +1,8 @@
 package de.wellenvogel.avnav.mdns;
 
+import android.content.Context;
+import android.net.wifi.WifiManager;
+
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -38,10 +41,15 @@ public class MdnsWorker extends Worker implements Target.IResolver {
     private final ArrayList<Resolver.QRequest<Target.HostTarget>> storedRequests=new ArrayList<>();
     private final HashSet<Target.ResolveTarget> resolvedServices=new HashSet<>();
 
+    private WifiManager.MulticastLock multicastLock;
     public MdnsWorker(String typeName, GpsService ctx) {
         super(typeName,ctx);
         parameterDescriptions.addParams(ENABLED_PARAMETER);
         status.canEdit=true;
+        WifiManager mgr=(WifiManager)(ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE));
+        if (mgr != null) {
+            multicastLock = mgr.createMulticastLock("MdnsWorker");
+        }
     }
     private void checkMdnsResolvers() {
         try {
@@ -150,6 +158,7 @@ public class MdnsWorker extends Worker implements Target.IResolver {
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
         setStatus(WorkerStatus.Status.STARTED,"starting MDNS resolvers");
+        if (multicastLock != null) multicastLock.acquire();
         checkMdnsResolvers();
         while(! shouldStop(startSequence)){
             sleep(5000);
@@ -167,6 +176,9 @@ public class MdnsWorker extends Worker implements Target.IResolver {
 
     private void stopInternal(){
         AvnLog.i("stooping MDNS resolvers");
+        if (multicastLock != null) {
+            if (multicastLock.isHeld()) multicastLock.release();
+        }
         synchronized (mdnsResolvers){
             for(ResolverWrapper r:mdnsResolvers.values()){
                 try {
