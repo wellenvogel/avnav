@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
+import android.os.Build;
+
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -64,7 +66,9 @@ public abstract class ChannelWorker extends Worker{
                             new Target.Resolved(target);
                     MdnsWorker resolver = gpsService.getMdnsResolver();
                     boolean systemResolve=false;
-                    if (target instanceof Target.ServiceTarget) {
+                    if (target instanceof Target.ServiceTarget && (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) ) {
+                        //for versions < O (26/Android 8) we cannot really receive MC (see constructor of Resolver) so we try the system resolution additionally
+                        //for newer versions we rely on our own resolver only to be sure to get really recent results
                         Target.ServiceTarget st=(Target.ServiceTarget)target;
                         systemResolve=gpsService.resolveService(
                                 st.name, st.type, new Target.Callback() {
