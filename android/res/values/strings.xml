@@ -129,5 +129,6 @@
     <string name="nmeaAge">max age of NMEA data in the queue before it get\'s dropped (in ms)</string>
     <string name="download_interrupted">download interrupted</string>
     <string name="sendOwn">send out data that we received on this connection</string>
+    <string name="handleUsb">autoconnect USB devices</string>
 
 </resources>
