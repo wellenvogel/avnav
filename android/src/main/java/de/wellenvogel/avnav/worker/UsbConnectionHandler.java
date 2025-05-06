@@ -32,8 +32,8 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class UsbConnectionHandler extends SingleConnectionHandler {
-    static final String NAME_STATUS="device";
-    static final String BUS_STATUS="bus";
+    static final String IF_STATUS ="device";
+    static final String DEVICE_STATUS ="name";
     private Context ctx;
     private boolean permissionRequested=false;
     private static final String ACTION_USB_PERMISSION =
@@ -49,6 +49,10 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                     FLOW_CONTROLS.keySet() );
 
     public static String getDeviceKey(UsbDevice device){
+        if (device == null) return null;
+        return device.getDeviceName();
+    }
+    public static String getDeviceName(UsbDevice device){
         if (device == null) return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             StringBuilder dn=new StringBuilder();
@@ -279,16 +283,20 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             if (device == null) {
                 ns=WorkerStatus.Status.STARTED;
             }
-            status.setChildStatus(NAME_STATUS,ns,deviceName);
-            String busName=device!=null?device.getDeviceName():null;
+            status.setChildStatus(IF_STATUS,ns,deviceName);
             if (device == null){
-                status.unsetChildStatus(BUS_STATUS);
+                status.unsetChildStatus(DEVICE_STATUS);
                 setStatus(WorkerStatus.Status.ERROR,"device not available");
                 sleep(2000);
             }
             else{
-                if (!deviceName.equals(busName)){
-                    status.setChildStatus(BUS_STATUS, WorkerStatus.Status.NMEA, busName);
+                String devName=null;
+                if (manager.hasPermission(device)) devName=getDeviceName(device);
+                if (!deviceName.equals(devName) && devName != null){
+                    status.setChildStatus(DEVICE_STATUS, WorkerStatus.Status.NMEA, devName);
+                }
+                else{
+                    status.unsetChildStatus(DEVICE_STATUS);
                 }
                 if (! manager.hasPermission(device)){
                     if (! permissionRequested){
@@ -301,7 +309,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                     else {
                         setStatus(WorkerStatus.Status.ERROR, "no permission for device");
                     }
-                    sleep(5000);
+                    sleep(3000);
                     continue;
                 }
                 setStatus(WorkerStatus.Status.STARTED,"connecting");
@@ -314,8 +322,8 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                 }
             }
         }
-        status.unsetChildStatus(NAME_STATUS);
-        status.unsetChildStatus(BUS_STATUS);
+        status.unsetChildStatus(IF_STATUS);
+        status.unsetChildStatus(DEVICE_STATUS);
     }
 
 
