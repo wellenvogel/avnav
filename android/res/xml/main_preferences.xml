@@ -25,6 +25,12 @@
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
     <CheckBoxPreference
+        android:key="handleUsb"
+        android:title="@string/handleUsb"
+        android:defaultValue="true"
+        android:widgetLayout="@layout/preference_checkbox">
+    </CheckBoxPreference>
+    <CheckBoxPreference
         android:key="allowAllPlugins"
         android:defaultValue="true"
         android:title="@string/allowPlugins"

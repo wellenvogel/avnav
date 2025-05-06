@@ -14,7 +14,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
 
-const getKey=function(obj){
+const getKey=function(obj,opt_keyFunction){
+    if (opt_keyFunction){
+        return opt_keyFunction(obj);
+    }
     let rt=obj.key;
     if (rt !== undefined) return rt;
     rt=obj.name;
@@ -73,7 +76,7 @@ const ItemList = (props) => {
     const allitems = props.itemList || [];
     allitems.forEach((entry) => {
         const itemProps = {...entry};
-        let key = getKey(entry);
+        let key = getKey(entry,props.keyFunction);
         //we allow for multiple items with the same name
         //we try at most 20 times to get a unique key by appending _idx
         let tries = 20;
@@ -160,7 +163,8 @@ ItemList.propTypes={
         onSortEnd:      PropTypes.func,
         style:          PropTypes.object,
         dragFrame:      PropTypes.string,
-        allowOther:     PropTypes.bool //allow dragging from other frames
+        allowOther:     PropTypes.bool, //allow dragging from other frames
+        keyFunction:    PropTypes.func
 };
 Content.propTypes=ItemList.propTypes;
 export default ItemList;

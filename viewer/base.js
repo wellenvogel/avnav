@@ -55,9 +55,4 @@ base.inherits = function (child, parent) {
 };
 
 
-if (! window.SVGElement){
-    //old safari on Playbook - measure will not work without this
-    window.SVGElement=function(){};
-}
-
 export default   base;

@@ -18,7 +18,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,8 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class UsbConnectionHandler extends SingleConnectionHandler {
+    static final String IF_STATUS ="device";
+    static final String DEVICE_STATUS ="name";
     private Context ctx;
     private boolean permissionRequested=false;
     private static final String ACTION_USB_PERMISSION =
@@ -46,6 +47,39 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
     static EditableParameter.StringListParameter FLOW_CONTROL=
             new EditableParameter.StringListParameter("flowControl",R.string.labelSettingsFlowControl,"none",
                     FLOW_CONTROLS.keySet() );
+
+    public static String getDeviceKey(UsbDevice device){
+        if (device == null) return null;
+        return device.getDeviceName();
+    }
+    public static String getDeviceName(UsbDevice device){
+        if (device == null) return null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            StringBuilder dn=new StringBuilder();
+            dn.append(device.getProductName()).append("-").append(device.getSerialNumber());
+            return dn.toString();
+        }
+        else{
+            return device.getDeviceName();
+        }
+    }
+
+    static UsbDevice getDeviceByKey(Context ctx, String key){
+        if (key == null) return null;
+        UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
+        Map<String,UsbDevice> devices=manager.getDeviceList();
+        for (UsbDevice d:devices.values()){
+            try {
+                if (key.equals(getDeviceKey(d))) {
+                    return d;
+                }
+            }catch (Throwable t){
+                AvnLog.e("unable to obtain device key for "+d.getDeviceName(),t);
+            }
+        }
+        return null;
+    }
+
     void deviceDetach(UsbDevice dev) {
         UsbSerialConnection usb=(UsbSerialConnection) connection;
         if (usb != null && usb.dev.equals(dev)){
@@ -68,18 +102,14 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         ArrayList<Byte> buffer=new ArrayList<Byte>();
         final Object bufferLock=new Object();
 
+        String id;
+
         private void notifyWaiters(){
             synchronized (bufferLock){
                 bufferLock.notifyAll();
             }
         }
-        static String getProductName(UsbDevice device){
-            if (device == null) return "";
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                return device.getProductName();
-            }
-            return "";
-        }
+
         final UsbSerialInterface.UsbReadCallback callback=new UsbSerialInterface.UsbReadCallback() {
             @Override
             public void onReceivedData(byte[] bytes) {
@@ -105,16 +135,17 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             this.dev=dev;
             this.baud=baud;
             this.flowControl=flowControl;
+            id=UsbConnectionHandler.getDeviceKey(dev);
             UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
             connection=manager.openDevice(dev);
-            if (connection == null) throw new Exception(dev.getDeviceName());
+            if (connection == null) throw new Exception("no connection to "+id);
             //TODO: handle open connection error
         }
         @Override
         public void connectImpl() throws IOException {
             buffer.clear();
             notifyWaiters();
-            AvnLog.i(PREFIX,"connect to "+dev.getDeviceName());
+            AvnLog.i(PREFIX,"connect to "+id);
             serialPort = UsbSerialDevice.createUsbSerialDevice(dev, connection);
             if (serialPort != null) {
                 if (serialPort.open()) {
@@ -126,11 +157,11 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                     serialPort.read(callback);
                     serialPort.debug(BuildConfig.DEBUG);
                 } else {
-                    throw new IOException(PREFIX + ": unable to open serial device " + dev.getDeviceName());
+                    throw new IOException(PREFIX + ": unable to open serial device " + id);
                 }
             }
             else{
-                throw new IOException(PREFIX + ": unable to open serial device " + dev.getDeviceName());
+                throw new IOException(PREFIX + ": unable to open serial device " + id);
             }
         }
 
@@ -193,7 +224,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
         @Override
         public void closeImpl() throws IOException {
-            AvnLog.i(PREFIX,"close connection to "+dev.getDeviceName());
+            AvnLog.i(PREFIX,"close connection to "+id);
             if (serialPort == null) return;
             try {
                 serialPort.close();
@@ -206,7 +237,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
         @Override
         public String getId() {
-            return dev.getDeviceName()+ " "+getProductName(dev);
+            return id;
         }
 
 
@@ -220,9 +251,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
-                UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
-                Map<String,UsbDevice> devices=manager.getDeviceList();
-                ArrayList<String> rt = new ArrayList<String>(devices.keySet());
+                List<String> rt = Creator.getAvailableUsbDevices(ctx);
                 return filterByClaims(CLAIM_USB,rt,false);
             }
         };
@@ -247,43 +276,54 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         if (flowControl == null){
             throw new JSONException("invalid flowControl "+fcValue);
         }
-        UsbDevice device=null;
-        while (device == null && ! shouldStop(startSequence)){
-            UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
-            Map<String,UsbDevice> devices=manager.getDeviceList();
-            device=devices.get(deviceName);
-            String name=UsbSerialConnection.getProductName(device);
+        UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
+        while (! shouldStop(startSequence)){
+            UsbDevice device= getDeviceByKey(gpsService,deviceName);
+            WorkerStatus.Status ns=WorkerStatus.Status.NMEA;
+            if (device == null) {
+                ns=WorkerStatus.Status.STARTED;
+            }
+            status.setChildStatus(IF_STATUS,ns,deviceName);
             if (device == null){
-                setStatus(WorkerStatus.Status.ERROR,"device "+deviceName+" not available");
+                status.unsetChildStatus(DEVICE_STATUS);
+                setStatus(WorkerStatus.Status.ERROR,"device not available");
                 sleep(2000);
             }
             else{
+                String devName=null;
+                if (manager.hasPermission(device)) devName=getDeviceName(device);
+                if (!deviceName.equals(devName) && devName != null){
+                    status.setChildStatus(DEVICE_STATUS, WorkerStatus.Status.NMEA, devName);
+                }
+                else{
+                    status.unsetChildStatus(DEVICE_STATUS);
+                }
                 if (! manager.hasPermission(device)){
                     if (! permissionRequested){
-                        setStatus(WorkerStatus.Status.ERROR,"requested permissions for "+ device.getDeviceName());
+                        setStatus(WorkerStatus.Status.ERROR,"requested permissions");
                         PendingIntent permissionIntent = PendingIntent.getBroadcast(ctx, 0, new Intent(ACTION_USB_PERMISSION), AvnUtil.buildPiFlags(0,true));
                         manager.requestPermission(device,permissionIntent);
                         permissionRequested=true;
 
                     }
                     else {
-                        setStatus(WorkerStatus.Status.ERROR, "no permission for device" + device.getDeviceName());
+                        setStatus(WorkerStatus.Status.ERROR, "no permission for device");
                     }
-                    device=null;
-                    sleep(5000);
+                    sleep(3000);
                     continue;
                 }
-                setStatus(WorkerStatus.Status.STARTED,"connecting to "+deviceName+" "+name);
+                setStatus(WorkerStatus.Status.STARTED,"connecting");
                 try {
                     runInternal(new UsbSerialConnection(ctx, device, BAUDRATE_PARAMETER.fromJson(parameters),flowControl), startSequence);
                 }catch(Throwable t){
-                    setStatus(WorkerStatus.Status.ERROR,"unable to open device "+deviceName+" "+t.getMessage());
+                    setStatus(WorkerStatus.Status.ERROR,"unable to open device:"+t.getMessage());
                     AvnLog.e("error opening usb device",t);
                     sleep(5000);
                 }
-                device=null;
             }
         }
+        status.unsetChildStatus(IF_STATUS);
+        status.unsetChildStatus(DEVICE_STATUS);
     }
 
 
@@ -294,12 +334,25 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         }
         @Override
         boolean canAdd(GpsService ctx) {
-            if (! ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST)) return false;
-            UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
-            if (manager == null) return false;
-            Map<String,UsbDevice> devices=manager.getDeviceList();
-            return devices.size() > 0;
+            return getAvailableUsbDevices(ctx).size() > 0;
 
+        }
+        static List<String> getAvailableUsbDevices(Context ctx){
+            ArrayList<String> rt=new ArrayList<>();
+            if (! ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST)) return rt;
+            UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
+            if (manager == null) return rt;
+            Map<String,UsbDevice> devices=manager.getDeviceList();
+            for (UsbDevice usbDevice:devices.values()){
+                if (UsbSerialDevice.isSupported(usbDevice)){
+                    try {
+                        rt.add(getDeviceKey(usbDevice));
+                    }catch (Throwable t){
+                        AvnLog.d("unable to get usb device info for "+usbDevice.getDeviceName()+": "+t);
+                    }
+                }
+            }
+            return rt;
         }
     }
 

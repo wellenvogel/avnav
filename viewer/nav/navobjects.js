@@ -12,8 +12,8 @@ let navobjects={};
  * @constructor
  */
 navobjects.Point=function(lon,lat){
-    this.lon=lon||0;
-    this.lat=lat||0;
+    this.lon=lon;
+    this.lat=lat;
 };
 /**
  * convert ol3 coordinates to a point
@@ -176,51 +176,5 @@ navobjects.Distance=function(){
     this.course=0
 };
 
-
-
-
-/**
- * a CPA point for AIS data, contains the point + the time and the info whether we pass front or back
- * @constructor
- *
- */
-navobjects.Cpa=function(){
-
-    /**
-     * the source position at CPA
-     * @type {navobjects.Point}
-     */
-    this.src=new navobjects.Point(0,0);
-    /**
-     * the destination position at CPA
-     * @type {navobjects.Point}
-     */
-    this.dst=new navobjects.Point(0,0);
-    /**
-     *
-     * @type {undefined|navobjects.Point}
-     */
-    this.crosspoint=undefined;
-    /**
-     * distance in m
-     * @type {number}
-     */
-    this.cpa=0;
-
-    /**
-     * time till cpa in s
-     * @type {number}
-     */
-    this.tcpa=-1;
-    /**
-     *
-     * @type {number|undefined}: 0-back,1-front,-1 parallel,undefined-parallel crossed
-     */
-    this.front=undefined;
-};
-
-navobjects.Ais=function(){
-
-};
 
 export default navobjects;

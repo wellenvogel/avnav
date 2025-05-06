@@ -10,9 +10,10 @@ export const AIS_CLASSES={
     Station:'S',
     Aton:'T'
 };
+
 const aisparam={
     nameOrmmsi: {
-        headline: 'name/mmsi',
+        headline: 'Name/MMSI',
         format: function (v) {
             if (v.type == 21){
                 if (v.name && v.name !== 'unknown') return v.name;
@@ -22,91 +23,87 @@ const aisparam={
         }
     },
     distance: {
-        headline: 'dist(nm)',
+        headline: 'DST',
         format: function (v) {
-            return Formatter.formatDistance(v.distance || 0);
+            return Formatter.formatDistance(v.distance);
         },
         unit: 'nm'
 
     },
     heading: {
-        headline: 'hdg',
+        headline: 'HDT',
         format: function (v) {
-            if (v.heading === undefined) return '---';
-            return Formatter.formatDirection(v.heading );
+            return Formatter.formatDirection(v.heading);
         },
         unit: '°',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     turn: {
-        headline: 'rot(°/min)',
+        headline: 'ROT',
         format: function (v) {
-            if (v.turn === undefined) return '-';
-            return Formatter.formatDecimal(v.turn,1,0);
+            return Formatter.formatDecimal(v.turn,2,0);
         },
-        unit: '°',
+        unit: '°/min',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     speed: {
-        headline: 'speed(kn)',
+        headline: 'SOG',
         format: function (v) {
-            return Formatter.formatSpeed(v.speed || 0);
+            return Formatter.formatSpeed(v.speed);
         },
         unit: 'kn',
         classes:[AIS_CLASSES.A,AIS_CLASSES.B]
     },
     course: {
-        headline: 'course',
+        headline: 'COG',
         format: function (v) {
-            return Formatter.formatDirection(v.course || 0);
+            return Formatter.formatDirection(v.course);
         },
         unit: '°',
         classes:[AIS_CLASSES.A,AIS_CLASSES.B]
     },
     headingTo:{
-        headline: 'hdt',
+        headline: 'BRG',
         format: function (v) {
-            return Formatter.formatDirection(v.headingTo || 0);
+            return Formatter.formatDirection(v.headingTo);
         },
         unit: '°'
     },
     cpa: {
-        headline: 'cpa',
+        headline: 'DCPA',
             format: function (v) {
-            if (v.cpa === undefined) return '----';
-            return Formatter.formatDistance(v.cpa || 0);
-        }
+            return Formatter.formatDistance(v.cpa);
+        },
+        unit: 'nm',
     },
     tcpa: {
-        headline: 'tcpa',
+        headline: 'TCPA',
             format: function (v) {
-            if (v.tcpa === undefined) return "---------";
-            let tval = parseFloat(v.tcpa || 0);
-            let sign = "";
-            if (tval < 0) {
-                sign = "-";
-                tval = -tval;
-            }
-            let h = Math.floor(tval / 3600);
-            let m = Math.floor((tval - h * 3600) / 60);
-            let s = tval - 3600 * h - 60 * m;
-            return sign + Formatter.formatDecimal(h, 2, 0).replace(" ", "0") + ':' + Formatter.formatDecimal(m, 2, 0).replace(" ", "0") + ':' + Formatter.formatDecimal(s, 2, 0).replace(" ", "0");
-        }
+              return Formatter.formatDecimal(v.tcpa/60,3,Math.abs(v.tcpa)>60?0:2);
+        },
+        unit: 'min',
+    },
+    bcpa: {
+        headline: 'BCPA',
+            format: function (v) {
+              return Formatter.formatDirection(v.bcpa);
+        },
+        unit: '°',
     },
     passFront: {
-        headline: 'pass',
+        headline: 'we pass',
             format: function (v) {
             if (!v.cpa) return "-";
             if (v.passFront !== undefined) {
                 if (v.passFront > 0) return "Front";
-                if (v.passFront < 0) return "Pass";
-                return "Back";
+                if (v.passFront < 0) return "Back";
+                return "Pass";
             }
             return "Done";
         }
     },
     shipname: {
-        headline: 'name',
+        headline: 'Name',
             format: function (v) {
             if ((v.shipname === undefined || v.shipname === 'unknown') && v.type == 21) return v.name;
             return v.shipname;
@@ -114,20 +111,20 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B,AIS_CLASSES.Aton]
     },
     callsign: {
-        headline: 'call',
+        headline: 'Callsign',
             format: function (v) {
             return v.callsign;
         },
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     mmsi: {
-        headline: 'mmsi',
+        headline: 'MMSI',
             format: function (v) {
             return v.mmsi;
         }
     },
     shiptype: {
-        headline: 'type',
+        headline: 'Type',
             format: function (v) {
             let t = 0;
             try {
@@ -159,11 +156,9 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     status:{
-        headline: 'status',
+        headline: 'Status',
         format: function(v){
-            if (v.status === undefined){
-                return "----";
-            }
+            if (v.status === undefined) return "----";
             let st=parseInt(v.status);
             switch (st){
                 case 0: return 'Under way using engine';
@@ -187,26 +182,21 @@ const aisparam={
         classes:[AIS_CLASSES.A,AIS_CLASSES.B]
     },
     age: {
-        headline: 'age',
+        headline: 'Age',
         format: function(v){
             if (v.age === undefined) return '----';
-            let age=v.age;
-            if (v.receiveTime !== undefined){
-                let now=(new Date()).getTime();
-                age+=(now-v.receiveTime)/1000.0;
-            }
-            return Formatter.formatDecimal(age,5,2);
+            return Formatter.formatDecimal(v.age,3,0);
         },
         unit: 's'
     },
     position: {
-        headline: 'position',
+        headline: 'Position',
             format: function (v) {
             return Formatter.formatLonLats({lon: v.lon, lat: v.lat});
         }
     },
     destination: {
-        headline: 'destination',
+        headline: 'Destination',
             format: function (v) {
             let d = v.destination;
             if (d) return d;
@@ -215,19 +205,19 @@ const aisparam={
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     warning: {
-        headline: 'warning',
+        headline: 'Warning',
             format: function (v) {
             return v.warning || false
         }
     },
     nearest: {
-        headline: 'nearest',
+        headline: 'Nearest',
             format: function (v) {
             return v.nearest || false
         }
     },
     clazz: {
-        headline: 'class',
+        headline: 'Class',
         format: function(v){
             if (typeof(v) !== 'object') return '';
             if (v.type == 1 || v.type == 2 || v.type == 3) return AIS_CLASSES.A;
@@ -238,32 +228,29 @@ const aisparam={
         }
     },
     length: {
-        headline: 'length',
+        headline: 'Length',
         format: function(v){
-            if (v.length === undefined) return '---';
             return Formatter.formatDecimal(v.length,3)
         },
         unit: 'm'
     },
     beam: {
-        headline: 'beam',
+        headline: 'Beam',
         format: function(v){
-            if (v.beam === undefined) return '---';
             return Formatter.formatDecimal(v.beam,3);
         },
         unit: 'm'
     },
     draught: {
-        headline: 'draught',
+        headline: 'Draught',
         format: function(v){
-            if (v.draught === undefined) return '---';
             return Formatter.formatDecimal(v.draught,2,1);
         },
         unit: 'm',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     aid_type: {
-        headline: 'type',
+        headline: 'Type',
         format: function (v){
             if (v.aid_type === undefined) return '---';
             let type=parseInt(v.aid_type);
@@ -340,6 +327,45 @@ const aisparam={
 
 };
 
+const aisProxyHandlerRo={
+    get(target,prop,receiver){
+        if (target[prop]!== undefined) return target[prop];
+        if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
+        if (target.received !== undefined) return target.received[prop];
+    },
+    set(target,prop,value){
+      throw new Error("invalid set access to AIS data: "+prop+"="+value);
+    },
+    has(target,key){
+        if (key === Symbol.for("proxy")) return true;
+        return key in target || target.hasItem(key);
+    }
+};
+const aisProxyHandler={
+    get(target,prop,receiver){
+        if (target[prop]!== undefined) return target[prop];
+        if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
+        if (target.received !== undefined) return target.received[prop];
+    },
+    has(target,key){
+        if (key === Symbol.for("proxy")) return true;
+        return key in target || target.hasItem(key);
+    }
+};
+
+export const isAisProxy=(obj)=>{
+    if (! (obj instanceof Object)) return false;
+    return Symbol.for("proxy") in obj;
+}
+/**
+ *
+ * @param aisobject
+ * @returns {Proxy<AISItem>}
+ */
+export const aisproxy=(aisobject,opt_writable)=>{
+    return opt_writable?new Proxy(aisobject,aisProxyHandler):new Proxy(aisobject,aisProxyHandlerRo);
+}
+
 const AisFormatter={
     /**
      * the formatter for AIS data
@@ -352,11 +378,22 @@ const AisFormatter={
         if (! d) return ;
         return d.headline;
     },
+    getUnit:function(key){
+        let d=aisparam[key];
+        if (! d) return ;
+        return d.unit;
+    },
     format(key,aisobject,inlcudeUnit){
         let d=aisparam[key];
         if (! d) return ;
         if (aisobject === undefined) return;
-        let rt=d.format(aisobject);
+        /**
+         * allow to use the new style {@link AISItem}
+         * we create a proxy and forward get access to either the cpadata or the received data if not at the base level
+         */
+
+        let op=isAisProxy(aisobject)?aisobject:aisproxy(aisobject);
+        let rt=d.format(op);
         if (inlcudeUnit && d.unit !== undefined){
             rt+=" "+d.unit;
         }
@@ -393,7 +430,7 @@ const AisFormatter={
         return rt;
     },
     shouldShow(key,item){
-        let cl=aisparam.clazz.format(item);
+        let cl=this.format('clazz',item);
         let param=aisparam[key];
         if (! param) return;
         if ( param.classes === undefined) return true;

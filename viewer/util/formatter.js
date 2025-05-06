@@ -3,7 +3,6 @@
  */
 
 import navcompute from '../nav/navcompute.js';
-import {extendCoordinate} from "ol/extent";
 import Helper from "./helper.js";
 
 /**
@@ -124,7 +123,7 @@ formatDecimalOpt.parameters=[
  * format a distance
  * show 99.9 for values < 100, show 999 for values >= 100, max 5
  * @param distance in m
- * @param unit: one of nm,m,km
+ * @param opt_unit one of nm,m,km
  */
 const formatDistance=function(distance,opt_unit){
     let number=parseFloat(distance);
@@ -134,12 +133,12 @@ const formatDistance=function(distance,opt_unit){
     if (opt_unit == 'km') factor=1000;
     number=number/factor;
     if (number < 1){
-        return formatDecimal(number,3,2);
+        return formatDecimal(number,undefined,2,false);
     }
     if (number < 100){
-        return formatDecimal(number,4,1);
+        return formatDecimal(number,undefined,1,false);
     }
-    return formatDecimal(number,5,0);
+    return formatDecimal(number,undefined,0,false);
 };
 formatDistance.parameters=[
     {name:'unit',type:'SELECT',list:['nm','m','km'],default:'nm'}
@@ -160,9 +159,9 @@ const formatSpeed=function(speed,opt_unit){
     if (opt_unit == 'kmh') factor=3.6;
     number=number*factor;
     if (number < 100){
-        return formatDecimal(number,2,1);
+        return formatDecimal(number,undefined,1,false);
     }
-    return formatDecimal(number,3,0);
+    return formatDecimal(number,undefined,0,false);
 };
 
 formatSpeed.parameters=[
@@ -241,7 +240,7 @@ const formatPressure=function(data,opt_unit){
             return (parseFloat(data)/100).toFixed(2)
         }
         if (opt_unit.toLowerCase() === 'bar') {
-            return formatDecimal(parseFloat(data)/100000,2,4);
+            return formatDecimal(parseFloat(data)/100000,2,4,false);
         }
     }catch(e){
         return "-----";

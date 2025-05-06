@@ -11,6 +11,7 @@ public class Constants {
     public static final String WORKDIR="workdir";
     public static final String CHARTDIR="chartdir";
     public static final String SHOWDEMO="showdemo";
+    public static final String AUTOUSB="handleUsb";
     public static final String EXTERNALACCESS="externalaccess";
     public static final String ALARMSOUNDS="alarmSounds";
     public static final String IPNMEA="ip.nmea";

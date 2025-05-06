@@ -77,16 +77,13 @@ public class Resolver implements Runnable, Target.IResolver {
 
     public Resolver(NetworkInterface intf, Target.Callback defaultCallback) throws IOException {
         this.intf=intf;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && intf != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && intf != null) {
             channel =DatagramChannel.open(StandardProtocolFamily.INET);
             channel.setOption(StandardSocketOptions.IP_MULTICAST_IF,intf);
             channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             channel.bind(new InetSocketAddress("0.0.0.0",MDNS_PORT));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //it should still work on older devices if the server replies unicast
-                InetAddress group=Inet4Address.getByName(MDNS_IP4_ADDRESS);
-                channel.join(group,intf);
-            }
+            InetAddress group=Inet4Address.getByName(MDNS_IP4_ADDRESS);
+            channel.join(group,intf);
         }
         else{
             //this will only work for remote devices that reply unicast

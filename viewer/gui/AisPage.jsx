@@ -9,7 +9,7 @@ import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import Page from '../components/Page.jsx';
-import AisFormatter from '../nav/aisformatter.jsx';
+import AisFormatter, {aisproxy, isAisProxy} from '../nav/aisformatter.jsx';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
@@ -19,60 +19,54 @@ import navdata from "../nav/navdata";
 import Dialogs from "../components/OverlayDialog.jsx";
 
 const aisInfos=[
-    [
-        {name:'distance',label:'Dst ',unit:'nm',len:6},
-        {name:'cpa',label:'Cpa ',unit:'nm',len:6},
-        {name:'headingTo',label:'Brg ',unit:'°',len:3},
-        {name:'tcpa',label:'Tcpa',unit:'h',len:8}
-    ],
-    [
-        {name:'course',label:'Cog ',unit:'°',len:6},
-        {name:'speed',label:'Sog ',unit:'kn',len:6},
-        {name:'heading',label:'Hdg ',unit:'°',len:3}
-    ],
-    [
-        {name:'length',label:'Len ',len:6},
-        {name:'beam',label:'Beam',len:6},
-        {name:'draught',label:'Drau',len:8}
-    ],
-    [
-        {name:'age',label:'Age ',len:6},
-        {name:'status',label:'Stat'}
-    ],
-    [
-        {name:'shiptype',label:'Type'},
-        {name:'aid_type',label:'Type'},
-        {name:'callsign',label:'Call'},
-        {name:'destination',label:'Dest'}
-    ]
+    [ 'cpa', 'tcpa', 'bcpa', ],
+    [ 'distance', 'headingTo', 'course', 'speed', ],
+//     [ 'headingTo', 'distance', ],
+//     [ 'course', 'speed', 'heading', 'turn', ],
+    [ 'status', ],
+//     [ 'status', 'age', ],
+    [ 'shiptype', 'aid_type', 'length', ],
+//     [ 'shiptype', 'aid_type', 'callsign', 'destination', ],
+//     [ 'length', 'beam', 'draught', ],
 ];
 const reducedAisInfos=[
-    aisInfos[0]
+    [ 'cpa', 'tcpa', 'distance', 'course', 'speed', ],
 ];
+
+const sortFields = [
+    {label:'Priority', value:'prio'},
+    {label:'DCPA', value:'cpa'},
+    {label:'TCPA',value:'tcpa'},
+    {label:'DST',value:'distance'},
+    {label:'Name',value:'shipname'},
+    {label:'MMSI',value:'mmsi'},
+];
+
 const fieldToLabel=(field)=>{
     let rt;
-    aisInfos.map((l1)=>{
-        l1.map((l2)=>{
-            if (l2.name == field) rt=l2.label;
-        })
-    });
+    sortFields.forEach((e)=>{ if(e.value==field) rt=e.label; });
     return rt||field;
 };
 
-
 const aisSortCreator=(sortField)=>{
     return (a,b)=> {
+        if (sortField==='prio') {
+            return a.priority - b.priority;
+        }
         let useFmt=sortField === 'shipname';
-        let fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
-        let fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
-        if (sortField == 'tcpa') {
-            if (fa < 0 && fb >= 0) return 1;
-            if (fb < 0 && fa >= 0) return -1;
-            if (fa < 0 && fb < 0) {
-                if (fa < fb) return 1;
-                if (fa > fb) return -1;
-                return 0;
-            }
+        var fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
+        var fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
+        if (sortField.includes('cpa')) {
+            // pull warnings up
+            if (b.warning && !a.warning) return 1;
+            if (a.warning && !b.warning) return -1;
+            // push down passed CPAs
+            let ta = a.tcpa, tb = b.tcpa;
+            if (ta < 0 && tb >= 0) return 1;
+            if (tb < 0 && ta >= 0) return -1;
+            // if both passed CPA, sort by distance
+            if (ta < 0 && tb < 0) { fa=a.distance; fb=b.distance; }
+            return fa-fb;
         }
         if (typeof(fa) === 'string') fa=fa.toUpperCase();
         if (typeof(fb) === 'string') fb=fb.toUpperCase();
@@ -82,35 +76,25 @@ const aisSortCreator=(sortField)=>{
     };
 };
 
-const formatFixed=(val,len)=>{
-    let str=new Array(len+1).join(' ')+val;
-    return str.substr(str.length-len);
-
+const pad=(val,len)=>{
+    let str = (''+val).trim();
+    str = ' '.repeat(Math.max(0,len-str.length)) + str;
+    return str;
 }
 
-
-
-
-
 const sortDialog=(sortField)=>{
-    let list=[
-        {label:'CPA', value:'cpa'},
-        {label:'TCPA',value:'tcpa'},
-        {label:'DST',value:'distance'},
-        {label:'Shipname',value:'shipname'}
-    ];
-    for (let i in list){
-        if (list[i].value === sortField) list[i].selected=true;
+    for (let i in sortFields){
+        sortFields[i].selected=sortFields[i].value === sortField;
     }
-    return OverlayDialog.selectDialogPromise('Sort Order',list);
+    return OverlayDialog.selectDialogPromise('Sort Order',sortFields);
 };
 
 const AisItem=(props)=>{
-    let reduceDetails=globalStore.getData(keys.properties.aisReducedList,true);
+    let reduceDetails=globalStore.getData(keys.properties.aisReducedList,false);
     let fmt=AisFormatter;
     let fb=fmt.format('passFront',props);
     let style={
-        color:props.color
+        color:PropertyHandler.getAisColor(props)
     };
     let cl=props.addClass||'';
     if (props.initialTarget) cl+=" initialTarget";
@@ -124,17 +108,20 @@ const AisItem=(props)=>{
         if (newLine) txt+="\n";
         newLine=false;
         infoLine.forEach((info)=>{
-            if (! fmt.shouldShow(info.name,props)) return;
+            if (! fmt.shouldShow(info,props)) return;
+            if (newLine) txt+='  ';
+            let lbl=fmt.getHeadline(info)+":";
+            lbl=pad(lbl,reduceDetails?1:5);
+            txt+=lbl+' ';
+            let val=(fmt.format(info,props)||'');
+            let unit=fmt.getUnit(info);
+            if(!reduceDetails && unit) val+=unit;
+            val=pad(val,reduceDetails?1:6);
+            txt+=val;
             newLine=true;
-            txt+=(info.label+": ").replace(/ /g,'\xa0');
-            let val=(fmt.format(info.name,props)||'');
-            if (info.len){
-                val=formatFixed(val,info.len);
-            }
-            txt+=val.replace(/ /g,'\xa0');
-            txt+="  ";
         })
     })
+    txt=txt.replace(/ /g,'\xa0');
     return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
                 <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
@@ -164,7 +151,7 @@ class AisPage extends React.Component{
         if (props.options && props.options.mmsi){
             this.initialMmsi=props.options.mmsi;
         }
-        let sortField='cpa';
+        let sortField=sortFields[0].value;
         if (props.options && props.options.sortField){
             sortField=props.options.sortField;
         }
@@ -252,9 +239,9 @@ class AisPage extends React.Component{
         let trackingTarget=state.tracked;
         let items=[];
         let sortFunction=aisSortCreator(this.state.sortField||'cpa');
-        aisList.sort(sortFunction);
         for( let aisidx in aisList){
-            let ais=aisList[aisidx];
+            let ais={...aisList[aisidx]};
+            ais=aisproxy(ais,true);
             if (! ais.mmsi) continue;
             if (this.state.searchActive){
                 let found=false;
@@ -265,20 +252,20 @@ class AisPage extends React.Component{
                 });
                 if (! found) continue;
             }
-            let color=PropertyHandler.getAisColor({
+            ais.color=PropertyHandler.getAisColor({
                 nearest: ais.nearest,
                 warning: ais.warning,
                 //tracking: hasTracking && ais.tracking
             });
-            let item=assign({},ais,{color:color,key:ais.mmsi});
-            if (item.mmsi == trackingTarget){
-                item.selected=true;
+            if (ais.mmsi == trackingTarget){
+                ais.selected=true;
             }
-            if (this.initialMmsi && item.mmsi ===  this.initialMmsi){
-                item.initialTarget=true;
+            if (this.initialMmsi && ais.mmsi ===  this.initialMmsi){
+                ais.initialTarget=true;
             }
-            items.push(item);
+            items.push(ais);
         }
+        items.sort(sortFunction);
         return {itemList:items};
     };
     scrollWarning(ev){
@@ -340,10 +327,12 @@ class AisPage extends React.Component{
                 <AisList
                     itemClass={MemoAisItem}
                     onItemClick={(item)=> {
-                        this.props.history.setOptions({mmsi:item.mmsi});
-                        this.props.history.replace('aisinfopage', {mmsi: item.mmsi});
+                        let accessor=aisproxy(item);
+                        this.props.history.setOptions({mmsi:accessor.mmsi});
+                        this.props.history.replace('aisinfopage', {mmsi: accessor.mmsi});
                         }}
                     className="aisList"
+                    keyFunction={(item)=>item.mmsi}
                     {...aisListProps}
                     scrollable={true}
                     listRef={(list)=>{
