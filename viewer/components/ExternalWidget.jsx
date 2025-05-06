@@ -56,6 +56,7 @@ export const ExternalWidget =(props)=>{
     let [,setUpdateCount]=useState(1);
     const initialCalled=useRef(false);
     const canvasRef=useRef(null);
+    const resizeSequence=useRef(0);
     const getProps=()=>{
         if (props.translateFunction) return {...props,...props.translateFunction({...props})};
         return props;
@@ -63,6 +64,10 @@ export const ExternalWidget =(props)=>{
     const userData=useRef( {
         eventHandler: [],
         triggerRedraw: () => {
+            setUpdateCount((previousCount)=>previousCount+1)
+        },
+        triggerResize: ()=>{
+            resizeSequence.current++;
             setUpdateCount((previousCount)=>previousCount+1)
         }
     });
@@ -102,7 +107,7 @@ export const ExternalWidget =(props)=>{
         let userHtml=(innerHtml!=null)?ReactHtmlParser(innerHtml,
             {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
         return (
-        <WidgetFrame {...convertedProps} addClass="externalWidget" onClick={props.onClick} >
+        <WidgetFrame {...convertedProps} addClass="externalWidget" onClick={props.onClick} resizeSequence={resizeSequence.current}>
             {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
                 {userHtml}
         </WidgetFrame>

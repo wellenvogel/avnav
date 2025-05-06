@@ -452,6 +452,7 @@ class AVNUtil(object):
       rt=360+rt
     return rt
 
+
   ais_converters = {
     "mmsi": str,
     "imo_id": int,

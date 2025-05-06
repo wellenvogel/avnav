@@ -13,7 +13,7 @@ const TimeStatusWidget = (props=> {
     let imgSrc=globalStore.getData(props.gpsValid?
         keys.properties.statusOkImage:
         keys.properties.statusErrorImage);
-    let time="----";
+    let time="--:--:--";
     if (props.time !== undefined){
         time=Formatter.formatTime(props.time);
     }

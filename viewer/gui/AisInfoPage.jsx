@@ -18,28 +18,29 @@ import NavData from '../nav/navdata';
 
 
 const displayItems = [
-    {name: 'mmsi', label: 'MMSI'},
-    {name: 'shipname', label: 'Name'},
-    {name: 'callsign', label: 'Callsign'},
-    {name: 'shiptype', label: 'Type'},
-    {name: 'aid_type', label: 'Type'},
-    {name: 'clazz', label: 'Class'},
-    {name: 'status', label: 'Status'},
-    {name: 'destination', label: 'Destination'},
-    {name: 'position', label: 'Position'},
-    {name: 'course', label: 'COG(°)'},
-    {name: 'speed', label: 'SOG(kn)'},
-    {name: 'heading', label: 'HDG(°)'},
-    {name: 'turn', label: 'ROT(°/min)'},
-    {name: 'headingTo', label: 'BRG(°)'},
-    {name: 'distance', label: 'Distance(nm)'},
-    {name: 'cpa', label: 'CPA(nm)'},
-    {name: 'tcpa', label: 'TCPA(h:min:sec)'},
-    {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
-    {name: 'length', label: 'Length(m)'},
-    {name: 'beam',label: 'Beam(m)'},
-    {name: 'draught',label: 'Draught(m)'},
-    {name: 'age',label: 'Age(s)'}
+    {name: 'mmsi'},
+    {name: 'shipname'},
+    {name: 'callsign'},
+    {name: 'shiptype'},
+    {name: 'aid_type'},
+    {name: 'clazz'},
+    {name: 'status'},
+    {name: 'destination'},
+    {name: 'position'},
+    {name: 'headingTo'},
+    {name: 'distance'},
+    {name: 'course'},
+    {name: 'speed'},
+    {name: 'heading'},
+    {name: 'turn'},
+    {name: 'cpa'},
+    {name: 'tcpa'},
+    {name: 'bcpa'},
+    {name: 'passFront', addClass: 'aisFront'},
+    {name: 'length'},
+    {name: 'beam'},
+    {name: 'draught'},
+    {name: 'age'},
 ];
 
 const createUpdateFunction=(config,mmsi)=>{
@@ -55,26 +56,37 @@ const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
     return Dynamic((props)=> {
-        if (! AisFormatter.shouldShow(props.name,props.current)){
+        let key = props.name;
+        if (! AisFormatter.shouldShow(key,props.current)){
             return null;
         }
+        let target = props.current;
+        if (typeof(target) == 'undefined') { return null; }
+        let unit = AisFormatter.getUnit(props.name);
+        let clazz = 'aisInfoRow';
+        let warning = target.warning && (key.includes('cpa') || key.includes('pass'));
+        let warningDist = globalStore.getData(keys.properties.aisWarningCpa);
+        let warningTime = globalStore.getData(keys.properties.aisWarningTpa);
+        if((key.includes('pass') && warning)
+            || (0 < target.tcpa && target.cpa < warningDist && (key=='cpa' || (key=='tcpa' && target.tcpa < warningTime)))
+        ){
+          clazz += ' warning';
+        }
         return (
-        <div className="aisInfoRow">
-            <div className='label '>{props.label}</div>
-            <div className={cl}>{AisFormatter.format(props.name, props.current)}</div>
-        </div>
+          <div className={clazz}>
+              <div className='label'>{AisFormatter.getHeadline(key)}</div>
+              <div className={cl}>{AisFormatter.format(key, props.current)}{unit && <span className='unit'>&thinsp;{unit}</span>}</div>
+          </div>
         );
     },{
         storeKeys:storeKeys,
         updateFunction:createUpdateFunction(config,mmsi)
-
     });
 };
 const GuardedList=MapEventGuard(ItemList);
 class AisInfoPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         this.buttons=[
             {
                 name: 'AisNearest',
@@ -82,68 +94,72 @@ class AisInfoPage extends React.Component{
                     NavData.getAisHandler().setTrackedTarget(0);
                     let pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
                     if (pos) MapHolder.setCenter(pos);
-                    self.props.history.pop();
+                    this.props.history.pop();
                 }
             },
             {
                 name: 'AisInfoLocate',
                 onClick:()=>{
-                    if (!self.props.options || ! self.props.options.mmsi) return;
-                    NavData.getAisHandler().setTrackedTarget(self.props.options.mmsi);
-                    let pos=NavData.getAisHandler().getAisPositionByMmsi(self.props.options.mmsi);
+                    if (!this.props.options || ! this.props.options.mmsi) return;
+                    NavData.getAisHandler().setTrackedTarget(this.props.options.mmsi);
+                    let pos=NavData.getAisHandler().getAisPositionByMmsi(this.props.options.mmsi);
                     if (pos) {
                         MapHolder.setCenter(pos);
                         MapHolder.setGpsLock(false);
                     }
-                    self.props.history.pop();
+                    this.props.history.pop();
                 }
             },
             {
                 name: 'AisInfoHide',
                 onClick: ()=>{
-                    if (!self.props.options || ! self.props.options.mmsi) return;
-                    if (globalStore.getData(keys.gui.aisinfopage.hidden)){
-                        NavData.getAisHandler().unsetHidden(self.props.options.mmsi);
+                    let target=this.getTarget();
+                    if (! target) return;
+                    if (target.hidden){
+                        NavData.getAisHandler().unsetHidden(target.mmsi);
                     }
                     else {
-                        NavData.getAisHandler().setHidden(self.props.options.mmsi);
+                        NavData.getAisHandler().setHidden(target.mmsi);
                     }
-                    self.props.history.pop();
+                    this.props.history.pop();
                 },
                 storeKeys: {
-                    toggle: keys.gui.aisinfopage.hidden
-                }
+                    dummy: storeKeys
+                },
+                updateFunction: ()=>{
+                    let target=this.getTarget()||{};
+                    return {toggle:target.hidden};
+                },
+                disabled: !this.props.options || ! this.props.options.mmsi
 
             },
             {
                 name: 'AisInfoList',
                 onClick:()=>{
                     let mmsi=(this.props.options||{}).mmsi;
-                    if (! self.props.history.backFromReplace()) {
-                        self.props.history.replace('aispage', {mmsi: mmsi});
+                    if (! this.props.history.backFromReplace()) {
+                        this.props.history.replace('aispage', {mmsi: mmsi});
                     }
                 }
             },
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{self.props.history.backFromReplace(true)}
+                onClick: ()=>{this.props.history.backFromReplace(true)}
             }
         ];
         this.checkNoTarget=this.checkNoTarget.bind(this);
         this.drawIcon=this.drawIcon.bind(this);
         this.timer=GuiHelpers.lifecycleTimer(this,this.checkNoTarget,5000,true);
-        let mmsi=(this.props.options||{}).mmsi;
-        if (mmsi) {
-            GuiHelpers.storeHelper(this, () => {
-                globalStore.storeData(keys.gui.aisinfopage.hidden,NavData.getAisHandler().isHidden(mmsi));
-            }, storeKeys, true)
-        }
     }
 
-    checkNoTarget(timerSequence){
+    getTarget(){
         let mmsi=this.props.options?this.props.options.mmsi:undefined;
-        if (! mmsi || ! NavData.getAisHandler().getAisByMmsi(mmsi)){
+        if (! mmsi) return;
+        return NavData.getAisHandler().getAisByMmsi(mmsi);
+    }
+    checkNoTarget(timerSequence){
+        if (! this.getTarget()){
             this.props.history.pop();
             return;
         }
@@ -161,23 +177,14 @@ class AisInfoPage extends React.Component{
         let rect=canvas.getBoundingClientRect();
         canvas.width=rect.width;
         canvas.height=rect.height;
-        MapHolder.aislayer.drawTargetSymbol(
-            drawing,
-            [rect.width/2,rect.height/2],
-            current,
-            (xy,rotation,distance)=>{
-                rotation=rotation/180*Math.PI;
-                return [
-                    rect.width/2*(1+Math.sin(rotation)),
-                    rect.height/2*(1-Math.cos(rotation))
-                ]
-            });
+        let [style,symbol,scale]=MapHolder.aislayer.getStyleEntry(current);
+        drawing.drawImageToContext([rect.width/2,rect.height/2],symbol.image,style);
+        //TODO: course vector
     }
 
     render(){
-        let self=this;
-        const Status = function (props) {
-            return <canvas className="status" ref={(ctx)=>{self.drawIcon(ctx,props.current)}}/>
+        const Status = (props)=> {
+            return <canvas className="status" ref={(ctx)=>{this.drawIcon(ctx,props.current)}}/>
         };
         const RenderStatus=Dynamic(Status);
         //gets mmsi
@@ -194,8 +201,8 @@ class AisInfoPage extends React.Component{
                     scrollable={true}
                     className="infoList"
                     onClick={()=>{
-                        if (! self.props.history.backFromReplace()) {
-                            self.props.history.pop();
+                        if (! this.props.history.backFromReplace()) {
+                            this.props.history.pop();
                         }
                     }}
                     />
@@ -206,7 +213,7 @@ class AisInfoPage extends React.Component{
 
         return (
             <Page
-                {...self.props}
+                {...this.props}
                 id="aisinfopage"
                 title="AIS Info"
                 mainContent={
@@ -214,7 +221,7 @@ class AisInfoPage extends React.Component{
                                 mmsi={this.props.options?this.props.options.mmsi:undefined}
                             />
                         }
-                buttonList={self.buttons}/>
+                buttonList={this.buttons}/>
         );
     }
 }

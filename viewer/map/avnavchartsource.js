@@ -191,7 +191,7 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
                         if (this.ownImage.naturalWidth && this.ownImage.naturalHeight) {
                             if (this.downZoom > 0){
                                 base.log("downzoom loaded, dz="+this.downZoom+" for "+this.ownSrc+
-                                ", "+this.tileCoord.join(","));
+                                ", "+this.getModifiedUrl());
                             }
                             this.state = olTileState.LOADED;
                         } else {

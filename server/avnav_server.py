@@ -280,8 +280,7 @@ def main(argv):
   navData=AVNStore(
     expiryTime=baseConfig.getWParam(baseConfig.P_EXPIRY_TIME),
     aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),
-    ownMMSI=baseConfig.getWParam(baseConfig.P_OWNMMSI),
-    useAisAge=baseConfig.getWParam(baseConfig.P_AISAGE)
+    ownMMSI=baseConfig.getWParam(baseConfig.P_OWNMMSI)
     )
   navData.setValue(navData.KEY_VERSION,AVNAV_VERSION,keepAlways=True)
   NMEAParser.registerKeys(navData)

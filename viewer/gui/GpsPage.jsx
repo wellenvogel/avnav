@@ -263,11 +263,11 @@ class GpsPage extends React.Component{
     }
 
     componentDidMount(){
-        resizeFont();
+        //resizeFont();
 
     }
     componentDidUpdate(){
-        resizeFont();
+        //resizeFont();
     }
     setPageNumber(num,opt_noRemote){
         globalStore.storeData(keys.gui.gpspage.pageNumber,num);

@@ -112,8 +112,6 @@ class AVNBaseConfig(AVNWorker):
                                 description="expiry in seconds for NMEA data")
   P_AIS_EXPIRYTIME=WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
                                    description="expiry time in seconds for AIS data")
-  P_AISAGE=WorkerParameter('useAisAge',True,type=WorkerParameter.T_BOOLEAN,
-                                   description="use the AIS message age")
   P_OWNMMSI=WorkerParameter('ownMMSI','',type=WorkerParameter.T_STRING,
                             description='if set - do not store AIS messages with this MMSI')
   P_DEBUGTOLOG=WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False)
@@ -156,7 +154,6 @@ class AVNBaseConfig(AVNWorker):
     return [
             cls.P_EXPIRY_TIME,
             cls.P_AIS_EXPIRYTIME,
-            cls.P_AISAGE,
             cls.P_OWNMMSI,
             cls.P_DEBUGTOLOG,
             cls.P_MAXTIMEBACK,
@@ -183,12 +180,9 @@ class AVNBaseConfig(AVNWorker):
   def updateConfig(self, param, child=None):
     super().updateConfig(param, child)
     if self.navdata is not None:
-      self.navdata.updateBaseConfig(
-        expiry=self.getWParam(self.P_EXPIRY_TIME),
-        aisExpiry=self.getWParam(self.P_AIS_EXPIRYTIME),
-        ownMMSI=self.getWParam(self.P_OWNMMSI),
-        useAisAge=self.getWParam(self.P_AISAGE)
-      )
+      self.navdata.updateBaseConfig(expiry=self.getWParam(self.P_EXPIRY_TIME),
+                                    aisExpiry=self.getWParam(self.P_AIS_EXPIRYTIME),
+                                    ownMMSI=self.getWParam(self.P_OWNMMSI))
 
   def startInstance(self, navdata):
     if self.startupError is not None:
