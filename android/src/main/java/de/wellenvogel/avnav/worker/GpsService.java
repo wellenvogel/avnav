@@ -370,14 +370,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 if (startForeground) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE){
-                            if (!SettingsActivity.checkGpsPermission(this)){
-                                AvnLog.i("location permissions revoked on API >=34");
-                                Toast.makeText(this,"Location permission revoked, cannot continue",Toast.LENGTH_LONG);
-                                stopMe();
-                            }
-                        }
-                        startForeground(NOTIFY_ID,notificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+                        startForeground(NOTIFY_ID,notificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
                     }
                     else {
                         startForeground(NOTIFY_ID, notificationBuilder.build());

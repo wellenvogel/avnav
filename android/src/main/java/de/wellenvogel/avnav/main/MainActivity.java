@@ -230,7 +230,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }
             binder.registerCallback(MainActivity.this);
-            AvnLog.d(Constants.LOGPRFX, "gps service connected");
+            AvnLog.i(Constants.LOGPRFX, "gps service connected");
 
         }
 
@@ -239,7 +239,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             gpsService=null;
             if (binder != null) binder.deregisterCallback();
             binder=null;
-            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
+            AvnLog.i(Constants.LOGPRFX,"gps service disconnected");
         }
 
     };
@@ -262,14 +262,15 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }
         }
-
+        AvnLog.i(Constants.LOGPRFX, "MainActivity create GpsService");
+        bindAction = new Runnable() {
+            @Override
+            public void run() {
+                initializeWebView();
+            }
+        };
         Intent intent = new Intent(this, GpsService.class);
         if (Build.VERSION.SDK_INT >= 26){
-            if (! checkGpsPermission(this)){
-                showPermissionRequest(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION}, true);
-                return false;
-            }
             startForegroundService(intent);
         }
         else {
@@ -818,32 +819,23 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         AvnLog.d("main: pause");
     }
 
-    private void onResumeInternal(){
-        if (webView == null){
+    private void onResumeInternal() {
+        if (webView == null) {
             shoLoading();
         }
         updateWorkDir(AvnUtil.getWorkDir(null, this));
         updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR, ""));
         if (gpsService == null) {
-            AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume create GpsService");
-            bindAction = new Runnable() {
-                @Override
-                public void run() {
-                    initializeWebView();
-                }
-            };
             startGpsService();
             return;
         }
-        if (gpsService != null) {
-            if (serviceNeedsRestart) {
-                gpsService.restart();
-                serviceNeedsRestart = false;
-                AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
-            }
-            else{
-                gpsService.onResumeInternal();
-            }
+
+        if (serviceNeedsRestart) {
+            gpsService.restart();
+            serviceNeedsRestart = false;
+            AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
+        } else {
+            gpsService.onResumeInternal();
         }
         if (webView == null) {
             initializeWebView();
