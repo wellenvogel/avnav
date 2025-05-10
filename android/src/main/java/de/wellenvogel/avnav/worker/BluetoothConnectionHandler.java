@@ -3,7 +3,6 @@ package de.wellenvogel.avnav.worker;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
@@ -12,7 +11,6 @@ import org.json.JSONObject;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 import java.io.IOException;
@@ -56,7 +54,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
                     final GpsService.MainActivityActions actions=ctx.getMainActions();
                     //only request permissions when we are in getAddable...
                     if (actions != null ) {
-                        actions.showPermissionRequest(R.string.needsBluetooth,new String[]{Manifest.permission.BLUETOOTH_CONNECT});
+                        actions.showPermissionRequest(new String[]{Manifest.permission.BLUETOOTH_CONNECT}, false);
                     }
                     throw new IOException("needs bluetooth");
                 }

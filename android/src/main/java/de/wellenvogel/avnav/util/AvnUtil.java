@@ -1,7 +1,10 @@
 package de.wellenvogel.avnav.util;
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -33,6 +36,9 @@ import java.util.List;
 import java.util.TimeZone;
 
 import de.wellenvogel.avnav.main.Constants;
+
+import static android.content.Context.RECEIVER_EXPORTED;
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
 
 /**
  * Created by andreas on 26.11.15.
@@ -390,5 +396,21 @@ public class AvnUtil {
             rt|=immutable? PendingIntent.FLAG_IMMUTABLE:PendingIntent.FLAG_MUTABLE;
         }
         return rt;
+    }
+    public static Intent registerUnexportedReceiver(Context ctx, BroadcastReceiver receiver, IntentFilter filter){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ctx.registerReceiver(receiver,filter, RECEIVER_NOT_EXPORTED);
+        }
+        else{
+            return ctx.registerReceiver(receiver,filter);
+        }
+    }
+    public static Intent registerExportedReceiver(Context ctx, BroadcastReceiver receiver, IntentFilter filter){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ctx.registerReceiver(receiver,filter, RECEIVER_EXPORTED);
+        }
+        else{
+            return ctx.registerReceiver(receiver,filter);
+        }
     }
 }

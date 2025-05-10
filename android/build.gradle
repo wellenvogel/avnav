@@ -74,7 +74,7 @@ android {
         versionName "avnav-$avnavVersion"
         versionCode Integer.parseInt(project.avnavVersion)
         manifestPlaceholders(['label':'avNav'])
-        targetSdkVersion 33
+        targetSdkVersion 34
         multiDexEnabled true //https://stackoverflow.com/questions/60919046/how-to-fix-build-gradle
         minSdkVersion 19
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
@@ -86,7 +86,7 @@ android {
         noCompress '.json'
     }
     //original:
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     sourceSets {
         main {

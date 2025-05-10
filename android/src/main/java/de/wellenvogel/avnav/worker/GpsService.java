@@ -2,7 +2,6 @@ package de.wellenvogel.avnav.worker;
 
 import android.Manifest;
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.Location;
@@ -270,7 +270,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     public static interface MainActivityActions{
         void showSettings(boolean checkInitially);
-        void showPermissionRequest(int title, String[]permissions);
+        void showPermissionRequest(String[]permissions, boolean exitOnCancel);
         void mainGoBack();
         void mainShutdown();
     }
@@ -369,7 +369,19 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 NotificationManager mNotificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 if (startForeground) {
-                    startForeground(NOTIFY_ID, notificationBuilder.build());
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE){
+                            if (!SettingsActivity.checkGpsPermission(this)){
+                                AvnLog.i("location permissions revoked on API >=34");
+                                Toast.makeText(this,"Location permission revoked, cannot continue",Toast.LENGTH_LONG);
+                                stopMe();
+                            }
+                        }
+                        startForeground(NOTIFY_ID,notificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+                    }
+                    else {
+                        startForeground(NOTIFY_ID, notificationBuilder.build());
+                    }
                 } else {
                     mNotificationManager.notify(NOTIFY_ID, notificationBuilder.build());
                 }
@@ -713,14 +725,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 if (perm.bluetooth){
                     if(!SettingsActivity.checkBluetooth(GpsService.this)){
                         if (Build.VERSION.SDK_INT >= 31) {
-                            actions.showPermissionRequest(R.string.needsBluetoothCon,new String[]{Manifest.permission.BLUETOOTH_CONNECT});
+                            actions.showPermissionRequest(new String[]{Manifest.permission.BLUETOOTH_CONNECT}, false);
                         }
                     }
                 }
                 if (perm.gps){
                     if (!SettingsActivity.checkGpsPermission(GpsService.this)){
-                        actions.showPermissionRequest(R.string.needGps,new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION});
+                        actions.showPermissionRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION}, false);
                     }
                 }
             }
@@ -767,6 +779,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         saveWorkerConfig(worker);
     }
     private synchronized void stopWorkers(boolean wait){
+        AvnLog.i(LOGPRFX,"stop workers");
         for (IWorker w: workers){
             try{
                 if (wait) w.stopAndWait();
@@ -823,7 +836,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     private synchronized void handleStartup(boolean isWatchdog){
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        AvnLog.d(LOGPRFX,"started");
+        AvnLog.i(LOGPRFX,"service started, watchdog="+isWatchdog);
         avnavVersion=prefs.getInt(Constants.VERSION,0);
         allowAllPlugins=prefs.getBoolean(Constants.ALLOW_PLUGINS,true);
         if (! isWatchdog || requestHandler == null){
@@ -1146,6 +1159,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     public void restart(){
+        AvnLog.i(LOGPRFX,"service restart");
         stopWorkers(true);
         stopDiscovery();
         synchronized (services){
@@ -1190,7 +1204,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 handleNotification(true,false);
             }
         };
-        registerReceiver(broadCastReceiver,filter);
+        AvnUtil.registerUnexportedReceiver(this,broadCastReceiver,filter);
         triggerReceiver=new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -1199,7 +1213,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         };
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_TRIGGER));
-        registerReceiver(triggerReceiver,triggerFilter);
+        AvnUtil.registerUnexportedReceiver(this,triggerReceiver,triggerFilter);
         IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
         broadCastReceiverStop = new BroadcastReceiver() {
             @Override
@@ -1208,7 +1222,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 GpsService.this.stopMe();
             }
         };
-        registerReceiver(broadCastReceiverStop,filterStop);
+        AvnUtil.registerUnexportedReceiver(this,broadCastReceiverStop,filterStop);
         IntentFilter pluginFilter=new IntentFilter(Constants.BC_PLUGIN);
         broadCastReceiverPlugin=new BroadcastReceiver() {
             @Override
@@ -1219,7 +1233,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 handlePluginMessage(name,intent);
             }
         };
-        registerReceiver(broadCastReceiverPlugin,pluginFilter);
+        AvnUtil.registerExportedReceiver(this,broadCastReceiverPlugin,pluginFilter);
         Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
         watchdog.setAction(WATCHDOGACTION);
         watchdogIntent=PendingIntent.getService(
@@ -1394,8 +1408,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (cb != null){
             cb.mainShutdown();
         }
-        AvnLog.i(LOGPRFX, "service stopped");
         stopDiscovery();
+        AvnLog.i(LOGPRFX, "service stopped");
     }
 
     public MainActivityActions getMainActions(){
@@ -1413,6 +1427,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     public void onDestroy()
     {
         super.onDestroy();
+        AvnLog.i(LOGPRFX,"service onDestroy");
         handleStop();
     }
 
