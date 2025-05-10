@@ -17,7 +17,7 @@ import android.preference.*;
 
 import android.provider.Settings;
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
+
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -72,6 +72,7 @@ public class SettingsActivity extends PreferenceActivity {
     private static class DialogRequest{
         int requestCode;
         Runnable callback;
+        public boolean exitOnCancel=false;
         DialogRequest(int requestCode,Runnable callback){
             this.requestCode=requestCode;
             this.callback=callback;
@@ -158,7 +159,7 @@ public class SettingsActivity extends PreferenceActivity {
         return 0;
     }
     static class PermissionRequestDialog extends DialogRequest{
-        PermissionRequestDialog(SettingsActivity activity,int requestCode,  boolean doRestart,String [] permissions, int title) {
+        PermissionRequestDialog(SettingsActivity activity, int requestCode, boolean doRestart, String [] permissions, boolean exitOnCancel) {
             super(requestCode, new Runnable() {
                 @Override
                 public void run() {
@@ -208,6 +209,9 @@ public class SettingsActivity extends PreferenceActivity {
                                         intent.setData(uri);
                                         activity.startActivity(intent);
                                     }
+                                    if (i == DialogInterface.BUTTON_NEGATIVE && exitOnCancel){
+                                        activity.resultNok();
+                                    }
                                     if (!activity.runNextDialog() ) {
                                         if(doRestart)
                                             activity.resultOk();
@@ -234,14 +238,14 @@ public class SettingsActivity extends PreferenceActivity {
         boolean checkInitially=false;
         Bundle b=getIntent() != null?getIntent().getExtras():null;
         String [] permissionRequests=null;
-        int permissionTitle=R.string.notifyTitle;
+        boolean exitOnCancel=false;
         if (b != null){
             checkInitially=b.getBoolean(Constants.EXTRA_INITIAL,false);
             if (b.containsKey(Constants.EXTRA_PERMSSIONS)) {
                 permissionRequests = b.getStringArray(Constants.EXTRA_PERMSSIONS);
             }
-            if (b.containsKey(Constants.EXTRA_PERMSSIONTITLE)){
-                permissionTitle=b.getInt(Constants.EXTRA_PERMSSIONTITLE);
+            if (b.containsKey(Constants.EXTRA_PERMSSIONEXITCANCEL)){
+                exitOnCancel=b.getBoolean(Constants.EXTRA_PERMSSIONEXITCANCEL);
             }
         }
         if (checkInitially) {
@@ -251,7 +255,7 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
         else if (permissionRequests != null && permissionRequests.length != 0){
-            openRequests.add(new PermissionRequestDialog(this,getNextPermissionRequestCode(),false,permissionRequests,permissionTitle));
+            openRequests.add(new PermissionRequestDialog(this,getNextPermissionRequestCode(),false,permissionRequests, exitOnCancel));
             if (! runNextDialog()){
                 resultNoRestart();
             }
@@ -264,7 +268,7 @@ public class SettingsActivity extends PreferenceActivity {
         if (perm.gps && !checkGpsPermission(this)) {
             int request = getNextPermissionRequestCode();
             openRequests.add(new PermissionRequestDialog(this, request, true, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION}, R.string.needGps));
+                    Manifest.permission.ACCESS_COARSE_LOCATION}, false));
         }
         if (perm.gps && ! checkGpsEnabled(this)){
             int request=getNextPermissionRequestCode();
@@ -330,7 +334,7 @@ public class SettingsActivity extends PreferenceActivity {
                         this,
                         getNextPermissionRequestCode(),
                         true,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},R.string.permissionNotification));
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, false));
             }
 
         }
@@ -340,7 +344,7 @@ public class SettingsActivity extends PreferenceActivity {
                         this,
                         getNextPermissionRequestCode(),
                         true,
-                        new String[]{Manifest.permission.BLUETOOTH_CONNECT},R.string.needsBluetoothCon));
+                        new String[]{Manifest.permission.BLUETOOTH_CONNECT}, false));
             }
         }
         if (! runNextDialog()) resultOk();
@@ -361,7 +365,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
 
-    public static boolean checkGpsEnabled(final Activity activity) {
+    public static boolean checkGpsEnabled(final Context activity) {
         LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
         return locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }

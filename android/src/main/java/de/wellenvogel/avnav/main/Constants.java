@@ -71,7 +71,7 @@ public class Constants {
 
     public static final String EXTRA_INITIAL="initial"; //boolean extra - check permissions when entering settings
     public static final String EXTRA_PERMSSIONS="permissions"; //start the settings activity to request some permissions
-    public static final String EXTRA_PERMSSIONTITLE="permissiontitle"; //title for permission request dialog
+    public static final String EXTRA_PERMSSIONEXITCANCEL ="permissionexitcancel"; //title for permission request dialog
     public static final int RESULT_NO_RESTART = Activity.RESULT_FIRST_USER+1;
 
     //workdir settings

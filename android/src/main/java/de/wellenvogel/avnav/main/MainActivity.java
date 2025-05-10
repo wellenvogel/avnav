@@ -1,12 +1,12 @@
 package de.wellenvogel.avnav.main;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,7 +15,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -25,19 +24,13 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 
-import android.provider.DocumentsContract;
-import android.provider.OpenableColumns;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
-import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -45,15 +38,12 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,11 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
@@ -73,7 +58,6 @@ import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
-import de.wellenvogel.avnav.main.DownloadHandler.DownloadStream;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -81,8 +65,9 @@ import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.worker.WorkerFactory;
-import de.wellenvogel.avnav.main.DownloadHandler;
+
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
 
 
@@ -245,7 +230,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }
             binder.registerCallback(MainActivity.this);
-            AvnLog.d(Constants.LOGPRFX, "gps service connected");
+            AvnLog.i(Constants.LOGPRFX, "gps service connected");
 
         }
 
@@ -254,7 +239,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             gpsService=null;
             if (binder != null) binder.deregisterCallback();
             binder=null;
-            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
+            AvnLog.i(Constants.LOGPRFX,"gps service disconnected");
         }
 
     };
@@ -277,12 +262,21 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }
         }
-
+        AvnLog.i(Constants.LOGPRFX, "MainActivity create GpsService");
+        bindAction = new Runnable() {
+            @Override
+            public void run() {
+                initializeWebView();
+            }
+        };
         Intent intent = new Intent(this, GpsService.class);
+        bindService(intent,mConnection,0);
         if (Build.VERSION.SDK_INT >= 26){
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
             startForegroundService(intent);
         }
         else {
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
             startService(intent);
         }
         serviceNeedsRestart=false;
@@ -294,7 +288,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         AvnLog.i(LOGPRFX,"stop gps service");
         GpsService service=gpsService;
         if (service !=null){
-            binder.deregisterCallback();
             gpsService=null;
             service.stopMe();
         }
@@ -318,9 +311,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         sintent.putExtra(Constants.EXTRA_INITIAL,initial);
         startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
     }
-    public void showPermissionRequest(int title, String[] permissionRequests){
+    public void showPermissionRequest(String[] permissionRequests, boolean exitOnCancel){
         Intent sintent= new Intent(this,SettingsActivity.class);
-        sintent.putExtra(Constants.EXTRA_PERMSSIONTITLE,title);
+        sintent.putExtra(Constants.EXTRA_PERMSSIONEXITCANCEL,exitOnCancel);
         if (permissionRequests != null && permissionRequests.length != 0){
             sintent.putExtra(Constants.EXTRA_PERMSSIONS,permissionRequests);
         }
@@ -349,6 +342,15 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     MainActivity.this.finish();
                 }
             });
+        }
+    }
+
+    @Override
+    public void mainServiceBound() {
+        AvnLog.i(LOGPRFX,"mainServiceBound, bindAction="+bindAction);
+        if (bindAction != null){
+            bindAction.run();
+            bindAction=null;
         }
     }
 
@@ -401,6 +403,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
+        if (binder != null){
+            binder.deregisterCallback();
+        }
         try {
             unbindService(mConnection);
         }catch (Exception e){}
@@ -441,6 +446,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
     private void initializeWebView(){
         if (webView != null) return;
+        AvnLog.i(LOGPRFX,"initializeWebView");
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
         jsInterface=new JavaScriptApi(this,getRequestHandler());
         webView=(WebView)findViewById(R.id.webmain);
@@ -668,10 +674,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             }
         };
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
-        registerReceiver(reloadReceiver,triggerFilter);
+        AvnUtil.registerUnexportedReceiver(this,reloadReceiver,triggerFilter);
         running=true;
-        Intent intent = new Intent(this, GpsService.class);
-        bindService(intent,mConnection,0);
         handleUsbDeviceAttach(getIntent());
     }
 
@@ -827,31 +831,23 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         AvnLog.d("main: pause");
     }
 
-    private void onResumeInternal(){
-        if (webView == null){
+    private void onResumeInternal() {
+        if (webView == null) {
             shoLoading();
         }
         updateWorkDir(AvnUtil.getWorkDir(null, this));
         updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR, ""));
         if (gpsService == null) {
-            bindAction = new Runnable() {
-                @Override
-                public void run() {
-                    initializeWebView();
-                }
-            };
             startGpsService();
             return;
         }
-        if (gpsService != null) {
-            if (serviceNeedsRestart) {
-                gpsService.restart();
-                serviceNeedsRestart = false;
-                AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
-            }
-            else{
-                gpsService.onResumeInternal();
-            }
+
+        if (serviceNeedsRestart) {
+            gpsService.restart();
+            serviceNeedsRestart = false;
+            AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
+        } else {
+            gpsService.onResumeInternal();
         }
         if (webView == null) {
             initializeWebView();

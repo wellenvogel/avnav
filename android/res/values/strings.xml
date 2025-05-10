@@ -130,5 +130,6 @@
     <string name="download_interrupted">download interrupted</string>
     <string name="sendOwn">send out data that we received on this connection</string>
     <string name="handleUsb">autoconnect USB devices</string>
+    <string name="alwaysNeedsLocation">AvNav always needs location permissions to run.\nEnable them now?</string>
 
 </resources>

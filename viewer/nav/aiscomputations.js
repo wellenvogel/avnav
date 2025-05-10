@@ -179,7 +179,7 @@ export const AisOptionMappings={
     showB: keys.properties.aisShowB,
     showOther:keys.properties.aisShowOther,
     hideTime: {key: keys.properties.aisHideTime,f:parseFloat},
-    cpaEstimated: keys.properties.aisCpaEstimated,
+    cpaEstimated: {key: {useEstimated:keys.properties.aisCpaEstimated,showEstimated:keys.properties.aisShowEstimated},f:(v)=> v.useEstimated && v.showEstimated},
     warningDist: keys.properties.aisWarningCpa,
     warningTime: keys.properties.aisWarningTpa,
     courseVectorTime: keys.properties.navBoatCourseTime,
@@ -362,7 +362,7 @@ const computeCourseVectors=(aisItem,boatPos,boatCog, boatSog, options)=>{
         aisItem.courseVector.startAngle=target_cog-target_rot_sgn*90;
         aisItem.courseVector.arc=target_rot_sgn*turn_angle;
     }
-    if (options.rmvRange > 0 && aisItem.distance < options.rmvRange && (target_sog||boatSog)){
+    if (options.rmvRange > 0 && aisItem.distance !== undefined && boatSog !== undefined && aisItem.distance < options.rmvRange && (target_sog||boatSog)){
         if (! curved){
             aisItem.rmv=new CourseVector();
             aisItem.rmv.start=cvstart;
@@ -419,26 +419,27 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         if (aisSpeed >= options.minDisplaySpeed) {
             aisItem.estimated = NavCompute.computeTarget(aisItem.receivedPos, aisCourse, aisItem.age * aisSpeed, options.useRhumbLine);
         }
-        if (boatPos.lat === undefined || boatPos.lon === undefined || boatCog === undefined || boatSpeed === undefined) return;
         aisItem.fromEstimated=(options.cpaEstimated && aisItem.estimated);
         let targetPos=(aisItem.fromEstimated)?aisItem.estimated:aisItem.receivedPos;
-        let dst=NavCompute.computeDistance(boatPos,targetPos,options.useRhumbLine);
-        aisItem.distance=dst.dts;
-        aisItem.headingTo=dst.course;
-        aisItem.cpadata=computeCpa({
-            lat: boatPos.lat,
-            lon: boatPos.lon,
-            course: boatCog,
-            speed: boatSpeed
-            },
-            {
-                lat: targetPos.lat,
-                lon: targetPos.lon,
-                course: aisCourse,
-                speed: aisSpeed
-            },
-            options
+        if (boatPos.lat !== undefined && boatPos.lon !== undefined && boatCog !== undefined && boatSpeed !== undefined) {
+            let dst = NavCompute.computeDistance(boatPos, targetPos, options.useRhumbLine);
+            aisItem.distance = dst.dts;
+            aisItem.headingTo = dst.course;
+            aisItem.cpadata = computeCpa({
+                    lat: boatPos.lat,
+                    lon: boatPos.lon,
+                    course: boatCog,
+                    speed: boatSpeed
+                },
+                {
+                    lat: targetPos.lat,
+                    lon: targetPos.lon,
+                    course: aisCourse,
+                    speed: aisSpeed
+                },
+                options
             );
+        }
         if (aisItem.cpadata  && aisItem.cpadata.cpa !== undefined){
             if (aisItem.cpadata.cpa <= options.warningDist && aisItem.cpadata.tcpa <= options.warningTime && 0 <= aisItem.cpadata.tcpa) {
                 aisItem.warning = true;
