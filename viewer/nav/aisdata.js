@@ -15,8 +15,14 @@ export const fillOptions=()=>{
     for (let k in AisOptionMappings){
         let mapping=AisOptionMappings[k];
         if (mapping instanceof Object){
-            let v=globalStore.getData(mapping.key);
-            rt[k]=mapping.f(v);
+            if ( (mapping.key instanceof Object)) {
+                let v = globalStore.getMultiple(mapping.key);
+                rt[k] = mapping.f(v);
+            }
+            else{
+                let v = globalStore.getData(mapping.key);
+                rt[k]=mapping.f(v);
+            }
         }
         else{
             rt[k]=globalStore.getData(mapping);

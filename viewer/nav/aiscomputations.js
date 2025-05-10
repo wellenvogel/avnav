@@ -179,7 +179,7 @@ export const AisOptionMappings={
     showB: keys.properties.aisShowB,
     showOther:keys.properties.aisShowOther,
     hideTime: {key: keys.properties.aisHideTime,f:parseFloat},
-    cpaEstimated: keys.properties.aisCpaEstimated,
+    cpaEstimated: {key: {useEstimated:keys.properties.aisCpaEstimated,showEstimated:keys.properties.aisShowEstimated},f:(v)=> v.useEstimated && v.showEstimated},
     warningDist: keys.properties.aisWarningCpa,
     warningTime: keys.properties.aisWarningTpa,
     courseVectorTime: keys.properties.navBoatCourseTime,

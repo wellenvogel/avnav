@@ -41,7 +41,7 @@ const settingsSections={
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit],
     AIS:        [keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
-        keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,
+        keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
         keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
         keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRange,keys.properties.style.aisNormalColor,
@@ -49,7 +49,7 @@ const settingsSections={
         keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowA,
         keys.properties.aisShowB,keys.properties.aisShowOther,keys.properties.aisUseHeading,
         keys.properties.aisReducedList,keys.properties.aisListUpdateTime, keys.properties.aisHideTime, keys.properties.aisLostTime,
-        keys.properties.aisCpaEstimated,keys.properties.aisMarkAllWarning],
+        keys.properties.aisMarkAllWarning],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
@@ -82,6 +82,8 @@ settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
 settingsConditions[keys.properties.aisMinDisplaySpeed]=(values)=>
     (values||{})[keys.properties.aisOnlyShowMoving]||(values||{})[keys.properties.aisShowEstimated]
 settingsConditions[keys.properties.aisEstimatedOpacity]=(values)=>
+    (values||{})[keys.properties.aisShowEstimated]
+settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
     (values||{})[keys.properties.aisShowEstimated]
 settingsConditions[keys.properties.boatSteadyMax]=(values)=>
     (values||{})[keys.properties.boatSteadyDetect]
