@@ -181,7 +181,12 @@ class AisInfoPage extends React.Component{
         canvas.height=rect.height;
         let [style,symbol,scale]=MapHolder.aislayer.getStyleEntry(current);
         drawing.drawImageToContext([rect.width/2,rect.height/2],symbol.image,style);
-        //TODO: course vector
+        if (globalStore.getData(keys.properties.aisUseCourseVector) && current.course !== undefined){
+            let rd=Math.PI*current.course/180.0;
+            let ty = rect.height/2-Math.cos(rd)*rect.height;
+            let tx= rect.width/2+Math.sin(rd)*rect.width;
+            drawing.drawLineToContext([[rect.width/2,rect.height/2],[tx,ty]],{...style,color:style.courseVectorColor, width: globalStore.getData(keys.properties.navCircleWidth)})
+        }
     }
 
     render(){
