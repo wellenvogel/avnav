@@ -25,6 +25,8 @@ export const fillOptions=()=>{
     return rt;
 }
 
+const RECOMPUTE_TRIGGER=2000; //trigger AIS recomputation every xxx ms even if no boat data change
+
 /**
  * the handler for the ais data
  * query the server...
@@ -53,6 +55,7 @@ class AisData {
          */
         this.trackedAIStarget = undefined;
 
+        this.lastBoatData=0;
 
         globalStore.register(this, [
             keys.gui.global.propertySequence,
@@ -60,14 +63,7 @@ class AisData {
         ]);
 
         globalStore.register(()=>{
-            if (! this.worker) return;
-            this.postWorker({
-                type:'boat',
-                boatPosition:globalStore.getData(keys.nav.gps.position),
-                boatSpeed: globalStore.getData(keys.nav.gps.speed),
-                boatCourse: globalStore.getData(keys.nav.gps.course),
-                trackedMMsi: globalStore.getData(keys.nav.ais.trackedMmsi)
-            })
+            this.sendBoatData()
         },[keys.nav.gps.position,keys.nav.gps.speed,keys.nav.gps.course,keys.nav.ais.trackedMmsi])
 
         /**
@@ -132,6 +128,28 @@ class AisData {
         this.postWorker({
             type:'hidden',
             hiddenTargets: this.hiddenTargets
+        })
+
+        /**
+         * trigger recompute AIS
+         * @type {number}
+         */
+        this.timer=window.setInterval(()=>{
+            if ((this.lastBoatData+RECOMPUTE_TRIGGER) < Helper.now()){
+                this.sendBoatData();
+            }
+        },RECOMPUTE_TRIGGER*1.1);
+    }
+
+    sendBoatData(){
+        if (! this.worker) return;
+        this.lastBoatData=Helper.now();
+        this.postWorker({
+            type:'boat',
+            boatPosition:globalStore.getData(keys.nav.gps.position),
+            boatSpeed: globalStore.getData(keys.nav.gps.speed),
+            boatCourse: globalStore.getData(keys.nav.gps.course),
+            trackedMMsi: globalStore.getData(keys.nav.ais.trackedMmsi)
         })
     }
 

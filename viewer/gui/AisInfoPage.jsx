@@ -67,8 +67,10 @@ const createItem=(config,mmsi)=>{
         let warning = target.warning && (key.includes('cpa') || key.includes('pass'));
         let warningDist = globalStore.getData(keys.properties.aisWarningCpa);
         let warningTime = globalStore.getData(keys.properties.aisWarningTpa);
+        let hideAge = globalStore.getData(keys.properties.aisLostTime)
         if((key.includes('pass') && warning)
             || (0 < target.tcpa && target.cpa < warningDist && (key=='cpa' || (key=='tcpa' && target.tcpa < warningTime)))
+            || (key === 'age' && target.age > hideAge )
         ){
           clazz += ' warning';
         }

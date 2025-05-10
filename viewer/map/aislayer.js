@@ -504,13 +504,19 @@ class AisLayer{
                         target.rmv.radius,
                         target.rmv.startAngle,
                         target.rmv.arc,
-                        {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth, dashed: true},
+                        {
+                            color: style.courseVectorColor,
+                            width: this.displayOptions.courseVectorWidth,
+                            dashed: true,
+                            alpha: style.alpha
+                        },
                         target.rmv.offsetDir, target.rmv.offsetDst);
                 } else {
                     drawing.drawLineToContext([this.pointToMap(target.rmv.start), this.pointToMap(target.rmv.end)], {
                         color: style.courseVectorColor,
                         width: this.displayOptions.courseVectorWidth,
-                        dashed: true
+                        dashed: true,
+                        alpha: style.alpha
                     });
                 }
             }
@@ -525,18 +531,30 @@ class AisLayer{
                         target.courseVector.radius,
                         target.courseVector.startAngle,
                         target.courseVector.arc,
-                        {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth});
+                        {
+                            color: style.courseVectorColor,
+                            width: this.displayOptions.courseVectorWidth,
+                            alpha: style.alpha
+                        });
                 } else {
                     drawing.drawLineToContext([
                         this.pointToMap(target.courseVector.start),
                         this.pointToMap(target.courseVector.end)
-                    ], {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth});
+                    ], {
+                        color: style.courseVectorColor,
+                        width: this.displayOptions.courseVectorWidth,
+                        alpha: style.alpha
+                    });
                 }
                 if (target.fromEstimated) {
                     drawing.drawLineToContext([
                         this.pointToMap(target.receivedPos),
                         this.pointToMap(target.courseVector.start)
-                    ], {color: style.courseVectorColor, width: this.displayOptions.courseVectorWidth})
+                    ], {
+                        color: style.courseVectorColor,
+                        width: this.displayOptions.courseVectorWidth,
+                        alpha: style.alpha
+                    })
                 }
             }
 
