@@ -272,11 +272,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         Intent intent = new Intent(this, GpsService.class);
         bindService(intent,mConnection,0);
         if (Build.VERSION.SDK_INT >= 26){
-            if (! checkGpsPermission(this)){
-                showPermissionRequest(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION}, true);
-                return false;
-            }
             AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
             startForegroundService(intent);
         }
