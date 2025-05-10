@@ -270,10 +270,18 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             }
         };
         Intent intent = new Intent(this, GpsService.class);
+        bindService(intent,mConnection,0);
         if (Build.VERSION.SDK_INT >= 26){
+            if (! checkGpsPermission(this)){
+                showPermissionRequest(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION}, true);
+                return false;
+            }
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
             startForegroundService(intent);
         }
         else {
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
             startService(intent);
         }
         serviceNeedsRestart=false;
@@ -285,7 +293,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         AvnLog.i(LOGPRFX,"stop gps service");
         GpsService service=gpsService;
         if (service !=null){
-            binder.deregisterCallback();
             gpsService=null;
             service.stopMe();
         }
@@ -343,6 +350,15 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
     }
 
+    @Override
+    public void mainServiceBound() {
+        AvnLog.i(LOGPRFX,"mainServiceBound, bindAction="+bindAction);
+        if (bindAction != null){
+            bindAction.run();
+            bindAction=null;
+        }
+    }
+
     //to be called e.g. from js
     public void goBack(){
         try {
@@ -391,6 +407,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (webView != null) webView.destroy();
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
+        }
+        if (binder != null){
+            binder.deregisterCallback();
         }
         try {
             unbindService(mConnection);
@@ -662,8 +681,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
         AvnUtil.registerUnexportedReceiver(this,reloadReceiver,triggerFilter);
         running=true;
-        Intent intent = new Intent(this, GpsService.class);
-        bindService(intent,mConnection,0);
         handleUsbDeviceAttach(getIntent());
     }
 
