@@ -9,7 +9,8 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import MapEventGuard from "../hoc/MapEventGuard";
 import NavData from '../nav/navdata';
-import {ShowAisItemInfo, storeKeys} from "../components/AisInfoDisplay";
+import {AisInfoDialog, ShowAisItemInfo, storeKeys} from "../components/AisInfoDisplay";
+import Dialogs from "../components/OverlayDialog";
 
 const GuardedInfo=MapEventGuard(ShowAisItemInfo);
 class AisInfoPage extends React.Component{
@@ -70,6 +71,19 @@ class AisInfoPage extends React.Component{
                     }
                 }
             },
+            /*
+            {
+                name:'Test',
+                onClick: ()=>{
+                    let mmsi=(this.props.options||{}).mmsi;
+                    if (mmsi){
+                        Dialogs.showDialog(undefined,()=>{
+                            return <AisInfoDialog mmsi={mmsi}/>;
+                        })
+                    }
+                }
+            },
+             */
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',

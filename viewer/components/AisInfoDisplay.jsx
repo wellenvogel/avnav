@@ -32,6 +32,8 @@ import React from "react";
 import {Drawing} from "../map/drawing";
 import MapHolder from "../map/mapholder";
 import ItemList from "./ItemList";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
+import PropTypes from "prop-types";
 
 const displayItems = [
     {name: 'mmsi'},
@@ -144,3 +146,17 @@ export const ShowAisItemInfo=(props)=>{
     </React.Fragment>
     )
 }
+ShowAisItemInfo.propTypes={
+    mmsi: PropTypes.string.isRequired,
+    onClick: PropTypes.func,
+    className: PropTypes.string
+}
+
+export const AisInfoDialog=({mmsi,onClick})=>{
+    return <DialogFrame className="aisInfoDialog ">
+        <DialogRow>
+            <ShowAisItemInfo mmsi={mmsi} onClick={onClick}/>
+        </DialogRow>
+        <DialogButtons buttonList={[DBCancel()]}></DialogButtons>
+    </DialogFrame>
+};
