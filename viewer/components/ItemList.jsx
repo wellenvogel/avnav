@@ -69,6 +69,24 @@ const Content=(props)=>{
     );
 };
 
+const SortableContent =
+    (sprops) => {
+        if (sprops.dragdrop) {
+            return (
+                <SortContext
+                    onDragEnd={sprops.onSortEnd}
+                    id={sprops.dragFrame}
+                    allowOther={sprops.allowOther}
+                    reverse={sprops.reverse}
+                    mode={sprops.horizontal? SortModes.horizontal:SortModes.vertical}>
+                    <Content {...sprops}/>
+                </SortContext>
+            )
+        } else {
+            return <Content {...sprops}/>
+        }
+    };
+
 const ItemList = (props) => {
     const itemList = [];
     const existingKeys = {};
@@ -111,23 +129,7 @@ const ItemList = (props) => {
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
-    const SortableContent =
-        (sprops) => {
-            if (props.dragdrop) {
-                return (
-                    <SortContext
-                        onDragEnd={props.onSortEnd}
-                        id={props.dragFrame}
-                        allowOther={props.allowOther}
-                        reverse={props.reverse}
-                        mode={props.horizontal? SortModes.horizontal:SortModes.vertical}>
-                            <Content {...sprops}/>
-                    </SortContext>
-                )
-            } else {
-                return <Content {...sprops}/>
-            }
-        };
+
     if (props.scrollable) {
         return (
             <div onClick={props.onClick} className={className} style={style} ref={(el) => {

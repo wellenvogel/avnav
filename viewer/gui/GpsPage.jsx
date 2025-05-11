@@ -263,7 +263,7 @@ class GpsPage extends React.Component{
                 return <AisInfoWithFunctions
                     mmsi={mmsi}
                     hidden={{
-                        AisInfoNearest: true,
+                        AisNearest: true,
                         AisInfoLocate: true,
                     }}
                     actionCb={(action,m)=>{

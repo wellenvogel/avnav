@@ -38,10 +38,20 @@ let lastMapClickTime=undefined;
 MapHolder.registerEventGuard((eventName)=>{
     if (eventName === 'click'){
         lastMapClickTime=(new Date()).getTime();
-        console.log("map click");
     }
 });
-export default  (Component,opt_store)=>{
+/**
+ * HOC to wrap other components when called from within a map environment to avoid
+ * immediate clicks that are created after the map "click" event
+ * It checks for the time of the last map click event event and if within 300ms after it (keys.properties.mapClickWorkaroundTime)
+ * it will add a "noEvents" class to the component.
+ * Additionally a timer will be started to remove this class when the workaroundTime has passed.
+ * If the properties contian an onClick handler this will be replaced by a handler that first checks if the
+ * workaroundTime has passed before it triggers.
+ * @param Component
+ * @returns {React.ForwardRefExoticComponent<React.PropsWithoutRef<{}> & React.RefAttributes<unknown>>}
+ */
+export default  (Component)=>{
     return React.forwardRef((props,ref)=>{
         let {onClick,className,...forwards}=props;
         const allowTime=allowClickTime();

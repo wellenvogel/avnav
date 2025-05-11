@@ -156,7 +156,6 @@ ShowAisItemInfo.propTypes={
 export const AisInfoDialog=({mmsi,onClick,buttons,className})=>{
     const dialogContext=useDialogContext();
     if (! onClick) onClick=()=>{
-        console.log("close click");
         dialogContext.closeDialog();
     }
     const buttonList=buttons?buttons.concat([DBCancel()]):[DBCancel()];
