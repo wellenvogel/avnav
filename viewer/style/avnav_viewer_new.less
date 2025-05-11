@@ -188,6 +188,9 @@ body{
 //----------------------------------------------------------------------------------------
 //dialogs
 //----------------------------------------------------------------------------------------
+.noEvents{
+  pointer-events: none;
+}
 .overlay_cover_active {
   background-color: rgba(0, 0, 0, 0.35);
   display: block;
@@ -992,7 +995,9 @@ span.valuePrefix{
   }
 
 }
-
+.aisHidden{
+  opacity: 0.5;
+}
 #aispage{
   .aisListItem{
     .listEntry();
@@ -1057,7 +1062,7 @@ span.valuePrefix{
   }
 }
 
-#aisinfopage,.aisInfoDialog{
+.aisInfoDialog{
   .status{
     left: 3em;
     top: ( 2em + @headlineHeight)  ;

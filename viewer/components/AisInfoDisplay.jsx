@@ -34,6 +34,7 @@ import MapHolder from "../map/mapholder";
 import ItemList from "./ItemList";
 import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
 import PropTypes from "prop-types";
+import Helper from "../util/helper";
 
 const displayItems = [
     {name: 'mmsi'},
@@ -152,11 +153,14 @@ ShowAisItemInfo.propTypes={
     className: PropTypes.string
 }
 
-export const AisInfoDialog=({mmsi,onClick,buttons})=>{
+export const AisInfoDialog=({mmsi,onClick,buttons,className})=>{
     const dialogContext=useDialogContext();
-    if (! onClick) onClick=()=>dialogContext.closeDialog();
+    if (! onClick) onClick=()=>{
+        console.log("close click");
+        dialogContext.closeDialog();
+    }
     const buttonList=buttons?buttons.concat([DBCancel()]):[DBCancel()];
-    return <DialogFrame className="aisInfoDialog ">
+    return <DialogFrame className={Helper.concatsp("aisInfoDialog",className)}>
         <DialogRow>
             <ShowAisItemInfo mmsi={mmsi} onClick={onClick}/>
         </DialogRow>
@@ -167,7 +171,8 @@ export const AisInfoDialog=({mmsi,onClick,buttons})=>{
 AisInfoDialog.propTypes={
     mmsi: PropTypes.string.isRequired,
     onClick: PropTypes.func,
-    buttons: PropTypes.array
+    buttons: PropTypes.array,
+    className: PropTypes.string
 }
 
 const getTarget=(mmsi)=>{
@@ -175,10 +180,11 @@ const getTarget=(mmsi)=>{
     return NavData.getAisHandler().getAisByMmsi(mmsi);
 }
 
-export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
+export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
     const runCb=(action,item)=>{
         if (actionCb) actionCb(action,item);
     }
+    const hiddenButtons=hidden||{};
     const pButtons=[
         {
             name: 'AisNearest',
@@ -189,7 +195,8 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
                 runCb('AisNearest',mmsi);
             },
             label: 'Nearest',
-            disabled: mmsi === undefined
+            disabled: mmsi === undefined,
+            visible: ! hiddenButtons.AisNearest,
         },
         {
             name: 'AisInfoLocate',
@@ -203,7 +210,8 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
                 runCb('AisInfoLocate',mmsi);
             },
             label: 'Locate',
-            disabled: mmsi === undefined
+            disabled: mmsi === undefined,
+            visible: ! hiddenButtons.AisInfoLocate
         },
         {
             name: 'AisInfoHide',
@@ -223,6 +231,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
                 let target=getTarget(mmsi)||{};
                 return {toggle:target.hidden};
             },
+            visible: !hiddenButtons.AisInfoHide
         },
         {
             name: 'AisInfoList',
@@ -230,7 +239,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
                 runCb('AisInfoList',mmsi)
             },
             label: 'List',
-            visible: mmsi !== undefined && actionCb !== undefined,
+            visible: mmsi !== undefined && actionCb !== undefined && ! hiddenButtons.AisInfoList,
             disabled: mmsi === undefined || actionCb === undefined
         },
 
@@ -238,5 +247,6 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
     return <AisInfoDialog
         mmsi={mmsi}
         buttons={buttons?pButtons.concat(buttons):pButtons}
+        className={className}
         />
 }

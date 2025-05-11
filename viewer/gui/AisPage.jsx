@@ -17,6 +17,8 @@ import Compare from "../util/compare";
 import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
 import Dialogs from "../components/OverlayDialog.jsx";
+import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
+import Helper from "../util/helper";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', ],
@@ -96,9 +98,13 @@ const AisItem=(props)=>{
     let style={
         color:PropertyHandler.getAisColor(props)
     };
-    let cl=props.addClass||'';
-    if (props.initialTarget) cl+=" initialTarget";
-    if (props.warning) cl+=" "+WARNING_CLASS;
+    let cl=Helper.concatsp(
+        "aisListItem",
+        props.addClass,
+        props.initialTarget?"initialTarget":undefined,
+        props.warning?WARNING_CLASS:undefined,
+        props.hidden?HIDDEN_CLASS:undefined,
+        props.lost?HIDDEN_CLASS:undefined);
     let clazz=fmt.format('clazz',props);
     if (clazz !== '') clazz="["+clazz+"]";
     let txt="";
@@ -122,7 +128,7 @@ const AisItem=(props)=>{
         })
     })
     txt=txt.replace(/ /g,'\xa0');
-    return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
+    return ( <div className={cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
                 <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
             </div>
@@ -145,6 +151,7 @@ const itemCompare=(oldValues,newValues)=>{
 const MemoAisItem=React.memo(AisItem,itemCompare);
 
 const WARNING_CLASS='aisWarning';
+const HIDDEN_CLASS='aisHidden';
 class AisPage extends React.Component{
     constructor(props){
         super(props);
@@ -328,8 +335,16 @@ class AisPage extends React.Component{
                     itemClass={MemoAisItem}
                     onItemClick={(item)=> {
                         let accessor=aisproxy(item);
-                        this.props.history.setOptions({mmsi:accessor.mmsi});
-                        this.props.history.replace('aisinfopage', {mmsi: accessor.mmsi});
+                        Dialogs.showDialog(undefined,()=>{
+                            return <AisInfoWithFunctions
+                                mmsi={accessor.mmsi}
+                                actionCb={(action,m)=>{
+                                    if (action === 'AisNearest' || action === 'AisInfoLocate'){
+                                            this.props.history.pop();
+                                    }
+                                }}
+                            />;
+                        })
                         }}
                     className="aisList"
                     keyFunction={(item)=>item.mmsi}

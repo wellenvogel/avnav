@@ -8,7 +8,6 @@ import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
 import GpsPage from './gui/GpsPage.jsx';
 import AisPage from './gui/AisPage.jsx';
-import AisInfoPage from './gui/AisInfoPage.jsx';
 import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
 import StatusPage from './gui/StatusPage.jsx';
@@ -102,7 +101,6 @@ const pages={
     infopage: InfoPage,
     gpspage: GpsPage,
     aispage: AisPage,
-    aisinfopage:AisInfoPage,
     addonpage:AddOnPage,
     addresspage:AddressPage,
     statuspage:StatusPage,

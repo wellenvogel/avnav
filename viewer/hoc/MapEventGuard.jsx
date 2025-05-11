@@ -29,32 +29,55 @@
 
 
 import globalStore from "../util/globalstore.jsx";
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import keys from '../util/keys.jsx';
 import MapHolder from '../map/mapholder';
+import Helper from "../util/helper";
 
 let lastMapClickTime=undefined;
 MapHolder.registerEventGuard((eventName)=>{
     if (eventName === 'click'){
         lastMapClickTime=(new Date()).getTime();
+        console.log("map click");
     }
 });
 export default  (Component,opt_store)=>{
     return React.forwardRef((props,ref)=>{
-        let {onClick,...forwards}=props;
+        let {onClick,className,...forwards}=props;
+        const allowTime=allowClickTime();
+        const [allow,setAllow]=useState(allowTime === undefined);
+        useEffect(() => {
+            if (allowTime === undefined) return;
+            const timer=window.setTimeout(()=>{
+                setAllow(true);
+            },allowTime);
+            return ()=>window.clearTimeout(timer)
+        }, []);
         let clickHandler=onClick?function() {
             if (isMapDeadTime()) return;
             if (props.onClick) {
                 props.onClick.apply(this, [...arguments]);
             }
         }:undefined;
+        let cl=Helper.concatsp(className,allow?undefined:'noEvents');
         return <Component
                 ref={ref}
+                className={cl}
                 onClick={clickHandler}
             {...forwards}
             />
     })
 };
+
+const allowClickTime=()=>{
+    let timeDiff = globalStore.getData(keys.properties.mapClickWorkaroundTime, 300);
+    let now=Helper.now();
+    if (lastMapClickTime !== undefined){
+        let diff=lastMapClickTime+timeDiff-now;
+        if (diff <= 0) return;
+        return diff;
+    }
+}
 
 export const isMapDeadTime=()=>{
     let timeDiff = globalStore.getData(keys.properties.mapClickWorkaroundTime, 300);

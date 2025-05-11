@@ -24,6 +24,8 @@ import remotechannel, {COMMANDS} from "../util/remotechannel";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {DynamicTitleIcons} from "../components/TitleIcons";
 import layouthandler from "../util/layouthandler.js";
+import Dialogs from "../components/OverlayDialog";
+import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -256,7 +258,21 @@ class GpsPage extends React.Component{
         if (EditWidgetDialog.createDialog(item,getLayoutPage(),panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
-            this.props.history.push("aisinfopage",{mmsi:mmsi});
+            if (mmsi === undefined) return;
+            Dialogs.showDialog(undefined,()=>{
+                return <AisInfoWithFunctions
+                    mmsi={mmsi}
+                    hidden={{
+                        AisInfoNearest: true,
+                        AisInfoLocate: true,
+                    }}
+                    actionCb={(action,m)=>{
+                        if (action === 'AisInfoList'){
+                            this.props.history.push('aispage', {mmsi: m});
+                        }
+                    }}
+                />;
+            })
             return;
         }
         this.props.history.pop();

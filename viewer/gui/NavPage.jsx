@@ -43,6 +43,8 @@ import Page from "../components/Page";
 import Dialogs from "../components/OverlayDialog.jsx";
 import Requests from "../util/requests";
 import DB from "../components/DialogButton";
+import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
+import MapEventGuard from "../hoc/MapEventGuard";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -228,6 +230,7 @@ class MapWidgetsDialog extends React.Component{
     }
 }
 
+const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
 class NavPage extends React.Component{
     constructor(props){
         super(props);
@@ -396,6 +399,19 @@ class NavPage extends React.Component{
         if (mapholder.getCurrentChartEntry()) return;
         return mapholder.getLastChartKey()
     }
+    showAisInfo(mmsi){
+        if (! mmsi) return;
+        Dialogs.showDialog(undefined,()=>{
+            return <GuardedAisDialog
+                mmsi={mmsi}
+                actionCb={(action,m)=>{
+                    if (action === 'AisInfoList'){
+                        this.props.history.push('aispage', {mmsi: m});
+                    }
+                }}
+            />;
+        })
+    }
     widgetClick(item,data,panel,invertEditDirection){
         let pagePanels=LayoutHandler.getPagePanels(PAGENAME);
         let idx=pagePanels.indexOf(OVERLAYPANEL);
@@ -405,8 +421,7 @@ class NavPage extends React.Component{
         if (EditWidgetDialog.createDialog(item,PAGENAME,panel,{fixPanel:pagePanels,beginning:invertEditDirection,types:["!map"]})) return;
         if (item.name == "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
-            if (! mmsi) return;
-            this.props.history.push("aisinfopage",{mmsi:mmsi});
+            this.showAisInfo(mmsi);
             return;
         }
         if (item.name == "ActiveRoute"){
@@ -443,7 +458,7 @@ class NavPage extends React.Component{
             let aisparam=evdata.aisparam;
             if (!aisparam) return;
             if (aisparam.mmsi){
-                this.props.history.push('aisinfopage',{mmsi:aisparam.mmsi});
+                this.showAisInfo(aisparam.mmsi);
                 return true;
             }
             return;
