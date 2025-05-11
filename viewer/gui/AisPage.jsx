@@ -21,15 +21,10 @@ import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper from "../util/helper";
 
 const aisInfos=[
-    [ 'cpa', 'tcpa', 'bcpa', ],
+    [ 'cpa', 'tcpa', 'bcpa', 'age'],
     [ 'distance', 'headingTo', 'course', 'speed', ],
-//     [ 'headingTo', 'distance', ],
-//     [ 'course', 'speed', 'heading', 'turn', ],
     [ 'status', ],
-//     [ 'status', 'age', ],
-    [ 'shiptype', 'aid_type', 'length', ],
-//     [ 'shiptype', 'aid_type', 'callsign', 'destination', ],
-//     [ 'length', 'beam', 'draught', ],
+    [ 'shiptype', 'aid_type', 'length', ]
 ];
 const reducedAisInfos=[
     [ 'cpa', 'tcpa', 'distance', 'course', 'speed', ],
@@ -127,7 +122,7 @@ const AisItem=(props)=>{
             newLine=true;
         })
     })
-    txt=txt.replace(/ /g,'\xa0');
+    txt=txt.replace(/ /g,'\u2003');
     return ( <div className={cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
                 <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
