@@ -32,7 +32,7 @@ import React from "react";
 import {Drawing} from "../map/drawing";
 import MapHolder from "../map/mapholder";
 import ItemList from "./ItemList";
-import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
 import PropTypes from "prop-types";
 
 const displayItems = [
@@ -74,7 +74,7 @@ const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
     return (iprops)=> {
-        const props=useStore(iprops,{storeKeys:storeKeys,updateFunction:createUpdateFunction(config,mmsi)});
+        const props=useStore({...iprops,storeKeys:storeKeys,updateFunction:createUpdateFunction(config,mmsi)});
         let key = props.name;
         if (! AisFormatter.shouldShow(key,props.current)){
             return null;
@@ -91,7 +91,7 @@ const createItem=(config,mmsi)=>{
             || (0 < target.tcpa && target.cpa < warningDist && (key=='cpa' || (key=='tcpa' && target.tcpa < warningTime)))
             || (key === 'age' && target.age > hideAge )
         ){
-            clazz += ' warning';
+            clazz += ' aisWarning';
         }
         return (
             <div className={clazz}>
@@ -152,11 +152,91 @@ ShowAisItemInfo.propTypes={
     className: PropTypes.string
 }
 
-export const AisInfoDialog=({mmsi,onClick})=>{
+export const AisInfoDialog=({mmsi,onClick,buttons})=>{
+    const dialogContext=useDialogContext();
+    if (! onClick) onClick=()=>dialogContext.closeDialog();
+    const buttonList=buttons?buttons.concat([DBCancel()]):[DBCancel()];
     return <DialogFrame className="aisInfoDialog ">
         <DialogRow>
             <ShowAisItemInfo mmsi={mmsi} onClick={onClick}/>
         </DialogRow>
-        <DialogButtons buttonList={[DBCancel()]}></DialogButtons>
+        <DialogButtons buttonList={buttonList}></DialogButtons>
     </DialogFrame>
 };
+
+AisInfoDialog.propTypes={
+    mmsi: PropTypes.string.isRequired,
+    onClick: PropTypes.func,
+    buttons: PropTypes.array
+}
+
+const getTarget=(mmsi)=>{
+    if (! mmsi) return;
+    return NavData.getAisHandler().getAisByMmsi(mmsi);
+}
+
+export const AisInfoWithFunctions=({mmsi,actionCb,buttons})=>{
+    const runCb=(action,item)=>{
+        if (actionCb) actionCb(action,item);
+    }
+    const pButtons=[
+        {
+            name: 'AisNearest',
+            onClick:()=>{
+                NavData.getAisHandler().setTrackedTarget(0);
+                let pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
+                if (pos) MapHolder.setCenter(pos);
+                runCb('AisNearest',mmsi);
+            },
+            label: 'Nearest',
+            disabled: mmsi === undefined
+        },
+        {
+            name: 'AisInfoLocate',
+            onClick: ()=>{
+                NavData.getAisHandler().setTrackedTarget(mmsi);
+                let pos=NavData.getAisHandler().getAisPositionByMmsi(mmsi);
+                if (pos) {
+                    MapHolder.setCenter(pos);
+                    MapHolder.setGpsLock(false);
+                }
+                runCb('AisInfoLocate',mmsi);
+            },
+            label: 'Locate',
+            disabled: mmsi === undefined
+        },
+        {
+            name: 'AisInfoHide',
+            onClick: () => {
+                let target = getTarget(mmsi);
+                if (!target) return;
+                if (target.hidden) {
+                    NavData.getAisHandler().unsetHidden(target.mmsi);
+                } else {
+                    NavData.getAisHandler().setHidden(target.mmsi);
+                }
+                runCb('AisInfoHide',mmsi);
+            },
+            label: 'Hide',
+            storeKeys: storeKeys,
+            updateFunction: ()=>{
+                let target=getTarget(mmsi)||{};
+                return {toggle:target.hidden};
+            },
+        },
+        {
+            name: 'AisInfoList',
+            onClick:()=>{
+                runCb('AisInfoList',mmsi)
+            },
+            label: 'List',
+            visible: mmsi !== undefined && actionCb !== undefined,
+            disabled: mmsi === undefined || actionCb === undefined
+        },
+
+    ]
+    return <AisInfoDialog
+        mmsi={mmsi}
+        buttons={buttons?pButtons.concat(buttons):pButtons}
+        />
+}

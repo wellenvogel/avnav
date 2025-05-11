@@ -4,6 +4,7 @@ import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import KeyHandler from '../util/keyhandler';
 import {concatsp} from "../util/helper";
 import {useDialogContext} from "./OverlayDialog";
+import {useStore} from "../hoc/Dynamic";
 
 const COMPONENT="dialogButton";
 const DialogButton=(props)=>{
@@ -12,7 +13,7 @@ const DialogButton=(props)=>{
         useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
             if (props.onClick && ! props.disabled && props.visible !== false) props.onClick();
         });
-        let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,...forward}=props;
+        let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,...forward}=useStore(props);
         if (visible === false) return null;
         let spanStyle={};
         if (icon !== undefined) {
@@ -27,12 +28,13 @@ const DialogButton=(props)=>{
             <button
                 {...forward}
                 {...add}
+                {...style}
                 name={name}
                 onClick={(ev)=>{
                     if (! onClick || close) dialogContext.closeDialog();
                     if (onClick) onClick(ev);
                 }}
-                className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive")}
+                className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
             >
             <span style={spanStyle}/>
                 {children}

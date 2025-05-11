@@ -14,7 +14,7 @@ import DB from './DialogButton.jsx';
 import DialogButton from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
-import {concatsp} from "../util/helper";
+import Helper, {concatsp} from "../util/helper";
 
 
 /**
@@ -102,7 +102,7 @@ export const DialogButtons=(props)=>{
     const {className,children,buttonList,...fw}=props;
     let buttons=buttonList;
     if (! (buttons instanceof Array)) buttons=[buttons];
-    return <div {...fw} className={"dialogButtons "+((className!==undefined)?className:"")}>
+    return <div {...fw} className={Helper.concatsp("dialogButtons",className)}>
         {buttons.map((button)=>{
             if (! button) return null;
             if (typeof(button) === 'function'){
@@ -110,7 +110,9 @@ export const DialogButtons=(props)=>{
                 return <El/>
             }
             const label=button.label?button.label:button.name.substring(0,1).toUpperCase()+button.name.substring(1);
-            return <DialogButton {...button} key={button.name}>{label}</DialogButton>
+            return <DialogButton {...button} key={button.name}>
+                {label}
+            </DialogButton>
         })}
         {children}
     </div>

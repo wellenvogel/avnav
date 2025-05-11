@@ -16,7 +16,9 @@ export const useStore=(props,opt_options)=>{
     const {storeKeys,updateFunction,minTime,changeCallback,...forward}=props;
     if (! opt_options) opt_options= {};
     const usedStoreKeys=KeyHelper.removeNodeInfo({...opt_options.storeKeys,...storeKeys});
-    if (! usedStoreKeys) return props;
+    if (! usedStoreKeys) {
+        return props;
+    }
     if (typeof(usedStoreKeys) !== 'object'){
         throw Error("invalid type of storeKeys: "+typeof(usedStoreKeys));
     }
@@ -25,11 +27,11 @@ export const useStore=(props,opt_options)=>{
     const timer=useRef(undefined);
     const [values,setValues]=useState(store.getMultiple(usedStoreKeys));
     const usedChangeCallback=changeCallback||opt_options.changeCallback;
-    const computeValues=useCallback((data)=>{
+    const computeValues=useCallback((data,fw)=>{
         const usedUpdateFunction=opt_options.updateFunction||updateFunction;
-        if (usedUpdateFunction) return {...forward,...usedUpdateFunction({...data},storeKeys)};
-        return {...forward,...data};
-    },[forward,updateFunction,opt_options])
+        if (usedUpdateFunction) return {...fw,...usedUpdateFunction({...data},storeKeys)};
+        return {...fw,...data};
+    },[updateFunction,opt_options])
     const doSetValues=(data)=>{
         setValues(data);
         lastUpdate.current=(new Date()).getTime();
@@ -60,7 +62,7 @@ export const useStore=(props,opt_options)=>{
             usedChangeCallback(computeValues(values));
         }, []);
     }
-    return computeValues(values);
+    return computeValues(values,forward);
 }
 
 export const DynamicFrame=(props)=>{

@@ -91,12 +91,15 @@
     border: none;
     position: relative;
     .nightForeColor(@colorMain,@nightColor);
+    .flex-display();
+    .flex-direction(row);
+    .flex-align-items(center);
     &[disabled] {
       opacity: 0.6;
       }
     > span{
-      position: absolute;
-      left: 0.1em;
+      position: unset;
+      display: inline-block;
       width:1em;
       height: 1em;
       margin-top: auto;
@@ -118,11 +121,8 @@
   > span{
     background-image: url("@{iconBase}/@{icon}");
   }
-  padding-left:1.3em;
-  font-size: 0.9em;
 }
 .dialogTextButton(@text){
-  font-size: 0.9em;
   padding-left:1.3em;
   > span:after{
     content: @text;

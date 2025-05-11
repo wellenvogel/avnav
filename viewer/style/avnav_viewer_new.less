@@ -1068,9 +1068,11 @@ span.valuePrefix{
   .smallDisplay & .status{
     display: block;
     margin-left: 1em;
-    position: relative;
-    top: 0;
-    left: 0;
+    margin-top: 0.5em;
+    .flex-shrink(0);
+    top: unset;
+    left: unset;
+    position: unset;
   }
   .infoList{
     width: 100%;
@@ -1107,8 +1109,22 @@ span.valuePrefix{
       width: 50%;
       font-weight: bold;
     }
-    .warning{
+    .aisWarning{
       color: @colorRed; //should also be ok for night mode as normal night color is dimmed to 60%
+    }
+  }
+}
+.aisInfoDialog{
+  position: relative;
+  .status{
+    position: unset;
+  }
+  .infoList{
+    font-size: unset;
+  }
+  @media(max-width: 35em){
+    .dialogRow{
+      .flex-direction(column)
     }
   }
 }

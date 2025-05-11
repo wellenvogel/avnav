@@ -9,7 +9,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import MapEventGuard from "../hoc/MapEventGuard";
 import NavData from '../nav/navdata';
-import {AisInfoDialog, ShowAisItemInfo, storeKeys} from "../components/AisInfoDisplay";
+import {AisInfoWithFunctions, ShowAisItemInfo, storeKeys} from "../components/AisInfoDisplay";
 import Dialogs from "../components/OverlayDialog";
 
 const GuardedInfo=MapEventGuard(ShowAisItemInfo);
@@ -52,9 +52,8 @@ class AisInfoPage extends React.Component{
                     }
                     this.props.history.pop();
                 },
-                storeKeys: {
-                    dummy: storeKeys
-                },
+                storeKeys: storeKeys
+                ,
                 updateFunction: ()=>{
                     let target=this.getTarget()||{};
                     return {toggle:target.hidden};
@@ -71,19 +70,26 @@ class AisInfoPage extends React.Component{
                     }
                 }
             },
-            /*
             {
                 name:'Test',
                 onClick: ()=>{
                     let mmsi=(this.props.options||{}).mmsi;
                     if (mmsi){
                         Dialogs.showDialog(undefined,()=>{
-                            return <AisInfoDialog mmsi={mmsi}/>;
+                            return <AisInfoWithFunctions
+                                mmsi={mmsi}
+                                actionCb={(action,m)=>{
+                                    if (action === 'AisInfoList'){
+                                        if (! this.props.history.backFromReplace()) {
+                                            this.props.history.replace('aispage', {mmsi: m});
+                                        }
+                                    }
+                                }}
+                            />;
                         })
                     }
                 }
             },
-             */
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
