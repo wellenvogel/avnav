@@ -7,7 +7,16 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {Children, cloneElement, createContext, useCallback, useContext, useRef, useState} from 'react';
+import React, {
+    Children,
+    cloneElement,
+    createContext,
+    forwardRef,
+    useCallback,
+    useContext,
+    useRef,
+    useState
+} from 'react';
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import DB from './DialogButton.jsx';
@@ -86,11 +95,11 @@ export const DialogText=({className,children})=>{
         {children}
     </div>
 }
-export const DialogRow=({className,children})=>{
-    return <div className={concatsp(className,"dialogRow")}>
+export const DialogRow=forwardRef(({className,children},ref)=>{
+    return <div className={concatsp(className,"dialogRow")} ref={ref}>
         {children}
     </div>
-}
+})
 DialogFrame.propTypes={
     className: PropTypes.string,
     title: PropTypes.string,

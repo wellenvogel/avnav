@@ -41,20 +41,20 @@ const displayItems = [
     {name: 'cpa'},
     {name: 'tcpa'},
     {name: 'bcpa'},
+    {name: 'headingTo'},
     {name: 'passFront', addClass: 'aisFront'},
     {name: 'mmsi'},
     {name: 'shipname'},
     {name: 'callsign'},
     {name: 'shiptype'},
     {name: 'aid_type'},
+    {name: 'course'},
+    {name: 'speed'},
+    {name: 'heading'},
     {name: 'clazz'},
     {name: 'status'},
     {name: 'destination'},
     {name: 'position'},
-    {name: 'headingTo'},
-    {name: 'course'},
-    {name: 'speed'},
-    {name: 'heading'},
     {name: 'turn'},
     {name: 'length'},
     {name: 'beam'},
@@ -141,7 +141,7 @@ export const ShowAisItemInfo=(props)=>{
         <ItemList
             itemCreator={(config)=>{return createItem(config,props.mmsi)}}
             itemList={displayItems}
-            scrollable={true}
+            scrollable={props.scrollable}
             className={Helper.concatsp("infoList",props.className)}
             onClick={props.onClick}
         />
@@ -162,7 +162,9 @@ export const AisInfoDialog=({mmsi,onClick,buttons,className})=>{
     }
     const buttonList=buttons?buttons.concat([DBCancel()]):[DBCancel()];
     return <DialogFrame className={Helper.concatsp("aisInfoDialog",className)}>
-        <DialogRow>
+        <DialogRow ref={(el)=>{
+            if (el) el.scrollTop=-el.scrollHeight;
+        }}>
             <ShowAisItemInfo mmsi={mmsi} onClick={onClick}/>
         </DialogRow>
         <DialogButtons buttonList={buttonList}></DialogButtons>

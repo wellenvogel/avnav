@@ -1062,29 +1062,29 @@ span.valuePrefix{
   }
 }
 
+@aisInfoSmall: 35em;
+@aisInfoNoIconHeight: 40em;
 .aisInfoDialog{
+  position: relative;
   .status{
-    left: 3em;
-    top: ( 2em + @headlineHeight)  ;
-    position: absolute;
     width: 100px;
     height:100px;
-  }
-  .smallDisplay & .status{
     display: block;
-    margin-left: 1em;
-    margin-top: 0.5em;
-    .flex-shrink(0);
-    top: unset;
-    left: unset;
-    position: unset;
+    @media(max-width: @aisInfoSmall) {
+      @media (max-height: @aisInfoNoIconHeight) {
+        display: none;
+      }
+    }
   }
   .infoList{
     width: 100%;
+    height: 100%;
+    @media(max-width: @aisInfoSmall){
+      height: unset;
+    }
     max-width: 60em;
     margin-left: auto;
     margin-right: auto;
-    font-size: 1.2em;
     margin-top: 0.5em;
     .flex-grow(1);
     .label {
@@ -1104,18 +1104,12 @@ span.valuePrefix{
       color: @colorRed; //should also be ok for night mode as normal night color is dimmed to 60%
     }
   }
-}
-.aisInfoDialog{
-  position: relative;
-  .status{
-    position: unset;
-  }
-  .infoList{
-    font-size: unset;
-  }
-  @media(max-width: 35em){
-    .dialogRow{
-      .flex-direction(column-reverse)
+  .dialogRow{
+    min-height: 0;
+    flex-shrink: 1;
+    overflow: auto;
+    @media(max-width: @aisInfoSmall){
+        .flex-direction(column-reverse)
     }
   }
 }
