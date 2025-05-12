@@ -207,7 +207,11 @@ const MapPage =(props)=>{
         return (
             <PageFrame
                 {...pageProperties}
-                className={className}>
+                className={className}
+                hideCallback={()=>{
+                    mapholder.updateSize();
+                }}
+            >
                 {props.mapFloat?map:null}
                 <PageLeft dialogCtxRef={(ctx)=>{
                     dialogCtx.current=ctx;
@@ -253,9 +257,6 @@ const MapPage =(props)=>{
                 </PageLeft>
                 <ButtonList
                     itemList={props.buttonList}
-                    buttonWidthChanged={()=>{
-                        mapholder.updateSize();
-                    }}
                     />
             </PageFrame>
 

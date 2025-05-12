@@ -35,6 +35,9 @@ export const PageFrame=(iprops)=>{
     }, []);
     const lastUserEvent=useRef(Helper.now());
     const [hidden,setHidden]=useState(false);
+    useEffect(() => {
+        if (hideCallback) hideCallback(hidden);
+    },[hidden]);
     const timer=useTimer((sequence)=>{
         if (autoHideButtons !== undefined){
             let now=Helper.now();
@@ -44,7 +47,6 @@ export const PageFrame=(iprops)=>{
             if (! hidden) {
                 if (lastUserEvent.current < (now - autoHideButtons)) {
                     setHidden(true);
-                    if (hideCallback) hideCallback(true);
                 }
             }
         }
@@ -54,7 +56,6 @@ export const PageFrame=(iprops)=>{
         lastUserEvent.current=Helper.now();
         if (hidden && ev && ev.type === 'click'){
             setHidden(false);
-            if (hideCallback) hideCallback(false)
         }
     },[hideCallback,hidden]);
     let cl=Helper.concatsp("page",
