@@ -29,6 +29,7 @@ import React from "react";
 import {useKeyEventHandler} from "../util/GuiHelpers";
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
 import {ResizeFrame} from "../hoc/Resizable";
+import Helper from "../util/helper";
 
 export const WidgetProps={
     onClick:    PropTypes.func,
@@ -62,10 +63,12 @@ WidgetHead.propTypes={
 export const WidgetFrame=(props)=> {
     useKeyEventHandler(props, "widget");
     const sortableProps = useAvNavSortable(props.dragId)
-    let classes = "widget ";
-    if (props.isAverage) classes += " average";
-    if (props.className) classes += " " + props.className;
-    if (props.addClass) classes += " " + props.addClass;
+    let classes = Helper.concatsp(
+        "widget ",
+        (props.isAverage)?"average":undefined,
+        props.className,
+        props.addClass,
+        (props.mode === 'horizontal')?"horizontal":undefined);
     const resize=!(props.resize === false) && props.mode === 'gps';
     return <div className={classes} onClick={props.onClick} {...sortableProps} style={props.style}>
         <WidgetHead {...props}/>

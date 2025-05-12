@@ -37,6 +37,11 @@ import PropTypes from "prop-types";
 import Helper from "../util/helper";
 
 const displayItems = [
+    {name: 'distance'},
+    {name: 'cpa'},
+    {name: 'tcpa'},
+    {name: 'bcpa'},
+    {name: 'passFront', addClass: 'aisFront'},
     {name: 'mmsi'},
     {name: 'shipname'},
     {name: 'callsign'},
@@ -47,15 +52,10 @@ const displayItems = [
     {name: 'destination'},
     {name: 'position'},
     {name: 'headingTo'},
-    {name: 'distance'},
     {name: 'course'},
     {name: 'speed'},
     {name: 'heading'},
     {name: 'turn'},
-    {name: 'cpa'},
-    {name: 'tcpa'},
-    {name: 'bcpa'},
-    {name: 'passFront', addClass: 'aisFront'},
     {name: 'length'},
     {name: 'beam'},
     {name: 'draught'},
@@ -127,7 +127,11 @@ const drawIcon=(canvas,current)=>{
 
 const AisStatus = (iprops)=> {
     const props=useStore(iprops,{storeKeys:storeKeys,updateFunction:createUpdateFunction({},iprops.mmsi)});
-    return <canvas className="status" ref={(ctx)=>{drawIcon(ctx,props.current)}}/>
+    return <canvas
+        className="status"
+        ref={(ctx)=>{drawIcon(ctx,props.current)}}
+        onClick={props.onClick}
+    />
 };
 
 export const ShowAisItemInfo=(props)=>{
@@ -138,10 +142,8 @@ export const ShowAisItemInfo=(props)=>{
             itemCreator={(config)=>{return createItem(config,props.mmsi)}}
             itemList={displayItems}
             scrollable={true}
-            className="infoList"
-            onClick={()=>{
-                props.onClick();
-            }}
+            className={Helper.concatsp("infoList",props.className)}
+            onClick={props.onClick}
         />
 
     </React.Fragment>
