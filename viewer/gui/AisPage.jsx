@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -147,6 +147,28 @@ const MemoAisItem=React.memo(AisItem,itemCompare);
 
 const WARNING_CLASS='aisWarning';
 const HIDDEN_CLASS='aisHidden';
+
+const Summary=(iprops)=>{
+    const props=useStore(iprops,{minTime:globalStore.getData(keys.properties.aisListUpdateTime,1)*1000})
+    let color=PropertyHandler.getAisColor({
+        warning: true
+    });
+    return (
+        <div className="aisSummary" onClick={iprops.onClick}>
+            <span className="aisNumTargets">{props.numTargets} Targets</span>
+            {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
+                                      onClick={iprops.scrollWarning}/>}
+            <span>sorted by {fieldToLabel(props.sortField)}</span>
+            {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
+        </div>
+    );
+};
+
+const AisList=(iprops)=> {
+    const props = useStore(iprops, {minTime: globalStore.getData(keys.properties.aisListUpdateTime, 1) * 1000});
+    return <ItemList {...props}/>
+}
+
 class AisPage extends React.Component{
     constructor(props){
         super(props);
@@ -286,22 +308,6 @@ class AisPage extends React.Component{
     componentDidMount(){
     }
     render(){
-        let updateTime=globalStore.getData(keys.properties.aisListUpdateTime,1)*1000;
-        const AisList=Dynamic(ItemList,{minTime:updateTime});
-        const Summary=Dynamic((props)=>{
-            let color=PropertyHandler.getAisColor({
-                warning: true
-            });
-            return (
-                <div className="aisSummary" onClick={this.sortDialog}>
-                    <span className="aisNumTargets">{props.numTargets} Targets</span>
-                    {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
-                                              onClick={this.scrollWarning}/>}
-                    <span>sorted by {fieldToLabel(this.state.sortField)}</span>
-                    {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
-                </div>
-            );
-        },{minTime:updateTime});
         let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
             this.computeList(globalStore.getMultiple({
                 list: keys.nav.ais.list,
@@ -325,6 +331,8 @@ class AisPage extends React.Component{
                      updateFunction={this.computeSummary}
                      sortField={this.state.sortField}
                      searchValue={this.state.searchActive?this.state.searchValue:undefined}
+                     scrollWarning={(el)=>this.scrollWarning(el)}
+                     onClick={this.sortDialog}
                 />
                 <AisList
                     itemClass={MemoAisItem}
