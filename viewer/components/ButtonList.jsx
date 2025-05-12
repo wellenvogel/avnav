@@ -37,7 +37,7 @@ const ButtonList = (iprops) => {
         if (item.editDisable && props.isEditing) return false;
         if (item.editOnly && !props.isEditing) return false;
         return true;
-    }, [props]);
+    }, [props.isEditing]);
     useEffect(() => {
         if (props.itemList) {
             for (let k in props.itemList) {
