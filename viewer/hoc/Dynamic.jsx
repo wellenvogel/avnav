@@ -35,7 +35,7 @@ export const useStore=(props,opt_options)=>{
     const doSetValues=(data)=>{
         setValues(data);
         lastUpdate.current=(new Date()).getTime();
-        if (usedChangeCallback) usedChangeCallback(computeValues(data));
+        if (usedChangeCallback) usedChangeCallback(computeValues(data,forward));
     }
     const dataChanged=useCallback(()=>{
         const usedMinTime=opt_options.minTime||minTime;
@@ -59,7 +59,7 @@ export const useStore=(props,opt_options)=>{
     }, [usedStoreKeys]);
     if (usedChangeCallback){
         useEffect(() => {
-            usedChangeCallback(computeValues(values));
+            usedChangeCallback(computeValues(values,forward));
         }, []);
     }
     return computeValues(values,forward);
