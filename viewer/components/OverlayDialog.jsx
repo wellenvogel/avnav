@@ -80,6 +80,12 @@ OverlayDialog.propTypes={
     className: PropTypes.string
 };
 
+export const handleCtxRef=(ctx,ref)=>{
+    if (!ref) return;
+    if (typeof ref == 'function') ref(ctx);
+    else ref.current=ctx;
+}
+
 export const NestedDialogDisplay=({closeCallback,children,dialogCtxRef})=>{
     let [DialogDisplay,setDialog]=useDialog(); //for nested dialogs
     const dialogContext=useDialogContext();
@@ -88,10 +94,7 @@ export const NestedDialogDisplay=({closeCallback,children,dialogCtxRef})=>{
         setDialog(undefined,closeCallback);
     }
     const newContext=buildContext(close,setDialog,setDialog,ourZIndex);
-    if (dialogCtxRef) {
-        if (typeof dialogCtxRef == 'function') dialogCtxRef(newContext);
-        else dialogCtxRef.current=newContext;
-    }
+    handleCtxRef(newContext,dialogCtxRef);
     return <DialogContext
         {...newContext}>
             <DialogDisplay/>
