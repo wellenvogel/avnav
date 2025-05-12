@@ -80,6 +80,33 @@ OverlayDialog.propTypes={
     className: PropTypes.string
 };
 
+export const NestedDialogDisplay=({closeCallback,children,dialogCtxRef})=>{
+    let [DialogDisplay,setDialog]=useDialog(); //for nested dialogs
+    const dialogContext=useDialogContext();
+    const ourZIndex=dialogContext.zIndex+10;
+    const close=()=>{
+        setDialog(undefined,closeCallback);
+    }
+    const newContext=buildContext(close,setDialog,setDialog,ourZIndex);
+    if (dialogCtxRef) {
+        if (typeof dialogCtxRef == 'function') dialogCtxRef(newContext);
+        else dialogCtxRef.current=newContext;
+    }
+    return <DialogContext
+        {...newContext}>
+            <DialogDisplay/>
+            {children}
+        </DialogContext>
+
+}
+NestedDialogDisplay.propTypes={
+    closeCallback: PropTypes.func,
+    dialogCtxRef: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({current: PropTypes.any})
+    ])
+}
+
 export const DialogFrame=(props)=>{
     let classNameS="";
     let {title,className,flex,children,...fwprops}=props;
@@ -356,6 +383,10 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
         })
     })
 }
+export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback)=>{
+    if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
+    else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
+}
 
 export const SelectList=({list,onClick})=> {
     return <div className="selectList">
@@ -535,10 +566,7 @@ const Dialogs = {
         return addDialog(html,opt_cancelCallback,opt_timeout);
     },
 
-    showDialog: function(opt_dialogContext,dialog,opt_cancelCallback){
-        if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
-        else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
-    }
+    showDialog: showDialog
 
 };
 

@@ -2,23 +2,22 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
+import {useStore} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React from 'react';
+import React, {useCallback, useRef} from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
-import Page from '../components/Page.jsx';
-import AisFormatter, {aisproxy, isAisProxy} from '../nav/aisformatter.jsx';
-import assign from 'object-assign';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
+import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
+import Dialogs, {showDialog, showPromiseDialog, useDialogContext} from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
-import GuiHelper from "../util/GuiHelpers";
+import GuiHelper, {useStoreState} from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
-import Dialogs from "../components/OverlayDialog.jsx";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper from "../util/helper";
+import ButtonList from "../components/ButtonList";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -79,12 +78,6 @@ const pad=(val,len)=>{
     return str;
 }
 
-const sortDialog=(sortField)=>{
-    for (let i in sortFields){
-        sortFields[i].selected=sortFields[i].value === sortField;
-    }
-    return OverlayDialog.selectDialogPromise('Sort Order',sortFields);
-};
 
 const AisItem=(props)=>{
     let reduceDetails=globalStore.getData(keys.properties.aisReducedList,false);
@@ -153,8 +146,9 @@ const Summary=(iprops)=>{
     let color=PropertyHandler.getAisColor({
         warning: true
     });
+    const dialogContext=useDialogContext();
     return (
-        <div className="aisSummary" onClick={iprops.onClick}>
+        <div className="aisSummary" onClick={(ev)=>iprops.onClick(ev,dialogContext)}>
             <span className="aisNumTargets">{props.numTargets} Targets</span>
             {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                       onClick={iprops.scrollWarning}/>}
@@ -168,38 +162,88 @@ const AisList=(iprops)=> {
     const props = useStore(iprops, {minTime: globalStore.getData(keys.properties.aisListUpdateTime, 1) * 1000});
     return <ItemList {...props}/>
 }
+const computeSummary=({sortField,aisList})=>{
+    let empty={sortField:sortField,numTargets:0,warning:undefined};
+    if (! aisList || aisList.length === 0) return empty;
+    let rt=empty;
+    for( let aisidx in aisList){
+        let ais=aisList[aisidx];
+        if (ais.warning) rt.warning=ais.mmsi;
+    }
+    rt.numTargets=aisList.length;
+    return rt;
+};
 
-class AisPage extends React.Component{
-    constructor(props){
-        super(props);
-        if (props.options && props.options.mmsi){
-            this.initialMmsi=props.options.mmsi;
+
+
+
+const computeList=({aisList,trackingTarget,sortField,searchActive,searchValue,initialMmsi})=>{
+    if (! aisList) return {itemList:[]};
+    let items=[];
+    let sortFunction=aisSortCreator(sortField||sortFields[0]);
+    for( let aisidx in aisList){
+        let ais={...aisList[aisidx]};
+        ais=aisproxy(ais,true);
+        if (! ais.mmsi) continue;
+        if (searchActive){
+            let found=false;
+            ['name','mmsi','callsign','shipname'].forEach((n)=>{
+                let v=ais[n];
+                if (! v) return;
+                if ((v+"").toUpperCase().indexOf(searchValue) >= 0) found=true;
+            });
+            if (! found) continue;
         }
-        let sortField=sortFields[0].value;
-        if (props.options && props.options.sortField){
-            sortField=props.options.sortField;
+        ais.color=PropertyHandler.getAisColor({
+            nearest: ais.nearest,
+            warning: ais.warning,
+            //tracking: hasTracking && ais.tracking
+        });
+        if (ais.mmsi == trackingTarget){
+            ais.selected=true;
         }
-        this.state={
-            sortField: sortField,
-            searchValue:'',
-            searchActive:false
-        };
-        this.searchHandler=GuiHelper.storeHelperState(this,{searchActive:keys.gui.aispage.searchActive,searchValue: keys.gui.aispage.searchValue});
-        this.scrollWarning=this.scrollWarning.bind(this);
-        this.computeList=this.computeList.bind(this);
-        this.sortDialog=this.sortDialog.bind(this);
-        this.computeSummary=this.computeSummary.bind(this);
-        this.buttons=[
+        if (initialMmsi && ais.mmsi ===  initialMmsi){
+            ais.initialTarget=true;
+        }
+        items.push(ais);
+    }
+    items.sort(sortFunction);
+    return {itemList:items};
+};
+
+const scrollWarning=(ev)=>{
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    let el=document.querySelector('.aisList .'+WARNING_CLASS);
+    if (el) el.scrollIntoView();
+}
+const AisPage =(props)=>{
+        const options=props.options||{};
+        let initialMmsi=useRef(options.mmsi);
+        const [sortField,setSortField]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
+        const [searchActive,setSearchActive]=useStoreState(keys.gui.aispage.searchActive,false);
+        const [searchValue,setSearchValue]=useStoreState(keys.gui.aispage.searchValue,"");
+        const dialogContext=useRef();
+        const sortDialog=useCallback(()=> {
+            for (let i in sortFields) {
+                sortFields[i].selected = sortFields[i].value === sortField;
+            }
+            showPromiseDialog(dialogContext.current,Dialogs.createSelectDialog('Sort Order', sortFields))
+                .then((selected)=>{
+                     setSortField(selected.value);
+                })
+                .catch(()=>{})
+        },[sortField]);
+        const buttons=[
             {
                 name:"AisNearest",
                 onClick:()=>{
                     navdata.getAisHandler().setTrackedTarget(0);
-                    this.props.history.pop();
+                    props.history.pop();
                 }
             },
             {
                 name:"AisSort",
-                onClick:this.sortDialog
+                onClick:sortDialog
 
             },
             {
@@ -211,173 +255,105 @@ class AisPage extends React.Component{
             {
                 name:'AisSearch',
                 onClick: ()=>{
-                    if (this.state.searchActive){
-                        this.searchHandler.setMultiple({searchActive:false});
+                    if (searchActive){
+                        setSearchActive(false);
                     }
                     else{
-                        Dialogs.valueDialogPromise("filter",this.state.searchValue,undefined,true)
+                        showPromiseDialog(dialogContext.current,Dialogs.createValueDialog("filter",searchValue,undefined,undefined,undefined,true))
                             .then((value)=>{
-                                this.searchHandler.setMultiple({searchValue:value.toUpperCase(),searchActive: true});
+                                setSearchActive(true);
+                                setSearchValue(value.toUpperCase());
                             })
                             .catch((e)=>{});
                     }
                 },
-                toggle:()=>this.state.searchActive
+                toggle:()=>searchActive
             },
-            Mob.mobDefinition(this.props.history),
+            Mob.mobDefinition(props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{this.props.history.pop()}
+                onClick: ()=>{props.history.pop()}
             }
         ];
-        this.listRef=undefined;
-    }
-
-    getSnapshotBeforeUpdate(prevProps, prevState) {
-        if (! this.listRef) return null;
-        return this.listRef.scrollTop;
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (snapshot === undefined || snapshot === null) return;
-        if (this.initialMmsi !== undefined) return ;
-        if (! this.listRef) return;
-        this.listRef.scrollTop=snapshot;
-    }
-
-    computeSummary(state){
-        let empty={sortField:this.state.sortField||'cpa',numTargets:0,warning:undefined};
-        let aisList=state.list;
-        if (! aisList || aisList.length === 0) return empty;
-        let rt=empty;
-        for( let aisidx in aisList){
-            let ais=aisList[aisidx];
-            if (ais.warning) rt.warning=ais.mmsi;
-        }
-        rt.numTargets=aisList.length;
-        return rt;
-    };
-    computeList(state){
-        let aisList=state.list;
-        if (! aisList) return {itemList:[]};
-        let trackingTarget=state.tracked;
-        let items=[];
-        let sortFunction=aisSortCreator(this.state.sortField||'cpa');
-        for( let aisidx in aisList){
-            let ais={...aisList[aisidx]};
-            ais=aisproxy(ais,true);
-            if (! ais.mmsi) continue;
-            if (this.state.searchActive){
-                let found=false;
-                ['name','mmsi','callsign','shipname'].forEach((n)=>{
-                    let v=ais[n];
-                    if (! v) return;
-                    if ((v+"").toUpperCase().indexOf(this.state.searchValue) >= 0) found=true;
-                });
-                if (! found) continue;
-            }
-            ais.color=PropertyHandler.getAisColor({
-                nearest: ais.nearest,
-                warning: ais.warning,
-                //tracking: hasTracking && ais.tracking
-            });
-            if (ais.mmsi == trackingTarget){
-                ais.selected=true;
-            }
-            if (this.initialMmsi && ais.mmsi ===  this.initialMmsi){
-                ais.initialTarget=true;
-            }
-            items.push(ais);
-        }
-        items.sort(sortFunction);
-        return {itemList:items};
-    };
-    scrollWarning(ev){
-        if (ev && ev.stopPropagation) ev.stopPropagation();
-        let el=document.querySelector('.aisList .'+WARNING_CLASS);
-        if (el) el.scrollIntoView();
-    }
-    sortDialog(){
-        sortDialog(this.state.sortField)
-            .then((selected)=>{
-                this.setState({sortField:selected.value});
-                this.props.history.setOptions({sortField:selected.value});
-            })
-            .catch(()=>{})
-    }
-    componentDidMount(){
-    }
-    render(){
-        let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
-            this.computeList(globalStore.getMultiple({
-                list: keys.nav.ais.list,
-                tracked: keys.nav.ais.trackedMmsi,
-            }))
-            :
+    let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
+        computeList(Object.assign(
             {
-                storeKeys: {
-                    updateCount: keys.nav.ais.updateCount,
-                    list: keys.nav.ais.list,
-                    tracked: keys.nav.ais.trackedMmsi,
-                },
-                updateFunction: this.computeList
-            };
-        let MainContent=<React.Fragment>
-            <Summary numTargets={0}
-                     storeKeys={{
-                        updateCount:keys.nav.ais.updateCount,
-                        list:keys.nav.ais.list
-                        }}
-                     updateFunction={this.computeSummary}
-                     sortField={this.state.sortField}
-                     searchValue={this.state.searchActive?this.state.searchValue:undefined}
-                     scrollWarning={(el)=>this.scrollWarning(el)}
-                     onClick={this.sortDialog}
-                />
-                <AisList
-                    itemClass={MemoAisItem}
-                    onItemClick={(item)=> {
-                        let accessor=aisproxy(item);
-                        Dialogs.showDialog(undefined,()=>{
-                            return <AisInfoWithFunctions
-                                mmsi={accessor.mmsi}
-                                actionCb={(action,m)=>{
-                                    if (action === 'AisNearest' || action === 'AisInfoLocate'){
-                                            this.props.history.pop();
-                                    }
-                                }}
-                            />;
-                        })
-                        }}
-                    className="aisList"
-                    keyFunction={(item)=>item.mmsi}
-                    {...aisListProps}
-                    scrollable={true}
-                    listRef={(list)=>{
-                        this.listRef=list;
-                        if (!list) return;
-                        if (! this.initialMmsi) return;
-                        let selected=list.querySelector('.initialTarget');
-                        if (! selected) return;
-                        this.initialMmsi=undefined;
-                        let mode=GuiHelper.scrollInContainer(list,selected);
-                        if (mode < 1 || mode > 2) return;
-                        selected.scrollIntoView(mode===1);
-                    }}
-                    />
-            </React.Fragment>;
-
+                sortField: sortField,
+                searchActive: searchActive,
+                searchValue: searchValue,
+                initialMmsi: initialMmsi.current
+            },
+            globalStore.getMultiple({
+                aisList: keys.nav.ais.list,
+                trackingTarget: keys.nav.ais.trackedMmsi
+            })
+        ))
+        :
+        {
+            storeKeys: {
+                updateCount: keys.nav.ais.updateCount,
+                aisList: keys.nav.ais.list,
+                trackingTarget: keys.nav.ais.trackedMmsi,
+            },
+            updateFunction: (state) => computeList({
+                ...state,
+                sortField: sortField,
+                searchActive: searchActive,
+                searchValue: searchValue,
+                initialMmsi: initialMmsi.current
+            })
+        };
         return (
-            <Page
-                {...this.props}
+            <PageFrame
+                {...props}
                 id="aispage"
-                title="Ais"
-                mainContent={
-                            MainContent
-                        }
-                buttonList={this.buttons}/>
+                title="Ais">
+                <PageLeft dialogCtxRef={dialogContext}>
+                    <Summary numTargets={0}
+                             storeKeys={{
+                                 updateCount:keys.nav.ais.updateCount,
+                                 aisList:keys.nav.ais.list
+                             }}
+                             updateFunction={(state)=>computeSummary({...state,sortField:sortField})}
+                             sortField={sortField}
+                             searchValue={searchActive?searchValue:undefined}
+                             scrollWarning={(el)=>scrollWarning(el)}
+                             onClick={sortDialog}
+                    />
+                    <AisList
+                        itemClass={MemoAisItem}
+                        onItemClick={(item)=> {
+                            let accessor=aisproxy(item);
+                            showDialog(dialogContext.current,()=>{
+                                return <AisInfoWithFunctions
+                                    mmsi={accessor.mmsi}
+                                    actionCb={(action,m)=>{
+                                        if (action === 'AisNearest' || action === 'AisInfoLocate'){
+                                            props.history.pop();
+                                        }
+                                    }}
+                                />;
+                            })
+                        }}
+                        className="aisList"
+                        keyFunction={(item)=>item.mmsi}
+                        {...aisListProps}
+                        scrollable={true}
+                        listRef={(list)=>{
+                            if (!list) return;
+                            if (! initialMmsi.current) return;
+                            let selected=list.querySelector('.initialTarget');
+                            if (! selected) return;
+                            initialMmsi.current=undefined;
+                            let mode=GuiHelper.scrollInContainer(list,selected);
+                            if (mode < 1 || mode > 2) return;
+                            selected.scrollIntoView(mode===1);
+                        }}
+                    />
+                </PageLeft>
+                <ButtonList itemList={buttons}/>
+            </PageFrame>
         );
-    }
 }
 AisPage.propTypes= Page.pageProperties;
 export default AisPage;

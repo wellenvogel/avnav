@@ -6,7 +6,7 @@ import assign from 'object-assign';
 import shallowcompare from "./compare";
 import Requests from "./requests";
 import base from "../base";
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
 
 
@@ -454,54 +454,26 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
 
 };
 /**
- * migration support for legacy code
- * with useState the state helper is not really necessary any more - but to migrate old code this method could be helpful
- * @param initialValues
- * @returns {*|{}|{getValue(*, *): *, getState(*): *, getValues(*): (any), isChanged(): boolean, setValue: *, setState: *, reset(): void, isItemChanged(*): *}|boolean}
+ * create a state that is backed up by the store
  */
-export const useStateHelper=(initialValues)=>{
-    const [values,setValues]=useState(initialValues);
-    const [isChanged,setChanged]=useState(false);
-    return {
-        setValue:(key,value)=>{
-            if (values[key] === value) return;
-            let nv={};
-            nv[key]=value;
-            let nvalues={...values,nv};
-            nvalues[key]=value;
-            setValues(nvalues);
-            setChanged(true);
-        },
-        setState:(partialState,opt_overwrite)=>{
-            let nvalues=opt_overwrite?partialState:{...values,...partialState};
-            setChanged(!shallowcompare(values,initialValues));
-            setValues(nvalues);
-        },
-        isChanged(){
-            return isChanged;
-        },
-        isItemChanged(name){
-            return ! shallowcompare(values[name],initialValues[name]);
-        },
-        reset(){
-            setValues(initialValues);
-            setChanged(false);
-        },
-        getValues(opt_copy){
-            if (opt_copy){
-                return {...values};
-            }
-            return values;
-        },
-        getState(opt_copy){
-            return opt_copy?{...values}:values;
-        },
-        getValue(key,opt_default){
-            let rt=values[key];
-            if (rt !== undefined) return rt;
-            return opt_default;
-        }
+export const useStoreState=(storeKey, defaultInitialValue,allowOther)=>{
+    const [value,setValue]=useState(globalStore.getData(storeKey,defaultInitialValue));
+    if (allowOther){
+        const setter=useCallback(()=>{
+            setValue(globalStore.getData(storeKey,defaultInitialValue));
+        },[]);
+        useEffect(() => {
+            globalStore.register(setter,storeKey);
+            return ()=>globalStore.deregister(setter);
+        }, []);
     }
+    return [
+        value,
+        (nv)=>{
+            globalStore.storeData(storeKey,nv);
+            setValue(nv);
+        }
+    ]
 }
 
 const getServerCommand=(name)=>{

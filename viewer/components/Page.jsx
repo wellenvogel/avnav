@@ -12,6 +12,7 @@ import {useTimer} from "../util/GuiHelpers";
 import assign from 'object-assign';
 import Helper from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
+import {NestedDialogDisplay} from "./OverlayDialog";
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -86,17 +87,23 @@ PageFrame.propTypes={
     id: PropTypes.string.isRequired
 }
 
-export const PageLeft=({className,title,children})=>{
+export const PageLeft=({className,title,children,dialogCtxRef})=>{
     const Alarm=useCallback(WidgetFactory.createWidget({name:'Alarm'}),[])
-    return <div className={Helper.concatsp("leftPart",className)}>
-        {title ? <Headline title={title} connectionLost={true}/> : null}
-        {children}
-        <Alarm onClick={alarmClick}/>
-    </div>
+    return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}>
+            <NestedDialogDisplay dialogCtxRef={dialogCtxRef}>
+            {title ? <Headline title={title} connectionLost={true}/> : null}
+            {children}
+            <Alarm onClick={alarmClick}/>
+            </NestedDialogDisplay>
+        </div>
 }
-PageLeft.propTypes={
+PageLeft.propTypes = {
     className: PropTypes.string,
-    title: PropTypes.string
+    title: PropTypes.string,
+    dialogCtxRef: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({current: PropTypes.any})
+    ])
 }
 
 const Page=(props)=>{
