@@ -16,7 +16,8 @@ const ButtonList = (iprops) => {
             dimensions: keys.gui.global.windowDimensions,
             buttonCols: keys.properties.buttonCols,
             cancelTop: keys.properties.cancelTop,
-            isEditing: keys.gui.global.layoutEditing
+            isEditing: keys.gui.global.layoutEditing,
+            showShade:keys.properties.showButtonShade
         }})
     const [showOverflow, setShowOverflow] = useState(false);
     const [visibility, setVisibilityImpl] = useState({});
