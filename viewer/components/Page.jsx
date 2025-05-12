@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Children, cloneElement, useCallback, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Headline from './Headline.jsx';
 import ButtonList from './ButtonList.jsx';
@@ -8,9 +8,10 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import KeyHandler from '../util/keyhandler.js';
 import AlarmHandler from '../nav/alarmhandler.js';
-import Dynamic from '../hoc/Dynamic.jsx';
-import GuiHelpers from "../util/GuiHelpers";
+import GuiHelpers, {useTimer} from "../util/GuiHelpers";
 import assign from 'object-assign';
+import Helper from "../util/helper";
+import {useStore} from "../hoc/Dynamic";
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -20,6 +21,52 @@ const alarmClick =function(){
         AlarmHandler.stopAlarm(k);
     }
 };
+
+export const PageFrame=(iprops)=>{
+    const {autoHideButtons,hideCallback,children,...forward}=useStore(iprops);
+    const lastUserEvent=useRef(Helper.now());
+    const [hidden,setHidden]=useState(false);
+    const timer=useTimer((sequence)=>{
+        if (autoHideButtons !== undefined){
+            let now=Helper.now();
+            if (globalStore.getData(keys.gui.global.hasActiveInputs)){
+                lastUserEvent.current=now;
+            }
+            if (! hidden) {
+                if (lastUserEvent.current < (now - autoHideButtons)) {
+                    setHidden(true);
+                    if (hideCallback) hideCallback(true);
+                }
+            }
+        }
+        timer.startTimer(sequence);
+    },1000,true);
+    const userEvent=useCallback((ev)=>{
+        lastUserEvent.current=Helper.now();
+        if (hidden && ev && ev.type === 'click'){
+            setHidden(false);
+            if (hideCallback) hideCallback(false)
+        }
+    },[hideCallback,hidden]);
+    return <div {...forward}
+                onClick={userEvent}
+                onTouchMove={userEvent}
+                onTouchStart={userEvent}
+                onMouseMove={userEvent}
+                onWheel={userEvent}
+    >
+        {Children.map(children,(child)=> {
+            if (child) return cloneElement(child, {buttonsHidden: hidden})
+            return null;
+            }
+        )}
+    </div>
+}
+
+PageFrame.propTypes={
+    autoHideButtons: PropTypes.oneOfType([PropTypes.undefined,PropTypes.number]),
+    hideCallback: PropTypes.func
+}
 
 class Page extends React.Component {
     constructor(props){
@@ -69,12 +116,11 @@ class Page extends React.Component {
         if (props.isEditing) className+=" editing";
         if (props.className) className += " " + props.className;
         let Alarm=this.alarmWidget;
-        return <div className={className} id={props.id} style={props.style}
-                    onClick={this.userEvent}
-                    onTouchMove={this.userEvent}
-                    onTouchStart={this.userEvent}
-                    onMouseMove={this.userEvent}
-                    onWheel={this.userEvent}
+        return <PageFrame
+            className={className}
+            id={props.id}
+            style={props.style}
+            autoHideButtons={props.autoHideButtons}
             >
             {props.floatContent && props.floatContent}
             <div className="leftPart">
@@ -86,11 +132,10 @@ class Page extends React.Component {
             <ButtonList
                 itemList={props.buttonList}
                 widthChanged={props.buttonWidthChanged}
-                hidden={hideButtons}
                 shadeCallback={this.userEvent}
                 showShade={globalStore.getData(keys.properties.showButtonShade)}
             />
-        </div>
+        </PageFrame>
     }
     componentDidMount(){
         KeyHandler.setPage(this.props.id);
