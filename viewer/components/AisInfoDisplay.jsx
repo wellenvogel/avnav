@@ -116,6 +116,7 @@ const drawIcon=(canvas,current)=>{
     canvas.width=rect.width;
     canvas.height=rect.height;
     let [style,symbol,scale]=MapHolder.aislayer.getStyleEntry(current);
+    if (! style || ! symbol) return;
     drawing.drawImageToContext([rect.width/2,rect.height/2],symbol.image,style);
     if (globalStore.getData(keys.properties.aisUseCourseVector) && current.course !== undefined){
         let rd=Math.PI*current.course/180.0;
