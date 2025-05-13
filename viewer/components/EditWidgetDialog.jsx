@@ -190,6 +190,54 @@ const filterObject=(data)=>{
     return data;
 };
 
+export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt_options})=>{
+    const panelList=[panelname];
+    if (! opt_options) opt_options={};
+    let index=opt_options.beginning?-1:1;
+    if (widgetItem){
+        index=widgetItem.index;
+    }
+    return <EditWidgetDialog
+        title="Select Widget"
+        panel={panelname}
+        types={opt_options.types}
+        panelList={panelList}
+        current={widgetItem?widgetItem:{}}
+        weight={opt_options.weight}
+        insertCallback={(selected,before,newPanel)=>{
+            if (! selected || ! selected.name) return;
+            let addMode=LayoutHandler.ADD_MODES.noAdd;
+            if (widgetItem){
+                addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
+            }
+            else{
+                addMode=opt_options.beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
+            }
+            LayoutHandler.withTransaction(pageWithOptions,(handler)=> {
+                handler.replaceItem(pageWithOptions, newPanel, index, filterObject(selected), addMode);
+            });
+        }}
+        removeCallback={widgetItem?()=>{
+            LayoutHandler.withTransaction(pageWithOptions,(handler)=> {
+                handler.replaceItem(pageWithOptions, panelname, index);
+            });
+        }:undefined}
+        updateCallback={widgetItem?(changes,newPanel)=>{
+            if (newPanel !== panelname){
+                LayoutHandler.withTransaction(pageWithOptions,(handler)=>{
+                    handler.replaceItem(pageWithOptions,panelname,index);
+                    handler.replaceItem(pageWithOptions,newPanel,1,filterObject(changes),LayoutHandler.ADD_MODES.end);
+                })
+            }
+            else{
+                LayoutHandler.withTransaction(pageWithOptions,(handler)=>{
+                    handler.replaceItem(pageWithOptions,panelname,index,filterObject(changes));
+                })
+            }
+        }:undefined}
+    />
+}
+
 /**
  *
  * @param widgetItem
@@ -204,58 +252,12 @@ const filterObject=(data)=>{
  */
 EditWidgetDialog.createDialog=(widgetItem,pageWithOptions,panelname,opt_options)=>{
     if (! LayoutHandler.isEditing()) return false;
-    if (! opt_options) opt_options={};
-    let index=opt_options.beginning?-1:1;
-    if (widgetItem){
-        index=widgetItem.index;
-    }
-    OverlayDialog.dialog((props)=> {
-        let panelList=[panelname];
-        if (!opt_options.fixPanel){
-            panelList=LayoutHandler.getPagePanels(pageWithOptions);
-        }
-        if (opt_options.fixPanel instanceof Array){
-            panelList=opt_options.fixPanel;
-        }
-        return <EditWidgetDialog
-            {...props}
-            title="Select Widget"
-            panel={panelname}
-            types={opt_options.types}
-            panelList={panelList}
-            current={widgetItem?widgetItem:{}}
-            weight={opt_options.weight}
-            insertCallback={(selected,before,newPanel)=>{
-                if (! selected || ! selected.name) return;
-                let addMode=LayoutHandler.ADD_MODES.noAdd;
-                if (widgetItem){
-                    addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
-                }
-                else{
-                    addMode=opt_options.beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
-                }
-                LayoutHandler.withTransaction(pageWithOptions,(handler)=> {
-                    handler.replaceItem(pageWithOptions, newPanel, index, filterObject(selected), addMode);
-                });
-            }}
-            removeCallback={widgetItem?()=>{
-                    LayoutHandler.withTransaction(pageWithOptions,(handler)=> {
-                        handler.replaceItem(pageWithOptions, panelname, index);
-                    });
-            }:undefined}
-            updateCallback={widgetItem?(changes,newPanel)=>{
-                if (newPanel !== panelname){
-                    LayoutHandler.withTransaction(pageWithOptions,(handler)=>{
-                        handler.replaceItem(pageWithOptions,panelname,index);
-                        handler.replaceItem(pageWithOptions,newPanel,1,filterObject(changes),LayoutHandler.ADD_MODES.end);
-                    })
-                }
-                else{
-                    LayoutHandler.withTransaction(pageWithOptions,(handler)=>{
-                        handler.replaceItem(pageWithOptions,panelname,index,filterObject(changes));
-                    })
-                }
-            }:undefined}
+    OverlayDialog.dialog(()=>{
+        return <EditWidgetDialogWithFunc
+            pageWithOptions={pageWithOptions}
+            panelname={panelname}
+            widgetItem={widgetItem}
+            opt_options={opt_options}
             />
     });
     return true;

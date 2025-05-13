@@ -125,8 +125,8 @@ export const DialogText=({className,children})=>{
         {children}
     </div>
 }
-export const DialogRow=forwardRef(({className,children},ref)=>{
-    return <div className={concatsp(className,"dialogRow")} ref={ref}>
+export const DialogRow=forwardRef(({className,onClick,children},ref)=>{
+    return <div className={concatsp(className,"dialogRow")} ref={ref} onClick={onClick}>
         {children}
     </div>
 })

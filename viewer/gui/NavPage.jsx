@@ -4,7 +4,7 @@
 
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React from 'react';
+import React, {useCallback, useState} from 'react';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
@@ -12,11 +12,11 @@ import OverlayDialog, {
     DBCancel,
     DialogButtons, DialogDisplay,
     dialogDisplay,
-    DialogFrame,
-    DialogText
+    DialogFrame, DialogRow,
+    DialogText, useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import GuiHelpers, {useStoreState} from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.jsx';
@@ -24,7 +24,7 @@ import WayPointDialog from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import EditWidgetDialog, {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
@@ -182,52 +182,58 @@ const navToWp=(on)=>{
     MapHolder.triggerRender();
 };
 const OVERLAYPANEL="overlay";
-class MapWidgetsDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            items:this.getCurrent()
-        };
-        this.sequence=GuiHelpers.storeHelper(this,()=>{
-            this.setState({items:this.getCurrent()})
-        },[keys.gui.global.layoutSequence]);
-    }
-
-    getCurrent() {
-        let current = getPanelWidgets(OVERLAYPANEL);
-        let idx = 0;
-        let rt = [];
-        if (! current.list) return rt;
-        current.list.forEach((item) => {
-            rt.push(assign({index: idx}, item));
-            idx++;
-        })
-        return rt;
-    }
-    onItemClick(item){
-        EditWidgetDialog.createDialog(item,PAGENAME,OVERLAYPANEL,{fixPanel:true,types:['map']});
-    }
-    render(){
-        return <div className={'MapWidgetsDialog'}>
-            <h2>Map Widgets</h2>
-            {this.state.items && this.state.items.map((item)=>{
+const getCurrentMapWidgets=(sequence) =>{
+    let current = getPanelWidgets(OVERLAYPANEL);
+    let idx = 0;
+    let rt = [];
+    if (! current.list) return rt;
+    current.list.forEach((item) => {
+        rt.push(assign({index: idx}, item));
+        idx++;
+    })
+    return rt;
+}
+const MapWidgetsDialog =()=> {
+    const dialogContext=useDialogContext();
+    const [layoutSequence]=useStoreState(keys.gui.global.layoutSequence);
+    const onItemClick = useCallback((item)=>{
+        dialogContext.showDialog(()=><EditWidgetDialogWithFunc
+            widgetItem={item}
+            panelname={OVERLAYPANEL}
+            pageWithOptions={PAGENAME}
+            opt_options={{fixPanel:true,types:['map']}}
+        />)
+    },[]);
+    const items=getCurrentMapWidgets(layoutSequence);
+    return <DialogFrame className={'MapWidgetsDialog'} title={"Map Widgets"}>
+            {items && items.map((item)=>{
                 let theItem=item;
-                return <div className={'dialogRow listEntry'}
-                    onClick={()=>this.onItemClick(theItem)}
-                >{item.name}</div>
+                return <DialogRow
+                    className={'lisEntry'}
+                    onClick={()=>onItemClick(theItem)}
+                    >
+                    {item.name}
+                </DialogRow>
             })}
-            <div className={'dialogButtons'}>
-                <DialogButton
-                    name={'add'}
-                    onClick={()=>EditWidgetDialog.createDialog(undefined,PAGENAME,OVERLAYPANEL,{fixPanel:true,types:['map']})}
-                    >Add</DialogButton>
-                <DialogButton
-                    name={'cancel'}
-                    onClick={this.props.closeCallback}
-                >Close</DialogButton>
-            </div>
-        </div>
-    }
+        <DialogButtons buttonList={[
+            {
+                name:'add',
+                onClick:()=>{
+                    dialogContext.showDialog(()=><EditWidgetDialogWithFunc
+                        widgetItem={undefined}
+                        pageWithOptions={PAGENAME}
+                        panelname={OVERLAYPANEL}
+                        opt_options={{fixPanel:true,types:['map']}}
+                    />)
+                    },
+                close: false
+            },
+            {
+                name:'cancel',
+                label:'Close'
+            }
+        ]}/>
+    </DialogFrame>
 }
 
 const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
