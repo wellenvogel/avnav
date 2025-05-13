@@ -118,10 +118,10 @@ class Store {
         let idx = this.findCallback(callback);
         if (idx < 0) {
             this.callbacks.push(new CallbackDescriptor(callback, keys));
-            return true;
+            return callback;
         }
         this.callbacks[idx] = new CallbackDescriptor(callback, keys);
-        return true;
+        return callback;
     }
 
     /**
