@@ -172,6 +172,7 @@ class Store {
     getData(key, opt_default) {
         let rt = this.data[key];
         if (rt !== undefined) return rt;
+        if (typeof opt_default === 'function') return opt_default();
         return opt_default;
     }
 

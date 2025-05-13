@@ -8,7 +8,7 @@
  */
 
 import globalStore from "../util/globalstore.jsx";
-import React, {Children, cloneElement, useCallback, useEffect, useRef, useState} from 'react';
+import React, {Children, cloneElement, useEffect, useRef, useState} from 'react';
 import {KeyHelper} from "../util/keys";
 
 const getStoreAndKeys=(props,options)=>{
@@ -34,6 +34,7 @@ const getStoreValues=(forwardData,store,storeKeys,updateFunction)=>{
 
 export const useStore=(props,opt_options)=>{
     if (! props) return;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {storeKeys,updateFunction,minTime,changeCallback,...forward}=props;
     if (! opt_options) opt_options= {};
     const [store,usedStoreKeys,usedUpdateFunction]=getStoreAndKeys(props,opt_options);
@@ -61,7 +62,7 @@ export const useStore=(props,opt_options)=>{
                 }
             }
             doSetValues(store.getMultiple(usedStoreKeys));
-        },storeKeys)
+        },usedStoreKeys)
     })
     const doSetValues=(data)=>{
         setValues(data);
