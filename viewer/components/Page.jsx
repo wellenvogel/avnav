@@ -75,7 +75,7 @@ export const PageFrame=(iprops)=>{
                 onWheel={userEvent}
     >
         {Children.map(children,(child)=> {
-            if (child) return cloneElement(child, {buttonsHidden: hidden && autoHideButtons })
+            if (child) return cloneElement(child, {buttonsHidden: hidden && !!autoHideButtons })
             return null;
             }
         )}
