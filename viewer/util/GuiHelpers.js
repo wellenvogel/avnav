@@ -1,12 +1,10 @@
 import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
 import KeyHandler from './keyhandler.js';
-import LayoutHandler from './layouthandler.js';
 import assign from 'object-assign';
 import shallowcompare from "./compare";
 import Requests from "./requests";
 import base from "../base";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 
 
@@ -123,6 +121,21 @@ const storeHelper=(thisref,dataCanged,storeKeys,opt_callImmediate)=>{
         dataCanged(globalStore.getMultiple(storeKeys));
     }
 };
+
+export const useStoreHelper=(callback,storeKeys,callImmediate,beforeRender)=>{
+    const setter=useRef();
+    if (beforeRender){
+        useState(()=>setter.current=globalStore.register(callback,storeKeys));
+    }
+    useEffect(() => {
+        if (! beforeRender){
+            setter.current=globalStore.register(callback,storeKeys);
+        }
+        return ()=>globalStore.deregister(setter.current);
+
+    }, []);
+    if (callImmediate) callback();
+}
 
 /**
  * get some data from the global store into our state

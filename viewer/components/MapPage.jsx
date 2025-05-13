@@ -4,7 +4,7 @@
  * and widget containers
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
 import Visible from '../hoc/Visible.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
@@ -108,7 +108,11 @@ const setBottom=(val)=>{
         el.style.bottom=val;
     }
 }
-const MapPage =(props)=>{
+const MapPage =(iprops)=>{
+    const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
+            widgetFontSize:keys.properties.widgetFontSize,
+            mapFloat: keys.properties.mapFloat
+        })});
     const dialogCtx=useRef();
     const mapRef=useRef();
     const bottomRef=useRef();
@@ -319,12 +323,6 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
     });
 };
 
-let DynamicPage=Dynamic(MapPage,{
-    storeKeys:LayoutHandler.getStoreKeys({
-        widgetFontSize:keys.properties.widgetFontSize,
-        mapFloat: keys.properties.mapFloat
-    })
-});
-DynamicPage.PANELS=['left','top','bottomLeft','bottomRight'];
-DynamicPage.propertyTypes=MapPage.propertyTypes
-export default DynamicPage;
+MapPage.PANELS=['left','top','bottomLeft','bottomRight'];
+
+export default MapPage;
