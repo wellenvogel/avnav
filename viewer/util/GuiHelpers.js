@@ -456,22 +456,23 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
 /**
  * create a state that is backed up by the store
  */
-export const useStoreState=(storeKey, defaultInitialValue,allowOther)=>{
+export const useStoreState=(storeKey, defaultInitialValue)=>{
     const [value,setValue]=useState(globalStore.getData(storeKey,defaultInitialValue));
-    if (allowOther){
-        const setter=useCallback(()=>{
+    const setter=useRef();
+    useState(()=>{
+        setter.current=globalStore.register(()=>{
             setValue(globalStore.getData(storeKey,defaultInitialValue));
-        },[]);
-        useEffect(() => {
-            globalStore.register(setter,storeKey);
-            return ()=>globalStore.deregister(setter);
+        },storeKey);
+    });
+    useEffect(() => {
+            return ()=>{
+                globalStore.deregister(setter.current);
+            }
         }, []);
-    }
     return [
         value,
         (nv)=>{
             globalStore.storeData(storeKey,nv);
-            setValue(nv);
         }
     ]
 }
