@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Button from './Button.jsx';
-import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
+import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic.jsx';
 import keys from '../util/keys.jsx';
 import ItemList from './ItemList.jsx';
 import PropTypes from "prop-types";
@@ -20,7 +20,29 @@ const ButtonList = (iprops) => {
             showShade:keys.properties.showButtonShade
         }})
     const [showOverflow, setShowOverflow] = useState(false);
-    const [visibility, setVisibilityImpl] = useState({});
+    const getStateKey = useCallback((iprops) => {
+        if (!iprops || !iprops.name) return;
+        return "button-" + iprops.name;
+    }, []);
+    const buttonVisible = useCallback((itemprops) => {
+        const item=dynamicWrapper(itemprops);
+        if (item.visible !== undefined && !item.visible) return false;
+        if (item.editDisable && props.isEditing) return false;
+        if (item.editOnly && !props.isEditing) return false;
+        return true;
+    }, [props.isEditing]);
+    const computeVisibility=useCallback((items)=>{
+        let rt={};
+        if (!items) return;
+        for (let k in items) {
+            let key = getStateKey(items[k]);
+            if (!key) continue;
+            let visible = buttonVisible(items[k]);
+            rt[key] = visible;
+        }
+        return rt;
+    },[buttonVisible])
+    const [visibility, setVisibilityImpl] = useState(computeVisibility(props.itemList));
     const buttonListRef = useRef();
     const buttonListWidth = useRef(0);
     const setVisbility = useCallback((key, value) => setVisibilityImpl((old) => {
@@ -28,24 +50,9 @@ const ButtonList = (iprops) => {
         rt[key] = value;
         return rt;
     }), []);
-    const getStateKey = useCallback((iprops) => {
-        if (!iprops || !iprops.name) return;
-        return "button-" + iprops.name;
-    }, []);
-    const buttonVisible = useCallback((item) => {
-        if (item.visible !== undefined && !item.visible) return false;
-        if (item.editDisable && props.isEditing) return false;
-        if (item.editOnly && !props.isEditing) return false;
-        return true;
-    }, [props.isEditing]);
     useEffect(() => {
         if (props.itemList) {
-            for (let k in props.itemList) {
-                let key = getStateKey(props.itemList[k]);
-                if (!key) continue;
-                let visible = buttonVisible(props.itemList[k]);
-                setVisbility(key, visible);
-            }
+            setVisibilityImpl(computeVisibility(props.itemList));
         }
     }, [props.itemList]);
     const itemSort = (items) => {
