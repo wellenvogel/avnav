@@ -10,7 +10,88 @@ import AisFormatter from '../nav/aisformatter.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 
-
+const AisFullDisplay=(display)=> {
+    return <React.Fragment>
+    <div className="aisPart">
+            <div className="widgetData">
+                <span className="aisData">{display.name}</span>
+            </div>
+        <div className="widgetData">
+            <span className='label'>{AisFormatter.getHeadline('distance')} </span>
+            <span className="aisData">{display.distance}</span>
+            <span className="unit">{AisFormatter.getUnit('distance')}</span>
+        </div>
+    </div>
+    {
+        display.tcpa > 0 &&
+        <div className="aisPart">
+            <div className="widgetData">
+                <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
+                <span className="aisData">{display.cpa}</span>
+                <span className="unit">{AisFormatter.getUnit('cpa')}</span>
+            </div>
+            <div className="widgetData">
+                <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
+                <span className="aisData"> {display.tcpa}</span>
+                <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
+            </div>
+        </div>
+    }
+    {
+        !(display.tcpa > 0) &&
+        <div className="aisPart">
+            <div className="widgetData">
+                <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
+                <span className="aisData">{display.headingTo}</span>
+                <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
+            </div>
+        </div>
+    }
+    <div className="aisPart">
+        <div className="widgetData">
+            <span className='aisFront aisData'>{display.front}</span>
+        </div>
+    </div>
+    </React.Fragment>
+}
+const AisSmallDisplay=(display)=> {
+    return <div className="aisSmall">
+        <div className="aisPart">
+            <div className="widgetData">
+                <span className='aisFront aisData'>{display.front.substring(0, 1)}</span>
+            </div>
+        </div>
+        <div className={"aisParts"}>
+        <div className="aisPart">
+            <div className="widgetData">
+                <span className='label'>{AisFormatter.getHeadline('distance')} </span>
+                <span className="aisData">{display.distance}</span>
+                <span className="unit">{AisFormatter.getUnit('distance')}</span>
+            </div>
+        </div>
+        {
+            display.tcpa > 0 &&
+            <div className="aisPart">
+                <div className="widgetData">
+                    <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
+                    <span className="aisData"> {display.tcpa}</span>
+                    <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
+                </div>
+            </div>
+        }
+        {
+            !(display.tcpa > 0) &&
+            <div className="aisPart">
+                <div className="widgetData">
+                    <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
+                    <span className="aisData">{display.headingTo}</span>
+                    <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
+                </div>
+            </div>
+        }
+        </div>
+    </div>
+}
 const AisTargetWidget = (props) => {
     const click = (ev) => {
         if (ev.stopPropagation) ev.stopPropagation();
@@ -22,18 +103,18 @@ const AisTargetWidget = (props) => {
     if (target.mmsi && target.mmsi !== "") {
         color = PropertyHandler.getAisColor(target);
     }
-    let front = AisFormatter.format('passFront', target);
-    let display={};
-    display.name=AisFormatter.format('nameOrmmsi', target);
+    let display = {};
+    display.front = AisFormatter.format('passFront', target);
+    display.name = AisFormatter.format('nameOrmmsi', target);
     if (target.tcpa > 0) {
-        display.cpa=AisFormatter.format('cpa', target);
-        display.tcpa=AisFormatter.format('tcpa', target);
+        display.cpa = AisFormatter.format('cpa', target);
+        display.tcpa = AisFormatter.format('tcpa', target);
+    } else {
+        display.headingTo = AisFormatter.format('headingTo', target);
     }
-    else{
-        display.headingTo=AisFormatter.format('headingTo', target);
-    }
-    const dashMode=props.mode === "gps";
-    const resizeSequence=useStringsChanged(display,dashMode);
+    display.distance=AisFormatter.format('distance', target);
+    const dashMode = props.mode === "gps";
+    const resizeSequence = useStringsChanged(display, dashMode);
     if (target.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
         const style = {...props.style, backgroundColor: color};
         return (
@@ -43,44 +124,13 @@ const AisTargetWidget = (props) => {
                          style={style}
                          onClick={click}
                          unit={undefined}
-                         caption='AIS' >
-                <div className="aisPart">
-                    {!small &&
-                    <div className="widgetData">
-                        <span className="aisData">{display.name}</span>
-                    </div>}
-                    <div className="widgetData">
-                        <span className='label'>{AisFormatter.getHeadline('distance')} </span>
-                        <span className="aisData">{AisFormatter.format('distance', target)}</span>
-                        <span className="unit">{AisFormatter.getUnit('distance')}</span>
-                    </div>
-                </div>
-                {target.tcpa>0 &&
-                <div className="aisPart">
-                    <div className="widgetData">
-                        <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
-                        <span className="aisData">{display.cpa}</span>
-                        <span className="unit">{AisFormatter.getUnit('cpa')}</span>
-                    </div>
-                    <div className="widgetData">
-                        <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
-                        <span className="aisData"> {display.tcpa}</span>
-                        <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
-                    </div>
-                </div>}
-                {!(target.tcpa>0) &&
-                <div className="aisPart">
-                    <div className="widgetData">
-                        <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
-                        <span className="aisData">{display.headingTo}</span>
-                        <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
-                    </div>
-                </div>}
-                <div className="aisPart">
-                    <div className="widgetData">
-                        <span className='aisFront aisData'>{front}</span>
-                    </div>
-                </div>
+                         caption='AIS'>
+                {! small && <AisFullDisplay
+                    {...display}
+                />}
+                { small && <AisSmallDisplay
+                    {...display}
+                />}
             </WidgetFrame>
         );
     } else {

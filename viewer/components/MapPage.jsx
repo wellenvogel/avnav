@@ -4,17 +4,17 @@
  * and widget containers
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
 import Visible from '../hoc/Visible.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React, {createRef} from 'react';
+import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import PropTypes from 'prop-types';
-import Page from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog, {showPromiseDialog} from '../components/OverlayDialog.jsx';
+import OverlayDialog, {handleCtxRef, showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
@@ -28,6 +28,8 @@ import Helper, {concatsp} from "../util/helper";
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import {DynamicTitleIcons} from "./TitleIcons";
+import ButtonList from "./ButtonList";
+import base from "../base";
 
 const SHOW_MODE={
     never:0,
@@ -92,71 +94,66 @@ const widgetCreator=(widget,mode)=>{
     return rt;
 };
 
-class MapPage extends React.Component{
-    mapRef=createRef();
-    constructor(props){
-        super(props);
-        this.mapEvent=this.mapEvent.bind(this);
-        this.subscribeToken=undefined;
-        this.bottomContainer=undefined;
 
+const getLayoutPage=(props)=>{
+    return {
+        location: props.location||props.id,
+        options: props.options,
+        id:props.id
     }
-    getLayoutPage(){
-        return {
-            location: this.props.location||this.props.id,
-            options: this.props.options
-        }
+}
+const setBottom=(val)=>{
+    let el=document.querySelector('.ol-scale-bar');
+    if (el){
+        el.style.bottom=val;
     }
-    mapEvent(evdata){
+}
+const MapPage =(iprops)=>{
+    const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
+            widgetFontSize:keys.properties.widgetFontSize,
+            mapFloat: keys.properties.mapFloat
+        })});
+    const dialogCtx=useRef();
+    const mapRef=useRef();
+    const bottomRef=useRef();
+    const layoutPage=getLayoutPage(props);
+    const mapEvent=useCallback((evdata)=>{
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
-        return this.props.mapEventCallback(evdata);
-    }
-    componentWillUnmount(){
-        MapHolder.renderTo();
-        if (this.subscribeToken !== undefined){
-            MapHolder.unsubscribe(this.subscribeToken);
-            this.subscribeToken=undefined;
-        }
-    }
-    computeScalePosition(){
-        const setBottom=(val)=>{
-            let el=document.querySelector('.ol-scale-bar');
-            if (el){
-                el.style.bottom=val;
-            }
-        }
-        if (! this.props.mapFloat){
+        if (props.mapEventCallback) return props.mapEventCallback(evdata);
+    },[]);
+    const computeScalePosition=useCallback(()=>{
+        if (! props.mapFloat){
             setBottom('0px');
         }
         else{
-            if (!this.bottomContainer) return;
-            let rect=this.bottomContainer.getBoundingClientRect();
+            if (!bottomRef.current) return;
+            let rect=bottomRef.current.getBoundingClientRect();
             setBottom(rect.height+"px");
         }
-    }
-    componentDidMount(){
-        let self=this;
-        this.subscribeToken=MapHolder.subscribe(this.mapEvent);
-        let chartEntry=MapHolder.getCurrentChartEntry()||{};
-        let showMap=()=>{
-            if (chartEntry.infoMode !== undefined ){
-                if (needsToShow(chartEntry.url,INFO_TYPES.info,chartEntry.infoMode)){
-                    Toast("Chart "+chartEntry.info);
-                    setShown(chartEntry.url,INFO_TYPES.info);
-                }
+    },[props.mapFloat]);
+    const showMap=useCallback((chartEntry)=>{
+        if (chartEntry.infoMode !== undefined ){
+            if (needsToShow(chartEntry.url,INFO_TYPES.info,chartEntry.infoMode)){
+                Toast("Chart "+chartEntry.info);
+                setShown(chartEntry.url,INFO_TYPES.info);
             }
-            MapHolder.loadMap(this.mapRef.current, this.props.preventCenterDialog).
-                then((result)=>{
-                    this.computeScalePosition();
-                }).
-                catch((error)=>{Toast(error)});
-        };
+        }
+        MapHolder.loadMap(mapRef.current, props.preventCenterDialog).
+        then((result)=>{
+            computeScalePosition();
+        }).
+        catch((error)=>{Toast(error)});
+    },[props.preventCenterDialog]);
+    const subscribeToken=useRef();
+    useEffect(() => {
+        subscribeToken.current=MapHolder.subscribe(mapEvent);
+        let chartEntry=MapHolder.getCurrentChartEntry()||{};
         if (chartEntry.eulaMode !== undefined){
             if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
-                showPromiseDialog(undefined,(props)=><EulaDialog {...props} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)
+                showPromiseDialog(dialogCtx.current,(props)=><EulaDialog {...props} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)
                     .then(()=>{
                         setShown(chartEntry.url,INFO_TYPES.eula);
-                        showMap();
+                        showMap(chartEntry);
                     })
                     .catch(()=>{
                         Toast("EULA rejected");
@@ -164,103 +161,110 @@ class MapPage extends React.Component{
                 return;
             }
         }
-        showMap();
-
-    }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        this.computeScalePosition();
-    }
-
-    render(){
-        let self=this;
-        const WidgetContainer=(props)=>{
-            let {panel,mode,...other}=props;
-            let panelItems=self.props.panelCreator(panel);
-            if (! panelItems.list) return null;
-            let invertEditDirection=mode==='vertical'||panel === 'bottomLeft';
-            return <ItemList  {...props}
-                className={"widgetContainer "+mode+" "+panel}
-                itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
-                itemList={panelItems.list}
-                onItemClick={(item,data)=>{
-                    self.props.onItemClick(item,data,panelItems.name,invertEditDirection)
-                    }}
-                onClick={()=>{
-                    EditWidgetDialog.createDialog(undefined,this.getLayoutPage(),panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
-                }}
-                dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
-                horizontal={mode === 'horizontal'}
-                allowOther={true}
-                dragFrame={panelItems.name}
-                onSortEnd={(oldIndex,newIndex,frameId,targetFrameId)=>{
-                    LayoutHandler.withTransaction(this.getLayoutPage(),(handler)=>handler.moveItem(self.props.id, frameId, oldIndex, newIndex,targetFrameId))
-                    }}
-                />
-        };
+        showMap(chartEntry);
+        return ()=>{
+            MapHolder.renderTo();
+            if (subscribeToken.current !== undefined){
+                MapHolder.unsubscribe(subscribeToken.current);
+                subscribeToken.current=undefined;
+            }
+        }
+    }, []);
+    useEffect(()=>computeScalePosition());
+    const WidgetContainer=useCallback((wcprops)=>{
+        let {panel,mode,layoutPage,...forward}=wcprops;
+        let panelItems=props.panelCreator(panel);
+        if (! panelItems.list) return null;
+        let invertEditDirection=mode==='vertical'||panel === 'bottomLeft';
+        return <ItemList  {...forward}
+                          className={"widgetContainer "+mode+" "+panel}
+                          itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
+                          itemList={panelItems.list}
+                          onItemClick={(item,data)=>{
+                              props.onItemClick(item,data,panelItems.name,invertEditDirection)
+                          }}
+                          onClick={()=>{
+                              EditWidgetDialog.createDialog(undefined,layoutPage,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
+                          }}
+                          dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
+                          horizontal={mode === 'horizontal'}
+                          allowOther={true}
+                          dragFrame={panelItems.name}
+                          onSortEnd={(oldIndex,newIndex,frameId,targetFrameId)=>{
+                              LayoutHandler.withTransaction(layoutPage,(handler)=>handler.moveItem(layoutPage.id, frameId, oldIndex, newIndex,targetFrameId))
+                          }}
+        />
+        },[props.onItemClick]);
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
         let mapClass=concatsp("map",chartEntry.chartKey?chartEntry.chartKey.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        let map=<div className={mapClass} ref={this.mapRef} style={{opacity:mapOpacity}}>
+        const map=<div className={mapClass} ref={mapRef} style={{opacity:mapOpacity}}>
             <DynamicTitleIcons/>
         </div>;
-        let className=self.props.className?self.props.className+" mapPage":"mapPage";
-        if (this.props.mapFloat) className+=" mapFloat";
-        let pageProperties=Helper.filteredAssign(Page.propTypes,self.props);
-        let overlay=self.props.overlayContent || null;
+        let className=Helper.concatsp(props.className,"mapPage",props.mapFloat?"mapFloat":undefined);
+        let pageProperties=Helper.filteredAssign(Page.propTypes,props);
+        let overlay=props.overlayContent || null;
         if (typeof(overlay) === 'function'){
             overlay=overlay({});
         }
         return (
-            <Page
+            <PageFrame
                 {...pageProperties}
                 className={className}
-                floatContent={this.props.mapFloat?map:undefined}
-                mainContent={
-                    <React.Fragment>
+                hideCallback={()=>{
+                    mapholder.updateSize();
+                }}
+            >
+                {props.mapFloat?map:null}
+                <PageLeft dialogCtxRef={(ctx)=>{
+                    dialogCtx.current=ctx;
+                    handleCtxRef(ctx,props.dialogCtxRef);
+                }}>
                         <div className="leftSection">
                             <WidgetContainer
-                                fontSize={self.props.widgetFontSize + "px"}
+                                fontSize={props.widgetFontSize + "px"}
                                 panel="left"
                                 mode="vertical"
+                                layoutPage={layoutPage}
+
                             />
                             <WidgetContainer
-                                fontSize={self.props.widgetFontSize + "px"}
+                                fontSize={props.widgetFontSize + "px"}
                                 panel="top"
                                 mode="horizontal"
+                                layoutPage={layoutPage}
                             />
 
-                            {!this.props.mapFloat && map}
+                            {!props.mapFloat && map}
                             {overlay}
                         </div>
                         <div ref={(container)=>{
-                            this.bottomContainer=container;
-                            this.computeScalePosition();
+                            bottomRef.current=container;
+                            computeScalePosition();
                         }}
                             className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows) ? " twoRows" : "")}>
                             <WidgetContainer
                                 reverse={true}
-                                fontSize={self.props.widgetFontSize + "px"}
+                                fontSize={props.widgetFontSize + "px"}
                                 panel='bottomLeft'
                                 mode="horizontal"
+                                layoutPage={layoutPage}
                             />
                             <WidgetContainer
-                                fontSize={self.props.widgetFontSize + "px"}
+                                fontSize={props.widgetFontSize + "px"}
                                 panel="bottomRight"
                                 mode="horizontal"
+                                layoutPage={layoutPage}
                             />
                         </div>
-                    </React.Fragment>
-                }
-                buttonList={self.props.buttonList}
-                buttonWidthChanged={()=>{
-                    mapholder.updateSize();
-                }}
-                autoHideButtons={self.props.autoHideButtons}
-                />
+                </PageLeft>
+                <ButtonList
+                    itemList={props.buttonList}
+                    />
+            </PageFrame>
 
         );
-    }
 }
 
 MapPage.propertyTypes={
@@ -276,15 +280,20 @@ MapPage.propertyTypes={
     preventCenterDialog: PropTypes.bool,
     autoHideButtons:    PropTypes.any,
     widgetFontSize:     PropTypes.number,
-    mapFloat:           PropTypes.bool
+    mapFloat:           PropTypes.bool,
+    dialogCtxRef: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({current: PropTypes.any})
+    ])
+
 
 };
 
-export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
+export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
     let current=MapHolder.getCurrentMergedOverlayConfig();
     if (! current) return;
     let currentChart=MapHolder.getCurrentChartEntry()||{};
-    OverlayDialog.dialog((props)=> {
+    showDialog(dialogContext,(props)=> {
         let canEdit=getOverlayConfigName(currentChart) !== undefined && globalStore.getData(keys.properties.connectedMode,false) ;
         return <EditOverlaysDialog
             {...props}
@@ -314,12 +323,6 @@ export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     });
 };
 
-let DynamicPage=Dynamic(MapPage,{
-    storeKeys:LayoutHandler.getStoreKeys({
-        widgetFontSize:keys.properties.widgetFontSize,
-        mapFloat: keys.properties.mapFloat
-    })
-});
-DynamicPage.PANELS=['left','top','bottomLeft','bottomRight'];
-DynamicPage.propertyTypes=MapPage.propertyTypes
-export default DynamicPage;
+MapPage.PANELS=['left','top','bottomLeft','bottomRight'];
+
+export default MapPage;

@@ -438,7 +438,10 @@ class AisLayer{
             (statusSuffix !== undefined) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
         );
         let style = cloneDeep(symbol.style);
-        if (!symbol.image || !style.size) return [undefined, undefined, 1];
+        if (!symbol.image || !style.size) {
+            //even the internal style has not been loaded yet...
+            return [undefined, undefined, 1];
+        }
         if (style.alpha !== undefined) {
             style.alpha = parseFloat(style.alpha);
             if (isNaN(style.alpha)) {
@@ -483,6 +486,7 @@ class AisLayer{
         let useCourseVector = !!target.courseVector;
         let target_hdg = (this.displayOptions.useHeading && target.heading !== undefined ? target.heading : target.course) || 0;
         let [style, symbol, scale] = this.getStyleEntry(target);
+        if (! style || ! symbol) return;
         if (!target.hidden) {
             const drawArc = (origin, center, radius, start, angle, style, shift_dir = 0, shift_dst = 0) => {
                 // pass origin to mitigate error due to projection for large radii

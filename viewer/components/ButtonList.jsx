@@ -1,13 +1,48 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Button from './Button.jsx';
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic.jsx';
 import keys from '../util/keys.jsx';
 import ItemList from './ItemList.jsx';
+import PropTypes from "prop-types";
 
 
-const ButtonList = (props) => {
+const ButtonList = (iprops) => {
+    const props=useStore(iprops,{
+        storeKeys: {
+            maxButtons: keys.properties.maxButtons,
+            buttonHeight: keys.gui.global.computedButtonHeight,
+            buttonWidth: keys.gui.global.computedButtonWidth,
+            buttonSize: keys.properties.style.buttonSize,
+            dimensions: keys.gui.global.windowDimensions,
+            buttonCols: keys.properties.buttonCols,
+            cancelTop: keys.properties.cancelTop,
+            isEditing: keys.gui.global.layoutEditing,
+            showShade:keys.properties.showButtonShade
+        }})
     const [showOverflow, setShowOverflow] = useState(false);
-    const [visibility, setVisibilityImpl] = useState({});
+    const getStateKey = useCallback((iprops) => {
+        if (!iprops || !iprops.name) return;
+        return "button-" + iprops.name;
+    }, []);
+    const buttonVisible = useCallback((itemprops) => {
+        const item=dynamicWrapper(itemprops);
+        if (item.visible !== undefined && !item.visible) return false;
+        if (item.editDisable && props.isEditing) return false;
+        if (item.editOnly && !props.isEditing) return false;
+        return true;
+    }, [props.isEditing]);
+    const computeVisibility=useCallback((items)=>{
+        let rt={};
+        if (!items) return;
+        for (let k in items) {
+            let key = getStateKey(items[k]);
+            if (!key) continue;
+            let visible = buttonVisible(items[k]);
+            rt[key] = visible;
+        }
+        return rt;
+    },[buttonVisible])
+    const [visibility, setVisibilityImpl] = useState(computeVisibility(props.itemList));
     const buttonListRef = useRef();
     const buttonListWidth = useRef(0);
     const setVisbility = useCallback((key, value) => setVisibilityImpl((old) => {
@@ -15,24 +50,9 @@ const ButtonList = (props) => {
         rt[key] = value;
         return rt;
     }), []);
-    const getStateKey = useCallback((iprops) => {
-        if (!iprops || !iprops.name) return;
-        return "button-" + iprops.name;
-    }, []);
-    const buttonVisible = useCallback((item) => {
-        if (item.visible !== undefined && !item.visible) return false;
-        if (item.editDisable && props.isEditing) return false;
-        if (item.editOnly && !props.isEditing) return false;
-        return true;
-    }, [props]);
     useEffect(() => {
         if (props.itemList) {
-            for (let k in props.itemList) {
-                let key = getStateKey(props.itemList[k]);
-                if (!key) continue;
-                let visible = buttonVisible(props.itemList[k]);
-                setVisbility(key, visible);
-            }
+            setVisibilityImpl(computeVisibility(props.itemList));
         }
     }, [props.itemList]);
     const itemSort = (items) => {
@@ -76,7 +96,7 @@ const ButtonList = (props) => {
 
     let className = props.className || "";
     className += " buttonContainer ";
-    if (props.hidden) {
+    if (props.buttonsHidden) {
         className += " buttonsHidden";
     }
     let listHeight = (props.dimensions) ? props.dimensions.height : 0;
@@ -88,7 +108,7 @@ const ButtonList = (props) => {
     for (let k in props.itemList) {
         let stateKey = getStateKey(props.itemList[k]);
         if (!stateKey) continue;
-        if (!props.hidden && (visibility[stateKey] === undefined || visibility[stateKey])) {
+        if (!props.buttonsHidden && (visibility[stateKey] === undefined || visibility[stateKey])) {
             items.push(props.itemList[k]);
             if (props.itemList[k].overflow) allowedOverflowItems++;
         } else {
@@ -99,7 +119,7 @@ const ButtonList = (props) => {
     let scale = 1;
     let hasOverflow = false;
     let moveToOverflow = 0;
-    if (!props.hidden) {
+    if (!props.buttonsHidden) {
         /* strategy:
            add 1 to len for overflow button (cannot overflow) if buttonCols is not set
            check if we can overflow without scaling - overflow items will be at most == remaining
@@ -123,7 +143,7 @@ const ButtonList = (props) => {
     let fontSize = props.buttonSize * scale / 4.0;
     let mainItems = [];
     let overflowItems = [];
-    if (!props.hidden) {
+    if (!props.buttonsHidden) {
         //split the buttons into multiple lists
         for (let k = items.length - 1; k >= 0; k--) {
             if (items[k].overflow && moveToOverflow > 0) {
@@ -154,7 +174,7 @@ const ButtonList = (props) => {
     }
     return (
         <div className={"buttonContainerWrap "} ref={buttonListRef}>
-            {(!props.hidden) && <ItemList {...props}
+            {(!props.buttonsHidden) && <ItemList {...props}
                                           fontSize={fontSize}
                                           className={className + " main"}
                                           itemList={mainItems}
@@ -175,7 +195,7 @@ const ButtonList = (props) => {
                       itemList={invisibleItems}
                       itemClass={Dynamic(Button, {changeCallback: buttonChanged})}
             />
-            {props.hidden &&
+            {props.buttonsHidden &&
                 <div
                     className={"buttonShade " + (props.showShade ? "shade" : "")}
                     style={{width: props.buttonWidth}}
@@ -186,15 +206,12 @@ const ButtonList = (props) => {
     )
 
 }
-export default Dynamic(ButtonList, {
-    storeKeys: {
-        maxButtons: keys.properties.maxButtons,
-        buttonHeight: keys.gui.global.computedButtonHeight,
-        buttonWidth: keys.gui.global.computedButtonWidth,
-        buttonSize: keys.properties.style.buttonSize,
-        dimensions: keys.gui.global.windowDimensions,
-        buttonCols: keys.properties.buttonCols,
-        cancelTop: keys.properties.cancelTop,
-        isEditing: keys.gui.global.layoutEditing
-    }
-});
+export default ButtonList;
+
+ButtonList.propTypes={
+    itemList: PropTypes.array.isRequired,
+    widthChanged: PropTypes.func,
+    className: PropTypes.string,
+    buttonsHidden: PropTypes.bool,
+    shadeCallback: PropTypes.func
+}

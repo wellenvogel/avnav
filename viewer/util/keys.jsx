@@ -270,7 +270,8 @@ let keys={
         },
         aispage:{
             searchActive: K,
-            searchValue: K
+            searchValue: K,
+            sortField: K
         }
 
     },

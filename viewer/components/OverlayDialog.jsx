@@ -7,14 +7,23 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {Children, cloneElement, createContext, useCallback, useContext, useRef, useState} from 'react';
+import React, {
+    Children,
+    cloneElement,
+    createContext,
+    forwardRef,
+    useCallback,
+    useContext,
+    useRef,
+    useState
+} from 'react';
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import DB from './DialogButton.jsx';
 import DialogButton from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
-import {concatsp} from "../util/helper";
+import Helper, {concatsp} from "../util/helper";
 
 
 /**
@@ -71,6 +80,36 @@ OverlayDialog.propTypes={
     className: PropTypes.string
 };
 
+export const handleCtxRef=(ctx,ref)=>{
+    if (!ref) return;
+    if (typeof ref == 'function') ref(ctx);
+    else ref.current=ctx;
+}
+
+export const NestedDialogDisplay=({closeCallback,children,dialogCtxRef})=>{
+    let [DialogDisplay,setDialog]=useDialog(); //for nested dialogs
+    const dialogContext=useDialogContext();
+    const ourZIndex=dialogContext.zIndex+10;
+    const close=()=>{
+        setDialog(undefined,closeCallback);
+    }
+    const newContext=buildContext(close,setDialog,setDialog,ourZIndex);
+    handleCtxRef(newContext,dialogCtxRef);
+    return <DialogContext
+        {...newContext}>
+            <DialogDisplay/>
+            {children}
+        </DialogContext>
+
+}
+NestedDialogDisplay.propTypes={
+    closeCallback: PropTypes.func,
+    dialogCtxRef: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({current: PropTypes.any})
+    ])
+}
+
 export const DialogFrame=(props)=>{
     let classNameS="";
     let {title,className,flex,children,...fwprops}=props;
@@ -86,11 +125,11 @@ export const DialogText=({className,children})=>{
         {children}
     </div>
 }
-export const DialogRow=({className,children})=>{
-    return <div className={concatsp(className,"dialogRow")}>
+export const DialogRow=forwardRef(({className,onClick,children},ref)=>{
+    return <div className={concatsp(className,"dialogRow")} ref={ref} onClick={onClick}>
         {children}
     </div>
-}
+})
 DialogFrame.propTypes={
     className: PropTypes.string,
     title: PropTypes.string,
@@ -102,7 +141,7 @@ export const DialogButtons=(props)=>{
     const {className,children,buttonList,...fw}=props;
     let buttons=buttonList;
     if (! (buttons instanceof Array)) buttons=[buttons];
-    return <div {...fw} className={"dialogButtons "+((className!==undefined)?className:"")}>
+    return <div {...fw} className={Helper.concatsp("dialogButtons",className)}>
         {buttons.map((button)=>{
             if (! button) return null;
             if (typeof(button) === 'function'){
@@ -110,7 +149,9 @@ export const DialogButtons=(props)=>{
                 return <El/>
             }
             const label=button.label?button.label:button.name.substring(0,1).toUpperCase()+button.name.substring(1);
-            return <DialogButton {...button} key={button.name}>{label}</DialogButton>
+            return <DialogButton {...button} key={button.name}>
+                {label}
+            </DialogButton>
         })}
         {children}
     </div>
@@ -331,7 +372,7 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
     if (!dialogContext) dialogContext=globalContext;
     return new Promise((resolve,reject)=>{
         let resolved=false;
-        dialogContext.showDialog(()=>{
+        showDialog(dialogContext,()=>{
             return <Dialog {...args} resolveFunction={(val)=>{
                 resolved=true;
                 resolve(val);
@@ -344,6 +385,18 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
             },0);
         })
     })
+}
+export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback)=>{
+    if (opt_dialogContext){
+        if (! opt_dialogContext.showDialog){
+            if(opt_dialogContext.current && opt_dialogContext.current.showDialog)
+                opt_dialogContext=opt_dialogContext.current;
+            else
+                opt_dialogContext=undefined;
+        }
+    }
+    if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
+    else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
 }
 
 export const SelectList=({list,onClick})=> {
@@ -524,10 +577,7 @@ const Dialogs = {
         return addDialog(html,opt_cancelCallback,opt_timeout);
     },
 
-    showDialog: function(opt_dialogContext,dialog,opt_cancelCallback){
-        if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
-        else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
-    }
+    showDialog: showDialog
 
 };
 
