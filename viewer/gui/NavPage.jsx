@@ -11,13 +11,11 @@ import NavHandler from '../nav/navdata.js';
 import OverlayDialog, {
     DBCancel,
     DialogButtons, DialogDisplay,
-    dialogDisplay,
     DialogFrame, DialogRow,
     DialogText, showDialog, useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
-import GuiHelpers, {
-    useKeyEventHandler,
+import {
     useKeyEventHandlerPlain,
     useStoreHelper,
     useStoreState,
@@ -427,7 +425,7 @@ const NavPage=(props)=>{
     useKeyEventHandlerPlain('page',"toggleNav",()=>navToWp(!activeRoute.hasActiveTarget()));
     const showAisInfo=useCallback((mmsi)=>{
         if (! mmsi) return;
-        showDialog(dialogCtx.current,()=>{
+        showDialog(dialogCtx,()=>{
             return <GuardedAisDialog
                 mmsi={mmsi}
                 actionCb={(action,m)=>{
@@ -455,7 +453,7 @@ const NavPage=(props)=>{
             pagePanels.splice(idx,1);
         }
         if (LayoutHandler.isEditing()) {
-            showDialog(dialogCtx.current, () => <EditWidgetDialogWithFunc
+            showDialog(dialogCtx, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
                 pageWithOptions={PAGENAME}
                 panelname={panel}
@@ -517,7 +515,7 @@ const NavPage=(props)=>{
                         }
                     );
                 }
-                showDialog(dialogCtx.current,()=><FeatureInfoDialog history={props.history} {...feature}/>)
+                showDialog(dialogCtx,()=><FeatureInfoDialog history={props.history} {...feature}/>)
             }
             if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
@@ -532,7 +530,7 @@ const NavPage=(props)=>{
                    name:'toroute',
                    label: 'Convert',
                    onClick:(cprops)=>{
-                       showDialog(dialogCtx.current,()=><TrackConvertDialog history={props.history} name={cprops.overlayName}/>)
+                       showDialog(dialogCtx,()=><TrackConvertDialog history={props.history} name={cprops.overlayName}/>)
                    }
                 });
             }
@@ -598,7 +596,7 @@ const NavPage=(props)=>{
                     if (! old){
                         let lockMode=globalStore.getData(keys.properties.mapLockMode,'center');
                         if ( lockMode === 'ask'){
-                            showLockDialog(dialogCtx.current);
+                            showLockDialog(dialogCtx);
                             return;
                         }
                         if (lockMode === 'current'){
@@ -623,7 +621,7 @@ const NavPage=(props)=>{
                 },
                 editDisable: true
             },
-            anchorWatch(true,dialogCtx.current),
+            anchorWatch(true,dialogCtx),
             {
                 name: "StopNav",
                 storeKeys: activeRoute.getStoreKeys(),
@@ -658,7 +656,7 @@ const NavPage=(props)=>{
             },
             {
                 name: "NavOverlays",
-                onClick:()=>overlayDialog(dialogCtx.current),
+                onClick:()=>overlayDialog(dialogCtx),
                 overflow: true,
                 storeKeys:{
                     visible:keys.gui.capabilities.uploadOverlays
@@ -714,7 +712,7 @@ const NavPage=(props)=>{
                 name: 'NavMapWidgets',
                 editOnly: true,
                 overflow: true,
-                onClick: ()=>showDialog(dialogCtx.current,(props)=><MapWidgetsDialog {...props}/>)
+                onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
             },
             LayoutFinishedDialog.getButtonDef(undefined,dialogCtx.current),
             LayoutHandler.revertButtonDef((pageWithOptions)=>{
@@ -722,7 +720,7 @@ const NavPage=(props)=>{
                     props.history.replace(pageWithOptions.location,pageWithOptions.options);
                 }
             }),
-            RemoteChannelDialog({overflow:true},dialogCtx.current),
+            RemoteChannelDialog({overflow:true},dialogCtx),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {

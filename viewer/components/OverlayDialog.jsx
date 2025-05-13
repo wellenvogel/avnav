@@ -372,7 +372,7 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
     if (!dialogContext) dialogContext=globalContext;
     return new Promise((resolve,reject)=>{
         let resolved=false;
-        dialogContext.showDialog(()=>{
+        showDialog(dialogContext,()=>{
             return <Dialog {...args} resolveFunction={(val)=>{
                 resolved=true;
                 resolve(val);
@@ -387,6 +387,14 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
     })
 }
 export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback)=>{
+    if (opt_dialogContext){
+        if (! opt_dialogContext.showDialog){
+            if(opt_dialogContext.current && opt_dialogContext.current.showDialog)
+                opt_dialogContext=opt_dialogContext.current;
+            else
+                opt_dialogContext=undefined;
+        }
+    }
     if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
     else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
 }
