@@ -28,7 +28,7 @@ import WayPointDialog from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import EditWidgetDialog, {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
+import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
@@ -38,15 +38,12 @@ import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
-import {InputReadOnly} from "../components/Inputs";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList from "../components/ItemList";
 import mapholder from "../map/mapholder.js";
-import Page, {PageFrame, PageLeft} from "../components/Page";
-import Dialogs from "../components/OverlayDialog.jsx";
+import {PageFrame, PageLeft} from "../components/Page";
 import Requests from "../util/requests";
-import DB from "../components/DialogButton";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
 
@@ -383,34 +380,36 @@ const NavPage=(props)=>{
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
     const [sequence,setSequence]=useState(0);
     const checkChartCount=useRef(30);
+    const loadTimer = useTimer((seq) => {
+        if (!needsChartLoad()) return;
+        checkChartCount.current--;
+        if (checkChartCount.current < 0) {
+            props.history.pop();
+        }
+        Requests.getJson("?request=list&type=chart", {timeout: 3 * parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json) => {
+            (json.items || []).forEach((chartEntry) => {
+                if (!chartEntry.key) chartEntry.key = chartEntry.chartKey || chartEntry.url;
+                if (chartEntry.key === neededChart) {
+                    mapholder.setChartEntry(chartEntry);
+                    setSequence(sequence + 1);
+                    return;
+                }
+                loadTimer.startTimer(seq);
+            })
+        })
+            .catch(() => {
+                loadTimer.startTimer(seq)
+            });
+    }, 1000);
     useEffect(() => {
         globalStore.storeData(keys.map.measurePosition,undefined);
         activeRoute.setIndexToTarget();
         if (globalStore.getData(keys.properties.mapLockMode) === 'center'){
             MapHolder.setBoatOffset();
         }
-        const neededChart=needsChartLoad();
-        if (neededChart){
-            const loadTimer=useTimer((seq)=>{
-                if (! needsChartLoad()) return;
-                checkChartCount.current--;
-                if (checkChartCount.current < 0){
-                    props.history.pop();
-                }
-                Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).
-                then((json)=>{
-                    (json.items||[]).forEach((chartEntry)=>{
-                        if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.url;
-                        if (chartEntry.key === neededChart){
-                            mapholder.setChartEntry(chartEntry);
-                            setSequence(sequence+1);
-                            return;
-                        }
-                        loadTimer.startTimer(seq);
-                    })
-                })
-                    .catch(()=>{loadTimer.startTimer(seq)});
-            },1000,true);
+        const neededChart = needsChartLoad();
+        if (neededChart) {
+            loadTimer.startTimer();
         }
         MapHolder.showEditingRoute(false);
         return ()=>{
@@ -418,7 +417,7 @@ const NavPage=(props)=>{
         }
     }, []);
     const wpTimer=useTimer(()=>{
-            showWpButtons(false);
+            setWpButtonsVisible(false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
     useKeyEventHandlerPlain('page',"centerToTarget", setCenterToTarget);
     useKeyEventHandlerPlain('page',"navNext",navNext);
