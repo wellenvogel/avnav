@@ -194,6 +194,7 @@ const MainBody = ({location, options, history, nightMode}) => {
                     windowDimensions: keys.gui.global.windowDimensions,
                     dim: keys.gui.global.dimActive,
                     isEditing: keys.gui.global.layoutEditing,
+                    layoutSequence: keys.gui.global.layoutSequence,
                     ...keys.gui.capabilities
                 }}
                 location={location}
