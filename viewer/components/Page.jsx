@@ -40,7 +40,7 @@ export const PageFrame=(iprops)=>{
         if (hideCallback) hideCallback(hidden);
     },[hidden]);
     const timer=useTimer((sequence)=>{
-        if (autoHideButtons !== undefined){
+        if (autoHideButtons !== undefined && ! isEditing){
             let now=Helper.now();
             if (globalStore.getData(keys.gui.global.hasActiveInputs)){
                 lastUserEvent.current=now;
