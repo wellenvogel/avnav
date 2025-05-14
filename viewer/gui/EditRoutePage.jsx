@@ -38,6 +38,7 @@ import Formatter from "../util/formatter";
 import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 import Page from "../components/Page";
 import Dialogs from "../components/OverlayDialog.jsx";
+import PropTypes from "prop-types";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -196,10 +197,11 @@ const EditRouteDialog = (props) => {
             .catch(() => {
             })
     }
-    const restartDialog=(newRoute)=>{
+    const restartDialog=(newRoute,saveUnchanged)=>{
         if (! newRoute) newRoute=route;
         dialogContext.replaceDialog(()=><EditRouteDialog
             {...props}
+            saveUnchanged={saveUnchanged}
             route={newRoute.clone()}
             />);
     }
@@ -224,7 +226,7 @@ const EditRouteDialog = (props) => {
                             Toast("unable to load route "+entry.originalName);
                             return;
                         }
-                        restartDialog(route);
+                        restartDialog(route,true);
                     },
                     (err)=>Toast(err)
                 )
@@ -308,13 +310,20 @@ const EditRouteDialog = (props) => {
                     </DB> :
                     <DB name="ok"
                         onClick={() => save()}
-                        disabled={!route.differsTo(props.route) || existingName}
+                        disabled={(! props.saveUnchanged && !route.differsTo(props.route)) || existingName}
                     >
                         OK
                     </DB>
                 }
             </DialogButtons>
     </DialogFrame>
+}
+
+EditRouteDialog.propTypes={
+    route: PropTypes.oneOfType(routeobjects.Route).isRequired,
+    editAction: PropTypes.func,
+    updateCallback: PropTypes.bool,
+    saveUnchanged: PropTypes.bool
 }
 
 
@@ -706,6 +715,12 @@ class EditRoutePage extends React.Component{
                 },
                 editDisable: true,
                 overflow: true
+            },
+            {
+                name: 'Menu',
+                onClick:()=>{ this.widgetClick({name:"EditRoute"})},
+                overflow: true,
+                editDisable: true
             },
             {
                 name: "NavOverlays",
