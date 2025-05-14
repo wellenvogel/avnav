@@ -148,7 +148,7 @@ const showLockDialog=(dialogContext)=>{
 
 const setCenterToTarget=()=>{
     MapHolder.setGpsLock(false);
-    if (globalStore.getData(keys.nav.anchor.watchDistance) !== undefined){
+    if (activeRoute.anchorWatch() !== undefined){
         MapHolder.setCenter(activeRoute.getCurrentFrom());
     }
     else {
@@ -246,6 +246,10 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
             onClick:()=>{
                 setCenterToTarget();
                 setShowWpButtons(false);
+            },
+            storeKeys: activeRoute.getStoreKeys(),
+            updateFunction:(state)=>{
+                return { visible: StateHelper.hasActiveTarget(state) || StateHelper.anchorWatchDistance(state) !== undefined}
             }
         },
         {
@@ -259,17 +263,17 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
                 }
                 setShowWpButtons(false);
             },
-            storeKeys: {watchDistance:keys.nav.anchor.watchDistance},
+            storeKeys: activeRoute.getStoreKeys(),
             updateFunction:(state)=>{
-                return {visible:! (state.watchDistance !== undefined)}
+                return {visible:StateHelper.hasActiveTarget(state) }
             },
 
         },
         {
             name:'WpGoto',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
-                return {visible: !StateHelper.selectedIsActiveTarget(state) && ! (state.watchDistance !== undefined)}
+                return {visible: StateHelper.hasActiveTarget(state) &&  !StateHelper.selectedIsActiveTarget(state)}
             },
             onClick:()=>{
                 let selected=activeRoute.getPointAt();
@@ -281,11 +285,11 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name:'NavNext',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
-                return {visible:  StateHelper.selectedIsActiveTarget(state)
+                return {visible:
+                        StateHelper.hasActiveTarget(state) &&  StateHelper.selectedIsActiveTarget(state)
                         &&  StateHelper.hasPointAtOffset(state,1)
-                        && ! (state.watchDistance !== undefined)
                 };
             },
             onClick:()=>{
@@ -297,10 +301,10 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name: 'NavRestart',
-            storeKeys: activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
                 return {
-                    visible:  StateHelper.hasActiveTarget(state)
+                    visible:  StateHelper.hasActiveTarget(state) &&  StateHelper.selectedIsActiveTarget(state)
                 };
             },
             onClick:()=>{
@@ -310,11 +314,11 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name:'WpNext',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
                 return {
                     disabled:!StateHelper.hasPointAtOffset(state,1),
-                    visible: StateHelper.hasRoute(state) && ! (state.watchDistance !== undefined)
+                    visible: StateHelper.hasRoute(state) && ! StateHelper.anchorWatchDistance(state)
                 };
             },
             onClick:()=>{
@@ -327,11 +331,11 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name:'WpPrevious',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
                 return {
                     disabled:!StateHelper.hasPointAtOffset(state,-1),
-                    visible: StateHelper.hasRoute(state) && ! (state.watchDistance !== undefined)
+                    visible: StateHelper.hasRoute(state) && ! StateHelper.anchorWatchDistance(state)
                 }
             },
             onClick:()=>{

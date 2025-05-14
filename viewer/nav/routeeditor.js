@@ -546,6 +546,11 @@ export class StateHelper{
         return state.leg.hasRoute();
     }
 
+    static anchorWatchDistance(state){
+        if (! state.leg) return;
+        return state.leg.anchorWatch();
+    }
+
 }
 
 //register the guard callback to prevent others from updating the routes
