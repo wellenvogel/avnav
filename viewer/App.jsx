@@ -145,6 +145,7 @@ class Router extends Component {
                     history={this.props.history}
                     small={small}
                     isEditing={this.props.isEditing}
+                    windowDimensions={this.props.windowDimensions}
                 />
             </div>
     }
@@ -190,7 +191,7 @@ const MainBody = ({location, options, history, nightMode}) => {
             <DynamicRouter
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,
-                    dimensions: keys.gui.global.windowDimensions,
+                    windowDimensions: keys.gui.global.windowDimensions,
                     dim: keys.gui.global.dimActive,
                     isEditing: keys.gui.global.layoutEditing,
                     ...keys.gui.capabilities

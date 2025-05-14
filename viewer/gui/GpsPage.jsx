@@ -40,8 +40,7 @@ const widgetCreator=(widget,weightSum)=>{
     return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
 };
 
-const getLayoutPage=(opt_pageNum)=>{
-    let pageNum=(opt_pageNum !== undefined)?opt_pageNum:globalStore.getData(keys.gui.gpspage.pageNumber,1);
+const getLayoutPage=(pageNum)=>{
     const base="gpspage";
     return{
         location: base,
@@ -176,13 +175,13 @@ const GpsPage = (props) => {
             RemoteChannelDialog({overflow: true}, dialogCtxRef),
             Mob.mobDefinition(props.history),
             EditPageDialog.getButtonDef(
-                getLayoutPage().layoutPage,
+                getLayoutPage(pageNumber).layoutPage,
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR],
                 dialogCtxRef),
             LayoutFinishedDialog.getButtonDef(undefined, dialogCtxRef),
             LayoutHandler.revertButtonDef((pageWithOptions) => {
-                let current = getLayoutPage();
+                let current = getLayoutPage(pageNumber);
                 if (pageWithOptions.location !== current.location) {
                     props.history.replace(pageWithOptions.location, pageWithOptions.options);
                     return;
@@ -206,7 +205,7 @@ const GpsPage = (props) => {
         if (LayoutHandler.isEditing()) {
             showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
-                pageWithOptions={getLayoutPage()}
+                pageWithOptions={getLayoutPage(pageNumber)}
                 panelname={panelInfo.name}
                 opt_options={{
                     beginning: false,
@@ -236,15 +235,18 @@ const GpsPage = (props) => {
             return;
         }
         props.history.pop();
-    }, []);
+    }, [pageNumber]);
     let autohide = undefined;
     if (globalStore.getData(keys.properties.autoHideGpsPage)) {
         autohide = globalStore.getData(keys.properties.hideButtonTime, 30) * 1000;
     }
 
     let fontSize = layoutBaseParam.baseWidgetFontSize;
-    let dimensions = globalStore.getData(keys.gui.global.windowDimensions);
+    let dimensions = props.windowDimensions;
     if (dimensions) {
+        /* we just compute a first guess for the font size
+           the resizing stuff will enlarge/shrink the font later
+         */
         let width = dimensions.width - 60; //TODO: correct button dimensions...
         if (width > 0 && dimensions.height > 0) {
             let fw = width / layoutBaseParam.layoutWidth || 0;
@@ -275,7 +277,7 @@ const GpsPage = (props) => {
             onClick: () => {
                 if (LayoutHandler.isEditing()) {
                     showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
-                        pageWithOptions={getLayoutPage()}
+                        pageWithOptions={getLayoutPage(pageNumber)}
                         panelname={panelData.name}
                         widgetItem={undefined}
                         opt_options={{beginning: false, weight: true, types: ["!map"]}}
@@ -284,7 +286,7 @@ const GpsPage = (props) => {
             },
             dragdrop: LayoutHandler.isEditing(),
             onSortEnd: (oldIndex, newIndex, frameId, targetFrameId) => {
-                LayoutHandler.withTransaction(getLayoutPage(),
+                LayoutHandler.withTransaction(getLayoutPage(pageNumber),
                     (handler) => handler.moveItem(panelData.page, frameId, oldIndex, newIndex, targetFrameId));
             }
         };

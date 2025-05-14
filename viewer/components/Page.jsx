@@ -142,10 +142,11 @@ Page.propTypes=assign({},Page.pageProperties,{
     mainContent: PropTypes.any,
     floatContent: PropTypes.any,
     bottomContent: PropTypes.any,
-    buttonList: PropTypes.any,
+    buttonList: PropTypes.array,
     style: PropTypes.object,
     buttonWidthChanged: PropTypes.func,
-    autoHideButtons: PropTypes.any // number of ms or undefined
+    autoHideButtons: PropTypes.any, // number of ms or undefined
+    windowDimensions: PropTypes.any
 });
 
 
