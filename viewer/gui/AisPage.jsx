@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import {useStore} from '../hoc/Dynamic.jsx';
+import {useStore, useStoreState} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -13,7 +13,7 @@ import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
 import Dialogs, {showDialog, showPromiseDialog, useDialogContext} from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
-import GuiHelper, {useStoreState} from "../util/GuiHelpers";
+import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper from "../util/helper";

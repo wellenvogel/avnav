@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
+import Dynamic, {useStore, useStoreState} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -10,7 +10,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import MapHolder from '../map/mapholder.js';
-import GuiHelpers, {useStoreState} from '../util/GuiHelpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import EditWidgetDialog, {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';

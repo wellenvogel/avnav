@@ -18,7 +18,6 @@ import Helper from '../util/helper.js';
 import {
     useKeyEventHandlerPlain,
     useStoreHelper,
-    useStoreState,
     useTimer
 } from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
@@ -46,6 +45,7 @@ import {PageFrame, PageLeft} from "../components/Page";
 import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
+import {useStoreState} from "../hoc/Dynamic";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 

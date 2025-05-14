@@ -7,8 +7,6 @@ import base from "../base";
 import {useEffect, useRef, useState} from "react";
 
 
-
-
 const resizeElementFont=(el)=>{
     let MAX=250;
     let MIN=10;
@@ -466,40 +464,6 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
     return rt;
 
 };
-/**
- * create a state that is backed up by the store
- * @param storeKey
- * @param defaultInitialValue - the initial value to be set if no value in the store (or forceInital)
- *        can be a function
- * @param forceInitial - always set this initial value if not undefine
- */
-export const useStoreState=(storeKey, defaultInitialValue,forceInitial)=>{
-    const [value,setValue]=useState(()=>{
-        let iv=globalStore.getData(storeKey);
-        if (iv === undefined || forceInitial) {
-            iv=(typeof defaultInitialValue === 'function')?defaultInitialValue(iv):defaultInitialValue;
-            if (iv !== undefined) globalStore.storeData(storeKey,iv);
-        }
-        return iv;
-    });
-    const setter=useRef();
-    useState(()=>{
-        setter.current=globalStore.register(()=>{
-            setValue(globalStore.getData(storeKey));
-        },storeKey);
-    });
-    useEffect(() => {
-            return ()=>{
-                globalStore.deregister(setter.current);
-            }
-        }, []);
-    return [
-        value,
-        (nv)=>{
-            globalStore.storeData(storeKey,nv);
-        }
-    ]
-}
 
 const getServerCommand=(name)=>{
     return Requests.getJson({
