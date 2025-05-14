@@ -583,7 +583,7 @@ const Dialogs = {
 
 
 export const InfoItem=(props)=>{
-    return <div className={"dialogRow "+props.className}>
+    return <div className={"dialogRow "+props.className} >
         <span className={"inputLabel"}>{props.label}</span>
         <span className={"itemInfo"}>{props.value}</span>
     </div>
@@ -596,7 +596,7 @@ InfoItem.show=(data,description)=>{
         v=description.formatter(v,data);
         if (v === undefined) return null;
     }
-    return <InfoItem label={description.label} value={v}/>
+    return <InfoItem label={description.label} value={v} key={description.label}/>
 }
 export default Dialogs;
 

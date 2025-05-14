@@ -320,9 +320,9 @@ const EditRouteDialog = (props) => {
 }
 
 EditRouteDialog.propTypes={
-    route: PropTypes.oneOfType(routeobjects.Route).isRequired,
+    route: PropTypes.objectOf(routeobjects.Route).isRequired,
     editAction: PropTypes.func,
-    updateCallback: PropTypes.bool,
+    updateCallback: PropTypes.func,
     saveUnchanged: PropTypes.bool
 }
 
