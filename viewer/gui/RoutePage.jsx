@@ -13,7 +13,7 @@ import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Helper from '../util/helper.js';
 import WaypointListItem from '../components/WayPointListItem.jsx';
-import WayPointDialog from '../components/WaypointDialog.jsx';
+import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import Formatter from '../util/formatter.js';
 import {showDialog} from '../components/OverlayDialog.jsx';
 import NavHandler from '../nav/navdata.js';
@@ -151,9 +151,9 @@ const startWaypointDialog=(rawitem,index,dialogCtx)=>{
     if (! rawitem) return;
     let item=new navobjects.WayPoint();
     assign(item,rawitem);
-    const wpChanged=(newWp,close)=>{
+    const wpChanged=(newWp)=>{
         if (! checkWritable()) return;
-        let changedWp=WayPointDialog.updateWaypoint(item,newWp,function(err){
+        let changedWp=updateWaypoint(item,newWp,function(err){
             Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {

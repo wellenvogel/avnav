@@ -23,7 +23,7 @@ import {
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.jsx';
-import WayPointDialog from '../components/WaypointDialog.jsx';
+import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
@@ -79,8 +79,8 @@ const getPanelWidgets=(panel)=>{
  */
 const startWaypointDialog=(item,idx,dialogCtx)=>{
     if (! item) return;
-    const wpChanged=(newWp,close)=>{
-        let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
+    const wpChanged=(newWp)=>{
+        let changedWp=updateWaypoint(item,newWp,(err)=>{
             Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {

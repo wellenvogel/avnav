@@ -10,6 +10,7 @@ import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
 import {
+    DBCancel, DBOk,
     DialogButtons,
     DialogFrame,
     showDialog,
@@ -20,7 +21,7 @@ import Helper from '../util/helper.js';
 import {useTimer} from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
-import WayPointDialog from '../components/WaypointDialog.jsx';
+import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit, {StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
@@ -30,15 +31,18 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
 import mapholder from "../map/mapholder.js";
-import {Input, InputReadOnly} from "../components/Inputs";
+import {InputReadOnly} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
 import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 import Page from "../components/Page";
-import Dialogs from "../components/OverlayDialog.jsx";
 import PropTypes from "prop-types";
 import {useStore} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem, SelectDialog, ValueDialog} from "../components/BasicDialogs";
+import ItemList from "../components/ItemList";
+import RoutePointsWidget, {RoutePoint} from "../components/RoutePointsWidget";
+import WayPointItem from "../components/WayPointItem";
+import {useAvNavSortable} from "../hoc/Sortable";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -58,7 +62,7 @@ const getCurrentEditor = () => {
 const startWaypointDialog = (item, index, dialogContext) => {
     if (!item) return;
     const wpChanged = (newWp) => {
-        let changedWp = WayPointDialog.updateWaypoint(item, newWp, (err) => {
+        let changedWp = updateWaypoint(item, newWp, (err) => {
             Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {
@@ -100,6 +104,64 @@ const loadRoutes = () => {
         .catch((error) => {
             Toast(error)
         });
+}
+
+const EditPointsDialog=(props)=>{
+    if (!props.route) return null;
+    const dialogContext = useDialogContext();
+    const [route, setRoute] = useState(props.route);
+    const [selected,setSelected]=useState(0);
+    const changeRoute = (cb) => {
+        let newRoute = route.clone();
+        if (cb(newRoute) !== false) {
+            setRoute(newRoute);
+            return newRoute;
+        }
+        return route;
+    }
+    const wpChanged = (oldWp,newWp,idx) => {
+        let changedWp = updateWaypoint(oldWp, newWp, (err) => {
+            Toast(Helper.escapeHtml(err));
+        });
+        if (changedWp) {
+            changeRoute((nr)=>{nr.points[idx]=changedWp})
+            return true;
+        }
+        return false;
+    };
+    let info = RouteHandler.getInfoFromRoute(route);
+    return <DialogFrame className={"EditRoutePoints"} title={route.name}>
+        {INFO_ROWS.map((description) => {
+            return InfoItem.show(info, description);
+        })}
+        <RoutePointsWidget
+            route={route}
+            index={selected}
+            showLatLon={globalStore.getData(keys.properties.routeShowLL)}
+            useRhumbLine={globalStore.getData(keys.nav.routeHandler.useRhumbLine)}
+            onClick={(item)=>{
+                setSelected(item.idx);
+                showDialog(dialogContext,()=><WayPointDialog
+                    waypoint={item}
+                    okCallback={(changedWp)=>{
+                        return wpChanged(item,changedWp,item.idx);
+                    }}
+                    deleteCallback={(wp)=>{
+                        changeRoute((nr)=>{
+                            nr.deletePoint(wp.idx);
+                        })
+                        return true;
+                    }}
+                />);
+            }}
+        />
+        <DialogButtons buttonList={[
+            DBCancel(),
+            DBOk(()=>{
+                if (props.resolveFunction) props.resolveFunction(route);
+            })
+        ]}/>
+    </DialogFrame>
 }
 
 const EditRouteDialog = (props) => {
@@ -283,15 +345,18 @@ const EditRouteDialog = (props) => {
                 }}
                 close={false}
             >Invert</DB>
-            {props.editAction &&
                 <DB name="edit"
                     onClick={() => {
-                        save(route.clone());
-                        props.editAction();
+                        showPromiseDialog(dialogContext,EditPointsDialog,{route:route,inverted:inverted})
+                            .then((changedRoute)=>{
+                                setRoute(changedRoute.clone());
+                                setInverted(false);
+                            },()=>{})
                     }}
+                    close={false}
                 >
-                    Edit
-                </DB>}
+                    Points
+                </DB>
         </DialogButtons>
         <DialogButtons>
             < DB name="load"
