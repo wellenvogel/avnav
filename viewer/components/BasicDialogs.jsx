@@ -24,7 +24,7 @@
  * basic dialog implementations
  */
 import DB from "./DialogButton";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
 
 export const SelectList = ({list, onClick}) => {
@@ -64,35 +64,61 @@ export const SelectDialog = ({resolveFunction, title, list, optResetCallback, ok
     );
 
 };
-export const ConfirmDialog = ({title, text, resolveFunction, okFunction, children, cancelFunction}) => {
+export const ConfirmDialog = ({title, text, resolveFunction, children}) => {
     return <DialogFrame title={title || ''}>
         <div className="dialogText">{text}</div>
         {children}
         <DialogButtons buttonList={[
-            DBCancel(cancelFunction),
-            DBOk(resolveFunction || okFunction)
+            DBCancel(),
+            DBOk(resolveFunction )
         ]}/>
     </DialogFrame>
 }
-export const AlertDialog = ({text, resolveFunction, okFunction}) => {
+export const AlertDialog = ({text, resolveFunction,children}) => {
     return <DialogFrame title={"Alert"}>
         <DialogText>{text}</DialogText>
-        <DialogButtons buttonList={DBOk(resolveFunction || okFunction)}/>
+        {children}
+        <DialogButtons buttonList={DBOk(resolveFunction )}/>
     </DialogFrame>
 }
-export const ValueDialog = ({value, label, title, clear, cancelCallback, resolveFunction}) => {
-    const [nvalue, setValue] = useState(value);
+export const ValueDialog = ({value, label, title, clear, resolveFunction,checkFunction}) => {
+    const [nvalue, setValueImpl] = useState(value);
+    const [error,setError]=useState(undefined)
+    const setValue=(nv)=> {
+        setValueImpl(nv);
+        check(nv);
+    }
+    const check=(nv)=>{
+        if (!checkFunction) return;
+        const res=checkFunction(nv);
+        if (!res){
+            setError(undefined);
+            return;
+        }
+        if (res instanceof Promise){
+            res.then((pres)=>{
+                setError(pres);
+            },(err)=>setError(err))
+            setError('checking');
+            return;
+        }
+        setError(res);
+    }
+    useEffect(() => {
+        check(nvalue);
+    }, []);
     return (
         <DialogFrame title={title || 'Input'}>
             <div className="dialogRow">
                 <span className="inputLabel">{label}</span>
                 <input type="text" name="value" value={nvalue} onChange={(ev) => setValue(ev.target.value)}/>
             </div>
+            {error !== undefined && <div className={'warning'}>{error}</div>}
             <DialogButtons>
                 {clear && <DB name="reset" close={false}
                               onClick={() => setValue((typeof clear === "function") ? clear(nvalue) : '')}>Clear</DB>}
-                <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
-                <DB name="ok" onClick={() => resolveFunction && resolveFunction(nvalue)}>Ok</DB>
+                <DB name="cancel">Cancel</DB>
+                <DB name="ok" onClick={() => resolveFunction && resolveFunction(nvalue)} disabled={error !== undefined}>Ok</DB>
             </DialogButtons>
         </DialogFrame>
     );
