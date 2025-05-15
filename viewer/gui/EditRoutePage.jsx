@@ -12,7 +12,7 @@ import routeobjects from '../nav/routeobjects.js';
 import {
     DBCancel, DBOk,
     DialogButtons,
-    DialogFrame,
+    DialogFrame, DialogRow,
     showDialog,
     showPromiseDialog,
     useDialogContext
@@ -111,6 +111,7 @@ const EditPointsDialog=(props)=>{
     const dialogContext = useDialogContext();
     const [route, setRoute] = useState(props.route);
     const [selected,setSelected]=useState(0);
+    const [inverted,setInverted]=useState(props.inverted);
     const changeRoute = (cb) => {
         let newRoute = route.clone();
         if (cb(newRoute) !== false) {
@@ -134,6 +135,7 @@ const EditPointsDialog=(props)=>{
         {INFO_ROWS.map((description) => {
             return InfoItem.show(info, description);
         })}
+        {inverted && <DialogRow>inverted</DialogRow>}
         <RoutePointsWidget
             route={route}
             index={selected}
@@ -156,12 +158,45 @@ const EditPointsDialog=(props)=>{
             }}
         />
         <DialogButtons buttonList={[
+            {
+                name: "empty",
+                onClick: () => {
+                    let changed=changeRoute((nr) => {
+                        nr.points = []
+                    });
+                    if (changed.points.length < 1) setInverted(false);
+                },
+                close: false,
+                label: "Empty"
+            },
+            {
+                name: "invert",
+                onClick: () => {
+                    changeRoute((nr) => {
+                        nr.swap()
+                    })
+                    setInverted(!inverted);
+                },
+                disabled: route.points.length < 1,
+                close: false,
+                label: "Invert"
+            },
             DBCancel(),
             DBOk(()=>{
-                if (props.resolveFunction) props.resolveFunction(route);
+                if (props.resolveFunction) props.resolveFunction({
+                    route:route,
+                    inverted:inverted
+                });
+            },{
+                disabled: !route.differsTo(props.route)
             })
         ]}/>
     </DialogFrame>
+}
+EditPointsDialog.propTypes={
+    route: PropTypes.objectOf(routeobjects.Route).isRequired,
+    resolveFunction: PropTypes.func,
+    inverted: PropTypes.bool
 }
 
 const EditRouteDialog = (props) => {
@@ -348,9 +383,9 @@ const EditRouteDialog = (props) => {
                 <DB name="edit"
                     onClick={() => {
                         showPromiseDialog(dialogContext,EditPointsDialog,{route:route,inverted:inverted})
-                            .then((changedRoute)=>{
-                                setRoute(changedRoute.clone());
-                                setInverted(false);
+                            .then((changed)=>{
+                                setRoute(changed.route.clone());
+                                setInverted(changed.inverted);
                             },()=>{})
                     }}
                     close={false}
