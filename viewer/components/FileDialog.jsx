@@ -643,7 +643,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
         if (opt_resultCallback) opt_resultCallback(info);
     };
-    let ok = showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"delete " + info.name + "?"}/>);
+    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + info.name + "?"}/>);
     ok.then(function () {
         if (info.type === 'layout') {
             LayoutHandler.deleteItem(info.name)

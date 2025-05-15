@@ -26,11 +26,11 @@
 
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {
+import {
     DBOk,
     DialogButtons,
     DialogFrame,
-    dialogHelper, showDialog,
+    showDialog,
     showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
@@ -156,7 +156,7 @@ const EditHandlerDialog=(props)=>{
         if (props.child){
             text="really delete "+props.child+"?";
         }
-        showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={text}/>)
+        showPromiseDialog(dialogContext,ConfirmDialog,{text:text})
             .then(()=> {
                 let param = getRequestParam({command: props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
                 return RequestHandler.getJson('', undefined, param);
@@ -366,7 +366,7 @@ EditHandlerDialog.createAddDialog=(opt_doneCallback,dialogCtx)=>{
             }
             let list=[];
             data.data.forEach((h)=>list.push({label:h,value:h}));
-            showPromiseDialog(dialogCtx,(props)=><SelectDialog {...props} title={'Select Handler to Add'} list={list}/> )
+            showPromiseDialog(dialogCtx,(dprops)=><SelectDialog {...dprops} title={'Select Handler to Add'} list={list}/> )
                 .then((selected)=>{
                     EditHandlerDialog.createNewHandlerDialog(selected.value,undefined,opt_doneCallback);
                 })

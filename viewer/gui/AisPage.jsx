@@ -232,7 +232,7 @@ const AisPage =(props)=>{
             for (let i in sortFields) {
                 sortFields[i].selected = sortFields[i].value === sortField;
             }
-            showPromiseDialog(dialogContext.current,(props)=><SelectDialog {...props} title={'Sort Order'} list={sortFields}/>)
+            showPromiseDialog(dialogContext,SelectDialog,{title:'Sort Order',list:sortFields})
                 .then((selected)=>{
                      setSortField(selected.value);
                 })

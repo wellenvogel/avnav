@@ -631,9 +631,9 @@ const EditOverlaysDialog = (props) => {
         setSelectedIndex(idx);
     }
     const showItemDialog = (item, opt_forceOk) => {
-        return showPromiseDialog(dialogContext,(props) => {
+        return showPromiseDialog(dialogContext,(dprops) => {
             return <OverlayItemDialog
-                {...props}
+                {...dprops}
                 resolveFunction={(changed) => {
                     if (changed.name && changed.type) props.resolveFunction(changed);
                 }}

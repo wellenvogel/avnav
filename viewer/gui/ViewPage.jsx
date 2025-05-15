@@ -144,7 +144,7 @@ class ViewPageBase extends React.Component{
                 name: 'Cancel',
                 onClick: ()=> {
                     if (this.state.changed){
-                        showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"Discard Changes?"}/>)
+                        showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"Discard Changes?"}/>)
                             .then((data)=>{this.props.history.pop();})
                             .catch((e)=>{});
                         return;

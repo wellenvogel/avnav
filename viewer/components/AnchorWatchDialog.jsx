@@ -31,7 +31,7 @@ export const stopAnchorWithConfirm=(opt_resolveOnInact,opt_dialogContext)=>{
             }
             return;
         }
-        showPromiseDialog(opt_dialogContext,(props)=><ConfirmDialog {...props} text={"Really stop the anchor watch?"}/>)
+        showPromiseDialog(opt_dialogContext,ConfirmDialog,{text:"Really stop the anchor watch?"})
             .then(() => resolve(true))
             .catch((e)=>reject(e));
     })

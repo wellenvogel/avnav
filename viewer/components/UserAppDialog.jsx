@@ -240,9 +240,9 @@ const UserAppDialog = (props) => {
             .then((addons) => {
                 let current = Addons.findAddonByUrl(addons, props.fixed.url,true)
                 if (current.length) {
-                    showPromiseDialog(dialogContext, (props) =>
+                    showPromiseDialog(dialogContext, (dprops) =>
                         <SelectExistingDialog
-                            {...props}
+                            {...dprops}
                             existingAddons={current}
                         />
                     )
@@ -406,7 +406,7 @@ const UserAppDialog = (props) => {
                     name: 'delete',
                     label: 'Delete',
                     onClick: () => {
-                        showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} test={"really delete User App?"}/>)
+                        showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={"really delete User App?"}/>)
                             .then(() => {
                                 Addons.removeAddon(currentAddon.name)
                                     .then((data) => {

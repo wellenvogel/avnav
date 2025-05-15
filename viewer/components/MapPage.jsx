@@ -150,7 +150,7 @@ const MapPage =(iprops)=>{
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
         if (chartEntry.eulaMode !== undefined){
             if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
-                showPromiseDialog(dialogCtx.current,(props)=><EulaDialog {...props} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)
+                showPromiseDialog(dialogCtx.current,(dprops)=><EulaDialog {...dprops} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)
                     .then(()=>{
                         setShown(chartEntry.url,INFO_TYPES.eula);
                         showMap(chartEntry);

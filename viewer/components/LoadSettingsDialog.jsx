@@ -105,7 +105,7 @@ const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) 
         )
         .then((result) => {
             if (result.warnings && result.warnings.length) {
-                return showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={result.warnings.join('\n')} title={'Import anyway?'}/>)
+                return showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={result.warnings.join('\n')} title={'Import anyway?'}/>)
                     .then(
                         () => setSettings(result.data),
                         () => Promise.reject()
