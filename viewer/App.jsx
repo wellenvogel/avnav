@@ -21,10 +21,10 @@ import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
-import OverlayDialog, {
+import {
+    ConfirmDialog,
     DialogContext,
-    GlobalDialogDisplay,
-    setGlobalContext,
+    setGlobalContext, showPromiseDialog,
     useDialog
 } from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -482,9 +482,9 @@ class App extends React.Component {
             return;
         }
         if (this.serverVersion === newVersion)return;
-        OverlayDialog.confirm("The server version has changed from "+
+        showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"The server version has changed from "+
             this.serverVersion+
-            " to "+newVersion+". Would you like to reload?",undefined,"Server version change")
+            " to "+newVersion+". Would you like to reload?"} title={"Server version change"}/>)
             .then(()=>{
                 LeaveHandler.stop();
                 window.location.replace(window.location.href);

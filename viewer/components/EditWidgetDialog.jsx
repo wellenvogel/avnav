@@ -27,10 +27,10 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
-import OverlayDialog, {
+import {
     DialogButtons,
     DialogFrame,
-    DialogRow
+    DialogRow, showDialog
 } from './OverlayDialog.jsx';
 import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
 import {Input,InputSelect} from './Inputs.jsx';
@@ -252,7 +252,7 @@ export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt
  */
 EditWidgetDialog.createDialog=(widgetItem,pageWithOptions,panelname,opt_options)=>{
     if (! LayoutHandler.isEditing()) return false;
-    OverlayDialog.dialog(()=>{
+    showDialog(undefined,()=>{
         return <EditWidgetDialogWithFunc
             pageWithOptions={pageWithOptions}
             panelname={panelname}

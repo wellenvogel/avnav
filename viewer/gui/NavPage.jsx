@@ -77,7 +77,7 @@ const getPanelWidgets=(panel)=>{
  * @param item
  * @param idx if undefined - just update the let "to" point
  */
-const startWaypointDialog=(item,idx)=>{
+const startWaypointDialog=(item,idx,dialogCtx)=>{
     if (! item) return;
     const wpChanged=(newWp,close)=>{
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
@@ -94,13 +94,11 @@ const startWaypointDialog=(item,idx)=>{
         }
         return false;
     };
-    let RenderDialog=function(props){
-        return <WayPointDialog
+    showDialog(dialogCtx,(props)=><WayPointDialog
             {...props}
             waypoint={item}
             okCallback={wpChanged}/>
-    };
-    OverlayDialog.dialog(RenderDialog);
+    );
 };
 
 const setBoatOffset=()=>{
@@ -238,9 +236,9 @@ const MapWidgetsDialog =()=> {
 }
 
 const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
-const OverlayContent=({showWpButtons,setShowWpButtons})=>{
+const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
     const waypointButtons=[
-        anchorWatch(),
+        anchorWatch(false,dialogCtxRef),
         {
             name:'WpLocate',
             onClick:()=>{
@@ -256,10 +254,10 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
             name:'WpEdit',
             onClick:()=>{
                 if (activeRoute.hasRoute()){
-                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex());
+                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogCtxRef);
                 }
                 else {
-                    startWaypointDialog(activeRoute.getCurrentTarget());
+                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogCtxRef);
                 }
                 setShowWpButtons(false);
             },
@@ -768,6 +766,7 @@ const NavPage=(props)=>{
                         setShowWpButtons={(on)=>{
                             showWpButtons(on);
                         }}
+                        dialogCtxRef={dialogCtx}
                     />}
                 buttonList={buttons}
                 preventCenterDialog={(props.options||{}).remote}

@@ -4,14 +4,14 @@
 
 import Dynamic from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
-import React, {createRef} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper from '../util/helper.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import {showDialog} from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import Mob from '../components/Mob.js';
@@ -253,7 +253,7 @@ class WpaPage extends React.Component{
                 return;
             }
         };
-        OverlayDialog.dialog((props)=>{
+        showDialog(undefined,(props)=>{
             return <Dialog
                 resultCallback={resultCallback}
                 {...props}

@@ -7,9 +7,15 @@ import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
 import React, {useState} from 'react';
 import Page from '../components/Page.jsx';
-import Toast,{hideToast} from '../components/Toast.jsx';
+import Toast from '../components/Toast.jsx';
 import assign from 'object-assign';
-import OverlayDialog, {DialogButtons, DialogFrame, useDialogContext} from '../components/OverlayDialog.jsx';
+import {
+    ConfirmDialog,
+    DialogButtons,
+    DialogFrame, showDialog,
+    showPromiseDialog,
+    useDialogContext
+} from '../components/OverlayDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
@@ -520,7 +526,7 @@ class SettingsPage extends React.Component{
     confirmAbortOrDo(){
         if (this.hasChanges()) {
             return new Promise((resolve)=>{
-                OverlayDialog.confirm("discard changes?")
+                showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"discard changes?"}/>)
                     .then(()=>{
                         resolve(0);
                     })
@@ -633,9 +639,9 @@ class SettingsPage extends React.Component{
             }).catch(()=>{});
         }
         else{
-            OverlayDialog.showDialog(undefined,()=><LayoutFinishedDialog finishCallback={()=>this.changeItem({name:keys.properties.layoutName},LayoutHandler.name)}/> )
+            showDialog(undefined,()=><LayoutFinishedDialog finishCallback={()=>this.changeItem({name:keys.properties.layoutName},LayoutHandler.name)}/> )
         }
-    };
+    }
 
     resetData(){
         let values=assign({},this.defaultValues);

@@ -1,6 +1,6 @@
 import React from 'react';
 import ColorDialog from './ColorDialog.jsx';
-import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
+import OverlayDialog, {SelectDialog, useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
@@ -147,7 +147,7 @@ export const InputSelect=(props)=>{
             };
             let resetCallback= props.resetCallback?props.resetCallback:undefined;
             const showDialog=(finalList)=>{
-                dialogContext.showDialog(OverlayDialog.createSelectDialog(props.label, finalList, valueChanged,undefined,resetCallback));
+                dialogContext.showDialog(()=><SelectDialog title={props.label} list={finalList} resolveFunction={valueChanged} optResetCallback={resetCallback}/>);
             }
             let finalList;
             if (typeof(displayList) === 'function') finalList = displayList(props.value);

@@ -27,10 +27,11 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
+    ConfirmDialog,
     DBOk,
     DialogButtons,
     DialogFrame,
-    dialogHelper,
+    dialogHelper, SelectDialog, showDialog,
     showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
@@ -155,7 +156,7 @@ const EditHandlerDialog=(props)=>{
         if (props.child){
             text="really delete "+props.child+"?";
         }
-        showPromiseDialog(dialogContext,OverlayDialog.createConfirmDialog(text))
+        showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={text}/>)
             .then(()=> {
                 let param = getRequestParam({command: props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
                 return RequestHandler.getJson('', undefined, param);
@@ -327,7 +328,7 @@ const filterObject=(data)=>{
  * @return {boolean}
  */
 EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handlerName)=>{
-    OverlayDialog.dialog((props)=> {
+    showDialog(undefined,(props)=> {
         return <EditHandlerDialog
             {...props}
             title="Edit Handler"
@@ -340,7 +341,7 @@ EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handler
 };
 
 EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_doneCallback)=>{
-    OverlayDialog.dialog((props)=> {
+    showDialog(undefined,(props)=> {
         return <EditHandlerDialog
             {...props}
             title="Add Handler"
@@ -352,7 +353,7 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_don
     },undefined);
 }
 
-EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{
+EditHandlerDialog.createAddDialog=(opt_doneCallback,dialogCtx)=>{
     RequestHandler.getJson('',undefined,{
         request:'api',
         type: 'config',
@@ -365,7 +366,7 @@ EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{
             }
             let list=[];
             data.data.forEach((h)=>list.push({label:h,value:h}));
-            OverlayDialog.selectDialogPromise('Select Handler to Add',list)
+            showPromiseDialog(dialogCtx,(props)=><SelectDialog {...props} title={'Select Handler to Add'} list={list}/> )
                 .then((selected)=>{
                     EditHandlerDialog.createNewHandlerDialog(selected.value,undefined,opt_doneCallback);
                 })

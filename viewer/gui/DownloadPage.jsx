@@ -13,7 +13,7 @@ import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import {showDialog, showPromiseDialog, ValueDialog} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
@@ -402,7 +402,7 @@ class DownloadPage extends React.Component{
                     let importConfig=checkExt(ext,this.state.chartImportExtensions);
                     if (importConfig.allow) {
                         let resolved=false;
-                        OverlayDialog.showDialog(undefined,(dprops)=>{
+                        showDialog(undefined,(dprops)=>{
                             return(
                                 <ImportDialog
                                     {...dprops}
@@ -464,7 +464,7 @@ class DownloadPage extends React.Component{
     }
 
     createItem(){
-        OverlayDialog.valueDialogPromise('enter filename','')
+        showPromiseDialog(undefined,(props)=><ValueDialog {...props} title={'enter filename'} value={''} />)
             .then((name)=>{
                 if (this.entryExists(name)) {
                     Toast("already exists");
@@ -513,7 +513,7 @@ class DownloadPage extends React.Component{
                                     EditOverlaysDialog.createDialog(item,()=>this.fillData());
                                     return;
                                 }
-                                OverlayDialog.showDialog(undefined,()=>
+                                showDialog(undefined,()=>
                                  <FileDialogWithActions
                                      item={item}
                                      history={this.props.history}

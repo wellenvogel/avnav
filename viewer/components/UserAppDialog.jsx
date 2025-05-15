@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
+    ConfirmDialog,
     DialogRow,
     promiseResolveHelper, SelectList,
     showPromiseDialog,
@@ -406,8 +407,8 @@ const UserAppDialog = (props) => {
                     name: 'delete',
                     label: 'Delete',
                     onClick: () => {
-                        dialogContext.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
-                            () => {
+                        showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} test={"really delete User App?"}/>)
+                            .then(() => {
                                 Addons.removeAddon(currentAddon.name)
                                     .then((data) => {
                                         props.resolveFunction(data);
@@ -417,7 +418,7 @@ const UserAppDialog = (props) => {
                                         if (unsetOrTrue(props.showToasts)) Toast("unable to remove: " + error);
                                     });
                             }
-                        ));
+                        ,()=>{});
                     },
                     close: false,
                     visible: !!(currentAddon.name && currentAddon.canDelete && canEdit)

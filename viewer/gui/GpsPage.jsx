@@ -218,7 +218,7 @@ const GpsPage = (props) => {
         if (item && item.name === "AisTarget") {
             let mmsi = (data && data.mmsi) ? data.mmsi : item.mmsi;
             if (mmsi === undefined) return;
-            Dialogs.showDialog(dialogCtxRef, () => {
+            showDialog(dialogCtxRef, () => {
                 return <AisInfoWithFunctions
                     mmsi={mmsi}
                     hidden={{

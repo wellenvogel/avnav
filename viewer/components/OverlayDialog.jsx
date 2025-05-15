@@ -74,11 +74,6 @@ export const OverlayDialog = ({className,closeCallback,replaceDialog,children}) 
 }
 
 
-OverlayDialog.propTypes={
-    closeCallback: PropTypes.func, //handed over to the child to close the dialog
-    replaceDialog: PropTypes.func,
-    className: PropTypes.string
-};
 
 export const handleCtxRef=(ctx,ref)=>{
     if (!ref) return;
@@ -414,7 +409,7 @@ export const SelectList=({list,onClick})=> {
     </div>
 }
 
-export const SelectDialog=({resolveFunction,title,list,optResetCallback,cancelCallback,okCallback})=>{
+export const SelectDialog=({resolveFunction,title,list,optResetCallback,okCallback})=>{
         const dialogContext = useDialogContext();
         return (
             <DialogFrame className="selectDialog" title={title || ''}>
@@ -431,155 +426,46 @@ export const SelectDialog=({resolveFunction,title,list,optResetCallback,cancelCa
                         }}
                     >Reset</DB>}
                     <DB name="cancel"
-                        onClick={(ev)=>{
-                            if (cancelCallback) cancelCallback(ev);
-                        }}
                     >Cancel</DB>
                 </DialogButtons>
             </DialogFrame>
         );
 
     };
-//"active input" to prevent resizes
-const Dialogs = {
-    /**
-     * create a select dialog component
-     * this method will not directly show the dialog
-     * @param title
-     * @param list
-     * @param okCallback
-     * @param cancelCallback
-     * @param optResetCallback
-     * @return {Function}
-     */
-    createSelectDialog: (title, list, okCallback, cancelCallback, optResetCallback) => {
-        return (props)=><SelectDialog
-            {...props}
-            title={title}
-            okCallback={okCallback}
-            list={list}
-            cancelCallback={cancelCallback}
-            optResetCallback={optResetCallback}
-        />
-    },
-    /**
-     * create a value dialog component
-     * this method will not show the dialog directly
-     * @param title
-     * @param ivalue
-     * @param okCallback
-     * @param cancelCallback
-     * @param opt_label
-     * @param opt_clear
-     * @return {any}
-     */
-    createValueDialog:(title,ivalue,okCallback,cancelCallback,opt_label,opt_clear) =>{
-         return ({resolveFunction})=>{
-                const [value,setValue]=useState(ivalue);
-                return (
-                    <DialogFrame title={title || 'Input'}>
-                            <div className="dialogRow">
-                                <span className="inputLabel">{opt_label}</span>
-                                <input type="text" name="value" value={value} onChange={(ev)=>setValue(ev.target.value)}/>
-                            </div>
-                        <DialogButtons>
-                            {opt_clear && <DB name="reset" close={false} onClick={()=>setValue('')}>Clear</DB>}
-                            <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
-                            <DB name="ok" onClick={() => resolveFunction?resolveFunction(value):okCallback(value)}>Ok</DB>
-                        </DialogButtons>
-                    </DialogFrame>
-                );
-            };
-    },
 
-    createConfirmDialog: (text,okFunction,cancelFunction,opt_title) =>{
-        return ({resolveFunction})=> {
-            return (
-                <DialogFrame title={opt_title || ''}>
-                    <div className="dialogText">{text}</div>
-                    <DialogButtons buttonList={[
-                        DBCancel(cancelFunction),
-                        DBOk(resolveFunction||okFunction)
-                    ]}/>
-                </DialogFrame>
-            );
-        };
-    },
+export const ConfirmDialog=({title,text,resolveFunction,okFunction,children,cancelFunction})=>{
+    return <DialogFrame title={title || ''}>
+        <div className="dialogText">{text}</div>
+        {children}
+        <DialogButtons buttonList={[
+            DBCancel(cancelFunction),
+            DBOk(resolveFunction||okFunction)
+        ]}/>
+    </DialogFrame>
+}
+export const AlertDialog=({text,resolveFunction,okFunction})=>{
+    return <DialogFrame title={"Alert"}>
+        <DialogText>{text}</DialogText>
+        <DialogButtons buttonList={DBOk(resolveFunction||okFunction)}/>
+    </DialogFrame>
+}
 
-
-    createAlertDialog: function(text,okFunction){
-        return ({resolveFunction})=>{
-            return (
-                <DialogFrame title={"Alert"}>
-                    <DialogText>{text}</DialogText>
-                    <DialogButtons buttonList={DBOk(resolveFunction||okFunction)}/>
-                </DialogFrame>
-            );
-        }
-
-    },
-
-
-    /**
-     * show an alert message with close button
-     * @param text
-     * @param opt_parent if set the HTML parent element
-     * @returns {Promise}
-     */
-    alert: function (text) {
-        return showPromiseDialog(undefined,Dialogs.createAlertDialog(text));
-    },
-    /**
-     * show a confirmation dialog
-     * @param {string} text
-     * @param  opt_parent if set the dialog parent
-     * @param {string} opt_title if set the title
-     * @returns {Promise}
-     */
-    confirm: function (text, opt_parent, opt_title) {
-        return showPromiseDialog(undefined,Dialogs.createConfirmDialog(text,undefined,undefined,opt_title));
-    },
-    /**
-     * create a value dialog as a promise
-     * this will always fullfill if the user clicks ok
-     * to implement checking and asynchronous close use the valueDialog method
-     * @param title
-     * @param value
-     * @param opt_label
-     * @param opt_clear show clear button
-     * @returns {Promise}
-     */
-    valueDialogPromise: function (title, value, opt_label,opt_clear) {
-        return showPromiseDialog(undefined,Dialogs.createValueDialog(title, value, undefined,undefined,opt_label,opt_clear));
-    },
-    /**
-     * create a value dialog as a promise
-     * this will always fullfill if the user clicks ok
-     * to implement checking and asynchronous close use the valueDialog method
-     * @param title
-     * @param list
-     * @returns {Promise}
-     */
-    selectDialogPromise: function (title, list) {
-        return showPromiseDialog(undefined,Dialogs.createSelectDialog(title, list));
-    },
-    /**
-     * create an arbitrary dialog
-     * it will provide a closeCallback property to the html
-     * by calling this function the dialog will be dismissed
-     * @param html the react class to show (or the html string)
-     * @param opt_parent
-     * @param opt_cancelCallback a callback to be invoked if the dialog is closed from outside
-     * @param opt_timeout if set - auto dismiss the dialog after opt_timeout ms
-     * @returns dialogId
-     */
-    dialog: function (html, opt_parent,opt_cancelCallback,opt_timeout) {
-        return addDialog(html,opt_cancelCallback,opt_timeout);
-    },
-
-    showDialog: showDialog
-
-};
+export const ValueDialog=({value,label,title,clear,cancelCallback,resolveFunction})=>{
+    const [nvalue,setValue]=useState(value);
+    return (
+        <DialogFrame title={title || 'Input'}>
+            <div className="dialogRow">
+                <span className="inputLabel">{label}</span>
+                <input type="text" name="value" value={nvalue} onChange={(ev)=>setValue(ev.target.value)}/>
+            </div>
+            <DialogButtons>
+                {clear && <DB name="reset" close={false} onClick={()=>setValue((typeof clear === "function")?clear(nvalue):'')}>Clear</DB>}
+                <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
+                <DB name="ok" onClick={() => resolveFunction && resolveFunction(nvalue)}>Ok</DB>
+            </DialogButtons>
+        </DialogFrame>
+    );
+}
 
 
 export const InfoItem=(props)=>{
@@ -598,7 +484,7 @@ InfoItem.show=(data,description)=>{
     }
     return <InfoItem label={description.label} value={v} key={description.label}/>
 }
-export default Dialogs;
+
 
 export const promiseResolveHelper = ({ok, err}, resolveFunction, ...args) => {
     let rt = resolveFunction(...args);

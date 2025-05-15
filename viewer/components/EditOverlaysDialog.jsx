@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {
+import {
     DialogButtons,
     DialogFrame,
-    DialogRow, showPromiseDialog,
+    DialogRow, showDialog, showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
@@ -924,7 +924,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
             if (!config.data) return;
             if (config.data.useDefault === undefined) config.data.useDefault = true;
             let overlayConfig = new OverlayConfig(config.data);
-            OverlayDialog.dialog((props) => {
+            showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
                     {...props}
                     chartName={chartItem.name}

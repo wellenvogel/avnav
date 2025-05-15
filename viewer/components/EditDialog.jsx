@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import OverlayDialog, {
+    ConfirmDialog,
     DBCancel,
     DBOk,
     DialogButtons,
@@ -40,7 +41,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             local={true}
             type={'user'}
             doneCallback={(data) => {
-                showPromiseDialog(dialogContext, OverlayDialog.createConfirmDialog("overwrite with " + data.name + " ?"))
+                showPromiseDialog(dialogContext, (props)=><ConfirmDialog {...props} text={"overwrite with " + data.name + " ?"}/>)
                     .then(() => {
                         flask.current.updateCode(data.data, true);
                         setChanged(true);

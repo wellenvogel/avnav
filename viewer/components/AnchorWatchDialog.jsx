@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
 import NavData from '../nav/navdata.js';
-import OverlayDialog, {
+import {
+    ConfirmDialog,
     DialogButtons,
-    DialogFrame,
+    DialogFrame, showDialog,
     showPromiseDialog,
     useDialogContext
 } from '../components/OverlayDialog.jsx';
@@ -30,7 +31,7 @@ export const stopAnchorWithConfirm=(opt_resolveOnInact,opt_dialogContext)=>{
             }
             return;
         }
-        showPromiseDialog(opt_dialogContext,OverlayDialog.createConfirmDialog("Really stop the anchor watch?"))
+        showPromiseDialog(opt_dialogContext,(props)=><ConfirmDialog {...props} text={"Really stop the anchor watch?"}/>)
             .then(() => resolve(true))
             .catch((e)=>reject(e));
     })
@@ -124,7 +125,7 @@ export const anchorWatchDialog = (opt_dialogContext)=> {
         Toast("no gps position");
         return;
     }
-    OverlayDialog.showDialog(opt_dialogContext,(props)=>{
+    showDialog(opt_dialogContext,(props)=>{
         return <WatchDialog
             {...props}
             active={isActive}

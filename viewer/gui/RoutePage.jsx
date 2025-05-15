@@ -15,7 +15,7 @@ import Helper from '../util/helper.js';
 import WaypointListItem from '../components/WayPointListItem.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import Formatter from '../util/formatter.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import {ConfirmDialog, showDialog} from '../components/OverlayDialog.jsx';
 import NavHandler from '../nav/navdata.js';
 import assign from 'object-assign';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
@@ -109,7 +109,7 @@ const createNewRouteDialog=(name,okCallback)=> {
 
 const checkWritable=()=>{
      if (!editor.isRouteWritable()){
-         OverlayDialog.confirm("you cannot edit this route as you are disconnected. Please select a new name");
+         showDialog(undefined,()=><ConfirmDialog text={"you cannot edit this route as you are disconnected. Please select a new name"}/>);
          return false;
      }
     return true;
@@ -141,12 +141,12 @@ const onHeadingClick=()=> {
         }
         return true;
     };
-    OverlayDialog.dialog(createNewRouteDialog(editor.getRouteName(),
+    showDialog(undefined,createNewRouteDialog(editor.getRouteName(),
         okCallback));
 };
 
 
-const startWaypointDialog=(rawitem,index)=>{
+const startWaypointDialog=(rawitem,index,dialogCtx)=>{
     if (! rawitem) return;
     let item=new navobjects.WayPoint();
     assign(item,rawitem);
@@ -165,13 +165,10 @@ const startWaypointDialog=(rawitem,index)=>{
         }
         return false;
     };
-    let RenderDialog=function(props){
-        return <WayPointDialog
+    showDialog(dialogCtx,(props)=><WayPointDialog
             {...props}
             waypoint={item}
-            okCallback={wpChanged}/>
-    };
-    OverlayDialog.dialog(RenderDialog);
+            okCallback={wpChanged}/>);
 };
 
 const storeRoute=(route,startNav)=>{

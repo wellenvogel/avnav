@@ -30,6 +30,7 @@ import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import OverlayDialog, {
+    ConfirmDialog,
     DialogButtons,
     DialogFrame,
     DialogRow,
@@ -643,7 +644,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
         if (opt_resultCallback) opt_resultCallback(info);
     };
-    let ok = OverlayDialog.confirm("delete " + info.name + "?");
+    let ok = showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"delete " + info.name + "?"}/>);
     ok.then(function () {
         if (info.type === 'layout') {
             LayoutHandler.deleteItem(info.name)

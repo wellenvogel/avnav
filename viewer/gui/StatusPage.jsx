@@ -3,7 +3,6 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -11,7 +10,12 @@ import React from 'react';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import {
+    AlertDialog,
+    ConfirmDialog,
+    showDialog,
+    showPromiseDialog
+} from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import EditHandlerDialog from "../components/EditHandlerDialog";
@@ -277,7 +281,7 @@ class StatusPage extends React.Component{
     componentWillUnmount(){
     }
     restartServer(){
-        OverlayDialog.confirm("really restart the AvNav server software?")
+        showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"really restart the AvNav server software?"}/>)
             .then((v)=>{
                 Requests.getJson('',undefined,{
                     request:'api',
@@ -326,13 +330,13 @@ class StatusPage extends React.Component{
                     name: 'StatusShutdown',
                     visible: !props.android && this.state.shutdown && props.connected,
                     onClick:()=>{
-                        OverlayDialog.confirm("really shutdown the server computer?").then(function(){
+                        showPromiseDialog(undefined, (props)=><ConfirmDialog {...props} text={"really shutdown the server computer?"}/>).then(function(){
                             Requests.getJson("?request=command&start=shutdown").then(
                                 (json)=>{
                                     Toast("shutdown started");
                                 },
                                 (error)=>{
-                                    OverlayDialog.alert("unable to trigger shutdown: "+error);
+                                    showDialog(undefined,()=><AlertDialog text={"unable to trigger shutdown: "+error}/>);
                                 });
 
                         })
@@ -348,7 +352,7 @@ class StatusPage extends React.Component{
                     name: 'StatusLog',
                     visible: props.log,
                     onClick: ()=>{
-                        OverlayDialog.dialog((props)=>{
+                        showDialog(undefined,(props)=>{
                             return <LogDialog
                                 {...props}
                                 baseUrl={globalStore.getData(keys.properties.navUrl)+"?request=download&type=config"}
@@ -362,7 +366,7 @@ class StatusPage extends React.Component{
                     name: 'StatusDebug',
                     visible: props.debugLevel && props.connected,
                     onClick: ()=>{
-                        OverlayDialog.dialog(DebugDialog);
+                        showDialog(undefined,DebugDialog);
                     },
                     overflow: true
                 },

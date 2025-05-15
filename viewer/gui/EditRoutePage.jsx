@@ -10,6 +10,7 @@ import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
 import {
+    ConfirmDialog,
     DialogButtons,
     DialogFrame,
     InfoItem, SelectDialog,
@@ -181,7 +182,7 @@ const EditRouteDialog = (props) => {
     }
     const deleteRoute = () => {
         if (isActiveRoute()) return;
-        showPromiseDialog(dialogContext, Dialogs.createConfirmDialog("Really delete route " + props.route.name))
+        showPromiseDialog(dialogContext, (props)=><ConfirmDialog {...props} text={"Really delete route " + props.route.name}/>)
             .then(() => {
                 RouteHandler.deleteRoute(props.route.name,
                     () => {
@@ -391,7 +392,7 @@ const EditRoutePage = (iprops) => {
         let currentEditor = getCurrentEditor();
         if (currentEditor.isRouteWritable()) return true;
         if (opt_noDialog) return false;
-        showPromiseDialog(dialogCtxRef, Dialogs.createConfirmDialog("you cannot edit this route as you are disconnected. OK to select a new name"))
+        showPromiseDialog(dialogCtxRef, (props)=><ConfirmDialog {...props} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
             .then(() => {
                 currentEditor.syncTo(RouteEdit.MODES.PAGE);
                 props.history.push('routepage');
@@ -539,7 +540,7 @@ const EditRoutePage = (iprops) => {
                 "Really append route ${route} starting at ${start} after ${current}?";
             replace = {route: name, current: current.name, start: otherStart.name};
         }
-        showPromiseDialog(dialogCtxRef, Dialogs.createConfirmDialog(Helper.templateReplace(text, replace)))
+        showPromiseDialog(dialogCtxRef, (props)=><ConfirmDialog {...props} text={Helper.templateReplace(text, replace)}/>)
             .then(() => runInsert())
             .catch(() => {
             });

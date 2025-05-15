@@ -29,17 +29,16 @@ import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import ItemList from "../components/ItemList";
 import GuiHelpers from "../util/GuiHelpers";
-import {ChildStatus, StatusItem, statusTextToImageUrl} from "../components/StatusItems";
+import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import DB from "../components/DialogButton";
-import Dialogs from "../components/OverlayDialog";
+import {showDialog, useDialogContext} from "../components/OverlayDialog";
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
 import UploadHandler from "../components/UploadHandler";
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
-import OverlayDialog from "../components/OverlayDialog";
 import Helper from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
 import EditHandlerDialog from "../components/EditHandlerDialog";
@@ -326,13 +325,14 @@ class ImporterPage extends React.Component{
         },HANDLER_NAME);
     }
     showConverterDialog(converter){
-        Dialogs.dialog((props)=>
-            <ConverterDialog
+        showDialog(undefined,(props)=>{
+            const dialogContext=useDialogContext();
+            return <ConverterDialog
                 {...props}
                 {...converter}
                 logCallback={()=>{
                     let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name=_current";
-                    Dialogs.dialog((dlprops)=>{
+                    showDialog(dialogContext,(dlprops)=>{
                         return <LogDialog
                             baseUrl={url}
                             title={"Converter"}
@@ -340,12 +340,12 @@ class ImporterPage extends React.Component{
                         />
                     })
                 }}
-            />
+            />}
         )
 
     }
     showScannerDialog(scanner){
-        Dialogs.dialog((props)=>
+        showDialog(undefined,(props)=>
             <ScannerDialog
                 {...props}
                 {...scanner}
@@ -354,13 +354,14 @@ class ImporterPage extends React.Component{
 
     }
     showImportDialog(item){
-        Dialogs.dialog((props)=>
-            <ImportStatusDialog
+        showDialog(undefined,(props)=>{
+            const dialogContext=useDialogContext();
+            return <ImportStatusDialog
                 {...props}
                 {...item}
                 logCallback={(id)=>{
                   let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(id);
-                  Dialogs.dialog((dlprops)=>{
+                  showDialog(dialogContext,(dlprops)=>{
                       return <LogDialog
                           baseUrl={url}
                           title={item.name}
@@ -368,7 +369,7 @@ class ImporterPage extends React.Component{
                       />
                   })
                 }}
-            />);
+            />});
     }
     showEditDialog(handlerId,id,finishCallback){
         if (! this.state.items) return;
@@ -386,7 +387,7 @@ class ImporterPage extends React.Component{
                 let importConfig=checkExt(ext,this.state.chartImportExtensions);
                 if (importConfig.allow) {
                     let resolved=false;
-                    OverlayDialog.showDialog(undefined,(props) => {
+                    showDialog(undefined,(props) => {
                         return (
                             <ImportDialog
                                 {...props}
