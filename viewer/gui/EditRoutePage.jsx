@@ -320,7 +320,7 @@ const EditRouteDialog = (props) => {
             </DB>
             <DB name="cancel"
             >Cancel</DB>
-            <DB name="rename"
+            <DB name="edit"
                 onClick={() => {
                         nameDialog()
                         .then((newName)=>{
