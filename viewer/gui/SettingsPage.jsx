@@ -10,7 +10,6 @@ import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import assign from 'object-assign';
 import {
-    ConfirmDialog,
     DialogButtons,
     DialogFrame, showDialog,
     showPromiseDialog,
@@ -32,6 +31,7 @@ import loadSettings from "../components/LoadSettingsDialog";
 import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
 import leavehandler from "../util/leavehandler";
+import {ConfirmDialog} from "../components/BasicDialogs";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,

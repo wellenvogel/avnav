@@ -30,7 +30,7 @@ import theFactory from "./WidgetFactory";
 import {EditableParameter} from "./EditableParameters";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import {DialogButtons, useDialog, useDialogContext} from "./OverlayDialog";
+import {DialogButtons, useDialogContext} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 

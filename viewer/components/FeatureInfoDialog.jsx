@@ -28,7 +28,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import OverlayDialog, {DialogButtons, DialogFrame, InfoItem, useDialogContext} from "./OverlayDialog";
+import OverlayDialog, {DialogButtons, DialogFrame, useDialogContext} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
@@ -39,6 +39,7 @@ import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
 import assign from 'object-assign';
 import {stateHelper} from "../util/GuiHelpers";
+import {InfoItem} from "./BasicDialogs";
 NavHandler.getRoutingHandler();
 
 

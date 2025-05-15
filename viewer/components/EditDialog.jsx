@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
 import OverlayDialog, {
-    ConfirmDialog,
     DBCancel,
     DBOk,
     DialogButtons,
@@ -14,6 +13,7 @@ import UploadHandler from "./UploadHandler";
 import Toast from "./Toast";
 import DownloadButton from "./DownloadButton";
 import PropTypes from "prop-types";
+import {ConfirmDialog} from "./BasicDialogs";
 
 export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName}) => {
     const flask = useRef();

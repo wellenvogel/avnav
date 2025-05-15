@@ -26,7 +26,8 @@ import React from 'react';
 import {LoadItemDialog} from "./LoadSaveDialogs";
 import PropertyHandler from "../util/propertyhandler";
 import RequestHandler from "../util/requests";
-import OverlayDialog, {ConfirmDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import OverlayDialog, {showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {ConfirmDialog} from "./BasicDialogs";
 
 
 const doLoad=(settings,selected)=>{

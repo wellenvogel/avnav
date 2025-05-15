@@ -11,8 +11,6 @@ import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import {
-    AlertDialog,
-    ConfirmDialog,
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
@@ -28,6 +26,7 @@ import PropTypes from 'prop-types';
 import Helper from "../util/helper";
 import GuiHelper from "../util/GuiHelpers";
 import {StatusItem} from '../components/StatusItems';
+import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
 
 class Notifier{
     constructor() {

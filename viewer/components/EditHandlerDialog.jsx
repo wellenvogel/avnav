@@ -27,11 +27,10 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
-    ConfirmDialog,
     DBOk,
     DialogButtons,
     DialogFrame,
-    dialogHelper, SelectDialog, showDialog,
+    dialogHelper, showDialog,
     showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
@@ -44,6 +43,7 @@ import {createEditableParameter} from "./EditableParameters";
 import Button from "./Button";
 import {stateHelper} from "../util/GuiHelpers";
 import DialogButton from "./DialogButton.jsx";
+import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 
 const HelpButton=(props)=>{
     const dialogContext=useDialogContext();

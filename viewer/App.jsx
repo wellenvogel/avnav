@@ -22,7 +22,6 @@ import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
 import {
-    ConfirmDialog,
     DialogContext,
     setGlobalContext, showPromiseDialog,
     useDialog
@@ -53,6 +52,7 @@ import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 import fullscreen from "./components/Fullscreen";
 import mapholder from "./map/mapholder";
 import 'drag-drop-touch';
+import {ConfirmDialog} from "./components/BasicDialogs";
 
 
 const DynamicSound=Dynamic(SoundHandler);

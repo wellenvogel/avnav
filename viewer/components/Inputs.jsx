@@ -1,9 +1,10 @@
 import React from 'react';
 import ColorDialog from './ColorDialog.jsx';
-import OverlayDialog, {SelectDialog, useDialogContext} from './OverlayDialog.jsx';
+import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
+import {SelectDialog} from "./BasicDialogs";
 
 /**
  * input elements

@@ -19,7 +19,6 @@ import React, {
 } from 'react';
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
-import DB from './DialogButton.jsx';
 import DialogButton from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
@@ -40,7 +39,7 @@ const Container=MapEventGuard(React.forwardRef((props,ref)=>{
     )
 }));
 
-export const OverlayDialog = ({className,closeCallback,replaceDialog,children}) => {
+const OverlayDialog = ({className,closeCallback,replaceDialog,children}) => {
     let [DialogDisplay,setDialog]=useDialog(); //for nested dialogs
     const dialogContext=useDialogContext(); //if we are nested - just handle the z index
     let classNameS = "dialog";
@@ -249,7 +248,50 @@ export const useDialog=(closeCb)=>{
         }
     ]
 }
+export const showPromiseDialog=(dialogContext,Dialog,args)=>{
+    if (!dialogContext) dialogContext=globalContext;
+    return new Promise((resolve,reject)=>{
+        let resolved=false;
+        showDialog(dialogContext,()=>{
+            return <Dialog {...args} resolveFunction={(val)=>{
+                resolved=true;
+                resolve(val);
+                return true;
+            }} />
+        },()=>{
+            //give the resolve a chance to win
+            window.setTimeout(()=> {
+                if (!resolved) reject();
+            },0);
+        })
+    })
+}
+export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback)=>{
+    if (opt_dialogContext){
+        if (! opt_dialogContext.showDialog){
+            if(opt_dialogContext.current && opt_dialogContext.current.showDialog)
+                opt_dialogContext=opt_dialogContext.current;
+            else
+                opt_dialogContext=undefined;
+        }
+    }
+    if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
+    else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
+}
 
+
+export const promiseResolveHelper = ({ok, err}, resolveFunction, ...args) => {
+    let rt = resolveFunction(...args);
+    if (rt instanceof Promise) {
+        rt.then(() => ok && ok())
+            .catch((e) => {
+                err && err(e)
+            })
+        return;
+    }
+    if (rt) ok && ok();
+    else err && err();
+}
 
 /* =================================================================================================
    legacy dialog handling
@@ -353,148 +395,4 @@ const notifyClosed=()=>{
     if (window.avnav.android && window.avnav.android.dialogClosed){
         window.avnav.android.dialogClosed();
     }
-}
-/**
- *
- * @param key
- * @param opt_cancelCallback this will be called if the dialog
- *        is removed from "outside"
- */
-const addDialog=(content,opt_cancelCallback,opt_timeout)=> {
-    return addGlobalDialog(content,opt_cancelCallback,opt_timeout);
-};
-export const showPromiseDialog=(dialogContext,Dialog,args)=>{
-    if (!dialogContext) dialogContext=globalContext;
-    return new Promise((resolve,reject)=>{
-        let resolved=false;
-        showDialog(dialogContext,()=>{
-            return <Dialog {...args} resolveFunction={(val)=>{
-                resolved=true;
-                resolve(val);
-                return true;
-            }} />
-        },()=>{
-            //give the resolve a chance to win
-            window.setTimeout(()=> {
-                if (!resolved) reject();
-            },0);
-        })
-    })
-}
-export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback)=>{
-    if (opt_dialogContext){
-        if (! opt_dialogContext.showDialog){
-            if(opt_dialogContext.current && opt_dialogContext.current.showDialog)
-                opt_dialogContext=opt_dialogContext.current;
-            else
-                opt_dialogContext=undefined;
-        }
-    }
-    if (! opt_dialogContext) addGlobalDialog(dialog,opt_cancelCallback);
-    else opt_dialogContext.showDialog(dialog,opt_cancelCallback);
-}
-
-export const SelectList=({list,onClick})=> {
-    return <div className="selectList">
-        {list.map(function (elem) {
-            return (
-                <div className={"listEntry " + (elem.selected && 'selectedItem')}
-                     onClick={() => onClick(elem)}
-                     key={elem.value + ":" + elem.label}
-                >
-                    {elem.icon && <span className="icon" style={{backgroundImage: "url('" + elem.icon + "')"}}/>}
-                    <span className="entryLabel">{elem.label}</span>
-                </div>);
-        })}
-    </div>
-}
-
-export const SelectDialog=({resolveFunction,title,list,optResetCallback,okCallback})=>{
-        const dialogContext = useDialogContext();
-        return (
-            <DialogFrame className="selectDialog" title={title || ''}>
-                <SelectList list={list} onClick={(elem)=>{
-                    dialogContext.closeDialog();
-                    if (resolveFunction) resolveFunction(elem);
-                    else if (okCallback) okCallback(elem);
-                }}/>
-                <DialogButtons>
-                    {optResetCallback && <DB
-                        name="reset"
-                        onClick={(ev)=>{
-                            optResetCallback(ev);
-                        }}
-                    >Reset</DB>}
-                    <DB name="cancel"
-                    >Cancel</DB>
-                </DialogButtons>
-            </DialogFrame>
-        );
-
-    };
-
-export const ConfirmDialog=({title,text,resolveFunction,okFunction,children,cancelFunction})=>{
-    return <DialogFrame title={title || ''}>
-        <div className="dialogText">{text}</div>
-        {children}
-        <DialogButtons buttonList={[
-            DBCancel(cancelFunction),
-            DBOk(resolveFunction||okFunction)
-        ]}/>
-    </DialogFrame>
-}
-export const AlertDialog=({text,resolveFunction,okFunction})=>{
-    return <DialogFrame title={"Alert"}>
-        <DialogText>{text}</DialogText>
-        <DialogButtons buttonList={DBOk(resolveFunction||okFunction)}/>
-    </DialogFrame>
-}
-
-export const ValueDialog=({value,label,title,clear,cancelCallback,resolveFunction})=>{
-    const [nvalue,setValue]=useState(value);
-    return (
-        <DialogFrame title={title || 'Input'}>
-            <div className="dialogRow">
-                <span className="inputLabel">{label}</span>
-                <input type="text" name="value" value={nvalue} onChange={(ev)=>setValue(ev.target.value)}/>
-            </div>
-            <DialogButtons>
-                {clear && <DB name="reset" close={false} onClick={()=>setValue((typeof clear === "function")?clear(nvalue):'')}>Clear</DB>}
-                <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
-                <DB name="ok" onClick={() => resolveFunction && resolveFunction(nvalue)}>Ok</DB>
-            </DialogButtons>
-        </DialogFrame>
-    );
-}
-
-
-export const InfoItem=(props)=>{
-    return <div className={"dialogRow "+props.className} >
-        <span className={"inputLabel"}>{props.label}</span>
-        <span className={"itemInfo"}>{props.value}</span>
-    </div>
-}
-
-InfoItem.show=(data,description)=>{
-    let v=data[description.value];
-    if (v === undefined) return null;
-    if (description.formatter){
-        v=description.formatter(v,data);
-        if (v === undefined) return null;
-    }
-    return <InfoItem label={description.label} value={v} key={description.label}/>
-}
-
-
-export const promiseResolveHelper = ({ok, err}, resolveFunction, ...args) => {
-    let rt = resolveFunction(...args);
-    if (rt instanceof Promise) {
-        rt.then(() => ok && ok())
-            .catch((e) => {
-                err && err(e)
-            })
-        return;
-    }
-    if (rt) ok && ok();
-    else err && err();
 }

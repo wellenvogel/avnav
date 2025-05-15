@@ -30,11 +30,9 @@ import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import OverlayDialog, {
-    ConfirmDialog,
     DialogButtons,
     DialogFrame,
     DialogRow,
-    InfoItem,
     showPromiseDialog, useDialogContext
 } from "./OverlayDialog";
 import globalStore from "../util/globalstore";
@@ -54,6 +52,7 @@ import LogDialog from "./LogDialog";
 import Formatter from '../util/formatter';
 import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
+import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**

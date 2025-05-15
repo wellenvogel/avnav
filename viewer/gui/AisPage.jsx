@@ -11,11 +11,9 @@ import PropertyHandler from '../util/propertyhandler.js';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
 import Dialogs, {
-    SelectDialog,
     showDialog,
     showPromiseDialog,
-    useDialogContext,
-    ValueDialog
+    useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
@@ -24,6 +22,7 @@ import navdata from "../nav/navdata";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper from "../util/helper";
 import ButtonList from "../components/ButtonList";
+import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],

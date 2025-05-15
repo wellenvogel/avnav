@@ -29,8 +29,9 @@ import {anchorWatchDialog, AnchorWatchKeys} from "./AnchorWatchDialog";
 import keys from '../util/keys';
 import {useStore} from "../hoc/Dynamic";
 import globalstore from "../util/globalstore";
-import {ConfirmDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
+import {ConfirmDialog} from "./BasicDialogs";
 
 export const DynamicTitleIcons=(iprops)=>{
     const dialogContext=useDialogContext();

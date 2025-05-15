@@ -1,10 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
-    ConfirmDialog,
     DialogRow,
-    promiseResolveHelper, SelectList,
-    showPromiseDialog,
+    promiseResolveHelper, showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
@@ -18,6 +16,7 @@ import {IconDialog} from "./IconDialog";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog} from "./EditDialog";
+import {ConfirmDialog, SelectList} from "./BasicDialogs";
 
 const ItemNameDialog=({iname,resolveFunction,fixedExt,title,mandatory,checkName})=>{
     const [name,setName]=useState(iname);

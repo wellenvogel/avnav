@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
 import NavData from '../nav/navdata.js';
 import {
-    ConfirmDialog,
     DialogButtons,
     DialogFrame, showDialog,
     showPromiseDialog,
@@ -16,6 +15,7 @@ import {Input, InputReadOnly} from "./Inputs";
 import DialogButton from "./DialogButton";
 import MapHolder from '../map/mapholder';
 import NavCompute from "../nav/navcompute";
+import {ConfirmDialog} from "./BasicDialogs";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);

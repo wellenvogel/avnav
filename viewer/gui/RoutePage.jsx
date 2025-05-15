@@ -15,7 +15,7 @@ import Helper from '../util/helper.js';
 import WaypointListItem from '../components/WayPointListItem.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import Formatter from '../util/formatter.js';
-import {ConfirmDialog, showDialog} from '../components/OverlayDialog.jsx';
+import {showDialog} from '../components/OverlayDialog.jsx';
 import NavHandler from '../nav/navdata.js';
 import assign from 'object-assign';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
@@ -24,6 +24,7 @@ import DB from '../components/DialogButton.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import Mob from '../components/Mob.js';
 import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
+import {ConfirmDialog} from "../components/BasicDialogs";
 
 const PAGENAME="routepage";
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);

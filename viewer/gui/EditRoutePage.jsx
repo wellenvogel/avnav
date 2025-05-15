@@ -10,10 +10,8 @@ import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
 import {
-    ConfirmDialog,
     DialogButtons,
     DialogFrame,
-    InfoItem, SelectDialog,
     showDialog,
     showPromiseDialog,
     useDialogContext
@@ -40,6 +38,7 @@ import Page from "../components/Page";
 import Dialogs from "../components/OverlayDialog.jsx";
 import PropTypes from "prop-types";
 import {useStore} from "../hoc/Dynamic";
+import {ConfirmDialog, InfoItem, SelectDialog} from "../components/BasicDialogs";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
