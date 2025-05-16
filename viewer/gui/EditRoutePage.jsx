@@ -41,6 +41,8 @@ import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem, SelectList, ValueDialog} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
 import plugimage from '../images/icons-new/plug.svg';
+import {ItemDownloadButton} from "../components/FileDialog";
+import UploadHandler from "../components/UploadHandler";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -211,11 +213,12 @@ EditPointsDialog.propTypes={
     inverted: PropTypes.bool
 }
 
-const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title})=>{
+const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload})=>{
     const dialogContext=useDialogContext();
     const [connectedMode]=useStoreState(keys.properties.connectedMode);
     const [list,setList]=useState(undefined);
     const [wrOnly,setWrOnly]=useState(true);
+    const [uploadSequence,setUploadSequence]=useState(0);
     useEffect(() => {
         loadRoutes()
             .then((routeList)=>{
@@ -225,7 +228,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title})=>{
                     //mark the route we had been editing on the page before
                     let selected = selectedName && selectedName === name;
                     //check with and without gpx extension
-                    if (blacklist &&(blacklist.indexOf(aroute.name) >= 0 || blacklist.indexOf(name) >= 0)) return;
+                    const hidden=(blacklist &&(blacklist.indexOf(aroute.name) >= 0 || blacklist.indexOf(name) >= 0));
                     finalList.push({
                         label: name,
                         value: name,
@@ -233,7 +236,8 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title})=>{
                         originalName: aroute.name,
                         selected: selected,
                         server: aroute.server,
-                        icon: aroute.server?plugimage:undefined
+                        icon: aroute.server?plugimage:undefined,
+                        hidden: hidden
                     });
                 })
                 setList(finalList);
@@ -243,6 +247,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title})=>{
     let displayList=[];
     if (list) {
         list.forEach((item) => {
+            if (item.hidden) return;
             let cl = "";
             if (item.server && !connectedMode) {
                 if (wrOnly) return;
@@ -276,7 +281,48 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title})=>{
                         (err)=>{Toast("unable to load route: "+err)});
             }}
             />
-        <DialogButtons buttonList={DBCancel()}/>
+        <UploadHandler
+            local={true}
+            uploadSequence={uploadSequence}
+            type={'route'}
+            doneCallback={(data)=>{
+                try {
+                    let nroute = new routeobjects.Route();
+                    nroute.fromXml(data.data);
+                    if (! nroute.name) {
+                        Toast("loaded route has no name");
+                        return;
+                    }
+                    if (list) {
+                        for (let i=0;i<list.length;i++) {
+                            if (list[i].value === nroute.name) {
+                                Toast("route " + nroute.name + " already exists");
+                                return;
+                            }
+                        }
+                    }
+                    if (resolveFunction) resolveFunction(nroute);
+                    dialogContext.closeDialog();
+                }catch (e) {
+                    Toast(e);
+                }
+            }}
+            errorCallback={(err)=>Toast(err)}
+            checkNameCallback={(name)=>{
+                if(Helper.getExt(name) !== 'gpx') return {error:"only .gpx files"};
+                return {name:name}
+            }}
+        />
+        <DialogButtons buttonList={[
+            {
+                name:'upload',
+                label:'Upload',
+                onClick: ()=>setUploadSequence(uploadSequence+1),
+                visible: allowUpload,
+                close:false
+            },
+            DBCancel()
+        ]}/>
     </DialogFrame>
 }
 
@@ -390,6 +436,7 @@ const EditRouteDialog = (props) => {
             {...props}
             blacklist={[route.name]}
             selectedName={getCurrentEditor().getRouteName()}
+            allowUpload={true}
         />)
             .then((nroute)=>{
                         setRoute(nroute);
@@ -448,6 +495,15 @@ const EditRouteDialog = (props) => {
                  onClick={loadNewRoute}
                  close={false}
             >Load</DB>
+            <ItemDownloadButton
+                item={{
+                    type:'route',
+                    name:route.name,
+                    localData: ()=>route.toXml()
+                }}
+                name={'download'}
+                useDialogButton={true}
+            >Download</ItemDownloadButton>
             <DB name="edit"
                 onClick={() => {
                     nameDialog()
