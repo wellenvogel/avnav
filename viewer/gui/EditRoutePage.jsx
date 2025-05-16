@@ -37,7 +37,7 @@ import Formatter from "../util/formatter";
 import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 import Page from "../components/Page";
 import PropTypes from "prop-types";
-import {useStore} from "../hoc/Dynamic";
+import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem, SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import ItemList from "../components/ItemList";
 import RoutePointsWidget, {RoutePoint} from "../components/RoutePointsWidget";
@@ -82,8 +82,7 @@ const startWaypointDialog = (item, index, dialogContext) => {
 
 export const INFO_ROWS = [
     {label: 'points', value: 'numpoints'},
-    {
-        label: 'length', value: 'length', formatter: (v) => {
+    {label: 'length', value: 'length', formatter: (v) => {
             return Formatter.formatDistance(v) + " nm";
         }
     },
@@ -181,6 +180,21 @@ const EditPointsDialog=(props)=>{
                 close: false,
                 label: "Invert"
             },
+            {
+                name:"renumber",
+                onClick:()=>{
+                    showPromiseDialog(dialogContext,(drops)=><ConfirmDialog {...drops} text={"All waypoint names will change"} title={"Renumber points"}/> )
+                        .then(()=>{
+                            if (changeRoute((nr)=>{
+                                nr.renumber();
+                            })) setInverted(false);
+                        },
+                            ()=>{})
+                },
+                disabled: route.points.length < 1,
+                close: false,
+                label: "Renumber"
+            },
             DBCancel(),
             DBOk(()=>{
                 if (props.resolveFunction) props.resolveFunction({
@@ -199,12 +213,22 @@ EditPointsDialog.propTypes={
     inverted: PropTypes.bool
 }
 
+const RouteSaveModes={
+    NONE:0,
+    UPDATE: 1, //if name changed: delete old editing
+    REPLACE_EXISTING:2,  //after loading new route - do not delete old editing
+    REPLACE_NEW:3 //replace with a new route - do not delete existing
+}
+
 const EditRouteDialog = (props) => {
     if (!props.route) return null;
+    const activeRouteState=useStore({storeKeys: activeRoute.getStoreKeys()})
+    const [saveMode,setSaveMode]=useState(RouteSaveModes.UPDATE);
     const dialogContext = useDialogContext();
     const [route, setRoute] = useState(props.route);
     const [inverted, setInverted] = useState(false);
     const [availableRoutes, setAvailableRoutes] = useState();
+    const [connectedMode]=useStoreState(keys.properties.connectedMode)
     useEffect(() => {
         loadRoutes()
             .then((routes) => {
@@ -212,9 +236,9 @@ const EditRouteDialog = (props) => {
             });
     }, []);
     const isActiveRoute = useCallback(() => {
-        let activeName = activeRoute.getRouteName();
-        return (activeName !== undefined && props.route.name === activeName);
-    }, []);
+        let activeName = StateHelper.routeName(activeRouteState);
+        return (activeName !== undefined && route.name === activeName);
+    }, [activeRouteState]);
     const getCurrentEditor = useCallback(() => {
         return isActiveRoute() ? activeRoute : editor;
     }, []);
@@ -226,11 +250,6 @@ const EditRouteDialog = (props) => {
         }
         return false;
     }
-    const done = useCallback(() => {
-        if (props.updateCallback) {
-            props.updateCallback();
-        }
-    }, []);
     const changeRoute = (cb) => {
         let newRoute = route.clone();
         if (cb(newRoute) !== false) {
@@ -239,45 +258,48 @@ const EditRouteDialog = (props) => {
         }
         return route;
     }
-    const save = (cloned,copy) => {
+    const save = (cloned,rtSaveMode) => {
         let oldName = props.route.name;
         let oldServer = props.route.server;
-        if (cloned.name === oldName) {
-            copy = false;
-        }
-        if (!copy) {
+        if (rtSaveMode === RouteSaveModes.NONE) return false;
+        if (rtSaveMode === RouteSaveModes.UPDATE){
+            const isActive=oldName === StateHelper.routeName(activeRouteState);
+            const nameChanged=route.name !== oldName;
+            if ( isActive && nameChanged){
+                Toast("cannot rename active route");
+                return false;
+            }
             getCurrentEditor().setNewRoute(cloned);
             //the page must also know that we are now editing a different route
             editor.setNewRoute(cloned);
-        } else {
+            if (nameChanged) {
+                RouteHandler.deleteRoute(oldName,
+                    () => {
+                    },
+                    (error) => {
+                        Toast(error);
+                    },
+                    !oldServer
+                )
+            }
+            return true;
+        }
+        if (rtSaveMode === RouteSaveModes.REPLACE_NEW || saveMode === RouteSaveModes.REPLACE_EXISTING){
             //if we had been editing the active this will change now
             //but there is no chance that we start editing the active with copy
             //as the name cannot exist already
             //do a last check anyway
-            let activeName = activeRoute.getRouteName();
-            if (activeName && cloned.name === activeName) {
+            if (cloned.name === StateHelper.routeName(activeRouteState)){
                 Toast("unable to copy to active route");
-                return;
+                return false;
             }
-            if (cloned.server && !globalStore.getData(keys.properties.connectedMode)) {
+            if (cloned.server && ! connectedMode) {
                 cloned.server = false;
             }
             editor.setNewRoute(cloned);
+            return true;
         }
-        if (!copy && cloned.name !== props.route.name) {
-            RouteHandler.deleteRoute(oldName,
-                () => {
-                    done();
-                },
-                (error) => {
-                    done();
-                    Toast(error);
-                },
-                !oldServer
-            )
-            return;
-        }
-        done();
+        return false;
     }
     const deleteRoute = () => {
         if (isActiveRoute()) return;
@@ -285,10 +307,9 @@ const EditRouteDialog = (props) => {
             .then(() => {
                 RouteHandler.deleteRoute(props.route.name,
                     () => {
-                        if (getCurrentEditor().getRouteName() === props.route.name) {
-                            getCurrentEditor().removeRoute();
+                        if (editor.getRouteName() === props.route.name) {
+                            editor.removeRoute();
                         }
-                        done();
                         dialogContext.closeDialog();
                     },
                     (error) => {
@@ -299,13 +320,6 @@ const EditRouteDialog = (props) => {
             })
             .catch(() => {
             })
-    }
-    const restartDialog = (newRoute) => {
-        if (!newRoute) newRoute = route;
-        dialogContext.replaceDialog(() => <EditRouteDialog
-            {...props}
-            route={newRoute.clone()}
-        />);
     }
     const loadNewRoute = () => {
         let finalList = [];
@@ -328,8 +342,9 @@ const EditRouteDialog = (props) => {
                             Toast("unable to load route " + entry.originalName);
                             return;
                         }
-                        save(nroute.clone(),true);
-                        restartDialog(nroute);
+                        setRoute(nroute.clone());
+                        setInverted(false);
+                        setSaveMode((nroute.name === props.route.name)?RouteSaveModes.UPDATE:RouteSaveModes.REPLACE_EXISTING);
                     },
                     (err) => Toast(err)
                 )
@@ -347,8 +362,7 @@ const EditRouteDialog = (props) => {
             }}/>)
     }
     let nameChanged = route.name !== props.route.name;
-    let existingName = existsRoute(route.name) && nameChanged;
-    let canDelete = !isActiveRoute() && !nameChanged && props.route.name !== DEFAULT_ROUTE;
+    let canDelete = !isActiveRoute() && !nameChanged && route.name !== DEFAULT_ROUTE;
     let info = RouteHandler.getInfoFromRoute(route);
     return <DialogFrame className="EditRouteDialog" title={"Edit Route"}>
         <InputReadOnly
@@ -364,22 +378,38 @@ const EditRouteDialog = (props) => {
             label=""
             value="inverted"
         />}
+        <InfoItem label={'server'} value={""+!!route.server}/>
         <DialogButtons>
-            <DB name="empty"
-                onClick={() => changeRoute((nr) => {
-                    nr.points = []
-                })}
-                close={false}
-            >Empty</DB>
-            <DB name="invert"
+            <DB name="new"
                 onClick={() => {
-                    changeRoute((nr) => {
-                        nr.swap()
-                    })
-                    setInverted(!inverted);
+                    nameDialog()
+                        .then((newName)=>{
+                            let newRoute=new routeobjects.Route();
+                            newRoute.name=newName;
+                            newRoute.server=connectedMode;
+                            setRoute(newRoute);
+                            setInverted(false);
+                            setSaveMode(RouteSaveModes.REPLACE_NEW);
+                        },()=>{});
                 }}
                 close={false}
-            >Invert</DB>
+            >New</DB>
+            < DB name="load"
+                 onClick={loadNewRoute}
+                 close={false}
+            >Load</DB>
+            <DB name="edit"
+                onClick={() => {
+                    nameDialog()
+                        .then((newName)=>{
+                            changeRoute((nr)=>{nr.name=newName})
+                        },()=>{})
+                }}
+                close={false}
+                disabled={props.route.name === DEFAULT_ROUTE && saveMode === RouteSaveModes.UPDATE}
+            >
+                Rename
+            </DB>
                 <DB name="edit"
                     onClick={() => {
                         showPromiseDialog(dialogContext,EditPointsDialog,{route:route,inverted:inverted})
@@ -394,10 +424,6 @@ const EditRouteDialog = (props) => {
                 </DB>
         </DialogButtons>
         <DialogButtons>
-            < DB name="load"
-                 onClick={loadNewRoute}
-                 close={false}
-            >Load</DB>
             <DB name="delete"
                 onClick={() => {
                     deleteRoute();
@@ -410,8 +436,8 @@ const EditRouteDialog = (props) => {
                     nameDialog()
                         .then((newName)=>{
                             let changedRoute=changeRoute((nr)=>{nr.name=newName})
-                            save(changedRoute,true);
-                            restartDialog(changedRoute);
+                            setSaveMode(RouteSaveModes.REPLACE_NEW); //just if something goes wrong during save and we do not close
+                            if(save(changedRoute,RouteSaveModes.REPLACE_NEW)) dialogContext.closeDialog()
                         },()=>{})
                 }}
                 close={false}
@@ -420,21 +446,9 @@ const EditRouteDialog = (props) => {
             </DB>
             <DB name="cancel"
             >Cancel</DB>
-            <DB name="edit"
-                onClick={() => {
-                        nameDialog()
-                        .then((newName)=>{
-                            changeRoute((nr)=>{nr.name=newName})
-                        },()=>{})
-                }}
-                close={false}
-                disabled={props.route.name === DEFAULT_ROUTE}
-            >
-                Rename
-            </DB>
             <DB name="ok"
-                onClick={() => save(route.clone())}
-                disabled={(!route.differsTo(props.route)) || existingName}
+                onClick={() => save(route.clone(),saveMode)}
+                disabled={!route.differsTo(props.route)}
             >
                 Save
             </DB>
@@ -445,8 +459,7 @@ const EditRouteDialog = (props) => {
 
 EditRouteDialog.propTypes = {
     route: PropTypes.objectOf(routeobjects.Route).isRequired,
-    editAction: PropTypes.func,
-    updateCallback: PropTypes.func
+    editAction: PropTypes.func
 }
 
 
@@ -516,16 +529,13 @@ const EditRoutePage = (iprops) => {
             if (globalStore.getData(keys.gui.global.layoutEditing)) return;
             showDialog(dialogCtxRef, () => {
                 return <EditRouteDialog
-                    route={currentEditor.getRoute().clone()}
+                    route={currentEditor.getRoute()?currentEditor.getRoute().clone():new routeobjects.Route('empty')}
                     editAction={() => {
                         currentEditor.syncTo(RouteEdit.MODES.PAGE);
                         props.history.push("routepage");
                     }}
-                    updateCallback={() => {
-                        checkEmptyRoute()
-                    }}
                 />
-            })
+            },checkEmptyRoute)
             return;
         }
         if (item.name === 'RoutePoints') {

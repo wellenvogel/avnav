@@ -550,6 +550,12 @@ export class StateHelper{
         if (! state.leg) return;
         return state.leg.anchorWatch();
     }
+    static routeName(state){
+        if (state.route ) return state.route.name;
+        if (state.leg){
+            return state.leg.getRouteName()
+        }
+    }
 
 }
 
