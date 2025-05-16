@@ -183,7 +183,7 @@ const EditPointsDialog=(props)=>{
             {
                 name:"renumber",
                 onClick:()=>{
-                    showPromiseDialog(dialogContext,(drops)=><ConfirmDialog {...drops} text={"All waypoint names will change"} title={"Renumber points"}/> )
+                    showPromiseDialog(dialogContext,(drops)=><ConfirmDialog {...drops} text={"All waypoint names will change"} title={"Renumber points?"}/> )
                         .then(()=>{
                             if (changeRoute((nr)=>{
                                 nr.renumber();
@@ -410,7 +410,7 @@ const EditRouteDialog = (props) => {
             >
                 Rename
             </DB>
-                <DB name="edit"
+                <DB name="points"
                     onClick={() => {
                         showPromiseDialog(dialogContext,EditPointsDialog,{route:route,inverted:inverted})
                             .then((changed)=>{

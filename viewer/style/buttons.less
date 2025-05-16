@@ -629,8 +629,8 @@ button{
   .EditRouteDialog &.edit{
     .dialogIconButton('ic_edit.svg');
   }
-  .EditRouteDialog &.empty{
-    .dialogIconButton('delete_sweep.svg');
+  .EditRouteDialog &.points{
+    .dialogIconButton('route.svg');
   }
   .EditRoutePoints &.empty{
     .dialogIconButton('delete_sweep.svg');
@@ -638,12 +638,13 @@ button{
   .EditRoutePoints &.invert{
     .dialogIconButton('invertroute.svg');
   }
+  .EditRoutePoints &.renumber{
+    .dialogIconButton('format_list_numbered.svg');
+  }
   .EditRouteDialog &.load{
     .dialogIconButton('save.svg');
   }
-  .EditRouteDialog &.invert{
-    .dialogIconButton('invertroute.svg');
-  }
+
   &.reload{
     .dialogIconButton('ic_refresh.svg');
   }
