@@ -26,12 +26,14 @@
 import DB from "./DialogButton";
 import React, {useEffect, useState} from "react";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
+import Helper from "../util/helper";
 
 export const SelectList = ({list, onClick}) => {
     return <div className="selectList">
         {list.map(function (elem) {
+            let cl=Helper.concatsp('listEntry',elem.selected?'selectedItem':undefined,elem.className);
             return (
-                <div className={"listEntry " + (elem.selected && 'selectedItem')}
+                <div className={cl}
                      onClick={() => onClick(elem)}
                      key={elem.value + ":" + elem.label}
                 >

@@ -524,9 +524,9 @@ routeobjects.Route.prototype.checkName=function(name){
 routeobjects.Route.prototype._createNameFromId=function(id){
     return "WP"+Formatter.formatDecimal(id,2,0);
 };
-routeobjects.Route.prototype.renumber=function(){
+routeobjects.Route.prototype.renumber=function(offset){
     for (let i=0;i<this.points.length;i++){
-        this.points[i].name=this._createNameFromId(i);
+        this.points[i].name=this._createNameFromId(i+offset);
     }
 }
 routeobjects.Route.prototype.findFreeName=function(){
