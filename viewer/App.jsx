@@ -12,7 +12,6 @@ import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
 import StatusPage from './gui/StatusPage.jsx';
 import WpaPage from './gui/WpaPage.jsx';
-import RoutePage from './gui/RoutePage.jsx';
 import DownloadPage from './gui/DownloadPage.jsx';
 import SettingsPage from './gui/SettingsPage.jsx';
 import NavPage from './gui/NavPage.jsx';
@@ -105,7 +104,6 @@ const pages={
     addresspage:AddressPage,
     statuspage:StatusPage,
     wpapage:WpaPage,
-    routepage:RoutePage,
     downloadpage:DownloadPage,
     settingspage:SettingsPage,
     navpage: NavPage,
