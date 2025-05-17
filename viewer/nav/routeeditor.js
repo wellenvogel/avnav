@@ -4,8 +4,6 @@
 
 import routeobjects from './routeobjects';
 import navobjects from './navobjects';
-import Formatter from '../util/formatter';
-import NavCompute from './navcompute';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import assign from 'object-assign';
@@ -451,15 +449,6 @@ class RouteEdit{
 }
 
 RouteEdit.MODES={
-    PAGE:{
-        storeKeys: {
-            route: keys.nav.routeHandler.routeForPage,
-            index: keys.nav.routeHandler.pageRouteIndex,
-            activeName: keys.nav.routeHandler.activeName,
-            useRhumbLine: keys.nav.routeHandler.useRhumbLine
-        },
-        writable:true
-    },
     EDIT:{
         storeKeys: {
             route: keys.nav.routeHandler.editingRoute,
@@ -564,15 +553,5 @@ export class StateHelper{
     }
 
 }
-
-//register the guard callback to prevent others from updating the routes
-
-let keylist=[];
-for (let k in [RouteEdit.MODES.EDIT,RouteEdit.MODES.PAGE]) {
-    let ownKeys = assign({}, k);
-    delete ownKeys.activeName;
-    keylist=keylist.concat(KeyHelper.flattenedKeys(ownKeys))
-}
-//globalStore.register(guard,keylist);
 
 export default  RouteEdit;

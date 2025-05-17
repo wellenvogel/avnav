@@ -189,8 +189,6 @@ let keys={
         },
         routeHandler:{
             activeName: K,
-            routeForPage: K,
-            pageRouteIndex: K,
             editingRoute:K,
             editingIndex: K,
             useRhumbLine: K,

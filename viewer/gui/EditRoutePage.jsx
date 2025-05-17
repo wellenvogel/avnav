@@ -357,10 +357,15 @@ const existsRoute = (name,availableRoutes) => {
 
 const NameDialog=({resolveFunction,route,existingRoutes,title})=>{
     return <ValueDialog
-        resolveFunction={resolveFunction}
+        resolveFunction={(newName)=>{
+            if (newName) newName=newName.trim();
+            if (resolveFunction) resolveFunction(newName);
+        }}
         title={title||"Select new name"}
         value={route.name}
         checkFunction={(newName)=>{
+            newName=newName.trim();
+            if (newName === '') return 'empty';
             if (newName === route.name) return "unchanged";
             if (existsRoute(newName,existingRoutes)) return "already exists";
         }}/>
