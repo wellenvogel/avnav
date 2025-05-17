@@ -111,6 +111,15 @@ const WaypointDialog=(props)=> {
                 value={decimal}
             />
             <DialogButtons>
+                <DB name={'start'}
+                    onClick={()=>{
+                        if (props.startCallback(props.waypoint)){
+                            dialogContext.closeDialog();
+                        }
+                    }}
+                    visible={!!props.startCallback}
+                    close={false}
+                >Goto</DB>
                 <DB name="delete" onClick={()=>{
                     if (props.deleteCallback) {
                         if (props.deleteCallback(props.waypoint)) {
@@ -118,10 +127,10 @@ const WaypointDialog=(props)=> {
                         }
                     }
                 }}
-                    visible={props.deleteCallback !== undefined}
+                    visible={props.deleteCallback !== undefined && ! props.readOnly}
                     close={false}>Delete</DB>
                 <DB name="cancel" tabIndex="3" >Cancel</DB>
-                <DB name="ok" tabIndex="4" onClick={okFunction} disabled={!ok} close={false}>Ok</DB>
+                <DB name="ok" tabIndex="4" onClick={okFunction} disabled={!ok || props.readOnly} close={false}>Ok</DB>
             </DialogButtons>
         </DialogFrame>
     )
@@ -166,8 +175,9 @@ WaypointDialog.propTypes={
     waypoint: PropTypes.instanceOf(navobjects.WayPoint).isRequired,
     okCallback: PropTypes.func.isRequired,
     closeCallback:PropTypes.func,
-    deleteCallback: PropTypes.func
-
+    deleteCallback: PropTypes.func,
+    startCallback: PropTypes.func,
+    readOnly: PropTypes.bool
 };
 
 export default WaypointDialog;

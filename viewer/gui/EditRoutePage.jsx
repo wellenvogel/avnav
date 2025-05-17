@@ -50,13 +50,16 @@ const PAGENAME = "editroutepage";
 const editor = new RouteEdit(RouteEdit.MODES.EDIT);
 const activeRoute = new RouteEdit(RouteEdit.MODES.ACTIVE);
 
-const isActiveRoute = () => {
-    let activeName = activeRoute.getRouteName();
-    if (activeName && activeName === editor.getRouteName()) return true;
+
+
+
+const isActiveRoute = (activeState,editorState) => {
+    let activeName = StateHelper.routeName(activeState);
+    if (activeName && activeName === StateHelper.routeName(editorState)) return true;
     return false;
 };
 const getCurrentEditor = () => {
-    return isActiveRoute() ? activeRoute : editor;
+    return isActiveRoute(activeRoute.getState(),editor.getState()) ? activeRoute : editor;
 };
 
 const startWaypointDialog = (item, index, dialogContext) => {
@@ -71,13 +74,19 @@ const startWaypointDialog = (item, index, dialogContext) => {
         }
         return false;
     };
+    const canWrite=checkRouteWritable();
     let RenderDialog = function (props) {
         return <WayPointDialog
             {...props}
+            readOnly={!canWrite}
             waypoint={item}
             okCallback={wpChanged}
             deleteCallback={()=>{
                 getCurrentEditor().deleteWaypoint(index);
+                return true;
+            }}
+            startCallback={()=>{
+                startRouting(dialogContext,index);
                 return true;
             }}
         />
@@ -468,7 +477,7 @@ const EditRouteDialog = (props) => {
                     (error) => {
                         Toast(error)
                     },
-                    !props.route.server)
+                    !route.server)
 
             })
             .catch(() => {
@@ -568,6 +577,17 @@ const EditRouteDialog = (props) => {
                 >
                     Points
                 </DB>
+            <DB
+                name={'StopNav'}
+                onClick={()=>{
+                    if (! isActiveRoute()) return;
+                    RouteHandler.routeOff();
+                    MapHolder.triggerRender();
+                }}
+                visible={isActiveRoute()}
+                disabled={!writable}
+                close={false}
+            >Stop</DB>
         </DialogButtons>
         <DialogButtons>
             <DB name="delete"
@@ -606,7 +626,7 @@ const EditRouteDialog = (props) => {
 
 EditRouteDialog.propTypes = {
     route: PropTypes.objectOf(routeobjects.Route).isRequired,
-    editAction: PropTypes.func
+    resolveFunction: PropTypes.func
 }
 
 
@@ -627,15 +647,46 @@ const checkEmptyRoute = () => {
     }
 }
 
+const startRouting=(dialogCtxRef,optIdx)=>{
+    if (!checkRouteWritable()) return;
+    stopAnchorWithConfirm(true,dialogCtxRef)
+        .then(() => {
+            RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
+        })
+        .catch(() => {
+        });
+}
+
+const checkRouteWritable = (dialogCtxRef) => {
+    let currentEditor = getCurrentEditor();
+    if (currentEditor.isRouteWritable()) return true;
+    if (dialogCtxRef) return false;
+    showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
+        .then(() => {
+            showPromiseDialog(dialogCtxRef,(props)=><EditRouteDialog
+                {...props}
+                route={currentEditor.getRoute().clone()}
+            />)
+                .then((nroute)=>{
+                    currentEditor.setNewRoute(nroute,undefined,true);
+                    checkEmptyRoute();
+                },()=>{})
+        });
+    return false;
+};
 
 const DEFAULT_ROUTE = "default";
 
-const EditRoutePage = (iprops) => {
+const EditRoutePage = (props) => {
     const dialogCtxRef = useRef();
-    const props = useStore(iprops, {storeKeys: {activeRouteName: keys.nav.routeHandler.activeName}})
+    const editorState=useStore({editor: activeRoute.getStoreKeys()});
+    const activeState=useStore({storeKeys:activeRoute.getStoreKeys()})
     const [wpButtonsVisible, setWpButtonsVisible] = useState(false);
     const [lastCenteredWp, setLastCenteredWp] = useState();
+    const [connectedMode]=useStoreState(keys.properties.connectedMode);
     const hasCentered = useRef(false);
+    const showingActiveRoute=isActiveRoute(activeState,editorState);
+    const routeWritable=!StateHelper.isServerRoute(showingActiveRoute?activeState:editorState) || connectedMode;
     const wpTimer = useTimer(() => {
         setWpButtonsVisible(false);
     }, globalStore.getData(keys.properties.wpButtonTimeout) * 1000);
@@ -659,23 +710,6 @@ const EditRoutePage = (iprops) => {
         }
     }, []);
 
-    const checkRouteWritable = useCallback((opt_noDialog) => {
-        let currentEditor = getCurrentEditor();
-        if (currentEditor.isRouteWritable()) return true;
-        if (opt_noDialog) return false;
-        showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
-            .then(() => {
-                showPromiseDialog(dialogCtxRef,(props)=><EditRouteDialog
-                    {...props}
-                    route={currentEditor.getRoute().clone()}
-                />)
-                    .then((nroute)=>{
-                        currentEditor.setNewRoute(nroute,undefined,true);
-                        checkEmptyRoute();
-                    },()=>{})
-            });
-        return false;
-    }, []);
     const widgetClick = (item, data, panel, invertEditDirection) => {
         let currentEditor = getCurrentEditor();
         if (item.name === "EditRoute") {
@@ -695,9 +729,7 @@ const EditRoutePage = (iprops) => {
                 MapHolder.setCenter(currentEditor.getPointAt());
                 setLastCenteredWp(data.idx);
                 if (lastSelected === data.idx && lastCenteredWp === data.idx) {
-                    if (checkRouteWritable()){
-                        startWaypointDialog(data, data.idx, dialogCtxRef);
-                    }
+                    startWaypointDialog(data, data.idx, dialogCtxRef);
                 }
             }
             return;
@@ -738,7 +770,8 @@ const EditRoutePage = (iprops) => {
                 wpTimer.startTimer();
                 let currentEditor = getCurrentEditor();
                 startWaypointDialog(currentEditor.getPointAt(), currentEditor.getIndex(), dialogCtxRef);
-            }
+            },
+            visible: routeWritable
         },
         {
             name: 'WpNext',
@@ -752,7 +785,8 @@ const EditRoutePage = (iprops) => {
                 currentEditor.moveIndex(1);
                 MapHolder.setCenter(currentEditor.getPointAt());
                 setLastCenteredWp(currentEditor.getIndex());
-            }
+            },
+            visible: routeWritable
         },
         {
             name: 'WpPrevious',
@@ -766,7 +800,8 @@ const EditRoutePage = (iprops) => {
                 currentEditor.moveIndex(-1);
                 MapHolder.setCenter(currentEditor.getPointAt());
                 setLastCenteredWp(currentEditor.getIndex());
-            }
+            },
+            visible: routeWritable
         }
     ];
 
@@ -834,13 +869,18 @@ const EditRoutePage = (iprops) => {
             hasCentered.current = true;
         }
         if (evdata.type === MapHolder.EventTypes.SELECTWP) {
-            currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
+            const currentIndex=currentEditor.getIndex();
+            const newIndex=currentEditor.getIndexFromPoint(evdata.wp);
+            if (currentIndex !== newIndex) currentEditor.setNewIndex(newIndex);
+            else {
+                startWaypointDialog(currentEditor.getPointAt(currentIndex), currentIndex, dialogCtxRef);
+            }
             return true;
         }
         if (evdata.type === MapHolder.EventTypes.FEATURE) {
             let feature = evdata.feature;
             if (!feature) return;
-            if (feature.nextTarget && checkRouteWritable(true)) {
+            if (feature.nextTarget && routeWritable) {
                 feature.additionalActions = [
                     {
                         name: 'insert', label: 'Before', onClick: () => {
@@ -886,7 +926,7 @@ const EditRoutePage = (iprops) => {
             if (feature.overlayType === 'route') {
                 let routeName = feature.overlayName;
                 if (routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName() &&
-                    checkRouteWritable(true)
+                    checkRouteWritable()
                 ) {
                     feature.additionalActions = [
                         {
@@ -928,7 +968,7 @@ const EditRoutePage = (iprops) => {
         {
             name: "NavAddAfter",
             onClick: () => {
-                if (!checkRouteWritable()) return;
+                if (!checkRouteWritable(dialogCtxRef)) return;
                 let center = MapHolder.getCenter();
                 if (!center) return;
                 let currentEditor = getCurrentEditor();
@@ -945,7 +985,7 @@ const EditRoutePage = (iprops) => {
         {
             name: "NavAdd",
             onClick: () => {
-                if (!checkRouteWritable()) return;
+                if (!checkRouteWritable(dialogCtxRef)) return;
                 let center = MapHolder.getCenter();
                 if (!center) return;
                 let currentEditor = getCurrentEditor();
@@ -962,7 +1002,7 @@ const EditRoutePage = (iprops) => {
         {
             name: "NavDelete",
             onClick: () => {
-                if (!checkRouteWritable()) return;
+                if (!checkRouteWritable(dialogCtxRef)) return;
                 getCurrentEditor().deleteWaypoint();
                 let newIndex = getCurrentEditor().getIndex();
                 let currentPoint = getCurrentEditor().getPointAt(newIndex);
@@ -976,7 +1016,7 @@ const EditRoutePage = (iprops) => {
         {
             name: "NavToCenter",
             onClick: () => {
-                if (!checkRouteWritable()) return;
+                if (!checkRouteWritable(dialogCtxRef)) return;
                 let center = MapHolder.getCenter();
                 if (!center) return;
                 let currentEditor = getCurrentEditor();
@@ -989,17 +1029,22 @@ const EditRoutePage = (iprops) => {
         {
             name: "NavGoto",
             onClick: () => {
-                if (!checkRouteWritable()) return;
-                stopAnchorWithConfirm(true)
-                    .then(() => {
-                        RouteHandler.wpOn(getCurrentEditor().getPointAt());
-                        props.history.pop();
-                    })
-                    .catch(() => {
-                    });
+                startRouting(dialogCtxRef);
+                props.history.pop();
             },
             editDisable: true,
             overflow: true
+        },
+        {
+            name: 'StopNav',
+            onClick:()=>{
+                RouteHandler.routeOff();
+                MapHolder.triggerRender();
+            },
+            editDisable: true,
+            overflow: true,
+            disabled: !activeRoute.hasActiveTarget(),
+            toggle: activeRoute.hasActiveTarget()
         },
         {
             name: 'Menu',

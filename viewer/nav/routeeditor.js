@@ -128,6 +128,9 @@ class RouteEdit{
     getStoreKeys(opt_merge){
         return assign({},opt_merge,this.storeKeys);
     }
+    getState(){
+        return {...load(this.storeKeys)}
+    }
     addMultipleWaypoints(points,opt_before){
         if (! points || ! points.length) return;
         this.checkWritable();
@@ -551,6 +554,11 @@ export class StateHelper{
         if (state.leg){
             return state.leg.getRouteName()
         }
+    }
+    static isServerRoute(state){
+        const route=state.route||(state.leg||{}).route;
+        if (!route) return false;
+        return route.server;
     }
 
 }
