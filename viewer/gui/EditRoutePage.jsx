@@ -75,7 +75,12 @@ const startWaypointDialog = (item, index, dialogContext) => {
         return <WayPointDialog
             {...props}
             waypoint={item}
-            okCallback={wpChanged}/>
+            okCallback={wpChanged}
+            deleteCallback={()=>{
+                getCurrentEditor().deleteWaypoint(index);
+                return true;
+            }}
+        />
     };
     showDialog(dialogContext, RenderDialog);
 };

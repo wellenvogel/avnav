@@ -269,20 +269,21 @@ class RouteEdit{
     }
 
 
-    deleteWaypoint(){
+    deleteWaypoint(idx){
         this.checkWritable();
         let data=load(this.storeKeys,true);
-        if (data.index < 0 || ! data.route) return;
+        if (idx === undefined) idx=data.index;
+        if (idx < 0 || ! data.route || idx >= data.route.points.length) return;
         let wasTarget=false;
         if (this.storeKeys.leg){
-            wasTarget=data.leg.getCurrentTargetIdx()==data.index;
+            wasTarget=data.leg.getCurrentTargetIdx()==idx;
         }
-        let nextPoint=data.route.deletePoint(data.index);
+        let nextPoint=data.route.deletePoint(idx);
         if (wasTarget){
             data.leg.to=nextPoint;
             if (!nextPoint) data.leg.active=false;
         }
-        if (! nextPoint && data.index > 0){
+        if (data.index < 0 || data.index >= data.route.points.length){
             //we deleted the last point (and there are just points in the route)
             data.index-=1;
         }

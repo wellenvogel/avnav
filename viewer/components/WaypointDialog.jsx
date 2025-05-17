@@ -11,6 +11,7 @@ import DB from './DialogButton.jsx';
 import {Checkbox, Input} from './Inputs.jsx';
 import Dms from "geodesy/dms";
 import {DialogButtons, DialogFrame, useDialogContext} from "./OverlayDialog";
+import visible from "../hoc/Visible";
 
 const strLonToLon=(val)=>{
     if (val === undefined) return;
@@ -117,6 +118,7 @@ const WaypointDialog=(props)=> {
                         }
                     }
                 }}
+                    visible={props.deleteCallback !== undefined}
                     close={false}>Delete</DB>
                 <DB name="cancel" tabIndex="3" >Cancel</DB>
                 <DB name="ok" tabIndex="4" onClick={okFunction} disabled={!ok} close={false}>Ok</DB>
