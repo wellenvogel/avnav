@@ -647,11 +647,12 @@ const checkEmptyRoute = () => {
     }
 }
 
-const startRouting=(dialogCtxRef,optIdx)=>{
-    if (!checkRouteWritable()) return;
+const startRouting=(dialogCtxRef,optIdx,opt_history)=>{
+    //if (!checkRouteWritable()) return;
     stopAnchorWithConfirm(true,dialogCtxRef)
         .then(() => {
             RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
+            if (opt_history) opt_history.pop();
         })
         .catch(() => {
         });
@@ -660,7 +661,7 @@ const startRouting=(dialogCtxRef,optIdx)=>{
 const checkRouteWritable = (dialogCtxRef) => {
     let currentEditor = getCurrentEditor();
     if (currentEditor.isRouteWritable()) return true;
-    if (dialogCtxRef) return false;
+    if (!dialogCtxRef) return false;
     showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
         .then(() => {
             showPromiseDialog(dialogCtxRef,(props)=><EditRouteDialog
@@ -1029,8 +1030,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavGoto",
             onClick: () => {
-                startRouting(dialogCtxRef);
-                props.history.pop();
+                startRouting(dialogCtxRef,undefined,props.history);
             },
             editDisable: true,
             overflow: true
