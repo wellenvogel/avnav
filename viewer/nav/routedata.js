@@ -373,8 +373,6 @@ RouteData.prototype.anchorOff=function(){
  */
 RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
     activeRoute.modify((data)=> {
-        if (!data.leg) data.leg = new routeobjects.Leg();
-        data.leg.approachDistance = parseFloat(globalStore.getData(keys.properties.routeApproach,-1));
         let pfrom;
         let gps = globalStore.getData(keys.nav.gps.position);
         let center = globalStore.getData(keys.map.centerPosition);
@@ -385,11 +383,13 @@ RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
             pfrom = new navobjects.WayPoint();
             center.assign(pfrom);
         }
+        let oldFrom;
         //check if we change the mode - in this case we always set a new from
-        if (!data.leg.active) {
+        if (! data.leg || !data.leg.active) {
             opt_keep_from = false;
         }
         else {
+            oldFrom=data.leg.from;
             if (data.leg.hasRoute()) {
                 //we had a route
                 if (mode == routeobjects.RoutingMode.WP || mode == routeobjects.RoutingMode.WPINACTIVE) {
@@ -408,7 +408,10 @@ RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
                 }
             }
         }
-        if (!opt_keep_from) data.leg.from = pfrom;
+        data.leg = new routeobjects.Leg();
+        data.leg.approachDistance = parseFloat(globalStore.getData(keys.properties.routeApproach,-1));
+        if (opt_keep_from && oldFrom) data.leg.from=oldFrom;
+        else data.leg.from = pfrom;
         data.leg.active = false;
         if (mode == routeobjects.RoutingMode.WP) {
             data.leg.to = newWp;
@@ -843,6 +846,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     if (!this.connectMode) return false;
     let nleg = new routeobjects.Leg();
     nleg.fromJson(serverData);
+    nleg.server=true;
     if (nleg.currentRoute) nleg.currentRoute.server=true;
     //store locally if we did not send or if the leg changed
     if (this.lastSentLeg && !nleg.differsTo(this.lastReceivedLeg)) {

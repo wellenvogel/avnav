@@ -44,20 +44,26 @@ export const WidgetProps={
 
 export const WidgetHead=(props)=> {
     if (props.unit === undefined && props.caption === undefined) return null;
+    const infoMiddle = (props.infoMiddle !== undefined) ? props.infoMiddle : props.disconnect ?
+        <div className={'disconnectedIcon'}/>
+        :undefined;
     return (
-    <div className="widgetHead">
-        <div className='infoLeft'>{props.caption}</div>
-        {props.unit !== undefined ?
-            <div className='infoRight'>{props.unit}</div>
-            : <div className='infoRight'></div>
-        }
-    </div>
+        <div className="widgetHead">
+            <div className='infoLeft'>{props.caption}</div>
+            {infoMiddle !== undefined && <div className={'infoMiddle'}>{infoMiddle}</div>}
+            {props.unit !== undefined ?
+                <div className='infoRight'>{props.unit}</div>
+                : <div className='infoRight'></div>
+            }
+        </div>
     )
 }
 
-WidgetHead.propTypes={
+WidgetHead.propTypes = {
     unit: PropTypes.string,
-    caption: PropTypes.string
+    caption: PropTypes.string,
+    infoMiddle: PropTypes.element,
+    disconnect: PropTypes.bool
 }
 
 export const WidgetFrame=(props)=> {

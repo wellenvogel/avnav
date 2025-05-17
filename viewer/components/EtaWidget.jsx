@@ -17,8 +17,9 @@ const EtaWidget = (props) => {
         name: props.wpname
     };
     const resizeSequence=useStringsChanged(display,props);
+    const disconnect=(props.server===false);
     return (
-        <WidgetFrame {...props} addClass="etaWidget" resizeSequence={resizeSequence}>
+        <WidgetFrame {...props} addClass="etaWidget" resizeSequence={resizeSequence} disconnect={disconnect}>
             <div className="widgetData markerEta">{display.eta}</div>
             <div className="widgetData markerName">{display.name}</div>
         </WidgetFrame>
@@ -32,6 +33,7 @@ EtaWidget.propTypes={
 };
 EtaWidget.storeKeys={
     eta: keys.nav.wp.eta,
-    wpname: keys.nav.wp.name
+    wpname: keys.nav.wp.name,
+    server: keys.nav.wp.server
 };
 export default EtaWidget;

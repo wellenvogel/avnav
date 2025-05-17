@@ -125,17 +125,17 @@ body{
   right: 1em;
   top: 1em;
   z-index: 3;
-
-  .anchorWatchIcon {
-    background-color: red;
-    .maskImage('anchor.svg');
-  }
-
-  .disconnectedIcon {
-    background-color: red;
-    .maskImage('plug-disconnect.svg');
-  }
 }
+.anchorWatchIcon {
+  background-color: red;
+  .maskImage('anchor.svg');
+}
+
+.disconnectedIcon {
+  background-color: red;
+  .maskImage('plug-disconnect.svg');
+}
+
 
 
 .leftPart{
@@ -802,6 +802,11 @@ span.valuePrefix{
   background-repeat: no-repeat;
   background-position: center;
   .nightOPacity();
+  .widgetHead &{
+    margin:0;
+    height: 0.8em;
+    width: 0.8em;
+  }
 }
 .iconImage(@url){
   .icon();

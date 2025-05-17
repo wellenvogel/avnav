@@ -164,7 +164,8 @@ let keys={
             xte: V,
             vmg: V,
             position: V,
-            name: V
+            name: V,
+            server: V
         },
         anchor:{
             distance: V,

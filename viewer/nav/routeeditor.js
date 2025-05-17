@@ -422,6 +422,10 @@ class RouteEdit{
         let data=load(this.storeKeys);
         return StateHelper.hasActiveTarget(data);
     }
+    isServerLeg(){
+        let data=load(this.storeKeys);
+        return StateHelper.isServerLeg(data);
+    }
     getCurrentTarget(){
         let data=load(this.storeKeys);
         if (!data.leg || ! data.leg.active) return undefined;
@@ -559,6 +563,10 @@ export class StateHelper{
         const route=state.route||(state.leg||{}).route;
         if (!route) return false;
         return route.server;
+    }
+    static isServerLeg(state){
+        if (! state.leg) return false;
+        return state.leg.server;
     }
 
 }

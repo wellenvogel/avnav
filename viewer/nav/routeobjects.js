@@ -60,7 +60,11 @@ routeobjects.Leg=function(from, to, active){
      * @type {undefined}
      */
     this.anchorDistance=undefined;
-
+    /**
+     * is this a leg from the server
+     * @type {boolean}
+     */
+    this.server=false;
 
 
 };
@@ -71,6 +75,7 @@ routeobjects.Leg.prototype.clone=function(){
     rt.approachDistance=this.approachDistance;
     rt.currentRoute=this.currentRoute?this.currentRoute.clone():undefined;
     rt.anchorDistance=this.anchorDistance;
+    rt.server=this.server;
     return rt;
 };
 /**
@@ -165,6 +170,7 @@ routeobjects.Leg.prototype.differsTo=function(leg2){
     if (! leg2) return true;
     if (leg2.anchorDistance && ! this.anchorDistance) return true;
     if (!leg2.anchorDistance && this.anchorDistance) return true;
+    if (leg2.server !== this.server) return true;
     if (this.anchorDistance && leg2.anchorDistance && this.anchorDistance != leg2.anchorDistance) return true;
     let leg1=this;
     let changed = false;
