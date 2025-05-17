@@ -233,6 +233,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
                         label: name,
                         value: name,
                         key: name,
+                        name:name,
                         originalName: aroute.name,
                         selected: selected,
                         server: aroute.server,
@@ -296,7 +297,17 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
                     if (list) {
                         for (let i=0;i<list.length;i++) {
                             if (list[i].value === nroute.name) {
-                                Toast("route " + nroute.name + " already exists");
+                                showPromiseDialog(dialogContext,(dprops)=><NameDialog
+                                    {...dprops}
+                                    title={"route already exists, select new name"}
+                                    route={nroute}
+                                    existingRoutes={list}
+                                />)
+                                    .then((newName)=>{
+                                        nroute.name=newName
+                                        if (resolveFunction) resolveFunction(nroute);
+                                        dialogContext.closeDialog();
+                                    })
                                 return;
                             }
                         }
@@ -324,6 +335,28 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             DBCancel()
         ]}/>
     </DialogFrame>
+}
+
+const existsRoute = (name,availableRoutes) => {
+    if (!availableRoutes) return false;
+    let fullname=name;
+    if (Helper.getExt(name) === '.gpx') name=name.substring(0,name.length-4);
+    if (Helper.getExt(fullname) !== 'gpx') fullname += '.gpx';
+    for (let i = 0; i < availableRoutes.length; i++) {
+        if (availableRoutes[i].name === name || availableRoutes[i].name === fullname) return true;
+    }
+    return false;
+}
+
+const NameDialog=({resolveFunction,route,existingRoutes,title})=>{
+    return <ValueDialog
+        resolveFunction={resolveFunction}
+        title={title||"Select new name"}
+        value={route.name}
+        checkFunction={(newName)=>{
+            if (newName === route.name) return "unchanged";
+            if (existsRoute(newName,existingRoutes)) return "already exists";
+        }}/>
 }
 
 const RouteSaveModes={
@@ -355,14 +388,7 @@ const EditRouteDialog = (props) => {
     const getCurrentEditor = useCallback(() => {
         return isActiveRoute() ? activeRoute : editor;
     }, []);
-    const existsRoute = (name) => {
-        if (!availableRoutes) return false;
-        if (Helper.getExt(name) !== 'gpx') name += '.gpx';
-        for (let i = 0; i < availableRoutes.length; i++) {
-            if (availableRoutes[i].name === name) return true;
-        }
-        return false;
-    }
+
     const changeRoute = (cb) => {
         let newRoute = route.clone();
         if (cb(newRoute) !== false) {
@@ -447,14 +473,11 @@ const EditRouteDialog = (props) => {
             )
     }
     const nameDialog=()=>{
-        return showPromiseDialog(dialogContext,(dprops)=><ValueDialog
+        return showPromiseDialog(dialogContext,(dprops)=><NameDialog
             {...dprops}
-            title={"Select new name"}
-            value={route.name}
-            checkFunction={(newName)=>{
-                if (newName === route.name) return "unchanged";
-                if (existsRoute(newName)) return "already exists";
-            }}/>)
+            route={route}
+            existingRoutes={availableRoutes}
+        />)
     }
     let nameChanged = route.name !== props.route.name;
     const writable= ! route.server || connectedMode;
