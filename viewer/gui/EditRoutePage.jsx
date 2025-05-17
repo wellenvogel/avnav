@@ -111,6 +111,10 @@ const EditPointsDialog=(props)=>{
     const [route, setRoute] = useState(props.route);
     const [selected,setSelected]=useState(0);
     const [inverted,setInverted]=useState(props.inverted);
+    const activeRouteState= useStore({storeKeys:activeRoute.getStoreKeys()});
+    const isActiveRoute=useCallback(()=>{
+        return route.name === StateHelper.routeName(activeRouteState)
+    },[activeRouteState])
     const changeRoute = (cb) => {
         let newRoute = route.clone();
         if (cb(newRoute) !== false) {
@@ -129,7 +133,8 @@ const EditPointsDialog=(props)=>{
         }
         return false;
     };
-    let info = RouteHandler.getInfoFromRoute(route);
+    const info = RouteHandler.getInfoFromRoute(route);
+    const active=isActiveRoute();
     return <DialogFrame className={"EditRoutePoints"} title={route.name}>
         {INFO_ROWS.map((description) => {
             return InfoItem.show(info, description);
@@ -147,7 +152,7 @@ const EditPointsDialog=(props)=>{
                     okCallback={(changedWp)=>{
                         return wpChanged(item,changedWp,item.idx);
                     }}
-                    deleteCallback={(wp)=>{
+                    deleteCallback={active?undefined:(wp)=>{
                         changeRoute((nr)=>{
                             nr.deletePoint(wp.idx);
                         })
@@ -166,7 +171,9 @@ const EditPointsDialog=(props)=>{
                     if (changed.points.length < 1) setInverted(false);
                 },
                 close: false,
-                label: "Empty"
+                label: "Empty",
+                visible: !active,
+                disabled: route.points.length < 1,
             },
             {
                 name: "invert",
@@ -408,9 +415,9 @@ const EditRouteDialog = (props) => {
                 Toast("cannot rename active route");
                 return false;
             }
-            getCurrentEditor().setNewRoute(cloned);
+            getCurrentEditor().setNewRoute(cloned,undefined,true);
             //the page must also know that we are now editing a different route
-            editor.setNewRoute(cloned);
+            editor.setNewRoute(cloned,undefined,true);
             if (nameChanged) {
                 RouteHandler.deleteRoute(oldName,
                     () => {
@@ -432,18 +439,18 @@ const EditRouteDialog = (props) => {
                 Toast("unable to copy to active route");
                 return false;
             }
-            editor.setNewRoute(cloned);
+            editor.setNewRoute(cloned,undefined,true);
             return true;
         }
         return false;
     }
     const deleteRoute = () => {
         if (isActiveRoute()) return;
-        showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={"Really delete route " + props.route.name}/>)
+        showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={"Really delete route " + route.name}/>)
             .then(() => {
-                RouteHandler.deleteRoute(props.route.name,
+                RouteHandler.deleteRoute(route.name,
                     () => {
-                        if (editor.getRouteName() === props.route.name) {
+                        if (editor.getRouteName() === route.name) {
                             editor.removeRoute();
                         }
                         dialogContext.closeDialog();
@@ -479,11 +486,10 @@ const EditRouteDialog = (props) => {
             existingRoutes={availableRoutes}
         />)
     }
-    let nameChanged = route.name !== props.route.name;
     const writable= ! route.server || connectedMode;
-    let canDelete = !isActiveRoute() && !nameChanged && route.name !== DEFAULT_ROUTE && writable;
+    let canDelete = !isActiveRoute() && existsRoute(route.name,availableRoutes) && route.name !== DEFAULT_ROUTE && writable;
     let info = RouteHandler.getInfoFromRoute(route);
-    return <DialogFrame className="EditRouteDialog" title={"Edit Route"}>
+    return <DialogFrame className={Helper.concatsp("EditRouteDialog",isActiveRoute()?"activeRoute":undefined)} title={"Edit Route"}>
         <InputReadOnly
             dialogRow={true}
             label="name"
@@ -654,7 +660,7 @@ const EditRoutePage = (iprops) => {
                     route={currentEditor.getRoute().clone()}
                 />)
                     .then((nroute)=>{
-                        currentEditor.setNewRoute(nroute);
+                        currentEditor.setNewRoute(nroute,undefined,true);
                         checkEmptyRoute();
                     },()=>{})
             });

@@ -1264,45 +1264,6 @@ span.valuePrefix{
 
 }
 
-#routepage{
-  &.activeRoute .header{
-    .nightBackFade(@colorRed);
-  }
-  .routeCurrent {
-    background-color: #CFD8DC;
-    padding: 1em;
-    padding-right: 1.5em;
-    height: 5.2em;
-    position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    .routeName{
-      white-space: nowrap;
-      overflow: hidden;
-    }
-    .routeInfo{
-      .mdText2();
-      margin-top: 0.7em;
-    }
-    .more{
-      display: inline-block;
-      position: absolute;
-      right: 0;
-      top: 1em;
-      height: 2em;
-      width: 2em;
-    }
-
-  }
-
-}
-.editRouteName{
-  label{
-    display: inline-block;
-    margin-left: 1em;
-  }
-
-}
-
 #downloadpage{
   .itemMain {
     .flex-display();
@@ -1408,6 +1369,14 @@ span.valuePrefix{
   .edit{
     .flex(1);
     position: relative;
+  }
+}
+.EditRouteDialog{
+  &.activeRoute{
+    border-width: 3px;
+    border-style: solid;
+    padding: 5px;
+    .nightBorderFade(@colorRed);
   }
 }
 .EditRoutePoints{

@@ -179,7 +179,7 @@ class RouteEdit{
         if (old) data.index=data.route.getIndexFromPoint(old);
         write(this.writeKeys,data);
     }
-    setNewRoute(route,opt_index){
+    setNewRoute(route,opt_index,opt_ignoreWpNames){
         if (! route) return;
         this.checkWritable();
         let data=load(this.storeKeys,true);
@@ -211,7 +211,7 @@ class RouteEdit{
              *   bestMatching
              */
             let newIndex=-1;
-            if (oldRouteName == data.route.name){
+            if (oldRouteName == data.route.name && ! opt_ignoreWpNames){
                 newIndex=data.route.getIndexFromPoint(oldTarget,true);
                 if (newIndex < 0 && oldNext){
                     newIndex=data.route.getIndexFromPoint(oldNext,true);
@@ -527,6 +527,12 @@ export class StateHelper{
     static hasActiveTarget(state){
         if (! state.leg) return false;
         return state.leg.isRouting();
+    }
+
+    static activeTarget(state){
+        if (! state.leg) return;
+        if (!state.leg.isRouting()) return;
+        return state.leg.to;
     }
 
     static targetName(state){
