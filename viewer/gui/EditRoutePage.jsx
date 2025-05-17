@@ -929,18 +929,18 @@ const EditRoutePage = (props) => {
                 if (routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName() &&
                     checkRouteWritable()
                 ) {
-                    feature.additionalActions = [
+                    feature.additionalActions.push(
                         {
-                            name: 'insert', label: 'Before', onClick: (props) => {
+                            name: 'insert', label: 'RtBefore', onClick: (props) => {
                                 insertOtherRoute(feature.overlayName, props.routeTarget, true);
                             },
                             condition: (props) => props.routeTarget
                         }
-                    ];
+                    );
                     if (currentEditor.getIndex() >= 0 && currentEditor.getPointAt()) {
                         feature.additionalActions.push(
                             {
-                                name: 'add', label: 'Ater', onClick: (props) => {
+                                name: 'add', label: 'RtAter', onClick: (props) => {
                                     insertOtherRoute(feature.overlayName, props.routeTarget, false);
                                 },
                                 condition: (props) => props.routeTarget
