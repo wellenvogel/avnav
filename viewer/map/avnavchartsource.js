@@ -40,6 +40,7 @@ import olTileState from 'ol/src/TileState';
 import assign from 'object-assign';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
+import navobjects from "../nav/navobjects";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -608,9 +609,22 @@ class AvnavChartSource extends ChartSourceBase{
                             chartKey: this.getChartKey(),
                             source: this,
                             overlayName:this.chartEntry.name,
-                            coordinates: lonlat},
+                            },
                             topInfo
                         );
+                        if (info.nextTarget){
+                            let nextTarget;
+                            if (info.nextTarget instanceof Array){
+                                //old style coordinate lon,lat
+                                nextTarget=new navobjects.Point();
+                                nextTarget.fromCoord(info.nextTarget);
+                            }
+                            else if (info.nextTarget instanceof Object){
+                                 nextTarget=new navobjects.Point();
+                                 nextTarget.fromPlain(info.nextTarget);
+                            }
+                            info.nextTarget=nextTarget;
+                        }
                         resolve([info]);
                     }
                     else resolve([]);
