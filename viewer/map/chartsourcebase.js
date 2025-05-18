@@ -36,6 +36,8 @@ export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
 }
 class ChartSourceBase {
+
+    COLOR_INVISIBLE='rgba(0,0,0,0)';
     /**
      *
      * @param mapholder
@@ -329,6 +331,7 @@ class ChartSourceBase {
         if (! this.isReady()) return false;
         return this.chartEntry.hasFeatureInfo||false;
     }
+
 
 }
 

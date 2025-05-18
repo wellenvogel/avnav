@@ -477,7 +477,12 @@ const OverlayItemDialog = (props) => {
             </DialogButtons>
         </DialogFrame>)
 }
-
+OverlayItemDialog.propTypes={
+    resolveFunction: PropTypes.func.isRequired,
+    forceOk: PropTypes.func,
+    title: PropTypes.element,
+    current: PropTypes.object
+}
 
 const BaseElement=(props)=>{
     const dd=useAvNavSortable(props.dragId,false)
@@ -635,7 +640,7 @@ const EditOverlaysDialog = (props) => {
             return <OverlayItemDialog
                 {...dprops}
                 resolveFunction={(changed) => {
-                    if (changed.name && changed.type) props.resolveFunction(changed);
+                    if (changed.name && changed.type) dprops.resolveFunction(changed);
                 }}
                 current={item}
                 title={item ? "Edit Overlay" : "New Overlay"}

@@ -373,31 +373,47 @@ routeobjects.Route.prototype.clone=function(){
  * fill a route from an xml doc
  * @param xml
  */
-routeobjects.Route.prototype.fromXml=function(xml){
+routeobjects.Route.prototype.fromXml=function(xml) {
+    this.name = undefined;
+    let doc = helper.parseXml(xml);
+    let routes=doc.getElementsByTagName('rte');
+    if (routes.length > 0){
+        return this.fromXmlNode(routes[0]);
+    }
+}
+routeobjects.Route.prototype.fromXmlNode=function(rte){
     this.name=undefined;
-    let doc= helper.parseXml(xml);
-    let self=this;
-    let i=0;
-    let rte=doc.getElementsByTagName('rte')[0];
+    this.points=[];
     if (rte){
         let name=rte.getElementsByTagName('name')[0];
-        if (name) self.name=name.textContent;
-        Array.from(rte.getElementsByTagName('rtept')).forEach(function(el){
+        if (name) this.name=name.textContent;
+        Array.from(rte.getElementsByTagName('rtept')).forEach((el)=>{
             let pt=new navobjects.WayPoint(0,0);
             pt.lon=parseFloat(el.getAttribute('lon'));
             pt.lat=parseFloat(el.getAttribute('lat'));
             let pname=el.getElementsByTagName('name')[0];
             if (pname) pt.name=pname.textContent;
-            pt.routeName=self.name.slice(0);
+            pt.routeName=this.name.slice(0);
             if (! pt.name){
-                pt.name=self.findFreeName();
+                pt.name=this.findFreeName();
             }
-            i++;
-            self.points.push(pt);
+            this.points.push(pt);
         })
     }
     return this;
 };
+
+export const parseRouteXml=(xmltext)=>{
+    let doc= helper.parseXml(xmltext);
+    let routes=doc.getElementsByTagName('rte');
+    let rt=[];
+    for (let i=0;i<routes.length;i++){
+        let route=new routeobjects.Route();
+        route.fromXmlNode(routes[i]);
+        rt.push(route);
+    }
+    return rt;
+}
 
 routeobjects.Route.prototype.toXml=function(noUtf8){
     let writer=new XmlWriter(true);

@@ -25,20 +25,78 @@
 
 import Requests from '../util/requests.js';
 import ChartSourceBase from './chartsourcebase.js';
-import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
+import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
+import {Feature as olFeature} from 'ol';
 import {GPX as olGPXFormat} from 'ol/format';
 import Helper from "../util/helper";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
-import {assign} from "ol/obj";
-import featureFormatter from "../util/featureFormatter";
 import navobjects from "../nav/navobjects";
 import NavCompute from "../nav/navcompute";
+import {getRouteStyles} from "./routelayer";
+import source from "ol/source/Source";
+import routeobjects from "../nav/routeobjects";
 
 export const stylePrefix="style."; // the prefix for style attributes
+
+const getTextStyle=(scale)=>{
+    const raw=getRouteStyles().textStyle;
+    return new olText({
+        font: raw.fontSize*scale+"px "+(raw.fontBase?raw.fontBase:''),
+        offsetY: raw.offsetY,
+        stroke: new olStroke({
+            color:raw.stroke,
+            width: raw.width||3
+        }) ,
+        fill: raw.color?new olFill({
+            color: raw.color
+            }):undefined,
+        declutterMode: 'declutter',
+        scale: 1
+    })
+}
+class OwnGpx extends olGPXFormat{
+    constructor(mapholder) {
+        super();
+        this.mapholder=mapholder;
+    }
+
+    readFeaturesFromNode(node, opt_options) {
+        let routes=node.ownerDocument.getElementsByTagName('rte');
+        let rt=[];
+        for (let i=0;i<routes.length;i++){
+            let rtel=routes[i];
+            rtel.parentNode.removeChild(rtel);
+            let route=new routeobjects.Route();
+            route.fromXmlNode(rtel);
+            if (route.name !== undefined || route.points.length > 0){
+                console.log("route"+route.name+" with "+route.points.length+" points");
+                let coordinates=[];
+                let first=true;
+                route.points.forEach((pt)=>{
+                    coordinates.push(this.mapholder.transformToMap([pt.lon,pt.lat]));
+                })
+                let feature=new olFeature();
+                feature.setGeometry(new olLineString(coordinates));
+                feature.set('name',route.name);
+                feature.set('route',route);
+                rt.push(feature);
+            }
+        }
+        let of=super.readFeaturesFromNode(node, opt_options);
+        return rt.concat(of);
+    }
+}
+
+const getRoutePointName=(feature,idx)=>{
+    if (!feature) return;
+    const route=feature.get('route');
+    if (! route || ! route.points) return;
+    return route.points[idx].name;
+}
 
 class GpxChartSource extends ChartSourceBase{
     /**
@@ -72,29 +130,38 @@ class GpxChartSource extends ChartSourceBase{
             }
         }
         this.styles = {
-            'Point': new olStyle({
+            Point: new olStyle({
                 image: new olCircle({
                     fill: new olFill({
                         color: styleParam.fillColor,
                     }),
                     radius: styleParam.circleWidth/2,
                     stroke: new olStroke({
-                        color: styleParam.lineColor,
+                        color: (styleParam.strokeWidth>0)?styleParam.lineColor:this.COLOR_INVISIBLE,
                         width: styleParam.strokeWidth,
                     })
                 })
             }),
-            'LineString': new olStyle({
+            LineString: new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
+                    color: (styleParam.lineWidth>0)?styleParam.lineColor:this.COLOR_INVISIBLE,
                     width: styleParam.lineWidth,
                 })
             }),
-            'MultiLineString': new olStyle({
+            MultiLineString: new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
+                    color: (styleParam.lineWidth>0)?styleParam.lineColor:this.COLOR_INVISIBLE,
                     width: styleParam.lineWidth,
                 })
+            }),
+            RoutePoint: new olStyle({
+                image: new olCircle({
+                    fill: new olFill({
+                        color: styleParam.fillColor,
+                    }),
+                    radius: styleParam.circleWidth / 2,
+                }),
+                text: getTextStyle(1)
             })
         };
         this.source=undefined;
@@ -104,6 +171,7 @@ class GpxChartSource extends ChartSourceBase{
                 this.redraw();
             }
         },[keys.nav.routeHandler.useRhumbLine])
+        this.routePoints=[];
     }
 
     redraw() {
@@ -149,12 +217,15 @@ class GpxChartSource extends ChartSourceBase{
             let geometry=feature.getGeometry();
             let styles=[this.styles[type]];
             let isFirst=true;
+            let ptIdx=0;
             geometry.forEachSegment((start,end)=>{
                 if (isFirst){
-                    styles.push(this.getRoutePointStyle(start));
+                    styles.push(this.getRoutePointStyle(start,getRoutePointName(feature,ptIdx)));
                     isFirst=false;
+                    ptIdx++;
                 }
-                styles.push(this.getRoutePointStyle(end));
+                styles.push(this.getRoutePointStyle(end,getRoutePointName(feature,ptIdx)));
+                ptIdx++;
             })
             return styles;
         }
@@ -164,41 +235,45 @@ class GpxChartSource extends ChartSourceBase{
             let styles=[this.styles[type]];
             let isFirst=true;
             let lineStrings=geometry.getLineStrings();
+            let ptIdx=0;
             lineStrings.forEach((lineString)=>{
                 let coordinates=lineString.getCoordinates();
                 if (coordinates.length > 1) {
                     if (isFirst) {
-                        styles.push(this.getRoutePointStyle(coordinates[0]));
+                        styles.push(this.getRoutePointStyle(coordinates[0],getRoutePointName(feature,ptIdx)));
                         isFirst = false;
+                        ptIdx++;
                     }
-                    styles.push(this.getRoutePointStyle(coordinates[coordinates.length-1]));
+                    styles.push(this.getRoutePointStyle(coordinates[coordinates.length-1],getRoutePointName(feature,ptIdx)));
+                    ptIdx++;
                 }
             })
             return styles;
         }
         return this.styles[feature.getGeometry().getType()];
     };
-    getRoutePointStyle(coordinates){
-        return new olStyle({
+    getRoutePointStyle(coordinates,name){
+        const base=this.styles.RoutePoint;
+        let rt= new olStyle({
             geometry: new olPoint(coordinates),
             image: new olCircle({
-                fill: new olFill({
-                        color: this.styles.LineString.getStroke().getColor()
-                    }),
+                fill: base.getImage().getFill(),
                 radius: globalstore.getData(keys.properties.routeWpSize) * this.getScale()
-            })
+            }),
+            text: base.getText().clone()
         });
+        if (name) rt.getText().setText(name);
+        return rt;
     }
     prepareInternal() {
         let url = this.chartEntry.url;
-        let self = this;
         return new Promise((resolve, reject)=> {
             if (!url) {
                 reject("no url for "+this.chartEntry.name);
                 return;
             }
             this.source = new olVectorSource({
-                format: new olGPXFormat(),
+                format: new OwnGpx(this.mapholder),
                 loader: (extent, resolution, projection) => {
                     Requests.getHtmlOrText(url, {}, {'_': (new Date()).getTime()})
                         .then((gpx) => {
@@ -349,6 +424,7 @@ export const readFeatureInfoFromGpx=(gpx)=>{
         else if (geo instanceof olLineString){
             rt.hasRoute=true;
             rt[stylePrefix+"lineColor"]=true;
+            rt[stylePrefix+"fillColor"]=true;
             rt[stylePrefix + "lineWidth"] = true;
             rt.hasAny=true;
         }

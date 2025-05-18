@@ -130,7 +130,7 @@ export const ParamValueInput=(props)=>{
     >{props.children}</ValueInput>
 }
 
-ParamValueInput.PropTypes={
+ParamValueInput.propTypes={
     param: PropTypes.object.isRequired,
     currentValues: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
