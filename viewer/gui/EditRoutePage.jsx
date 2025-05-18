@@ -678,8 +678,7 @@ const checkRouteWritable = (dialogCtxRef) => {
 
 
 const getTargetFromInfo=(feature)=> {
-    const target = feature.routeTarget ? feature.routeTarget :
-        feature.nextTarget ? new navobjects.WayPoint(feature.nextTarget[0], feature.nextTarget[1]) : undefined;
+    const target = feature.nextTarget;
     if (target && !target.name) target.name = feature.name;
     return target;
 }
@@ -889,7 +888,7 @@ const EditRoutePage = (props) => {
         if (evdata.type === MapHolder.EventTypes.FEATURE) {
             let feature = evdata.feature;
             if (!feature) return;
-            if ((feature.nextTarget||feature.routeTarget) && routeWritable) {
+            if (feature.nextTarget && routeWritable) {
                 feature.additionalActions = [
                     {
                         name: 'insert', label: 'Before', onClick: (info) => {
@@ -924,25 +923,25 @@ const EditRoutePage = (props) => {
                 ]
             }
             if (feature.overlayType === 'route') {
-                let routeName = feature.overlayName;
+                let routeName = feature.routeName;
                 if (routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName() &&
                     checkRouteWritable()
                 ) {
                     feature.additionalActions.push(
                         {
                             name: 'insert', label: 'RtBefore', onClick: (props) => {
-                                insertOtherRoute(feature.overlayName, props.routeTarget, true);
+                                insertOtherRoute(feature.overlayName, props.nextTarget, true);
                             },
-                            condition: (props) => props.routeTarget
+                            condition: (props) => props.nextTarget
                         }
                     );
                     if (currentEditor.getIndex() >= 0 && currentEditor.getPointAt()) {
                         feature.additionalActions.push(
                             {
                                 name: 'add', label: 'RtAter', onClick: (props) => {
-                                    insertOtherRoute(feature.overlayName, props.routeTarget, false);
+                                    insertOtherRoute(feature.overlayName, props.nextTarget, false);
                                 },
-                                condition: (props) => props.routeTarget
+                                condition: (props) => props.nextTarget
                             });
                     }
                 }

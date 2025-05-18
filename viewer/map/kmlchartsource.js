@@ -184,19 +184,18 @@ class KmlChartSource extends ChartSourceBase{
         let coordinates;
         if (geometry instanceof olPoint){
             rt.kind='point';
-            coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
+            coordinates=this.mapholder.fromMapToPoint(geometry.getCoordinates());
             rt.nextTarget=coordinates;
         }
         else{
             if (geometry){
-                coordinates=this.mapholder.transformFromMap(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
+                coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
                 rt.nextTarget=coordinates;
             }
             else {
-                coordinates = this.mapholder.transformFromMap(this.mapholder.pixelToCoord(pixel));
+                coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
-        rt.coordinates=coordinates;
         rt.desc=feature.get('desc')||feature.get('description');
         if (rt.desc){
             if (rt.desc.indexOf("<") >= 0){

@@ -5,8 +5,9 @@
 import routeobjects from './routeobjects';
 import navobjects from './navobjects';
 import globalStore from '../util/globalstore.jsx';
-import keys,{KeyHelper} from '../util/keys.jsx';
+import keys from '../util/keys.jsx';
 import assign from 'object-assign';
+import NavCompute from "./navcompute";
 
 const ERROR_KEYS="either provide leg or route,index and activeName as keys";
 
@@ -572,3 +573,28 @@ export class StateHelper{
 }
 
 export default  RouteEdit;
+export const getClosestRoutePoint = (route, waypoint) => {
+    let idx = route.findBestMatchingIdx(waypoint);
+    let useRhumbLine = globalStore.getData(keys.nav.routeHandler.useRhumbLine);
+    if (idx >= 0) {
+        //now we check if we are somehow between the found point and the next
+        let currentTarget = route.getPointAtIndex(idx);
+        if (currentTarget.compare(waypoint)) return currentTarget;
+        let nextTarget = route.getPointAtIndex(idx + 1);
+        if (nextTarget && currentTarget) {
+            let nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget, useRhumbLine).dts;
+            let nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget, useRhumbLine).dts;
+            //if the distance to the next wp is larger then the distance between current and next
+            //we stick at current
+            //we allow additionally a xx% catch range
+            //so we only go to the next if the distance to the nextWp is xx% smaller then the distance between the rp
+            let limit = nextDistanceRt * (100 - globalStore.getData(keys.properties.routeCatchRange, 50)) / 100;
+            if (nextDistanceWp <= limit) {
+                return nextTarget;
+            } else {
+                return currentTarget;
+            }
+        }
+        return currentTarget;
+    }
+}

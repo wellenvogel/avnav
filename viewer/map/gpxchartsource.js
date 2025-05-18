@@ -39,6 +39,7 @@ import NavCompute from "../nav/navcompute";
 import {getRouteStyles} from "./routelayer";
 import source from "ol/source/Source";
 import routeobjects from "../nav/routeobjects";
+import {getClosestRoutePoint} from "../nav/routeeditor";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -349,19 +350,28 @@ class GpxChartSource extends ChartSourceBase{
         let coordinates;
         if (geometry instanceof olPoint){
             rt.kind='point';
-            coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
+            coordinates=this.mapholder.fromMapToPoint(geometry.getCoordinates());
             rt.nextTarget=coordinates;
+            const fn=feature.get('name');
+            if (fn !== undefined) rt.nextTarget.name=fn;
         }
         else{
             if (geometry){
-                coordinates=this.mapholder.transformFromMap(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
+                coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
+                if (this.isRoute){
+                    const route=feature.get('route');
+                    if (route){
+                        rt.routeName=route.name;
+                        const routePoint=getClosestRoutePoint(route,coordinates);
+                        if (routePoint) coordinates=routePoint;
+                    }
+                }
                 rt.nextTarget=coordinates;
             }
             else {
-                coordinates = this.mapholder.transformFromMap(this.mapholder.pixelToCoord(pixel));
+                coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
-        rt.coordinates=coordinates;
         let infoItems=['desc','name','sym','time','height','sym','link','linkText'];
         infoItems.forEach((item)=>rt[item]=feature.get(item));
         this.formatFeatureInfo(rt,feature,coordinates.true);

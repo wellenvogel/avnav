@@ -239,19 +239,17 @@ class GeoJsonChartSource extends ChartSourceBase{
         let coordinates;
         if (geometry instanceof olPoint){
             rt.kind='point';
-            coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
-            rt.nextTarget=coordinates;
+            rt.nextTarget=this.mapholder.fromMapToPoint(geometry.getCoordinates());
         }
         else{
             if (geometry){
-                coordinates=this.mapholder.transformFromMap(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
+                coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
                 rt.nextTarget=coordinates;
             }
             else {
-                coordinates = this.mapholder.transformFromMap(this.mapholder.pixelToCoord(pixel));
+                coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
-        rt.coordinates=coordinates;
         let param=['desc','name','sym','link','linkText'];
         param.forEach((p)=>rt[p]=feature.get(p));
         for (let k in this.chartEntry){

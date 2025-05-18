@@ -510,8 +510,7 @@ const NavPage=(props)=>{
                             name: 'goto', label: 'Goto', onClick: () => {
                                 let target = feature.nextTarget;
                                 if (!target) return;
-                                let wp = new navobjects.WayPoint(target[0], target[1], feature.name);
-                                RouteHandler.wpOn(wp);
+                                RouteHandler.wpOn(target);
                             }
                         }
                     );
@@ -541,25 +540,25 @@ const NavPage=(props)=>{
                 let currentTarget=activeRoute.getCurrentTarget();
                 //show a "routeTo" if this is not the current target
                 if (! feature.activeRoute || ! currentTarget ||
-                    currentTarget.lon !== feature.nextTarget[0]||
-                    currentTarget.lat !== feature.nextTarget[1]
+                    ! currentTarget.compare(feature.nextTarget)
                 ) {
                     feature.additionalActions.push({
                         name: 'routeTo',
                         label: 'Route',
                         onClick: (props) => {
-                            RouteHandler.wpOn(props.routeTarget);
+                            RouteHandler.wpOn(props.nextTarget);
                         },
-                        condition: (props) => props.routeTarget
+                        condition: (props) => props.nextTarget
                     });
                 }
                 feature.additionalActions.push({
                     name:'editRoute',
                     label:'Edit',
                     onClick:()=>{
+                        let nextTarget= feature.nextTarget;
+                        if (! nextTarget) return;
                         RouteHandler.fetchRoute(feature.overlayName,false,
                             (route)=>{
-                                let nextTarget= new navobjects.WayPoint(feature.nextTarget[0],feature.nextTarget[1])
                                 let idx=route.findBestMatchingIdx(nextTarget);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);

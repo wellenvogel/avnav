@@ -438,7 +438,6 @@ MapHolder.prototype.pixelToCoord=function(pixel){
     return this.olmap.getCoordinateFromPixel(pixel);
 };
 
-
 /**
  * get the 2Dv view
  * @returns {View}
@@ -1442,6 +1441,17 @@ MapHolder.prototype.pointFromMap=function(point){
     return this.transformFromMap(point);
 };
 
+/**
+ *
+ * @param coord {olCoordinate}
+ * @returns {navobjects.Point}
+ */
+MapHolder.prototype.fromMapToPoint=function(coord){
+    let llcoord=this.transformFromMap(coord);
+    return new navobjects.Point(llcoord[0],llcoord[1]);
+}
+
+
 MapHolder.prototype._centerToReference = function () {
     if (!this.getView()) return;
     let mapSize = this.olmap.getSize();
@@ -1599,16 +1609,15 @@ MapHolder.prototype.onClick=function(evt){
     //if we have a route point we will treat this as a feature info if not handled directly
     if (wp){
         let feature = {
-            coordinates: [wp.lon, wp.lat]
+            nextTarget:wp
         }
         let routeName=wp.routeName;
         if (routeName) {
-            if (Helper.getExt(routeName) !== 'gpx') routeName += ".gpx";
             assign(feature,{
                 overlayType: 'route',
-                overlayName: routeName,
+                overlayName: (Helper.getExt(routeName) !== 'gpx')?routeName+".gpx":routeName,
+                routeName: routeName,
                 activeRoute: true,
-                nextTarget: [wp.lon, wp.lat],
                 name: wp.name
             });
         }
@@ -1623,12 +1632,9 @@ MapHolder.prototype.onClick=function(evt){
     }
     let currentTrackPoint=this.tracklayer.findTarget(evt.pixel);
     if (currentTrackPoint){
-        let mapcoordinates=this.pixelToCoord(evt.pixel);
-        let lonlat=this.transformFromMap(mapcoordinates);
         let featureInfo={
             overlayType: 'track',
             overlayName: 'current',
-            coordinates: lonlat,
             nextTarget: currentTrackPoint
         }
         if (this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})) return false;
@@ -1640,11 +1646,10 @@ MapHolder.prototype.onClick=function(evt){
             if (globalStore.getData(keys.properties.emptyFeatureInfo)){
                 let baseChart=this.getBaseChart();
                 if (!baseChart) return;
-                let coordinates=this.transformFromMap(this.pixelToCoord(evt.pixel));
+                let coordinates=this.fromMapToPoint(this.pixelToCoord(evt.pixel));
                 let featureInfo={
                     overlayType: 'chart',
                     overlayName: baseChart.getConfig().name,
-                    coordinates: coordinates,
                     nextTarget: coordinates
                 };
                 this._callGuards('click'); //do this again as some time could have passed
@@ -1727,7 +1732,7 @@ MapHolder.prototype.onClick=function(evt){
                     //we always fill the click position
                     //so we could goto
                     let mapcoordinates = this.pixelToCoord(evt.pixel);
-                    let lonlat = this.transformFromMap(mapcoordinates);
+                    let lonlat = this.fromMapToPoint(mapcoordinates);
                     finalFeature.nextTarget = lonlat;
                 }
                 this._callGuards('click'); //do this again as some time could have passed

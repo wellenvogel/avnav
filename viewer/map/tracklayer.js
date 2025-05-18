@@ -146,7 +146,7 @@ TrackLayer.prototype.setImageStyles=function(styles){
 /**
  * find the waypoint that has been clicked and set this as active
  * @param pixel
- * @returns trackpoint or undefined
+ * @returns {navobjects.Point}
  */
 TrackLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
@@ -154,7 +154,7 @@ TrackLayer.prototype.findTarget=function(pixel){
     if (! this.trackPixel || ! this.trackPixel.length) return;
     let idx = this.mapholder.findTarget(pixel, this.trackPixel, tolerance);
     if (idx >= 0 && idx < this.trackPoints.length){
-        return mapholder.pointFromMap(this.trackPoints[idx]);
+        return mapholder.fromMapToPoint(this.trackPoints[idx]);
     }
     return;
 };

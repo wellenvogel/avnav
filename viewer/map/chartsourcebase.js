@@ -279,6 +279,8 @@ class ChartSourceBase {
      * of the feature and merge this with the already fetched items
      * @param info the info to be merged in
      * @param feature the ol feature
+     * @param coordinates {navobjects.Point}
+     * @param extended
      */
     formatFeatureInfo(info, feature,coordinates,extended){
        if (! info || ! feature) return {};
@@ -291,8 +293,8 @@ class ChartSourceBase {
                     }
                 }
                 if (coordinates) {
-                    fProps.lat = coordinates[1];
-                    fProps.lon = coordinates[0];
+                    fProps.lat = coordinates.lat;
+                    fProps.lon = coordinates.lon;
                 }
                 assign(info, Helper.filteredAssign({
                     sym: true,
