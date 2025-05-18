@@ -121,7 +121,8 @@ class GpxChartSource extends ChartSourceBase{
             lineColor: '#000000',
             fillColor: 'rgba(255,255,0,0.4)',
             strokeWidth: 3,
-            circleWidth: 10
+            circleWidth: 10,
+            showName: true
 
         };
         for (let k in styleParam) {
@@ -161,7 +162,7 @@ class GpxChartSource extends ChartSourceBase{
                     }),
                     radius: styleParam.circleWidth / 2,
                 }),
-                text: getTextStyle(1)
+                text: styleParam.showName?getTextStyle(1):undefined
             })
         };
         this.source=undefined;
@@ -260,9 +261,10 @@ class GpxChartSource extends ChartSourceBase{
                 fill: base.getImage().getFill(),
                 radius: globalstore.getData(keys.properties.routeWpSize) * this.getScale()
             }),
-            text: base.getText().clone()
+            text: (base.getText())?base.getText().clone():undefined
         });
-        if (name) rt.getText().setText(name);
+        const textStyle=rt.getText();
+        if (name && textStyle) textStyle.setText(name);
         return rt;
     }
     prepareInternal() {
@@ -426,6 +428,7 @@ export const readFeatureInfoFromGpx=(gpx)=>{
             rt[stylePrefix+"lineColor"]=true;
             rt[stylePrefix+"fillColor"]=true;
             rt[stylePrefix + "lineWidth"] = true;
+            rt[stylePrefix+ "showName"] = true;
             rt.hasAny=true;
         }
         else if (geo instanceof olMultiLineString){

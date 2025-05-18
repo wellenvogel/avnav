@@ -676,6 +676,14 @@ const checkRouteWritable = (dialogCtxRef) => {
     return false;
 };
 
+
+const getTargetFromInfo=(feature)=> {
+    const target = feature.routeTarget ? feature.routeTarget :
+        feature.nextTarget ? new navobjects.WayPoint(feature.nextTarget[0], feature.nextTarget[1]) : undefined;
+    if (target && !target.name) target.name = feature.name;
+    return target;
+}
+
 const DEFAULT_ROUTE = "default";
 
 const EditRoutePage = (props) => {
@@ -881,42 +889,33 @@ const EditRoutePage = (props) => {
         if (evdata.type === MapHolder.EventTypes.FEATURE) {
             let feature = evdata.feature;
             if (!feature) return;
-            if (feature.nextTarget && routeWritable) {
+            if ((feature.nextTarget||feature.routeTarget) && routeWritable) {
                 feature.additionalActions = [
                     {
-                        name: 'insert', label: 'Before', onClick: () => {
+                        name: 'insert', label: 'Before', onClick: (info) => {
+                            const target=getTargetFromInfo(info);
+                            if (! target) return;
                             let currentEditor = getCurrentEditor();
-                            let target = new navobjects.WayPoint(
-                                feature.nextTarget[0],
-                                feature.nextTarget[1],
-                                feature.name
-                            )
                             MapHolder.setCenter(target);
                             currentEditor.addWaypoint(target, true);
                             setLastCenteredWp(currentEditor.getIndex());
                         }
                     },
                     {
-                        name: 'add', label: 'After', onClick: () => {
+                        name: 'add', label: 'After', onClick: (info) => {
+                            const target=getTargetFromInfo(info);
+                            if (! target) return;
                             let currentEditor = getCurrentEditor();
-                            let target = new navobjects.WayPoint(
-                                feature.nextTarget[0],
-                                feature.nextTarget[1],
-                                feature.name
-                            )
                             MapHolder.setCenter(target);
                             currentEditor.addWaypoint(target);
                             setLastCenteredWp(currentEditor.getIndex());
                         }
                     },
                     {
-                        name: 'center', label: 'Center', onClick: () => {
+                        name: 'center', label: 'Center', onClick: (info) => {
+                            const target=getTargetFromInfo(info);
+                            if (! target) return;
                             let currentEditor = getCurrentEditor();
-                            let target = new navobjects.WayPoint(
-                                feature.nextTarget[0],
-                                feature.nextTarget[1],
-                                feature.name
-                            )
                             MapHolder.setCenter(target);
                             currentEditor.changeSelectedWaypoint(target);
                             setLastCenteredWp(currentEditor.getIndex());
