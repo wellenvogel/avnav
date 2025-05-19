@@ -123,7 +123,6 @@ export const ParamValueInput=(props)=>{
         key={param.name.replace(/  */,'')}
         label={param.displayName}
         onChange={inputFunction}
-        showDialogFunction={props.showDialogFunction}
         showUnset={true}
         list={(current)=>getList(param.getList(),current)}
         value={current}
@@ -134,7 +133,6 @@ ParamValueInput.propTypes={
     param: PropTypes.object.isRequired,
     currentValues: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
-    showDialogFunction: PropTypes.func.isRequired,
     className: PropTypes.string,
     onlyOwnParam: PropTypes.bool
 }

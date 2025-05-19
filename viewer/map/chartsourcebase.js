@@ -31,6 +31,9 @@ import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
+import featureFormatters from "../util/featureFormatter";
+import {Feature as olFeature} from 'ol';
+import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -333,8 +336,46 @@ class ChartSourceBase {
         if (! this.isReady()) return false;
         return this.chartEntry.hasFeatureInfo||false;
     }
-
-
+    /**
+     *
+     * @param supportedSettings {Object[]}
+     */
+    buildStyleConfig(supportedSettings){
+        let rt={};
+        if (! supportedSettings) return rt;
+        supportedSettings.forEach((setting)=>{
+            const key=setting.name;
+            if (this.chartEntry[setting.name] !== undefined){
+                rt[key]=this.chartEntry[setting.name];
+            }
+            else{
+                rt[key]=setting.default;
+            }
+        })
+        return rt;
+    }
+}
+class ConfigHelper extends Object {
+    constructor(props) {
+        super();
+        this.apply(props);
+    }
+    apply(props){
+        if (! props) return;
+        for (let k in props) {
+            this[k] = props[k];
+        }
+    }
+    toString() {
+        if (this.name !== undefined) return this.name;
+        return super.toString();
+    }
+    clone(updates){
+        let rt=new ConfigHelper()
+        rt.apply(this);
+        rt.apply(updates);
+        return rt;
+    }
 }
 
 /**
@@ -343,22 +384,166 @@ class ChartSourceBase {
  * as this could easily create circular dependencies
  * @type {*[]}
  */
-ChartSourceBase.StyleParam={
-    lineWidth:{type:'NUMBER',list:[1,10],displayName:'line width',default: 3},
-    lineColor:{type:'COLOR',displayName:'line color',default:'#000000' },
-    fillColor:{type:'COLOR',displayName:'fill color',default: 'rgba(255,255,0,0.4)'},
-    strokeWidth:{type:'NUMBER',displayName:'stroke width',default: 3,list:[1,40]},
-    circleWidth:{type:'NUMBER',displayName:'circle width',default: 10,list:[1,40]},
-    showName:{type:'BOOLEAN',displayName:'show feature name',default: false},
-    textSize:{type:'NUMBER',displayName:'font size',default: 16},
-    textOffset:{type:'NUMBER',displayName: 'text offset',default: 32}
+export const editableOverlayParameters={
+    minZoom:new ConfigHelper({name:'minZoom',displayName:'min zoom',type:'NUMBER',default:0}),
+    maxZoom:new ConfigHelper({name:'maxZoom',displayName:'max zoom',type:'NUMBER',default: 0}),
+    minScale:new ConfigHelper({name:'minScale',displayName:'min scale',type: 'NUMBER', default: 0}),
+    maxScale:new ConfigHelper({name:'maxScale',displayName:'max scale',type:'NUMBER', default: 0}),
+    allowOnline:new ConfigHelper({name: 'allowOnline',type:'BOOLEAN',displayName: 'allow online',default:false}),
+    showText:new ConfigHelper({name:'showText',type:'BOOLEAN',displayName: 'show text',default:false}),
+    allowHtml:new ConfigHelper({name:'allowHtml',type:'BOOLEAN',displayName: 'allow html',default: false}),
+    icon: new ConfigHelper({name:'icons',displayName: 'icon file',type:'SELECT',readOnly:false}),
+    defaultIcon:new ConfigHelper({name:'defaultIcon',displayName:'default icon',type:'ICON'}),
+    featureFormatter: new ConfigHelper({name:'featureFormatter',displayName:'featureFormatter',type:'SELECT',list:()=>{
+            let formatters = [{label: '-- none --', value: undefined}];
+            for (let f in featureFormatters) {
+                if (typeof (featureFormatters[f]) === 'function') {
+                    formatters.push({label: f, value: f});
+                }
+            }
+            return formatters;
+        }}),
+    lineWidth:new ConfigHelper({name:'style.lineWidth',type:'NUMBER',list:[1,10],displayName:'line width',default: 3}),
+    lineColor:new ConfigHelper({name: 'style.lineColor',type:'COLOR',displayName:'line color',default:'#000000' }),
+    fillColor:new ConfigHelper({name:'style.fillColor',type:'COLOR',displayName:'fill color',default: 'rgba(255,255,0,0.4)'}),
+    strokeWidth:new ConfigHelper({name: 'style.strokeWidth',type:'NUMBER',displayName:'stroke width',default: 3,list:[1,40]}),
+    strokeColor:new ConfigHelper({name: 'style.strokeColor',type:'COLOR',displayName:'stroke color',default: '#ffffff'}),
+    circleWidth:new ConfigHelper({name: 'style.circleWidth', type:'NUMBER',displayName:'circle width',default: 10,list:[1,40]}),
+    showName:new ConfigHelper({name: 'style.showName', type:'BOOLEAN',displayName:'show feature name',default: false}),
+    textSize:new ConfigHelper({name: 'style.textSize', type:'NUMBER',displayName:'font size',default: 16}),
+    textOffset:new ConfigHelper({name: 'style.textOffset', type:'NUMBER',displayName: 'text offset',default: 32}),
 }
+export const DEFAULT_SETTINGS=[editableOverlayParameters.minZoom,editableOverlayParameters.maxZoom];
+export const SCALE_SETTINGS=[editableOverlayParameters.minScale,editableOverlayParameters.maxScale];
+export const SYMBOL_SETTINGS=[editableOverlayParameters.icon,editableOverlayParameters.defaultIcon].concat(SCALE_SETTINGS);
+export const CIRCLE_SETTINGS=[editableOverlayParameters.fillColor,editableOverlayParameters.circleWidth]
+export const TEXT_SETTINGS=[editableOverlayParameters.showText,editableOverlayParameters.fillColor,editableOverlayParameters.strokeWidth,editableOverlayParameters.textSize,editableOverlayParameters.textOffset]
+export const LINE_SETTINGS=[editableOverlayParameters.lineWidth,editableOverlayParameters.lineColor]
 export const getKnownStyleParam=()=>{
     let rt=[];
-    for (let k in ChartSourceBase.StyleParam){
-        rt.push(assign({},ChartSourceBase.StyleParam[k],{name:'style.'+k}));
+    for (let k in editableOverlayParameters){
+        const p=editableOverlayParameters[k];
+        if (Helper.startsWith(p.name,'style.'))
+        rt.push({...p});
     }
     return rt;
 }
+/**
+ *
+ * @param settings {Object}
+ * @param items
+ * @param [opt_onlyExisting] {boolean} - if set only set items if already there
+ */
+export const addToSettings=(settings,items,opt_onlyExisting)=>{
+    if (! (items instanceof Array)) items=[items];
+    items.forEach((item)=>{
+        if (!item) return;
+        if (settings[item.name] !== undefined ||  !opt_onlyExisting)
+            settings[item.name]=item;
+    })
+}
+export const orderSettings=(settings)=>{
+    if (! settings) return;
+    let ordered=[];
+    let handled={};
+    for (let k in editableOverlayParameters){
+        const name=editableOverlayParameters[k].name;
+        if (settings[name] !== undefined){
+            handled[name]=true;
+            ordered.push(settings[name]);
+        }
+    }
+    for (let k in settings){
+        const name=settings[k].name;
+        if (name && ! handled[name]){
+            ordered.push(settings[k]);
+        }
+    }
+    return ordered;
+}
+
+export class FoundFeatureFlags{
+    constructor() {
+        this.hasAny=false;
+        this.hasPoint=false;
+        this.hasNonSymbolPoint=false;
+        this.hasSymbol=false;
+        this.hasLink=false;
+        this.hasLineString=false;
+        this.hasMultiline=false;
+        this.hasLink=false;
+        this.hasDescription=false;
+        this.hasHtml=false;
+        this.hasText=false;
+    }
+
+    /**
+     * @callback ParseFeatureCallback
+     * @param feature {olFeature}
+     * @param rtv {FoundFeatureFlags}
+     */
+    /**
+     * parse the found list of features
+     * @param features {olFeature[]}
+     * @param [featureCallback] {(ParseFeatureCallback|undefined)}
+     * @return {FoundFeatureFlags}
+     */
+    static parseFoundFeatures(features,featureCallback){
+        let rt=new FoundFeatureFlags();
+        if (! features) return rt;
+        features.forEach((feature)=>{
+            if (featureCallback) featureCallback(feature,rt);
+            const hasSymbol=feature.get('symbol') !== undefined;
+            if (feature.get('link') !== undefined) rt.hasLink=true;
+            const desc=feature.get('desc')||feature.get('description');
+            if (desc){
+                rt.hasDescription=true;
+                if (desc.indexOf("<")>=0) rt.hasHtml=true;
+            }
+            const geometry=feature.getGeometry();
+            if (geometry) rt.hasAny=true;
+            if (geometry instanceof olPoint){
+               rt.hasPoint=true;
+               if (!hasSymbol) rt.hasNonSymbolPoint=true;
+               else rt.hasSymbol=true;
+            }
+            else if (geometry instanceof olLineString){
+                rt.hasLineString=true;
+            }
+            else if(geometry instanceof olMultiLineString){
+                rt.hasMultiline=true;
+            }
+        });
+        return rt;
+    }
+
+    /**
+     * @returns {Object.<string,Object>} a map of settings
+     */
+    createSettings(){
+        let rt={};
+        addToSettings(rt,DEFAULT_SETTINGS);
+        if (this.hasSymbol) {
+            addToSettings(rt,SYMBOL_SETTINGS)
+            addToSettings(rt,SCALE_SETTINGS);
+        }
+        if (this.hasLink) {
+            addToSettings(rt,SYMBOL_SETTINGS)
+            addToSettings(rt,SCALE_SETTINGS);
+        }
+        if (this.hasNonSymbolPoint){
+            addToSettings(rt,CIRCLE_SETTINGS);
+            addToSettings(rt,SCALE_SETTINGS);
+        }
+        if (this.hasMultiline || this.hasLineString){
+            addToSettings(rt,LINE_SETTINGS);
+        }
+        if (this.hasText){
+            addToSettings(rt,TEXT_SETTINGS);
+        }
+        return rt;
+    }
+}
+
 
 export default  ChartSourceBase;

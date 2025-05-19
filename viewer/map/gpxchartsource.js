@@ -24,22 +24,23 @@
  */
 
 import Requests from '../util/requests.js';
-import ChartSourceBase from './chartsourcebase.js';
+import ChartSourceBase, {
+    addToSettings, editableOverlayParameters, FoundFeatureFlags, orderSettings
+} from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {Feature as olFeature} from 'ol';
 import {GPX as olGPXFormat} from 'ol/format';
-import Helper from "../util/helper";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import navobjects from "../nav/navobjects";
 import NavCompute from "../nav/navcompute";
 import {getRouteStyles} from "./routelayer";
-import source from "ol/source/Source";
 import routeobjects from "../nav/routeobjects";
 import {getClosestRoutePoint} from "../nav/routeeditor";
+import Mapholder from "./mapholder";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -99,6 +100,19 @@ const getRoutePointName=(feature,idx)=>{
     return route.points[idx].name;
 }
 
+const getSupportedStyleParameters=(isRoute)=>{
+    return [
+        editableOverlayParameters.lineWidth.clone({default:globalstore.getData(isRoute?keys.properties.routeWidth:keys.properties.trackWidth)}),
+        editableOverlayParameters.lineColor.clone({efault:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor)}),
+        editableOverlayParameters.fillColor.clone({default:isRoute?globalstore.getData(keys.properties.routeColor):'rgba(255,255,0,0.4)'}),
+        editableOverlayParameters.strokeWidth.clone({default:0}),
+        editableOverlayParameters.strokeColor.clone({default:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor) }),
+        editableOverlayParameters.circleWidth.clone({default:globalstore.getData(keys.properties.routeWpSize) }),
+        editableOverlayParameters.showName.clone({default:isRoute}),
+        editableOverlayParameters.textSize.clone({default:globalstore.getData(keys.properties.routingTextSize)}),
+    ]
+}
+
 class GpxChartSource extends ChartSourceBase{
     /**
      *
@@ -117,55 +131,8 @@ class GpxChartSource extends ChartSourceBase{
         super(mapholer,chartEntry);
         this.styleMap={};
         this.styleFunction=this.styleFunction.bind(this);
-        let styleParam={
-            lineWidth:3,
-            lineColor: '#000000',
-            fillColor: 'rgba(255,255,0,0.4)',
-            strokeWidth: 3,
-            circleWidth: 10,
-            showName: true
+        this.styles={};
 
-        };
-        for (let k in styleParam) {
-            if (chartEntry[stylePrefix + k] !== undefined) {
-                styleParam[k] = chartEntry[stylePrefix + k];
-            }
-        }
-        this.styles = {
-            Point: new olStyle({
-                image: new olCircle({
-                    fill: new olFill({
-                        color: styleParam.fillColor,
-                    }),
-                    radius: styleParam.circleWidth/2,
-                    stroke: new olStroke({
-                        color: (styleParam.strokeWidth>0)?styleParam.lineColor:this.COLOR_INVISIBLE,
-                        width: styleParam.strokeWidth,
-                    })
-                })
-            }),
-            LineString: new olStyle({
-                stroke: new olStroke({
-                    color: (styleParam.lineWidth>0)?styleParam.lineColor:this.COLOR_INVISIBLE,
-                    width: styleParam.lineWidth,
-                })
-            }),
-            MultiLineString: new olStyle({
-                stroke: new olStroke({
-                    color: (styleParam.lineWidth>0)?styleParam.lineColor:this.COLOR_INVISIBLE,
-                    width: styleParam.lineWidth,
-                })
-            }),
-            RoutePoint: new olStyle({
-                image: new olCircle({
-                    fill: new olFill({
-                        color: styleParam.fillColor,
-                    }),
-                    radius: styleParam.circleWidth / 2,
-                }),
-                text: styleParam.showName?getTextStyle(1):undefined
-            })
-        };
         this.source=undefined;
         this.isRoute=false;
         globalstore.register(()=>{
@@ -182,6 +149,47 @@ class GpxChartSource extends ChartSourceBase{
             this.source.refresh();
             return true;
         }
+    }
+    buildStyles(){
+        const supportedStyles=getSupportedStyleParameters(this.isRoute); //get the defaults
+        let styleParam=this.buildStyleConfig(supportedStyles);
+        this.styles = {
+            Point: new olStyle({
+                image: new olCircle({
+                    fill: new olFill({
+                        color: styleParam[editableOverlayParameters.fillColor],
+                    }),
+                    radius: styleParam[editableOverlayParameters.circleWidth]/2,
+                    stroke: new olStroke({
+                        color: (styleParam[editableOverlayParameters.strokeWidth]>0)?
+                            styleParam[editableOverlayParameters.lineColor]:this.COLOR_INVISIBLE,
+                        width: styleParam[editableOverlayParameters.strokeWidth],
+                    })
+                })
+            }),
+            LineString: new olStyle({
+                stroke: new olStroke({
+                    color: (styleParam[editableOverlayParameters.lineWidth]>0)?
+                        styleParam[editableOverlayParameters.lineColor]:this.COLOR_INVISIBLE,
+                    width: styleParam[editableOverlayParameters.lineWidth],
+                })
+            }),
+            MultiLineString: new olStyle({
+                stroke: new olStroke({
+                    color: (styleParam[editableOverlayParameters.lineWidth]>0)?styleParam[editableOverlayParameters.lineColor]:this.COLOR_INVISIBLE,
+                    width: styleParam[editableOverlayParameters.lineWidth],
+                })
+            }),
+            RoutePoint: new olStyle({
+                image: new olCircle({
+                    fill: new olFill({
+                        color: styleParam[editableOverlayParameters.fillColor],
+                    }),
+                    radius: styleParam[editableOverlayParameters.circleWidth] / 2,
+                }),
+                text: styleParam[editableOverlayParameters.showText]?getTextStyle(1):undefined
+            })
+        };
     }
     styleFunction(feature,resolution) {
 
@@ -324,6 +332,7 @@ class GpxChartSource extends ChartSourceBase{
                 },
                 wrapX: false
             });
+            this.buildStyles();
             let layerOptions={
                 source: this.source,
                 style: this.styleFunction,
@@ -375,11 +384,6 @@ class GpxChartSource extends ChartSourceBase{
         let infoItems=['desc','name','sym','time','height','sym','link','linkText'];
         infoItems.forEach((item)=>rt[item]=feature.get(item));
         this.formatFeatureInfo(rt,feature,coordinates.true);
-        for (let k in this.chartEntry){
-            if (Helper.startsWith(k,stylePrefix)){
-                rt[k]=this.chartEntry[k];
-            }
-        }
         return rt;
     }
 }
@@ -411,49 +415,21 @@ const stripExtensions=(gpx)=>{
  *
  */
 export const readFeatureInfoFromGpx=(gpx)=>{
-    let parser=new olGPXFormat();
-    let rt={
-        styles:{}
-    };
+    let parser=new OwnGpx(Mapholder);
     let features=parser.readFeatures(stripExtensions(gpx));
-    let nonSymbolPoints=false;
-    features.forEach((feature)=>{
-        let hasSymbol=false;
-        if (! feature) return;
-        if (feature.get('sym')){
-            rt.hasSymbols=true;
-            hasSymbol=true;
-        }
-        if (feature.get('link')){
-            rt.hasLinks=true;
-        }
-        let geo=feature.getGeometry();
-        if (geo instanceof olPoint) {
-            rt.hasWaypoint = true;
-            rt.hasAny=true;
-            if (! hasSymbol) nonSymbolPoints=true;
-        }
-        else if (geo instanceof olLineString){
+    const featureFlags=FoundFeatureFlags.parseFoundFeatures(features,(feature,rt)=>{
+        if (feature.get('route')) {
             rt.hasRoute=true;
-            rt[stylePrefix+"lineColor"]=true;
-            rt[stylePrefix+"fillColor"]=true;
-            rt[stylePrefix + "lineWidth"] = true;
-            rt[stylePrefix+ "showName"] = true;
-            rt.hasAny=true;
+            rt.hasText=true;
+            rt.hasNonSymbolPoint=true;
         }
-        else if (geo instanceof olMultiLineString){
-            rt.hasTrack=true;
-            rt[stylePrefix+"lineColor"]=true;
-            rt[stylePrefix + "lineWidth"] = true;
-            rt.hasAny=true;
-        }
-    })
-    if (nonSymbolPoints){
-        rt[stylePrefix+"fillColor"]=true;
-        rt[stylePrefix+"lineColor"]=true;
-        rt[stylePrefix+"circleWidth"]=true;
+    });
+    let settings=featureFlags.createSettings();
+    addToSettings(settings,editableOverlayParameters.featureFormatter)
+    addToSettings(settings,getSupportedStyleParameters(featureFlags.hasRoute),true);
+    return {
+        hasAny: featureFlags.hasAny,
+        settings: orderSettings(settings)
     }
-    rt.allowFormatter=true;
-    return rt;
 
 }

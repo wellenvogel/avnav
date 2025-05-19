@@ -400,11 +400,12 @@ const OverlayItemDialog = (props) => {
                                 />
 
                             }
-                            {getKnownStyleParam().map((param) => {
-                                if (!itemInfo[param.name]) return null;
+                            {itemInfo.settings && itemInfo.settings.map((param) => {
+                                let ipParam=createEditableParameter(param.name, param.type, param.list, param.displayName, param.default);
+                                if (ipParam && param.description) ipParam.description=param.description;
                                 return (
                                     <ParamValueInput
-                                        param={createEditableParameter(param.name, param.type, param.list, param.displayName, param.default)}
+                                        param={ipParam}
                                         currentValues={current || {}}
                                         onChange={(nv) => updateCurrent(nv)}
                                         onlyOwnParam={true}

@@ -26,6 +26,8 @@
 
 import React from "react";
 import CloneDeep from 'clone-deep';
+import {DialogRow, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {IconDialog} from "./IconDialog";
 
 export class EditableParameter{
     constructor(name,type,list,displayName){
@@ -132,8 +134,31 @@ EditableParameter.TYPE={
     FLOAT: 3,
     SELECT:4,
     BOOLEAN:5,
-    COLOR:6
+    COLOR:6,
+    ICON: 7
 };
+
+export class IconParameter extends EditableParameter{
+    constructor(name, type, list, displayName) {
+        super(name, EditableParameter.TYPE.ICON, list, displayName);
+    }
+    render=(props)=>{
+        if (! props.currentValues) return null;
+        const dialogContext=useDialogContext();
+        return <DialogRow
+            label={props.param.displayName}
+            value={this.getValueForDisplay(props.currentValues)}
+            onClick={()=>{
+                showPromiseDialog(dialogContext,(dprops)=><IconDialog/>)
+                    .then((selected)=>{
+                        let rt={};
+                        rt[props.param.name]=selected.url;
+                        props.onChange(rt);
+                    })
+                    .catch(()=>{})
+            }}/>
+    }
+}
 
 
 export const createEditableParameter=(name, type, list, displayName,opt_default)=>{
@@ -149,6 +174,9 @@ export const createEditableParameter=(name, type, list, displayName,opt_default)
         case EditableParameter.TYPE.BOOLEAN:
         case EditableParameter.TYPE.COLOR:
             rt=new EditableParameter(name, type, list, displayName);
+            break;
+        case EditableParameter.TYPE.ICON:
+            rt=new IconParameter(name,type,list,displayName);
     }
     if (rt && opt_default !== undefined){
         rt.default=opt_default;
