@@ -12,8 +12,8 @@ repositories {
     }
 }
 dependencies{
-    compile files("$rootDir"+File.separator+"lib"+File.separator+mobacJar)
-    compile([name:"jakarta.xml.bind-api",group:"jakarta.xml.bind",  version:"3.0.0"])
+    implementation files("$rootDir"+File.separator+"lib"+File.separator+mobacJar)
+    implementation([name:"jakarta.xml.bind-api",group:"jakarta.xml.bind",  version:"3.0.0"])
 }
 def srcbase=new File(project.rootDir,"src")
 def srcsub="mobac"+File.separator+"mapsources"+File.separator+"mappacks"+File.separator+"avnavbase"
@@ -44,7 +44,7 @@ jar.dependsOn writeVersion
 jar.dependsOn copyDefs
 println("##: classes dir ${sourceSets.main.output.classesDirs[0]}")
 jar{
-    archiveName="mp-avnavbase.jar"
+    archiveFileName="mp-avnavbase.jar"
     manifest.getAttributes().with{
         put 'MapPackVersion', '${mobac.mappackversion}'
         put 'MapPackRevision',revision
@@ -60,8 +60,8 @@ jar{
 
 //create a zip file that contains all
 task createZip(type: org.gradle.api.tasks.bundling.Zip){
-    archiveName="avnav-mapsources.zip"
-    destinationDir new File(project.buildDir,"libs")
+    archiveFileName="avnav-mapsources.zip"
+    destinationDirectory=layout.buildDirectory.dir("libs")
     from jar.archivePath
     from project.rootDir,{
         include "*exml"
@@ -76,7 +76,7 @@ createZip.dependsOn(build)
 def testdir=new File(project.buildDir,"test")
 def testmapsrc=new File(testdir,"mapsources")
 task prepareTest(type: org.gradle.api.tasks.Copy){
-    from project.libsDir,{
+    from layout.buildDirectory.dir("libs/dependencies"),{
         include "*.jar"
         into "mapsources"
     }
