@@ -73,7 +73,7 @@ export const IconDialog=(props)=>{
     const [iconList,setIconList]=useState([]);
     const [uploadSequence,setUploadSequence]=useState(0);
     const loadIcons = (opt_active,opt_activeType) => {
-        setIconList([]);
+        setIconList(props.addEmpty?[{label:'--- none ---',value:undefined}]:[]);
         SOURCES.forEach((src) => {
             const active=!!(sources & src.flag);
             if (! active) return;
@@ -177,5 +177,6 @@ export const IconDialog=(props)=>{
 IconDialog.propTypes={
     onChange: PropTypes.func,
     resolveFunction: PropTypes.func,
-    allowUpload: PropTypes.bool
+    allowUpload: PropTypes.bool,
+    addEmpty: PropTypes.bool
 }

@@ -28,6 +28,7 @@ import React from "react";
 import CloneDeep from 'clone-deep';
 import {DialogRow, showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
+import {InputReadOnly} from "./Inputs";
 
 export class EditableParameter{
     constructor(name,type,list,displayName){
@@ -142,14 +143,23 @@ export class IconParameter extends EditableParameter{
     constructor(name, type, list, displayName) {
         super(name, EditableParameter.TYPE.ICON, list, displayName);
     }
+    renderValue=({url})=>{
+        return <React.Fragment>
+            {url && <span className="icon" style={{backgroundImage: "url('" + url + "')"}}/>}
+            {url&&<span className={"url"}>{url.replace(/.*\//,'')}</span>}
+        </React.Fragment>
+    }
     render=(props)=>{
         if (! props.currentValues) return null;
         const dialogContext=useDialogContext();
-        return <DialogRow
+        const RV=(vprops)=>this.renderValue(vprops);
+        return <InputReadOnly
+            className={'iconInput'}
+            dialogRow={true}
             label={props.param.displayName}
-            value={this.getValueForDisplay(props.currentValues)}
+            value={<RV url={this.getValueForDisplay(props.currentValues)}/>}
             onClick={()=>{
-                showPromiseDialog(dialogContext,(dprops)=><IconDialog/>)
+                showPromiseDialog(dialogContext,(dprops)=><IconDialog {...dprops} addEmpty={props.param.mandatory !== true} />)
                     .then((selected)=>{
                         let rt={};
                         rt[props.param.name]=selected.url;

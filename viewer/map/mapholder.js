@@ -535,7 +535,8 @@ MapHolder.prototype.renderTo=function(div){
 
 MapHolder.prototype.setChartEntry=function(entry,opt_noRemote){
     //set the new base chart
-    this._baseChart=this.createChartSource(assign({},entry,{type:'chart',enabled:true,baseChart:true}));
+    const baseClass=this.findChartSource('chart',entry.url);
+    this._baseChart=new baseClass(this,{...entry,type:'chart',enabled:true,baseChart:true})
     try{
         LocalStorage.setItem(STORAGE_NAMES.LASTCHART,undefined,this._baseChart.getChartKey());
     }catch(e){}
@@ -609,28 +610,26 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
  *          url (mandatory)
  *          other parameter depending on source
  *
- * @returns {*}
+ * @returns {ChartSourceBase}
  */
 
-MapHolder.prototype.createChartSource=function(description){
-    if (description.type=='chart'){
-        return new AvNavChartSource(this,description);
+MapHolder.prototype.findChartSource=function(type,url){
+    if (type=='chart'){
+        return AvNavChartSource;
     }
-    if (! description.url){
+    if (! url){
         throw Error("missing url for overlay");
     }
-    if (description.url.match(/\.gpx$/)){
-        return new GpxChartSource(this,description);
+    if (url.match(/\.gpx$/)){
+        return GpxChartSource;
     }
-    if (description.url.match(/\.kml$/)){
-        return new KmlChartSource(this,description);
+    if (url.match(/\.kml$/)){
+        return KmlChartSource;
     }
-    if (description.url.match(/\.geojson$/)){
-        return new GeoJsonChartSource(this,description);
+    if (url.match(/\.geojson$/)){
+        return GeoJsonChartSource;
     }
-    throw Error("unsupported overlay: "+description.url)
-
-
+    throw Error("unsupported overlay: "+url)
 };
 
 MapHolder.prototype.getBaseChart=function(){
@@ -730,8 +729,8 @@ MapHolder.prototype.loadMap=function(div){
                         newSources.push(chartSource);
                         return;
                     }
-                    let overlaySource = this.createChartSource(overlay);
-                    if (overlaySource) newSources.push(overlaySource);
+                    const overlaySourceClass = this.findChartSource(overlay.type,overlay.url);
+                    if (overlaySourceClass) newSources.push(new overlaySourceClass(this,overlay));
                 });
                 checkChanges();
             })

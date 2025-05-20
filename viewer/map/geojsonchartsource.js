@@ -23,27 +23,33 @@
  ###############################################################################
  */
 
-import ChartSourceBase from './chartsourcebase.js';
+import ChartSourceBase, {
+    addToSettings,
+    editableOverlayParameters,
+    FoundFeatureFlags,
+    orderSettings
+} from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
-import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
+import {Point as olPoint} from 'ol/geom';
 import {GeoJSON as olGeoJSON} from 'ol/format';
-import Helper from "../util/helper";
-import {stylePrefix} from "./gpxchartsource";
-import assign from "object-assign";
 
-//TODO: check against style param from chartsourcebase
-let styleParam={
-    lineWidth:3,
-    lineColor: '#000000',
-    fillColor: 'rgba(255,255,0,0.4)',
-    strokeWidth: 3,
-    circleWidth: 10,
-    showName: false,
-    textSize: 16,
-    textOffset: 32
-};
+const supportedStyleParameters= {
+    lineWidth:editableOverlayParameters.lineWidth,
+    lineColor: editableOverlayParameters.lineColor,
+    fillColor: editableOverlayParameters.fillColor,
+    strokeWidth: editableOverlayParameters.strokeWidth,
+    circleWidth: editableOverlayParameters.circleWidth,
+    showText: editableOverlayParameters.showText,
+    textSize: editableOverlayParameters.textSize,
+    textOffset: editableOverlayParameters.textOffset,
+    textColor: editableOverlayParameters.textColor,
+    defaultIcon: editableOverlayParameters.defaultIcon,
+    icon: editableOverlayParameters.icon,
+    featureFormatter: editableOverlayParameters.featureFormatter
+}
+
 class GeoJsonChartSource extends ChartSourceBase{
     /**
      *
@@ -63,23 +69,18 @@ class GeoJsonChartSource extends ChartSourceBase{
         this.styleMap={};
         this.userIcons={};
         this.styleFunction=this.styleFunction.bind(this);
-        let ourStyleParam=assign({},styleParam);
-        for (let k in ourStyleParam) {
-            if (chartEntry[stylePrefix + k] !== undefined) {
-                ourStyleParam[k] = chartEntry[stylePrefix + k];
-            }
-        }
+        this.styleParameters=this.buildStyleConfig(supportedStyleParameters);
         let image;
-        if (this.chartEntry.defaultIcon) {
+        if (this.styleParameters[supportedStyleParameters.defaultIcon]) {
             image=new olIcon({
-                src: this.chartEntry.defaultIcon
+                src: this.styleParameters[supportedStyleParameters.defaultIcon]
             })
         }
         else {
             image = new olCircle({
-                radius: ourStyleParam.circleWidth/2,
+                radius: this.styleParameters[supportedStyleParameters.circleWidth]/2,
                 fill: new olFill({
-                    color: ourStyleParam.fillColor,
+                    color: this.styleParameters[supportedStyleParameters.fillColor],
                 })
             });
         }
@@ -90,14 +91,14 @@ class GeoJsonChartSource extends ChartSourceBase{
             }),
             'LineString': new olStyle({
                 stroke: new olStroke({
-                    color: ourStyleParam.lineColor,
-                    width: ourStyleParam.lineWidth,
+                    color: this.styleParameters[supportedStyleParameters.lineColor],
+                    width: this.styleParameters[supportedStyleParameters.lineWidth],
                 }),
             }),
             'MultiLineString': new olStyle({
                 stroke: new olStroke({
-                    color: ourStyleParam.lineColor,
-                    width: ourStyleParam.lineWidth,
+                    color: this.styleParameters[supportedStyleParameters.lineColor],
+                    width: this.styleParameters[supportedStyleParameters.lineWidth],
                 }),
             }),
             'MultiPoint': new olStyle({
@@ -105,39 +106,39 @@ class GeoJsonChartSource extends ChartSourceBase{
             }),
             'MultiPolygon': new olStyle({
                 stroke: new olStroke({
-                    color: ourStyleParam.lineColor,
-                    width: ourStyleParam.lineWidth,
+                    color: this.styleParameters[supportedStyleParameters.lineColor],
+                    width: this.styleParameters[supportedStyleParameters.lineWidth],
                 }),
                 fill: new olFill({
-                    color: ourStyleParam.fillColor,
+                    color: this.styleParameters[supportedStyleParameters.fillColor],
                 }),
             }),
             'Polygon': new olStyle({
                 stroke: new olStroke({
-                    color: ourStyleParam.lineColor,
-                    width: ourStyleParam.lineWidth,
+                    color: this.styleParameters[supportedStyleParameters.lineColor],
+                    width: this.styleParameters[supportedStyleParameters.lineWidth],
                 }),
                 fill: new olFill({
-                    color: ourStyleParam.fillColor,
+                    color: this.styleParameters[supportedStyleParameters.fillColor],
                 }),
             }),
             'GeometryCollection': new olStyle({
                 stroke: new olStroke({
-                    color: ourStyleParam.lineColor,
-                    width: ourStyleParam.lineWidth,
+                    color: this.styleParameters[supportedStyleParameters.lineColor],
+                    width: this.styleParameters[supportedStyleParameters.lineWidth],
                 }),
                 fill: new olFill({
-                    color: ourStyleParam.fillColor,
+                    color: this.styleParameters[supportedStyleParameters.fillColor],
                 }),
                 image: image,
             }),
             'Circle': new olStyle({
                 stroke: new olStroke({
-                    color: ourStyleParam.lineColor,
-                    width: ourStyleParam.lineWidth,
+                    color: this.styleParameters.lineColor,
+                    width: this.styleParameters.lineWidth,
                 }),
                 fill: new olFill({
-                    color: ourStyleParam.fillColor,
+                    color: this.styleParameters.fillColor,
                 }),
             }),
         };
@@ -160,11 +161,8 @@ class GeoJsonChartSource extends ChartSourceBase{
     styleFunction(feature,resolution) {
         let type=feature.getGeometry().getType();
         let rt= this.styles[type];
-        let userInfo={};
         let isCloned=false;
-        let name;
-        if (this.featureFormatter){
-            userInfo=this.formatFeatureInfo({},feature,false);
+        let userInfo=this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter],{name:feature.getProperties().name},feature,false);
             if (userInfo.sym){
                 let icon=this.userIcons(userInfo.sym);
                 if (! icon){
@@ -175,21 +173,16 @@ class GeoJsonChartSource extends ChartSourceBase{
                 isCloned=true;
                 rt.setImage(icon);
             }
-            name=userInfo.name;
-        }
-        else{
-            name=feature.getProperties().name;
-        }
-        if (this.chartEntry['style.showName']){
-            if (name !== undefined){
+        if (this.styleParameters[supportedStyleParameters.showText]){
+            if (userInfo.name !== undefined){
                 if (!isCloned){
                     rt=rt.clone();
                 }
                 rt.setText(new olText({
                     text:name,
                     textAlign:'start',
-                    font: this.chartEntry['style.textSize']||styleParam.textSize+"px",
-                    offsetX: this.chartEntry['style.textOffset']||styleParam.textOffset
+                    font: this.styleParameters[supportedStyleParameters.textSize]+"px",
+                    offsetX: this.styleParameters[supportedStyleParameters.textOffset]
                 }))
             }
         }
@@ -202,7 +195,6 @@ class GeoJsonChartSource extends ChartSourceBase{
     }
     prepareInternal() {
         let url = this.chartEntry.url;
-        let self = this;
         return new Promise((resolve, reject)=> {
             if (!url) {
                 reject("no url for "+this.chartEntry.name);
@@ -252,16 +244,14 @@ class GeoJsonChartSource extends ChartSourceBase{
         }
         let param=['desc','name','sym','link','linkText'];
         param.forEach((p)=>rt[p]=feature.get(p));
-        for (let k in this.chartEntry){
-            if (Helper.startsWith(k,stylePrefix)){
-                rt[k]=this.chartEntry[k];
-            }
-        }
-        this.formatFeatureInfo(rt,feature,coordinates,true);
-        if (rt.link && this.chartEntry.icons){
+        this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter], rt,feature,coordinates,true);
+        if (rt.link){
             rt.link=this.getLinkUrl(rt.link);
         }
         return rt;
+    }
+    static analyzeOverlay(overlay){
+        return readFeatureInfoFromGeoJson(overlay);
     }
 }
 
@@ -282,32 +272,17 @@ export default  GeoJsonChartSource;
  *      styleXXX - XXX being the keys from styleParam
  *
  */
-export const readFeatureInfoFromGeoJson=(doc)=>{
+const readFeatureInfoFromGeoJson=(doc)=>{
     let parser=new olGeoJSON();
-    let rt={
-        styles:{}
-    };
     let features=parser.readFeatures(doc);
-    features.forEach((feature)=>{
-        if (! feature) return;
-        if (feature.get('sym')){
-            rt.hasSymbols=true;
-        }
-        if (feature.get('link')){
-            rt.hasLinks=true;
-        }
-        let geo=feature.getGeometry();
-        if (geo){
-            rt.hasAny=true;
-        }
-        if (geo instanceof olPoint ) {
-            rt.hasWaypoint = true;
-        }
-        for (let k in styleParam) {
-            rt[stylePrefix + k] =true;
-        }
+    let flags= FoundFeatureFlags.parseFoundFeatures(features,(feature)=>{
+      //no dedicated actions
     })
-    rt.allowFormatter=true;
-    return rt;
-
+    let settings=flags.createSettings();
+    addToSettings(settings,supportedStyleParameters.featureFormatter)
+    if (flags.hasNonSymbolPoint) addToSettings(settings,supportedStyleParameters.defaultIcon);
+    return {
+        hasAny: flags.hasAny,
+        settings: orderSettings(settings)
+    }
 }

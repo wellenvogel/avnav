@@ -16,9 +16,8 @@ import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
 import {readFeatureInfoFromKml} from '../map/kmlchartsource';
-import {getOverlayConfigName} from '../map/chartsourcebase'
+import {editableOverlayParameters, getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
@@ -27,10 +26,10 @@ import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
 import {createEditableParameter} from "./EditableParameters";
-import {getKnownStyleParam} from "../map/chartsourcebase";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import base from "../base";
+import Mapholder from "../map/mapholder";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -228,15 +227,16 @@ const OverlayItemDialog = (props) => {
             .then((data) => {
                 try {
                     let featureInfo={};
+                    try {
+                        const OverlayClass=Mapholder.findChartSource('overlay',url);
+                        if (typeof(OverlayClass.analyzeOverlay) === 'function'){
+                            featureInfo=OverlayClass.analyzeOverlay(data);
+                        }
+                    }catch (e){}
+
                     let ext = Helper.getExt(url);
-                    if (ext === 'gpx') {
-                        featureInfo = readFeatureInfoFromGpx(data);
-                    }
                     if (ext === 'kml') {
                         featureInfo = readFeatureInfoFromKml(data);
-                    }
-                    if (ext === 'geojson') {
-                        featureInfo = readFeatureInfoFromGeoJson(data);
                     }
                     if (!featureInfo.hasAny) {
                         Toast(url + " is no valid overlay file");
@@ -354,54 +354,12 @@ const OverlayItemDialog = (props) => {
                                     analyseOverlay(newState.url, initial);
                                 }}
                             />
-                            {!iconsReadOnly && (itemInfo.hasSymbols || itemInfo.hasLinks) && <InputSelect
-                                dialogRow={true}
-                                label="icon file"
-                                value={current.icons}
-                                list={itemLists.iconFiles.list}
-                                fetchCount={itemsFetchCount}
-                                onChange={(nv) => {
-                                    updateCurrent({icons: nv.url});
-                                }}
-                            />
-                            }
-                            {iconsReadOnly && <InputReadOnly
-                                dialogRow={true}
-                                label="icon file"
-                                value={current.icons}
-                            />}
-                            {itemInfo.allowOnline && <Checkbox
-                                dialogRow={true}
-                                label="allow online"
-                                value={current.allowOnline || false}
-                                onChange={(nv) => updateCurrent({allowOnline: nv})}
-                            />}
-                            {itemInfo.showText && <Checkbox
-                                dialogRow={true}
-                                label="show text"
-                                value={current.showText || false}
-                                onChange={(nv) => updateCurrent({showText: nv})}
-                            />}
-                            {itemInfo.allowHtml && <Checkbox
-                                dialogRow={true}
-                                label="allow html"
-                                value={current.allowHtml || false}
-                                onChange={(nv) => updateCurrent({allowHtml: nv})}
-                            />}
-                            {itemInfo.allowFormatter &&
-                                <InputSelect
-                                    dialogRow={true}
-                                    label={"featureFormatter"}
-                                    value={current.featureFormatter}
-                                    onChange={(nv) => {
-                                        updateCurrent({featureFormatter: nv.value});
-                                    }}
-                                    list={formatters}
-                                />
-
-                            }
                             {itemInfo.settings && itemInfo.settings.map((param) => {
                                 let ipParam=createEditableParameter(param.name, param.type, param.list, param.displayName, param.default);
+                                if (ipParam.name === editableOverlayParameters.icon.name){
+                                    //fill icon list
+                                    ipParam.list=itemLists.iconFiles.list;
+                                }
                                 if (ipParam && param.description) ipParam.description=param.description;
                                 return (
                                     <ParamValueInput
@@ -412,49 +370,6 @@ const OverlayItemDialog = (props) => {
                                     />
                                 )
                             })}
-                            <Input
-                                dialogRow={true}
-                                type="number"
-                                label="min zoom"
-                                value={current.minZoom || 0}
-                                onChange={(nv) => updateCurrent({minZoom: nv})}
-                            />
-                            <Input
-                                dialogRow={true}
-                                type="number"
-                                label="max zoom"
-                                value={current.maxZoom || 0}
-                                onChange={(nv) => updateCurrent({maxZoom: nv})}
-                            />
-                            {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
-                                dialogRow={true}
-                                type="number"
-                                label="min scale"
-                                value={current.minScale || 0}
-                                onChange={(nv) => updateCurrent({minScale: nv})}
-                            />}
-                            {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
-                                dialogRow={true}
-                                type="number"
-                                label="max scale"
-                                value={current.maxScale || 0}
-                                onChange={(nv) => updateCurrent({maxScale: nv})}
-                            />}
-                            {(itemInfo.hasSymbols || itemInfo.allowOnline || itemInfo.hasWaypoint) && <InputSelect
-                                dialogRow={true}
-                                label="default icon"
-                                value={current.defaultIcon || '--none--'}
-                                list={itemLists.icons.list}
-                                fetchCount={itemsFetchCount}
-                                onChange={(nv) => {
-                                    updateCurrent({defaultIcon: nv.value});
-                                }}
-                            >
-                                {current.defaultIcon &&
-                                    <span className="icon"
-                                          style={{backgroundImage: "url('" + current.defaultIcon + "')"}}> </span>
-                                }
-                            </InputSelect>}
                         </React.Fragment>
                     }
                 </React.Fragment>

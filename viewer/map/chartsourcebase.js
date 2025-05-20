@@ -31,8 +31,6 @@ import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
-import featureFormatters from "../util/featureFormatter";
-import {Feature as olFeature} from 'ol';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 
 export const getOverlayConfigName=(chartEntry)=>{
@@ -62,16 +60,7 @@ class ChartSourceBase {
                 delete this.chartEntry[k];
             }
         }
-        this.featureFormatter=undefined
-        if (chartEntry.featureFormatter){
-            let formatter=chartEntry.featureFormatter;
-            if (typeof(formatter) === 'string'){
-                formatter=featureFormatter[formatter];
-            }
-            if (formatter) {
-                this.featureFormatter=formatter;
-            }
-        }
+
         /**
          * @protected
          * @type {undefined}
@@ -261,12 +250,12 @@ class ChartSourceBase {
         let url;
         if (sym.match(/^https*:/)) return sym;
         if (sym.match(/^\//)) return sym;
-        if (this.chartEntry.icons){
-            url=this.chartEntry.icons + "/" + sym;
-            if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
+        if (this.chartEntry[editableOverlayParameters.icon]){
+            url=this.chartEntry[editableOverlayParameters.icon] + "/" + sym;
+            if (this.chartEntry[editableOverlayParameters.defaultIcon]) url+="?fallback="+encodeURIComponent(this.chartEntry[editableOverlayParameters.defaultIcon]);
         }
         else{
-            return this.chartEntry.defaultIcon;
+            return this.chartEntry[editableOverlayParameters.defaultIcon];
         }
         return url;
     }
@@ -274,20 +263,25 @@ class ChartSourceBase {
         if (! link) return;
         if (link.match(/^https*:/)) return link;
         if (link.match(/^\//)) return link;
-        if (! this.chartEntry.icons) return;
-        return this.chartEntry.icons+"/"+link;
+        if (! this.chartEntry[editableOverlayParameters.icon]) return;
+        return this.chartEntry[editableOverlayParameters.icon]+"/"+link;
     }
     /**
      * call any user defined formatter with the properties
      * of the feature and merge this with the already fetched items
-     * @param info the info to be merged in
+     * @param formatter {(string|function|undefined)}
+     * @param info {Object} the info to be merged in
      * @param feature the ol feature
      * @param coordinates {navobjects.Point}
      * @param extended
      */
-    formatFeatureInfo(info, feature,coordinates,extended){
-       if (! info || ! feature) return {};
-        if (this.featureFormatter) {
+    formatFeatureInfo(formatter, info, feature, coordinates, extended) {
+        if (!info || !feature) return {};
+        if (typeof (formatter) === 'string') {
+            formatter = featureFormatter[formatter];
+        }
+
+        if (formatter) {
             try {
                 let fProps = assign({}, feature.getProperties());
                 for (let k in fProps) {
@@ -306,14 +300,14 @@ class ChartSourceBase {
                     link: true,
                     htmlInfo: true,
                     time: true
-                }, this.featureFormatter(fProps, extended)));
+                }, formatter(fProps, extended)));
 
             } catch (e) {
                 base.log("error in feature info formatter : " + e);
             }
         }
-        info.icon=this.getSymbolUrl(info.sym,'.png');
-        info.link=this.getLinkUrl(info.link);
+        info.icon = this.getSymbolUrl(info.sym, '.png');
+        info.link = this.getLinkUrl(info.link);
         return info;
     }
 
@@ -343,7 +337,7 @@ class ChartSourceBase {
     buildStyleConfig(supportedSettings){
         let rt={};
         if (! supportedSettings) return rt;
-        supportedSettings.forEach((setting)=>{
+        Helper.iterate(supportedSettings,(setting)=>{
             const key=setting.name;
             if (this.chartEntry[setting.name] !== undefined){
                 rt[key]=this.chartEntry[setting.name];
@@ -396,9 +390,9 @@ export const editableOverlayParameters={
     defaultIcon:new ConfigHelper({name:'defaultIcon',displayName:'default icon',type:'ICON'}),
     featureFormatter: new ConfigHelper({name:'featureFormatter',displayName:'featureFormatter',type:'SELECT',list:()=>{
             let formatters = [{label: '-- none --', value: undefined}];
-            for (let f in featureFormatters) {
-                if (typeof (featureFormatters[f]) === 'function') {
-                    formatters.push({label: f, value: f});
+            for (let f in featureFormatter) {
+                if (typeof (featureFormatter[f]) === 'function') {
+                    formatters.push({label: f, value: f,name:f});
                 }
             }
             return formatters;
@@ -412,22 +406,15 @@ export const editableOverlayParameters={
     showName:new ConfigHelper({name: 'style.showName', type:'BOOLEAN',displayName:'show feature name',default: false}),
     textSize:new ConfigHelper({name: 'style.textSize', type:'NUMBER',displayName:'font size',default: 16}),
     textOffset:new ConfigHelper({name: 'style.textOffset', type:'NUMBER',displayName: 'text offset',default: 32}),
+    textColor:new ConfigHelper({name: 'style.textColor', type:'COLOR',displayName: 'text color',default: 'rgba(0,0,0,1)'}),
 }
 export const DEFAULT_SETTINGS=[editableOverlayParameters.minZoom,editableOverlayParameters.maxZoom];
 export const SCALE_SETTINGS=[editableOverlayParameters.minScale,editableOverlayParameters.maxScale];
 export const SYMBOL_SETTINGS=[editableOverlayParameters.icon,editableOverlayParameters.defaultIcon].concat(SCALE_SETTINGS);
-export const CIRCLE_SETTINGS=[editableOverlayParameters.fillColor,editableOverlayParameters.circleWidth]
+export const CIRCLE_SETTINGS=[editableOverlayParameters.fillColor,editableOverlayParameters.circleWidth].concat(SCALE_SETTINGS)
 export const TEXT_SETTINGS=[editableOverlayParameters.showText,editableOverlayParameters.fillColor,editableOverlayParameters.strokeWidth,editableOverlayParameters.textSize,editableOverlayParameters.textOffset]
 export const LINE_SETTINGS=[editableOverlayParameters.lineWidth,editableOverlayParameters.lineColor]
-export const getKnownStyleParam=()=>{
-    let rt=[];
-    for (let k in editableOverlayParameters){
-        const p=editableOverlayParameters[k];
-        if (Helper.startsWith(p.name,'style.'))
-        rt.push({...p});
-    }
-    return rt;
-}
+
 /**
  *
  * @param settings {Object}
@@ -435,8 +422,7 @@ export const getKnownStyleParam=()=>{
  * @param [opt_onlyExisting] {boolean} - if set only set items if already there
  */
 export const addToSettings=(settings,items,opt_onlyExisting)=>{
-    if (! (items instanceof Array)) items=[items];
-    items.forEach((item)=>{
+    Helper.iterate(items,(item)=>{
         if (!item) return;
         if (settings[item.name] !== undefined ||  !opt_onlyExisting)
             settings[item.name]=item;
@@ -525,15 +511,13 @@ export class FoundFeatureFlags{
         addToSettings(rt,DEFAULT_SETTINGS);
         if (this.hasSymbol) {
             addToSettings(rt,SYMBOL_SETTINGS)
-            addToSettings(rt,SCALE_SETTINGS);
         }
         if (this.hasLink) {
             addToSettings(rt,SYMBOL_SETTINGS)
-            addToSettings(rt,SCALE_SETTINGS);
+            addToSettings(rt,editableOverlayParameters.allowOnline)
         }
         if (this.hasNonSymbolPoint){
             addToSettings(rt,CIRCLE_SETTINGS);
-            addToSettings(rt,SCALE_SETTINGS);
         }
         if (this.hasMultiline || this.hasLineString){
             addToSettings(rt,LINE_SETTINGS);

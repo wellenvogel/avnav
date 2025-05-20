@@ -130,6 +130,7 @@ export const InputReadOnly=(props)=>{
         {props.children}
         </div>
 };
+InputReadOnly.propTypes=DEFAULT_TYPES;
 
 export const InputSelect=(props)=>{
     const dialogContext=useDialogContext();
