@@ -113,11 +113,13 @@ class ChartSourceBase {
             let view = this.mapholder.olmap.getView();
             let scale = 1;
             let currentZoom = view.getZoom();
-            if (this.chartEntry.minScale && currentZoom < this.chartEntry.minScale) {
-                scale = 1 / Math.pow(2, this.chartEntry.minScale - currentZoom);
+            let cmin=parseFloat(this.chartEntry.minScale);
+            let cmax=parseFloat(this.chartEntry.maxScale);
+            if (cmin && currentZoom < cmin) {
+                scale = 1 / Math.pow(2, cmin - currentZoom);
             }
-            if (this.chartEntry.maxScale && currentZoom > this.chartEntry.maxScale) {
-                scale = Math.pow(2, currentZoom - this.chartEntry.maxScale);
+            if (cmax && currentZoom > cmax) {
+                scale = Math.pow(2, currentZoom - cmax);
             }
             return scale;
         }catch (e){}
