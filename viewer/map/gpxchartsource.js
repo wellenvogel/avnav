@@ -97,7 +97,11 @@ const getSupportedStyleParameters=(isRoute)=>{
         editableOverlayParameters.textSize.clone({default:globalstore.getData(keys.properties.routingTextSize)}),
         editableOverlayParameters.textColor,
         editableOverlayParameters.textOffset,
-        editableOverlayParameters.featureFormatter
+        editableOverlayParameters.featureFormatter,
+        editableOverlayParameters.minZoom,
+        editableOverlayParameters.maxZoom,
+        editableOverlayParameters.minScale,
+        editableOverlayParameters.maxScale
     ]
 }
 
@@ -411,13 +415,6 @@ const stripExtensions=(gpx)=>{
  * parses an gpx document and returns a couple of flags
  * to determine which kind of styling is necessary
  * @param gpx
- * @returns {*}
- *      hasSymbols
- *      hasLinks
- *      hasWaypoint
- *      hasRoute
- *      hasTrack
- *      styleXXX - XXX being the keys from this.styleParameters
  *
  */
 export const readFeatureInfoFromGpx=(gpx)=>{
@@ -435,7 +432,7 @@ export const readFeatureInfoFromGpx=(gpx)=>{
     addToSettings(settings,getSupportedStyleParameters(featureFlags.hasRoute),true);
     return {
         hasAny: featureFlags.hasAny,
-        settings: orderSettings(settings)
+        settings: orderSettings(settings,getSupportedStyleParameters(featureFlags.isRoute))
     }
 
 }

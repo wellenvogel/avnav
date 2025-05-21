@@ -24,15 +24,38 @@
  */
 
 import Requests from '../util/requests.js';
-import ChartSourceBase from './chartsourcebase.js';
-import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
+import ChartSourceBase, {
+    addToSettings,
+    editableOverlayParameters,
+    FoundFeatureFlags,
+    orderSettings
+} from './chartsourcebase.js';
+import {Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
-import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
+import {Point as olPoint} from 'ol/geom';
 import {KML as olKMLFormat} from 'ol/format';
 import base from "../base";
-import {stylePrefix} from './gpxchartsource';
 
+const supportedStyleParameters= {
+    lineWidth:editableOverlayParameters.lineWidth,
+    lineColor: editableOverlayParameters.lineColor,
+    fillColor: editableOverlayParameters.fillColor,
+    strokeWidth: editableOverlayParameters.strokeWidth,
+    circleWidth: editableOverlayParameters.circleWidth,
+    showText: editableOverlayParameters.showText,
+    textSize: editableOverlayParameters.textSize,
+    textOffset: editableOverlayParameters.textOffset,
+    textColor: editableOverlayParameters.textColor,
+    defaultIcon: editableOverlayParameters.defaultIcon,
+    icon: editableOverlayParameters.icon,
+    featureFormatter: editableOverlayParameters.featureFormatter,
+    allowOnline: editableOverlayParameters.allowOnline,
+    minZoom: editableOverlayParameters.minZoom,
+    maxZoom: editableOverlayParameters.maxZoom,
+    minScale: editableOverlayParameters.minScale,
+    maxScale: editableOverlayParameters.maxScale
+}
 
 class KmlChartSource extends ChartSourceBase{
     /**
@@ -52,8 +75,8 @@ class KmlChartSource extends ChartSourceBase{
      */
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
-        this.styleMap=[];
         this.source=undefined;
+        this.styleParameters=this.buildStyleConfig(supportedStyleParameters);
 
     }
     redraw() {
@@ -68,7 +91,7 @@ class KmlChartSource extends ChartSourceBase{
         if (type === 'Point'){
             try {
                 let currentUrl=style.getImage().getSrc();
-                if (currentUrl.startsWith(this.chartEntry.icons) || currentUrl.startsWith(this.chartEntry.defaultIcon)){
+                if (currentUrl.startsWith(this.styleParameters[supportedStyleParameters.icon]) || currentUrl.startsWith(this.chartEntry.defaultIcon)){
                     style.getImage().setScale(this.getScale());
                     return style;
                 }
@@ -79,17 +102,17 @@ class KmlChartSource extends ChartSourceBase{
                     if (currentUrl.startsWith("/")) currentUrl=currentUrl.substr(1);
                 }
                 if (currentUrl.startsWith("http")){
-                    if (this.chartEntry.allowOnline){
+                    if (this.styleParameters[supportedStyleParameters.allowOnline]){
                         return style;
                     }
-                    url=this.chartEntry.defaultIcon;
+                    url=this.styleParameters[supportedStyleParameters.defaultIcon];
                 }
                 else{
-                    if (this.chartEntry.icons){
-                        url=this.chartEntry.icons+"/"+currentUrl+"?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
+                    if (this.styleParameters[supportedStyleParameters.icon]){
+                        url=this.styleParameters[supportedStyleParameters.icon]+"/"+currentUrl+"?fallback="+encodeURIComponent(this.styleParameters[supportedStyleParameters.defaultIcon]);
                     }
                     else{
-                        url=this.chartEntry.defaultIcon;
+                        url=this.styleParameters[supportedStyleParameters.defaultIcon];
                     }
                 }
                 if (url) {
@@ -104,9 +127,9 @@ class KmlChartSource extends ChartSourceBase{
                     style.setImage(
                         new olCircle({
                             fill: new olFill({
-                                color: this.chartEntry[stylePrefix+'fillColor']||'#000000',
+                                color: this.styleParameters[supportedStyleParameters.fillColor],
                             }),
-                            radius: (this.chartEntry[stylePrefix+'circleWidth']||10)/2,
+                            radius: (this.styleParameters[supportedStyleParameters.circleWidth])/2,
                         })
                     );
                 }
@@ -117,7 +140,6 @@ class KmlChartSource extends ChartSourceBase{
     }
     prepareInternal() {
         let url = this.chartEntry.url;
-        let self = this;
         return new Promise((resolve, reject)=> {
             if (!url) {
                 reject("no url for "+this.chartEntry.name);
@@ -125,7 +147,7 @@ class KmlChartSource extends ChartSourceBase{
             }
             this.source = new olVectorSource({
                 format: new olKMLFormat({
-                    showPointNames: this.chartEntry.showText||false,
+                    showPointNames: this.styleParameters[supportedStyleParameters.showText],
                 }),
                 wrapX: false,
                 loader: (extent,resolution,projection)=>{
@@ -199,13 +221,13 @@ class KmlChartSource extends ChartSourceBase{
         rt.desc=feature.get('desc')||feature.get('description');
         if (rt.desc){
             if (rt.desc.indexOf("<") >= 0){
-                if(this.chartEntry.allowHtml) {
+                if(this.styleParameters[supportedStyleParameters.allowHtml]) {
                     rt.htmlInfo = rt.desc.replace(/src *= *"([^"]*)"/g,(match,url)=>{
                         if (url.startsWith('http')){
-                            if (!this.chartEntry.allowOnline) return 'src=""';
+                            if (!this.styleParameters[supportedStyleParameters.allowOnline]) return 'src=""';
                             return match;
                         }
-                        return 'src="'+(this.chartEntry.icons+"/"+url).replace('"','\\"')+'" ';
+                        return 'src="'+(this.styleParameters[supportedStyleParameters.icons]+"/"+url).replace('"','\\"')+'" ';
                     });
                     rt.desc=undefined;
                 }
@@ -213,8 +235,11 @@ class KmlChartSource extends ChartSourceBase{
         }
         rt.name=feature.get('name');
         rt.sym=feature.get('sym');
-        this.formatFeatureInfo(rt,feature,coordinates,true);
+        this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter],rt,feature,coordinates,true);
         return rt;
+    }
+    static analyzeOverlay(overlay){
+        return readFeatureInfoFromKml(overlay);
     }
 }
 
@@ -223,47 +248,19 @@ export default  KmlChartSource;
 /**
  * parses an gpx document and returns a couple of flags
  * to determine which kind of styling is necessary
- * @param gpx
- * @returns {*}
- *      hasSymbols
- *      hasLinks
- *      hasWaypoint
- *      hasRoute
- *      hasTrack
- *      styleXXX - XXX being the keys from styleParam
+ * @param kml
  *
  */
 export const readFeatureInfoFromKml=(kml)=>{
     let parser=new olKMLFormat();
-    let rt={
-        styles:{}
-    };
     let features=parser.readFeatures(kml);
-    features.forEach((feature)=>{
-        if (! feature) return;
-        let geo=feature.getGeometry();
-        if (geo){
-            rt.hasAny=true;
-        }
-        if (geo instanceof olPoint) {
-            rt.hasWaypoint = true;
-        }
-        else if (geo instanceof olLineString){
-            rt.hasTrack=true;
-        }
-        else if (geo instanceof olMultiLineString){
-            rt.hasTrack=true;
-        }
-        let desc=feature.get('desc')||feature.get('description');
-        if (desc && desc.indexOf("<")>=0){
-            rt.allowHtml=true;
-        }
-    })
-    rt[stylePrefix+'fillColor']=true;
-    rt[stylePrefix+'circleWidth']=true;
-    rt.allowOnline=true;
-    rt.showText=true;
-    rt.allowFormatter=true;
-    return rt;
+    let flags=FoundFeatureFlags.parseFoundFeatures(features);
+    let settings=flags.createSettings();
+    if (flags.hasNonSymbolPoint) addToSettings(settings,supportedStyleParameters.defaultIcon);
+    addToSettings(settings,supportedStyleParameters.featureFormatter)
+    return {
+        hasAny: flags.hasAny,
+        settings: orderSettings(settings,supportedStyleParameters)
+    }
 
 }

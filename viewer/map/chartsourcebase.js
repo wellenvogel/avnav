@@ -428,20 +428,36 @@ export const addToSettings=(settings,items,opt_onlyExisting)=>{
             settings[item.name]=item;
     })
 }
-export const orderSettings=(settings)=>{
+/**
+ * order a settings object (plain object)
+ * will put all known settings in the order they have in editableOverlayParameters
+ * and add all others at the end
+ * @param settings
+ * @param [opt_filter] if a filter is given - only add the settings that are available in the filter
+ *        opt_filter can be an array of names or an array/plain object with ConfigHelper items as values
+ * @returns {*[]} an array of settings
+ */
+export const orderSettings=(settings,opt_filter)=>{
     if (! settings) return;
     let ordered=[];
     let handled={};
+    let filter;
+    if (opt_filter){
+        filter={};
+        Helper.iterate(opt_filter,(fe)=>{
+            filter[fe]=true; //we rely on toString for the config helper
+        })
+    }
     for (let k in editableOverlayParameters){
         const name=editableOverlayParameters[k].name;
-        if (settings[name] !== undefined){
+        if (settings[name] !== undefined && (! filter || filter[name])){
             handled[name]=true;
             ordered.push(settings[name]);
         }
     }
     for (let k in settings){
         const name=settings[k].name;
-        if (name && ! handled[name]){
+        if (name && ! handled[name] && (! filter || filter[name])){
             ordered.push(settings[k]);
         }
     }
@@ -524,6 +540,9 @@ export class FoundFeatureFlags{
         }
         if (this.hasText){
             addToSettings(rt,TEXT_SETTINGS);
+        }
+        if (this.hasHtml){
+            addToSettings(rt,editableOverlayParameters.allowHtml)
         }
         return rt;
     }

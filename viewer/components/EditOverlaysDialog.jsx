@@ -233,11 +233,6 @@ const OverlayItemDialog = (props) => {
                             featureInfo=OverlayClass.analyzeOverlay(data);
                         }
                     }catch (e){}
-
-                    let ext = Helper.getExt(url);
-                    if (ext === 'kml') {
-                        featureInfo = readFeatureInfoFromKml(data);
-                    }
                     if (!featureInfo.hasAny) {
                         Toast(url + " is no valid overlay file");
                         setLoading(false);

@@ -47,7 +47,11 @@ const supportedStyleParameters= {
     textColor: editableOverlayParameters.textColor,
     defaultIcon: editableOverlayParameters.defaultIcon,
     icon: editableOverlayParameters.icon,
-    featureFormatter: editableOverlayParameters.featureFormatter
+    featureFormatter: editableOverlayParameters.featureFormatter,
+    minZoom: editableOverlayParameters.minZoom,
+    maxZoom: editableOverlayParameters.maxZoom,
+    minScale: editableOverlayParameters.minScale,
+    maxScale: editableOverlayParameters.maxScale
 }
 
 class GeoJsonChartSource extends ChartSourceBase{
@@ -66,7 +70,6 @@ class GeoJsonChartSource extends ChartSourceBase{
      */
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
-        this.styleMap={};
         this.userIcons={};
         this.styleFunction=this.styleFunction.bind(this);
         this.styleParameters=this.buildStyleConfig(supportedStyleParameters);
@@ -263,13 +266,6 @@ export default  GeoJsonChartSource;
  * parses an geajson document and returns a couple of flags
  * to determine which kind of styling is necessary
  * @param doc
- * @returns {*}
- *      hasSymbols
- *      hasLinks
- *      hasWaypoint
- *      hasRoute
- *      hasTrack
- *      styleXXX - XXX being the keys from styleParam
  *
  */
 const readFeatureInfoFromGeoJson=(doc)=>{
@@ -283,6 +279,6 @@ const readFeatureInfoFromGeoJson=(doc)=>{
     if (flags.hasNonSymbolPoint) addToSettings(settings,supportedStyleParameters.defaultIcon);
     return {
         hasAny: flags.hasAny,
-        settings: orderSettings(settings)
+        settings: orderSettings(settings,supportedStyleParameters)
     }
 }
