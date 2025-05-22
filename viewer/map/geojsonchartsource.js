@@ -24,7 +24,7 @@
  */
 
 import ChartSourceBase, {
-    addToSettings,
+    addToSettings, buildOlFontConfig,
     editableOverlayParameters,
     FoundFeatureFlags,
     orderSettings
@@ -181,12 +181,14 @@ class GeoJsonChartSource extends ChartSourceBase{
                 if (!isCloned){
                     rt=rt.clone();
                 }
-                rt.setText(new olText({
-                    text:name,
-                    textAlign:'start',
-                    font: this.styleParameters[supportedStyleParameters.textSize]+"px",
-                    offsetX: this.styleParameters[supportedStyleParameters.textOffset]
-                }))
+                rt.setText(new olText(
+                    buildOlFontConfig(this.styleParameters, {
+                        text: name,
+                        textAlign: 'start',
+                        offsetX: this.styleParameters[supportedStyleParameters.textOffset],
+                        scale: this.getScale()
+                    })
+                ))
             }
         }
         this.setIconScale(rt);

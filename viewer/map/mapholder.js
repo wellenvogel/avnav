@@ -1232,7 +1232,7 @@ MapHolder.prototype.drawGrid=function() {
     let textStyle={
         color: 'grey',
         fontSize: 12,
-        fontBase: 'Calibri,sans-serif',
+        fontBase: globalStore.getData(keys.properties.fontBase),
         offsetY:7, //should compute this from the font...
         fixY:0
     };

@@ -8,6 +8,7 @@ import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import navcompute from '../nav/navcompute.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import globalstore from "../util/globalstore";
 
 const normalColors={
     all: '#000000'
@@ -51,7 +52,7 @@ const XteWidget = (props) => {
         let shipUpper = h * 0.45;
         let shipH = h * 0.3;
         let shipw = w * 0.03;
-        context.font = "normal " + Math.ceil(textSize) + "px Arial";
+        context.font = "normal " + Math.ceil(textSize) + "px "+globalstore.getData(keys.properties.fontBase);
         context.textAlign = "center";
         context.fillText(xteText, left, textBase);
         context.fillText(xteText, right, textBase);

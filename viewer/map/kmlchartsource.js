@@ -25,12 +25,12 @@
 
 import Requests from '../util/requests.js';
 import ChartSourceBase, {
-    addToSettings,
+    addToSettings, buildOlFontConfig,
     editableOverlayParameters,
     FoundFeatureFlags,
     orderSettings
 } from './chartsourcebase.js';
-import {Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
+import {Circle as olCircle, Icon as olIcon, Fill as olFill,Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
@@ -47,6 +47,7 @@ const supportedStyleParameters= {
     textSize: editableOverlayParameters.textSize,
     textOffset: editableOverlayParameters.textOffset,
     textColor: editableOverlayParameters.textColor,
+    overwriteTextStyle: editableOverlayParameters.overwriteTextStyle,
     defaultIcon: editableOverlayParameters.defaultIcon,
     icon: editableOverlayParameters.icon,
     featureFormatter: editableOverlayParameters.featureFormatter,
@@ -86,55 +87,81 @@ class KmlChartSource extends ChartSourceBase{
             return true;
         }
     }
+    setImageStyle(style){
+        try {
+            let imageStyle=style.getImage();
+            let currentUrl=imageStyle.getSrc();
+            if (currentUrl.startsWith(this.styleParameters[supportedStyleParameters.icon]) || currentUrl.startsWith(this.chartEntry.defaultIcon)){
+                imageStyle.setScale(this.getScale());
+                return style;
+            }
+            let url;
+            let ourBase=window.location.href.replace(/\/[^/]*$/,'');
+            if (currentUrl.startsWith(ourBase)){
+                currentUrl=currentUrl.substr(ourBase.length);
+                if (currentUrl.startsWith("/")) currentUrl=currentUrl.substr(1);
+            }
+            if (currentUrl.startsWith("http")){
+                if (this.styleParameters[supportedStyleParameters.allowOnline]){
+                    imageStyle.setScale(this.getScale());
+                    return style;
+                }
+                url=this.styleParameters[supportedStyleParameters.defaultIcon];
+            }
+            else{
+                if (this.styleParameters[supportedStyleParameters.icon]){
+                    url=this.styleParameters[supportedStyleParameters.icon]+"/"+currentUrl+"?fallback="+encodeURIComponent(this.styleParameters[supportedStyleParameters.defaultIcon]);
+                }
+                else{
+                    url=this.styleParameters[supportedStyleParameters.defaultIcon];
+                }
+            }
+            if (url) {
+                style.setImage(
+                    new olIcon({
+                            src: url
+                        }
+                    )
+                )
+            }
+            else{
+                style.setImage(
+                    new olCircle({
+                        fill: new olFill({
+                            color: this.styleParameters[supportedStyleParameters.fillColor],
+                        }),
+                        radius: (this.styleParameters[supportedStyleParameters.circleWidth])/2,
+                    })
+                );
+            }
+            style.getImage().setScale(this.getScale());
+        }catch (e){base.log("exception in kml style: "+e.message);}
+    }
+    setTextStyle(style){
+        try{
+            const textStyle=style.getText();
+            if (textStyle && this.styleParameters[supportedStyleParameters.overwriteTextStyle]){
+                const text=textStyle.getText();
+                if (text){
+                    style.setText(new olText(
+                        buildOlFontConfig(this.styleParameters,{
+                        text: text,
+                        offsetX: this.styleParameters[supportedStyleParameters.textOffset],
+                        scale: this.getScale()
+                    })))
+                }
+            }
+
+        }catch(e){base.log("exception in kml style "+e.message)}
+    }
     replacePointStyle(feature,style){
         let type=feature.getGeometry().getType();
         if (type === 'Point'){
-            try {
-                let currentUrl=style.getImage().getSrc();
-                if (currentUrl.startsWith(this.styleParameters[supportedStyleParameters.icon]) || currentUrl.startsWith(this.chartEntry.defaultIcon)){
-                    style.getImage().setScale(this.getScale());
-                    return style;
-                }
-                let url;
-                let ourBase=window.location.href.replace(/\/[^/]*$/,'');
-                if (currentUrl.startsWith(ourBase)){
-                    currentUrl=currentUrl.substr(ourBase.length);
-                    if (currentUrl.startsWith("/")) currentUrl=currentUrl.substr(1);
-                }
-                if (currentUrl.startsWith("http")){
-                    if (this.styleParameters[supportedStyleParameters.allowOnline]){
-                        return style;
-                    }
-                    url=this.styleParameters[supportedStyleParameters.defaultIcon];
-                }
-                else{
-                    if (this.styleParameters[supportedStyleParameters.icon]){
-                        url=this.styleParameters[supportedStyleParameters.icon]+"/"+currentUrl+"?fallback="+encodeURIComponent(this.styleParameters[supportedStyleParameters.defaultIcon]);
-                    }
-                    else{
-                        url=this.styleParameters[supportedStyleParameters.defaultIcon];
-                    }
-                }
-                if (url) {
-                    style.setImage(
-                        new olIcon({
-                                src: url
-                            }
-                        )
-                    )
-                }
-                else{
-                    style.setImage(
-                        new olCircle({
-                            fill: new olFill({
-                                color: this.styleParameters[supportedStyleParameters.fillColor],
-                            }),
-                            radius: (this.styleParameters[supportedStyleParameters.circleWidth])/2,
-                        })
-                    );
-                }
-                style.getImage().setScale(this.getScale());
-            }catch (e){base.log("exception in kml style: "+e.message);}
+            this.setImageStyle(style);
+            this.setTextStyle(style);
+        }
+        else{
+            this.setTextStyle(style);
         }
         return style;
     }
@@ -169,7 +196,8 @@ class KmlChartSource extends ChartSourceBase{
                                             })
                                             return rt;
                                         }
-                                        return this.replacePointStyle(feature,style);
+                                        const rs=this.replacePointStyle(feature,style);
+                                        return rs;
                                     }
                                     feature.setStyle(newSf);
                                 }
@@ -257,7 +285,11 @@ export const readFeatureInfoFromKml=(kml)=>{
     let flags=FoundFeatureFlags.parseFoundFeatures(features);
     let settings=flags.createSettings();
     if (flags.hasNonSymbolPoint) addToSettings(settings,supportedStyleParameters.defaultIcon);
-    addToSettings(settings,supportedStyleParameters.featureFormatter)
+    addToSettings(settings,[
+        supportedStyleParameters.featureFormatter,
+        supportedStyleParameters.allowOnline
+    ])
+    if (flags.hasText) addToSettings(settings,supportedStyleParameters.overwriteTextStyle);
     return {
         hasAny: flags.hasAny,
         settings: orderSettings(settings,supportedStyleParameters)

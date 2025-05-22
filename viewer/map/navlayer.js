@@ -126,11 +126,11 @@ NavLayer.prototype.setStyle=function() {
         width: globalStore.getData(keys.properties.navCircleWidth)
     }
     this.measureTextStyle={
-        stroke: '#fff',
+        stroke: globalStore.getData(keys.properties.fontShadowColor),
         color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
-        width: 3,
+        width: globalStore.getData(keys.properties.fontShadowWidth),
         fontSize: globalStore.getData(keys.properties.aisTextSize),
-        fontBase: 'Calibri,sans-serif',
+        fontBase: globalStore.getData(keys.properties.fontBase),
         offsetY: -20
     }
 

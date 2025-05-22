@@ -380,6 +380,10 @@ let keys={
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
+        fontBase: new Property("Arial","Font Base",PropertyType.SELECT,["Arial","Verdana","Tahoma","Times New Roman","Georgia","Garamond"]),
+        fontShadowColor: new Property('#fff',"Font Shadow Color", PropertyType.COLOR),
+        fontShadowWidth: new Property(3,"font shadow width(px)",PropertyType.RANGE,[0,10]),
+        fontColor: new Property('#000',"font color",PropertyType.COLOR),
         routeCatchRange: new Property(50,"route point snap distance %", PropertyType.RANGE,[0,100]),
         statusErrorImage: new Property(redBubble),
         statusOkImage: new Property(greenBubble),

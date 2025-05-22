@@ -32,6 +32,7 @@ import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
+import {Stroke as olStroke, Fill as olFill} from 'ol/style';
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -406,6 +407,7 @@ export const editableOverlayParameters={
     strokeColor:new ConfigHelper({name: 'style.strokeColor',type:'COLOR',displayName:'stroke color',default: '#ffffff'}),
     circleWidth:new ConfigHelper({name: 'style.circleWidth', type:'NUMBER',displayName:'circle width',default: 10,list:[1,40]}),
     showName:new ConfigHelper({name: 'style.showName', type:'BOOLEAN',displayName:'show feature name',default: false}),
+    overwriteTextStyle: new ConfigHelper({name: 'style.overwriteText', type: 'BOOLEAN', displayName:'overwrite text style',default: false}),
     textSize:new ConfigHelper({name: 'style.textSize', type:'NUMBER',displayName:'font size',default: 16}),
     textOffset:new ConfigHelper({name: 'style.textOffset', type:'NUMBER',displayName: 'text offset',default: 32}),
     textColor:new ConfigHelper({name: 'style.textColor', type:'COLOR',displayName: 'text color',default: 'rgba(0,0,0,1)'}),
@@ -414,7 +416,7 @@ export const DEFAULT_SETTINGS=[editableOverlayParameters.minZoom,editableOverlay
 export const SCALE_SETTINGS=[editableOverlayParameters.minScale,editableOverlayParameters.maxScale];
 export const SYMBOL_SETTINGS=[editableOverlayParameters.icon,editableOverlayParameters.defaultIcon].concat(SCALE_SETTINGS);
 export const CIRCLE_SETTINGS=[editableOverlayParameters.fillColor,editableOverlayParameters.circleWidth].concat(SCALE_SETTINGS)
-export const TEXT_SETTINGS=[editableOverlayParameters.showText,editableOverlayParameters.fillColor,editableOverlayParameters.strokeWidth,editableOverlayParameters.textSize,editableOverlayParameters.textOffset]
+export const TEXT_SETTINGS=[editableOverlayParameters.showText,editableOverlayParameters.textColor,editableOverlayParameters.strokeWidth,editableOverlayParameters.textSize,editableOverlayParameters.textOffset]
 export const LINE_SETTINGS=[editableOverlayParameters.lineWidth,editableOverlayParameters.lineColor]
 
 /**
@@ -499,6 +501,7 @@ export class FoundFeatureFlags{
             if (featureCallback) featureCallback(feature,rt);
             const hasSymbol=feature.get('symbol') !== undefined;
             if (feature.get('link') !== undefined) rt.hasLink=true;
+            if (feature.get('name') !== undefined) rt.hasText=true;
             const desc=feature.get('desc')||feature.get('description');
             if (desc){
                 rt.hasDescription=true;
@@ -550,5 +553,22 @@ export class FoundFeatureFlags{
     }
 }
 
+export const buildOlFontConfig=(settings,add)=>{
+    let sz=settings[editableOverlayParameters.textSize];
+    if (sz === undefined) sz=editableOverlayParameters.textSize.default;
+    let color=settings[editableOverlayParameters.textColor];
+    if (color === undefined) color=editableOverlayParameters.textColor.default;
+    return {
+        font:sz + "px " + globalstore.getData(keys.properties.fontBase),
+        stroke: new olStroke({
+            color: globalstore.getData(keys.properties.fontShadowColor),
+            width: globalstore.getData(keys.properties.fontShadowWidth)
+        }),
+        fill: new olFill({
+            color: color
+        }),
+        ...add
+    }
+}
 
 export default  ChartSourceBase;

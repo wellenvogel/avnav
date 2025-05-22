@@ -25,7 +25,7 @@
 
 import Requests from '../util/requests.js';
 import ChartSourceBase, {
-    addToSettings, editableOverlayParameters, FoundFeatureFlags, orderSettings
+    addToSettings, buildOlFontConfig, editableOverlayParameters, FoundFeatureFlags, orderSettings
 } from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
@@ -60,9 +60,7 @@ class OwnGpx extends olGPXFormat{
             let route=new routeobjects.Route();
             route.fromXmlNode(rtel);
             if (route.name !== undefined || route.points.length > 0){
-                console.log("route"+route.name+" with "+route.points.length+" points");
                 let coordinates=[];
-                let first=true;
                 route.points.forEach((pt)=>{
                     coordinates.push(this.mapholder.transformToMap([pt.lon,pt.lat]));
                 })
@@ -145,20 +143,13 @@ class GpxChartSource extends ChartSourceBase{
     buildStyles(){
         const supportedStyles=getSupportedStyleParameters(this.isRoute); //get the defaults
         this.styleParameters=this.buildStyleConfig(supportedStyles);
-        const raw=getRouteStyles().textStyle
-        const textStyle= new olText({
-                font: this.styleParameters[editableOverlayParameters.textSize]+"px "+(raw.fontBase?raw.fontBase:''),
-                offsetY: this.styleParameters[editableOverlayParameters.textOffset],
-                stroke: new olStroke({
-                    color:raw.stroke,
-                    width: raw.width||3
-                }) ,
-                fill:new olFill({
-                    color: this.styleParameters[editableOverlayParameters.textColor]
-                }),
+        const textStyle= new olText(
+            buildOlFontConfig(this.styleParameters,{
                 declutterMode: 'declutter',
-                scale: 1
+                offsetY: this.styleParameters[editableOverlayParameters.textOffset],
+                scale: this.getScale()
             })
+        )
         this.styles = {
             Point: new olStyle({
                 image: new olCircle({
@@ -201,32 +192,30 @@ class GpxChartSource extends ChartSourceBase{
 
         let type=feature.getGeometry().getType();
         if (type === 'Point'){
-            if(this.chartEntry.icons||this.chartEntry.defaultIcon) {
+            let rt=this.styles[type];
+            if(this.styleParameters[editableOverlayParameters.icon]||this.styleParameters[editableOverlayParameters.defaultIcon]) {
                 let sym = feature.get('sym');
-                if (!sym && this.chartEntry.defaultIcon) {
+                if (!sym && this.styleParameters[editableOverlayParameters.defaultIcon]) {
                     sym = "defaultIcon"; //arbitrary name that is neither an external or absolute URL
                 }
                 if (sym) {
                     if (!this.styleMap[sym]) {
-                        let style = new olStyle({
-                            image: new olIcon({
-                                src: this.getSymbolUrl(sym, '.png')
-                            })
-                        });
-                        this.styleMap[sym] = style;
+                        let rt = rt.clone();
+                        rt.setImage(
+                                new olIcon({
+                                    src: this.getSymbolUrl(sym, '.png')
+                                })
+                        );
+                        this.styleMap[sym] = rt;
                     }
-                    let rt = this.styleMap[sym];
-                    let view = this.mapholder.olmap.getView();
-                    let scale = this.getScale();
-                    rt.getImage().setScale(scale);
-                    return rt;
                 }
             }
-            else{
-                let rt=this.styles[type];
-                rt.getImage().setScale(this.getScale());
-                return rt;
-            }
+            const scale=this.getScale();
+            const image=rt.getImage();
+            if (image) image.setScale(scale);
+            const textStyle=rt.getText();
+            if (textStyle) textStyle.setScale(scale);
+            return rt;
         }
         if (type === 'LineString'){
             //route
@@ -274,11 +263,13 @@ class GpxChartSource extends ChartSourceBase{
             geometry: new olPoint(coordinates),
             image: new olCircle({
                 fill: base.getImage().getFill(),
-                radius: base.getImage().getRadius()
+                radius: base.getImage().getRadius(),
+                scale: this.getScale()
             }),
             text: (base.getText())?base.getText().clone():undefined
         });
         const textStyle=rt.getText();
+        if (textStyle) textStyle.setScale(this.getScale());
         if (name && textStyle) textStyle.setText(name);
         return rt;
     }
