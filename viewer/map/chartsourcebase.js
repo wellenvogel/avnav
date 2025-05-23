@@ -33,7 +33,12 @@ import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {Stroke as olStroke, Fill as olFill} from 'ol/style';
-import {EditableNumberParameter} from "../util/EditableParameter";
+import {
+    EditableBooleanParameter, EditableColorParameter,
+    EditableIconParameter,
+    EditableNumberParameter,
+    EditableSelectParameter
+} from "../util/EditableParameter";
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -387,12 +392,12 @@ export const editableOverlayParameters={
     maxZoom:new EditableNumberParameter({name:'maxZoom',displayName:'max zoom',default: 0}),
     minScale:new EditableNumberParameter({name:'minScale',displayName:'min scale', default: 0}),
     maxScale:new EditableNumberParameter({name:'maxScale',displayName:'max scale', default: 0}),
-    allowOnline:new ConfigHelper({name: 'allowOnline',type:'BOOLEAN',displayName: 'allow online',default:false}),
-    showText:new ConfigHelper({name:'showText',type:'BOOLEAN',displayName: 'show text',default:false}),
-    allowHtml:new ConfigHelper({name:'allowHtml',type:'BOOLEAN',displayName: 'allow html',default: false}),
-    icon: new ConfigHelper({name:'icons',displayName: 'icon file',type:'SELECT',readOnly:false}),
-    defaultIcon:new ConfigHelper({name:'defaultIcon',displayName:'default icon',type:'ICON'}),
-    featureFormatter: new ConfigHelper({name:'featureFormatter',displayName:'featureFormatter',type:'SELECT',list:()=>{
+    allowOnline:new EditableBooleanParameter({name: 'allowOnline',displayName: 'allow online',default:false}),
+    showText:new EditableBooleanParameter({name:'showText',displayName: 'show text',default:false}),
+    allowHtml:new EditableBooleanParameter({name:'allowHtml',displayName: 'allow html',default: false}),
+    icon: new EditableSelectParameter({name:'icons',displayName: 'icon file',readOnly:false,list:[undefined]}),
+    defaultIcon:new EditableIconParameter({name:'defaultIcon',displayName:'default icon'}),
+    featureFormatter: new EditableSelectParameter({name:'featureFormatter',displayName:'featureFormatter',list:()=>{
             let formatters = [{label: '-- none --', value: undefined}];
             for (let f in featureFormatter) {
                 if (typeof (featureFormatter[f]) === 'function') {
@@ -401,17 +406,17 @@ export const editableOverlayParameters={
             }
             return formatters;
         }}),
-    lineWidth:new ConfigHelper({name:'style.lineWidth',type:'NUMBER',list:[1,10],displayName:'line width',default: 3}),
-    lineColor:new ConfigHelper({name: 'style.lineColor',type:'COLOR',displayName:'line color',default:'#000000' }),
-    fillColor:new ConfigHelper({name:'style.fillColor',type:'COLOR',displayName:'fill color',default: 'rgba(255,255,0,0.4)'}),
-    strokeWidth:new ConfigHelper({name: 'style.strokeWidth',type:'NUMBER',displayName:'stroke width',default: 3,list:[1,40]}),
-    strokeColor:new ConfigHelper({name: 'style.strokeColor',type:'COLOR',displayName:'stroke color',default: '#ffffff'}),
-    circleWidth:new ConfigHelper({name: 'style.circleWidth', type:'NUMBER',displayName:'circle width',default: 10,list:[1,40]}),
-    showName:new ConfigHelper({name: 'style.showName', type:'BOOLEAN',displayName:'show feature name',default: false}),
-    overwriteTextStyle: new ConfigHelper({name: 'style.overwriteText', type: 'BOOLEAN', displayName:'overwrite text style',default: false}),
-    textSize:new ConfigHelper({name: 'style.textSize', type:'NUMBER',displayName:'font size',default: 16}),
-    textOffset:new ConfigHelper({name: 'style.textOffset', type:'NUMBER',displayName: 'text offset',default: 32}),
-    textColor:new ConfigHelper({name: 'style.textColor', type:'COLOR',displayName: 'text color',default: 'rgba(0,0,0,1)'}),
+    lineWidth:new EditableNumberParameter({name:'style.lineWidth',list:[1,10],displayName:'line width',default: 3}),
+    lineColor:new EditableColorParameter({name: 'style.lineColor',displayName:'line color',default:'#000000' }),
+    fillColor:new EditableColorParameter({name:'style.fillColor',displayName:'fill color',default: 'rgba(255,255,0,0.4)'}),
+    strokeWidth:new EditableNumberParameter({name: 'style.strokeWidth',displayName:'stroke width',default: 3,list:[1,40]}),
+    strokeColor:new EditableColorParameter({name: 'style.strokeColor',displayName:'stroke color',default: '#ffffff'}),
+    circleWidth:new EditableNumberParameter({name: 'style.circleWidth', displayName:'circle width',default: 10,list:[1,40]}),
+    showName:new EditableBooleanParameter({name: 'style.showName', displayName:'show feature name',default: false}),
+    overwriteTextStyle: new EditableBooleanParameter({name: 'style.overwriteText',  displayName:'overwrite text style',default: false}),
+    textSize:new EditableNumberParameter({name: 'style.textSize', displayName:'font size',default: 16}),
+    textOffset:new EditableNumberParameter({name: 'style.textOffset', displayName: 'text offset',default: 32}),
+    textColor:new EditableColorParameter({name: 'style.textColor', displayName: 'text color',default: 'rgba(0,0,0,1)'}),
 }
 export const DEFAULT_SETTINGS=[editableOverlayParameters.minZoom,editableOverlayParameters.maxZoom];
 export const SCALE_SETTINGS=[editableOverlayParameters.minScale,editableOverlayParameters.maxScale];
