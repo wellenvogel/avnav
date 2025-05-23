@@ -21,6 +21,7 @@
 */
 
 import CloneDeep from "clone-deep";
+import Helper from "./helper";
 
 const assignableProperties={
     name: undefined,
@@ -113,6 +114,61 @@ export class EditableParameter extends Object{
             return this.default;
         }
         return rt;
+    }
+    conditionMatch(param,compare){
+        const value=this.getValue(param);
+        if (typeof compare === 'function'){
+            return compare(param,value);
+        }
+        else return compare == value;
+    }
+
+    checkConditions(param,allParameters){
+        if (!this.condition) return true;
+        const conditions=(this.condition instanceof Array)?this.condition:[this.condition];
+        const knownEditables={};
+        for (let i=0;i<conditions.length;i++){
+            const condition=conditions[i];
+            if (!(condition instanceof Object)) continue;
+            let match=true;
+            for (let k in condition){
+                //try to find the editableParameter with the name
+                //that matches the key
+                let editableParameter=knownEditables[k];
+                if (! editableParameter) {
+                    Helper.iterate(allParameters, (parameter) => {
+                        if (editableParameter) return;
+                        if (!(parameter instanceof EditableParameter)) return;
+                        if (parameter.name != k) return;
+                        editableParameter = parameter;
+                        knownEditables[k]=editableParameter;
+                    })
+                }
+                const compare=condition[k];
+                if (editableParameter){
+                    if (! editableParameter.conditionMatch(param,compare)){
+                        match=false;
+                        break;
+                    }
+                }
+                else {
+                    const value = param[k];
+                    if (typeof compare === 'function') {
+                        if (!compare(param, value)) {
+                            match = false;
+                            break;
+                        }
+                    } else {
+                        if (compare != value) {
+                            match = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (match) return true;
+        }
+        return false;
     }
 
     /**
