@@ -33,6 +33,7 @@ import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {Stroke as olStroke, Fill as olFill} from 'ol/style';
+import {EditableNumberParameter} from "../util/EditableParameter";
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -382,10 +383,10 @@ class ConfigHelper extends Object {
  * @type {*[]}
  */
 export const editableOverlayParameters={
-    minZoom:new ConfigHelper({name:'minZoom',displayName:'min zoom',type:'NUMBER',default:0}),
-    maxZoom:new ConfigHelper({name:'maxZoom',displayName:'max zoom',type:'NUMBER',default: 0}),
-    minScale:new ConfigHelper({name:'minScale',displayName:'min scale',type: 'NUMBER', default: 0}),
-    maxScale:new ConfigHelper({name:'maxScale',displayName:'max scale',type:'NUMBER', default: 0}),
+    minZoom:new EditableNumberParameter({name:'minZoom',displayName:'min zoom',default:0}),
+    maxZoom:new EditableNumberParameter({name:'maxZoom',displayName:'max zoom',default: 0}),
+    minScale:new EditableNumberParameter({name:'minScale',displayName:'min scale', default: 0}),
+    maxScale:new EditableNumberParameter({name:'maxScale',displayName:'max scale', default: 0}),
     allowOnline:new ConfigHelper({name: 'allowOnline',type:'BOOLEAN',displayName: 'allow online',default:false}),
     showText:new ConfigHelper({name:'showText',type:'BOOLEAN',displayName: 'show text',default:false}),
     allowHtml:new ConfigHelper({name:'allowHtml',type:'BOOLEAN',displayName: 'allow html',default: false}),
