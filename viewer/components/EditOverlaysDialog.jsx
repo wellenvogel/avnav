@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import PropTypes from 'prop-types';
 import {
     DialogButtons,
@@ -116,6 +116,29 @@ const OverlayItemDialog = (props) => {
         route: useItemList([]),
         track: useItemList([])
     };
+    const parameters=useMemo(()=>{
+        const rt=[];
+        if (itemInfo.settings){
+            itemInfo.settings.forEach((setting)=>{
+                let addOn=undefined;
+                if (setting.name === editableOverlayParameters.icon.name){
+                    //fill icon list
+                    addOn={
+                        list:itemLists.iconFiles.list,
+                        readOnly: iconsReadOnly
+                    };
+                }
+                const param=editableParameterUI.createEditableParameterUI({...setting,...addOn});
+                const render=(rp)=>param.render(rp)
+                rt.push({
+                    render:render,
+                    param:param
+                });
+            })
+        }
+        return rt;
+    },[itemInfo,itemsFetchCount])
+
     const getItemList = (type) => {
         const filledLists={};
         Requests.getJson("", {}, {
@@ -279,29 +302,10 @@ const OverlayItemDialog = (props) => {
     }
     let currentType = current.type;
     let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
-    let formatters = [{label: '-- none --', value: undefined}];
-    for (let f in featureFormatters) {
-        if (typeof (featureFormatters[f]) === 'function') {
-            formatters.push({label: f, value: f});
-        }
-    }
-    let parameters=[]
-    if (itemInfo.settings){
-        itemInfo.settings.forEach((setting)=>{
-            let addOn=undefined;
-            if (setting.name === editableOverlayParameters.icon.name){
-                //fill icon list
-                addOn={
-                    list:itemLists.iconFiles.list,
-                    readOnly: iconsReadOnly
-                };
-            }
-            parameters.push(editableParameterUI.createEditableParameterUI({...setting,...addOn}));
-        })
-    }
+
     let dataValid=true;
     parameters.forEach((parameter)=>{
-        if (parameter.hasError(current||{})) dataValid=false;
+        if (parameter.param.hasError(current||{})) dataValid=false;
     })
     return (
         <DialogFrame className="selectDialog editOverlayItemDialog" title={props.title || 'Edit Overlay'}>
@@ -368,9 +372,8 @@ const OverlayItemDialog = (props) => {
                                 }}
                             />
                             {parameters.map((param) => {
-                                const RV=(props)=>param.render(props);
                                 return (
-                                    <RV
+                                    <param.render
                                         currentValues={current || {}}
                                         onChange={(nv) => updateCurrent(nv)}
                                         onlyOwnParam={true}
