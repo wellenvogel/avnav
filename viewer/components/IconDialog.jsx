@@ -178,5 +178,6 @@ IconDialog.propTypes={
     onChange: PropTypes.func,
     resolveFunction: PropTypes.func,
     allowUpload: PropTypes.bool,
-    addEmpty: PropTypes.bool
+    addEmpty: PropTypes.bool,
+    value: PropTypes.string
 }

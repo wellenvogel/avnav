@@ -28,6 +28,12 @@ const assignableProperties={
     default: undefined,
     list: undefined,
     displayName: undefined,
+    /**
+     * a list of conditions
+     * each of them is an object with keys (being editable parameter names) and values to compare
+     * the value can be a function that will be called with the currentValues object and the value of the key parameter
+     * @type {(Object|Array)}
+     */
     condition: undefined,
     description: undefined,
     mandatory: false,
@@ -56,6 +62,7 @@ export class EditableParameter extends Object{
         if (this.name === undefined) throw new Error("invalid editable parameter: missing name");
         if (this.type === undefined) throw new Error("invalid editable parameter "+this.name+" has no type");
         if (this.checker !== undefined && (typeof this.checker !== 'function')) throw new Error("invalid type"+(typeof this.checker)+" for checker ("+this.name+") - must be function");
+        if (this.displayName === undefined) this.displayName=this.name;
         Object.freeze(this);
     }
     assign(target,plain,onlyExisting){
@@ -93,16 +100,16 @@ export class EditableParameter extends Object{
     }
     getList(){
         if (typeof (this.list) === 'function') return this.list();
-        return this.list||[];
+        return this.list;
     }
     setValue(param,value,check){
+        if (! param) param={};
         if (check && this.checker) {
             if (! this.checker(value,param)) throw new Error("invalid value for "+this.name+": "+value);
         }
         if (check) {
             if (this.mandatory && value === undefined) throw new Error("mandatory parameter " + this.name + " missing");
         }
-        if (! param) param={};
         param[this.name] = value;
         return param;
     }
@@ -216,6 +223,19 @@ export class EditableParameter extends Object{
     toString() {
         return this.name;
     }
+
+    /**
+     * check if a vlaue is ok
+     * @param param
+     */
+    hasError(param){
+        const cv=this.getValue(param);
+        try{
+            this.setValue({},cv,true);
+            return false;
+        }catch (e){}
+        return true;
+    }
 }
 export class EditableStringParameterBase extends EditableParameter{
     constructor(plain,type) {
@@ -225,7 +245,7 @@ export class EditableStringParameterBase extends EditableParameter{
      *
      * @param param
      * @param value
-     * @param check {boolean} - check the value type
+     * @param [check] {boolean} - check the value type
      * @returns {*}
      */
     setValue(param, value,check) {
@@ -261,7 +281,7 @@ export class EditableBooleanParameter extends EditableParameter{
      *
      * @param param
      * @param value
-     * @param check {boolean} - check the value type
+     * @param [check] {boolean} - check the value type
      * @returns {*}
      */
     setValue(param, value,check) {
@@ -327,16 +347,27 @@ export class EditableSelectParameter extends EditableParameter{
     static getValueFromListEntry(listEntry){
         if (typeof listEntry === 'string') return listEntry;
         if (! (listEntry instanceof Object)) return listEntry;
-        return listEntry.name||listEntry.value;
+        return listEntry.value;
     }
     static getLabelFromListEntry(listEntry){
         if (typeof listEntry === 'string') return listEntry;
         if (! (listEntry instanceof Object)) return listEntry;
-        return listEntry.label||listEntry.l||listEntry.displayName;
+        if ('label' in listEntry) return listEntry.label+'';
+        if ('l' in listEntry) return listEntry.l+'';
+        if ('displayName' in listEntry) return listEntry.displayName+'';
+        return listEntry.value+'';
     }
     constructor(plain) {
         super(plain,EditableSelectParameter.TYPE);
-        if (this.list === undefined) throw new Error("missing list parameter for select "+this.name);
+        const theList=super.getList();
+        if (theList === undefined) throw new Error("missing list parameter for select "+this.name);
+        if (! (theList instanceof Array) ) throw new Error("list parameter must be an array or a function for "+this.name);
+        theList.forEach((item)=>{
+            if (item === undefined) return;
+            if (typeof item === 'string') return;
+            if (typeof item !== 'object') throw new Error("invalid list item "+item+" for "+this.name+" must be string or object");
+            if (! ('value' in item)) throw new Error("invalid list item "+JSON.stringify(item)+" for "+this.name+", missing value property");
+        })
     }
     getList(){
         let list=super.getList();
@@ -377,7 +408,9 @@ export class EditableIconParameter extends EditableStringParameterBase{
 export class EditableColorParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.COLOR;
     constructor(plain) {
-        super(plain,EditableColorParameter.TYPE);
+        super({checker:(cv)=>{
+            return CSS.supports('color',cv);
+            },...plain},EditableColorParameter.TYPE);
     }
 }
 

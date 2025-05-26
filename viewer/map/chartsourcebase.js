@@ -406,12 +406,12 @@ export const editableOverlayParameters={
             }
             return formatters;
         }}),
-    lineWidth:new EditableNumberParameter({name:'style.lineWidth',list:[1,10],displayName:'line width',default: 3}),
+    lineWidth:new EditableNumberParameter({name:'style.lineWidth',list:[0,10],displayName:'line width',default: 3}),
     lineColor:new EditableColorParameter({name: 'style.lineColor',displayName:'line color',default:'#000000' }),
     fillColor:new EditableColorParameter({name:'style.fillColor',displayName:'fill color',default: 'rgba(255,255,0,0.4)'}),
-    strokeWidth:new EditableNumberParameter({name: 'style.strokeWidth',displayName:'stroke width',default: 3,list:[1,40]}),
+    strokeWidth:new EditableNumberParameter({name: 'style.strokeWidth',displayName:'stroke width',default: 3,list:[0,40]}),
     strokeColor:new EditableColorParameter({name: 'style.strokeColor',displayName:'stroke color',default: '#ffffff'}),
-    circleWidth:new EditableNumberParameter({name: 'style.circleWidth', displayName:'circle width',default: 10,list:[1,40]}),
+    circleWidth:new EditableNumberParameter({name: 'style.circleWidth', displayName:'circle width',default: 10,list:[0,40]}),
     showName:new EditableBooleanParameter({name: 'style.showName', displayName:'show feature name',default: false}),
     overwriteTextStyle: new EditableBooleanParameter({name: 'style.overwriteText',  displayName:'overwrite text style',default: false}),
     textSize:new EditableNumberParameter({name: 'style.textSize', displayName:'font size',default: 16}),
@@ -505,7 +505,7 @@ export class FoundFeatureFlags{
         if (! features) return rt;
         features.forEach((feature)=>{
             if (featureCallback) featureCallback(feature,rt);
-            const hasSymbol=feature.get('symbol') !== undefined;
+            const hasSymbol=(feature.get('symbol') !== undefined) || (feature.get('sym') !== undefined);
             if (feature.get('link') !== undefined) rt.hasLink=true;
             if (feature.get('name') !== undefined) rt.hasText=true;
             const desc=feature.get('desc')||feature.get('description');

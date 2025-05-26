@@ -287,7 +287,8 @@ export const readFeatureInfoFromKml=(kml)=>{
     if (flags.hasNonSymbolPoint) addToSettings(settings,supportedStyleParameters.defaultIcon);
     addToSettings(settings,[
         supportedStyleParameters.featureFormatter,
-        supportedStyleParameters.allowOnline
+        supportedStyleParameters.allowOnline,
+        supportedStyleParameters.icon
     ])
     if (flags.hasText) addToSettings(settings,supportedStyleParameters.overwriteTextStyle);
     return {

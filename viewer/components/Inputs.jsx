@@ -56,12 +56,15 @@ export const Input=(props)=>{
         </div>;
 };
 
-Input.propTypes=assign({},DEFAULT_TYPES,{
+Input.propTypes={...DEFAULT_TYPES,
     type: PropTypes.string, //the type of the input element, default: text
     minSize: PropTypes.number,
     maxSize: PropTypes.number,
+    min: PropTypes.number,
+    max: PropTypes.number,
+    step: PropTypes.oneOfType([PropTypes.number,PropTypes.string]),
     checkFunction: PropTypes.func
-});
+};
 
 export const Checkbox=(props)=>{
     let className="checkBox";
@@ -69,6 +72,10 @@ export const Checkbox=(props)=>{
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
     let clickFunction=(ev)=>{
+        if (props.readOnly) {
+            ev.stopPropagation();
+            return;
+        }
         if (props.onClick) return props.onClick(ev);
         if (props.onChange) {
             ev.stopPropagation();
@@ -84,9 +91,10 @@ export const Checkbox=(props)=>{
 
 
 
-Checkbox.propTypes=assign({},DEFAULT_TYPES,{
+Checkbox.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if set: do not call onChange but call onClick with the event
-});
+    readOnly: PropTypes.bool
+};
 
 export const Radio=(props)=>{
     let className="radio";
@@ -197,6 +205,7 @@ export const ColorSelector=(props)=>{
         };
         onClick=(ev)=>{
             ev.stopPropagation();
+            if (props.readOnly) return;
             dialogContext.showDialog(()=>{
                 return <ColorDialog
                     value={props.value}
@@ -220,7 +229,8 @@ export const ColorSelector=(props)=>{
         {props.children}
   </div>;
 };
-ColorSelector.propTypes=assign({},DEFAULT_TYPES,{
+ColorSelector.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if onChange is not set, call this function when clicked
-    style: PropTypes.object //if set use this style for the color display
-});
+    style: PropTypes.object, //if set use this style for the color display
+    readOnly: PropTypes.bool
+};

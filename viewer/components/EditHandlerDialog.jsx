@@ -39,10 +39,8 @@ import DB from './DialogButton.jsx';
 import {ParamValueInput} from "./ParamValueInput";
 import RequestHandler from "../util/requests";
 import Toast from "./Toast";
-import {createEditableParameter} from "./EditableParameters";
+import {createEditableParameter} from "./EditableParameterUI";
 import Button from "./Button";
-import {stateHelper} from "../util/GuiHelpers";
-import DialogButton from "./DialogButton.jsx";
 import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 
 const HelpButton=(props)=>{
@@ -313,14 +311,6 @@ EditHandlerDialog.propTypes={
     createdCallback: PropTypes.func,
     addHandler: PropTypes.bool
 };
-
-const filterObject=(data)=>{
-    for (let k in data){
-        if (data[k] === undefined) delete data[k];
-    }
-    return data;
-};
-
 /**
  *
  * @param handlerId: the handler to be edited

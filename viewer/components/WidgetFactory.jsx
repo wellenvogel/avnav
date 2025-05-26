@@ -11,7 +11,7 @@ import keys,{KeyHelper} from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
-import {createEditableParameter, EditableParameter} from "./EditableParameters";
+import {createEditableParameter, EditableParameter} from "./EditableParameterUI";
 import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
 import MapWidget from "./MapWidget";

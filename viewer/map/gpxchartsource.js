@@ -99,7 +99,9 @@ const getSupportedStyleParameters=(isRoute)=>{
         editableOverlayParameters.minZoom,
         editableOverlayParameters.maxZoom,
         editableOverlayParameters.minScale,
-        editableOverlayParameters.maxScale
+        editableOverlayParameters.maxScale,
+        editableOverlayParameters.icon,
+        editableOverlayParameters.defaultIcon
     ]
 }
 
@@ -200,13 +202,16 @@ class GpxChartSource extends ChartSourceBase{
                 }
                 if (sym) {
                     if (!this.styleMap[sym]) {
-                        let rt = rt.clone();
+                        rt = rt.clone();
                         rt.setImage(
                                 new olIcon({
                                     src: this.getSymbolUrl(sym, '.png')
                                 })
                         );
                         this.styleMap[sym] = rt;
+                    }
+                    else{
+                        rt=this.styleMap[sym];
                     }
                 }
             }
@@ -378,7 +383,7 @@ class GpxChartSource extends ChartSourceBase{
                 coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
-        let infoItems=['desc','name','sym','time','height','sym','link','linkText'];
+        let infoItems=['desc','name','sym','time','height','link','linkText'];
         infoItems.forEach((item)=>rt[item]=feature.get(item));
         this.formatFeatureInfo(this.styleParameters[editableOverlayParameters.featureFormatter], rt,feature,coordinates,true);
         return rt;

@@ -25,7 +25,7 @@ import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
-import {createEditableParameter} from "./EditableParameters";
+import editableParameterUI, {createEditableParameter} from "./EditableParameterUI";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import base from "../base";
@@ -112,7 +112,7 @@ const OverlayItemDialog = (props) => {
         images: useItemList([]),
         user: useItemList([]),
         knownOverlays: useItemList([]),
-        iconFiles: useItemList([{label: "--none--"}]),
+        iconFiles: useItemList([{label: "--none--",value:undefined}]),
         route: useItemList([]),
         track: useItemList([])
     };
@@ -285,6 +285,24 @@ const OverlayItemDialog = (props) => {
             formatters.push({label: f, value: f});
         }
     }
+    let parameters=[]
+    if (itemInfo.settings){
+        itemInfo.settings.forEach((setting)=>{
+            let addOn=undefined;
+            if (setting.name === editableOverlayParameters.icon.name){
+                //fill icon list
+                addOn={
+                    list:itemLists.iconFiles.list,
+                    readOnly: iconsReadOnly
+                };
+            }
+            parameters.push(editableParameterUI.createEditableParameterUI({...setting,...addOn}));
+        })
+    }
+    let dataValid=true;
+    parameters.forEach((parameter)=>{
+        if (parameter.hasError(current||{})) dataValid=false;
+    })
     return (
         <DialogFrame className="selectDialog editOverlayItemDialog" title={props.title || 'Edit Overlay'}>
             <DialogRow className="info"><span
@@ -349,16 +367,10 @@ const OverlayItemDialog = (props) => {
                                     analyseOverlay(newState.url, initial);
                                 }}
                             />
-                            {itemInfo.settings && itemInfo.settings.map((param) => {
-                                let ipParam=createEditableParameter(param.name, param.type, param.list, param.displayName, param.default);
-                                if (ipParam.name === editableOverlayParameters.icon.name){
-                                    //fill icon list
-                                    ipParam.list=itemLists.iconFiles.list;
-                                }
-                                if (ipParam && param.description) ipParam.description=param.description;
+                            {parameters.map((param) => {
+                                const RV=(props)=>param.render(props);
                                 return (
-                                    <ParamValueInput
-                                        param={ipParam}
+                                    <RV
                                         currentValues={current || {}}
                                         onChange={(nv) => updateCurrent(nv)}
                                         onlyOwnParam={true}
@@ -381,7 +393,7 @@ const OverlayItemDialog = (props) => {
                             if (changes.opacity > 1) changes.opacity = 1;
                             props.resolveFunction(changes);
                         }}
-                        disabled={(!changed && !props.forceOk) || !current.name}
+                        disabled={(!changed && !props.forceOk) || !current.name||!dataValid}
                     >Ok</DB>
                     : null}
 

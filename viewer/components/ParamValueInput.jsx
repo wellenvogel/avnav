@@ -27,7 +27,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.jsx';
-import {EditableParameter} from "./EditableParameters";
+import {EditableParameter} from "./EditableParameterUI";
 
 export const getList=(list,current)=> {
     if (list instanceof Promise){
