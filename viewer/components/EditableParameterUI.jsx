@@ -26,7 +26,7 @@
 
 import React from "react";
 import CloneDeep from 'clone-deep';
-import {DialogRow, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import {Checkbox, ColorSelector, Input, InputReadOnly, InputSelect} from "./Inputs";
 import editableParameterFactory, {
