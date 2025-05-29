@@ -144,40 +144,9 @@ EditableParameter.TYPE={
     FLOAT: 3,
     SELECT:4,
     BOOLEAN:5,
-    COLOR:6,
-    ICON: 7
+    COLOR:6
 };
 
-export class IconParameter extends EditableParameter{
-    constructor(name, type, list, displayName) {
-        super(name, EditableParameter.TYPE.ICON, list, displayName);
-    }
-    renderValue=({url})=>{
-        return <React.Fragment>
-            {url && <span className="icon" style={{backgroundImage: "url('" + url + "')"}}/>}
-            {url&&<span className={"url"}>{url.replace(/.*\//,'')}</span>}
-        </React.Fragment>
-    }
-    render=(props)=>{
-        if (! props.currentValues) return null;
-        const dialogContext=useDialogContext();
-        const RV=(vprops)=>this.renderValue(vprops);
-        return <InputReadOnly
-            className={'iconInput'}
-            dialogRow={true}
-            label={props.param.displayName}
-            value={<RV url={this.getValueForDisplay(props.currentValues)}/>}
-            onClick={()=>{
-                showPromiseDialog(dialogContext,(dprops)=><IconDialog {...dprops} addEmpty={props.param.mandatory !== true} />)
-                    .then((selected)=>{
-                        let rt={};
-                        rt[props.param.name]=selected.url;
-                        props.onChange(rt);
-                    })
-                    .catch(()=>{})
-            }}/>
-    }
-}
 
 
 export const createEditableParameter=(name, type, list, displayName,opt_default)=>{
@@ -194,8 +163,6 @@ export const createEditableParameter=(name, type, list, displayName,opt_default)
         case EditableParameter.TYPE.COLOR:
             rt=new EditableParameter(name, type, list, displayName);
             break;
-        case EditableParameter.TYPE.ICON:
-            rt=new IconParameter(name,type,list,displayName);
     }
     if (rt && opt_default !== undefined){
         rt.default=opt_default;
@@ -242,9 +209,17 @@ const getCommonParam=(ep,currentValues,className)=>{
     }
 }
 
+const cHelper=(thisref)=>{
+    if (typeof thisref.render === 'function') {
+        thisref.render=thisref.render.bind(thisref);
+    }
+    Object.freeze(thisref);
+}
+
 export class EditableBooleanParameterUI extends EditableBooleanParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
     render({currentValues,className,onChange}) {
         return <Checkbox
@@ -259,7 +234,8 @@ export class EditableBooleanParameterUI extends EditableBooleanParameter{
 
 export class EditableStringParameterUI extends EditableStringParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
     render({currentValues,className,onChange}){
         if (!this.canEdit()){
@@ -279,7 +255,8 @@ export class EditableStringParameterUI extends EditableStringParameter{
 
 export class EditableNumberParameterUI extends EditableNumberParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
     render({currentValues,className,onChange}){
         if (!this.canEdit()){
@@ -302,7 +279,8 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
 
 export class EditableFloatParameterUI extends EditableFloatParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
     render({currentValues,className,onChange}){
         if (!this.canEdit()){
@@ -322,7 +300,8 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
 }
 export class EditableSelectParameterUI extends EditableSelectParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
     render({currentValues,className,onChange}){
         if (!this.canEdit()){
@@ -356,7 +335,8 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
 
 class EditableColorParameterUI extends EditableColorParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
 
     render({currentValues, className, onChange}) {
@@ -378,7 +358,8 @@ const RenderIcon=({url})=>{
 }
 class EditableIconParameterUI extends EditableIconParameter{
     constructor(props) {
-        super(props);
+        super(props,true);
+        cHelper(this);
     }
     render({currentValues,className,onChange}) {
         const dialogContext=useDialogContext();

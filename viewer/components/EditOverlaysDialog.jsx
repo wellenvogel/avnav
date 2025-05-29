@@ -16,16 +16,13 @@ import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {readFeatureInfoFromKml} from '../map/kmlchartsource';
 import {editableOverlayParameters, getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
-import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
-import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
-import editableParameterUI, {createEditableParameter} from "./EditableParameterUI";
+import editableParameterUI from "./EditableParameterUI";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import base from "../base";
@@ -129,11 +126,7 @@ const OverlayItemDialog = (props) => {
                     };
                 }
                 const param=editableParameterUI.createEditableParameterUI({...setting,...addOn});
-                const render=(rp)=>param.render(rp)
-                rt.push({
-                    render:render,
-                    param:param
-                });
+                rt.push(param);
             })
         }
         return rt;
@@ -305,7 +298,7 @@ const OverlayItemDialog = (props) => {
 
     let dataValid=true;
     parameters.forEach((parameter)=>{
-        if (parameter.param.hasError(current||{})) dataValid=false;
+        if (parameter.hasError(current||{})) dataValid=false;
     })
     return (
         <DialogFrame className="selectDialog editOverlayItemDialog" title={props.title || 'Edit Overlay'}>
@@ -376,7 +369,6 @@ const OverlayItemDialog = (props) => {
                                     <param.render
                                         currentValues={current || {}}
                                         onChange={(nv) => updateCurrent(nv)}
-                                        onlyOwnParam={true}
                                     />
                                 )
                             })}

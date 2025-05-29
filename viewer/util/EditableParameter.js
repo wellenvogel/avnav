@@ -55,7 +55,13 @@ export const EditableParameterTypes={
 
 export class EditableParameter extends Object{
     static TYPE=EditableParameterTypes.UNKNOWN
-    constructor(plain,type) {
+
+    /**
+     * @param plain {Object} object with properties from assignableProperties
+     * @param type the type from EditableParameterTypes
+     * @param opt_noFreeze if set - do not freeze the object
+     */
+    constructor(plain,type,opt_noFreeze) {
         super();
         this.type=type;
         this.assign(this,plain);
@@ -63,7 +69,7 @@ export class EditableParameter extends Object{
         if (this.type === undefined) throw new Error("invalid editable parameter "+this.name+" has no type");
         if (this.checker !== undefined && (typeof this.checker !== 'function')) throw new Error("invalid type"+(typeof this.checker)+" for checker ("+this.name+") - must be function");
         if (this.displayName === undefined) this.displayName=this.name;
-        Object.freeze(this);
+        if (! opt_noFreeze) Object.freeze(this);
     }
     assign(target,plain,onlyExisting){
         if (! target) target={};
@@ -238,8 +244,8 @@ export class EditableParameter extends Object{
     }
 }
 export class EditableStringParameterBase extends EditableParameter{
-    constructor(plain,type) {
-        super(plain,type);
+    constructor(plain,type,opt_noFreeze) {
+        super(plain,type,opt_noFreeze);
     }
     /**
      *
@@ -260,14 +266,14 @@ export class EditableStringParameterBase extends EditableParameter{
 }
 export class EditableStringParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.STRING;
-    constructor(plain) {
-        super(plain,EditableParameterTypes.STRING);
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableParameterTypes.STRING,opt_noFreeze);
     }
 }
 export class EditableBooleanParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.BOOLEAN;
-    constructor(plain) {
-        super(plain,EditableBooleanParameter.TYPE);
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableBooleanParameter.TYPE,opt_noFreeze);
     }
     toBool(v){
         if (v === undefined) return false;
@@ -295,8 +301,8 @@ export class EditableBooleanParameter extends EditableParameter{
 }
 export class EditableNumberParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.NUMBER;
-    constructor(plain) {
-        super(plain,EditableNumberParameter.TYPE);
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableNumberParameter.TYPE,opt_noFreeze);
     }
     setValue(param, value,check) {
         let parsed=(value!==undefined)?parseInt(value):value;
@@ -319,8 +325,8 @@ export class EditableNumberParameter extends EditableParameter{
 }
 export class EditableFloatParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.FLOAT;
-    constructor(plain) {
-        super(plain,EditableFloatParameter.TYPE);
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableFloatParameter.TYPE,opt_noFreeze);
     }
     setValue(param, value,check) {
         let parsed=(value!==undefined)?parseFloat(value):value;
@@ -357,8 +363,8 @@ export class EditableSelectParameter extends EditableParameter{
         if ('displayName' in listEntry) return listEntry.displayName+'';
         return listEntry.value+'';
     }
-    constructor(plain) {
-        super(plain,EditableSelectParameter.TYPE);
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableSelectParameter.TYPE,opt_noFreeze);
         const theList=super.getList();
         if (theList === undefined) throw new Error("missing list parameter for select "+this.name);
         if (! (theList instanceof Array) ) throw new Error("list parameter must be an array or a function for "+this.name);
@@ -401,16 +407,16 @@ export class EditableSelectParameter extends EditableParameter{
 
 export class EditableIconParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.ICON;
-    constructor(plain) {
-        super(plain,EditableIconParameter.TYPE);
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableIconParameter.TYPE,opt_noFreeze);
     }
 }
 export class EditableColorParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.COLOR;
-    constructor(plain) {
+    constructor(plain,opt_noFreeze) {
         super({checker:(cv)=>{
             return CSS.supports('color',cv);
-            },...plain},EditableColorParameter.TYPE);
+            },...plain},EditableColorParameter.TYPE,opt_noFreeze);
     }
 }
 
