@@ -277,7 +277,7 @@ body{
     .inputLabel();
     width: unset;
   }
-  .iconInput .input {
+  .iconInput .input,.colorSelector .input {
     .flex-display();
     .flex-direction(row);
     .flex-align-items(center);
@@ -343,6 +343,10 @@ body{
   }
   .errorText{
     .nightForeFade(@colorRed)
+  }
+  .paramButtons {
+    .flex-display();
+    .flex-direction(row);
   }
 
 }
@@ -568,10 +572,6 @@ body{
 .EditHandlerDialog{
   .inputLabel{
     width: 9em;
-  }
-  .paramButtons {
-    .flex-display();
-    .flex-direction(row);
   }
 }
 .downloadFrame{

@@ -26,48 +26,16 @@
 
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import {
-    DBOk,
-    DialogButtons,
-    DialogFrame,
-    showDialog,
-    showPromiseDialog,
-    useDialogContext
-} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import DB from './DialogButton.jsx';
 import {ParamValueInput} from "./ParamValueInput";
 import RequestHandler from "../util/requests";
 import Toast from "./Toast";
-import {createEditableParameter} from "./EditableParameterUI";
+import {createEditableParameter, HelpButton} from "./EditableParameterUI";
 import Button from "./Button";
 import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 
-const HelpButton=(props)=>{
-    const dialogContext=useDialogContext();
-    let InfoDialog=()=>{
-        return(
-            <DialogFrame className="HelpDialog">
-                <div className="dialogRow infoText">
-                    {props.param.description}
-                </div>
-                <DialogButtons buttonList={DBOk()}>
-                </DialogButtons>
-            </DialogFrame>
-        )
-    }
-    return <Button
-        name={'help'}
-        className="Help smallButton"
-        onClick={(ev)=>{
-            ev.stopPropagation();
-            ev.preventDefault();
-            if (props.param && props.param.description) {
-                dialogContext.showDialog(InfoDialog);
-            }
-        }}
-        />
-}
 const EditHandlerDialog=(props)=>{
     const [loaded,setLoaded]=useState(false);
     const [parameters,setParameters]=useState(undefined);

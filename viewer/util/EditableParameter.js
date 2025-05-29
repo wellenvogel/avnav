@@ -95,8 +95,8 @@ export class EditableParameter extends Object{
         let rt=new this.constructor(param,this.type);
         return rt;
     }
-    reset(param){
-        this.setValue(param, this.default);
+    reset(values){
+        return this.setValue(values, this.default);
     }
     canEdit(){
         return ! this.readOnly;
@@ -108,35 +108,35 @@ export class EditableParameter extends Object{
         if (typeof (this.list) === 'function') return this.list();
         return this.list;
     }
-    setValue(param,value,check){
-        if (! param) param={};
+    setValue(values,value,check){
+        if (! values) values={};
         if (check && this.checker) {
-            if (! this.checker(value,param)) throw new Error("invalid value for "+this.name+": "+value);
+            if (! this.checker(value,values)) throw new Error("invalid value for "+this.name+": "+value);
         }
         if (check) {
             if (this.mandatory && value === undefined) throw new Error("mandatory parameter " + this.name + " missing");
         }
-        param[this.name] = value;
-        return param;
+        values[this.name] = value;
+        return values;
     }
 
-    getValue(param){
-        if (! param) param={};
-        let rt=param[this.name];
+    getValue(values){
+        if (! values) values={};
+        let rt=values[this.name];
         if (rt === undefined && this.default !== undefined){
             return this.default;
         }
         return rt;
     }
-    conditionMatch(param,compare){
-        const value=this.getValue(param);
+    conditionMatch(values,compare){
+        const value=this.getValue(values);
         if (typeof compare === 'function'){
-            return compare(param,value);
+            return compare(values,value);
         }
         else return compare == value;
     }
 
-    checkConditions(param,allParameters){
+    checkConditions(values,allParameters){
         if (!this.condition) return true;
         const conditions=(this.condition instanceof Array)?this.condition:[this.condition];
         const knownEditables={};
@@ -159,15 +159,15 @@ export class EditableParameter extends Object{
                 }
                 const compare=condition[k];
                 if (editableParameter){
-                    if (! editableParameter.conditionMatch(param,compare)){
+                    if (! editableParameter.conditionMatch(values,compare)){
                         match=false;
                         break;
                     }
                 }
                 else {
-                    const value = param[k];
+                    const value = values[k];
                     if (typeof compare === 'function') {
-                        if (!compare(param, value)) {
+                        if (!compare(values, value)) {
                             match = false;
                             break;
                         }
@@ -186,12 +186,12 @@ export class EditableParameter extends Object{
 
     /**
      * @deprecated
-     * @param param
+     * @param values
      * @param opt_placeHolder
      * @returns {*|string|boolean}
      */
-    getValueForDisplay(param,opt_placeHolder){
-        let rt=this.getValue(param);
+    getValueForDisplay(values,opt_placeHolder){
+        let rt=this.getValue(values);
         if (rt === undefined || rt === null) {
             rt = CloneDeep(this.default);
         }
@@ -212,9 +212,9 @@ export class EditableParameter extends Object{
     isValid(value){
         return true;
     }
-    mandatoryOk(param){
+    mandatoryOk(values){
         if (! this.mandatory) return true;
-        let cv=this.getValue(param);
+        let cv=this.getValue(values);
         if (cv !== undefined && cv !== null && cv !== '') return true;
         return false;
     }
@@ -232,10 +232,10 @@ export class EditableParameter extends Object{
 
     /**
      * check if a vlaue is ok
-     * @param param
+     * @param values
      */
-    hasError(param){
-        const cv=this.getValue(param);
+    hasError(values){
+        const cv=this.getValue(values);
         try{
             this.setValue({},cv,true);
             return false;
@@ -249,17 +249,17 @@ export class EditableStringParameterBase extends EditableParameter{
     }
     /**
      *
-     * @param param
+     * @param values
      * @param value
      * @param [check] {boolean} - check the value type
      * @returns {*}
      */
-    setValue(param, value,check) {
-        return super.setValue(param, (value!==undefined)?value+"":undefined,check);
+    setValue(values, value,check) {
+        return super.setValue(values, (value!==undefined)?value+"":undefined,check);
     }
 
-    getValue(param) {
-        const rt=super.getValue(param);
+    getValue(values) {
+        const rt=super.getValue(values);
         if (rt === undefined) return rt;
         return rt+"";
     }
@@ -285,17 +285,17 @@ export class EditableBooleanParameter extends EditableParameter{
 
     /**
      *
-     * @param param
+     * @param values
      * @param value
      * @param [check] {boolean} - check the value type
      * @returns {*}
      */
-    setValue(param, value,check) {
-        return super.setValue(param, this.toBool(value),check);
+    setValue(values, value,check) {
+        return super.setValue(values, this.toBool(value),check);
     }
 
-    getValue(param) {
-        const rt=super.getValue(param);
+    getValue(values) {
+        const rt=super.getValue(values);
         return this.toBool(rt);
     }
 }
@@ -304,7 +304,7 @@ export class EditableNumberParameter extends EditableParameter{
     constructor(plain,opt_noFreeze) {
         super(plain,EditableNumberParameter.TYPE,opt_noFreeze);
     }
-    setValue(param, value,check) {
+    setValue(values, value,check) {
         let parsed=(value!==undefined)?parseInt(value):value;
         if (check && this.list !== undefined){
             const list=this.getList();
@@ -314,11 +314,11 @@ export class EditableNumberParameter extends EditableParameter{
                 }
             }
         }
-        return super.setValue(param, parsed,check);
+        return super.setValue(values, parsed,check);
     }
 
-    getValue(param) {
-        const rt=super.getValue(param);
+    getValue(values) {
+        const rt=super.getValue(values);
         if (rt === undefined) return rt;
         return parseInt(rt);
     }
@@ -328,7 +328,7 @@ export class EditableFloatParameter extends EditableParameter{
     constructor(plain,opt_noFreeze) {
         super(plain,EditableFloatParameter.TYPE,opt_noFreeze);
     }
-    setValue(param, value,check) {
+    setValue(values, value,check) {
         let parsed=(value!==undefined)?parseFloat(value):value;
         if (check && this.list !== undefined){
             const list=this.getList();
@@ -338,11 +338,11 @@ export class EditableFloatParameter extends EditableParameter{
                 }
             }
         }
-        return super.setValue(param, parsed,check);
+        return super.setValue(values, parsed,check);
     }
 
-    getValue(param) {
-        const rt=super.getValue(param);
+    getValue(values) {
+        const rt=super.getValue(values);
         if (rt === undefined) return rt;
         return parseFloat(rt);
     }
@@ -385,7 +385,7 @@ export class EditableSelectParameter extends EditableParameter{
         }
         return list;
     }
-    setValue(param, value,check) {
+    setValue(values, value,check) {
         if (check){
             const list=this.getList();
             let found=false;
@@ -397,10 +397,10 @@ export class EditableSelectParameter extends EditableParameter{
             }
             if (! found) throw new Error("value "+value+" for "+this.name+" not in list");
         }
-        return super.setValue(param, value,check);
+        return super.setValue(values, value,check);
     }
-    getValue(param) {
-        const rt=super.getValue(param);
+    getValue(values) {
+        const rt=super.getValue(values);
         return rt;
     }
 }

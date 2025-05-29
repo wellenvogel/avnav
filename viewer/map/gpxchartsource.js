@@ -25,7 +25,7 @@
 
 import Requests from '../util/requests.js';
 import ChartSourceBase, {
-    addToSettings, buildOlFontConfig, editableOverlayParameters, FoundFeatureFlags, orderSettings
+    addToSettings, buildOlFontConfig, editableOverlayParameters, FoundFeatureFlags, orderSettings, TEXT_FORMAT_SETTINGS
 } from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
@@ -161,7 +161,7 @@ class GpxChartSource extends ChartSourceBase{
                     radius: this.styleParameters[editableOverlayParameters.circleWidth]/2,
                     stroke: new olStroke({
                         color: (this.styleParameters[editableOverlayParameters.strokeWidth]>0)?
-                            this.styleParameters[editableOverlayParameters.lineColor]:this.COLOR_INVISIBLE,
+                            this.styleParameters[editableOverlayParameters.strokeColor]:this.COLOR_INVISIBLE,
                         width: this.styleParameters[editableOverlayParameters.strokeWidth],
                     })
                 })
@@ -426,6 +426,11 @@ export const readFeatureInfoFromGpx=(gpx)=>{
     let settings=featureFlags.createSettings();
     addToSettings(settings,editableOverlayParameters.featureFormatter)
     addToSettings(settings,getSupportedStyleParameters(featureFlags.hasRoute),true);
+    TEXT_FORMAT_SETTINGS.forEach((setting)=>{
+        addToSettings(settings,setting.clone({
+            condition:{[editableOverlayParameters.showText]:true}
+        }),true);
+    })
     return {
         hasAny: featureFlags.hasAny,
         settings: orderSettings(settings,getSupportedStyleParameters(featureFlags.isRoute))

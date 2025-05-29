@@ -27,7 +27,7 @@ import ChartSourceBase, {
     addToSettings, buildOlFontConfig,
     editableOverlayParameters,
     FoundFeatureFlags,
-    orderSettings
+    orderSettings, TEXT_FORMAT_SETTINGS
 } from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
@@ -40,6 +40,7 @@ const supportedStyleParameters= {
     lineColor: editableOverlayParameters.lineColor,
     fillColor: editableOverlayParameters.fillColor,
     strokeWidth: editableOverlayParameters.strokeWidth,
+    strokeColor: editableOverlayParameters.strokeColor,
     circleWidth: editableOverlayParameters.circleWidth,
     showText: editableOverlayParameters.showText,
     textSize: editableOverlayParameters.textSize,
@@ -84,6 +85,11 @@ class GeoJsonChartSource extends ChartSourceBase{
                 radius: this.styleParameters[supportedStyleParameters.circleWidth]/2,
                 fill: new olFill({
                     color: this.styleParameters[supportedStyleParameters.fillColor],
+                }),
+                stroke: new olStroke({
+                    color: (this.styleParameters[supportedStyleParameters.strokeWidth]>0)?
+                        this.styleParameters[supportedStyleParameters.strokeColor]:this.COLOR_INVISIBLE,
+                    width: this.styleParameters[supportedStyleParameters.strokeWidth],
                 })
             });
         }
@@ -279,6 +285,12 @@ const readFeatureInfoFromGeoJson=(doc)=>{
     let settings=flags.createSettings();
     addToSettings(settings,supportedStyleParameters.featureFormatter)
     if (flags.hasNonSymbolPoint) addToSettings(settings,supportedStyleParameters.defaultIcon);
+    //add a condition to the text format settings
+    TEXT_FORMAT_SETTINGS.forEach((setting)=>{
+        addToSettings(settings,setting.clone({
+            condition:{[editableOverlayParameters.showText]:true}
+        }),true);
+    })
     return {
         hasAny: flags.hasAny,
         settings: orderSettings(settings,supportedStyleParameters)

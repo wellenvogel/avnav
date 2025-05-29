@@ -221,13 +221,15 @@ export const ColorSelector=(props)=>{
     if (props.className) className+=" "+props.className;
     let ipClass="input";
     if (valueMissing(props.mandatory,props.value)) ipClass+=" missing";
-    return <div className={className+ " colorSelector"}
-              onClick={onClick}>
-            <span className="inputLabel">{props.label}</span>
+    return <div className={className + " colorSelector"}
+                onClick={onClick}>
+        <span className="inputLabel">{props.label}</span>
+        <div className={ipClass}>
             <div className="colorValue" style={style}></div>
-            <div className={ipClass}>{props.value}</div>
+            <div className={"value"}>{props.value}</div>
+        </div>
         {props.children}
-  </div>;
+    </div>;
 };
 ColorSelector.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if onChange is not set, call this function when clicked

@@ -26,17 +26,20 @@
 
 import React from "react";
 import CloneDeep from 'clone-deep';
-import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {DBOk, DialogButtons, DialogFrame, showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import {Checkbox, ColorSelector, Input, InputReadOnly, InputSelect} from "./Inputs";
 import editableParameterFactory, {
     EditableBooleanParameter,
     EditableColorParameter,
-    EditableFloatParameter, EditableIconParameter,
-    EditableNumberParameter, EditableSelectParameter,
+    EditableFloatParameter,
+    EditableIconParameter,
+    EditableNumberParameter,
+    EditableSelectParameter,
     EditableStringParameter
 } from "../util/EditableParameter";
 import Helper from "../util/helper";
+import Button from "./Button";
 
 //------------------------- legacy part ------
 export class EditableParameter{
@@ -172,6 +175,31 @@ export const createEditableParameter=(name, type, list, displayName,opt_default)
 
 
 //------------ new part --------------------------
+const InfoDialog = ({description}) => {
+    return (
+        <DialogFrame className="HelpDialog">
+            <div className="dialogRow infoText">
+                {description}
+            </div>
+            <DialogButtons buttonList={DBOk()}>
+            </DialogButtons>
+        </DialogFrame>
+    )
+}
+export const HelpButton = ({description}) => {
+    const dialogContext = useDialogContext();
+    return <Button
+        name={'help'}
+        className="Help smallButton"
+        onClick={(ev) => {
+            ev.stopPropagation();
+            ev.preventDefault();
+            if (description) {
+                dialogContext.showDialog(()=><InfoDialog description={description}/>);
+            }
+        }}
+    />
+}
 /**
  *
  * @param param
@@ -196,10 +224,24 @@ const getMinMax=(ep)=>{
     }
     return {}
 }
-const getCommonParam=(ep,currentValues,className)=>{
+const ItemButtons=({description,onReset})=>{
+    if (! description && ! onReset) return null;
+    return <div className={"paramButtons"}>
+        {description && <HelpButton description={description}/> }
+        {onReset && <Button
+            name={'Delete'}
+            className={'smallButton'}
+            onClick={(ev) => {
+                 ev.stopPropagation()
+                onReset();
+            }}
+        />}
+    </div>
+}
+const getCommonParam=(ep,currentValues,className,onChange)=>{
     const v=ep.getValue(currentValues);
     const errorClass=checkerHelper(ep,v)?undefined:'error';
-    return {
+    let rt={
         dialogRow:true,
         className:Helper.concatsp('editParam',ep.name,className,errorClass),
         label:ep.displayName,
@@ -207,6 +249,13 @@ const getCommonParam=(ep,currentValues,className)=>{
         value:v,
         checkFunction:(nv)=>checkerHelper(ep,nv)
     }
+    rt.children=<ItemButtons
+        description={ep.description}
+        onReset={(onChange && ('default' in ep))?()=>{
+            onChange(ep.reset(undefined))
+        }:undefined}
+    />
+    return rt
 }
 
 const cHelper=(thisref)=>{
@@ -223,7 +272,7 @@ export class EditableBooleanParameterUI extends EditableBooleanParameter{
     }
     render({currentValues,className,onChange}) {
         return <Checkbox
-            {...getCommonParam(this,currentValues,className)}
+            {...getCommonParam(this,currentValues,className,this.canEdit()?onChange:undefined)}
             readOnly={!this.canEdit()}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv));
@@ -243,7 +292,7 @@ export class EditableStringParameterUI extends EditableStringParameter{
                 {...getCommonParam(this,currentValues,className)}/>
         }
         return <Input
-            {...getCommonParam(this,currentValues,className)}
+            {...getCommonParam(this,currentValues,className,onChange)}
             type={'text'}
             checkFunction={(nv)=>checkerHelper(this,nv)}
             onChange={(nv)=>{
@@ -267,7 +316,7 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
 
         return <Input
             {...getMinMax(this)}
-            {...getCommonParam(this,currentValues,className)}
+            {...getCommonParam(this,currentValues,className,onChange)}
             type={'number'}
             step={1}
             onChange={(nv)=>{
@@ -289,7 +338,7 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
             />
         }
         return <Input
-            {...getCommonParam(this,currentValues,className)}
+            {...getCommonParam(this,currentValues,className,onChange)}
             type={'number'}
             step={"any"}
             onChange={(nv)=>{
@@ -324,7 +373,7 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
             return 0;
         })
         return <InputSelect
-            {...getCommonParam(this,currentValues,className)}
+            {...getCommonParam(this,currentValues,className,onChange)}
             list={displayList}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv.value))
@@ -341,7 +390,7 @@ class EditableColorParameterUI extends EditableColorParameter{
 
     render({currentValues, className, onChange}) {
         return <ColorSelector
-            {...getCommonParam(this, currentValues, className)}
+            {...getCommonParam(this, currentValues, className,this.canEdit()?onChange:undefined)}
             readOnly={!this.canEdit()}
             onChange={(nv) => {
                 onChange(this.setValue(undefined, nv))
@@ -365,9 +414,10 @@ class EditableIconParameterUI extends EditableIconParameter{
         const dialogContext=useDialogContext();
         const url=this.getValue(currentValues);
         return <InputReadOnly
-            {...getCommonParam(this,currentValues,Helper.concatsp(className,'iconInput'))}
+            {...getCommonParam(this,currentValues,Helper.concatsp(className,'iconInput'),this.canEdit()?onChange:undefined)}
             value={<RenderIcon url={url}/>}
             onClick={()=>{
+                if (! this.canEdit()) return;
                 showPromiseDialog(dialogContext,(dprops)=>
                     <IconDialog {...dprops}
                                 addEmpty={this.mandatory !== true}

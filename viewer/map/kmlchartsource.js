@@ -27,10 +27,10 @@ import Requests from '../util/requests.js';
 import ChartSourceBase, {
     addToSettings, buildOlFontConfig,
     editableOverlayParameters,
-    FoundFeatureFlags,
-    orderSettings
+    FoundFeatureFlags, LINE_SETTINGS,
+    orderSettings, TEXT_FORMAT_SETTINGS
 } from './chartsourcebase.js';
-import {Circle as olCircle, Icon as olIcon, Fill as olFill,Text as olText} from 'ol/style';
+import {Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText, Stroke as olStroke} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
@@ -48,6 +48,7 @@ const supportedStyleParameters= {
     textOffset: editableOverlayParameters.textOffset,
     textColor: editableOverlayParameters.textColor,
     overwriteTextStyle: editableOverlayParameters.overwriteTextStyle,
+    overwriteLineStyle: editableOverlayParameters.overwriteLineStyle,
     defaultIcon: editableOverlayParameters.defaultIcon,
     icon: editableOverlayParameters.icon,
     featureFormatter: editableOverlayParameters.featureFormatter,
@@ -140,19 +141,31 @@ class KmlChartSource extends ChartSourceBase{
     setTextStyle(style){
         try{
             const textStyle=style.getText();
-            if (textStyle && this.styleParameters[supportedStyleParameters.overwriteTextStyle]){
-                const text=textStyle.getText();
-                if (text){
-                    style.setText(new olText(
-                        buildOlFontConfig(this.styleParameters,{
-                        text: text,
-                        offsetX: this.styleParameters[supportedStyleParameters.textOffset],
-                        scale: this.getScale()
-                    })))
+            if (textStyle) {
+                if (!this.styleParameters[supportedStyleParameters.showText]) {
+                    style.setText(undefined);
+                } else if (this.styleParameters[supportedStyleParameters.overwriteTextStyle]) {
+                    const text = textStyle.getText();
+                    if (text) {
+                        style.setText(new olText(
+                            buildOlFontConfig(this.styleParameters, {
+                                text: text,
+                                offsetX: this.styleParameters[supportedStyleParameters.textOffset],
+                                scale: this.getScale()
+                            })))
+                    }
                 }
             }
-
         }catch(e){base.log("exception in kml style "+e.message)}
+    }
+    setLineStyle(style){
+        if (! this.styleParameters[supportedStyleParameters.overwriteLineStyle]) return style;
+        style.setStroke(new olStroke({
+            color: (this.styleParameters[supportedStyleParameters.lineWidth]>0)?
+                this.styleParameters[supportedStyleParameters.lineColor]:this.COLOR_INVISIBLE,
+            width: this.styleParameters[supportedStyleParameters.lineWidth],
+        }))
+        return style;
     }
     replacePointStyle(feature,style){
         let type=feature.getGeometry().getType();
@@ -162,6 +175,9 @@ class KmlChartSource extends ChartSourceBase{
         }
         else{
             this.setTextStyle(style);
+            if (type === 'LineString' || type === 'MultiLineString'){
+                this.setLineStyle(style);
+            }
         }
         return style;
     }
@@ -290,7 +306,32 @@ export const readFeatureInfoFromKml=(kml)=>{
         supportedStyleParameters.allowOnline,
         supportedStyleParameters.icon
     ])
-    if (flags.hasText) addToSettings(settings,supportedStyleParameters.overwriteTextStyle);
+    if (flags.hasText) {
+        addToSettings(settings,supportedStyleParameters.overwriteTextStyle.clone({
+            condition: {[editableOverlayParameters.showText]:true}
+        }));
+        TEXT_FORMAT_SETTINGS.forEach((setting)=>{
+            addToSettings(settings,setting.clone({
+                condition:{
+                    [editableOverlayParameters.overwriteTextStyle]:true,
+                    [editableOverlayParameters.showText]:true
+                }
+            }),true);
+        })
+    }
+    if (flags.hasText){
+        addToSettings(settings,supportedStyleParameters.overwriteLineStyle);
+        LINE_SETTINGS.forEach((setting)=>{
+            addToSettings(settings,setting.clone({
+                condition:{[supportedStyleParameters.overwriteLineStyle]:true}
+            }),true);
+        })
+    }
+    else{
+        LINE_SETTINGS.forEach((setting)=>{
+            delete settings[setting.name];
+        })
+    }
     return {
         hasAny: flags.hasAny,
         settings: orderSettings(settings,supportedStyleParameters)

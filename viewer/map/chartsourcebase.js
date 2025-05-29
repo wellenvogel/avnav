@@ -388,15 +388,15 @@ class ConfigHelper extends Object {
  * @type {*[]}
  */
 export const editableOverlayParameters={
-    minZoom:new EditableNumberParameter({name:'minZoom',displayName:'min zoom',default:0}),
-    maxZoom:new EditableNumberParameter({name:'maxZoom',displayName:'max zoom',default: 0}),
-    minScale:new EditableNumberParameter({name:'minScale',displayName:'min scale', default: 0}),
-    maxScale:new EditableNumberParameter({name:'maxScale',displayName:'max scale', default: 0}),
-    allowOnline:new EditableBooleanParameter({name: 'allowOnline',displayName: 'allow online',default:false}),
-    showText:new EditableBooleanParameter({name:'showText',displayName: 'show text',default:false}),
-    allowHtml:new EditableBooleanParameter({name:'allowHtml',displayName: 'allow html',default: false}),
-    icon: new EditableSelectParameter({name:'icons',displayName: 'icon file',readOnly:false,list:[undefined]}),
-    defaultIcon:new EditableIconParameter({name:'defaultIcon',displayName:'default icon'}),
+    minZoom:new EditableNumberParameter({name:'minZoom',displayName:'min zoom',default:0,description:'minimal zoom level to display this overlay'}),
+    maxZoom:new EditableNumberParameter({name:'maxZoom',displayName:'max zoom',default: 0,description:'maximal zoom level to display this overlay'}),
+    minScale:new EditableNumberParameter({name:'minScale',displayName:'min scale', default: 0,description:'shrink symbols below this zoom, 0 to unset'}),
+    maxScale:new EditableNumberParameter({name:'maxScale',displayName:'max scale', default: 0,description:'enlarge symbols above this zoom, 0 to unset'}),
+    allowOnline:new EditableBooleanParameter({name: 'allowOnline',displayName: 'allow online',default:false,description:'allow access to online http/https resources'}),
+    showText:new EditableBooleanParameter({name:'showText',displayName: 'show text',default:false,description:'show text beside symbols if available'}),
+    allowHtml:new EditableBooleanParameter({name:'allowHtml',displayName: 'allow html',default: false,description:'allow to show html content'}),
+    icon: new EditableSelectParameter({name:'icons',displayName: 'icon file',readOnly:false,list:[undefined],description:'file that contains icons and linked resources'}),
+    defaultIcon:new EditableIconParameter({name:'defaultIcon',displayName:'default icon',description:'default icon to be used for points'}),
     featureFormatter: new EditableSelectParameter({name:'featureFormatter',displayName:'featureFormatter',list:()=>{
             let formatters = [{label: '-- none --', value: undefined}];
             for (let f in featureFormatter) {
@@ -405,24 +405,25 @@ export const editableOverlayParameters={
                 }
             }
             return formatters;
-        }}),
-    lineWidth:new EditableNumberParameter({name:'style.lineWidth',list:[0,10],displayName:'line width',default: 3}),
-    lineColor:new EditableColorParameter({name: 'style.lineColor',displayName:'line color',default:'#000000' }),
-    fillColor:new EditableColorParameter({name:'style.fillColor',displayName:'fill color',default: 'rgba(255,255,0,0.4)'}),
-    strokeWidth:new EditableNumberParameter({name: 'style.strokeWidth',displayName:'stroke width',default: 3,list:[0,40]}),
-    strokeColor:new EditableColorParameter({name: 'style.strokeColor',displayName:'stroke color',default: '#ffffff'}),
-    circleWidth:new EditableNumberParameter({name: 'style.circleWidth', displayName:'circle width',default: 10,list:[0,40]}),
-    showName:new EditableBooleanParameter({name: 'style.showName', displayName:'show feature name',default: false}),
-    overwriteTextStyle: new EditableBooleanParameter({name: 'style.overwriteText',  displayName:'overwrite text style',default: false}),
-    textSize:new EditableNumberParameter({name: 'style.textSize', displayName:'font size',default: 16}),
-    textOffset:new EditableNumberParameter({name: 'style.textOffset', displayName: 'text offset',default: 32}),
-    textColor:new EditableColorParameter({name: 'style.textColor', displayName: 'text color',default: 'rgba(0,0,0,1)'}),
+        },description:'a function to format the feature info (refer to the doc)'}),
+    overwriteLineStyle: new EditableBooleanParameter({name:'style.overwriteLine',displayName:'own line style',default: false,description:'ignore line styles from document'}),
+    lineWidth:new EditableNumberParameter({name:'style.lineWidth',list:[0,10],displayName:'line width',default: 3,description:'width in px for lines'}),
+    lineColor:new EditableColorParameter({name: 'style.lineColor',displayName:'line color',default:'#000000',description:'line color' }),
+    fillColor:new EditableColorParameter({name:'style.fillColor',displayName:'fill color',default: 'rgba(255,255,0,0.4)',description:'fill color for points'}),
+    strokeWidth:new EditableNumberParameter({name: 'style.strokeWidth',displayName:'stroke width',default: 3,list:[0,40],description:'width in px for the border of point circles'}),
+    strokeColor:new EditableColorParameter({name: 'style.strokeColor',displayName:'stroke color',default: '#ffffff',description:'color for the border of point circles'}),
+    circleWidth:new EditableNumberParameter({name: 'style.circleWidth', displayName:'circle width',default: 10,list:[0,40],description:'width in px for point circles'}),
+    overwriteTextStyle: new EditableBooleanParameter({name: 'style.overwriteText',  displayName:'own text style',default: false,description:'do not use the text style from the document'}),
+    textSize:new EditableNumberParameter({name: 'style.textSize', displayName:'font size',default: 16,description:'font size in px for texts'}),
+    textOffset:new EditableNumberParameter({name: 'style.textOffset', displayName: 'text offset',default: 32,description:'text offset in px from a point'}),
+    textColor:new EditableColorParameter({name: 'style.textColor', displayName: 'text color',default: 'rgba(0,0,0,1)',description:'color for texts'}),
 }
 export const DEFAULT_SETTINGS=[editableOverlayParameters.minZoom,editableOverlayParameters.maxZoom];
 export const SCALE_SETTINGS=[editableOverlayParameters.minScale,editableOverlayParameters.maxScale];
 export const SYMBOL_SETTINGS=[editableOverlayParameters.icon,editableOverlayParameters.defaultIcon].concat(SCALE_SETTINGS);
-export const CIRCLE_SETTINGS=[editableOverlayParameters.fillColor,editableOverlayParameters.circleWidth].concat(SCALE_SETTINGS)
-export const TEXT_SETTINGS=[editableOverlayParameters.showText,editableOverlayParameters.textColor,editableOverlayParameters.strokeWidth,editableOverlayParameters.textSize,editableOverlayParameters.textOffset]
+export const CIRCLE_SETTINGS=[editableOverlayParameters.fillColor,editableOverlayParameters.circleWidth,editableOverlayParameters.strokeWidth,editableOverlayParameters.strokeColor].concat(SCALE_SETTINGS)
+export const TEXT_FORMAT_SETTINGS=[editableOverlayParameters.textColor,editableOverlayParameters.textSize,editableOverlayParameters.textOffset]
+export const TEXT_SETTINGS=[editableOverlayParameters.showText].concat(TEXT_FORMAT_SETTINGS)
 export const LINE_SETTINGS=[editableOverlayParameters.lineWidth,editableOverlayParameters.lineColor]
 
 /**

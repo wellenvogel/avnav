@@ -365,6 +365,7 @@ const OverlayItemDialog = (props) => {
                                 }}
                             />
                             {parameters.map((param) => {
+                                if (! param.checkConditions(current||{},parameters)) return null;
                                 return (
                                     <param.render
                                         currentValues={current || {}}
