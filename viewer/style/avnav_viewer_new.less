@@ -351,6 +351,15 @@ body{
 
 }
 
+.editParam{
+  &.changed{
+    font-weight: bold;
+  }
+  &.defaultValue{
+    font-style: italic;
+  }
+}
+
 .editWidgetDialog, .editPageDialog{
   .dialogRow{
     .flex-shrink(0);
@@ -529,7 +538,7 @@ body{
 
 .editOverlayItemDialog{
   .inputLabel{
-    width: 9em;
+    width: 10em;
   }
 }
 .FeatureInfoDialog{

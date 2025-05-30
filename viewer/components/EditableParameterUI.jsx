@@ -238,19 +238,42 @@ const ItemButtons=({description,onReset})=>{
         />}
     </div>
 }
+
+export const EditableParameterListUI=({values,parameters,initialValues,onChange})=>{
+    if (! parameters) return null;
+    return <React.Fragment>
+        {parameters.map((param)=>{
+          if (! param) return null;
+            if (! param.checkConditions(values,parameters)) return null;
+          return <param.render
+              key={param.name}
+              currentValues={values}
+              className={param.isChanged(values,initialValues)?'changed':undefined}
+              onChange={(nv)=>onChange(nv)}
+          ></param.render>
+        })}
+    </React.Fragment>
+}
+
 const getCommonParam=(ep,currentValues,className,onChange)=>{
     const v=ep.getValue(currentValues);
     const errorClass=checkerHelper(ep,v)?undefined:'error';
     let rt={
         dialogRow:true,
-        className:Helper.concatsp('editParam',ep.name,className,errorClass),
+        className:Helper.concatsp(
+            'editParam',
+            ep.name,
+            className,
+            errorClass,
+            ep.isDefault(currentValues)?'defaultValue':undefined,
+            ep.mandatoryOk(currentValues)?undefined:'missing'),
         label:ep.displayName,
         key: ep.name,
         value:v,
         checkFunction:(nv)=>checkerHelper(ep,nv)
     }
     rt.children=<ItemButtons
-        description={ep.description}
+        description={getDescription(ep)}
         onReset={(onChange && ('default' in ep))?()=>{
             onChange(ep.reset(undefined))
         }:undefined}
@@ -263,6 +286,23 @@ const cHelper=(thisref)=>{
         thisref.render=thisref.render.bind(thisref);
     }
     Object.freeze(thisref);
+}
+
+const getDescription=(ep)=>{
+    const range=ep.getRange();
+    let rtext;
+    if (range.min !== undefined && range.max !== undefined){
+        rtext=`range: ${range.min}...${range.max}`;
+    }
+    else if (range.min !== undefined){
+        rtext=`range: ${range.min}...`
+    }
+    else if (range.max !== undefined){
+        rtext=`range: ...${range.max}`
+    }
+    if (! rtext) return ep.description;
+    if (! ep.description) return rtext;
+    return ep.description+"\n"+rtext;
 }
 
 export class EditableBooleanParameterUI extends EditableBooleanParameter{
@@ -308,15 +348,18 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
         cHelper(this);
     }
     render({currentValues,className,onChange}){
-        if (!this.canEdit()){
+        const canEdit=this.canEdit();
+        let common=getCommonParam(this,currentValues,className,canEdit?onChange:undefined);
+        if (isNaN(common.value)) common.value="";
+        if (!canEdit){
             return <InputReadOnly
-                {...getCommonParam(this,currentValues,className)}
+                {...common}
             />
         }
 
         return <Input
             {...getMinMax(this)}
-            {...getCommonParam(this,currentValues,className,onChange)}
+            {...common}
             type={'number'}
             step={1}
             onChange={(nv)=>{

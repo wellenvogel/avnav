@@ -22,7 +22,7 @@ import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import chartImage from '../images/Chart60.png';
-import editableParameterUI from "./EditableParameterUI";
+import editableParameterUI, {EditableParameterListUI} from "./EditableParameterUI";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import base from "../base";
@@ -364,15 +364,12 @@ const OverlayItemDialog = (props) => {
                                     analyseOverlay(newState.url, initial);
                                 }}
                             />
-                            {parameters.map((param) => {
-                                if (! param.checkConditions(current||{},parameters)) return null;
-                                return (
-                                    <param.render
-                                        currentValues={current || {}}
-                                        onChange={(nv) => updateCurrent(nv)}
-                                    />
-                                )
-                            })}
+                            <EditableParameterListUI
+                                values={current}
+                                parameters={parameters}
+                                onChange={updateCurrent}
+                                initialValues={props.current}
+                            />
                         </React.Fragment>
                     }
                 </React.Fragment>

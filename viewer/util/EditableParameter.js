@@ -114,7 +114,7 @@ export class EditableParameter extends Object{
             if (! this.checker(value,values)) throw new Error("invalid value for "+this.name+": "+value);
         }
         if (check) {
-            if (this.mandatory && value === undefined) throw new Error("mandatory parameter " + this.name + " missing");
+            if (!this.mandatoryOk(value)) throw new Error("mandatory parameter " + this.name + " missing");
         }
         values[this.name] = value;
         return values;
@@ -138,6 +138,7 @@ export class EditableParameter extends Object{
 
     checkConditions(values,allParameters){
         if (!this.condition) return true;
+        if (! values) values={};
         const conditions=(this.condition instanceof Array)?this.condition:[this.condition];
         const knownEditables={};
         for (let i=0;i<conditions.length;i++){
@@ -184,42 +185,17 @@ export class EditableParameter extends Object{
         return false;
     }
 
-    /**
-     * @deprecated
-     * @param values
-     * @param opt_placeHolder
-     * @returns {*|string|boolean}
-     */
-    getValueForDisplay(values,opt_placeHolder){
-        let rt=this.getValue(values);
-        if (rt === undefined || rt === null) {
-            rt = CloneDeep(this.default);
-        }
-        if (rt === undefined || rt === null){
-            rt=opt_placeHolder;
-        }
-        if (rt === undefined || rt === null){
-            if (this.type === EditableParameter.TYPE.BOOLEAN) return false
-            return '';
-        }
-        if (this.type === EditableParameter.TYPE.BOOLEAN){
-            if (typeof(rt)==='string'){
-                return rt.toLowerCase() === 'true';
-            }
-        }
-        return rt;
-    }
-    isValid(value){
-        return true;
-    }
-    mandatoryOk(values){
+    mandatoryOk(cv){
         if (! this.mandatory) return true;
-        let cv=this.getValue(values);
         if (cv !== undefined && cv !== null && cv !== '') return true;
         return false;
     }
-    isChanged(value){
-        return value !== this.default;
+    isDefault(values){
+        return this.getValue(values) === this.default;
+    }
+    isChanged(currentValues,initialValues){
+        if (! initialValues || ! currentValues) return false;
+        return this.getValue(currentValues) !== this.getValue(initialValues)
     }
 
     /**
@@ -241,6 +217,10 @@ export class EditableParameter extends Object{
             return false;
         }catch (e){}
         return true;
+    }
+
+    getRange(){
+        return{}
     }
 }
 export class EditableStringParameterBase extends EditableParameter{
@@ -304,17 +284,30 @@ export class EditableNumberParameter extends EditableParameter{
     constructor(plain,opt_noFreeze) {
         super(plain,EditableNumberParameter.TYPE,opt_noFreeze);
     }
-    setValue(values, value,check) {
-        let parsed=(value!==undefined)?parseInt(value):value;
-        if (check && this.list !== undefined){
-            const list=this.getList();
-            if (list.length >= 2){
-                if (parsed < parseFloat(list[0]) || parsed > parseFloat(list[1])){
-                    throw new Error("value "+parsed+" for "+this.name+" outside range "+list[0]+","+list[1]);
-                }
+    getRange() {
+        let rt={};
+        const list = this.getList();
+        if (! list || ! (list instanceof Array)) return rt;
+        if (list.length >= 1) {
+            rt.min = parseFloat(list[0]);
+        }
+        if (list.length >= 2) {
+            rt.max = parseFloat(list[1]);
+        }
+        return rt;
+    }
+
+    setValue(values, value, check) {
+        let parsed = (value !== undefined) ? parseInt(value) : value;
+        if (check) {
+            if (isNaN(parsed)) throw new Error("no value for " + this.name);
+            const range = this.getRange();
+            if ((range.min !== undefined && parsed < range.min) ||
+                (range.max !== undefined && parsed > range.max)) {
+                throw new Error("value " + parsed + " for " + this.name + " outside range " + list[0] + "," + list[1]);
             }
         }
-        return super.setValue(values, parsed,check);
+        return super.setValue(values, parsed, check);
     }
 
     getValue(values) {
@@ -330,12 +323,12 @@ export class EditableFloatParameter extends EditableParameter{
     }
     setValue(values, value,check) {
         let parsed=(value!==undefined)?parseFloat(value):value;
-        if (check && this.list !== undefined){
-            const list=this.getList();
-            if (list.length >= 2){
-                if (parsed < parseFloat(list[0]) || parsed > parseFloat(list[1])){
-                    throw new Error("value "+parsed+" for "+this.name+" outside range "+list[0]+","+list[1]);
-                }
+        if (check){
+            if (isNaN(parsed)) throw new Error("invalid value (NaN): "+value+" for "+this.name);
+            const range = this.getRange();
+            if ((range.min !== undefined && parsed < range.min) ||
+                (range.max !== undefined && parsed > range.max)) {
+                throw new Error("value " + parsed + " for " + this.name + " outside range " + list[0] + "," + list[1]);
             }
         }
         return super.setValue(values, parsed,check);
