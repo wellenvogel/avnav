@@ -191,10 +191,27 @@ export const unsetOrTrue=(item)=>{
 export const now=()=>{
     return (new Date()).getTime();
 }
+export const iterate=(object,callback)=>{
+    if (object instanceof Array){
+        object.forEach((item,index)=>callback(item,index));
+        return;
+    }
+    if (object instanceof Object && object.constructor === Object){
+        //just for plain objects
+        for (let k in object){
+            if (typeof object[k] !== 'function') {
+                callback(object[k], k);
+            }
+        }
+        return;
+    }
+    callback(object);
+}
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
 Helper.now=now;
+Helper.iterate=iterate;
 
 export default Helper;
 

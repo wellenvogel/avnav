@@ -104,7 +104,14 @@ let widgetList=[
         unit: "nm",
         caption: 'DST',
         storeKeys:{
-            value: keys.nav.wp.distance
+            value: keys.nav.wp.distance,
+            server: keys.nav.wp.server
+        },
+        updateFunction: (state)=>{
+            return {
+                value: state.value,
+                disconnect: state.server === false
+            }
         },
         formatter: 'formatDistance'
 
@@ -284,7 +291,15 @@ let widgetList=[
         default: "-------------",
         caption: 'MRK',
         storeKeys:{
-            value:keys.nav.wp.position
+            value:keys.nav.wp.position,
+            server: keys.nav.wp.server
+        },
+        updateFunction: (state)=>{
+            return {
+                value: state.value,
+                disconnect: state.server === false
+            }
+
         },
         formatter: 'formatLonLats'
     },

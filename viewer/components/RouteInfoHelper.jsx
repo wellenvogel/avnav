@@ -24,11 +24,8 @@
  * display the infos of a route
  */
 
-import NavCompute from "../nav/navcompute";
 import Formatter from '../util/formatter';
 import navdata from "../nav/navdata";
-import globalStore from "../util/globalstore";
-import keys from "../util/keys";
 
 let RouteHandler=navdata.getRoutingHandler();
 
@@ -38,33 +35,9 @@ export const INFO_ROWS=[
     {label:'length',value:'length',formatter:(v)=>{
         return Formatter.formatDistance(v)+" nm";
         }},
-    {label:'next point',value:'routeTarget',formatter:(v)=>v.name}
+    {label:'next point',value:'nextTarget',formatter:(v)=>v.name}
     ];
-export const getClosestPoint=(route,waypoint)=>{
-    let idx=route.findBestMatchingIdx(waypoint);
-    let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
-    if (idx >= 0) {
-        //now we check if we are somehow between the found point and the next
-        let currentTarget = route.getPointAtIndex(idx);
-        let nextTarget = route.getPointAtIndex(idx + 1);
-        if (nextTarget && currentTarget) {
-            let nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget,useRhumbLine).dts;
-            let nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget,useRhumbLine).dts;
-            //if the distance to the next wp is larger then the distance between current and next
-            //we stick at current
-            //we allow additionally a xx% catch range
-            //so we only go to the next if the distance to the nextWp is xx% smaller then the distance between the rp
-            let limit = nextDistanceRt * (100 - globalStore.getData(keys.properties.routeCatchRange, 50)) / 100;
-            if (nextDistanceWp <= limit) {
-                return nextTarget;
-            } else {
-                return currentTarget;
-            }
-        }
-        return currentTarget;
-    }
-}
-export const getRouteInfo = (routeName,opt_waypoint) => {
+export const getRouteInfo = (routeName) => {
     return new Promise((resolve, reject) => {
         if (!routeName) reject("missing route name");
         RouteHandler.fetchRoute(routeName,false,(route)=>{
@@ -72,9 +45,6 @@ export const getRouteInfo = (routeName,opt_waypoint) => {
                 let rt={
                     length: info.length,
                     numPoints: info.numpoints,
-                }
-                if (opt_waypoint){
-                    rt.routeTarget=getClosestPoint(route,opt_waypoint);
                 }
                 resolve(rt);
             }

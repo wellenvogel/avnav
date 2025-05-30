@@ -26,7 +26,8 @@ import React from 'react';
 import {LoadItemDialog} from "./LoadSaveDialogs";
 import PropertyHandler from "../util/propertyhandler";
 import RequestHandler from "../util/requests";
-import OverlayDialog from "./OverlayDialog";
+import OverlayDialog, {showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {ConfirmDialog} from "./BasicDialogs";
 
 
 const doLoad=(settings,selected)=>{
@@ -41,6 +42,7 @@ const doLoad=(settings,selected)=>{
  * @param opt_preventDialog
  */
 const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) => {
+    const dialogContext=useDialogContext();
     const setSettings = (checkedValues) => {
         return PropertyHandler.importSettings(checkedValues, currentValues, true);
     }
@@ -103,7 +105,7 @@ const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) 
         )
         .then((result) => {
             if (result.warnings && result.warnings.length) {
-                return OverlayDialog.confirm(result.warnings.join('\n'), undefined, 'Import anyway?')
+                return showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={result.warnings.join('\n')} title={'Import anyway?'}/>)
                     .then(
                         () => setSettings(result.data),
                         () => Promise.reject()

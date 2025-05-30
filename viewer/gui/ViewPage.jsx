@@ -10,7 +10,7 @@ import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import Toast,{hideToast} from '../components/Toast.jsx';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {showPromiseDialog} from '../components/OverlayDialog.jsx';
 import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
@@ -18,6 +18,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Helper from "../util/helper.js";
 import {ItemActions} from "../components/FileDialog";
+import {ConfirmDialog} from "../components/BasicDialogs";
 
 //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
@@ -143,7 +144,7 @@ class ViewPageBase extends React.Component{
                 name: 'Cancel',
                 onClick: ()=> {
                     if (this.state.changed){
-                        OverlayDialog.confirm("Discard Changes?")
+                        showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"Discard Changes?"}/>)
                             .then((data)=>{this.props.history.pop();})
                             .catch((e)=>{});
                         return;

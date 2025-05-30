@@ -1,8 +1,7 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
-import OverlayDialog, {DialogButtons, DialogFrame} from './OverlayDialog.jsx';
-import assign from 'object-assign';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
 import {Checkbox} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import cloneDeep from "clone-deep";
@@ -196,7 +195,7 @@ EditPageDialog.propTypes={
  */
 EditPageDialog.createDialog=(pagename,panelnames,handledOptions,opt_dialogContext)=>{
     if (! LayoutHandler.isEditing()) return false;
-    OverlayDialog.showDialog(opt_dialogContext,(props)=> {
+    showDialog(opt_dialogContext,(props)=> {
         return <EditPageDialog
             {...props}
             title="Edit Page Layout"

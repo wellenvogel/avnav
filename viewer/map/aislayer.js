@@ -385,11 +385,11 @@ class AisLayer{
 
     setStyles() {
         this.textStyle = {
-            stroke: '#fff',
-            color: '#000',
-            width: 3,
+            stroke: globalStore.getData(keys.properties.fontShadowColor),
+            color: globalStore.getData(keys.properties.fontColor),
+            width: globalStore.getData(keys.properties.fontShadowWidth),
             fontSize: globalStore.getData(keys.properties.aisTextSize),
-            fontBase: 'Calibri,sans-serif',
+            fontBase: globalStore.getData(keys.properties.fontBase),
             offsetY: 15,
             align: 'left'
         };

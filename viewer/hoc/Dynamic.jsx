@@ -46,7 +46,7 @@ export const useStore=(props,opt_options)=>{
     const [values,setValues]=useState(store.getMultiple(usedStoreKeys));
     const usedChangeCallback=changeCallback||opt_options.changeCallback;
     const callbackRef=useRef();
-    useState(()=>{
+    if (! callbackRef.current){
         callbackRef.current=store.register(()=>{
             const usedMinTime=opt_options.minTime||minTime;
             if (usedMinTime){
@@ -63,7 +63,7 @@ export const useStore=(props,opt_options)=>{
             }
             doSetValues(store.getMultiple(usedStoreKeys));
         },usedStoreKeys)
-    })
+    }
     const doSetValues=(data)=>{
         setValues(data);
         lastUpdate.current=(new Date()).getTime();
@@ -105,4 +105,38 @@ export default  function(Component,opt_options,opt_store){
         const currentValues=useStore(props,{...opt_options,store:store});
         return <Component {...currentValues}/>
     }
+}
+/**
+ * create a state that is backed up by the store
+ * @param storeKey
+ * @param defaultInitialValue - the initial value to be set if no value in the store (or forceInital)
+ *        can be a function
+ * @param forceInitial - always set this initial value if not undefine
+ */
+export const useStoreState = (storeKey, defaultInitialValue, forceInitial) => {
+    const [value, setValue] = useState(() => {
+        let iv = globalStore.getData(storeKey);
+        if (iv === undefined || forceInitial) {
+            iv = (typeof defaultInitialValue === 'function') ? defaultInitialValue(iv) : defaultInitialValue;
+            if (iv !== undefined) globalStore.storeData(storeKey, iv);
+        }
+        return iv;
+    });
+    const setter = useRef();
+    if (!setter.current) {
+        setter.current = globalStore.register(() => {
+            setValue(globalStore.getData(storeKey));
+        }, storeKey);
+    }
+    useEffect(() => {
+        return () => {
+            globalStore.deregister(setter.current);
+        }
+    }, []);
+    return [
+        value,
+        (nv) => {
+            globalStore.storeData(storeKey, nv);
+        }
+    ]
 }

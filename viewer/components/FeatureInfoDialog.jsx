@@ -28,7 +28,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import OverlayDialog, {DialogButtons, DialogFrame, InfoItem, useDialogContext} from "./OverlayDialog";
+import OverlayDialog, {DialogButtons, DialogFrame, useDialogContext} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
@@ -37,28 +37,27 @@ import NavCompute from "../nav/navcompute";
 import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
-import assign from 'object-assign';
-import {stateHelper} from "../util/GuiHelpers";
+import {InfoItem} from "./BasicDialogs";
 NavHandler.getRoutingHandler();
 
 
 const INFO_ROWS=[
-    {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})},
-    {label: 'distance',value:'coordinates',formatter:(v)=>{
+    {label: 'position',value:'nextTarget',formatter:(v)=>Formatter.formatLonLats(v)},
+    {label: 'distance',value:'nextTarget',formatter:(v)=>{
             let position=globalstore.getData(keys.nav.gps.position);
             let valid=globalstore.getData(keys.nav.gps.valid,false);
             if (! valid) return;
             let distance=NavCompute.computeDistance(position,
-                new navobjects.Point(v[0],v[1]),
+                v,
                 globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             return Formatter.formatDistance(distance.dts)+" nm";
         }},
-    {label: 'bearing',value:'coordinates',formatter:(v)=>{
+    {label: 'bearing',value:'nextTarget',formatter:(v)=>{
             let position=globalstore.getData(keys.nav.gps.position);
             let valid=globalstore.getData(keys.nav.gps.valid,false);
             if (! valid) return;
             let distance=NavCompute.computeDistance(position,
-                new navobjects.Point(v[0],v[1]),
+                v,
                 globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             return Formatter.formatDirection(distance.course)+" °";
         }},
@@ -134,10 +133,10 @@ const FeatureInfoDialog = (props) => {
     }, [props]);
     useEffect(() => {
         let infoFunction = INFO_FUNCTIONS[props.overlayType]
-        let infoCoordinates = props.nextTarget ? props.nextTarget : props.coordinates;
-        if (infoFunction) {
+        let infoCoordinates = props.nextTarget;
+        if (infoFunction && infoCoordinates) {
             infoFunction(props.overlayName,
-                new navobjects.WayPoint(infoCoordinates[0], infoCoordinates[1])
+                infoCoordinates
             )
                 .then((info) => {
                     setExtendedInfo(info)
@@ -200,7 +199,6 @@ FeatureInfoDialog.propTypes={
     history: PropTypes.object.isRequired,
     info: PropTypes.string,
     link: PropTypes.string,
-    coordinates: PropTypes.array,
     nextTarget:  PropTypes.array,
     overlayName: PropTypes.string,
     overlayType: PropTypes.string,

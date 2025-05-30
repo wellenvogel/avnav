@@ -157,64 +157,71 @@ const RouteLayer=function(mapholder){
 
 
 };
-/**
- * set the styles
- * @private
- */
-RouteLayer.prototype.setStyle=function(opt_change) {
-    this.lineStyle = {
-            color:  globalStore.getData(keys.properties.routeColor),
-            width:  globalStore.getData(keys.properties.routeWidth),
-            arrow: {
-                width:  globalStore.getData(keys.properties.routeWidth)*3,
-                length:  globalStore.getData(keys.properties.routeWidth)*7,
-                offset: 20,
-                open: true
-                }
-        };
-    this.dashedStyle = {
+
+export const getRouteStyles=(opt_change)=>{
+    let rt={};
+    rt.lineStyle = {
+        color:  globalStore.getData(keys.properties.routeColor),
+        width:  globalStore.getData(keys.properties.routeWidth),
+        arrow: {
+            width:  globalStore.getData(keys.properties.routeWidth)*3,
+            length:  globalStore.getData(keys.properties.routeWidth)*7,
+            offset: 20,
+            open: true
+        }
+    };
+    rt.dashedStyle = {
         color:  globalStore.getData(keys.properties.routeColor),
         width:  globalStore.getData(keys.properties.routeWidth),
         dashed: true
     };
-    this.normalWpStyle={
+    rt.normalWpStyle={
         color: "yellow",
         width: 1,
         background: "yellow"
     };
-    this.activeWpStyle={
+    rt.activeWpStyle={
         color: "red",
         width: 1,
         background: "red"
     };
-    this.routeTargetStyle={
+    rt.routeTargetStyle={
         color:  globalStore.getData(keys.properties.bearingColor),
         width: 1,
         background:  globalStore.getData(keys.properties.bearingColor)
     };
     if (! opt_change) {
-        this.markerStyle = {
+        rt.markerStyle = {
             anchor: [20, 20],
             size: [40, 40],
             src: orangeMarker,
             image: new Image()
         };
-        this.markerStyle.image.src = this.markerStyle.src;
+        rt.markerStyle.image.src = rt.markerStyle.src;
     }
-    this.courseStyle = {
+    rt.courseStyle = {
         color:  globalStore.getData(keys.properties.bearingColor),
         width:  globalStore.getData(keys.properties.bearingWidth)
 
     };
-    this.textStyle= {
-        stroke: '#fff',
-        color: '#000',
-        width: 3,
+    rt.textStyle= {
+        stroke: globalStore.getData(keys.properties.fontShadowColor),
+        color: globalStore.getData(keys.properties.fontColor),
+        width: globalStore.getData(keys.properties.fontShadowWidth),
         fontSize: globalStore.getData(keys.properties.routingTextSize),
-        fontBase: 'Calibri,sans-serif',
+        fontBase: globalStore.getData(keys.properties.fontBase),
         offsetY: 15
     };
+    return rt;
+}
 
+/**
+ * set the styles
+ * @private
+ */
+RouteLayer.prototype.setStyle=function(opt_change) {
+    const styles=getRouteStyles(opt_change);
+    Object.assign(this,styles);
 };
 
 

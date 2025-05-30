@@ -67,6 +67,8 @@
     .flex(1);
     min-width: 0;
     min-height: 0;
+    .flex-display();
+    .flex-direction(column);
   }
 }
 //----- dashboard pages (gps page) ------
@@ -246,7 +248,6 @@
     .smallWidget(@size1);
     .widgetData{
       text-align: center;
-      margin-top: @smallFont;
     }
   }
   &.timeStatusWidget{

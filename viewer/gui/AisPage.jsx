@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import {useStore} from '../hoc/Dynamic.jsx';
+import {useStore, useStoreState} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -10,14 +10,19 @@ import React, {useCallback, useRef} from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
-import Dialogs, {showDialog, showPromiseDialog, useDialogContext} from '../components/OverlayDialog.jsx';
+import Dialogs, {
+    showDialog,
+    showPromiseDialog,
+    useDialogContext
+} from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
-import GuiHelper, {useStoreState} from "../util/GuiHelpers";
+import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper from "../util/helper";
 import ButtonList from "../components/ButtonList";
+import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -227,7 +232,7 @@ const AisPage =(props)=>{
             for (let i in sortFields) {
                 sortFields[i].selected = sortFields[i].value === sortField;
             }
-            showPromiseDialog(dialogContext.current,Dialogs.createSelectDialog('Sort Order', sortFields))
+            showPromiseDialog(dialogContext,SelectDialog,{title:'Sort Order',list:sortFields})
                 .then((selected)=>{
                      setSortField(selected.value);
                 })
@@ -259,7 +264,12 @@ const AisPage =(props)=>{
                         setSearchActive(false);
                     }
                     else{
-                        showPromiseDialog(dialogContext.current,Dialogs.createValueDialog("filter",searchValue,undefined,undefined,undefined,true))
+                        showPromiseDialog(dialogContext.current,(props)=><ValueDialog
+                            {...props}
+                            title={"filter"}
+                            value={searchValue}
+                            clear={true}
+                        />)
                             .then((value)=>{
                                 setSearchActive(true);
                                 setSearchValue(value.toUpperCase());

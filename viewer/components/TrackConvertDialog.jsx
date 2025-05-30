@@ -32,7 +32,6 @@ import {
     DialogButtons,
     DialogFrame,
     DialogRow,
-    InfoItem,
     useDialogContext
 } from "./OverlayDialog";
 import Requests from '../util/requests';
@@ -49,6 +48,7 @@ import navdata from "../nav/navdata";
 import routeobjects from "../nav/routeobjects";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
+import {InfoItem} from "./BasicDialogs";
 
 const RouteHandler=navdata.getRoutingHandler();
 

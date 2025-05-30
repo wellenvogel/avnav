@@ -98,6 +98,7 @@ NavData.prototype.computeValues=function() {
             markerXte: keys.nav.wp.xte,
             markerVmg: keys.nav.wp.vmg,
             markerWp: keys.nav.wp.position,
+            markerServer: keys.nav.wp.server,
             anchorDirection: keys.nav.anchor.direction,
             anchorDistance: keys.nav.anchor.distance,
             anchorWatchDistance: keys.nav.anchor.watchDistance,
@@ -120,6 +121,9 @@ NavData.prototype.computeValues=function() {
     let gps = globalStore.getMultiple(this.storeKeys);
     //copy the marker to data to make it available extern
     data.markerWp = activeRoute.getCurrentTarget();
+    if (data.markerWp){
+        data.markerServer=activeRoute.isServerLeg();
+    }
     data.routeNextWp = activeRoute.getNextWaypoint();
     let maplatlon=globalStore.getData(keys.map.centerPosition,new navobjects.Point(0,0));
     let rstart = activeRoute.getCurrentFrom();

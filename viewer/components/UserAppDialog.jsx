@@ -2,8 +2,7 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
     DialogRow,
-    promiseResolveHelper, SelectList,
-    showPromiseDialog,
+    promiseResolveHelper, showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
@@ -17,6 +16,7 @@ import {IconDialog} from "./IconDialog";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog} from "./EditDialog";
+import {ConfirmDialog, SelectList} from "./BasicDialogs";
 
 const ItemNameDialog=({iname,resolveFunction,fixedExt,title,mandatory,checkName})=>{
     const [name,setName]=useState(iname);
@@ -240,9 +240,9 @@ const UserAppDialog = (props) => {
             .then((addons) => {
                 let current = Addons.findAddonByUrl(addons, props.fixed.url,true)
                 if (current.length) {
-                    showPromiseDialog(dialogContext, (props) =>
+                    showPromiseDialog(dialogContext, (dprops) =>
                         <SelectExistingDialog
-                            {...props}
+                            {...dprops}
                             existingAddons={current}
                         />
                     )
@@ -406,8 +406,8 @@ const UserAppDialog = (props) => {
                     name: 'delete',
                     label: 'Delete',
                     onClick: () => {
-                        dialogContext.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
-                            () => {
+                        showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={"really delete User App?"}/>)
+                            .then(() => {
                                 Addons.removeAddon(currentAddon.name)
                                     .then((data) => {
                                         props.resolveFunction(data);
@@ -417,7 +417,7 @@ const UserAppDialog = (props) => {
                                         if (unsetOrTrue(props.showToasts)) Toast("unable to remove: " + error);
                                     });
                             }
-                        ));
+                        ,()=>{});
                     },
                     close: false,
                     visible: !!(currentAddon.name && currentAddon.canDelete && canEdit)

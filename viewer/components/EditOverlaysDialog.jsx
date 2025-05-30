@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {
+import {
     DialogButtons,
     DialogFrame,
-    DialogRow, showPromiseDialog,
+    DialogRow, showDialog, showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
@@ -16,21 +16,17 @@ import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
-import {readFeatureInfoFromKml} from '../map/kmlchartsource';
-import {getOverlayConfigName} from '../map/chartsourcebase'
+import {editableOverlayParameters, getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
-import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
-import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
-import {createEditableParameter} from "./EditableParameters";
-import {getKnownStyleParam} from "../map/chartsourcebase";
+import editableParameterUI, {EditableParameterListUI} from "./EditableParameterUI";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import base from "../base";
+import Mapholder from "../map/mapholder";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -113,10 +109,29 @@ const OverlayItemDialog = (props) => {
         images: useItemList([]),
         user: useItemList([]),
         knownOverlays: useItemList([]),
-        iconFiles: useItemList([{label: "--none--"}]),
+        iconFiles: useItemList([{label: "--none--",value:undefined}]),
         route: useItemList([]),
         track: useItemList([])
     };
+    const parameters=useMemo(()=>{
+        const rt=[];
+        if (itemInfo.settings){
+            itemInfo.settings.forEach((setting)=>{
+                let addOn=undefined;
+                if (setting.name === editableOverlayParameters.icon.name){
+                    //fill icon list
+                    addOn={
+                        list:itemLists.iconFiles.list,
+                        readOnly: iconsReadOnly
+                    };
+                }
+                const param=editableParameterUI.createEditableParameterUI({...setting,...addOn});
+                rt.push(param);
+            })
+        }
+        return rt;
+    },[itemInfo,itemsFetchCount])
+
     const getItemList = (type) => {
         const filledLists={};
         Requests.getJson("", {}, {
@@ -228,16 +243,12 @@ const OverlayItemDialog = (props) => {
             .then((data) => {
                 try {
                     let featureInfo={};
-                    let ext = Helper.getExt(url);
-                    if (ext === 'gpx') {
-                        featureInfo = readFeatureInfoFromGpx(data);
-                    }
-                    if (ext === 'kml') {
-                        featureInfo = readFeatureInfoFromKml(data);
-                    }
-                    if (ext === 'geojson') {
-                        featureInfo = readFeatureInfoFromGeoJson(data);
-                    }
+                    try {
+                        const OverlayClass=Mapholder.findChartSource('overlay',url);
+                        if (typeof(OverlayClass.analyzeOverlay) === 'function'){
+                            featureInfo=OverlayClass.analyzeOverlay(data);
+                        }
+                    }catch (e){}
                     if (!featureInfo.hasAny) {
                         Toast(url + " is no valid overlay file");
                         setLoading(false);
@@ -284,12 +295,11 @@ const OverlayItemDialog = (props) => {
     }
     let currentType = current.type;
     let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
-    let formatters = [{label: '-- none --', value: undefined}];
-    for (let f in featureFormatters) {
-        if (typeof (featureFormatters[f]) === 'function') {
-            formatters.push({label: f, value: f});
-        }
-    }
+
+    let dataValid=true;
+    parameters.forEach((parameter)=>{
+        if (parameter.hasError(current||{})) dataValid=false;
+    })
     return (
         <DialogFrame className="selectDialog editOverlayItemDialog" title={props.title || 'Edit Overlay'}>
             <DialogRow className="info"><span
@@ -354,106 +364,12 @@ const OverlayItemDialog = (props) => {
                                     analyseOverlay(newState.url, initial);
                                 }}
                             />
-                            {!iconsReadOnly && (itemInfo.hasSymbols || itemInfo.hasLinks) && <InputSelect
-                                dialogRow={true}
-                                label="icon file"
-                                value={current.icons}
-                                list={itemLists.iconFiles.list}
-                                fetchCount={itemsFetchCount}
-                                onChange={(nv) => {
-                                    updateCurrent({icons: nv.url});
-                                }}
+                            <EditableParameterListUI
+                                values={current}
+                                parameters={parameters}
+                                onChange={updateCurrent}
+                                initialValues={props.current}
                             />
-                            }
-                            {iconsReadOnly && <InputReadOnly
-                                dialogRow={true}
-                                label="icon file"
-                                value={current.icons}
-                            />}
-                            {itemInfo.allowOnline && <Checkbox
-                                dialogRow={true}
-                                label="allow online"
-                                value={current.allowOnline || false}
-                                onChange={(nv) => updateCurrent({allowOnline: nv})}
-                            />}
-                            {itemInfo.showText && <Checkbox
-                                dialogRow={true}
-                                label="show text"
-                                value={current.showText || false}
-                                onChange={(nv) => updateCurrent({showText: nv})}
-                            />}
-                            {itemInfo.allowHtml && <Checkbox
-                                dialogRow={true}
-                                label="allow html"
-                                value={current.allowHtml || false}
-                                onChange={(nv) => updateCurrent({allowHtml: nv})}
-                            />}
-                            {itemInfo.allowFormatter &&
-                                <InputSelect
-                                    dialogRow={true}
-                                    label={"featureFormatter"}
-                                    value={current.featureFormatter}
-                                    onChange={(nv) => {
-                                        updateCurrent({featureFormatter: nv.value});
-                                    }}
-                                    list={formatters}
-                                />
-
-                            }
-                            {getKnownStyleParam().map((param) => {
-                                if (!itemInfo[param.name]) return null;
-                                return (
-                                    <ParamValueInput
-                                        param={createEditableParameter(param.name, param.type, param.list, param.displayName, param.default)}
-                                        currentValues={current || {}}
-                                        onChange={(nv) => updateCurrent(nv)}
-                                        onlyOwnParam={true}
-                                    />
-                                )
-                            })}
-                            <Input
-                                dialogRow={true}
-                                type="number"
-                                label="min zoom"
-                                value={current.minZoom || 0}
-                                onChange={(nv) => updateCurrent({minZoom: nv})}
-                            />
-                            <Input
-                                dialogRow={true}
-                                type="number"
-                                label="max zoom"
-                                value={current.maxZoom || 0}
-                                onChange={(nv) => updateCurrent({maxZoom: nv})}
-                            />
-                            {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
-                                dialogRow={true}
-                                type="number"
-                                label="min scale"
-                                value={current.minScale || 0}
-                                onChange={(nv) => updateCurrent({minScale: nv})}
-                            />}
-                            {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
-                                dialogRow={true}
-                                type="number"
-                                label="max scale"
-                                value={current.maxScale || 0}
-                                onChange={(nv) => updateCurrent({maxScale: nv})}
-                            />}
-                            {(itemInfo.hasSymbols || itemInfo.allowOnline || itemInfo.hasWaypoint) && <InputSelect
-                                dialogRow={true}
-                                label="default icon"
-                                value={current.defaultIcon || '--none--'}
-                                list={itemLists.icons.list}
-                                fetchCount={itemsFetchCount}
-                                onChange={(nv) => {
-                                    updateCurrent({defaultIcon: nv.value});
-                                }}
-                            >
-                                {current.defaultIcon &&
-                                    <span className="icon"
-                                          style={{backgroundImage: "url('" + current.defaultIcon + "')"}}> </span>
-                                }
-                            </InputSelect>}
                         </React.Fragment>
                     }
                 </React.Fragment>
@@ -470,14 +386,19 @@ const OverlayItemDialog = (props) => {
                             if (changes.opacity > 1) changes.opacity = 1;
                             props.resolveFunction(changes);
                         }}
-                        disabled={(!changed && !props.forceOk) || !current.name}
+                        disabled={(!changed && !props.forceOk) || !current.name||!dataValid}
                     >Ok</DB>
                     : null}
 
             </DialogButtons>
         </DialogFrame>)
 }
-
+OverlayItemDialog.propTypes={
+    resolveFunction: PropTypes.func.isRequired,
+    forceOk: PropTypes.func,
+    title: PropTypes.element,
+    current: PropTypes.object
+}
 
 const BaseElement=(props)=>{
     const dd=useAvNavSortable(props.dragId,false)
@@ -631,11 +552,11 @@ const EditOverlaysDialog = (props) => {
         setSelectedIndex(idx);
     }
     const showItemDialog = (item, opt_forceOk) => {
-        return showPromiseDialog(dialogContext,(props) => {
+        return showPromiseDialog(dialogContext,(dprops) => {
             return <OverlayItemDialog
-                {...props}
+                {...dprops}
                 resolveFunction={(changed) => {
-                    if (changed.name && changed.type) props.resolveFunction(changed);
+                    if (changed.name && changed.type) dprops.resolveFunction(changed);
                 }}
                 current={item}
                 title={item ? "Edit Overlay" : "New Overlay"}
@@ -924,7 +845,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
             if (!config.data) return;
             if (config.data.useDefault === undefined) config.data.useDefault = true;
             let overlayConfig = new OverlayConfig(config.data);
-            OverlayDialog.dialog((props) => {
+            showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
                     {...props}
                     chartName={chartItem.name}

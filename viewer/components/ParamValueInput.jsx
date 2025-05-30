@@ -27,7 +27,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.jsx';
-import {EditableParameter} from "./EditableParameters";
+import {EditableParameter} from "./EditableParameterUI";
 
 export const getList=(list,current)=> {
     if (list instanceof Promise){
@@ -123,18 +123,16 @@ export const ParamValueInput=(props)=>{
         key={param.name.replace(/  */,'')}
         label={param.displayName}
         onChange={inputFunction}
-        showDialogFunction={props.showDialogFunction}
         showUnset={true}
         list={(current)=>getList(param.getList(),current)}
         value={current}
     >{props.children}</ValueInput>
 }
 
-ParamValueInput.PropTypes={
+ParamValueInput.propTypes={
     param: PropTypes.object.isRequired,
     currentValues: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
-    showDialogFunction: PropTypes.func.isRequired,
     className: PropTypes.string,
     onlyOwnParam: PropTypes.bool
 }

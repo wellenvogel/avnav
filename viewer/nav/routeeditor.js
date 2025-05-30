@@ -4,11 +4,10 @@
 
 import routeobjects from './routeobjects';
 import navobjects from './navobjects';
-import Formatter from '../util/formatter';
-import NavCompute from './navcompute';
 import globalStore from '../util/globalstore.jsx';
-import keys,{KeyHelper} from '../util/keys.jsx';
+import keys from '../util/keys.jsx';
 import assign from 'object-assign';
+import NavCompute from "./navcompute";
 
 const ERROR_KEYS="either provide leg or route,index and activeName as keys";
 
@@ -130,6 +129,9 @@ class RouteEdit{
     getStoreKeys(opt_merge){
         return assign({},opt_merge,this.storeKeys);
     }
+    getState(){
+        return {...load(this.storeKeys)}
+    }
     addMultipleWaypoints(points,opt_before){
         if (! points || ! points.length) return;
         this.checkWritable();
@@ -179,7 +181,7 @@ class RouteEdit{
         if (old) data.index=data.route.getIndexFromPoint(old);
         write(this.writeKeys,data);
     }
-    setNewRoute(route,opt_index){
+    setNewRoute(route,opt_index,opt_ignoreWpNames){
         if (! route) return;
         this.checkWritable();
         let data=load(this.storeKeys,true);
@@ -211,7 +213,7 @@ class RouteEdit{
              *   bestMatching
              */
             let newIndex=-1;
-            if (oldRouteName == data.route.name){
+            if (oldRouteName == data.route.name && ! opt_ignoreWpNames){
                 newIndex=data.route.getIndexFromPoint(oldTarget,true);
                 if (newIndex < 0 && oldNext){
                     newIndex=data.route.getIndexFromPoint(oldNext,true);
@@ -271,20 +273,21 @@ class RouteEdit{
     }
 
 
-    deleteWaypoint(){
+    deleteWaypoint(idx){
         this.checkWritable();
         let data=load(this.storeKeys,true);
-        if (data.index < 0 || ! data.route) return;
+        if (idx === undefined) idx=data.index;
+        if (idx < 0 || ! data.route || idx >= data.route.points.length) return;
         let wasTarget=false;
         if (this.storeKeys.leg){
-            wasTarget=data.leg.getCurrentTargetIdx()==data.index;
+            wasTarget=data.leg.getCurrentTargetIdx()==idx;
         }
-        let nextPoint=data.route.deletePoint(data.index);
+        let nextPoint=data.route.deletePoint(idx);
         if (wasTarget){
             data.leg.to=nextPoint;
             if (!nextPoint) data.leg.active=false;
         }
-        if (! nextPoint && data.index > 0){
+        if (data.index < 0 || data.index >= data.route.points.length){
             //we deleted the last point (and there are just points in the route)
             data.index-=1;
         }
@@ -420,6 +423,10 @@ class RouteEdit{
         let data=load(this.storeKeys);
         return StateHelper.hasActiveTarget(data);
     }
+    isServerLeg(){
+        let data=load(this.storeKeys);
+        return StateHelper.isServerLeg(data);
+    }
     getCurrentTarget(){
         let data=load(this.storeKeys);
         if (!data.leg || ! data.leg.active) return undefined;
@@ -451,15 +458,6 @@ class RouteEdit{
 }
 
 RouteEdit.MODES={
-    PAGE:{
-        storeKeys: {
-            route: keys.nav.routeHandler.routeForPage,
-            index: keys.nav.routeHandler.pageRouteIndex,
-            activeName: keys.nav.routeHandler.activeName,
-            useRhumbLine: keys.nav.routeHandler.useRhumbLine
-        },
-        writable:true
-    },
     EDIT:{
         storeKeys: {
             route: keys.nav.routeHandler.editingRoute,
@@ -529,6 +527,12 @@ export class StateHelper{
         return state.leg.isRouting();
     }
 
+    static activeTarget(state){
+        if (! state.leg) return;
+        if (!state.leg.isRouting()) return;
+        return state.leg.to;
+    }
+
     static targetName(state){
         if (! StateHelper.hasActiveTarget(state)) return;
         if (! state.leg.to) return;
@@ -546,16 +550,51 @@ export class StateHelper{
         return state.leg.hasRoute();
     }
 
-}
+    static anchorWatchDistance(state){
+        if (! state.leg) return;
+        return state.leg.anchorWatch();
+    }
+    static routeName(state){
+        if (state.route ) return state.route.name;
+        if (state.leg){
+            return state.leg.getRouteName()
+        }
+    }
+    static isServerRoute(state){
+        const route=state.route||(state.leg||{}).route;
+        if (!route) return false;
+        return route.server;
+    }
+    static isServerLeg(state){
+        if (! state.leg) return false;
+        return state.leg.server;
+    }
 
-//register the guard callback to prevent others from updating the routes
-
-let keylist=[];
-for (let k in [RouteEdit.MODES.EDIT,RouteEdit.MODES.PAGE]) {
-    let ownKeys = assign({}, k);
-    delete ownKeys.activeName;
-    keylist=keylist.concat(KeyHelper.flattenedKeys(ownKeys))
 }
-//globalStore.register(guard,keylist);
 
 export default  RouteEdit;
+export const getClosestRoutePoint = (route, waypoint) => {
+    let idx = route.findBestMatchingIdx(waypoint);
+    let useRhumbLine = globalStore.getData(keys.nav.routeHandler.useRhumbLine);
+    if (idx >= 0) {
+        //now we check if we are somehow between the found point and the next
+        let currentTarget = route.getPointAtIndex(idx);
+        if (currentTarget.compare(waypoint)) return currentTarget;
+        let nextTarget = route.getPointAtIndex(idx + 1);
+        if (nextTarget && currentTarget) {
+            let nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget, useRhumbLine).dts;
+            let nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget, useRhumbLine).dts;
+            //if the distance to the next wp is larger then the distance between current and next
+            //we stick at current
+            //we allow additionally a xx% catch range
+            //so we only go to the next if the distance to the nextWp is xx% smaller then the distance between the rp
+            let limit = nextDistanceRt * (100 - globalStore.getData(keys.properties.routeCatchRange, 50)) / 100;
+            if (nextDistanceWp <= limit) {
+                return nextTarget;
+            } else {
+                return currentTarget;
+            }
+        }
+        return currentTarget;
+    }
+}

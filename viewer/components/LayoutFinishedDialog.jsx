@@ -1,7 +1,7 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
-import OverlayDialog, {DialogButtons, DialogFrame} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 
 const LayoutFinishedDialog=(props)=>{
@@ -41,7 +41,7 @@ LayoutFinishedDialog.getButtonDef=(callback,opt_dialogContext)=>{
         name: 'LayoutFinished',
         editOnly: true,
         onClick: ()=>{
-            OverlayDialog.showDialog(opt_dialogContext,()=><LayoutFinishedDialog finishCallback={(res)=>{if (callback) callback(res)}}/>);
+            showDialog(opt_dialogContext,()=><LayoutFinishedDialog finishCallback={(res)=>{if (callback) callback(res)}}/>);
         },
         toggle: true
     }

@@ -26,52 +26,17 @@
 
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {
-    DBOk,
-    DialogButtons,
-    DialogFrame,
-    dialogHelper,
-    showPromiseDialog,
-    useDialogContext
-} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import DB from './DialogButton.jsx';
-import {ParamValueInput} from "./ParamValueInput";
 import RequestHandler from "../util/requests";
 import Toast from "./Toast";
-import {createEditableParameter} from "./EditableParameters";
-import Button from "./Button";
-import {stateHelper} from "../util/GuiHelpers";
-import DialogButton from "./DialogButton.jsx";
+import editableParameterUIFactory, {EditableParameterListUI} from "./EditableParameterUI";
+import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 
-const HelpButton=(props)=>{
-    const dialogContext=useDialogContext();
-    let InfoDialog=()=>{
-        return(
-            <DialogFrame className="HelpDialog">
-                <div className="dialogRow infoText">
-                    {props.param.description}
-                </div>
-                <DialogButtons buttonList={DBOk()}>
-                </DialogButtons>
-            </DialogFrame>
-        )
-    }
-    return <Button
-        name={'help'}
-        className="Help smallButton"
-        onClick={(ev)=>{
-            ev.stopPropagation();
-            ev.preventDefault();
-            if (props.param && props.param.description) {
-                dialogContext.showDialog(InfoDialog);
-            }
-        }}
-        />
-}
 const EditHandlerDialog=(props)=>{
     const [loaded,setLoaded]=useState(false);
-    const [parameters,setParameters]=useState(undefined);
+    const [parameters,setParameters]=useState([]);
     const [handlerId,setHandlerId]=useState(props.handlerId);
     const [currentValues,setCurrentValues]=useState({});
     const [modifiedValues,setModifiedValues]=useState({});
@@ -103,17 +68,11 @@ const EditHandlerDialog=(props)=>{
                 data.data.forEach((param)=>{
                     let type = param.type;
                     if (type === 'FILTER') type = 'STRING';
-                    if (type === 'FLOAT') type='NUMBER';
-                    let description=createEditableParameter(param.name,type,
-                        param.rangeOrList,
-                        param.name
-                    )
-                    if (! description) return;
-                    description.default=param.default;
-                    description.mandatory=param.mandatory;
-                    description.description=param.description;
-                    description.condition=param.condition;
-                    parameters.push(description);
+                    const editableParameterUI=editableParameterUIFactory.createEditableParameterUI(
+                        {...param,
+                                    list:param.rangeOrList
+                        })
+                    parameters.push(editableParameterUI);
                 })
                 setLoaded(true);
                 setParameters(parameters);
@@ -155,7 +114,7 @@ const EditHandlerDialog=(props)=>{
         if (props.child){
             text="really delete "+props.child+"?";
         }
-        showPromiseDialog(dialogContext,OverlayDialog.createConfirmDialog(text))
+        showPromiseDialog(dialogContext,ConfirmDialog,{text:text})
             .then(()=> {
                 let param = getRequestParam({command: props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
                 return RequestHandler.getJson('', undefined, param);
@@ -185,55 +144,11 @@ const EditHandlerDialog=(props)=>{
         }
         setModifiedValues(newState);
     }
-
-    const checkCondition=(condition,values)=>{
-        if (! (condition instanceof Array)){
-            condition=[condition]
-        }
-        for (let i in condition){
-            let matches=true;
-            for (let k in condition[i]){
-                let compare=condition[i][k];
-                let value=undefined;
-                let hasFound=false;
-                for (let pi in parameters) {
-                    if (parameters[pi].name === k){
-                        value=parameters[pi].getValueForDisplay(values);
-                        hasFound=true;
-                        break;
-                    }
-                }
-                if (! hasFound){
-                    //potentially we have some none editable parameter
-                    //we need to compare to - in this case we still take it's current value
-                    //this will potentially not include the default....
-                    value=values[k]
-                }
-                if (typeof(compare) === 'string' && compare.match(/^!/)){
-                    //special case: empty after ! also matches undefined
-                    if (value === undefined && compare === '!'){
-                        matches=false;
-                        break;
-                    }
-                    //intentionally use ==
-                    if (compare.substring(1) == value){
-                        matches=false;
-                        break;
-                    }
-                }
-                else {
-                    if (compare != value) {
-                        matches = false;
-                        break;
-                    }
-                }
-            }
-            if (matches) return true;
-        }
-        return false;
-    }
-
-        let renderValues={...currentValues,...modifiedValues};
+    let renderValues={...currentValues,...modifiedValues};
+    let dataValid=true;
+    parameters.forEach((parameter)=>{
+        if (parameter.hasError(renderValues)) dataValid=false;
+    })
         let renderName=name||'';
         if (props.child){
             renderName+=":"+props.child;
@@ -244,42 +159,12 @@ const EditHandlerDialog=(props)=>{
                 {!loaded ?
                     <div className="loadingIndicator"></div>
                     :
-                    <React.Fragment>
-                        {parameters.map((param) => {
-                            let notFilled=!param.mandatoryOk(renderValues);
-                            let children=
-                                <div className="paramButtons">
-                                    {param.description && <HelpButton
-                                        param={param}
-                                    />
-                                    }
-                                    {param.default !== undefined && <Button
-                                        name={'Delete'}
-                                        className={'smallButton'}
-                                        onClick={(ev) => {
-                                            ev.stopPropagation();
-                                            let nv = {};
-                                            nv[param.name] = param.default;
-                                            modifyValues(nv);
-                                        }}
-                                    />
-                                    }
-                                </div>;
-                            if (param.condition){
-                                let show=checkCondition(param.condition,renderValues);
-                                if (!show) return null;
-                            }
-                            return ParamValueInput({
-                                param: param,
-                                currentValues: renderValues,
-                                showDialogFunction: dialogContext.showDialog,
-                                onChange: (nv) => modifyValues(nv),
-                                className: notFilled?'missing':'',
-                                children: children
-                            })
-                        })}
-
-                    </React.Fragment>
+                    <EditableParameterListUI
+                        parameters={parameters}
+                        values={renderValues}
+                        initialValues={currentValues}
+                        onChange={(nv)=>modifyValues(nv)}
+                    />
                 }
                 <DialogButtons>
                         <DB
@@ -293,10 +178,13 @@ const EditHandlerDialog=(props)=>{
                             Delete
                         </DB>
                     <DB name="cancel" >Cancel</DB>
-                    <DB name="ok" onClick={()=>{
-                        if (! props.addHandler) updateValues();
-                        else addHandler();
-                    }}>Ok</DB>
+                    <DB name="ok"
+                        onClick={()=>{
+                            if (! props.addHandler) updateValues();
+                            else addHandler();
+                        }}
+                        disabled={!dataValid}
+                    >Ok</DB>
                 </DialogButtons>
             </DialogFrame>
         );
@@ -312,14 +200,6 @@ EditHandlerDialog.propTypes={
     createdCallback: PropTypes.func,
     addHandler: PropTypes.bool
 };
-
-const filterObject=(data)=>{
-    for (let k in data){
-        if (data[k] === undefined) delete data[k];
-    }
-    return data;
-};
-
 /**
  *
  * @param handlerId: the handler to be edited
@@ -327,7 +207,7 @@ const filterObject=(data)=>{
  * @return {boolean}
  */
 EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handlerName)=>{
-    OverlayDialog.dialog((props)=> {
+    showDialog(undefined,(props)=> {
         return <EditHandlerDialog
             {...props}
             title="Edit Handler"
@@ -340,7 +220,7 @@ EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handler
 };
 
 EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_doneCallback)=>{
-    OverlayDialog.dialog((props)=> {
+    showDialog(undefined,(props)=> {
         return <EditHandlerDialog
             {...props}
             title="Add Handler"
@@ -352,7 +232,7 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_don
     },undefined);
 }
 
-EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{
+EditHandlerDialog.createAddDialog=(opt_doneCallback,dialogCtx)=>{
     RequestHandler.getJson('',undefined,{
         request:'api',
         type: 'config',
@@ -365,7 +245,7 @@ EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{
             }
             let list=[];
             data.data.forEach((h)=>list.push({label:h,value:h}));
-            OverlayDialog.selectDialogPromise('Select Handler to Add',list)
+            showPromiseDialog(dialogCtx,(dprops)=><SelectDialog {...dprops} title={'Select Handler to Add'} list={list}/> )
                 .then((selected)=>{
                     EditHandlerDialog.createNewHandlerDialog(selected.value,undefined,opt_doneCallback);
                 })

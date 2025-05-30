@@ -125,17 +125,17 @@ body{
   right: 1em;
   top: 1em;
   z-index: 3;
-
-  .anchorWatchIcon {
-    background-color: red;
-    .maskImage('anchor.svg');
-  }
-
-  .disconnectedIcon {
-    background-color: red;
-    .maskImage('plug-disconnect.svg');
-  }
 }
+.anchorWatchIcon {
+  background-color: red;
+  .maskImage('anchor.svg');
+}
+
+.disconnectedIcon {
+  background-color: red;
+  .maskImage('plug-disconnect.svg');
+}
+
 
 
 .leftPart{
@@ -236,17 +236,20 @@ body{
     .flex-direction(column);
   }
 
-
-  input, .input {
-    font-size: inherit;
-    font-family: inherit;
-    max-width: 100%;
+  .inputFrame{
     width: 20em;
     min-width: 5em;
+    max-width: 100%;
+    display: inline-block;
+  }
+
+  input, .input {
+    .inputFrame();
+    font-size: inherit;
+    font-family: inherit;
     border: none;
     border-bottom: 1px solid;
     .nightBorderColorGR();
-    display: inline-block;
     vertical-align: middle;
     line-height: 2em;
     min-height: 2em;
@@ -276,6 +279,11 @@ body{
   .wideLabel{
     .inputLabel();
     width: unset;
+  }
+  .iconInput .input,.colorSelector .input {
+    .flex-display();
+    .flex-direction(row);
+    .flex-align-items(center);
   }
 
 
@@ -339,7 +347,20 @@ body{
   .errorText{
     .nightForeFade(@colorRed)
   }
+  .paramButtons {
+    .flex-display();
+    .flex-direction(row);
+  }
 
+}
+
+.editParam{
+  &.changed{
+    font-weight: bold;
+  }
+  &.defaultValue{
+    font-style: italic;
+  }
 }
 
 .editWidgetDialog, .editPageDialog{
@@ -439,6 +460,16 @@ body{
     .nightBackFade(@colorSelection);
   }
 }
+.LoadRoutesDialog{
+  .listEntry{
+    .flex-align-items(center);
+    .icon{
+      margin-right: 0.8em;
+      width: 1em;
+      height: 1em;
+    }
+  }
+}
 
 .overlayElement{
   &.sortableHelper {
@@ -510,7 +541,7 @@ body{
 
 .editOverlayItemDialog{
   .inputLabel{
-    width: 9em;
+    width: 10em;
   }
 }
 .FeatureInfoDialog{
@@ -553,10 +584,6 @@ body{
 .EditHandlerDialog{
   .inputLabel{
     width: 9em;
-  }
-  .paramButtons {
-    .flex-display();
-    .flex-direction(row);
   }
 }
 .downloadFrame{
@@ -792,6 +819,11 @@ span.valuePrefix{
   background-repeat: no-repeat;
   background-position: center;
   .nightOPacity();
+  .widgetHead &{
+    margin:0;
+    height: 0.8em;
+    width: 0.8em;
+  }
 }
 .iconImage(@url){
   .icon();
@@ -1254,45 +1286,6 @@ span.valuePrefix{
 
 }
 
-#routepage{
-  &.activeRoute .header{
-    .nightBackFade(@colorRed);
-  }
-  .routeCurrent {
-    background-color: #CFD8DC;
-    padding: 1em;
-    padding-right: 1.5em;
-    height: 5.2em;
-    position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    .routeName{
-      white-space: nowrap;
-      overflow: hidden;
-    }
-    .routeInfo{
-      .mdText2();
-      margin-top: 0.7em;
-    }
-    .more{
-      display: inline-block;
-      position: absolute;
-      right: 0;
-      top: 1em;
-      height: 2em;
-      width: 2em;
-    }
-
-  }
-
-}
-.editRouteName{
-  label{
-    display: inline-block;
-    margin-left: 1em;
-  }
-
-}
-
 #downloadpage{
   .itemMain {
     .flex-display();
@@ -1398,6 +1391,26 @@ span.valuePrefix{
   .edit{
     .flex(1);
     position: relative;
+  }
+}
+.EditRouteDialog{
+  &.activeRoute{
+    border-width: 3px;
+    border-style: solid;
+    padding: 5px;
+    .nightBorderFade(@colorRed);
+  }
+}
+.EditRoutePoints{
+  .routeInfoPoint {
+    .flex-display();
+    .flex-direction(row);
+    line-height: 2em;
+    .info{
+      width: 8em;
+      padding-top: 0.4em;
+      padding-bottom: 0.4em;
+    }
   }
 }
 

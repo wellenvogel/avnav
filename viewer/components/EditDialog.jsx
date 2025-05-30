@@ -13,6 +13,7 @@ import UploadHandler from "./UploadHandler";
 import Toast from "./Toast";
 import DownloadButton from "./DownloadButton";
 import PropTypes from "prop-types";
+import {ConfirmDialog} from "./BasicDialogs";
 
 export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName}) => {
     const flask = useRef();
@@ -40,7 +41,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             local={true}
             type={'user'}
             doneCallback={(data) => {
-                showPromiseDialog(dialogContext, OverlayDialog.createConfirmDialog("overwrite with " + data.name + " ?"))
+                showPromiseDialog(dialogContext, ConfirmDialog,{text:"overwrite with " + data.name + " ?"})
                     .then(() => {
                         flask.current.updateCode(data.data, true);
                         setChanged(true);

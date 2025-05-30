@@ -257,6 +257,9 @@ button{
   &.ShowSettings {
     .iconButton('ic_settings.svg');
   }
+  &.Menu{
+    .iconButton('menu_open.svg');
+  }
 
   &.Connected {
     .iconButton('plug.svg');
@@ -626,15 +629,22 @@ button{
   .EditRouteDialog &.edit{
     .dialogIconButton('ic_edit.svg');
   }
-  .EditRouteDialog &.empty{
+  .EditRouteDialog &.points{
+    .dialogIconButton('route.svg');
+  }
+  .EditRoutePoints &.empty{
     .dialogIconButton('delete_sweep.svg');
+  }
+  .EditRoutePoints &.invert{
+    .dialogIconButton('invertroute.svg');
+  }
+  .EditRoutePoints &.renumber{
+    .dialogIconButton('format_list_numbered.svg');
   }
   .EditRouteDialog &.load{
     .dialogIconButton('save.svg');
   }
-  .EditRouteDialog &.invert{
-    .dialogIconButton('invertroute.svg');
-  }
+
   &.reload{
     .dialogIconButton('ic_refresh.svg');
   }
@@ -680,5 +690,8 @@ button{
   }
   &.save{
     .dialogIconButton('save.svg')
+  }
+  &.start {
+    .dialogIconButton('wpgoto.svg')
   }
 }

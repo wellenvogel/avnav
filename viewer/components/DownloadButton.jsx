@@ -58,7 +58,7 @@ const DownloadButton=(props)=>{
             hiddenA.current.click();
         }
     }
-    let {useDialogButton,url,localData,fileName,type,androidUrl,...forward}=props;
+    let {useDialogButton,url,localData,fileName,type,...forward}=props;
     let Bt = useDialogButton ? DB : Button;
     if (!url && ! localData) return null;
         return (
@@ -114,8 +114,7 @@ DownloadButton.propTypes={
     useDialogButton: PropTypes.bool,
     fileName:  PropTypes.string,
     type: PropTypes.string,
-    onClick: PropTypes.func,
-    androidUrl: PropTypes.string //optional url for android downloads
+    onClick: PropTypes.func
 }
 
 export default DownloadButton;

@@ -40,7 +40,7 @@ export const PageFrame=(iprops)=>{
         if (hideCallback) hideCallback(hidden);
     },[hidden]);
     const timer=useTimer((sequence)=>{
-        if (autoHideButtons !== undefined){
+        if (autoHideButtons !== undefined && ! isEditing){
             let now=Helper.now();
             if (globalStore.getData(keys.gui.global.hasActiveInputs)){
                 lastUserEvent.current=now;
@@ -142,10 +142,11 @@ Page.propTypes=assign({},Page.pageProperties,{
     mainContent: PropTypes.any,
     floatContent: PropTypes.any,
     bottomContent: PropTypes.any,
-    buttonList: PropTypes.any,
+    buttonList: PropTypes.array,
     style: PropTypes.object,
     buttonWidthChanged: PropTypes.func,
-    autoHideButtons: PropTypes.any // number of ms or undefined
+    autoHideButtons: PropTypes.any, // number of ms or undefined
+    windowDimensions: PropTypes.any
 });
 
 

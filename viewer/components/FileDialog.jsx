@@ -33,7 +33,6 @@ import OverlayDialog, {
     DialogButtons,
     DialogFrame,
     DialogRow,
-    InfoItem,
     showPromiseDialog, useDialogContext
 } from "./OverlayDialog";
 import globalStore from "../util/globalstore";
@@ -53,6 +52,7 @@ import LogDialog from "./LogDialog";
 import Formatter from '../util/formatter';
 import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
+import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -68,14 +68,13 @@ export const additionalUrlParameters={
 export const ItemDownloadButton=(props)=>{
     let {item,...forwards}=props;
     if (item.canDownload === false) return null;
-    let localData=getLocalDataFunction(item);
+    let localData=props.localData||getLocalDataFunction(item);
     return <DownloadButton
         {...forwards}
         url={localData?undefined:getDownloadUrl(item)}
         fileName={getDownloadFileName(item)}
         localData={localData}
         type={item.type}
-        androidUrl={item.url}
         />
 }
 const getLocalDataFunction=(item)=>{
@@ -643,7 +642,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
         if (opt_resultCallback) opt_resultCallback(info);
     };
-    let ok = OverlayDialog.confirm("delete " + info.name + "?");
+    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + info.name + "?"}/>);
     ok.then(function () {
         if (info.type === 'layout') {
             LayoutHandler.deleteItem(info.name)
@@ -651,6 +650,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
                     doneAction();
                 })
                 .catch((err)=>{
+                    Toast("unable to delete layout "+info.name+": "+err);
                     Toast("unable to delete layout "+info.name+": "+err);
                     doneAction();
                 });

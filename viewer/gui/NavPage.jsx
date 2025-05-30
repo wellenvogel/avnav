@@ -18,13 +18,12 @@ import Helper from '../util/helper.js';
 import {
     useKeyEventHandlerPlain,
     useStoreHelper,
-    useStoreState,
     useTimer
 } from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.jsx';
-import WayPointDialog from '../components/WaypointDialog.jsx';
+import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
@@ -46,6 +45,7 @@ import {PageFrame, PageLeft} from "../components/Page";
 import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
+import {useStoreState} from "../hoc/Dynamic";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -77,10 +77,10 @@ const getPanelWidgets=(panel)=>{
  * @param item
  * @param idx if undefined - just update the let "to" point
  */
-const startWaypointDialog=(item,idx)=>{
+const startWaypointDialog=(item,idx,dialogCtx)=>{
     if (! item) return;
-    const wpChanged=(newWp,close)=>{
-        let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
+    const wpChanged=(newWp)=>{
+        let changedWp=updateWaypoint(item,newWp,(err)=>{
             Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {
@@ -94,13 +94,11 @@ const startWaypointDialog=(item,idx)=>{
         }
         return false;
     };
-    let RenderDialog=function(props){
-        return <WayPointDialog
+    showDialog(dialogCtx,(props)=><WayPointDialog
             {...props}
             waypoint={item}
             okCallback={wpChanged}/>
-    };
-    OverlayDialog.dialog(RenderDialog);
+    );
 };
 
 const setBoatOffset=()=>{
@@ -148,7 +146,7 @@ const showLockDialog=(dialogContext)=>{
 
 const setCenterToTarget=()=>{
     MapHolder.setGpsLock(false);
-    if (globalStore.getData(keys.nav.anchor.watchDistance) !== undefined){
+    if (activeRoute.anchorWatch() !== undefined){
         MapHolder.setCenter(activeRoute.getCurrentFrom());
     }
     else {
@@ -238,38 +236,42 @@ const MapWidgetsDialog =()=> {
 }
 
 const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
-const OverlayContent=({showWpButtons,setShowWpButtons})=>{
+const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
     const waypointButtons=[
-        anchorWatch(),
+        anchorWatch(false,dialogCtxRef),
         {
             name:'WpLocate',
             onClick:()=>{
                 setCenterToTarget();
                 setShowWpButtons(false);
+            },
+            storeKeys: activeRoute.getStoreKeys(),
+            updateFunction:(state)=>{
+                return { visible: StateHelper.hasActiveTarget(state) || StateHelper.anchorWatchDistance(state) !== undefined}
             }
         },
         {
             name:'WpEdit',
             onClick:()=>{
                 if (activeRoute.hasRoute()){
-                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex());
+                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogCtxRef);
                 }
                 else {
-                    startWaypointDialog(activeRoute.getCurrentTarget());
+                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogCtxRef);
                 }
                 setShowWpButtons(false);
             },
-            storeKeys: {watchDistance:keys.nav.anchor.watchDistance},
+            storeKeys: activeRoute.getStoreKeys(),
             updateFunction:(state)=>{
-                return {visible:! (state.watchDistance !== undefined)}
+                return {visible:StateHelper.hasActiveTarget(state) }
             },
 
         },
         {
             name:'WpGoto',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
-                return {visible: !StateHelper.selectedIsActiveTarget(state) && ! (state.watchDistance !== undefined)}
+                return {visible: StateHelper.hasActiveTarget(state) &&  !StateHelper.selectedIsActiveTarget(state)}
             },
             onClick:()=>{
                 let selected=activeRoute.getPointAt();
@@ -281,11 +283,11 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name:'NavNext',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
-                return {visible:  StateHelper.selectedIsActiveTarget(state)
+                return {visible:
+                        StateHelper.hasActiveTarget(state) &&  StateHelper.selectedIsActiveTarget(state)
                         &&  StateHelper.hasPointAtOffset(state,1)
-                        && ! (state.watchDistance !== undefined)
                 };
             },
             onClick:()=>{
@@ -297,10 +299,10 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name: 'NavRestart',
-            storeKeys: activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
                 return {
-                    visible:  StateHelper.hasActiveTarget(state)
+                    visible:  StateHelper.hasActiveTarget(state) &&  StateHelper.selectedIsActiveTarget(state)
                 };
             },
             onClick:()=>{
@@ -310,11 +312,11 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name:'WpNext',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
                 return {
                     disabled:!StateHelper.hasPointAtOffset(state,1),
-                    visible: StateHelper.hasRoute(state) && ! (state.watchDistance !== undefined)
+                    visible: StateHelper.hasRoute(state) && ! StateHelper.anchorWatchDistance(state)
                 };
             },
             onClick:()=>{
@@ -327,11 +329,11 @@ const OverlayContent=({showWpButtons,setShowWpButtons})=>{
         },
         {
             name:'WpPrevious',
-            storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+            storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state)=> {
                 return {
                     disabled:!StateHelper.hasPointAtOffset(state,-1),
-                    visible: StateHelper.hasRoute(state) && ! (state.watchDistance !== undefined)
+                    visible: StateHelper.hasRoute(state) && ! StateHelper.anchorWatchDistance(state)
                 }
             },
             onClick:()=>{
@@ -508,8 +510,7 @@ const NavPage=(props)=>{
                             name: 'goto', label: 'Goto', onClick: () => {
                                 let target = feature.nextTarget;
                                 if (!target) return;
-                                let wp = new navobjects.WayPoint(target[0], target[1], feature.name);
-                                RouteHandler.wpOn(wp);
+                                RouteHandler.wpOn(target);
                             }
                         }
                     );
@@ -539,25 +540,25 @@ const NavPage=(props)=>{
                 let currentTarget=activeRoute.getCurrentTarget();
                 //show a "routeTo" if this is not the current target
                 if (! feature.activeRoute || ! currentTarget ||
-                    currentTarget.lon !== feature.nextTarget[0]||
-                    currentTarget.lat !== feature.nextTarget[1]
+                    ! currentTarget.compare(feature.nextTarget)
                 ) {
                     feature.additionalActions.push({
                         name: 'routeTo',
                         label: 'Route',
                         onClick: (props) => {
-                            RouteHandler.wpOn(props.routeTarget);
+                            RouteHandler.wpOn(props.nextTarget);
                         },
-                        condition: (props) => props.routeTarget
+                        condition: (props) => props.nextTarget
                     });
                 }
                 feature.additionalActions.push({
                     name:'editRoute',
                     label:'Edit',
                     onClick:()=>{
+                        let nextTarget= feature.nextTarget;
+                        if (! nextTarget) return;
                         RouteHandler.fetchRoute(feature.overlayName,false,
                             (route)=>{
-                                let nextTarget= new navobjects.WayPoint(feature.nextTarget[0],feature.nextTarget[1])
                                 let idx=route.findBestMatchingIdx(nextTarget);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);
@@ -764,6 +765,7 @@ const NavPage=(props)=>{
                         setShowWpButtons={(on)=>{
                             showWpButtons(on);
                         }}
+                        dialogCtxRef={dialogCtx}
                     />}
                 buttonList={buttons}
                 preventCenterDialog={(props.options||{}).remote}

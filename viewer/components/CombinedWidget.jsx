@@ -27,10 +27,10 @@ import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
 import theFactory from "./WidgetFactory";
-import {EditableParameter} from "./EditableParameters";
+import {EditableParameter} from "./EditableParameterUI";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import {DialogButtons, useDialog, useDialogContext} from "./OverlayDialog";
+import {DialogButtons, useDialogContext} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 

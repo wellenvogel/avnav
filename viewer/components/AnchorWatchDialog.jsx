@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import NavData from '../nav/navdata.js';
-import OverlayDialog, {
+import {
     DialogButtons,
-    DialogFrame,
+    DialogFrame, showDialog,
     showPromiseDialog,
     useDialogContext
 } from '../components/OverlayDialog.jsx';
@@ -15,6 +15,7 @@ import {Input, InputReadOnly} from "./Inputs";
 import DialogButton from "./DialogButton";
 import MapHolder from '../map/mapholder';
 import NavCompute from "../nav/navcompute";
+import {ConfirmDialog} from "./BasicDialogs";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -30,7 +31,7 @@ export const stopAnchorWithConfirm=(opt_resolveOnInact,opt_dialogContext)=>{
             }
             return;
         }
-        showPromiseDialog(opt_dialogContext,OverlayDialog.createConfirmDialog("Really stop the anchor watch?"))
+        showPromiseDialog(opt_dialogContext,ConfirmDialog,{text:"Really stop the anchor watch?"})
             .then(() => resolve(true))
             .catch((e)=>reject(e));
     })
@@ -40,7 +41,7 @@ const WatchDialog=(props)=> {
     const [bearing,setBearing]=useState(0);
     const [distance,setDistance]=useState(0);
     const dialogContext=useDialogContext();
-    const computeRefPoint=(sv,fromCenter)=>{
+    const computeRefPoint=(fromCenter)=>{
         let cv={radius,bearing,distance};
         if (fromCenter){
             cv.refPoint=MapHolder.getCenter();
@@ -124,7 +125,7 @@ export const anchorWatchDialog = (opt_dialogContext)=> {
         Toast("no gps position");
         return;
     }
-    OverlayDialog.showDialog(opt_dialogContext,(props)=>{
+    showDialog(opt_dialogContext,(props)=>{
         return <WatchDialog
             {...props}
             active={isActive}

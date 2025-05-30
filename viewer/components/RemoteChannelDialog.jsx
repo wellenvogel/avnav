@@ -1,10 +1,9 @@
 import React, {useState} from 'react';
-import OverlayDialog, {DialogButtons, DialogFrame} from '../components/OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import {Checkbox, InputSelect} from "./Inputs";
 import DialogButton from "./DialogButton";
-import cloneDeep from 'clone-deep';
 import assign from "object-assign";
 
 
@@ -68,7 +67,7 @@ export default  (options, opt_dialogContext)=>{
         },
         onClick: ()=>{
             const current=globalStore.getMultiple(storeKeys);
-            OverlayDialog.showDialog(opt_dialogContext,()=><RemoteChannelDialog
+            showDialog(opt_dialogContext,()=><RemoteChannelDialog
                 {...current}
                 setCallback={(values)=>{
                     if (! values.read && ! values.write){

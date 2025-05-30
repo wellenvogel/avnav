@@ -27,22 +27,24 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {anchorWatchDialog, AnchorWatchKeys} from "./AnchorWatchDialog";
 import keys from '../util/keys';
-import Dynamic, {DynamicFrame, useStore} from "../hoc/Dynamic";
+import {useStore} from "../hoc/Dynamic";
 import globalstore from "../util/globalstore";
-import OverlayDialog from "./OverlayDialog";
+import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
+import {ConfirmDialog} from "./BasicDialogs";
 
 export const DynamicTitleIcons=(iprops)=>{
+    const dialogContext=useDialogContext();
     const props=useStore(iprops,{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons }})
     if (! props.show) return null;
     let cl="iconContainer ";
     if (props.className) cl+=props.className;
     let anchorWatch=props.watchDistance !== undefined;
     return <div className={cl}>
-        {anchorWatch && <span className="anchorWatchIcon" onClick={() => anchorWatchDialog()}/>}
+        {anchorWatch && <span className="anchorWatchIcon" onClick={() => anchorWatchDialog(dialogContext)}/>}
         {!props.connected && <span className="disconnectedIcon" onClick={()=>{
             if (globalstore.getData(keys.gui.global.onAndroid) ||  !globalStore.getData(keys.gui.capabilities.canConnect)) return;
-            OverlayDialog.confirm("End disconnected mode?")
+            showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={"End disconnected mode?"}/>)
                 .then(()=>globalStore.storeData(keys.properties.connectedMode,true))
                 .catch(()=>{});
         }}/>}

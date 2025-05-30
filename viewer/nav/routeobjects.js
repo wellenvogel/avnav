@@ -60,7 +60,11 @@ routeobjects.Leg=function(from, to, active){
      * @type {undefined}
      */
     this.anchorDistance=undefined;
-
+    /**
+     * is this a leg from the server
+     * @type {boolean}
+     */
+    this.server=false;
 
 
 };
@@ -71,6 +75,7 @@ routeobjects.Leg.prototype.clone=function(){
     rt.approachDistance=this.approachDistance;
     rt.currentRoute=this.currentRoute?this.currentRoute.clone():undefined;
     rt.anchorDistance=this.anchorDistance;
+    rt.server=this.server;
     return rt;
 };
 /**
@@ -165,6 +170,7 @@ routeobjects.Leg.prototype.differsTo=function(leg2){
     if (! leg2) return true;
     if (leg2.anchorDistance && ! this.anchorDistance) return true;
     if (!leg2.anchorDistance && this.anchorDistance) return true;
+    if (leg2.server !== this.server) return true;
     if (this.anchorDistance && leg2.anchorDistance && this.anchorDistance != leg2.anchorDistance) return true;
     let leg1=this;
     let changed = false;
@@ -367,31 +373,47 @@ routeobjects.Route.prototype.clone=function(){
  * fill a route from an xml doc
  * @param xml
  */
-routeobjects.Route.prototype.fromXml=function(xml){
+routeobjects.Route.prototype.fromXml=function(xml) {
+    this.name = undefined;
+    let doc = helper.parseXml(xml);
+    let routes=doc.getElementsByTagName('rte');
+    if (routes.length > 0){
+        return this.fromXmlNode(routes[0]);
+    }
+}
+routeobjects.Route.prototype.fromXmlNode=function(rte){
     this.name=undefined;
-    let doc= helper.parseXml(xml);
-    let self=this;
-    let i=0;
-    let rte=doc.getElementsByTagName('rte')[0];
+    this.points=[];
     if (rte){
         let name=rte.getElementsByTagName('name')[0];
-        if (name) self.name=name.textContent;
-        Array.from(rte.getElementsByTagName('rtept')).forEach(function(el){
+        if (name) this.name=name.textContent;
+        Array.from(rte.getElementsByTagName('rtept')).forEach((el)=>{
             let pt=new navobjects.WayPoint(0,0);
             pt.lon=parseFloat(el.getAttribute('lon'));
             pt.lat=parseFloat(el.getAttribute('lat'));
             let pname=el.getElementsByTagName('name')[0];
             if (pname) pt.name=pname.textContent;
-            pt.routeName=self.name.slice(0);
+            pt.routeName=this.name.slice(0);
             if (! pt.name){
-                pt.name=self.findFreeName();
+                pt.name=this.findFreeName();
             }
-            i++;
-            self.points.push(pt);
+            this.points.push(pt);
         })
     }
     return this;
 };
+
+export const parseRouteXml=(xmltext)=>{
+    let doc= helper.parseXml(xmltext);
+    let routes=doc.getElementsByTagName('rte');
+    let rt=[];
+    for (let i=0;i<routes.length;i++){
+        let route=new routeobjects.Route();
+        route.fromXmlNode(routes[i]);
+        rt.push(route);
+    }
+    return rt;
+}
 
 routeobjects.Route.prototype.toXml=function(noUtf8){
     let writer=new XmlWriter(true);
@@ -524,6 +546,11 @@ routeobjects.Route.prototype.checkName=function(name){
 routeobjects.Route.prototype._createNameFromId=function(id){
     return "WP"+Formatter.formatDecimal(id,2,0);
 };
+routeobjects.Route.prototype.renumber=function(offset){
+    for (let i=0;i<this.points.length;i++){
+        this.points[i].name=this._createNameFromId(i+offset);
+    }
+}
 routeobjects.Route.prototype.findFreeName=function(){
     let i=this.points.length;
     let j=0;

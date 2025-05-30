@@ -23,7 +23,7 @@ const ActiveRouteWidget =(props)=>{
         }
         const resizeSequence=useStringsChanged(display,props);
         return (
-            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence}>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={props.server === false}>
                 <div className="widgetData">
                     <div className="routeName">{display.name}</div>
                     <div>
@@ -60,7 +60,8 @@ ActiveRouteWidget.storeKeys={
     eta: keys.nav.route.eta,
     remain: keys.nav.route.remain,
     nextCourse: keys.nav.route.nextCourse,
-    isEditing: keys.gui.global.layoutEditing
+    isEditing: keys.gui.global.layoutEditing,
+    server: keys.nav.wp.server
 };
 
 export default ActiveRouteWidget;

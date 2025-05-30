@@ -4,6 +4,7 @@ import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
+import {SelectDialog} from "./BasicDialogs";
 
 /**
  * input elements
@@ -55,12 +56,15 @@ export const Input=(props)=>{
         </div>;
 };
 
-Input.propTypes=assign({},DEFAULT_TYPES,{
+Input.propTypes={...DEFAULT_TYPES,
     type: PropTypes.string, //the type of the input element, default: text
     minSize: PropTypes.number,
     maxSize: PropTypes.number,
+    min: PropTypes.number,
+    max: PropTypes.number,
+    step: PropTypes.oneOfType([PropTypes.number,PropTypes.string]),
     checkFunction: PropTypes.func
-});
+};
 
 export const Checkbox=(props)=>{
     let className="checkBox";
@@ -68,6 +72,10 @@ export const Checkbox=(props)=>{
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
     let clickFunction=(ev)=>{
+        if (props.readOnly) {
+            ev.stopPropagation();
+            return;
+        }
         if (props.onClick) return props.onClick(ev);
         if (props.onChange) {
             ev.stopPropagation();
@@ -76,16 +84,21 @@ export const Checkbox=(props)=>{
     };
     return <div className={frameClass} onClick={clickFunction} >
         <span className="inputLabel">{props.label}</span>
-        <span className= {className} ></span>
+        <div className={props.frame?'inputFrame':''}>
+            <span className= {className} ></span>
+        </div>
         {props.children}
+
     </div>
 };
 
 
 
-Checkbox.propTypes=assign({},DEFAULT_TYPES,{
+Checkbox.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if set: do not call onChange but call onClick with the event
-});
+    readOnly: PropTypes.bool,
+    frame: PropTypes.bool
+};
 
 export const Radio=(props)=>{
     let className="radio";
@@ -129,6 +142,7 @@ export const InputReadOnly=(props)=>{
         {props.children}
         </div>
 };
+InputReadOnly.propTypes=DEFAULT_TYPES;
 
 export const InputSelect=(props)=>{
     const dialogContext=useDialogContext();
@@ -147,7 +161,7 @@ export const InputSelect=(props)=>{
             };
             let resetCallback= props.resetCallback?props.resetCallback:undefined;
             const showDialog=(finalList)=>{
-                dialogContext.showDialog(OverlayDialog.createSelectDialog(props.label, finalList, valueChanged,undefined,resetCallback));
+                dialogContext.showDialog(()=><SelectDialog title={props.label} list={finalList} resolveFunction={valueChanged} optResetCallback={resetCallback}/>);
             }
             let finalList;
             if (typeof(displayList) === 'function') finalList = displayList(props.value);
@@ -195,6 +209,7 @@ export const ColorSelector=(props)=>{
         };
         onClick=(ev)=>{
             ev.stopPropagation();
+            if (props.readOnly) return;
             dialogContext.showDialog(()=>{
                 return <ColorDialog
                     value={props.value}
@@ -210,15 +225,18 @@ export const ColorSelector=(props)=>{
     if (props.className) className+=" "+props.className;
     let ipClass="input";
     if (valueMissing(props.mandatory,props.value)) ipClass+=" missing";
-    return <div className={className+ " colorSelector"}
-              onClick={onClick}>
-            <span className="inputLabel">{props.label}</span>
+    return <div className={className + " colorSelector"}
+                onClick={onClick}>
+        <span className="inputLabel">{props.label}</span>
+        <div className={ipClass}>
             <div className="colorValue" style={style}></div>
-            <div className={ipClass}>{props.value}</div>
+            <div className={"value"}>{props.value}</div>
+        </div>
         {props.children}
-  </div>;
+    </div>;
 };
-ColorSelector.propTypes=assign({},DEFAULT_TYPES,{
+ColorSelector.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if onChange is not set, call this function when clicked
-    style: PropTypes.object //if set use this style for the color display
-});
+    style: PropTypes.object, //if set use this style for the color display
+    readOnly: PropTypes.bool
+};

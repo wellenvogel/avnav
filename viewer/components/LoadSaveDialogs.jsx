@@ -101,13 +101,13 @@ SaveItemDialog.propTypes={
  */
 SaveItemDialog.createDialog=(name,checkFunction,properties,opt_dialogContext)=>{
     if (! properties) properties={}
-    return showPromiseDialog(opt_dialogContext,(props)=>{
+    return showPromiseDialog(opt_dialogContext,(dprops)=>{
             return <SaveItemDialog
                 {...properties}
-                {...props}
+                {...dprops}
                 value={name}
                 okCallback={(newName)=>{
-                        props.resolveFunction(newName)
+                        dprops.resolveFunction(newName)
                    }}
                 checkFunction={(cname)=>{
                         if (checkFunction){
