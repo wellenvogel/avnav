@@ -312,6 +312,7 @@ export class EditableBooleanParameterUI extends EditableBooleanParameter{
     }
     render({currentValues,className,onChange}) {
         return <Checkbox
+            frame={true}
             {...getCommonParam(this,currentValues,className,this.canEdit()?onChange:undefined)}
             readOnly={!this.canEdit()}
             onChange={(nv)=>{

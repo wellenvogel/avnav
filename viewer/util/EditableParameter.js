@@ -20,7 +20,6 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
-import CloneDeep from "clone-deep";
 import Helper from "./helper";
 
 const assignableProperties={

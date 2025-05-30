@@ -236,17 +236,20 @@ body{
     .flex-direction(column);
   }
 
-
-  input, .input {
-    font-size: inherit;
-    font-family: inherit;
-    max-width: 100%;
+  .inputFrame{
     width: 20em;
     min-width: 5em;
+    max-width: 100%;
+    display: inline-block;
+  }
+
+  input, .input {
+    .inputFrame();
+    font-size: inherit;
+    font-family: inherit;
     border: none;
     border-bottom: 1px solid;
     .nightBorderColorGR();
-    display: inline-block;
     vertical-align: middle;
     line-height: 2em;
     min-height: 2em;

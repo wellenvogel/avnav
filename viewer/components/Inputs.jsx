@@ -84,8 +84,11 @@ export const Checkbox=(props)=>{
     };
     return <div className={frameClass} onClick={clickFunction} >
         <span className="inputLabel">{props.label}</span>
-        <span className= {className} ></span>
+        <div className={props.frame?'inputFrame':''}>
+            <span className= {className} ></span>
+        </div>
         {props.children}
+
     </div>
 };
 
@@ -93,7 +96,8 @@ export const Checkbox=(props)=>{
 
 Checkbox.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if set: do not call onChange but call onClick with the event
-    readOnly: PropTypes.bool
+    readOnly: PropTypes.bool,
+    frame: PropTypes.bool
 };
 
 export const Radio=(props)=>{
