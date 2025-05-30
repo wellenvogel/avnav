@@ -173,9 +173,23 @@ export class EditableParameter extends Object{
                             break;
                         }
                     } else {
-                        if (compare != value) {
-                            match = false;
-                            break;
+                        if (typeof(compare) === 'string' && compare.match(/^!/)){
+                            //special case: empty after ! also matches undefined
+                            if (value === undefined && compare === '!'){
+                                match=false;
+                                break;
+                            }
+                            //intentionally use ==
+                            if (compare.substring(1) == value){
+                                match=false;
+                                break;
+                            }
+                        }
+                        else {
+                            if (compare != value) {
+                                match = false;
+                                break;
+                            }
                         }
                     }
                 }
@@ -363,7 +377,7 @@ export class EditableSelectParameter extends EditableParameter{
         if (! (theList instanceof Array) ) throw new Error("list parameter must be an array or a function for "+this.name);
         theList.forEach((item)=>{
             if (item === undefined) return;
-            if (typeof item === 'string') return;
+            if (typeof item === 'string' || typeof item === 'number') return;
             if (typeof item !== 'object') throw new Error("invalid list item "+item+" for "+this.name+" must be string or object");
             if (! ('value' in item)) throw new Error("invalid list item "+JSON.stringify(item)+" for "+this.name+", missing value property");
         })
@@ -383,7 +397,10 @@ export class EditableSelectParameter extends EditableParameter{
             const list=this.getList();
             let found=false;
             for (let i=0;i<list.length;i++){
-                if (EditableSelectParameter.getValueFromListEntry(list[i]) === value){
+                const lv=EditableSelectParameter.getValueFromListEntry(list[i]);
+                //intentionally allow to convert e.g. strings to numbers
+                if (lv == value){
+                    value=lv;
                     found=true;
                     break;
                 }
