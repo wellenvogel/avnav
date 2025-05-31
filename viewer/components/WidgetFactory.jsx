@@ -70,6 +70,7 @@ class FormatterParameterUI extends EditableParameter {
         return currentValues;
     }
     getValue(currentValues){
+        if (! currentValues) currentValues={};
         let rt=currentValues[this.name];
         if (! rt) {
             return this.default;
@@ -108,10 +109,10 @@ class FormatterParameterUI extends EditableParameter {
             const cv=current[idx];
             let parameter;
             if (pdef !== undefined){
-                parameter=editableParameterUI.createEditableParameterUI({...dp,default:pdef,readonly: this.readonly});
+                parameter=editableParameterUI.createEditableParameterUI({...dp,default:pdef,readonly: this.readonly,displayName: "fmt:"+dp.name});
             }
             else{
-                parameter=editableParameterUI.createEditableParameterUI({...dp,readonly:this.readonly});
+                parameter=editableParameterUI.createEditableParameterUI({...dp,readonly:this.readonly,displayName: "fmt:"+dp.name});
             }
             nameToIdx[parameter.name]=idx;
             currentAsDict[parameter.name]=cv;
@@ -275,6 +276,11 @@ class WidgetFactory{
                 rt.push(editableParameterUI.createEditableParameterUI({...foundEditableParameter, ...overrides}));
             }
         }
+        rt.sort((a,b)=>{
+            if (a.name === 'formatterParameters' || a.name === 'formatter') return 1;
+            if (b.name === 'formatter'  || b.name === 'formatterParameters') return -1;
+            return 0;
+        })
         this.editableParametersCache[name] = rt;
         return rt;
     }
