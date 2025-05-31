@@ -27,12 +27,13 @@ import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
 import theFactory from "./WidgetFactory";
-import {EditableParameter} from "./EditableParameterUI";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
 import {DialogButtons, useDialogContext} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
+import {EditableParameter} from "../util/EditableParameter";
+import Helper from "../util/helper";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);
@@ -54,16 +55,16 @@ const updateChildren=(children,index,data)=>{
     return next;
 }
 
-const RenderChildParam=(props)=>{
-    if (! props.currentValues) return null;
+const RenderChildParam=({currentValues,onChange,className})=>{
+    if (! currentValues) return null;
     const dialogContext=useDialogContext();
-    const [children,setChildrenImpl]=useState(props.currentValues.children||[])
+    const [children,setChildrenImpl]=useState(currentValues.children||[])
     const setChildren=(ch)=>{
         if (ch === undefined) return;
         setChildrenImpl(ch);
-        props.onChange({children:ch});
+        onChange({children:ch});
     }
-    return <div className={'childWidgets'}>
+    return <div className={Helper.concatsp('childWidgets',className)}>
         <ItemList
             itemList={children}
             itemClass={ChildWidget}
@@ -75,14 +76,14 @@ const RenderChildParam=(props)=>{
                 }
             }}
             onItemClick={(item,data)=>{
-                dialogContext.showDialog((props)=>{
+                dialogContext.showDialog((dprops)=>{
                     return <EditWidgetDialog
-                        {...props}
+                        {...dprops}
                         title={"Sub Widget "+item.index}
                         current={item}
                         weight={true}
-                        updateCallback={(data)=>{
-                            setChildren(updateChildren(children,item.index,data));
+                        updateCallback={(udata)=>{
+                            setChildren(updateChildren(children,item.index,udata));
                         }}
                         removeCallback={()=> {
                             setChildren(updateChildren(children,item.index));
@@ -115,12 +116,15 @@ const RenderChildParam=(props)=>{
 }
 class ChildrenParam extends EditableParameter {
     constructor() {
-        super('children', -1);
-        this.default=[];
+        super({name:'children',default:[]}, -1,true);
+        this.render=this.render.bind(this)
+        Object.freeze(this);
     }
-    render(props){
+    render({currentValues,className,onChange}){
         return <RenderChildParam
-            {...props}
+            className={className}
+            onChange={onChange}
+            currentValues={currentValues}
             />
     }
 }

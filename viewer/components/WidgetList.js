@@ -19,7 +19,6 @@ import DateTimeWidget from './DateTimeWidget.jsx';
 import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
-import assign from 'object-assign';
 import {CombinedWidget} from "./CombinedWidget";
 
 let widgetList=[
@@ -328,7 +327,11 @@ let widgetList=[
         name: 'CenterDisplay',
         caption: 'Center',
         wclass: CenterDisplayWidget,
-        storeKeys: CenterDisplayWidget.storeKeys
+        storeKeys: CenterDisplayWidget.storeKeys,
+        editableParameters: {
+            formatter: false,
+            formatterParameters: false
+        }
     },
     {
         name: 'WindDisplay',

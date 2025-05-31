@@ -48,7 +48,9 @@ export const EditableParameterTypes={
     BOOLEAN:5,
     COLOR:6,
     ICON: 7,
-    UNKNOWN: 10
+    KEY: 8,
+    UNKNOWN: 10,
+    OTHER_BASE: 100
 };
 
 
@@ -58,7 +60,7 @@ export class EditableParameter extends Object{
     /**
      * @param plain {Object} object with properties from assignableProperties
      * @param type the type from EditableParameterTypes
-     * @param opt_noFreeze if set - do not freeze the object
+     * @param [opt_noFreeze] {boolean} if set - do not freeze the object
      */
     constructor(plain,type,opt_noFreeze) {
         super();
@@ -115,6 +117,7 @@ export class EditableParameter extends Object{
         if (check) {
             if (!this.mandatoryOk(value)) throw new Error("mandatory parameter " + this.name + " missing");
         }
+        if (this.readOnly) return values;
         values[this.name] = value;
         return values;
     }
@@ -414,6 +417,28 @@ export class EditableSelectParameter extends EditableParameter{
     }
 }
 
+export class EditableKeyParameter extends EditableParameter{
+    static TYPE=EditableParameterTypes.KEY;
+    static KEY='storeKeys';
+    constructor(plain,opt_noFreeze) {
+        super(plain,EditableKeyParameter.TYPE,opt_noFreeze);
+    }
+    setValue(values, value,check) {
+        if (! values) values={};
+        if (this.readOnly) return values;
+        const current=values[EditableKeyParameter.KEY]||{};
+        current[this.name]=value;
+        values[EditableKeyParameter.KEY]=current;
+        return values;
+    }
+    getValue(values) {
+        if (! values) values={};
+        const current=values[EditableKeyParameter.KEY]||{};
+        if (this.name in current) return current [this.name];
+        return this.default;
+    }
+}
+
 export class EditableIconParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.ICON;
     constructor(plain,opt_noFreeze) {
@@ -464,7 +489,8 @@ const editableParameters=[
     EditableFloatParameter,
     EditableSelectParameter,
     EditableIconParameter,
-    EditableColorParameter
+    EditableColorParameter,
+    EditableKeyParameter
 ];
 
 const editableParameterFactory=new EditableParameterFactory(editableParameters);

@@ -3,18 +3,22 @@ import assign from "object-assign";
 import widgetList from './WidgetList';
 import Dynamic from '../hoc/Dynamic.jsx';
 import DirectWidget from './DirectWidget.jsx';
-import globalStore from '../util/globalstore.jsx';
 import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
 import ExternalWidget from './ExternalWidget.jsx';
-import keys,{KeyHelper} from '../util/keys.jsx';
-import Requests from '../util/requests.js';
+import keys from '../util/keys.jsx';
 import base from '../base.js';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
-import {createEditableParameter, EditableParameter} from "./EditableParameterUI";
-import Compare from "../util/compare";
-import CloneDeep from 'clone-deep';
 import MapWidget from "./MapWidget";
+import editableParameterFactory, {
+    EditableKeyParameter,
+    EditableParameter,
+    EditableParameterTypes, EditableSelectParameter,
+    EditableStringParameter
+} from "../util/EditableParameter";
+import editableParameterUI, {EditableParameterListUI, getCommonParam} from "./EditableParameterUI";
+import {Input, InputReadOnly} from "./Inputs";
+import {shallowEqualArrays} from "shallow-equal";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -22,12 +26,7 @@ export const filterByEditables=(editableParameters,values)=>{
     editableParameters.forEach((param)=>{
         if (! param.canEdit()) return;
         let v=param.getValue(values);
-        if (v === undefined){
-            param.setDefault(rt);
-        }
-        else {
-            param.setValue(rt, v);
-        }
+        param.setValue(rt, v);
     });
     let fixed=['name','weight'];
     fixed.forEach((fp)=>{
@@ -39,206 +38,121 @@ export const filterByEditables=(editableParameters,values)=>{
     }
     return rt;
 }
-class KeyWidgetParameter extends EditableParameter {
-    constructor(name, type, list, displayName) {
-        super(name, type, list, displayName);
-        this.list = ()=> {
-            let kl = KeyHelper.getValueKeys().slice(0);
-            let storeKeys=globalStore.getKeysByPrefix('nav.gps',true);
-            storeKeys.forEach((sk)=>{
-                if (kl.indexOf(sk) >= 0) return;
-                kl.push(sk);
-            })
-
-            return kl;
-        };
-    }
-    setValue(widget, value) {
-        if ( value === undefined) return;
-        if (!widget) widget = {};
-        if (!widget.storeKeys) widget.storeKeys = {};
-        if (value === '') value=undefined;
-        widget.storeKeys[this.name] = value;
-        return widget;
-    }
-
-    getValue(widget) {
-        if (!widget) return ;
-        if (!widget.storeKeys) return ;
-        return widget.storeKeys[this.name];
-    }
-
-    getTypeForEdit(widget) {
-        return EditableParameter.TYPE.SELECT;
-    }
-    isChanged(value) {
-        return ! Compare(value,this.default);
-    }
-}
-
-class ArrayWidgetParameter extends EditableParameter {
-    constructor(name, type, list, displayName) {
-        super(name, type, list, displayName);
-    }
-
-    setValue(widget, value) {
-        if (!widget) widget = {};
-        if (typeof(value) === 'string') value=value.split(",");
-        widget[this.name]=value;
-        return widget;
-    }
-    getValue(widget){
-        let rt=widget[this.name];
-        if (! rt) return;
-        if (typeof(rt) === 'string') return rt.split(",");
-        return rt;
-    }
-    getValueForDisplay(widget,opt_placeHolder){
-        let rt=this.getValue(widget);
-        if (rt === undefined)  rt=CloneDeep(this.default);
-        if (rt === undefined) rt=opt_placeHolder;
-        if (! rt) return "";
-        if (rt instanceof Array){
-            return rt.join(",")
+class FormatterParameterUI extends EditableParameter {
+    static TYPE=EditableParameterTypes.OTHER_BASE+1;
+    constructor(plain) {
+        super(plain, FormatterParameterUI.TYPE,true);
+        if (this.default !== undefined){
+            if (! (this.default instanceof Array)){
+                this.default=(this.default+"").split(',');
+            }
         }
-        return rt;
-    }
-    getTypeForEdit(widget) {
-        return EditableParameter.TYPE.STRING;
+        this.render=this.render.bind(this);
+        Object.freeze(this);
     }
 
-    isChanged(value) {
-        return ! Compare(value,this.default);
-    }
-}
-class FormatterParamWidgetParameter extends EditableParameter {
-    constructor(name, type, list, displayName) {
-        super(name, type, list, displayName);
-        this.parameterDescriptions=undefined;
-    }
+    setValue(currentValues, value,check) {
+        if (! currentValues) currentValues={};
+        if (value === undefined) {
+            if (this.readonly) return currentValues;
+            currentValues[this.name]=value;
+            return currentValues;
+        }
+        if (! (value instanceof Array)) value=(value+"").split(",");
+        if (check){
+            const definedParameters=getFormatterParameters(currentValues);
+            if (definedParameters){
 
-    setValue(widget, value) {
-        if (!widget) widget = {};
-        if (typeof(value) === 'string') value=value.split(",");
-        widget[this.name]=value;
-        return widget;
+            }
+        }
+        if (this.readonly) return currentValues;
+        currentValues[this.name]=value;
+        return currentValues;
     }
-    getValue(widget){
-        let rt=widget[this.name];
-        if (! rt) return;
-        if (typeof(rt) === 'string') return rt.split(",");
+    getValue(currentValues){
+        let rt=currentValues[this.name];
+        if (! rt) {
+            return this.default;
+        }
+        if (! (rt instanceof Array)) return (rt+"").split(",");
         return rt;
     }
-    getValueForDisplay(widget,opt_placeHolder){
-        let rt=this.getValue(widget);
-        if (rt === undefined)  rt=CloneDeep(this.default);
-        if (rt === undefined) rt=opt_placeHolder;
-        if (! rt) return "";
-        if (rt instanceof Array){
-            return rt.join(",")
-        }
-        return rt;
+    getDefault(idx){
+        if (! this.default) return;
+        if (! (this.default instanceof Array)) return;
+        return this.default[idx];
     }
-    getTypeForEdit(widget) {
-        let rt=EditableParameter.TYPE.STRING;
-        let parameterDescriptions=this.parameterDescriptions;
-        if (! parameterDescriptions) {
-            parameterDescriptions=getFormatterParameters(widget);
-            if (! parameterDescriptions) return rt;
+    render({currentValues,className,onChange}) {
+        const common=getCommonParam(this,currentValues,className,this.readonly?undefined:onChange);
+        const definedParameter=getFormatterParameters(currentValues);
+        if (! definedParameter) {
+            if (common.value instanceof Array) common.value=common.value.join(',');
+            if (this.readonly) {
+                return <InputReadOnly {...common}/>
+            }
+            return <Input
+                {...common}
+                type={'string'}
+                onChange={(nv)=>onChange(this.setValue({},nv))}
+            />
         }
-        rt=[];
+        const parameterList=[];
         let idx=0;
-        parameterDescriptions.forEach((fp)=>{
-            let nested=createEditableParameter(this.name,fp.type,fp.list,
-                'fmt:'+fp.name);
-            if (! nested) return;
-            nested.default=fp.default;
-            nested.arrayIndex=idx;
-            rt.push(nested);
+        const currentAsDict={};
+        const nameToIdx={};
+        let current=common.value;
+        if (! current) current=[];
+        else if (! (current instanceof Array)) current=(current+"").split(',');
+        definedParameter.forEach((dp)=>{
+            const pdef=this.getDefault(idx);
+            const cv=current[idx];
+            let parameter;
+            if (pdef !== undefined){
+                parameter=editableParameterUI.createEditableParameterUI({...dp,default:pdef,readonly: this.readonly});
+            }
+            else{
+                parameter=editableParameterUI.createEditableParameterUI({...dp,readonly:this.readonly});
+            }
+            nameToIdx[parameter.name]=idx;
+            currentAsDict[parameter.name]=cv;
+            parameterList.push(parameter);
             idx++;
         })
-        return rt;
-    }
-    isChanged(value) {
-        let cv=(typeof(value) === 'string'?value.split(','):value);
-        let cd=(typeof(this.default) === 'string'?this.default.split(','):this.default);
-        return ! Compare(cv,cd);
-    }
-}
 
-class ReadOnlyWidgetParameter extends EditableParameter {
-    constructor(name, type, list, displayName) {
-        super(name, type, list, displayName);
-        this.readOnly=true;
+        return <EditableParameterListUI
+            parameters={parameterList}
+            values={currentAsDict}
+            onChange={this.readonly?undefined:(nv)=>{
+                const newVal=current.slice(0);
+                for (let k in nv){
+                    const idx=nameToIdx[k];
+                    if (idx !== undefined) newVal[idx]=nv[k];
+                }
+                onChange(this.setValue({},newVal));
+            }}
+        />
     }
-    getValue(widget){
-        let rt=widget[this.name];
-        if (rt === undefined) return;
-        if (typeof(rt)==='function'){
-            rt=rt.name||"function";
-        }
-        return rt;
-    }
-    setValue(widget, value) {
-        if (!widget) widget = {};
-        return widget;
-    }
-    getTypeForEdit(widget) {
-        return 'STRING';
+
+    isChanged(currentValues, initialValues) {
+        const old=this.getValue(initialValues);
+        const current=this.getValue(currentValues);
+        return !shallowEqualArrays(old,current);
     }
 }
-
-
-//must be different from editable parameter types
-const WidgetParameter_TYPE={
-    KEY:30,
-    DISPLAY: 40,
-    ARRAY: 50,
-    FORMATTER_PARAM: 60
-};
-
-
-const createWidgetParameter=(name,type,list,displayName)=>{
-    if (typeof(type) === 'string'){
-        let wtype=WidgetParameter_TYPE[type];
-        if (wtype === undefined) return createEditableParameter(name,type,list,displayName)
-        type=wtype;
-    }
-    switch(type) {
-        case WidgetParameter_TYPE.DISPLAY:
-            return new ReadOnlyWidgetParameter(name,type,list,displayName);
-        case WidgetParameter_TYPE.KEY:
-            return new KeyWidgetParameter(name, type, list, displayName);
-        case WidgetParameter_TYPE.ARRAY:
-            return new ArrayWidgetParameter(name, type, list, displayName);
-        case WidgetParameter_TYPE.FORMATTER_PARAM:
-            return new FormatterParamWidgetParameter(name, type, list, displayName);
-
-    }
-    return createEditableParameter(name,type,list,displayName);
-};
-
-const typeIdFromType=(typeStr)=>{
-    let sp=WidgetParameter_TYPE[typeStr];
-    if (sp !== undefined) return sp;
-    return EditableParameter.TYPE[typeStr];
-}
-
-const getDefaultParameter=(name)=>{
-    if (name === 'caption') return createWidgetParameter('caption',EditableParameter.TYPE.STRING);
-    if (name === 'unit') return createWidgetParameter('unit',EditableParameter.TYPE.STRING);
-    if (name === 'formatterParameters') return createWidgetParameter('formatterParameters',WidgetParameter_TYPE.FORMATTER_PARAM,undefined,"formatter parameters");
-    if (name === 'value') return createWidgetParameter('value',WidgetParameter_TYPE.KEY);
-    if (name === 'className') return createWidgetParameter("className",EditableParameter.TYPE.STRING,undefined,"css class");
-    if (name === 'formatter') return createWidgetParameter('formatter', EditableParameter.TYPE.SELECT,()=>{
-        let fl=[];
+const defaultWidgetParameters={
+    caption: new EditableStringParameter({name:'caption'}),
+    unit: new EditableStringParameter({name:'unit'}),
+    formatterParameters: new FormatterParameterUI({name:'formatterParameters'}),
+    value: new EditableKeyParameter({name:'value'}),
+    className: new EditableStringParameter({name:'className'}),
+    formatter: new EditableSelectParameter({name:'formatter',list:()=>{
+        let rt=[];
         for (let k in Formatter){
-            if (typeof(Formatter[k]) === 'function') fl.push(k);
+            rt.push({label:k,value:k})
         }
-        return fl;
-    });
-    if (name === 'children') return createWidgetParameter('children',WidgetParameter_TYPE.CHILDREN_PARAM);
-};
+        return rt;
+        }})
+}
 
 
 export const getFormatterParameters=(widget)=>{
@@ -291,85 +205,75 @@ class WidgetFactory{
             name=name.name;
         }
         let plist=this.editableParametersCache[name];
-        if (plist) return plist;
+        //if (plist) return plist;
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
         let wClass=widgetData.wclass || DirectWidget;
-        let editableParameters=assign({className:true},wClass.editableParameters,widgetData.editableParameters);
-        let storeKeys=assign({},wClass.storeKeys,widgetData.storeKeys);
-        for (let pname in editableParameters){
-            let pdefinition=editableParameters[pname];
-            if (pdefinition === undefined || pdefinition === false ) continue;
-            if (pdefinition instanceof EditableParameter){
-                //allow for a complete own parameter definition in widget classes
-                if (wClass.editableParameters && wClass.editableParameters[pname] instanceof EditableParameter){
-                    rt.push(pdefinition);
-                    continue;
-                }
+        const classParameters=wClass.editableParameters||{};
+        const configParameters=widgetData.editableParameters||{};
+        const allParameters={...defaultWidgetParameters,...classParameters,...configParameters};
+        let storeKeys={...wClass.storeKeys,...widgetData.storeKeys};
+        //do not allow to override those definitions from widget data
+        const forbiddenOverrides=['formatter','formatterParameters']
+        for (let pname in allParameters){
+            let foundEditableParameter;
+            const defaultParam=defaultWidgetParameters[pname];
+            let classParam=classParameters[pname];
+            let finalParam=allParameters[pname];
+            if (finalParam === undefined || finalParam === false) continue;
+            if (classParam === true) {
+                classParam=defaultParam;
             }
-            //get a fresh (i.e. copied) default parameter
-            let predefined=getDefaultParameter(pname);
-            if (! predefined && (typeof(pdefinition) !== 'object')){
-                base.log("invalid parameter definition in widget "+widgetData.name+": "+pname);
+            if (finalParam === true) {
+                finalParam = classParam;
+            }
+            if (! (finalParam instanceof Object)) {
+                //no definition found
+                 base.log("invalid parameter definition in widget - only true "+widgetData.name+": "+pname);
+                 continue;
+            }
+            foundEditableParameter=finalParam;
+            if (forbiddenOverrides.indexOf(pname) >= 0) {
+                //we allow them to come from default or class only
+                foundEditableParameter=classParam||defaultParam;
+            }
+            if (! (foundEditableParameter instanceof  Object)) {
+                base.log("invalid parameter definition in widget - no object" + widgetData.name + ": " + pname);
                 continue;
             }
-            if (predefined) {
-                //we allow for overriding default definitions except for formatter
-                //and formatter parameters as long as the type matches
-                let usePredefined = pdefinition.name === 'formatter' || predefined.type === WidgetParameter_TYPE.FORMATTER_PARAM;
-                if (!usePredefined && (typeof (pdefinition) !== 'object')) usePredefined = true;
-                if (!usePredefined && (predefined.type !== typeIdFromType(pdefinition.type))) usePredefined = true;
-                if (usePredefined) {
-                    pdefinition = predefined;
-                    //some special handling for the formatter
-                    //some widgets have a fixed formatter
-                    //but we still want to edit the formatter parameters
-                    //and it is helpfull to show the formatter to the user
-                    //so we set a readOnly parameter for the formatter
-                    if (pdefinition.name === 'formatter') {
-                        if (widgetData.formatter) {
-                            pdefinition = createWidgetParameter(pdefinition.name, WidgetParameter_TYPE.DISPLAY,
-                                undefined, 'formatter')
-
-                        }
-                    }
-                    //do not allow to edit key parameters if they are already provided
-                    //in the widget definition
-                    if (pdefinition.type === WidgetParameter_TYPE.KEY && storeKeys[pdefinition.name]) {
-                        continue;
-                    }
-                    if (pdefinition.type === WidgetParameter_TYPE.FORMATTER_PARAM) {
-                        //if the widget has a predefined formatter
-                        //we set the formatter parameters here
-                        //if not the editWidgetDialog will do this dynamically later
-                        let formatterParam=getFormatterParameters(widgetData);
-                        if (formatterParam){
-                                pdefinition.parameterDescriptions = formatterParam;
-                        }
-                    }
-                } else {
-                    //trigger creation of a copy
-                    predefined = undefined;
-                }
+            if (! (foundEditableParameter instanceof EditableParameter)) {
+                foundEditableParameter=editableParameterFactory.createParameterFromPlain(foundEditableParameter,{name:pname});
             }
-            if (!predefined) {
-                //create a copy as we potentially e.g. change the default
-                let npdefinition = createWidgetParameter(pname, pdefinition.type, pdefinition.list, pdefinition.displayName);
-                if (!npdefinition) {
-                    base.log("unknown widget parameter type: " + pdefinition.type);
+            if (defaultParam !== undefined) {
+                //if we overwrite a default parameter the type must match!
+                if (foundEditableParameter.type !== defaultParam.type) {
+                    base.log("invalid default parameter overwrite in widget - different types" + widgetData.name + ": " + pname);
                     continue;
                 }
-                npdefinition.default = pdefinition.default;
-                pdefinition = npdefinition;
             }
-            let defaultv = pdefinition.getValue(widgetData);
+            //do not allow to edit key parameters if they are already provided
+            //in the widget definition
+            if (foundEditableParameter.type === EditableKeyParameter.TYPE && storeKeys[foundEditableParameter.name]) {
+                base.log("cannot edit store key as it is already in the widget definition" + widgetData.name + ": " + pname);
+                continue;
+            }
+            let overrides={name:pname};
+            let defaultv = widgetData[pname];
             if (defaultv !== undefined) {
                 //default values from the widget class or from the widget list will win against
                 //defaults from the parameter defines
-                pdefinition.default = defaultv;
+                overrides.default = defaultv;
             }
-            rt.push(pdefinition);
+            if (pname === 'formatter'){
+                if (widgetData.formatter) overrides.readOnly=true;
+            }
+            if (typeof foundEditableParameter.render === 'function'){
+                rt.push(foundEditableParameter.clone(overrides));
+            }
+            else {
+                rt.push(editableParameterUI.createEditableParameterUI({...foundEditableParameter, ...overrides}));
+            }
         }
         this.editableParametersCache[name] = rt;
         return rt;
@@ -398,7 +302,6 @@ class WidgetFactory{
     }
 
     createWidget(props, opt_properties) {
-        let self = this;
         if (!props.name) return;
         let e = this.findWidget(props.name, true);
         if (!e) {
@@ -431,12 +334,12 @@ class WidgetFactory{
                     ff = () => '?#?#';
                 }
             }
-            mergedProps.formatter = function (v) {
+            mergedProps.formatter =  (v)=> {
                 let param = mergedProps.formatterParameters;
                 if (typeof (param) === 'string') {
                     param = param.split(",");
                 }
-                return ff.apply(self.formatter, [v].concat(param || []));
+                return ff.apply(this.formatter, [v].concat(param || []));
             }
 
         }
@@ -575,72 +478,18 @@ class WidgetFactory{
 
         this.addWidget(internalDescription);
     }
-}
-/**
- * filter a list of widget descriptiion by name
- * @param list the list
- * @param filterObject an object with {'name1':true,'name2':false} entries
- *        missing entries are treated as true
- */
-WidgetFactory.prototype.filterListByName=function(list,filterObject){
-    let rt=[];
-    list.forEach((el)=>{
-        if (el.name) {
-            if (filterObject[el.name] !== false){
-                rt.push(el);
-            }
+    registerFormatter(name,formatterFunction){
+        if (! name) throw new Error("registerFormatter: missing parameter name");
+        if (! formatterFunction || (typeof(formatterFunction) !== 'function')){
+            throw new Error("registerFormatter("+name+"): missing or invalid formatterFunction");
         }
-    });
-    return rt;
-};
-
-WidgetFactory.prototype.loadGaugeDefinitions=function(name,prefix,wclass){
-    let self=this;
-    let urls=[name+".json","/user/viewer/"+name+".json"];
-    urls.forEach((url)=>{
-        Requests.getJson(url,{useNavUrl:false,checkOk:false})
-            .then((data)=>{
-                for (let gName in data){
-                    let description=data[gName];
-                    description.name=prefix+"."+gName;
-                    description.wclass=wclass;
-                    let existing=self.findWidget(description);
-                    if (existing){
-                        if (existing.wclass !== description.wclass){
-                            base.log("ignoring widget "+description.name+": already exists with different class");
-                            return;
-                        }
-                    }
-                    self.addWidget(description,true);
-                }
-            })
-            .catch((error)=>{
-                base.log("unable to read widget list "+url+": "+error);
-            })
-    })
-};
-
-WidgetFactory.prototype.loadAllGaugeDefinitions=function(){
-    let self=this;
-    let list=[
-        {name:'radialGauges',prefix:'radGauge',wclass:GaugeRadial}
-    ];
-    list.forEach((le)=>{
-        self.loadGaugeDefinitions(le.name,le.prefix,le.wclass);
-    })
-};
-
-WidgetFactory.prototype.registerFormatter=function(name,formatterFunction){
-    if (! name) throw new Error("registerFormatter: missing parameter name");
-    if (! formatterFunction || (typeof(formatterFunction) !== 'function')){
-        throw new Error("registerFormatter("+name+"): missing or invalid formatterFunction");
+        if (Formatter[name]){
+            throw new Error("registerFormatter("+name+"): formatter already exists");
+        }
+        Formatter[name]=formatterFunction;
     }
-    if (Formatter[name]){
-        throw new Error("registerFormatter("+name+"): formatter already exists");
-    }
-    Formatter[name]=formatterFunction;
+
 }
-
 const theFactory=new WidgetFactory();
 
 export default  theFactory;
