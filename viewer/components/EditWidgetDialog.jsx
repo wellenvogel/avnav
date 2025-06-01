@@ -135,6 +135,12 @@ const EditWidgetDialog = (props) => {
         panelClass += " changed";
     }
     let completeWidgetData = {...cloneDeep(WidgetFactory.findWidget(widget.name)), ...widget};
+    let validData=true;
+    parameters.forEach((param)=>{
+        if (param.hasError(completeWidgetData)){
+            validData=false;
+        }
+    })
     return (
         <DialogFrame className="selectDialog editWidgetDialog" title={props.title || 'Select Widget'}>
             {(props.panelList !== undefined) && <InputSelect className={panelClass}
@@ -176,9 +182,9 @@ const EditWidgetDialog = (props) => {
             />
             {(widget.name !== undefined && props.insertCallback) ?
                 <DialogButtons className="insertButtons">
-                    {hasCurrent ? <DB name="before" onClick={() => insert(true)}>Before</DB> : null}
-                    {hasCurrent ? <DB name="after" onClick={() => insert(false)}>After</DB> : null}
-                    {(!hasCurrent) ? <DB name="after" onClick={() => insert(false)}>Insert</DB> : null}
+                    {hasCurrent ? <DB name="before" disabled={!validData} onClick={() => insert(true)}>Before</DB> : null}
+                    {hasCurrent ? <DB name="after" disabled={!validData} onClick={() => insert(false)}>After</DB> : null}
+                    {(!hasCurrent) ? <DB name="after" disabled={!validData} onClick={() => insert(false)}>Insert</DB> : null}
                 </DialogButtons>
                 : null}
             <DialogButtons>
@@ -188,7 +194,7 @@ const EditWidgetDialog = (props) => {
                     }}>Delete</DB> : null}
                 <DB name="cancel">Cancel</DB>
                 {props.updateCallback ?
-                    <DB name="ok" onClick={() => {
+                    <DB name="ok" disabled={!validData} onClick={() => {
                         let changes = changedParameters();
                         if (props.weight) {
                             if (changes.weight !== undefined) changes.weight = parseFloat(changes.weight)

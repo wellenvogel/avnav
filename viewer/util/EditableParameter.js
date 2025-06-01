@@ -425,9 +425,17 @@ export class EditableKeyParameter extends EditableParameter{
     }
     setValue(values, value,check) {
         if (! values) values={};
+        if (check){
+            if (! this.mandatoryOk(value)) throw new Error("missing mandatory value for "+this.name);
+        }
         if (this.readOnly) return values;
         const current=values[EditableKeyParameter.KEY]||{};
-        current[this.name]=value;
+        if (! value){
+            delete current[this.name];
+        }
+        else {
+            current[this.name] = value;
+        }
         values[EditableKeyParameter.KEY]=current;
         return values;
     }

@@ -139,7 +139,7 @@ export const getCommonParam=({ep,currentValues,initialValues,className,onChange}
             className,
             errorClass,
             ep.isDefault(currentValues)?'defaultValue':undefined,
-            ep.mandatoryOk(currentValues)?undefined:'missing',
+            ep.mandatoryOk(v)?undefined:'missing',
             ep.isChanged(currentValues,initialValues)?'changed':undefined),
         label:ep.displayName,
         key: ep.name,
@@ -326,18 +326,20 @@ export class EditableKeyParameterUI extends EditableKeyParameter {
             if (displayList.indexOf(sk) >= 0) return;
             displayList.push(sk);
         })
+        const finalList=[];
         displayList.forEach((item) => {
             const label = item;
             const value = item;
-            displayList.push({label: label, value: value, selected: value === current});
+            finalList.push({label: label, value: value, selected: value === current});
         })
-        displayList.sort((a, b) => {
+        finalList.sort((a, b) => {
             const na = (typeof a.label === 'string') ? a.label.toLowerCase() : a.label;
             const nb = (typeof b.label === 'string') ? b.label.toLowerCase() : b.label;
             if (na < nb) return -1;
             if (na > nb) return 1;
             return 0;
         })
+        return finalList;
     }
     render({currentValues, initialValues,className, onChange}) {
         if (!this.canEdit()) {

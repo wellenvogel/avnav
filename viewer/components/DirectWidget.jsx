@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import Value from './Value.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
+import {EditableKeyParameter} from "../util/EditableParameter";
 
 const DirectWidget=(wprops)=>{
     const props=wprops.translateFunction?{...wprops,...wprops.translateFunction({...wprops})}:wprops;
@@ -47,7 +48,7 @@ DirectWidget.editableParameters={
     unit:true,
     formatter:true,
     formatterParameters: true,
-    value: true
+    value: new EditableKeyParameter({name:'value',mandatory:true})
 };
 
 export default DirectWidget;
