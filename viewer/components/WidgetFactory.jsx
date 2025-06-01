@@ -1,7 +1,7 @@
 import React from "react";
 import assign from "object-assign";
 import widgetList from './WidgetList';
-import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
+import {useStore} from '../hoc/Dynamic.jsx';
 import DirectWidget from './DirectWidget.jsx';
 import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
@@ -179,7 +179,14 @@ const DynamicWidget=({Widget,wprops,storeKeys})=>{
     const props=useStore(wprops,
         {
             storeKeys:storeKeys,
-            updateFunction:wprops.updateFunction?(data)=>wprops.updateFunction({...wprops,...data}):undefined
+            updateFunction:wprops.updateFunction?(data)=>{
+                const rt=wprops.updateFunction({...wprops,...data})
+                //we keep some important parameters independent of the update function
+                rt.editing=data.editing;
+                rt.mode=wprops.mode||data.mode;
+                rt.nightMode=data.nightMode;
+                return rt;
+            }:undefined
         });
     return <Widget {...props}/>
 }
@@ -363,9 +370,10 @@ class WidgetFactory{
         mergedProps.className=Helper.concatsp(mergedProps.className,props.name);
         if (mergedProps.handleVisible) RenderWidget=Visible(RenderWidget);
         mergedStoreKeys.nightMode=keys.properties.nightMode;
-        return (props)=><DynamicWidget
+        mergedStoreKeys.editing=keys.gui.global.layoutEditing;
+        return (wprops)=><DynamicWidget
             Widget={RenderWidget}
-            wprops={{...mergedProps,...props}}
+            wprops={{...mergedProps,...wprops}}
             storeKeys={mergedStoreKeys}
         />
     }

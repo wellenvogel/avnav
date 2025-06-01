@@ -389,13 +389,15 @@ let widgetList=[
         wclass: CombinedWidget,
         caption: '',
         children: [{name:'RteDistance'},{name:'RteEta'}],
+        locked:true,
         editableParameters:{
             formatter: false,
             unit: false,
             formatterParameters: false,
             value: false,
             caption: false,
-            children: false
+            children: false,
+            locked: false
         }
     },
     {

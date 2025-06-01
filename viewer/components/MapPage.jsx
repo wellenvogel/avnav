@@ -17,7 +17,7 @@ import {handleCtxRef, showDialog, showPromiseDialog} from '../components/Overlay
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {itemFromLayout} from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import {getOverlayConfigName} from "../map/chartsourcebase";
@@ -175,10 +175,12 @@ const MapPage =(iprops)=>{
         let invertEditDirection=mode==='vertical'||panel === 'bottomLeft';
         return <ItemList  {...forward}
                           className={"widgetContainer "+mode+" "+panel}
-                          itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
-                          itemList={panelItems.list}
+                          itemCreator={(widget)=>{
+                              return widgetCreator(itemFromLayout(widget,panelItems),mode)
+                          }}
+                          itemList={panelItems.nameList}
                           onItemClick={(item,data)=>{
-                              props.onItemClick(item,data,panelItems.name,invertEditDirection)
+                              props.onItemClick(itemFromLayout(item,panelItems),data,panelItems.name,invertEditDirection)
                           }}
                           onClick={()=>{
                               EditWidgetDialog.createDialog(undefined,layoutPage,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});

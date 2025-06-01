@@ -2,20 +2,20 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic, {useStore, useStoreState} from '../hoc/Dynamic.jsx';
+import {useStoreState} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
-import EditWidgetDialog, {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
+import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {itemFromLayout} from '../util/layouthandler.js';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
@@ -23,7 +23,7 @@ import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {DynamicTitleIcons} from "../components/TitleIcons";
-import Dialogs, {showDialog} from "../components/OverlayDialog";
+import {showDialog} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
 const MINPAGE=1;
@@ -33,7 +33,9 @@ const PANEL_LIST=['left','m1','m2','m3','right'];
 function resizeFont() {
     GuiHelpers.resizeByQuerySelector('#gpspage .resize');
 }
-const widgetCreator=(widget,weightSum)=>{
+const widgetCreator=(nameIdx,weightSum,panelData)=>{
+    let widget=itemFromLayout(nameIdx,panelData);
+    if (! widget) return ()=>null;
     let {weight,...widgetProps}=widget;
     if (weight === undefined) weight=1;
     let height=weight/weightSum*100;
@@ -201,7 +203,9 @@ const GpsPage = (props) => {
                 }
             }
         ]);
-    const onItemClick = useCallback((item, data, panelInfo) => {
+    const onItemClick = useCallback((nameIdx, data, panelInfo) => {
+        const item=itemFromLayout(nameIdx,panelInfo);
+        if (! item) return;
         if (LayoutHandler.isEditing()) {
             showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
@@ -266,10 +270,10 @@ const GpsPage = (props) => {
             dragFrame: panelData.name,
             allowOther: true,
             className: 'widgetContainer',
-            itemCreator: (widget) => {
-                return widgetCreator(widget, sum);
+            itemCreator: (nameIdx) => {
+                return widgetCreator(nameIdx, sum,panelData);
             },
-            itemList: panelData.list,
+            itemList: panelData.nameList,
             fontSize: fontSize,
             onItemClick: (item, data) => {
                 onItemClick(item, data, panelData);

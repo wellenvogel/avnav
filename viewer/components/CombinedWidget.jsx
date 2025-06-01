@@ -139,7 +139,7 @@ const getWeight=(item)=>{
 const DEFAULT_NAME="CombinedWidget";
 export const CombinedWidget=(props)=>{
     useKeyEventHandler(props,"widget")
-    let {wclass,locked,editing,sequence,editableParameters,nightMode,children,onClick,childProperties,dragId,className,vertical,...forwardProps}=props;
+    let {wclass,locked,editing,sequence,editableParameters,nightMode,children,onClick,childProperties,dragId,className,vertical,mode,...forwardProps}=props;
     const sortContext=useAvnavSortContext();
     const ddProps = useAvNavSortable(locked?dragId:undefined);
     const cl=(ev)=>{
@@ -177,7 +177,7 @@ export const CombinedWidget=(props)=>{
                 let Item = theFactory.createWidget(item, {...childProperties,style:style});
                 cidx++;
                 return (iprops)=>{
-                    return  <Item key={cidx} {...iprops} editing={editing}/>
+                    return  <Item key={cidx} {...iprops} mode={mode} editing={editing}/>
             }}
             }
         />
