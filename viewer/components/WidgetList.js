@@ -187,18 +187,16 @@ let widgetList=[
     {
         name: 'WindSpeed',
         default: "---",
-        unit: "m/s",
         caption: 'Wind Speed',
         storeKeys:{
             windSpeed:keys.nav.gps.windSpeed,
             windSpeedTrue: keys.nav.gps.trueWindSpeed,
-            showKnots: keys.properties.windKnots
         },
         formatter: 'formatSpeed',
         editableParameters: {
-            formatterParameters: false,
             value: false,
             caption: false,
+            unit: false,
             kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
         },
         translateFunction: (props)=>{
@@ -210,9 +208,7 @@ let widgetList=[
             let wind=getWindData(props);
             return {...props,
                 value:wind.windSpeed,
-                caption:captions[wind.suffix],
-                formatterParameters: props.showKnots?'k':'m',
-                unit: props.showKnots?'kn':'m/s'
+                caption:captions[wind.suffix]
             }
         }
     },
@@ -351,7 +347,8 @@ let widgetList=[
         name: 'WindDisplay',
         caption: 'Wind',
         wclass: WindWidget,
-        storeKeys: WindWidget.storeKeys
+        storeKeys: WindWidget.storeKeys,
+        formatter: WindWidget.formatter
     },
     {
         name: 'DepthDisplay',
@@ -373,7 +370,8 @@ let widgetList=[
     {
         name: 'WindGraphics',
         wclass: WindGraphics,
-        storeKeys: WindGraphics.storeKeys
+        storeKeys: WindGraphics.storeKeys,
+        formatter: WindGraphics.formatter
     },
     {
         name: "DateTime",

@@ -12,6 +12,7 @@ import {getWindData} from "./WindWidget";
 import {useAvNavSortable} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import globalstore from "../util/globalstore";
+import formatter from "../util/formatter";
 
 const normalColors={
     green:  'rgba(5, 128, 30, 0.57)',
@@ -145,19 +146,9 @@ const WindGraphics = (props) => {
     }
     setTimeout(drawWind, 0);
     let current = getWindData(props);
-    let windSpeed = "";
-    let showKnots = props.showKnots;
-    try {
-        windSpeed = parseFloat(current.windSpeed);
-        if (showKnots) {
-            windSpeed = windSpeed * 3600 / navcompute.NM;
-        }
-        if (windSpeed < 10) windSpeed = Formatter.formatDecimal(windSpeed, 1, 2);
-        else windSpeed = Formatter.formatDecimal(windSpeed, 3, 0);
-    } catch (e) {
-    }
+    let windSpeed = props.formatter(current.windSpeed);
     return (
-        <WidgetFrame {...props} addClass="windGraphics" unit={showKnots ? "kn" : "m/s"} caption="Wind" resize={false}>
+        <WidgetFrame {...props} addClass="windGraphics"  caption="Wind" resize={false}>
             <canvas className='widgetData' ref={canvasRef}></canvas>
             <div className="windSpeed">{windSpeed}</div>
             <div className="windReference">{current.suffix}</div>
@@ -173,7 +164,7 @@ WindGraphics.propTypes={
     windAngle: PropTypes.number,
     windAngleTrue:  PropTypes.number,
     windSpeedTrue:  PropTypes.number,
-    showKnots:  PropTypes.bool,
+    formatter: PropTypes.func,
     scaleAngle: PropTypes.number,
     nightMode: PropTypes.bool,
     kind: PropTypes.string, //true,apparent,auto,
@@ -186,11 +177,15 @@ WindGraphics.storeKeys={
     windDirectionTrue: keys.nav.gps.trueWindDirection,
     windSpeedTrue: keys.nav.gps.trueWindSpeed,
     visible:    keys.properties.showWind,
-    showKnots:  keys.properties.windKnots,
     scaleAngle: keys.properties.windScaleAngle
 };
 WindGraphics.editableParameters={
     show360: {type:'BOOLEAN',default:false},
     kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
+}
+WindGraphics.formatter='formatSpeed';
+WindGraphics.editableParameters={
+    formatter: true,
+    formatterParameters: true
 }
 export default WindGraphics;

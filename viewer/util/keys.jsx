@@ -409,7 +409,6 @@ let keys={
         showWind: new Property(true, "show wind", PropertyType.CHECKBOX),
         showDepth: new Property(true, "show depth", PropertyType.CHECKBOX),
         autoZoom: new Property(true, "automatic zoom", PropertyType.CHECKBOX),
-        windKnots: new Property(true, "wind knots", PropertyType.CHECKBOX),
         nightMode: new Property(false, "NightMode", PropertyType.CHECKBOX),
         nightColorDim: new Property(60, "Night Dim for Colors", PropertyType.RANGE, [5, 100]), //should match @nightModeVale in less
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999]),

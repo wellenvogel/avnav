@@ -226,7 +226,7 @@ class WidgetFactory{
             name=name.name;
         }
         let plist=this.editableParametersCache[name];
-        //if (plist) return plist;
+        if (plist) return plist;
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
@@ -280,7 +280,7 @@ class WidgetFactory{
                 continue;
             }
             let overrides={name:pname};
-            let defaultv = widgetData[pname];
+            let defaultv = widgetData[pname]||wClass[pname];
             if (defaultv !== undefined) {
                 //default values from the widget class or from the widget list will win against
                 //defaults from the parameter defines
@@ -339,9 +339,10 @@ class WidgetFactory{
             filteredProps = filterByEditables(editables, props);
         }
         let mergedProps = {...e, ...filteredProps, ...opt_properties};
+        let RenderWidget = mergedProps.wclass || DirectWidget;
         //we need a special handling for the store keys as the simple assign above will not merge them
         let mergedStoreKeys={};
-        [e, filteredProps, opt_properties].forEach((p) => {
+        [RenderWidget,e, filteredProps, opt_properties].forEach((p) => {
             if (p && p.storeKeys) {
                 Object.assign(mergedStoreKeys, p.storeKeys);
             }
@@ -381,7 +382,6 @@ class WidgetFactory{
             }
 
         }
-        let RenderWidget = mergedProps.wclass || DirectWidget;
         mergedProps.className=Helper.concatsp(mergedProps.className,props.name);
         if (mergedProps.handleVisible) RenderWidget=Visible(RenderWidget);
         mergedStoreKeys.nightMode=keys.properties.nightMode;

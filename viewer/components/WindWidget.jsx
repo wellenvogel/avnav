@@ -72,21 +72,7 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
-    let windSpeedStr = '';
-    try {
-        windSpeedStr = parseFloat(wind.windSpeed);
-        if (isNaN(windSpeedStr)) {
-            windSpeedStr = "---"
-        } else {
-            if (props.showKnots) {
-                let nm = navcompute.NM;
-                windSpeedStr = windSpeedStr * 3600 / nm;
-            }
-            if (windSpeedStr < 10) windSpeedStr = Formatter.formatDecimal(windSpeedStr, 2, 1);
-            else windSpeedStr = Formatter.formatDecimal(windSpeedStr, 3, 0);
-        }
-    } catch (e) {
-    }
+    let windSpeedStr = props.formatter(wind.speed);
     if (!props.show360 && wind.suffix !== 'TD') {
         if (wind.windAngle > 180) wind.windAngle -= 360;
     }
@@ -99,7 +85,7 @@ const WindWidget = (props) => {
                         {Formatter.formatDirection(wind.windAngle)}
                         <span className="unit">°</span>
                         /{windSpeedStr}
-                        <span className="unit">{props.showKnots ? "kn" : "m/s"}</span>
+                        <span className="unit">{props.unit}</span>
                     </div>
                 </React.Fragment>
                 :
@@ -109,7 +95,7 @@ const WindWidget = (props) => {
                             <div className='widgetData'>{Formatter.formatDirection(wind.windAngle)}</div>
                         </div>
                         <div className="windInner">
-                            <WidgetHead caption={names[wind.suffix].speed} unit={props.showKnots ? "kn" : "m/s"}/>
+                            <WidgetHead caption={names[wind.suffix].speed} unit={props.unit}/>
                             <div className='widgetData'>{windSpeedStr}</div>
                         </div>
                 </React.Fragment>
@@ -128,7 +114,6 @@ WindWidget.propTypes={
     windSpeedTrue:  PropTypes.number,
     enabled:    PropTypes.bool,
     kind: PropTypes.string, //true,apparent,auto,
-    showKnots: PropTypes.bool,
     show360: PropTypes.bool,
     mode: PropTypes.string
 };
@@ -140,11 +125,13 @@ WindWidget.storeKeys={
     windSpeedTrue: keys.nav.gps.trueWindSpeed,
     windDirectionTrue: keys.nav.gps.trueWindDirection,
     visible: keys.properties.showWind,
-    showKnots: keys.properties.windKnots
 };
 WindWidget.editableParameters={
     show360: {type:'BOOLEAN',default:false},
-    kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
+    kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'},
+    formatter: true,
+    formatterParameters: true
 }
+WindWidget.formatter='formatSpeed';
 
 export default WindWidget;
