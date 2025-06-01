@@ -1,7 +1,7 @@
 import React from "react";
 import assign from "object-assign";
 import widgetList from './WidgetList';
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
 import DirectWidget from './DirectWidget.jsx';
 import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
@@ -19,6 +19,7 @@ import editableParameterFactory, {
 import editableParameterUI, {EditableParameterListUI, getCommonParam} from "./EditableParameterUI";
 import {Input, InputReadOnly} from "./Inputs";
 import {shallowEqualArrays} from "shallow-equal";
+import Helper from "../util/helper";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -174,7 +175,14 @@ export const getFormatterParameters=(widget)=>{
     }
 }
 
-
+const DynamicWidget=({Widget,wprops,storeKeys})=>{
+    const props=useStore(wprops,
+        {
+            storeKeys:storeKeys,
+            updateFunction:wprops.updateFunction?(data)=>wprops.updateFunction({...wprops,...data}):undefined
+        });
+    return <Widget {...props}/>
+}
 
 class WidgetFactory{
     constructor(){
@@ -218,7 +226,7 @@ class WidgetFactory{
         let wClass=widgetData.wclass || DirectWidget;
         const classParameters=wClass.editableParameters||{};
         const configParameters=widgetData.editableParameters||{};
-        const allParameters={...defaultWidgetParameters,...classParameters,...configParameters};
+        const allParameters={className:true,...classParameters,...configParameters};
         let storeKeys={...wClass.storeKeys,...widgetData.storeKeys};
         //do not allow to override those definitions from widget data
         const forbiddenOverrides=['formatter','formatterParameters']
@@ -229,10 +237,10 @@ class WidgetFactory{
             let finalParam=allParameters[pname];
             if (finalParam === undefined || finalParam === false) continue;
             if (classParam === true) {
-                classParam=defaultParam;
+                classParam=undefined; //fall through to defaultParam
             }
             if (finalParam === true) {
-                finalParam = classParam;
+                finalParam = classParam||defaultParam;
             }
             if (! (finalParam instanceof Object)) {
                 //no definition found
@@ -323,18 +331,15 @@ class WidgetFactory{
         if (editables) {
             filteredProps = filterByEditables(editables, props);
         }
-        let mergedProps = assign({}, e, filteredProps, opt_properties);
+        let mergedProps = {...e, ...filteredProps, ...opt_properties};
         //we need a special handling for the store keys as the simple assign above will not merge them
-        let mergedStoreKeys;
+        let mergedStoreKeys={};
         [e, filteredProps, opt_properties].forEach((p) => {
             if (p && p.storeKeys) {
-                if (!mergedStoreKeys) mergedStoreKeys = {};
-                assign(mergedStoreKeys, p.storeKeys);
+                Object.assign(mergedStoreKeys, p.storeKeys);
             }
         });
-        if (mergedStoreKeys) {
-            mergedProps.storeKeys = mergedStoreKeys;
-        }
+        delete mergedProps.storeKeys;
         if (mergedProps.key === undefined) mergedProps.key = props.name;
         if (mergedProps.formatter) {
             let ff = mergedProps.formatter;
@@ -354,34 +359,15 @@ class WidgetFactory{
             }
 
         }
-
-        return function (props) {
-            let wprops = {...props, ...mergedProps};
-            wprops.childProperties = opt_properties;
-            let RenderWidget = mergedProps.wclass || DirectWidget;
-            let storeKeys = mergedProps.storeKeys;
-            if (wprops.className) wprops.className += " " + wprops.name;
-            else wprops.className = wprops.name;
-            if (!storeKeys) {
-                storeKeys = RenderWidget.storeKeys;
-            }
-            if (wprops.handleVisible) {
-                RenderWidget = Visible(RenderWidget);
-                delete wprops.handleVisible;
-            }
-            if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)) {
-                if (storeKeys === undefined) {
-                    storeKeys = {nightMode: keys.properties.nightMode}
-                } else {
-                    storeKeys = assign({nightMode: keys.properties.nightMode}, storeKeys)
-                }
-            }
-            if (storeKeys) {
-                RenderWidget = Dynamic(RenderWidget, {storeKeys: storeKeys});
-            }
-            delete wprops.storeKeys;
-            return <RenderWidget {...wprops}/>
-        }
+        let RenderWidget = mergedProps.wclass || DirectWidget;
+        mergedProps.className=Helper.concatsp(mergedProps.className,props.name);
+        if (mergedProps.handleVisible) RenderWidget=Visible(RenderWidget);
+        mergedStoreKeys.nightMode=keys.properties.nightMode;
+        return (props)=><DynamicWidget
+            Widget={RenderWidget}
+            wprops={{...mergedProps,...props}}
+            storeKeys={mergedStoreKeys}
+        />
     }
     getWidget(index){
         if (index < 0 || index >= this.widgetDefinitions.length) return undefined;

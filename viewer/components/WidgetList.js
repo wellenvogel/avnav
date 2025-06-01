@@ -21,6 +21,16 @@ import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
 
+const formatterParamHelper=(state,idx,defaultv)=>{
+    if (! state) return defaultv;
+    let fmtParam=state.formatterParameters||[];
+    if (! (fmtParam instanceof Array)) fmtParam=(fmtParam+"").split(",");
+    if (idx < 0) return fmtParam;
+    const rt=fmtParam[idx];
+    if (rt === undefined) return defaultv;
+    return rt;
+}
+
 let widgetList=[
     {
         name: 'SOG',
@@ -107,12 +117,17 @@ let widgetList=[
             server: keys.nav.wp.server
         },
         updateFunction: (state)=>{
+            const unit=formatterParamHelper(state,0,state.unit);
             return {
                 value: state.value,
-                disconnect: state.server === false
+                disconnect: state.server === false,
+                unit:unit
             }
         },
-        formatter: 'formatDistance'
+        formatter: 'formatDistance',
+        editableParameters: {
+            unit: false
+        }
 
     },
     {
