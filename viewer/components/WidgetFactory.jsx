@@ -147,12 +147,12 @@ class FormatterParameterUI extends EditableParameter {
     }
 }
 const defaultWidgetParameters={
-    caption: new EditableStringParameter({name:'caption'}),
-    unit: new EditableStringParameter({name:'unit'}),
+    caption: new EditableStringParameter({name:'caption',description:'the title of the widget'}),
+    unit: new EditableStringParameter({name:'unit',description:'the unit to be shown in the title row'}),
     formatterParameters: new FormatterParameterUI({name:'formatterParameters'}),
-    value: new EditableKeyParameter({name:'value'}),
-    className: new EditableStringParameter({name:'className'}),
-    formatter: new EditableSelectParameter({name:'formatter',list:()=>{
+    value: new EditableKeyParameter({name:'value',description:'The value from the internal data store to be used.\nBe sure to select a matching formatter for this item.',mandatory: true}),
+    className: new EditableStringParameter({name:'className',description:'add a CSS class to your widget to be able to style it in your user.css'}),
+    formatter: new EditableSelectParameter({name:'formatter',description:'the formatter to convert your value into the display string',list:()=>{
         let rt=[];
         for (let k in Formatter){
             rt.push({label:k,value:k})

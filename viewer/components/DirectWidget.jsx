@@ -48,7 +48,7 @@ DirectWidget.editableParameters={
     unit:true,
     formatter:true,
     formatterParameters: true,
-    value: new EditableKeyParameter({name:'value',mandatory:true})
+    value: true
 };
 
 export default DirectWidget;
