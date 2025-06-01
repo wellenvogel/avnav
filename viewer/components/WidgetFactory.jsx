@@ -148,7 +148,7 @@ class FormatterParameterUI extends EditableParameter {
 }
 const defaultWidgetParameters={
     caption: new EditableStringParameter({name:'caption',description:'the title of the widget'}),
-    unit: new EditableStringParameter({name:'unit',description:'the unit to be shown in the title row'}),
+    unit: new EditableStringParameter({name:'unit',description:'The unit to be shown in the title row.\nLeave it empty to use a unit parameter from the formatter if there is one.'}),
     formatterParameters: new FormatterParameterUI({name:'formatterParameters'}),
     value: new EditableKeyParameter({name:'value',description:'The value from the internal data store to be used.\nBe sure to select a matching formatter for this item.',mandatory: true}),
     className: new EditableStringParameter({name:'className',description:'add a CSS class to your widget to be able to style it in your user.css'}),
@@ -357,11 +357,31 @@ class WidgetFactory{
                     ff = () => '?#?#';
                 }
             }
-            mergedProps.formatter =  (v)=> {
-                let param = mergedProps.formatterParameters;
-                if (typeof (param) === 'string') {
-                    param = param.split(",");
+            let param = mergedProps.formatterParameters;
+            if (typeof (param) === 'string') {
+                param = param.split(",");
+            }
+            const fmtParamDef=ff.parameters;
+            if (fmtParamDef instanceof Array){
+                //check if there is a "unit" fmt param and use it's value
+                //as "unit" parameter if not provided and if we have an editable unit parameter
+                let hasUnitParam=false;
+                for (let i=0;i<(editables||[]).length;i++){
+                    if (editables[i].name  === 'unit'){
+                        hasUnitParam=true;
+                        break;
+                    }
                 }
+                if (hasUnitParam && !mergedProps.unit){
+                    for (let i=0;i<fmtParamDef.length;i++){
+                        if (fmtParamDef[i].name === 'unit'){
+                            const punit=param[i];
+                            mergedProps.unit=punit;
+                        }
+                    }
+                }
+            }
+            mergedProps.formatter =  (v)=> {
                 return ff.apply(this.formatter, [v].concat(param || []));
             }
 
