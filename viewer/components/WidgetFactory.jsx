@@ -361,6 +361,7 @@ class WidgetFactory{
             if (typeof (param) === 'string') {
                 param = param.split(",");
             }
+            if (! param) param=[];
             const fmtParamDef=ff.parameters;
             if (fmtParamDef instanceof Array){
                 //check if there is a "unit" fmt param and use it's value
@@ -382,7 +383,7 @@ class WidgetFactory{
                 }
             }
             mergedProps.formatter =  (v)=> {
-                return ff.apply(this.formatter, [v].concat(param || []));
+                return ff.apply(this.formatter, [v].concat(param));
             }
 
         }

@@ -35,11 +35,19 @@ let widgetList=[
     {
         name: 'SOG',
         default: "---",
-        unit: "kn",
         caption: 'SOG',
         storeKeys: {
             value: keys.nav.gps.speed,
             isAverage: keys.nav.gps.speedAverageOn
+        },
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
         },
         formatter:'formatSpeed'
     },
@@ -146,10 +154,18 @@ let widgetList=[
     {
         name: 'VMG',
         default: "---",
-        unit: "kn",
         caption: 'VMG',
         storeKeys: {
             value: keys.nav.wp.vmg
+        },
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
         },
         formatter:'formatSpeed'
 
@@ -157,10 +173,18 @@ let widgetList=[
     {
         name: 'STW',
         default: '---',
-        unit: 'kn',
         caption: 'STW',
         storeKeys:{
             value: keys.nav.gps.waterSpeed
+        },
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
         },
         formatter: 'formatSpeed'
     },
@@ -250,10 +274,18 @@ let widgetList=[
     {
         name: 'AnchorDistance',
         default: "---",
-        unit: "m",
         caption: 'ACHR-DST',
         storeKeys:{
             value:keys.nav.anchor.distance
+        },
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
         },
         formatter: 'formatDistance',
         formatterParameters: ['m']
@@ -261,22 +293,38 @@ let widgetList=[
     {
         name: 'AnchorWatchDistance',
         default: "---",
-        unit: "m",
         caption: 'ACHR-WATCH',
         storeKeys:{
             value:keys.nav.anchor.watchDistance
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1],
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
+        },
+        formatter: 'formatDistance',
+        formatterParameters: ['m'],
     },
 
     {
         name: 'RteDistance',
         default: "---",
-        unit: "nm",
         caption: 'RTE-Dst',
         storeKeys:{
             value:keys.nav.route.remain
+        },
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
         },
         formatter: 'formatDistance'
     },
@@ -433,8 +481,16 @@ let widgetList=[
     {
         name: 'signalKPressureHpa',
         default: "---",
-        unit: 'hPa',
-        formatter: 'skPressure'
+        formatter: 'skPressure',
+        updateFunction:(state)=>{
+            return {
+                ...state,
+                unit: formatterParamHelper(state,0,'kn')
+            }
+        },
+        editableParameters: {
+            unit:false
+        },
     },
     {
         name:'signalKCelsius',
