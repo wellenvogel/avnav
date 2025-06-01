@@ -55,13 +55,13 @@ const updateChildren=(children,index,data)=>{
     return next;
 }
 
-const RenderChildParam=({currentValues,onChange,className})=>{
+const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
     if (! currentValues) return null;
+    //TODO: changed handling
     const dialogContext=useDialogContext();
-    const [children,setChildrenImpl]=useState(currentValues.children||[])
+    const children=currentValues.children||[];
     const setChildren=(ch)=>{
         if (ch === undefined) return;
-        setChildrenImpl(ch);
         onChange({children:ch});
     }
     return <div className={Helper.concatsp('childWidgets',className)}>
@@ -120,11 +120,12 @@ class ChildrenParam extends EditableParameter {
         this.render=this.render.bind(this)
         Object.freeze(this);
     }
-    render({currentValues,className,onChange}){
+    render({currentValues,initialValues,className,onChange}){
         return <RenderChildParam
             className={className}
             onChange={onChange}
             currentValues={currentValues}
+            initialValues={initialValues}
             />
     }
 }

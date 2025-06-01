@@ -83,8 +83,8 @@ class FormatterParameterUI extends EditableParameter {
         if (! (this.default instanceof Array)) return;
         return this.default[idx];
     }
-    render({currentValues,className,onChange}) {
-        const common=getCommonParam(this,currentValues,className,this.readonly?undefined:onChange);
+    render({currentValues,initialValues,className,onChange}) {
+        const common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:this.readonly?undefined:onChange});
         const definedParameter=getFormatterParameters(currentValues);
         if (! definedParameter) {
             if (common.value instanceof Array) common.value=common.value.join(',');
@@ -101,9 +101,12 @@ class FormatterParameterUI extends EditableParameter {
         let idx=0;
         const currentAsDict={};
         const nameToIdx={};
-        let current=common.value;
-        if (! current) current=[];
-        else if (! (current instanceof Array)) current=(current+"").split(',');
+        const current=common.value||[];
+        let initialAsDict;
+        const initial = this.getValue(initialValues) || [];
+        if (initialValues) {
+            initialAsDict={};
+        }
         definedParameter.forEach((dp)=>{
             const pdef=this.getDefault(idx);
             const cv=current[idx];
@@ -116,6 +119,7 @@ class FormatterParameterUI extends EditableParameter {
             }
             nameToIdx[parameter.name]=idx;
             currentAsDict[parameter.name]=cv;
+            if (initialAsDict) initialAsDict[parameter.name]=initial[idx];
             parameterList.push(parameter);
             idx++;
         })
@@ -123,6 +127,7 @@ class FormatterParameterUI extends EditableParameter {
         return <EditableParameterListUI
             parameters={parameterList}
             values={currentAsDict}
+            initialValues={initialAsDict}
             onChange={this.readonly?undefined:(nv)=>{
                 const newVal=current.slice(0);
                 for (let k in nv){
