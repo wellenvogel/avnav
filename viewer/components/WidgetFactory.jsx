@@ -180,7 +180,7 @@ const DynamicWidget=({Widget,wprops,storeKeys})=>{
         {
             storeKeys:storeKeys,
             updateFunction:wprops.updateFunction?(data)=>{
-                const rt=wprops.updateFunction({...wprops,...data})
+                const rt=wprops.updateFunction(data)
                 //we keep some important parameters independent of the update function
                 rt.editing=data.editing;
                 rt.mode=wprops.mode||data.mode;
@@ -365,18 +365,12 @@ class WidgetFactory{
             const fmtParamDef=ff.parameters;
             if (fmtParamDef instanceof Array){
                 //check if there is a "unit" fmt param and use it's value
-                //as "unit" parameter if not provided and if we have an editable unit parameter
-                let hasUnitParam=false;
-                for (let i=0;i<(editables||[]).length;i++){
-                    if (editables[i].name  === 'unit'){
-                        hasUnitParam=true;
-                        break;
-                    }
-                }
-                if (hasUnitParam && !mergedProps.unit){
+                //as "unit" parameter if not provided
+                if (!mergedProps.unit){
                     for (let i=0;i<fmtParamDef.length;i++){
                         if (fmtParamDef[i].name === 'unit'){
-                            const punit=param[i];
+                            let punit=param[i];
+                            if (punit === undefined) punit=fmtParamDef[i].default;
                             mergedProps.unit=punit;
                         }
                     }

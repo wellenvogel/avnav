@@ -20,17 +20,6 @@ import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
-
-const formatterParamHelper=(state,idx,defaultv)=>{
-    if (! state) return defaultv;
-    let fmtParam=state.formatterParameters||[];
-    if (! (fmtParam instanceof Array)) fmtParam=(fmtParam+"").split(",");
-    if (idx < 0) return fmtParam;
-    const rt=fmtParam[idx];
-    if (rt === undefined) return defaultv;
-    return rt;
-}
-
 let widgetList=[
     {
         name: 'SOG',
@@ -39,12 +28,6 @@ let widgetList=[
         storeKeys: {
             value: keys.nav.gps.speed,
             isAverage: keys.nav.gps.speedAverageOn
-        },
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
         },
         editableParameters: {
             unit:false
@@ -125,11 +108,9 @@ let widgetList=[
             server: keys.nav.wp.server
         },
         updateFunction: (state)=>{
-            const unit=formatterParamHelper(state,0,state.unit);
             return {
                 value: state.value,
-                disconnect: state.server === false,
-                unit:unit
+                disconnect: state.server === false
             }
         },
         formatter: 'formatDistance',
@@ -158,12 +139,6 @@ let widgetList=[
         storeKeys: {
             value: keys.nav.wp.vmg
         },
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
-        },
         editableParameters: {
             unit:false
         },
@@ -176,12 +151,6 @@ let widgetList=[
         caption: 'STW',
         storeKeys:{
             value: keys.nav.gps.waterSpeed
-        },
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
         },
         editableParameters: {
             unit:false
@@ -278,12 +247,6 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.anchor.distance
         },
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
-        },
         editableParameters: {
             unit:false
         },
@@ -296,12 +259,6 @@ let widgetList=[
         caption: 'ACHR-WATCH',
         storeKeys:{
             value:keys.nav.anchor.watchDistance
-        },
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
         },
         editableParameters: {
             unit:false
@@ -316,12 +273,6 @@ let widgetList=[
         caption: 'RTE-Dst',
         storeKeys:{
             value:keys.nav.route.remain
-        },
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
         },
         editableParameters: {
             unit:false
@@ -482,12 +433,6 @@ let widgetList=[
         name: 'signalKPressureHpa',
         default: "---",
         formatter: 'skPressure',
-        updateFunction:(state)=>{
-            return {
-                ...state,
-                unit: formatterParamHelper(state,0,'kn')
-            }
-        },
         editableParameters: {
             unit:false
         },
