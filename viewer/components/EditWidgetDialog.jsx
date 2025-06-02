@@ -28,7 +28,7 @@ import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, DialogRow, showDialog} from './OverlayDialog.jsx';
-import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
+import WidgetFactory from '../components/WidgetFactory.jsx';
 import {Input, InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import cloneDeep from 'clone-deep';
@@ -109,12 +109,10 @@ const EditWidgetDialog = (props) => {
          * and the name and weight in any case
          */
         if (!parameters) return widget;
-        let filtered = filterByEditables(parameters, widget);
-        //filter out the parameters that are really set at the widget itself
         let nwidget = WidgetFactory.findWidget(widget);
         let rt = {};
         parameters.forEach((parameter) => {
-            let fv = parameter.getValue(filtered);
+            let fv = parameter.getValue(widget);
             if (fv !== undefined) {
                 let dv = parameter.getValue(nwidget);
                 if (Compare(fv, dv)) {
@@ -125,7 +123,7 @@ const EditWidgetDialog = (props) => {
         })
         let fixed = ['name', 'weight'];
         fixed.forEach((fp) => {
-            if (filtered[fp] !== undefined) rt[fp] = filtered[fp];
+            if (widget[fp] !== undefined) rt[fp] = widget[fp];
         });
         return rt;
     }

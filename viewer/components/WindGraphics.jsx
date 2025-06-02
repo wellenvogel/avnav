@@ -6,13 +6,11 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
-import navcompute from '../nav/navcompute.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {getWindData} from "./WindWidget";
 import {useAvNavSortable} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import globalstore from "../util/globalstore";
-import formatter from "../util/formatter";
 
 const normalColors={
     green:  'rgba(5, 128, 30, 0.57)',
