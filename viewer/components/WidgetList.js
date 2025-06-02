@@ -316,32 +316,22 @@ let widgetList=[
         name: 'Zoom',
         caption: 'Zoom',
         wclass: ZoomWidget,
-        storeKeys: ZoomWidget.storeKeys
     },
     {
         name: 'AisTarget',
         wclass: AisTargetWidget,
-        storeKeys: AisTargetWidget.storeKeys
     },
     {
         name: 'ActiveRoute',
         wclass: ActiveRouteWidget,
-        storeKeys: ActiveRouteWidget.storeKeys
     },
     {
         name: 'EditRoute',
         wclass: EditRouteWidget,
-        storeKeys: EditRouteWidget.storeKeys
     },
     {
         name: 'CenterDisplay',
-        caption: 'Center',
-        wclass: CenterDisplayWidget,
-        storeKeys: CenterDisplayWidget.storeKeys,
-        editableParameters: {
-            formatter: false,
-            formatterParameters: false
-        }
+        wclass: CenterDisplayWidget
     },
     {
         name: 'WindDisplay',
@@ -362,7 +352,6 @@ let widgetList=[
     {
         name: 'XteDisplay',
         wclass: XteWidget,
-        storeKeys: XteWidget.storeKeys
     },
     {
         name: 'WindGraphics',
@@ -399,12 +388,10 @@ let widgetList=[
     {
         name: 'Alarm',
         wclass:AlarmWidget,
-        storeKeys: AlarmWidget.storeKeys
     },
     {
         name: 'RoutePoints',
         wclass: RoutePointsWidget,
-        storeKeys: RoutePointsWidget.storeKeys
     },
     {
         name: 'Default', //a way to access the default widget providing all parameters in the layout

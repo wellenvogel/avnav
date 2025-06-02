@@ -33,8 +33,8 @@ const CenterDisplayWidget = (props) => {
                         /
                     </div>
                     <div className="value">
-                        <span>{Formatter.formatDistance(measureValues.dts)}</span>
-                        <span className="unit">nm</span>
+                        <span>{props.formatter(measureValues.dts)}</span>
+                        <span className="unit">{props.unit}</span>
                     </div>
                 </div>
             }
@@ -48,8 +48,8 @@ const CenterDisplayWidget = (props) => {
                     /
                 </div>
                 <div className="value">
-                    <span>{Formatter.formatDistance(props.markerDistance)}</span>
-                    <span className="unit">nm</span>
+                    <span>{props.formatter(props.markerDistance)}</span>
+                    <span className="unit">{props.unit}</span>
                 </div>
             </div>
             <div className="widgetData">
@@ -62,8 +62,8 @@ const CenterDisplayWidget = (props) => {
                     /
                 </div>
                 <div className="value">
-                    <span>{Formatter.formatDistance(props.centerDistance)}</span>
-                    <span className="unit">nm</span>
+                    <span>{props.formatter(props.centerDistance)}</span>
+                    <span className="unit">{props.unit}</span>
 
                 </div>
             </div>
@@ -72,7 +72,8 @@ const CenterDisplayWidget = (props) => {
 }
 
 
-CenterDisplayWidget.storeKeys={
+CenterDisplayWidget.predefined={
+    storeKeys:{
         markerCourse:keys.nav.center.markerCourse,
         markerDistance:keys.nav.center.markerDistance,
         centerCourse:keys.nav.center.course,
@@ -80,6 +81,12 @@ CenterDisplayWidget.storeKeys={
         centerPosition: keys.map.centerPosition,
         measurePosition: keys.map.measurePosition,
         measureRhumbLine: keys.properties.measureRhumbLine
+    },
+    formatter: 'formatDistance',
+    editableParameters:{
+        formatterParameters: true
+    },
+    caption:'Center'
 };
 
 CenterDisplayWidget.propTypes={
