@@ -345,10 +345,7 @@ let widgetList=[
     },
     {
         name: 'WindDisplay',
-        caption: 'Wind',
         wclass: WindWidget,
-        storeKeys: WindWidget.storeKeys,
-        formatter: WindWidget.formatter
     },
     {
         name: 'DepthDisplay',
@@ -369,9 +366,7 @@ let widgetList=[
     },
     {
         name: 'WindGraphics',
-        wclass: WindGraphics,
-        storeKeys: WindGraphics.storeKeys,
-        formatter: WindGraphics.formatter
+        wclass: WindGraphics
     },
     {
         name: "DateTime",

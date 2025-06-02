@@ -132,7 +132,7 @@ const EditWidgetDialog = (props) => {
     if (props.panel !== panel) {
         panelClass += " changed";
     }
-    let completeWidgetData = {...cloneDeep(WidgetFactory.findWidget(widget.name)), ...widget};
+    let completeWidgetData = {...WidgetFactory.findWidget(widget.name), ...widget};
     let validData=true;
     parameters.forEach((param)=>{
         if (param.hasError(completeWidgetData)){

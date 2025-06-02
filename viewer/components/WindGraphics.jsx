@@ -29,8 +29,6 @@ const nightColors={
     text: 'rgba(252, 11, 11, 0.6)'
 };
 const WindGraphics = (props) => {
-    useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
     let canvas = undefined;
     const drawWind = () => {
         let current = getWindData(props);
@@ -146,7 +144,7 @@ const WindGraphics = (props) => {
     let current = getWindData(props);
     let windSpeed = props.formatter(current.windSpeed);
     return (
-        <WidgetFrame {...props} addClass="windGraphics"  caption="Wind" resize={false}>
+        <WidgetFrame {...props} addClass="windGraphics"  caption={props.caption} resize={false}>
             <canvas className='widgetData' ref={canvasRef}></canvas>
             <div className="windSpeed">{windSpeed}</div>
             <div className="windReference">{current.suffix}</div>
@@ -168,22 +166,29 @@ WindGraphics.propTypes={
     kind: PropTypes.string, //true,apparent,auto,
     show360: PropTypes.bool
 };
-WindGraphics.storeKeys={
-    windSpeed:  keys.nav.gps.windSpeed,
-    windAngle:  keys.nav.gps.windAngle,
-    windAngleTrue: keys.nav.gps.trueWindAngle,
-    windDirectionTrue: keys.nav.gps.trueWindDirection,
-    windSpeedTrue: keys.nav.gps.trueWindSpeed,
-    visible:    keys.properties.showWind,
-    scaleAngle: keys.properties.windScaleAngle
-};
-WindGraphics.editableParameters={
-    show360: {type:'BOOLEAN',default:false},
-    kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
+WindGraphics.predefined= {
+    storeKeys: {
+        windSpeed: keys.nav.gps.windSpeed,
+        windAngle: keys.nav.gps.windAngle,
+        windAngleTrue: keys.nav.gps.trueWindAngle,
+        windDirectionTrue: keys.nav.gps.trueWindDirection,
+        windSpeedTrue: keys.nav.gps.trueWindSpeed,
+        visible: keys.properties.showWind,
+        scaleAngle: keys.properties.windScaleAngle
+    },
+    editableParameters: {
+        show360: {type: 'BOOLEAN', default: false},
+        kind: {type: 'SELECT',
+            list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],
+            default: 'auto',
+            description:'which wind data to be shown\nauto will try apparent, trueAngle, trueDirection and display the first found data'
+        },
+        formatter: true,
+        formatterParameters: true,
+        caption: true
+    },
+    formatter: 'formatSpeed',
+    caption: 'Wind'
 }
-WindGraphics.formatter='formatSpeed';
-WindGraphics.editableParameters={
-    formatter: true,
-    formatterParameters: true
-}
+
 export default WindGraphics;
