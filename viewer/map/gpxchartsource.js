@@ -327,6 +327,7 @@ class GpxChartSource extends ChartSourceBase{
                             this.source.addFeatures(
                                 features
                             );
+                            this.buildStyles();
                         })
                         .catch((error) => {
                             //vectorSource.removeLoadedExtent(extent);

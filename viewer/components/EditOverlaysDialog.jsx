@@ -7,8 +7,7 @@ import {
     useDialogContext
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
-import {ParamValueInput} from './ParamValueInput';
-import {Input,Checkbox,InputReadOnly,InputSelect,Radio} from './Inputs.jsx';
+import {Input,Checkbox,InputSelect,Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';

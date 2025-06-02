@@ -148,11 +148,14 @@ export const InputSelect=(props)=>{
     const dialogContext=useDialogContext();
     let onClick=props.onClick;
     let {value,...forwardProps}=props;
+    if (value === null || value === undefined) value='';
     let label=value;
-    if (typeof value === 'object'){
+    if (value instanceof Object){
         label=value.label;
         value=value.value;
     }
+    if (label === undefined) label=value;
+    if (label === undefined) label='';
     let displayList = props.list||props.itemList;
     if (props.onChange && displayList){
         onClick=()=> {

@@ -19,18 +19,18 @@ import DateTimeWidget from './DateTimeWidget.jsx';
 import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
-import assign from 'object-assign';
 import {CombinedWidget} from "./CombinedWidget";
-
 let widgetList=[
     {
         name: 'SOG',
         default: "---",
-        unit: "kn",
         caption: 'SOG',
         storeKeys: {
             value: keys.nav.gps.speed,
             isAverage: keys.nav.gps.speedAverageOn
+        },
+        editableParameters: {
+            unit:false
         },
         formatter:'formatSpeed'
     },
@@ -113,7 +113,10 @@ let widgetList=[
                 disconnect: state.server === false
             }
         },
-        formatter: 'formatDistance'
+        formatter: 'formatDistance',
+        editableParameters: {
+            unit: false
+        }
 
     },
     {
@@ -132,10 +135,12 @@ let widgetList=[
     {
         name: 'VMG',
         default: "---",
-        unit: "kn",
         caption: 'VMG',
         storeKeys: {
             value: keys.nav.wp.vmg
+        },
+        editableParameters: {
+            unit:false
         },
         formatter:'formatSpeed'
 
@@ -143,10 +148,12 @@ let widgetList=[
     {
         name: 'STW',
         default: '---',
-        unit: 'kn',
         caption: 'STW',
         storeKeys:{
             value: keys.nav.gps.waterSpeed
+        },
+        editableParameters: {
+            unit:false
         },
         formatter: 'formatSpeed'
     },
@@ -180,18 +187,16 @@ let widgetList=[
     {
         name: 'WindSpeed',
         default: "---",
-        unit: "m/s",
         caption: 'Wind Speed',
         storeKeys:{
             windSpeed:keys.nav.gps.windSpeed,
             windSpeedTrue: keys.nav.gps.trueWindSpeed,
-            showKnots: keys.properties.windKnots
         },
         formatter: 'formatSpeed',
         editableParameters: {
-            formatterParameters: false,
             value: false,
             caption: false,
+            unit: false,
             kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
         },
         translateFunction: (props)=>{
@@ -203,9 +208,7 @@ let widgetList=[
             let wind=getWindData(props);
             return {...props,
                 value:wind.windSpeed,
-                caption:captions[wind.suffix],
-                formatterParameters: props.showKnots?'k':'m',
-                unit: props.showKnots?'kn':'m/s'
+                caption:captions[wind.suffix]
             }
         }
     },
@@ -236,10 +239,12 @@ let widgetList=[
     {
         name: 'AnchorDistance',
         default: "---",
-        unit: "m",
         caption: 'ACHR-DST',
         storeKeys:{
             value:keys.nav.anchor.distance
+        },
+        editableParameters: {
+            unit:false
         },
         formatter: 'formatDistance',
         formatterParameters: ['m']
@@ -247,22 +252,26 @@ let widgetList=[
     {
         name: 'AnchorWatchDistance',
         default: "---",
-        unit: "m",
         caption: 'ACHR-WATCH',
         storeKeys:{
             value:keys.nav.anchor.watchDistance
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1],
+        editableParameters: {
+            unit:false
+        },
+        formatter: 'formatDistance',
+        formatterParameters: ['m'],
     },
 
     {
         name: 'RteDistance',
         default: "---",
-        unit: "nm",
         caption: 'RTE-Dst',
         storeKeys:{
             value:keys.nav.route.remain
+        },
+        editableParameters: {
+            unit:false
         },
         formatter: 'formatDistance'
     },
@@ -307,34 +316,26 @@ let widgetList=[
         name: 'Zoom',
         caption: 'Zoom',
         wclass: ZoomWidget,
-        storeKeys: ZoomWidget.storeKeys
     },
     {
         name: 'AisTarget',
         wclass: AisTargetWidget,
-        storeKeys: AisTargetWidget.storeKeys
     },
     {
         name: 'ActiveRoute',
         wclass: ActiveRouteWidget,
-        storeKeys: ActiveRouteWidget.storeKeys
     },
     {
         name: 'EditRoute',
         wclass: EditRouteWidget,
-        storeKeys: EditRouteWidget.storeKeys
     },
     {
         name: 'CenterDisplay',
-        caption: 'Center',
-        wclass: CenterDisplayWidget,
-        storeKeys: CenterDisplayWidget.storeKeys
+        wclass: CenterDisplayWidget
     },
     {
         name: 'WindDisplay',
-        caption: 'Wind',
         wclass: WindWidget,
-        storeKeys: WindWidget.storeKeys
     },
     {
         name: 'DepthDisplay',
@@ -351,12 +352,10 @@ let widgetList=[
     {
         name: 'XteDisplay',
         wclass: XteWidget,
-        storeKeys: XteWidget.storeKeys
     },
     {
         name: 'WindGraphics',
-        wclass: WindGraphics,
-        storeKeys: WindGraphics.storeKeys
+        wclass: WindGraphics
     },
     {
         name: "DateTime",
@@ -371,13 +370,15 @@ let widgetList=[
         wclass: CombinedWidget,
         caption: '',
         children: [{name:'RteDistance'},{name:'RteEta'}],
+        locked:true,
         editableParameters:{
             formatter: false,
             unit: false,
             formatterParameters: false,
             value: false,
             caption: false,
-            children: false
+            children: false,
+            locked: false
         }
     },
     {
@@ -387,12 +388,10 @@ let widgetList=[
     {
         name: 'Alarm',
         wclass:AlarmWidget,
-        storeKeys: AlarmWidget.storeKeys
     },
     {
         name: 'RoutePoints',
         wclass: RoutePointsWidget,
-        storeKeys: RoutePointsWidget.storeKeys
     },
     {
         name: 'Default', //a way to access the default widget providing all parameters in the layout
@@ -413,8 +412,10 @@ let widgetList=[
     {
         name: 'signalKPressureHpa',
         default: "---",
-        unit: 'hPa',
-        formatter: 'skPressure'
+        formatter: 'skPressure',
+        editableParameters: {
+            unit:false
+        },
     },
     {
         name:'signalKCelsius',

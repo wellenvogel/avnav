@@ -27,23 +27,54 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
-import {
-    DialogButtons,
-    DialogFrame,
-    DialogRow, showDialog
-} from './OverlayDialog.jsx';
-import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
-import {Input,InputSelect} from './Inputs.jsx';
+import {DialogButtons, DialogFrame, DialogRow, showDialog} from './OverlayDialog.jsx';
+import WidgetFactory from '../components/WidgetFactory.jsx';
+import {Input, InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
-import {getList,ParamValueInput} from "./ParamValueInput";
 import cloneDeep from 'clone-deep';
 import Compare from "../util/compare";
+import {EditableParameterListUI} from "./EditableParameterUI";
+import assign from "object-assign";
 
 
+export const getList = (list, current) => {
+    if (list instanceof Promise) {
+        return new Promise((resolve, reject) => {
+            list
+                .then((data) => resolve(getList(data, current)))
+                .catch((e) => reject(e))
+        })
+    }
+    let idx = 0;
+    let displayList = [];
+    list.forEach((el) => {
+        let item = undefined;
+        if (typeof (el) === 'object') {
+            item = assign({}, el);
+        } else {
+            item = {name: el}
+        }
+        item.key = idx;
+        if (!item.label) item.label = item.name;
+        idx++;
+        displayList.push(item);
+    });
+    displayList.sort((a, b) => {
+        if (!a || !a.name) return -1;
+        if (!b || !b.name) return 1;
+        let na = (typeof (a.name) === 'string') ? a.name.toUpperCase() : a;
+        let nb = (typeof (b.name) === 'string') ? b.name.toUpperCase() : b;
+        if (na < nb) return -1;
+        if (na > nb) return 1;
+        return 0;
+    });
+    return displayList;
+}
 const EditWidgetDialog = (props) => {
     const [panel, setPanel] = useState(props.panel);
     const [widget, setWidget] = useState(cloneDeep(props.current || {}));
-    const [parameters, setParameters] = useState(WidgetFactory.getEditableWidgetParameters(props.current.name));
+    const [initialWidget,setInitialWidget]=useState(cloneDeep(props.current||{}));
+    const [parameters, setParameters] = useState(()=>WidgetFactory.getEditableWidgetParameters(props.current.name));
 
     const insert = (before) => {
         if (!props.insertCallback) return;
@@ -55,10 +86,12 @@ const EditWidgetDialog = (props) => {
             const nvalues = {...values};
             let parameters = WidgetFactory.getEditableWidgetParameters(values.name);
             parameters.forEach((p) => {
-                p.setDefault(nvalues);
+                const v=p.getValue();
+                p.setValue(nvalues,v);
             });
             setParameters(parameters);
             setWidget({weight: widget.weight, ...nvalues})
+            setInitialWidget({weight: widget.weight, ...nvalues})
         } else {
             nvalues = {...widget, ...values};
             if (widget.formatter !== nvalues.formatter) {
@@ -76,12 +109,10 @@ const EditWidgetDialog = (props) => {
          * and the name and weight in any case
          */
         if (!parameters) return widget;
-        let filtered = filterByEditables(parameters, widget);
-        //filter out the parameters that are really set at the widget itself
         let nwidget = WidgetFactory.findWidget(widget);
         let rt = {};
         parameters.forEach((parameter) => {
-            let fv = parameter.getValue(filtered);
+            let fv = parameter.getValue(widget);
             if (fv !== undefined) {
                 let dv = parameter.getValue(nwidget);
                 if (Compare(fv, dv)) {
@@ -92,7 +123,7 @@ const EditWidgetDialog = (props) => {
         })
         let fixed = ['name', 'weight'];
         fixed.forEach((fp) => {
-            if (filtered[fp] !== undefined) rt[fp] = filtered[fp];
+            if (widget[fp] !== undefined) rt[fp] = widget[fp];
         });
         return rt;
     }
@@ -101,7 +132,13 @@ const EditWidgetDialog = (props) => {
     if (props.panel !== panel) {
         panelClass += " changed";
     }
-    let completeWidgetData = {...cloneDeep(WidgetFactory.findWidget(widget.name)), ...widget};
+    let completeWidgetData = {...WidgetFactory.findWidget(widget.name), ...widget};
+    let validData=true;
+    parameters.forEach((param)=>{
+        if (param.hasError(completeWidgetData)){
+            validData=false;
+        }
+    })
     return (
         <DialogFrame className="selectDialog editWidgetDialog" title={props.title || 'Select Widget'}>
             {(props.panelList !== undefined) && <InputSelect className={panelClass}
@@ -135,18 +172,17 @@ const EditWidgetDialog = (props) => {
                          list={() => getList(WidgetFactory.getAvailableWidgets(props.types))}
                          value={widget.name || '-Select Widget-'}
             />
-            {parameters.map((param) => {
-                return ParamValueInput({
-                    param: param,
-                    currentValues: completeWidgetData,
-                    onChange: updateWidgetState
-                })
-            })}
+            <EditableParameterListUI
+                parameters={parameters}
+                values={completeWidgetData}
+                initialValues={initialWidget}
+                onChange={updateWidgetState}
+            />
             {(widget.name !== undefined && props.insertCallback) ?
                 <DialogButtons className="insertButtons">
-                    {hasCurrent ? <DB name="before" onClick={() => insert(true)}>Before</DB> : null}
-                    {hasCurrent ? <DB name="after" onClick={() => insert(false)}>After</DB> : null}
-                    {(!hasCurrent) ? <DB name="after" onClick={() => insert(false)}>Insert</DB> : null}
+                    {hasCurrent ? <DB name="before" disabled={!validData} onClick={() => insert(true)}>Before</DB> : null}
+                    {hasCurrent ? <DB name="after" disabled={!validData} onClick={() => insert(false)}>After</DB> : null}
+                    {(!hasCurrent) ? <DB name="after" disabled={!validData} onClick={() => insert(false)}>Insert</DB> : null}
                 </DialogButtons>
                 : null}
             <DialogButtons>
@@ -156,7 +192,7 @@ const EditWidgetDialog = (props) => {
                     }}>Delete</DB> : null}
                 <DB name="cancel">Cancel</DB>
                 {props.updateCallback ?
-                    <DB name="ok" onClick={() => {
+                    <DB name="ok" disabled={!validData} onClick={() => {
                         let changes = changedParameters();
                         if (props.weight) {
                             if (changes.weight !== undefined) changes.weight = parseFloat(changes.weight)

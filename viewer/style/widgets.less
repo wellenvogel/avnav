@@ -58,6 +58,9 @@
   .editing &{
     .flex-grow(0);
   }
+  #gpspage.editing &{
+    .flex-grow(1);
+  }
   .unit{
     font-size: @infoFontSize;
     opacity: 0.7;
@@ -147,6 +150,14 @@
 .mapWidgetContainer.widgetContainer {
   width: 0;
   height: 0;
+}
+//separate weight container around widgets
+.widgetWeight{
+  .flex-display();
+  .flex-direction(column);
+  &>.widget{
+    .flex-shrink(1);
+  }
 }
 
 //------------------ dedicated widgets -------------------------
@@ -398,16 +409,6 @@
     padding-right: 0;
     .widgetData{
       font-size: @timeFont;
-    }
-    .windInner {
-      position: relative;
-      padding-top: 0.7em;
-      .widgetData{
-        padding-top: 0;
-        font-size: @timeFont;
-      }
-      padding-left: 0.3em;
-      padding-right: 0.3em;
     }
   }
   &.DepthDisplay{
