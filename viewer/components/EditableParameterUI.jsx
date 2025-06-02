@@ -259,7 +259,7 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
             />
         }
         return <Input
-            {...getCommonParam(this,currentValues,className,onChange)}
+            {...getCommonParam({ep:this,currentValues,initialValues,className,onChange})}
             type={'number'}
             step={"any"}
             onChange={(nv)=>{

@@ -31,6 +31,7 @@ import Helper from "../util/helper";
 export const SelectList = ({list, onClick}) => {
     return <div className="selectList">
         {list.map(function (elem) {
+            if (! (elem instanceof Object)) return null;
             let cl=Helper.concatsp('listEntry',elem.selected?'selectedItem':undefined,elem.className);
             return (
                 <div className={cl}
