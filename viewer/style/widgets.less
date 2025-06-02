@@ -148,6 +148,14 @@
   width: 0;
   height: 0;
 }
+//separate weight container around widgets
+.widgetWeight{
+  .flex-display();
+  .flex-direction(column);
+  &>.widget{
+    .flex-shrink(1);
+  }
+}
 
 //------------------ dedicated widgets -------------------------
 //widgets have their name from the widget list and maybe some additonial fixed name as classes

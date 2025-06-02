@@ -39,7 +39,10 @@ const widgetCreator=(nameIdx,weightSum,panelData)=>{
     let {weight,...widgetProps}=widget;
     if (weight === undefined) weight=1;
     let height=weight/weightSum*100;
-    return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
+    const Widget=WidgetFactory.createWidget(widget,{mode:'gps'});
+    return (props)=><div className={'widgetWeight'} style={{height:height+"%"}}>
+        <Widget {...props}/>
+    </div>
 };
 
 const getLayoutPage=(pageNum)=>{
