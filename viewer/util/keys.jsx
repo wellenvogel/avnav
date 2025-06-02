@@ -333,7 +333,6 @@ let keys={
         measureColor: new Property('red','Measure display color',PropertyType.COLOR),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
-        gpsXteMax: new Property(1, "XTE(nm)", PropertyType.RANGE, [0.1, 5, 0.1, 1]),
         trackColor: new Property("#942eba", "Color", PropertyType.COLOR),
         trackWidth: new Property(3, "Width", PropertyType.RANGE, [1, 10]),
         trackInterval: new Property(30, "Point Dist.(s)", PropertyType.RANGE, [5, 300]), //seconds
