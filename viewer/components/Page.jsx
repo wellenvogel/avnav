@@ -31,6 +31,9 @@ export const PageFrame=(iprops)=>{
         }
     });
     useEffect(() => {
+        if (iprops.editingChanged) iprops.editingChanged(isEditing);
+    }, [isEditing]);
+    useEffect(() => {
         KeyHandler.setPage(id);
         return ()=>hideToast();
     }, []);
@@ -86,6 +89,7 @@ PageFrame.propTypes={
     className: PropTypes.string,
     autoHideButtons: PropTypes.oneOfType([PropTypes.undefined,PropTypes.number]),
     hideCallback: PropTypes.func,
+    editingChanged: PropTypes.func,
     id: PropTypes.string.isRequired
 }
 

@@ -214,6 +214,7 @@ const MapPage =(iprops)=>{
                 hideCallback={()=>{
                     mapholder.updateSize();
                 }}
+                editingChanged={()=>mapholder.updateSize()}
             >
                 {props.mapFloat?map:null}
                 <PageLeft dialogCtxRef={(ctx)=>{
