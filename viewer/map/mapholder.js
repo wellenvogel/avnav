@@ -8,9 +8,9 @@ import AisLayer from './aislayer';
 import NavLayer from './navlayer';
 import TrackLayer from './tracklayer';
 import RouteLayer from './routelayer';
-import {Drawing,DrawingPositionConverter} from './drawing';
+import {Drawing, DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
-import keys,{KeyHelper} from '../util/keys.jsx';
+import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
@@ -20,9 +20,10 @@ import assign from 'object-assign';
 import AvNavChartSource from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';
 import CryptHandler from './crypthandler.js';
-import {Map as olMap,View as olView,
+import {
+    Map as olMap, View as olView,
     Feature as olFeature,
-    } from 'ol';
+} from 'ol';
 import * as olExtent from 'ol/extent';
 import * as olInteraction from 'ol/interaction';
 import EventType from "ol/events/EventType";
@@ -30,8 +31,8 @@ import {Polygon as olPolygonGemotery, Point as olPointGeometry} from 'ol/geom';
 import {Vector as olVectorSource, XYZ as olXYZSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {GeoJSON as olGeoJSONFormat} from 'ol/format';
-import {Style as olStyle,Circle as olCircle, Stroke as olStroke, Fill as olFill} from 'ol/style';
-import * as olTransforms  from 'ol/proj/transforms';
+import {Style as olStyle, Circle as olCircle, Stroke as olStroke, Fill as olFill} from 'ol/style';
+import * as olTransforms from 'ol/proj/transforms';
 import {ScaleLine as olScaleLine} from 'ol/control';
 import OverlayConfig from "./overlayconfig";
 import Helper from "../util/helper";
@@ -44,40 +45,50 @@ import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {MouseWheelZoom} from "ol/interaction";
 import UserLayer from './userlayer';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
+import {
+    AisFeatureInfo,
+    BaseFeatureInfo,
+    ChartFeatureInfo,
+    RouteFeatureInfo,
+    TrackFeatureInfo,
+    WpFeatureInfo
+} from "./featureInfo";
 
 
-export const EventTypes={
-    SELECTAIS:1,
+export const EventTypes = {
+    SELECTAIS: 1,
     SELECTWP: 2,
     RELOAD: 3,
     LOAD: 4,
     FEATURE: 5,
-    SHOWMAP:6,
-    HIDEMAP:7
+    SHOWMAP: 6,
+    HIDEMAP: 7
 
 };
 
-class Context{
+class Context {
     constructor() {
-        this.width=undefined;
-        this.height=undefined;
-        this.context=undefined;
+        this.width = undefined;
+        this.height = undefined;
+        this.context = undefined;
     }
-    check(width,height,opt_clear) {
+
+    check(width, height, opt_clear) {
         if (width === this.width && height === this.height) {
             if (opt_clear) this.clear()
             return;
         }
-        this.width=width;
-        this.height=height;
-        let canvas=document.createElement('canvas');
-        canvas.width=width;
-        canvas.height=height;
-        this.context=canvas.getContext('2d');
+        this.width = width;
+        this.height = height;
+        let canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        this.context = canvas.getContext('2d');
     }
-    clear(){
-        if (! this.context) return;
-        this.context.canvas.width=this.width;
+
+    clear() {
+        if (!this.context) return;
+        this.context.canvas.width = this.width;
     }
 }
 
@@ -987,7 +998,7 @@ class MapHolder extends DrawingPositionConverter {
                 })
 
             });
-            this.olmap.on('click',  (evt)=> {
+            this.olmap.on('click', (evt) => {
                 this._callGuards('click');
                 this.userAction(true);
                 return this.onClick(evt);
@@ -996,12 +1007,12 @@ class MapHolder extends DrawingPositionConverter {
             this.olmap.on('pointermove', () => this.userAction(true));
             this.olmap.on('singleclick', () => this.userAction(true));
             this.olmap.on('postrender', (evt) => this.postrender(evt));
-            this.olmap.getView().on('change:resolution',  (evt)=> {
+            this.olmap.getView().on('change:resolution', (evt) => {
                 return this.onZoomChange(evt);
             });
         }
         if (layers.length > 0) {
-            layers[layers.length - 1].on('postrender', (evt)=> {
+            layers[layers.length - 1].on('postrender', (evt) => {
                 return this.onPostCompose(evt);
             });
         }
@@ -1598,72 +1609,36 @@ class MapHolder extends DrawingPositionConverter {
     onClick(evt) {
         evt.preventDefault();
         evt.stopPropagation();
+        const clickPoint = this.fromMapToPoint(this.pixelToCoord(evt.pixel));
         let wp = this.routinglayer.findTarget(evt.pixel);
         if (wp) {
             let rt = this._callHandlers({type: EventTypes.SELECTWP, wp: wp});
             if (rt) return false;
         }
         let aisparam = this.aislayer.findTarget(evt.pixel);
-        if (aisparam) {
+        if (aisparam && aisparam.length > 0) {
             let rt = this._callHandlers({type: EventTypes.SELECTAIS, aisparam: aisparam});
             if (rt) return false;
         }
         if (!globalStore.getData(keys.properties.featureInfo, true)) return true;
+        const featureInfos = [];
+        featureInfos.push(new BaseFeatureInfo({point:clickPoint,name:this.getBaseChart()?this.getBaseChart().getName():'unknown'}))
         //if we have a route point we will treat this as a feature info if not handled directly
         if (wp) {
-            let feature = {
-                nextTarget: wp
-            }
-            let routeName = wp.routeName;
-            if (routeName) {
-                assign(feature, {
-                    overlayType: 'route',
-                    overlayName: (Helper.getExt(routeName) !== 'gpx') ? routeName + ".gpx" : routeName,
-                    routeName: routeName,
-                    activeRoute: true,
-                    name: wp.name
-                });
+            if (wp.routeName) {
+                featureInfos.push(new RouteFeatureInfo({point: wp}))
             } else {
-                assign(feature, {
-                    overlayType: 'target',
-                    overlayName: 'current target',
-                    name: wp.name
-                })
+                featureInfos.push(new WpFeatureInfo({point: wp}))
             }
-            if (this._callHandlers({type: EventTypes.FEATURE, feature: feature})) return false;
+        }
+        if (aisparam && aisparam.length > 0) {
+            featureInfos.push(new AisFeatureInfo({point: clickPoint, mmsilist: aisparam}))
         }
         let currentTrackPoint = this.tracklayer.findTarget(evt.pixel);
         if (currentTrackPoint) {
-            let featureInfo = {
-                overlayType: 'track',
-                overlayName: 'current',
-                nextTarget: currentTrackPoint
-            }
-            if (this._callHandlers({type: EventTypes.FEATURE, feature: featureInfo})) return false;
+            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, name: 'current'}));
         }
-        //detect vector layer features
-        let detectedFeatures = [];
-        const callForTop = (topFeature) => {
-            if (!topFeature) {
-                if (globalStore.getData(keys.properties.emptyFeatureInfo)) {
-                    let baseChart = this.getBaseChart();
-                    if (!baseChart) return;
-                    let coordinates = this.fromMapToPoint(this.pixelToCoord(evt.pixel));
-                    let featureInfo = {
-                        overlayType: 'chart',
-                        overlayName: baseChart.getConfig().name,
-                        nextTarget: coordinates
-                    };
-                    this._callGuards('click'); //do this again as some time could have passed
-                    return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfo})
-                } else {
-                    return;
-                }
-            }
-            let featureInfo = topFeature.source.featureToInfo(topFeature.feature, evt.pixel);
-            this._callGuards('click'); //do this again as some time could have passed
-            return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfo})
-        }
+        const detectedFeatures = [];
         this.olmap.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
                 if (!layer.avnavOptions || !layer.avnavOptions.chartSource) return;
                 detectedFeatures.push({feature: feature, layer: layer, source: layer.avnavOptions.chartSource});
@@ -1671,12 +1646,13 @@ class MapHolder extends DrawingPositionConverter {
             {
                 hitTolerance: globalStore.getData(keys.properties.clickTolerance) / 2
             });
-        //sort the detected features by the order of our sources so that we use the topmost
-        let topFeature;
-        for (let i = this.sources.length - 1; i >= 0 && !topFeature; i--) {
+        //sort the detected features by the order of our sources
+        for (let i = this.sources.length - 1; i >= 0; i--) {
             for (let fidx = 0; fidx < detectedFeatures.length; fidx++) {
-                if (detectedFeatures[fidx].source === this.sources[i]) {
-                    topFeature = detectedFeatures[fidx];
+                const df = detectedFeatures[fidx];
+                if (df.source === this.sources[i]) {
+                    const fi=df.source.featureToInfo(df.feature, evt.pixel);
+                    if (fi) featureInfos.push(fi);
                     break;
                 }
             }
@@ -1684,63 +1660,31 @@ class MapHolder extends DrawingPositionConverter {
         let promises = [];
         //just get chart features on top of the currently detected feature
         for (let i = this.sources.length - 1; i >= 0; i--) {
-            if (topFeature && topFeature.source === this.sources[i]) {
-                break;
-            }
             if (this.sources[i].hasFeatureInfo()) {
                 promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
             }
         }
 
         if (promises.length < 1) {
-            return callForTop(topFeature);
+            this._callGuards('click'); //do this again as some time could have passed
+            return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos})
         }
         Promise.all(promises)
             .then((promiseFeatures) => {
-                /* 3 steps
-               (1) - find the topmost "point" feature (i.e. having nextTarget set)
-               (2) - check if we have a feature from our base chart
-               (3) - use the topmost feature without nextTarget
-               This will give us some more info if the charts did have a nice info (e.g. in htmlInfo)
-               if we do not find any of them - just fall through to a simple map click in callForTop
-             */
-                let nextTargetFeature;
-                let baseChartFeature;
-                let topChartFeature;
-                let baseChart = this.getBaseChart();
                 for (let pi = 0; pi < promiseFeatures.length; pi++) {
                     if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                     let feature = promiseFeatures[pi][0];
                     if (feature) {
-                        if (feature.nextTarget) {
-                            nextTargetFeature = feature;
-                            //ok - this wins in any case
-                            break;
-                        }
-                        if (baseChart && baseChart.getChartKey() === feature.chartKey) {
-                            baseChartFeature = feature;
-                        }
-                        if (!topChartFeature && feature.htmlInfo) {
-                            topChartFeature = feature;
-                        }
+                        featureInfos.push(new ChartFeatureInfo({
+                            point: feature.point || clickPoint,
+                            chartName: feature.name,
+                            chartFeatures: promiseFeatures[pi]
+                        }));
                     }
                 }
-                let finalFeature = nextTargetFeature;
-                if (!finalFeature) finalFeature = topChartFeature;
-                if (!finalFeature) finalFeature = baseChartFeature;
-                if (finalFeature) {
-                    if (!finalFeature.nextTarget) {
-                        //we always fill the click position
-                        //so we could goto
-                        let mapcoordinates = this.pixelToCoord(evt.pixel);
-                        let lonlat = this.fromMapToPoint(mapcoordinates);
-                        finalFeature.nextTarget = lonlat;
-                    }
-                    this._callGuards('click'); //do this again as some time could have passed
-                    this._callHandlers({type: EventTypes.FEATURE, feature: finalFeature});
-                    return true;
-                }
-                return callForTop(topFeature);
+                this._callGuards('click'); //do this again as some time could have passed
+                this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos});
+                return true;
             })
             .catch((error) => {
                 base.log("error in query features: " + error);
@@ -1775,9 +1719,9 @@ class MapHolder extends DrawingPositionConverter {
      * @param  points in pixel coordinates - the entries are either an array of x,y or an object having the
      *         coordinates in a pixel element
      * @param opt_tolerance {number}
-     * @return {number} the matching index or -1
+     * @return {[number]} list of found indices sorted by distance
      */
-    findTarget(pixel, points, opt_tolerance) {
+    findTargets(pixel, points, opt_tolerance) {
         base.log("findTarget " + pixel[0] + "," + pixel[1]);
         let tolerance = opt_tolerance || 10;
         let xmin = pixel[0] - tolerance;
@@ -1795,14 +1739,16 @@ class MapHolder extends DrawingPositionConverter {
         }
         if (rt.length) {
             if (rt.length == 1) return rt[0].idx;
-            rt.sort( (a, b)=> {
+            rt.sort((a, b) => {
                 let da = (a.pixel[0] - pixel[0]) * (a.pixel[0] - pixel[0]) + (a.pixel[1] - pixel[1]) * (a.pixel[1] - pixel[1]);
                 let db = (b.pixel[0] - pixel[0]) * (b.pixel[0] - pixel[0]) + (b.pixel[1] - pixel[1]) * (b.pixel[1] - pixel[1]);
                 return (da - db);
             });
-            return rt[0].idx; //currently simply the first - could be the nearest...
+            const idxList = [];
+            rt.forEach((item) => idxList.push(item.idx));
+            return idxList;
         }
-        return -1;
+        return [];
     }
 
 
@@ -1849,7 +1795,7 @@ class MapHolder extends DrawingPositionConverter {
             this.slideIn = start;
         }
         let to = globalStore.getData(keys.properties.slideTime);
-        window.setTimeout( ()=> {
+        window.setTimeout(() => {
             this.doSlide();
         }, to);
     }

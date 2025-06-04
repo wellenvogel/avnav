@@ -36,6 +36,7 @@ import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
 import {KML as olKMLFormat} from 'ol/format';
 import base from "../base";
+import {FeatureInfo, OverlayFeatureInfo} from "./featureInfo";
 
 const supportedStyleParameters= {
     lineWidth:editableOverlayParameters.lineWidth,
@@ -236,50 +237,47 @@ class KmlChartSource extends ChartSourceBase{
         });
     }
     featureToInfo(feature,pixel){
-        let rt={
-            overlayName:this.chartEntry.name,
-            overlayType:this.chartEntry.type,
-            overlayUrl: this.chartEntry.url,
-            overlaySource: this
-        };
+        let rt=new OverlayFeatureInfo({
+            name:this.chartEntry.name,
+            overlayType:FeatureInfo.TYPE.overlay,
+            url: this.chartEntry.url
+        });
         if (! feature) {
             return rt;
         }
 
         let geometry=feature.getGeometry();
-        let coordinates;
         if (geometry instanceof olPoint){
-            rt.kind='point';
-            coordinates=this.mapholder.fromMapToPoint(geometry.getCoordinates());
-            rt.nextTarget=coordinates;
+            rt.point=this.mapholder.fromMapToPoint(geometry.getCoordinates());
         }
         else{
             if (geometry){
-                coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
-                rt.nextTarget=coordinates;
+                rt.point=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
             }
             else {
-                coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
+                rt.point = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
-        rt.desc=feature.get('desc')||feature.get('description');
+        const userInfo={};
+        userInfo.desc=feature.get('desc')||feature.get('description');
         if (rt.desc){
-            if (rt.desc.indexOf("<") >= 0){
+            if (userInfo.desc.indexOf("<") >= 0){
                 if(this.styleParameters[supportedStyleParameters.allowHtml]) {
-                    rt.htmlInfo = rt.desc.replace(/src *= *"([^"]*)"/g,(match,url)=>{
+                    userInfo.htmlInfo = userInfo.desc.replace(/src *= *"([^"]*)"/g,(match,url)=>{
                         if (url.startsWith('http')){
                             if (!this.styleParameters[supportedStyleParameters.allowOnline]) return 'src=""';
                             return match;
                         }
                         return 'src="'+(this.styleParameters[supportedStyleParameters.icons]+"/"+url).replace('"','\\"')+'" ';
                     });
-                    rt.desc=undefined;
+                    userInfo.desc=undefined;
                 }
             }
         }
-        rt.name=feature.get('name');
-        rt.sym=feature.get('sym');
-        this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter],rt,feature,coordinates,true);
+        userInfo.name=feature.get('name');
+        userInfo.sym=feature.get('sym');
+        this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter],userInfo,feature,rt.point,true);
+        rt.userInfo=userInfo;
         return rt;
     }
     static analyzeOverlay(overlay){

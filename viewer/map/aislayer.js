@@ -377,9 +377,15 @@ class AisLayer{
         base.log("findAisTarget " + pixel[0] + "," + pixel[1]);
         if (!this.pixel) return undefined;
         let tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
-        let idx = this.mapholder.findTarget(pixel, this.pixel, tolerance);
-        if (idx >= 0) return this.pixel[idx].ais;
-        return undefined;
+        let idxlist = this.mapholder.findTargets(pixel, this.pixel, tolerance);
+        const targetList=[];
+        idxlist.forEach((idx)=>{
+            const target=this.pixel[idx];
+            if (target && target.ais && target.ais.mmsi){
+                targetList.push(target.ais.mmsi)
+            }
+        })
+        return targetList;
     }
 
 

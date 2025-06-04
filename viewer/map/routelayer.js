@@ -317,14 +317,14 @@ RouteLayer.prototype.findTarget=function(pixel){
     let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
     let currentEditor=this._displayEditing?editingRoute:activeRoute;
     if (this.routePixel) {
-        let idx = this.mapholder.findTarget(pixel, this.routePixel, tolerance);
-        if (idx >= 0) {
-            return currentEditor.getPointAt(idx);
+        let idx = this.mapholder.findTargets(pixel, this.routePixel, tolerance);
+        if (idx.length > 0) {
+            return currentEditor.getPointAt(idx[0]);
         }
     }
     if (this.wpPixel) {
-        let idx = this.mapholder.findTarget(pixel, this.wpPixel, tolerance);
-        if (idx == 0) {
+        let idx = this.mapholder.findTargets(pixel, this.wpPixel, tolerance);
+        if (idx.length> 0) {
             return currentEditor.getCurrentTarget();
         }
     }

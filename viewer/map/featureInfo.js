@@ -1,0 +1,98 @@
+/*
+# Copyright (c) 2022,2025 Andreas Vogel andreas@wellenvogel.net
+
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+*/
+
+import navobjects from "../nav/navobjects";
+
+export class FeatureInfo{
+    static TYPE={
+        route:1,
+        ais:2,
+        boat: 3,
+        track: 4,
+        overlay: 5,
+        chart: 6,
+        waypoint: 7,
+        base:8,
+        unknown: 0
+    }
+    constructor({point,type,isOverlay}) {
+        /**
+         * goto target
+         * @type {navobjects.Point}
+         */
+        this.point=point||new navobjects.Point();
+        this.type=type|| FeatureInfo.TYPE.unknown;
+        this.overlayType=undefined;
+        this.name=undefined;
+        this.isOverlay=isOverlay||false;
+    }
+}
+
+export class BaseFeatureInfo extends FeatureInfo{
+    constructor({point,name}) {
+        super({point,type:FeatureInfo.TYPE.base});
+        this.name=name;
+    }
+}
+
+export class OverlayFeatureInfo extends FeatureInfo{
+    constructor({name,point,url,userInfo,overlayType}) {
+        super({point,isOverlay:true,type: FeatureInfo.TYPE.overlay});
+        this.userInfo=userInfo;
+        this.name=name;
+        this.url=url;
+        this.overlayType=overlayType;
+    }
+}
+
+export class RouteFeatureInfo extends FeatureInfo{
+    constructor({point,isOverlay,routeName}) {
+        super({point,type:FeatureInfo.TYPE.route,isOverlay});
+        this.name=routeName||this.point.routeName;
+    }
+}
+export class AisFeatureInfo extends FeatureInfo{
+    constructor({point,mmsilist}) {
+        super({point,type:FeatureInfo.TYPE.ais});
+        this.mmsilist=mmsilist||[];
+    }
+}
+export class TrackFeatureInfo extends FeatureInfo{
+    constructor({point,track,name,isOverlay}) {
+        super({point,type:FeatureInfo.TYPE.track,isOverlay});
+        this.track=track;
+        this.name=name;
+    }
+}
+export class ChartFeatureInfo extends FeatureInfo{
+    constructor({point,chartName,isOverlay,chartFeatures}) {
+        super({point,type:FeatureInfo.TYPE.chart,isOverlay});
+        this.name=chartName;
+        this.chartFeatures=chartFeatures;
+    }
+}
+export class WpFeatureInfo extends FeatureInfo{
+    constructor({point}) {
+        super({point,type:FeatureInfo.TYPE.waypoint});
+        this.name=this.point.name;
+    }
+}

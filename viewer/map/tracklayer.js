@@ -152,9 +152,9 @@ TrackLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
     let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
     if (! this.trackPixel || ! this.trackPixel.length) return;
-    let idx = this.mapholder.findTarget(pixel, this.trackPixel, tolerance);
-    if (idx >= 0 && idx < this.trackPoints.length){
-        return mapholder.fromMapToPoint(this.trackPoints[idx]);
+    let idx = this.mapholder.findTargets(pixel, this.trackPixel, tolerance);
+    if (idx.length > 0 && idx[0] < this.trackPoints.length){
+        return mapholder.fromMapToPoint(this.trackPoints[idx[0]]);
     }
     return;
 };
