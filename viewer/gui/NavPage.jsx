@@ -8,7 +8,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog, {
+import {
     DBCancel,
     DialogButtons, DialogDisplay,
     DialogFrame, DialogRow,
