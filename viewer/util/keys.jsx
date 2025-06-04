@@ -403,10 +403,6 @@ let keys={
         baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28]),
         widgetFontSize: new Property(14, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX),
-        showClock: new Property(true, "show clock", PropertyType.CHECKBOX),
-        showZoom: new Property(true, "show zoom", PropertyType.CHECKBOX),
-        showWind: new Property(true, "show wind", PropertyType.CHECKBOX),
-        showDepth: new Property(true, "show depth", PropertyType.CHECKBOX),
         autoZoom: new Property(true, "automatic zoom", PropertyType.CHECKBOX),
         nightMode: new Property(false, "NightMode", PropertyType.CHECKBOX),
         nightColorDim: new Property(60, "Night Dim for Colors", PropertyType.RANGE, [5, 100]), //should match @nightModeVale in less

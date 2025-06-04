@@ -39,7 +39,7 @@ const settingsSections={
         keys.properties.layers.user],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
                 keys.properties.connectionLostAlarm],
-    Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
+    Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
         keys.properties.showSplitButton],
@@ -67,7 +67,9 @@ const settingsSections={
         keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
         keys.properties.mapOnlineUpZoom,
-        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapScaleBarText,keys.properties.mapZoomLock],
+        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
+        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
+    ],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
     Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
     Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite,keys.properties.remoteGuardTime]

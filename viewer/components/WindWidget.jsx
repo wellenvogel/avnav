@@ -121,8 +121,7 @@ WindWidget.predefined= {
         windSpeed: keys.nav.gps.windSpeed,
         windAngleTrue: keys.nav.gps.trueWindAngle,
         windSpeedTrue: keys.nav.gps.trueWindSpeed,
-        windDirectionTrue: keys.nav.gps.trueWindDirection,
-        visible: keys.properties.showWind,
+        windDirectionTrue: keys.nav.gps.trueWindDirection
     },
     editableParameters: {
         show360: {type: 'BOOLEAN', default: false},

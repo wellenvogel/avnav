@@ -173,7 +173,6 @@ WindGraphics.predefined= {
         windAngleTrue: keys.nav.gps.trueWindAngle,
         windDirectionTrue: keys.nav.gps.trueWindDirection,
         windSpeedTrue: keys.nav.gps.trueWindSpeed,
-        visible: keys.properties.showWind,
         scaleAngle: keys.properties.windScaleAngle
     },
     editableParameters: {
