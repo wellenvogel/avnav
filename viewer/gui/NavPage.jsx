@@ -20,7 +20,7 @@ import {
     useStoreHelper,
     useTimer
 } from '../util/GuiHelpers.js';
-import MapHolder from '../map/mapholder.js';
+import MapHolder, {EventTypes} from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
@@ -489,7 +489,7 @@ const NavPage=(props)=>{
 
     const mapEvent=useCallback((evdata)=>{
         console.log("mapevent: "+evdata.type);
-        if (evdata.type === MapHolder.EventTypes.SELECTAIS){
+        if (evdata.type === EventTypes.SELECTAIS){
             let aisparam=evdata.aisparam;
             if (!aisparam) return;
             if (aisparam.mmsi){
@@ -498,7 +498,7 @@ const NavPage=(props)=>{
             }
             return;
         }
-        if (evdata.type === MapHolder.EventTypes.FEATURE){
+        if (evdata.type === EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;
             feature.additionalActions=[];

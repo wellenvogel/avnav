@@ -19,7 +19,7 @@ import {
 } from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import {useTimer} from '../util/GuiHelpers.js';
-import MapHolder from '../map/mapholder.js';
+import MapHolder, {EventTypes} from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
@@ -863,7 +863,7 @@ const EditRoutePage = (props) => {
     const mapEvent = (evdata) => {
         //console.log("mapevent: "+evdata.type);
         let currentEditor = getCurrentEditor();
-        if (evdata.type === MapHolder.EventTypes.LOAD || evdata.type === MapHolder.EventTypes.RELOAD) {
+        if (evdata.type === EventTypes.LOAD || evdata.type === EventTypes.RELOAD) {
             if (hasCentered.current) return true;
             if (props.options && props.options.center) {
                 if (editor.hasRoute()) {
@@ -876,7 +876,7 @@ const EditRoutePage = (props) => {
             }
             hasCentered.current = true;
         }
-        if (evdata.type === MapHolder.EventTypes.SELECTWP) {
+        if (evdata.type ===EventTypes.SELECTWP) {
             const currentIndex=currentEditor.getIndex();
             const newIndex=currentEditor.getIndexFromPoint(evdata.wp);
             if (currentIndex !== newIndex) currentEditor.setNewIndex(newIndex);
@@ -885,7 +885,7 @@ const EditRoutePage = (props) => {
             }
             return true;
         }
-        if (evdata.type === MapHolder.EventTypes.FEATURE) {
+        if (evdata.type === EventTypes.FEATURE) {
             let feature = evdata.feature;
             if (!feature) return;
             if (feature.nextTarget && routeWritable) {
