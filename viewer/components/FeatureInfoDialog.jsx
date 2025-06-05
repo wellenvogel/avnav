@@ -28,7 +28,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import OverlayDialog, {DialogButtons, DialogFrame, useDialogContext} from "./OverlayDialog";
+import OverlayDialog, {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
@@ -38,6 +38,8 @@ import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
 import {InfoItem} from "./BasicDialogs";
+import {BaseFeatureInfo, FeatureInfo} from "../map/featureInfo";
+import Helper from "../util/helper";
 NavHandler.getRoutingHandler();
 
 
@@ -111,6 +113,57 @@ const InfoRowDisplay=({row,data})=>{
     if (row.formatter) v=row.formatter(v,data);
     if (v === undefined) return null;
     return <InfoItem label={row.label} value={v}/>
+}
+
+export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history}) => {
+    const dialogContext = useDialogContext();
+    const select = useCallback((featureInfo) => {
+        if (!onSelectCb || onSelectCb(featureInfo)) {
+            let factions = [];
+            if (additionalActions instanceof Array) {
+                additionalActions.forEach((action)=>{
+                    if (typeof action.visible === 'function'){
+                        if (action.visible(featureInfo)) factions.push(action);
+                    }
+                    else{
+                        factions.push(action);
+                    }
+                })
+            }
+            dialogContext.replaceDialog((dprops) => <FeatureInfoDialog
+                    {...dprops}
+                    {...featureInfo}
+                    {...featureInfo.userInfo}
+                    additionalActions={factions}
+                    history={history}
+                />
+            )
+        } else {
+            dialogContext.closeDialog();
+        }
+    }, [onSelectCb, additionalActions, history]);
+    if (!(featureList instanceof Array) || featureList.length < 1) {
+        dialogContext.closeDialog();
+        return null;
+    }
+    if (featureList.length === 1) {
+        select(featureList[0]);
+        return null;
+    }
+    return <DialogFrame className={'featureListDialog'} title={'FeatureList'}>
+        {featureList.map((feature) => {
+            if (feature instanceof BaseFeatureInfo) return null;
+            return <DialogRow key={feature.urlOrKey} className={'listEntry'} onClick={() => {
+                select(feature);
+            }}>
+                {feature.icon && <img className={'icon'} src={feature.icon.src}/>}
+                {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
+                {feature.isOverlay && <span className={Helper.concatsp('icon','overlay')}/> }
+                <span className={'title'}>{feature.title}</span>
+            </DialogRow>
+        })}
+        <DialogButtons buttonList={[DBCancel()]}/>
+    </DialogFrame>
 }
 
 const FeatureInfoDialog = (props) => {

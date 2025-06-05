@@ -886,7 +886,7 @@ const EditRoutePage = (props) => {
             return true;
         }
         if (evdata.type === EventTypes.FEATURE) {
-            let feature = evdata.feature;
+            let featureList = evdata.feature;
             if (!feature) return;
             if (feature.nextTarget && routeWritable) {
                 feature.additionalActions = [

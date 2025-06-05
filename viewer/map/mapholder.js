@@ -1666,12 +1666,9 @@ class MapHolder extends DrawingPositionConverter {
                 for (let pi = 0; pi < promiseFeatures.length; pi++) {
                     if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                     let feature = promiseFeatures[pi][0];
+                    //TODO: handle multiple chart features here
                     if (feature) {
-                        featureInfos.push(new ChartFeatureInfo({
-                            point: feature.point || clickPoint,
-                            chartName: feature.name,
-                            chartFeatures: promiseFeatures[pi]
-                        }));
+                        featureInfos.push(feature);
                     }
                 }
                 this._callGuards('click'); //do this again as some time could have passed

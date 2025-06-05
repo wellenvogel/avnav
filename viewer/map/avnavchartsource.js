@@ -41,6 +41,7 @@ import assign from 'object-assign';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
+import {ChartFeatureInfo} from "./featureInfo";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -604,26 +605,24 @@ class AvnavChartSource extends ChartSourceBase{
                         }
                     }
                     if (topInfo) {
-                        let info=assign({},topInfo,{
-                            overlayType:'chart',
+                        let info=new ChartFeatureInfo({
                             chartKey: this.getChartKey(),
-                            source: this,
-                            overlayName:this.chartEntry.name,
-                            },
-                            topInfo
-                        );
-                        if (info.nextTarget){
+                            title:this.getName(),
+                            isOverlay: ! (this.chartEntry||{}).baseChart
+                            });
+                        info.userInfo=topInfo;
+                        if (topInfo.nextTarget){
                             let nextTarget;
-                            if (info.nextTarget instanceof Array){
+                            if (topInfo.nextTarget instanceof Array){
                                 //old style coordinate lon,lat
                                 nextTarget=new navobjects.Point();
                                 nextTarget.fromCoord(info.nextTarget);
                             }
-                            else if (info.nextTarget instanceof Object){
+                            else if (topInfo.nextTarget instanceof Object){
                                  nextTarget=new navobjects.Point();
                                  nextTarget.fromPlain(info.nextTarget);
                             }
-                            info.nextTarget=nextTarget;
+                            info.point=nextTarget;
                         }
                         resolve([info]);
                     }

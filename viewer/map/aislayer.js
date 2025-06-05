@@ -381,11 +381,16 @@ class AisLayer{
         let tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
         let idxlist = this.mapholder.findTargets(pixel, this.pixel, tolerance);
         const targetList=[];
+        const foundMmsis={};
         idxlist.forEach((idx)=>{
             const target=this.pixel[idx];
             if (target && target.ais && target.ais.mmsi){
+                if (foundMmsis[target.ais.mmsi]) return;
+                foundMmsis[target.ais.mmsi]=true;
                 const featureInfo=new AisFeatureInfo({point:target.ais.receivedPos,mmsi:target.ais.mmsi});
                 featureInfo.title = AisFormatter.format(firstLabel, target.ais, true);
+                const [, symbol, ] = this.getStyleEntry(target);
+                if (symbol && symbol.image) featureInfo.icon=symbol.image;
                 targetList.push(featureInfo)
             }
         })

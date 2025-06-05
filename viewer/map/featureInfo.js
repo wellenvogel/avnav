@@ -22,6 +22,24 @@
 
 import navobjects from "../nav/navobjects";
 
+export class FeatureAction{
+    constructor({name,label,onClick,condition}) {
+        this.name=name;
+        this.label=label;
+        this.onClickHandler=onClick;
+        this.condition=condition;
+    }
+    visible(featureInfo){
+        if (! this.condition) return true;
+        return this.condition(featureInfo);
+    }
+    onClick(featureInfo){
+        if (this.visible(featureInfo) && this.onClickHandler){
+            this.onClickHandler(featureInfo);
+        }
+    }
+}
+
 export class FeatureInfo{
     static TYPE={
         route:1,
@@ -32,7 +50,8 @@ export class FeatureInfo{
         chart: 6,
         waypoint: 7,
         base:8,
-        unknown: 0
+        unknown: 0,
+        any: 99 //for additional actions
     }
     constructor({point,type,isOverlay,title}) {
         /**
@@ -44,6 +63,14 @@ export class FeatureInfo{
         this.title=title;
         this.isOverlay=isOverlay||false;
         this.urlOrKey=undefined;
+        this.icon=undefined;
+        this.userInfo=undefined;
+    }
+    typeString(){
+        for (let k in FeatureInfo.TYPE){
+            if (this.type === FeatureInfo.TYPE[k]) return k;
+        }
+        return 'unknown';
     }
 }
 
@@ -69,10 +96,11 @@ export class RouteFeatureInfo extends FeatureInfo{
     }
 }
 export class AisFeatureInfo extends FeatureInfo{
-    constructor({point,mmsi,title}) {
+    constructor({point,mmsi,title,icon}) {
         super({point,type:FeatureInfo.TYPE.ais});
         this.urlOrKey=mmsi;
         this.title=title||`MMSI: ${mmsi}`
+        this.icon=icon;
     }
 }
 export class TrackFeatureInfo extends FeatureInfo{

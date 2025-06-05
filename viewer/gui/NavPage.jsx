@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import FeatureInfoDialog from "../components/FeatureInfoDialog";
+import FeatureInfoDialog, {FeatureListDialog} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -46,6 +46,8 @@ import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
 import {useStoreState} from "../hoc/Dynamic";
+import {FeatureAction, FeatureInfo} from "../map/featureInfo";
+import featureInfoDialog from "../components/FeatureInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -487,84 +489,76 @@ const NavPage=(props)=>{
 
     },[]);
 
-    const mapEvent=useCallback((evdata)=>{
-        console.log("mapevent: "+evdata.type);
-        if (evdata.type === EventTypes.FEATURE){
-            let feature=evdata.feature;
-            if (! feature) return;
-            feature.additionalActions=[];
-            feature.additionalInfoRows=[];
-            const showFeature=()=>{
-                if (feature.nextTarget && ! feature.activeRoute) {
-                    feature.additionalActions.push(
-                        {
-                            name: 'goto', label: 'Goto', onClick: () => {
-                                let target = feature.nextTarget;
-                                if (!target) return;
-                                RouteHandler.wpOn(target);
-                            }
-                        }
-                    );
-                }
-                showDialog(dialogCtx,()=><FeatureInfoDialog history={props.history} {...feature}/>)
-            }
-            if (feature.overlayType === 'route' && ! feature.activeRoute){
-                let currentRouteName=activeRoute.getRouteName();
-                if (Helper.getExt(currentRouteName) !== 'gpx') currentRouteName+='.gpx';
-                if (activeRoute.hasActiveTarget() && currentRouteName === feature.overlayName){
-                    //do not show a feature pop up if we have an overlay that exactly has the current route
-                    return false;
-                }
-            }
-            if (feature.overlayType === 'track'){
-                feature.additionalActions.push({
-                   name:'toroute',
-                   label: 'Convert',
-                   onClick:(cprops)=>{
-                       showDialog(dialogCtx,()=><TrackConvertDialog history={props.history} name={cprops.overlayName}/>)
-                   }
-                });
-            }
-            if (feature.overlayType !== 'route' || ! feature.nextTarget){
-                showFeature()
-            } else {
-                let currentTarget=activeRoute.getCurrentTarget();
+    const mapEvent = useCallback((evdata) => {
+        console.log("mapevent: " + evdata.type);
+        if (evdata.type === EventTypes.FEATURE) {
+            const featureList=evdata.feature;
+            const additionalActions = [];
+            additionalActions.push(new FeatureAction({
+                name: 'goto',
+                label: 'Goto',
+                onClick: (featureInfo) => {
+                    let target = featureInfo.point;
+                    if (!target) return;
+                    RouteHandler.wpOn(target);
+                },
+                condition: (featureInfo) => !!featureInfo.point
+            }));
+            additionalActions.push(new FeatureAction({
+                name: 'toroute',
+                label: 'Convert',
+                onClick: (featureInfo) => {
+                    showDialog(dialogCtx, () => <TrackConvertDialog history={props.history}
+                                                                    name={featureInfo.urlOrKey}/>)
+                },
+                condition: (featureInfo) => featureInfo.type === FeatureInfo.TYPE.track
+            }));
+
+            const showRouteActionsCondition = (featureInfo) => {
+                if (featureInfo.type !== FeatureInfo.TYPE.route) return false;
+                if (!featureInfo.point) return false;
+                let currentTarget = activeRoute.getCurrentTarget();
                 //show a "routeTo" if this is not the current target
-                if (! feature.activeRoute || ! currentTarget ||
-                    ! currentTarget.compare(feature.nextTarget)
-                ) {
-                    feature.additionalActions.push({
-                        name: 'routeTo',
-                        label: 'Route',
-                        onClick: (props) => {
-                            RouteHandler.wpOn(props.nextTarget);
-                        },
-                        condition: (props) => props.nextTarget
-                    });
+                if (!currentTarget || !currentTarget.compare(featureInfo.point)) {
+                    return true;
                 }
-                feature.additionalActions.push({
-                    name:'editRoute',
-                    label:'Edit',
-                    onClick:()=>{
-                        let nextTarget= feature.nextTarget;
-                        if (! nextTarget) return;
-                        RouteHandler.fetchRoute(feature.overlayName,false,
-                            (route)=>{
-                                let idx=route.findBestMatchingIdx(nextTarget);
-                                let editor=new RouteEdit(RouteEdit.MODES.EDIT);
-                                editor.setNewRoute(route,idx >= 0?idx:undefined);
-                                props.history.push("editroutepage");
-                            },
-                            (error)=> {
-                                if (error) Toast(error);
-                            });
-                    }
-                });
-                showFeature();
+                return false;
             }
+            additionalActions.push(new FeatureAction({
+                name: 'routeTo',
+                label: 'Route',
+                onClick: (featureInfo) => {
+                    RouteHandler.wpOn(featureInfo.point);
+                },
+                condition: (featureInfo) => showRouteActionsCondition(featureInfo)
+            }));
+            additionalActions.push(new FeatureAction({
+                name: 'editRoute',
+                label: 'Edit',
+                onClick: (featureInfo) => {
+                    let nextTarget = featureInfo.point;
+                    if (!nextTarget) return;
+                    RouteHandler.fetchRoute(featureInfo.urlOrKey, false,
+                        (route) => {
+                            let idx = route.findBestMatchingIdx(nextTarget);
+                            let editor = new RouteEdit(RouteEdit.MODES.EDIT);
+                            editor.setNewRoute(route, idx >= 0 ? idx : undefined);
+                            props.history.push("editroutepage");
+                        },
+                        (error) => {
+                            if (error) Toast(error);
+                        });
+                },
+                condition: (featureInfo) => showRouteActionsCondition(featureInfo)
+            }));
+            showDialog(dialogCtx,(dprops)=><FeatureListDialog
+                {...dprops}
+                featureList={featureList}
+                additionalActions={additionalActions}
+            />)
             return true;
         }
-    },[]);
+    }, []);
     const buttons=[
             {
                 name: "ZoomIn",
