@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import FeatureInfoDialog, {FeatureListDialog} from "../components/FeatureInfoDialog";
+import {FeatureListDialog} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -47,7 +47,6 @@ import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
 import {useStoreState} from "../hoc/Dynamic";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
-import featureInfoDialog from "../components/FeatureInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
