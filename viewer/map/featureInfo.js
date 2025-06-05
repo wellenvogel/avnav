@@ -64,13 +64,17 @@ export class FeatureInfo{
         this.isOverlay=isOverlay||false;
         this.urlOrKey=undefined;
         this.icon=undefined;
-        this.userInfo=undefined;
+        this.userInfo= {};
+        this.overlaySource=undefined;
     }
     typeString(){
         for (let k in FeatureInfo.TYPE){
             if (this.type === FeatureInfo.TYPE[k]) return k;
         }
         return 'unknown';
+    }
+    validPoint(){
+        return this.point && (this.point instanceof navobjects.Point) && this.point.valid();
     }
 }
 
@@ -81,10 +85,11 @@ export class BaseFeatureInfo extends FeatureInfo{
 }
 
 export class OverlayFeatureInfo extends FeatureInfo{
-    constructor({title,point,urlOrKey,userInfo}) {
+    constructor({title,point,urlOrKey,userInfo,overlaySource}) {
         super({title,point,isOverlay:true,type: FeatureInfo.TYPE.overlay});
         this.userInfo=userInfo;
         this.urlOrKey=urlOrKey;
+        this.overlaySource=overlaySource;
     }
 }
 

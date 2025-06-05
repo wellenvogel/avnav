@@ -239,7 +239,8 @@ class KmlChartSource extends ChartSourceBase{
     featureToInfo(feature,pixel){
         let rt=new OverlayFeatureInfo({
             title:this.getName(),
-            urlOrKey: this.getUrl()
+            urlOrKey: this.getUrl(),
+            overlaySource: this
         });
         if (! feature) {
             return rt;

@@ -376,6 +376,7 @@ class GpxChartSource extends ChartSourceBase{
         else{
             rt=new OverlayFeatureInfo({title: oname,urlOrKey:url});
         }
+        rt.overlaySource=this;
         let geometry=feature.getGeometry();
         let coordinates;
         if (geometry instanceof olPoint){

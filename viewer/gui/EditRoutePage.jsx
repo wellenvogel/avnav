@@ -898,7 +898,7 @@ const EditRoutePage = (props) => {
                                 currentEditor.addWaypoint(target, true);
                                 setLastCenteredWp(currentEditor.getIndex());
                             },
-                            condition: (featureInfo) => !!featureInfo.point
+                            condition: (featureInfo) => featureInfo.validPoint()
                         }),
                     new FeatureAction(
                         {
@@ -910,7 +910,7 @@ const EditRoutePage = (props) => {
                                 currentEditor.addWaypoint(target);
                                 setLastCenteredWp(currentEditor.getIndex());
                             },
-                            condition: (featureInfo) => !!featureInfo.point
+                            condition: (featureInfo) => featureInfo.validPoint()
                         }),
                     new FeatureAction(
                         {
@@ -922,12 +922,12 @@ const EditRoutePage = (props) => {
                                 currentEditor.changeSelectedWaypoint(target);
                                 setLastCenteredWp(currentEditor.getIndex());
                             },
-                            condition: (featureInfo) => !!featureInfo.point
+                            condition: (featureInfo) => featureInfo.validPoint()
                         })
                 )
                 const routeActionCondition = (featureInfo) => {
                     if (featureInfo.type !== FeatureInfo.TYPE.route) return false;
-                    if (!featureInfo.point) return false;
+                    if (!featureInfo.validPoint()) return false;
                     let routeName = featureInfo.urlOrKey;
                     return routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName();
                 }

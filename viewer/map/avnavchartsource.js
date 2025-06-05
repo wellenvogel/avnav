@@ -611,16 +611,17 @@ class AvnavChartSource extends ChartSourceBase{
                             isOverlay: ! (this.chartEntry||{}).baseChart
                             });
                         info.userInfo=topInfo;
+                        delete info.userInfo.name;
                         if (topInfo.nextTarget){
                             let nextTarget;
                             if (topInfo.nextTarget instanceof Array){
                                 //old style coordinate lon,lat
                                 nextTarget=new navobjects.Point();
-                                nextTarget.fromCoord(info.nextTarget);
+                                nextTarget.fromCoord(topInfo.nextTarget);
                             }
                             else if (topInfo.nextTarget instanceof Object){
                                  nextTarget=new navobjects.Point();
-                                 nextTarget.fromPlain(info.nextTarget);
+                                 nextTarget.fromPlain(topInfo.nextTarget);
                             }
                             info.point=nextTarget;
                         }

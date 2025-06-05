@@ -501,7 +501,7 @@ const NavPage=(props)=>{
                     if (!target) return;
                     RouteHandler.wpOn(target);
                 },
-                condition: (featureInfo) => !!featureInfo.point
+                condition: (featureInfo) => featureInfo.validPoint()
             }));
             additionalActions.push(new FeatureAction({
                 name: 'toroute',
@@ -515,7 +515,7 @@ const NavPage=(props)=>{
 
             const showRouteActionsCondition = (featureInfo) => {
                 if (featureInfo.type !== FeatureInfo.TYPE.route) return false;
-                if (!featureInfo.point) return false;
+                if (!featureInfo.validPoint()) return false;
                 let currentTarget = activeRoute.getCurrentTarget();
                 //show a "routeTo" if this is not the current target
                 if (!currentTarget || !currentTarget.compare(featureInfo.point)) {
@@ -554,6 +554,7 @@ const NavPage=(props)=>{
                 {...dprops}
                 featureList={featureList}
                 additionalActions={additionalActions}
+                history={props.history}
             />)
             return true;
         }
