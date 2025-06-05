@@ -34,65 +34,63 @@ export class FeatureInfo{
         base:8,
         unknown: 0
     }
-    constructor({point,type,isOverlay}) {
+    constructor({point,type,isOverlay,title}) {
         /**
          * goto target
          * @type {navobjects.Point}
          */
         this.point=point||new navobjects.Point();
         this.type=type|| FeatureInfo.TYPE.unknown;
-        this.overlayType=undefined;
-        this.name=undefined;
+        this.title=title;
         this.isOverlay=isOverlay||false;
+        this.urlOrKey=undefined;
     }
 }
 
 export class BaseFeatureInfo extends FeatureInfo{
-    constructor({point,name}) {
-        super({point,type:FeatureInfo.TYPE.base});
-        this.name=name;
+    constructor({point,title}) {
+        super({point,type:FeatureInfo.TYPE.base,title});
     }
 }
 
 export class OverlayFeatureInfo extends FeatureInfo{
-    constructor({name,point,url,userInfo,overlayType}) {
-        super({point,isOverlay:true,type: FeatureInfo.TYPE.overlay});
+    constructor({title,point,urlOrKey,userInfo}) {
+        super({title,point,isOverlay:true,type: FeatureInfo.TYPE.overlay});
         this.userInfo=userInfo;
-        this.name=name;
-        this.url=url;
-        this.overlayType=overlayType;
+        this.urlOrKey=urlOrKey;
     }
 }
 
 export class RouteFeatureInfo extends FeatureInfo{
-    constructor({point,isOverlay,routeName}) {
+    constructor({point,isOverlay,routeName,title}) {
         super({point,type:FeatureInfo.TYPE.route,isOverlay});
-        this.name=routeName||this.point.routeName;
+        this.urlOrKey=routeName||this.point.routeName;
+        this.title=title||`Route: ${this.urlOrKey}`
     }
 }
 export class AisFeatureInfo extends FeatureInfo{
-    constructor({point,mmsilist}) {
+    constructor({point,mmsi,title}) {
         super({point,type:FeatureInfo.TYPE.ais});
-        this.mmsilist=mmsilist||[];
+        this.urlOrKey=mmsi;
+        this.title=title||`MMSI: ${mmsi}`
     }
 }
 export class TrackFeatureInfo extends FeatureInfo{
-    constructor({point,track,name,isOverlay}) {
-        super({point,type:FeatureInfo.TYPE.track,isOverlay});
-        this.track=track;
-        this.name=name;
+    constructor({point,urlOrKey,title,isOverlay}) {
+        super({point,type:FeatureInfo.TYPE.track,isOverlay,title});
+        this.urlOrKey=urlOrKey
     }
 }
 export class ChartFeatureInfo extends FeatureInfo{
-    constructor({point,chartName,isOverlay,chartFeatures}) {
-        super({point,type:FeatureInfo.TYPE.chart,isOverlay});
-        this.name=chartName;
+    constructor({point,chartKey,title,isOverlay,chartFeatures}) {
+        super({point,type:FeatureInfo.TYPE.chart,isOverlay,title});
+        this.urlOrKey=chartKey
         this.chartFeatures=chartFeatures;
     }
 }
 export class WpFeatureInfo extends FeatureInfo{
-    constructor({point}) {
+    constructor({point,title}) {
         super({point,type:FeatureInfo.TYPE.waypoint});
-        this.name=this.point.name;
+        this.title=title||`WP ${this.point.name}`;
     }
 }

@@ -35,7 +35,6 @@ import {Style as olStyle, Circle as olCircle, Stroke as olStroke, Fill as olFill
 import * as olTransforms from 'ol/proj/transforms';
 import {ScaleLine as olScaleLine} from 'ol/control';
 import OverlayConfig from "./overlayconfig";
-import Helper from "../util/helper";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
@@ -46,7 +45,6 @@ import {MouseWheelZoom} from "ol/interaction";
 import UserLayer from './userlayer';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import {
-    AisFeatureInfo,
     BaseFeatureInfo,
     ChartFeatureInfo,
     RouteFeatureInfo,
@@ -56,7 +54,6 @@ import {
 
 
 export const EventTypes = {
-    SELECTAIS: 1,
     SELECTWP: 2,
     RELOAD: 3,
     LOAD: 4,
@@ -1616,12 +1613,7 @@ class MapHolder extends DrawingPositionConverter {
             if (rt) return false;
         }
         let aisparam = this.aislayer.findTarget(evt.pixel);
-        if (aisparam && aisparam.length > 0) {
-            let rt = this._callHandlers({type: EventTypes.SELECTAIS, aisparam: aisparam});
-            if (rt) return false;
-        }
-        if (!globalStore.getData(keys.properties.featureInfo, true)) return true;
-        const featureInfos = [];
+        let featureInfos = [];
         featureInfos.push(new BaseFeatureInfo({point:clickPoint,name:this.getBaseChart()?this.getBaseChart().getName():'unknown'}))
         //if we have a route point we will treat this as a feature info if not handled directly
         if (wp) {
@@ -1632,7 +1624,7 @@ class MapHolder extends DrawingPositionConverter {
             }
         }
         if (aisparam && aisparam.length > 0) {
-            featureInfos.push(new AisFeatureInfo({point: clickPoint, mmsilist: aisparam}))
+            featureInfos=featureInfos.concat(aisparam);
         }
         let currentTrackPoint = this.tracklayer.findTarget(evt.pixel);
         if (currentTrackPoint) {

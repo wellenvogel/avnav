@@ -489,15 +489,6 @@ const NavPage=(props)=>{
 
     const mapEvent=useCallback((evdata)=>{
         console.log("mapevent: "+evdata.type);
-        if (evdata.type === EventTypes.SELECTAIS){
-            let aisparam=evdata.aisparam;
-            if (!aisparam) return;
-            if (aisparam.mmsi){
-                showAisInfo(aisparam.mmsi);
-                return true;
-            }
-            return;
-        }
         if (evdata.type === EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;

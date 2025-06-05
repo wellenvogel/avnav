@@ -41,7 +41,7 @@ import {getRouteStyles} from "./routelayer";
 import routeobjects from "../nav/routeobjects";
 import {getClosestRoutePoint} from "../nav/routeeditor";
 import Mapholder from "./mapholder";
-import {FeatureInfo, OverlayFeatureInfo, RouteFeatureInfo} from "./featureInfo";
+import {FeatureInfo, OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -363,31 +363,32 @@ class GpxChartSource extends ChartSourceBase{
             return;
         }
         let rt;
-        if (feature.get('track')){
-            rt=new OverlayFeatureInfo({overlayType:FeatureInfo.TYPE.track});
+        const ot=(this.chartEntry||{}).type;
+        const oname=this.getName();
+        const fname=feature.get('name');
+        const url=this.getUrl();
+        if (ot==='track'){
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:url});
         }
-        const route=feature.get('route');
-        if (route){
-            rt=new OverlayFeatureInfo({overlayType:FeatureInfo.TYPE.route})
+        else if (ot === 'route'){
+            rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})
         }
-        if (! rt){
-            rt=new OverlayFeatureInfo({overlayType:FeatureInfo.TYPE.overlay});
+        else{
+            rt=new OverlayFeatureInfo({title: oname,urlOrKey:url});
         }
-        const name=feature.get('name');
-        if (name) rt.name=name;
-        rt.url=this.getUrl();
         let geometry=feature.getGeometry();
         let coordinates;
         if (geometry instanceof olPoint){
             coordinates=this.mapholder.fromMapToPoint(geometry.getCoordinates());
             rt.point=coordinates;
-            if (name) rt.point.name=name;
+            if (fname) rt.point.name=fname;
 
         }
         else{
             if (geometry){
                 coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
-                if (route){
+                const route=feature.get('route')
+                if (rt instanceof RouteFeatureInfo && route){
                         const routePoint=getClosestRoutePoint(route,coordinates);
                         if (routePoint) rt.point=routePoint;
                     }

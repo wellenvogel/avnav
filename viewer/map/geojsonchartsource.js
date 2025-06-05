@@ -230,16 +230,14 @@ class GeoJsonChartSource extends ChartSourceBase{
     }
     featureToInfo(feature,pixel){
         let rt=new OverlayFeatureInfo({
-            name:this.chartEntry.name,
-            overlayType:FeatureInfo.TYPE.overlay,
-            url: this.chartEntry.url
+            title:this.getName(),
+            url: this.getUrl()
         });
         if (! feature) {
             return rt;
         }
 
         let geometry=feature.getGeometry();
-        let coordinates;
         if (geometry instanceof olPoint){
             rt.point=this.mapholder.fromMapToPoint(geometry.getCoordinates());
         }

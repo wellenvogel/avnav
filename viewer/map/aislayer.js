@@ -16,6 +16,7 @@ import atonIcon from '../images/ais-aton.png';
 import cloneDeep from 'clone-deep';
 import {CourseVector} from "../nav/aiscomputations";
 import {fillOptions} from "../nav/aisdata";
+import {AisFeatureInfo} from "./featureInfo";
 
 const DEFAULT_COLOR="#f7c204";
 
@@ -375,14 +376,17 @@ class AisLayer{
      */
     findTarget(pixel) {
         base.log("findAisTarget " + pixel[0] + "," + pixel[1]);
-        if (!this.pixel) return undefined;
+        if (!this.pixel) return [];
+        let firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
         let tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
         let idxlist = this.mapholder.findTargets(pixel, this.pixel, tolerance);
         const targetList=[];
         idxlist.forEach((idx)=>{
             const target=this.pixel[idx];
             if (target && target.ais && target.ais.mmsi){
-                targetList.push(target.ais.mmsi)
+                const featureInfo=new AisFeatureInfo({point:target.ais.receivedPos,mmsi:target.ais.mmsi});
+                featureInfo.title = AisFormatter.format(firstLabel, target.ais, true);
+                targetList.push(featureInfo)
             }
         })
         return targetList;

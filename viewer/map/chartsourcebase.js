@@ -92,7 +92,7 @@ class ChartSourceBase {
         this.visible=true;
     }
     getName(){
-        return this.chartEntry.name||'unknown';
+        return (this.chartEntry||{}).name||'unknown';
     }
     getConfig(){
         return(assign({},this.chartEntry));
@@ -174,7 +174,7 @@ class ChartSourceBase {
         return shallowcompare(this.chartEntry,other.chartEntry);
     }
     getUrl(){
-        return this.chartEntry.url;
+        return (this.chartEntry||{}).url;
     }
 
     getChartKey() {
