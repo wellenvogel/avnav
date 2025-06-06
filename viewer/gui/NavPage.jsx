@@ -550,11 +550,24 @@ const NavPage=(props)=>{
                 },
                 condition: (featureInfo) => showRouteActionsCondition(featureInfo)
             }));
+            const listActions=[
+                new FeatureAction({
+                    name: 'goto',
+                    label: 'Goto',
+                    onClick: (featureInfo) => {
+                        let target = featureInfo.point;
+                        if (!target) return;
+                        RouteHandler.wpOn(target);
+                    },
+                    condition: (featureInfo)=>featureInfo.validPoint()
+                })
+            ]
             showDialog(dialogCtx,(dprops)=><FeatureListDialog
                 {...dprops}
                 featureList={featureList}
                 additionalActions={additionalActions}
                 history={props.history}
+                listActions={listActions}
             />)
             return true;
         }

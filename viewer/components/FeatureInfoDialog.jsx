@@ -37,14 +37,15 @@ import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
 import {InfoItem} from "./BasicDialogs";
-import {AisFeatureInfo, BaseFeatureInfo, FeatureInfo} from "../map/featureInfo";
+import {AisFeatureInfo, BaseFeatureInfo, FeatureAction, FeatureInfo} from "../map/featureInfo";
 import Helper from "../util/helper";
 import {AisInfoDialog, AisInfoWithFunctions} from "./AisInfoDisplay";
 NavHandler.getRoutingHandler();
 
+const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
 
 const INFO_ROWS=[
-    {label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)},
+    POS_ROW,
     {label: 'distance',value:'point',formatter:(v,featureInfo)=>{
             if (! featureInfo.validPoint()) return;
             let position=globalstore.getData(keys.nav.gps.position);
@@ -112,7 +113,7 @@ const INFO_DISPLAY={
     [FeatureInfo.TYPE.route]: ROUTE_INFO_ROWS
 }
 
-const InfoRowDisplay=({row,data})=>{
+const InfoRowDisplay=({row,data,className})=>{
     let v;
     if (row.value) {
         v = data[row.value];
@@ -120,10 +121,10 @@ const InfoRowDisplay=({row,data})=>{
     }
     if (row.formatter) v=row.formatter(v,data);
     if (v === undefined) return null;
-    return <InfoItem label={row.label} value={v}/>
+    return <InfoItem label={row.label} value={v} className={className}/>
 }
 
-export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history}) => {
+export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions}) => {
     const dialogContext = useDialogContext();
     const select = useCallback((featureInfo) => {
         if (!onSelectCb || onSelectCb(featureInfo)) {
@@ -143,10 +144,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
             let factions = [];
             if (additionalActions instanceof Array) {
                 additionalActions.forEach((action)=>{
-                    if (typeof action.condition === 'function'){
-                        if (action.condition(featureInfo)) factions.push(action);
-                    }
-                    else{
+                    if (action.shouldShow(featureInfo)){
                         factions.push(action);
                     }
                 })
@@ -166,11 +164,29 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         dialogContext.closeDialog();
         return null;
     }
-    if (featureList.length === 1) {
-        select(featureList[0]);
-        return null;
+    let baseInfo;
+    if (featureList[0] instanceof BaseFeatureInfo && featureList[0].validPoint()){
+        baseInfo=featureList[0];
     }
+    const buttonList=[];
+    if (baseInfo && listActions){
+        listActions.forEach((action)=>{
+            if (action.shouldShow(baseInfo)){
+                buttonList.push({
+                    name:action.name,
+                    onClick:() => {
+                        action.onClick(baseInfo)
+                    },
+                    label:action.label
+                });
+            }
+        })
+    }
+    buttonList.push(DBCancel());
     return <DialogFrame className={'featureListDialog'} title={'FeatureList'}>
+        {baseInfo &&
+            <InfoRowDisplay row={POS_ROW} data={baseInfo}/>
+        }
         {featureList.map((feature) => {
             if (feature instanceof BaseFeatureInfo) return null;
             return <DialogRow key={feature.urlOrKey} className={'listEntry'} onClick={() => {
@@ -182,8 +198,15 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 <span className={'title'}>{feature.title}</span>
             </DialogRow>
         })}
-        <DialogButtons buttonList={[DBCancel()]}/>
+        <DialogButtons buttonList={buttonList}/>
     </DialogFrame>
+}
+FeatureListDialog.propTypes={
+    history: PropTypes.object.isRequired,
+    featureList: PropTypes.arrayOf(FeatureInfo),
+    onSelectCb: PropTypes.func, //return false to cancel
+    additionalActions: PropTypes.arrayOf(FeatureAction),
+    listActions: PropTypes.arrayOf(FeatureAction) //will be called with first list element (if this is a BaseFeatureInfo)
 }
 
 const FeatureInfoDialog = ({featureInfo,additionalActions,history}) => {

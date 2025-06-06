@@ -29,12 +29,12 @@ export class FeatureAction{
         this.onClickHandler=onClick;
         this.condition=condition;
     }
-    visible(featureInfo){
+    shouldShow(featureInfo){
         if (! this.condition) return true;
         return this.condition(featureInfo);
     }
     onClick(featureInfo){
-        if (this.visible(featureInfo) && this.onClickHandler){
+        if (this.shouldShow(featureInfo) && this.onClickHandler){
             this.onClickHandler(featureInfo);
         }
     }
