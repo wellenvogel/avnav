@@ -658,8 +658,7 @@ const NavPage=(props)=>{
                     newMeasure.addPoint(-99,featureInfo.point);
                     MapHolder.setCenter(featureInfo.point);
                     globalStore.storeData(keys.map.activeMeasure,newMeasure);
-                },
-                toggle: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined
+                }
             }))
             listActions.push(new FeatureAction({
                 name: 'MeasureOff',
@@ -667,7 +666,8 @@ const NavPage=(props)=>{
                 onClick: (featureInfo)=>{
                     globalStore.storeData(keys.map.activeMeasure,undefined)
                 },
-                condition: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined
+                condition: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined,
+                toggle: true
             }))
             showDialog(dialogCtx,(dprops)=><FeatureListDialog
                 {...dprops}
@@ -790,7 +790,7 @@ const NavPage=(props)=>{
                 overflow: true
             },
             {
-                name: 'Measure',
+                name: 'CenterAction',
                 storeKeys: {
                     toggle: keys.map.activeMeasure
                 },
