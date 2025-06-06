@@ -37,9 +37,10 @@ import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import Toast from "./Toast";
 import {InfoItem} from "./BasicDialogs";
-import {AisFeatureInfo, BaseFeatureInfo, FeatureAction, FeatureInfo} from "../map/featureInfo";
+import {AisFeatureInfo, AnchorFeatureInfo, BaseFeatureInfo, FeatureAction, FeatureInfo} from "../map/featureInfo";
 import Helper from "../util/helper";
 import {AisInfoWithFunctions} from "./AisInfoDisplay";
+import {anchorWatchDialog} from "./AnchorWatchDialog";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -148,6 +149,10 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 )
                 return;
             }
+            if (featureInfo instanceof AnchorFeatureInfo){
+                anchorWatchDialog(dialogContext,true);
+                return;
+            }
             let factions = [];
             if (additionalActions instanceof Array) {
                 additionalActions.forEach((action)=>{
@@ -172,11 +177,11 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         return null;
     }
     let baseInfo;
-    if (featureList[0] instanceof BaseFeatureInfo && featureList[0].validPoint()){
+    if (featureList[0].validPoint()){
         baseInfo=featureList[0];
     }
     const buttonList=[];
-    if (baseInfo && listActions){
+    if (baseInfo && listActions && (baseInfo instanceof BaseFeatureInfo)){
         listActions.forEach((action)=>{
             if (action.shouldShow(baseInfo)){
                 buttonList.push({
@@ -202,7 +207,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 <div className={'icons'}>
                 {feature.icon && <img className={'icon'} src={feature.icon.src}/>}
                 {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
-                {feature.isOverlay && <span className={Helper.concatsp('icon','overlay')}/> }
+                {feature.isOverlay && (feature.type !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
                 </div>
                 <span className={'title'}>{feature.title}</span>
             </DialogRow>

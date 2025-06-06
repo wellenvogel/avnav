@@ -16,13 +16,15 @@ import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
 import globalstore from "../util/globalstore";
+import {AnchorFeatureInfo, BoatFeatureInfo} from "./featureInfo";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
 
 
-
+const BOAT_PIXEL=0;
+const ANCHOR_PIXEL=1;
 /**
  * a cover for the layer that contaisn the booat, the current wp and the route between them
  * @param {MapHolder} mapholder
@@ -104,7 +106,7 @@ const NavLayer=function(mapholder){
     this.measureStyle.image.src=this.measureStyle.src;
     this.setStyle();
     globalStore.register(this,keys.gui.global.propertySequence);
-
+    this.pixel=[];
 };
 
 
@@ -174,13 +176,18 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             boatStyle.rotation = 0;
         }
     }
+    this.pixel=[];
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
         let f=globalStore.getData(keys.properties.boatIconScale,1.0);
         boatStyle.size=[boatStyle.size[0]*f, boatStyle.size[1]*f];
         boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
-        drawing.drawImageToContext(boatPosition, boatStyle.image, boatStyle);
+        this.pixel[BOAT_PIXEL]={
+            pixel: drawing.drawImageToContext(boatPosition, boatStyle.image, boatStyle),
+            position: gps.position,
+            image: boatStyle.image
+        };
         let other;
         if (! gps.isSteady) {
             let courseVectorStyle = assign({}, this.circleStyle);
@@ -250,7 +257,10 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         let p=activeRoute.getCurrentFrom();
         if (p){
             let c=this.mapholder.transformToMap(p.toCoord());
-            drawing.drawImageToContext(c,this.anchorStyle.image,this.anchorStyle);
+            this.pixel[ANCHOR_PIXEL]={
+                pixel:drawing.drawImageToContext(c,this.anchorStyle.image,this.anchorStyle),
+                position: p
+            };
             let other=this.computeTarget(c,0,anchorDistance);
             drawing.drawCircleToContext(c,other,this.anchorCircleStyle);
         }
@@ -310,5 +320,23 @@ NavLayer.prototype.setImageStyles=function(styles){
     }
     this.setStyle();
 };
-
+NavLayer.prototype.findFeatures=function(pixel){
+    let tolerance = globalStore.getData(keys.properties.clickTolerance) / 2;
+    let idxlist = this.mapholder.findTargets(pixel, this.pixel, tolerance);
+    const rt=[];
+    if (idxlist){
+        idxlist.forEach((idx)=>{
+            if (idx === BOAT_PIXEL){
+                rt.push(new BoatFeatureInfo({
+                    point: this.pixel[idx].position,
+                    icon: this.pixel[idx].image
+                }))
+            }
+            else if (idx === ANCHOR_PIXEL){
+                rt.push(new AnchorFeatureInfo({point: this.pixel[idx].position}))
+            }
+        })
+    }
+    return rt;
+}
 export default NavLayer;

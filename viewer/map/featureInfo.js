@@ -50,6 +50,7 @@ export class FeatureInfo{
         chart: 6,
         waypoint: 7,
         base:8,
+        anchor: 10,
         unknown: 0,
         any: 99 //for additional actions
     }
@@ -121,9 +122,24 @@ export class ChartFeatureInfo extends FeatureInfo{
         this.chartFeatures=chartFeatures;
     }
 }
+
+/**
+ * active waypoint
+ */
 export class WpFeatureInfo extends FeatureInfo{
     constructor({point,title}) {
         super({point,type:FeatureInfo.TYPE.waypoint});
         this.title=title||`WP ${this.point.name}`;
+    }
+}
+
+export class BoatFeatureInfo extends FeatureInfo{
+    constructor({point,icon}) {
+        super({point,title:'current position',icon,type: FeatureInfo.TYPE.boat});
+    }
+}
+export class AnchorFeatureInfo extends FeatureInfo{
+    constructor({point}) {
+        super({point,title:'anchor',type: FeatureInfo.TYPE.anchor});
     }
 }

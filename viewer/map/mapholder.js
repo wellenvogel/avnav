@@ -1477,8 +1477,8 @@ class MapHolder extends DrawingPositionConverter {
     /**
      * set the map center
      * @param {navobjects.Point} point
-     * @param opt_noUserAction
-     * @param opt_offset offset in % x,y
+     * @param [opt_noUserAction]
+     * @param [opt_offset] offset in % x,y
      */
     setCenter(point, opt_noUserAction, opt_offset) {
         if (!point) return;
@@ -1612,9 +1612,14 @@ class MapHolder extends DrawingPositionConverter {
             let rt = this._callHandlers({type: EventTypes.SELECTWP, wp: wp});
             if (rt) return false;
         }
-        let aisparam = this.aislayer.findTarget(evt.pixel);
         let featureInfos = [];
-        featureInfos.push(new BaseFeatureInfo({point:clickPoint,name:this.getBaseChart()?this.getBaseChart().getName():'unknown'}))
+        const navFeatures=this.navlayer.findFeatures(evt.pixel);
+        if (navFeatures && navFeatures.length > 0) {
+            featureInfos = featureInfos.concat(navFeatures);
+        }
+        else{
+            featureInfos.push(new BaseFeatureInfo({point:clickPoint,name:this.getBaseChart()?this.getBaseChart().getName():'unknown'}))
+        }
         //if we have a route point we will treat this as a feature info if not handled directly
         if (wp) {
             if (wp.routeName) {
@@ -1625,6 +1630,7 @@ class MapHolder extends DrawingPositionConverter {
                 featureInfos.push(new WpFeatureInfo({point: wp}))
             }
         }
+        let aisparam = this.aislayer.findFeatures(evt.pixel);
         if (aisparam && aisparam.length > 0) {
             featureInfos=featureInfos.concat(aisparam);
         }
@@ -1733,6 +1739,7 @@ class MapHolder extends DrawingPositionConverter {
         let rt = [];
         for (i = 0; i < points.length; i++) {
             let current = points[i];
+            if (! current) continue;
             if (!(current instanceof Array)) current = current.pixel;
             if (current[0] >= xmin && current[0] <= xmax && current[1] >= ymin && current[1] <= ymax) {
                 rt.push({idx: i, pixel: current});

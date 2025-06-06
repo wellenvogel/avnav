@@ -1,11 +1,9 @@
 /**
  * Created by andreas on 18.05.14.
  */
-    
-import navobjects from '../nav/navobjects';
+
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import RouteLayer from "./routelayer";
 import mapholder from "./mapholder";
 
 

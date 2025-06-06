@@ -46,7 +46,7 @@ import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
 import {useStoreState} from "../hoc/Dynamic";
-import {FeatureAction, FeatureInfo} from "../map/featureInfo";
+import {BoatFeatureInfo, FeatureAction, FeatureInfo, WpFeatureInfo} from "../map/featureInfo";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -501,8 +501,22 @@ const NavPage=(props)=>{
                     if (!target) return;
                     RouteHandler.wpOn(target);
                 },
-                condition: (featureInfo) => featureInfo.validPoint()
+                condition: (featureInfo) => {
+                    return featureInfo.validPoint() && !(featureInfo instanceof WpFeatureInfo ) && ! (featureInfo instanceof BoatFeatureInfo)
+                }
             }));
+            additionalActions.push(new FeatureAction({
+                name:'center',
+                label:'Center',
+                onClick:(featureInfo)=>{
+                    if (MapHolder.getGpsLock()) return;
+                    MapHolder.setCenter(featureInfo.point);
+                    MapHolder.triggerRender();
+                },
+                condition: (featureInfo)=>{
+                    return featureInfo.validPoint();
+                }
+            }))
             additionalActions.push(new FeatureAction({
                 name: 'toroute',
                 label: 'Convert',

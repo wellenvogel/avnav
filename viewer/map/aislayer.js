@@ -374,7 +374,7 @@ class AisLayer{
      * find the AIS target that has been clicked
      * @param {olCoordinate} pixel the css pixel from the event
      */
-    findTarget(pixel) {
+    findFeatures(pixel) {
         base.log("findAisTarget " + pixel[0] + "," + pixel[1]);
         if (!this.pixel) return [];
         let firstLabel = globalStore.getData(keys.properties.aisFirstLabel, '');
