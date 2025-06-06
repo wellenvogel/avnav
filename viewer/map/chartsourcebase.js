@@ -108,6 +108,12 @@ class ChartSourceBase {
         return this.layers;
 
     }
+    isChart(){
+        return false;
+    }
+    isBaseChart(){
+        return !!(this.chartEntry||{}).baseChart;
+    }
 
     /**
      * redraw this layer if the sequence has changed

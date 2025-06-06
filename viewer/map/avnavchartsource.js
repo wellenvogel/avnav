@@ -37,7 +37,6 @@ import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';
 import olImageTile from 'ol/src/ImageTile';
 import olTileState from 'ol/src/TileState';
-import assign from 'object-assign';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
@@ -282,6 +281,10 @@ class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
         this.destroySequence=0;
+    }
+
+    isChart() {
+        return true;
     }
 
     prepareInternal() {
@@ -608,7 +611,7 @@ class AvnavChartSource extends ChartSourceBase{
                         let info=new ChartFeatureInfo({
                             chartKey: this.getChartKey(),
                             title:this.getName(),
-                            isOverlay: ! (this.chartEntry||{}).baseChart
+                            isOverlay: ! this.isBaseChart()
                             });
                         info.userInfo=topInfo;
                         delete info.userInfo.name;

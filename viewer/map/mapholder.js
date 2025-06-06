@@ -1657,6 +1657,16 @@ class MapHolder extends DrawingPositionConverter {
             if (this.sources[i].hasFeatureInfo()) {
                 promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
             }
+            else{
+                if (this.sources[i].isChart()) {
+                    featureInfos.push(new ChartFeatureInfo({
+                        title: this.sources[i].getName(),
+                        chartKey: this.sources[i].getChartKey(),
+                        isOverlay: !this.sources[i].isBaseChart(),
+                        point: clickPoint
+                    }))
+                }
+            }
         }
 
         if (promises.length < 1) {
