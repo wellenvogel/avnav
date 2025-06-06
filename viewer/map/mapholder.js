@@ -46,7 +46,7 @@ import UserLayer from './userlayer';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import {
     BaseFeatureInfo,
-    ChartFeatureInfo,
+    ChartFeatureInfo, FeatureInfo,
     RouteFeatureInfo,
     TrackFeatureInfo,
     WpFeatureInfo
@@ -189,7 +189,8 @@ class MapHolder extends DrawingPositionConverter {
             KeyHelper.flattenedKeys(keys.nav.wp),
             KeyHelper.flattenedKeys(keys.nav.anchor),
             KeyHelper.flattenedKeys(keys.nav.track),
-            KeyHelper.flattenedKeys(keys.nav.display)
+            KeyHelper.flattenedKeys(keys.nav.display),
+            KeyHelper.flattenedKeys(keys.map.activeMeasure)
         );
         this.userKeys = {};
         globalStore.register(() => this.navEvent(), this.storeKeys);
@@ -1588,7 +1589,7 @@ class MapHolder extends DrawingPositionConverter {
             remotechannel.sendMessage(COMMANDS.lock, lock ? 'true' : 'false');
         }
         if (lock === this.gpsLocked) return;
-        if (lock) globalStore.storeData(keys.map.measurePosition, undefined);
+        if (lock) globalStore.storeData(keys.map.activeMeasure, undefined);
         if (!globalStore.getData(keys.nav.gps.valid) && lock) return;
         //we do not lock if the nav layer is not visible
         if (!globalStore.getData(keys.properties.layers.boat) && lock) return;
@@ -1606,19 +1607,31 @@ class MapHolder extends DrawingPositionConverter {
     onClick(evt) {
         evt.preventDefault();
         evt.stopPropagation();
-        const clickPoint = this.fromMapToPoint(this.pixelToCoord(evt.pixel));
-        let wp = this.routinglayer.findTarget(evt.pixel);
+        this.featureAction(evt.pixel);
+    }
+    featureAction(pixel){
+        const clickPoint = this.fromMapToPoint(this.pixelToCoord(pixel));
+        let wp = this.routinglayer.findTarget(pixel);
         if (wp) {
             let rt = this._callHandlers({type: EventTypes.SELECTWP, wp: wp});
             if (rt) return false;
         }
         let featureInfos = [];
-        const navFeatures=this.navlayer.findFeatures(evt.pixel);
+        const navFeatures=this.navlayer.findFeatures(pixel);
+        let hasBoatOrAnchor=false;
         if (navFeatures && navFeatures.length > 0) {
+            navFeatures.forEach((featureInfo)=>{
+                if (featureInfo.getType() === FeatureInfo.TYPE.boat || featureInfo.getType() === FeatureInfo.TYPE.anchor){
+                    hasBoatOrAnchor=true;
+                }
+            })
+        }
+        if (hasBoatOrAnchor){
             featureInfos = featureInfos.concat(navFeatures);
         }
         else{
             featureInfos.push(new BaseFeatureInfo({point:clickPoint,name:this.getBaseChart()?this.getBaseChart().getName():'unknown'}))
+            featureInfos.push(...navFeatures);
         }
         //if we have a route point we will treat this as a feature info if not handled directly
         if (wp) {
@@ -1630,16 +1643,16 @@ class MapHolder extends DrawingPositionConverter {
                 featureInfos.push(new WpFeatureInfo({point: wp}))
             }
         }
-        let aisparam = this.aislayer.findFeatures(evt.pixel);
+        let aisparam = this.aislayer.findFeatures(pixel);
         if (aisparam && aisparam.length > 0) {
             featureInfos=featureInfos.concat(aisparam);
         }
-        let currentTrackPoint = this.tracklayer.findTarget(evt.pixel);
+        let currentTrackPoint = this.tracklayer.findTarget(pixel);
         if (currentTrackPoint) {
             featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',urlOrKey:'current'}));
         }
         const detectedFeatures = [];
-        this.olmap.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
+        this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
                 if (!layer.avnavOptions || !layer.avnavOptions.chartSource) return;
                 detectedFeatures.push({feature: feature, layer: layer, source: layer.avnavOptions.chartSource});
             },
@@ -1651,7 +1664,7 @@ class MapHolder extends DrawingPositionConverter {
             for (let fidx = 0; fidx < detectedFeatures.length; fidx++) {
                 const df = detectedFeatures[fidx];
                 if (df.source === this.sources[i]) {
-                    const fi=df.source.featureToInfo(df.feature, evt.pixel);
+                    const fi=df.source.featureToInfo(df.feature, pixel);
                     if (fi) featureInfos.push(fi);
                     break;
                 }
@@ -1661,7 +1674,7 @@ class MapHolder extends DrawingPositionConverter {
         //just get chart features on top of the currently detected feature
         for (let i = this.sources.length - 1; i >= 0; i--) {
             if (this.sources[i].hasFeatureInfo()) {
-                promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
+                promises.push(this.sources[i].getChartFeaturesAtPixel(pixel));
             }
             else{
                 if (this.sources[i].isChart()) {

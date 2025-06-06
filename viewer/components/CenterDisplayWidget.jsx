@@ -6,15 +6,13 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import NavCompute from "../nav/navcompute";
-import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 
 const CenterDisplayWidget = (props) => {
     let small = (props.mode == "horizontal");
-    let measurePosition = props.measurePosition;
+    let measurePosition = props.activeMeasure?props.activeMeasure.getPointAtIndex(0):undefined;
     let measureValues;
     if (measurePosition) {
         measureValues = NavCompute.computeDistance(measurePosition, props.centerPosition, props.measureRhumbLine);
@@ -79,7 +77,7 @@ CenterDisplayWidget.predefined={
         centerCourse:keys.nav.center.course,
         centerDistance:keys.nav.center.distance,
         centerPosition: keys.map.centerPosition,
-        measurePosition: keys.map.measurePosition,
+        activeMeasure: keys.map.activeMeasure,
         measureRhumbLine: keys.properties.measureRhumbLine
     },
     formatter: 'formatDistance',
@@ -96,7 +94,7 @@ CenterDisplayWidget.propTypes={
     centerCourse:PropTypes.number,
     centerDistance:PropTypes.number,
     centerPosition: PropTypes.object,
-    measurePosition: PropTypes.object,
+    activeMeasure: PropTypes.object,
     measureRhumbLine: PropTypes.bool,
     style: PropTypes.object,
     mode: PropTypes.string

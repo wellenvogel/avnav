@@ -16,7 +16,7 @@ import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
 import globalstore from "../util/globalstore";
-import {AnchorFeatureInfo, BoatFeatureInfo} from "./featureInfo";
+import {AnchorFeatureInfo, BoatFeatureInfo, MeasureFeatureInfo} from "./featureInfo";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -107,6 +107,8 @@ const NavLayer=function(mapholder){
     this.setStyle();
     globalStore.register(this,keys.gui.global.propertySequence);
     this.pixel=[];
+    this.measurePixel=[];
+    this.drawnMeasure=undefined;
 };
 
 
@@ -177,6 +179,8 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         }
     }
     this.pixel=[];
+    this.measurePixel=[];
+    this.drawnMeasure=undefined;
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
@@ -229,28 +233,43 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     }
     if (!globalStore.getData(keys.map.lockPosition,false)) {
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
-        let measurePos=globalStore.getData(keys.map.measurePosition);
-        if (measurePos && measurePos.lat && measurePos.lon){
-            let measureRhumbLine=globalstore.getData(keys.properties.measureRhumbLine);
-            let measure=this.mapholder.transformToMap((new navobjects.Point(measurePos.lon,measurePos.lat)).toCoord());
-            drawing.drawImageToContext(measure,this.measureStyle.image,this.measureStyle);
-            let centerPoint=new navobjects.Point();
+        let measure=globalStore.getData(keys.map.activeMeasure);
+        let measurePos;
+        if (measure && measure.points.length > 0) {
+            let centerPoint = new navobjects.Point();
             centerPoint.fromCoord(this.mapholder.transformFromMap(center));
-            if (measureRhumbLine) {
-                drawing.drawLineToContext([measure, center], this.measureLineStyle);
+            this.drawnMeasure=measure.clone();
+            this.drawnMeasure.points.push(centerPoint);
+            measurePos = measure.getPointAtIndex(0);
+            let measureRhumbLine = globalstore.getData(keys.properties.measureRhumbLine);
+            for (let i=1;i<this.drawnMeasure.points.length;i++) {
+                const nextPos=this.drawnMeasure.getPointAtIndex(i);
+                if (measurePos && measurePos.valid() && nextPos && nextPos.valid()) {
+                    let measure = this.mapholder.transformToMap(measurePos.toCoord());
+                    let next=this.mapholder.transformToMap(nextPos.toCoord());
+                    drawing.drawImageToContext(measure, this.measureStyle.image, this.measureStyle);
+                    if (measureRhumbLine) {
+                        this.measurePixel.push(...drawing.drawLineToContext([measure, next], this.measureLineStyle));
+                    } else {
+                        let segmentPoints = NavCompute.computeCoursePoints(nextPos, measurePos, 3);
+                        let line = [];
+                        segmentPoints.forEach((sp) => line.push(
+                            this.mapholder.transformToMap([sp.lon, sp.lat])
+                        ));
+                        this.measurePixel.push(...drawing.drawLineToContext(line, this.measureLineStyle));
+                    }
+                }
+                measurePos=nextPos;
             }
-            else{
-                let segmentPoints=NavCompute.computeCoursePoints(centerPoint,measurePos,3);
-                let line=[];
-                segmentPoints.forEach((sp)=>line.push(
-                    this.mapholder.transformToMap([sp.lon,sp.lat])
-                ));
-                drawing.drawLineToContext(line, this.measureLineStyle);
-            }
-            let distance=NavCompute.computeDistance(measurePos,centerPoint,measureRhumbLine);
-            let text=Formatter.formatDirection(distance.course)+"°\n"+
-                Formatter.formatDistance(distance.dts)+"nm";
-            drawing.drawTextToContext(center,text,this.measureTextStyle);
+            const drawnLength=this.drawnMeasure.points.length;
+            let distance = NavCompute.computeDistance(
+                this.drawnMeasure.points[drawnLength-2],
+                this.drawnMeasure.points[drawnLength-1]
+                , measureRhumbLine);
+            let len=this.drawnMeasure.computeLength(0,measureRhumbLine);
+            let text = Formatter.formatDirection(distance.course) + "°\n" +
+            Formatter.formatDistance(len) + "nm";
+            drawing.drawTextToContext(center, text, this.measureTextStyle);
         }
     }
     if (anchorDistance){
@@ -336,6 +355,19 @@ NavLayer.prototype.findFeatures=function(pixel){
                 rt.push(new AnchorFeatureInfo({point: this.pixel[idx].position}))
             }
         })
+    }
+    const measure=globalStore.getData(keys.map.activeMeasure);
+    if (measure && this.drawnMeasure) {
+        idxlist = this.mapholder.findTargets(pixel, this.measurePixel, tolerance);
+        if (idxlist && idxlist.length){
+            const clickPoint = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
+            const idx=this.drawnMeasure.findBestMatchingIdx(clickPoint);
+            if (idx >= 0){
+                rt.push(new MeasureFeatureInfo({
+                    point:this.drawnMeasure.getPointAtIndex(idx)
+                }))
+            }
+        }
     }
     return rt;
 }

@@ -55,7 +55,7 @@ import {
     WpFeatureInfo
 } from "../map/featureInfo";
 import {NameDialog} from "../components/RouteInfoHelper";
-import routeobjects from "../nav/routeobjects";
+import routeobjects, {Measure} from "../nav/routeobjects";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -452,7 +452,7 @@ const NavPage=(props)=>{
             });
     }, 1000);
     useEffect(() => {
-        globalStore.storeData(keys.map.measurePosition,undefined);
+        globalStore.storeData(keys.map.activeMeasure,undefined);
         activeRoute.setIndexToTarget();
         if (globalStore.getData(keys.properties.mapLockMode) === 'center'){
             MapHolder.setBoatOffset();
@@ -463,7 +463,7 @@ const NavPage=(props)=>{
         }
         MapHolder.showEditingRoute(false);
         return ()=>{
-            globalStore.storeData(keys.map.measurePosition,undefined);
+            globalStore.storeData(keys.map.activeMeasure,undefined);
         }
     }, []);
     const wpTimer=useTimer(()=>{
@@ -577,11 +577,11 @@ const NavPage=(props)=>{
                     showDialog(dialogCtx, () => <TrackConvertDialog history={props.history}
                                                                     name={featureInfo.urlOrKey}/>)
                 },
-                condition: (featureInfo) => featureInfo.type === FeatureInfo.TYPE.track
+                condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.track
             }));
 
             const showRouteActionsCondition = (featureInfo) => {
-                if (featureInfo.type !== FeatureInfo.TYPE.route) return false;
+                if (featureInfo.getType() !== FeatureInfo.TYPE.route) return false;
                 if (!featureInfo.validPoint()) return false;
                 let currentTarget = activeRoute.getCurrentTarget();
                 //show a "routeTo" if this is not the current target
@@ -629,6 +629,32 @@ const NavPage=(props)=>{
                 }),
                 createRouteFeatureAction(props)
             ]
+            const measure=globalStore.getData(keys.map.activeMeasure);
+            listActions.push(new FeatureAction({
+                name: 'Measure',
+                label: (measure === undefined)?'Measure':'Add Measure',
+                onClick: (featureInfo)=>{
+                    let newMeasure;
+                    if (measure){
+                        newMeasure=measure.clone();
+                    }
+                    else{
+                        newMeasure=new Measure('default');
+                    }
+                    newMeasure.addPoint(-99,featureInfo.point);
+                    MapHolder.setCenter(featureInfo.point);
+                    globalStore.storeData(keys.map.activeMeasure,newMeasure);
+                },
+                toggle: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined
+            }))
+            listActions.push(new FeatureAction({
+                name: 'MeasureOff',
+                label: 'Measure Off',
+                onClick: (featureInfo)=>{
+                    globalStore.storeData(keys.map.activeMeasure,undefined)
+                },
+                condition: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined
+            }))
             showDialog(dialogCtx,(dprops)=><FeatureListDialog
                 {...dprops}
                 featureList={featureList}
@@ -752,21 +778,13 @@ const NavPage=(props)=>{
             {
                 name: 'Measure',
                 storeKeys: {
-                    toggle: keys.map.measurePosition,
-                    visible: keys.properties.showMeasure
+                    toggle: keys.map.activeMeasure
                 },
                 overflow: true,
                 onClick: ()=>{
-                    let current=globalStore.getData(keys.map.measurePosition);
-                    if (current){
-                        globalStore.storeData(keys.map.measurePosition,undefined);
-                        MapHolder.triggerRender();
-                        return;
-                    }
-                    if (MapHolder.getGpsLock()) return;
                     let center = globalStore.getData(keys.map.centerPosition);
-                    globalStore.storeData(keys.map.measurePosition,center);
-                    MapHolder.triggerRender();
+                    let pixel=MapHolder.coordToPixel(MapHolder.pointToMap([center.lon,center.lat]))
+                    MapHolder.featureAction(pixel);
                 }
             },
             Mob.mobDefinition(props.history),

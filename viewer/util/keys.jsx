@@ -209,7 +209,7 @@ let keys={
         currentZoom:K,
         requiredZoom:K,
         centerPosition:K,
-        measurePosition: K,
+        activeMeasure: K,
         },
     gui:{
         capabilities:{

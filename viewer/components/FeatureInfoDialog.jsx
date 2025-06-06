@@ -40,24 +40,24 @@ import {InfoItem} from "./BasicDialogs";
 import {AisFeatureInfo, AnchorFeatureInfo, BaseFeatureInfo, FeatureAction, FeatureInfo} from "../map/featureInfo";
 import Helper from "../util/helper";
 import {AisInfoWithFunctions} from "./AisInfoDisplay";
-import AnchorWatchDialog, {anchorWatchDialog, WatchDialogWithFunctions} from "./AnchorWatchDialog";
+import {WatchDialogWithFunctions} from "./AnchorWatchDialog";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
 
 const INFO_ROWS=[
     {label:'item',formatter:(v,featureInfo)=>{
-            if (featureInfo.isOverlay || featureInfo.type === FeatureInfo.TYPE.chart) return;
+            if (featureInfo.isOverlay || featureInfo.getType() === FeatureInfo.TYPE.chart) return;
             return featureInfo.title;
         }},
     {label:'overlay',value:'title',formatter:(v,overlay)=>{
-            if (!overlay.isOverlay || overlay.type === FeatureInfo.TYPE.chart) return;
+            if (!overlay.isOverlay || overlay.getType() === FeatureInfo.TYPE.chart) return;
             let prefix="";
-            if (overlay.type) prefix=TYPE_PREFIX[overlay.type]||"";
+            if (overlay.getType()) prefix=TYPE_PREFIX[overlay.getType()]||"";
             return prefix+v;
         }},
     {label:'chart',value:'title',formatter:(v,overlay)=>{
-            if (overlay.type !== FeatureInfo.TYPE.chart) return;
+            if (overlay.getType() !== FeatureInfo.TYPE.chart) return;
             return v;
         }
     },
@@ -208,7 +208,8 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                         action.onClick(baseInfo,dialogContext)
                     },
                     label:action.label,
-                    close: Helper.unsetorTrue(action.close)
+                    close: Helper.unsetorTrue(action.close),
+                    toggle: action.toggle(baseInfo)
                 });
             }
         })
@@ -226,7 +227,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 <div className={'icons'}>
                 {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
                 {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
-                {feature.isOverlay && (feature.type !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
+                {feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
                 </div>
                 <span className={'title'}>{feature.title}</span>
             </DialogRow>
@@ -266,7 +267,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
         featureInfo.overlaySource.setEnabled(false, true);
     }, [featureInfo]);
     useEffect(() => {
-        let infoFunction = INFO_FUNCTIONS[featureInfo.type]
+        let infoFunction = INFO_FUNCTIONS[featureInfo.getType()]
         let infoCoordinates = featureInfo.point;
         if (infoFunction && infoCoordinates) {
             infoFunction(featureInfo.urlOrKey,
@@ -279,7 +280,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
         }
     }, []);
     let link = userInfo.link || userInfo.htmlInfo;
-    let extendedInfoRows = INFO_DISPLAY[featureInfo.type];
+    let extendedInfoRows = INFO_DISPLAY[featureInfo.getType()];
     return (
         <DialogFrame className="FeatureInfoDialog">
             <h3 className="dialogTitle">
@@ -303,6 +304,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
                             action.onClick(featureInfo,dialogContext)
                         }}
                         close={Helper.unsetorTrue(action.close)}
+                        toggle={action.toggle(featureInfo)}
                         >
                         {action.label}
                     </DB>

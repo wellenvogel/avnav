@@ -22,13 +22,15 @@
 
 import navobjects from "../nav/navobjects";
 
+
 export class FeatureAction{
-    constructor({name,label,onClick,condition,close}) {
+    constructor({name,label,onClick,condition,close,toggle}) {
         this.name=name;
         this.label=label;
         this.onClickHandler=onClick;
         this.condition=condition;
         this.close=close;
+        this.toggleValue=toggle;
     }
     shouldShow(featureInfo){
         if (! this.condition) return true;
@@ -38,6 +40,11 @@ export class FeatureAction{
         if (this.shouldShow(featureInfo) && this.onClickHandler){
             this.onClickHandler(featureInfo,dialogCtx);
         }
+    }
+    toggle(featureInfo){
+        if (this.toggleValue === undefined) return false;
+        if (typeof this.toggleValue === 'function') return this.toggleValue(featureInfo);
+        return this.toggleValue;
     }
 }
 
@@ -51,17 +58,17 @@ export class FeatureInfo{
         chart: 6,
         waypoint: 7,
         base:8,
+        measure:9,
         anchor: 10,
         unknown: 0,
         any: 99 //for additional actions
     }
-    constructor({point,type,isOverlay,title,icon}) {
+    constructor({point,isOverlay,title,icon}) {
         /**
          * goto target
          * @type {navobjects.Point}
          */
         this.point=point||new navobjects.Point();
-        this.type=type|| FeatureInfo.TYPE.unknown;
         this.title=title;
         this.isOverlay=isOverlay||false;
         this.urlOrKey=undefined;
@@ -69,9 +76,12 @@ export class FeatureInfo{
         this.userInfo= {};
         this.overlaySource=undefined;
     }
+    getType(){
+        return FeatureInfo.TYPE.unknown;
+    }
     typeString(){
         for (let k in FeatureInfo.TYPE){
-            if (this.type === FeatureInfo.TYPE[k]) return k;
+            if (this.getType() === FeatureInfo.TYPE[k]) return k;
         }
         return 'unknown';
     }
@@ -82,45 +92,63 @@ export class FeatureInfo{
 
 export class BaseFeatureInfo extends FeatureInfo{
     constructor({point,title}) {
-        super({point,type:FeatureInfo.TYPE.base,title});
+        super({point,title});
+    }
+    getType(){
+        return FeatureInfo.TYPE.base;
     }
 }
 
 export class OverlayFeatureInfo extends FeatureInfo{
     constructor({title,point,urlOrKey,userInfo,overlaySource}) {
-        super({title,point,isOverlay:true,type: FeatureInfo.TYPE.overlay});
+        super({title,point,isOverlay:true});
         this.userInfo=userInfo;
         this.urlOrKey=urlOrKey;
         this.overlaySource=overlaySource;
+    }
+    getType(){
+        return FeatureInfo.TYPE.overlay;
     }
 }
 
 export class RouteFeatureInfo extends FeatureInfo{
     constructor({point,isOverlay,routeName,title}) {
-        super({point,type:FeatureInfo.TYPE.route,isOverlay});
+        super({point,isOverlay});
         this.urlOrKey=routeName||this.point.routeName;
         this.title=title||`Route: ${this.urlOrKey}`
+    }
+    getType(){
+        return FeatureInfo.TYPE.route;
     }
 }
 export class AisFeatureInfo extends FeatureInfo{
     constructor({point,mmsi,title,icon}) {
-        super({point,type:FeatureInfo.TYPE.ais});
+        super({point});
         this.urlOrKey=mmsi;
         this.title=title||`MMSI: ${mmsi}`
         this.icon=icon;
     }
+    getType(){
+        return FeatureInfo.TYPE.ais;
+    }
 }
 export class TrackFeatureInfo extends FeatureInfo{
     constructor({point,urlOrKey,title,isOverlay}) {
-        super({point,type:FeatureInfo.TYPE.track,isOverlay,title});
+        super({point,isOverlay,title});
         this.urlOrKey=urlOrKey
+    }
+    getType(){
+        return FeatureInfo.TYPE.track;
     }
 }
 export class ChartFeatureInfo extends FeatureInfo{
     constructor({point,chartKey,title,isOverlay,chartFeatures}) {
-        super({point,type:FeatureInfo.TYPE.chart,isOverlay,title});
+        super({point,isOverlay,title});
         this.urlOrKey=chartKey
         this.chartFeatures=chartFeatures;
+    }
+    getType(){
+        return FeatureInfo.TYPE.chart;
     }
 }
 
@@ -129,18 +157,35 @@ export class ChartFeatureInfo extends FeatureInfo{
  */
 export class WpFeatureInfo extends FeatureInfo{
     constructor({point,title}) {
-        super({point,type:FeatureInfo.TYPE.waypoint});
+        super({point});
         this.title=title||`WP ${this.point.name}`;
+    }
+    getType(){
+        return FeatureInfo.TYPE.waypoint;
     }
 }
 
 export class BoatFeatureInfo extends FeatureInfo{
     constructor({point,icon}) {
-        super({point,title:'current position',icon,type: FeatureInfo.TYPE.boat});
+        super({point,title:'current position',icon});
+    }
+    getType(){
+        return FeatureInfo.TYPE.boat;
     }
 }
 export class AnchorFeatureInfo extends FeatureInfo{
     constructor({point}) {
-        super({point,title:'anchor',type: FeatureInfo.TYPE.anchor});
+        super({point,title:'anchor'});
+    }
+    getType(){
+        return FeatureInfo.TYPE.anchor;
+    }
+}
+export class MeasureFeatureInfo extends FeatureInfo{
+    constructor({point}) {
+        super({point,title:'measure'});
+    }
+    getType(){
+        return FeatureInfo.TYPE.measure;
     }
 }
