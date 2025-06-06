@@ -563,7 +563,7 @@ body{
   .icon.overlay{
     .iconImage('layers-black.svg');
   }
-  .icon.overlay{
+  .icon.waypoint{
     .iconImage('waypoint.svg');
   }
   .icon.anchor{
@@ -572,6 +572,15 @@ body{
   .icons{
     width: 4em;
     display: inline-block;
+  }
+  .ImageIcon{
+    .flex-display();
+    .flex-direction(row);
+    img{
+      .flex-grow(1);
+      .flex-shrink(1);
+      min-width: 0;
+    }
   }
 }
 .featureInfoHtml{

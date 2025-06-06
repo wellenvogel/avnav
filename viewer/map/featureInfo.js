@@ -54,7 +54,7 @@ export class FeatureInfo{
         unknown: 0,
         any: 99 //for additional actions
     }
-    constructor({point,type,isOverlay,title}) {
+    constructor({point,type,isOverlay,title,icon}) {
         /**
          * goto target
          * @type {navobjects.Point}
@@ -64,7 +64,7 @@ export class FeatureInfo{
         this.title=title;
         this.isOverlay=isOverlay||false;
         this.urlOrKey=undefined;
-        this.icon=undefined;
+        this.icon=icon;
         this.userInfo= {};
         this.overlaySource=undefined;
     }

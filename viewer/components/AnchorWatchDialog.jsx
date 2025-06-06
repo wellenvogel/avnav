@@ -113,7 +113,7 @@ const WatchDialog=(props)=> {
         </DialogButtons>
     </DialogFrame>
 }
-const WatchDialogWithFunctions=(props)=> {
+export const WatchDialogWithFunctions=(props)=> {
     const dialogContext=useDialogContext();
     let router = NavData.getRoutingHandler();
     let pos = NavData.getCurrentPosition();

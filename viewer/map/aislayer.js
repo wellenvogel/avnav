@@ -389,7 +389,7 @@ class AisLayer{
                 foundMmsis[target.ais.mmsi]=true;
                 const featureInfo=new AisFeatureInfo({point:target.ais.receivedPos,mmsi:target.ais.mmsi});
                 featureInfo.title = AisFormatter.format(firstLabel, target.ais, true);
-                const [, symbol, ] = this.getStyleEntry(target);
+                const [, symbol, ] = this.getStyleEntry(target.ais);
                 if (symbol && symbol.image) featureInfo.icon=symbol.image;
                 targetList.push(featureInfo)
             }

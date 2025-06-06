@@ -24,7 +24,7 @@
  * display the infos of a feature
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
@@ -40,7 +40,7 @@ import {InfoItem} from "./BasicDialogs";
 import {AisFeatureInfo, AnchorFeatureInfo, BaseFeatureInfo, FeatureAction, FeatureInfo} from "../map/featureInfo";
 import Helper from "../util/helper";
 import {AisInfoWithFunctions} from "./AisInfoDisplay";
-import {anchorWatchDialog} from "./AnchorWatchDialog";
+import AnchorWatchDialog, {anchorWatchDialog, WatchDialogWithFunctions} from "./AnchorWatchDialog";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -131,13 +131,22 @@ const InfoRowDisplay=({row,data,className})=>{
     if (v === undefined) return null;
     return <InfoItem label={row.label} value={v} className={className}/>
 }
+const ImageIcon=({iconImage,className})=>{
+    const ref=useRef();
+    useEffect(() => {
+        if (ref.current) ref.current.appendChild(iconImage.cloneNode(true));
+    }, []);
+    return <div className={Helper.concatsp(className,'ImageIcon')} ref={ref}/>
+}
 
 export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions}) => {
     const dialogContext = useDialogContext();
+    const shouldKeep=useRef(false);
     const select = useCallback((featureInfo) => {
         if (!onSelectCb || onSelectCb(featureInfo)) {
+            shouldKeep.current=false;
             if (featureInfo instanceof AisFeatureInfo){
-                dialogContext.replaceDialog((dprops)=><AisInfoWithFunctions
+                dialogContext.showDialog((dprops)=><AisInfoWithFunctions
                         {...dprops}
                         mmsi={featureInfo.urlOrKey}
                         actionCb={(action,m)=>{
@@ -150,7 +159,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 return;
             }
             if (featureInfo instanceof AnchorFeatureInfo){
-                anchorWatchDialog(dialogContext,true);
+                dialogContext.replaceDialog((dprops)=><WatchDialogWithFunctions {...dprops}/>)
                 return;
             }
             let factions = [];
@@ -161,12 +170,21 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                     }
                 })
             }
-            dialogContext.replaceDialog((dprops) => <FeatureInfoDialog
+            dialogContext.showDialog((dprops) => <FeatureInfoDialog
                     {...dprops}
                     featureInfo={featureInfo}
                     additionalActions={factions}
                     history={history}
-                />
+                    cancelAction={()=>{
+                        shouldKeep.current=true;
+                        return true;
+                    }}
+                />,
+                ()=>{
+                    if (! shouldKeep.current){
+                        dialogContext.closeDialog();
+                    }
+                }
             )
         } else {
             dialogContext.closeDialog();
@@ -205,7 +223,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 select(feature);
             }}>
                 <div className={'icons'}>
-                {feature.icon && <img className={'icon'} src={feature.icon.src}/>}
+                {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
                 {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
                 {feature.isOverlay && (feature.type !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
                 </div>
@@ -223,7 +241,7 @@ FeatureListDialog.propTypes={
     listActions: PropTypes.arrayOf(FeatureAction) //will be called with first list element (if this is a BaseFeatureInfo)
 }
 
-const FeatureInfoDialog = ({featureInfo,additionalActions,history}) => {
+const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction}) => {
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
     if (! featureInfo){
@@ -300,6 +318,13 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history}) => {
                         close={false}
                     >Hide</DB>}
                 <DB name={"cancel"}
+                    onPreClose={()=>{
+                        if (cancelAction) {
+                            return cancelAction();
+                        }
+                        return true;
+                    }}
+                    close={false}
                 >Cancel</DB>
             </DialogButtons>
         </DialogFrame>
@@ -309,5 +334,6 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history}) => {
 FeatureInfoDialog.propTypes={
     featureInfo: PropTypes.instanceOf(FeatureInfo),
     history: PropTypes.object.isRequired,
-    additionalActions: PropTypes.array
+    additionalActions: PropTypes.array,
+    cancelAction: PropTypes.func
 }
