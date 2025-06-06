@@ -17,7 +17,7 @@ import {handleCtxRef, showDialog, showPromiseDialog} from '../components/Overlay
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
-import LayoutHandler, {itemFromLayout} from '../util/layouthandler.js';
+import LayoutHandler from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import {getOverlayConfigName} from "../map/chartsourcebase";
@@ -176,11 +176,11 @@ const MapPage =(iprops)=>{
         return <ItemList  {...forward}
                           className={"widgetContainer "+mode+" "+panel}
                           itemCreator={(widget)=>{
-                              return widgetCreator(itemFromLayout(widget,panelItems),mode)
+                              return widgetCreator(widget,mode)
                           }}
-                          itemList={panelItems.nameList}
+                          itemList={panelItems.list}
                           onItemClick={(item,data)=>{
-                              props.onItemClick(itemFromLayout(item,panelItems),data,panelItems.name,invertEditDirection)
+                              props.onItemClick(item,data,panelItems.name,invertEditDirection)
                           }}
                           onClick={()=>{
                               EditWidgetDialog.createDialog(undefined,layoutPage,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
@@ -214,6 +214,7 @@ const MapPage =(iprops)=>{
                 hideCallback={()=>{
                     mapholder.updateSize();
                 }}
+                editingChanged={()=>mapholder.updateSize()}
             >
                 {props.mapFloat?map:null}
                 <PageLeft dialogCtxRef={(ctx)=>{

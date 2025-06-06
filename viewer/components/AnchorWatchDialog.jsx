@@ -113,8 +113,8 @@ const WatchDialog=(props)=> {
         </DialogButtons>
     </DialogFrame>
 }
-
-export const anchorWatchDialog = (opt_dialogContext)=> {
+export const WatchDialogWithFunctions=(props)=> {
+    const dialogContext=useDialogContext();
     let router = NavData.getRoutingHandler();
     let pos = NavData.getCurrentPosition();
     let isActive=false;
@@ -123,26 +123,34 @@ export const anchorWatchDialog = (opt_dialogContext)=> {
     }
     if (!pos && ! isActive) {
         Toast("no gps position");
-        return;
+        dialogContext.closeDialog();
+        return null;
     }
-    showDialog(opt_dialogContext,(props)=>{
-        return <WatchDialog
-            {...props}
-            active={isActive}
-            position={pos}
-            setCallback={(values)=>{
-                AlarmHandler.stopAlarm('anchor');
-                router.anchorOn(values.refPoint,values.radius);
-            }}
-            stopCallback={()=>{
-                router.anchorOff();
-                //alarms will be stopped anyway by the server
-                //but this takes some seconds...
-                AlarmHandler.stopAlarm('anchor');
-                AlarmHandler.stopAlarm('gps');
-            }}
-            />
-    })
+    return <WatchDialog
+        {...props}
+        active={isActive}
+        position={pos}
+        setCallback={(values)=>{
+            AlarmHandler.stopAlarm('anchor');
+            router.anchorOn(values.refPoint,values.radius);
+        }}
+        stopCallback={()=>{
+            router.anchorOff();
+            //alarms will be stopped anyway by the server
+            //but this takes some seconds...
+            AlarmHandler.stopAlarm('anchor');
+            AlarmHandler.stopAlarm('gps');
+        }}
+    />
+}
+
+export const anchorWatchDialog = (opt_dialogContext,opt_replace)=> {
+    if (opt_dialogContext && opt_replace){
+        opt_dialogContext.replaceDialog((props)=><WatchDialogWithFunctions {...props}/>);
+    }
+    else {
+        showDialog(opt_dialogContext, (props) => <WatchDialogWithFunctions {...props}/>)
+    }
 };
 export const AnchorWatchKeys={
     watchDistance:keys.nav.anchor.watchDistance,

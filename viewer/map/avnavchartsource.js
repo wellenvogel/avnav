@@ -37,10 +37,10 @@ import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';
 import olImageTile from 'ol/src/ImageTile';
 import olTileState from 'ol/src/TileState';
-import assign from 'object-assign';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
+import {ChartFeatureInfo} from "./featureInfo";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -281,6 +281,10 @@ class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
         this.destroySequence=0;
+    }
+
+    isChart() {
+        return true;
     }
 
     prepareInternal() {
@@ -604,26 +608,28 @@ class AvnavChartSource extends ChartSourceBase{
                         }
                     }
                     if (topInfo) {
-                        let info=assign({},topInfo,{
-                            overlayType:'chart',
+                        let info=new ChartFeatureInfo({
                             chartKey: this.getChartKey(),
-                            source: this,
-                            overlayName:this.chartEntry.name,
-                            },
-                            topInfo
-                        );
-                        if (info.nextTarget){
+                            title:this.getName(),
+                            isOverlay: ! this.isBaseChart()
+                            });
+                        info.userInfo=topInfo;
+                        delete info.userInfo.name;
+                        if (topInfo.nextTarget){
                             let nextTarget;
-                            if (info.nextTarget instanceof Array){
+                            if (topInfo.nextTarget instanceof Array){
                                 //old style coordinate lon,lat
                                 nextTarget=new navobjects.Point();
-                                nextTarget.fromCoord(info.nextTarget);
+                                nextTarget.fromCoord(topInfo.nextTarget);
                             }
-                            else if (info.nextTarget instanceof Object){
+                            else if (topInfo.nextTarget instanceof Object){
                                  nextTarget=new navobjects.Point();
-                                 nextTarget.fromPlain(info.nextTarget);
+                                 nextTarget.fromPlain(topInfo.nextTarget);
                             }
-                            info.nextTarget=nextTarget;
+                            info.point=nextTarget;
+                        }
+                        if (! info.validPoint()){
+                            info.point=new navobjects.Point(lonlat[0],lonlat[1])
                         }
                         resolve([info]);
                     }

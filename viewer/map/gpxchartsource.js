@@ -41,6 +41,7 @@ import {getRouteStyles} from "./routelayer";
 import routeobjects from "../nav/routeobjects";
 import {getClosestRoutePoint} from "../nav/routeeditor";
 import Mapholder from "./mapholder";
+import {FeatureInfo, OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -68,6 +69,16 @@ class OwnGpx extends olGPXFormat{
                 feature.setGeometry(new olLineString(coordinates));
                 feature.set('name',route.name);
                 feature.set('route',route);
+                rt.push(feature);
+            }
+        }
+        let tracks=node.ownerDocument.getElementsByTagName('trk');
+        for (let i=0;i<tracks.length;i++){
+            let trkel=tracks[i];
+            trkel.parentNode.removeChild(trkel);
+            const feature=super.readFeatureFromNode(trkel);
+            if (feature){
+                feature.set('track',true);
                 rt.push(feature);
             }
         }
@@ -348,45 +359,50 @@ class GpxChartSource extends ChartSourceBase{
         });
     }
     featureToInfo(feature,pixel){
-        let rt={
-            overlayName:this.chartEntry.name,
-            overlayType:this.chartEntry.type,
-            overlayUrl: this.chartEntry.url,
-            overlaySource: this
-        };
         if (! feature) {
-            return rt;
+            return;
         }
-
+        let rt;
+        const ot=(this.chartEntry||{}).type;
+        const oname=this.getName();
+        const fname=feature.get('name');
+        const url=this.getUrl();
+        if (ot==='track'){
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:url});
+        }
+        else if (ot === 'route'){
+            rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})
+        }
+        else{
+            rt=new OverlayFeatureInfo({title: oname,urlOrKey:url});
+        }
+        rt.overlaySource=this;
         let geometry=feature.getGeometry();
         let coordinates;
         if (geometry instanceof olPoint){
-            rt.kind='point';
             coordinates=this.mapholder.fromMapToPoint(geometry.getCoordinates());
-            rt.nextTarget=coordinates;
-            const fn=feature.get('name');
-            if (fn !== undefined) rt.nextTarget.name=fn;
+            rt.point=coordinates;
+            if (fname) rt.point.name=fname;
+
         }
         else{
             if (geometry){
                 coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
-                if (this.isRoute){
-                    const route=feature.get('route');
-                    if (route){
-                        rt.routeName=route.name;
+                const route=feature.get('route')
+                if (rt instanceof RouteFeatureInfo && route){
                         const routePoint=getClosestRoutePoint(route,coordinates);
-                        if (routePoint) coordinates=routePoint;
+                        if (routePoint) rt.point=routePoint;
                     }
                 }
-                rt.nextTarget=coordinates;
-            }
             else {
-                coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
+                rt.point = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
+        const userInfo={};
         let infoItems=['desc','name','sym','time','height','link','linkText'];
-        infoItems.forEach((item)=>rt[item]=feature.get(item));
-        this.formatFeatureInfo(this.styleParameters[editableOverlayParameters.featureFormatter], rt,feature,coordinates,true);
+        infoItems.forEach((item)=>userInfo[item]=feature.get(item));
+        this.formatFeatureInfo(this.styleParameters[editableOverlayParameters.featureFormatter], userInfo,feature,coordinates,true);
+        rt.userInfo=userInfo;
         return rt;
     }
 

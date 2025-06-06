@@ -1,0 +1,315 @@
+{
+  "description": "The system default layout. No keys and no properties.",
+  "layoutVersion": 1,
+  "properties": {
+    "layers": {
+      "ais": true
+    }
+  },
+  "widgets": {
+    "gpspage1": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "weight": 1.5
+        },
+        {
+          "name": "XteDisplay",
+          "compareState": true,
+          "weight": 1
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "SOG",
+          "weight": 1.5
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage2": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "weight": 0.75
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "SOG",
+          "weight": 0.75
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage3": {},
+    "navpage": {
+      "left": [
+        {
+          "name": "CenterDisplay"
+        },
+        {
+          "name": "Zoom"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "ActiveRoute"
+        },
+        {
+          "name": "LargeTime"
+        }
+      ],
+      "left_small": [],
+      "top_small": [
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "ActiveRoute"
+        },
+        {
+          "name": "LargeTime"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST",
+          "caption": "DST"
+        },
+        {
+          "name": "ETA"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        }
+      ],
+      "bottomLeft_anchor": [
+        {
+          "name": "AnchorBearing",
+          "caption": "ACHR-BRG",
+          "unit": "°"
+        },
+        {
+          "name": "AnchorDistance",
+          "caption": "ACHR-DST",
+          "unit": "m",
+          "formatterParameters": [
+            "m"
+          ]
+        },
+        {
+          "name": "AnchorWatchDistance",
+          "caption": "ACHR-WATCH",
+          "unit": "m",
+          "formatterParameters": [
+            3,
+            1
+          ]
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "CenterDisplay"
+        },
+        {
+          "name": "LargeTime",
+          "caption": "Time"
+        },
+        {
+          "name": "Zoom"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ],
+      "left_small_anchor": [],
+      "top_small_anchor": [
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "LargeTime",
+          "caption": "Time"
+        }
+      ],
+      "bottomLeft_small": [
+        {
+          "name": "BRG",
+          "caption": "BRG",
+          "unit": "°"
+        },
+        {
+          "name": "DST",
+          "caption": "DST"
+        },
+        {
+          "name": "ETA"
+        }
+      ],
+      "bottomLeft_small_anchor": [
+        {
+          "name": "AnchorBearing",
+          "caption": "ACHR-BRG",
+          "unit": "°"
+        },
+        {
+          "name": "AnchorDistance",
+          "caption": "ACHR-DST",
+          "formatterParameters": [
+            "m"
+          ]
+        }
+      ],
+      "bottomRight_small": [
+        {
+          "name": "COG",
+          "caption": "COG",
+          "unit": "°"
+        },
+        {
+          "name": "SOG",
+          "caption": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        }
+      ]
+    },
+    "editroutepage": {
+      "left": [
+        {
+          "name": "EditRoute"
+        },
+        {
+          "name": "RoutePoints"
+        }
+      ],
+      "left_small": [],
+      "top_small": [
+        {
+          "name": "EditRoute"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ]
+    }
+  }
+}

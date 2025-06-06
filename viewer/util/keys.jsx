@@ -26,7 +26,8 @@ export const PropertyType={
     LAYOUT:4,
     SELECT: 5,
     INTERNAL: 6,
-    MULTICHECKBOX: 7
+    MULTICHECKBOX: 7,
+    STRING: 8
 };
 
 /**
@@ -208,7 +209,7 @@ let keys={
         currentZoom:K,
         requiredZoom:K,
         centerPosition:K,
-        measurePosition: K,
+        activeMeasure: K,
         },
     gui:{
         capabilities:{
@@ -333,6 +334,7 @@ let keys={
         measureColor: new Property('red','Measure display color',PropertyType.COLOR),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
+        markerDefaultName: new Property('Marker','default SP name',PropertyType.STRING),
         trackColor: new Property("#942eba", "Color", PropertyType.COLOR),
         trackWidth: new Property(3, "Width", PropertyType.RANGE, [1, 10]),
         trackInterval: new Property(30, "Point Dist.(s)", PropertyType.RANGE, [5, 300]), //seconds
@@ -403,10 +405,6 @@ let keys={
         baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28]),
         widgetFontSize: new Property(14, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX),
-        showClock: new Property(true, "show clock", PropertyType.CHECKBOX),
-        showZoom: new Property(true, "show zoom", PropertyType.CHECKBOX),
-        showWind: new Property(true, "show wind", PropertyType.CHECKBOX),
-        showDepth: new Property(true, "show depth", PropertyType.CHECKBOX),
         autoZoom: new Property(true, "automatic zoom", PropertyType.CHECKBOX),
         nightMode: new Property(false, "NightMode", PropertyType.CHECKBOX),
         nightColorDim: new Property(60, "Night Dim for Colors", PropertyType.RANGE, [5, 100]), //should match @nightModeVale in less

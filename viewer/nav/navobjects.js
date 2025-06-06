@@ -60,6 +60,9 @@ navobjects.Point.prototype.toCoord=function(){
 navobjects.Point.prototype.clone=function(){
     return new navobjects.Point(this.lon,this.lat);
 };
+navobjects.Point.prototype.valid=function(){
+    return !isNaN(parseFloat(this.lat)) && ! isNaN(parseFloat(this.lon))
+}
 /**
  * a waypoint (to interact with the server)
  * @param {number} lon

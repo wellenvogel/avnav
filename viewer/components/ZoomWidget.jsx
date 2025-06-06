@@ -38,7 +38,6 @@ ZoomWidget.propTypes={
 
 ZoomWidget.storeKeys={
     zoom: keys.map.currentZoom,
-    requiredZoom: keys.map.requiredZoom,
-    visible: keys.properties.showZoom
+    requiredZoom: keys.map.requiredZoom
 };
 export default ZoomWidget;

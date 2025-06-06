@@ -290,8 +290,7 @@ let widgetList=[
         default: "--:--",
         caption: 'Time',
         storeKeys:{
-            value:keys.nav.gps.rtime,
-            visible: keys.properties.showClock
+            value:keys.nav.gps.rtime
         },
         formatter: 'formatClock'
     },
@@ -343,8 +342,7 @@ let widgetList=[
         caption: 'DPT',
         unit: 'm',
         storeKeys:{
-            value:keys.nav.gps.depthBelowTransducer,
-            visible: keys.properties.showDepth
+            value:keys.nav.gps.depthBelowTransducer
         },
         formatter: 'formatDecimal',
         formatterParameters: [3,1,true]

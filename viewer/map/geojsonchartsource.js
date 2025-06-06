@@ -34,6 +34,7 @@ import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
 import {GeoJSON as olGeoJSON} from 'ol/format';
+import {FeatureInfo, OverlayFeatureInfo} from "./featureInfo";
 
 const supportedStyleParameters= {
     lineWidth:editableOverlayParameters.lineWidth,
@@ -228,37 +229,35 @@ class GeoJsonChartSource extends ChartSourceBase{
         });
     }
     featureToInfo(feature,pixel){
-        let rt={
-            overlayName:this.chartEntry.name,
-            overlayType:this.chartEntry.type,
-            overlayUrl: this.chartEntry.url,
+        let rt=new OverlayFeatureInfo({
+            title:this.getName(),
+            url: this.getUrl(),
             overlaySource: this
-        };
+        });
         if (! feature) {
             return rt;
         }
 
         let geometry=feature.getGeometry();
-        let coordinates;
         if (geometry instanceof olPoint){
-            rt.kind='point';
-            rt.nextTarget=this.mapholder.fromMapToPoint(geometry.getCoordinates());
+            rt.point=this.mapholder.fromMapToPoint(geometry.getCoordinates());
         }
         else{
             if (geometry){
-                coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
-                rt.nextTarget=coordinates;
+                rt.point=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
             }
             else {
-                coordinates = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
+                rt.point = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
         }
+        const userInfo={};
         let param=['desc','name','sym','link','linkText'];
-        param.forEach((p)=>rt[p]=feature.get(p));
-        this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter], rt,feature,coordinates,true);
-        if (rt.link){
-            rt.link=this.getLinkUrl(rt.link);
+        param.forEach((p)=>userInfo[p]=feature.get(p));
+        this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter], userInfo,feature,rt.point,true);
+        if (userInfo.link){
+            userInfo.link=this.getLinkUrl(rt.link);
         }
+        rt.userInfo=userInfo;
         return rt;
     }
     static analyzeOverlay(overlay){

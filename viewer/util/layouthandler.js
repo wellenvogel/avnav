@@ -472,11 +472,7 @@ class LayoutHandler{
         for (let i=0;i<tryList.length;i++){
             let list=this.getDirectPanelData(page,tryList[i]);
             if (list) {
-                const nameList=[];
-                for (let i=0;i<list.length;i++){
-                    nameList.push({name:list[i].name,layoutIndex:i})
-                }
-                return {name:tryList[i],list:list,nameList:nameList};
+                return {name:tryList[i],list:list};
             }
         }
         return {name:basename};
@@ -869,14 +865,5 @@ LayoutHandler.prototype.ADD_MODES={
     beforeIndex: 3,
     afterIndex: 4
 };
-/**
- *
- * @param nameIdx the entry from panelData.nameList
- * @param panelData the panelData returned from getPanelData
- */
-export const itemFromLayout=(nameIdx,panelData)=>{
-    if (! (nameIdx instanceof Object) || ! ( panelData instanceof Object) || ! (panelData.list instanceof Array)) return;
-    if (nameIdx.layoutIndex === undefined) return;
-    return {...nameIdx,...panelData.list[nameIdx.layoutIndex]};
-}
+
 export default  new LayoutHandler();

@@ -550,6 +550,42 @@ body{
   }
 
 }
+.featureListDialog{
+  .icon.route{
+    .iconImage('route.svg')
+  }
+  .icon.track{
+    .iconImage('track.svg')
+  }
+  .icon.chart{
+    .iconImage('map2.svg')
+  }
+  .icon.overlay{
+    .iconImage('layers-black.svg');
+  }
+  .icon.waypoint{
+    .iconImage('waypoint.svg');
+  }
+  .icon.anchor{
+    .iconImage('anchor.svg');
+  }
+  .icon.measure{
+    .iconImage('straighten.svg');
+  }
+  .icons{
+    width: 4em;
+    display: inline-block;
+  }
+  .ImageIcon{
+    .flex-display();
+    .flex-direction(row);
+    img{
+      .flex-grow(1);
+      .flex-shrink(1);
+      min-width: 0;
+    }
+  }
+}
 .featureInfoHtml{
   white-space: pre;
   margin-left: 1em;

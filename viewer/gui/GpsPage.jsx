@@ -15,7 +15,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import LayoutHandler, {itemFromLayout} from '../util/layouthandler.js';
+import LayoutHandler from '../util/layouthandler.js';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
@@ -33,8 +33,7 @@ const PANEL_LIST=['left','m1','m2','m3','right'];
 function resizeFont() {
     GuiHelpers.resizeByQuerySelector('#gpspage .resize');
 }
-const widgetCreator=(nameIdx,weightSum,panelData)=>{
-    let widget=itemFromLayout(nameIdx,panelData);
+const widgetCreator=(widget,weightSum)=>{
     if (! widget) return ()=>null;
     let {weight,...widgetProps}=widget;
     if (weight === undefined) weight=1;
@@ -206,8 +205,7 @@ const GpsPage = (props) => {
                 }
             }
         ]);
-    const onItemClick = useCallback((nameIdx, data, panelInfo) => {
-        const item=itemFromLayout(nameIdx,panelInfo);
+    const onItemClick = useCallback((item, data, panelInfo) => {
         if (! item) return;
         if (LayoutHandler.isEditing()) {
             showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
@@ -273,10 +271,10 @@ const GpsPage = (props) => {
             dragFrame: panelData.name,
             allowOther: true,
             className: 'widgetContainer',
-            itemCreator: (nameIdx) => {
-                return widgetCreator(nameIdx, sum,panelData);
+            itemCreator: (widget) => {
+                return widgetCreator(widget, sum);
             },
-            itemList: panelData.nameList,
+            itemList: panelData.list,
             fontSize: fontSize,
             onItemClick: (item, data) => {
                 onItemClick(item, data, panelData);

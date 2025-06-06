@@ -13,7 +13,7 @@ const DialogButton=(props)=>{
         useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
             if (props.onClick && ! props.disabled && props.visible !== false) props.onClick();
         });
-        let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,...forward}=useStore(props);
+        let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,...forward}=useStore(props);
         if (visible === false) return null;
         let spanStyle={};
         if (icon !== undefined) {
@@ -31,8 +31,13 @@ const DialogButton=(props)=>{
                 {...style}
                 name={name}
                 onClick={(ev)=>{
-                    if (! onClick || close) dialogContext.closeDialog();
-                    if (onClick) onClick(ev);
+                    if (! onClick || close) {
+                        if (onPreClose) {
+                            if (! onPreClose(ev,dialogContext)) return;
+                        }
+                        dialogContext.closeDialog();
+                    }
+                    if (onClick) onClick(ev,dialogContext);
                 }}
                 className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
             >
@@ -44,6 +49,7 @@ const DialogButton=(props)=>{
 
 DialogButton.propTypes={
     onClick: PropTypes.func,
+    onPreClose: PropTypes.func,
     className: PropTypes.string,
     name: PropTypes.string.isRequired,
     icon: PropTypes.string,

@@ -91,6 +91,9 @@ class ChartSourceBase {
 
         this.visible=true;
     }
+    getName(){
+        return (this.chartEntry||{}).name||'unknown';
+    }
     getConfig(){
         return(assign({},this.chartEntry));
     }
@@ -104,6 +107,12 @@ class ChartSourceBase {
         }
         return this.layers;
 
+    }
+    isChart(){
+        return false;
+    }
+    isBaseChart(){
+        return !!(this.chartEntry||{}).baseChart;
     }
 
     /**
@@ -171,7 +180,7 @@ class ChartSourceBase {
         return shallowcompare(this.chartEntry,other.chartEntry);
     }
     getUrl(){
-        return this.chartEntry.url;
+        return (this.chartEntry||{}).url;
     }
 
     getChartKey() {
@@ -251,7 +260,7 @@ class ChartSourceBase {
     }
 
     featureToInfo(feature,pixel,layer){
-        return {};
+        return ;
     }
     getSymbolUrl(sym,opt_ext){
         if (! sym) return;
@@ -355,28 +364,6 @@ class ChartSourceBase {
                 rt[key]=setting.default;
             }
         })
-        return rt;
-    }
-}
-class ConfigHelper extends Object {
-    constructor(props) {
-        super();
-        this.apply(props);
-    }
-    apply(props){
-        if (! props) return;
-        for (let k in props) {
-            this[k] = props[k];
-        }
-    }
-    toString() {
-        if (this.name !== undefined) return this.name;
-        return super.toString();
-    }
-    clone(updates){
-        let rt=new ConfigHelper()
-        rt.apply(this);
-        rt.apply(updates);
         return rt;
     }
 }
