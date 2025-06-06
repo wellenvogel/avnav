@@ -12,7 +12,7 @@ import {
     DBCancel,
     DialogButtons, DialogDisplay,
     DialogFrame, DialogRow,
-    DialogText, showDialog, useDialogContext
+    DialogText, showDialog, showPromiseDialog, useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import {
@@ -46,11 +46,21 @@ import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import MapEventGuard from "../hoc/MapEventGuard";
 import {useStoreState} from "../hoc/Dynamic";
-import {BoatFeatureInfo, FeatureAction, FeatureInfo, WpFeatureInfo} from "../map/featureInfo";
+import {
+    BoatFeatureInfo,
+    FeatureAction,
+    FeatureInfo,
+    RouteFeatureInfo,
+    TrackFeatureInfo,
+    WpFeatureInfo
+} from "../map/featureInfo";
+import {NameDialog} from "../components/RouteInfoHelper";
+import routeobjects from "../nav/routeobjects";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+const editorRoute = new RouteEdit(RouteEdit.MODES.EDIT);
 
 const PAGENAME='navpage';
 
@@ -171,7 +181,7 @@ const navToWp=(on)=>{
             wp.name=current.name;
         }
         else{
-            wp.name = 'Marker';
+            wp.name = globalStore.getData(keys.properties.markerDefaultName);
         }
         wp.routeName=undefined;
         center.assign(wp);
@@ -181,6 +191,12 @@ const navToWp=(on)=>{
     RouteHandler.routeOff();
     MapHolder.triggerRender();
 };
+const gotoFeature=(featureInfo)=>{
+    let target = featureInfo.point;
+    if (!target) return;
+    if (! target.name) target.name=globalStore.getData(keys.properties.markerDefaultName);
+    RouteHandler.wpOn(target);
+}
 const OVERLAYPANEL="overlay";
 const getCurrentMapWidgets=(sequence) =>{
     let current = getPanelWidgets(OVERLAYPANEL);
@@ -377,6 +393,37 @@ const needsChartLoad=()=>{
     if (mapholder.getCurrentChartEntry()) return;
     return mapholder.getLastChartKey()
 }
+const createRouteFeatureAction=(props)=>{
+    return new FeatureAction({
+        name:'ShowRoutePanel',
+        label: 'New Route',
+        onClick: (featureInfo,listCtx)=>{
+            showPromiseDialog(listCtx,(dprops)=><NameDialog
+                {...dprops}
+                title={"Select Name for new Route"}
+            />)
+                .then((routeName)=>{
+                    listCtx.closeDialog();
+                    let newRoute=new routeobjects.Route();
+                    newRoute.name=routeName;
+                    newRoute.server=globalStore.getData(keys.properties.connectedMode);
+                    newRoute.addPoint(0,featureInfo.point);
+                    editorRoute.setNewRoute(newRoute);
+                    MapHolder.setCenter(featureInfo.point);
+                    props.history.push("editroutepage");
+                },()=>{})
+
+        },
+        close:false,
+        condition: (featureInfo)=>{
+            if (featureInfo instanceof WpFeatureInfo) return false;
+            if (featureInfo instanceof RouteFeatureInfo) return false;
+            if (featureInfo instanceof TrackFeatureInfo) return false;
+            if (! featureInfo.validPoint()) return false;
+            return true;
+        }
+    })
+}
 const NavPage=(props)=>{
     const dialogCtx=useRef();
     const [wpButtonsVisible,setWpButtonsVisible]=useState(false);
@@ -494,12 +541,18 @@ const NavPage=(props)=>{
             const featureList=evdata.feature;
             const additionalActions = [];
             additionalActions.push(new FeatureAction({
+                name:'StopNav',
+                label:'StopNav',
+                onClick:(featureInfo)=>{
+                    RouteHandler.wpOn();
+                },
+                condition:(featureInfo)=>featureInfo instanceof WpFeatureInfo
+            }))
+            additionalActions.push(new FeatureAction({
                 name: 'goto',
                 label: 'Goto',
                 onClick: (featureInfo) => {
-                    let target = featureInfo.point;
-                    if (!target) return;
-                    RouteHandler.wpOn(target);
+                    gotoFeature(featureInfo);
                 },
                 condition: (featureInfo) => {
                     return featureInfo.validPoint() && !(featureInfo instanceof WpFeatureInfo ) && ! (featureInfo instanceof BoatFeatureInfo)
@@ -564,17 +617,17 @@ const NavPage=(props)=>{
                 },
                 condition: (featureInfo) => showRouteActionsCondition(featureInfo)
             }));
+            additionalActions.push(createRouteFeatureAction(props))
             const listActions=[
                 new FeatureAction({
                     name: 'goto',
                     label: 'Goto',
                     onClick: (featureInfo) => {
-                        let target = featureInfo.point;
-                        if (!target) return;
-                        RouteHandler.wpOn(target);
+                        gotoFeature(featureInfo);
                     },
                     condition: (featureInfo)=>featureInfo.validPoint()
-                })
+                }),
+                createRouteFeatureAction(props)
             ]
             showDialog(dialogCtx,(dprops)=><FeatureListDialog
                 {...dprops}

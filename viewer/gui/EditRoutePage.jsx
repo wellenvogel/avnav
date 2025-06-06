@@ -10,16 +10,19 @@ import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
 import {
-    DBCancel, DBOk,
+    DBCancel,
+    DBOk,
     DialogButtons,
-    DialogFrame, DialogRow,
+    DialogFrame,
+    DialogRow,
     showDialog,
     showPromiseDialog,
     useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import {useTimer} from '../util/GuiHelpers.js';
-import MapHolder, {EventTypes} from '../map/mapholder.js';
+import MapHolder from '../map/mapholder.js';
+import mapholder, {EventTypes} from '../map/mapholder.js';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit, {StateHelper} from '../nav/routeeditor.js';
@@ -29,7 +32,6 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import {FeatureListDialog} from "../components/FeatureInfoDialog";
-import mapholder from "../map/mapholder.js";
 import {Checkbox, InputReadOnly} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
@@ -37,12 +39,13 @@ import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 import Page from "../components/Page";
 import PropTypes from "prop-types";
 import {useStore, useStoreState} from "../hoc/Dynamic";
-import {ConfirmDialog, InfoItem, SelectList, ValueDialog} from "../components/BasicDialogs";
+import {ConfirmDialog, InfoItem, SelectList} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
 import plugimage from '../images/icons-new/plug.svg';
 import {ItemDownloadButton} from "../components/FileDialog";
 import UploadHandler from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
+import {existsRoute, loadRoutes, NameDialog} from "../components/RouteInfoHelper";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -101,23 +104,6 @@ export const INFO_ROWS = [
         }
     },
 ];
-
-const loadRoutes = () => {
-    return RouteHandler.listRoutes(true)
-        .then((routes) => {
-            routes.sort((a, b) => {
-                let na = a.name ? a.name.toLowerCase() : undefined;
-                let nb = b.name ? b.name.toLowerCase() : undefined;
-                if (na < nb) return -1;
-                if (na > nb) return 1;
-                return 0;
-            })
-            return routes;
-        })
-        .catch((error) => {
-            Toast(error)
-        });
-}
 
 const EditPointsDialog=(props)=>{
     if (!props.route) return null;
@@ -356,33 +342,6 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             DBCancel()
         ]}/>
     </DialogFrame>
-}
-
-const existsRoute = (name,availableRoutes) => {
-    if (!availableRoutes) return false;
-    let fullname=name;
-    if (Helper.getExt(name) === '.gpx') name=name.substring(0,name.length-4);
-    if (Helper.getExt(fullname) !== 'gpx') fullname += '.gpx';
-    for (let i = 0; i < availableRoutes.length; i++) {
-        if (availableRoutes[i].name === name || availableRoutes[i].name === fullname) return true;
-    }
-    return false;
-}
-
-const NameDialog=({resolveFunction,route,existingRoutes,title})=>{
-    return <ValueDialog
-        resolveFunction={(newName)=>{
-            if (newName) newName=newName.trim();
-            if (resolveFunction) resolveFunction(newName);
-        }}
-        title={title||"Select new name"}
-        value={route.name}
-        checkFunction={(newName)=>{
-            newName=newName.trim();
-            if (newName === '') return 'empty';
-            if (newName === route.name) return "unchanged";
-            if (existsRoute(newName,existingRoutes)) return "already exists";
-        }}/>
 }
 
 const RouteSaveModes={

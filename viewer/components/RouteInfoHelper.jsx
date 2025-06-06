@@ -29,6 +29,10 @@ import navdata from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
+import {ValueDialog} from "./BasicDialogs";
+import React, {useEffect, useState} from "react";
+import Helper from "../util/helper";
+import Toast from "./Toast";
 
 let RouteHandler=navdata.getRoutingHandler();
 
@@ -63,4 +67,54 @@ export const getRouteInfo = (routeName,opt_point) => {
             ,(error) => reject(error)
         );
     })
+}
+export const NameDialog = ({resolveFunction, route, existingRoutes, title}) => {
+    const [routeList,setRouteList]=useState(existingRoutes);
+    useEffect(() => {
+        if (! existingRoutes){
+            loadRoutes()
+                .then((routes) => {
+                    setRouteList(routes)
+                });
+        }
+    }, [existingRoutes]);
+    return <ValueDialog
+        resolveFunction={(newName) => {
+            if (newName) newName = newName.trim();
+            if (resolveFunction) resolveFunction(newName);
+        }}
+        title={title || "Select new name"}
+        value={route?route.name:''}
+        checkFunction={(newName) => {
+            newName = newName.trim();
+            if (newName === '') return 'empty';
+            if (route && newName === route.name) return "unchanged";
+            if (existsRoute(newName, routeList)) return "already exists";
+        }}/>
+}
+export const existsRoute = (name, availableRoutes) => {
+    if (!availableRoutes) return false;
+    let fullname = name;
+    if (Helper.getExt(name) === '.gpx') name = name.substring(0, name.length - 4);
+    if (Helper.getExt(fullname) !== 'gpx') fullname += '.gpx';
+    for (let i = 0; i < availableRoutes.length; i++) {
+        if (availableRoutes[i].name === name || availableRoutes[i].name === fullname) return true;
+    }
+    return false;
+}
+export const loadRoutes = () => {
+    return RouteHandler.listRoutes(true)
+        .then((routes) => {
+            routes.sort((a, b) => {
+                let na = a.name ? a.name.toLowerCase() : undefined;
+                let nb = b.name ? b.name.toLowerCase() : undefined;
+                if (na < nb) return -1;
+                if (na > nb) return 1;
+                return 0;
+            })
+            return routes;
+        })
+        .catch((error) => {
+            Toast(error)
+        });
 }

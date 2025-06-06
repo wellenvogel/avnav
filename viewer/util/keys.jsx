@@ -26,7 +26,8 @@ export const PropertyType={
     LAYOUT:4,
     SELECT: 5,
     INTERNAL: 6,
-    MULTICHECKBOX: 7
+    MULTICHECKBOX: 7,
+    STRING: 8
 };
 
 /**
@@ -333,6 +334,7 @@ let keys={
         measureColor: new Property('red','Measure display color',PropertyType.COLOR),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
+        markerDefaultName: new Property('Marker','default SP name',PropertyType.STRING),
         trackColor: new Property("#942eba", "Color", PropertyType.COLOR),
         trackWidth: new Property(3, "Width", PropertyType.RANGE, [1, 10]),
         trackInterval: new Property(30, "Point Dist.(s)", PropertyType.RANGE, [5, 300]), //seconds

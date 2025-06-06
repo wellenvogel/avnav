@@ -23,19 +23,20 @@
 import navobjects from "../nav/navobjects";
 
 export class FeatureAction{
-    constructor({name,label,onClick,condition}) {
+    constructor({name,label,onClick,condition,close}) {
         this.name=name;
         this.label=label;
         this.onClickHandler=onClick;
         this.condition=condition;
+        this.close=close;
     }
     shouldShow(featureInfo){
         if (! this.condition) return true;
         return this.condition(featureInfo);
     }
-    onClick(featureInfo){
+    onClick(featureInfo,dialogCtx){
         if (this.shouldShow(featureInfo) && this.onClickHandler){
-            this.onClickHandler(featureInfo);
+            this.onClickHandler(featureInfo,dialogCtx);
         }
     }
 }

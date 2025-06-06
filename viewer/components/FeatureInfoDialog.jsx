@@ -205,9 +205,10 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 buttonList.push({
                     name:action.name,
                     onClick:() => {
-                        action.onClick(baseInfo)
+                        action.onClick(baseInfo,dialogContext)
                     },
-                    label:action.label
+                    label:action.label,
+                    close: Helper.unsetorTrue(action.close)
                 });
             }
         })
@@ -295,15 +296,14 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
             })}
             <DialogButtons>
                 {additionalActions && additionalActions.map((action) => {
-                    if (typeof (action.condition) === "function") {
-                        if (!action.condition(featureInfo)) return null;
-                    }
-                    if (action.condition !== undefined && !action.condition) return null;
+                    if (!action.shouldShow(featureInfo)) return null;
                     return <DB
                         name={action.name}
                         onClick={() => {
-                            action.onClick(featureInfo)
-                        }}>
+                            action.onClick(featureInfo,dialogContext)
+                        }}
+                        close={Helper.unsetorTrue(action.close)}
+                        >
                         {action.label}
                     </DB>
                 })}
