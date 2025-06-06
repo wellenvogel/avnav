@@ -49,7 +49,7 @@ import {useStoreState} from "../hoc/Dynamic";
 import {
     BoatFeatureInfo,
     FeatureAction,
-    FeatureInfo,
+    FeatureInfo, MeasureFeatureInfo,
     RouteFeatureInfo,
     TrackFeatureInfo,
     WpFeatureInfo
@@ -393,23 +393,34 @@ const needsChartLoad=()=>{
     if (mapholder.getCurrentChartEntry()) return;
     return mapholder.getLastChartKey()
 }
-const createRouteFeatureAction=(props)=>{
+const createRouteFeatureAction=(props,opt_fromMeasure)=>{
     return new FeatureAction({
         name:'ShowRoutePanel',
         label: 'New Route',
         onClick: (featureInfo,listCtx)=>{
+            let measure;
+            if (opt_fromMeasure){
+                measure=globalStore.getData(keys.map.activeMeasure);
+                if (!measure) return;
+                if (measure.points.length < 1) return;
+            }
             showPromiseDialog(listCtx,(dprops)=><NameDialog
                 {...dprops}
                 title={"Select Name for new Route"}
             />)
                 .then((routeName)=>{
                     listCtx.closeDialog();
-                    let newRoute=new routeobjects.Route();
+                    let newRoute=measure?measure.clone():new routeobjects.Route();
                     newRoute.name=routeName;
                     newRoute.server=globalStore.getData(keys.properties.connectedMode);
-                    newRoute.addPoint(0,featureInfo.point);
+                    if (! measure) {
+                        newRoute.addPoint(0, featureInfo.point);
+                        MapHolder.setCenter(featureInfo.point);
+                    }
+                    else{
+                        MapHolder.setCenter(newRoute.getPointAtIndex(0));
+                    }
                     editorRoute.setNewRoute(newRoute);
-                    MapHolder.setCenter(featureInfo.point);
                     props.history.push("editroutepage");
                 },()=>{})
 
@@ -420,6 +431,8 @@ const createRouteFeatureAction=(props)=>{
             if (featureInfo instanceof RouteFeatureInfo) return false;
             if (featureInfo instanceof TrackFeatureInfo) return false;
             if (! featureInfo.validPoint()) return false;
+            if (opt_fromMeasure && !(featureInfo instanceof MeasureFeatureInfo)) return false;
+            if (!opt_fromMeasure && (featureInfo instanceof MeasureFeatureInfo)) return false;
             return true;
         }
     })
@@ -617,7 +630,8 @@ const NavPage=(props)=>{
                 },
                 condition: (featureInfo) => showRouteActionsCondition(featureInfo)
             }));
-            additionalActions.push(createRouteFeatureAction(props))
+            additionalActions.push(createRouteFeatureAction(props));
+            additionalActions.push(createRouteFeatureAction(props,true));
             const listActions=[
                 new FeatureAction({
                     name: 'goto',
