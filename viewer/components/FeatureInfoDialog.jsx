@@ -39,7 +39,7 @@ import Toast from "./Toast";
 import {InfoItem} from "./BasicDialogs";
 import {AisFeatureInfo, BaseFeatureInfo, FeatureAction, FeatureInfo} from "../map/featureInfo";
 import Helper from "../util/helper";
-import {AisInfoDialog, AisInfoWithFunctions} from "./AisInfoDisplay";
+import {AisInfoWithFunctions} from "./AisInfoDisplay";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -192,9 +192,11 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
             return <DialogRow key={feature.urlOrKey} className={'listEntry'} onClick={() => {
                 select(feature);
             }}>
+                <div className={'icons'}>
                 {feature.icon && <img className={'icon'} src={feature.icon.src}/>}
                 {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
                 {feature.isOverlay && <span className={Helper.concatsp('icon','overlay')}/> }
+                </div>
                 <span className={'title'}>{feature.title}</span>
             </DialogRow>
         })}

@@ -1628,7 +1628,7 @@ class MapHolder extends DrawingPositionConverter {
         }
         let currentTrackPoint = this.tracklayer.findTarget(evt.pixel);
         if (currentTrackPoint) {
-            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, name: 'current'}));
+            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',urlOrKey:'current'}));
         }
         const detectedFeatures = [];
         this.olmap.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
