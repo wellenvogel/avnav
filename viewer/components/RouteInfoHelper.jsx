@@ -26,6 +26,9 @@
 
 import Formatter from '../util/formatter';
 import navdata from "../nav/navdata";
+import navobjects from "../nav/navobjects";
+import globalStore from "../util/globalstore";
+import keys from "../util/keys";
 
 let RouteHandler=navdata.getRoutingHandler();
 
@@ -35,9 +38,12 @@ export const INFO_ROWS=[
     {label:'length',value:'length',formatter:(v)=>{
         return Formatter.formatDistance(v)+" nm";
         }},
+    {label:'remain',value:'remain',formatter:(v)=>{
+            return Formatter.formatDistance(v)+" nm";
+        }},
     {label:'next point',value:'nextTarget',formatter:(v)=>v.name}
     ];
-export const getRouteInfo = (routeName) => {
+export const getRouteInfo = (routeName,opt_point) => {
     return new Promise((resolve, reject) => {
         if (!routeName) reject("missing route name");
         RouteHandler.fetchRoute(routeName,false,(route)=>{
@@ -45,6 +51,12 @@ export const getRouteInfo = (routeName) => {
                 let rt={
                     length: info.length,
                     numPoints: info.numpoints,
+                }
+                if (opt_point instanceof navobjects.Point ){
+                    const idx=route.getIndexFromPoint(opt_point);
+                    if (idx >= 0) {
+                        rt.remain = route.computeLength(idx, globalStore.getData(keys.nav.routeHandler.useRhumbLine));
+                    }
                 }
                 resolve(rt);
             }

@@ -1618,7 +1618,9 @@ class MapHolder extends DrawingPositionConverter {
         //if we have a route point we will treat this as a feature info if not handled directly
         if (wp) {
             if (wp.routeName) {
-                featureInfos.push(new RouteFeatureInfo({point: wp}))
+                const info=new RouteFeatureInfo({point: wp});
+                info.title=`CurrentRoute: ${wp.routeName}`;
+                featureInfos.push(info);
             } else {
                 featureInfos.push(new WpFeatureInfo({point: wp}))
             }
@@ -1727,7 +1729,7 @@ class MapHolder extends DrawingPositionConverter {
             }
         }
         if (rt.length) {
-            if (rt.length == 1) return rt[0].idx;
+            if (rt.length == 1) return [rt[0].idx];
             rt.sort((a, b) => {
                 let da = (a.pixel[0] - pixel[0]) * (a.pixel[0] - pixel[0]) + (a.pixel[1] - pixel[1]) * (a.pixel[1] - pixel[1]);
                 let db = (b.pixel[0] - pixel[0]) * (b.pixel[0] - pixel[0]) + (b.pixel[1] - pixel[1]) * (b.pixel[1] - pixel[1]);

@@ -625,6 +625,9 @@ class AvnavChartSource extends ChartSourceBase{
                             }
                             info.point=nextTarget;
                         }
+                        if (! info.validPoint()){
+                            info.point=new navobjects.Point(lonlat[0],lonlat[1])
+                        }
                         resolve([info]);
                     }
                     else resolve([]);

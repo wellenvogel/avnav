@@ -45,6 +45,21 @@ NavHandler.getRoutingHandler();
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
 
 const INFO_ROWS=[
+    {label:'item',formatter:(v,featureInfo)=>{
+            if (featureInfo.isOverlay || featureInfo.type === FeatureInfo.TYPE.chart) return;
+            return featureInfo.title;
+        }},
+    {label:'overlay',value:'title',formatter:(v,overlay)=>{
+            if (!overlay.isOverlay || overlay.type === FeatureInfo.TYPE.chart) return;
+            let prefix="";
+            if (overlay.type) prefix=TYPE_PREFIX[overlay.type]||"";
+            return prefix+v;
+        }},
+    {label:'chart',value:'title',formatter:(v,overlay)=>{
+            if (overlay.type !== FeatureInfo.TYPE.chart) return;
+            return v;
+        }
+    },
     POS_ROW,
     {label: 'distance',value:'point',formatter:(v,featureInfo)=>{
             if (! featureInfo.validPoint()) return;
@@ -66,7 +81,10 @@ const INFO_ROWS=[
                 globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             return Formatter.formatDirection(distance.course)+" °";
         }},
-    {label:'name',formatter:(v,featureInfo)=>featureInfo.userInfo.name},
+    {label:'name',formatter:(v,featureInfo)=>{
+        if (featureInfo.validPoint() && featureInfo.point.name) return featureInfo.point.name;
+        return featureInfo.userInfo.name;
+        }},
     {label:'description',formatter:(v,feature)=>{
         const rt=feature.userInfo.desc;
         if (feature.userInfo.name === rt) return;
@@ -80,17 +98,6 @@ const INFO_ROWS=[
             return Formatter.formatDateTime(tv);
         }catch(e){}
         }},
-    {label:'overlay',value:'title',formatter:(v,overlay)=>{
-        if (!overlay.isOverlay || overlay.type === FeatureInfo.TYPE.chart) return;
-        let prefix="";
-        if (overlay.type) prefix=TYPE_PREFIX[overlay.type]||"";
-        return prefix+v;
-        }},
-    {label:'chart',value:'title',formatter:(v,overlay)=>{
-        if (overlay.type !== FeatureInfo.TYPE.chart) return;
-        return v;
-        }
-    },
     {label:'symbol',formatter:(v,featureInfo)=>featureInfo.userInfo.sym},
     //for s57 objects
     {label: 'buoy',formatter:(v,featureInfo)=>featureInfo.userInfo.buoy},
