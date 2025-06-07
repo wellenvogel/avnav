@@ -56,6 +56,7 @@ import {
 } from "../map/featureInfo";
 import {NameDialog} from "../components/RouteInfoHelper";
 import routeobjects, {Measure} from "../nav/routeobjects";
+import {KeepFromMode} from "../nav/routedata";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -167,7 +168,7 @@ const setCenterToTarget=()=>{
 
 const navNext=()=>{
     if (!activeRoute.hasRoute() ) return;
-    RouteHandler.wpOn(activeRoute.getNextWaypoint())
+    RouteHandler.wpOn(activeRoute.getNextWaypoint(),KeepFromMode.OLDTO);
 };
 
 const navToWp=(on)=>{
@@ -309,8 +310,7 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
             },
             onClick:()=>{
                 setShowWpButtons(false);
-                activeRoute.moveIndex(1);
-                RouteHandler.wpOn(activeRoute.getPointAt());
+                navNext();
 
             }
         },

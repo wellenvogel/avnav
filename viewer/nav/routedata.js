@@ -298,17 +298,24 @@ RouteData.prototype.isEditingActiveRoute=function(){
  state changes (edit on/route on/off...)
  ----------------------------------------------------------*/
 
+export const KeepFromMode={
+    NONE: 0, //use current position or center
+    CURRENT: 1, //keep current from
+    OLDTO: 2 //use old "to"
+}
 
 /**
  *
  * @param {navobjects.WayPoint} wp
- * @param opt_keep_from
+ * @param {number}[opt_keep_from] KeepFromMode
  */
 RouteData.prototype.wpOn=function(wp,opt_keep_from) {
     if (! wp) {
         this.routeOff();
         return;
     }
+    if (! opt_keep_from) opt_keep_from=KeepFromMode.NONE;
+    if (opt_keep_from === true) opt_keep_from=KeepFromMode.CURRENT;
     let stwp=new navobjects.WayPoint.fromPlain(wp);
     if (wp.routeName){
         //if the waypoint seems to be part of a route
@@ -367,11 +374,11 @@ RouteData.prototype.anchorOff=function(){
  *
  * @param mode
  * @param {navobjects.WayPoint} newWp
- * @param {boolean} opt_keep_from
+ * @param {KeepFromMode} keep_from
  * @returns {boolean}
  * @private
  */
-RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
+RouteData.prototype._startRouting = function (mode, newWp, keep_from) {
     activeRoute.modify((data)=> {
         let pfrom;
         let gps = globalStore.getData(keys.nav.gps.position);
@@ -386,31 +393,32 @@ RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
         let oldFrom;
         //check if we change the mode - in this case we always set a new from
         if (! data.leg || !data.leg.active) {
-            opt_keep_from = false;
+            keep_from = KeepFromMode.NONE;
         }
         else {
-            oldFrom=data.leg.from;
             if (data.leg.hasRoute()) {
                 //we had a route
                 if (mode == routeobjects.RoutingMode.WP || mode == routeobjects.RoutingMode.WPINACTIVE) {
-                    opt_keep_from = false;
+                    keep_from = KeepFromMode.NONE;
                 }
                 else {
                     if (newWp && newWp.routeName != data.leg.getRouteName()) {
                         //we switched to a new route
-                        opt_keep_from = false;
+                        keep_from = KeepFromMode.NONE;
                     }
                 }
             }
             else {
                 if (mode == routeobjects.RoutingMode.ROUTE) {
-                    opt_keep_from = false;
+                    keep_from = KeepFromMode.NONE;
                 }
             }
+            if (keep_from === KeepFromMode.CURRENT) oldFrom=data.leg.from;
+            if (keep_from === KeepFromMode.OLDTO) oldFrom=data.leg.to;
         }
         data.leg = new routeobjects.Leg();
         data.leg.approachDistance = parseFloat(globalStore.getData(keys.properties.routeApproach,-1));
-        if (opt_keep_from && oldFrom) data.leg.from=oldFrom;
+        if (oldFrom) data.leg.from=oldFrom;
         else data.leg.from = pfrom;
         data.leg.active = false;
         if (mode == routeobjects.RoutingMode.WP) {
