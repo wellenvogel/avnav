@@ -655,7 +655,7 @@ const NavPage=(props)=>{
             const measure=globalStore.getData(keys.map.activeMeasure);
             listActions.push(new FeatureAction({
                 name: 'Measure',
-                label: (measure === undefined)?'Measure':'Add Measure',
+                label: (measure === undefined)?'Measure':'+ Measure',
                 onClick: (featureInfo)=>{
                     let newMeasure;
                     if (measure){
@@ -671,7 +671,7 @@ const NavPage=(props)=>{
             }))
             listActions.push(new FeatureAction({
                 name: 'MeasureOff',
-                label: 'Measure Off',
+                label: 'Measure',
                 onClick: (featureInfo)=>{
                     globalStore.storeData(keys.map.activeMeasure,undefined)
                 },
