@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import {FeatureListDialog} from "../components/FeatureInfoDialog";
+import {GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -49,10 +49,7 @@ import {useStoreState} from "../hoc/Dynamic";
 import {
     BoatFeatureInfo,
     FeatureAction,
-    FeatureInfo, MeasureFeatureInfo,
-    RouteFeatureInfo,
-    TrackFeatureInfo,
-    WpFeatureInfo
+    FeatureInfo, WpFeatureInfo
 } from "../map/featureInfo";
 import {NameDialog} from "../components/RouteInfoHelper";
 import routeobjects, {Measure} from "../nav/routeobjects";
@@ -681,7 +678,7 @@ const NavPage=(props)=>{
                 condition: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined,
                 toggle: true
             }))
-            showDialog(dialogCtx,(dprops)=><FeatureListDialog
+            showDialog(dialogCtx,(dprops)=><GuardedFeatureListDialog
                 {...dprops}
                 featureList={featureList}
                 additionalActions={additionalActions}

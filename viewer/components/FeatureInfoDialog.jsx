@@ -41,6 +41,7 @@ import {AisFeatureInfo, AnchorFeatureInfo, BaseFeatureInfo, FeatureAction, Featu
 import Helper from "../util/helper";
 import {AisInfoWithFunctions} from "./AisInfoDisplay";
 import {WatchDialogWithFunctions} from "./AnchorWatchDialog";
+import MapEventGuard from "../hoc/MapEventGuard";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -139,7 +140,7 @@ const ImageIcon=({iconImage,className})=>{
     return <div className={Helper.concatsp(className,'ImageIcon')} ref={ref}/>
 }
 
-export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions}) => {
+export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions,className}) => {
     const dialogContext = useDialogContext();
     const shouldKeep=useRef(false);
     const select = useCallback((featureInfo) => {
@@ -212,7 +213,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         })
     }
     buttonList.push(DBCancel());
-    return <DialogFrame className={'featureListDialog'} title={'FeatureList'}>
+    return <DialogFrame className={Helper.concatsp('featureListDialog',className)} title={'FeatureList'}>
         {baseInfo &&
             <InfoRowDisplay row={POS_ROW} data={baseInfo}/>
         }
@@ -233,12 +234,16 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
     </DialogFrame>
 }
 FeatureListDialog.propTypes={
+    className: PropTypes.string,
     history: PropTypes.object.isRequired,
     featureList: PropTypes.arrayOf(FeatureInfo),
     onSelectCb: PropTypes.func, //return false to cancel
     additionalActions: PropTypes.arrayOf(FeatureAction),
     listActions: PropTypes.arrayOf(FeatureAction) //will be called with first list element (if this is a BaseFeatureInfo)
 }
+
+export const GuardedFeatureListDialog=MapEventGuard(FeatureListDialog);
+GuardedFeatureListDialog.propTypes=FeatureListDialog.propTypes;
 
 const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction}) => {
     const [extendedInfo, setExtendedInfo] = useState({});
