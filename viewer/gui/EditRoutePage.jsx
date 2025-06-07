@@ -576,7 +576,7 @@ const EditRouteDialog = (props) => {
                 onClick={() => save(route.clone(),saveMode)}
                 disabled={!route.differsTo(props.route) || (! writable && saveMode !== RouteSaveModes.REPLACE_EXISTING)}
             >
-                Save
+                Ok
             </DB>
 
         </DialogButtons>
@@ -861,10 +861,11 @@ const EditRoutePage = (props) => {
         if (evdata.type === EventTypes.LOAD || evdata.type === EventTypes.RELOAD) {
             if (hasCentered.current) return true;
             if (props.options && props.options.center) {
-                if (editor.hasRoute()) {
-                    let wp = editor.getPointAt();
-                    if (wp) {
-                        setLastCenteredWp(wp.index);
+                if (currentEditor.hasRoute()) {
+                    const index=currentEditor.getIndex();
+                    let wp = currentEditor.getPointAt(index);
+                    if (wp && index >= 0) {
+                        setLastCenteredWp(index);
                         mapholder.setCenter(wp);
                     }
                 }

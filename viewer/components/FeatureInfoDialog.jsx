@@ -194,12 +194,9 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         dialogContext.closeDialog();
         return null;
     }
-    let baseInfo;
-    if (featureList[0].validPoint()){
-        baseInfo=featureList[0];
-    }
     const buttonList=[];
-    if (baseInfo && listActions && (baseInfo instanceof BaseFeatureInfo)){
+    const baseInfo=featureList[0];
+    if (baseInfo && listActions){
         listActions.forEach((action)=>{
             if (action.shouldShow(baseInfo)){
                 buttonList.push({

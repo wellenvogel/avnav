@@ -396,7 +396,7 @@ const needsChartLoad=()=>{
 const createRouteFeatureAction=(props,opt_fromMeasure)=>{
     return new FeatureAction({
         name:'ShowRoutePanel',
-        label: 'New Route',
+        label: opt_fromMeasure?'To Route':'New Route',
         onClick: (featureInfo,listCtx)=>{
             let measure;
             if (opt_fromMeasure){
@@ -415,24 +415,24 @@ const createRouteFeatureAction=(props,opt_fromMeasure)=>{
                     newRoute.server=globalStore.getData(keys.properties.connectedMode);
                     if (! measure) {
                         newRoute.addPoint(0, featureInfo.point);
-                        MapHolder.setCenter(featureInfo.point);
+                        editorRoute.setRouteAndIndex(newRoute,0);
                     }
                     else{
-                        MapHolder.setCenter(newRoute.getPointAtIndex(0));
+                        editorRoute.setRouteAndIndex(newRoute,newRoute.getIndexFromPoint(featureInfo.point))
                     }
-                    editorRoute.setNewRoute(newRoute);
-                    props.history.push("editroutepage");
+                    props.history.push("editroutepage",{center:true});
                 },()=>{})
 
         },
         close:false,
         condition: (featureInfo)=>{
-            if (featureInfo instanceof WpFeatureInfo) return false;
-            if (featureInfo instanceof RouteFeatureInfo) return false;
-            if (featureInfo instanceof TrackFeatureInfo) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.waypoint) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.boat) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.anchor) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay) return false;
             if (! featureInfo.validPoint()) return false;
-            if (opt_fromMeasure && !(featureInfo instanceof MeasureFeatureInfo)) return false;
-            if (!opt_fromMeasure && (featureInfo instanceof MeasureFeatureInfo)) return false;
+            if (opt_fromMeasure && (featureInfo.getType() !== FeatureInfo.TYPE.measure)) return false;
+            if (!opt_fromMeasure && (featureInfo.getType() === FeatureInfo.TYPE.measure)) return false;
             return true;
         }
     })
@@ -620,9 +620,8 @@ const NavPage=(props)=>{
                     RouteHandler.fetchRoute(featureInfo.urlOrKey, false,
                         (route) => {
                             let idx = route.findBestMatchingIdx(nextTarget);
-                            let editor = new RouteEdit(RouteEdit.MODES.EDIT);
-                            editor.setNewRoute(route, idx >= 0 ? idx : undefined);
-                            props.history.push("editroutepage");
+                            editorRoute.setNewRoute(route, idx >= 0 ? idx : undefined);
+                            props.history.push("editroutepage",{center:true});
                         },
                         (error) => {
                             if (error) Toast(error);
@@ -634,9 +633,9 @@ const NavPage=(props)=>{
                 name: 'editRoute',
                 label: 'Edit',
                 onClick: (featureInfo) => {
-                    if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
+                    activeRoute.setNewIndex(activeRoute.getIndexFromPoint(featureInfo.point,true));
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
-                    props.history.push("editroutepage");
+                    props.history.push("editroutepage",{center:true});
                 },
                 condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay
             }));
@@ -649,7 +648,10 @@ const NavPage=(props)=>{
                     onClick: (featureInfo) => {
                         gotoFeature(featureInfo);
                     },
-                    condition: (featureInfo)=>featureInfo.validPoint()
+                    condition: (featureInfo)=>featureInfo.validPoint() &&
+                        //could only be base boat or anchor
+                        featureInfo.getType() === FeatureInfo.TYPE.base
+
                 }),
                 createRouteFeatureAction(props)
             ]
