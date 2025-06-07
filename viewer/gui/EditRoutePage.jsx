@@ -635,7 +635,6 @@ const checkRouteWritable = (dialogCtxRef) => {
     return false;
 };
 
-
 const getTargetFromInfo=(featureInfo)=> {
     const target = featureInfo.point;
     return target;
@@ -818,6 +817,44 @@ const EditRoutePage = (props) => {
             .catch(() => {
             });
     }
+    const pointActions=[new FeatureAction(
+        {
+            name: 'insert', label: 'Before', onClick: (info) => {
+                const target = getTargetFromInfo(info);
+                if (!target) return;
+                let currentEditor = getCurrentEditor();
+                MapHolder.setCenter(target);
+                currentEditor.addWaypoint(target, true);
+                setLastCenteredWp(currentEditor.getIndex());
+            },
+            condition: (featureInfo) => featureInfo.validPoint()
+        }),
+        new FeatureAction(
+            {
+                name: 'add', label: 'After', onClick: (info) => {
+                    const target = getTargetFromInfo(info);
+                    if (!target) return;
+                    let currentEditor = getCurrentEditor();
+                    MapHolder.setCenter(target);
+                    currentEditor.addWaypoint(target);
+                    setLastCenteredWp(currentEditor.getIndex());
+                },
+                condition: (featureInfo) => featureInfo.validPoint()
+            }),
+        new FeatureAction(
+            {
+                name: 'center', label: 'Center', onClick: (info) => {
+                    const target = getTargetFromInfo(info);
+                    if (!target) return;
+                    let currentEditor = getCurrentEditor();
+                    MapHolder.setCenter(target);
+                    currentEditor.changeSelectedWaypoint(target);
+                    setLastCenteredWp(currentEditor.getIndex());
+                },
+                condition: (featureInfo) => featureInfo.validPoint()
+            })
+    ]
+
     const mapEvent = (evdata) => {
         //console.log("mapevent: "+evdata.type);
         let currentEditor = getCurrentEditor();
@@ -847,45 +884,9 @@ const EditRoutePage = (props) => {
             let featureList = evdata.feature;
             const additionalActions = [];
             if (routeWritable) {
-                additionalActions.push(new FeatureAction(
-                        {
-                            name: 'insert', label: 'Before', onClick: (info) => {
-                                const target = getTargetFromInfo(info);
-                                if (!target) return;
-                                let currentEditor = getCurrentEditor();
-                                MapHolder.setCenter(target);
-                                currentEditor.addWaypoint(target, true);
-                                setLastCenteredWp(currentEditor.getIndex());
-                            },
-                            condition: (featureInfo) => featureInfo.validPoint()
-                        }),
-                    new FeatureAction(
-                        {
-                            name: 'add', label: 'After', onClick: (info) => {
-                                const target = getTargetFromInfo(info);
-                                if (!target) return;
-                                let currentEditor = getCurrentEditor();
-                                MapHolder.setCenter(target);
-                                currentEditor.addWaypoint(target);
-                                setLastCenteredWp(currentEditor.getIndex());
-                            },
-                            condition: (featureInfo) => featureInfo.validPoint()
-                        }),
-                    new FeatureAction(
-                        {
-                            name: 'center', label: 'Center', onClick: (info) => {
-                                const target = getTargetFromInfo(info);
-                                if (!target) return;
-                                let currentEditor = getCurrentEditor();
-                                MapHolder.setCenter(target);
-                                currentEditor.changeSelectedWaypoint(target);
-                                setLastCenteredWp(currentEditor.getIndex());
-                            },
-                            condition: (featureInfo) => featureInfo.validPoint()
-                        })
-                )
+                additionalActions.push(...pointActions);
                 const routeActionCondition = (featureInfo) => {
-                    if (featureInfo.type !== FeatureInfo.TYPE.route) return false;
+                    if (featureInfo.type !== FeatureInfo.TYPE.route || !featureInfo.isOverlay) return false;
                     if (!featureInfo.validPoint()) return false;
                     let routeName = featureInfo.urlOrKey;
                     return routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName();
@@ -908,7 +909,11 @@ const EditRoutePage = (props) => {
                         }));
                 }
             }
-            showDialog(dialogCtxRef, (dprops) => <FeatureListDialog {...dprops} history={props.history} featureList={featureList} additionalActions={additionalActions}/>)
+            showDialog(dialogCtxRef, (dprops) => <FeatureListDialog {...dprops}
+                                                                    history={props.history}
+                                                                    featureList={featureList}
+                                                                    additionalActions={additionalActions}
+                                                                    listActions={pointActions}/>)
             return true;
         }
     }

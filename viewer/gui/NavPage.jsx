@@ -628,7 +628,17 @@ const NavPage=(props)=>{
                             if (error) Toast(error);
                         });
                 },
-                condition: (featureInfo) => showRouteActionsCondition(featureInfo)
+                condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && featureInfo.isOverlay
+            }));
+            additionalActions.push(new FeatureAction({
+                name: 'editRoute',
+                label: 'Edit',
+                onClick: (featureInfo) => {
+                    if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
+                    activeRoute.syncTo(RouteEdit.MODES.EDIT);
+                    props.history.push("editroutepage");
+                },
+                condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay
             }));
             additionalActions.push(createRouteFeatureAction(props));
             additionalActions.push(createRouteFeatureAction(props,true));
