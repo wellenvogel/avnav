@@ -67,7 +67,7 @@ class TrackPoint:
 #a writer for our track
 class AVNTrackWriter(AVNDirectoryHandlerBase):
   P_CLEANUP=WorkerParameter('cleanup',25,type=WorkerParameter.T_FLOAT,
-                            description='cleanup in hours')
+                            description='cleanup in hours(length of the current track)', rangeOrList=[1,48])
   P_INTERVAL=WorkerParameter('interval',10,type=WorkerParameter.T_FLOAT,
                              description='time between trackpoints in s')
   P_TRACKDIR=WorkerParameter('trackdir',"",editable=False,description='defaults to datadir/tracks')
@@ -75,10 +75,15 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
                             description='only write if we at least moved this distance in m')
   P_WRITEF=WorkerParameter('writeFile',True,type=WorkerParameter.T_BOOLEAN,
                            description="write to track file (otherwise memory only)")
+
+  WEXT="avt"
+  GPXEXT="gpx"
   def __init__(self,param):
     super(AVNTrackWriter,self).__init__(param,'track')
+    self.modifySequence = 0
     self.track=[]
     self.tracklock=threading.Lock()
+    self.filelock=threading.Lock()
     self.baseDir=AVNHandlerManager.getDirWithDefault(self.param, self.P_TRACKDIR.name, 'tracks')
     self.fname=None
     self.loopCount=0
@@ -122,14 +127,13 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def cleanupTrack(self):
     numremoved=0
     cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
-    self.tracklock.acquire()
-    while len(self.track) > 0:
-      if self.track[0].ts<=cleanupTime:
-        numremoved+=1
-        self.track.pop(0)
-      else:
-        break
-    self.tracklock.release()
+    with self.tracklock:
+      while len(self.track) > 0:
+        if self.track[0].ts<=cleanupTime:
+          numremoved+=1
+          self.track.pop(0)
+        else:
+          break
     if numremoved > 0:
       AVNLog.debug("removed %d track entries older then %s",numremoved,cleanupTime.isoformat())
 
@@ -137,14 +141,32 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def handleSpecialApiRequest(self, command, requestparam, handler):
     if command == 'getTrack':
       return self.handleTrackRequest(requestparam)
+    if command == 'getTrackV2':
+      return self.handleTrackRequest(requestparam,True)
+    if command == 'cleanCurrent':
+      return self.cleanCurrent()
     return super(AVNTrackWriter,self).handleSpecialApiRequest(command,requestparam,handler)
 
-  def handleTrackRequest(self, requestParam):
+  def cleanCurrent(self):
+    with self.filelock:
+      if self.currentFile:
+        self.currentFile.close()
+        self.currentFile=None
+      affected=self._getNecessaryNames()
+      for fn in affected:
+        self._renameFile(fn)
+    with self.tracklock:
+      self.track=[]
+      self.modifySequence+=1
+    return AVNUtil.getReturnData()
+
+  def handleTrackRequest(self, requestParam,v2=False):
       lat = None
       lon = None
       dist = None
       maxnum = 60  # with default settings this is one hour
       interval = 60
+      full=False
       try:
         maxnumstr = AVNUtil.getHttpRequestParam(requestParam, 'maxnum')
         if not maxnumstr is None:
@@ -152,10 +174,14 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         intervalstr = AVNUtil.getHttpRequestParam(requestParam, 'interval')
         if not intervalstr is None:
           interval = int(intervalstr)
+        if v2:
+          full=AVNUtil.getHttpRequestFlag(requestParam,'full')
       except:
         pass
       frt = self.getTrackFormatted(maxnum, interval)
-      return frt
+      if not v2:
+        return frt
+      return AVNUtil.getReturnData(data=frt,sequence=self.modifySequence,full=full)
 
   #get the track as array of dicts
   #filter by maxnum and interval
@@ -163,15 +189,14 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     rt=[]
     curts=None
     intervaldt=datetime.timedelta(seconds=interval)
-    self.tracklock.acquire()
-    try:
-      for tp in self.track:
-        if curts is None or tp.ts > (curts + intervaldt):
-          rt.append(tp.getFormatted())
-          curts=tp.ts
-    except:
-      pass
-    self.tracklock.release()
+    with self.tracklock:
+      try:
+        for tp in self.track:
+          if curts is None or tp.ts > (curts + intervaldt):
+            rt.append(tp.getFormatted())
+            curts=tp.ts
+      except:
+        pass
     return rt[-maxnum:]
   #read in a track file (our csv syntax)
   #return an array of track data
@@ -255,10 +280,10 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     infoName="TrackWriter:converter"
     AVNLog.info("%s thread started",infoName)
     while self.startSequence == sequence:
-      currentTracks=glob.glob(os.path.join(self.baseDir,"*.avt"))
+      currentTracks=glob.glob(os.path.join(self.baseDir,"*."+self.WEXT))
       for track in currentTracks:
         try:
-          gpx=re.sub(r"avt$","gpx",track)
+          gpx=re.sub(r"%s$"%self.WEXT,self.GPXEXT,track)
           doCreate=True
           if os.path.exists(gpx):
             trackstat=os.stat(track)
@@ -267,11 +292,94 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
               doCreate=False
           if doCreate:
             AVNLog.debug("creating gpx file %s",gpx)
-            data=self.readTrackFile(track)
-            self.writeGpx(gpx,data)
+            try:
+              data=self.readTrackFile(track)
+              self.writeGpx(gpx,data)
+            except Exception as e:
+              AVNLog.error("unable to convert track %s: %s",track,str(e))
+            #maybe the avt file has been renamed in between - just delete the gpx
+            if not os.path.exists(track):
+              try:
+                AVNLog.info("track %s has been removed after convert, remove gpx",track)
+                os.unlink(gpx)
+              except:
+                pass
         except:
           pass
       self.wait(60)
+  def _nameToFullName(self,base,ext,sfx=None):
+    if sfx is None:
+      return os.path.join(self.baseDir,base+"."+ext)
+    return os.path.join(self.baseDir,"%s-%s.%s"%(base,str(sfx),ext))
+
+  def _getNecessaryNames(self):
+    '''
+    get all the file names that are necessary to build up the current track - based on the current time
+    and the cleanup time
+    @return:
+    '''
+    currentTime = datetime.datetime.utcnow()
+    timelist=[currentTime]
+    nextTime=currentTime-datetime.timedelta(days=1)
+    minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
+    while nextTime >= minTime:
+      timelist.append(nextTime)
+      nextTime-=datetime.timedelta(days=1)
+    rt=[]
+    for ts in reversed(timelist):
+      curfname = self.createFileName(ts)
+      rt.append(curfname)
+    return rt
+
+  def _readTrackDataFromFiles(self):
+    fnames=self._getNecessaryNames()
+    currentTime = datetime.datetime.utcnow()
+    minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
+    for fname in fnames:
+      realfilename = self._nameToFullName(fname,self.WEXT)
+      if os.path.exists(realfilename):
+        AVNLog.info("reading trackfile %s", realfilename)
+        self.setInfo('main', "reading track %s"%fname, WorkerStatus.STARTED)
+        data = self.readTrackFile(realfilename)
+        with self.tracklock:
+          for trkpoint in data:
+            if (trkpoint.ts >= minTime):
+              self.track.append(trkpoint)
+
+  def _renameFile(self,basename):
+    fullbase=os.path.join(self.baseDir,basename)
+    extensions=[self.WEXT,self.GPXEXT]
+    def alreadyExists(sfx=None):
+      for ext in extensions:
+        fullname=self._nameToFullName(basename,ext,sfx)
+        if os.path.exists(fullname):
+          return True
+      return False
+    if not alreadyExists():
+      return False
+    foundSfx=None
+    for sfx in range(1,1000):
+      if not alreadyExists(sfx):
+        foundSfx=sfx
+        break
+    if foundSfx is None:
+      foundSfx=999
+    #we only rename the avt and leave renaming the gpx to the converter
+    oldname=self._nameToFullName(basename,self.WEXT)
+    renamed=self._nameToFullName(basename,self.WEXT,foundSfx)
+    os.rename(oldname,renamed)
+    if os.path.exists(renamed):
+      AVNLog.info("rename %s to %s",oldname,renamed)
+      #now delete the old gpx file
+      oldgpx=self._nameToFullName(basename,self.GPXEXT)
+      try:
+        os.unlink(oldgpx)
+      except:
+        pass
+    else:
+      AVNLog.error("unable to rename %s to %s",oldname,renamed)
+    return True
+
 
   def onPreRun(self):
     self.fname = None
@@ -279,6 +387,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     theConverter = threading.Thread(target=self.converter,args=[self.startSequence])
     theConverter.daemon = True
     theConverter.start()
+    self.modifySequence=time.monotonic()
     AVNLog.info("started with dir=%s,interval=%d, distance=%d",
                 self.baseDir,
                 self.getWParam(self.P_INTERVAL),
@@ -303,30 +412,30 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       newFile=False
       realfilename=None
       writeFile=self.getWParam(self.P_WRITEF)
-      if not writeFile and self.currentFile is not None:
-        self.currentFile.close()
-        self.currentFile=None
-        self.initial=True
+      with self.filelock:
+        if not writeFile and self.currentFile is not None:
+          self.currentFile.close()
+          self.currentFile=None
       if writeFile:
-        if not curfname == self.fname or self.currentFile is None:
-          self.fname = curfname
-          if not self.currentFile is None:
-            self.currentFile.close()
-          newFile = True
-          realfilename = os.path.join(self.baseDir, curfname + ".avt")
-          AVNLog.info("new trackfile %s", realfilename)
-          if self.initial:
-            if os.path.exists(realfilename):
-              self.setInfo('main', "reading old track data", WorkerStatus.STARTED)
-              data = self.readTrackFile(realfilename)
-              for trkpoint in data:
-                self.track.append(trkpoint)
-            self.initial = False
-        if newFile:
-          self.currentFile = open(realfilename, "a",encoding='utf-8')
-          self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
-          self.currentFile.flush()
-          self.setInfo('main', "writing to %s" % (realfilename,), WorkerStatus.NMEA)
+        if self.initial:
+          with self.filelock:
+            if not self.currentFile is None:
+              self.currentFile.close()
+          self.initial=False
+          self._readTrackDataFromFiles()
+        with self.filelock:
+          if not curfname == self.fname or self.currentFile is None:
+            self.fname = curfname
+            if not self.currentFile is None:
+              self.currentFile.close()
+            newFile = True
+            realfilename = self._nameToFullName(curfname,self.WEXT)
+            AVNLog.info("new trackfile %s", realfilename)
+          if newFile:
+            self.currentFile = open(realfilename, "a",encoding='utf-8')
+            self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
+            self.currentFile.flush()
+        self.setInfo('main', "writing to %s" % (realfilename,), WorkerStatus.NMEA)
       else:
         self.setInfo('main','writing to memory only',WorkerStatus.NMEA)
       if self.loopCount >= 10:
@@ -340,9 +449,11 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         tp.fillFromGpsData(gpsdata)
         if self.lastlat is None or self.lastlon is None:
           AVNLog.ld("write track entry", gpsdata)
-          if self.currentFile is not None:
-            self.writeLine(self.currentFile,tp)
-          self.track.append(tp)
+          with self.filelock:
+            if self.currentFile is not None:
+              self.writeLine(self.currentFile,tp)
+          with self.tracklock:
+            self.track.append(tp)
           self.lastlat = lat
           self.lastlon = lon
         else:
@@ -350,21 +461,33 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
           if dist >= self.getWParam(self.P_MINDIST):
             tp.distance = dist
             AVNLog.ld("write track entry", gpsdata)
-            if self.currentFile is not None:
-              self.writeLine(self.currentFile,tp)
-            self.track.append(tp)
+            with self.filelock:
+              if self.currentFile is not None:
+                self.writeLine(self.currentFile,tp)
+            with self.tracklock:
+              self.track.append(tp)
             self.lastlat = lat
             self.lastlon = lon
     except Exception as e:
-      AVNLog.error("exception in Trackwriter: %s", traceback.format_exc());
+      AVNLog.error("exception in Trackwriter: %s", traceback.format_exc())
 
 
   def handleDelete(self, name):
     rt=super(AVNTrackWriter, self).handleDelete(name)
-    if name.endswith(".gpx"):
+    if name.endswith(self.GPXEXT):
       if self.fname == name[:-4]:
         AVNLog.info("deleting current track!")
-        self.track=[]
+        with self.tracklock:
+          self.track=[]
+          self.modifySequence+=1
+        with self.filelock:
+          if self.currentFile is not None:
+            self.currentFile.close()
+            self.currentFile=None
+      try:
+        super().handleDelete(re.sub(r"%s$"%self.GPXEXT,self.WEXT,name))
+      except:
+        pass
     return rt
 
   LISTED_EXTENSIONS=['.nmea','.nmea.gz','.gpx']

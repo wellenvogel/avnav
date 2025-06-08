@@ -54,6 +54,8 @@ import {
 import {NameDialog} from "../components/RouteInfoHelper";
 import routeobjects, {Measure} from "../nav/routeobjects";
 import {KeepFromMode} from "../nav/routedata";
+import {ConfirmDialog} from "../components/BasicDialogs";
+import navdata from "../nav/navdata.js";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -636,8 +638,20 @@ const NavPage=(props)=>{
                 },
                 condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay
             }));
-            additionalActions.push(createRouteFeatureAction(props));
             additionalActions.push(createRouteFeatureAction(props,true));
+            additionalActions.push(new FeatureAction({
+                name: 'Delete',
+                label: 'Clean Track',
+                onClick:()=>{
+                    showPromiseDialog(dialogCtx,(dp)=><ConfirmDialog
+                        {...dp}
+                        title={'Empty Current Track'}
+                        text={'Clean current track data and rename files?'}
+                    />)
+                    .then(()=>navdata.resetTrack(true),()=>{})
+                },
+                condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && globalStore.getData(keys.properties.connectedMode)
+            }))
             const listActions=[
                 new FeatureAction({
                     name: 'goto',

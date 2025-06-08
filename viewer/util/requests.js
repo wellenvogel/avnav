@@ -107,7 +107,6 @@ let RequestHandler={
     /**
      * do a json get request
      * @param url - either string or object with request parameters
-     * @param options:
      *        useNavUrl - (default: true) - prepend the navUrl to the provided url
      *        checkOk   - (default: true) - check if the response has a status field and this is set to "OK"
      *        noCache   - (default: true) - prevent caching
@@ -115,6 +114,7 @@ let RequestHandler={
      *        sequenceFunction - if set: a function to return a sequence - if the one returned from start
      *                           does not match the on at the result we reject
      *        opt_parameter - object with request parameters
+     * @param options
      * @param opt_parameter
      */
     getJson:(url,options,opt_parameter)=>{
