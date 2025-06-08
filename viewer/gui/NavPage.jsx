@@ -650,7 +650,7 @@ const NavPage=(props)=>{
                     />)
                     .then(()=>navdata.resetTrack(true),()=>{})
                 },
-                condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && globalStore.getData(keys.properties.connectedMode)
+                condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && ! featureInfo.isOverlay && globalStore.getData(keys.properties.connectedMode)
             }))
             const listActions=[
                 new FeatureAction({
