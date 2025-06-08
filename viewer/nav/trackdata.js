@@ -94,7 +94,8 @@ class TrackData {
         let now = new Date().getTime();
         let maxItems = 0;
         const param={
-            request: 'track',
+            request: 'api',
+            type: 'track',
             command: 'getTrackV2'
         }
         if (this.currentTrack.length === 0 || (this.lastModifySequence !== this.lastReceivedSequence)) {
@@ -181,7 +182,8 @@ class TrackData {
         }
         if (globalStore.getData(keys.properties.connectedMode)){
             Requests.getJson({
-                request: 'track',
+                request: 'api',
+                type: 'track',
                 command: 'cleanCurrent'
             })
                 .then(()=>{
