@@ -52,7 +52,7 @@
      inkscape:snap-nodes="false"
      inkscape:zoom="2.3805928"
      inkscape:cx="56.498533"
-     inkscape:cy="139.25103"
+     inkscape:cy="105.64596"
      inkscape:window-x="1680"
      inkscape:window-y="31"
      inkscape:window-maximized="1"
@@ -110,18 +110,18 @@
      y="0"
      width="100%"
      height="100%"
-     transform="matrix(1.1664359,0,0,1.6458001,-151.09444,68.053047)"
-     style="stroke-width:0.784432" />
+     transform="matrix(1.3283839,0,0,1.6458001,-172.90902,68.053047)"
+     style="stroke-width:0.735062" />
   <path
-     style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:9.99997;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="M 127.97865,0.16159721 V 99.31745 h 0.3802"
+     style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:9.99993;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 127.97865,0.60136194 V 87.182387 h 0.3802"
      id="path1542" />
   <path
      style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 127.79619,152.63958 v 99.56283 h 0.38546"
+     d="m 127.79619,160.84605 v 91.48083 h 0.38546"
      id="path1542-6" />
   <path
      style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="M 257.00479,128 H 156.34182 v 0.39968"
+     d="m 256.75085,128 h -93.28373 v 0.39968"
      id="path1542-3" />
 </svg>

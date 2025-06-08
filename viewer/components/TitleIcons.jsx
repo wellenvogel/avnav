@@ -24,7 +24,6 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import {anchorWatchDialog, AnchorWatchKeys} from "./AnchorWatchDialog";
 import keys from '../util/keys';
 import {useStore} from "../hoc/Dynamic";
@@ -35,12 +34,15 @@ import {ConfirmDialog} from "./BasicDialogs";
 
 export const DynamicTitleIcons=(iprops)=>{
     const dialogContext=useDialogContext();
-    const props=useStore(iprops,{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons }})
+    const props=useStore(iprops,{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons,measure: keys.map.activeMeasure }})
     if (! props.show) return null;
     let cl="iconContainer ";
     if (props.className) cl+=props.className;
     let anchorWatch=props.watchDistance !== undefined;
     return <div className={cl}>
+        {props.measure && <span className="measureIcon" onClick={()=>{
+            globalStore.storeData(keys.map.activeMeasure,undefined);
+        }}/> }
         {anchorWatch && <span className="anchorWatchIcon" onClick={() => anchorWatchDialog(dialogContext)}/>}
         {!props.connected && <span className="disconnectedIcon" onClick={()=>{
             if (globalstore.getData(keys.gui.global.onAndroid) ||  !globalStore.getData(keys.gui.capabilities.canConnect)) return;
@@ -49,9 +51,4 @@ export const DynamicTitleIcons=(iprops)=>{
                 .catch(()=>{});
         }}/>}
     </div>
-}
-DynamicTitleIcons.propTypes={
-    watchDistance: PropTypes.number,
-    connected: PropTypes.bool,
-    show: PropTypes.bool
 }

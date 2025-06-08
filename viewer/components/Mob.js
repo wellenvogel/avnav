@@ -20,7 +20,7 @@ const controlMob=(start,history)=>{
         if (LayoutHandler.isEditing()) LayoutHandler.loadStoredLayout();
         let target=navobjects.WayPoint.fromPlain(globalStore.getData(keys.nav.gps.position));
         target.name=navobjects.WayPoint.MOB;
-        Router.wpOn(target,false);
+        Router.wpOn(target);
         MapHolder.setGpsLock(true);
         if (MapHolder.getCurrentChartEntry()){
             let currentZoom=MapHolder.getZoom();

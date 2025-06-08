@@ -37,11 +37,10 @@ import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import navobjects from "../nav/navobjects";
 import NavCompute from "../nav/navcompute";
-import {getRouteStyles} from "./routelayer";
 import routeobjects from "../nav/routeobjects";
 import {getClosestRoutePoint} from "../nav/routeeditor";
 import Mapholder from "./mapholder";
-import {FeatureInfo, OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
+import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -76,7 +75,7 @@ class OwnGpx extends olGPXFormat{
         for (let i=0;i<tracks.length;i++){
             let trkel=tracks[i];
             trkel.parentNode.removeChild(trkel);
-            const feature=super.readFeatureFromNode(trkel);
+            const feature=super.readFeatureFromNode(trkel,opt_options);
             if (feature){
                 feature.set('track',true);
                 rt.push(feature);
@@ -251,24 +250,27 @@ class GpxChartSource extends ChartSourceBase{
             return styles;
         }
         if (type === 'MultiLineString'){
-            //route
+            //route or track
             let geometry=feature.getGeometry();
+            const route=feature.get('route');
             let styles=[this.styles[type]];
-            let isFirst=true;
-            let lineStrings=geometry.getLineStrings();
-            let ptIdx=0;
-            lineStrings.forEach((lineString)=>{
-                let coordinates=lineString.getCoordinates();
-                if (coordinates.length > 1) {
-                    if (isFirst) {
-                        styles.push(this.getRoutePointStyle(coordinates[0],getRoutePointName(feature,ptIdx)));
-                        isFirst = false;
+            if (route) {
+                let isFirst = true;
+                let lineStrings = geometry.getLineStrings();
+                let ptIdx = 0;
+                lineStrings.forEach((lineString) => {
+                    let coordinates = lineString.getCoordinates();
+                    if (coordinates.length > 1) {
+                        if (isFirst) {
+                            styles.push(this.getRoutePointStyle(coordinates[0], getRoutePointName(feature, ptIdx)));
+                            isFirst = false;
+                            ptIdx++;
+                        }
+                        styles.push(this.getRoutePointStyle(coordinates[coordinates.length - 1], getRoutePointName(feature, ptIdx)));
                         ptIdx++;
                     }
-                    styles.push(this.getRoutePointStyle(coordinates[coordinates.length-1],getRoutePointName(feature,ptIdx)));
-                    ptIdx++;
-                }
-            })
+                })
+            }
             return styles;
         }
         return this.styles[feature.getGeometry().getType()];
@@ -368,7 +370,7 @@ class GpxChartSource extends ChartSourceBase{
         const fname=feature.get('name');
         const url=this.getUrl();
         if (ot==='track'){
-            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:url});
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:oname});
         }
         else if (ot === 'route'){
             rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})

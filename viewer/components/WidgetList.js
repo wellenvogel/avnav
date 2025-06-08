@@ -7,7 +7,7 @@ import AisTargetWidget from './AisTargetWidget.jsx';
 import ActiveRouteWidget from './ActiveRouteWidget.jsx';
 import EditRouteWidget from './EditRouteWidget.jsx';
 import CenterDisplayWidget from './CenterDisplayWidget.jsx';
-import WindWidget, {getWindData} from './WindWidget';
+import WindWidget, {getWindData, WindStoreKeys} from './WindWidget';
 import XteWidget from './XteWidget';
 import EmptyWidget from './EmptyWidget';
 import WindGraphics from './WindGraphics';
@@ -162,11 +162,7 @@ let widgetList=[
         default: "---",
         unit: "\u00b0",
         caption: 'Wind Angle',
-        storeKeys:{
-            windAngle:keys.nav.gps.windAngle,
-            windDirectionTrue: keys.nav.gps.trueWindDirection,
-            windAngleTrue: keys.nav.gps.trueWindAngle
-        },
+        storeKeys:WindStoreKeys,
         formatter: 'formatDirection',
         editableParameters: {
             formatterParameters: false,
@@ -188,10 +184,7 @@ let widgetList=[
         name: 'WindSpeed',
         default: "---",
         caption: 'Wind Speed',
-        storeKeys:{
-            windSpeed:keys.nav.gps.windSpeed,
-            windSpeedTrue: keys.nav.gps.trueWindSpeed,
-        },
+        storeKeys:WindStoreKeys,
         formatter: 'formatSpeed',
         editableParameters: {
             value: false,

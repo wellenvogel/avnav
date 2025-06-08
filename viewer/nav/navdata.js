@@ -275,8 +275,8 @@ NavData.prototype.getGpsHandler=function(){
 };
 
 
-NavData.prototype.resetTrack=function(){
-    return this.trackHandler.resetTrack();
+NavData.prototype.resetTrack=function(opt_cleanServer){
+    return this.trackHandler.resetTrack(opt_cleanServer);
 };
 
 

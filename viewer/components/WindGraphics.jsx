@@ -6,9 +6,7 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {getWindData} from "./WindWidget";
-import {useAvNavSortable} from "../hoc/Sortable";
+import {getWindData, WindProps, WindStoreKeys} from "./WindWidget";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import globalstore from "../util/globalstore";
 
@@ -156,26 +154,16 @@ const WindGraphics = (props) => {
 
 WindGraphics.propTypes={
     ...WidgetProps,
-    windSpeed: PropTypes.number,
-    windAngle: PropTypes.number,
-    windAngleTrue:  PropTypes.number,
-    windSpeedTrue:  PropTypes.number,
+    ...WindProps,
     formatter: PropTypes.func,
     scaleAngle: PropTypes.number,
     nightMode: PropTypes.bool,
-    kind: PropTypes.string, //true,apparent,auto,
     show360: PropTypes.bool
 };
 WindGraphics.predefined= {
-    storeKeys: {
-        windSpeed: keys.nav.gps.windSpeed,
-        windAngle: keys.nav.gps.windAngle,
-        windAngleTrue: keys.nav.gps.trueWindAngle,
-        windDirectionTrue: keys.nav.gps.trueWindDirection,
-        windSpeedTrue: keys.nav.gps.trueWindSpeed,
-        scaleAngle: keys.properties.windScaleAngle
-    },
+    storeKeys: WindStoreKeys,
     editableParameters: {
+        scaleAngle: {default:50, displayName: "red/green Angle", type:'NUMBER', list:[5, 90]},
         show360: {type: 'BOOLEAN', default: false},
         kind: {type: 'SELECT',
             list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],

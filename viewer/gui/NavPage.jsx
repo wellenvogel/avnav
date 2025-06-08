@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import {FeatureListDialog} from "../components/FeatureInfoDialog";
+import {GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -49,13 +49,13 @@ import {useStoreState} from "../hoc/Dynamic";
 import {
     BoatFeatureInfo,
     FeatureAction,
-    FeatureInfo, MeasureFeatureInfo,
-    RouteFeatureInfo,
-    TrackFeatureInfo,
-    WpFeatureInfo
+    FeatureInfo, WpFeatureInfo
 } from "../map/featureInfo";
 import {NameDialog} from "../components/RouteInfoHelper";
 import routeobjects, {Measure} from "../nav/routeobjects";
+import {KeepFromMode} from "../nav/routedata";
+import {ConfirmDialog} from "../components/BasicDialogs";
+import navdata from "../nav/navdata.js";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -167,7 +167,7 @@ const setCenterToTarget=()=>{
 
 const navNext=()=>{
     if (!activeRoute.hasRoute() ) return;
-    RouteHandler.wpOn(activeRoute.getNextWaypoint())
+    RouteHandler.wpOn(activeRoute.getNextWaypoint(),KeepFromMode.OLDTO);
 };
 
 const navToWp=(on)=>{
@@ -309,8 +309,7 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
             },
             onClick:()=>{
                 setShowWpButtons(false);
-                activeRoute.moveIndex(1);
-                RouteHandler.wpOn(activeRoute.getPointAt());
+                navNext();
 
             }
         },
@@ -396,7 +395,7 @@ const needsChartLoad=()=>{
 const createRouteFeatureAction=(props,opt_fromMeasure)=>{
     return new FeatureAction({
         name:'ShowRoutePanel',
-        label: 'New Route',
+        label: opt_fromMeasure?'To Route':'New Route',
         onClick: (featureInfo,listCtx)=>{
             let measure;
             if (opt_fromMeasure){
@@ -415,24 +414,24 @@ const createRouteFeatureAction=(props,opt_fromMeasure)=>{
                     newRoute.server=globalStore.getData(keys.properties.connectedMode);
                     if (! measure) {
                         newRoute.addPoint(0, featureInfo.point);
-                        MapHolder.setCenter(featureInfo.point);
+                        editorRoute.setRouteAndIndex(newRoute,0);
                     }
                     else{
-                        MapHolder.setCenter(newRoute.getPointAtIndex(0));
+                        editorRoute.setRouteAndIndex(newRoute,newRoute.getIndexFromPoint(featureInfo.point))
                     }
-                    editorRoute.setNewRoute(newRoute);
-                    props.history.push("editroutepage");
+                    props.history.push("editroutepage",{center:true});
                 },()=>{})
 
         },
         close:false,
         condition: (featureInfo)=>{
-            if (featureInfo instanceof WpFeatureInfo) return false;
-            if (featureInfo instanceof RouteFeatureInfo) return false;
-            if (featureInfo instanceof TrackFeatureInfo) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.waypoint) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.boat) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.anchor) return false;
+            if (featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay) return false;
             if (! featureInfo.validPoint()) return false;
-            if (opt_fromMeasure && !(featureInfo instanceof MeasureFeatureInfo)) return false;
-            if (!opt_fromMeasure && (featureInfo instanceof MeasureFeatureInfo)) return false;
+            if (opt_fromMeasure && (featureInfo.getType() !== FeatureInfo.TYPE.measure)) return false;
+            if (!opt_fromMeasure && (featureInfo.getType() === FeatureInfo.TYPE.measure)) return false;
             return true;
         }
     })
@@ -620,18 +619,39 @@ const NavPage=(props)=>{
                     RouteHandler.fetchRoute(featureInfo.urlOrKey, false,
                         (route) => {
                             let idx = route.findBestMatchingIdx(nextTarget);
-                            let editor = new RouteEdit(RouteEdit.MODES.EDIT);
-                            editor.setNewRoute(route, idx >= 0 ? idx : undefined);
-                            props.history.push("editroutepage");
+                            editorRoute.setNewRoute(route, idx >= 0 ? idx : undefined);
+                            props.history.push("editroutepage",{center:true});
                         },
                         (error) => {
                             if (error) Toast(error);
                         });
                 },
-                condition: (featureInfo) => showRouteActionsCondition(featureInfo)
+                condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && featureInfo.isOverlay
             }));
-            additionalActions.push(createRouteFeatureAction(props));
+            additionalActions.push(new FeatureAction({
+                name: 'editRoute',
+                label: 'Edit',
+                onClick: (featureInfo) => {
+                    activeRoute.setNewIndex(activeRoute.getIndexFromPoint(featureInfo.point,true));
+                    activeRoute.syncTo(RouteEdit.MODES.EDIT);
+                    props.history.push("editroutepage",{center:true});
+                },
+                condition: (featureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay
+            }));
             additionalActions.push(createRouteFeatureAction(props,true));
+            additionalActions.push(new FeatureAction({
+                name: 'Delete',
+                label: 'Clean Track',
+                onClick:()=>{
+                    showPromiseDialog(dialogCtx,(dp)=><ConfirmDialog
+                        {...dp}
+                        title={'Empty Current Track'}
+                        text={'Clean current track data and rename files?'}
+                    />)
+                    .then(()=>navdata.resetTrack(true),()=>{})
+                },
+                condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && ! featureInfo.isOverlay && globalStore.getData(keys.properties.connectedMode)
+            }))
             const listActions=[
                 new FeatureAction({
                     name: 'goto',
@@ -639,14 +659,17 @@ const NavPage=(props)=>{
                     onClick: (featureInfo) => {
                         gotoFeature(featureInfo);
                     },
-                    condition: (featureInfo)=>featureInfo.validPoint()
+                    condition: (featureInfo)=>featureInfo.validPoint() &&
+                        //could only be base boat or anchor
+                        featureInfo.getType() === FeatureInfo.TYPE.base
+
                 }),
                 createRouteFeatureAction(props)
             ]
             const measure=globalStore.getData(keys.map.activeMeasure);
             listActions.push(new FeatureAction({
                 name: 'Measure',
-                label: (measure === undefined)?'Measure':'Add Measure',
+                label: (measure === undefined)?'Measure':'+ Measure',
                 onClick: (featureInfo)=>{
                     let newMeasure;
                     if (measure){
@@ -662,14 +685,14 @@ const NavPage=(props)=>{
             }))
             listActions.push(new FeatureAction({
                 name: 'MeasureOff',
-                label: 'Measure Off',
+                label: 'Measure',
                 onClick: (featureInfo)=>{
                     globalStore.storeData(keys.map.activeMeasure,undefined)
                 },
                 condition: (featureInfo)=>globalStore.getData(keys.map.activeMeasure) !== undefined,
                 toggle: true
             }))
-            showDialog(dialogCtx,(dprops)=><FeatureListDialog
+            showDialog(dialogCtx,(dprops)=><GuardedFeatureListDialog
                 {...dprops}
                 featureList={featureList}
                 additionalActions={additionalActions}

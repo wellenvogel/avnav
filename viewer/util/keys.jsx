@@ -332,7 +332,6 @@ let keys={
         boatSteadyDetect: new Property(false,'zero SOG detect',PropertyType.CHECKBOX),
         boatSteadyMax: new Property(0.2,'zero SOG detect below (kn)',PropertyType.RANGE,[0.1,1.0,0.05]),
         measureColor: new Property('red','Measure display color',PropertyType.COLOR),
-        windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
         markerDefaultName: new Property('Marker','default SP name',PropertyType.STRING),
         trackColor: new Property("#942eba", "Color", PropertyType.COLOR),

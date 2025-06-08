@@ -55,6 +55,21 @@ export const getWindData=(props)=>{
     }
 }
 
+export const WindStoreKeys={
+    windAngle: keys.nav.gps.windAngle,
+    windSpeed: keys.nav.gps.windSpeed,
+    windAngleTrue: keys.nav.gps.trueWindAngle,
+    windSpeedTrue: keys.nav.gps.trueWindSpeed,
+    windDirectionTrue: keys.nav.gps.trueWindDirection
+}
+export const WindProps={
+    windAngle:  PropTypes.number,
+    windSpeed:  PropTypes.number,
+    windAngleTrue:  PropTypes.number,
+    windSpeedTrue:  PropTypes.number,
+    kind: PropTypes.string //true,apparent,auto,
+}
+
 const WindWidget = (props) => {
     let wind = getWindData(props);
     const names = {
@@ -71,7 +86,7 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
-    let windSpeedStr = props.formatter(wind.speed);
+    let windSpeedStr = props.formatter(wind.windSpeed);
     if (!props.show360 && wind.suffix !== 'TD') {
         if (wind.windAngle > 180) wind.windAngle -= 360;
     }
@@ -105,24 +120,12 @@ const WindWidget = (props) => {
 
 WindWidget.propTypes={
     ...WidgetProps,
-    windAngle:  PropTypes.number,
-    windSpeed:  PropTypes.number,
-    windAngleTrue:  PropTypes.number,
-    windSpeedTrue:  PropTypes.number,
-    enabled:    PropTypes.bool,
-    kind: PropTypes.string, //true,apparent,auto,
+    ...WindProps,
     show360: PropTypes.bool,
-    mode: PropTypes.string
 };
 
 WindWidget.predefined= {
-    storeKeys: {
-        windAngle: keys.nav.gps.windAngle,
-        windSpeed: keys.nav.gps.windSpeed,
-        windAngleTrue: keys.nav.gps.trueWindAngle,
-        windSpeedTrue: keys.nav.gps.trueWindSpeed,
-        windDirectionTrue: keys.nav.gps.trueWindDirection
-    },
+    storeKeys: WindStoreKeys,
     editableParameters: {
         show360: {type: 'BOOLEAN', default: false},
         kind: {

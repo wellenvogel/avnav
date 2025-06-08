@@ -52,7 +52,6 @@ public class RequestHandler {
     public static final String INTERNAL_URL_PREFIX ="http://assets";
     public static final String ROOT_PATH="/viewer";
     protected static final String NAVURL="viewer/avnav_navi.php";
-    private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     GpsService service;
     private SharedPreferences preferences;
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
@@ -558,42 +557,6 @@ public class RequestHandler {
                     o.put("status","no gps service");
                 }
                 fout=o;
-            }
-            if (type.equals("track")){
-                handled=true;
-                if (getGpsService() != null) {
-                    String intervals = uri.getQueryParameter("interval");
-                    String maxnums = uri.getQueryParameter("maxnum");
-                    long interval = 60000;
-                    if (intervals != null) {
-                        try {
-                            interval = 1000*Long.parseLong(intervals);
-                        } catch (NumberFormatException i) {
-                        }
-                    }
-                    int maxnum = 60;
-                    if (maxnums != null) {
-                        try {
-                            maxnum = Integer.parseInt(maxnums);
-                        } catch (NumberFormatException i) {
-                        }
-                    }
-                    ArrayList<Location> track=getGpsService().getTrack(maxnum, interval);
-                    //the returned track is inverse order, i.e. the newest entry comes first
-                    JSONArray arr=new JSONArray();
-                    for (int i=track.size()-1;i>=0;i--){
-                        Location l=track.get(i);
-                        JSONObject e=new JSONObject();
-                        e.put("ts",l.getTime()/1000.0);
-                        e.put("time",dateFormat.format(new Date(l.getTime())));
-                        e.put("lon",l.getLongitude());
-                        e.put("lat",l.getLatitude());
-                        e.put("course",l.getBearing());
-                        e.put("speed",l.getSpeed());
-                        arr.put(e);
-                    }
-                    fout=arr;
-                }
             }
             if (type.equals("ais")) {
                 handled=true;

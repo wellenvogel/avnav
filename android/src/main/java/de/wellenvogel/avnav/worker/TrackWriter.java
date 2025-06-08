@@ -2,9 +2,11 @@ package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.util.Log;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
+import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
@@ -29,9 +31,10 @@ import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
  * Created by andreas on 12.12.14.
  */
 public class TrackWriter extends DirectoryRequestHandler {
-
+    private static final SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
 
     private final IMediaUpdater updater;
+    private long changeSequence= SystemClock.uptimeMillis();
 
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
@@ -147,51 +150,69 @@ public class TrackWriter extends DirectoryRequestHandler {
         }
 
     }
+
+    /**
+     *
+     * @return
+     */
+    private ArrayList<Date> getNecessaryDates() throws JSONException {
+        ArrayList<Date> rt=new ArrayList<>();
+        long mintime = System.currentTimeMillis() - 60*60*1000*(long)PARAM_LENGTH.fromJson(parameters);
+        Date dt = new Date();
+        while (dt.getTime() >= mintime){
+            rt.add(0,dt);
+            dt=new Date(dt.getTime()-24*60*60*1000);
+        }
+        return rt;
+    }
+
+
     @Override
     public void run(int startSequence) {
-        WriteInfo currentInfo=getWriteInfo();
-        WriteInfo lastWriteInfo=new WriteInfo(currentInfo);
+        changeSequence = SystemClock.uptimeMillis();
+        WriteInfo currentInfo = getWriteInfo();
+        WriteInfo lastWriteInfo = new WriteInfo(currentInfo);
         status.setChildStatus("directory", WorkerStatus.Status.NMEA, trackdir.getAbsolutePath());
         setWriteStatus(currentInfo);
-        setStatus(WorkerStatus.Status.STARTED,"loading tracks");
+        setStatus(WorkerStatus.Status.STARTED, "loading tracks");
+        trackLoading=true;
         try {
-            status.setChildStatus("loading", WorkerStatus.Status.STARTED,"loading track files");
             ArrayList<Location> filetp = new ArrayList<Location>();
-            //read the track data from today and yesterday
+            //read the track data from all necessary dates
             //we rely on the cleanup to handle outdated entries
-            long mintime = System.currentTimeMillis() - 24*60*60*1000*(long)PARAM_LENGTH.fromJson(parameters);
-            Date dt = new Date();
-            ArrayList<Location> rt = parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, PARAM_DISTANCE.fromJson(parameters));
-            filetp.addAll(rt);
-            rt = parseTrackFile(dt, mintime, PARAM_DISTANCE.fromJson(parameters));
-            filetp.addAll(rt);
+            long mintime = System.currentTimeMillis() - 60 * 60 * 1000 * (long) PARAM_LENGTH.fromJson(parameters);
+            List<Date> necessary = getNecessaryDates();
+            for (Date filedate : necessary) {
+                status.setChildStatus("loading", WorkerStatus.Status.STARTED, "track file: "+getCurrentTrackname(filedate));
+                ArrayList<Location> rt = parseTrackFile(filedate, mintime, PARAM_DISTANCE.fromJson(parameters));
+                filetp.addAll(rt);
+            }
             synchronized (this) {
-                lastTrackWrite = dt.getTime();
-                if (rt.size() == 0) {
+                lastTrackWrite = (new Date()).getTime();
+                if (filetp.size() == 0) {
                     //empty track file - trigger write very soon
                     lastTrackWrite = 0;
                 }
-                ArrayList<Location> newTp = trackpoints;
                 trackpoints = filetp;
-                trackpoints.addAll(newTp);
             }
-            status.setChildStatus("loading",WorkerStatus.Status.NMEA, "finished with " + trackpoints.size() + " points");
+            status.setChildStatus("loading", WorkerStatus.Status.NMEA, "finished with " + trackpoints.size() + " points");
+
         } catch (Exception e) {
-            status.setChildStatus("loading",WorkerStatus.Status.ERROR, "error: " + e.getMessage());
+            status.setChildStatus("loading", WorkerStatus.Status.ERROR, "error: " + e.getMessage());
             AvnLog.e("error loading tracks", e);
         }
         AvnLog.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
         trackLoading = false;
-        setStatus(WorkerStatus.Status.STARTED,"waiting for trackpoints");
+        setStatus(WorkerStatus.Status.STARTED, "waiting for trackpoints");
         while (!shouldStop(startSequence)) {
             sleep(1000);
-            WriteInfo info= getWriteInfo();
-            if (! lastWriteInfo.equals(info)){
-                status.setChildStatus(C_WRITES, (info.numWrites>0)?
-                        WorkerStatus.Status.NMEA:
-                        WorkerStatus.Status.STARTED,
-                        info.numWrites+" ("+info.numPoints+" points)");
-                lastWriteInfo=info;
+            WriteInfo info = getWriteInfo();
+            if (!lastWriteInfo.equals(info)) {
+                status.setChildStatus(C_WRITES, (info.numWrites > 0) ?
+                                WorkerStatus.Status.NMEA :
+                                WorkerStatus.Status.STARTED,
+                        info.numWrites + " (" + info.numPoints + " points)");
+                lastWriteInfo = info;
             }
         }
     }
@@ -309,14 +330,18 @@ public class TrackWriter extends DirectoryRequestHandler {
             this.writer=writer;
             this.updater=updater;
         }
+        private class MyOs extends ByteArrayOutputStream{
+            public byte[] getBuffer(){return buf;}
+        }
         @Override
         public void run() {
-
+            long startSequence=writer.changeSequence;
+            String name = getCurrentTrackname(dt);
+            File ofile = getTrackFile(dt);
             try {
-                String name = getCurrentTrackname(dt);
-                File ofile = getTrackFile(dt);
                 AvnLog.i(LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
-                PrintStream out = new PrintStream(new FileOutputStream(ofile));
+                MyOs os=new MyOs();
+                PrintStream out = new PrintStream(os);
                 out.format(header, name);
                 int numpoints=0;
                 for (Location l : track) {
@@ -328,6 +353,8 @@ public class TrackWriter extends DirectoryRequestHandler {
                 }
                 out.append(footer);
                 out.close();
+                ByteArrayInputStream is=new ByteArrayInputStream(os.getBuffer(),0,os.size());
+                writeAtomic(ofile,is,true);
                 if (updater != null){
                     updater.triggerUpdateMtp(ofile);
                 }
@@ -336,6 +363,16 @@ public class TrackWriter extends DirectoryRequestHandler {
             } catch (Exception io) {
                 Log.e(LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
                 writer.updateWriteInfo(0,io.getMessage());
+            }
+            if (startSequence != writer.changeSequence){
+                //the writer potentially changed or renamed files in between
+                //so just delete the file we created and rely on us coming back soon...
+                AvnLog.i("trackwriter - must delete after write"+ofile);
+                try{
+                    if (ofile.exists()){
+                        ofile.delete();
+                    }
+                }catch (Throwable t){}
             }
             writer.writerRunning=false;
         }
@@ -516,6 +553,113 @@ public class TrackWriter extends DirectoryRequestHandler {
         return deleted;
     }
 
+    private boolean renameFile(Date dt){
+        String baseName=getCurrentTrackname(dt);
+        File ofile = new File(trackdir, baseName + ".gpx");
+        if (! ofile.exists()) return true;
+        try {
+            for (int i = 1; i < 1000; i++) {
+                File candidate = new File(trackdir, baseName + "-"+ i + ".gpx");
+                if (!candidate.exists() || i >= 999) {
+                    return ofile.renameTo(candidate);
+                }
+            }
+        }catch (Throwable t){
+            AvnLog.e("unable to rename "+ofile,t);
+        }
+        return false;
+    }
 
+    @Override
+    protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (command.equals("getTrackV2")){
+            String intervals = uri.getQueryParameter("interval");
+            String maxnums = uri.getQueryParameter("maxnum");
+            boolean full=uri.getBooleanQueryParameter("full",false);
+            long interval = 60000;
+            if (intervals != null) {
+                try {
+                    interval = 1000*Long.parseLong(intervals);
+                } catch (NumberFormatException i) {
+                }
+            }
+            int maxnum = 60;
+            if (maxnums != null) {
+                try {
+                    maxnum = Integer.parseInt(maxnums);
+                } catch (NumberFormatException i) {
+                }
+            }
 
+            JSONArray arr=getTrack(maxnum,interval);
+            //we need to invert the order...
+            JSONArray res=new JSONArray();
+            for (int i=arr.length()-1;i>=0;i--){
+                res.put(arr.get(i));
+            }
+            return RequestHandler.getReturn(
+                    new AvnUtil.KeyValue<JSONArray>("data",res),
+                    new AvnUtil.KeyValue<Long>("sequence",changeSequence),
+                    new AvnUtil.KeyValue<Boolean>("full",full)
+            );
+        }
+        else if (command.equals("cleanCurrent")){
+            writeSync(updater);
+            synchronized (this) {
+                this.trackpoints = new ArrayList<>();
+                this.changeSequence++;
+            }
+            for (Date fdate: getNecessaryDates()) {
+                this.renameFile(fdate);
+            }
+            return RequestHandler.getReturn();
+        }
+        return RequestHandler.getErrorReturn("unknown api request "+command);
+    }
+
+    private static void addTrackPoint(JSONArray arr,Location l) throws JSONException {
+        JSONObject e=new JSONObject();
+        e.put("ts",l.getTime()/1000.0);
+        e.put("time",dateFormat.format(new Date(l.getTime())));
+        e.put("lon",l.getLongitude());
+        e.put("lat",l.getLatitude());
+        e.put("course",l.getBearing());
+        e.put("speed",l.getSpeed());
+        arr.put(e);
+    }
+    /**
+     * get the current track
+     * @param maxnum - max number of points (including the newest one)
+     * @param interval - min time distance between 2 points
+     * @return the track points in inverse order, i.e. the newest is at index 0
+     */
+    private synchronized  JSONArray getTrack(int maxnum, long interval){
+        JSONArray rt=new JSONArray();
+        List<Location> trackpoints=getTrackPoints(true,false);
+        long currts=-1;
+        long num=0;
+        try {
+            for (int i = trackpoints.size() - 1; i >= 0; i--) {
+                Location l = trackpoints.get(i);
+                if (currts == -1) {
+                    currts = l.getTime();
+                    addTrackPoint(rt,l);
+                    num++;
+                } else {
+                    long nts = l.getTime();
+                    if ((currts - nts) >= interval || interval == 0) {
+                        currts = nts;
+                        addTrackPoint(rt,l);
+                        num++;
+                    }
+                }
+
+                if (num >= maxnum) break;
+            }
+        }catch (Exception e){
+            //we are tolerant - if we hit cleanup an do not get the track once, this should be no issue
+        }
+        AvnLog.d(LOGPRFX,"getTrack returns "+num+" points");
+        return rt;
+    }
 }
