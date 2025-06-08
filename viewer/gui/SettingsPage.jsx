@@ -60,7 +60,7 @@ const settingsSections={
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
         keys.properties.courseAverageTolerance,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
-        keys.properties.anchorCircleColor,keys.properties.windScaleAngle,keys.properties.measureColor,keys.properties.measureRhumbLine],
+        keys.properties.anchorCircleColor,keys.properties.measureColor,keys.properties.measureRhumbLine],
     Map:        [
         keys.properties.startNavPage,
         keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,

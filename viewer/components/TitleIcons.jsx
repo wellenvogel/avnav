@@ -24,7 +24,6 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import {anchorWatchDialog, AnchorWatchKeys} from "./AnchorWatchDialog";
 import keys from '../util/keys';
 import {useStore} from "../hoc/Dynamic";
