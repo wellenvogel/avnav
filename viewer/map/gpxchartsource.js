@@ -370,7 +370,7 @@ class GpxChartSource extends ChartSourceBase{
         const fname=feature.get('name');
         const url=this.getUrl();
         if (ot==='track'){
-            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:url});
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:oname});
         }
         else if (ot === 'route'){
             rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})
