@@ -66,7 +66,7 @@ const RoutePointsWidget = (props) => {
 
 RoutePointsWidget.propTypes={
     ...WidgetProps,
-    route:          PropTypes.objectOf(routeobjects.Route),
+    route:          PropTypes.instanceOf(routeobjects.Route),
     isActive:       PropTypes.bool,
     index:          PropTypes.number,
     showLatLon:     PropTypes.bool,

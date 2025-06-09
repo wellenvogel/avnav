@@ -25,13 +25,13 @@ const alarmClick =function(){
 
 export const PageFrame=(iprops)=>{
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,...forward}=useStore(iprops,{
+    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,...forward}=useStore(iprops,{
         storeKeys:{
             isEditing: keys.gui.global.layoutEditing
         }
     });
     useEffect(() => {
-        if (iprops.editingChanged) iprops.editingChanged(isEditing);
+        if (editingChanged) editingChanged(isEditing);
     }, [isEditing]);
     useEffect(() => {
         KeyHandler.setPage(id);
@@ -87,7 +87,7 @@ export const PageFrame=(iprops)=>{
 
 PageFrame.propTypes={
     className: PropTypes.string,
-    autoHideButtons: PropTypes.oneOfType([PropTypes.undefined,PropTypes.number]),
+    autoHideButtons: PropTypes.number,
     hideCallback: PropTypes.func,
     editingChanged: PropTypes.func,
     id: PropTypes.string.isRequired

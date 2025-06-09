@@ -230,7 +230,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         }
         {featureList.map((feature) => {
             if (feature instanceof BaseFeatureInfo) return null;
-            return <DialogRow key={feature.urlOrKey} className={'listEntry'} onClick={() => {
+            return <DialogRow key={feature.urlOrKey||feature.title} className={'listEntry'} onClick={() => {
                 select(feature);
             }}>
                 <div className={'icons'}>
@@ -245,10 +245,10 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
 FeatureListDialog.propTypes={
     className: PropTypes.string,
     history: PropTypes.object.isRequired,
-    featureList: PropTypes.arrayOf(FeatureInfo),
+    featureList: PropTypes.arrayOf(PropTypes.instanceOf(FeatureInfo)),
     onSelectCb: PropTypes.func, //return false to cancel
-    additionalActions: PropTypes.arrayOf(FeatureAction),
-    listActions: PropTypes.arrayOf(FeatureAction) //will be called with first list element (if this is a BaseFeatureInfo)
+    additionalActions: PropTypes.arrayOf(PropTypes.instanceOf(FeatureAction)),
+    listActions: PropTypes.arrayOf(PropTypes.instanceOf(FeatureAction)) //will be called with first list element (if this is a BaseFeatureInfo)
 }
 
 export const GuardedFeatureListDialog=MapEventGuard(FeatureListDialog);
@@ -282,15 +282,16 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
                 Feature Info
             </h3>
             {INFO_ROWS.map((row) => {
-                return <InfoRowDisplay row={row} data={featureInfo}/>;
+                return <InfoRowDisplay row={row} data={featureInfo} key={row.label}/>;
             })}
             {extendedInfoRows && extendedInfoRows.map((row) => {
-                return <InfoRowDisplay row={row} data={extendedInfo}/>;
+                return <InfoRowDisplay row={row} data={extendedInfo} key={row.label}/>;
             })}
             <DialogButtons>
                 {additionalActions && additionalActions.map((action) => {
                     if (!action.shouldShow(featureInfo)) return null;
                     return <DB
+                        key={action.name}
                         name={action.name}
                         onClick={() => {
                             action.onClick(featureInfo,dialogContext)
@@ -362,7 +363,7 @@ export const CenterActionButton={
     },
     updateFunction: (state)=>{
         return {
-            toggle:state.toggle,
+            toggle:!!state.toggle,
             visible: !state.locked || state.always
         }
     },
