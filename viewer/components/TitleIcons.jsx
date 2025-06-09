@@ -44,7 +44,7 @@ export const DynamicTitleIcons=({rightOffset})=>{
     if (rightOffset){
         style.paddingRight=rightOffset+"px";
     }
-    return <div className={cl} style={style}>
+    return <div className={cl} style={style} onClick={(ev)=>ev.stopPropagation()}>
         {props.measure && <span className="measureIcon" onClick={()=>{
             globalStore.storeData(keys.map.activeMeasure,undefined);
         }}/> }

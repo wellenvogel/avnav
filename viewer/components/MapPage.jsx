@@ -105,13 +105,12 @@ const setBottom=(val)=>{
         el.style.bottom=val;
     }
 }
-const Map=({titleOffset,mapClass,mapOpacity})=><div
+const Map=({mapClass,mapOpacity})=><div
     className={mapClass}
     ref={(el)=>{
         MapHolder.renderTo(el);
     }}
     style={{opacity:mapOpacity}}>
-    <DynamicTitleIcons rightOffset={titleOffset}/>
 </div>;
 const MapPage =(iprops)=>{
     const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
@@ -223,7 +222,8 @@ const MapPage =(iprops)=>{
                 }}
                 editingChanged={()=>mapholder.updateSize()}
             >
-                {props.mapFloat?<Map mapClass={mapClass} mapOpactity={mapOpacity} titleOffset={buttonWidth}/>:null}
+                {props.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
+                {props.mapFloat?<Map mapClass={mapClass} mapOpactity={mapOpacity} />:null}
                 <PageLeft dialogCtxRef={(ctx)=>{
                     dialogCtx.current=ctx;
                     handleCtxRef(ctx,props.dialogCtxRef);
@@ -242,9 +242,11 @@ const MapPage =(iprops)=>{
                                 mode="horizontal"
                                 layoutPage={layoutPage}
                             />
-
+                            <div className={'mapFrame'}>
+                            {!props.mapFloat && <DynamicTitleIcons /> }
                             {!props.mapFloat && <Map mapClass={mapClass} mapOpactity={mapOpacity}/>}
                             {overlay}
+                            </div>
                         </div>
                         <div ref={(container)=>{
                             bottomRef.current=container;
