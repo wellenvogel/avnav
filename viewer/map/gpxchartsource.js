@@ -394,8 +394,11 @@ class GpxChartSource extends ChartSourceBase{
                 if (rt instanceof RouteFeatureInfo && route){
                         const routePoint=getClosestRoutePoint(route,coordinates);
                         if (routePoint) rt.point=routePoint;
-                    }
                 }
+                else{
+                    rt.point=coordinates;
+                }
+            }
             else {
                 rt.point = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
             }
