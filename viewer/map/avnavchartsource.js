@@ -614,6 +614,7 @@ class AvnavChartSource extends ChartSourceBase{
                             isOverlay: ! this.isBaseChart()
                             });
                         info.userInfo=topInfo;
+                        info.overlaySource=this;
                         delete info.userInfo.name;
                         if (topInfo.nextTarget){
                             let nextTarget;

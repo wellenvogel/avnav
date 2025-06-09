@@ -1680,7 +1680,8 @@ class MapHolder extends DrawingPositionConverter {
                         title: this.sources[i].getName(),
                         chartKey: this.sources[i].getChartKey(),
                         isOverlay: !this.sources[i].isBaseChart(),
-                        point: clickPoint
+                        point: clickPoint,
+                        overlaySource: this.sources[i]
                     }))
                 }
             }

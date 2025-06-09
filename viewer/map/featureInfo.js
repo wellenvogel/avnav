@@ -157,10 +157,10 @@ export class TrackFeatureInfo extends FeatureInfo{
     }
 }
 export class ChartFeatureInfo extends FeatureInfo{
-    constructor({point,chartKey,title,isOverlay,chartFeatures}) {
+    constructor({point,chartKey,title,isOverlay,overlaySource}) {
         super({point,isOverlay,title});
         this.urlOrKey=chartKey
-        this.chartFeatures=chartFeatures;
+        this.overlaySource=overlaySource
     }
     getType(){
         return FeatureInfo.TYPE.chart;
