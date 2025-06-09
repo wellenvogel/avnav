@@ -157,7 +157,6 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         if (!onSelectCb || onSelectCb(featureInfo)) {
             shouldKeep.current=false;
             if (featureInfo instanceof AisFeatureInfo){
-                shouldKeep.current=true;
                 dialogContext.showDialog((dprops)=><AisInfoWithFunctions
                         {...dprops}
                         mmsi={featureInfo.urlOrKey}
@@ -165,12 +164,10 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                             if (action === 'AisInfoList'){
                                 history.push('aispage', {mmsi: m});
                             }
-                            shouldKeep.current=false;
+                            dialogContext.closeDialog();
                         }}
                     />
-                ,()=>{
-                    if (!shouldKeep.current) dialogContext.closeDialog();
-                    })
+                )
                 return;
             }
             if (featureInfo instanceof AnchorFeatureInfo){
