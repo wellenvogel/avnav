@@ -494,13 +494,12 @@ class MapHolder extends DrawingPositionConverter {
         if (this.timer && !div) {
             window.clearInterval(this.timer);
             this.timer = undefined;
-            this._lastMapDiv = undefined;
         }
+        this._lastMapDiv = div;
         if (!this.olmap) return;
         this._callHandlers({type: div ? EventTypes.SHOWMAP : EventTypes.HIDEMAP});
         let mapDiv = div || this.defaultDiv;
         this.olmap.setTarget(mapDiv);
-        this._lastMapDiv = div;
         if (!this.timer && div) {
             this.timer = window.setInterval(() => {
                 this.timerFunction()
@@ -649,8 +648,7 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
-    loadMap(div) {
-        if (div) this._lastMapDiv = div;
+    loadMap() {
         return new Promise((resolve, reject) => {
             let url = this._baseChart.getConfig().url;
             if (!url) {

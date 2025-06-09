@@ -879,7 +879,6 @@ const NavPage=(props)=>{
                         dialogCtxRef={dialogCtx}
                     />}
                 buttonList={buttons}
-                preventCenterDialog={(props.options||{}).remote}
                 autoHideButtons={autohide}
                 dialogCtxRef={dialogCtx}
                 />

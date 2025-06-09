@@ -31,15 +31,20 @@ import globalstore from "../util/globalstore";
 import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import {ConfirmDialog} from "./BasicDialogs";
+import PropTypes from "prop-types";
 
-export const DynamicTitleIcons=(iprops)=>{
+export const DynamicTitleIcons=({rightOffset})=>{
     const dialogContext=useDialogContext();
-    const props=useStore(iprops,{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons,measure: keys.map.activeMeasure }})
+    const props=useStore({rightOffset},{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons,measure: keys.map.activeMeasure }})
     if (! props.show) return null;
     let cl="iconContainer ";
     if (props.className) cl+=props.className;
     let anchorWatch=props.watchDistance !== undefined;
-    return <div className={cl}>
+    const style={};
+    if (rightOffset){
+        style.paddingRight=rightOffset+"px";
+    }
+    return <div className={cl} style={style}>
         {props.measure && <span className="measureIcon" onClick={()=>{
             globalStore.storeData(keys.map.activeMeasure,undefined);
         }}/> }
@@ -51,4 +56,7 @@ export const DynamicTitleIcons=(iprops)=>{
                 .catch(()=>{});
         }}/>}
     </div>
+}
+DynamicTitleIcons.propTypes={
+    rightOffset: PropTypes.number
 }
