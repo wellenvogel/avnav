@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import {GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
+import {CenterActionButton, GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -671,6 +671,7 @@ const NavPage=(props)=>{
                 name: 'Measure',
                 label: (measure === undefined)?'Measure':'+ Measure',
                 onClick: (featureInfo)=>{
+                    if (MapHolder.getGpsLock()) return;
                     let newMeasure;
                     if (measure){
                         newMeasure=measure.clone();
@@ -681,7 +682,8 @@ const NavPage=(props)=>{
                     newMeasure.addPoint(-99,featureInfo.point);
                     MapHolder.setCenter(featureInfo.point);
                     globalStore.storeData(keys.map.activeMeasure,newMeasure);
-                }
+                },
+                condition: ()=>!MapHolder.getGpsLock()
             }))
             listActions.push(new FeatureAction({
                 name: 'MeasureOff',
@@ -812,18 +814,7 @@ const NavPage=(props)=>{
                 },
                 overflow: true
             },
-            {
-                name: 'CenterAction',
-                storeKeys: {
-                    toggle: keys.map.activeMeasure
-                },
-                overflow: true,
-                onClick: ()=>{
-                    let center = globalStore.getData(keys.map.centerPosition);
-                    let pixel=MapHolder.coordToPixel(MapHolder.pointToMap([center.lon,center.lat]))
-                    MapHolder.featureAction(pixel);
-                }
-            },
+            CenterActionButton,
             Mob.mobDefinition(props.history),
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,

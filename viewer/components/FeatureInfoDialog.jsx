@@ -42,6 +42,8 @@ import Helper from "../util/helper";
 import {AisInfoWithFunctions} from "./AisInfoDisplay";
 import {WatchDialogWithFunctions} from "./AnchorWatchDialog";
 import MapEventGuard from "../hoc/MapEventGuard";
+import globalStore from "../util/globalstore";
+import MapHolder from "../map/mapholder";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -340,4 +342,26 @@ FeatureInfoDialog.propTypes={
     history: PropTypes.object.isRequired,
     additionalActions: PropTypes.array,
     cancelAction: PropTypes.func
+}
+
+export const CenterActionButton={
+    name: 'CenterAction',
+    storeKeys: {
+        toggle: keys.map.activeMeasure,
+        locked: keys.map.lockPosition,
+        always: keys.properties.mapAlwaysCenter
+    },
+    updateFunction: (state)=>{
+        return {
+            toggle:state.toggle,
+            visible: !state.locked || state.always
+        }
+    },
+    overflow: true,
+    editDisable: true,
+    onClick: ()=>{
+        let center = globalStore.getData(keys.map.centerPosition);
+        let pixel=MapHolder.coordToPixel(MapHolder.pointToMap([center.lon,center.lat]))
+        MapHolder.featureAction(pixel);
+    }
 }
