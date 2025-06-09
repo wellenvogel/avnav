@@ -496,7 +496,7 @@ const NavPage=(props)=>{
                 }}
             />;
         })
-    },[]);
+    },[dialogCtx]);
     const showWpButtons=useCallback((on)=>{
         if (on) {
             wpTimer.startTimer();
@@ -545,7 +545,7 @@ const NavPage=(props)=>{
         }
         props.history.push("gpspage",{widget:item.name});
 
-    },[]);
+    },[dialogCtx]);
 
     const mapEvent = useCallback((evdata) => {
         console.log("mapevent: " + evdata.type);
@@ -705,7 +705,7 @@ const NavPage=(props)=>{
             />)
             return true;
         }
-    }, []);
+    }, [dialogCtx]);
     const buttons=[
             {
                 name: "ZoomIn",
