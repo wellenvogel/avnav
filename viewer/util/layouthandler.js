@@ -639,7 +639,7 @@ class LayoutHandler{
     }
 
     moveItem(pageWithOptions,panel,oldIndex,newIndex,opt_newPanel){
-        console.log("moveItem",pageWithOptions,panel,oldIndex,newIndex,opt_newPanel);
+        base.log("moveItem",pageWithOptions,panel,oldIndex,newIndex,opt_newPanel);
         if (oldIndex == newIndex && (opt_newPanel === undefined || panel === opt_newPanel)) return true;
         if (! this.isEditing()) return false;
         const page=getPagename(pageWithOptions);

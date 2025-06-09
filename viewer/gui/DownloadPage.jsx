@@ -500,7 +500,6 @@ class DownloadPage extends React.Component{
                             scrollable={true}
                             itemList={this.state.items}
                             onItemClick={(item,data)=>{
-                                console.log("click on "+item.name+" type="+data);
                                 if (data === 'delete'){
                                     return deleteItem(item,this.fillData);
                                 }

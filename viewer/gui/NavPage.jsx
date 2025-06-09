@@ -40,7 +40,6 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList from "../components/ItemList";
-import mapholder from "../map/mapholder.js";
 import {PageFrame, PageLeft} from "../components/Page";
 import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
@@ -56,6 +55,7 @@ import routeobjects, {Measure} from "../nav/routeobjects";
 import {KeepFromMode} from "../nav/routedata";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import navdata from "../nav/navdata.js";
+import base from "../base";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -389,8 +389,8 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
     </React.Fragment>
 }
 const needsChartLoad=()=>{
-    if (mapholder.getCurrentChartEntry()) return;
-    return mapholder.getLastChartKey()
+    if (MapHolder.getCurrentChartEntry()) return;
+    return MapHolder.getLastChartKey()
 }
 const createRouteFeatureAction=(props,opt_fromMeasure)=>{
     return new FeatureAction({
@@ -452,7 +452,7 @@ const NavPage=(props)=>{
             (json.items || []).forEach((chartEntry) => {
                 if (!chartEntry.key) chartEntry.key = chartEntry.chartKey || chartEntry.url;
                 if (chartEntry.key === neededChart) {
-                    mapholder.setChartEntry(chartEntry);
+                    MapHolder.setChartEntry(chartEntry);
                     setSequence(sequence + 1);
                     return;
                 }
@@ -548,7 +548,7 @@ const NavPage=(props)=>{
     },[dialogCtx]);
 
     const mapEvent = useCallback((evdata) => {
-        console.log("mapevent: " + evdata.type);
+        base.log("mapevent: " + evdata.type);
         if (evdata.type === EventTypes.FEATURE) {
             const featureList=evdata.feature;
             const additionalActions = [];

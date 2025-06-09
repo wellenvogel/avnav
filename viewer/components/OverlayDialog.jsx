@@ -23,6 +23,7 @@ import DialogButton from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
 import Helper, {concatsp} from "../util/helper";
+import base from "../base";
 
 
 /**
@@ -228,7 +229,7 @@ export const useDialog=(closeCb)=>{
                             if (closeCb) closeCb();
                         }
                         else{
-                            console.log("deferred close");
+                            base.log("deferred close");
                         }
                         if (dialogContent.close) dialogContent.close();
                     }

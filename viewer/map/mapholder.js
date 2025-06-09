@@ -957,11 +957,11 @@ class MapHolder extends DrawingPositionConverter {
             let pixelRatio = undefined;
             try {
                 if (document.body.style.transform === undefined) {
-                    console.log("browser has no transform feature, keeping pixelRatio at 1");
+                    base.log("browser has no transform feature, keeping pixelRatio at 1");
                     pixelRatio = 1;
                 }
             } catch (e) {
-                console.log("unable to detect transform feature");
+                base.log("unable to detect transform feature");
             }
             let interactions = olInteraction.defaults({
                 altShiftDragRotate: false,

@@ -135,7 +135,7 @@ class KeyHandler{
                 if (mapping) return mapping;
                 mapping = this.findMappingForType(lidx, key,this.ALLPAGES ,opt_inDialog);
             } catch (e) {
-                console.log("error when searching keymapping: " + e)
+                base.log("error when searching keymapping: " + e)
             }
             if (mapping) return mapping;
         }
