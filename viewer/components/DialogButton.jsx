@@ -32,10 +32,11 @@ const DialogButton=(props)=>{
                 name={name}
                 onClick={(ev)=>{
                     if (! onClick || close) {
+                        let closeDialog=true;
                         if (onPreClose) {
-                            if (! onPreClose(ev,dialogContext)) return;
+                            if (! onPreClose(ev,dialogContext)) closeDialog=false;
                         }
-                        dialogContext.closeDialog();
+                        if (closeDialog) dialogContext.closeDialog();
                     }
                     if (onClick) onClick(ev,dialogContext);
                 }}

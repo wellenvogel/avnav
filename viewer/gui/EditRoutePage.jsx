@@ -31,7 +31,7 @@ import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
-import {CenterActionButton, GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
+import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {Checkbox, InputReadOnly} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
@@ -909,6 +909,8 @@ const EditRoutePage = (props) => {
                             condition: (featureInfo) => routeActionCondition(featureInfo)
                         }));
                 }
+                additionalActions.push(hideAction);
+                additionalActions.push(linkAction(props.history));
             }
             showDialog(dialogCtxRef, (dprops) => <GuardedFeatureListDialog {...dprops}
                                                                     history={props.history}

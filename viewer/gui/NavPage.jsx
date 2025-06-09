@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import {CenterActionButton, GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
+import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -652,6 +652,8 @@ const NavPage=(props)=>{
                 },
                 condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && ! featureInfo.isOverlay && globalStore.getData(keys.properties.connectedMode)
             }))
+            additionalActions.push(hideAction);
+            additionalActions.push(linkAction(props.history));
             const listActions=[
                 new FeatureAction({
                     name: 'goto',

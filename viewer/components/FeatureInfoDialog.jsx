@@ -142,6 +142,14 @@ const ImageIcon=({iconImage,className})=>{
     return <div className={Helper.concatsp(className,'ImageIcon')} ref={ref}/>
 }
 
+const FeatureIcon=({feature,showOverlayIcon})=>{
+    return <React.Fragment>
+        {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
+        {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
+        { showOverlayIcon && feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
+    </React.Fragment>
+}
+
 export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions,className}) => {
     const dialogContext = useDialogContext();
     const shouldKeep=useRef(false);
@@ -149,6 +157,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         if (!onSelectCb || onSelectCb(featureInfo)) {
             shouldKeep.current=false;
             if (featureInfo instanceof AisFeatureInfo){
+                shouldKeep.current=true;
                 dialogContext.showDialog((dprops)=><AisInfoWithFunctions
                         {...dprops}
                         mmsi={featureInfo.urlOrKey}
@@ -156,9 +165,12 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                             if (action === 'AisInfoList'){
                                 history.push('aispage', {mmsi: m});
                             }
+                            shouldKeep.current=false;
                         }}
                     />
-                )
+                ,()=>{
+                    if (!shouldKeep.current) dialogContext.closeDialog();
+                    })
                 return;
             }
             if (featureInfo instanceof AnchorFeatureInfo){
@@ -225,9 +237,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                 select(feature);
             }}>
                 <div className={'icons'}>
-                {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
-                {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
-                {feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
+               <FeatureIcon feature={feature} showOverlayIcon={true}/>
                 </div>
                 <span className={'title'}>{feature.title}</span>
             </DialogRow>
@@ -254,22 +264,6 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
         dialogContext.closeDialog();
         return null;
     }
-    const userInfo=featureInfo.userInfo||{};
-    const linkAction = useCallback(() => {
-        if (!userInfo.link && !userInfo.htmlInfo) return;
-        dialogContext.closeDialog();
-        let url = userInfo.link;
-        if (userInfo.htmlInfo) {
-            history.push('viewpage', {html: userInfo.htmlInfo, name: userInfo.name || 'featureInfo'});
-            return;
-        }
-        history.push('viewpage', {url: url, name: userInfo.name, useIframe: true});
-    }, [userInfo,history]);
-    const hideAction = useCallback(() => {
-        if (!featureInfo.overlaySource || ! featureInfo.isOverlay) return;
-        dialogContext.closeDialog();
-        featureInfo.overlaySource.setEnabled(false, true);
-    }, [featureInfo]);
     useEffect(() => {
         let infoFunction = INFO_FUNCTIONS[featureInfo.getType()]
         let infoCoordinates = featureInfo.point;
@@ -283,14 +277,11 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
                 .catch((error) => Toast(error));
         }
     }, []);
-    let link = userInfo.link || userInfo.htmlInfo;
     let extendedInfoRows = INFO_DISPLAY[featureInfo.getType()];
     return (
         <DialogFrame className="FeatureInfoDialog">
             <h3 className="dialogTitle">
-                {userInfo.icon &&
-                    <span className="icon" style={{backgroundImage: "url('" + userInfo.icon + "')"}}/>
-                }
+                <FeatureIcon feature={featureInfo}/>
                 Feature Info
             </h3>
             {INFO_ROWS.map((row) => {
@@ -309,24 +300,20 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
                         }}
                         close={Helper.unsetorTrue(action.close)}
                         toggle={action.toggle(featureInfo)}
+                        onPreClose={(featureInfo)=>{
+                            if (! action.onPreClose(featureInfo,dialogContext)){
+                                if (cancelAction) cancelAction(featureInfo,dialogContext);
+                            }
+                            return true;
+                        }}
                         >
                         {action.label}
                     </DB>
                 })}
-                {link && <DB
-                    name="info"
-                    onClick={linkAction}
-                    close={false}
-                >Info</DB>}
-                {featureInfo.overlaySource && featureInfo.isOverlay &&
-                    <DB name="hide"
-                        onClick={hideAction}
-                        close={false}
-                    >Hide</DB>}
                 <DB name={"cancel"}
                     onPreClose={()=>{
                         if (cancelAction) {
-                            return cancelAction();
+                            return cancelAction(featureInfo,dialogContext);
                         }
                         return true;
                     }}
@@ -343,6 +330,31 @@ FeatureInfoDialog.propTypes={
     additionalActions: PropTypes.array,
     cancelAction: PropTypes.func
 }
+
+export const hideAction=new FeatureAction({
+    name:"hide",
+    label: 'Hide',
+    onClick:(featureInfo)=>{
+        featureInfo.overlaySource.setEnabled(false, true);
+        },
+    condition: (featureInfo)=>featureInfo.isOverlay && featureInfo.overlaySource
+    });
+
+export const linkAction=(history)=>new FeatureAction({
+    name:"info",
+    label:'Info',
+    condition: (featureInfo)=>featureInfo.userInfo && (featureInfo.userInfo.link || featureInfo.userInfo.html),
+    onClick: (featureInfo)=>{
+        const userInfo=featureInfo.userInfo||{};
+        if (!userInfo.link && !userInfo.htmlInfo) return;
+        let url = userInfo.link;
+        if (userInfo.htmlInfo) {
+            history.push('viewpage', {html: userInfo.htmlInfo, name: userInfo.title || 'featureInfo'});
+            return;
+        }
+        history.push('viewpage', {url: url, name: userInfo.title, useIframe: true});
+    }
+})
 
 export const CenterActionButton={
     name: 'CenterAction',
