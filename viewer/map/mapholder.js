@@ -494,13 +494,12 @@ class MapHolder extends DrawingPositionConverter {
         if (this.timer && !div) {
             window.clearInterval(this.timer);
             this.timer = undefined;
-            this._lastMapDiv = undefined;
         }
+        this._lastMapDiv = div;
         if (!this.olmap) return;
         this._callHandlers({type: div ? EventTypes.SHOWMAP : EventTypes.HIDEMAP});
         let mapDiv = div || this.defaultDiv;
         this.olmap.setTarget(mapDiv);
-        this._lastMapDiv = div;
         if (!this.timer && div) {
             this.timer = window.setInterval(() => {
                 this.timerFunction()
@@ -649,8 +648,7 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
-    loadMap(div) {
-        if (div) this._lastMapDiv = div;
+    loadMap() {
         return new Promise((resolve, reject) => {
             let url = this._baseChart.getConfig().url;
             if (!url) {
@@ -959,11 +957,11 @@ class MapHolder extends DrawingPositionConverter {
             let pixelRatio = undefined;
             try {
                 if (document.body.style.transform === undefined) {
-                    console.log("browser has no transform feature, keeping pixelRatio at 1");
+                    base.log("browser has no transform feature, keeping pixelRatio at 1");
                     pixelRatio = 1;
                 }
             } catch (e) {
-                console.log("unable to detect transform feature");
+                base.log("unable to detect transform feature");
             }
             let interactions = olInteraction.defaults({
                 altShiftDragRotate: false,
@@ -1682,7 +1680,8 @@ class MapHolder extends DrawingPositionConverter {
                         title: this.sources[i].getName(),
                         chartKey: this.sources[i].getChartKey(),
                         isOverlay: !this.sources[i].isBaseChart(),
-                        point: clickPoint
+                        point: clickPoint,
+                        overlaySource: this.sources[i]
                     }))
                 }
             }

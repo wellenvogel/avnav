@@ -121,7 +121,7 @@ class TrackInfo{
         }
         let refIdx=-1;
         let remain=0;
-        if (this.refPoint){
+        if (this.refPoint && (this.refPoint instanceof navobjects.Point) && this.refPoint.valid()){
             let bestDistance;
             for (let i=0;i<this.points.length;i++){
                 let cur=NavCompute.computeDistance(this.refPoint,
@@ -268,7 +268,9 @@ export const getTrackInfo = (trackName,opt_point) => {
                 }
                 trackInfo.finalize(resolve,reject);
             })
-            .catch((error) => reject(error))
+            .catch((error) => {
+                reject(error)
+            })
     })
 }
 

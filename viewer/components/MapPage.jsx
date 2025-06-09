@@ -9,7 +9,7 @@ import Visible from '../hoc/Visible.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React, {useCallback, useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -105,13 +105,21 @@ const setBottom=(val)=>{
         el.style.bottom=val;
     }
 }
+const Map=({mapClass,mapOpacity})=><div
+    className={mapClass}
+    ref={(el)=>{
+        MapHolder.renderTo(el);
+    }}
+    style={{opacity:mapOpacity}}>
+</div>;
 const MapPage =(iprops)=>{
     const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
             widgetFontSize:keys.properties.widgetFontSize,
             mapFloat: keys.properties.mapFloat
         })});
+    const [buttonWidth,setButtonWidth]=useState(undefined);
+    const buttonsHidden=useRef(false);
     const dialogCtx=useRef();
-    const mapRef=useRef();
     const bottomRef=useRef();
     const layoutPage=getLayoutPage(props);
     const mapEvent=useCallback((evdata)=>{
@@ -135,12 +143,12 @@ const MapPage =(iprops)=>{
                 setShown(chartEntry.url,INFO_TYPES.info);
             }
         }
-        MapHolder.loadMap(mapRef.current, props.preventCenterDialog).
+        MapHolder.loadMap().
         then((result)=>{
             computeScalePosition();
         }).
         catch((error)=>{Toast(error)});
-    },[props.preventCenterDialog]);
+    },[]);
     const subscribeToken=useRef();
     useEffect(() => {
         subscribeToken.current=MapHolder.subscribe(mapEvent);
@@ -160,7 +168,7 @@ const MapPage =(iprops)=>{
         }
         showMap(chartEntry);
         return ()=>{
-            MapHolder.renderTo();
+            //MapHolder.renderTo();
             if (subscribeToken.current !== undefined){
                 MapHolder.unsubscribe(subscribeToken.current);
                 subscribeToken.current=undefined;
@@ -198,9 +206,6 @@ const MapPage =(iprops)=>{
         let mapClass=concatsp("map",chartEntry.chartKey?chartEntry.chartKey.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        const map=<div className={mapClass} ref={mapRef} style={{opacity:mapOpacity}}>
-            <DynamicTitleIcons/>
-        </div>;
         let className=Helper.concatsp(props.className,"mapPage",props.mapFloat?"mapFloat":undefined);
         let pageProperties=Helper.filteredAssign(Page.propTypes,props);
         let overlay=props.overlayContent || null;
@@ -211,12 +216,14 @@ const MapPage =(iprops)=>{
             <PageFrame
                 {...pageProperties}
                 className={className}
-                hideCallback={()=>{
+                hideCallback={(hidden)=>{
                     mapholder.updateSize();
+                    buttonsHidden.current=hidden;
                 }}
                 editingChanged={()=>mapholder.updateSize()}
             >
-                {props.mapFloat?map:null}
+                {props.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
+                {props.mapFloat?<Map mapClass={mapClass} mapOpactity={mapOpacity} />:null}
                 <PageLeft dialogCtxRef={(ctx)=>{
                     dialogCtx.current=ctx;
                     handleCtxRef(ctx,props.dialogCtxRef);
@@ -235,9 +242,11 @@ const MapPage =(iprops)=>{
                                 mode="horizontal"
                                 layoutPage={layoutPage}
                             />
-
-                            {!props.mapFloat && map}
+                            <div className={'mapFrame'}>
+                            {!props.mapFloat && <DynamicTitleIcons /> }
+                            {!props.mapFloat && <Map mapClass={mapClass} mapOpactity={mapOpacity}/>}
                             {overlay}
+                            </div>
                         </div>
                         <div ref={(container)=>{
                             bottomRef.current=container;
@@ -261,6 +270,10 @@ const MapPage =(iprops)=>{
                 </PageLeft>
                 <ButtonList
                     itemList={props.buttonList}
+                    widthChanged={(width)=>{
+                        setButtonWidth(width);
+                        mapholder.updateSize();
+                    }}
                     />
             </PageFrame>
 
@@ -277,7 +290,6 @@ MapPage.propertyTypes={
     id:                 PropTypes.string,
     overlayContent:     PropTypes.any,               //overlay in the map container
     mapLoadCallback:    PropTypes.func,
-    preventCenterDialog: PropTypes.bool,
     autoHideButtons:    PropTypes.any,
     widgetFontSize:     PropTypes.number,
     mapFloat:           PropTypes.bool,
@@ -311,7 +323,7 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
             editCallback={(canEdit)?()=>{
                 EditOverlaysDialog.createDialog(currentChart,(nv)=>{
                     if (nv) {
-                        MapHolder.loadMap(undefined,true).then(()=>{
+                        MapHolder.loadMap().then(()=>{
                             MapHolder.resetOverlayConfig();
                         })
                     }

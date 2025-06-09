@@ -58,7 +58,7 @@ class DimmHandler{
                 if (mode === "true"){
                     //TEST
                     this.actionFunction=(value)=>{
-                        console.log("dimm called with "+value);
+                        base.log("dimm called with "+value);
                     }
                 }
             }

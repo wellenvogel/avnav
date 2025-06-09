@@ -24,13 +24,14 @@ import navobjects from "../nav/navobjects";
 
 
 export class FeatureAction{
-    constructor({name,label,onClick,condition,close,toggle}) {
+    constructor({name,label,onClick,condition,close,toggle,onPreClose}) {
         this.name=name;
         this.label=label;
         this.onClickHandler=onClick;
         this.condition=condition;
         this.close=close;
         this.toggleValue=toggle;
+        this.onPreCloseValue=onPreClose
     }
     shouldShow(featureInfo){
         if (! this.condition) return true;
@@ -45,6 +46,20 @@ export class FeatureAction{
         if (this.toggleValue === undefined) return false;
         if (typeof this.toggleValue === 'function') return this.toggleValue(featureInfo);
         return this.toggleValue;
+    }
+
+    /**
+     * called before the feature dialog will close
+     * @param featureInfo
+     * @returns {*|boolean} return false to threat this as a "cancel" action - i.e. keep the feature list open
+     *                      the default is true - i.e. close the feature list when closing the featureinfo
+     */
+    onPreClose(featureInfo){
+        if (this.onPreCloseValue !== undefined) {
+            if (typeof this.onPreCloseValue === 'function') return this.onPreCloseValue(featureInfo);
+            return this.onPreCloseValue;
+        }
+        return true;
     }
 }
 
@@ -142,10 +157,10 @@ export class TrackFeatureInfo extends FeatureInfo{
     }
 }
 export class ChartFeatureInfo extends FeatureInfo{
-    constructor({point,chartKey,title,isOverlay,chartFeatures}) {
+    constructor({point,chartKey,title,isOverlay,overlaySource}) {
         super({point,isOverlay,title});
         this.urlOrKey=chartKey
-        this.chartFeatures=chartFeatures;
+        this.overlaySource=overlaySource
     }
     getType(){
         return FeatureInfo.TYPE.chart;

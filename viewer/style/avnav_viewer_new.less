@@ -554,7 +554,7 @@ body{
   }
 
 }
-.featureListDialog{
+.featureListDialog, .FeatureInfoDialog{
   .icon.route{
     .iconImage('route.svg')
   }
@@ -863,6 +863,7 @@ span.valuePrefix{
     height: 0.8em;
     width: 0.8em;
   }
+  vertical-align: middle;
 }
 .iconImage(@url){
   .icon();
@@ -1041,7 +1042,7 @@ span.valuePrefix{
 
 #gpspage{
   .iconContainer{
-    z-index: 101;
+    z-index: 102;
   }
   .leftPart{
     .flex-direction(row);
@@ -1631,6 +1632,13 @@ span.valuePrefix{
 
 //-------------- pages with map and widgets ----------------------------
 .mapPage{
+  .iconContainer{
+    z-index: 102; //above widgets and shade
+  }
+  .mapFrame {
+    position: relative;
+    .flex-grow(1);
+  }
   .map{
     .flex(1);
     overflow: hidden;

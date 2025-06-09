@@ -231,11 +231,11 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             }
         }
     }
-    if (!globalStore.getData(keys.map.lockPosition,false)) {
+    if (!globalStore.getData(keys.map.lockPosition,false) || globalStore.getData(keys.properties.mapAlwaysCenter)) {
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
         let measure=globalStore.getData(keys.map.activeMeasure);
         let measurePos;
-        if (measure && measure.points.length > 0) {
+        if (!globalStore.getData(keys.map.lockPosition,false) && measure && measure.points.length > 0) {
             let centerPoint = new navobjects.Point();
             centerPoint.fromCoord(this.mapholder.transformFromMap(center));
             this.drawnMeasure=measure.clone();

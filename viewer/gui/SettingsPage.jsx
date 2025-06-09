@@ -67,7 +67,7 @@ const settingsSections={
         keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
         keys.properties.mapOnlineUpZoom,
-        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
+        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
         keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
     ],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],

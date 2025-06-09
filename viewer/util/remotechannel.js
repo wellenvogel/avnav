@@ -174,7 +174,7 @@ class RemoteChannel{
         let url='ws://'+window.location.host+
             "/remotechannels/"+this.channel;
         try{
-            console.log("opening websocket to ",url);
+            base.log("opening websocket to ",url);
             this.websocket=new WebSocket(url);
             this.websocket.addEventListener('message',(msg)=>{
                 if (connectionId === this.id) {
@@ -182,14 +182,14 @@ class RemoteChannel{
                 }
             });
             this.websocket.addEventListener('close',()=>{
-                console.log("websocket closed");
+                base.log("websocket closed");
                 if (connectionId !== this.id) {
                     return;
                 }
                 this.websocket = undefined;
             })
             this.websocket.addEventListener('error',()=>{
-                console.log("websocket error");
+                base.log("websocket error");
                 if (connectionId !== this.id){
                     return;
                 }

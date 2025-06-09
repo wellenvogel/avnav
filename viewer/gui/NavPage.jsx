@@ -32,7 +32,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
-import {GuardedFeatureListDialog} from "../components/FeatureInfoDialog";
+import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
@@ -40,7 +40,6 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList from "../components/ItemList";
-import mapholder from "../map/mapholder.js";
 import {PageFrame, PageLeft} from "../components/Page";
 import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
@@ -56,6 +55,7 @@ import routeobjects, {Measure} from "../nav/routeobjects";
 import {KeepFromMode} from "../nav/routedata";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import navdata from "../nav/navdata.js";
+import base from "../base";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -389,8 +389,8 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
     </React.Fragment>
 }
 const needsChartLoad=()=>{
-    if (mapholder.getCurrentChartEntry()) return;
-    return mapholder.getLastChartKey()
+    if (MapHolder.getCurrentChartEntry()) return;
+    return MapHolder.getLastChartKey()
 }
 const createRouteFeatureAction=(props,opt_fromMeasure)=>{
     return new FeatureAction({
@@ -452,7 +452,7 @@ const NavPage=(props)=>{
             (json.items || []).forEach((chartEntry) => {
                 if (!chartEntry.key) chartEntry.key = chartEntry.chartKey || chartEntry.url;
                 if (chartEntry.key === neededChart) {
-                    mapholder.setChartEntry(chartEntry);
+                    MapHolder.setChartEntry(chartEntry);
                     setSequence(sequence + 1);
                     return;
                 }
@@ -496,7 +496,7 @@ const NavPage=(props)=>{
                 }}
             />;
         })
-    },[]);
+    },[dialogCtx]);
     const showWpButtons=useCallback((on)=>{
         if (on) {
             wpTimer.startTimer();
@@ -545,10 +545,10 @@ const NavPage=(props)=>{
         }
         props.history.push("gpspage",{widget:item.name});
 
-    },[]);
+    },[dialogCtx]);
 
     const mapEvent = useCallback((evdata) => {
-        console.log("mapevent: " + evdata.type);
+        base.log("mapevent: " + evdata.type);
         if (evdata.type === EventTypes.FEATURE) {
             const featureList=evdata.feature;
             const additionalActions = [];
@@ -652,6 +652,8 @@ const NavPage=(props)=>{
                 },
                 condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && ! featureInfo.isOverlay && globalStore.getData(keys.properties.connectedMode)
             }))
+            additionalActions.push(hideAction);
+            additionalActions.push(linkAction(props.history));
             const listActions=[
                 new FeatureAction({
                     name: 'goto',
@@ -671,6 +673,7 @@ const NavPage=(props)=>{
                 name: 'Measure',
                 label: (measure === undefined)?'Measure':'+ Measure',
                 onClick: (featureInfo)=>{
+                    if (MapHolder.getGpsLock()) return;
                     let newMeasure;
                     if (measure){
                         newMeasure=measure.clone();
@@ -681,7 +684,8 @@ const NavPage=(props)=>{
                     newMeasure.addPoint(-99,featureInfo.point);
                     MapHolder.setCenter(featureInfo.point);
                     globalStore.storeData(keys.map.activeMeasure,newMeasure);
-                }
+                },
+                condition: ()=>!MapHolder.getGpsLock()
             }))
             listActions.push(new FeatureAction({
                 name: 'MeasureOff',
@@ -701,7 +705,7 @@ const NavPage=(props)=>{
             />)
             return true;
         }
-    }, []);
+    }, [dialogCtx]);
     const buttons=[
             {
                 name: "ZoomIn",
@@ -812,18 +816,7 @@ const NavPage=(props)=>{
                 },
                 overflow: true
             },
-            {
-                name: 'CenterAction',
-                storeKeys: {
-                    toggle: keys.map.activeMeasure
-                },
-                overflow: true,
-                onClick: ()=>{
-                    let center = globalStore.getData(keys.map.centerPosition);
-                    let pixel=MapHolder.coordToPixel(MapHolder.pointToMap([center.lon,center.lat]))
-                    MapHolder.featureAction(pixel);
-                }
-            },
+            CenterActionButton,
             Mob.mobDefinition(props.history),
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,
@@ -888,7 +881,6 @@ const NavPage=(props)=>{
                         dialogCtxRef={dialogCtx}
                     />}
                 buttonList={buttons}
-                preventCenterDialog={(props.options||{}).remote}
                 autoHideButtons={autohide}
                 dialogCtxRef={dialogCtx}
                 />
