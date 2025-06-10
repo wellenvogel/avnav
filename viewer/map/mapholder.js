@@ -266,30 +266,35 @@ class MapHolder extends DrawingPositionConverter {
             this.changeZoom(-1)
         }, "map", "zoomOut");
         KeyHandler.registerHandler(() => {
+            this.userAction();
             this.setGpsLock(true)
         }, "map", "lockGps");
         KeyHandler.registerHandler(() => {
+            this.userAction();
             this.setGpsLock(false)
         }, "map", "unlockGps");
         KeyHandler.registerHandler(() => {
+            this.userAction();
             this.setGpsLock(!this.getGpsLock())
         }, "map", "toggleGps");
         KeyHandler.registerHandler(() => {
-            this.moveCenterPercent(-10, 0)
+            this.moveCenterPercentKey(-10, 0)
         }, "map", "left");
         KeyHandler.registerHandler(() => {
-            this.moveCenterPercent(10, 0)
+            this.moveCenterPercentKey(10, 0)
         }, "map", "right");
         KeyHandler.registerHandler(() => {
-            this.moveCenterPercent(0, -10)
+            this.moveCenterPercentKey(0, -10)
         }, "map", "up");
         KeyHandler.registerHandler(() => {
-            this.moveCenterPercent(0, 10)
+            this.moveCenterPercentKey(0, 10)
         }, "map", "down");
         KeyHandler.registerHandler(() => {
+            this.userAction();
             this.setCourseUp(!this.getCourseUp())
         }, "map", "toggleCourseUp");
         KeyHandler.registerHandler(() => {
+            this.userAction();
             this.centerToGps()
         }, "map", "centerToGps");
 
@@ -321,8 +326,7 @@ class MapHolder extends DrawingPositionConverter {
             if (this.isInUserActionGuard()) return;
             try {
                 let nz = parseFloat(msg);
-                let diff = nz - this.requiredZoom;
-                this.changeZoom(diff, false, true);
+                this.setZoom(nz);
             } catch (e) {
             }
         })
@@ -1038,7 +1042,7 @@ class MapHolder extends DrawingPositionConverter {
                 }
             }
             this.requiredZoom = this.zoom;
-            this.setZoom(this.zoom);
+            this.setMapZoom(this.zoom);
             recenter = false;
             let lext = undefined;
             if (baseLayers.length > 0) {
@@ -1048,7 +1052,7 @@ class MapHolder extends DrawingPositionConverter {
                         let view = this.getView();
                         lext = baseLayers[0].avnavOptions.extent;
                         if (lext !== undefined) view.fit(lext, this.olmap.getSize());
-                        this.setZoom(this.minzoom);
+                        this.setMapZoom(this.minzoom);
                         this.center = this.pointFromMap(view.getCenter());
                         this.zoom = view.getZoom();
 
@@ -1063,7 +1067,7 @@ class MapHolder extends DrawingPositionConverter {
                 view = this.getView();
                 let lextx = baseLayers[0].avnavOptions.extent;
                 if (lextx !== undefined) view.fit(lextx, this.olmap.getSize());
-                this.setZoom(this.minzoom);
+                this.setMapZoom(this.minzoom);
                 this.referencePoint = this.pointFromMap(view.getCenter());
                 this.zoom = view.getZoom();
 
@@ -1165,6 +1169,8 @@ class MapHolder extends DrawingPositionConverter {
     /**
      * increase/decrease the map zoom
      * @param number
+     * @param opt_force
+     * @param opt_noUserAction
      */
     changeZoom(number, opt_force, opt_noUserAction) {
         if (!opt_noUserAction) this.userAction();
@@ -1183,13 +1189,16 @@ class MapHolder extends DrawingPositionConverter {
             }
         }
         curzoom += number;
+        this.setZoom(curzoom,opt_force);
+    }
+    setZoom(curzoom,opt_force){
         if (curzoom < this.minzoom) curzoom = this.minzoom;
         if (curzoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale))) {
             curzoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
         }
         this.requiredZoom = curzoom;
         this.forceZoom = opt_force || false;
-        this.setZoom(curzoom);
+        this.setMapZoom(curzoom);
         this.checkAutoZoom();
         this.timerFunction();
     }
@@ -1200,7 +1209,7 @@ class MapHolder extends DrawingPositionConverter {
      * @param newZoom
      * @param opt_noRemo
      */
-    setZoom(newZoom) {
+    setMapZoom(newZoom) {
         if (!this.olmap) return;
         this.mapZoom = newZoom;
         if (this.olmap.getView().getZoom() != newZoom) {
@@ -1363,7 +1372,7 @@ class MapHolder extends DrawingPositionConverter {
         if (!this.olmap) return;
         if (!enabled || !(this.gpsLocked || opt_force)) {
             if (this.olmap.getView().getZoom() != this.requiredZoom) {
-                this.setZoom(this.requiredZoom);
+                this.setMapZoom(this.requiredZoom);
             }
             return;
         }
@@ -1405,7 +1414,7 @@ class MapHolder extends DrawingPositionConverter {
                 if (tzoom != Math.floor(this.olmap.getView().getZoom())) {
                     base.log("autozoom change to " + tzoom);
                     if (opt_force) this.requiredZoom = tzoom;
-                    this.setZoom(tzoom); //should set our zoom in the post render
+                    this.setMapZoom(tzoom); //should set our zoom in the post render
                 } else {
                     if (opt_force && (tzoom != this.requiredZoom)) {
                         this.requiredZoom = tzoom;
@@ -1422,12 +1431,12 @@ class MapHolder extends DrawingPositionConverter {
             if (nzoom != this.olmap.getView().getZoom) {
                 base.log("autozoom change to " + tzoom);
                 if (opt_force) this.requiredZoom = nzoom;
-                this.setZoom(nzoom);
+                this.setMapZoom(nzoom);
             }
         }
         if (!hasZoomInfo) {
             //hmm - no zoominfo - better go back to the required zoom
-            this.setZoom(this.requiredZoom);
+            this.setMapZoom(this.requiredZoom);
         }
     }
 
@@ -1531,7 +1540,9 @@ class MapHolder extends DrawingPositionConverter {
         view.adjustRotation(delta, this.transformToMap(opt_anchor !== undefined ? opt_anchor : this.referencePoint));
     }
 
-    moveCenterPercent(deltax, deltay) {
+    moveCenterPercentKey(deltax, deltay) {
+        this.userAction();
+        if (this.getGpsLock() && ! globalStore.getData(keys.properties.mapLockMove)) return;
         if (!this.olmap) return;
         let referencePix = this.coordToPixel(this.transformToMap(this.referencePoint));
         let size = this.olmap.getSize(); //[width,height]
@@ -1541,7 +1552,12 @@ class MapHolder extends DrawingPositionConverter {
         referencePix[0] += deltaxPix;
         referencePix[1] += deltayPix;
         this.referencePoint = this.transformFromMap(this.pixelToCoord(referencePix));
+        if (this.getGpsLock()){
+            this.boatOffset.x-=deltax;
+            this.boatOffset.y-=deltay;
+        }
         this._centerToReference();
+        this.sendReference();
     }
 
     /**
