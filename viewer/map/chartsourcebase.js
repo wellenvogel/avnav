@@ -381,7 +381,7 @@ export const editableOverlayParameters={
     maxScale:new EditableNumberParameter({name:'maxScale',displayName:'max scale', default: 0,description:'enlarge symbols above this zoom, 0 to unset'}),
     allowOnline:new EditableBooleanParameter({name: 'allowOnline',displayName: 'allow online',default:false,description:'allow access to online http/https resources'}),
     showText:new EditableBooleanParameter({name:'showText',displayName: 'show text',default:false,description:'show text beside symbols if available'}),
-    allowHtml:new EditableBooleanParameter({name:'allowHtml',displayName: 'allow html',default: false,description:'allow to show html content'}),
+    allowHtml:new EditableBooleanParameter({name:'allowHtml',displayName: 'allow html',default: true,description:'allow to show html content'}),
     icon: new EditableSelectParameter({name:'icons',displayName: 'icon file',readOnly:false,list:[undefined],description:'file that contains icons and linked resources'}),
     defaultIcon:new EditableIconParameter({name:'defaultIcon',displayName:'default icon',description:'default icon to be used for points'}),
     featureFormatter: new EditableSelectParameter({name:'featureFormatter',displayName:'featureFormatter',list:()=>{

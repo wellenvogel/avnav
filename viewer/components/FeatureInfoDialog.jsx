@@ -341,7 +341,7 @@ export const hideAction=new FeatureAction({
 export const linkAction=(history)=>new FeatureAction({
     name:"info",
     label:'Info',
-    condition: (featureInfo)=>featureInfo.userInfo && (featureInfo.userInfo.link || featureInfo.userInfo.html),
+    condition: (featureInfo)=>featureInfo.userInfo && (featureInfo.userInfo.link || featureInfo.userInfo.htmlInfo),
     onClick: (featureInfo)=>{
         const userInfo=featureInfo.userInfo||{};
         if (!userInfo.link && !userInfo.htmlInfo) return;

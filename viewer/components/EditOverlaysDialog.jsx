@@ -26,6 +26,7 @@ import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import base from "../base";
 import Mapholder from "../map/mapholder";
+import {EditableParameterTypes} from "../util/EditableParameter";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -112,24 +113,33 @@ const OverlayItemDialog = (props) => {
         route: useItemList([]),
         track: useItemList([])
     };
+    let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
     const parameters=useMemo(()=>{
         const rt=[];
         if (itemInfo.settings){
             itemInfo.settings.forEach((setting)=>{
                 let addOn=undefined;
                 if (setting.name === editableOverlayParameters.icon.name){
-                    //fill icon list
-                    addOn={
-                        list:itemLists.iconFiles.list,
-                        readOnly: iconsReadOnly
-                    };
+                    if (iconsReadOnly){
+                        addOn={
+                            type: EditableParameterTypes.STRING,
+                            readOnly: true,
+                            default: current[editableOverlayParameters.icon.name]
+                        }
+                    }
+                    else {
+                        //fill icon list
+                        addOn = {
+                            list: itemLists.iconFiles.list
+                        }
+                    }
                 }
                 const param=editableParameterUI.createEditableParameterUI({...setting,...addOn});
                 rt.push(param);
             })
         }
         return rt;
-    },[itemInfo,itemsFetchCount])
+    },[itemInfo,itemsFetchCount,iconsReadOnly])
 
     const getItemList = (type) => {
         const filledLists={};
@@ -287,7 +297,6 @@ const OverlayItemDialog = (props) => {
         return rt;
     }
     let currentType = current.type;
-    let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
 
     let dataValid=true;
     parameters.forEach((parameter)=>{
@@ -349,7 +358,7 @@ const OverlayItemDialog = (props) => {
                                 onChange={(nv) => {
                                     let newState = {url: nv.url, name: nv.name};
                                     if (Helper.getExt(nv.name) === 'kmz') {
-                                        newState.icons = nv.url;
+                                        newState[editableOverlayParameters.icon.name] = nv.url;
                                         newState.url += "/doc.kml";
                                     }
                                     let initial = current.name === undefined;
