@@ -77,6 +77,7 @@ export class EditableParameter extends Object{
         for (let k in assignableProperties){
             if (Object.hasOwn(plain,k)){
                 target[k]=plain[k];
+                if (target[k] === null) target[k]=undefined;
             }
             else{
                 if (! onlyExisting) target[k]=assignableProperties[k];

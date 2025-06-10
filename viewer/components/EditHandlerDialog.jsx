@@ -67,7 +67,7 @@ const EditHandlerDialog=(props)=>{
                 let parameters=[];
                 data.data.forEach((param)=>{
                     let type = param.type;
-                    if (type === 'FILTER') type = 'STRING';
+                    if (type === 'FILTER') param.type = 'STRING';
                     const editableParameterUI=editableParameterUIFactory.createEditableParameterUI(
                         {...param,
                                     list:param.rangeOrList
