@@ -180,8 +180,8 @@ Gauge.editableParameters=
     drawValue:{type:"BOOLEAN",default:true,description:"Show Value"},
     valueFontFactor:{type:'NUMBER',default:12},
     colorPlate:{type:'COLOR'},
-    colorText:{type: 'COLOR'},
-    colorNeedle:{type:'COLOR'}
+    colorText:{type: 'COLOR',description:`text color, leave empty to use default colors\nfor day (${normalColors.text}) and night (${nightColors.text}`},
+    colorNeedle:{type:'COLOR',description: `needle color, leave empty to use default colors\nfor day (${normalColors.needle}) and night (${nightColors.needle}`}
 };
 
 export const GaugeRadial=(props)=>{
