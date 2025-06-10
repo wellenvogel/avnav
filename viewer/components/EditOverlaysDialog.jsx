@@ -258,12 +258,6 @@ const OverlayItemDialog = (props) => {
                         setItemInfo(featureInfo);
                         if (initial) {
                             let newItemState = {};
-                            newItemState['style.lineWidth'] = (featureInfo.hasRoute) ? globalStore.getData(keys.properties.routeWidth) :
-                                globalStore.getData(keys.properties.trackWidth);
-                            newItemState['style.lineColor'] = (featureInfo.hasRoute) ? globalStore.getData(keys.properties.routeColor) :
-                                globalStore.getData(keys.properties.trackColor);
-                            newItemState['style.fillColor'] = newItemState['style.lineColor'];
-                            newItemState['style.circleWidth'] = newItemState['style.lineWidth'] * 3;
                             updateCurrent({...newItemState});
                         }
                     }
