@@ -57,7 +57,8 @@ const supportedStyleParameters= {
     minZoom: editableOverlayParameters.minZoom,
     maxZoom: editableOverlayParameters.maxZoom,
     minScale: editableOverlayParameters.minScale,
-    maxScale: editableOverlayParameters.maxScale
+    maxScale: editableOverlayParameters.maxScale,
+    allowHtml: editableOverlayParameters.allowHtml
 }
 
 class KmlChartSource extends ChartSourceBase{
@@ -260,7 +261,7 @@ class KmlChartSource extends ChartSourceBase{
         }
         const userInfo={};
         userInfo.desc=feature.get('desc')||feature.get('description');
-        if (rt.desc){
+        if (userInfo.desc){
             if (userInfo.desc.indexOf("<") >= 0){
                 if(this.styleParameters[supportedStyleParameters.allowHtml]) {
                     userInfo.htmlInfo = userInfo.desc.replace(/src *= *"([^"]*)"/g,(match,url)=>{

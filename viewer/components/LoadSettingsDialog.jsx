@@ -26,13 +26,8 @@ import React from 'react';
 import {LoadItemDialog} from "./LoadSaveDialogs";
 import PropertyHandler from "../util/propertyhandler";
 import RequestHandler from "../util/requests";
-import OverlayDialog, {showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {showPromiseDialog} from "./OverlayDialog";
 import {ConfirmDialog} from "./BasicDialogs";
-
-
-const doLoad=(settings,selected)=>{
-
-}
 /**
  * will return a promise that reolves to the loaded settings
  * or rejects with undefined of abort - or an error string
@@ -41,8 +36,7 @@ const doLoad=(settings,selected)=>{
  * @param opt_title
  * @param opt_preventDialog
  */
-const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) => {
-    const dialogContext=useDialogContext();
+export const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) => {
     const setSettings = (checkedValues) => {
         return PropertyHandler.importSettings(checkedValues, currentValues, true);
     }
@@ -105,7 +99,7 @@ const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) 
         )
         .then((result) => {
             if (result.warnings && result.warnings.length) {
-                return showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={result.warnings.join('\n')} title={'Import anyway?'}/>)
+                return showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={result.warnings.join('\n')} title={'Import anyway?'}/>)
                     .then(
                         () => setSettings(result.data),
                         () => Promise.reject()

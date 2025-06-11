@@ -77,6 +77,7 @@ export class EditableParameter extends Object{
         for (let k in assignableProperties){
             if (Object.hasOwn(plain,k)){
                 target[k]=plain[k];
+                if (target[k] === null) target[k]=undefined;
             }
             else{
                 if (! onlyExisting) target[k]=assignableProperties[k];
@@ -457,6 +458,7 @@ export class EditableColorParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.COLOR;
     constructor(plain,opt_noFreeze) {
         super({checker:(cv)=>{
+            if (! cv) return true;
             return CSS.supports('color',cv);
             },...plain},EditableColorParameter.TYPE,opt_noFreeze);
     }

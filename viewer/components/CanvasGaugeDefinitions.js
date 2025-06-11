@@ -1,5 +1,6 @@
 import WidgetFactory from './WidgetFactory.jsx';
 import {getTicks} from "./CanvasGauges";
+import Helper from "../util/helper";
 
 
 const temperatureTranslateFunction=(props)=>{
@@ -56,6 +57,18 @@ const voltageTranslateFunction=(props)=>{
 
 export default  ()=>{
     let prefix="radGauge_";
+    const compassParam={
+        formatterParameters: false,
+        inputRadian:{type:'BOOLEAN',description:'enable to use data that is provided in radian (like from SignalK)'}
+    }
+    const compassTranslateFunction=(props)=>{
+        if (props.value !== undefined){
+            const v=parseFloat(props.value);
+            return {
+                value: props.inputRadian?Helper.degrees(v):v
+            };
+        }
+    }
     WidgetFactory.registerWidget(
       //Compass
     {
@@ -94,7 +107,8 @@ export default  ()=>{
         "startAngle": 180,
         "animationTarget": "plate",
         colorPlate:"rgba(255, 255, 255, 0)",
-    });
+        translateFunction: compassTranslateFunction
+    },compassParam);
 
     WidgetFactory.registerWidget({
         name:prefix+"Speed",
@@ -228,49 +242,68 @@ export default  ()=>{
         colorOk:{type:'COLOR'}
     });
     prefix="linGauge_";
-    WidgetFactory.registerWidget(
-        //Compass
-        {
-            name: prefix+"Compass",
-            type: 'linearGauge',
-            "unit":"°",
-            "formatter":"formatDirection",
-            "drawValue":false,
-            tickSide: "right",
-            numberSide: "right",
-            borders:false,
-            barBeginCircle:0,
-            barProgress:false,
-            barWidth:0,
-            "animationDuration": 1000,
-            "animationRule":"linear",
-            "minValue": 0,
-            "maxValue": 360,
-            "majorTicks": [
-                "0",
-                "45",
-                "90",
-                "135",
-                "180",
-                "225",
-                "270",
-                "315",
-                "360"
-            ],
-            "minorTicks": 9,
-            "highlights": [
-            ],
-            "needleType":"line",
-            "needleWidth":5,
-            needleStart:0,
-            needleEnd:100,
-            "borderShadowWidth":0,
-            "valueBox": false,
-            "ticksAngle": 360,
-            "startAngle": 180,
-            "animationTarget": "plate",
-            colorPlate:"rgba(255, 255, 255, 0)",
-        });
+    const compass = {
+        type: 'linearGauge',
+        "unit": "°",
+        "formatter": "formatDirection",
+        "drawValue": false,
+        tickSide: "right",
+        numberSide: "right",
+        borders: false,
+        barBeginCircle: 0,
+        barProgress: false,
+        barWidth: 0,
+        "animationDuration": 1000,
+        "animationRule": "linear",
+        "minorTicks": 9,
+        "highlights": [],
+        "needleType": "line",
+        "needleWidth": 5,
+        needleStart: 0,
+        needleEnd: 100,
+        "borderShadowWidth": 0,
+        "valueBox": false,
+        "ticksAngle": 360,
+        "startAngle": 180,
+        "animationTarget": "plate",
+        colorPlate: "rgba(255, 255, 255, 0)",
+        translateFunction: compassTranslateFunction
+    }
+    WidgetFactory.registerWidget({
+        ...compass,
+        name: prefix + "Compass",
+        "minValue": 0,
+        "maxValue": 360,
+        "majorTicks": [
+            "0",
+            "45",
+            "90",
+            "135",
+            "180",
+            "225",
+            "270",
+            "315",
+            "360"
+        ]
+        },compassParam);
+    WidgetFactory.registerWidget({
+        ...compass,
+        name: prefix + "Compass180",
+        "minValue": -180,
+        "maxValue": 180,
+        "majorTicks": [
+            "-180",
+            "-135",
+            "-90",
+            "-45",
+            "0",
+            "45",
+            "90",
+            "135",
+            "180"
+        ],
+        formatterParameters: [false,true]
+    },compassParam);
 
     WidgetFactory.registerWidget(
         {

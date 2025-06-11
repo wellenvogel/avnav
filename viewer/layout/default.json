@@ -307,13 +307,7 @@
           ]
         },
         {
-          "name": "AnchorWatchDistance",
-          "caption": "ACHR-WATCH",
-          "unit": "m",
-          "formatterParameters": [
-            3,
-            1
-          ]
+          "name": "AnchorWatchDistance"
         }
       ]
     },

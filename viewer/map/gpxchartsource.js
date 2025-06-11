@@ -41,6 +41,7 @@ import routeobjects from "../nav/routeobjects";
 import {getClosestRoutePoint} from "../nav/routeeditor";
 import Mapholder from "./mapholder";
 import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
+import {getRouteStyles} from "./routelayer";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -94,10 +95,11 @@ const getRoutePointName=(feature,idx)=>{
 }
 
 const getSupportedStyleParameters=(isRoute)=>{
+    const routeStyles=getRouteStyles();
     return [
         editableOverlayParameters.lineWidth.clone({default:globalstore.getData(isRoute?keys.properties.routeWidth:keys.properties.trackWidth)}),
-        editableOverlayParameters.lineColor.clone({efault:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor)}),
-        editableOverlayParameters.fillColor.clone({default:isRoute?globalstore.getData(keys.properties.routeColor):'rgba(255,255,0,0.4)'}),
+        editableOverlayParameters.lineColor.clone({default:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor)}),
+        editableOverlayParameters.fillColor.clone({default:isRoute?routeStyles.normalWpStyle.color:'rgba(255,255,0,0.4)'}),
         editableOverlayParameters.strokeWidth.clone({default:0}),
         editableOverlayParameters.strokeColor.clone({default:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor) }),
         editableOverlayParameters.circleWidth.clone({default:globalstore.getData(keys.properties.routeWpSize) }),
@@ -174,7 +176,8 @@ class GpxChartSource extends ChartSourceBase{
                             this.styleParameters[editableOverlayParameters.strokeColor]:this.COLOR_INVISIBLE,
                         width: this.styleParameters[editableOverlayParameters.strokeWidth],
                     })
-                })
+                }),
+                text: this.styleParameters[editableOverlayParameters.showText]?textStyle:undefined
             }),
             LineString: new olStyle({
                 stroke: new olStroke({
@@ -228,8 +231,19 @@ class GpxChartSource extends ChartSourceBase{
             const scale=this.getScale();
             const image=rt.getImage();
             if (image) image.setScale(scale);
-            const textStyle=rt.getText();
-            if (textStyle) textStyle.setScale(scale);
+            let textStyle=rt.getText();
+            if (textStyle) {
+                textStyle.setScale(scale);
+                if (!textStyle.getText()){
+                    const txt=feature.get('name')||feature.get('desc');
+                    if (txt){
+                        textStyle=textStyle.clone();
+                        textStyle.setText(txt);
+                        rt.setText(textStyle);
+                    }
+
+                }
+            }
             return rt;
         }
         if (type === 'LineString'){

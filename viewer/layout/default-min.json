@@ -39,7 +39,8 @@
           "weight": 1.5
         },
         {
-          "name": "AnchorWatchDistance"
+          "name": "AnchorWatchDistance",
+          "formatterParameters": ["m"]
         },
         {
           "name": "DepthDisplay"
@@ -95,7 +96,8 @@
           "weight": 1.5
         },
         {
-          "name": "AnchorWatchDistance"
+          "name": "AnchorWatchDistance",
+          "formatterParameters": ["m"]
         },
         {
           "name": "DepthDisplay"
@@ -192,11 +194,7 @@
         {
           "name": "AnchorWatchDistance",
           "caption": "ACHR-WATCH",
-          "unit": "m",
-          "formatterParameters": [
-            3,
-            1
-          ]
+          "formatterParameters": ["m"]
         }
       ],
       "left_anchor": [

@@ -30,7 +30,7 @@ import AisFormatter from "../nav/aisformatter";
 import globalStore from "../util/globalstore";
 import React from "react";
 import {Drawing} from "../map/drawing";
-import MapHolder from "../map/mapholder";
+import MapHolder, {LOCK_MODES} from "../map/mapholder";
 import ItemList from "./ItemList";
 import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
 import PropTypes from "prop-types";
@@ -209,7 +209,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
                 let pos=NavData.getAisHandler().getAisPositionByMmsi(mmsi);
                 if (pos) {
                     MapHolder.setCenter(pos);
-                    MapHolder.setGpsLock(false);
+                    MapHolder.setGpsLock(LOCK_MODES.off);
                 }
                 runCb('AisInfoLocate',mmsi);
             },

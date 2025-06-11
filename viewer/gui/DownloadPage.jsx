@@ -409,7 +409,7 @@ class DownloadPage extends React.Component{
                                     {...dprops}
                                     allowNameChange={true}
                                     allowSubDir={importConfig.subdir}
-                                    okFunction={(props,subdir)=>{
+                                    resolveFunction={(props,subdir)=>{
                                         resolved=true;
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});

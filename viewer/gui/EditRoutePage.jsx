@@ -21,7 +21,7 @@ import {
 } from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import {useTimer} from '../util/GuiHelpers.js';
-import MapHolder from '../map/mapholder.js';
+import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
@@ -667,7 +667,7 @@ const EditRoutePage = (props) => {
         MapHolder.setRoutingActive(true);
         MapHolder.showEditingRoute(true);
         lastGpsLock.current = MapHolder.getGpsLock();
-        MapHolder.setGpsLock(false);
+        MapHolder.setGpsLock(LOCK_MODES.off);
         return () => {
             MapHolder.setRoutingActive(false);
             MapHolder.setGpsLock(lastGpsLock.current, true);
