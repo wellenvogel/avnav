@@ -716,7 +716,7 @@ const NavPage=(props)=>{
                 onClick:()=>{
                     let old=globalStore.getData(keys.map.lockPosition);
                     let mapLockMode=LOCK_MODES.center;
-                    if (old === LOCK_MODES.off){
+                    if (!old /*off or undefined*/){
                         let lockMode=globalStore.getData(keys.properties.mapLockMode,'center');
                         if ( lockMode === 'ask'){
                             showLockDialog(dialogCtx);
