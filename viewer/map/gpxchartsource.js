@@ -176,7 +176,8 @@ class GpxChartSource extends ChartSourceBase{
                             this.styleParameters[editableOverlayParameters.strokeColor]:this.COLOR_INVISIBLE,
                         width: this.styleParameters[editableOverlayParameters.strokeWidth],
                     })
-                })
+                }),
+                text: this.styleParameters[editableOverlayParameters.showText]?textStyle:undefined
             }),
             LineString: new olStyle({
                 stroke: new olStroke({
@@ -230,8 +231,19 @@ class GpxChartSource extends ChartSourceBase{
             const scale=this.getScale();
             const image=rt.getImage();
             if (image) image.setScale(scale);
-            const textStyle=rt.getText();
-            if (textStyle) textStyle.setScale(scale);
+            let textStyle=rt.getText();
+            if (textStyle) {
+                textStyle.setScale(scale);
+                if (!textStyle.getText()){
+                    const txt=feature.get('name')||feature.get('desc');
+                    if (txt){
+                        textStyle=textStyle.clone();
+                        textStyle.setText(txt);
+                        rt.setText(textStyle);
+                    }
+
+                }
+            }
             return rt;
         }
         if (type === 'LineString'){
