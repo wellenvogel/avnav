@@ -23,17 +23,17 @@
  ###############################################################################
  */
 
-import React from 'react';
-import Page from '../components/Page.jsx';
+import React, {useCallback, useEffect, useState} from 'react';
+import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import ItemList from "../components/ItemList";
-import GuiHelpers from "../util/GuiHelpers";
+import GuiHelpers, {useTimer} from "../util/GuiHelpers";
 import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import DB from "../components/DialogButton";
-import {showDialog, useDialogContext} from "../components/OverlayDialog";
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from "../components/OverlayDialog";
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
@@ -43,8 +43,10 @@ import Helper from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DownloadButton from "../components/DownloadButton";
+import ButtonList from "../components/ButtonList";
 
 const HANDLER_NAME='AVNImporter';
+export const IMPORTERPAGE='importerpage';
 
 const MainStatus=(props)=>{
     let canEdit=globalstore.getData(keys.properties.connectedMode);
@@ -94,9 +96,9 @@ const ImporterItem=(props)=>{
 };
 
 const ImportStatusDialog=(props)=>{
+    const dialogContext=useDialogContext();
     let isRunning=props.status === 'NMEA';
-    return <div className="importStatusDialog flexInner">
-        <h3 className="dialogTitle">{props.name}</h3>
+    return <DialogFrame className="importStatusDialog" title={props.name}>
         <div className="dialogRow">
             <span className="itemInfo">{props.info}</span>
         </div>
@@ -104,7 +106,7 @@ const ImportStatusDialog=(props)=>{
             <span className="inputLabel">file</span>
             <span className="itemInfo">{props.basename}</span>
         </div>
-        <div className="dialogButtons">
+        <DialogButtons >
             <DB name="delete"
                 onClick={() => {
                     Requests.getJson({
@@ -113,10 +115,11 @@ const ImportStatusDialog=(props)=>{
                         name:props.name
                     })
                         .then((res)=>{
-                            props.closeCallback()
+                            dialogContext.closeDialog()
                         })
                         .catch((e)=>Toast("unable to delete "+e,5000));
                 }}
+                close={false}
             >
                 Delete
             </DB>
@@ -129,10 +132,11 @@ const ImportStatusDialog=(props)=>{
                                        name: props.name
                                    })
                                        .then((res)=>{
-                                           props.closeCallback()
+                                           dialogContext.closeDialog()
                                        })
                                        .catch((e)=>Toast("unable to disable "+e,5000));
                                }}
+                               close={false}
             >
                 Disable
             </DB>}
@@ -145,10 +149,11 @@ const ImportStatusDialog=(props)=>{
                                       name: props.name
                                   })
                                       .then((res)=>{
-                                          props.closeCallback()
+                                          dialogContext.closeDialog()
                                       })
                                       .catch((e)=>Toast("unable to stop "+e,5000));
                               }}
+                              close={false}
             >
                 Stop
             </DB>}
@@ -161,10 +166,11 @@ const ImportStatusDialog=(props)=>{
                                       name: props.name
                                   })
                                       .then((res)=>{
-                                          props.closeCallback()
+                                          dialogContext.closeDialog()
                                       })
                                       .catch((e)=>Toast("unable to restart "+e,5000));
                               }}
+                               close={false}
             >
                 Restart
             </DB>}
@@ -177,24 +183,28 @@ const ImportStatusDialog=(props)=>{
             {props.hasLog &&
             <DB name="log"
                 onClick={() => {
-                    props.logCallback(props.name);
-                    props.closeCallback();
+                    let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(props.name);
+                    dialogContext.replaceDialog((dlprops)=>{
+                        return <LogDialog
+                            baseUrl={url}
+                            title={props.name}
+                            {...dlprops}
+                        />
+                    })
                 }}
+                close={false}
             >Log</DB>
             }
             <DB name="cancel"
-                onClick={() => {
-                    props.closeCallback();
-                }}
             >Cancel</DB>
-        </div>
-    </div>
+        </DialogButtons>
+    </DialogFrame>
 }
 
 const ConverterDialog=(props)=>{
+    const dialogContext=useDialogContext();
     let isRunning=props.status === 'NMEA';
-    return <div className="importConverterDialog flexInner">
-        <h3 className="dialogTitle">Converter</h3>
+    return <DialogFrame className="importConverterDialog" title={'Converter'}>
         <div className="dialogRow childStatus">
             <img src={statusTextToImageUrl(props.status)}/>
             <span className="itemInfo">{props.info}</span>
@@ -209,130 +219,19 @@ const ConverterDialog=(props)=>{
                         command:'cancel'
                     })
                         .then((res)=>{
-                            props.closeCallback()
+                            dialogContext.closeDialog();
                         })
                         .catch((e)=>Toast("unable to stop "+e,5000));
                 }}
+                              close={false}
             >
                 Stop
             </DB>}
             {isRunning &&
             <DB name="log"
                 onClick={() => {
-                    props.logCallback();
-                    props.closeCallback();
-                }}
-            >Log</DB>
-            }
-            <DB name="cancel"
-                onClick={() => {
-                    props.closeCallback();
-                }}
-            >Cancel</DB>
-        </div>
-    </div>
-}
-
-const ScannerDialog=(props)=>{
-    return <div className="importScannerDialog flexInner">
-        <h3 className="dialogTitle">Scanner</h3>
-        <div className="dialogRow childStatus">
-            <img src={statusTextToImageUrl(props.status)}/>
-            <span className="itemInfo">{props.info}</span>
-        </div>
-
-        <div className="dialogButtons">
-            <DB name="rescan"
-                onClick={()=>{
-                    Requests.getJson({
-                        type:'import',
-                        request:'api',
-                        command:'rescan'
-                    })
-                        .then((res)=>{
-                            props.closeCallback()
-                        })
-                        .catch((e)=>Toast("unable to trigger rescan "+e,5000));
-                }}
-            >Rescan</DB>
-            <DB name="cancel"
-                onClick={() => {
-                    props.closeCallback();
-                }}
-            >Cancel</DB>
-        </div>
-    </div>
-}
-
-class ImporterPage extends React.Component{
-    constructor(props){
-        super(props);
-        this.activeButtons=[
-            {
-                name:'DownloadPageUpload',
-                visible: globalStore.getData(keys.properties.connectedMode,true),
-                onClick:()=>{
-                    this.setState({uploadSequence:this.state.uploadSequence+1});
-                }
-            }
-        ]
-        this.buttons=[
-            {
-                name: 'Edit',
-                onClick:()=>{this.showEditHandlerDialog()}
-            },
-            Mob.mobDefinition(this.props.history),
-            {
-                name: 'Cancel',
-                onClick: ()=>{this.props.history.pop()}
-            }
-        ];
-        this.state={
-            items:[],
-            uploadSequence:0,
-            chartImportExtensions:[],
-            disabled:true
-        };
-        if (props.options && props.options.subdir){
-            this.state.importSubDir=props.options.subdir;
-        }
-        this.timer=GuiHelpers.lifecycleTimer(this,(seq)=>{
-            Requests.getJson({
-            request:'list',
-            type:'import'
-        }).then((json)=>{
-                this.setState({items:json.items||[],disabled:false});
-                this.timer.startTimer(seq);
-            })
-                .catch((e)=>this.timer.startTimer(seq))
-        },1000,true)
-        this.showEditDialog=this.showEditDialog.bind(this);
-        this.checkNameForUpload=this.checkNameForUpload.bind(this);
-        this.showEditHandlerDialog=this.showEditHandlerDialog.bind(this);
-    }
-    shouldComponentUpdate(nextProps, nextState, nextContext) {
-        return !RecursiveCompare(this.state,nextState);
-    }
-
-    componentDidMount(){
-        readImportExtensions()
-            .then((extList)=>this.setState({chartImportExtensions:extList}));
-    }
-    showEditHandlerDialog(){
-        EditHandlerDialog.createDialog(undefined,undefined,()=>{
-            //maybe we disabled...
-            this.setState({items:[]});
-        },HANDLER_NAME);
-    }
-    showConverterDialog(converter){
-        showDialog(undefined,(props)=>{
-            const dialogContext=useDialogContext();
-            return <ConverterDialog
-                {...props}
-                {...converter}
-                logCallback={()=>{
                     let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name=_current";
-                    showDialog(dialogContext,(dlprops)=>{
+                    dialogContext.replaceDialog((dlprops)=>{
                         return <LogDialog
                             baseUrl={url}
                             title={"Converter"}
@@ -340,121 +239,178 @@ class ImporterPage extends React.Component{
                         />
                     })
                 }}
+                close={false}
+            >Log</DB>
+            }
+            <DB name="cancel"
+            >Cancel</DB>
+        </div>
+    </DialogFrame>
+}
+
+const ScannerDialog=(props)=>{
+    const dialogContext=useDialogContext();
+    return <DialogFrame className="importScannerDialog" title={'Scanner'}>
+        <div className="dialogRow childStatus">
+            <img src={statusTextToImageUrl(props.status)}/>
+            <span className="itemInfo">{props.info}</span>
+        </div>
+
+        <DialogButtons >
+            <DB name="reload"
+                onClick={()=>{
+                    Requests.getJson({
+                        type:'import',
+                        request:'api',
+                        command:'rescan'
+                    })
+                        .then((res)=>{
+                            dialogContext.closeDialog()
+                        })
+                        .catch((e)=>Toast("unable to trigger rescan "+e,5000));
+                }}
+                close={false}
+            >Rescan</DB>
+            <DB name="cancel"
+            >Cancel</DB>
+        </DialogButtons>
+    </DialogFrame>
+}
+
+const ImporterPage =(props)=>{
+    const [uploadSequence,setUploadSequence]=useState(0);
+    const [items,setItems]=useState([]);
+    const [chartImportExtensions,setChartImportExtensions]=useState([]);
+    const [disabled,setDisabled]=useState(true);
+    const [importSubDir,setImportSubDir]=useState(()=>{if (props.options && props.options.subdir){
+        return props.options.subdir;
+    }})
+    const dialogContext=useDialogContext();
+        const activeButtons=[
+            {
+                name:'DownloadPageUpload',
+                visible: globalStore.getData(keys.properties.connectedMode,true),
+                onClick:()=>{
+                    setUploadSequence(uploadSequence+1);
+                }
+            }
+        ]
+        const buttons=[
+            {
+                name: 'Edit',
+                onClick:()=>{showEditHandlerDialog()}
+            },
+            Mob.mobDefinition(props.history),
+            {
+                name: 'Cancel',
+                onClick: ()=>{props.history.pop()}
+            }
+        ];
+        const timer=useTimer((seq)=>{
+            Requests.getJson({
+            request:'list',
+            type:'import'
+        }).then((json)=>{
+                setItems(json.items||[]);
+                setDisabled(false);
+                timer.startTimer(seq);
+            })
+                .catch((e)=>timer.startTimer(seq))
+        },1000,true);
+
+    useEffect(() => {
+        readImportExtensions()
+            .then((extList)=>setChartImportExtensions(extList||[]));
+    }, []);
+    
+    const showEditHandlerDialog=useCallback(()=>{
+        dialogContext.showDialog((dprops)=><EditHandlerDialog
+            {...dprops}
+            title="Edit Importer Settings"
+            handlerName={HANDLER_NAME}
+        />,()=>setItems([]));
+    },[]);
+    const showConverterDialog=useCallback((converter)=>{
+        showDialog(undefined,(dprops)=>{
+            return <ConverterDialog
+                {...dprops}
+                {...converter}
             />}
         )
-
-    }
-    showScannerDialog(scanner){
-        showDialog(undefined,(props)=>
-            <ScannerDialog
-                {...props}
+    },[]);
+    const showScannerDialog=useCallback((scanner)=>{
+        dialogContext.showDialog((dprops)=><ScannerDialog
+                {...dprops}
                 {...scanner}
             />
         )
-
-    }
-    showImportDialog(item){
-        showDialog(undefined,(props)=>{
-            const dialogContext=useDialogContext();
-            return <ImportStatusDialog
-                {...props}
+    },[]);
+    const showImportDialog=useCallback((item)=>{
+        dialogContext.showDialog((dprops)=><ImportStatusDialog
+                {...dprops}
                 {...item}
-                logCallback={(id)=>{
-                  let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(id);
-                  showDialog(dialogContext,(dlprops)=>{
-                      return <LogDialog
-                          baseUrl={url}
-                          title={item.name}
-                          {...dlprops}
-                      />
-                  })
-                }}
-            />});
-    }
-    showEditDialog(handlerId,id,finishCallback){
-        if (! this.state.items) return;
-        for (let k=0;k<this.state.items.length;k++){
-            if (this.state.items[k].name === id){
-                this.showImportDialog(this.state.items[k]);
+            />);
+    },[]);
+    const showEditDialog=useCallback((handlerId,id,finishCallback)=>{
+        if (! items) return;
+        for (let k=0;k<items.length;k++){
+            if (items[k].name === id){
+                showImportDialog(items[k]);
                 return;
             }
         }
-    }
+    },[items]);
 
-    checkNameForUpload(name) {
-        return new Promise((resolve, reject) => {
-                let ext = Helper.getExt(name);
-                let importConfig=checkExt(ext,this.state.chartImportExtensions);
-                if (importConfig.allow) {
-                    let resolved=false;
-                    showDialog(undefined,(props) => {
-                        return (
-                            <ImportDialog
-                                {...props}
+    const checkNameForUpload=useCallback((name)=> {
+        let ext = Helper.getExt(name);
+        let importConfig=checkExt(ext,chartImportExtensions);
+        if (! importConfig.allow) return Promise.reject("unknown chart type " + ext);
+        return showPromiseDialog(dialogContext,(dprops)=> <ImportDialog
+                                {...dprops}
                                 allowNameChange={true}
-                                okFunction={(props, subdir) => {
-                                    resolved=true;
-                                    if (subdir !== this.state.importSubDir) {
-                                        this.setState({importSubDir: subdir});
+                                resolveFunction={(oprops, subdir) => {
+                                    if (subdir !== importSubDir) {
+                                        setImportSubDir(subdir);
                                     }
-                                    resolve({name: props.name, type: 'import', uploadParameters: {subdir: subdir}});
+                                    dprops.resolveFunction({name: oprops.name, type: 'import', uploadParameters: {subdir: subdir}});
                                 }}
                                 name={name}
                                 allowSubDir={importConfig.subdir}
-                                subdir={this.state.importSubDir}
+                                subdir={importSubDir}
                             />
                         );
-                    },()=>window.setTimeout(()=>{if (! resolved) reject("canceled")},0));
-                    return;
-                } else reject("unknown chart type " + ext);
-            }
-        );
-    }
-    render(){
-        let self=this;
+                    
+    },[chartImportExtensions,importSubDir])
         let mainStatus={};
-        (this.state.items||[]).forEach((st)=>{
+        (items||[]).forEach((st)=>{
             if (st.name === 'main' || st.name === 'converter'){
                 mainStatus[st.name]=st;
             }
         })
-        let MainContent;
-        let isActive=!this.state.disabled && mainStatus.main;
-        if (! isActive){
-            MainContent= <div className="importerInfo">Importer inactive</div>;
-        }
-        else {
-            MainContent = <React.Fragment>
+        let isActive=!disabled && mainStatus.main;
+        return <PageFrame id={IMPORTERPAGE} >
+            <PageLeft title={"Chart Converter"}>
+            {(! isActive)&&<div className="importerInfo">Importer inactive</div>}
+            { isActive && <React.Fragment>
                 <MainStatus
                     {...mainStatus}
-                    showConverterDialog={() => this.showConverterDialog(mainStatus.converter)}
-                    showScannerDialog={()=>this.showScannerDialog(mainStatus.main)}
+                    showConverterDialog={() => showConverterDialog(mainStatus.converter)}
+                    showScannerDialog={()=>showScannerDialog(mainStatus.main)}
                 />
                 <ItemList
-                    itemList={this.state.items}
+                    scrollable={true}
+                    itemList={items}
                     itemCreator={(item) => {
                         if (!item.name || !item.name.match(/^conv:/)) return null;
-                        return (props) => {
+                        return (iprops) => {
                             return <ImporterItem
-                                {...props}
-                                showEditDialog={this.showEditDialog}
+                                {...iprops}
+                                showEditDialog={showEditDialog}
                             />
                         }
                     }}
                 />
-            </React.Fragment>;
-        }
-
-        return (
-            <React.Fragment>
-            <Page
-                {...self.props}
-                id="importerpage"
-                title="Chart Converter"
-                mainContent={
-                            MainContent
-                        }
-                buttonList={isActive?self.activeButtons.concat(self.buttons):self.buttons}/>
+            </React.Fragment>}
                 <UploadHandler
                     local={false}
                     type={'chart'}
@@ -465,12 +421,12 @@ class ImporterPage extends React.Component{
                         (err)=>{
                             if (err) Toast(err);
                         }}
-                    uploadSequence={this.state.uploadSequence}
-                    checkNameCallback={this.checkNameForUpload}
+                    uploadSequence={uploadSequence}
+                    checkNameCallback={checkNameForUpload}
                 />
-            </React.Fragment>
-        );
-    }
+            </PageLeft>
+            <ButtonList itemList={isActive?activeButtons.concat(buttons):buttons}/>
+        </PageFrame>
 }
 
 ImporterPage.propTypes=Page.propTypes;
