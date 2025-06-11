@@ -103,8 +103,8 @@ class AisData {
                     currentAis: keys.nav.ais.list,
                     updateCount: keys.nav.ais.updateCount
                 };
-                let nearestAisTarget;
-                if (data.data && data.data.length) {
+                let nearestAisTarget=data.aisWarning?aisproxy(data.aisWarning):undefined;
+                if (data.data && data.data.length && !nearestAisTarget) {
                     if (this.trackedAIStarget !== undefined) {
                         for (let i = 0; i < data.data.length; i++) {
                             if (data.data[i].received && data.data[i].received.mmsi == this.trackedAIStarget) {

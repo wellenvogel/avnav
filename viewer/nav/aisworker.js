@@ -29,8 +29,6 @@ import {handleReceivedAisData} from "./aiscomputations";
 import navobjects from "./navobjects";
 import formatter from '../util/formatter';
 import Requests from "../util/requests";
-import {KeyHelper} from "../util/keys";
-import globalstore from "../util/globalstore";
 import Helper from "../util/helper";
 
 
@@ -101,6 +99,7 @@ const computeResponse=(messageData)=>{
     fillOptionsAndBoatData(messageData);
     let start = Helper.now();
     let ais = computeAis();
+    let aisWarning;
     if (ais){
         let hideTime=options.hideTime*1000;
         ais.forEach((aisItem)=>{
@@ -114,6 +113,9 @@ const computeResponse=(messageData)=>{
                     if (hidden !== undefined) aisItem.hidden=true;
                 }
             }
+            if (aisItem.nextWarning){
+                aisWarning=aisItem;
+            }
         })
     }
     let done = Helper.now();
@@ -121,7 +123,8 @@ const computeResponse=(messageData)=>{
         type: 'data',
         time: done - start,
         sequence: messageData.sequence,
-        data: ais
+        data: ais,
+        aisWarning: aisWarning
     })
 }
 
