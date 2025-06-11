@@ -28,31 +28,15 @@ import base from "../base";
 import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
 
-const filterOverlayItem=(item,opt_itemInfo)=>{
-    let rt=undefined;
-    if (item.type === 'chart') {
-        let filter={chartKey:true,type:true,opacity:true,enabled:true};
-        filter[OVERLAY_ID]=true;
-        rt=Helper.filteredAssign(filter,item)
-    }
-    else {
-        rt = assign({}, item);
-    }
+const filterOverlayItem=(item)=>{
+    const rt={...item};
+    delete rt.selected;
+    delete rt.dragId;
+    delete rt.index;
+    delete rt.disabled;
     for (let k in rt){
         if (typeof rt[k] === 'function'){
             delete rt[k];
-        }
-    }
-    delete rt.selected;
-    delete rt.index;
-    delete rt.disabled;
-    let dstyles=['style.lineWidth','style.lineColor'];
-    if (opt_itemInfo){
-        dstyles.forEach((st)=> {
-            if (!opt_itemInfo[st]) delete rt[st];
-        })
-        if (! opt_itemInfo.hasSymbols && ! opt_itemInfo.hasLinks){
-            delete rt.icons;
         }
     }
     return rt;
