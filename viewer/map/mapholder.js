@@ -88,7 +88,11 @@ class Context {
         this.context.canvas.width = this.width;
     }
 }
-
+export const LOCK_MODES={
+    off:0,
+    current: 1,
+    center: 2
+}
 /**
  * the holder for our olmap
  * the holer remains alive all the time whereas the map could be recreated on demand
@@ -202,7 +206,7 @@ class MapHolder extends DrawingPositionConverter {
             let isEditing = globalStore.getData(keys.gui.global.layoutEditing);
             if (isEditing) {
                 this.setCourseUp(false);
-                this.setGpsLock(false);
+                this.setGpsLock(LOCK_MODES.off);
             }
         }, keys.gui.global.layoutEditing);
         globalStore.register(() => {
@@ -210,7 +214,7 @@ class MapHolder extends DrawingPositionConverter {
         }, keys.map.lockPosition);
         /**
          * locked to GPS
-         * @type {boolean}
+         * @type {number}
          * @private
          */
         this.gpsLocked = globalStore.getData(keys.map.lockPosition);
@@ -267,15 +271,15 @@ class MapHolder extends DrawingPositionConverter {
         }, "map", "zoomOut");
         KeyHandler.registerHandler(() => {
             this.userAction();
-            this.setGpsLock(true)
+            this.setGpsLock(LOCK_MODES.center)
         }, "map", "lockGps");
         KeyHandler.registerHandler(() => {
             this.userAction();
-            this.setGpsLock(false)
+            this.setGpsLock(LOCK_MODES.off)
         }, "map", "unlockGps");
         KeyHandler.registerHandler(() => {
             this.userAction();
-            this.setGpsLock(!this.getGpsLock())
+            this.setGpsLock((this.getGpsLock()===LOCK_MODES.off)?LOCK_MODES.center:LOCK_MODES.off)
         }, "map", "toggleGps");
         KeyHandler.registerHandler(() => {
             this.moveCenterPercentKey(-10, 0)
@@ -339,8 +343,11 @@ class MapHolder extends DrawingPositionConverter {
         })
         this.remoteChannel.subscribe(COMMANDS.lock, (msg) => {
             if (this.isInUserActionGuard()) return;
+            let lockMode=msg;
+            if (lockMode === 'true') lockMode=LOCK_MODES.center;
+            if (lockMode === 'false') lockMode=LOCK_MODES.off;
             try {
-                this.setGpsLock(msg === 'true', true);
+                this.setGpsLock(lockMode, true);
             } catch (e) {
             }
         })
@@ -371,7 +378,8 @@ class MapHolder extends DrawingPositionConverter {
          * this will be used to allow for moving the center when locked
          * @type {number}
          */
-        this.lastMapUserAction = 0;
+        this.inMapUserAction = 0;
+        this.mapUserActionTimer=undefined;
         this.scaleControl = undefined;
         this.lastRender = undefined;
     }
@@ -477,16 +485,33 @@ class MapHolder extends DrawingPositionConverter {
     userAction(opt_map) {
         let ts = (new Date()).getTime();
         this.lastUserAction = ts;
+        if (this.mapUserActionTimer !== undefined) {
+            window.clearTimeout(this.mapUserActionTimer);
+            this.mapUserActionTimer=undefined;
+        }
         if (opt_map) {
-            this.lastMapUserAction = ts;
-        } else {
-            this.lastMapUserAction = 0;
+            if (globalStore.getData(keys.properties.mapLockMove)) {
+                this.inMapUserAction = true;
+                this.mapUserActionTimer = window.setTimeout(() => {
+                    this.inMapUserAction = false;
+                    if (globalStore.getData(keys.properties.mapLockMove) && this.getGpsLock()) {
+                        let gps = globalStore.getMultiple(keys.nav.gps);
+                        if (gps.valid) {
+                            this.setBoatOffset(gps);
+                        }
+                    }
+                }, globalStore.getData(keys.properties.remoteGuardTime, 2) * 1000)
+            }
+            else{
+                this.inMapUserAction=false;
+            }
         }
     }
 
     isInUserActionGuard(opt_map) {
+        if (opt_map) return this.inMapUserAction;
         let now = (new Date()).getTime();
-        let compare = opt_map ? this.lastMapUserAction : this.lastUserAction;
+        let compare = opt_map ? this.inMapUserAction : this.lastUserAction;
         return now <= (compare + globalStore.getData(keys.properties.remoteGuardTime, 2) * 1000);
     }
 
@@ -1102,7 +1127,6 @@ class MapHolder extends DrawingPositionConverter {
             this.lastCenter = newCenter;
             let zoomChanged = this.zoom !== newZoom;
             this.zoom = newZoom;
-            let allowMove = globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard(true);
             /*
         if not gps locked:
           (1) set the referencePoint to the new center
@@ -1118,22 +1142,6 @@ class MapHolder extends DrawingPositionConverter {
                 this.boatOffset = {x: 50, y: 50};
                 this.saveCenter();
                 this.sendReference();
-            } else {
-                if (allowMove) {
-                    let gps = globalStore.getMultiple(keys.nav.gps);
-                    if (gps.valid) {
-                        let currentOffset = this.boatOffset;
-                        this.setBoatOffset(gps);
-                        if (currentOffset.x !== this.boatOffset.x || currentOffset.y !== this.boatOffset.y) {
-                            this.saveCenter();
-                            this.sendReference();
-                        }
-                    }
-                } else {
-                    if (zoomChanged) {
-                        //this._centerToReference();
-                    }
-                }
             }
         }
     }
@@ -1304,7 +1312,7 @@ class MapHolder extends DrawingPositionConverter {
 
     /**
      * map locked to GPS
-     * @returns {boolean}
+     * @returns {number}
      */
     getGpsLock() {
         return this.gpsLocked;
@@ -1541,7 +1549,7 @@ class MapHolder extends DrawingPositionConverter {
     }
 
     moveCenterPercentKey(deltax, deltay) {
-        this.userAction();
+        this.userAction(true);
         if (this.getGpsLock() && ! globalStore.getData(keys.properties.mapLockMove)) return;
         if (!this.olmap) return;
         let referencePix = this.coordToPixel(this.transformToMap(this.referencePoint));
@@ -1552,10 +1560,6 @@ class MapHolder extends DrawingPositionConverter {
         referencePix[0] += deltaxPix;
         referencePix[1] += deltayPix;
         this.referencePoint = this.transformFromMap(this.pixelToCoord(referencePix));
-        if (this.getGpsLock()){
-            this.boatOffset.x-=deltax;
-            this.boatOffset.y-=deltay;
-        }
         this._centerToReference();
         this.sendReference();
     }
@@ -1600,18 +1604,31 @@ class MapHolder extends DrawingPositionConverter {
 
     setGpsLock(lock, opt_noRemote) {
         if (!opt_noRemote) {
-            remotechannel.sendMessage(COMMANDS.lock, lock ? 'true' : 'false');
+            remotechannel.sendMessage(COMMANDS.lock, lock );
         }
         if (lock === this.gpsLocked) return;
-        if (lock) globalStore.storeData(keys.map.activeMeasure, undefined);
-        if (!globalStore.getData(keys.nav.gps.valid) && lock) return;
-        //we do not lock if the nav layer is not visible
-        if (!globalStore.getData(keys.properties.layers.boat) && lock) return;
+        if (lock === LOCK_MODES.off){
+            this.setBoatOffset();
+        }
+        else{
+            const gps=globalStore.getMultiple(keys.nav.gps);
+            if (! gps.valid || !globalStore.getData(keys.properties.layers.boat)){
+                lock=LOCK_MODES.off;
+            }
+            else{
+                globalStore.storeData(keys.map.activeMeasure, undefined);
+                if (lock=== LOCK_MODES.current){
+                    this.setBoatOffset(gps);
+                }
+                else{
+                    this.setBoatOffset();
+                }
+                this.setCenter(globalStore.getData(keys.nav.gps.position), opt_noRemote, this.getBoatOffset());
+                this.sendReference();
+                this.checkAutoZoom();
+            }
+        }
         globalStore.storeData(keys.map.lockPosition, lock);
-        if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position), opt_noRemote, this.getBoatOffset());
-        else this.setBoatOffset();
-        this.sendReference();
-        this.checkAutoZoom();
     }
 
     /**

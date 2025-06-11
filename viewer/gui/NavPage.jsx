@@ -20,7 +20,7 @@ import {
     useStoreHelper,
     useTimer
 } from '../util/GuiHelpers.js';
-import MapHolder, {EventTypes} from '../map/mapholder.js';
+import MapHolder, {EventTypes, LOCK_MODES} from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
@@ -111,14 +111,6 @@ const startWaypointDialog=(item,idx,dialogCtx)=>{
             okCallback={wpChanged}/>
     );
 };
-
-const setBoatOffset=()=>{
-    if (! globalStore.getData(keys.nav.gps.valid)) return;
-    let pos=globalStore.getData(keys.nav.gps.position);
-    if (! pos) return;
-    let ok=MapHolder.setBoatOffset(pos);
-    return ok;
-}
 const showLockDialog=(dialogContext)=>{
     const LockDialog=(props)=>{
         return <div className={'LockDialog inner'}>
@@ -128,8 +120,7 @@ const showLockDialog=(dialogContext)=>{
                     name={'current'}
                     onClick={()=>{
                         props.closeCallback();
-                        if (!setBoatOffset()) return;
-                        MapHolder.setGpsLock(true);
+                        MapHolder.setGpsLock(LOCK_MODES.current);
                     }}
                 >
                     Current</DialogButton>
@@ -137,8 +128,7 @@ const showLockDialog=(dialogContext)=>{
                     name={'center'}
                     onClick={()=>{
                         props.closeCallback();
-                        MapHolder.setBoatOffset();
-                        MapHolder.setGpsLock(true);
+                        MapHolder.setGpsLock(LOCK_MODES.center);
                     }}
                 >
                     Center
@@ -156,7 +146,7 @@ const showLockDialog=(dialogContext)=>{
 }
 
 const setCenterToTarget=()=>{
-    MapHolder.setGpsLock(false);
+    MapHolder.setGpsLock(LOCK_MODES.off);
     if (activeRoute.anchorWatch() !== undefined){
         MapHolder.setCenter(activeRoute.getCurrentFrom());
     }
@@ -725,20 +715,21 @@ const NavPage=(props)=>{
                 },
                 onClick:()=>{
                     let old=globalStore.getData(keys.map.lockPosition);
-                    if (! old){
+                    let mapLockMode=LOCK_MODES.center;
+                    if (old === LOCK_MODES.off){
                         let lockMode=globalStore.getData(keys.properties.mapLockMode,'center');
                         if ( lockMode === 'ask'){
                             showLockDialog(dialogCtx);
                             return;
                         }
                         if (lockMode === 'current'){
-                            if (! setBoatOffset()) return;
-                        }
-                        else{
-                            MapHolder.setBoatOffset();
+                            mapLockMode=LOCK_MODES.current;
                         }
                     }
-                    MapHolder.setGpsLock(!old);
+                    else{
+                        mapLockMode=LOCK_MODES.off;
+                    }
+                    MapHolder.setGpsLock(mapLockMode);
                 },
                 editDisable:true
             },
