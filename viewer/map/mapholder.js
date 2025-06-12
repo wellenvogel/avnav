@@ -586,6 +586,10 @@ class MapHolder extends DrawingPositionConverter {
         this.updateSize();
     }
 
+    setRedraw(on){
+        this.needsRedraw=!!on;
+    }
+
     setChartEntry(entry, opt_noRemote) {
         //set the new base chart
         const baseClass = this.findChartSource('chart', entry.url);
@@ -694,17 +698,17 @@ class MapHolder extends DrawingPositionConverter {
 
     loadMap() {
         return new Promise((resolve, reject) => {
-            let url = this._baseChart.getConfig().url;
-            if (!url) {
-                reject("no map selected");
-                return;
-            }
             let chartSource = this._baseChart;
             if (!chartSource) {
                 reject("chart not set");
             }
+            let url = chartSource.getConfig().url;
+            if (!url) {
+                reject("no map selected");
+                return;
+            }
             let oldBase = this.getBaseChart();
-            let resetOverrides = false;
+            let resetOverrides = this.needsRedraw;
             if (this.sources.length < 1 ||
                 (oldBase && oldBase.getChartKey() !== chartSource.getChartKey())) {
                 //new chart - forget all local overlay overrides
