@@ -293,38 +293,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         int fgType=0;
         if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.Q) {
             NeededPermissions perm = GpsService.getNeededPermissions(activity);
-            fgType= ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+            fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
             if (perm.gps) {
-                fgType= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
-                if (! checkGpsEnabled(this) || ! checkGpsPermission(this)){
-                    if (settingsAlreadyChecked){
-                        fgType=ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
-                    }
-                    else {
-                        DialogBuilder builder = new DialogBuilder(this, R.layout.dialog_confirm);
-                        builder.createDialog();
-                        builder.setText(R.id.title, 0);
-                        builder.setText(R.id.question, R.string.missingGps);
-                        builder.setButton(R.string.ok, DialogInterface.BUTTON_POSITIVE);
-                        builder.setButton(R.string.showSettings, DialogInterface.BUTTON_NEUTRAL);
-                        builder.setButton(R.string.exit, DialogInterface.BUTTON_NEGATIVE);
-                        builder.setOnClickListener((dialog, which) -> {
-                            dialog.dismiss();
-                            showsDialog = false;
-                            if (which == DialogInterface.BUTTON_POSITIVE) {
-                                doStartGpsService(ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
-                                return;
-                            }
-                            if (which == DialogInterface.BUTTON_NEGATIVE) {
-                                endApp();
-                            }
-                            showSettings(true);
-                        });
-                        builder.show();
-                        showsDialog = true;
-                        settingsAlreadyChecked=true;
-                        return false;
-                    }
+                fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+                if (!checkGpsEnabled(this) || !checkGpsPermission(this)) {
+                    fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+                    Toast.makeText(this, R.string.missingGps, Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -881,7 +855,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     protected void onPause() {
         super.onPause();
         AvnLog.i(LOGPRFX,"MainActivity: onPause");
-        //settingsAlreadyChecked=false;
     }
 
     private void onResumeInternal() {
