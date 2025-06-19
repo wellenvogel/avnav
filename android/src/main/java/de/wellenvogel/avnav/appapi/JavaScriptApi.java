@@ -291,7 +291,7 @@ public class JavaScriptApi {
     }
 
     @JavascriptInterface
-    public boolean interruptCopy(int id){
+    public boolean interruptCopy(long id){
         if (uploadData==null || ! uploadData.isReady(id)) return false;
         return uploadData.interruptCopy(false);
     }

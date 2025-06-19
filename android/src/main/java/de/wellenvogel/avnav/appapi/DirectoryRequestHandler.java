@@ -105,10 +105,12 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         File localFile=findLocalFile(name);
-        if (localFile == null) return false;
-        boolean rt=localFile.delete();
-        if (rt && deleter != null){
-            deleter.deleteByUrl(getUrlFromName(localFile.getName()));
+        boolean rt=false;
+        if (localFile != null) {
+            rt = localFile.delete();
+            if (rt && deleter != null) {
+                deleter.deleteByUrl(getUrlFromName(localFile.getName()));
+            }
         }
         return rt;
     }
@@ -289,10 +291,17 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return tmpCount;
     }
     
-    private static File getTmpFor(File original){
+    public static File getTmpFor(File original){
         if (original == null) return original;
         String tmp=TMP_PRFX+Long.toString(getTmpCount())+"."+original.getName();
         return new File(original.getParent(),tmp);
+    }
+
+    public static boolean deleteTmp(File original){
+        if (original == null) return false;
+        File tmp=getTmpFor(original);
+        if (tmp.exists()) return tmp.delete();
+        return false;
     }
 
     public static long writeAtomic(File out, InputStream is, boolean overwrite) throws Exception {
@@ -303,44 +312,47 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         long written=0;
         if (!overwrite && out.exists()) throw new Exception("File "+out+" already exists");
         File tmp=getTmpFor(out);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            written=Files.copy(is,tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            if (requestedLength >= 0 && written != requestedLength){
-                tmp.delete();
-                throw new IOException("not all bytes written ("+written+" from "+requestedLength+")");
-            }
-            if (overwrite) {
-                Files.move(tmp.toPath(), out.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
-            }
-            else{
-                try {
-                    Files.move(tmp.toPath(), out.toPath(), StandardCopyOption.ATOMIC_MOVE);
-                } catch(Throwable t){
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                written = Files.copy(is, tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                if (requestedLength >= 0 && written != requestedLength) {
                     tmp.delete();
-                    throw t;
+                    throw new IOException("not all bytes written (" + written + " from " + requestedLength + ")");
+                }
+                if (overwrite) {
+                    Files.move(tmp.toPath(), out.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    try {
+                        Files.move(tmp.toPath(), out.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                    } catch (Throwable t) {
+                        tmp.delete();
+                        throw t;
+                    }
+                }
+                is.close();
+            } else {
+                FileOutputStream os = new FileOutputStream(tmp);
+                byte[] buffer = new byte[10240];
+                int rd = is.read(buffer);
+                while (rd >= 0) {
+                    os.write(buffer, 0, rd);
+                    written += rd;
+                    rd = is.read(buffer);
+                }
+                os.close();
+                is.close();
+                if (requestedLength >= 0 && written != requestedLength) {
+                    tmp.delete();
+                    throw new IOException("not all bytes written (" + written + " from " + requestedLength + ")");
+                }
+                if (!tmp.renameTo(out)) {
+                    tmp.delete();
+                    throw new Exception("cannot rename " + tmp + " to " + out);
                 }
             }
-            is.close();
-        }
-        else{
-            FileOutputStream os=new FileOutputStream(tmp);
-            byte[] buffer=new byte[10240];
-            int rd=is.read(buffer);
-            while (rd >= 0){
-                os.write(buffer,0,rd);
-                written+=rd;
-                rd=is.read(buffer);
-            }
-            os.close();
-            is.close();
-            if (requestedLength >= 0 && written != requestedLength){
-                tmp.delete();
-                throw new IOException("not all bytes written ("+written+" from "+requestedLength+")");
-            }
-            if (! tmp.renameTo(out)){
-                tmp.delete();
-                throw new Exception("cannot rename "+tmp+" to "+out);
-            }
+        } catch (Throwable t){
+            tmp.delete();
+            throw t;
         }
         return written;
     }
