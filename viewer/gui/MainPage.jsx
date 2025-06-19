@@ -227,7 +227,7 @@ class MainPage extends React.Component {
             {
                 name: 'NavOverlays',
                 onClick: ()=> {
-                    EditOverlaysDialog.createDialog(DEFAULT_OVERLAY_CHARTENTRY);
+                    EditOverlaysDialog.createDialog(DEFAULT_OVERLAY_CHARTENTRY,()=>MapHolder.setRedraw(true));
                 },
                 editDisable: true,
                 overflow: true,
@@ -280,6 +280,7 @@ class MainPage extends React.Component {
                         ev.stopPropagation();
                         EditOverlaysDialog.createDialog(props,()=>{
                             this.fillList();
+                            MapHolder.setRedraw(true);
                         });
                     }}
                 />}

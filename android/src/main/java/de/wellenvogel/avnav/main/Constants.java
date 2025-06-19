@@ -41,6 +41,7 @@ public class Constants {
     public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
     public final static String USER_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".userprovider";
     public static final String USB_DEVICE_EXTRA = "usbDevice" ;
+    public static final String SERVICE_TYPE = "foregroundType";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{

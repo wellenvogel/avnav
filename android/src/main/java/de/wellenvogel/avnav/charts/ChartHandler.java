@@ -45,9 +45,6 @@ public class ChartHandler implements INavRequestHandler {
     private static final String GEMFEXTENSION =".gemf";
     private static final String MBTILESEXTENSION =".mbtiles";
     private static final String XMLEXTENSION=".xml";
-    private static final String TYPE_GEMF="gemf";
-    private static final String TYPE_MBTILES="mbtiles";
-    private static final String TYPE_XML="xml";
     public static final String INDEX_INTERNAL = "1";
     public static final String INDEX_EXTERNAL = "2";
     private static final String DEFAULT_CFG="default.cfg";
@@ -234,30 +231,33 @@ public class ChartHandler implements INavRequestHandler {
                 //see https://github.com/googlesamples/android-DirectorySelection/blob/master/Application/src/main/java/com/example/android/directoryselection/DirectorySelectionFragment.java
                 //and https://stackoverflow.com/questions/36862675/android-sd-card-write-permission-using-saf-storage-access-framework
                 Uri dirUri = Uri.parse(chartDirStr);
-                DocumentFile dirFile=DocumentFile.fromTreeUri(context,dirUri);
-                for (DocumentFile f : dirFile.listFiles()){
-                    try {
-                        if (f.getName().endsWith(GEMFEXTENSION)) {
-                            String urlName = Constants.REALCHARTS + "/" + index + "/"+TYPE_GEMF+"/" + URLEncoder.encode(f.getName(), "UTF-8");
-                            arr.put(urlName, new Chart(Chart.TYPE_GEMF, context, f, urlName, f.lastModified()));
-                            AvnLog.d(Constants.LOGPRFX, "readCharts: adding gemf url " + urlName + " for " + f.getUri());
+                DocumentFile dirFile = DocumentFile.fromTreeUri(context, dirUri);
+                if (dirFile != null) {
+                    for (DocumentFile f : dirFile.listFiles()) {
+                        try {
+                            Chart newChart=null;
+                            if (f.getName() == null) continue;
+                            if (f.getName().startsWith(DirectoryRequestHandler.TMP_PRFX)) continue;
+                            if (f.getName().endsWith(GEMFEXTENSION)) {
+                                newChart = new Chart(Chart.TYPE_GEMF, context, f, index, f.lastModified());
+                            }
+                            if (f.getName().endsWith(MBTILESEXTENSION)) {
+                                //we cannot handle this!
+                                AvnLog.e("unable to read mbtiles from external dir: " + f.getName());
+                            }
+                            if (f.getName().endsWith(XMLEXTENSION)) {
+                                newChart = new Chart(Chart.TYPE_XML, context, f, index, f.lastModified());
+                            }
+                            if (newChart != null){
+                                arr.put(newChart.getChartKey(), newChart);
+                                AvnLog.d(Constants.LOGPRFX, "readCharts: adding chart" + newChart);
+                            }
+                        } catch (Throwable t) {
+                            AvnLog.e("unable to handle chart " + f.getName() + ": " + t.getLocalizedMessage());
                         }
-                        if (f.getName().endsWith(MBTILESEXTENSION)){
-                            //we cannot handle this!
-                            AvnLog.e("unable to read mbtiles from external dir: "+f.getName());
-                        }
-                        if (f.getName().endsWith(XMLEXTENSION)) {
-                            String name = f.getName();
-                            String urlName = Constants.REALCHARTS + "/" + index + "/"+TYPE_XML+"/" + URLEncoder.encode(name, "UTF-8");
-                            Chart newChart = new Chart(Chart.TYPE_XML, context, f, urlName, f.lastModified());
-                            arr.put(urlName, newChart);
-                            AvnLog.d(Constants.LOGPRFX, "readCharts: adding xml url " + urlName + " for " + f.getUri());
-                        }
-                    }catch (Throwable t){
-                        AvnLog.e("unable to handle chart "+f.getName()+": "+t.getLocalizedMessage());
                     }
+                    return;
                 }
-                return;
             }
         }
         File chartDir=new File(chartDirStr);
@@ -267,25 +267,20 @@ public class ChartHandler implements INavRequestHandler {
         for (File f : files) {
             if (f.getName().startsWith(DirectoryRequestHandler.TMP_PRFX)) continue;
             try {
+                Chart newChart=null;
                 if (f.getName().endsWith(GEMFEXTENSION)){
-                    String gemfName = f.getName();
-                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_GEMF+"/" + URLEncoder.encode(gemfName,"UTF-8");
-                    arr.put(urlName,new Chart(Chart.TYPE_GEMF, context, f,urlName,f.lastModified()));
-                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding gemf url "+urlName+" for "+f.getAbsolutePath());
+                    newChart=new Chart(Chart.TYPE_GEMF, context, f,index,f.lastModified());
                 }
                 if (f.getName().endsWith(MBTILESEXTENSION)){
-                    String name = f.getName();
-                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_MBTILES+"/" + URLEncoder.encode(name,"UTF-8");
-                    arr.put(urlName,new Chart(Chart.TYPE_MBTILES, context, f,urlName,f.lastModified()));
-                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding mbtiles url "+urlName+" for "+f.getAbsolutePath());
+                    newChart=new Chart(Chart.TYPE_MBTILES, context, f,index,f.lastModified());
 
                 }
                 if (f.getName().endsWith(XMLEXTENSION)){
-                    String name=f.getName();
-                    String urlName=Constants.REALCHARTS+"/"+index+"/"+TYPE_XML+"/"+URLEncoder.encode(name,"UTF-8");
-                    Chart newChart=new Chart(Chart.TYPE_XML, context, f,urlName,f.lastModified());
-                    arr.put(urlName,newChart);
-                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding xml url "+urlName+" for "+f.getAbsolutePath());
+                    newChart=new Chart(Chart.TYPE_XML, context, f,index,f.lastModified());
+                }
+                if (newChart != null){
+                    arr.put(newChart.getChartKey(),newChart);
+                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding chart"+newChart.toString()+" for "+f.getAbsolutePath());
                 }
             } catch (Exception e) {
                 Log.e(Constants.LOGPRFX, "exception handling file " + f.getAbsolutePath());
@@ -617,7 +612,7 @@ public class ChartHandler implements INavRequestHandler {
         if (!parts[1].equals(REALCHARTS)){
             throw new Exception("no chart url");
         }
-        if (!parts[3].equals(TYPE_MBTILES) && ! parts[3].equals(TYPE_GEMF) && ! parts[3].equals(TYPE_XML))
+        if (!parts[3].equals(Chart.STYPE_MBTILES) && ! parts[3].equals(Chart.STYPE_GEMF) && ! parts[3].equals(Chart.STYPE_XML))
             throw new Exception("invalid chart type "+parts[3]);
         if (!parts[2].equals(INDEX_EXTERNAL) && ! parts[2].equals(INDEX_INTERNAL))
             throw new Exception("invalid chart index "+parts[2]);

@@ -326,7 +326,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
     }
 
-    private boolean handleNotification(boolean start, boolean startForeground){
+    private boolean handleNotification(boolean start, boolean startForeground, int fgType){
         if (start) {
             Alarm currentAlarm=getCurrentAlarm();
             if (! notificationSend || (currentAlarm != null && ! currentAlarm.equals(lastNotifiedAlarm))|| (currentAlarm == null && lastNotifiedAlarm != null))
@@ -378,7 +378,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 if (startForeground) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        startForeground(NOTIFY_ID,notificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
+                        startForeground(NOTIFY_ID,notificationBuilder.build(), fgType);
                     }
                     else {
                         startForeground(NOTIFY_ID, notificationBuilder.build());
@@ -906,7 +906,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         AvnLog.i(LOGPRFX,"service onStartCommand, watchdog="+isWatchdog+", running="+isRunning);
         if (! isWatchdog && isRunning) return Service.START_REDELIVER_INTENT;
         if (isWatchdog && ! isRunning) return Service.START_NOT_STICKY;
-        if (! handleNotification(true,true)){
+        int fgType=0;
+        if (intent != null){
+            fgType=intent.getIntExtra(Constants.SERVICE_TYPE,0);
+        }
+        if (! handleNotification(true,true, fgType)){
             stopMe();
             return Service.START_NOT_STICKY;
         }
@@ -1208,7 +1212,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             public void onReceive(Context context, Intent intent) {
                 AvnLog.i("received stop alarm");
                 resetAllAlarms();
-                handleNotification(true,false);
+                handleNotification(true,false, 0);
             }
         };
         AvnUtil.registerUnexportedReceiver(this,broadCastReceiver,filter);
@@ -1283,7 +1287,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         checkAnchor();
         checkApproach();
         checkMob();
-        handleNotification(true,false);
+        handleNotification(true,false, 0);
         checkTrackWriter();
         ArrayList<IWorker> allWorkers = new ArrayList<>();
         synchronized (this) {
@@ -1395,7 +1399,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
                     cancel(watchdogIntent);
         }
-        handleNotification(false, false);
+        handleNotification(false, false, 0);
         AvnLog.i(LOGPRFX,"alarm deregistered");
         if (mediaPlayer != null){
             try{

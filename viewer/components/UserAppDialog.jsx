@@ -1,12 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {
-    DialogRow,
-    promiseResolveHelper, showPromiseDialog,
-    useDialogContext
-} from './OverlayDialog.jsx';
+import {showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
-import {Checkbox, Input, InputReadOnly, valueMissing} from './Inputs.jsx';
+import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
 import Helper, {unsetOrTrue} from '../util/helper.js';
 import Requests from '../util/requests.js';
@@ -17,48 +13,8 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
+import {ItemNameDialog} from "./ItemNameDialog";
 
-const ItemNameDialog=({iname,resolveFunction,fixedExt,title,mandatory,checkName})=>{
-    const [name,setName]=useState(iname);
-    const [error,setError]=useState();
-    const dialogContext=useDialogContext();
-    const titlevalue=title?title:(iname?"Modify FileName":"Create FileName");
-    const completeName=(nn)=>{
-        if (! fixedExt) return nn;
-        return nn+"."+fixedExt;
-    }
-    return <DialogFrame className={"itemNameDialog"} title={titlevalue}>
-        <Input
-            dialogRow={true}
-            value={name}
-            onChange={(nv)=>{
-                setName(nv);
-                if (checkName) {
-                    setError(checkName(completeName(nv)));
-                }
-            }}
-            mandatory={mandatory}
-            checkFunction={(n)=>!checkName(completeName(n))}
-            >
-            {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
-        </Input>
-        { error && <DialogRow className={"errorText"}><span className={'inputLabel'}></span>{error}</DialogRow>}
-        <DialogButtons buttonList={[
-            DBCancel(),
-            DBOk(()=> {
-                promiseResolveHelper({ok:dialogContext.closeDialog},resolveFunction,completeName(name));
-            },{close:false,disabled: valueMissing(mandatory,name) || !!error})
-        ]}/>
-    </DialogFrame>
-};
-ItemNameDialog.propTypes={
-    iname: PropTypes.string,
-    resolveFunction: PropTypes.func, //must return true to close the dialog
-    checkName: PropTypes.func, //if provided: return an error text if the name is invalid
-    title: PropTypes.func, //use this as dialog title
-    mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
-    fixedExt: PropTypes.string //set a fixed extension
-}
 
 const uploadFromEdit=async (name,data,overwrite)=>{
     try {

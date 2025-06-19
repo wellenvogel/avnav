@@ -14,6 +14,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -63,10 +64,12 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.NeededPermissions;
 import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.worker.WorkerFactory;
 
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsEnabled;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
 
@@ -99,12 +102,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private ProgressDialog pd;
     private JavaScriptApi jsInterface;
     private int goBackSequence=0;
-    private boolean checkSettings=true;
     private boolean showsDialog = false;
 
     View dlProgress=null;
     TextView dlText=null;
     private ValueCallback<Uri[]> upload=null;
+    private boolean settingsAlreadyChecked=false;
 
 
     private class DownloadInternal extends DownloadHandler.DownloadStream{
@@ -166,6 +169,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 if (resultCode != Constants.RESULT_NO_RESTART) {
                     serviceNeedsRestart = true;
                 }
+                showsDialog=false;
                 sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
                 break;
             case Constants.FILE_OPEN:
@@ -243,6 +247,30 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
 
     };
+
+    private boolean doStartGpsService(int fgType){
+        AvnLog.i(Constants.LOGPRFX, "MainActivity create GpsService");
+        bindAction = new Runnable() {
+            @Override
+            public void run() {
+                initializeWebView();
+            }
+        };
+        Intent intent = new Intent(this, GpsService.class);
+        intent.putExtra(Constants.SERVICE_TYPE,fgType);
+        bindService(intent,mConnection,0);
+        if (Build.VERSION.SDK_INT >= 26){
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
+            startForegroundService(intent);
+        }
+        else {
+            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
+            startService(intent);
+        }
+        serviceNeedsRestart=false;
+        return true;
+    }
+
     private boolean startGpsService(){
         if (Build.VERSION.SDK_INT >= 26) {
             ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
@@ -262,25 +290,20 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }
         }
-        AvnLog.i(Constants.LOGPRFX, "MainActivity create GpsService");
-        bindAction = new Runnable() {
-            @Override
-            public void run() {
-                initializeWebView();
+        int fgType=0;
+        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.Q) {
+            NeededPermissions perm = GpsService.getNeededPermissions(activity);
+            fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+            if (perm.gps) {
+                fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+                if (!checkGpsEnabled(this) || !checkGpsPermission(this)) {
+                    fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+                    Toast.makeText(this, R.string.missingGps, Toast.LENGTH_LONG).show();
+                }
             }
-        };
-        Intent intent = new Intent(this, GpsService.class);
-        bindService(intent,mConnection,0);
-        if (Build.VERSION.SDK_INT >= 26){
-            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
-            startForegroundService(intent);
         }
-        else {
-            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
-            startService(intent);
-        }
-        serviceNeedsRestart=false;
-        return true;
+        return doStartGpsService(fgType);
+
     }
 
 
@@ -307,6 +330,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
 
     public void showSettings(boolean initial){
+        showsDialog=true;
         Intent sintent= new Intent(this,SettingsActivity.class);
         sintent.putExtra(Constants.EXTRA_INITIAL,initial);
         startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
@@ -653,6 +677,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AvnLog.i(LOGPRFX,"MainActivity:onCreate");
         super.onCreate(savedInstanceState);
         if (running) return;
         showsDialog=false;
@@ -677,6 +702,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         AvnUtil.registerUnexportedReceiver(this,reloadReceiver,triggerFilter);
         running=true;
         handleUsbDeviceAttach(getIntent());
+        checkForInitialDialogs();
     }
 
     @Override
@@ -749,12 +775,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
 
     private boolean checkSettingsInternal(){
-        if (checkSettings && !checkSettings(this,true)) {
-            checkSettings=false;
+        if (settingsAlreadyChecked) return true;
+        if (!checkSettings(this,true)) {
             showSettings(true);
+            settingsAlreadyChecked=true;
             return false;
         }
-        checkSettings=false;
         return true;
     }
     private boolean checkForInitialDialogs(){
@@ -785,7 +811,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     showsDialog=false;
-                    checkSettings=false; //settings are checked in the settings activity
+                    settingsAlreadyChecked=true;
                     showSettings(false);
                 }
             });
@@ -828,10 +854,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     @Override
     protected void onPause() {
         super.onPause();
-        AvnLog.d("main: pause");
+        AvnLog.i(LOGPRFX,"MainActivity: onPause");
     }
 
     private void onResumeInternal() {
+        AvnLog.i(LOGPRFX,"MainActivity:onResumeInternal");
         if (webView == null) {
             shoLoading();
         }
@@ -875,10 +902,10 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
     @Override
     protected void onResume() {
+        AvnLog.i(LOGPRFX,"MainActivity:onResume");
         super.onResume();
         handleBars();
-        AvnLog.d("main: onResume");
-        if (! checkForInitialDialogs()){
+        if (! showsDialog){
             onResumeInternal();
         }
     }
