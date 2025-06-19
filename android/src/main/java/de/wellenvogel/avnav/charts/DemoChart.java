@@ -26,6 +26,11 @@ public class DemoChart extends Chart{
     }
 
     @Override
+    public String getConfigName() {
+        return Constants.DEMOCHARTS+CFG_DELIM+fileName;
+    }
+
+    @Override
     public boolean isXml() {
         return true;
     }
