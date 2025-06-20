@@ -24,7 +24,7 @@
  * generic dialog to select an item name
  */
 
-import React, {useState} from "react";
+import React, {useCallback, useState} from "react";
 import {
     DBCancel,
     DBOk,
@@ -36,6 +36,7 @@ import {
 } from "./OverlayDialog";
 import {Input, valueMissing} from "./Inputs";
 import PropTypes from "prop-types";
+import Helper from "../util/helper";
 
 export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandatory, checkName}) => {
     const [name, setName] = useState(iname);
@@ -47,6 +48,30 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
         if (!fixedExt) return nn;
         return nn + "." + fixedExt;
     }
+    const nameChecker=useCallback((name)=>{
+        if (! checkName) return Promise.resolve();
+        const cr=checkName(name);
+        if (cr instanceof Promise) return cr;
+        if (! cr) return Promise.resolve();
+        return Promise.reject(cr);
+    },[checkName])
+    const checkNameAndSet=useCallback((name)=>{
+        nameChecker(name)
+            .then(()=>{
+                setError(undefined);
+                setProposal(undefined);
+            })
+            .catch((ev)=>{
+                if (ev instanceof Object) {
+                    setError(ev.error);
+                    setProposal(ev.proposal)
+                }
+                else {
+                    setError(ev);
+                    setProposal(undefined);
+                }
+            })
+    },[nameChecker])
     const buttonList=[
         DBCancel(),
         DBOk(() => {
@@ -57,7 +82,16 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
         buttonList.splice(0,0,{
             name: 'Propose',
             label: 'Propose',
-            onClick: ()=>setName(proposal),
+            onClick: ()=>{
+                let pname=proposal;
+                if (fixedExt){
+                    if (Helper.endsWith(proposal,fixedExt)){
+                        pname=proposal.substring(0,proposal.length-fixedExt.length-1);
+                    }
+                }
+                setName(pname);
+                checkNameAndSet(proposal);
+            },
             close:false
         })
     }
@@ -67,26 +101,10 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
             value={name}
             onChange={(nv) => {
                 setName(nv);
-                if (checkName) {
-                    const ev=checkName(completeName(nv));
-                    if (! ev) {
-                        setError(undefined);
-                        setProposal(undefined);
-                    }
-                    else {
-                        if (ev instanceof Object) {
-                            setError(ev.error);
-                            setProposal(ev.proposal)
-                        }
-                        else {
-                            setError(ev);
-                            setProposal(undefined);
-                        }
-                    }
-                }
+                checkNameAndSet(completeName(nv));
             }}
             mandatory={mandatory}
-            checkFunction={(n) => !checkName(completeName(n))}
+            checkFunction={(n) => nameChecker(completeName(n))}
         >
             {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
         </Input>
@@ -99,6 +117,8 @@ ItemNameDialog.propTypes={
     iname: PropTypes.string,
     resolveFunction: PropTypes.func, //must return true to close the dialog
     checkName: PropTypes.func, //if provided: return an error text if the name is invalid
+                               //can also return an object with error, proposal to propose a new name
+                               //can return a promise - resolve means ok, reject like return object/string
     title: PropTypes.func, //use this as dialog title
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string //set a fixed extension

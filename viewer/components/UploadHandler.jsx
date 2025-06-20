@@ -31,10 +31,26 @@ import keys from "../util/keys";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
+import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {ItemNameDialog} from "./ItemNameDialog";
 
 const MAXUPLOADSIZE=100000;
 
+const showNameDialog=({result,checkName,dialogContext})=>{
+    if (! result || !result.nameDialog) return Promise.reject(result);
+    return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
+        {...dprops}
+        title={result.error}
+        checkName={(name)=>{
+
+        }}
+    />)
+        .then((res)=>Promise.resolve(res))
+        .catch((err)=>Promise.reject({error:err||'cancelled'}))
+}
+
 const UploadHandler = (props) => {
+    const dialogContext=useDialogContext();
     const xhdrRef = useRef();
     const androidSequence = useRef(0);
     const androidCopyParam=useRef();
@@ -55,17 +71,18 @@ const UploadHandler = (props) => {
      */
     const checkName = useCallback((name) => {
         if (!props.checkNameCallback) {
-            return new Promise((resolve, reject) => {
-                resolve({name: name});
-            });
+            return Promise.resolve({name:name});
         }
         let rt = props.checkNameCallback(name);
-        if (rt instanceof Promise) return rt;
+        if (rt instanceof Promise) return rt.then((res)=>res,(err)=>{
+            if (err instanceof Object) return Promise.reject(err);
+            return Promise.reject({error:err});
+        });
         return new Promise((resolve, reject) => {
             if (typeof (rt) === 'object') {
                 if (!rt.error) resolve(rt);
-                else reject(rt.error);
-            } else reject(rt);
+                else reject(rt);
+            } else reject({error:rt});
         })
     }, [props.checkNameCallback]);
     const upload = useCallback((file) => {
@@ -79,7 +96,7 @@ const UploadHandler = (props) => {
                 }
             })
             .catch((err) => {
-                error(err);
+                error(err.error);
             });
     }, [props.type]);
 
@@ -190,7 +207,7 @@ const UploadHandler = (props) => {
                 })
             })
             .catch((err) => {
-                Toast(err);
+                Toast(err.error);
             });
     }, []);
 
@@ -233,7 +250,7 @@ const UploadHandler = (props) => {
             })
             .catch((err) => {
                 avnav.android.interruptCopy(id)
-                if (err) error(err);
+                if (err) error(err.error);
             });
 
     }, [checkName]);

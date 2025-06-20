@@ -61,8 +61,24 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     }, []);
     const checkName=(name)=>{
         if (! name) return;
+        let exists=false;
+        let maxNum=1;
+        const [fn,ext]=Helper.getNameAndExt(name);
+        if (! fn) return;
+        let prfx=fn.replace(/\d*$/,'');
+        if (! prfx) prfx=fn;
         for (let i=0;i<userFiles.length;i++) {
-            if (userFiles[i].name ===name) return "file "+name+" already exists";
+            if (Helper.startsWith(userFiles[i].name,prfx) && Helper.endsWith(userFiles[i].name,ext)){
+                let n=parseInt(userFiles[i].name.substring(prfx.length));
+                if (!isNaN(n) && n >= maxNum) maxNum=n+1;
+            }
+            if (userFiles[i].name ===name) exists=true;
+        }
+        if (exists){
+            return {
+                error: "file "+name+" already exists",
+                proposal:prfx+maxNum+(ext?'.'+ext:'')
+            }
         }
     }
     return <DialogFrame title={"Select HTML file"}>

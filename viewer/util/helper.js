@@ -17,7 +17,8 @@ Helper.endsWith=function(str, suffix) {
 };
 
 Helper.startsWith=function(str, prefix) {
-    return (str.indexOf(prefix, 0) == 0);
+    if (! str) return false;
+    return (str.indexOf(prefix, 0) === 0);
 };
 
 Helper.addEntryToListItem=function(list,keyname,keyvalue,key,value){
@@ -207,11 +208,20 @@ export const iterate=(object,callback)=>{
     }
     callback(object);
 }
+export const getNameAndExt=(fn)=>{
+    if (typeof(fn) !== 'string' || ! fn) return [fn+'',''];
+    const x=fn.lastIndexOf('.');
+    if (x >= 0){
+        return [fn.substring(0,x),fn.substring(x+1)]
+    }
+    return [fn,''];
+}
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
 Helper.now=now;
 Helper.iterate=iterate;
+Helper.getNameAndExt=getNameAndExt;
 
 export default Helper;
 
