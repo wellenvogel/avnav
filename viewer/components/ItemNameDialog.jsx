@@ -123,16 +123,33 @@ ItemNameDialog.propTypes={
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string //set a fixed extension
 }
+export const TMP_PRFX="__avn.";
 /**
  * check a name for existance in a list of items
  * if it already exists try to build a name (by appending numbers) that does not exists
  * @param name the name to check
  * @param itemList the list of items
  * @param [opt_idx] the value of each item to be checked, defaults to "name"
+ * @param [opt_checkAllowed] set to false to disable the check for allowed file names
  * @returns {{proposal: *, error: string}} - returns undefined if ok
  */
-export const checkName=(name,itemList,opt_idx)=>{
+export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
     if (! name) return;
+    if (opt_checkAllowed !== false){
+        if (Helper.startsWith(name,TMP_PRFX)){
+            return {
+                error: `name must not start with ${TMP_PRFX}`,
+                proposal: name.substring(TMP_PRFX.length)
+            }
+        }
+        const check=name.replace(/[^\w. ()+\-@]/g,"");
+        if (check !== name){
+            return {
+                error: 'name contains illegal characters',
+                proposal: check
+            }
+        }
+    }
     if (! (itemList instanceof Array)) return;
     let exists=false;
     let maxNum=1;
