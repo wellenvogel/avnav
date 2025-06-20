@@ -13,7 +13,7 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
-import {ItemNameDialog} from "./ItemNameDialog";
+import {ItemNameDialog,checkName} from "./ItemNameDialog";
 
 
 const uploadFromEdit=async (name,data,overwrite)=>{
@@ -59,35 +59,14 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     useEffect(() => {
         listFiles();
     }, []);
-    const checkName=(name)=>{
-        if (! name) return;
-        let exists=false;
-        let maxNum=1;
-        const [fn,ext]=Helper.getNameAndExt(name);
-        if (! fn) return;
-        let prfx=fn.replace(/\d*$/,'');
-        if (! prfx) prfx=fn;
-        for (let i=0;i<userFiles.length;i++) {
-            if (Helper.startsWith(userFiles[i].name,prfx) && Helper.endsWith(userFiles[i].name,ext)){
-                let n=parseInt(userFiles[i].name.substring(prfx.length));
-                if (!isNaN(n) && n >= maxNum) maxNum=n+1;
-            }
-            if (userFiles[i].name ===name) exists=true;
-        }
-        if (exists){
-            return {
-                error: "file "+name+" already exists",
-                proposal:prfx+maxNum+(ext?'.'+ext:'')
-            }
-        }
-    }
+    const checkNameFunction=(name)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>
         <UploadHandler
             uploadSequence={uploadSequence}
             type={'user'}
             checkNameCallback={(name)=>{
                 if (name && name.substring(name.length-4).toUpperCase() === 'HTML') {
-                    let err=checkName(name);
+                    let err=checkNameFunction(name);
                     if (err) return err;
                     return {name: name}
                 }
@@ -119,7 +98,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                         iname={""}
                         fixedExt={"html"}
                         mandatory={(v)=>!v}
-                        checkName={checkName}
+                        checkName={checkNameFunction}
                         resolveFunction={(name)=>{
                             if (!name) return;
                             const data = `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;

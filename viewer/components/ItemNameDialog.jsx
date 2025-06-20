@@ -123,3 +123,36 @@ ItemNameDialog.propTypes={
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string //set a fixed extension
 }
+/**
+ * check a name for existance in a list of items
+ * if it already exists try to build a name (by appending numbers) that does not exists
+ * @param name the name to check
+ * @param itemList the list of items
+ * @param [opt_idx] the value of each item to be checked, defaults to "name"
+ * @returns {{proposal: *, error: string}} - returns undefined if ok
+ */
+export const checkName=(name,itemList,opt_idx)=>{
+    if (! name) return;
+    if (! (itemList instanceof Array)) return;
+    let exists=false;
+    let maxNum=1;
+    const [fn,ext]=Helper.getNameAndExt(name);
+    if (! fn) return;
+    if (! opt_idx) opt_idx='name';
+    let prfx=fn.replace(/\d*$/,'');
+    if (! prfx) prfx=fn;
+    for (let i=0;i<itemList.length;i++) {
+        if (! itemList[i][opt_idx]) continue;
+        if (Helper.startsWith(itemList[i][opt_idx],prfx) && Helper.endsWith(itemList[i][opt_idx],ext)){
+            let n=parseInt(itemList[i][opt_idx].substring(prfx.length));
+            if (!isNaN(n) && n >= maxNum) maxNum=n+1;
+        }
+        if (itemList[i][opt_idx] ===name) exists=true;
+    }
+    if (exists){
+        return {
+            error: "file "+name+" already exists",
+            proposal:prfx+maxNum+(ext?'.'+ext:'')
+        }
+    }
+}
