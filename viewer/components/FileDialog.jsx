@@ -24,7 +24,7 @@
  */
 import React, {useCallback, useEffect, useState} from "react";
 import keys from '../util/keys.jsx';
-import {Input, InputSelect, Radio} from "./Inputs";
+import {Input, InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
@@ -53,6 +53,7 @@ import Formatter from '../util/formatter';
 import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
+import {ItemNameDialog} from "./ItemNameDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -439,7 +440,7 @@ const infoRowDisplay=(row,data)=>{
 }
 export const FileDialog = (props) => {
     const [changed, setChanged] = useState(false);
-    const [existingName, setExistingName] = useState(false);
+    const [existingName, setExistingName] = useState(true);
     const [name, setName] = useState(props.current.name);
     const [scheme, setScheme] = useState(props.current.scheme);
     const [allowed, setAllowed] = useState(ItemActions.create(props.current, globalStore.getData(keys.properties.connectedMode, true)))
@@ -455,17 +456,17 @@ export const FileDialog = (props) => {
         }
     }, []);
 
-    const onChange = (newName) => {
+    const onRename = (newName) => {
         if (newName === name) return;
         if (newName === props.current.name) {
             setChanged(false);
-            setExistingName(false);
+            setExistingName(true);
             setName(newName);
             return;
         }
+        setExistingName(false);
         setName(newName);
         setChanged(true);
-        if (props.checkName) setExistingName(props.checkName(newName));
     }
     let cn = existingName ? "existing" : "";
     let rename = changed && !existingName && (name !== props.current.name);
@@ -509,18 +510,30 @@ export const FileDialog = (props) => {
                     className="mbtilesType"/>
 
             }
-            {allowed.showRename ?
-                <div className="dialogRow">
-                    <Input
-                        label={existingName ? "existing" : "new name"}
+            {(allowed.showRename && ! existingName) &&
+                    <InputReadOnly
+                        dialogRow={true}
+                        label={"new name"}
                         className={cn}
                         value={name}
-                        onChange={onChange}
                     />
-                </div>
-                : null
             }
             <DialogButtons>
+                {allowed.showRename && <DB
+                    name={"rename"}
+                    onClick={()=>{
+                        showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
+                            title={`Rename ${name}`}
+                            {...dprops}
+                            checkName={(name)=>props.checkName?props.checkName(name):undefined}
+                        />)
+                            .then((res)=>{
+                                onRename(res.name)
+                            })
+                            .catch(()=>{})
+                    }}
+                    close={false}
+                >Rename</DB>}
                 {(allowed.showRename || allowed.showScheme) ?
                     <DB name="ok"
                         onClick={() => {
@@ -537,7 +550,7 @@ export const FileDialog = (props) => {
                         }}
                         disabled={!rename && !schemeChanged}
                     >
-                        Change
+                        Save
                     </DB>
                     :
                     null

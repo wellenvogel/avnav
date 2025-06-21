@@ -75,7 +75,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
     const buttonList=[
         DBCancel(),
         DBOk(() => {
-            promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, completeName(name));
+            promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, {name:completeName(name)});
         }, {close: false, disabled: valueMissing(mandatory, name) || !!error})
     ];
     if (proposal){

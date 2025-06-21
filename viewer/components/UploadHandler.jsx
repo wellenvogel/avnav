@@ -41,9 +41,7 @@ const showNameDialog=({result,checkName,dialogContext})=>{
     return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
         {...dprops}
         title={result.error}
-        checkName={(name)=>{
-
-        }}
+        checkName={checkName}
     />)
         .then((res)=>Promise.resolve(res))
         .catch((err)=>Promise.reject({error:err||'cancelled'}))
@@ -74,7 +72,9 @@ const UploadHandler = (props) => {
             return Promise.resolve({name:name});
         }
         let rt = props.checkNameCallback(name);
-        if (rt instanceof Promise) return rt.then((res)=>res,(err)=>{
+        if (rt instanceof Promise) return rt.then(
+            (res)=>res,
+            (err)=>{
             if (err instanceof Object) return Promise.reject(err);
             return Promise.reject({error:err});
         });
@@ -85,9 +85,19 @@ const UploadHandler = (props) => {
             } else reject({error:rt});
         })
     }, [props.checkNameCallback]);
+    const checkNameWithDialog=useCallback((name)=>{
+        return checkName(name)
+            .then((res)=>res)
+            .catch((err)=>{
+                if (err.proposal || err.dialog){
+                    return showNameDialog({result:err,checkName,dialogContext})
+                }
+                else return Promise.reject(err)
+            })
+    },[checkName,dialogContext])
     const upload = useCallback((file) => {
         if (!file || !props.type) return;
-        checkName(file.name)
+        checkNameWithDialog(file.name)
             .then((res) => {
                 if (!props.local) {
                     uploadServer(file, res.name, res.type || props.type, res.uploadParameters, res)
@@ -198,7 +208,7 @@ const UploadHandler = (props) => {
         let filename = avnav.android.getFileName(id);
         if (!filename) return;
         let data = avnav.android.getFileData(id);
-        checkName(filename)
+        checkNameWithDialog(filename)
             .then((res) => {
                 props.doneCallback({
                     name: res.name,

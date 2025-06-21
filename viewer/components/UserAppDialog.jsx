@@ -99,7 +99,8 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                         fixedExt={"html"}
                         mandatory={(v)=>!v}
                         checkName={checkNameFunction}
-                        resolveFunction={(name)=>{
+                        resolveFunction={(res)=>{
+                            const name=(res||{}).name;
                             if (!name) return;
                             const data = `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;
                             dialogContext.showDialog(() => <EditDialog

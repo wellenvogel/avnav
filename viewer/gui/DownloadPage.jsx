@@ -31,6 +31,7 @@ import PropertyHandler from '../util/propertyhandler';
 import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
 import {ValueDialog} from "../components/BasicDialogs";
+import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -260,7 +261,7 @@ class DownloadPage extends React.Component{
     }
     entryExists(name){
         let current=this.state.items;
-        return findInfo(current,{name:name})>=0;
+        return checkName(name,current);
     };
 
     getButtonParam(bName,bType,overflow, opt_capability){
@@ -431,8 +432,10 @@ class DownloadPage extends React.Component{
                 }
                 //fallthrough to check existing...
             }
-            if (this.entryExists(name)){
-                reject("already exists");
+            const existing=this.entryExists(name);
+            if (existing){
+                existing.dialog=true;
+                reject(existing);
             }
             else{
                 resolve(rt);
@@ -465,8 +468,14 @@ class DownloadPage extends React.Component{
     }
 
     createItem(){
-        showPromiseDialog(undefined,(props)=><ValueDialog {...props} title={'enter filename'} value={''} />)
-            .then((name)=>{
+        showPromiseDialog(undefined,(dprops)=><ItemNameDialog
+            {...dprops}
+            title={'enter filename'}
+            checkName={(name)=>this.entryExists(name)}
+        />)
+            .then((res)=>{
+                const name=(res||{}).name;
+                if (! name) return;
                 if (this.entryExists(name)) {
                     Toast("already exists");
                     return;
