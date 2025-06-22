@@ -520,11 +520,12 @@ export const FileDialog = (props) => {
             }
             <DialogButtons>
                 {allowed.showRename && <DB
-                    name={"rename"}
+                    name={"Rename"}
                     onClick={()=>{
                         showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
                             title={`Rename ${name}`}
                             {...dprops}
+                            iname={name}
                             checkName={(name)=>props.checkName?props.checkName(name):undefined}
                         />)
                             .then((res)=>{

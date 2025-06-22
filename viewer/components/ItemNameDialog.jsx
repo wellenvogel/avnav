@@ -24,7 +24,7 @@
  * generic dialog to select an item name
  */
 
-import React, {useCallback, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {
     DBCancel,
     DBOk,
@@ -48,30 +48,38 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
         if (!fixedExt) return nn;
         return nn + "." + fixedExt;
     }
-    const nameChecker=useCallback((name)=>{
-        if (! checkName) return Promise.resolve();
-        const cr=checkName(name);
-        if (cr instanceof Promise) return cr;
-        if (! cr) return Promise.resolve();
-        return Promise.reject(cr);
-    },[checkName])
-    const checkNameAndSet=useCallback((name)=>{
-        nameChecker(name)
-            .then(()=>{
-                setError(undefined);
+    useEffect(() => {
+        checkNameAndSet(completeName(iname));
+    }, []);
+    const checkResult=useCallback((res)=>{
+        if (! res){
+            setError(undefined);
+            setProposal(undefined);
+        }
+        else{
+            if (res instanceof Object) {
+                setError(res.error);
+                setProposal(res.proposal)
+            }
+            else {
+                setError(res);
                 setProposal(undefined);
-            })
-            .catch((ev)=>{
-                if (ev instanceof Object) {
-                    setError(ev.error);
-                    setProposal(ev.proposal)
-                }
-                else {
-                    setError(ev);
-                    setProposal(undefined);
-                }
-            })
-    },[nameChecker])
+            }
+        }
+
+    },[]);
+    const checkNameAndSet=useCallback((name)=>{
+        if (!checkName) {
+            checkResult();
+            return;
+        }
+        const cr=checkName(name);
+        if (! (cr instanceof Promise)){
+            checkResult(cr);
+            return;
+        }
+        cr.then(()=>checkResult(),(err)=>checkResult(err));
+    },[checkName,checkResult])
     const buttonList=[
         DBCancel(),
         DBOk(() => {
@@ -103,8 +111,8 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
                 setName(nv);
                 checkNameAndSet(completeName(nv));
             }}
+            className={error?'error':undefined}
             mandatory={mandatory}
-            checkFunction={(n) => nameChecker(completeName(n))}
         >
             {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
         </Input>
@@ -135,21 +143,33 @@ export const TMP_PRFX="__avn.";
  */
 export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
     if (! name) return;
+    let rt=undefined;
     if (opt_checkAllowed !== false){
         if (Helper.startsWith(name,TMP_PRFX)){
-            return {
+            rt= {
                 error: `name must not start with ${TMP_PRFX}`,
                 proposal: name.substring(TMP_PRFX.length)
             }
         }
-        const check=name.replace(/[^\w. ()+\-@]/g,"");
-        if (check !== name){
-            return {
-                error: 'name contains illegal characters',
-                proposal: check
+        if (! rt) {
+            const check = name.replace(/[^\w. ()+\-@]/g, "");
+            if (check !== name) {
+                rt = {
+                    error: 'name contains illegal characters',
+                    proposal: check
+                }
             }
         }
     }
+    if (! rt ) return checkNameList(name,itemList,opt_idx);
+    if (! rt.proposal) return rt;
+    const finalCheck=checkNameList(rt.proposal,itemList,opt_idx);
+    if (! finalCheck) return rt;
+    if (finalCheck.proposal) rt.proposal=finalCheck.proposal;
+    return rt;
+}
+
+const checkNameList=(name,itemList,opt_idx)=>{
     if (! (itemList instanceof Array)) return;
     let exists=false;
     let maxNum=1;
