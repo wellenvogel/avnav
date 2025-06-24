@@ -160,7 +160,7 @@ public class PluginWorker extends Worker{
         if (startPackage != null && startAction != null) {
             Intent si = new Intent();
             si.setComponent(new ComponentName(startPackage, startAction));
-            Log.i(Constants.LOGPRFX,"trying autostart "+startPackage+":"+startPackage);
+            Log.i(Constants.LOGPRFX,"trying autostart "+startPackage+":"+startAction);
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     gpsService.startForegroundService(si);

@@ -341,36 +341,22 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 Intent broadcastIntentStop = new Intent();
                 broadcastIntentStop.setAction(Constants.BC_STOPAPPL);
                 PendingIntent stopAppl = PendingIntent.getBroadcast(ctx, 1, broadcastIntentStop, AvnUtil.buildPiFlags(PendingIntent.FLAG_CANCEL_CURRENT,true));
-                RemoteViews nv = new RemoteViews(getPackageName(), R.layout.notification);
-                nv.setOnClickPendingIntent(R.id.button2, stopAlarmPi);
-                nv.setOnClickPendingIntent(R.id.button3, stopAppl);
-                nv.setOnClickPendingIntent(R.id.notification, contentIntent);
-                //TODO: show/hide alarm button
-                if (currentAlarm != null) {
-                    nv.setViewVisibility(R.id.button2, View.VISIBLE);
-                    nv.setViewVisibility(R.id.button3, View.GONE);
-                } else {
-                    nv.setViewVisibility(R.id.button2, View.GONE);
-                    nv.setViewVisibility(R.id.button3, View.VISIBLE);
-                }
                 NotificationCompat.Builder notificationBuilder =
                         new NotificationCompat.Builder(this, CHANNEL_ID_NEW);
                 notificationBuilder.setSmallIcon(R.drawable.sailboat);
                 notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
                 if (currentAlarm == null) {
                     notificationBuilder.setContentText(getString(R.string.notifyText));
-                    nv.setTextViewText(R.id.notificationText, getString(R.string.notifyText));
                 } else {
                     notificationBuilder.setContentText(currentAlarm.name + " Alarm");
-                    nv.setTextViewText(R.id.notificationText, currentAlarm.name + " Alarm");
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    notificationBuilder.setContent(nv);
-                }
-                //notificationBuilder.addAction(R.drawable.alarm256red,"alarm",stopAlarmPi);
                 notificationBuilder.setContentIntent(contentIntent);
                 notificationBuilder.setOngoing(true);
                 notificationBuilder.setAutoCancel(false);
+                notificationBuilder.addAction(0,getString(R.string.nfexit),stopAppl);
+                if (currentAlarm != null){
+                    notificationBuilder.addAction(0,getString(R.string.nfalarm),stopAlarmPi);
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                 }
@@ -1215,7 +1201,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 handleNotification(true,false, 0);
             }
         };
-        AvnUtil.registerUnexportedReceiver(this,broadCastReceiver,filter);
+        AvnUtil.registerExportedReceiver(this,broadCastReceiver,filter);
         triggerReceiver=new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -1233,7 +1219,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 GpsService.this.stopMe();
             }
         };
-        AvnUtil.registerUnexportedReceiver(this,broadCastReceiverStop,filterStop);
+        AvnUtil.registerExportedReceiver(this,broadCastReceiverStop,filterStop);
         IntentFilter pluginFilter=new IntentFilter(Constants.BC_PLUGIN);
         broadCastReceiverPlugin=new BroadcastReceiver() {
             @Override
