@@ -276,14 +276,72 @@ const ScannerDialog=(props)=>{
         </DialogButtons>
     </DialogFrame>
 }
+const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,changeActive})=>{
+    const [items,setItems]=useState([]);
+    const [disabled, setDisabled] = useState(true);
+    const lastActive=useRef(false);
+    const timer = useTimer((seq) => {
+        Requests.getJson({
+            request: 'list',
+            type: 'import'
+        }).then((json) => {
+            setItems(json.items || []);
+            setDisabled(false);
+            timer.startTimer(seq);
+        })
+            .catch((e) => {
+                setDisabled(true);
+                timer.startTimer(seq)
+            })
+    }, 1000, true);
+    let mainStatus = {};
+    (items || []).forEach((st) => {
+        if (st.name === 'main' || st.name === 'converter') {
+            mainStatus[st.name] = st;
+        }
+    })
+    let isActive = !disabled && !!mainStatus.main;
+    if (isActive !== lastActive.current){
+        if (changeActive) changeActive(isActive);
+        lastActive.current=isActive;
+    }
+    if(!isActive) return <div className="importerInfo">Importer inactive</div>;
+        return <React.Fragment>
+        <MainStatus
+            {...mainStatus}
+            showConverterDialog={() => showConverterDialog(mainStatus.converter)}
+            showScannerDialog={() => showScannerDialog(mainStatus.main)}
+        />
+        <ItemList
+            scrollable={true}
+            itemList={items}
+            itemCreator={(item) => {
+                if (!item.name || !item.name.match(/^conv:/)) return null;
+                return (iprops) => {
+                    return <ImporterItem
+                        {...iprops}
+                        showEditDialog={(handlerId, id)=>{
+                            if (!items) return;
+                            for (let k = 0; k < items.length; k++) {
+                                if (items[k].name === id) {
+                                    showEditDialog(items[k]);
+                                    return;
+                                }
+                            }
+                        }}
+                    />
+                }
+            }}
+        />
+    </React.Fragment>
+})
 
 const ImporterPage = (props) => {
     const [uploadSequence, setUploadSequence] = useState(0);
-    const [items, setItems] = useState([]);
+    const [isActive,setIsActive]=useState(false);
     const chartImportExtensions=useRef([]);
-    const [disabled, setDisabled] = useState(true);
     const importSubDir=useRef((props.options && props.options.subdir)?props.options.subdir:undefined);
-    const dialogContext = useDialogContext();
+    const dialogContext = useRef();
     const activeButtons = [
         {
             name: 'DownloadPageUpload',
@@ -308,17 +366,6 @@ const ImporterPage = (props) => {
             }
         }
     ];
-    const timer = useTimer((seq) => {
-        Requests.getJson({
-            request: 'list',
-            type: 'import'
-        }).then((json) => {
-            setItems(json.items || []);
-            setDisabled(false);
-            timer.startTimer(seq);
-        })
-            .catch((e) => timer.startTimer(seq))
-    }, 1000, true);
 
     useEffect(() => {
         readImportExtensions()
@@ -328,14 +375,14 @@ const ImporterPage = (props) => {
     }, []);
 
     const showEditHandlerDialog = useCallback(() => {
-        dialogContext.showDialog((dprops) => <EditHandlerDialog
+        showDialog(dialogContext,(dprops) => <EditHandlerDialog
             {...dprops}
             title="Edit Importer Settings"
             handlerName={HANDLER_NAME}
-        />, () => setItems([]));
+        />);
     }, []);
     const showConverterDialog = useCallback((converter) => {
-        showDialog(undefined, (dprops) => {
+        showDialog(dialogContext, (dprops) => {
                 return <ConverterDialog
                     {...dprops}
                     {...converter}
@@ -344,27 +391,18 @@ const ImporterPage = (props) => {
         )
     }, []);
     const showScannerDialog = useCallback((scanner) => {
-        dialogContext.showDialog((dprops) => <ScannerDialog
+        showDialog(dialogContext,(dprops) => <ScannerDialog
                 {...dprops}
                 {...scanner}
             />
         )
     }, []);
     const showImportDialog = useCallback((item) => {
-        dialogContext.showDialog((dprops) => <ImportStatusDialog
+        showDialog(dialogContext,(dprops) => <ImportStatusDialog
             {...dprops}
             {...item}
         />);
     }, []);
-    const showEditDialog = useCallback((handlerId, id, finishCallback) => {
-        if (!items) return;
-        for (let k = 0; k < items.length; k++) {
-            if (items[k].name === id) {
-                showImportDialog(items[k]);
-                return;
-            }
-        }
-    }, [items]);
     const checkNameForUpload = useCallback((name) => {
         let ext = Helper.getExt(name);
         let importConfig = checkExt(ext, chartImportExtensions.current);
@@ -385,36 +423,16 @@ const ImporterPage = (props) => {
         );
 
     }, [])
-    let mainStatus = {};
-    (items || []).forEach((st) => {
-        if (st.name === 'main' || st.name === 'converter') {
-            mainStatus[st.name] = st;
-        }
-    })
-    let isActive = !disabled && mainStatus.main;
     return <PageFrame id={IMPORTERPAGE}>
-        <PageLeft title={"Chart Converter"}>
-            {(!isActive) && <div className="importerInfo">Importer inactive</div>}
-            {isActive && <React.Fragment>
-                <MainStatus
-                    {...mainStatus}
-                    showConverterDialog={() => showConverterDialog(mainStatus.converter)}
-                    showScannerDialog={() => showScannerDialog(mainStatus.main)}
-                />
-                <ItemList
-                    scrollable={true}
-                    itemList={items}
-                    itemCreator={(item) => {
-                        if (!item.name || !item.name.match(/^conv:/)) return null;
-                        return (iprops) => {
-                            return <ImporterItem
-                                {...iprops}
-                                showEditDialog={(...args)=>showEditDialog(...args)}
-                            />
-                        }
-                    }}
-                />
-            </React.Fragment>}
+        <PageLeft title={"Chart Converter"} dialogCtxRef={dialogContext} >
+            <PageContent
+                showEditDialog={showImportDialog}
+                showConverterDialog={showConverterDialog}
+                showScannerDialog={showScannerDialog}
+                changeActive={(newActive)=>{
+                    if (isActive !== newActive) setIsActive(newActive);
+                }}
+            />
             <UploadHandler
                 local={false}
                 type={'chart'}
