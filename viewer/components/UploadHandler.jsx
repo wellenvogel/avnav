@@ -33,6 +33,7 @@ import AndroidEventHandler from "../util/androidEventHandler";
 import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {ItemNameDialog} from "./ItemNameDialog";
 import Helper from "../util/helper";
+import androidEventHandler from "../util/androidEventHandler";
 
 const MAXUPLOADSIZE=100000;
 
@@ -205,102 +206,110 @@ const UploadHandler = (props) => {
         setStateHelper({}); //trigger render
 
     }, [props.uploadSequence,props.type,props.local]);
-
-    /**
-     * called back from android if the file was completely read
-     * if we had set the "local" flag
-     * @param eventData
-     */
-    const androidUploadHandler = useCallback((eventData) => {
-        if (!avnav.android) return;
-        let {id} = eventData;
-        let requestedId = androidSequence.current;
-        if (id !== requestedId) return;
-        let filename = avnav.android.getFileName(id);
-        if (!filename) return;
-        let data = avnav.android.getFileData(id);
-        checkNameWithDialog(filename,props.fixedPrefix)
-            .then((res) => {
-                props.doneCallback({
-                    name: res.name,
-                    data: data,
-                    param: res
+    const androidHandlers=useRef();
+    androidHandlers.current= {
+        /**
+         * called back from android if the file was completely read
+         * if we had set the "local" flag
+         * @param eventData
+         */
+        uploadAvailable: (eventData) => {
+            if (!avnav.android) return;
+            let {id} = eventData;
+            let requestedId = androidSequence.current;
+            if (id !== requestedId) return;
+            let filename = avnav.android.getFileName(id);
+            if (!filename) return;
+            let data = avnav.android.getFileData(id);
+            checkNameWithDialog(filename, props.fixedPrefix)
+                .then((res) => {
+                    props.doneCallback({
+                        name: res.name,
+                        data: data,
+                        param: res
+                    })
                 })
-            })
-            .catch((err) => {
-                Toast(err.error);
-            });
-    }, [props.fixedPrefix]);
-
-    /**
-     * called from android when the file selection is ready
-     * @param eventData
-     */
-    const androidCopyHandler = useCallback((eventData) => {
-        if (!avnav.android) return;
-        let requestedId = androidSequence.current;
-        let {id} = eventData;
-        if (id !== requestedId) return;
-        let fileName = avnav.android.getFileName(id);
-
-        checkName((props.fixedPrefix||'')+fileName)
-            .then((res) => {
-                xhdrRef.current = {
-                    abort: () => {
-                        avnav.android.interruptCopy(id);
-                    }
-                };
-                let copyInfo = {
-                    total: avnav.android.getFileSize(id),
-                    loaded: 0,
-                    loadedPercent: true
-                };
-                androidCopyParam.current=res||{};
-                setStateHelper((old) => {
-                    return {...old, ...copyInfo}
+                .catch((err) => {
+                    Toast(err.error);
                 });
-                if (avnav.android.copyFile(id, res.name)) {
-                    //we update the file size as with copyFile it is fetched again
-                    setStateHelper((old) => {
-                        return {...old, total: avnav.android.getFileSize(id)}
-                    });
-                } else {
-                    error("unable to upload");
-                    setStateHelper({});
-                }
-            })
-            .catch((err) => {
-                avnav.android.interruptCopy(id)
-                if (err) error(err.error);
-            });
+        },
 
-    }, [checkName,props.fixedPrefix]);
-    const androidProgressHandler = useCallback((eventData) => {
-        let {event, id} = eventData;
-        if (event === "fileCopyPercent") {
-            if (! androidCopyParam.current) return;
-            setStateHelper((old) => {
-                return {...old, loaded: id}
-            });
-        } else {
-            //done, error already reported from java side
-            setStateHelper({});
-            props.doneCallback && props.doneCallback({param: androidCopyParam.current});
-            androidCopyParam.current=undefined;
+        /**
+         * called from android when the file selection is ready
+         * @param eventData
+         */
+        fileCopyReady: (eventData) => {
+            if (!avnav.android) return;
+            let requestedId = androidSequence.current;
+            let {id} = eventData;
+            if (id !== requestedId) return;
+            let fileName = avnav.android.getFileName(id);
+
+            checkNameWithDialog(fileName, props.fixedPrefix)
+                .then((res) => {
+                    xhdrRef.current = {
+                        abort: () => {
+                            avnav.android.interruptCopy(id);
+                        }
+                    };
+                    let copyInfo = {
+                        total: avnav.android.getFileSize(id),
+                        loaded: 0,
+                        loadedPercent: true
+                    };
+                    androidCopyParam.current = res || {};
+                    setStateHelper((old) => {
+                        return {...old, ...copyInfo}
+                    });
+                    if (avnav.android.copyFile(id, res.name)) {
+                        //we update the file size as with copyFile it is fetched again
+                        setStateHelper((old) => {
+                            return {...old, total: avnav.android.getFileSize(id)}
+                        });
+                    } else {
+                        error("unable to upload");
+                        setStateHelper({});
+                    }
+                })
+                .catch((err) => {
+                    avnav.android.interruptCopy(id)
+                    if (err) error(err.error);
+                });
+
+        },
+        fileCopyPercent: (eventData) => {
+            let {event, id} = eventData;
+            if (event === "fileCopyPercent") {
+                if (!androidCopyParam.current) return;
+                setStateHelper((old) => {
+                    return {...old, loaded: id}
+                });
+            } else {
+                //done, error already reported from java side
+                setStateHelper({});
+                props.doneCallback && props.doneCallback({param: androidCopyParam.current});
+                androidCopyParam.current = undefined;
+            }
         }
-    }, []);
+    };
+    androidHandlers.current.fileCopyDone=androidHandlers.current.fileCopyPercent;
+    const androidEventHandler=useCallback((eventData)=>{
+        let {event, id} = eventData;
+        const handler=androidHandlers.current[event];
+        if (! handler) return;
+        return handler(eventData);
+    },[]);
     useEffect(() => {
         const subscriptions = [];
-        subscriptions.push(AndroidEventHandler.subscribe("uploadAvailable", androidUploadHandler));
-        subscriptions.push(AndroidEventHandler.subscribe("fileCopyReady", androidCopyHandler));
-        subscriptions.push(AndroidEventHandler.subscribe("fileCopyPercent", androidProgressHandler));
-        subscriptions.push(AndroidEventHandler.subscribe("fileCopyDone", androidProgressHandler));
+        for (let k in androidHandlers.current) {
+            subscriptions.push(AndroidEventHandler.subscribe(k, androidEventHandler));
+        }
         return () => {
             subscriptions.forEach((s) => AndroidEventHandler.unsubscribe(s));
             if (xhdrRef.current) xhdrRef.current.abort();
 
         }
-    }, [props.type,props.local,props.fixedPrefix]);
+    }, []);
     useEffect(() => {
         checkForUpload();
     });
