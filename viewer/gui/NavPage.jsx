@@ -456,9 +456,9 @@ const NavPage=(props)=>{
     useEffect(() => {
         globalStore.storeData(keys.map.activeMeasure,undefined);
         activeRoute.setIndexToTarget();
-        if (globalStore.getData(keys.properties.mapLockMode) === 'center'){
+        /*if (globalStore.getData(keys.properties.mapLockMode) === 'center'){
             MapHolder.setBoatOffset();
-        }
+        }*/
         const neededChart = needsChartLoad();
         if (neededChart) {
             loadTimer.startTimer();
