@@ -131,4 +131,6 @@
     <string name="sendOwn">send out data that we received on this connection</string>
     <string name="handleUsb">autoconnect USB devices</string>
     <string name="missingGps">Running without location permissions</string>
+    <string name="nfexit">Exit</string>
+    <string name="nfalarm">Cancel Alarm</string>
 </resources>
