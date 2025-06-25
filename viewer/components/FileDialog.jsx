@@ -120,6 +120,7 @@ const buildRequestParameters=(request,item,opt_additional)=>{
             name:item.name
         }
 }
+export const USER_PREFIX='user.';
 export class ItemActions{
     constructor(type) {
         this.type=type;
@@ -140,6 +141,7 @@ export class ItemActions{
         this.infoText='';
         this.className='';
         this.extForView='';
+        this.fixedPrefix=undefined;
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -161,6 +163,13 @@ export class ItemActions{
          * @returns {*}
          */
         this.nameForUpload=(name)=>name;
+        /**
+         * convert the server name to the complete
+         * client name to check for existance
+         * @param name
+         * @returns {*}
+         */
+        this.serverNameToClientName=(name)=>this.nameForDownload(name);
     }
     static create(props,isConnected){
         if (typeof(props) === 'string') props={type:props};
@@ -222,8 +231,14 @@ export class ItemActions{
                 rt.localUploadFunction=(name,data)=>{
                     //name is ignored
                     try{
-                        let route=new routeobjects.Route("");
-                        route.fromXml(data);
+                        let route;
+                        if (data instanceof routeobjects.Route){
+                            route=data;
+                        }
+                        else {
+                            route = new routeobjects.Route("");
+                            route.fromXml(data);
+                        }
                         if (! route.name){
                             return Promise.reject("route has no name");
                         }
@@ -246,9 +261,11 @@ export class ItemActions{
                 rt.nameForUpload=(name)=>{
                     return LayoutHandler.fileNameToServerName(name);
                 }
+                rt.serverNameToClientName=(name)=>name+'.json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
                     return LayoutHandler.uploadLayout(name,data,overwrite);
                 }
+                rt.fixedPrefix=USER_PREFIX;
                 break;
             case 'settings':
                 rt.headline='Settings';
@@ -268,12 +285,14 @@ export class ItemActions{
                             serverName=serverName.substr(prefix.length+1);
                         }
                     });
-                    return 'user.'+serverName.replace(/\.json$/,'');
+                    return USER_PREFIX+serverName.replace(/\.json$/,'');
                 }
+                rt.serverNameToClientName=(name)=>name+'.json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
                    return PropertyHandler.verifySettingsData(data, true,true)
                        .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
                 }
+                rt.fixedPrefix=USER_PREFIX;
                 break;
             case 'user':
                 rt.headline='User';

@@ -23,7 +23,7 @@
  ###############################################################################
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
@@ -277,125 +277,129 @@ const ScannerDialog=(props)=>{
     </DialogFrame>
 }
 
-const ImporterPage =(props)=>{
-    const [uploadSequence,setUploadSequence]=useState(0);
-    const [items,setItems]=useState([]);
-    const [chartImportExtensions,setChartImportExtensions]=useState([]);
-    const [disabled,setDisabled]=useState(true);
-    const [importSubDir,setImportSubDir]=useState(()=>{if (props.options && props.options.subdir){
-        return props.options.subdir;
-    }})
-    const dialogContext=useDialogContext();
-        const activeButtons=[
-            {
-                name:'DownloadPageUpload',
-                visible: globalStore.getData(keys.properties.connectedMode,true),
-                onClick:()=>{
-                    setUploadSequence(uploadSequence+1);
-                }
+const ImporterPage = (props) => {
+    const [uploadSequence, setUploadSequence] = useState(0);
+    const [items, setItems] = useState([]);
+    const chartImportExtensions=useRef([]);
+    const [disabled, setDisabled] = useState(true);
+    const importSubDir=useRef((props.options && props.options.subdir)?props.options.subdir:undefined);
+    const dialogContext = useDialogContext();
+    const activeButtons = [
+        {
+            name: 'DownloadPageUpload',
+            visible: globalStore.getData(keys.properties.connectedMode, true),
+            onClick: () => {
+                setUploadSequence(uploadSequence + 1);
             }
-        ]
-        const buttons=[
-            {
-                name: 'Edit',
-                onClick:()=>{showEditHandlerDialog()}
-            },
-            Mob.mobDefinition(props.history),
-            {
-                name: 'Cancel',
-                onClick: ()=>{props.history.pop()}
+        }
+    ]
+    const buttons = [
+        {
+            name: 'Edit',
+            onClick: () => {
+                showEditHandlerDialog()
             }
-        ];
-        const timer=useTimer((seq)=>{
-            Requests.getJson({
-            request:'list',
-            type:'import'
-        }).then((json)=>{
-                setItems(json.items||[]);
-                setDisabled(false);
-                timer.startTimer(seq);
-            })
-                .catch((e)=>timer.startTimer(seq))
-        },1000,true);
+        },
+        Mob.mobDefinition(props.history),
+        {
+            name: 'Cancel',
+            onClick: () => {
+                props.history.pop()
+            }
+        }
+    ];
+    const timer = useTimer((seq) => {
+        Requests.getJson({
+            request: 'list',
+            type: 'import'
+        }).then((json) => {
+            setItems(json.items || []);
+            setDisabled(false);
+            timer.startTimer(seq);
+        })
+            .catch((e) => timer.startTimer(seq))
+    }, 1000, true);
 
     useEffect(() => {
         readImportExtensions()
-            .then((extList)=>setChartImportExtensions(extList||[]));
+            .then((extList) => {
+                chartImportExtensions.current=extList || [];
+            });
     }, []);
-    
-    const showEditHandlerDialog=useCallback(()=>{
-        dialogContext.showDialog((dprops)=><EditHandlerDialog
+
+    const showEditHandlerDialog = useCallback(() => {
+        dialogContext.showDialog((dprops) => <EditHandlerDialog
             {...dprops}
             title="Edit Importer Settings"
             handlerName={HANDLER_NAME}
-        />,()=>setItems([]));
-    },[]);
-    const showConverterDialog=useCallback((converter)=>{
-        showDialog(undefined,(dprops)=>{
-            return <ConverterDialog
-                {...dprops}
-                {...converter}
-            />}
+        />, () => setItems([]));
+    }, []);
+    const showConverterDialog = useCallback((converter) => {
+        showDialog(undefined, (dprops) => {
+                return <ConverterDialog
+                    {...dprops}
+                    {...converter}
+                />
+            }
         )
-    },[]);
-    const showScannerDialog=useCallback((scanner)=>{
-        dialogContext.showDialog((dprops)=><ScannerDialog
+    }, []);
+    const showScannerDialog = useCallback((scanner) => {
+        dialogContext.showDialog((dprops) => <ScannerDialog
                 {...dprops}
                 {...scanner}
             />
         )
-    },[]);
-    const showImportDialog=useCallback((item)=>{
-        dialogContext.showDialog((dprops)=><ImportStatusDialog
-                {...dprops}
-                {...item}
-            />);
-    },[]);
-    const showEditDialog=useCallback((handlerId,id,finishCallback)=>{
-        if (! items) return;
-        for (let k=0;k<items.length;k++){
-            if (items[k].name === id){
+    }, []);
+    const showImportDialog = useCallback((item) => {
+        dialogContext.showDialog((dprops) => <ImportStatusDialog
+            {...dprops}
+            {...item}
+        />);
+    }, []);
+    const showEditDialog = useCallback((handlerId, id, finishCallback) => {
+        if (!items) return;
+        for (let k = 0; k < items.length; k++) {
+            if (items[k].name === id) {
                 showImportDialog(items[k]);
                 return;
             }
         }
-    },[items]);
-
-    const checkNameForUpload=useCallback((name)=> {
+    }, [items]);
+    const checkNameForUpload = useCallback((name) => {
         let ext = Helper.getExt(name);
-        let importConfig=checkExt(ext,chartImportExtensions);
-        if (! importConfig.allow) return Promise.reject("unknown chart type " + ext);
-        return showPromiseDialog(dialogContext,(dprops)=> <ImportDialog
-                                {...dprops}
-                                allowNameChange={true}
-                                resolveFunction={(oprops, subdir) => {
-                                    if (subdir !== importSubDir) {
-                                        setImportSubDir(subdir);
-                                    }
-                                    dprops.resolveFunction({name: oprops.name, type: 'import', uploadParameters: {subdir: subdir}});
-                                }}
-                                name={name}
-                                allowSubDir={importConfig.subdir}
-                                subdir={importSubDir}
-                            />
-                        );
-                    
-    },[chartImportExtensions,importSubDir])
-        let mainStatus={};
-        (items||[]).forEach((st)=>{
-            if (st.name === 'main' || st.name === 'converter'){
-                mainStatus[st.name]=st;
-            }
-        })
-        let isActive=!disabled && mainStatus.main;
-        return <PageFrame id={IMPORTERPAGE} >
-            <PageLeft title={"Chart Converter"}>
-            {(! isActive)&&<div className="importerInfo">Importer inactive</div>}
-            { isActive && <React.Fragment>
+        let importConfig = checkExt(ext, chartImportExtensions.current);
+        if (!importConfig.allow) return Promise.reject("unknown chart type " + ext);
+        return showPromiseDialog(dialogContext, (dprops) => <ImportDialog
+                {...dprops}
+                allowNameChange={true}
+                resolveFunction={(oprops, subdir) => {
+                    if (subdir !== importSubDir.current) {
+                        importSubDir.current=subdir;
+                    }
+                    dprops.resolveFunction({name: oprops.name, type: 'import', uploadParameters: {subdir: subdir}});
+                }}
+                name={name}
+                allowSubDir={importConfig.subdir}
+                subdir={importSubDir.current}
+            />
+        );
+
+    }, [])
+    let mainStatus = {};
+    (items || []).forEach((st) => {
+        if (st.name === 'main' || st.name === 'converter') {
+            mainStatus[st.name] = st;
+        }
+    })
+    let isActive = !disabled && mainStatus.main;
+    return <PageFrame id={IMPORTERPAGE}>
+        <PageLeft title={"Chart Converter"}>
+            {(!isActive) && <div className="importerInfo">Importer inactive</div>}
+            {isActive && <React.Fragment>
                 <MainStatus
                     {...mainStatus}
                     showConverterDialog={() => showConverterDialog(mainStatus.converter)}
-                    showScannerDialog={()=>showScannerDialog(mainStatus.main)}
+                    showScannerDialog={() => showScannerDialog(mainStatus.main)}
                 />
                 <ItemList
                     scrollable={true}
@@ -405,28 +409,28 @@ const ImporterPage =(props)=>{
                         return (iprops) => {
                             return <ImporterItem
                                 {...iprops}
-                                showEditDialog={showEditDialog}
+                                showEditDialog={(...args)=>showEditDialog(...args)}
                             />
                         }
                     }}
                 />
             </React.Fragment>}
-                <UploadHandler
-                    local={false}
-                    type={'chart'}
-                    doneCallback={()=>{
+            <UploadHandler
+                local={false}
+                type={'chart'}
+                doneCallback={() => {
 
+                }}
+                errorCallback={
+                    (err) => {
+                        if (err) Toast(err);
                     }}
-                    errorCallback={
-                        (err)=>{
-                            if (err) Toast(err);
-                        }}
-                    uploadSequence={uploadSequence}
-                    checkNameCallback={checkNameForUpload}
-                />
-            </PageLeft>
-            <ButtonList itemList={isActive?activeButtons.concat(buttons):buttons}/>
-        </PageFrame>
+                uploadSequence={uploadSequence}
+                checkNameCallback={(name)=>checkNameForUpload(name)}
+            />
+        </PageLeft>
+        <ButtonList itemList={isActive ? activeButtons.concat(buttons) : buttons}/>
+    </PageFrame>
 }
 
 ImporterPage.propTypes=Page.propTypes;

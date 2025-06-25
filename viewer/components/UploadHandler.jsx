@@ -24,7 +24,6 @@
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import {stateHelper} from "../util/GuiHelpers";
 import Button from "./Button";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
@@ -33,15 +32,27 @@ import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
 import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {ItemNameDialog} from "./ItemNameDialog";
+import Helper from "../util/helper";
 
 const MAXUPLOADSIZE=100000;
 
-const showNameDialog=({result,checkName,dialogContext})=>{
-    if (! result || !result.nameDialog) return Promise.reject(result);
+const showNameDialog=({result,name,checkName,dialogContext})=>{
+    if (! result ) return Promise.reject(result);
+    if (name){
+        if (result.fixedExt && Helper.endsWith(name,"."+result.fixedExt)){
+            name=name.substring(0,name.length-result.fixedExt.length-1);
+        }
+        if (result.fixedPrefix && Helper.startsWith(name,result.fixedPrefix)){
+            name=name.substring(result.fixedPrefix.length);
+        }
+    }
     return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
         {...dprops}
-        title={result.error}
+        iname={name}
+        title={`select new name for ${name}`}
         checkName={checkName}
+        fixedPrefix={result.fixedPrefix}
+        fixedExt={result.fixedExt}
     />)
         .then((res)=>Promise.resolve(res))
         .catch((err)=>Promise.reject({error:err||'cancelled'}))
@@ -85,19 +96,19 @@ const UploadHandler = (props) => {
             } else reject({error:rt});
         })
     }, [props.checkNameCallback]);
-    const checkNameWithDialog=useCallback((name)=>{
-        return checkName(name)
+    const checkNameWithDialog=useCallback((name,fixedPrefix)=>{
+        return checkName((fixedPrefix||'')+name)
             .then((res)=>res)
             .catch((err)=>{
                 if (err.proposal || err.dialog){
-                    return showNameDialog({result:err,checkName,dialogContext})
+                    return showNameDialog({name:name,result:err,checkName,dialogContext})
                 }
                 else return Promise.reject(err)
             })
     },[checkName,dialogContext])
-    const upload = useCallback((file) => {
+    const upload = useCallback((file,fixedPrefix) => {
         if (!file || !props.type) return;
-        checkNameWithDialog(file.name)
+        checkNameWithDialog(file.name,fixedPrefix)
             .then((res) => {
                 if (!props.local) {
                     uploadServer(file, res.name, res.type || props.type, res.uploadParameters, res)
@@ -208,7 +219,7 @@ const UploadHandler = (props) => {
         let filename = avnav.android.getFileName(id);
         if (!filename) return;
         let data = avnav.android.getFileData(id);
-        checkNameWithDialog(filename)
+        checkNameWithDialog(filename,props.fixedPrefix)
             .then((res) => {
                 props.doneCallback({
                     name: res.name,
@@ -219,7 +230,7 @@ const UploadHandler = (props) => {
             .catch((err) => {
                 Toast(err.error);
             });
-    }, []);
+    }, [props.fixedPrefix]);
 
     /**
      * called from android when the file selection is ready
@@ -232,7 +243,7 @@ const UploadHandler = (props) => {
         if (id !== requestedId) return;
         let fileName = avnav.android.getFileName(id);
 
-        checkName(fileName)
+        checkName((props.fixedPrefix||'')+fileName)
             .then((res) => {
                 xhdrRef.current = {
                     abort: () => {
@@ -263,7 +274,7 @@ const UploadHandler = (props) => {
                 if (err) error(err.error);
             });
 
-    }, [checkName]);
+    }, [checkName,props.fixedPrefix]);
     const androidProgressHandler = useCallback((eventData) => {
         let {event, id} = eventData;
         if (event === "fileCopyPercent") {
@@ -289,15 +300,15 @@ const UploadHandler = (props) => {
             if (xhdrRef.current) xhdrRef.current.abort();
 
         }
-    }, [props.type,props.local]);
+    }, [props.type,props.local,props.fixedPrefix]);
     useEffect(() => {
         checkForUpload();
     });
-    const fileChange = useCallback((ev) => {
+    const fileChange = useCallback((ev,fixedPrefix) => {
         ev.stopPropagation();
         let fileObject = ev.target;
         if (fileObject.files && fileObject.files.length > 0) {
-            upload(fileObject.files[0]);
+            upload(fileObject.files[0],fixedPrefix);
         }
     }, [props.type,upload]);
     if (!uploadSequenceRef.current) return null;
@@ -322,7 +333,8 @@ const UploadHandler = (props) => {
                            }
                        }}
                        name="file"
-                       key={uploadSequenceRef.current} onChange={(ev) => fileChange(ev)}/>
+                       key={uploadSequenceRef.current}
+                       onChange={(ev) => fileChange(ev,props.fixedPrefix)}/>
             </form>}
             {loaded !== undefined && <div className="downloadProgress">
                 <div className="progressContainer">
@@ -351,7 +363,8 @@ UploadHandler.propTypes={
     doneCallback:       PropTypes.func, //will be called with and object with name,data for local=true, otherwise
                                         //with no parameter
     errorCallback:      PropTypes.func, //called with error text (or undefined for cancel)
-    checkNameCallback:  PropTypes.func //must resolve an object with name, uploadParameters, type
+    checkNameCallback:  PropTypes.func, //must resolve an object with name, uploadParameters, type
+    fixedPrefix:        PropTypes.string
 }
 export default UploadHandler;
 

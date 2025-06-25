@@ -408,15 +408,18 @@ export class Route {
         this.name = undefined;
         this.points = [];
         if (rte) {
-            let name = rte.getElementsByTagName('name')[0];
-            if (name) this.name = name.textContent;
+            for (const child of rte.children){
+                if (child.tagName === 'name'){
+                    this.name = child.textContent;
+                }
+            }
             Array.from(rte.getElementsByTagName('rtept')).forEach((el) => {
                 let pt = new navobjects.WayPoint(0, 0);
                 pt.lon = parseFloat(el.getAttribute('lon'));
                 pt.lat = parseFloat(el.getAttribute('lat'));
                 let pname = el.getElementsByTagName('name')[0];
                 if (pname) pt.name = pname.textContent;
-                pt.routeName = this.name.slice(0);
+                pt.routeName = this.name?this.name.slice(0):undefined;
                 if (!pt.name) {
                     pt.name = this.findFreeName();
                 }

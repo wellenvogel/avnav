@@ -24,7 +24,7 @@
  * generic dialog to select an item name
  */
 
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
     DBCancel,
     DBOk,
@@ -38,15 +38,16 @@ import {Input, valueMissing} from "./Inputs";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
 
-export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandatory, checkName}) => {
+export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName}) => {
     const [name, setName] = useState(iname);
     const [error, setError] = useState();
     const [proposal,setProposal]=useState();
     const dialogContext = useDialogContext();
+    const parametersFromCheck=useRef();
     const titlevalue = title ? title : (iname ? "Modify FileName" : "Create FileName");
     const completeName = (nn) => {
         if (!fixedExt) return nn;
-        return nn + "." + fixedExt;
+        return (fixedPrefix?fixedPrefix:'')+nn + "." + fixedExt;
     }
     useEffect(() => {
         checkNameAndSet(completeName(iname));
@@ -58,8 +59,16 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
         }
         else{
             if (res instanceof Object) {
-                setError(res.error);
-                setProposal(res.proposal)
+                if (! res.error){
+                    setError(undefined);
+                    setProposal(undefined);
+                    if ('name' in res){setName(res.name)}
+                    parametersFromCheck.current=res;
+                }
+                else {
+                    setError(res.error);
+                    setProposal(res.proposal)
+                }
             }
             else {
                 setError(res);
@@ -94,7 +103,12 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
                 let pname=proposal;
                 if (fixedExt){
                     if (Helper.endsWith(proposal,fixedExt)){
-                        pname=proposal.substring(0,proposal.length-fixedExt.length-1);
+                        pname=pname.substring(0,proposal.length-fixedExt.length-1);
+                    }
+                }
+                if (fixedPrefix){
+                    if (Helper.startsWith(proposal,fixedPrefix)){
+                        pname=pname.substring(fixedPrefix.length);
                     }
                 }
                 setName(pname);
@@ -113,6 +127,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, title, mandato
             }}
             className={error?'error':undefined}
             mandatory={mandatory}
+            label={fixedPrefix?fixedPrefix:''}
         >
             {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
         </Input>
@@ -137,7 +152,7 @@ export const TMP_PRFX="__avn.";
  * if it already exists try to build a name (by appending numbers) that does not exists
  * @param name the name to check
  * @param itemList the list of items
- * @param [opt_idx] the value of each item to be checked, defaults to "name"
+ * @param [opt_idx]{string|function} the value of each item to be checked, defaults to "name"
  * @param [opt_checkAllowed] set to false to disable the check for allowed file names
  * @returns {{proposal: *, error: string}} - returns undefined if ok
  */
@@ -169,22 +184,28 @@ export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
     return rt;
 }
 
-const checkNameList=(name,itemList,opt_idx)=>{
+const checkNameList=(name,itemList,opt_idxfct)=>{
     if (! (itemList instanceof Array)) return;
     let exists=false;
     let maxNum=1;
     const [fn,ext]=Helper.getNameAndExt(name);
     if (! fn) return;
-    if (! opt_idx) opt_idx='name';
+    if (! opt_idxfct) opt_idxfct=(data)=>data?data.name:data;
+    else{
+        if (typeof(opt_idxfct) !== "function"){
+            opt_idxfct=(data)=>data?data[opt_idxfct]:data;
+        }
+    }
     let prfx=fn.replace(/\d*$/,'');
     if (! prfx) prfx=fn;
     for (let i=0;i<itemList.length;i++) {
-        if (! itemList[i][opt_idx]) continue;
-        if (Helper.startsWith(itemList[i][opt_idx],prfx) && Helper.endsWith(itemList[i][opt_idx],ext)){
-            let n=parseInt(itemList[i][opt_idx].substring(prfx.length));
+        const v=opt_idxfct(itemList[i],name);
+        if (! v) continue;
+        if (Helper.startsWith(v,prfx) && Helper.endsWith(v,ext)){
+            let n=parseInt(v.substring(prfx.length));
             if (!isNaN(n) && n >= maxNum) maxNum=n+1;
         }
-        if (itemList[i][opt_idx] ===name) exists=true;
+        if (v ===name) exists=true;
     }
     if (exists){
         return {
