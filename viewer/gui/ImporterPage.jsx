@@ -28,7 +28,7 @@ import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import ItemList from "../components/ItemList";
-import GuiHelpers, {useTimer} from "../util/GuiHelpers";
+import {useTimer} from "../util/GuiHelpers";
 import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
@@ -40,7 +40,6 @@ import LogDialog from "../components/LogDialog";
 import UploadHandler from "../components/UploadHandler";
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
 import Helper from "../util/helper";
-import {RecursiveCompare} from "../util/compare";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DownloadButton from "../components/DownloadButton";
 import ButtonList from "../components/ButtonList";
@@ -279,32 +278,39 @@ const ScannerDialog=(props)=>{
 const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,changeActive})=>{
     const [items,setItems]=useState([]);
     const [disabled, setDisabled] = useState(true);
+    const [mainStatus,setMainStatus]=useState({});
     const lastActive=useRef(false);
+    const handleStatus=(items,error)=>{
+        let mainStatus = {};
+        setItems(items||[]);
+        (items || []).forEach((st) => {
+            if (st.name === 'main' || st.name === 'converter') {
+                mainStatus[st.name] = st;
+            }
+        })
+        setMainStatus(mainStatus);
+        setDisabled(error)
+        const isActive=!error && !!mainStatus.main;
+        if (isActive !== lastActive.current){
+            if (changeActive) changeActive(isActive);
+            lastActive.current=isActive;
+        }
+    }
     const timer = useTimer((seq) => {
         Requests.getJson({
             request: 'list',
             type: 'import'
         }).then((json) => {
-            setItems(json.items || []);
-            setDisabled(false);
+            handleStatus(json.items);
             timer.startTimer(seq);
         })
             .catch((e) => {
-                setDisabled(true);
+                handleStatus(undefined,true);
                 timer.startTimer(seq)
             })
     }, 1000, true);
-    let mainStatus = {};
-    (items || []).forEach((st) => {
-        if (st.name === 'main' || st.name === 'converter') {
-            mainStatus[st.name] = st;
-        }
-    })
-    let isActive = !disabled && !!mainStatus.main;
-    if (isActive !== lastActive.current){
-        if (changeActive) changeActive(isActive);
-        lastActive.current=isActive;
-    }
+
+    let isActive=!disabled && !!mainStatus.main;
     if(!isActive) return <div className="importerInfo">Importer inactive</div>;
         return <React.Fragment>
         <MainStatus
