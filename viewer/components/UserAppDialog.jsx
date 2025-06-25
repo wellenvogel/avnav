@@ -11,24 +11,10 @@ import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
-import {EditDialog} from "./EditDialog";
+import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
-import {ItemNameDialog,checkName} from "./ItemNameDialog";
+import {checkName, ItemNameDialog} from "./ItemNameDialog";
 
-
-const uploadFromEdit=async (name,data,overwrite)=>{
-    try {
-        await Requests.postPlain({
-            request: 'upload',
-            type: 'user',
-            name: name,
-            overwrite:overwrite
-        }, data);
-    }catch (e){
-        Toast(e);
-        throw e;
-    }
-}
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     const dialogContext=useDialogContext();
@@ -102,16 +88,14 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                         resolveFunction={(res)=>{
                             const name=(res||{}).name;
                             if (!name) return;
-                            const data = `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;
-                            dialogContext.showDialog(() => <EditDialog
+                            const data = getTemplate(name);
+                            dialogContext.showDialog(() => <EditDialogWithSave
                                 data={data}
                                 fileName={name}
-                                resolveFunction={async (modifiedData) => {
-                                    await uploadFromEdit(name,modifiedData,true);
+                                resolveFunction={() => {
                                     listFiles(name);
                                 }}
-                                saveFunction={async (modifiedData)=>
-                                    await uploadFromEdit(name,modifiedData,true)}
+                                type={'user'}
                             />)
                         }}/>
                     )

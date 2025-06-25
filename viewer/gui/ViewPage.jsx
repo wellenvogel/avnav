@@ -5,32 +5,22 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import helper from '../util/helper.js';
+import Helper from '../util/helper.js';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
-import Toast,{hideToast} from '../components/Toast.jsx';
-import OverlayDialog, {showPromiseDialog} from '../components/OverlayDialog.jsx';
+import Toast, {hideToast} from '../components/Toast.jsx';
+import {showPromiseDialog} from '../components/OverlayDialog.jsx';
 import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
-import Helper from "../util/helper.js";
 import {ItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
+import {languageMap} from "../components/EditDialog";
 
-//add all extensions here that we can edit
-//if set to undefined we will edit them but without highlighting
-const languageMap={
-    js:'js',
-    json:'json',
-    html:'markup',
-    css:'css',
-    xml: 'markup',
-    gpx: 'markup',
-    txt: undefined
-};
 const MAXEDITSIZE=50000;
 
 

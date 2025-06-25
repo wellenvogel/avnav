@@ -33,6 +33,7 @@ import ImportDialog, {checkExt, readImportExtensions} from "../components/Import
 import {ValueDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import routeobjects from "../nav/routeobjects";
+import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -473,6 +474,7 @@ class DownloadPage extends React.Component{
             {...dprops}
             title={'enter filename'}
             checkName={(name)=>this.entryExists(name,accessor)}
+            mandatory={true}
         />)
             .then((res)=>{
                 const name=(res||{}).name;
@@ -481,19 +483,35 @@ class DownloadPage extends React.Component{
                     Toast("already exists");
                     return;
                 }
-                let data="";
-                Requests.postPlain({
-                    request:'upload',
-                    type: this.state.type,
-                    name: name
-                }, data)
-                    .then((res)=>{
-                        this.fillData();
-                    })
-                    .catch((error)=>{
-                        Toast("creation failed: "+error);
-                        this.fillData();
-                    });
+                const template=getTemplate(name);
+                if (template){
+                    showPromiseDialog(undefined,(dprops)=><EditDialogWithSave
+                        {...dprops}
+                        type={'user'}
+                        fileName={name}
+                        data={template}
+                    />)
+                        .then(()=>this.fillData())
+                        .catch((e)=>{
+                            if (e) Toast(e);
+                            this.fillData();
+                        })
+                }
+                else {
+                    let data = "";
+                    Requests.postPlain({
+                        request: 'upload',
+                        type: this.state.type,
+                        name: name
+                    }, data)
+                        .then((res) => {
+                            this.fillData();
+                        })
+                        .catch((error) => {
+                            Toast("creation failed: " + error);
+                            this.fillData();
+                        });
+                }
             })
             .catch(()=>{})
     };
