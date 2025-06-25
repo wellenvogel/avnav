@@ -121,10 +121,10 @@ export const EditDialogWithSave=(props)=>{
     return <EditDialog
         {...props}
         resolveFunction={async (data)=>{
-            await uploadFromEdit(props.name,data,true,props.type);
+            await uploadFromEdit(props.fileName,data,true,props.type);
             props.resolveFunction(data);
         }}
-        saveFunction={async (data)=> await uploadFromEdit(props.name,data,true,props.type)}
+        saveFunction={async (data)=> await uploadFromEdit(props.fileName,data,true,props.type)}
     />
 
 }

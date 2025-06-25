@@ -214,7 +214,19 @@ export class ItemActions{
                 rt.headline='Routes';
                 rt.showIsServer=props.server;
                 rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
-                rt.showView=viewable;
+                rt.showView=async (item)=>{
+                    return new Promise((resolve,reject)=> {
+                        RouteHandler.fetchRoute(item.name, !item.server, (route) => {
+                            resolve({
+                                    name: item.name,
+                                    data: route.toXml()
+                                },
+                                (err) => {
+                                    reject(err)
+                                })
+                        })
+                    });
+                };
                 rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
                 rt.showOverlay=canEditOverlays;
                 rt.showDownload=true;
@@ -251,7 +263,13 @@ export class ItemActions{
             case 'layout':
                 rt.headline='Layouts';
                 rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
-                rt.showView = true;
+                rt.showView = async (item)=>{
+                    const layout = await LayoutHandler.loadLayout(item.name,true);
+                    return {
+                        name:item.name+".json",
+                        data: JSON.stringify(layout,undefined,"  ")
+                    }
+                };
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 rt.extForView='json';
@@ -611,6 +629,17 @@ export const FileDialog = (props) => {
                 {(allowed.showView) ?
                     <DB name="view"
                         onClick={() => {
+                            if (typeof (allowed.showView) === 'function' ) {
+                                const rs=allowed.showView(props.current);
+                                if (rs instanceof Promise) {
+                                    rs
+                                        .then((res)=>props.okFunction('view',{...props.current,...res}))
+                                        .catch((err)=>Toast(err));
+                                    return;
+                                }
+                                props.okFunction('view',{...props.current,...rs});
+                                return;
+                            }
                             props.okFunction('view', props.current);
                         }}
                         disabled={changed}
@@ -768,7 +797,7 @@ export const FileDialogWithActions=(props)=>{
         }
         if (action === 'view'){
             doneAction(true);
-            history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
+            history.push('viewpage',{type:item.type,name:newItem.name,readOnly:true,data:newItem.data});
             return;
         }
         if (action === 'edit'){

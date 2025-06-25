@@ -46,6 +46,9 @@ class ViewPageBase extends React.Component{
         if (this.html){
             state.data=this.html;
         }
+        if (this.props.options.data){
+            state.data=this.props.options.data;
+        }
         this.state=state;
         this.changed=this.changed.bind(this);
         this.flask=undefined;
@@ -174,7 +177,10 @@ class ViewPageBase extends React.Component{
     componentDidMount(){
         let self=this;
         if (this.isImage()) return;
-        if (this.html) {
+        if (this.html ) {
+            return;
+        }
+        if (this.props.options.data){
             return;
         }
         if (this.url && this.props.options.useIframe){
