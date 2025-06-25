@@ -28,9 +28,7 @@ import {
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
-import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
-import {ValueDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import routeobjects from "../nav/routeobjects";
 import {EditDialogWithSave, getTemplate} from "../components/EditDialog";

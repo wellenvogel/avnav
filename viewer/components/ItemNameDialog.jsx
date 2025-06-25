@@ -38,27 +38,43 @@ import {Input, valueMissing} from "./Inputs";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
 
+export const shrinkName=(name,fixedPrefix,fixedExt)=>{
+    let rt=name;
+    if (fixedPrefix) {
+        if (Helper.startsWith(rt, fixedPrefix)) rt=rt.substring(fixedPrefix.length);
+    }
+    if (fixedExt){
+        if (Helper.endsWith(rt,"."+fixedExt)){
+            rt=rt.substring(0,rt.length-fixedExt.length-1)
+        }
+    }
+    return rt;
+}
+
 export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName}) => {
-    const [name, setName] = useState(iname);
+    const [name, setName] = useState(()=>shrinkName(iname,fixedPrefix,fixedExt));
     const [error, setError] = useState();
     const [proposal,setProposal]=useState();
+    const [info,setInfo]=useState();
     const dialogContext = useDialogContext();
     const parametersFromCheck=useRef();
     const titlevalue = title ? title : (iname ? "Modify FileName" : "Create FileName");
     const completeName = (nn) => {
-        if (!fixedExt) return nn;
+        if (!fixedExt) return (fixedPrefix?fixedPrefix:'')+nn;
         return (fixedPrefix?fixedPrefix:'')+nn + "." + fixedExt;
     }
     useEffect(() => {
-        checkNameAndSet(completeName(iname));
+        checkNameAndSet(completeName(name));
     }, []);
     const checkResult=useCallback((res)=>{
         if (! res){
             setError(undefined);
             setProposal(undefined);
+            setInfo(undefined);
         }
         else{
             if (res instanceof Object) {
+                setInfo(res.info);
                 if (! res.error){
                     setError(undefined);
                     setProposal(undefined);
@@ -73,6 +89,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             else {
                 setError(res);
                 setProposal(undefined);
+                setInfo(undefined);
             }
         }
 
@@ -100,19 +117,9 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             name: 'Propose',
             label: 'Propose',
             onClick: ()=>{
-                let pname=proposal;
-                if (fixedExt){
-                    if (Helper.endsWith(proposal,fixedExt)){
-                        pname=pname.substring(0,proposal.length-fixedExt.length-1);
-                    }
-                }
-                if (fixedPrefix){
-                    if (Helper.startsWith(proposal,fixedPrefix)){
-                        pname=pname.substring(fixedPrefix.length);
-                    }
-                }
+                let pname=shrinkName(proposal,fixedPrefix,fixedExt);
                 setName(pname);
-                checkNameAndSet(proposal);
+                checkNameAndSet(completeName(pname));
             },
             close:false
         })
@@ -132,6 +139,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
         </Input>
         {error && <DialogRow className={"errorText"}><span className={'inputLabel'}></span>{error}</DialogRow>}
+        {info && <DialogRow className={"info"}><span className={'inputLabel'}>{info}</span> </DialogRow>}
         <DialogButtons buttonList={buttonList}/>
     </DialogFrame>
 };
