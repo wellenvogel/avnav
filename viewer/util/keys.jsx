@@ -27,7 +27,8 @@ export const PropertyType={
     SELECT: 5,
     INTERNAL: 6,
     MULTICHECKBOX: 7,
-    STRING: 8
+    STRING: 8,
+    DELETED: 100
 };
 
 /**
@@ -452,8 +453,18 @@ let keys={
             routeApproachingColor: new Property('#FA584A', "Approach", PropertyType.COLOR),
             widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20]),
             useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX,undefined,true)
-        }
-
+        },
+        /**
+         * old properties are kept here to avoid warnings on import
+         */
+        windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.DELETED, [5, 90, 1]),
+        aisUseRelMotionVector: new Property(false, "relative motion vectors", PropertyType.DELETED),
+        aisUseTurnIndicator: new Property(false, "turn indicator", PropertyType.DELETED),
+        showClock: new Property(true, "show clock", PropertyType.DELETED),
+        showZoom: new Property(true, "show zoom", PropertyType.DELETED),
+        showWind: new Property(true, "show wind", PropertyType.DELETED),
+        showDepth: new Property(true, "show depth", PropertyType.DELETED),
+        windKnots: new Property(true, "wind knots", PropertyType.DELETED),
     }
 };
 
