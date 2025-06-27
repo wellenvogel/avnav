@@ -1,17 +1,10 @@
 package de.wellenvogel.avnav.appapi;
 
 import android.content.Context;
-import android.net.Uri;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
-
-import de.wellenvogel.avnav.fileprovider.AssetsProvider;
-import de.wellenvogel.avnav.fileprovider.UserFileProvider;
-import de.wellenvogel.avnav.util.AvnLog;
 
 public class SettingsHandler extends ScopedItemHandler {
     static final String PREFIX="settings";
@@ -37,20 +30,4 @@ public class SettingsHandler extends ScopedItemHandler {
         return RequestHandler.getReturn();
     }
 
-    public static Uri getUriForSettings(String url){
-        if (! url.startsWith(PREFIX)) return null;
-        url=url.substring(PREFIX.length()+1);
-        if (url.startsWith("system.")){
-            return AssetsProvider.createContentUri(PREFIX,url.replaceAll("^system\\.",""));
-        }
-        else{
-            try {
-                Uri rt = UserFileProvider.createContentUri(PREFIX,url.replaceAll("^user\\.",""),null);
-                return rt;
-            }catch (Throwable t){
-                AvnLog.e("error creating uri for layout "+url,t);
-                return null;
-            }
-        }
-    }
 }

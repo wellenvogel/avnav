@@ -38,8 +38,6 @@ public class Constants {
     public static final String CHARTPREFIX="charts";
     public static final String DEMOCHARTS="demo";
     public static final String CHARTOVERVIEW="avnav.xml";
-    public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
-    public final static String USER_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".userprovider";
     public static final String USB_DEVICE_EXTRA = "usbDevice" ;
     public static final String SERVICE_TYPE = "foregroundType";
     //list of audio settings

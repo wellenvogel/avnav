@@ -109,19 +109,6 @@
             android:foregroundServiceType="connectedDevice|location"
             android:label="AvnavGps" />
 
-        <provider
-            android:name="de.wellenvogel.avnav.fileprovider.AssetsProvider"
-            android:authorities="${applicationId}.assetsprovider"
-            android:exported="false"
-            android:grantUriPermissions="true" >
-        </provider>
-        <provider
-            android:name="de.wellenvogel.avnav.fileprovider.UserFileProvider"
-            android:authorities="${applicationId}.userprovider"
-            android:exported="false"
-            android:grantUriPermissions="true" >
-        </provider>
-
     </application>
 
 </manifest>

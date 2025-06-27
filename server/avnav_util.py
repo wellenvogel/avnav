@@ -623,12 +623,10 @@ class AVNUtil(object):
 
   @classmethod
   def clean_filename(cls,filename):
-    replace=['/',os.sep]
+    replace=re.compile('[\u0000-\u001f\u007f"*/:<>?\\\|]')
     if filename is None:
       return None
-    for r in replace:
-      filename = filename.replace(r, '_')
-    return filename
+    return replace.sub('',filename)
 
   @classmethod
   def getBool(cls,v,default=False):
