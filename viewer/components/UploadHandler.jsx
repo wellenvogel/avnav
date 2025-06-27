@@ -24,17 +24,43 @@
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import {stateHelper} from "../util/GuiHelpers";
 import Button from "./Button";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
+import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {ItemNameDialog} from "./ItemNameDialog";
+import Helper from "../util/helper";
+import androidEventHandler from "../util/androidEventHandler";
 
 const MAXUPLOADSIZE=100000;
 
+const showNameDialog=({result,name,checkName,dialogContext})=>{
+    if (! result ) return Promise.reject(result);
+    if (name){
+        if (result.fixedExt && Helper.endsWith(name,"."+result.fixedExt)){
+            name=name.substring(0,name.length-result.fixedExt.length-1);
+        }
+        if (result.fixedPrefix && Helper.startsWith(name,result.fixedPrefix)){
+            name=name.substring(result.fixedPrefix.length);
+        }
+    }
+    return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
+        {...dprops}
+        iname={name}
+        title={`select new name for ${name}`}
+        checkName={checkName}
+        fixedPrefix={result.fixedPrefix}
+        fixedExt={result.fixedExt}
+    />)
+        .then((res)=>Promise.resolve(res))
+        .catch((err)=>Promise.reject({error:err||'cancelled'}))
+}
+
 const UploadHandler = (props) => {
+    const dialogContext=useDialogContext();
     const xhdrRef = useRef();
     const androidSequence = useRef(0);
     const androidCopyParam=useRef();
@@ -55,22 +81,35 @@ const UploadHandler = (props) => {
      */
     const checkName = useCallback((name) => {
         if (!props.checkNameCallback) {
-            return new Promise((resolve, reject) => {
-                resolve({name: name});
-            });
+            return Promise.resolve({name:name});
         }
         let rt = props.checkNameCallback(name);
-        if (rt instanceof Promise) return rt;
+        if (rt instanceof Promise) return rt.then(
+            (res)=>res,
+            (err)=>{
+            if (err instanceof Object) return Promise.reject(err);
+            return Promise.reject({error:err});
+        });
         return new Promise((resolve, reject) => {
             if (typeof (rt) === 'object') {
                 if (!rt.error) resolve(rt);
-                else reject(rt.error);
-            } else reject(rt);
+                else reject(rt);
+            } else reject({error:rt});
         })
     }, [props.checkNameCallback]);
-    const upload = useCallback((file) => {
+    const checkNameWithDialog=useCallback((name,fixedPrefix)=>{
+        return checkName((fixedPrefix||'')+name)
+            .then((res)=>res)
+            .catch((err)=>{
+                if (err.proposal || err.dialog){
+                    return showNameDialog({name:name,result:err,checkName,dialogContext})
+                }
+                else return Promise.reject(err)
+            })
+    },[checkName,dialogContext])
+    const upload = useCallback((file,fixedPrefix) => {
         if (!file || !props.type) return;
-        checkName(file.name)
+        checkNameWithDialog(file.name,fixedPrefix)
             .then((res) => {
                 if (!props.local) {
                     uploadServer(file, res.name, res.type || props.type, res.uploadParameters, res)
@@ -79,7 +118,7 @@ const UploadHandler = (props) => {
                 }
             })
             .catch((err) => {
-                error(err);
+                error(err.error);
             });
     }, [props.type]);
 
@@ -167,110 +206,118 @@ const UploadHandler = (props) => {
         setStateHelper({}); //trigger render
 
     }, [props.uploadSequence,props.type,props.local]);
-
-    /**
-     * called back from android if the file was completely read
-     * if we had set the "local" flag
-     * @param eventData
-     */
-    const androidUploadHandler = useCallback((eventData) => {
-        if (!avnav.android) return;
-        let {id} = eventData;
-        let requestedId = androidSequence.current;
-        if (id !== requestedId) return;
-        let filename = avnav.android.getFileName(id);
-        if (!filename) return;
-        let data = avnav.android.getFileData(id);
-        checkName(filename)
-            .then((res) => {
-                props.doneCallback({
-                    name: res.name,
-                    data: data,
-                    param: res
+    const androidHandlers=useRef();
+    androidHandlers.current= {
+        /**
+         * called back from android if the file was completely read
+         * if we had set the "local" flag
+         * @param eventData
+         */
+        uploadAvailable: (eventData) => {
+            if (!avnav.android) return;
+            let {id} = eventData;
+            let requestedId = androidSequence.current;
+            if (id !== requestedId) return;
+            let filename = avnav.android.getFileName(id);
+            if (!filename) return;
+            let data = avnav.android.getFileData(id);
+            checkNameWithDialog(filename, props.fixedPrefix)
+                .then((res) => {
+                    props.doneCallback({
+                        name: res.name,
+                        data: data,
+                        param: res
+                    })
                 })
-            })
-            .catch((err) => {
-                Toast(err);
-            });
-    }, []);
-
-    /**
-     * called from android when the file selection is ready
-     * @param eventData
-     */
-    const androidCopyHandler = useCallback((eventData) => {
-        if (!avnav.android) return;
-        let requestedId = androidSequence.current;
-        let {id} = eventData;
-        if (id !== requestedId) return;
-        let fileName = avnav.android.getFileName(id);
-
-        checkName(fileName)
-            .then((res) => {
-                xhdrRef.current = {
-                    abort: () => {
-                        avnav.android.interruptCopy(id);
-                    }
-                };
-                let copyInfo = {
-                    total: avnav.android.getFileSize(id),
-                    loaded: 0,
-                    loadedPercent: true
-                };
-                androidCopyParam.current=res||{};
-                setStateHelper((old) => {
-                    return {...old, ...copyInfo}
+                .catch((err) => {
+                    Toast(err.error);
                 });
-                if (avnav.android.copyFile(id, res.name)) {
-                    //we update the file size as with copyFile it is fetched again
-                    setStateHelper((old) => {
-                        return {...old, total: avnav.android.getFileSize(id)}
-                    });
-                } else {
-                    error("unable to upload");
-                    setStateHelper({});
-                }
-            })
-            .catch((err) => {
-                avnav.android.interruptCopy(id)
-                if (err) error(err);
-            });
+        },
 
-    }, [checkName]);
-    const androidProgressHandler = useCallback((eventData) => {
-        let {event, id} = eventData;
-        if (event === "fileCopyPercent") {
-            if (! androidCopyParam.current) return;
-            setStateHelper((old) => {
-                return {...old, loaded: id}
-            });
-        } else {
-            //done, error already reported from java side
-            setStateHelper({});
-            props.doneCallback && props.doneCallback({param: androidCopyParam.current});
-            androidCopyParam.current=undefined;
+        /**
+         * called from android when the file selection is ready
+         * @param eventData
+         */
+        fileCopyReady: (eventData) => {
+            if (!avnav.android) return;
+            let requestedId = androidSequence.current;
+            let {id} = eventData;
+            if (id !== requestedId) return;
+            let fileName = avnav.android.getFileName(id);
+
+            checkNameWithDialog(fileName, props.fixedPrefix)
+                .then((res) => {
+                    xhdrRef.current = {
+                        abort: () => {
+                            avnav.android.interruptCopy(id);
+                        }
+                    };
+                    let copyInfo = {
+                        total: avnav.android.getFileSize(id),
+                        loaded: 0,
+                        loadedPercent: true
+                    };
+                    androidCopyParam.current = res || {};
+                    setStateHelper((old) => {
+                        return {...old, ...copyInfo}
+                    });
+                    if (avnav.android.copyFile(id, res.name)) {
+                        //we update the file size as with copyFile it is fetched again
+                        setStateHelper((old) => {
+                            return {...old, total: avnav.android.getFileSize(id)}
+                        });
+                    } else {
+                        error("unable to upload");
+                        setStateHelper({});
+                    }
+                })
+                .catch((err) => {
+                    avnav.android.interruptCopy(id)
+                    if (err) error(err.error);
+                });
+
+        },
+        fileCopyPercent: (eventData) => {
+            let {event, id} = eventData;
+            if (event === "fileCopyPercent") {
+                if (!androidCopyParam.current) return;
+                setStateHelper((old) => {
+                    return {...old, loaded: id}
+                });
+            } else {
+                //done, error already reported from java side
+                setStateHelper({});
+                props.doneCallback && props.doneCallback({param: androidCopyParam.current});
+                androidCopyParam.current = undefined;
+            }
         }
-    }, []);
+    };
+    androidHandlers.current.fileCopyDone=androidHandlers.current.fileCopyPercent;
+    const androidEventHandler=useCallback((eventData)=>{
+        let {event, id} = eventData;
+        const handler=androidHandlers.current[event];
+        if (! handler) return;
+        return handler(eventData);
+    },[]);
     useEffect(() => {
         const subscriptions = [];
-        subscriptions.push(AndroidEventHandler.subscribe("uploadAvailable", androidUploadHandler));
-        subscriptions.push(AndroidEventHandler.subscribe("fileCopyReady", androidCopyHandler));
-        subscriptions.push(AndroidEventHandler.subscribe("fileCopyPercent", androidProgressHandler));
-        subscriptions.push(AndroidEventHandler.subscribe("fileCopyDone", androidProgressHandler));
+        for (let k in androidHandlers.current) {
+            subscriptions.push(AndroidEventHandler.subscribe(k, androidEventHandler));
+        }
         return () => {
             subscriptions.forEach((s) => AndroidEventHandler.unsubscribe(s));
             if (xhdrRef.current) xhdrRef.current.abort();
 
         }
-    }, [props.type,props.local]);
+    }, []);
     useEffect(() => {
         checkForUpload();
     });
-    const fileChange = useCallback((ev) => {
+    const fileChange = useCallback((ev,fixedPrefix) => {
         ev.stopPropagation();
         let fileObject = ev.target;
         if (fileObject.files && fileObject.files.length > 0) {
-            upload(fileObject.files[0]);
+            upload(fileObject.files[0],fixedPrefix);
         }
     }, [props.type,upload]);
     if (!uploadSequenceRef.current) return null;
@@ -295,7 +342,8 @@ const UploadHandler = (props) => {
                            }
                        }}
                        name="file"
-                       key={uploadSequenceRef.current} onChange={(ev) => fileChange(ev)}/>
+                       key={uploadSequenceRef.current}
+                       onChange={(ev) => fileChange(ev,props.fixedPrefix)}/>
             </form>}
             {loaded !== undefined && <div className="downloadProgress">
                 <div className="progressContainer">
@@ -324,7 +372,8 @@ UploadHandler.propTypes={
     doneCallback:       PropTypes.func, //will be called with and object with name,data for local=true, otherwise
                                         //with no parameter
     errorCallback:      PropTypes.func, //called with error text (or undefined for cancel)
-    checkNameCallback:  PropTypes.func //must resolve an object with name, uploadParameters, type
+    checkNameCallback:  PropTypes.func, //must resolve an object with name, uploadParameters, type
+    fixedPrefix:        PropTypes.string
 }
 export default UploadHandler;
 

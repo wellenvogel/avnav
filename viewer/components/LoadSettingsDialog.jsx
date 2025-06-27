@@ -23,11 +23,10 @@
  ###############################################################################
  */
 import React from 'react';
-import {LoadItemDialog} from "./LoadSaveDialogs";
 import PropertyHandler from "../util/propertyhandler";
 import RequestHandler from "../util/requests";
 import {showPromiseDialog} from "./OverlayDialog";
-import {ConfirmDialog} from "./BasicDialogs";
+import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 /**
  * will return a promise that reolves to the loaded settings
  * or rejects with undefined of abort - or an error string
@@ -48,20 +47,20 @@ export const loadSettings = (currentValues, defaultName, opt_title, opt_preventD
             let displayList=[];
             let prefSettings=undefined;
             settingslist.forEach((s)=>{
+                let selected=false;
                 if (s.name === defaultName){
                     prefSettings=s.name;
+                    selected=true;
                 }
-                displayList.push({label:s.name,value:s.name});
+                displayList.push({label:s.name,value:s.name,selected:selected});
             })
             if (! prefSettings || ! opt_preventDialog) {
-                return LoadItemDialog.createDialog(
-                    defaultName,
-                    displayList,
-                    {
-                        title: opt_title ? opt_title : 'Select Settings to load',
-                        itemLabel: 'Settings'
-                    }
-                )
+                return showPromiseDialog(undefined,(dprops)=><SelectDialog
+                    {...dprops}
+                    title={opt_title ? opt_title : 'Select Settings to load'}
+                    list={displayList}
+                />)
+                    .then((res)=>res.value)
             }
             else{
                 return new Promise((resolve,reject)=>{

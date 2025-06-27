@@ -28,9 +28,10 @@ import {
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
-import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
-import {ValueDialog} from "../components/BasicDialogs";
+import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
+import routeobjects from "../nav/routeobjects";
+import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -258,9 +259,9 @@ class DownloadPage extends React.Component{
             }
         )
     }
-    entryExists(name){
+    entryExists(name,opt_idxfct){
         let current=this.state.items;
-        return findInfo(current,{name:name})>=0;
+        return checkName(name,current,opt_idxfct);
     };
 
     getButtonParam(bName,bType,overflow, opt_capability){
@@ -277,7 +278,6 @@ class DownloadPage extends React.Component{
         };
     }
     getButtons(){
-        let allowTypeChange=! (this.props.options && this.props.options.allowChange === false);
         let rt=[
             this.getButtonParam('DownloadPageCharts','chart'),
             {
@@ -331,13 +331,14 @@ class DownloadPage extends React.Component{
         return new Promise((resolve,reject)=>{
             let actions=ItemActions.create({type:this.state.type},false);
             let ext=Helper.getExt(name);
-            let rt={name:name};
             let serverName=actions.nameForUpload(name);
+            let rt={name:serverName};
             if (this.state.type === 'route'){
                 if (ext !== "gpx") {
                     reject("only gpx for routes");
                     return;
                 }
+                resolve(rt);
             }
             if (this.state.type === 'track'){
                 if (ext !== "gpx") {
@@ -356,45 +357,12 @@ class DownloadPage extends React.Component{
                     reject("only .json files allowed for settings");
                     return;
                 }
-                if (this.entryExists(serverName)){
-                    SaveItemDialog.createDialog(serverName,(newName)=>{
-                        return {
-                            existing : this.entryExists(newName)
-                        };
-                    },{
-                        title: "Settings file exists, select new name",
-                        itemLabel: 'Settings',
-                        fixedPrefix: 'user.'
-                    })
-                        .then((newName)=>{
-                            resolve({name:newName});
-                        })
-                        .catch((error)=>{reject(error)})
+            }
+            if (this.state.type === 'layout') {
+                if (ext !== 'json') {
+                    reject("only .json files allowed for layouts");
                     return;
                 }
-                resolve(rt);
-                return;
-            }
-            if (this.state.type === 'layout'){
-                if (this.entryExists(serverName)) {
-                    SaveItemDialog.createDialog(serverName,(newName)=>{
-                        return {
-                            existing : this.entryExists(newName)
-                        };
-                    },{
-                        title: "Layout exists, select new name",
-                        itemLabel: 'Layout',
-                        fixedPrefix: 'user.'
-                    })
-                        .then((newName)=>{
-                            resolve({name:newName});
-                        })
-                        .catch((error)=>{reject(error)})
-                }
-                else{
-                    resolve(rt);
-                }
-                return;
             }
             if (this.state.type === 'chart'){
                 let directExtensions=['gemf','mbtiles','xml'];
@@ -431,8 +399,13 @@ class DownloadPage extends React.Component{
                 }
                 //fallthrough to check existing...
             }
-            if (this.entryExists(name)){
-                reject("already exists");
+            const accessor=this.createAccessor(actions);
+            const existing=this.entryExists(name,accessor);
+            if (existing){
+                existing.dialog=true;
+                existing.fixedPrefix=actions.fixedPrefix;
+                existing.fixedExt=ext;
+                reject(existing);
             }
             else{
                 resolve(rt);
@@ -454,7 +427,33 @@ class DownloadPage extends React.Component{
                     Toast("no data available after upload");
                     return;
                 }
-                actions.localUploadFunction(obj.name, obj.data)
+                let data= obj.data;
+                let name=obj.name;
+                if (this.state.type === 'route'){
+                    try{
+                        let route=new routeobjects.Route();
+                        route.fromXml(data)
+                        if (! route.name) route.name=actions.nameForUpload(name);
+                        const existing=this.entryExists(actions.nameForDownload(route.name));
+                        if (existing){
+                            showPromiseDialog(undefined,(dprops)=><ItemNameDialog
+                                {...dprops}
+                                checkName={(name)=>this.entryExists(name)}
+                                fixedExt={'gpx'}
+                                iname={route.name}
+                                title={`route ${route.name} already exists`}
+                                />)
+                                .then((res)=>{
+                                    route.name=actions.nameForUpload(res.name);
+                                    actions.localUploadFunction(name,route)
+                                        .then(()=>this.fillData(),(e)=>{Toast(e);this.fillData()})
+                                })
+                            return;
+                        }
+                        data=route;
+                    }catch(e){}
+                }
+                actions.localUploadFunction(name, data)
                     .then((ok) => this.fillData())
                     .catch((e)=>{
                         Toast(e);
@@ -463,32 +462,60 @@ class DownloadPage extends React.Component{
             }
         }
     }
-
+    createAccessor(opt_actions){
+        if (! opt_actions) opt_actions=ItemActions.create({type:this.state.type},false);
+        return (data)=>data?opt_actions.serverNameToClientName(data.name):data;
+    }
     createItem(){
-        showPromiseDialog(undefined,(props)=><ValueDialog {...props} title={'enter filename'} value={''} />)
-            .then((name)=>{
-                if (this.entryExists(name)) {
+        const accessor=this.createAccessor();
+        showPromiseDialog(undefined,(dprops)=><ItemNameDialog
+            {...dprops}
+            title={'enter filename'}
+            checkName={(name)=>this.entryExists(name,accessor)}
+            mandatory={true}
+        />)
+            .then((res)=>{
+                const name=(res||{}).name;
+                if (! name) return;
+                if (this.entryExists(name,accessor)) {
                     Toast("already exists");
                     return;
                 }
-                let data="";
-                Requests.postPlain({
-                    request:'upload',
-                    type: this.state.type,
-                    name: name
-                }, data)
-                    .then((res)=>{
-                        this.fillData();
-                    })
-                    .catch((error)=>{
-                        Toast("creation failed: "+error);
-                        this.fillData();
-                    });
+                const template=getTemplate(name);
+                if (template){
+                    showPromiseDialog(undefined,(dprops)=><EditDialogWithSave
+                        {...dprops}
+                        type={'user'}
+                        fileName={name}
+                        data={template}
+                    />)
+                        .then(()=>this.fillData())
+                        .catch((e)=>{
+                            if (e) Toast(e);
+                            this.fillData();
+                        })
+                }
+                else {
+                    let data = "";
+                    Requests.postPlain({
+                        request: 'upload',
+                        type: this.state.type,
+                        name: name
+                    }, data)
+                        .then((res) => {
+                            this.fillData();
+                        })
+                        .catch((error) => {
+                            Toast("creation failed: " + error);
+                            this.fillData();
+                        });
+                }
             })
             .catch(()=>{})
     };
     render(){
         let self=this;
+        const actions=ItemActions.create({type:this.state.type});
         let localDoneFunction=this.getLocalUploadFunction();
         return (
             <Page
@@ -503,9 +530,6 @@ class DownloadPage extends React.Component{
                                 if (data === 'delete'){
                                     return deleteItem(item,this.fillData);
                                 }
-                                if (data === 'download'){
-                                    return this.download(item);
-                                }
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
                                 }
@@ -513,6 +537,7 @@ class DownloadPage extends React.Component{
                                     EditOverlaysDialog.createDialog(item,()=>this.fillData());
                                     return;
                                 }
+                                const accessor=this.createAccessor();
                                 showDialog(undefined,()=>
                                  <FileDialogWithActions
                                      item={item}
@@ -524,7 +549,7 @@ class DownloadPage extends React.Component{
                                      }}
                                      checkExists={(newName)=>{
                                          //checkExisting
-                                         return this.entryExists(newName);
+                                         return this.entryExists(newName,accessor);
                                      }}
                                  />);
                             }}
@@ -545,6 +570,7 @@ class DownloadPage extends React.Component{
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
                             uploadSequence={this.state.uploadSequence}
                             checkNameCallback={this.checkNameForUpload}
+                            fixedPrefix={actions.fixedPrefix}
                         />
                         {(this.state.type === "user")?
                             <Button
@@ -558,7 +584,7 @@ class DownloadPage extends React.Component{
                             null}
                     </React.Fragment>
                 }
-                title={ItemActions.create({type:this.state.type}).headline}
+                title={actions.headline}
                 buttonList={this.getButtons()}
                 />
         );

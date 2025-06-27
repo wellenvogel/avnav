@@ -44,7 +44,7 @@ console.log("android shim loaded");
         },
         handleUpload: function (url, data) {
             log("handleUpload",url,data)
-            return { status:"not implemented"};
+            return JSON.stringify({ status:"not implemented"});
         },
         requestFile: function (type, id, readFile) {
             var pf=function(){

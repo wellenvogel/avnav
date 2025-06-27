@@ -184,7 +184,7 @@ public class Chart implements AvnUtil.IJsonObect {
         }
         e.put("name", (realFile!=null)?realFile.getName():documentFile.getName());
         e.put("time", getLastModified() / 1000);
-        e.put("url", "/"+ Constants.CHARTPREFIX + "/"+keyPrefix+URLEncoder.encode(name, "UTF-8"));
+        e.put("url", "/"+ Constants.CHARTPREFIX + "/"+keyPrefix+URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20"));
         e.put("canDelete",canDelete());
         e.put("info",numFiles+" files");
         e.put("canDownload",isXml() || (numFiles == 1));

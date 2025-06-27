@@ -382,6 +382,12 @@ class PropertyHandler {
                                     })
                         );
                         break;
+                    case PropertyType.DELETED:
+                        warnings.push(dk+" is not used any more");
+                        break;
+                    case PropertyType.STRING:
+                        rt[dk]=v;
+                        break;
                     default:
                         if (eHandler(dk+": cannot be set",true)) return;
                         break;

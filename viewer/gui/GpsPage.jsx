@@ -226,10 +226,6 @@ const GpsPage = (props) => {
             showDialog(dialogCtxRef, () => {
                 return <AisInfoWithFunctions
                     mmsi={mmsi}
-                    hidden={{
-                        AisNearest: true,
-                        AisInfoLocate: true,
-                    }}
                     actionCb={(action, m) => {
                         if (action === 'AisInfoList') {
                             props.history.push('aispage', {mmsi: m});

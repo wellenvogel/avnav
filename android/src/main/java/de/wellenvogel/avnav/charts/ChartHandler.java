@@ -16,7 +16,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,31 +66,18 @@ public class ChartHandler implements INavRequestHandler {
     }
 
     /**
-     * create the name part for the content provider uri
-     * @param fileName
-     * @param url charts/charts/index/type/name/
-     *            this is created by {@link Chart#toJson()}
-     * @return basically the same url after some checks
-     */
-    public static String uriPath(String fileName, String url) throws Exception {
-        if (url == null) return null;
-        KeyAndParts kp=urlToKey(url,true);
-        return CHARTPREFIX+"/"+REALCHARTS+"/"+kp.originalParts[2]+"/"+kp.originalParts[3]+"/"+DirectoryRequestHandler.safeName(kp.originalParts[4],true);
-    }
-
-    /**
      * open a file for download
-     * @param uriPart - corresponds to the path we returned from {@link #uriPath(String, String)}
+     * @param uriPart -
      *                chart/index/type/name/
      *                it is the same like the url returned by {@link Chart#toJson()}
      * @return
      */
     public static ParcelFileDescriptor getFileFromUri(String uriPart, Context ctx) throws Exception {
         if (uriPart == null) return null;
-        KeyAndParts kp=urlToKey(uriPart,true);
+        KeyAndParts kp=urlToKey(uriPart,true,true);
         if (kp.originalParts[2].equals(INDEX_INTERNAL)){
             File chartBase=getInternalChartsDir(ctx);
-            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(URLDecoder.decode(kp.originalParts[4],"UTF-8"),true));
+            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(kp.originalParts[4],true));
             if (!chartFile.exists() || ! chartFile.canRead()) return null;
             return ParcelFileDescriptor.open(chartFile,ParcelFileDescriptor.MODE_READ_ONLY);
         }
@@ -100,7 +86,7 @@ public class ChartHandler implements INavRequestHandler {
             if (secondChartDirStr.isEmpty()) return null;
             if (!secondChartDirStr.startsWith("content:")) return null;
             DocumentFile dirFile=DocumentFile.fromTreeUri(ctx,Uri.parse(secondChartDirStr));
-            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(URLDecoder.decode(kp.originalParts[4],"UTF-8"),true));
+            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(kp.originalParts[4],true));
             if (chartFile == null) return null;
             return ctx.getContentResolver().openFileDescriptor(chartFile.getUri(),"r");
         }
@@ -389,12 +375,15 @@ public class ChartHandler implements INavRequestHandler {
             return false;
         }
         String charturl=AvnUtil.getMandatoryParameter(uri,"url");
-        KeyAndParts kp=urlToKey(charturl,true);
+        KeyAndParts kp=urlToKey(charturl,true,true);
         Chart chart= getChartDescription(kp.key);
         if (chart == null){
             return false;
         }
         else {
+            if (! chart.canDelete()){
+                throw new Exception("chart "+name+" cannot be deleted");
+            }
             File chartfile=chart.deleteFile();
             String cfgName=chart.getConfigName();
             File cfgFile=new File(getInternalChartsDir(this.context),cfgName);
@@ -462,7 +451,7 @@ public class ChartHandler implements INavRequestHandler {
         if (command.equals("scheme")){
             String scheme=AvnUtil.getMandatoryParameter(uri,"newScheme");
             String url=AvnUtil.getMandatoryParameter(uri,"url");
-            KeyAndParts kp=urlToKey(url,true);
+            KeyAndParts kp=urlToKey(url,true,true);
             Chart chart= getChartDescription(kp.key);
             if (chart == null){
                 return RequestHandler.getErrorReturn("chart not found");
@@ -591,7 +580,7 @@ public class ChartHandler implements INavRequestHandler {
      * @return
      * @throws Exception
      */
-    private static KeyAndParts urlToKey(String url, boolean noDemo) throws Exception {
+    private static KeyAndParts urlToKey(String url, boolean noDemo,boolean needsDecode) throws Exception {
         url=url.replaceAll("^//*","");
         url=url.replaceAll("\\?.*", "");
         String parts[]=url.split("/");
@@ -618,14 +607,15 @@ public class ChartHandler implements INavRequestHandler {
             throw new Exception("invalid chart index "+parts[2]);
         if (parts.length < 5) throw new Exception("invalid chart request " + url);
         //the name is url encoded in the key
-        String key=parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+parts[4];
+        String name=needsDecode?URLDecoder.decode(parts[4], "UTF-8"):parts[4];
+        String key=parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+ name;
         return new KeyAndParts(key,parts,5);
     }
 
     private ExtendedWebResourceResponse handleChartRequest(Uri uri) throws Exception {
         String fname=uri.getPath();
         if (fname == null) return null;
-        KeyAndParts kp = urlToKey(fname,false);
+        KeyAndParts kp = urlToKey(fname,false,false);
         try {
             Chart chart = getChartDescription(kp.key);
             if (chart == null) {

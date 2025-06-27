@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
@@ -144,41 +143,6 @@ public class JavaScriptApi {
         return o.toString();
     }
 
-    @JavascriptInterface
-    public boolean downloadFile(String name, String type,String url) {
-        if (detached) return false;
-        if (requestHandler.typeDirs.get(type) == null) {
-            AvnLog.e("invalid type " + type + " for sendFile");
-            return false;
-        }
-        Uri data = null;
-        if (type.equals("layout")) {
-            data = LayoutHandler.getUriForLayout(url);
-        } else if (type.equals("settings")){
-            data= SettingsHandler.getUriForSettings(url);
-        } else {
-            try {
-                data = UserFileProvider.createContentUri(type, name,url);
-            } catch (Exception e) {
-                AvnLog.e("unable to create content uri for " + name,e);
-            }
-        }
-        if (data == null) return false;
-        Intent shareIntent = new Intent();
-        shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_STREAM, data);
-        shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        shareIntent.setType("application/octet-stream");
-        if (type.equals("layout")) {
-            shareIntent.setType("application/json");
-        }
-        if (type.equals("route") || type.equals("track")) {
-            shareIntent.setType("application/gpx+xml");
-        }
-        String title = mainActivity.getText(R.string.selectApp) + " " + name;
-        mainActivity.startActivity(Intent.createChooser(shareIntent, title));
-        return true;
-    }
 
     /**
      * replacement for the missing ability to intercept post requests
@@ -193,6 +157,9 @@ public class JavaScriptApi {
         if (detached) return null;
         try {
             RequestHandler.NavResponse rt= requestHandler.handleNavRequestInternal(Uri.parse(url),new PostVars(data),null);
+            if (rt == null){
+                return RequestHandler.getErrorReturn("no data for"+url).toString();
+            }
             if (! rt.isJson()){
                 return RequestHandler.getErrorReturn("invalid post request").toString();
             }

@@ -24,7 +24,6 @@ import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
-import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
@@ -32,6 +31,7 @@ import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
 import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
+import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -551,24 +551,25 @@ class SettingsPage extends React.Component{
         PropertyHandler.listSettings(true)
             .then((settings)=>{
                 const checkFunction=(newName)=>{
-                    for (let idx in settings){
-                        if (settings[idx].value === newName) return {existing:true};
-                    }
-                    return {}
+                    return checkName(newName,settings,(item)=>item.label+".json");
                 }
-                return SaveItemDialog.createDialog(proposedName,checkFunction,{
-                    title: "Select Name to save settings",
-                    itemLabel: 'Settings',
-                    fixedPrefix: 'user.'
+                return showPromiseDialog(undefined,(dprops)=><ItemNameDialog
+                    {...dprops}
+                    fixedPrefix={'user.'}
+                    fixedExt={'json'}
+                    title={"Select Name to save settings"}
+                    iname={proposedName}
+                    checkName={checkFunction}
+                    />)
+                    .then((res)=>res.name)
                 })
-            })
             .then((settingsName)=>{
                 if (!settingsName || settingsName === 'user.'){
                     return Promise.reject();
                 }
-                proposedName=settingsName;
+                proposedName=actions.nameForUpload(settingsName);
                 return PropertyHandler.uploadSettingsData(
-                    settingsName,
+                    proposedName,
                     PropertyHandler.exportSettings(this.values.getValues(true)),
                     true
                 )
@@ -610,18 +611,30 @@ class SettingsPage extends React.Component{
             let startDialog=()=> {
                 LayoutHandler.listLayouts()
                     .then((list)=> {
-                        let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
-                        SaveItemDialog.createDialog(name,(newName)=>{
-                            return {existing:list.indexOf(newName) >= 0};
-                        },{
-                            title: "Start Layout Editor",
-                            itemLabel: 'Layout',
-                            subtitle: "save changes to",
-                            fixedPrefix: 'user.',
-                            allowOverwrite: true
-                        })
-                            .then((newName)=> {
-                                LayoutHandler.startEditing(newName);
+                        showPromiseDialog(undefined,(dprops)=><ItemNameDialog
+                            {...dprops}
+                            title={"Start Layout Editor"}
+                            iname={LayoutHandler.nameToBaseName(LayoutHandler.name)}
+                            fixedPrefix={'user.'}
+                            fixedExt={'json'}
+                            checkName={(newName)=> {
+                                let cr=checkName(newName,undefined,undefined);
+                                if (cr) return cr;
+                                cr=checkName(newName,list,(item)=>item.name+'.json');
+                                if (cr){
+                                    return {
+                                        info: "existing"
+                                    }
+                                }
+                                else{
+                                    return {
+                                        info: "new"
+                                    }
+                                }
+                            }}
+                        />)
+                            .then((res)=> {
+                                LayoutHandler.startEditing(res.name);
                                 this.props.history.pop();
                             })
                             .catch(()=> {

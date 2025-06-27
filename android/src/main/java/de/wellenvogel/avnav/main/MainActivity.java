@@ -529,7 +529,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                             return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
                         }
                         else {
-                            return new WebResourceResponse("application/octet-stream", "UTF-8", is);
+                            return null;
                         }
                     }
                 }

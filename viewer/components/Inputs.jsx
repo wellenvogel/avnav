@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import ColorDialog from './ColorDialog.jsx';
 import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
 import {SelectDialog} from "./BasicDialogs";
+import Helper from "../util/helper";
 
 /**
  * input elements
@@ -33,8 +34,7 @@ export const valueMissing=(check,value)=>{
 }
 
 export const Input=(props)=>{
-    let className=props.dialogRow?"dialogRow":"";
-    if (props.className) className+=" "+props.className;
+    const [hasError,setError]=useState(false);
     let size=undefined;
     if (props.minSize){
         size=(props.value||"").length;
@@ -43,10 +43,19 @@ export const Input=(props)=>{
     if (size !== undefined && props.maxSize){
         if (size > props.maxSize) size=props.maxSize;
     }
-    if (props.checkFunction){
-        if (! props.checkFunction(props.value)) className+=" error";
-    }
-    if (valueMissing(props.mandatory,props.value)) className+=" missing";
+    useEffect(() => {
+        if (props.checkFunction){
+            const cr=props.checkFunction(props.value);
+            if (cr instanceof Promise){
+                cr.then(()=>setError(false),()=>setError(true));
+            }
+            else setError(!cr);
+        }
+    }, [props.value]);
+    let className=Helper.concatsp(props.dialogRow?"dialogRow":undefined,
+        props.className,
+        hasError?"error":undefined,
+        valueMissing(props.mandatory,props.value)?"missing":undefined);
     return <div className={className} >
         <span className="inputLabel">{props.label}</span>
         <input size={size} type={props.type||"text"} value={props.value} min={props.min} max={props.max} step={props.step} onChange={

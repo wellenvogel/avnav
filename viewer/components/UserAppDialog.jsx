@@ -11,24 +11,10 @@ import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
-import {EditDialog} from "./EditDialog";
+import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
-import {ItemNameDialog} from "./ItemNameDialog";
+import {checkName, ItemNameDialog} from "./ItemNameDialog";
 
-
-const uploadFromEdit=async (name,data,overwrite)=>{
-    try {
-        await Requests.postPlain({
-            request: 'upload',
-            type: 'user',
-            name: name,
-            overwrite:overwrite
-        }, data);
-    }catch (e){
-        Toast(e);
-        throw e;
-    }
-}
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     const dialogContext=useDialogContext();
@@ -59,19 +45,14 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     useEffect(() => {
         listFiles();
     }, []);
-    const checkName=(name)=>{
-        if (! name) return;
-        for (let i=0;i<userFiles.length;i++) {
-            if (userFiles[i].name ===name) return "file "+name+" already exists";
-        }
-    }
+    const checkNameFunction=(name)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>
         <UploadHandler
             uploadSequence={uploadSequence}
             type={'user'}
             checkNameCallback={(name)=>{
                 if (name && name.substring(name.length-4).toUpperCase() === 'HTML') {
-                    let err=checkName(name);
+                    let err=checkNameFunction(name);
                     if (err) return err;
                     return {name: name}
                 }
@@ -103,19 +84,18 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                         iname={""}
                         fixedExt={"html"}
                         mandatory={(v)=>!v}
-                        checkName={checkName}
-                        resolveFunction={(name)=>{
+                        checkName={checkNameFunction}
+                        resolveFunction={(res)=>{
+                            const name=(res||{}).name;
                             if (!name) return;
-                            const data = `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;
-                            dialogContext.showDialog(() => <EditDialog
+                            const data = getTemplate(name);
+                            dialogContext.showDialog(() => <EditDialogWithSave
                                 data={data}
                                 fileName={name}
-                                resolveFunction={async (modifiedData) => {
-                                    await uploadFromEdit(name,modifiedData,true);
+                                resolveFunction={() => {
                                     listFiles(name);
                                 }}
-                                saveFunction={async (modifiedData)=>
-                                    await uploadFromEdit(name,modifiedData,true)}
+                                type={'user'}
                             />)
                         }}/>
                     )

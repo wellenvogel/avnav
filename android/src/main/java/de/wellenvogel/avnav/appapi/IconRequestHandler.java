@@ -82,10 +82,6 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
         throw new IOException("upload not allowed");
     }
 
-    protected String getUrlFromName(String name) throws UnsupportedEncodingException {
-       return "/"+urlPrefix+"/"+
-               URLEncoder.encode(name,"utf-8");
-    }
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         return iconFiles;

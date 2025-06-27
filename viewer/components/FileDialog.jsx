@@ -24,7 +24,7 @@
  */
 import React, {useCallback, useEffect, useState} from "react";
 import keys from '../util/keys.jsx';
-import {Input, InputSelect, Radio} from "./Inputs";
+import {Input, InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
@@ -53,6 +53,7 @@ import Formatter from '../util/formatter';
 import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
+import {ItemNameDialog} from "./ItemNameDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -119,6 +120,7 @@ const buildRequestParameters=(request,item,opt_additional)=>{
             name:item.name
         }
 }
+export const USER_PREFIX='user.';
 export class ItemActions{
     constructor(type) {
         this.type=type;
@@ -139,6 +141,7 @@ export class ItemActions{
         this.infoText='';
         this.className='';
         this.extForView='';
+        this.fixedPrefix=undefined;
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -160,6 +163,13 @@ export class ItemActions{
          * @returns {*}
          */
         this.nameForUpload=(name)=>name;
+        /**
+         * convert the server name to the complete
+         * client name to check for existance
+         * @param name
+         * @returns {*}
+         */
+        this.serverNameToClientName=(name)=>this.nameForDownload(name);
     }
     static create(props,isConnected){
         if (typeof(props) === 'string') props={type:props};
@@ -204,7 +214,19 @@ export class ItemActions{
                 rt.headline='Routes';
                 rt.showIsServer=props.server;
                 rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
-                rt.showView=viewable;
+                rt.showView=async (item)=>{
+                    return new Promise((resolve,reject)=> {
+                        RouteHandler.fetchRoute(item.name, !item.server, (route) => {
+                            resolve({
+                                    name: item.name,
+                                    data: route.toXml()
+                                },
+                                (err) => {
+                                    reject(err)
+                                })
+                        })
+                    });
+                };
                 rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
                 rt.showOverlay=canEditOverlays;
                 rt.showDownload=true;
@@ -221,8 +243,14 @@ export class ItemActions{
                 rt.localUploadFunction=(name,data)=>{
                     //name is ignored
                     try{
-                        let route=new routeobjects.Route("");
-                        route.fromXml(data);
+                        let route;
+                        if (data instanceof routeobjects.Route){
+                            route=data;
+                        }
+                        else {
+                            route = new routeobjects.Route("");
+                            route.fromXml(data);
+                        }
                         if (! route.name){
                             return Promise.reject("route has no name");
                         }
@@ -235,7 +263,13 @@ export class ItemActions{
             case 'layout':
                 rt.headline='Layouts';
                 rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
-                rt.showView = true;
+                rt.showView = async (item)=>{
+                    const layout = await LayoutHandler.loadLayout(item.name,true);
+                    return {
+                        name:item.name+".json",
+                        data: JSON.stringify(layout,undefined,"  ")
+                    }
+                };
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 rt.extForView='json';
@@ -245,9 +279,11 @@ export class ItemActions{
                 rt.nameForUpload=(name)=>{
                     return LayoutHandler.fileNameToServerName(name);
                 }
+                rt.serverNameToClientName=(name)=>name+'.json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
                     return LayoutHandler.uploadLayout(name,data,overwrite);
                 }
+                rt.fixedPrefix=USER_PREFIX;
                 break;
             case 'settings':
                 rt.headline='Settings';
@@ -267,12 +303,14 @@ export class ItemActions{
                             serverName=serverName.substr(prefix.length+1);
                         }
                     });
-                    return 'user.'+serverName.replace(/\.json$/,'');
+                    return USER_PREFIX+serverName.replace(/\.json$/,'');
                 }
+                rt.serverNameToClientName=(name)=>name+'.json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
                    return PropertyHandler.verifySettingsData(data, true,true)
                        .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
                 }
+                rt.fixedPrefix=USER_PREFIX;
                 break;
             case 'user':
                 rt.headline='User';
@@ -439,7 +477,7 @@ const infoRowDisplay=(row,data)=>{
 }
 export const FileDialog = (props) => {
     const [changed, setChanged] = useState(false);
-    const [existingName, setExistingName] = useState(false);
+    const [existingName, setExistingName] = useState(true);
     const [name, setName] = useState(props.current.name);
     const [scheme, setScheme] = useState(props.current.scheme);
     const [allowed, setAllowed] = useState(ItemActions.create(props.current, globalStore.getData(keys.properties.connectedMode, true)))
@@ -455,17 +493,17 @@ export const FileDialog = (props) => {
         }
     }, []);
 
-    const onChange = (newName) => {
+    const onRename = (newName) => {
         if (newName === name) return;
         if (newName === props.current.name) {
             setChanged(false);
-            setExistingName(false);
+            setExistingName(true);
             setName(newName);
             return;
         }
+        setExistingName(false);
         setName(newName);
         setChanged(true);
-        if (props.checkName) setExistingName(props.checkName(newName));
     }
     let cn = existingName ? "existing" : "";
     let rename = changed && !existingName && (name !== props.current.name);
@@ -509,18 +547,31 @@ export const FileDialog = (props) => {
                     className="mbtilesType"/>
 
             }
-            {allowed.showRename ?
-                <div className="dialogRow">
-                    <Input
-                        label={existingName ? "existing" : "new name"}
+            {(allowed.showRename && ! existingName) &&
+                    <InputReadOnly
+                        dialogRow={true}
+                        label={"new name"}
                         className={cn}
                         value={name}
-                        onChange={onChange}
                     />
-                </div>
-                : null
             }
             <DialogButtons>
+                {allowed.showRename && <DB
+                    name={"Rename"}
+                    onClick={()=>{
+                        showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
+                            title={`Rename ${name}`}
+                            {...dprops}
+                            iname={name}
+                            checkName={(name)=>props.checkName?props.checkName(name):undefined}
+                        />)
+                            .then((res)=>{
+                                onRename(res.name)
+                            })
+                            .catch(()=>{})
+                    }}
+                    close={false}
+                >Rename</DB>}
                 {(allowed.showRename || allowed.showScheme) ?
                     <DB name="ok"
                         onClick={() => {
@@ -537,7 +588,7 @@ export const FileDialog = (props) => {
                         }}
                         disabled={!rename && !schemeChanged}
                     >
-                        Change
+                        Save
                     </DB>
                     :
                     null
@@ -578,6 +629,17 @@ export const FileDialog = (props) => {
                 {(allowed.showView) ?
                     <DB name="view"
                         onClick={() => {
+                            if (typeof (allowed.showView) === 'function' ) {
+                                const rs=allowed.showView(props.current);
+                                if (rs instanceof Promise) {
+                                    rs
+                                        .then((res)=>props.okFunction('view',{...props.current,...res}))
+                                        .catch((err)=>Toast(err));
+                                    return;
+                                }
+                                props.okFunction('view',{...props.current,...rs});
+                                return;
+                            }
                             props.okFunction('view', props.current);
                         }}
                         disabled={changed}
@@ -735,7 +797,7 @@ export const FileDialogWithActions=(props)=>{
         }
         if (action === 'view'){
             doneAction(true);
-            history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
+            history.push('viewpage',{type:item.type,name:newItem.name,readOnly:true,data:newItem.data});
             return;
         }
         if (action === 'edit'){

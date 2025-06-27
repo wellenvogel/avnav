@@ -278,7 +278,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
         if (name.startsWith(TMP_PRFX)) throw new Exception("name cannot start with "+TMP_PRFX);
-        String safeName=name.replaceAll("[^\\w. ()+-@]","");
+        String safeName=name.replaceAll("[\u0000-\u001f\u007f\"*/:<>?\\\\|]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }
