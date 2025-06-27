@@ -157,6 +157,9 @@ public class JavaScriptApi {
         if (detached) return null;
         try {
             RequestHandler.NavResponse rt= requestHandler.handleNavRequestInternal(Uri.parse(url),new PostVars(data),null);
+            if (rt == null){
+                return RequestHandler.getErrorReturn("no data for"+url).toString();
+            }
             if (! rt.isJson()){
                 return RequestHandler.getErrorReturn("invalid post request").toString();
             }

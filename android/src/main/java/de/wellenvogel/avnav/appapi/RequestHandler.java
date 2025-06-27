@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.appapi;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
@@ -503,7 +504,9 @@ public class RequestHandler {
         return handleNavRequest(uri,postData,null);
     }
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
-        return handleNavRequestInternal(uri,postData,serverInfo).getResponse();
+        NavResponse resp= handleNavRequestInternal(uri,postData,serverInfo);
+        if (resp == null) return null;
+        return resp.getResponse();
     }
     static class NavResponse{
         private ExtendedWebResourceResponse response;
@@ -615,6 +618,7 @@ public class RequestHandler {
                         resp = handler.handleDownload(name, uri);
                     }catch (Exception e){
                         AvnLog.e("error in download request "+uri.getPath(),e);
+                        return null;
                     }
                 }
                 if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
@@ -763,7 +767,7 @@ public class RequestHandler {
             if (type.equals("api")){
                 try {
                     String apiType = AvnUtil.getMandatoryParameter(uri, "type");
-                    RequestHandler.LazyHandlerAccess handler = handlerMap.get(apiType);
+                    LazyHandlerAccess handler = handlerMap.get(apiType);
                     if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
                     JSONObject resp=handler.getHandler().handleApiRequest(uri,postData, serverInfo);
                     if (resp == null){

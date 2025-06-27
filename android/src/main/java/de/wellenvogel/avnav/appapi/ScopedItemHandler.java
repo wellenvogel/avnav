@@ -181,10 +181,10 @@ public class ScopedItemHandler implements INavRequestHandler{
             name=name.substring(ItemInfo.USERPREFIX.length());
             String filename=name+".json";
             File ifile=new File(userDir,filename);
-            if (! ifile.canRead()) throw new IOException("unable to read layout file: "+ifile.getAbsolutePath());
+            if (! ifile.canRead()) throw new IOException("unable to read file: "+ifile.getAbsolutePath());
             return new FileInputStream(ifile);
         }
-        throw new IOException("neither system nor user layout: "+name);
+        throw new IOException("neither system nor user item: "+name);
     }
 
 

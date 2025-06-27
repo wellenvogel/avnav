@@ -238,6 +238,13 @@ public class WebServer extends Worker {
         return rt;
     }
 
+    class FdKeepingEntity extends InputStreamEntity{
+        ExtendedWebResourceResponse response;
+        public FdKeepingEntity(ExtendedWebResourceResponse resp) {
+            super(resp.getData(), resp.getLength());
+            response=resp;
+        }
+    }
     class NavRequestHandler implements HttpRequestHandler{
 
         @Override
@@ -280,16 +287,11 @@ public class WebServer extends Worker {
                 throw new HttpException("error handling "+url,t);
             }
             if (resp != null){
-                httpResponse.setHeader("content-type","application/json");
+                httpResponse.setHeader("content-type",resp.getMimeType());
                 for (String k:resp.getHeaders().keySet()){
                     httpResponse.setHeader(k,resp.getHeaders().get(k));
                 }
-                if (resp.getLength() < 0){
-                    httpResponse.setEntity(streamToEntity(resp.getData()));
-                }
-                else {
-                    httpResponse.setEntity(new InputStreamEntity(resp.getData(),resp.getLength()));
-                }
+                httpResponse.setEntity(new FdKeepingEntity(resp));
             }
             else {
                 AvnLog.d(NAME,"no data for "+url);
