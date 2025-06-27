@@ -50,12 +50,13 @@ import {
     FeatureAction,
     FeatureInfo, WpFeatureInfo
 } from "../map/featureInfo";
-import {NameDialog} from "../components/RouteInfoHelper";
+import {loadRoutes} from "../components/RouteInfoHelper";
 import routeobjects, {Measure} from "../nav/routeobjects";
 import {KeepFromMode} from "../nav/routedata";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import navdata from "../nav/navdata.js";
 import base from "../base";
+import {checkName, ItemNameDialog, nameProposal} from "../components/ItemNameDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -393,24 +394,35 @@ const createRouteFeatureAction=(props,opt_fromMeasure)=>{
                 if (!measure) return;
                 if (measure.points.length < 1) return;
             }
-            showPromiseDialog(listCtx,(dprops)=><NameDialog
-                {...dprops}
-                title={"Select Name for new Route"}
-            />)
-                .then((routeName)=>{
-                    listCtx.closeDialog();
-                    let newRoute=measure?measure.clone():new routeobjects.Route();
-                    newRoute.name=routeName;
-                    newRoute.server=globalStore.getData(keys.properties.connectedMode);
-                    if (! measure) {
-                        newRoute.addPoint(0, featureInfo.point);
-                        editorRoute.setRouteAndIndex(newRoute,0);
+            loadRoutes()
+                .then( (routes)=> {
+                    const checkRouteName=(name)=>{
+                        return checkName(name,routes,(item)=>item.name);
                     }
-                    else{
-                        editorRoute.setRouteAndIndex(newRoute,newRoute.getIndexFromPoint(featureInfo.point))
-                    }
-                    props.history.push("editroutepage",{center:true});
-                },()=>{})
+                    showPromiseDialog(listCtx, (dprops) => <ItemNameDialog
+                        {...dprops}
+                        title={"Select Name for new Route"}
+                        checkName={checkRouteName}
+                        mandatory={true}
+                        fixedExt={'gpx'}
+                        iname={nameProposal('route')}
+                    />)
+                        .then((res) => {
+                            listCtx.closeDialog();
+                            let newRoute = measure ? measure.clone() : new routeobjects.Route();
+                            newRoute.name = res.name;
+                            newRoute.server = globalStore.getData(keys.properties.connectedMode);
+                            if (!measure) {
+                                newRoute.addPoint(0, featureInfo.point);
+                                editorRoute.setRouteAndIndex(newRoute, 0);
+                            } else {
+                                editorRoute.setRouteAndIndex(newRoute, newRoute.getIndexFromPoint(featureInfo.point))
+                            }
+                            props.history.push("editroutepage", {center: true});
+                        }, () => {
+                        })
+                })
+                .catch(()=>{})
 
         },
         close:false,

@@ -42,10 +42,11 @@ import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem, SelectList} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
 import plugimage from '../images/icons-new/plug.svg';
-import {ItemDownloadButton} from "../components/FileDialog";
+import {ItemActions, ItemDownloadButton} from "../components/FileDialog";
 import UploadHandler from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
-import {existsRoute, loadRoutes, NameDialog} from "../components/RouteInfoHelper";
+import {existsRoute, loadRoutes} from "../components/RouteInfoHelper";
+import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -226,6 +227,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
     const [list,setList]=useState(undefined);
     const [wrOnly,setWrOnly]=useState(true);
     const [uploadSequence,setUploadSequence]=useState(0);
+    const currentList=useRef([]);
     useEffect(() => {
         loadRoutes()
             .then((routeList)=>{
@@ -264,6 +266,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             displayList.push({...item, className: cl})
         })
     }
+    currentList.current=list;
     return <DialogFrame className={'LoadRoutesDialog'} title={title}>
         <Checkbox dialogRow={true} label={"writableOnly"} value={wrOnly} onChange={(nv)=>setWrOnly(nv)}/>
         {! list && <div className="loading">Loading...</div>}
@@ -295,29 +298,30 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             type={'route'}
             doneCallback={(data)=>{
                 try {
+                    const actions=ItemActions.create({type:'route'},connectedMode)
                     let nroute = new routeobjects.Route();
                     nroute.fromXml(data.data);
                     if (! nroute.name) {
-                        Toast("loaded route has no name");
-                        return;
+                        nroute.name=actions.nameForUpload(data.name);
                     }
-                    if (list) {
-                        for (let i=0;i<list.length;i++) {
-                            if (list[i].value === nroute.name) {
-                                showPromiseDialog(dialogContext,(dprops)=><NameDialog
-                                    {...dprops}
-                                    title={"route already exists, select new name"}
-                                    route={nroute}
-                                    existingRoutes={list}
-                                />)
-                                    .then((newName)=>{
-                                        nroute.name=newName
-                                        if (resolveFunction) resolveFunction(nroute);
-                                        dialogContext.closeDialog();
-                                    })
-                                return;
-                            }
-                        }
+                    const routeExists=(name)=> {
+                        return checkName(name,currentList.current,(item)=>item.value+".gpx")
+                    }
+                    const name=actions.serverNameToClientName(nroute.name);
+                    if (routeExists(name)) {
+                        showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
+                            {...dprops}
+                            title={"route already exists, select new name"}
+                            checkName={routeExists}
+                            fixedExt={'gpx'}
+                            iname={nroute.name}
+                            />)
+                            .then((res)=>{
+                                nroute.name=actions.nameForUpload(res.name);
+                                if (resolveFunction) resolveFunction(nroute);
+                                dialogContext.closeDialog();
+                            })
+                        return;
                     }
                     if (resolveFunction) resolveFunction(nroute);
                     dialogContext.closeDialog();
@@ -457,12 +461,22 @@ const EditRouteDialog = (props) => {
                     () => {}
             )
     }
-    const nameDialog=()=>{
-        return showPromiseDialog(dialogContext,(dprops)=><NameDialog
+    const nameDialog=(title)=>{
+        const checkExisting=(name)=>{
+            return checkName(name,availableRoutes,(item)=>item.name);
+        }
+        return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
             {...dprops}
-            route={route}
-            existingRoutes={availableRoutes}
+            iname={route.name}
+            fixedExt={'gpx'}
+            checkName={checkExisting}
+            mandatory={true}
+            title={title}
         />)
+            .then((res)=>{
+                const actions=ItemActions.create({type:'route'},connectedMode);
+                return actions.nameForUpload(res.name);
+            })
     }
     const writable= ! route.server || connectedMode;
     let canDelete = !isActiveRoute() && existsRoute(route.name,availableRoutes) && route.name !== DEFAULT_ROUTE && writable;
@@ -486,7 +500,7 @@ const EditRouteDialog = (props) => {
         <DialogButtons>
             <DB name="new"
                 onClick={() => {
-                    nameDialog()
+                    nameDialog("Choose Route Name")
                         .then((newName)=>{
                             let newRoute=new routeobjects.Route();
                             newRoute.name=newName;
@@ -513,7 +527,7 @@ const EditRouteDialog = (props) => {
             >Download</ItemDownloadButton>
             <DB name="edit"
                 onClick={() => {
-                    nameDialog()
+                    nameDialog("Choose New Name")
                         .then((newName)=>{
                             changeRoute((nr)=>{nr.name=newName})
                         },()=>{})
@@ -558,7 +572,7 @@ const EditRouteDialog = (props) => {
             >Delete</DB>
             <DB name="copy"
                 onClick={() => {
-                    nameDialog()
+                    nameDialog("Save As")
                         .then((newName)=>{
                             let changedRoute=changeRoute((nr)=>{nr.name=newName})
                             if (! connectedMode) changedRoute.server=false;

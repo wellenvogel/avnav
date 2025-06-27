@@ -37,8 +37,14 @@ import {
 import {Input, valueMissing} from "./Inputs";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
+import formatter from "../util/formatter";
 
+export const nameProposal=(prefix)=>{
+    const dt=new Date();
+    return (prefix||'')+formatter.formatDateTime(dt).replace(/[: /]/g,'');
+}
 export const shrinkName=(name,fixedPrefix,fixedExt)=>{
+    if (!name) return name;
     let rt=name;
     if (fixedPrefix) {
         if (Helper.startsWith(rt, fixedPrefix)) rt=rt.substring(fixedPrefix.length);
@@ -52,7 +58,7 @@ export const shrinkName=(name,fixedPrefix,fixedExt)=>{
 }
 
 export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName}) => {
-    const [name, setName] = useState(()=>shrinkName(iname,fixedPrefix,fixedExt));
+    const [name, setName] = useState(()=>shrinkName(iname||'',fixedPrefix,fixedExt));
     const [error, setError] = useState();
     const [proposal,setProposal]=useState();
     const [info,setInfo]=useState();
@@ -62,6 +68,11 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     const completeName = (nn) => {
         if (!fixedExt) return (fixedPrefix?fixedPrefix:'')+nn;
         return (fixedPrefix?fixedPrefix:'')+nn + "." + fixedExt;
+    }
+    let mandatoryFunction=false;
+    if (mandatory){
+        if (typeof(mandatory) === 'function') mandatoryFunction=mandatory;
+        else mandatoryFunction=(name)=>(name === undefined || name === null || ! name);
     }
     useEffect(() => {
         checkNameAndSet(completeName(name));
@@ -107,10 +118,19 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         cr.then(()=>checkResult(),(err)=>checkResult(err));
     },[checkName,checkResult])
     const buttonList=[
+        {
+          name:'reset',
+          label:'Clear',
+          onClick: ()=>{
+              setName('');
+              checkNameAndSet(completeName(''));
+          },
+          close: false
+        },
         DBCancel(),
         DBOk(() => {
             promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, {name:completeName(name)});
-        }, {close: false, disabled: valueMissing(mandatory, name) || !!error})
+        }, {close: false, disabled: valueMissing(mandatoryFunction, name) || !!error})
     ];
     if (proposal){
         buttonList.splice(0,0,{
@@ -133,7 +153,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
                 checkNameAndSet(completeName(nv));
             }}
             className={error?'error':undefined}
-            mandatory={mandatory}
+            mandatory={mandatoryFunction}
             label={fixedPrefix?fixedPrefix:''}
         >
             {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
@@ -153,6 +173,10 @@ ItemNameDialog.propTypes={
     title: PropTypes.func, //use this as dialog title
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string //set a fixed extension
+}
+export const safeName=(name)=>{
+    if (! name) return;
+    return name.replace(/[\u0000-\u001f\u007f"*/:<>?\\|]/g,'');
 }
 export const TMP_PRFX="__avn.";
 /**
@@ -175,7 +199,7 @@ export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
             }
         }
         if (! rt) {
-            const check = name.replace(/[^\w. ()+\-@]/g, "");
+            const check = safeName(name);
             if (check !== name) {
                 rt = {
                     error: 'name contains illegal characters',

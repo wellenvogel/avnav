@@ -29,8 +29,6 @@ import navdata from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
-import {ValueDialog} from "./BasicDialogs";
-import React, {useEffect, useState} from "react";
 import Helper from "../util/helper";
 import Toast from "./Toast";
 
@@ -67,30 +65,6 @@ export const getRouteInfo = (routeName,opt_point) => {
             ,(error) => reject(error)
         );
     })
-}
-export const NameDialog = ({resolveFunction, route, existingRoutes, title}) => {
-    const [routeList,setRouteList]=useState(existingRoutes);
-    useEffect(() => {
-        if (! existingRoutes){
-            loadRoutes()
-                .then((routes) => {
-                    setRouteList(routes)
-                });
-        }
-    }, [existingRoutes]);
-    return <ValueDialog
-        resolveFunction={(newName) => {
-            if (newName) newName = newName.trim();
-            if (resolveFunction) resolveFunction(newName);
-        }}
-        title={title || "Select new name"}
-        value={route?route.name:''}
-        checkFunction={(newName) => {
-            newName = newName.trim();
-            if (newName === '') return 'empty';
-            if (route && newName === route.name) return "unchanged";
-            if (existsRoute(newName, routeList)) return "already exists";
-        }}/>
 }
 export const existsRoute = (name, availableRoutes) => {
     if (!availableRoutes) return false;
