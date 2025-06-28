@@ -278,7 +278,13 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
         if (name.startsWith(TMP_PRFX)) throw new Exception("name cannot start with "+TMP_PRFX);
-        String safeName=name.replaceAll("[\u0000-\u001f\u007f\"*/:<>?\\\\|]","");
+        //in principle we should forbid : in names as we could in theory run on an SD card
+        //but older versions allowed this (accidently) and so e.g. plugin chart configs have a ':'
+        //in the name - original regexp would be [\u0000-\u001f\u007f\"*/:<>?\\\\|]
+        //see https://stackoverflow.com/questions/2679699/what-characters-allowed-in-file-names-on-android/28516488
+        //but as we do not run on a FAT32 SD card any way (and have never been able to do so)
+        //we just allow the :
+        String safeName=name.replaceAll("[\u0000-\u001f\u007f\"*/<>?\\\\|]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }
