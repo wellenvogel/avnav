@@ -483,9 +483,9 @@ const NavPage=(props)=>{
     const wpTimer=useTimer(()=>{
             setWpButtonsVisible(false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
-    useKeyEventHandlerPlain('page',"centerToTarget", setCenterToTarget);
-    useKeyEventHandlerPlain('page',"navNext",navNext);
-    useKeyEventHandlerPlain('page',"toggleNav",()=>navToWp(!activeRoute.hasActiveTarget()));
+    useKeyEventHandlerPlain("centerToTarget",'page', setCenterToTarget);
+    useKeyEventHandlerPlain("navNext",'page',navNext);
+    useKeyEventHandlerPlain("toggleNav",'page',()=>navToWp(!activeRoute.hasActiveTarget()));
     const showAisInfo=useCallback((mmsi)=>{
         if (! mmsi) return;
         showDialog(dialogCtx,()=>{
