@@ -378,6 +378,8 @@ class App extends React.Component {
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             Dimmer.trigger();
         },'global','dimmoff');
+        //an action to ensure keys are grabbed away even if not really used
+        GuiHelpers.keyEventHandler(this,()=>{},'global','dummy');
         this.newDeviceHandler=this.newDeviceHandler.bind(this);
         this.subscription=AndroidEventHandler.subscribe('deviceAdded',this.newDeviceHandler);
         this.remoteChannel=remotechannel;

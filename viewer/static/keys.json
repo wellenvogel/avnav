@@ -19,7 +19,8 @@
       "mobon": ["m","Control- "],
       "anchoron": ["i"],
       "anchoroff": ["Control-i"],
-      "toggledimm": ["z"]
+      "toggledimm": ["z"],
+      "dummy": ["Control-g"]
     },
     "button":{
       "Cancel":"Escape"
