@@ -1,4 +1,4 @@
-import React, {Children, cloneElement, useCallback, useEffect, useRef, useState} from 'react';
+import React, {Children, cloneElement, forwardRef, useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Headline from './Headline.jsx';
 import ButtonList from './ButtonList.jsx';
@@ -23,7 +23,7 @@ const alarmClick =function(){
     }
 };
 
-export const PageFrame=(iprops)=>{
+export const PageFrame=forwardRef((iprops,ref)=>{
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,...forward}=useStore(iprops,{
         storeKeys:{
@@ -68,6 +68,7 @@ export const PageFrame=(iprops)=>{
         isEditing?"editing":undefined
         )
     return <div
+                ref={ref}
                 className={cl}
                 id={id}
                 {...forward}
@@ -83,7 +84,7 @@ export const PageFrame=(iprops)=>{
             }
         )}
     </div>
-}
+})
 
 PageFrame.propTypes={
     className: PropTypes.string,
@@ -112,13 +113,14 @@ PageLeft.propTypes = {
     ])
 }
 
-const Page=(props)=>{
+const Page=forwardRef((props,ref)=>{
         return <PageFrame
             className={props.className}
             id={props.id}
             style={props.style}
             autoHideButtons={props.autoHideButtons}
             hideCallback={props.buttonWidthChanged}
+            ref={ref}
             >
             {props.floatContent && props.floatContent}
             <PageLeft title={props.title}>
@@ -130,7 +132,7 @@ const Page=(props)=>{
                 widthChanged={props.buttonWidthChanged}
             />
         </PageFrame>
-}
+});
 
 Page.pageProperties={
     className: PropTypes.string,

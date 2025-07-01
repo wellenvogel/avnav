@@ -434,6 +434,7 @@ class App extends React.Component {
     }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
+        if (globalStore.getData(keys.gui.global.preventSizeChange,false)) return;
         if (! this.appRef.current) return;
         let current=this.appRef.current.getBoundingClientRect();
         if (! current) return;
