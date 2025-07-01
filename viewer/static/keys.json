@@ -19,10 +19,15 @@
       "mobon": ["m","Control- "],
       "anchoron": ["i"],
       "anchoroff": ["Control-i"],
-      "toggledimm": ["z"]
+      "toggledimm": ["z"],
+      "dummy": ["Control-g"]
     },
     "button":{
       "Cancel":"Escape"
+    },
+    "dialogButton": {
+      "Cancel": "Escape",
+      "cancel": "Escape"
     },
     "addon":{
       "0":"Control-0",

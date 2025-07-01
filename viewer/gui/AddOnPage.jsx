@@ -12,6 +12,8 @@ import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import alarmhandler from "../nav/alarmhandler";
+import GuiHelpers from "../util/GuiHelpers";
+import Keyhandler from "../util/keyhandler";
 
 
 class AddOnPage extends React.Component{
@@ -48,6 +50,7 @@ class AddOnPage extends React.Component{
             },100);
         })
         this.blockIds={};
+        this.keyHandlers=[];
     }
     componentWillUnmount() {
         remotechannel.unsubscribe(this.remoteToken);
@@ -55,6 +58,8 @@ class AddOnPage extends React.Component{
             alarmhandler.removeBlock(id);
         }
         this.blockIds={};
+        globalStore.storeData(keys.gui.global.preventSizeChange,false);
+        this.keyHandlers.forEach((h)=>Keyhandler.deregisterHandler(h));
     }
     blockAlarm(name){
         for (let k in this.blockIds){
@@ -71,22 +76,26 @@ class AddOnPage extends React.Component{
             }
         }
     }
-
     componentDidMount(){
         let self=this;
         Addons.readAddOns(true)
             .then((items)=>{
-                let currenIndex=globalStore.getData(keys.gui.addonpage.activeAddOn);
-                if (self.props.options && self.props.options.addonName){
-                    for (let i=0;i<items.length;i++){
-                        if (items[i].name == self.props.options.addonName){
-                            if (i != currenIndex){
-                                currenIndex=i;
-                                globalStore.storeData(keys.gui.addonpage.activeAddOn,i);
+                let currenIndex = globalStore.getData(keys.gui.addonpage.activeAddOn);
+                for (let i = 0; i < items.length; i++) {
+                    if (self.props.options && self.props.options.addonName) {
+                        if (items[i].name == self.props.options.addonName) {
+                            if (i != currenIndex) {
+                                currenIndex = i;
+                                globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
                             }
                             break;
                         }
                     }
+                    const handler=()=> {
+                        this.setAddon(items[i], i);
+                    };
+                    this.keyHandlers.push(handler);
+                    Keyhandler.registerHandler(handler,"addon",i+"");
                 }
                 if (currenIndex === undefined || currenIndex < 0 || currenIndex >= items.length){
                     globalStore.storeData(keys.gui.addonpage.activeAddOn,0);
@@ -94,6 +103,19 @@ class AddOnPage extends React.Component{
                 self.setState({addOns:items})
             })
             .catch(()=>{});
+        globalStore.storeData(keys.gui.global.preventSizeChange,true);
+    }
+    setAddon(addOn,i){
+        remotechannel.sendMessage(COMMANDS.addOn,i);
+        if (addOn.newWindow === 'true'){
+            window.open(addOn.url,addOn.key);
+            return;
+        }
+        //first unload the iframe completely to avoid pushing to the history
+        globalStore.storeData(keys.gui.addonpage.activeAddOn, -1);
+        window.setTimeout(()=> {
+            globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
+        },100);
     }
     buildButtonList(addOns,activeIndex){
         let rt = [];
@@ -104,16 +126,7 @@ class AddOnPage extends React.Component{
                     name: addOn.key,
                     icon: addOn.icon,
                     onClick: ()=> {
-                        remotechannel.sendMessage(COMMANDS.addOn,i);
-                        if (addOn.newWindow === 'true'){
-                            window.open(addOn.url,addOn.key);
-                            return;
-                        }
-                        //first unload the iframe completely to avoid pushing to the history
-                        globalStore.storeData(keys.gui.addonpage.activeAddOn, -1);
-                        window.setTimeout(()=> {
-                            globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
-                        },100);
+                        this.setAddon(addOn,i);
                     },
                     toggle: activeIndex == i,
                     overflow: true,
@@ -144,10 +157,10 @@ class AddOnPage extends React.Component{
                     this.unblockAlarm('connectionLost');
                 }
                 let showInWindow=currentAddOn.newWindow === 'true';
-                let MainContent= InputMonitor((props)=>
+                let MainContent= (props)=>
                     <div className="addOnFrame">
                         {(currentAddOn.url && ! showInWindow)?<iframe src={url} className="addOn"/>:null}
-                    </div>);
+                    </div>;
                 return (
                     <Page
                         {...self.props}

@@ -239,6 +239,7 @@ let keys={
             propertySequence:K,
             propertiesLoaded: K,
             hasActiveInputs: K,
+            preventSizeChange:K,
             windowDimensions: K,
             layoutEditing:K,
             layoutSequence: K, //updated on layout load

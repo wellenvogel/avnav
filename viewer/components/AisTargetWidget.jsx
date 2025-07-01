@@ -94,7 +94,7 @@ const AisSmallDisplay=(display)=> {
 }
 const AisTargetWidget = (props) => {
     const click = (ev) => {
-        if (ev.stopPropagation) ev.stopPropagation();
+        if (ev && ev.stopPropagation) ev.stopPropagation();
         props.onClick({...props, mmsi: props.target ? props.target.mmsi : undefined});
     }
     let target = props.target || {};
