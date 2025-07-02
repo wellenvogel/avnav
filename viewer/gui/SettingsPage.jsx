@@ -313,7 +313,7 @@ const LayoutItem=(props)=>
             isEditing();
             return;
         }
-        LayoutHandler.loadLayout(newVal)
+        LayoutHandler.loadLayout(newVal,true)
             .then((layout)=>{
                 props.onClick(newVal);
             })
@@ -367,13 +367,18 @@ class SettingsPage extends React.Component{
                     }
                     let values=self.values.getValues(true);
                     //if the layout changed we need to set it
-                    if (values[keys.properties.layoutName] != globalStore.getData(keys.properties.layoutName)){
-                        if (! LayoutHandler.hasLoaded(values[keys.properties.layoutName])){
-                            Toast("layout not loaded, cannot activate it");
-                            return;
-                        }
-                        LayoutHandler.activateLayout();
+                    const layoutName = values[keys.properties.layoutName];
+                    if (!LayoutHandler.hasLoaded(layoutName)) {
+                        LayoutHandler.loadLayout(layoutName)
+                            .then((res) => {
+                                LayoutHandler.activateLayout();
+                                globalStore.storeMultiple(values);
+                                this.props.history.pop();
+                            })
+                            .catch((err) => Toast(err));
+                        return;
                     }
+                    LayoutHandler.activateLayout();
                     globalStore.storeMultiple(values);
                     this.props.history.pop();
                 }
@@ -400,7 +405,7 @@ class SettingsPage extends React.Component{
                     for (let key in masterValues){
                         let description = KeyHelper.getKeyDescriptions()[key];
                         if (description.type === PropertyType.LAYOUT){
-                            promises.push(LayoutHandler.loadLayout(masterValues[key]));
+                            promises.push(LayoutHandler.loadLayout(masterValues[key],true));
                         }
                     }
                     Promise.all(promises)
@@ -660,7 +665,6 @@ class SettingsPage extends React.Component{
 
     resetData(){
         let values=assign({},this.defaultValues);
-
         this.values.setState(values,true);
     }
     hasChanges(){
