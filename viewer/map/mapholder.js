@@ -210,14 +210,14 @@ class MapHolder extends DrawingPositionConverter {
             }
         }, keys.gui.global.layoutEditing);
         globalStore.register(() => {
-            this.gpsLocked = globalStore.getData(keys.map.lockPosition);
+            this.gpsLocked = globalStore.getData(keys.map.lockPosition,LOCK_MODES.off);
         }, keys.map.lockPosition);
         /**
          * locked to GPS
          * @type {number}
          * @private
          */
-        this.gpsLocked = globalStore.getData(keys.map.lockPosition);
+        this.gpsLocked = globalStore.getData(keys.map.lockPosition,LOCK_MODES.off);
 
         globalStore.register(() => {
             this.updateSize();
@@ -485,6 +485,20 @@ class MapHolder extends DrawingPositionConverter {
         return {required: this.requiredZoom, current: v.getZoom()};
     }
 
+    /**
+     * reset any pending user action
+     * and compute the current boat offset
+     */
+    leavePageAction(){
+        if (this.mapUserActionTimer){
+            window.clearTimeout(this.mapUserActionTimer);
+            this.mapUserActionTimer=undefined;
+        }
+        this.inMapUserAction=false;
+        const p=new navobjects.Point();
+        p.fromCoord(this.referencePoint);
+        this.setBoatOffset(p);
+    }
     /**
      * just allow to move the map
      * but without really activating a user action
@@ -1340,7 +1354,20 @@ class MapHolder extends DrawingPositionConverter {
     getBoatOffset() {
         return this.boatOffset;
     }
-
+    setBoatOffsetXY(xy){
+        if (! xy){
+            this.boatOffset = {
+                x: 50,
+                y: 50
+            }
+        }
+        else{
+            this.boatOffset={
+                x:isNaN(xy.x)?50:xy.x,
+                y:isNaN(xy.y)?50:xy.y
+            }
+        }
+    }
     setBoatOffset(point) {
         if (!point) {
             this.boatOffset = {
@@ -1620,32 +1647,28 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
-    setGpsLock(lock, opt_noRemote,opt_force) {
+    setGpsLock(lock, opt_noRemote,opt_force,opt_keepOffset) {
         if (!opt_noRemote) {
             remotechannel.sendMessage(COMMANDS.lock, lock );
         }
+        const gps=globalStore.getMultiple(keys.nav.gps);
+        if (! gps.valid || !globalStore.getData(keys.properties.layers.boat)){
+            lock=LOCK_MODES.off;
+        }
         if (lock === this.gpsLocked && ! opt_force) return;
         if (lock === LOCK_MODES.off){
-            this.setBoatOffset();
-        }
-        else{
-            const gps=globalStore.getMultiple(keys.nav.gps);
-            if (! gps.valid || !globalStore.getData(keys.properties.layers.boat)){
-                lock=LOCK_MODES.off;
+            //this.setBoatOffset();
+        } else {
+            globalStore.storeData(keys.map.activeMeasure, undefined);
+            if (lock === LOCK_MODES.current) {
+                if (! opt_keepOffset) this.setBoatOffset(gps);
+                //no need to set the center here
+            } else {
+                if (! opt_keepOffset) this.setBoatOffset();
+                this.sendReference(gps);
+                this.setCenter(gps, opt_noRemote,this.getBoatOffset());
             }
-            else{
-                globalStore.storeData(keys.map.activeMeasure, undefined);
-                if (lock=== LOCK_MODES.current){
-                    this.setBoatOffset(gps);
-                    //no need to set the center here
-                }
-                else{
-                    this.setBoatOffset();
-                    this.sendReference(gps);
-                    this.setCenter(gps, opt_noRemote);
-                }
-                this.checkAutoZoom();
-            }
+            this.checkAutoZoom();
         }
         globalStore.storeData(keys.map.lockPosition, lock);
     }

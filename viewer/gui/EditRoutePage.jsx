@@ -356,7 +356,6 @@ const RouteSaveModes={
 }
 
 const EditRouteDialog = (props) => {
-    if (!props.route) return null;
     const activeRouteState=useStore({storeKeys: activeRoute.getStoreKeys()})
     const [saveMode,setSaveMode]=useState(RouteSaveModes.UPDATE);
     const dialogContext = useDialogContext();
@@ -365,6 +364,7 @@ const EditRouteDialog = (props) => {
     const [availableRoutes, setAvailableRoutes] = useState();
     const [connectedMode]=useStoreState(keys.properties.connectedMode)
     useEffect(() => {
+        if (!props.route) return;
         loadRoutes()
             .then((routes) => {
                 setAvailableRoutes(routes)
@@ -377,7 +377,7 @@ const EditRouteDialog = (props) => {
     const getCurrentEditor = useCallback(() => {
         return isActiveRoute() ? activeRoute : editor;
     }, []);
-
+    if (!props.route) return null;
     const changeRoute = (cb) => {
         let newRoute = route.clone();
         if (cb(newRoute) !== false) {
@@ -675,16 +675,20 @@ const EditRoutePage = (props) => {
         setWpButtonsVisible(on);
     }, [wpButtonsVisible]);
     const lastGpsLock = useRef();
+    const lastBoatOffset=useRef();
     useEffect(() => {
         checkEmptyRoute();
         RouteHandler.setCurrentRoutePage(PAGENAME);
         MapHolder.setRoutingActive(true);
         MapHolder.showEditingRoute(true);
+        MapHolder.leavePageAction();
         lastGpsLock.current = MapHolder.getGpsLock();
-        MapHolder.setGpsLock(LOCK_MODES.off);
+        lastBoatOffset.current=MapHolder.getBoatOffset();
+        MapHolder.setGpsLock(LOCK_MODES.off,true);
         return () => {
             MapHolder.setRoutingActive(false);
-            MapHolder.setGpsLock(lastGpsLock.current, true);
+            MapHolder.setBoatOffsetXY(lastBoatOffset.current);
+            MapHolder.setGpsLock(lastGpsLock.current, true,false,true);
             RouteHandler.unsetCurrentRoutePage(PAGENAME);
         }
     }, []);
