@@ -43,9 +43,9 @@ let widgetList=[
             value: keys.nav.gps.course,
             isAverage:keys.nav.gps.courseAverageOn
         },
-        formatter: 'formatDirection',
+        formatter: 'formatDirection360',
         editableParameters: {
-            formatterParameters: false
+            formatterParameters: true
         }
 
     },
@@ -57,9 +57,9 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.gps.headingMag
         },
-        formatter: 'formatDirection',
+        formatter: 'formatDirection360',
         editableParameters: {
-            formatterParameters: false
+            formatterParameters: true
         }
     },
     {
@@ -70,9 +70,9 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.gps.headingTrue
         },
-        formatter: 'formatDirection',
+        formatter: 'formatDirection360',
         editableParameters: {
-            formatterParameters: false
+            formatterParameters: true
         }
     },
     {
@@ -127,9 +127,9 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.wp.course
         },
-        formatter: 'formatDirection',
+        formatter: 'formatDirection360',
         editableParameters: {
-            formatterParameters: false
+            formatterParameters: true
         }
     },
     {
@@ -163,9 +163,9 @@ let widgetList=[
         unit: "\u00b0",
         caption: 'Wind Angle',
         storeKeys:WindStoreKeys,
-        formatter: 'formatDirection',
+        formatter: 'formatDirection360',
         editableParameters: {
-            formatterParameters: false,
+            formatterParameters: true,
             value: false,
             caption: false,
             kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
@@ -224,9 +224,9 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.anchor.direction
         },
-        formatter: 'formatDirection',
+        formatter: 'formatDirection360',
         editableParameters: {
-            formatterParameters: false
+            formatterParameters: true
         }
     },
     {

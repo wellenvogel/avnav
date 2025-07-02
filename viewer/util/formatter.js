@@ -168,14 +168,22 @@ formatSpeed.parameters=[
     {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
 ];
 
-const formatDirection=function(dir,opt_rad,opt_180){
+const formatDirection=function(dir,opt_rad,opt_180,opt_lz){
     dir=opt_rad ? Helper.degrees(dir) : dir;
     dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
-    return formatDecimal(dir,3,0);
+    return formatDecimal(dir,3,0,(!!opt_lz && !!opt_180),!!opt_lz);
 };
 formatDirection.parameters=[
     {name:'inputRadian',type:'BOOLEAN',default:false},
-    {name:'range180',type:'BOOLEAN',default:false}
+    {name:'range180',type:'BOOLEAN',default:false},
+    {name:'leadingZero',type:'BOOLEAN',default: false,description:'show leading zeroes (012)'}
+];
+
+const formatDirection360=function(dir,opt_lz){
+    return formatDecimal(dir,3,0,false,!!opt_lz);
+};
+formatDirection360.parameters=[
+    {name:'leadingZero',type:'BOOLEAN',default: false,description:'show leading zeroes (012)'}
 ];
 
 /**
@@ -278,6 +286,7 @@ export default {
     formatLonLatsDecimal,
     formatDistance,
     formatDirection,
+    formatDirection360,
     formatSpeed,
     formatString,
     formatDate,
