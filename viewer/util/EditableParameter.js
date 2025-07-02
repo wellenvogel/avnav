@@ -274,7 +274,7 @@ export class EditableBooleanParameter extends EditableParameter{
     }
     toBool(v){
         if (v === undefined) return false;
-        if (v instanceof String){
+        if (typeof(v) === 'string'){
             return v.toLowerCase() === 'true';
         }
         return !!v;
