@@ -302,7 +302,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
                     let nroute = new routeobjects.Route();
                     nroute.fromXml(data.data);
                     if (! nroute.name) {
-                        nroute.name=actions.nameForUpload(data.name);
+                        nroute.setName(actions.nameForUpload(data.name));
                     }
                     const routeExists=(name)=> {
                         return checkName(name,currentList.current,(item)=>item.value+".gpx")
@@ -317,7 +317,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
                             iname={nroute.name}
                             />)
                             .then((res)=>{
-                                nroute.name=actions.nameForUpload(res.name);
+                                nroute.setName(actions.nameForUpload(res.name));
                                 if (resolveFunction) resolveFunction(nroute);
                                 dialogContext.closeDialog();
                             })
@@ -503,7 +503,7 @@ const EditRouteDialog = (props) => {
                     nameDialog("Choose Route Name")
                         .then((newName)=>{
                             let newRoute=new routeobjects.Route();
-                            newRoute.name=newName;
+                            newRoute.setName(newName);
                             newRoute.server=connectedMode;
                             setRoute(newRoute);
                             setInverted(false);
@@ -529,7 +529,7 @@ const EditRouteDialog = (props) => {
                 onClick={() => {
                     nameDialog("Choose New Name")
                         .then((newName)=>{
-                            changeRoute((nr)=>{nr.name=newName})
+                            changeRoute((nr)=>{nr.setName(newName)})
                         },()=>{})
                 }}
                 close={false}
@@ -574,7 +574,7 @@ const EditRouteDialog = (props) => {
                 onClick={() => {
                     nameDialog("Save As")
                         .then((newName)=>{
-                            let changedRoute=changeRoute((nr)=>{nr.name=newName})
+                            let changedRoute=changeRoute((nr)=>{nr.setName(newName)})
                             if (! connectedMode) changedRoute.server=false;
                             setSaveMode(RouteSaveModes.REPLACE_NEW); //just if something goes wrong during save and we do not close
                             if(save(changedRoute,RouteSaveModes.REPLACE_NEW)) dialogContext.closeDialog()

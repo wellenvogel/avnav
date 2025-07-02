@@ -57,6 +57,7 @@ import {ConfirmDialog} from "../components/BasicDialogs";
 import navdata from "../nav/navdata.js";
 import base from "../base";
 import {checkName, ItemNameDialog, nameProposal} from "../components/ItemNameDialog";
+import {ItemActions} from "../components/FileDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -409,9 +410,11 @@ const createRouteFeatureAction=(props,opt_fromMeasure)=>{
                     />)
                         .then((res) => {
                             listCtx.closeDialog();
+                            const isConnected=globalStore.getData(keys.properties.connectedMode);
                             let newRoute = measure ? measure.clone() : new routeobjects.Route();
-                            newRoute.name = res.name;
-                            newRoute.server = globalStore.getData(keys.properties.connectedMode);
+                            const action=ItemActions.create({type:'route'},isConnected);
+                            newRoute.setName(action.nameForUpload(res.name));
+                            newRoute.server = isConnected;
                             if (!measure) {
                                 newRoute.addPoint(0, featureInfo.point);
                                 editorRoute.setRouteAndIndex(newRoute, 0);
