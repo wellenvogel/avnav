@@ -1659,13 +1659,14 @@ class MapHolder extends DrawingPositionConverter {
         evt.stopPropagation();
         this.featureAction(evt.pixel);
     }
-    featureAction(pixel){
+    featureAction(pixel,opt_fromButton){
         const clickPoint = this.fromMapToPoint(this.pixelToCoord(pixel));
         let wp = this.routinglayer.findTarget(pixel);
         if (wp) {
             let rt = this._callHandlers({type: EventTypes.SELECTWP, wp: wp});
             if (rt) return false;
         }
+        if (! opt_fromButton && ! globalStore.getData(keys.properties.featureInfo)) return false;
         let featureInfos = [];
         const navFeatures=this.navlayer.findFeatures(pixel);
         let hasBoatOrAnchor=false;

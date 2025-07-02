@@ -64,7 +64,7 @@ const settingsSections={
     Map:        [
         keys.properties.startNavPage,
         keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
-        keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,
+        keys.properties.clickTolerance,keys.properties.featureInfo,
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
         keys.properties.mapOnlineUpZoom,
         keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,

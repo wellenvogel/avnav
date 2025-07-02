@@ -424,10 +424,8 @@ let keys={
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,true),
         titleIcons: new Property(true,"red icons in title",PropertyType.CHECKBOX),
         titleIconsGps: new Property(true,"title icons on dashboard page",PropertyType.CHECKBOX),
-        featureInfo: new Property(true,"Overlay Info on Click",PropertyType.CHECKBOX),
-        emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.CHECKBOX),
+        featureInfo: new Property(true,"Feature Info on Click",PropertyType.CHECKBOX),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
-        showMeasure: new Property(true,"Show Measure Button",PropertyType.CHECKBOX),
         measureRhumbLine: new Property(true,"Measure rhumb line (false: great circle)",PropertyType.CHECKBOX),
         mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6]),
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
@@ -466,6 +464,8 @@ let keys={
         showWind: new Property(true, "show wind", PropertyType.DELETED),
         showDepth: new Property(true, "show depth", PropertyType.DELETED),
         windKnots: new Property(true, "wind knots", PropertyType.DELETED),
+        showMeasure: new Property(true,"Show Measure Button",PropertyType.DELETED),
+        emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.DELETED),
     }
 };
 

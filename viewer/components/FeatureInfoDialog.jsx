@@ -372,6 +372,6 @@ export const CenterActionButton={
     onClick: ()=>{
         let center = globalStore.getData(keys.map.centerPosition);
         let pixel=MapHolder.coordToPixel(MapHolder.pointToMap([center.lon,center.lat]))
-        MapHolder.featureAction(pixel);
+        MapHolder.featureAction(pixel,true);
     }
 }
