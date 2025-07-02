@@ -257,11 +257,8 @@ GuardedFeatureListDialog.propTypes=FeatureListDialog.propTypes;
 const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction}) => {
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
-    if (! featureInfo){
-        dialogContext.closeDialog();
-        return null;
-    }
     useEffect(() => {
+        if (! featureInfo) return;
         let infoFunction = INFO_FUNCTIONS[featureInfo.getType()]
         let infoCoordinates = featureInfo.point;
         if (infoFunction && infoCoordinates) {
@@ -274,6 +271,10 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
                 .catch((error) => Toast(error));
         }
     }, []);
+    if (! featureInfo){
+        dialogContext.closeDialog();
+        return null;
+    }
     let extendedInfoRows = INFO_DISPLAY[featureInfo.getType()];
     return (
         <DialogFrame className="FeatureInfoDialog">

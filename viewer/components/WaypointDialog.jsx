@@ -47,13 +47,13 @@ const formatLat=(val,keep)=>{
  *           hideCallback: function to be called when the dialog is hidden (but not on unmount)
  */
 const WaypointDialog=(props)=> {
-    if (!props.waypoint) return null;
     const dialogContext = useDialogContext();
-    const [name, setName] = useState(props.waypoint.name);
-    const [lat, setLat] = useState(formatLat(props.waypoint.lat));
-    const [lon, setLon] = useState(formatLon(props.waypoint.lon));
+    const waypoint=props.waypoint||{};
+    const [name, setName] = useState(waypoint.name);
+    const [lat, setLat] = useState(formatLat(waypoint.lat));
+    const [lon, setLon] = useState(formatLon(waypoint.lon));
     const [decimal, setDecimal] = useState(props.showDecimal || false);
-
+    if (!props.waypoint) return null;
 
     const okFunction = () => {
         let data = {

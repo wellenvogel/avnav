@@ -56,9 +56,9 @@ const updateChildren=(children,index,data)=>{
 }
 
 const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
-    if (! currentValues) return null;
     //TODO: changed handling
     const dialogContext=useDialogContext();
+    if (! currentValues) return null;
     const children=currentValues.children||[];
     const setChildren=(ch)=>{
         if (ch === undefined) return;

@@ -2,7 +2,7 @@
  * Created by andreas on 23.02.16.
  */
 
-import React, {useEffect} from "react";
+import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import routeobjects from '../nav/routeobjects.js';
@@ -20,12 +20,12 @@ const RoutePoint=(showLL)=>{
     }
 }
 const RoutePointsWidget = (props) => {
-    let listRef = undefined;
+    let listRef = useRef();
     const scrollSelected = () => {
-        if (!listRef) return;
-        let el = listRef.querySelector('.activeEntry');
+        if (!listRef.current) return;
+        let el = listRef.current.querySelector('.activeEntry');
         if (el) {
-            let mode = GuiHelper.scrollInContainer(listRef, el);
+            let mode = GuiHelper.scrollInContainer(listRef.current, el);
             if (mode < 1 || mode > 2) return;
             el.scrollIntoView(mode == 1);
         }
@@ -56,7 +56,7 @@ const RoutePointsWidget = (props) => {
                     }
                 }}
                 listRef={(element) => {
-                    listRef = element
+                    listRef.current = element
                 }}
             />
         </WidgetFrame>

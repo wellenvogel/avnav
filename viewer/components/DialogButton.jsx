@@ -11,7 +11,6 @@ const DialogButton=(props)=>{
         const dialogContext=useDialogContext();
         KeyHandler.registerDialogComponent(COMPONENT);
         let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,...forward}=useStore(props);
-        if (visible === false) return null;
         let spanStyle={};
         if (icon !== undefined) {
             spanStyle.backgroundImage = "url(" + icon + ")";
@@ -32,8 +31,9 @@ const DialogButton=(props)=>{
             if (onClick) onClick(ev,dialogContext);
         };
         useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
-            if ( ! props.disabled && props.visible !== false) clickHandler({});
+            if ( ! disabled && visible !== false) clickHandler({});
         });
+        if (visible === false) return null;
         return (
             <button
                 {...forward}
