@@ -511,7 +511,7 @@ const NavPage=(props)=>{
         }
         if (wpButtonsVisible === on) return;
         setWpButtonsVisible(on);
-    },[]);
+    },[wpButtonsVisible]);
     const widgetClick=useCallback((item,data,panel,invertEditDirection)=>{
         let pagePanels=LayoutHandler.getPagePanels(PAGENAME);
         let idx=pagePanels.indexOf(OVERLAYPANEL);
@@ -607,14 +607,6 @@ const NavPage=(props)=>{
                 }
                 return false;
             }
-            additionalActions.push(new FeatureAction({
-                name: 'routeTo',
-                label: 'Route',
-                onClick: (featureInfo) => {
-                    RouteHandler.wpOn(featureInfo.point);
-                },
-                condition: (featureInfo) => showRouteActionsCondition(featureInfo)
-            }));
             additionalActions.push(new FeatureAction({
                 name: 'editRoute',
                 label: 'Edit',
