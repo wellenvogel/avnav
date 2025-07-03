@@ -3,6 +3,7 @@
 (1) enable console input -> about:config
     devtools.chrome ->enable
 
+ (1x) disable "title bar" in customize toolbar (lower left)
  (2) WebDeveloper->Browser Console   
 
 (function(){ /*toggle toolbox*/
@@ -13,6 +14,6 @@ nt.style.setProperty("display",ds?"-moz-box":"none","important");}
 )()
 
 //set window size
-xdotool search --name "AVNav-Web.*Mozilla Firefox" windowsize 1024 768
+xdotool search --name "AVNav-Web.*Mozilla Firefox" windowsize 1000 800
 
 

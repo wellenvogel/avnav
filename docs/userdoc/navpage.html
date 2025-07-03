@@ -91,12 +91,12 @@
           <td>Fullscreen ein/aus (nur auf unterstützten Browsern)<a href="../hints/overlays.html"></a></td>
         </tr>
         <tr>
-          <td><img src="../viewerimages/icons-new/straighten.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/center-action.svg" class="inlineimage"><br>
           </td>
-          <td>Measure</td>
-          <td>Setze eine Markierung auf die Kartenmitte und zeige fortlaufend
-            Kurz und Entfernung zur MItte an, wenn die Karten bewegt wird
-            (Mess-Tool)</td>
+          <td>CenterAction</td>
+          <td>Die gleiche Aktion wie beim Klick auf die Karte (bezogen auf den
+            Kartenmittelpunkt - das Kreuz). Zeigt die <a href="#featurelist">Liste
+              der Features</a> an dieser Position.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -315,6 +315,106 @@
       dargestellt. Die gekrümmten Vektoren zeigen eine potenzielle Kollision
       ggf. viel früher an als die ungekrümmten Vektoren.</p>
     <p><img src="aisvectors-curved.png" alt="curved vectors" class="image"></p>
+    <h3>Berechnung von CPA und Bewegungsvektoren</h3>
+    <p>Um CPA und Bewegungsvektoren zu berechnen benutzt AvNav die von einem AIS
+      Ziel empfangenen Daten (position,COG,SOG, HDG) und die Daten des eigenen
+      Bootes (position, COG, SOG).</p>
+    <p>Vor Version 202507xx benutzte die Berechnung die Daten der AIS Ziele so,
+      wie sie auf der Karten angezeigt werden und die Bootdaten von dem
+      Zeitpunkt, wenn die Berechnung erfolgte.</p>
+    <p>AvNav berechnet:</p>
+    <ul>
+      <li>Den Punkt, an dem sich die beiden Kurse treffen (unser Kurs und der
+        Kurs vom AIS Ziel - beide COG)</li>
+      <li>Den Punkt an dem wir die minimale Distanz zum AIS Ziel haben - die
+        CPA.</li>
+    </ul>
+    <p>Es werden auch die Zeiten berechnet, um diese Punkte zu erreichen.
+      Negative Zeiten bedeuten dabei, das wir an diesem Punkt bereits vorbei
+      sind.<br>
+      Abhängig davon wird entschieden, wie wir das Ziel passieren:</p>
+    <ul>
+      <li>front = wir passieren vor dem Ziel</li>
+      <li>back = wir passieren hinter dem Ziel</li>
+      <li>pass = wir haben das Ziel bereits passiert - oder es gibt keinen
+        Begegnungspunkt - z.B. festliegendes Ziel</li>
+      <li>done = wir haben den Kurs bereits gekreuzt und auch den Punkt mit dem
+        kleinsten Abstand bereits passiert</li>
+    </ul>
+    <p>Basierend auf der berechneten DCPA (minimale Entfernung am CPA Punkt) und
+      TCPA (Zeit bis zum CPA Punkt) setzt AvNav eine Warnung für das Ziel wenn
+      die Werte unter den konfigurierten Schwellwerten liegen.</p>
+    <p>Um zu entscheiden, welches Ziel im AisTargetWidget angezeigt wird und für
+      die Sortierung in der <a href="aisinfopage.html">AIS liste</a> wird für
+      jedes Ziel eine Priorität berechnet.<br>
+      Die Priorität von hoch zu niedrig:</p>
+    <ol>
+      <li>Ziele mit Warnung (d.h. CPA &lt; warning CPA und TCPA &lt; warning
+        TCPA aber &gt; 0)<br>
+        Diese werten nach TCPA sortiert, niedrigste TCPA ganz oben.</li>
+      <li>Andere Ziele sortiert nach kleinstem (dx)²+(dy)² .<br>
+        Für TCPA &lt; 0 (also kleinster Abstand schon in der Vergangenheit)
+        dx=dy=distance/warningDistance.<br>
+        Für TCPA &gt;= 0 dx=tcpa/warningTime, dy=cpa/warningDistance</li>
+    </ol>
+    <p>Auf diese Weise lassen sich die Ziele nach ihrer Bedeutung für die
+      Navigation sortieren.</p>
+    <p>Die bisherige (vor Version 202507xx) genutzte Berechnung hat einige
+      Nachteile:</p>
+    <p>Ein AIS Ziel befindet sich normalerweise in Fahrt und AIS Nachrichten
+      werden nur in relativ großen Zeitabständen gesendet/empfangen. Ausserdem
+      lädt der Anzeigeteil von AvNav (im Browser) die AIS Daten nur in
+      bestimmten Abständen (settings/UpdateTimes/AIS - default 5 Sekunden).
+      Damit werden die AIS Symbole auf der Karte an einer Position dargestellt,
+      die sie einige Zeit in der Vergangenheit hatten. Und auch die darauf
+      basierenden (CPA/Distance) Berechnungen sind damit nicht ganz korrekt -
+      sie nutzen die Boot position/course/speed zur Zeit der Berechnung und AIS
+      Ziel position/course/speed von einem Zeitpunkt an dem die Nachricht vom
+      Ziel versendet wurde.</p>
+    <p>Wenn man eine typische Situation hat mit einem Ziel, dem man sich
+      annähert wird man eine ständige Änderung in den berechneten CPA Werten
+      erleben - auch wenn das Boot und das Ziel Kurs und Geschwindigkeit
+      beibehalten.</p>
+    <p>Ab Version 202507xx bietet AvNav die Option (aktiv als default,
+      settings/AIS/CPA from estimated) CPA und Bewegungsvektoren aus einer
+      geschätzten Position des AIS Zieles zu berechnen. Diese Position ist die
+      gleiche, die als Schattensymbol auf der Karte dargestellt wird. Die
+      Berechnung nimmt dabei an, das das AIS Ziel Kurs und Geschwindigkeit
+      beibehält und berücksichtigt das Alter der AIS Information.</p>
+    <p>Dieses Alter berücksichtigt die folgenden Zeiten:</p>
+    <ol>
+      <li>Die Zeit, die eine AIS Nachricht im AvNav server vom Empfang bis zur
+        Abholung durch den Browser verbringt. Wenn die Daten von&nbsp; <a href="../hints/CanboatAndSignalk.html">SignalK</a>&nbsp;
+        kommen, wird auch die Zeit berücksichtigt, die die Daten bereits in
+        SignalK verbracht haben.</li>
+      <li>Die Zeit vom Empfang im Browser bis zur Berechnung (Maximum: AIS
+        update time - settings/UpdateTimes/AIS - 5s).</li>
+    </ol>
+    <p>Wenn man diese Berechnung nutzt, erhält man normalerweise einen
+      konstanten CPA wenn Boot course/speed und AIS Ziel course/speed gleich
+      bleiben. In den meisten Fällen erhält man damit ein besseres Resultat.</p>
+    <p>Es gibt allerdings 2 Probleme, die man damit nicht lösen kann:</p>
+    <ol>
+      <li>Wenn die Berechnung der Zeit zwischen dem Empfang der AIS Nachricht
+        und der Abholung durch den Browser nicht korrekt ist (z.B. fehlende
+        Zeitsynchronisation zwischen AvNav und SignalK) wird man immer
+        fehlerhafte Resultate bekommen. Problematisch ist, das man das u.U.
+        nicht bemerkt, da der Fehler über die Zeit konstant bleibt.</li>
+      <li>Wenn das AIS Ziel Kurs oder Geschwindigkeit verändert, ist die
+        geschätzte Position falsch. Das ist allerdings im Normalfall nur ein
+        temporäres Problem solange diese Änderung andauert.<br>
+        Im Prinzip könnte man auch ROT (rate of turn) eines Zieles
+        berücksichtigen - allerdings ist es nicht sehr wahrscheinlich, das ROT
+        über eine längere Zeit konstant ist - daher wird das nicht benutzt.</li>
+    </ol>
+    <p>Da beide Berechnungen ihre Limitierungen haben, kann der Nutzer am Ende
+      entscheiden, welche genutzt werden soll.</p>
+    <p>Ab Version 202507xx werden alle AIS Berechnungen in einem separaten
+      Thread (worker) im Browser durchgeführt und werden bei jeder
+      Positionsänderung wiederholt. In älteren Versionen wurden die Berechnungen
+      nur ausgeführt, wenn neue AIS Daten abgerufen wurden.</p>
+    <h2></h2>
+    <h2></h2>
     <h2>Anzeigen (Widgets)</h2>
     <p>Links befinden sich (von oben nach unten):</p>
     <ul>
@@ -473,6 +573,215 @@
       Button weiterschalten. Danach die Karte ggf. wieder auf die Bootposition
       fixieren (LockPos).</p>
     <img src="navpage-route-waypoint.png" alt="" class="fimage">
+    <h2><a name="featurelist" id="featurelist"></a>Feature Info</h2>
+    <p>Wenn man auf die Karte klickt (und settings/map/"Feature Info on Click"
+      aktiviert ist) - oder man den&nbsp; <img src="../viewerimages/icons-new/center-action.svg"
+        alt="" class="inlineimage"> CenterAction klickt wird ein Dialog mit den
+      an dieser Position verfügbaren Features angezeigt.<br>
+      Das können sein:</p>
+    <ul>
+      <li>AIS Targets</li>
+      <li>die aktuelle Route</li>
+      <li>der aktuelle track</li>
+      <li>die aktuelle Meßlinie</li>
+      <li>das Boot</li>
+      <li>ein (oder mehrere) Overlays</li>
+      <li>die aktuelle Karte</li>
+    </ul>
+    <p><img src="navpage-featureinfo1.png" alt="" class="fimage"></p>
+    <p>In diesem Dialog kann man sofort eine einfache Wegepunkt-Navigation
+      starten ("Goto") oder eine neue Route mit dem angeklickten Punkt als
+      Startpunkt erzeugen ("New Route").</p>
+    <p>Beim Klick auf eines der angezeigten Features wird ein neuer Dialog mit
+      detaillierten Informationen und weiteren Aktionen geöffnet.</p>
+    <h3><a name="aisinfo" id="aisinfo"></a>AIS Ziele</h3>
+    <img src="navpage-aisinfo.png" alt="">
+    <p>Die AIS info zeigt detaillierte Informationen zu einem AIS Ziel an. Die
+      folgenden Aktionen stehen zur Verfügung:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisNearest</td>
+          <td>Kehre zur normalen AIS Funktion zurück bei der im AisTargetWidget
+            das Ziel mit der höchsten Priorität angezeigt wird und ein Tracking
+            beendet wird.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoLocate</td>
+          <td>Verfolge (Tracking) das ausgewählte AIS Ziel und zentriere die
+            Karte auf dieses Ziel.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_hide.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoHide</td>
+          <td>Verberge das Ziel für eine gewisse Zeit (settings/ais/hide time)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoList</td>
+          <td>zeige die&nbsp; <a href="aispage.html">AIS listen Seite</a> </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Schliesse den Dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Vector Karten</h3>
+    <p><img src="navpage-featureinfo-ocharts.png" alt="" class="fimage"></p>
+    <p>Wenn es ein wichtiges Objekt an der Position gibt (Tonne, Licht) wird
+      eine Zusammenfassung angezeigt. Mit "Info" bekommt man eine detaillierte
+      Auflistung der Kartenobjekte.</p>
+    <h3>Aktueller Track</h3>
+    <p><img src="navpage-featureinfo-track2.png" alt="" class="fimage"></p>
+    <p>Wenn man in die Nähe des altuellen Tracks geklickt hat und dieser in der
+      Feature Liste enthalten ist, können wir die Feature Info für ihn bekommen.<br>
+      Die verfügbarne Aktionen:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>goto</td>
+          <td>Starte eine Wegepunkt Navigation zum nächsten Punkt im Track.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>center</td>
+          <td>Zentriere die Karten zum nächsten Punkt im Track</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>toroute</td>
+          <td>Wandle den aktuellen Track in eine Route um(siehe <a href="../hints/TracksToRoutes.html">Tracks
+              zu Routen</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Delete</td>
+          <td>Lösche den aktuellen Track. Diese Aktion löscht die Track-Anzeige
+            und benennt die aktuelle Trackdatei um (z.B. von 2025-07-03.gpx zu
+            2025-07-03-1.gpx). Zusätzlich werden potentiell auch die Trackfiles
+            vergangener Tage umbenannt, wenn diese Daten enthalten, die im
+            aktuellen Track angezeigt würden. Das Track-Schreiben wird danach
+            normal fortgesetzt.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Schliesse den Dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Aktuelle Route</h2>
+    <p>Wenn wir auf einen Punkt der aktuellen Route klicken wird sie in der
+      Feature Liste angezeigt. Mit Klick darauf bekommen wir einen Route Feature
+      Info Dialog.</p>
+    <p><img src="navpage-featureinfo-route.png" alt="" class="fimage"></p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>goto</td>
+          <td>Starte eine Routen-Navigation ab dem angezeigten Punkt der Route.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>center</td>
+          <td>Zentriere die Karte auf den angezeigten Punkt der Route.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>editRoute</td>
+          <td>Öffne den <a href="editroutepage.html">Routeneditor</a> mit der
+            aktuellen Route</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Schliesse den Dialog.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Messung</h3>
+    <p>Mit einem Klick auf die Karten oder den&nbsp; <img src="../viewerimages/icons-new/center-action.svg"
+        alt="" class="inlineimage"> CenterAction button kann man eine Messung
+      starten/erweitern. Diese Funktion ist nur verfügbar, wenn die Karte nicht
+      auf die Boot-Position gelockt ist.</p>
+    <p><img src="navpage-measure1.png" alt="" class="fimage"></p>
+    <p>Mit Klick auf den "Measure" button wird auf der aktuellen Position ein
+      Icon plaziert (see usericons) und zum Kartenmittelpunkt wird eine Linie
+      angezeigt mit der Richtung und dem Abstand vom Startpunkt. Auch im Center
+      Widget werden die entsprechenden Daten angezeigt.</p>
+    <p><img src="navpage-measure2.png" alt="" class="fimage"></p>
+    <p>Bei erneutem Klick auf den&nbsp; <img src="../viewerimages/icons-new/center-action.svg"
+        alt="" class="inlineimage"> CenterAction (oder auf die Karte) erhält man
+      Aktionen um die Messung zu beenden oder zu erweitern. Man kann die Messung
+      auch durch Klick auf das kleine rote Messungs-Icon oben rechts auf der
+      Karte beenden.</p>
+    <p><img src="navpage-measure3.png" alt="" class="fimage"></p>
+    <p>Actions:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/straighten.svg" alt="" class="inlineimage">+
+          </td>
+          <td>Measure</td>
+          <td>+Measure: Erweitere die Messung um den aktuellen Punkt. Die
+            Anzeige summiert die Distanzen.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/straighten-off.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MeasureOff</td>
+          <td>Beende die aktive Messung.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Wenn es eine aktive Messung gibt und man in der Feature Liste auf
+      "measure" klickt, erhält man die Option, die Messung in eine Route
+      umzuwandeln.</p>
+    <p><img src="navpage-measure-toroute.png" alt=""> </p>
     <h2>Spezielle Funktionen</h2>
     <h3><a name="waypoint" id="waypoint"></a>Simple Wegpunkt Navigation</h3>
     <p>Schritte:</p>
@@ -484,6 +793,15 @@
       <li>LockMarker </li>
       <li>Lock Boot </li>
     </ol>
+    <p>Alternative Schritte:</p>
+    <ol>
+      <li>Klick auf die Karten oder <img src="../viewerimages/icons-new/center-action.svg"
+          alt="" class="inlineimage"> CenterAction button. Die Feature Liste
+        wird angezeigt.</li>
+      <li>Klick auf "Goto"</li>
+    </ol>
+    <ol>
+    </ol>
     <h3>Peilungen</h3>
     <p>Wenn man einen Wegpunkt aktiv hat (Marker Button grün) und die Karte
       nicht auf das Schiff "gelockt" ist (Schiffsbutton nicht grün), wird beim
@@ -491,13 +809,7 @@
       Anzeige des aktuellen Abstandes vom Marker bzw. Schiff zum
       Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
       auf Peilziel verschieben und Peilung ablesen.</p>
-    <h3>Feature Info</h3>
-    <p>Wenn man auf die Karte klickt erscheint ein Dialog mit Informationen zum
-      angeklickten Punkt. In diesem Dialog findet man einen Butoon um sofort
-      eine Navigation zu diesem Ziel zu starten.</p>
-    <p></p>
-    <p>Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
-        alt="" class="inlineimage">zum <a href="editroutepage.html">Routen
-        Editor</a>.</p>
+    Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
+      alt="" class="inlineimage">zum <a href="editroutepage.html">Routen Editor</a>.
   </body>
 </html>

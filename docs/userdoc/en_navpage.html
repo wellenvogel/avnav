@@ -98,12 +98,11 @@
           <td>Fullscreen on/off (supported browsers only)<a href="../hints/overlays.html"></a></td>
         </tr>
         <tr>
-          <td><img src="../viewerimages/icons-new/straighten.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/center-action.svg" class="inlineimage"><br>
           </td>
-          <td>Measure</td>
-          <td>set a marker at the current map center and show a line to the
-            center together with course and distance (also in the "center
-            Display" widget) - measure tool</td>
+          <td>CenterAction</td>
+          <td>Same action as tapping on the map at the center (cross hair). Will
+            bring up the <a href="#featurelist">FeatureList</a> at this point.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/more_left.svg" alt="" class="inlineimage">
@@ -265,8 +264,8 @@
       If you enable this in the setting the targets will also show an estimated
       position (shadow) based on the age of the AIS information.</p>
     <p>By clicking an AIS target (or the "next AIS" display) you will be shown
-      all <a href="aisinfopage.html">information</a> for this target and you
-      can change to the <a href="aispage.html">list of all AIS targets</a>.</p>
+      all <a href="#aisinfo">information</a> for this target and you can change
+      to the <a href="aispage.html">list of all AIS targets</a>.</p>
     <h3>AIS Motion Vectors</h3>
     <p>A basic introduction to the topic of true and relative motion vectors and
       how they are used in navigation can be found at</p>
@@ -309,7 +308,7 @@
     <p>To compute the CPA data and the motion vectors AvNav considers the
       received data of an AIS target (position,COG,SOG, HDG) and the data of the
       own boat (position, COG, SOG).</p>
-    <p>Before version 2025xxxx the computation uses the AIS target data as shown
+    <p>Before version 202507xx the computation uses the AIS target data as shown
       on the map and the boat data as shown when this data is computed.</p>
     <p>AvNav computes:</p>
     <ul>
@@ -331,8 +330,21 @@
     <p>Based on the computed DCPA (minimal distance at the CPA point) and TCPA
       (time to reach this point) AvNav sets a warning flag at the target if the
       values are below the configured threshold.</p>
-    <p>#TODO: priority</p>
-    <p>The used computation approach has some drawbacks:</p>
+    <p>To select which target is shown in the AisTargetWidget and for sorting
+      items in the <a href="aisinfopage.html">ais list</a> AvNav computes a
+      priority for each target.<br>
+      The priority (from high to low):</p>
+    <ol>
+      <li>Targets with warning (i.e. CPA &lt; warning CPA and TCPA &lt; warning
+        TCPA but &gt; 0)<br>
+        They are sorted by the TCPA with lowest TCPA being on top</li>
+      <li>other targets sorted by lowest (dx)²+(dy)² .<br>
+        For TCPA &lt; 0 (CPA already passed) dx=dy=distance/warningDistance.<br>
+        For TCPA &gt;= 0 dx=tcpa/warningTime, dy=cpa/warningDistance</li>
+    </ol>
+    <p>This way the targets should be sorted by their importance.</p>
+    <p>The originally (before 202507xx) used computation approach has some
+      drawbacks:</p>
     <p>The AIS target normally moves and AIS messages are only received at
       certain time intervals. Moreover the AvNav viewer part (in the browser)
       only fetches the AIS data every nn seconds (settings/UpdateTimes/AIS -
@@ -346,7 +358,7 @@
       approach in the near future you will observe a constant change in the
       computed CPA (and motion vector) data - even if the target keeps
       course/speed and your vessel also keeps course and speed.</p>
-    <p>Starting from version 2025xxxx AvNav will give you the option (activated
+    <p>Starting from version 202507xx AvNav will give you the option (activated
       by default, settings/AIS/CPA from estimated) to compute the CPA and motion
       vector data from an estimated position of the AIS target. This position is
       the same as the one drawn on the map as a "shadow". The estimation simply
@@ -381,6 +393,10 @@
     </ol>
     <p>As both computations have their limits AvNav leaves the decision to the
       user - defaulting to use the estimated position.</p>
+    <p>Starting from 202507xx all AIS computations are done in the browser in a
+      separate thread (worker) and will be repeated each time the boat position
+      changes or new AIS data is fetched from the server. In versions before
+      most computations have only been executed when fetching new AIS data.</p>
     <h2>Displays (Widgets)</h2>
     <p></p>
     <p></p>
@@ -431,6 +447,7 @@
     <p>If you click on the lower right displays you will be taken to the <a href="dashboardpage.html">dashboard</a>.</p>
     <p><a name="lowerleftclick" id="lowerleftclick"></a>Clicking on the lower
       left displays will bring up a couple of additional waypoint buttons.</p>
+    <h2>Waypoint Buttons</h2>
     <p><img src="navpage-waypoint-buttons.png" alt="" class="fimage"> </p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -514,6 +531,7 @@
         </tr>
       </tbody>
     </table>
+    <h2>Route Info</h2>
     <p>If a route is active there will be a display for the route data on the
       left side (name, remaining distance, ETA).</p>
     <p>In routing mode the next target waypoint will be activated automatically
@@ -532,6 +550,214 @@
       far), you can click on the waypoint data and use the <img src="../viewerimages/icons-new/nextwp.svg"
         alt="" class="inlineimage"> button to set the next waypoint as target.</p>
     <img src="navpage-route-waypoint.png" alt="" class="fimage">
+    <h2><a name="featurelist" id="featurelist"></a>Feature Info</h2>
+    <p>When you click on the map (and have settings/map/Feature Info on Click
+      enabled) - or you click the CenterAction button you will bring up a dialog
+      showing you the available features at this position. Features can be:</p>
+    <ul>
+      <li>AIS Targets</li>
+      <li>a current route</li>
+      <li>the current track</li>
+      <li>the current measure line</li>
+      <li>the boat</li>
+      <li>any overlay</li>
+      <li>the current chart</li>
+    </ul>
+    <p><img src="navpage-featureinfo1.png" alt="" class="fimage"></p>
+    <p>This dialog will immediately allow you to start a simple way point
+      navigation ("Goto") or to create a new route using the selected point as
+      starting point.</p>
+    <p>Clicking on any of the items will bring up a second dialog with more
+      detailed information and additional actions.</p>
+    <h3><a name="aisinfo" id="aisinfo"></a>AIS Items</h3>
+    <img src="navpage-aisinfo.png" alt="">
+    <p>The AIS info will show you the details about an AIS target. It provides
+      the following actions:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisNearest</td>
+          <td>Go back to the normal AIS function showing the nearest (highest
+            priority) target in the AisTargetWidget</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoLocate</td>
+          <td>Make the selected target the one we follow (i.e. show in the
+            AisTargetWidget) and center the map to it</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_hide.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoHide</td>
+          <td>Hide the selected target temporarily (settings/ais/hide time)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoList</td>
+          <td>show the <a href="aispage.html">ais list page</a> </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Close the dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Vector Charts</h3>
+    <p><img src="navpage-featureinfo-ocharts.png" alt="" class="fimage"></p>
+    <p>If there is an important chart item (buoy or light) being selected a top
+      level info is shown. You get a couple of additional actions.</p>
+    <h3>Current Track</h3>
+    <p><img src="navpage-featureinfo-track2.png" alt="" class="fimage"></p>
+    <p>If we tapped near the current track and it is included in the Feature
+      List we can get the feature info for it.<br>
+      The available actions:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>goto</td>
+          <td>Start a waypoint navigation to the closest point in the current
+            track. This can be slightly different from the "Goto" in the feature
+            list as this really targets the klick point on the map.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>center</td>
+          <td>Center the map to the closest point of the track</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>toroute</td>
+          <td>Convert the current track into a route (see <a href="../hints/TracksToRoutes.html">Tracks
+              to Routes</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Delete</td>
+          <td>Clean the current track. This will rename the current track file
+            to a file with a suffix (like from 2025-07-03.gpx to
+            2025-07-03-1.gpx). Additionally it will potentially also rename
+            files from the day before (depending on the length of the track).
+            TRack writing afterwards continues as normal - but the history is
+            removed from the display.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Close the dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Current Route</h2>
+    <p>If we tap near a point from the current route we will get it in the
+      feature list. By clicking on it we get a route feature info dialog.</p>
+    <p><img src="navpage-featureinfo-route.png" alt="" class="fimage"></p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>goto</td>
+          <td>Start a waypoint navigation to the closest point in the route
+            (like shown in the info). This can be slightly different from the
+            "Goto" in the feature list as this really targets the klick point on
+            the map.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>center</td>
+          <td>Center the map to the selected point in the route</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>editRoute</td>
+          <td>Open the <a href="editroutepage.html">route editor</a> with the
+            current route</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Close the dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Measure</h3>
+    <p>When tapping on the map or using the <img src="../viewerimages/icons-new/center-action.svg"
+        alt="" class="inlineimage"> CenterAction button you will be able to
+      start/extend a measure function. This is only available if the map is not
+      locked to the boat position.</p>
+    <p><img src="navpage-measure1.png" alt="" class="fimage"></p>
+    <p>By clicking the "Measure" button you will get an icon (see usericons) at
+      the start position and a line with direction and distance to the current
+      map center. The Center Widget will also display the measure information.</p>
+    <p><img src="navpage-measure2.png" alt="" class="fimage"></p>
+    <p>By tapping the <img src="../viewerimages/icons-new/center-action.svg" alt=""
+        class="inlineimage"> CenterAction button again (or tapping on the map)
+      you will get actions to end the measure or to extend the measure. You can
+      also end the measure by clicking the small red measure icon in upper right
+      of the map.</p>
+    <p><img src="navpage-measure3.png" alt="" class="fimage"></p>
+    <p>Actions:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>Name</td>
+          <td>Action</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/straighten.svg" alt="" class="inlineimage">+
+          </td>
+          <td>Measure</td>
+          <td>+Measure: Add the current center/tapped point to the existing
+            measure. The measure display will sum up the distances.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/straighten-off.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MeasureOff</td>
+          <td>End the active measure</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If there is an active measure and you click the measure row in the
+      feature list you will get an option to convert the measure into a route.</p>
+    <p><img src="navpage-measure-toroute.png" alt=""> </p>
+    
     <h2>Special Functions</h2>
     <h3><a name="waypoint" id="waypoint"></a>Simple Waypoint Navigation</h3>
     <p>Steps:</p>
@@ -543,6 +769,15 @@
       <li>LockMarker (start navigation) </li>
       <li>Lock Chart</li>
     </ol>
+    <p>Alternative steps:</p>
+    <ol>
+      <li>Tap on the chart or use the <img src="../viewerimages/icons-new/center-action.svg"
+          alt="" class="inlineimage"> CenterAction button to bring up the
+        feature list</li>
+      <li>Tap "Goto" in the feature list dialog</li>
+    </ol>
+    <ol>
+    </ol>
     <h3>Bearings</h3>
     <p>If a waypoint is active and the chart is not locked to the boat position
       you have a "Center" display at the left side. This shows the center
@@ -550,10 +785,6 @@
       waypoint to the center. For a simple bearing just move the chart center
       (cross) to the bearing target and read the bearing from the "Center"
       display.</p>
-    <h3>Feature Info</h3>
-    <p>When clicking on the map a feature info dialog will pop up. Within this
-      dialog you also have a button to immediately start a navigation to the
-      clicked point.</p>
     <p>To start a route - change with&nbsp; <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage">to the <a href="editroutepage.html">route
         editor</a>.</p>
