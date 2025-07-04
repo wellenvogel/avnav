@@ -427,14 +427,18 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         if self.initial:
           with self.filelock:
             if not self.currentFile is None:
+              AVNLog.info("closing trackfile - initial")
               self.currentFile.close()
+              self.currentFile=None
           self.initial=False
           self._readTrackDataFromFiles()
         with self.filelock:
           if not curfname == self.fname or self.currentFile is None:
             self.fname = curfname
             if not self.currentFile is None:
+              AVNLog.info("closing trackfile - new name")
               self.currentFile.close()
+              self.currentFile=None
             newFile = True
             realfilename = self._nameToFullName(curfname,self.WEXT)
             AVNLog.info("new trackfile %s", realfilename)

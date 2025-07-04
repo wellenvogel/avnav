@@ -90,8 +90,8 @@ TrackLayer.prototype.navEvent = function () {
     }
     let startts = newTrack[0].ts;
     let mystart = this.currentTrack.length ? this.currentTrack[0].ts : 0;
-    if ((mystart > 0 && (startts - mystart) > 3600) || mystart == 0) {
-        //once per hour we do a redraw...
+    if ((mystart > 0 && (startts < mystart || (startts - mystart) > 300)) || mystart === 0) {
+        //once per 5 minutes we redraw
         this.currentTrack = newTrack.slice(0);
         this.trackPoints = [];
         for (let i = 0; i < this.currentTrack.length; i++) {
