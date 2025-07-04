@@ -12,6 +12,11 @@ class LeaveHandler{
             this._callHandlers(ev);
             if (!self.prevent) return;
             (ev || window.event).returnValue =txt;
+            if (ev){
+                try{
+                    ev.preventDefault();
+                }catch (e){}
+            }
             return txt;
         }
     }
