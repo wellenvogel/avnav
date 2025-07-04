@@ -51,6 +51,7 @@ import {
     TrackFeatureInfo,
     WpFeatureInfo
 } from "./featureInfo";
+import Leavehandler from "../util/leavehandler";
 
 
 export const EventTypes = {
@@ -385,6 +386,10 @@ class MapHolder extends DrawingPositionConverter {
         this.mapUserActionTimer=undefined;
         this.scaleControl = undefined;
         this.lastRender = undefined;
+        this.saveCenterTimer=undefined;
+        Leavehandler.subscribe(()=>{
+            this.saveCenter(true);
+        })
     }
 
     updateStoreKeys(newKeys, page, name) {
@@ -525,6 +530,7 @@ class MapHolder extends DrawingPositionConverter {
                         const centerPoint = this.fromMapToPoint(view.getCenter());
                         this.sendReference(centerPoint);
                     }
+                    this.saveCenter();
                 }
             }, globalStore.getData(keys.properties.remoteGuardTime, 2) * 1000)
         }
@@ -1128,6 +1134,7 @@ class MapHolder extends DrawingPositionConverter {
                 this.setMapZoom(this.minzoom);
                 this.referencePoint = this.pointFromMap(view.getCenter());
                 this.zoom = view.getZoom();
+                this.saveCenter();
 
             }
         }
@@ -1548,6 +1555,7 @@ class MapHolder extends DrawingPositionConverter {
         this.referencePoint = [point.lon, point.lat];
         this.boatOffset = (opt_offset !== undefined) ? opt_offset : {x: 50, y: 50};
         this._centerToReference();
+        this.saveCenter();
     }
 
     /**
@@ -1607,6 +1615,7 @@ class MapHolder extends DrawingPositionConverter {
         referencePix[1] += deltayPix;
         this.referencePoint = this.transformFromMap(this.pixelToCoord(referencePix));
         this._centerToReference();
+        this.saveCenter();
     }
 
     /**
@@ -1914,14 +1923,26 @@ class MapHolder extends DrawingPositionConverter {
      * save the current center and zoom
      * @private
      */
-    saveCenter() {
+    saveCenter(opt_force) {
+        if (this.saveCenterTimer !== undefined){
+            window.clearTimeout(this.saveCenterTimer);
+            this.saveCenterTimer=undefined;
+        }
         let raw = JSON.stringify({
             center: this.referencePoint,
             zoom: this.zoom,
             requiredZoom: this.requiredZoom,
             boatOffset: this.getBoatOffset()
         });
-        LocalStorage.setItem(STORAGE_NAMES.CENTER, undefined, raw);
+        if (opt_force){
+            LocalStorage.setItem(STORAGE_NAMES.CENTER, undefined, raw);
+        }
+        else {
+            this.saveCenterTimer = window.setTimeout(() => {
+                LocalStorage.setItem(STORAGE_NAMES.CENTER, undefined, raw);
+            }, globalStore.getData(keys.properties.mapSaveCenterTimeout) * 1000);
+        }
+
     }
 
     /**

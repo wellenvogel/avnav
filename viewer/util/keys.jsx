@@ -437,6 +437,7 @@ let keys={
         mapScaleBarText: new Property(true,"Show text on scale bar",PropertyType.CHECKBOX),
         mapZoomLock: new Property(true,"Lock to int zoom levels with buttons", PropertyType.CHECKBOX),
         mapAlwaysCenter: new Property(true,"Show center cross when locked",PropertyType.CHECKBOX),
+        mapSaveCenterTimeout: new Property(10,"Min save center interval(s)",PropertyType.RANGE,[5,100,5]),
         remoteChannelName: new SplitProperty('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new SplitProperty(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new SplitProperty(false,'write to remote channel',PropertyType.CHECKBOX),
