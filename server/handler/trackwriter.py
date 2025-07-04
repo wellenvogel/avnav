@@ -157,7 +157,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         self._renameFile(fn)
     with self.tracklock:
       self.track=[]
-      self.modifySequence+=1
+      self.modifySequence=time.monotonic()
     return AVNUtil.getReturnData()
 
   def handleTrackRequest(self, requestParam,v2=False):
@@ -181,7 +181,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       frt = self.getTrackFormatted(maxnum, interval)
       if not v2:
         return frt
-      return AVNUtil.getReturnData(data=frt,sequence=self.modifySequence,full=full)
+      return AVNUtil.getReturnData(data=frt,sequence=self.modifySequence,now=AVNUtil.utcnow(),full=full)
 
   #get the track as array of dicts
   #filter by maxnum and interval
@@ -332,6 +332,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     return rt
 
   def _readTrackDataFromFiles(self):
+    self.track=[]
     fnames=self._getNecessaryNames()
     currentTime = datetime.datetime.utcnow()
     minTime=currentTime-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
@@ -343,8 +344,9 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         data = self.readTrackFile(realfilename)
         with self.tracklock:
           for trkpoint in data:
-            if (trkpoint.ts >= minTime):
+            if trkpoint.ts >= minTime and trkpoint.ts < currentTime:
               self.track.append(trkpoint)
+    self.modifySequence=time.monotonic()
 
   def _renameFile(self,basename):
     fullbase=os.path.join(self.baseDir,basename)
@@ -404,6 +406,11 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     super().updateConfig(param, child)
     self.wakeUp()
 
+  def timeChanged(self):
+    super().timeChanged()
+    #reread track data from logs and request full query
+    self.initial=True
+
   def periodicRun(self):
     try:
       self.loopCount+=1
@@ -435,7 +442,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
             self.currentFile = open(realfilename, "a",encoding='utf-8')
             self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
             self.currentFile.flush()
-        self.setInfo('main', "writing to %s" % (realfilename,), WorkerStatus.NMEA)
+        self.setInfo('main', "writing to %s" % (self.fname,), WorkerStatus.NMEA)
       else:
         self.setInfo('main','writing to memory only',WorkerStatus.NMEA)
       if self.loopCount >= 10:
@@ -479,7 +486,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         AVNLog.info("deleting current track!")
         with self.tracklock:
           self.track=[]
-          self.modifySequence+=1
+          self.modifySequence=time.monotonic()
         with self.filelock:
           if self.currentFile is not None:
             self.currentFile.close()

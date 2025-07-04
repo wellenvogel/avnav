@@ -53,9 +53,10 @@ class TrackData {
      *
      * @param {array} data
      * @param {boolean} [opt_full]
+     * @param opt_now timestamp from server - use this for cleanup if received
      * @private
      */
-    handleTrackResponse(data,opt_full) {
+    handleTrackResponse(data,opt_full,opt_now) {
         let lastts = 0;
         if (opt_full){
             this.currentTrack=[];
@@ -71,12 +72,18 @@ class TrackData {
         //cleanup old track data
         let maxage = globalStore.getData(keys.properties.initialTrackLength) * 3600; //len is in h
         let curgps = globalStore.getMultiple(keys.nav.gps);
-        let now = new Date();
-        if (curgps.rtime) {
-            //if we have a valid GPS time we take this as our current time for the track...
-            now = curgps.rtime;
+        let oldest;
+        if (opt_now === undefined) {
+            let now = new Date();
+            if (curgps.rtime) {
+                //if we have a valid GPS time we take this as our current time for the track...
+                now = curgps.rtime;
+            }
+            oldest = now.getTime() / 1000 - maxage;
         }
-        let oldest = now.getTime() / 1000 - maxage;
+        else{
+            oldest=opt_now-maxage;
+        }
         base.log("removing track data older then " + oldest);
         while (this.currentTrack.length > 0) {
             if (this.currentTrack[0].ts > oldest) break;
@@ -117,7 +124,7 @@ class TrackData {
             (json) => {
                 this.lastTrackQuery = new Date().getTime();
                 this.lastReceivedSequence=json.sequence;
-                this.handleTrackResponse(json.data,json.full);
+                this.handleTrackResponse(json.data,json.full,json.now);
                 base.log("trackdata");
                 this.handleTrackStatus(true);
                 this.timer = window.setTimeout(()=> {

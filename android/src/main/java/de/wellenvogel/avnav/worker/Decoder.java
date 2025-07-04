@@ -47,6 +47,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
@@ -898,17 +899,42 @@ public class Decoder extends Worker {
         super.stop();
         queue.clear();
     }
+    private interface LocationSetter{
+        void op(Location l,NmeaEntry e);
+    }
+    private static class LocationEntry{
+        public boolean mandatory;
+        public LocationSetter setter;
+        public LocationEntry(boolean mandatory, LocationSetter setter) {
+            this.mandatory = mandatory;
+            this.setter = setter;
+        }
+        public boolean mandatoryOk(NmeaEntry e,long now){
+            return ! mandatory || e.valid(now);
+        }
+        public void set(NmeaEntry e,long now, Location l){
+            if (! e.valid(now)) return;
+            setter.op(l,e);
+        }
+    }
 
-
-
+    private static final Map<String,LocationEntry> locationEntries= new HashMap<String,LocationEntry>(){
+            {
+            put(K_LON,new LocationEntry(true,(l, e) -> l.setLongitude((double)e.value)));
+            put(K_LAT,new LocationEntry(true,(l, e) -> l.setLatitude((double)e.value)));
+            put(K_SPEED,new LocationEntry(false,(l, e) -> l.setSpeed((float)((double)e.value))));
+            put(K_COURSE,new LocationEntry(false,(l, e) -> l.setBearing((float)((double)e.value))));
+    }};
+    private static final String [] locationKeys=locationEntries.keySet().toArray(new String[0]);
     public Location getLocation() throws JSONException {
-        List<NmeaEntry> pos=getEntries(K_LON,K_LAT);
+        List<NmeaEntry> pos=getEntries(locationKeys);
         long current=SystemClock.uptimeMillis();
         Location rt=new Location((String)null);
         for (NmeaEntry e:pos){
-            if (! e.valid(current)) return null;
-            if (K_LAT.equals(e.key)) rt.setLatitude((double)e.value);
-            if (K_LON.equals(e.key)) rt.setLongitude((double)e.value);
+            LocationEntry le=locationEntries.get(e.key);
+            if (le == null) return null; //internal error
+            if (!le.mandatoryOk(e,current)) return null;
+            le.set(e,current,rt);
         }
         return rt;
     }

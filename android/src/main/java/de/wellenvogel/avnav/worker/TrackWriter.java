@@ -600,7 +600,8 @@ public class TrackWriter extends DirectoryRequestHandler {
             return RequestHandler.getReturn(
                     new AvnUtil.KeyValue<JSONArray>("data",res),
                     new AvnUtil.KeyValue<Long>("sequence",changeSequence),
-                    new AvnUtil.KeyValue<Boolean>("full",full)
+                    new AvnUtil.KeyValue<Boolean>("full",full),
+                    new AvnUtil.KeyValue<Long>("now",System.currentTimeMillis()/1000L)
             );
         }
         else if (command.equals("cleanCurrent")){
