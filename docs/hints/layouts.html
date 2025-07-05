@@ -40,29 +40,32 @@
     <p><img src="../navpage-layout.png" alt="" class="fimage"></p>
     <p>Die Anzeigen sind auf allen relevanten Seiten in sogenannten "Panels"
       angeordnet.<br>
-      Innerhalb des jeweiligen Panels können die Anzeigen im Editor-Modus
-      einfach verschoben werden.<br>
+      Im Editor-Modus können die Anzeigen einfach verschoben werden.<br>
       Auf der Navigationsseite können die Panels unterschiedlich belegt werden,
       je nachdem ob ein eher schmales Display vorhanden ist (small) oder ein
-      breiteres (die Grenze dafür kann in den Settings eingestellt werden).</p>
+      breiteres (die Grenze dafür kann in den Settings eingestellt werden). Auch
+      für den Zustand "Ankerwache" können die Anzeigen separat konfiguriert
+      werden.</p>
     <p>Über <img src="../viewerimages/icons-new/tune.svg" alt="" class="inlineimage">kann
       die Konfiguration für die Panels auf der jeweiligen Seite aufgerufen
       werden.</p>
     <img src="../navpage-layout-panels-marked.png" alt="" class="fimage">
     <p>Im Bild sind die vorhandenen Panels markiert. Im Dialog kann ausgewählt
       werden, welche der Panels jeweils sichtbar sein sollen. Wenn in der Spalte
-      "small" ein Häkchen gesetzt ist, bedeutet das, dass bei schmalem Bildschirm
-      das Panel anders belegt werden kann. Im Beispiel ist das Top-Panel im
+      "small" ein Häkchen gesetzt ist, bedeutet das, dass bei schmalem
+      Bildschirm das Panel anders belegt werden kann. Gleiches für den Zustand
+      "anchor" - also Ankerwache aktiv. Im Beispiel ist das Top-Panel im
       normalen Modus nicht sichtbar, sondern nur im schmalen, das Left-Panel ist
       jeweils unterschiedlich belegt. Die beiden unteren Panels sind in beiden
-      Modi gleich belegt. Unter "Current Conditions" kann ausgewählt werden, ob
-      die Panels für die Normal-Ansicht oder für die schmale Ansicht bearbeitet
-      werden sollen.</p>
+      Modi gleich belegt. Wenn die Ankerwache aktiv ist, hat das Panel links
+      unten andere Anzeigen. Unter "Current Conditions" kann ausgewählt werden,
+      ob die Panels für die Normal-Ansicht oder für die schmale Ansicht bzw. die
+      Ankerwache bearbeitet werden sollen. Im Beispiel benötigt man also
+      nacheinander 3 Bearbeitungsschritte um für alle Modi das Layout fertig zu
+      stellen.</p>
     <p>Die beiden unteren Panels können potentiell 2 Reihen von Anzeigen
       aufnehmen (Einstellung: "2 widget rows"), nicht mehr passende Anzeigen
       werden ausgeblendet.</p>
-    <p>Nach Beenden des Panel-Dialogs können jetzt Anzeigen (Widgets) innerhalb
-      der Panels verschoben werden (jedoch nicht von einem Panel zum anderen).</p>
     <h2>Widget Dialog</h2>
     <p>Zum Ändern oder Einfügen eines Widgets klickt man auf ein vorhandenes
       oder auf ein freies Feld in einem Panel.</p>
@@ -77,7 +80,7 @@
       vorhandenen Widgets auswählen.</p>
     <p>Jedes Widget benötigt eine Information, welche Daten es anzeigen soll.
       Die verfügbaren Daten sind intern in einem Speicher verfügbar und werden
-      über einen Key ausgewählt.</p>
+      über einen Schlüssel (Key) ausgewählt.</p>
     <p>Je nach Art des Widgets ist dieser Key (oder auch mehrere) fest im Widget
       eingebaut, bei anderen kann man das frei wählen. Fast immer wählbar sind
       der Titel (caption), die Einheit (unit) und die css Klasse (falls man das
@@ -85,9 +88,16 @@
     <h2><a name="formatter" id="formatter"></a>Formatierer (formatter)</h2>
     <p>Die meisten Widgets benötigen für die Darstellung einen Formatierer, der
       den internen Wert in die gewünschte Darstellung wandelt. Meist ist der
-      beim Widget fest vorgegeben. Einige Formatierer akzeptieren eine
-      Komma-getrennte Liste von Parametern um ihr Verhalten anzupassen (z.B. m/s
-      statt kn).</p>
+      beim Widget fest vorgegeben. Einige Formatierer akzeptieren Parameter um
+      ihr Verhalten anzupassen (z.B. m/s statt kn).</p>
+    <p>Die Parameter für einen Formatierer sind im Dialog mit dem Prefix "fmt:"
+      sichtbar - "fmt:unit" im Beispiel.<br>
+      Die Liste der verfügbaren Parameter wird in der Implementierung des
+      Formatierers definiert (siehe <a href="userjs.html#formatter">Benutzer
+        Formatierer</a>). </p>
+    <p>Wenn ein Formatierer einen "unit" Parameter ha, wird der Wert dieses
+      Parameter benutzt, um ihn als "unit" in der Anzeige darzustellen (Einige
+      Anzeigen erlauben ein Überschreiben dieses Wertes im Dialog).</p>
     <p>Die folgenden Formatierer sind vorhanden:</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -99,30 +109,45 @@
         <tr>
           <td>formatDecimal</td>
           <td>einfache Formatierung als Dezimalzahl</td>
-          <td>fix, fract, addSpace<br>
-            z.B.: 3,1</td>
+          <td>fix: minimale Zahl der ganzzahligen Ziffern<br>
+            fract: Zahl der Ziffern nach dem Komma<br>
+            addSpace: setze ein Leerzeichen vor positive Zahlen<br>
+            prefixZero: setze 0 als Prefix, um die Zahl der Vorkommastellen zu
+            erreichen</td>
+        </tr>
+        <tr>
+          <td>formatDecimalOpt</td>
+          <td>Formatierung einer Dezimalzahl. Nachkommastellen werden nur für
+            nicht ganzzahlige Werte dargestellt.</td>
+          <td>wie bei formatDecimal</td>
         </tr>
         <tr>
           <td>formatDistance</td>
-          <td>Entfernung in nm</td>
-          <td>ein Parameter (unit):<br>
+          <td>Entfernung in nm|m|km</td>
+          <td>unit:<br>
             nm - Enterfnung in nm<br>
             m - Entfernung in m statt nm<br>
             km - Entfernung in km statt nm</td>
         </tr>
         <tr>
           <td>formatSpeed</td>
-          <td>Geschwindigkeit in kn</td>
-          <td>ein Parameter (unit):<br>
+          <td>Geschwindigkeit in kn|m/s|km/h</td>
+          <td>unit:<br>
             kn - knoten<br>
             ms - m/s statt kn<br>
             kmh - km/h statt kn</td>
         </tr>
         <tr>
           <td>formatDirection</td>
-          <td>Formatieren einen Gradwert</td>
-          <td>ein Parameter:<br>
-            inputRadian - Input in rad statt °</td>
+          <td>Formatiere einen Gradwert</td>
+          <td>inputRadian: - Input in rad statt Grad<br>
+            range180: zeige +/- 180° statt 0...360°<br>
+            leadingZero: zeige immer 3 Stellen</td>
+        </tr>
+        <tr>
+          <td>formatDirection360</td>
+          <td>Formatiere einen Gradwert</td>
+          <td>leadingZero: zeige immer 3 Stellen</td>
         </tr>
         <tr>
           <td>formatTime</td>
@@ -159,13 +184,13 @@
         <tr>
           <td>formatTemperature</td>
           <td>Formatiere eine Temperatur (seit 20210106), Input in Kelvin</td>
-          <td>ein Parameter (unit)<br>
+          <td>unit:<br>
             celsius, kelvin</td>
         </tr>
         <tr>
           <td>formatPressure</td>
           <td>Formatiere einen Druck (seit 20210106), input in Pa</td>
-          <td>ein Parameter (unit)<br>
+          <td>unit:<br>
             pa, hpa, bar</td>
         </tr>
       </tbody>
@@ -206,6 +231,30 @@
     <p>Das Layout wird im aktuellen Browser sofort aktiv (und auf dem Server
       gespeichert). Andere Browser erhalten es erst, wenn dort die App neu
       geladen wird oder das Layout gewechselt wird.</p>
+    <h2>Roll Back</h2>
+    <p>Beim Bearbeiten eines Layouts hat man einen <img src="../viewerimages/icons-new/ic_undo.svg"
+        alt="" class="inlineimage">RollBack Button. Mit diesem kann man Schritt
+      für Schritt die gemachten Layout-Änderungen zurücknehmen.</p>
+    <h2>Combined Widget</h2>
+    <p>Um mehr Flexibilität beim Anordnen der Anzeigen zu bekommen, gibt es ein
+      CombinedWidget das weitere Widgets als "Kinder" enthalten kann. Diese
+      können horizontal oder vertical angeordnet werden. Damit kann man die zur
+      Verfügung stehende Anzeigefläche (z.B. auf den Dashboard-Seiten) besser
+      ausnutzen.<br>
+      Um ein CombinedWidget zu plazieren nutzt man den normalen Widget Dialog
+      und wählt "CombinedWidget" als New Widget.<br>
+      Danach kann man mit "+Sub" Kind-Widgets hinzufügen - das öffnet jeweils
+      den normalen Widget Dialog für diese.</p>
+    <img src="../dashboard-layout-combined-creating.png" alt="" class="fimage">
+    <p>Man kann auswählen, ob die Widgets horizontal oder vertical angezeigt
+      werden sollen.<br>
+      Mit "locked" entscheidet man, wie sich das Widget für Drag&amp;Drop
+      verhalten soll. Wenn "locked" aktiv ist, wird das CombinedWidget als
+      Ganzes verschoben - sonst kann man die Kinder einzeln bewegen (und damit
+      auch entfernen oder hinzufügen).</p>
+    <p><img src="../dashboard-layout-combined-example.png" alt="" class="fimage"></p>
+    <p>Das Beispiel zeigt eine Dashboard Seite mit einigen "normalen" Widgets
+      und einem CombinedWidget mit horizontaler Anordnung.</p>
     <h2>Layout Download/Upload</h2>
     <p>Über die Files/Download Seite <img src="../viewerimages/icons-new/ic_file_download.svg"
         alt="" class="inlineimage">können unter <img src="../viewerimages/icons-new/ballot.svg"
