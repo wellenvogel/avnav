@@ -104,19 +104,20 @@ formatDecimal.parameters=[
     {name: 'addSpace',type:'BOOLEAN'},
     {name: 'prefixZero',type:'BOOLEAN'}
 ];
-const formatDecimalOpt=function(number,fix,fract,addSpace){
+const formatDecimalOpt=function(number,fix,fract,addSpace,prefixZero){
     number=parseFloat(number);
-    if (isNaN(number)) return formatDecimal(number,fix,fract,addSpace);
+    if (isNaN(number)) return formatDecimal(number,fix,fract,addSpace,prefixZero);
     if (Math.floor(number) == number){
-        return formatDecimal(number,fix,0,addSpace);
+        return formatDecimal(number,fix,0,addSpace,prefixZero);
     }
-    return formatDecimal(number,fix,fract,addSpace);
+    return formatDecimal(number,fix,fract,addSpace,prefixZero);
 };
 
 formatDecimalOpt.parameters=[
     {name:'fix',type:'NUMBER'},
     {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'}
+    {name: 'addSpace',type:'BOOLEAN'},
+    {name: 'prefixZero',type:'BOOLEAN'}
 ];
 
 /**
