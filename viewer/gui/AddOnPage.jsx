@@ -7,12 +7,10 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
-import InputMonitor from '../hoc/InputMonitor.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import alarmhandler from "../nav/alarmhandler";
-import GuiHelpers from "../util/GuiHelpers";
 import Keyhandler from "../util/keyhandler";
 
 
