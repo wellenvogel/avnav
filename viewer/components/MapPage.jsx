@@ -125,7 +125,7 @@ const MapPage =(iprops)=>{
     const mapEvent=useCallback((evdata)=>{
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         if (props.mapEventCallback) return props.mapEventCallback(evdata);
-    },[]);
+    },[props.mapEventCallback]);
     const computeScalePosition=useCallback(()=>{
         if (! props.mapFloat){
             setBottom('0px');
@@ -149,9 +149,7 @@ const MapPage =(iprops)=>{
         }).
         catch((error)=>{Toast(error)});
     },[]);
-    const subscribeToken=useRef();
     useEffect(() => {
-        subscribeToken.current=MapHolder.subscribe(mapEvent);
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
         if (chartEntry.eulaMode !== undefined){
             if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
@@ -169,13 +167,14 @@ const MapPage =(iprops)=>{
         showMap(chartEntry);
         return ()=>{
             //MapHolder.renderTo();
-            if (subscribeToken.current !== undefined){
-                MapHolder.unsubscribe(subscribeToken.current);
-                subscribeToken.current=undefined;
-            }
+
         }
     }, []);
     useEffect(()=>computeScalePosition());
+    useEffect(() => {
+        const id=MapHolder.subscribe(mapEvent);
+        return ()=>MapHolder.unsubscribe(id);
+    }, [mapEvent]);
     const WidgetContainer=useCallback((wcprops)=>{
         let {panel,mode,layoutPage,...forward}=wcprops;
         let panelItems=props.panelCreator(panel);
