@@ -261,7 +261,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
  *
  * @param timercallback
  * @param interval
- * @param opt_autostart
+ * @param [opt_autostart]
  * @returns {{guardedCall: ((function(*, *): (boolean))|*), setTimeout: *, startTimer: (function(*): boolean), currentSequence: (function(): number), stopTimer: (function(*): boolean)}}
  */
 export const useTimer=(timercallback,interval,opt_autostart)=>{
