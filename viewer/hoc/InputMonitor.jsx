@@ -4,13 +4,17 @@
  */
 
 import globalStore from "../util/globalstore.jsx";
-import React from 'react';
+import React, {useEffect} from 'react';
 import keys from '../util/keys.jsx';
-import assign from 'object-assign';
 
 
 let activeInputs={};
 let currentId=0;
+
+const getNextId=()=>{
+    currentId++;
+    return currentId;
+}
 
 export default  function(Component,opt_store){
     let store=opt_store?opt_store:globalStore;
@@ -20,8 +24,7 @@ export default  function(Component,opt_store){
             this.id=0;
         }
         componentDidMount(){
-            currentId++;
-            this.id=currentId;
+            this.id=getNextId();
             activeInputs[this.id]=true;
             store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
         }
@@ -35,3 +38,16 @@ export default  function(Component,opt_store){
     };
     return InputMonitor;
 };
+
+export const useInputMonitor=(opt_store)=>{
+    let store=opt_store?opt_store:globalStore;
+    useEffect(() => {
+        const id=getNextId();
+        activeInputs[id]=true;
+        store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
+        return ()=>{
+            delete activeInputs[id];
+            store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
+        }
+    }, []);
+}
