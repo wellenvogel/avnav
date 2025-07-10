@@ -53,7 +53,7 @@ class WorkerParameter(object):
   VALUE_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT]
   RANGE_TYPES=[T_NUMBER,T_FLOAT]
   PREDEFINED_DESCRIPTIONS={
-    T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
+    T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters.\nUse a ^before each sentence to blacklist it'
   }
 
   def __init__(self,name,
