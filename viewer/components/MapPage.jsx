@@ -105,13 +105,15 @@ const setBottom=(val)=>{
         el.style.bottom=val;
     }
 }
-const Map=({mapClass,mapOpacity})=><div
-    className={mapClass}
-    ref={(el)=>{
-        MapHolder.renderTo(el);
-    }}
-    style={{opacity:mapOpacity}}>
-</div>;
+const Map=({mapClass,mapOpacity})=>{
+    return <div
+        className={mapClass}
+        ref={(el)=>{
+            MapHolder.renderTo(el);
+        }}
+        style={{opacity:mapOpacity}}>
+    </div>;
+}
 const MapPage =(iprops)=>{
     const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
             widgetFontSize:keys.properties.widgetFontSize,
@@ -221,7 +223,7 @@ const MapPage =(iprops)=>{
                 editingChanged={()=>mapholder.updateSize()}
             >
                 {props.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
-                {props.mapFloat?<Map mapClass={mapClass} mapOpactity={mapOpacity} />:null}
+                {props.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} />:null}
                 <PageLeft dialogCtxRef={(ctx)=>{
                     dialogCtx.current=ctx;
                     handleCtxRef(ctx,props.dialogCtxRef);
@@ -242,7 +244,7 @@ const MapPage =(iprops)=>{
                             />
                             <div className={'mapFrame'}>
                             {!props.mapFloat && <DynamicTitleIcons /> }
-                            {!props.mapFloat && <Map mapClass={mapClass} mapOpactity={mapOpacity}/>}
+                            {!props.mapFloat && <Map mapClass={mapClass} mapOpacity={mapOpacity}/>}
                             {overlay}
                             </div>
                         </div>
