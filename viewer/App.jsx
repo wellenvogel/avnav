@@ -52,6 +52,7 @@ import fullscreen from "./components/Fullscreen";
 import mapholder from "./map/mapholder";
 import 'drag-drop-touch';
 import {ConfirmDialog} from "./components/BasicDialogs";
+import PropTypes from "prop-types";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -126,8 +127,6 @@ class Router extends Component {
         let style={};
         if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
         let dimStyle={opacity: 0.5};
-        let small = (this.props.dimensions||{}).width
-            < globalStore.getData(keys.properties.smallBreak);
         return <div className={className}>
             {this.props.dim ?
                 <div
@@ -141,12 +140,22 @@ class Router extends Component {
                     options={this.props.options}
                     location={this.props.location}
                     history={this.props.history}
-                    small={small}
+                    small={this.props.smallDisplay}
                     isEditing={this.props.isEditing}
                     windowDimensions={this.props.windowDimensions}
                 />
             </div>
     }
+}
+Router.propTypes={
+    location: PropTypes.string,
+    isEditing: PropTypes.bool,
+    windowDimensions: PropTypes.object,
+    history: PropTypes.instanceOf(History),
+    options: PropTypes.object,
+    dim: PropTypes.bool,
+    nightMode: PropTypes.bool,
+    smallDisplay: PropTypes.bool
 }
 
 const DynamicRouter=Dynamic(Router);
@@ -193,6 +202,7 @@ const MainBody = ({location, options, history, nightMode}) => {
                     dim: keys.gui.global.dimActive,
                     isEditing: keys.gui.global.layoutEditing,
                     layoutSequence: keys.gui.global.layoutSequence,
+                    smallDisplay: keys.gui.global.smallDisplay,
                     ...keys.gui.capabilities
                 }}
                 location={location}
