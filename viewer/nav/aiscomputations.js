@@ -298,7 +298,7 @@ const computeCpa=(src,dst,options)=>{
         llsrc.rhumbDestinationPoint(appr.dms,src.course):
         llsrc.destinationPoint(appr.dms,src.course );
     let cpadst = options.useRhumbLine?
-        lldst.rhumbDestinationPoint(appr.dms,dst.course):
+        lldst.rhumbDestinationPoint(appr.dmd,dst.course):
         lldst.destinationPoint(appr.dmd,dst.course);
     rt.src.lon=cpasrc.lon;
     rt.src.lat=cpasrc.lat;
