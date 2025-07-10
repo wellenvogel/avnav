@@ -149,6 +149,13 @@ const MapPage =(iprops)=>{
         }).
         catch((error)=>{Toast(error)});
     },[]);
+    //we rely on map events being only triggered by load map when a promise resolves (i.e. async to this code)
+    //this way the order of our effects does not really matter (although the subscribe effect will run AFTER the next one that triggers loadMap) -
+    //see https://www.zipy.ai/blog/useeffect-hook-guide#:~:text=React%20determines%20the%20order%20of,they%20appear%20in%20the%20code.
+    useEffect(() => {
+        const id=MapHolder.subscribe(mapEvent);
+        return ()=>MapHolder.unsubscribe(id);
+    }, [mapEvent]);
     useEffect(() => {
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
         if (chartEntry.eulaMode !== undefined){
@@ -165,16 +172,8 @@ const MapPage =(iprops)=>{
             }
         }
         showMap(chartEntry);
-        return ()=>{
-            //MapHolder.renderTo();
-
-        }
     }, []);
     useEffect(()=>computeScalePosition());
-    useEffect(() => {
-        const id=MapHolder.subscribe(mapEvent);
-        return ()=>MapHolder.unsubscribe(id);
-    }, [mapEvent]);
     const WidgetContainer=useCallback((wcprops)=>{
         let {panel,mode,layoutPage,...forward}=wcprops;
         let panelItems=props.panelCreator(panel);
