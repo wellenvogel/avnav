@@ -12,7 +12,7 @@
   border: 1px solid;
   text-decoration: none;
   .nightBorderFade(#D3D3D3);
-  .nightBackFade(#E6E6E6);
+  .nightBackColor(#E6E6E6,rgb(30 30 30 / 55%));
   //position: relative;
   cursor: pointer;
   outline: none;
@@ -66,6 +66,9 @@
 .iconButton(@icon){
   span {
     .icon(@icon);
+    .nightMode &{
+      filter: brightness(0) saturate(50%) invert(16%) sepia(98%) saturate(2000%) hue-rotate(353deg) brightness(94%) contrast(111%)
+    }
   }
 }
 
