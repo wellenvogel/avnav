@@ -2,6 +2,6 @@ allow-hotplug wlan-ap2
 
 iface wlan-ap2 inet manual
   wireless-power off
-  up /sbin/ip -4 addr replace 192.168.30.40/24 dev $IFACE || true
+  up /sbin/ip -4 addr replace 192.168.40.10/24 dev $IFACE || true
   up /usr/lib/avnav/raspberry/hostapd $IFACE
   down /usr/lib/avnav/raspberry/hostapd -s $IFACE
