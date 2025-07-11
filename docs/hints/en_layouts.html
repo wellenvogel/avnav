@@ -286,6 +286,24 @@
       especially contain formatters for values that are otherwise not included
       in AvNav like signalKCelsius to display temperatures in °C.</p>
     <p>They only make sense if you have appropriate signalk data, of course.</p>
+    <h3>MapWidgets</h3>
+    <p>Users or plugins can create <a href="userjs.html#widgets">MapWidgets</a>.
+      Those are drawn directly on the map and can use information about the
+      current map position. One example is the SailInstrumentOverlay widget from
+      the <a href="https://github.com/kdschmidt1/Sail_Instrument">Sail
+        Instrument plugin</a>.</p>
+    <p>To edit those widgets use the <img src="../viewerimages/icons-new/assistant_nav.svg"
+        alt="" class="inlineimage">MapWidget Button on the navigation page.</p>
+    <p><img src="../navpage-layout-map1.png" alt="" class="fimage"><br>
+    </p>
+    <p>You will get a dialog to add/edit/delete the widgets on the map.</p>
+    <p><img src="../navpage-layout-map2.png" alt="" class="fimage"></p>
+    <p>Please keep in mind that clicking on the widget on the map will NOT bring
+      up the edit dialog (like on other widgets) - you always have to use the <img
+        src="../viewerimages/icons-new/assistant_nav.svg" alt="" class="inlineimage">MapWidget
+      Button. As the position on the map is determined by the widget itself
+      there is also no drag and drop functionality for those widgets.</p>
+    <br>
     <h2>Adapting the Look and Feel of a Widget</h2>
     <p>If you would like to adapt the look and feel of a widget you should add a
       css class to it. Afterwards you can assign rules to it in your <a href="usercss.html">user

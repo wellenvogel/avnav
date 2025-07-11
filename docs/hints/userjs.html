@@ -37,7 +37,7 @@
       keine Versionsverwaltung in AvNav.</p>
     <p>Das aktuelle Template kann man auch <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">auf
         github</a> finden.</p>
-    <h2>Anzeigen (Widgets)</h2>
+    <h2><a name="widgets" id="widgets"></a>Anzeigen (Widgets)</h2>
     <p>Man kann im Wesentlichen die folgenden Arten von Anzeigen hinzufügen:</p>
     <ul>
       <li>Widgets mit eigenem Formatter (und ggf. festen Werten) basierend auf
@@ -95,8 +95,8 @@
       ignoriert!</p>
     <p>Neben den Parametern kann auch noch eine translateFunction definiert
       werden. Diese erhält als Parameter ein Objekt mit den aktuellen Werten
-      aller Parameter und kann dieses modifizieren, bevor sie an
-      canvas gauges übergeben wird (<a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L104">Beispiel
+      aller Parameter und kann dieses modifizieren, bevor sie an canvas gauges
+      übergeben wird (<a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L104">Beispiel
         ab Zeile 104</a>). Diese Funktion muss "zustandsfrei" sein, d.h. die
       Werte der Rückgabe dürfen nur von den übergebenen Werten (und anderen
       unveränderlichen Werten) abhängig sein. Andernfalls werden potentiell

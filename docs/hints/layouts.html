@@ -297,6 +297,24 @@
       Formatter für Daten enthalten, die so in avnav sonst nicht verfügbar sind
       - z.B. signalKCelsius zur Anzeige von Temperaturen. Diese machen natürlich
       nur Sinn, wenn entsprechende SignalK Daten vorhanden sind.</p>
+    <h3>MapWidgets</h3>
+    <p>Nutzer oder plugins können <a href="userjs.html#widgets">Map Widgets</a>
+      erzeugen. Diese werden direkt auf der Karte gezeichnet und können
+      Informationen über die aktuelle Position und den Zoom der Karte benutzen.
+      Ein Beispiel ist das SailInstrumentOverlay Widget vom <a href="https://github.com/kdschmidt1/Sail_Instrument">Sail
+        Instrument plugin</a>.</p>
+    <p>Um diese Widgets zu bearbeiten nutzt man den <img src="../viewerimages/icons-new/assistant_nav.svg"
+        alt="" class="inlineimage">MapWidget Button auf der Navigationsseite.</p>
+    <p><img src="../navpage-layout-map1.png" alt="" class="fimage"><br>
+    </p>
+    <p>Man erhält einen Dialog in dem man die Widgets hinzufügen/bearbeiten oder
+      löschen kann.</p>
+    <p><img src="../navpage-layout-map2.png" alt="" class="fimage"></p>
+    <p>Man sollte beachten, das ein Klick auf ein solches Map Widget NICHT den
+      Dialog zum Bearbeiten anzeigt. Statt dessen muss man immer den <img src="../viewerimages/icons-new/assistant_nav.svg"
+        alt="" class="inlineimage">MapWidget Button benutzen. Da die Position
+      auf der Karte durch das Widget selbst festgelegt wird, gibt es auch keine
+      Drag und Drop Funktionalität für diese Widgets.</p>
     <h2>Anpassung des Aussehens</h2>
     <p>Falls man das Aussehen eines Widgets anpassen möchte, empfiehlt es sich,
       eine neue css class zu vergeben - auf diese kann man dann mit <a href="usercss.html">nutzerspezifischem
