@@ -130,9 +130,6 @@ const RouteLayer=function(mapholder){
     this.textStyle={};
     this.dashedStyle={};
     this.setStyle();
-    this.navChangedCb=new Callback((keys)=>{
-       self.mapholder.triggerRender();
-    });
     let navStoreKeys=[keys.nav.gps.position,keys.nav.gps.valid];
     navStoreKeys=navStoreKeys.concat(
         KeyHelper.flattenedKeys(activeRoute.getStoreKeys()),
@@ -229,6 +226,7 @@ RouteLayer.prototype.showEditingRoute=function(on){
     let old=this._displayEditing;
     this._displayEditing=on;
     if (on != old){
+        this.routeDisplay.reset();
         this.mapholder.triggerRender();
     }
 };
