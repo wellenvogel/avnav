@@ -138,10 +138,11 @@ const RouteLayer=function(mapholder){
     globalStore.register(this.navChangedCb,navStoreKeys);
     globalStore.register(this,keys.gui.global.propertySequence);
     this.routeDisplay=new RouteDisplay(this.mapholder);
+    this.currentCourse=new RouteDisplay(this.mapholder);
     globalStore.register(()=>{
         this.routeDisplay.reset();
+        this.currentCourse.reset();
     },activeRoute.getStoreKeys(editingRoute.getStoreKeys({seq: keys.gui.global.propertySequence,rl:keys.nav.routeHandler.useRhumbLine})));
-    this.currentCourse=new RouteDisplay(this.mapholder);
     globalStore.register(()=>{
         this.currentCourse.reset();
     },activeRoute.getStoreKeys({lat:keys.nav.gps.lat,lon:keys.nav.gps.lon,
@@ -227,6 +228,7 @@ RouteLayer.prototype.showEditingRoute=function(on){
     this._displayEditing=on;
     if (on != old){
         this.routeDisplay.reset();
+        this.currentCourse.reset();
         this.mapholder.triggerRender();
     }
 };
@@ -241,10 +243,11 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.wpPixel=[];
     if (!this.visible) return;
     let currentEditor=this._displayEditing?editingRoute:activeRoute;
+    let showingActive= ! this._displayEditing || currentEditor.getRouteName() === activeRoute.getRouteName();
     let gpsPosition=globalStore.getData(keys.nav.gps.position);
     let gpsValid=globalStore.getData(keys.nav.gps.valid);
-    let toPoint=activeRoute.getCurrentTarget();
-    let fromPoint=activeRoute.getCurrentFrom();
+    let toPoint=showingActive?activeRoute.getCurrentTarget():undefined;
+    let fromPoint=showingActive?activeRoute.getCurrentFrom():undefined;
     let showBoat=globalStore.getData(keys.properties.layers.boat);
     let showNav=globalStore.getData(keys.properties.layers.nav);
     let wpSize=globalStore.getData(keys.properties.routeWpSize);
