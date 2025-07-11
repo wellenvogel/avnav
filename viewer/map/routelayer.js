@@ -89,9 +89,6 @@ const RouteLayer=function(mapholder){
      * @type {boolean}
      */
     this.visible=globalStore.getData(keys.properties.layers.nav);
-    let self=this;
-
-
     /**
      * the pixel coordinates of the route points from the last draw
      * @private
@@ -135,7 +132,7 @@ const RouteLayer=function(mapholder){
         KeyHelper.flattenedKeys(activeRoute.getStoreKeys()),
         KeyHelper.flattenedKeys(editingRoute.getStoreKeys())
     );
-    globalStore.register(this.navChangedCb,navStoreKeys);
+    globalStore.register(()=>this.mapholder.triggerRender(),navStoreKeys);
     globalStore.register(this,keys.gui.global.propertySequence);
     this.routeDisplay=new RouteDisplay(this.mapholder);
     this.currentCourse=new RouteDisplay(this.mapholder);

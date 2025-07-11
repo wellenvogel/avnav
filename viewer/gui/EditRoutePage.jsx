@@ -413,13 +413,14 @@ const EditRouteDialog = (props) => {
             return true;
         }
         if (rtSaveMode === RouteSaveModes.REPLACE_NEW || saveMode === RouteSaveModes.REPLACE_EXISTING){
-            //if we had been editing the active this will change now
-            //but there is no chance that we start editing the active with copy
-            //as the name cannot exist already
-            //do a last check anyway
-            if (cloned.name === StateHelper.routeName(activeRouteState)){
-                Toast("unable to copy to active route");
-                return false;
+            if (rtSaveMode === RouteSaveModes.REPLACE_NEW) {
+                //we should never replace the currently active route with a newly created one
+                //basically this should not be possible any way as the name dialog would prevent this
+                //but: do a last check anyway
+                if (cloned.name === StateHelper.routeName(activeRouteState)) {
+                    Toast("unable to copy to active route");
+                    return false;
+                }
             }
             editor.setNewRoute(cloned,undefined,true);
             return true;
@@ -598,8 +599,7 @@ const EditRouteDialog = (props) => {
 }
 
 EditRouteDialog.propTypes = {
-    route: PropTypes.objectOf(routeobjects.Route).isRequired,
-    resolveFunction: PropTypes.func
+    route: PropTypes.objectOf(routeobjects.Route).isRequired
 }
 
 
@@ -637,14 +637,13 @@ const checkRouteWritable = (dialogCtxRef) => {
     if (!dialogCtxRef) return false;
     showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
         .then(() => {
-            showPromiseDialog(dialogCtxRef,(props)=><EditRouteDialog
+            showDialog(dialogCtxRef,(props)=><EditRouteDialog
                 {...props}
                 route={currentEditor.getRoute().clone()}
-            />)
-                .then((nroute)=>{
-                    currentEditor.setNewRoute(nroute,undefined,true);
-                    checkEmptyRoute();
-                },()=>{})
+            />,()=>{
+                checkEmptyRoute();
+                MapHolder.triggerRender();
+            })
         });
     return false;
 };
@@ -701,7 +700,10 @@ const EditRoutePage = (props) => {
                 return <EditRouteDialog
                     route={currentEditor.getRoute()?currentEditor.getRoute().clone():new routeobjects.Route('empty')}
                 />
-            },checkEmptyRoute)
+            },()=>{
+                checkEmptyRoute();
+                MapHolder.triggerRender();
+            })
             return;
         }
         if (item.name === 'RoutePoints') {
