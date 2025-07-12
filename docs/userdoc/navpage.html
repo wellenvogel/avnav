@@ -270,7 +270,7 @@
       Es gibt unterschiedliche Symbole für die AIS Ziele - für Details siehe
       unter "<a href="../hints/usericons.html">Nutzerdefinierte Icons</a>".</p>
     <p>Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles in
-      den Anzeige-Bereichen) erhält man alle <a href="aisinfopage.html">Informationen</a>
+      den Anzeige-Bereichen) erhält man alle <a href="#aisinfo">Informationen</a>
       zu diesem Ziel und kann zur <a href="aispage.html">Liste aller AIS-Ziele</a>
       navigieren.</p>
     <h3>AIS Bewegungsvektoren</h3>
@@ -344,9 +344,10 @@
     <p>Basierend auf der berechneten DCPA (minimale Entfernung am CPA Punkt) und
       TCPA (Zeit bis zum CPA Punkt) setzt AvNav eine Warnung für das Ziel wenn
       die Werte unter den konfigurierten Schwellwerten liegen.</p>
+    <h4><a name="aispriority" id="aispriority"></a>Priorität</h4>
     <p>Um zu entscheiden, welches Ziel im AisTargetWidget angezeigt wird und für
-      die Sortierung in der <a href="aisinfopage.html">AIS liste</a> wird für
-      jedes Ziel eine Priorität berechnet.<br>
+      die Sortierung in der <a href="aispage.html">AIS liste</a> wird für jedes
+      Ziel eine Priorität berechnet.<br>
       Die Priorität von hoch zu niedrig:</p>
     <ol>
       <li>Ziele mit Warnung (d.h. CPA &lt; warning CPA und TCPA &lt; warning
@@ -428,8 +429,8 @@
       färbt sich rot, wenn eine CPA von 500m (einstellbar) unterschritten wird.
       Gelb bedeuted, dass nicht das nächste Ziel, sondern ein separat
       ausgewähltes Ziel (siehe unten AIS) angezeigt wird. Ein Klick auf diese
-      Fläche oder ein AIS Ziel auf der Karte führt auf die <a href="aisinfopage.html">AIS
-        Info Seite</a> .</p>
+      Fläche oder ein AIS Ziel in der Feature Liste (nach Klick auf die Karte) <a
+        href="#aisinfo">AIS Info </a> .</p>
     <p>(ab 202011xx) Die verwendeten Symbole für das Boot und die AIS Ziele
       können bei Bedarf über eine Datei <a href="../hints/usericons.html">images.json</a>
       angepasst werden. Ausserdem können die AIS Symbole in den Einstellungen

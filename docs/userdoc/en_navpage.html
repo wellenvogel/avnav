@@ -330,8 +330,9 @@
     <p>Based on the computed DCPA (minimal distance at the CPA point) and TCPA
       (time to reach this point) AvNav sets a warning flag at the target if the
       values are below the configured threshold.</p>
+    <h4><a name="priority" id="aispriority"></a>Priority</h4>
     <p>To select which target is shown in the AisTargetWidget and for sorting
-      items in the <a href="aisinfopage.html">ais list</a> AvNav computes a
+      items in the <a href="aispage.html">ais list</a> AvNav computes a
       priority for each target.<br>
       The priority (from high to low):</p>
     <ol>
@@ -410,8 +411,8 @@
     </ul>
     <p>The display of the closest AIS target will turn red if expected CPA is
       closer than 500m (can be changed in settings). If the display is yellow it
-      does not show the nearest target but a different one selected on the <a href="aisinfopage.html">ais
-        info page</a>. If you click on this display you move to the ais info
+      does not show the nearest target but a different one selected on the <a href="#aisinfo">ais
+        info</a>. If you click on this display you move to the ais info
       page.</p>
     <p>(since 202011xx) The icons used for your boat and the AIS targets can be
       changed using a file <a href="../hints/usericons.html">images.json</a>.
@@ -757,7 +758,6 @@
     <p>If there is an active measure and you click the measure row in the
       feature list you will get an option to convert the measure into a route.</p>
     <p><img src="navpage-measure-toroute.png" alt=""> </p>
-    
     <h2>Special Functions</h2>
     <h3><a name="waypoint" id="waypoint"></a>Simple Waypoint Navigation</h3>
     <p>Steps:</p>
@@ -788,5 +788,6 @@
     <p>To start a route - change with&nbsp; <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage">to the <a href="editroutepage.html">route
         editor</a>.</p>
+    
   </body>
 </html>

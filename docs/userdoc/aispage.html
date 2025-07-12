@@ -7,7 +7,7 @@
   </head>
   <body data-order="1700">
     <h1>Die AIS Liste</h1>
-    <p>Von der <a href="aisinfopage.html">Ais Info</a> gelangt man über den
+    <p>Von der <a href="navpage.html#aisinfo">Ais Info</a> gelangt man über den
       Button&nbsp;<img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage">
       zu dieser Seite.</p>
     <p><img src="aislist.png" alt="" class="fimage"></p>
@@ -65,14 +65,46 @@
       </tbody>
     </table>
     <p>Auf dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
-      10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
-      springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
-      Zentrum. Das gewählte Ziel erscheint auch im AIS Info Fenster (dieses
-      färbt sich gelb). Ein Klick auf den grünen Pfeil schaltet wieder in den
-      „Normalmodus“ - d.h. Anzeige des nächsten AIS Zieles.</p>
-    <p>Durch Klick auf die 2. Überschriftszeile oder den Button <img src="../viewerimages/icons-new/sort.svg"
-        alt="" class="inlineimage">kann man die Sortierung verändern.<br>
-      Mit dem Klick auf ein Ziel gelangt man zur <a href="aisinfopage.html">Aisinfoseite</a>
-      für dieses Ziel.</p>
+      10nm zur Bootsposition (sortiert nach Priorität). Mit Klick auf eine Zeile
+      geht man zur <a href="navpage.html#aisinfo">Ais Info</a> für dieses Ziel.
+      Ein Klick auf den grünen Pfeil schaltet wieder in den „Normalmodus“ - d.h.
+      Anzeige des nächsten AIS Zieles.</p>
+    <p>Die folgenden Sortierungen kann man auswählen:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Sortierung</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>Priority</td>
+          <td>Sortiere nach der Bedeutung für die Navigation. Siehe <a href="navpage.html#aispriority">AIS
+              Priorität</a>.</td>
+        </tr>
+        <tr>
+          <td>DCPA</td>
+          <td>Sortiere nach Entfernung am CPA Punkt (Punkt der stärksten
+            Annäherung)</td>
+        </tr>
+        <tr>
+          <td>TCPA</td>
+          <td>Sortiere nach der Zeit bis zum CPA Punkt</td>
+        </tr>
+        <tr>
+          <td>DST</td>
+          <td>Sortiere nach aktueller Entfernung</td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td>Sortiere nach Name</td>
+        </tr>
+        <tr>
+          <td>MMSI</td>
+          <td>Sortiere nach MMSI</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Durch Klick auf die Überschriftszeile oder den Button <img src="../viewerimages/icons-new/sort.svg"
+        alt="" class="inlineimage">kann man die Sortierung verändern.</p>
   </body>
 </html>

@@ -7,7 +7,7 @@
   </head>
   <body data-order="1700">
     <h1>The AIS List</h1>
-    <p>From the <a href="aisinfopage.html">Ais Info</a> you get here by
+    <p>From the <a href="navpage.html#aisinfo">Ais Info</a> you get here by
       clicking the <img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage">
       button.</p>
     <p><img src="aislist.png" alt="" class="fimage"></p>
@@ -63,11 +63,43 @@
       </tbody>
     </table>
     <p>This page lists all targets within a 10nm range to the current position
-      or to the center of the chart (sorted by CPA). By clicking a row you will
-      return to the chart centered to this target. </p>
-    <p>By clicking either second column heading or the <img src="../viewerimages/icons-new/sort.svg"
+      or to the center of the chart (sorted by Priority). By clicking a row you
+      go to the <a href="navpage.html#aisinfo">Ais Info</a> for this target. </p>
+    <p>By clicking either the heading or the <img src="../viewerimages/icons-new/sort.svg"
         alt="" class="inlineimage">button you can change the sort order.<br>
-      Clicking an item in the list will bring you to the <a href="aisinfopage.html">aisinfo
-        page</a> for this item.</p>
+      The following sort modes are available:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Sorting</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>Priority</td>
+          <td>Sort by importance for navigation. Refer to <a href="navpage.html#aispriority">AIS
+              Priority</a>.</td>
+        </tr>
+        <tr>
+          <td>DCPA</td>
+          <td>Distance at the CPA (closest point of approach)</td>
+        </tr>
+        <tr>
+          <td>TCPA</td>
+          <td>Time till reaching the CPA point</td>
+        </tr>
+        <tr>
+          <td>DST</td>
+          <td>Current distance</td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td>Sort by name</td>
+        </tr>
+        <tr>
+          <td>MMSI</td>
+          <td>Sort by mmsi</td>
+        </tr>
+      </tbody>
+    </table>
   </body>
 </html>
