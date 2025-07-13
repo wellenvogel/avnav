@@ -123,6 +123,10 @@ class MainPage extends React.Component {
             this.readAddOns();
         },{sequence:keys.gui.global.reloadSequence},2);
         GuiHelper.storeHelper(this,(data)=>{
+            this.setState({
+                chartList:[],
+                loading: true
+            })
             this.fillList();
         },{sequence:keys.gui.global.reloadSequence});
         this.timer=GuiHelper.lifecycleTimer(this,(sequence)=>{
@@ -337,7 +341,7 @@ class MainPage extends React.Component {
                 let lastChartKey=current?current.getChartKey():mapholder.getLastChartKey();
                 let i=0;
                 let selectedChart;
-                let isLoading=json.items.length < 1 && json.loading;
+                let isLoading= json.loading;
                 json.items.sort((a,b)=>{
                     let nameA = (a.name).toUpperCase();
                     let nameB = (b.name).toUpperCase();
@@ -411,15 +415,17 @@ class MainPage extends React.Component {
 
 
     render() {
+        const Title=(props)=><React.Fragment>
+            <span>{"AvNav "+ LocalStorage.getPrefix()}</span>
+            {this.state.loading && <span className={"spinner"}/>}
+        </React.Fragment>
         return (
             <Page
                 {...this.props}
                   id="mainpage"
-                  title={"AvNav "+ LocalStorage.getPrefix()}
+                title={<Title/>}
                   mainContent={
-                    this.state.loading?<div className="loading mainContent">
-                            Loading charts...
-                        </div>:<ItemList className="mainContent"
+                    <ItemList className="mainContent"
                                itemClass={this.ChartItem}
                                onItemClick={this.showNavpage}
                                itemList={this.state.chartList}

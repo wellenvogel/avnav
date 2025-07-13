@@ -293,7 +293,9 @@ public class RouteReceiver extends Activity {
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
             if (aBoolean){
-                sendBroadcast(new Intent(Constants.BC_TRIGGER));
+                Intent tr=new Intent(Constants.BC_TRIGGER);
+                tr.setPackage(getPackageName());
+                sendBroadcast(tr);
                 startMain();
             }
             else{
@@ -309,6 +311,7 @@ public class RouteReceiver extends Activity {
 
     private void startMain(){
         Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setPackage(getPackageName());
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         startActivity(notificationIntent);

@@ -934,529 +934,553 @@ span.valuePrefix{
   opacity: 0;
   margin: 0;
 }
-//----------------------------------------------------------------------------------------
-//pages
-//----------------------------------------------------------------------------------------
-#mainpage{
-  .chartItem{
-    cursor: pointer;
-    overflow: hidden;
-    width: 22em;
-    max-width: 100%;
-    .flex-display(inline);
-    .flex-direction(row);
-    .flex-align-items(center);
-    margin-right: 3em;
-    padding: 1em;
-    padding-right: 0;
-    line-height: 2em;
-    border-bottom: 1px solid;
-    border-color: rgba(0, 0, 0, 0.3);
-    .more {
-      display: inline-block;
-      float: right;
-      width: 1em;
-      height: 1em;
-      background-image: url('../images/icons-new/ic_chevron_right.svg');
-      background-size: 100% 100%;
-      opacity: 0.6;
-    }
-    img {
-      .nightOPacity();
-      width: 1.3em;
-      height: 1.3em;
-      border-radius: 50%;
-      margin-right: 1em;
-      vertical-align: middle;
-    }
-    .chartName{
-      .flex(1);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    &.noOverlays .smallButton.MainOverlays {
-      opacity: 0.4;
-    }
+//-- spinner
+@keyframes spinner {
+  to {transform: rotate(360deg);}
+}
 
+.spinner {
+  display: inline-block;
+  margin-left: 2em;
+  vertical-align: middle;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  border: 2px solid;
+  border-color: #ffffff;
+  border-top-color: #00000000;
 
+  .nightMode & {
+      border-color: @nightColor;
+      border-top-color: #00000000;
   }
-  .footer{
-    height: 3.2em;
-    .inner{
-      font-size: 0.8em;
-      padding-top: 0.8em;
-      width: 100%;
-      .status{
-        padding-left: 1em;
-        padding-right: 1em;
-        text-align: left;
-        z-index: 10;
-        white-space: nowrap;
-        display: inline-block;
-        margin-bottom: 0.2em;
-      }
-      .status_image {
-        width: 1.5em;
-        height: 1.5em;
-        vertical-align: middle;
-        .nightOPacity();
-      }
-      .link{
-        text-align: right;
-        padding-right: 1em;
-        white-space: nowrap;
+    animation: spinner .8s linear infinite;
+  }
+
+
+  //----------------------------------------------------------------------------------------
+  //pages
+  //----------------------------------------------------------------------------------------
+  #mainpage{
+    .chartItem{
+      cursor: pointer;
+      overflow: hidden;
+      width: 22em;
+      max-width: 100%;
+      .flex-display(inline);
+      .flex-direction(row);
+      .flex-align-items(center);
+      margin-right: 3em;
+      padding: 1em;
+      padding-right: 0;
+      line-height: 2em;
+      border-bottom: 1px solid;
+      border-color: rgba(0, 0, 0, 0.3);
+      .more {
         display: inline-block;
         float: right;
+        width: 1em;
+        height: 1em;
+        background-image: url('../images/icons-new/ic_chevron_right.svg');
+        background-size: 100% 100%;
+        opacity: 0.6;
       }
-    }
-  }
-}
+      img {
+        .nightOPacity();
+        width: 1.3em;
+        height: 1.3em;
+        border-radius: 50%;
+        margin-right: 1em;
+        vertical-align: middle;
+      }
+      .chartName{
+        .flex(1);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      &.noOverlays .smallButton.MainOverlays {
+        opacity: 0.4;
+      }
 
-#infopage{
-  .link{
-    display: inline-block;
-    padding: 1em;
-    text-decoration: underline;
-  }
-  .linkWrapper{
-    margin: 1em;
-    .flex-shrink(0);
-  }
-  .infoFrame{
-    padding-left: 1em;
-    padding-right: 1em;
-    p {
-      margin-top: 0.2em;
-      margin-bottom: 0.5em;
-    }
-    h3 {
-      margin-top: 1em;
-      margin-bottom: 0.2em;
-    }
-  }
-  .avnavVersion {
-    margin-left: 1em;
-  }
 
-}
-
-#gpspage{
-  .iconContainer{
-    z-index: 102;
-  }
-  .leftPart{
-    .flex-direction(row);
-    height: 100%;
-  }
-  .hfield{
-    width: 50%;
-    height: 100%;
-    border: 1px solid;
-    .nightBorderFade(grey);
-    .widgetContainer{
-      height: 100%;
-      width: 100%;
-      padding: 0;
-      margin: 0;
-      .flex-direction(column);
-      .flex-align-items(stretch);
     }
-  }
-  .resize,.noresize{
-    .flex-display();
-    .flex-direction(column);
-    .flex-justify-content(space-evenly);
-    max-height: 100%;
-    min-width: 0;
-    min-height: 0;
-  }
-
-}
-.aisHidden{
-  opacity: 0.5;
-}
-#aispage{
-  .aisListItem{
-    .listEntry();
-    .flex-wrap(wrap);
-    .aisItemFB{
-      width:4em;
-      min-width: 4em;
-    }
-    .fb1{
-      font-size: 2.5em;
-      font-weight: bold;
-    }
-    .aisData{
-      overflow: hidden;
-      max-width: 100%;
-      .aisData1{
-        font-weight: bold;
-        margin-bottom: 0.2em;
-      }
-      .aisData2{
-        white-space: pre-line;
-        font-family: monospace;
-      }
-      .infoLine{
-        margin-bottom: 0.2em;
-        .flex-display();
-        .flex-direction(row);
-        .flex-wrap(wrap);
-      }
-      .label{
-        .mdText2();
-        width: 2em;
-        display: inline-block;
-      }
-      .info{
-        padding-left: 1em;
-        min-width: 6.5em;
-        display: inline-block;
+    .footer{
+      height: 3.2em;
+      .inner{
+        font-size: 0.8em;
+        padding-top: 0.8em;
+        width: 100%;
+        .status{
+          padding-left: 1em;
+          padding-right: 1em;
+          text-align: left;
+          z-index: 10;
+          white-space: nowrap;
+          display: inline-block;
+          margin-bottom: 0.2em;
+        }
+        .status_image {
+          width: 1.5em;
+          height: 1.5em;
+          vertical-align: middle;
+          .nightOPacity();
+        }
+        .link{
+          text-align: right;
+          padding-right: 1em;
+          white-space: nowrap;
+          display: inline-block;
+          float: right;
+        }
       }
     }
   }
 
-  .aisSummary{
-    .nightBackFade(@colorSecond);
-    padding-top: 0.5em;
-    padding-left: 1em;
-    padding-bottom: 0.5em;
-    min-height: 3em;
-    .flex-shrink(0);
-    span{
+  #infopage{
+    .link{
       display: inline-block;
-      vertical-align: middle;
-      margin-right: 1em;
+      padding: 1em;
+      text-decoration: underline;
     }
-    .aisWarning{
-      display: inline-block;
-      width: 1.8em;
-      height: 1.8em;
-      margin-right: 1em;
-      vertical-align: middle;
+    .linkWrapper{
+      margin: 1em;
+      .flex-shrink(0);
     }
-  }
-}
-
-@aisInfoSmall: 35em;
-@aisInfoNoIconHeight: 40em;
-.aisInfoDialog{
-  position: relative;
-  .status{
-    width: 100px;
-    height:100px;
-    display: block;
-    @media(max-width: @aisInfoSmall) {
-      @media (max-height: @aisInfoNoIconHeight) {
-        display: none;
-      }
-    }
-  }
-  .infoList{
-    width: 100%;
-    height: 100%;
-    @media(max-width: @aisInfoSmall){
-      height: unset;
-    }
-    max-width: 60em;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 0.5em;
-    .flex-grow(1);
-    .label {
-      display: inline-block;
+    .infoFrame{
+      padding-left: 1em;
       padding-right: 1em;
-      .mdText2();
-      width: 6em;
-    }
-    .aisData {
-      display: inline-block;
-      text-align: left;
-      padding-bottom: .5em;
-      width: 15em;
-      font-weight: bold;
-    }
-    .aisWarning{
-      color: @colorRed; //should also be ok for night mode as normal night color is dimmed to 60%
-    }
-  }
-  .dialogRow{
-    min-height: 0;
-    flex-shrink: 1;
-    overflow: auto;
-    @media(max-width: @aisInfoSmall){
-        .flex-direction(column-reverse)
-    }
-  }
-}
-
-.addOnFrame{
-  .flex(1);
-  .flex-display();
-  .flex-align-items(stretch);
-  iframe{
-    .flex(1);
-    height: 100%; /* older microsoft ...*/
-    min-height: 100%; //old safari
-    min-width: 100%; //old safari
-  }
-}
-#addonpage{
-  .buttonContainer{
-    overflow-y: auto;
-  }
-}
-
-#addresspage {
-
-  .url {
-    margin-bottom: 1em;
-    font-size: 1.2em;
-  }
-  .address {
-    .listEntry();
-    .flex-direction(column);
-    padding: 2em;
-  }
-}
-
-#statuspage,#importerpage,.importConverterDialog,.importScannerDialog{
-  .editIcon {
-    margin-left: 1em;
-  }
-  .status {
-    .listEntry();
-    .flex-direction(column);
-    padding-left: 1em;
-    margin-top: 5px;
-    line-height: 1.5em;
-    .statusHeading{
-      .flex-display();
-      .flex-direction(row);
-      &.disabled{
-        .mdText2();
+      p {
+        margin-top: 0.2em;
+        margin-bottom: 0.5em;
+      }
+      h3 {
+        margin-top: 1em;
+        margin-bottom: 0.2em;
       }
     }
-    .flex-shrink(0);
+    .avnavVersion {
+      margin-left: 1em;
+    }
+
   }
-  .childStatus {
-    padding-left: 1.5em;
-    margin-top: 3px;
+
+  #gpspage{
+    .iconContainer{
+      z-index: 102;
+    }
+    .leftPart{
+      .flex-direction(row);
+      height: 100%;
+    }
+    .hfield{
+      width: 50%;
+      height: 100%;
+      border: 1px solid;
+      .nightBorderFade(grey);
+      .widgetContainer{
+        height: 100%;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        .flex-direction(column);
+        .flex-align-items(stretch);
+      }
+    }
+    .resize,.noresize{
+      .flex-display();
+      .flex-direction(column);
+      .flex-justify-content(space-evenly);
+      max-height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
+
+  }
+  .aisHidden{
+    opacity: 0.5;
+  }
+  #aispage{
+    .aisListItem{
+      .listEntry();
+      .flex-wrap(wrap);
+      .aisItemFB{
+        width:4em;
+        min-width: 4em;
+      }
+      .fb1{
+        font-size: 2.5em;
+        font-weight: bold;
+      }
+      .aisData{
+        overflow: hidden;
+        max-width: 100%;
+        .aisData1{
+          font-weight: bold;
+          margin-bottom: 0.2em;
+        }
+        .aisData2{
+          white-space: pre-line;
+          font-family: monospace;
+        }
+        .infoLine{
+          margin-bottom: 0.2em;
+          .flex-display();
+          .flex-direction(row);
+          .flex-wrap(wrap);
+        }
+        .label{
+          .mdText2();
+          width: 2em;
+          display: inline-block;
+        }
+        .info{
+          padding-left: 1em;
+          min-width: 6.5em;
+          display: inline-block;
+        }
+      }
+    }
+
+    .aisSummary{
+      .nightBackFade(@colorSecond);
+      padding-top: 0.5em;
+      padding-left: 1em;
+      padding-bottom: 0.5em;
+      min-height: 3em;
+      .flex-shrink(0);
+      span{
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 1em;
+      }
+      .aisWarning{
+        display: inline-block;
+        width: 1.8em;
+        height: 1.8em;
+        margin-right: 1em;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  @aisInfoSmall: 35em;
+  @aisInfoNoIconHeight: 40em;
+  .aisInfoDialog{
+    position: relative;
+    .status{
+      width: 100px;
+      height:100px;
+      display: block;
+      @media(max-width: @aisInfoSmall) {
+        @media (max-height: @aisInfoNoIconHeight) {
+          display: none;
+        }
+      }
+    }
+    .infoList{
+      width: 100%;
+      height: 100%;
+      @media(max-width: @aisInfoSmall){
+        height: unset;
+      }
+      max-width: 60em;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 0.5em;
+      .flex-grow(1);
+      .label {
+        display: inline-block;
+        padding-right: 1em;
+        .mdText2();
+        width: 6em;
+      }
+      .aisData {
+        display: inline-block;
+        text-align: left;
+        padding-bottom: .5em;
+        width: 15em;
+        font-weight: bold;
+      }
+      .aisWarning{
+        color: @colorRed; //should also be ok for night mode as normal night color is dimmed to 60%
+      }
+    }
+    .dialogRow{
+      min-height: 0;
+      flex-shrink: 1;
+      overflow: auto;
+      @media(max-width: @aisInfoSmall){
+        .flex-direction(column-reverse)
+      }
+    }
+  }
+
+  .addOnFrame{
+    .flex(1);
     .flex-display();
-    .flex-direction(row);
-    .flex-align-items(center);
-    .flex-wrap(wrap);
-    .mdText2();
-    img {
-      width: 1em;
-      height: 1em;
-      margin-left: -1em;
-    }
-    &.sub{
-      margin-left: 1.5em;
-      margin-top: 0;
+    .flex-align-items(stretch);
+    iframe{
+      .flex(1);
+      height: 100%; /* older microsoft ...*/
+      min-height: 100%; //old safari
+      min-width: 100%; //old safari
     }
   }
-  .statusName {
-    padding-left: 3px;
-  }
-  .statusInfo {
-    padding-left: 3px;
-    word-wrap: break-word;
-  }
-  &.serverError{
-    .header {
-      .nightBackFade(@colorRed);
+  #addonpage{
+    .buttonContainer{
+      overflow-y: auto;
     }
   }
-}
 
-#importerpage{
-  .itemInfo {
-    margin-left: 1.5em;
-    padding-left: 3px;
-    .mdText2();
-  }
-}
+  #addresspage {
 
-#wpapage {
-  .wpaInterface {
-    font-size: 1.2em;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-    padding-left: 0.5em;
-    .detail {
-      .mdText2();
-      margin-top: 0.3em;
-      font-size: 0.81em;
-    }
-  }
-  .wpaNetwork {
-    .detail {
-      font-size: 1em;
-      .mdText2();
-      line-height: 1.5em;
-      margin-right: 0.5em;
-    }
-    .ssid {
-      margin-right: 2em;
+    .url {
+      margin-bottom: 1em;
       font-size: 1.2em;
     }
-  }
-}
-
-.wpaDialog {
-  button[name=cancel] {
-    float: right;
-  }
-  button[name=connect] {
-    float: right;
-  }
-  button[name=disable] {
-    float: right;
-  }
-  button[name=remove] {
-    float: left;
-  }
-  label {
-    margin-bottom: 0.5em;
-    display: block;
-    text-align: left;
-  }
-
-}
-
-#downloadpage{
-  .itemMain {
-    .flex-display();
-    .flex-direction(row);
-    .flex(1);
-    .flex-wrap(wrap);
-    .flex-align-items(start);
-  }
-  .listEntry{
-    .flex-wrap(wrap);
-    .flex-align-items(center);
-  }
-  .downloadItemData{
-    .flex(1);
-    padding-left: 0.8em;
-    padding-right: 0.8em;
-    .flex-display();
-    .flex-direction(row);
-    .flex-align-items(center);
-    @media(max-width: 35em){
+    .address {
+      .listEntry();
       .flex-direction(column);
-      .flex-align-items(flex-start);
+      padding: 2em;
     }
-    .date{
+  }
+
+  #statuspage,#importerpage,.importConverterDialog,.importScannerDialog{
+    .editIcon {
+      margin-left: 1em;
+    }
+    .status {
+      .listEntry();
+      .flex-direction(column);
+      padding-left: 1em;
+      margin-top: 5px;
+      line-height: 1.5em;
+      .statusHeading{
+        .flex-display();
+        .flex-direction(row);
+        &.disabled{
+          .mdText2();
+        }
+      }
+      .flex-shrink(0);
+    }
+    .childStatus {
+      padding-left: 1.5em;
+      margin-top: 3px;
+      .flex-display();
+      .flex-direction(row);
+      .flex-align-items(center);
+      .flex-wrap(wrap);
       .mdText2();
-      width: 11.5em;
+      img {
+        width: 1em;
+        height: 1em;
+        margin-left: -1em;
+      }
+      &.sub{
+        margin-left: 1.5em;
+        margin-top: 0;
+      }
     }
-    .info{
+    .statusName {
+      padding-left: 3px;
+    }
+    .statusInfo {
+      padding-left: 3px;
+      word-wrap: break-word;
+    }
+    &.serverError{
+      .header {
+        .nightBackFade(@colorRed);
+      }
+    }
+  }
+
+  #importerpage{
+    .itemInfo {
+      margin-left: 1.5em;
+      padding-left: 3px;
+      .mdText2();
+    }
+  }
+
+  #wpapage {
+    .wpaInterface {
+      font-size: 1.2em;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      padding-left: 0.5em;
+      .detail {
+        .mdText2();
+        margin-top: 0.3em;
+        font-size: 0.81em;
+      }
+    }
+    .wpaNetwork {
+      .detail {
+        font-size: 1em;
+        .mdText2();
+        line-height: 1.5em;
+        margin-right: 0.5em;
+      }
+      .ssid {
+        margin-right: 2em;
+        font-size: 1.2em;
+      }
+    }
+  }
+
+  .wpaDialog {
+    button[name=cancel] {
+      float: right;
+    }
+    button[name=connect] {
+      float: right;
+    }
+    button[name=disable] {
+      float: right;
+    }
+    button[name=remove] {
+      float: left;
+    }
+    label {
+      margin-bottom: 0.5em;
+      display: block;
+      text-align: left;
+    }
+
+  }
+
+  #downloadpage{
+    .itemMain {
+      .flex-display();
+      .flex-direction(row);
       .flex(1);
-      word-break: break-all;
+      .flex-wrap(wrap);
+      .flex-align-items(start);
     }
-    &.noDelete{
-      margin-left: 2.4em;
+    .listEntry{
+      .flex-wrap(wrap);
+      .flex-align-items(center);
     }
-  }
-  .infoImages{
-    padding-left: 0.8em;
-  }
-  .listrasimage{
-   .iconImage('plug.svg');
-  }
-  .editimage{
-    .iconImage('ic_edit.svg');
-  }
-  .viewimage{
-    .iconImage('visibility.svg');
-  }
-  .appimage{
-    .iconImage('apps.svg');
+    .downloadItemData{
+      .flex(1);
+      padding-left: 0.8em;
+      padding-right: 0.8em;
+      .flex-display();
+      .flex-direction(row);
+      .flex-align-items(center);
+      @media(max-width: 35em){
+        .flex-direction(column);
+        .flex-align-items(flex-start);
+      }
+      .date{
+        .mdText2();
+        width: 11.5em;
+      }
+      .info{
+        .flex(1);
+        word-break: break-all;
+      }
+      &.noDelete{
+        margin-left: 2.4em;
+      }
+    }
+    .infoImages{
+      padding-left: 0.8em;
+    }
+    .listrasimage{
+      .iconImage('plug.svg');
+    }
+    .editimage{
+      .iconImage('ic_edit.svg');
+    }
+    .viewimage{
+      .iconImage('visibility.svg');
+    }
+    .appimage{
+      .iconImage('apps.svg');
+    }
+
   }
 
-}
-
-.downloadProgress{
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 1em 1em 1em 1em;
-  background-color: lightgrey;
-  z-index: 10;
-  .flex-display();
-  .nightColors();
-  .progressContainer{
-    .flex(1);
-  }
-  .progressDisplay {
-    margin: 0.5em 0.5em 0.5em 0.5em;
-    height: 2em;
-    display: block;
-    border: 1px solid;
-    margin-left: 1em;
-    margin-bottom: 1em;
-    margin-right: 1em;
-  }
-  .progressInfo{
-    display: block;
-    text-align: center;
-  }
-  .progressDone{
-    height: 100%;
-    .nightBackColor(blue);
-  }
-}
-
-.fileDialog{
-  .existing input{
-    border-bottom: 1px solid;
-    .nightBorderFade(@colorRed)
-  }
-}
-.userAppDialog{
-   .input, input{
-    width: auto;
-     .flex(1);
-    min-width: 10em;
-  }
-}
-
-.editFileDialog{
-  width: 90vw;
-  height: 90vh;
-  .edit{
-    .flex(1);
-    position: relative;
-  }
-}
-.EditRouteDialog{
-  &.activeRoute{
-    border-width: 3px;
-    border-style: solid;
-    padding: 5px;
-    .nightBorderFade(@colorRed);
-  }
-}
-.EditRoutePoints{
-  .routeInfoPoint {
+  .downloadProgress{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1em 1em 1em 1em;
+    background-color: lightgrey;
+    z-index: 10;
     .flex-display();
-    .flex-direction(row);
-    line-height: 2em;
-    .info{
-      width: 8em;
-      padding-top: 0.4em;
-      padding-bottom: 0.4em;
+    .nightColors();
+    .progressContainer{
+      .flex(1);
+    }
+    .progressDisplay {
+      margin: 0.5em 0.5em 0.5em 0.5em;
+      height: 2em;
+      display: block;
+      border: 1px solid;
+      margin-left: 1em;
+      margin-bottom: 1em;
+      margin-right: 1em;
+    }
+    .progressInfo{
+      display: block;
+      text-align: center;
+    }
+    .progressDone{
+      height: 100%;
+      .nightBackColor(blue);
     }
   }
-}
 
-#settingspage{
+  .fileDialog{
+    .existing input{
+      border-bottom: 1px solid;
+      .nightBorderFade(@colorRed)
+    }
+  }
+  .userAppDialog{
+    .input, input{
+      width: auto;
+      .flex(1);
+      min-width: 10em;
+    }
+  }
+
+  .editFileDialog{
+    width: 90vw;
+    height: 90vh;
+    .edit{
+      .flex(1);
+      position: relative;
+    }
+  }
+  .EditRouteDialog{
+    &.activeRoute{
+      border-width: 3px;
+      border-style: solid;
+      padding: 5px;
+      .nightBorderFade(@colorRed);
+    }
+  }
+  .EditRoutePoints{
+    .routeInfoPoint {
+      .flex-display();
+      .flex-direction(row);
+      line-height: 2em;
+      .info{
+        width: 8em;
+        padding-top: 0.4em;
+        padding-bottom: 0.4em;
+      }
+    }
+  }
+
+  #settingspage{
     .leftSection{
       .flex-display();
       .flex-direction(row);
@@ -1506,216 +1530,216 @@ span.valuePrefix{
         width: 0.8em;
       }
     }
-}
-
-.settingsDialog{
-  input{
-    width: 10em;
-  }
-  button[name=reset] {
-    float: left;
-  }
-  .settingsRange {
-    margin-bottom: 1em;
-    font-size: 0.8em;
-    .mdText2();
-  }
-  &.colorDialog {
-    .value {
-      margin-top: 1em;
-    }
-    .colorValue {
-      width: 50px;
-      height: 50px;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    .colorFrame {
-      margin-top: 1em;
-    }
-    .colorPicker {
-      .flex-display();
-      .flex-direction(row);
-    }
-    .colorName{
-      width:11em;
-    }
   }
 
-}
-
-#warningpage{
-  .warningFrame {
-    margin-left: 0.5em;
-    margin-right: 0.5em;
-  }
-
-}
-
-#viewpage{
-  .mainContainer{
-    .flex(1);
-    position: relative;
-    overflow: auto;
-    &.image {
-      .flex-display();
-      .flex-align-items(center);
-      .flex-justify-content(center);
+  .settingsDialog{
+    input{
+      width: 10em;
     }
-    &.hidden{
-      display: none !important;
+    button[name=reset] {
+      float: left;
     }
-    &.flex{
-      .flex-display();
-    }
-  }
-  .readOnlyText{
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-  }
-  .readOnlyImage{
-    max-width: 100%;
-    max-height: 100%;
-    margin: auto;
-    display: block;
-    object-fit: contain;
-  }
-  //some corrections for codeflask
-  pre.codeflask__pre.codeflask__flatten {
-    width: unset;
-  }
-  .codeflask__lines{
-    z-index: 4 !important;
-    background-color:  #eee;
-  }
-  .codeflask__lines__line{
-    background-color:  #eee;
-    padding-right: 5px;
-    padding-left: 0;
-  }
-  .codeflask__flatten{
-    font-size: inherit;
-  }
-  textarea{
-    font-size: inherit;
-  }
-}
-
-#addonconfigpage{
-  .appIcon{
-    width: 3em;
-    height: 3em;
-    margin-left: 0.5em;
-    margin-right: 1em;
-  }
-  .itemMain{
-    .flex(1);
-    .flex-display();
-    .flex-direction(column);
-    .itemTitle{
+    .settingsRange {
+      margin-bottom: 1em;
+      font-size: 0.8em;
       .mdText2();
     }
-    overflow: hidden;
-    min-width: 0;
-    .sourceInfo {
-      .mdText2();
+    &.colorDialog {
+      .value {
+        margin-top: 1em;
+      }
+      .colorValue {
+        width: 50px;
+        height: 50px;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .colorFrame {
+        margin-top: 1em;
+      }
+      .colorPicker {
+        .flex-display();
+        .flex-direction(row);
+      }
+      .colorName{
+        width:11em;
+      }
     }
-    .sourceInfo:before{
-      content:"(";
-    }
-    .sourceInfo:after{
-      content:")";
-    }
-  }
-  .AddonConfigView{
-    .flex-shrink(0);
-  }
-}
 
-//-------------- pages with map and widgets ----------------------------
-.mapPage{
-  .iconContainer{
-    z-index: 102; //above widgets and shade
   }
-  .mapFrame {
-    position: relative;
-    .flex-grow(1);
-  }
-  .map{
-    .flex(1);
-    overflow: hidden;
-    /* position absolute contradicts somehow the flex approach
-       but otherwise the map will not show on old Safari (IPad 4, safari 9)
-     */
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-  }
-  &.mapFloat .map{
-    z-index: 1;
-  }
-  .leftSection{
-    .flex-display();
-    .flex(1);
-    .flex-direction(column);
-    position: relative;
 
-    min-width: 0;
-    min-height: 0;
-  }
-  .bottomSection{
-    z-index: 3;
-    .flex-display();
-    .flex-direction(row);
-    .flex-wrap(nowrap);
-    position: relative;
-    .bottomLeft{
-      width: 50%;
-      position: relative;
-      .flex-direction(row-reverse);
-      .flex-justify-content(flex-start);
+  #warningpage{
+    .warningFrame {
+      margin-left: 0.5em;
+      margin-right: 0.5em;
     }
-    .bottomRight{
-      width: 50%;
+
+  }
+
+  #viewpage{
+    .mainContainer{
+      .flex(1);
       position: relative;
+      overflow: auto;
+      &.image {
+        .flex-display();
+        .flex-align-items(center);
+        .flex-justify-content(center);
+      }
+      &.hidden{
+        display: none !important;
+      }
+      &.flex{
+        .flex-display();
+      }
+    }
+    .readOnlyText{
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+    }
+    .readOnlyImage{
+      max-width: 100%;
+      max-height: 100%;
+      margin: auto;
+      display: block;
+      object-fit: contain;
+    }
+    //some corrections for codeflask
+    pre.codeflask__pre.codeflask__flatten {
+      width: unset;
+    }
+    .codeflask__lines{
+      z-index: 4 !important;
+      background-color:  #eee;
+    }
+    .codeflask__lines__line{
+      background-color:  #eee;
+      padding-right: 5px;
+      padding-left: 0;
+    }
+    .codeflask__flatten{
+      font-size: inherit;
+    }
+    textarea{
+      font-size: inherit;
+    }
+  }
+
+  #addonconfigpage{
+    .appIcon{
+      width: 3em;
+      height: 3em;
+      margin-left: 0.5em;
+      margin-right: 1em;
+    }
+    .itemMain{
+      .flex(1);
+      .flex-display();
+      .flex-direction(column);
+      .itemTitle{
+        .mdText2();
+      }
+      overflow: hidden;
+      min-width: 0;
+      .sourceInfo {
+        .mdText2();
+      }
+      .sourceInfo:before{
+        content:"(";
+      }
+      .sourceInfo:after{
+        content:")";
+      }
+    }
+    .AddonConfigView{
+      .flex-shrink(0);
+    }
+  }
+
+  //-------------- pages with map and widgets ----------------------------
+  .mapPage{
+    .iconContainer{
+      z-index: 102; //above widgets and shade
+    }
+    .mapFrame {
+      position: relative;
+      .flex-grow(1);
+    }
+    .map{
+      .flex(1);
+      overflow: hidden;
+      /* position absolute contradicts somehow the flex approach
+         but otherwise the map will not show on old Safari (IPad 4, safari 9)
+       */
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+    }
+    &.mapFloat .map{
+      z-index: 1;
+    }
+    .leftSection{
+      .flex-display();
+      .flex(1);
+      .flex-direction(column);
+      position: relative;
+
+      min-width: 0;
+      min-height: 0;
+    }
+    .bottomSection{
+      z-index: 3;
+      .flex-display();
       .flex-direction(row);
+      .flex-wrap(nowrap);
+      position: relative;
+      .bottomLeft{
+        width: 50%;
+        position: relative;
+        .flex-direction(row-reverse);
+        .flex-justify-content(flex-start);
+      }
+      .bottomRight{
+        width: 50%;
+        position: relative;
+        .flex-direction(row);
+      }
+    }
+    &.editing{
+      .bottomLeft {
+        border-right: 0.3em solid;
+        .nightBorderFade(@editingColor);
+      }
+      .bottomRight {
+        border-left: 0.3em solid;
+        .nightBorderFade(@editingColor);
+      }
+    }
+    .widgetContainer.left{
+      position: absolute;
+      bottom:0;
+      left:0;
+      max-height: 100%;
+      z-index: 3;
+      width:  @navLeftWidgetWidth;
+    }
+    .widgetContainer.top{
+      z-index: 3;
+    }
+    .overlayContainer{
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      background-color: inherit;
+    }
+    &.mapFloat .buttonContainer{
+      background-color: unset;
+      z-index: 2;
+    }
+    &.mapFloat .buttonShade{
+      z-index: 2;
     }
   }
-  &.editing{
-    .bottomLeft {
-      border-right: 0.3em solid;
-      .nightBorderFade(@editingColor);
-    }
-    .bottomRight {
-      border-left: 0.3em solid;
-      .nightBorderFade(@editingColor);
-    }
-  }
-  .widgetContainer.left{
-    position: absolute;
-    bottom:0;
-    left:0;
-    max-height: 100%;
-    z-index: 3;
-    width:  @navLeftWidgetWidth;
-  }
-  .widgetContainer.top{
-    z-index: 3;
-  }
-  .overlayContainer{
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    background-color: inherit;
-  }
-  &.mapFloat .buttonContainer{
-    background-color: unset;
-    z-index: 2;
-  }
-  &.mapFloat .buttonShade{
-    z-index: 2;
-  }
-}

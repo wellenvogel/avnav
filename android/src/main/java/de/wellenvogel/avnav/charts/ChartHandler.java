@@ -235,7 +235,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                     AvnLog.e("error getting file reader for "+chart.getChartKey(),e);
                 }
             }
-            context.sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
             Thread overviewCreator=new Thread(new Runnable() {
                 @Override
                 public void run() {

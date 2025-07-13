@@ -169,7 +169,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 }
             }
         });
-        sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
+        Intent bc=new Intent(Constants.BC_RELOAD_DATA);
+        bc.setPackage(getPackageName());
+        sendBroadcast(bc);
 
     }
 
