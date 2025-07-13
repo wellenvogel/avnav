@@ -1376,7 +1376,7 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
     setBoatOffset(point) {
-        if (!point) {
+        if (!point || ! this.olmap) {
             this.boatOffset = {
                 x: 50,
                 y: 50
