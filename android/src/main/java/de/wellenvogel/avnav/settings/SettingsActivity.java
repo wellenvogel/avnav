@@ -458,6 +458,7 @@ public class SettingsActivity extends PreferenceActivity {
 
     @Override
     public void onBackPressed(){
+        AvnLog.i(Constants.LOGPRFX,"settings back");
         if (!isMultiPane() && ! hasHeaders()){
             super.onBackPressed();
             return;
@@ -516,16 +517,19 @@ public class SettingsActivity extends PreferenceActivity {
     private void resultOk(){
         Intent result=new Intent();
         setResult(Activity.RESULT_OK,result);
+        AvnLog.i(Constants.LOGPRFX,"settings ok");
         finish();
     }
     private void resultNoRestart(){
         Intent result=new Intent();
         setResult(Constants.RESULT_NO_RESTART,result);
+        AvnLog.i(Constants.LOGPRFX,"settings no restart");
         finish();
     }
     private void resultNok(){
         Intent result=new Intent();
         setResult(Activity.RESULT_FIRST_USER,result);
+        AvnLog.i(Constants.LOGPRFX,"settings nok");
         finish();
     }
     @Override

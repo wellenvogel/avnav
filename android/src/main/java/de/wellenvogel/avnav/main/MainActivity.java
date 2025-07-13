@@ -879,6 +879,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (webView == null) {
             initializeWebView();
         }
+        AvnLog.i(LOGPRFX,"MainActivity:onResumeInternal done");
     }
 
     private void shoLoading() {

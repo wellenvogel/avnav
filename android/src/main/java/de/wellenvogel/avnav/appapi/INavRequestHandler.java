@@ -29,6 +29,7 @@ public interface INavRequestHandler {
      */
     JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception;
 
+
     /**
      * delet an item
      * @param name

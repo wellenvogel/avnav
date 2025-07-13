@@ -37,10 +37,11 @@ import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
 import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 
-public class ChartHandler implements INavRequestHandler {
+public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     private static final String GEMFEXTENSION =".gemf";
     private static final String MBTILESEXTENSION =".mbtiles";
     private static final String XMLEXTENSION=".xml";
@@ -54,15 +55,70 @@ public class ChartHandler implements INavRequestHandler {
     private HashMap<String, Chart> chartList =new HashMap<String, Chart>();
     private boolean isStopped=false;
     private final HashMap<String,JSONArray> externalCharts= new HashMap<>();
+    private Thread chartUpdater;
+    private final Object chartHandlerMonitor=new Object();
+    private boolean loading=true;
+    private long updateSequence=0;
 
     public ChartHandler(Context a, RequestHandler h){
         handler=h;
         context =a;
+        startUpdater();
+    }
 
+    private void triggerUpdate(boolean wait){
+        long currentSequence=-1;
+        synchronized (chartHandlerMonitor){
+            currentSequence=updateSequence;
+            chartHandlerMonitor.notifyAll();
+        }
+        if (! wait) return;
+        long waitTime=30*50; //30s
+        while (currentSequence == updateSequence){
+            waitTime--;
+            if (waitTime <= 0) return;
+            synchronized (chartHandlerMonitor){
+                try {
+                    chartHandlerMonitor.wait(20);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+    }
+
+    public void startUpdater(){
+        if (chartUpdater != null){
+            if (chartUpdater.isAlive()) {
+                chartUpdater.interrupt();
+            }
+            chartUpdater=null;
+        }
+        chartUpdater = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                AvnLog.i("RequestHandler: chartHandler thread is starting");
+                while (!isStopped) {
+                    updateChartList();
+                    try {
+                        synchronized (chartHandlerMonitor){
+                            updateSequence++;
+                            chartHandlerMonitor.wait(5000);
+                        }
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+                AvnLog.i("RequestHandler: chartHandler thread is stopping");
+            }
+        });
+        chartUpdater.setDaemon(true);
+        chartUpdater.start();
     }
 
     public void stop(){
         isStopped=true;
+        triggerUpdate(false);
     }
 
     /**
@@ -104,9 +160,13 @@ public class ChartHandler implements INavRequestHandler {
         }
     }
 
+    /**
+     * we rely on this method only be called with one thread
+     */
     public void updateChartList(){
         HashMap<String, Chart> newGemfFiles=new HashMap<String, Chart>();
         HashMap<String, Chart> currentCharts=chartList; //atomic
+        HashMap<String, Chart> workingCharts=new HashMap<>(currentCharts); //make a copy to save with atomic at the end
         SharedPreferences prefs=AvnUtil.getSharedPreferences(context);
         File workDir=AvnUtil.getWorkDir(prefs, context);
         File chartDir = getInternalChartsDir(context);
@@ -137,28 +197,28 @@ public class ChartHandler implements INavRequestHandler {
             for (String url : newGemfFiles.keySet()) {
                 Chart chart = newGemfFiles.get(url);
                 long lastModified = chart.getLastModified();
-                if (currentCharts.get(url) == null) {
-                    chartList.put(url, chart);
+                if (workingCharts.get(url) == null) {
+                    workingCharts.put(url, chart);
                     modifiedCharts.add(chart);
                     modified = true;
                 } else {
-                    if (chartList.get(url).getLastModified() < lastModified) {
+                    if (workingCharts.get(url).getLastModified() < lastModified) {
                         modified = true;
-                        chartList.get(url).close();
-                        chartList.put(url, chart);
+                        workingCharts.get(url).close();
+                        workingCharts.put(url, chart);
                         modifiedCharts.add(chart);
                     }
                 }
             }
 
-            Iterator<String> it = chartList.keySet().iterator();
+            Iterator<String> it = workingCharts.keySet().iterator();
             while (it.hasNext()) {
                 String url = it.next();
                 if (newGemfFiles.get(url) == null) {
                     it.remove();
                     modified = true;
                 } else {
-                    Chart chart = chartList.get(url);
+                    Chart chart = workingCharts.get(url);
                     if (chart.closeInactive()) {
                         AvnLog.i("closing gemf file " + url);
                         modified = true;
@@ -167,6 +227,14 @@ public class ChartHandler implements INavRequestHandler {
             }
         }
         if (modified){
+            for (Chart chart:modifiedCharts){
+                try {
+                    //open the chart file - this can be time consuming
+                    if (! chart.isXml()) chart.getChartFileReader();
+                } catch (Exception e) {
+                    AvnLog.e("error getting file reader for "+chart.getChartKey(),e);
+                }
+            }
             context.sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
             Thread overviewCreator=new Thread(new Runnable() {
                 @Override
@@ -192,22 +260,26 @@ public class ChartHandler implements INavRequestHandler {
                     AvnLog.i("done creating chart overviews");
                     if (readAgain){
                         AvnLog.i("errors when creating chart overview, files have been deleted - read again");
-                        updateChartList();
+                        triggerUpdate(false);
                     }
                 }
             });
             overviewCreator.setDaemon(true);
             overviewCreator.start();
         }
+        chartList=workingCharts; //atomic replace of the current list
+        loading=false;
     }
 
     public synchronized Chart getChartDescription(String url){
-        return chartList.get(url);
+        HashMap<String,Chart> currentCharts=chartList; //atomic
+        return currentCharts.get(url);
     }
     public synchronized Chart getChartDescriptionByChartKey(String key){
         if (key == null) return null;
         //we rely on the the key (url) being the same as our chart key
-        return chartList.get(key);
+        HashMap<String,Chart> currentCharts=chartList; //atomic
+        return currentCharts.get(key);
     }
 
     private void readChartDir(String chartDirStr,String index,HashMap<String, Chart> arr) {
@@ -306,13 +378,13 @@ public class ChartHandler implements INavRequestHandler {
         if (postData == null) throw new Exception("no data in file");
         DirectoryRequestHandler.writeAtomic(outFile,postData.getStream(),ignoreExisting,postData.getContentLength());
         postData.closeInput();
-        updateChartList();
+        triggerUpdate(true);
         return true;
     }
     private static final String[] REPLACE_KEYS=new String[]{"url","tokenUrl","icon"};
 
     @Override
-    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+    public JSONObject handleListExtended(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
         AvnLog.i(Constants.LOGPRFX,"start chartlist request "+Thread.currentThread().getId());
         JSONArray rt=new JSONArray();
@@ -361,7 +433,7 @@ public class ChartHandler implements INavRequestHandler {
             Log.e(Constants.LOGPRFX,"exception adding external charts:",e);
         }
         AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId());
-        return rt;
+        return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("items",rt), new AvnUtil.KeyValue<Boolean>("loading",loading));
     }
 
     @Override
@@ -389,7 +461,7 @@ public class ChartHandler implements INavRequestHandler {
             File cfgFile=new File(getInternalChartsDir(this.context),cfgName);
             if (cfgFile.exists()) cfgFile.delete();
             deleteFromOverlays("chart",chart.getChartKey());
-            updateChartList();
+            triggerUpdate(true);
             return chartfile != null;
         }
     }

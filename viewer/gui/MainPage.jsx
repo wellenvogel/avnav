@@ -104,6 +104,8 @@ class BottomLine extends React.Component {
         }
     };
 
+const DEFAULT_QUERY_INTERVAL=3000;
+const EMPTY_QUERY_INTERVAL=500;
 
 class MainPage extends React.Component {
     constructor(props) {
@@ -113,7 +115,8 @@ class MainPage extends React.Component {
             addOns:[],
             selectedChart:0,
             sequence:0,
-            overlays:{}
+            overlays:{},
+            loading: false
         };
         this.fillList=this.fillList.bind(this);
         GuiHelper.storeHelper(this,(data)=>{
@@ -124,7 +127,7 @@ class MainPage extends React.Component {
         },{sequence:keys.gui.global.reloadSequence});
         this.timer=GuiHelper.lifecycleTimer(this,(sequence)=>{
             this.fillList(sequence);
-        },3000,true);
+        },DEFAULT_QUERY_INTERVAL,true);
         this.selectChart(0);
         GuiHelper.keyEventHandler(this,(component,action)=>{
             if (action == "selectChart"){
@@ -334,6 +337,7 @@ class MainPage extends React.Component {
                 let lastChartKey=current?current.getChartKey():mapholder.getLastChartKey();
                 let i=0;
                 let selectedChart;
+                let isLoading=json.items.length < 1 && json.loading;
                 json.items.sort((a,b)=>{
                     let nameA = (a.name).toUpperCase();
                     let nameB = (b.name).toUpperCase();
@@ -379,10 +383,16 @@ class MainPage extends React.Component {
                             rt.chartList=newState.chartList;
                         }
                         if (!RecursiveCompare(state.overlays,newState.overlays)) rt.overlays=newState.overlays;
-                        if (! rt.chartList && ! rt.overlays) return null;
+                        if (state.loading !== isLoading){
+                            rt.loading=isLoading;
+                        }
+                        if (! rt.chartList && ! rt.overlays && rt.loading === undefined) return null;
                         return rt;
                     });
-                    if (sequence !== undefined) this.timer.startTimer(sequence);
+                    if (sequence !== undefined) {
+                        this.timer.setTimeout(isLoading?EMPTY_QUERY_INTERVAL:DEFAULT_QUERY_INTERVAL)
+                        this.timer.startTimer(sequence);
+                    }
                 });
             },
             (error)=>{
@@ -407,7 +417,9 @@ class MainPage extends React.Component {
                   id="mainpage"
                   title={"AvNav "+ LocalStorage.getPrefix()}
                   mainContent={
-                    <ItemList className="mainContent"
+                    this.state.loading?<div className="loading mainContent">
+                            Loading charts...
+                        </div>:<ItemList className="mainContent"
                                itemClass={this.ChartItem}
                                onItemClick={this.showNavpage}
                                itemList={this.state.chartList}

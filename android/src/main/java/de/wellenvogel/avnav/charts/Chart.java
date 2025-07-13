@@ -75,7 +75,7 @@ public class Chart implements AvnUtil.IJsonObect {
         this.context=ctx;
     }
 
-    private synchronized ChartFileReader getChartFileReader() throws Exception {
+    synchronized ChartFileReader getChartFileReader() throws Exception {
         if (isXml())
             throw new IOException("unable to get chart file from xml");
         if (chartReader == null){

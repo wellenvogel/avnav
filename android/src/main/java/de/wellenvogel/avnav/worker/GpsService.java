@@ -64,6 +64,8 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+
 /**
  * Created by andreas on 12.12.14.
  */
@@ -118,7 +120,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private boolean allowAllPlugins=true;
 
     public void onResumeInternal() {
+        AvnLog.i(LOGPRFX,"onResumeInternal");
         onResumeWorkers();
+        AvnLog.i(LOGPRFX,"onResumeInternal done");
     }
 
     private static class Registration{
@@ -1165,6 +1169,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         unregisterAllServices();
         startDiscovery();
         handleStartup(false);
+        AvnLog.i(LOGPRFX,"service restart done");
     }
 
     public void onCreate()
