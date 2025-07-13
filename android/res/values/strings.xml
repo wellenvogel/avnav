@@ -99,7 +99,7 @@
     <string name="labelSettingsBlacklist">a , separated list of source names that we do not send out on this connection</string>
     <string name="labelSettingsSendBroadcast">send data as broadcast</string>
     <string name="labelSettingsComputeRMB">compute RMB sentences if a waypoint or route is active</string>
-    <string name="reallyResetHandlers">Really reset the handler configuration?</string>
+    <string name="reallyResetHandlers">Really reset the main and handler configuration?</string>
     <string name="labelSettingsSelectService">Select the service you would like to connect to</string>
     <string name="labelSettingsMdnsName">Name for Mdns (Bonjour/Avahi) announcement</string>
     <string name="labelSettingsMdnsEnabled">Enable announcement via MDNS (Bonjour/Avahi)</string>
@@ -133,4 +133,5 @@
     <string name="missingGps">Running without location permissions</string>
     <string name="nfexit">Exit</string>
     <string name="nfalarm">Cancel Alarm</string>
+    <string name="resetChartDir">reset external chart dir</string>
 </resources>

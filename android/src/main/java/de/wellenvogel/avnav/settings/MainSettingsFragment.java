@@ -1,24 +1,26 @@
 package de.wellenvogel.avnav.settings;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.DocumentsContract;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
@@ -125,6 +127,7 @@ public class MainSettingsFragment extends SettingsFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (which == DialogInterface.BUTTON_POSITIVE){
+                                    setDefaults(R.xml.main_preferences,false);
                                     GpsService.resetWorkerConfig(MainSettingsFragment.this.getActivity());
                                 }
                             }
@@ -132,6 +135,17 @@ public class MainSettingsFragment extends SettingsFragment {
                 return false;
             }
         });
+        Preference resetChartDir=findPreference(Constants.RESET_CHARTDIR);
+        ExternalDialogEditTextPreference chartDir= (ExternalDialogEditTextPreference) findPreference(Constants.CHARTDIR);
+        if (resetChartDir != null && chartDir != null){
+            resetChartDir.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    chartDir.setText("");
+                    return true;
+                }
+            });
+        }
         setDefaults(R.xml.main_preferences,true);
     }
 

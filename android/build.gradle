@@ -222,10 +222,10 @@ afterEvaluate {
     generateDebugAssets.dependsOn(copyToAssetsViewerDebug)
     generateReleaseAssets.dependsOn(copyToAssetsViewerRelease)
     generateBetaAssets.dependsOn(copyToAssetsViewerRelease)
-    [lintVitalReportBeta,lintVitalAnalyzeBeta,lintVitalReportRelease, lintVitalAnalyzeRelease].each { task ->
+    /*[lintVitalReportBeta,lintVitalAnalyzeBeta,lintVitalReportRelease, lintVitalAnalyzeRelease].each { task ->
         task.dependsOn(copyToAssetsViewerRelease)
         task.dependsOn(copySounds)
-    }
+    }*/
     //lintVitalReportDebug.dependsOn(copyToAssetsViewerDebug)
     //lintVitalReportDebug.dependsOn(copySounds)
 }

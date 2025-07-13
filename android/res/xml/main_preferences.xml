@@ -9,18 +9,25 @@
         android:key="chartdir"
         android:title="@string/selectChartDirLabel">
     </de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
+    <Preference
+        android:key="resetChartdir"
+        android:title="@string/resetChartDir">
+    </Preference>
     <CheckBoxPreference
         android:key="showdemo"
         android:title="@string/enableDemoLabel"
+        android:defaultValue="true"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
     <CheckBoxPreference
         android:key="alarmSounds"
+        android:defaultValue="true"
         android:title="@string/alarmSounds"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
     <CheckBoxPreference
         android:key="layout.hideBars"
+        android:defaultValue="true"
         android:title="@string/hideBars"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>

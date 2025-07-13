@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -26,6 +27,19 @@ import de.wellenvogel.avnav.worker.GpsService;
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String NAMESPACE="http://schemas.android.com/apk/res/android";
 
+    private String getStringDefault(XmlResourceParser xpp, String k){
+        String dv=xpp.getAttributeValue(NAMESPACE, "defaultValue");
+        Resources res=getResources();
+        if (dv != null) {
+            if (k.startsWith("@")) {
+                k = res.getString(Integer.parseInt(k.substring(1)));
+            }
+            if (dv.startsWith("@")) {
+                dv = res.getString(Integer.parseInt(dv.substring(1)));
+            }
+        }
+        return dv;
+    }
     /**
      * as there is no easy way of resetting all the defaults here, we parse the xml by our own...
      * @param id the resource id for the preferences xml
@@ -39,29 +53,24 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG) {
                     String k=xpp.getAttributeValue(NAMESPACE,"key");
-                    String dv=xpp.getAttributeValue(NAMESPACE, "defaultValue");
-                    if (dv != null) {
-                        if (k.startsWith("@")) {
-                            k = res.getString(Integer.parseInt(k.substring(1)));
-                        }
-                        if (dv.startsWith("@")) {
-                            dv = res.getString(Integer.parseInt(dv.substring(1)));
-                        }
-
-                        Preference p = getPreferenceScreen().findPreference(k);
-                        if (p != null) {
-                            if (! setDefaultOnly) {
-                                if (p instanceof EditTextPreference) {
-                                    ((EditTextPreference) p).setText(dv);
-                                }
+                    Preference p = getPreferenceScreen().findPreference(k);
+                    if (p != null) {
+                        if (! setDefaultOnly) {
+                            if (p instanceof EditTextPreference) {
+                                String dv=getStringDefault(xpp,k);
+                                if (dv == null) dv="";
+                                ((EditTextPreference) p).setText(dv);
                             }
-                            else {
-                                if (p instanceof DefaultsEditTextPreference){
-                                    ((DefaultsEditTextPreference)p).setDefaultValue(dv);
-                                }
-                                else if (p instanceof  AudioEditTextPreference){
-                                    ((AudioEditTextPreference)p).setDefaultValue(dv);
-                                }
+                            if (p instanceof CheckBoxPreference){
+                                String dv=getStringDefault(xpp,k);
+                                boolean bdv= dv != null && dv.equalsIgnoreCase("true");
+                                ((CheckBoxPreference)p).setChecked(bdv);
+                            }
+                        }
+                        else {
+                            if (p instanceof  AudioEditTextPreference){
+                                String dv=getStringDefault(xpp,k);
+                                if (dv != null) ((AudioEditTextPreference)p).setDefaultValue(dv);
                             }
                         }
                     }
