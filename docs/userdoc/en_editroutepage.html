@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
-
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvNav Route Editor</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -13,8 +12,8 @@
     <p>You will enter the route editor by clicking the&nbsp; <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage"> button on the <a href="navpage.html">navigation
         page</a> . Additionally you can get to it via the <img src="../viewerimages/icons-new/ic_edit.svg"
-		 alt="" class="inlineimage">Edit button in the route's info dialog on the <a href="downloadpage.html#filedialog">Files/Download</a>
-      page.</p>
+        alt="" class="inlineimage">Edit button in the route's info dialog on the
+      <a href="downloadpage.html#filedialog">Files/Download</a> page.</p>
     <div> <img src="routeedit-demo-start.png" alt="" class="fimage"><span style="font-weight: bold;"><br>
       </span></div>
     <div><span style="font-weight: bold;"><br>
@@ -81,9 +80,28 @@
           </td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StopNav</td>
+          <td>stop a running navigation (if one is currently active)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/menu_open.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Menu</td>
+          <td>show the EditRoute dialog to create/load/modify/rename a route</td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage"></td>
           <td>NavOverlays</td>
           <td>show and hide <a href="../hints/overlays.html">Overlays</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center-action.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>CenterAction</td>
+          <td>same action as tapping at the map center (crosshairs), brings up
+            the Feature List</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -101,48 +119,111 @@
       </tbody>
     </table>
     <p>At this page you can create and edit a route.</p>
-    <p>There is always a currently selected point within the
-      route. It is marked red on the chart and marked grey in the list on the
-      left side. You can change the selected point by clicking a different
-      point on the chart or in the list on the left side.<br>
+    <p>There is always a currently selected point within the route. It is marked
+      red on the chart and marked grey in the list on the left side. You can
+      change the selected point by clicking a different point on the chart or in
+      the list on the left side.<br>
       If you are editing the currently active route, the route info at the left
       side will display a red border (otherwise green).<br>
       Leaving the editor will take you back to the active route.</p>
     <p>All changes become effective immediately - there is no undo.</p>
     <p>At the left side you see a list of all the route's waypoints including
-      courses and distances. On top of the list the number of waypoints, the overall route
-      length and - if the route is active - the estimated ETA are displayed.<br>
-      By clicking an already selected waypoint in the list you open an
-      edit dialog to change its name or position.</p>
-    <h2><a name="routedialog" id="routedialog"></a>Route Dialog</h2>
-    <p> Clicking on the route info on the left side opens a dialog.</p>
+      courses and distances. On top of the list the number of waypoints, the
+      overall route length and - if the route is active - the estimated ETA are
+      displayed.<br>
+      By clicking an already selected waypoint in the list you open an edit
+      dialog to change its name or position.</p>
+    <h2><a name="routedialog" id="routedialog"></a>EditRoute Dialog</h2>
+    <p> Clicking on the route info on the left side or the <img src="../viewerimages/icons-new/menu_open.svg"
+        alt="" class="inlineimage">Menu Button opens a dialog.</p>
     <p><img src="editroutepage-editroutedialog.png" alt="" class="fimage"></p>
-    <p>Within this dialog you can change the name of the route, select a
-      new route to be edited, copy the route, delete it, empty or
-      invert it. </p>
-    <p>Clicking Edit will take you to the <a href="routepage.html">route list</a>.
-      At this page you can delete and edit all points, change the name, invert
-      or load a new route.</p>
-    <p>Clicking the bottom left panel activates some additional buttons.</p>
+    <p>Within this dialog you have the following actions available:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Action </td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>New</td>
+          <td>Create a new route. You will be prompted for a name. The new route
+            will be empty.</td>
+        </tr>
+        <tr>
+          <td>Load</td>
+          <td>Load an existing route. This bring up a select list with the
+            routes being stored at the server if you are in connected mode
+            (normal). If in disconnected mode you can load routes being stored
+            locally.<br>
+            The dialog will also include an Upload button to load a route that
+            you have available locally as a gpx file. It will upload this route
+            to AvNav.</td>
+        </tr>
+        <tr>
+          <td>Download</td>
+          <td>Download the current route to store it locally on your device.</td>
+        </tr>
+        <tr>
+          <td>Rename</td>
+          <td>Give the route a new name.</td>
+        </tr>
+        <tr>
+          <td>Points</td>
+          <td>Open the <a href="#pointsdialog">Points dialog</a> to invert,
+            renumber or empty the list of route points.</td>
+        </tr>
+        <tr>
+          <td>Delete</td>
+          <td>Delete the current route from AvNav</td>
+        </tr>
+        <tr>
+          <td>SaveAs</td>
+          <td>Save a copy of the current route with a new name.</td>
+        </tr>
+        <tr>
+          <td>Cancel</td>
+          <td>Quit the dialog without saving</td>
+        </tr>
+        <tr>
+          <td>OK</td>
+          <td>Save your changes</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Name Dialog</h3>
+    <p>From the EditRoute dialog some actions will bring up a name dialog to
+      select a new name for a route.</p>
+    <img src="editroutepage-namedialog.png" alt="" class="fimage">
+    <p>If the selected name already exists you can use the "Propose" action to
+      let the system propose a new name that currently does not exist.</p>
+    <h3><a name="pointsdialog" id="pointsdialog"></a>Points Dialog</h3>
+    <p>The "Points" action in the EditRoute dialog will bring up the Points
+      dialog.</p>
+    <p><img src="editroutepage-pointsdialog.png" alt="" class="fimage"></p>
+    <p>You can empty, invert or renumber the list of points. By clicking on a
+      point in the list a dialog will be brought up to edit this point (e.g.
+      changing the name).</p>
+    <h2>Route Point Buttons</h2>
+    <p>Clicking the bottom left panel activates some additional buttons. </p>
     <p><img src="editroute-wpbuttons.png" alt="" class="fimage"></p>
     <p>Using those buttons you can move between the points in the route or you
       can edit the selected waypoint.<br>
       Clicking the bottom right panel centers the chart at the boat's position.</p>
     <h2>Using Overlays</h2>
-    <p>If an <a href="../hints/overlays.html">overlay</a> is visible
-      (like in the picture) - or within <a href="../hints/ocharts.html">ocharts</a>
-      you can open a dialog by clicking an object on the chart. This
-      dialog provides some additional functions. </p>
+    <p>If an <a href="../hints/overlays.html">overlay</a> is visible (like in
+      the picture) - or within <a href="../hints/ocharts.html">ocharts</a> you
+      can open a dialog by clicking an object on the chart. This dialog provides
+      some additional functions. </p>
     <p><img src="../hints/Overlay-Example-InfoDialogRouting.png" alt="" class="fimage">
     </p>
-    <p>You can insert the object you clicked into the route (befor or
-      after the current red point). This way you can easily e.g. use points from
-      a waypoint file to create your routes.</p>
+    <p>You can insert the object you clicked into the route (befor or after the
+      current red point). This way you can easily e.g. use points from a
+      waypoint file to create your routes.</p>
     <p>If the overlay is a route you can insert the part after the clicked point
       into your current route.</p>
     <img src="../hints/Overlay-Example-InfoDialogRouting2.png" alt="" class="fimage">
-    <p>The dialog shows the selected start point of the route and you
-      can decide to insert before or after your current red point.</p>
+    <p>The dialog shows the selected start point of the route and you can decide
+      to insert before or after your current red point.</p>
     <p><br>
     </p>
     <p> </p>
