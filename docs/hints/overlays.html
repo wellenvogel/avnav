@@ -54,10 +54,10 @@
     <p>Im Bild wurde hier mit "InsertAfter" die Auswahl der vorhandenen Overlays
       aufgerufen.<br>
       Im Beispiel wurde die im overlays Verzeichnis vorhandene Datei
-      Wegepunkte2020.gpx (<a href="https://nvcharts.com/shop/media/download/Wegepunkte2020_gpx.zip">NV
+      Wegepunkte2020.gpx (<a href="https://nvcharts.com/downloads/wegepunkte/2024/Wegepunkte2024_gpx.zip">NV
         Verlag</a>)&nbsp; gewählt.<br>
       Es können jetzt noch Parameter für die Anzeige eingestellt werden.</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -99,7 +99,7 @@
             unsichtbar)</td>
         </tr>
         <tr>
-          <td>user icons</td>
+          <td>icon file</td>
           <td>---</td>
           <td>Hier kann eine zip-Datei angegeben werden, die die Bilder (oder
             sonstigen Inhalte) entält.<br>
@@ -146,12 +146,25 @@
             bereits mitbringt. <img src="../viewerimages/icons-new/DefaultGpxPoint.png"
               alt="" class="inlineimage"></td>
         </tr>
+        <tr>
+          <td>show text</td>
+          <td>nein</td>
+          <td>Zeige Text (z.B. Punkt-Namen)</td>
+        </tr>
+        <tr>
+          <td>feature Formatter</td>
+          <td>---</td>
+          <td>wähle einen <a href="userjs.html#featureFormatter">Feature
+              Formatierer</a> der benutzt wird, um die Informationen für die
+            Anzeige aufzubereiten, wenn auf der Karte auf das Overlay geklickt
+            wird.</td>
+        </tr>
       </tbody>
     </table>
     <p>Falls die Datei andere Inhalte hat als Wegpunkte, werden ggf. noch
       weitere Auswahlmöglichkeiten angeboten.</p>
     <p><img src="Overlay-Config-Default-Select2.png" alt="" class="fimage"></p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -208,25 +221,18 @@
     <p>Im Beispiel eine o-charts Karte mit einer OpenStreetMap Karte darunter
       und einer Wegpunkt-Datei darüber.<br>
       Als Icon wurde das DefaultGpxIcon gewählt.<br>
-      Wenn auf eines der Icons aus dem Overlay geklickt wird, erscheint ein Info
-      Dialog.</p>
+      Wenn auf eines der Icons aus dem Overlay geklickt wird, erhält man die
+      Feature Liste an diesem Punkt (die das Overlay entält), beim Klick auf das
+      Overlay erscheint ein Info Dialog.</p>
     <img src="Overlay-Example-InfoDialog.png" alt="" class="fimage">
     <p>Man erhält die zum Punkt verfügbaren Informationen und die Möglichkeit
       z.B. diesen Punkt sofort als Zielpunkt zum Routing zu verwenden (Goto).<br>
       Über "Hide" kann das gesamte Overlay temporär ausgeblendet werden.<br>
-      Wenn man sich momentan im <a href="../userdoc/editroutepage.html">Routen-Editor</a>
+      Wenn man sich momentan im <a href="../userdoc/editroutepage.html#featureInfo">Routen-Editor</a>
       befindet, stehen noch weitere Funktionen zur Verfügung.</p>
-    <p><img src="Overlay-Example-InfoDialogRouting.png" alt="" class="fimage"></p>
-    <p>Der gewählte Punkt kann zur Route hinzugefügt werden (vor oder hinter dem
-      aktuellen Punkt der Route) oder der aktuelle Punkt der Route kann auf
-      diesen Wegpunkt verschoben werden.</p>
-    <p>Wenn es sich beim Overlay um eine Route handelt, kann diese Route (ab dem
-      gewählten Punkt) zur aktuellen Route hinzugefügt werden.</p>
-    <p><img src="Overlay-Example-InfoDialogRouting2.png" alt="" class="fimage"></p>
-    <p>Auf der <a href="../userdoc/navpage.html">Navigationsseite</a> und im <a
-        href="../userdoc/editroutepage.html">Route-Editor</a> gibt es die
-      Möglichkeit, Overlays aus- und einzublenden.<br>
-      Dazu auf der rechten Seite den <img src="../viewerimages/icons-new/layers-black.svg"
+    Auf der <a href="../userdoc/navpage.html">Navigationsseite</a> und im <a href="../userdoc/editroutepage.html">Route-Editor</a>
+    gibt es die Möglichkeit, Overlays aus- und einzublenden.<br>
+    <p> Dazu auf der rechten Seite den <img src="../viewerimages/icons-new/layers-black.svg"
         alt="" class="inlineimage">Button verwenden.</p>
     <p><img src="Overlay-Config-ActiveOverlays.png" alt="" class="fimage"></p>
     <p>Hier kann man kurzfristig Overlays ein- und ausschalten. Diese
@@ -259,7 +265,7 @@
       veränderte/neue Eigenschaften zurückgeben, die dann vom FeatureInfo Dialog
       angezeigt werden.</p>
     <p>Die folgenden Eigenschaften können zurückgegeben werden:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>

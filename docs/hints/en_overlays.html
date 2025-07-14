@@ -44,15 +44,22 @@
         page</a> at the sub section "charts" - or&nbsp; at the <a href="../userdoc/mainpage.html">Mainpage</a>.</p>
     <p><img src="Overlay-Config-Default-DownloadPage.png" alt="" class="fimage"></p>
     <p>In the screenshot&nbsp; you see the dialog showing up once you click on
-      "DefaultOverlays" at the Files/Download page.</p>
+      "DefaultOverlays" at the Files/Download page.<br>
+      To change the display order of overlays just drag and drop them in the
+      list. <br>
+      Hint: Overlays shown before the ---chart--- entry are shown below the
+      chart.<br>
+      The overlays defined in the default overlays will be visible for all
+      charts (but can be enabled/disabled in the overlay dialogs for particular
+      charts).</p>
     <p>In this dialog you can add, edit or remove overlays.</p>
     <p><img src="Overlay-Config-Default-Select1.png" alt="" class="fimage"></p>
     <p>In the screenshot you see the dialog that opens on clicking
       "InsertAfter".<br>
-      In the example I selected the file Wegepunkte2020.gpx (<a href="https://nvcharts.com/shop/media/download/Wegepunkte2020_gpx.zip">NV
+      In the example I selected the file Wegepunkte2020.gpx (<a href="https://nvcharts.com/downloads/wegepunkte/2024/Wegepunkte2024_gpx.zip">NV
         Verlag</a>)&nbsp; that has been uploaded to the overlays directory.<br>
       You can now set various parameters (depending on the type of overlay).</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -86,7 +93,7 @@
           <td>the opacity for the display (0...1) - 0: invisible</td>
         </tr>
         <tr>
-          <td>user icons</td>
+          <td>icon file</td>
           <td>---</td>
           <td>You can select a zip file (that has been uploaded to overlays)
             containing symbol icons or other content (like html pages).<br>
@@ -130,12 +137,24 @@
             With --DefaultGpxIcon-- you can select a builtin icon. <img src="../viewerimages/icons-new/DefaultGpxPoint.png"
               alt="" class="inlineimage"></td>
         </tr>
+        <tr>
+          <td>show text</td>
+          <td>false</td>
+          <td>If enabled show item names (e.g. point names)</td>
+        </tr>
+        <tr>
+          <td>featureFormatter</td>
+          <td>---</td>
+          <td>select a <a href="userjs.html#featureFormatter">featureFormatter</a>
+            that will be used to format the information when the overlay is
+            clicked on the map.</td>
+        </tr>
       </tbody>
     </table>
     <p>If the overlay contains other data than way points, potentially more
       parameters can be displayed.</p>
     <p><img src="Overlay-Config-Default-Select2.png" alt="" class="fimage"></p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -156,10 +175,7 @@
     </table>
     <p>After clicking "Ok" the overlay has been added.</p>
     <img src="Overlay-Config-Default-SelectList.png" alt="" class="fimage"><br>
-    <p>You can change the overlay order by drag&amp;drop - if you want one below
-      the chart you have to move it above the ---chart--- row.</p>
-    <p>It could make sense to keep default overlays disabled first and just
-      enable them on the charts where you really need them - or just on demand.</p>
+    <br>
     <p>For a chart the overlay configuration looks like:</p>
     <img src="Overlay-Config-Default-SelectListNormal.png" alt="" class="fimage">
     <p>Overlays configured as defaults can only be moved (as a block) or
@@ -190,26 +206,18 @@
     <p>This example shows an o-charts chart together with an OpenStreetMap chart
       (below) and a waypoint file on top.<br>
       As default icon the --DefaultGpxIcon-- has been selected.<br>
-      If you click one of the overlay's icons you will get its Feature Info
-      dialog.</p>
+      If you click one of the overlay's icons you will get a Feature List withe
+      the overlay included, clicking it brings up the Feature Info dialog.</p>
     <img src="Overlay-Example-InfoDialog.png" alt="" class="fimage">
     <p>You will see the inforamtion available for this point and you can e.g.
       use this point as a routing target immediately (Goto).<br>
       Using "Hide" you can temporarily disable the complete overlay.<br>
-      From within the <a href="../userdoc/editroutepage.html">Route Editor</a>
-      some more functions are available at the info dialog.</p>
-    <p><img src="Overlay-Example-InfoDialogRouting.png" alt="" class="fimage"></p>
-    <p>The selected point can be added to the route (before or after the
-      currently selected point) or you can move the currently selected waypoint
-      to the position of the shown point.</p>
-    <p>If the overlay is a route you can insert this route (starting from the
-      selected point) into the current route. This way you can e.g. combine two
-      routes.</p>
-    <p><img src="Overlay-Example-InfoDialogRouting2.png" alt="" class="fimage"></p>
-    <p>At the <a href="../userdoc/navpage.html">Navigation Page</a> and within
-      the <a href="../userdoc/editroutepage.html">Route Editor</a> there is an
-      option to temporarily disable or enable overlays.<br>
-      This is done using the <img src="../viewerimages/icons-new/layers-black.svg"
+      From within the <a href="../userdoc/editroutepage.html#featureInfo">Route
+        Editor</a> some more functions are available at the info dialog.</p>
+    At the <a href="../userdoc/navpage.html">Navigation Page</a> and within the
+    <a href="../userdoc/editroutepage.html">Route Editor</a> there is an option
+    to temporarily disable or enable overlays.<br>
+    <p> This is done using the <img src="../viewerimages/icons-new/layers-black.svg"
         alt="" class="inlineimage">button on the right side.</p>
     <p><img src="Overlay-Config-ActiveOverlays.png" alt="" class="fimage"></p>
     <p>The enable and disable settings remain active until you change the chart.
@@ -235,13 +243,13 @@
       handled by AvNav on its own.</p>
     <p>For this purpose you can set a "featureFormatter" function when you <a href="#configuration">configure</a>
       the overlay. This featureFormatter is a java script function, either
-      already built in into AvNav or implemented by you in your <a href="userjs.html">user.js</a>&nbsp;
+      already built in into AvNav or implemented by you in your <a href="userjs.html#featureFormatter">user.js</a>&nbsp;
       It may also be provided by a <a href="plugins.html">plugin</a>.</p>
     <p>This java script function will retrieve all available parameters of the
       element from the overlay file that you have clicked on. It can return the
       properties to be shown in the "Feature Info" dialog.</p>
     <p>You can return the following properties:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
