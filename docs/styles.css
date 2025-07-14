@@ -17,7 +17,13 @@
 	display: inline-block;
 	vertical-align: middle;
 }
-
+.inlineimagered{
+	width: 2em;
+	height: 2em;
+	display: inline-block;
+	vertical-align: middle;
+	filter: invert(22%) sepia(100%) saturate(7262%) hue-rotate(359deg) brightness(93%) contrast(117%);
+}
 .image{
 	width: 600px;
 }

@@ -209,23 +209,115 @@
     <p>Using those buttons you can move between the points in the route or you
       can edit the selected waypoint.<br>
       Clicking the bottom right panel centers the chart at the boat's position.</p>
-    <h2>Using Overlays</h2>
-    <p>If an <a href="../hints/overlays.html">overlay</a> is visible (like in
-      the picture) - or within <a href="../hints/ocharts.html">ocharts</a> you
-      can open a dialog by clicking an object on the chart. This dialog provides
-      some additional functions. </p>
-    <p><img src="../hints/Overlay-Example-InfoDialogRouting.png" alt="" class="fimage">
-    </p>
-    <p>You can insert the object you clicked into the route (befor or after the
-      current red point). This way you can easily e.g. use points from a
-      waypoint file to create your routes.</p>
-    <p>If the overlay is a route you can insert the part after the clicked point
-      into your current route.</p>
-    <img src="../hints/Overlay-Example-InfoDialogRouting2.png" alt="" class="fimage">
-    <p>The dialog shows the selected start point of the route and you can decide
-      to insert before or after your current red point.</p>
+    <h2>Using the Feature Info</h2>
+    <p>When you tap on the map or click the <img src="../viewerimages/icons-new/center-action.svg"
+        alt="" class="inlineimage">CenterAction button you will get the list of
+      features at this point.<br>
+      You will get some additional actions for using it in editing the route:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Action</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>Before</td>
+          <td>Insert the point that you clicked before the currently selected
+            (red) route point</td>
+        </tr>
+        <tr>
+          <td>After</td>
+          <td>Insert the point that you clicked after the currently selected
+            (red) route point</td>
+        </tr>
+        <tr>
+          <td>Move</td>
+          <td>Move the currently selected (red) route point to the point that
+            you clicked</td>
+        </tr>
+        <tr>
+          <td>Cancel</td>
+          <td>Close the list</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Using this dialog you can add points to the route by clicking on the map
+      and using Before/After.</p>
+    <p><img src="editroutepage-overlaylist.png" class="fimage"> </p>
     <p><br>
     </p>
-    <p> </p>
+    <p>If there is a route in the list and you click on it you get more
+      dedicated actions.</p>
+    <img src="editroutepage-overlayroute.png" class="fimage">
+    <p>The info shows the nearest point of the overlay route and offers a couple
+      of actions:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Action</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>Before</td>
+          <td>Insert the shown point from the overlay route before your
+            currently selected (red) route point</td>
+        </tr>
+        <tr>
+          <td>After</td>
+          <td>Insert the shown point from the overlay route after your currently
+            selected (red) route point</td>
+        </tr>
+        <tr>
+          <td>RtBefore</td>
+          <td>Insert the complete overlay route starting at the shown point
+            before your currently selected (red) route point</td>
+        </tr>
+        <tr>
+          <td>RtAfter</td>
+          <td>Insert the complete overlay route starting at the shown point
+            after your currently selected (red) route point</td>
+        </tr>
+        <tr>
+          <td>Hide</td>
+          <td>Hide the overlay route</td>
+        </tr>
+        <tr>
+          <td>Cancel</td>
+          <td>Close the dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Using this Feature Info you could create routes that contain your
+      favorite way points, add them as overlay and use them to insert way points
+      into routes that you create.<br>
+      Hint: To only display the points of a route just set the line width of the
+      overlay to 0.</p>
+    <h2>Connected and Disconnected Mode</h2>
+    <p>If you switch off the <img src="../viewerimages/icons-new/plug.svg" alt=""
+        class="inlineimage" style="color:red;">ConnectedMode on the mainpage
+      (showing a <img src="../viewerimages/icons-new/plug-disconnect.svg" alt=""
+        class="inlineimagered">disconnect icon in the title) this basically
+      means you cannot change items that are stored on the server. This also
+      includes routes. You still can create new routes or modify routes that you
+      created while being disconnected.<br>
+      The intention is to give you the option to play with alternative routes
+      (including activating them) without interfering with the server.<br>
+      When you leave the disconnected mode and a (different) route is active on
+      the server this will also become locally.</p>
+    <p>The <a href="#routedialog">EditRoute dialog</a> will show you the
+      information whether a route is stored on the server and if you currently
+      can write the route.<br>
+      If you try to edit a route that is stored on the server while in
+      disconnected mode you will get a warning.</p>
+    <p><img src="editroutepage-disconnected.png" alt="" class="fimage"> </p>
+    <p>In this case just klick "OK" (will bring up the <a href="#routedialog">EditRoute
+        dialog</a>) and e.g. create a copy using "Save As".<br>
+      By default the "Load" action in the EditRoute dialog will only provide you
+      the list of routes you currently can write (but you could also load a read
+      only route to display it).</p>
+    <p>When you created a route in disconnected mode it will be stored locally
+      in your Browser. To copy it to the server leave the disconnected
+      mode,&nbsp; open the local route in the route editor and make a change -
+      this will automatically push the route to the server.</p>
   </body>
 </html>

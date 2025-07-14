@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
-    
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvNav Routen Editor</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -83,10 +82,30 @@
           </td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StopNav</td>
+          <td>Beende eine laufende Navigation</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/menu_open.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Menu</td>
+          <td>Zeige den&nbsp; EditRoute Dialog um eine Route zu erzeugen/zu
+            laden/zu bearbeiten/umzubenennen </td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavOverlays</td>
           <td>Ein- und Ausblenden von <a href="../hints/overlays.html">Overlays</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center-action.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>CenterAction</td>
+          <td>Die gleiche Aktion wie ein Klick auf die Kartenmitten (Fadenkreuz)
+            - ein Dialog mit der Feature Liste wird angezeigt</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -108,7 +127,7 @@
     <p>Auf dieser Seite kann man eine Route bearbeiten bzw. erzeugen.</p>
     <p>Zu jeder Zeit gibt es einen aktiven Wegpunkt (rot dargestellt, links in
       der Anzeige grau unterlegt. Die meisten Aktionen beziehen sich auf diesen
-	   Wegpunkt. Er kann durch Anklicken links in der Liste oder durch Anklicken
+      Wegpunkt. Er kann durch Anklicken links in der Liste oder durch Anklicken
       auf der Karte geändert werden.</p>
     <p>Wenn man die momentan aktive Route bearbeitet, wird das durch einen roten
       Rahmen links um die Routen-Info angezeigt. Falls eine andere Route
@@ -122,15 +141,79 @@
       Anklicken kann man einen Wegpunkt aktivieren.</p>
     <p>Durch nochmaligen Klick auf einen links bereits markierten Punkt wird
       eine Eingabemaske aufgerufen, in der man den Wegpunkt bearbeiten kann.</p>
-    <h2><a name="routedialog" id="routedialog"></a>Route Dialog</h2>
-    <p>Ein Klick auf das Route Info Feld (links oben) führt zu einem Dialog.</p>
+    <h2><a name="routedialog" id="routedialog"></a>EditRoute Dialog</h2>
+    <p>Ein Klick auf das Route Info Feld (links oben) oder auf den <img src="../viewerimages/icons-new/menu_open.svg"
+        alt="" class="inlineimage">Menu Button&nbsp; führt zu einem Dialog.</p>
     <img src="editroutepage-editroutedialog.png" alt="" class="fimage">
-    <p>Hier kann man den Namen der Route ändern, eine neue Route zum Editieren
-      auswählen, die Route kopieren, sie löschen, invertieren oder alle Punkte
-      löschen.</p>
-    <p>Ein Klick auf den Edit Button führt zur <a href="routepage.html">Route
-        Liste</a>. Hier kann man die Wegpunkte bearbeiten oder ebenfalls eine
-      neue Route wählen. </p>
+    <p>Mit diesem Dialog erhält man die folgenden Aktionen:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Aktion </td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>New</td>
+          <td>Erzeuge eine neue Route. Der Name der neuen Route wird erfragt.
+            Die neue Route ist leer.</td>
+        </tr>
+        <tr>
+          <td>Load</td>
+          <td>Lade eine existierende Route. Das zeigt eine Auswahl mit den auf
+            dem Server gespeicherten Routen (wenn man im connected Modus is -
+            der Normalfall). Wenn man im "disconnected" Modus ist, werden die
+            Routen angeboten, die lokal gespeichert sind.<br>
+            Der Dialog enhält auch einen "Upload" Button um eine auf dem lokalen
+            Gerät gespeicherte Route (gpx Datei) zu AvNav zu importieren.</td>
+        </tr>
+        <tr>
+          <td>Download</td>
+          <td>Exportiere die aktuelle Route als gpx Datei auf das aktuelle
+            Gerät.</td>
+        </tr>
+        <tr>
+          <td>Rename</td>
+          <td>Vergib einen neuen Namen für die Route.</td>
+        </tr>
+        <tr>
+          <td>Points</td>
+          <td>Öffne den <a href="#pointsdialog">RoutePoints Dialog</a> um die
+            Liste der Punkte in der Route zu bearbeiten, zu invertieren oder neu
+            zu nummerieren.</td>
+        </tr>
+        <tr>
+          <td>Delete</td>
+          <td>Lösche die aktuelle Route in AvNav.</td>
+        </tr>
+        <tr>
+          <td>SaveAs</td>
+          <td>Speichere eine Kopie der aktuellen Route mit neuem Namen.</td>
+        </tr>
+        <tr>
+          <td>Cancel</td>
+          <td>Abbruch ohne Speichern.</td>
+        </tr>
+        <tr>
+          <td>OK</td>
+          <td>Speichern der Änderungen.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Name Dialog</h3>
+    <p>Vom EditRoute Dialog zeigen einige Aktionen einen Dialog zur Vergabe
+      eines neuen Namens an.</p>
+    <img src="editroutepage-namedialog.png" alt="" class="fimage">
+    <p>Wenn der gewählte Name bereits existiert, kann man die "Propose" Aktion
+      nutzen, um das System einen noch nicht vorhandenen Namen vorschlagen zu
+      lassen.</p>
+    <h3><a name="pointsdialog" id="pointsdialog"></a>Points Dialog</h3>
+    <p>Die "Points" Aktion im EditRoute Dialog zeigt einen Dialog zum Bearbeiten
+      der Punkte in der Route.</p>
+    <p><img src="editroutepage-pointsdialog.png" alt="" class="fimage"></p>
+    <p>Man kann die Liste leeren, umkehren oder neu nummerieren. Mit Klick auf
+      einen der angezeigten Punkte kann man ihn bearbeiten (z.B. den Namen
+      ändern).</p>
+    <h2>Route Point Buttons</h2>
     <p>Ein Klick auf die linken unteren Anzeigen zeigt einige zusätzliche
       Buttons.</p>
     <p><img src="editroute-wpbuttons.png" alt="" class="fimage"></p>
@@ -138,26 +221,113 @@
       aktuelle Punkt kann bearbeitet werden.</p>
     <p>Ein Klick auf die rechten Anzeigen zentriert die Karte auf die
       Bootsposition.</p>
-    <h2>Nutzung von Overlays</h2>
-    <p>Falls (wie im Bild) <a href="../hints/overlays.html">Overlays</a>
-      angezeigt werden (oder in <a href="../hints/ocharts.html">ocharts-Karten</a>)
-      kann man durch Klick auf ein Objekt einen Dialog aufrufen, der weitere
-      Routen-Funktionen bietet.</p>
-    <p><img src="../hints/Overlay-Example-InfoDialogRouting.png" alt="" class="fimage">
-    </p>
-    <p>Der angeklickte Punkt kann jetzt in die Route eingefügt werden. Auf diese
-      Weise können leicht Punkte z.B. aus einer Wegpunkt-Datei zum Erstellen
-      von Routen genutzt werden.</p>
-    <p>Falls das angezeigte Overlay eine Route ist, kann der Teil nach dem
-      angeklickten Punkt der aktuellen Route hinzugefügt werden.</p>
-    <img src="../hints/Overlay-Example-InfoDialogRouting2.png" alt="" class="fimage">
-    <p>Im Dialog wird der angeklickte Startpunkt der Route angezeigt und man
-      kann auswählen, ob man die Route vor oder hinter dem aktuell markierten
-      Punkt der in Bearbeitung befindlichen Route einfügen möchte.</p>
-    <p><br>
-    </p>
-    <div>
-      <h2> <a name="editroutepage" id="editroutepage"></a></h2>
-    </div>
+    <h2>Nutzung der Feature Info</h2>
+    <p>Wenn man auf die Karte klickt oder auf den <img src="../viewerimages/icons-new/center-action.svg"
+        alt="" class="inlineimage">CenterAction Button erhält man die Liste der
+      Objekte (Features) an dieser Stelle.<br>
+      Es gibt einige spezielle Aktionen für das Bearbeiten der Route:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Aktion</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>Before</td>
+          <td>Füge den angeklickten Punkt vor dem aktuell selektierten Punkt
+            (rot) ein.</td>
+        </tr>
+        <tr>
+          <td>After</td>
+          <td>Füge den angeklickten Punkt nach dem aktuell selektierten Punkt
+            (rot) ein.</td>
+        </tr>
+        <tr>
+          <td>Move</td>
+          <td>Verschiebe den aktuell selektierten Punkt (rot) zum angeklickten
+            Punkt.</td>
+        </tr>
+        <tr>
+          <td>Cancel</td>
+          <td>Schliesse die Liste</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Mit diesem Dialog kann man Punkte zur Route hinzufügen durch Klick auf
+      die Karte und "Before"/"After".</p>
+    <p><img src="editroutepage-overlaylist.png" class="fimage"> </p>
+    <p>Wenn es eine Overlay-Route in der Liste gibt, bekommt man für diese noch
+      weitere spezielle Aktionen.</p>
+    <img src="editroutepage-overlayroute.png" class="fimage">
+    <p>Die Information zeigt den nächsten Punkt der Overlay-Route an und bietet
+      die folgenden Aktionen:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Aktion</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>Before</td>
+          <td>Füge den angezeigten Punkt der Overlay-Route vor dem aktuell
+            selektierten Punkt (rot) ein.</td>
+        </tr>
+        <tr>
+          <td>After</td>
+          <td>Füge den angezeigten Punkt der Overlay-Route nach dem aktuell
+            selektierten Punkt (rot) ein.</td>
+        </tr>
+        <tr>
+          <td>RtBefore</td>
+          <td>Füge die komplette Overlay-Route ab dem angezeigten Punkt vor dem
+            aktuell selektierten Punkt (rot) ein.</td>
+        </tr>
+        <tr>
+          <td>RtAfter</td>
+          <td>Füge die komplette Overlay-Route ab dem angezeigten Punkt nach dem
+            aktuell selektierten Punkt (rot) ein.</td>
+        </tr>
+        <tr>
+          <td>Hide</td>
+          <td>Blende die Anzeige der Overlay Route aus</td>
+        </tr>
+        <tr>
+          <td>Cancel</td>
+          <td>Schliesse den Dialog</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Mit dieser FeatureInfo kann man z.B. Routen anlegen, die bevorzugte
+      Wegepunkte enthalten, diese als Overlays anzeigen und dann zur Erstellung
+      neuer Routen nutzen.<br>
+      Hinweis: Um von einer Overlay-Route nur die Punkte anzuzeigen kann man die
+      "line width" im Overlay auf 0 stellen.</p>
+    <h2>Connected und Disconnected Mode</h2>
+    <p>Wenn man auf der Hautseite den<img src="../viewerimages/icons-new/plug.svg"
+        alt="" class="inlineimage" style="color:red;">ConnectedMode ausschaltet
+      (ein <img src="../viewerimages/icons-new/plug-disconnect.svg" alt="" class="inlineimagered">disconnect
+      Symbol wird im Titel angezeigt) heisst das, das man keine Dinge ändern
+      kann, die auf dem Server gespeichert sind. Das gilt auch für Routen. Man
+      kann neue Routen erstellen oder Routen verändern, die man im
+      "disconnected" Mode erzeugt hat.<br>
+      Die Idee dahinter ist es, eine Möglichkeit zu bieten um Routen z.B.
+      auszuprobieren ohne die Funktion des Servers zu beeinflussen.<br>
+      Wenn man den "disconnected" Mode verlässt und eine (andere) Route ist auf
+      dem Server aktiv, dann wird diese auch lokal aktiv.</p>
+    <p>Der <a href="#routedialog">EditRoute Dialog</a> zeigt die Information
+      an, ob eine Route auf dem Server gespeichert ist und ob so momentan
+      schreibbar ist.<br>
+      Wenn man versucht, eine Route zu bearbeiten, die momentan nicht schreibbar
+      ist, erhält man eine Warnung.</p>
+    <p><img src="editroutepage-disconnected.png" alt="" class="fimage"> </p>
+    <p>In diesem Fall kann man "OK" wählen, das zeigt den <a href="#routedialog">EditRoute
+        Dialog</a> und z.B. mit "SaveAs" eine Kopie erzeugen.<br>
+      Im Normalfall zeigt die "Load" Aktion im EditRoute Dialog nur die Liste
+      der schreibbaren Routen an (aber man kann auch eine nicht schreibbare
+      Route laden, um sie anzuzeigen).</p>
+    <p>Wenn man eine Route im "disconnected" Mode erzeugt hat, wird diese lokal
+      im Browser gespeichert. Um sie auf den Server zu kopieren, verlässt man
+      den "disconnected" Mode, öffnet die Route im Routen Editor und nimmt eine
+      Änderung vor. Das speichert die Route auf dem Server.</p>
   </body>
 </html>
