@@ -182,11 +182,15 @@ class MyTransformer(object):
         for key in ('SRC_SRS','DST_SRS'):
             try:
                 srs=options[key]
+                logging.info("MyTransformer %s=%s",key,srs)
                 if srs.startswith('+'):
                     options[key]=proj4wkt(srs)
+                    logging.info("MyTransformer proj4: %s",options[key])
             except: pass
         opt_lst=['%s=%s' % (key,options[key]) for key in options]
+        logging.info("creating transformer from %s with options %s",str(src_ds)," ".join(opt_lst))
         self.transfomer=gdal.Transformer(src_ds,dst_ds,opt_lst)
+        logging.info("created transformer %s",str(self.transfomer))
 
     def transform(self,points,inv=False):
         if not points:

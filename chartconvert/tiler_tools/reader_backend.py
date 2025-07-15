@@ -286,8 +286,17 @@ class SrcLayer(object):
             
             #double x = 0.0, double y = 0.0, double z = 0.0, double pixel = 0.0, 
             #double line = 0.0, char info = "", char id = ""
-
-            gcps = [gdal.GCP(c[0], c[1], 0, p[0], p[1], '', i) for i, p, c in self.refs]
+            foundPoints={}
+            gcps=[]
+            added=1
+            for i, p, c in self.refs:
+                if p in foundPoints:
+                    logging.warning("ref point %s has same point/line as %s,ignored",i,foundPoints[p])
+                else:
+                    foundPoints[p]=i
+                    gcps.append(gdal.GCP(c[0], c[1], 0, p[0], p[1], '', str(added)))
+                    added+=1
+            #gcps = [gdal.GCP(c[0], c[1], 0, p[0], p[1], '', i) for i, p, c in self.refs]
 
             if isGdal3:
                 gsr=osr.SpatialReference()
@@ -297,9 +306,13 @@ class SrcLayer(object):
                 dst_ds.SetGCPs(gcps,self.refs.srs())
             dst_geotr=gdal.GCPsToGeoTransform(gcps) # if len(gcps) < 5 else (0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
             dst_ds.SetGeoTransform(dst_geotr)
-            poly,gmt_data=self.cut_poly(dst_ds)
-            if poly:
-                dst_ds.SetMetadataItem('CUTLINE',poly)
+            gmt_data=None
+            try:
+                poly,gmt_data=self.cut_poly(dst_ds)
+                if poly:
+                    dst_ds.SetMetadataItem('CUTLINE',poly)
+            except Exception as e:
+                logging.exception("Exception in reading CUTLINE: %s",e,exc_info=True)
             if self.name:
                 dst_ds.SetMetadataItem('DESCRIPTION',self.name)
             dst_ds.FlushCache()
