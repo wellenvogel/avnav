@@ -50,20 +50,20 @@ sudo systemctl start avnav</div>
         This solves <a href="https://github.com/wellenvogel/avnav/issues/397">#397</a>,
         <a href="https://github.com/wellenvogel/avnav/pull/398">#398</a>.</li>
       <li>The <a href="userdoc/navpage.html#featurelist">Feature Info</a>
-        handling has been changed. You will not first get a list of Objects and
-        can select which one you would like to see the details for. there is
+        handling has been changed. You will now first get a list of objects and
+        can select which one you would like to see the details for. There is
         also a new <img src="viewerimages/icons-new/center-action.svg" alt="" class="inlineimage">"CenterAction"
         button to "click" on the map center.</li>
-      <li>You now can get more flexibility in organizing your widgets on <a href="userdoc/dashboardpage.html">dashboard
+      <li>You can get more flexibility in organizing your widgets on <a href="userdoc/dashboardpage.html">dashboard
           pages</a> with a new <a href="hints/layouts.html#combinedwidget">Combined
           Widget</a>.</li>
       <li>There are improvements in the <a href="hints/layouts.html">layout
-          editor</a>. You can now freely drag and drop items between panels -
-        and there is a roll back button.</li>
-      <li>A couple of settings have been removed. The now can be applied in the
-        <a href="hints/layouts.html">layout editor</a>.<br>
+          editor</a>. You can freely drag and drop items between panels - and
+        there is a roll back button.</li>
+      <li>A couple of settings have been removed. Most of them can be applied in
+        the <a href="hints/layouts.html">layout editor</a>.<br>
         To support systems with only a basic set of sensors (GPS) an additional
-        deault-min layout has been added.<br>
+        default-min layout has been added.<br>
         <table width="100%" border="1">
           <tbody>
             <tr>
@@ -121,16 +121,15 @@ sudo systemctl start avnav</div>
         If you load a settings file that contains removed settings you will get
         a warning (but the file still loads).</li>
       <li>The <a href="userdoc/editroutepage.html#routedialog">Edit Route
-          Dialog</a> has been changed. It show now be much easier to
+          Dialog</a> has been changed. It should be much easier to
         load/save/modify/rename/create routes. The page to edit route points has
-        been removed and the function is now integrated in the Edit Route
-        Dialog.</li>
+        been removed and the function is integrated in the Edit Route Dialog.</li>
       <li>The AIS info page has been replaced by a dialog. You will get this
         dialog from the <a href="userdoc/navpage.html#featurelist">Feature List</a>
         if you selected an AIS target or by clicking on the AisTargetWidget.</li>
       <li>When you are creating a new <a href="userdoc/addonconfigpage.html">User
-          App</a> you can directly upload the necessary Icon file from the
-        creation dialog. Additionally you can choose now also icons that are
+          App</a> you can directly upload the necessary icon file from the
+        creation dialog. Additionally you can choose&nbsp;&nbsp; icons that are
         part of AvNav.<br>
         This resolves <a href="https://github.com/wellenvogel/avnav/issues/372">#372</a>:
         allow icon upload directly in user app dialog</li>
@@ -140,14 +139,14 @@ sudo systemctl start avnav</div>
         been fixed. This resolves <a href="https://github.com/wellenvogel/avnav/issues/347">#347</a>/<a
           href="https://github.com/wellenvogel/avnav/issues/348">#348 </a>
         handling for missing values</li>
-      <li>Widgets with a formatter that have a "unit" parameter can now take
-        over this value to be used as the unit for the display (by leaving the
-        unit empty in the layout editor)</li>
+      <li>Widgets with a formatter that have a "unit" parameter can take over
+        this value to be used as the unit for the display (by leaving the unit
+        empty in the layout editor)</li>
       <li>The font handling for items on the map has been improved. There are
-        settings now (settings/map) to control some font parameters and <a href="hints/overlays.html">overlays</a>
+        settings (settings/map) to control some font parameters and <a href="hints/overlays.html">overlays</a>
         also include font parameters in the settings.</li>
-      <li>The UDP reader is now able to handle mulicast</li>
-      <li>AvNav can now decode PGNs 129025/129026 directly from canboat</li>
+      <li>The UDP reader is able to handle mulicast</li>
+      <li>AvNav can decode PGNs 129025/129026 directly from canboat</li>
       <li>Internally some restructuring (new library versions - especiall
         reactjs 18), restructured dialog handling</li>
     </ul>
