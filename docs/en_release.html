@@ -40,6 +40,246 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">202507xx</span> <a title="release/202507xx"
+        href="../downloads/release/202507xx">link</a></p>
+    <p>Main Changes:</p>
+    <ul>
+      <li>The computation of AIS data has changed to be based on the estimated
+        target position. For details refer to <a href="userdoc/navpage.html#aiscomputations">AIS
+          computations</a>.<br>
+        This solves <a href="https://github.com/wellenvogel/avnav/issues/397">#397</a>,
+        <a href="https://github.com/wellenvogel/avnav/pull/398">#398</a>.</li>
+      <li>The <a href="userdoc/navpage.html#featurelist">Feature Info</a>
+        handling has been changed. You will not first get a list of Objects and
+        can select which one you would like to see the details for. there is
+        also a new <img src="viewerimages/icons-new/center-action.svg" alt="" class="inlineimage">"CenterAction"
+        button to "click" on the map center.</li>
+      <li>You now can get more flexibility in organizing your widgets on <a href="userdoc/dashboardpage.html">dashboard
+          pages</a> with a new <a href="hints/layouts.html#combinedwidget">Combined
+          Widget</a>.</li>
+      <li>There are improvements in the <a href="hints/layouts.html">layout
+          editor</a>. You can now freely drag and drop items between panels -
+        and there is a roll back button.</li>
+      <li>A couple of settings have been removed. The now can be applied in the
+        <a href="hints/layouts.html">layout editor</a>.<br>
+        To support systems with only a basic set of sensors (GPS) an additional
+        deault-min layout has been added.<br>
+        <table width="100%" border="1">
+          <tbody>
+            <tr>
+              <td>Removed Setting</td>
+              <td>Replacement</td>
+            </tr>
+            <tr>
+              <td>red/green Angle Wind</td>
+              <td>set this at the wind widgets in the layout editor</td>
+            </tr>
+            <tr>
+              <td>relative motion vectors<br>
+              </td>
+              <td>set relative motion vector range (nm) to a value != 0<br>
+              </td>
+            </tr>
+            <tr>
+              <td>show clock<br>
+              </td>
+              <td>include or exclude the clock widget using the layout editor<br>
+              </td>
+            </tr>
+            <tr>
+              <td>show zoom<br>
+              </td>
+              <td>include or exclude the zoom widget using the layout editor </td>
+            </tr>
+            <tr>
+              <td>show wind<br>
+              </td>
+              <td> include or exclude the wind widget using the layout editor</td>
+            </tr>
+            <tr>
+              <td>show depth</td>
+              <td>include or exclude the depth widget using the layout editor</td>
+            </tr>
+            <tr>
+              <td>wind knots</td>
+              <td>set the uints at the wind widgets</td>
+            </tr>
+            <tr>
+              <td>Show Measure Button</td>
+              <td>the measure function is now included in the <a href="userdoc/navpage.html#featurelist">Feature
+                  Info</a> handling</td>
+            </tr>
+            <tr>
+              <td>Always Info on Chart Click</td>
+              <td>now you only have "Feature Info on Click" to disable a chart
+                klick handling completely. You still can emulate a click at the
+                center (crosshair) with the <img src="viewerimages/icons-new/center-action.svg"
+                  alt="" class="inlineimage">"CenterAction" button</td>
+            </tr>
+          </tbody>
+        </table>
+        If you load a settings file that contains removed settings you will get
+        a warning (but the file still loads).</li>
+      <li>The <a href="userdoc/editroutepage.html#routedialog">Edit Route
+          Dialog</a> has been changed. It show now be much easier to
+        load/save/modify/rename/create routes. The page to edit route points has
+        been removed and the function is now integrated in the Edit Route
+        Dialog.</li>
+      <li>The AIS info page has been replaced by a dialog. You will get this
+        dialog from the <a href="userdoc/navpage.html#featurelist">Feature List</a>
+        if you selected an AIS target or by clicking on the AisTargetWidget.</li>
+      <li>When you are creating a new <a href="userdoc/addonconfigpage.html">User
+          App</a> you can directly upload the necessary Icon file from the
+        creation dialog. Additionally you can choose now also icons that are
+        part of AvNav.<br>
+        This resolves <a href="https://github.com/wellenvogel/avnav/issues/372">#372</a>:
+        allow icon upload directly in user app dialog</li>
+      <li>The handling for missing values (i.e. data that has not been received
+        by NMEA or from SignalK) has been adapted. In the past many widgets or
+        other displays have been showing "0" for non existing values. This has
+        been fixed. This resolves <a href="https://github.com/wellenvogel/avnav/issues/347">#347</a>/<a
+          href="https://github.com/wellenvogel/avnav/issues/348">#348 </a>
+        handling for missing values</li>
+      <li>Widgets with a formatter that have a "unit" parameter can now take
+        over this value to be used as the unit for the display (by leaving the
+        unit empty in the layout editor)</li>
+      <li>The font handling for items on the map has been improved. There are
+        settings now (settings/map) to control some font parameters and <a href="hints/overlays.html">overlays</a>
+        also include font parameters in the settings.</li>
+      <li>The UDP reader is now able to handle mulicast</li>
+      <li>AvNav can now decode PGNs 129025/129026 directly from canboat</li>
+      <li>Internally some restructuring (new library versions - especiall
+        reactjs 18), restructured dialog handling</li>
+    </ul>
+    <p><i> <b>AvNav Android</b></i></p>
+    <ul>
+      <li>Adapt to Android 14 (API 34 as required by Google), changed service
+        types and permissions</li>
+    </ul>
+    <p><i> <b>Bugfixes and Issues</b></i></p>
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/462">#462</a>:
+        socket reader transmission rates (0/s) on settings page and log
+        mismatching/wrong</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/461">#461</a>:
+        Can't import KAP charts</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/460">#460</a>:
+        Android Settings page</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/457">#457</a>:
+        Copyright date still 2021</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/456">#456</a>:
+        Browser window stops displaying Target Info</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/455">#455</a>:
+        invalid local address for wlan-ap2</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/451">#451</a>:
+        NightChartDim has no effect</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/447">#447</a>:
+        20250704 AIS: DCPA calculation fails, TCPA Alarm not triggered</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/445">#445</a>:
+        Track writing stops after time change </li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/433">#433</a>:
+        allow a formatter parameter for leading zeroes in
+        formatDirection/formatDirection360</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/442">#442</a>:
+        avoid react error 310 - different number of hooks</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/436">#436</a>:
+        allow to change the selected name in upload when already existing</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/436">#436</a>:
+        correct handling of file names with special characters on android</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/429">#429</a>:
+        activate overlay changes from mainpage even if not changing the chart</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/429">#429</a>:
+        show names on Gpx waypoint files</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/428">#428</a>:
+        show the most important warning in AisNearest widget</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/427">#427</a>:
+        correctly handle default overlays when editing, avoid useless overlay
+        property filtering</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/426">#426</a>:
+        make loadSettings working again</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/359">#359</a>:
+        implement cleanCurrentTrack on Android, switch trackdata to new API
+        schema, clean current track and rename affected track files</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/424">#424</a>:
+        show wind speed in WindWidget, correctly handle auto mode for wind
+        widgets, move red/green angle to WindGraphics editable parameter</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/422">#422</a>:
+        use the current target as from when skipping to the next waypoint</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/358">#358</a>:
+        use wp names from route overlay if inserting into route</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/358">#358</a>:
+        Overlays: parse routes with own parser, show point names</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/358">#358</a>:
+        allow to add only the selected point from a route on feature click</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/337">#337</a>:
+        allow route points renumbering</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/415">#415</a>:
+        use the system mDns resolver in parallel to the own resolver on Android,
+        correctly use a multicast receiver for mDNS resolution</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/390">#390</a>:
+        add useMinPath to radialGauge</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/384">#384</a>:
+        add a provider info and a chart name info as css classes to the map
+        object</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/345">#345</a>:
+        add new links for image description</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/354">#354</a>
+        from quantenschaum/353-direction-180</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/400">#400</a>:
+        offsetPress,also add pressure offset to bmp180 and sensehat</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/345">#345</a>:
+        remove useless doc link for images, add links for bookworm and to pi
+        imager</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/346">#346</a>:
+        add doc for ConfigSequence</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/394">#394</a>:
+        fix missing aisRelativeMotionVectorRange in settings</li>
+      <li> PR <a href="https://github.com/wellenvogel/avnav/issues/407">#407</a>
+        from free-x/lgpio</li>
+      <li> PR <a href="https://github.com/wellenvogel/avnav/issues/360">#360</a>
+        from hkapanen/master better descriptions for some settings</li>
+      <li> PR <a href="https://github.com/wellenvogel/avnav/issues/405">#405</a>
+        from free-x/pi5-udev - some PI5 changes</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/406">#406</a>:
+        set ap_max_inactivity to 30s</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/403">#403</a>:
+        fix creating target dirs of converter</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/404">#404</a>:
+        ignore SK values that do not have a timestamp or a property</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/403">#403</a>:
+        avoiding deprecation warning</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/366">#366</a>:
+        avoid map twitching around rotation 0</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/381">#381</a>:
+        correctly update map widgets when store keys are changing</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/393">#393</a>:
+        make ais center mode a property</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/392">#392</a>:
+        correctly set name on dialog button again</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/387">#387</a>:
+        add missing pointFromMap to Drawing</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/388">#388</a>:
+        correctly manage the lifecycle of the context for user widgets</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/377">#377</a>:
+        correctly reset formatter parameters when changin the widget formatter</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/375">#375</a>:
+        allow to sort AIS list by shipname</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/381">#381</a>:
+        make triggerRedraw working again</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/376">#376</a>:
+        make avnav run on python 3.12</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/373">#373</a>:
+        correctly handle cog/hdg 360</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/373">#373</a>:
+        handle courses outside of 0...360 for text offsets, use the target
+        rotation instead of always COG</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/371">#371</a>:
+        correctly handle 0 for signalkPitch/signalKRoll</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/349">#349</a>:
+        use a fixed version for the pip installer on windows</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/343">#343</a>:
+        doc add NOAA mbtiles hint, reorganize chart sources description</li>
+    </ul>
     <p> <span style="font-weight: bold;">20240616</span> <a title="release/20240616"
         href="../downloads/release/20240616">link</a></p>
     <p><i> <b>AvNav base</b></i></p>

@@ -26,7 +26,7 @@
     <p>Einmal können Rasterkarten, die nicht herstellerverschlüsselt sind,
       verwendet werden. Vektorkarten Typs OESenc können ebenfalls genutzt
       werden. Sie sind allerdings nicht kostenlos und können über den
-      O-Charts-Shop bezogen werden.</p>
+      O-Charts-Shop bezogen werden. Für Details siehe unter <a href="charts.html">Karten</a>.</p>
     <h2>Varianten</h2>
     <p> Es gibt nicht nur die Server-Variante von AvNav: Ebenfalls zur Verfügung
       stehen ein „StandAlone-AvNav“ für den Raspberry (AvNav Touch) und eine
@@ -36,7 +36,7 @@
       dem Herzstück von Openplotter, dem SignalK-Server und AvNav. Die gesamte
       Software steht zum Download unter einer Open Source Lizenz bereit. </p>
     <p>Für einen schnellen Einstieg: <a href="quickstart.html">Quickstart</a></p>
-    15.12.2020
+    16.07.2025
     <ul class="mainlist">
       <li class="printPageHidden"><a href="../downloads/de_AvNavDoc.pdf"><img class="inlineimage"
             title="Everaldo Coelho and YellowIcon;, LGPL &lt;http://www.gnu.org/licenses/lgpl.html&gt;, via Wikimedia Commons"
@@ -52,7 +52,8 @@
       <li><a href="https://github.com/wellenvogel/avnav">Source Code auf GitHub</a></li>
       <li><a href="userdoc/index.html">Nutzer-Beschreibung</a> </li>
       <li><a href="android/android.html">Android App</a></li>
-      <li> <a href="charts.html">Karten herunterladen und umwandeln</a></li>
+      <li> <a href="charts.html">Karten<br>
+        </a></li>
       <li><a href="install.html">Installation</a></li>
       <li><a href="release.html">Release-Notes</a></li>
       <li><a href="demo.html">Demo</a></li>
@@ -64,7 +65,7 @@
           Risiko. In jedem Falle empfehle ich einen intensiven Test der
           Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
     <h2 class="western">Überblick </h2>
-    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
+    <p><img class="fimage" src="overview.png" name="Grafik1" width="600" border="0"
         align="LEFT">avnav-raspi-2020<br clear="LEFT">
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
@@ -138,7 +139,7 @@
     <p>Der Hauptbestandteil der Sofware auf dem Raspberry Pi ist ein in Python
       geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was
       dieser Server intern tut.</p>
-    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600"
+    <p><img class="fimage" src="software.png" name="Grafik2" width="600" border="0"
         align="LEFT"><br clear="LEFT">
       <br>
       Der Server versucht alle am Raspberry angeschlossenen seriellen Geräte zu
@@ -199,7 +200,7 @@
     <h3>Software auf dem Raspberry</h3>
     <p>Auf dem Raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
-    <table cellspacing="4" cellpadding="4" border="1" width="100%">
+    <table width="100%" border="1" cellspacing="4" cellpadding="4">
       <colgroup><col width="73*"> <col width="183*"> </colgroup>
       <tbody>
         <tr valign="TOP">
@@ -279,7 +280,7 @@
     <h2><a name="urlParameters"></a>URL Parameter</h2>
     <p>Die WebApp unterstützt eine Reihe von URL Parametern mit denen man einige
       Funktionen steuern kann.</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Parameter</td>
