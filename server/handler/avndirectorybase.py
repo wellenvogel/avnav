@@ -270,7 +270,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
-      now=time.time()
+      now=time.monotonic()
       if (lastCleanup+3600) < now or lastCleanup > now:
         try:
           self.cleanupTmp(self.baseDir)

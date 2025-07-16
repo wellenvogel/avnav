@@ -77,7 +77,7 @@ class SocketReader(object):
     def nmeaInfo(peer):
       if nmeaSum.shouldUpdate():
         self.infoHandler.setInfo(INAME,
-                     "%d/s"%(nmeaSum.avg()),
+                     "%.4g/s"%(nmeaSum.avg()),
                      WorkerStatus.NMEA if nmeaSum.val()>0 else WorkerStatus.RUNNING)
     sock=self.socket
     filterA = None
@@ -95,15 +95,15 @@ class SocketReader(object):
     buffer=""
     try:
       sock.settimeout(1)
-      lastReceived=time.time()
+      lastReceived=time.monotonic()
       while sock.fileno() >= 0 and not self.shouldStop():
         nmeaSum.add(0)
         try:
           data = sock.recv(1024)
-          lastReceived=time.time()
+          lastReceived=time.monotonic()
         except socket.timeout:
           if timeout is not None:
-            now=time.time()
+            now=time.monotonic()
             if now < lastReceived:
               lastReceived=now
               continue

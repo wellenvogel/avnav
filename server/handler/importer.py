@@ -651,7 +651,6 @@ class AVNImporter(AVNWorker):
 
   def startConversion(self,candidate:ConversionCandidate):
     AVNLog.info("starting conversion for %s",candidate.name)
-    now=time.time()
     self.setInfo(self.INFO_CONVERTER,"running for %s"%(candidate.name),WorkerStatus.NMEA)
     cmd=candidate.converter.getConverterCommand(candidate.getFileOrDir(),candidate.name)
     po=self.runConverter(candidate.name,cmd)

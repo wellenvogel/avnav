@@ -278,7 +278,7 @@ class SerialReader(object):
         def nmeaInfo():
           if nmeaSum.shouldUpdate():
             self.infoHandler.setInfo('reader',
-                                     'receiving %d/s' % nmeaSum.avg(),
+                                     'receiving %.4g/s' % nmeaSum.avg(),
                                      WorkerStatus.NMEA if nmeaSum.val() > 0 else WorkerStatus.RUNNING)
         while not self.doStop:
           nmeaSum.add(0)

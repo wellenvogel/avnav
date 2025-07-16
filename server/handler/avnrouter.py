@@ -534,7 +534,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return
     if self.activatedAlarms.get(self.ALARMS.waypoint) is None:
       self.startStopAlarm(True, self.ALARMS.waypoint)
-      self.approachStarted=time.time()
+      self.approachStarted=time.monotonic()
     #we have approach
     def setApproach(leg,x):
       if not leg:
@@ -563,7 +563,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     if hasNextWp:
       if switchMode == 'early':
         if self.approachStarted is not None:
-          now=time.time()
+          now=time.monotonic()
           if self.approachStarted > now:
             self.approachStarted=now
           if self.approachStarted > (now - switchTime):
