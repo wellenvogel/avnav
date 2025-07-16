@@ -1,6 +1,8 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
+import {useStore} from "../hoc/Dynamic";
+import Store from "../util/store";
 
 const Button = (props) => {
     useKeyEventHandlerPlain(props.name, "button", (component, action) => {
@@ -51,3 +53,18 @@ Button.propTypes={
 };
 
 export default Button;
+
+export const DynamicButton=(props)=>{
+    const iprops=useStore(props);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {visible,storeKeys,store,...forward}=iprops;
+    if (! visible) return null;
+    return <Button {...forward}>{props.children}</Button>;
+}
+DynamicButton.propTypes={
+    ...Button.propTypes,
+    storeKeys: PropTypes.object,
+    store: PropTypes.instanceOf(Store),
+    updateFunction: PropTypes.func,
+    visible: PropTypes.bool
+}

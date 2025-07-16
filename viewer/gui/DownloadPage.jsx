@@ -3,7 +3,7 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Button from '../components/Button.jsx';
+import Button, {DynamicButton} from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -143,10 +143,6 @@ const DownloadItem=(props)=>{
         </div>
     );
 };
-
-
-
-
 
 
 class DownloadPage extends React.Component{
@@ -573,12 +569,13 @@ class DownloadPage extends React.Component{
                             fixedPrefix={actions.fixedPrefix}
                         />
                         {(this.state.type === "user")?
-                            <Button
+                            <DynamicButton
                                 className="fab"
                                 name="DownloadPageCreate"
                                 onClick={()=>{
                                     this.createItem();
                                 }}
+                                storeKeys={{visible:keys.properties.connectedMode}}
                             />
                             :
                             null}
