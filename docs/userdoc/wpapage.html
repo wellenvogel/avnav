@@ -7,15 +7,16 @@
   </head>
   <body data-order="2400">
     <h1> Die Wifi Konfigurationsseite </h1>
-    <p>- nicht auf Android -
-    </p>
+    <p>- nicht auf Android - </p>
     <p>Von der <a href="statuspage.html">Statusseite</a> kommt man mit dem
       Button <img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage">zu
       dieser Seite.</p>
     <p><img src="wpapage.png" alt="" class="fimage"></p>
     <p>Diese Seite wird nur angezeigt, wenn das Wifi Client Handling
-      konfiguriert ist (als default an) und ein WLAN-Adapter in der richtigen
-      USB-Buchse eingesteckt wurde.</p>
+      in der avnav_server.xml&nbsp; konfiguriert ist (als default an). Man kann
+      nur Verbindungen konfigurieren, wenn ein WLAN-Adapter in der richtigen
+      USB-Buchse eingesteckt wurde oder in der <a href="../install.html#preparation">avnav.conf</a>
+      InternalWifi as Client auf "yes" gesetzt wurde.</p>
     <p><img src="../raspi3-wlan.jpg" alt="" class="fimage"></p>
     <p>Im Bild gezeigt hier ein Raspberry Pi 3. Bei den neueren mit USB 3.0
       (blaue Buchsen) muss er in der blauen Buchse auf der Leiterplatten-Seite
@@ -43,8 +44,8 @@
     <p>Während des Verbindungsaufbaus werden bei "Interface"
       Zustandsinformationen angezeigt.</p>
     <p>Falls man das WLAN trennen möchte, kann man durch erneuten Klick auf das
-      Netzwerk dieses trennen, deaktivieren oder auch komplett aus der Konfiguration
-      entfernen.</p>
+      Netzwerk dieses trennen, deaktivieren oder auch komplett aus der
+      Konfiguration entfernen.</p>
     <p><img src="wpapage-modify.png" alt="" class="fimage"></p>
     <p>Die WLAN Informationen werden in der Datei
       /etc/wpa_supplicant/wpa_supplicant.conf gespeichert.</p>
