@@ -25,17 +25,17 @@
       the Pi is only used as a server, the display logic will run in the browser
       e.g. on some mobile device. In this case a Raspberry Pi 3B(+) with 1GB
       should be sufficient. If you would like to run a local display you should
-      go for a Pi4 with at least 2GB of memory. </p>
+      go for a Pi4 or Pi5 with at least 2GB of memory. </p>
     <p>If you are looking for a complete desktop system with a lot of other
       applications <a href="#openplotter">OpenPlotter</a> could be your choice.
-      For running OpenPlotter I suggest a Pi4 with 4GB of RAM. 2GB will do but
-      without a lot of room for later extension requirements.</p>
+      For running OpenPlotter I suggest a Pi4 or Pi5 with 4GB of RAM. 2GB will
+      do but without a lot of room for later extension requirements.</p>
     <p>In the past there were special AvNav Touch images. But they are not
       maintained any more.<br>
     </p>
     <h2><a name="Headless"></a><a name="headless"></a>AvNav Images (named
       Headless in the past)</h2>
-    <p>Those images are maintained by <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
+    <p>Those images are maintained by <a href="https://www.segeln-forum.de/cms/user/27970-blacksea/">BlackSea</a>
       (many thanks...). There is a description on the <a href="https://github.com/free-x/AvNav-Image">repository</a>.
       On Windows/Linux/OSx download the image from free-x <a href="https://www.free-x.de/raspbian/bullseye">(bullseye
         - till Pi4</a> or <a href="https://www.free-x.de/raspbian/bookworm">bookworm</a>)
@@ -158,7 +158,8 @@
             .<br>
             If you would upgrade the kernel of your system (from the command
             line) the kernel module will be compiled to fit the newly installed
-            kernel.</td>
+            kernel.<br>
+            Not available for bookworm images as the driver is not available.</td>
         </tr>
         <tr>
           <td><a name="configMODULES"></a>Module RTL8192EU</td>
@@ -169,7 +170,8 @@
             .<br>
             If you would upgrade the kernel of your system (from the command
             line) the kernel module will be compiled to fit the newly installed
-            kernel.</td>
+            kernel.<br>
+            Not available for bookworm images as the driver is not available.</td>
         </tr>
         <tr>
           <td>TimeZone</td>
@@ -388,8 +390,8 @@
     <h4>Connection via a different Wifi Network</h4>
     <p>You need an additional wifi adapter (USB adapter). Please check the
       compatibility before buying one - e.g. <a href="https://elinux.org/RPi_USB_Wi-Fi_Adapters">here</a>.</p>
-    <p>The stick must be plugged at the correct port (see picture). On the Pi4
-      use the blue USB Port at the board side). <br>
+    <p>The stick must be plugged at the correct port (see picture). On the
+      Pi4/Pi5 use the blue USB Port at the board side). <br>
       The internal name of the network will be wlan-av1.&nbsp; </p>
     <p></p>
     <p> <img class="fimage" src="raspi3-wlan.jpg"></p>
@@ -446,7 +448,7 @@
       the support for a local monitor there.</p>
     <p>If you enable this the system will start up a service "avnav-startx".
       This service creates a local X server, a user session for the user pi with
-      <a href="http://openbox.org/wiki/Main_Page">openbox</a> as window manager
+      <a href="https://openbox.org/help/Contents">openbox</a> as window manager
       and firefox in kiosk mode.</p>
     <p><a href="http://manpages.ubuntu.com/manpages/bionic/man1/onboard.1.html">Onboard</a>
       will be used for an on screen keyboard.</p>
@@ -495,7 +497,10 @@ sudo cp boating-buster.list /etc/apt/sources.list.d/</div>
     <p> Debian Bullseye (amd64,armhf,arm64)</p>
     <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
-    <p> Ubuntu Jammy (amd64)</p>
+    <p> Debian Bookworm (amd64,armhf,arm64) </p>
+    <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
+echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bookworm main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
+    <p>Ubuntu Jammy (amd64)</p>
     <div class="code">wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu jammy main" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
     For the installation on a linux system you need to execute:

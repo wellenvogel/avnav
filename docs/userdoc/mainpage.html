@@ -77,8 +77,8 @@
               <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
               </td>
               <td>MOB</td>
-              <td><a href="#mob">Mann über Bord</a> (nur sichtbar wenn
-                connected)</td>
+              <td><a href="#mob">Mann über Bord</a> (nur sichtbar wenn connected
+                und eine gültige GPS Position vorhanden ist)</td>
             </tr>
             <tr>
               <td><img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage"><br>
@@ -133,8 +133,9 @@
       Format. Ausserdem kann auch eine Online-Karten-Quelle über ein XML File
       eingebunden werden. Details dazu unter <a href="../charts.html#chartformats">Kartenformate</a>.</p>
     <p>O-Charts Karten müssen über das <a href="../hints/ocharts.html">o-charts
-        Plugin</a> (zu erreichen über den <img src="../viewerimages/icons-new/apps.svg"
-        alt="" class="inlineimage">Button) hochgeladen werden.</p>
+        Plugin</a> bzw. das <a href="../hints/ochartsng.html">ochartsng Plugin</a>
+      (zu erreichen über den <img src="../viewerimages/icons-new/apps.svg" alt=""
+        class="inlineimage">Button) hochgeladen werden.</p>
     <p>Wenn in <a href="../hints/CanboatAndSignalk.html">SignalK</a> Karten
       installiert sind, werden diese hier ebenfalls angezeigt.</p>
     <p>Über den <img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage">Button
@@ -146,7 +147,7 @@
     <h3><a name="mob" id="mob"></a>Mann über Bord</h3>
     <p>Sichtbar auf allen Seiten, aber nur wenn der "connected" Mode aktiv ist -
       Button <img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">ist
-      grün.<br>
+      grün und eine aktuelle GPS Position vorhanden ist.<br>
       Durch Klick wird die aktuelle Position zu einem Wegepunkt mit dem Namen
       "MOB", ein aktuelles Routing wird abgebrochen, ein Routing zum Wegepunkt
       wird aktiviert, und es wird auf die Navigationsseite mit der zuletzt
@@ -178,11 +179,11 @@
       Route dann akitiviert wird, wird sie auch zum Server hochgeladen. Auf der
       <a href="downloadpage.html">Files/Download</a> Seite wird bei den Routen
       durch das <img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">Symbol
-      angezeigt, ob sie mit dem Server synchronisiert sind.</p>
-    <p>Der Verbunden/Nicht Verbunden Zustand bezieht sich nur auf Routen und
-      Wegepunkte! Alle anderen Funktionen sind immer mit dem Server verbunden
-      (ausser MOB - das ist eine Routing Funktion - und daher nicht aktivierbar
-      wenn man nicht verbunden ist).</p>
+      angezeigt, ob sie mit dem Server synchronisiert sind. Siehe auch die
+      Beschreibung beim <a href="editroutepage.html#connectedmode">Routen
+        Editor</a>.</p>
+    <p>Im "disconnected" Mode sind verschiedene Funktionen auf der <a href="downloadpage.html">Files/Download</a>
+      Seite gesperrt bzw. nicht verfügbar.</p>
     <p><img src="mainpage-disconnected.png" alt="" class="fimage"><br>
     </p>
     <p>Ab 20240520 wird in der Titelzeile ein kleines rotes Icon angezeigt, wenn

@@ -78,7 +78,7 @@
       sowie <a href="hints/plugins.html">Plugins</a> vorgenommen werden.</p>
     <h2>NMEA-Daten</h2>
     <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export"
-        border="0" width="600"> </p>
+        width="600" border="0"> </p>
     <h3>Client Server Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
@@ -108,6 +108,7 @@
       <li>$xxMTW (seit 20220225)</li>
       <li>$xxZDA (seit 20220421)</li>
       <li>$xxVDR (seit 20240520)</li>
+      <li>$xxGSA (seit 202507xx)</li>
     </ul>
     <p>Je nach <a href="hints/configfile.html">Konfiguration</a> kann AvNav
       auch NMEA-Daten erzeugen:</p>
@@ -155,8 +156,7 @@
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.
       Diese können aus verschiedenen Quellen im Netz heruntergeladen werden
-      (z.B. <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeaMap</a>
-      or <a href="https://tileservice.charts.noaa.gov/tileset.html#50000_1-locator">NOAA</a>)
+      (z.B. <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeaMap</a>)
       oder z.B. mit dem <a href="https://mobac.sourceforge.io/">MobileAtlasCreator</a>
       oder <a href="https://wiki.openstreetmap.org/wiki/SAS_Planet">SASPlanet</a>
       aus Quellen im Netz erstellt werden.</p>
@@ -170,7 +170,7 @@
         avocharts app (ochartsng)</a>. Der O-Charts-Shop bietet Karten für
       Open-Source-Software zu sehr günstigen Preisen an.</p>
     <p>Mit dem <a href="hints/ochartsng.html">ochartsng</a> plugin kann AvNav
-      auch freie S57 Karten anzeigen (nach Konvertierung).</p>
+      auch freie S57 Karten anzeigen (nach Konvertierung) - z.b. -&nbsp; <a href="https://nauticalcharts.noaa.gov/charts/noaa-enc.html">NOAA</a>..</p>
     <p>Karten müssen in AvNav installiert werden, bevor sie genutzt werden
       können. Das kann auf der <a href="userdoc/downloadpage.html">Files/Download
         Seite</a>, erfolgen - Sektion charts <img src="viewerimages/icons-new/map2.svg"
@@ -259,7 +259,7 @@
     Es ist wichtig zu beachten, das die Weiterschaltung nur erfolgt, wenn beide
     Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist,
     kann man jederzeit durch Klick auf die Widgets links unten die
-    Wegepunkt-Buttons anzeigen un den <img src="viewerimages/icons-new/nextwp.svg"
+    Wegepunkt-Buttons anzeigen und den <img src="viewerimages/icons-new/nextwp.svg"
       alt="" class="inlineimage">Button nutzen.<br>
     <h2><a name="tracks"></a>Tracks</h2>
     <p>AvNav zeichnet beständig den aktuellen Track auf und zeigt ihn auf der
@@ -306,6 +306,9 @@
       auch weitere Aktionen ausgelöst werden (siehe <a href="https://github.com/wellenvogel/avnav/tree/master/hardware/simple-pi">Beispiel</a>).
       Die Konfiguration erfolgt im&nbsp; <a href="hints/configfile.html#AVNAlarmHandler">configfile
         - AVNAlarmHandler</a>.</p>
+    <p>Über die <a href="hints/CanboatAndSignalk.html#configuration">SignalK
+        Verbindung</a> kann AvNav auch Notifications von SignalK als Alarme
+      anzeigen (und erzeugen bzw. löschen ).</p>
     <h2>Nachtmodus</h2>
     <p>AvNav kann auf der <a href="userdoc/mainpage.html">Hauptseite</a> in
       einen Nachtmodus <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">

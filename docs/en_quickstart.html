@@ -77,7 +77,7 @@
     <p>With the Android installation, all settings are directly integrated in
       the App.</p>
     <h2>NMEA Data</h2>
-    <p><img class="fimage" src="en_avnav_schnittstellen.png" border="0" width="600">
+    <p><img class="fimage" src="en_avnav_schnittstellen.png" width="600" border="0">
     </p>
     <h3>Client Server</h3>
     <p>AvNav processes NMEA0183 Data from connected USB devices, serial ports,
@@ -111,6 +111,7 @@
       <li>$xxMTW (since 20220225)</li>
       <li>$xxZDA (since 20220421)</li>
       <li>$xxVDR (since 20240520)</li>
+      <li>$xxGSA (since 202507xx)</li>
     </ul>
     &nbsp; Depending on the <a href="hints/configfile.html">configuration</a>
     AvNav is able to generate following NMEA sentences:
@@ -158,8 +159,7 @@
     <p></p>
     <h2>Charts</h2>
     <p>AvNav generally handles <a href="charts.html#Intro">raster charts</a>.
-      You can download them from various internet sources (e.g. <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeaMap</a>
-      or <a href="https://tileservice.charts.noaa.gov/tileset.html#50000_1-locator">NOAA</a>)
+      You can download them from various internet sources (e.g. <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeaMap</a>)
       - or you can use software like <a href="https://mobac.sourceforge.io/">MobileAtlasCreator</a>&nbsp;
       or <a href="https://wiki.openstreetmap.org/wiki/SAS_Planet">SASPlanet</a>
       to download/create charts.</p>
@@ -172,7 +172,7 @@
         (ochartsng</a>). The company offers charts for Open Source Software at
       reasonable prices.</p>
     <p>With the <a href="hints/ochartsng.html">ochartsng</a> plugin AvNav can
-      also display free S57 charts (after conversion).</p>
+      also display free S57 charts (after conversion) - like provided by <a href="https://nauticalcharts.noaa.gov/charts/noaa-enc.html">NOAA</a>.</p>
     <p>Charts need to be uploaded to AvNav before being usable - at the&nbsp; <a
         href="userdoc/downloadpage.html">Files/Download page</a>, section charts
       <img src="viewerimages/icons-new/map2.svg" alt="" class="inlineimage">.
@@ -300,6 +300,9 @@
       is raised (see <a href="https://github.com/wellenvogel/avnav/tree/master/hardware/simple-pi">example</a>).
       The configuration is handled within the <a href="hints/configfile.html#AVNAlarmHandler">configfile
         - AVNAlarmHandler</a>.</p>
+    <p>With the <a href="hints/CanboatAndSignalk.html#configuration">SignalK
+        connection</a> AvNav is able to receive,send and clear SignalK
+      notifications as alarms.</p>
     <h2>Nightmode</h2>
     <p>At the <a href="userdoc/mainpage.html">Main page</a> you can active the
       night mode <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">.
