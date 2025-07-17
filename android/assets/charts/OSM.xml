@@ -5,7 +5,7 @@
    
      <TileMap 
        title="OpenSeaMap" 
-       href="https://t1.openseamap.org/seamark/"
+       href="http://t1.openseamap.org/seamark/"
        minzoom="6"
        maxzoom="20"
        projection="EPSG:4326">
@@ -15,7 +15,7 @@
  <TileMap 
        title="OSM" 
        srs="OSGEO:41001" 
-       href="https://a.tile.openstreetmap.org/"
+       href="http://a.tile.openstreetmap.org"
        minzoom="4"
        maxzoom="20">
        

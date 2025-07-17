@@ -5,7 +5,7 @@
    <TileMaps>
       <TileMap 
        title="OpenSeaMap" 
-       href="https://t1.openseamap.org/seamark/"
+       href="http://t1.openseamap.org/seamark/"
        minzoom="6"
        maxzoom="20"
        projection="EPSG:4326">
@@ -15,72 +15,99 @@
       <TileMap 
        title="BSH Hydro" 
 	   profile="wms"
-       href="https://www.geoseaportal.de/wss/service/NAUTHIS_Hydrography/guest?"
+       href="https://gdi.bsh.de/mapservice_gs/NAUTHIS_Hydrography/ows?"
        minzoom="6"
        maxzoom="20"
        projection="EPSG:4326">
 	   <WMSParameter name="SERVICE" value="WMS"/>
 	   <WMSParameter name="BGCOLOR" value="0x777777"/>
 	   <WMSParameter name="TRANSPARENT" value="TRUE"/>
-	   <WMSParameter name="LAYERS" value="29,30,65,66,101,102,137,138,173,174,209,210"/>
+	   <WMSParameter name="LAYERS" value="4_Approach"/>
 	   <WMSParameter name="STYLES" value=""/>
 	   <WMSParameter name="VERSION" value="1.1.0"/>
-       <WMSLayerMapping zooms="1,2,3,4,5,6,7,8,9,10,11" layers="29,30,65,66,101,102"/>
-       <WMSLayerMapping zooms="12" layers="29,30,65,66,101,102,137"/>
+      <!--
+         <WMSLayerMapping zooms="1,2,3,4,5,6,7,8,9,10,11,12" layers="1_Overview,2_General,3_Coastel"/>
+       <WMSLayerMapping zooms="12" layers="4_Approach,5_Harbour,6_Berthing"/>
+       -->
 	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
        <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
     </TileMap>
-   <!-- 
    <TileMap 
        title="BSH Rocks Wrecks" 
 	   profile="wms"
-       href="https://www.geoseaportal.de/wss/service/NAUTHIS_RocksWrecksObstructions/guest?"
+       href="https://gdi.bsh.de/mapservice_gs/NAUTHIS_RocksWrecksObstructions/ows?"
        minzoom="6"
        maxzoom="20"
        projection="EPSG:4326">
 	   <WMSParameter name="SERVICE" value="WMS"/>
 	   <WMSParameter name="BGCOLOR" value="0x777777"/>
 	   <WMSParameter name="TRANSPARENT" value="TRUE"/>
-	   <WMSParameter name="LAYERS" value="2,12,22,32,42,9,19,29,39,49,59"/>
+	   <WMSParameter name="LAYERS" value="4_Approach,5_Harbour"/>
 	   <WMSParameter name="STYLES" value=""/>
 	   <WMSParameter name="VERSION" value="1.1.0"/>
 	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
        <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
     </TileMap>
-  -->
-   <!--
   <TileMap 
        title="AidsAndService" 
 	   profile="wms"
-       href="https://www.geoseaportal.de/wss/service/NAUTHIS_AidsAndServices/guest?"
+       href="https://gdi.bsh.de/mapservice_gs/NAUTHIS_AidsAndServices/ows?"
        minzoom="6"
        maxzoom="20"
        projection="EPSG:4326">
 	   <WMSParameter name="SERVICE" value="WMS"/>
 	   <WMSParameter name="BGCOLOR" value="0xffffff"/>
 	   <WMSParameter name="TRANSPARENT" value="TRUE"/>
-	   <WMSParameter name="LAYERS" value="11,13,14,15,20,34,35,36,41,53,55,56,57,74,76,77,78,83,97,98,99,116,118,119,120"/>
+	   <WMSParameter name="LAYERS" value="Coastal_Lights,Coastal_Lateral_Buoys,Coastal_Cardinal_Buoys,Coastal_All_Other_Buoys,Coastal_Lateral_Beacons,Coastal_Cardinal_Beacons,Coastal_All_Other_Beacons,Approach_Lights,Approach_Lateral_Buoys,Approach_Cardinal_Buoys,Approach_All_Other_Buoys,Approach_Lateral_Beacons,Approach_Cardinal_Beacons,Approach_All_Other_Beacons,Harbour_Lights,Harbour_Lateral_Buoys,Harbour_Cardinal_Buoys,Harbour_All_Other_Buoys,Harbour_Lateral_Beacons,Harbour_Cardinal_Beacons,Harbour_All_Other_Beacons,Berthing_Lights,Berthing_Lateral_Buoys,Berthing_Cardinal_Buoys,Berthing_All_Other_Buoys,Berthing_Lateral_Beacons,Berthing_Cardinal_Beacons,Berthing_All_Other_Beacons"/>
 	   <WMSParameter name="STYLES" value=""/>
 	   <WMSParameter name="VERSION" value="1.1.0"/>
 	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
        <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
     </TileMap>
-   -->
     <TileMap 
-       title="Skin" 
+       title="Topo" 
 	   profile="wms"
-       href="https://www.geoseaportal.de/wss/service/NAUTHIS_SkinOfTheEarth/guest?" 
+       href="https://gdi.bsh.de/mapservice_gs/NAUTHIS_Topography/ows?" 
        minzoom="6"
        maxzoom="20"
        projection="EPSG:4326">
        <WMSParameter name="SERVICE" value="WMS"/>
        <WMSParameter name="BGCOLOR" value="0xffffff"/>
        <WMSParameter name="TRANSPARENT" value="TRUE"/>
-       <WMSParameter name="LAYERS" value="2,6,12,18,24,30"/>
+       <WMSParameter name="LAYERS" value="4_Approach,5_Harbour"/>
        <WMSParameter name="STYLES" value=""/>
        <WMSParameter name="VERSION" value="1.1.0"/>
        <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
        <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+    <TileMap 
+       title="Skin" 
+	   profile="wms"
+       href="https://gdi.bsh.de/mapservice_gs/NAUTHIS_SkinOfTheEarth/ows?" 
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+       <WMSParameter name="SERVICE" value="WMS"/>
+       <WMSParameter name="BGCOLOR" value="0xffffff"/>
+       <WMSParameter name="TRANSPARENT" value="TRUE"/>
+       <WMSParameter name="LAYERS" value="General_DepthArea,Coastal_Depth_area,Approach_Depth_area,Harbour_Depth_area"/>
+       <WMSParameter name="STYLES" value=""/>
+       <WMSParameter name="VERSION" value="1.1.0"/>
+       <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+    <TileMap 
+       title="OSM" 
+       srs="OSGEO:41001" 
+       href="http://a.tile.openstreetmap.org"
+       minzoom="4"
+       maxzoom="20">
+       
+<BoundingBox minlon="-20" minlat="10" maxlon="30" maxlat="70"
+   title="layer"/>
+
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+       
     </TileMap>
       
 
