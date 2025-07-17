@@ -42,7 +42,7 @@ sudo systemctl start avnav</div>
     <h2>Versions</h2>
     <p> <span style="font-weight: bold;">202507xx</span> <a title="release/202507xx"
         href="../downloads/release/202507xx">link</a></p>
-    <p>Main Changes:</p>
+    <p><i><b>Main Changes</b></i></p>
     <ul>
       <li>The computation of AIS data has changed to be based on the estimated
         target position. For details refer to <a href="userdoc/navpage.html#aiscomputations">AIS
@@ -102,7 +102,7 @@ sudo systemctl start avnav</div>
             </tr>
             <tr>
               <td>wind knots</td>
-              <td>set the uints at the wind widgets</td>
+              <td>set the units at the wind widgets (formatter parameters)</td>
             </tr>
             <tr>
               <td>Show Measure Button</td>
@@ -154,6 +154,9 @@ sudo systemctl start avnav</div>
     <ul>
       <li>Adapt to Android 14 (API 34 as required by Google), changed service
         types and permissions</li>
+      <li>Improve startup time</li>
+      <li>Correctly reset settings, resolves <a href="https://github.com/wellenvogel/avnav/issues/460">#460</a>:
+        Android Settings page</li>
     </ul>
     <p><i> <b>Bugfixes and Issues</b></i></p>
     <ul>
@@ -162,8 +165,6 @@ sudo systemctl start avnav</div>
         mismatching/wrong</li>
       <li> <a href="https://github.com/wellenvogel/avnav/issues/461">#461</a>:
         Can't import KAP charts</li>
-      <li> <a href="https://github.com/wellenvogel/avnav/issues/460">#460</a>:
-        Android Settings page</li>
       <li> <a href="https://github.com/wellenvogel/avnav/issues/457">#457</a>:
         Copyright date still 2021</li>
       <li> <a href="https://github.com/wellenvogel/avnav/issues/456">#456</a>:
