@@ -32,8 +32,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.wellenvogel.avnav.main.Constants;
 
@@ -46,6 +47,7 @@ import static android.content.Context.RECEIVER_NOT_EXPORTED;
 public class AvnUtil {
     public static final double NM=1852.0;
     public static final double msToKn=3600.0/NM;
+    public static Pattern NMEA_START=Pattern.compile("[!$]");
 
     public static long getLongPref(SharedPreferences prefs, String key, long defaultValue){
         try{
@@ -118,6 +120,16 @@ public class AvnUtil {
     public static String removeNonNmeaChars(String input){
         if (input == null) return input;
         return input.replaceAll("[^\\x20-\\x7F]", "");
+    }
+    public static String stripLeading(String line){
+        if (line == null || line.isEmpty()) return line;
+        if (line.charAt(0) != '!' && line.charAt(0) != '$') {
+            Matcher m = NMEA_START.matcher(line);
+            if (m.find()) {
+                line = line.substring(m.start());
+            }
+        }
+        return line;
     }
 
     public static File workdirStringToFile(String wd, Context context){
