@@ -103,10 +103,11 @@
       version - or any other NMEA0183-wifi gateway. You can also use a plain
       bluetooth GPS mouse if your device does not have an internal GPS.</p>
     <h2>Charts and stored Data</h2>
-    <p>AvNav stores its data and charts in a working directory. You can choose
-      between "internal storage" or "external storage" for this directory.
-      Depending on the device the external storage <b>could</b> be located on
-      the SD card. In any case other apps cannot access this directory.<br>
+    <p><a name="workingdirectory" id="workingdirectory"></a>AvNav stores its
+      data and charts in a working directory. You can choose between "internal
+      storage" or "external storage" for this directory. Depending on the device
+      the external storage <b>could</b> be located on the SD card. In any case
+      other apps cannot access this directory.<br>
       So you have to load or export all data using the AvNav app itself.<br>
       There is only one exception: you can choose an "additonal chart directory"
       that can be used to store charts in gemf or xml format. This directory can
@@ -131,16 +132,30 @@
     Amongst other settings, you can select the working directory and the
     external charts directory. <br>
     A complete list of settings can be found <a href="#Settings">here</a>.<br>
-    <br>
-    <p> You can leave the settings page with the upper right button or by
-      pressing the back button. You will get to the <a href="../userdoc/mainpage.html">main
-        page</a> of the app.</p>
+    You can leave the settings page with the upper right button or by pressing
+    the back button.<br>
+    Each time you leave the settings page AvNav will check the permissions it
+    expects and will ask you to allow them.<br>
+    To work properly AvNav needs:
+    <ul>
+      <li>Access to fine location (GPS) as long as the app is running</li>
+      <li>Notifications to show you an info as long as AvNav is running (even
+        when in background)</li>
+    </ul>
+    <p>Additionally AvNav will check if energy saving is enabled. If enabled
+      AvNav will not be able to use the internal GPS while in background. So you
+      will be asked to disable it.</p>
+    <p>Afterwards yo will get to the <a href="../userdoc/mainpage.html">main
+        page</a> of the app (typically you will be prompted to accept the
+      conditions before and to select one of the available layouts).</p>
     <img src="android-mainpage.png" alt="" class="fimage"><br>
     In the screenshot a valid internal position is shown (green bubble), but
-    currently no AIS data (red bubble).<br>
+    currently no AIS data (yellow bubble).<br>
     To return to the android setting move to the <a href="../userdoc/settingspage.html">settings
       page</a> within the app and click the android button there.<br>
     On further starts,&nbsp; the app will directly present the main page.<br>
+    For further usage description refer to the <a href="../userdoc/mainpage.html">WebApp
+      description</a>.<br>
     <p> </p>
     <br>
     <h2>External Access</h2>
@@ -166,11 +181,11 @@
     <br>
     <h2>Background</h2>
     <p>The NMEA multiplexer (and the Web Server) of AvNav can run in background.
-      You would e.g. use this if your display is on a different device.</p>
-    <p>To enter the background mode open the close dialog on the main page <img
+      You would e.g. use this if your display is on a different device.<br>
+      To enter the background mode open the close dialog on the main page <img
         src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage">and
-      select "BACKGROUND".</p>
-    <p>Via the android notification (in the Android notification bar) you can
+      select "BACKGROUND".<br>
+      Via the android notification (in the Android notification bar) you can
       bring back the app to foreground - or close it completely.</p>
     <br>
     <h2> <a id="Settings" name="Settings"></a>Settings</h2>
@@ -195,13 +210,19 @@
         </tr>
         <tr>
           <td>working directory</td>
-          <td>working directory for your data (sub folders charts,tracks,
-            routes, user, layout)</td>
-          <td>/storage/sdcard/avnav</td>
+          <td>you can select where the AvNav <a href="#workingdirectory">working
+              directory</a> should be located (internal storage or external
+            storage)</td>
+          <td>internal storage</td>
         </tr>
         <tr>
           <td>additional charts directory</td>
           <td>external chart directory (not for mbtiles), SD card recommended</td>
+          <td>---</td>
+        </tr>
+        <tr>
+          <td>reset external chart dir</td>
+          <td>reset the external chart directory (i.e. no external chart dir)</td>
           <td>---</td>
         </tr>
         <tr>
@@ -219,11 +240,29 @@
         <tr>
           <td>Hide System Bars</td>
           <td>hide&nbsp; the top and bottom android bars</td>
-          <td>off</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>autoconnect USB devices</td>
+          <td>When activated AvNav will be started whenever a supported USB
+            device is plugged in and you will be asked to configure that device.
+            When deactivated you still can configure USB devices using the +
+            Button on the server/status page.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>allow unknown plugins</td>
+          <td>AvNav has an interface (still experimental) that can be used by
+            plugin to inform AvNav about functions that the plugin provides.
+            Currently only charts are supported. With this switch activated a
+            plugin that is not directly known to AvNav can still be used.
+            Remark: avocharts is already known to AvNav and does not need this
+            switch.</td>
+          <td>on</td>
         </tr>
         <tr>
           <td>reset to defaults</td>
-          <td>reset the multiplexer settings to defaults</td>
+          <td>reset the multiplexer and main settings to defaults</td>
           <td><br>
           </td>
         </tr>
@@ -357,6 +396,15 @@
             or not</td>
           <td>10</td>
         </tr>
+        <tr>
+          <td>queueAge</td>
+          <td>AvNav internally uses a queue to transfer NMEA data from it's
+            receivers (inputs) to it's senders (outputs). Whene an output is
+            slow it potentially cannot send all data at the same speed as they
+            arrive in the queue. If an item is sitting in the queue longer then
+            this time (in ms) the item is droppped.</td>
+          <td>3000</td>
+        </tr>
       </tbody>
     </table>
     <h4>Route</h4>
@@ -372,6 +420,24 @@
           <td>if switched on RMB records will be created if the routing is
             active</td>
           <td>on</td>
+        </tr>
+        <tr>
+          <td>computeAPB</td>
+          <td>if switched on APB records will be created if the routing is
+            active</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>useRhumbLine</td>
+          <td>set the <a href="../quickstart.html#routes">Routing Mode</a> to
+            rhumbLine</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>nextWpMode</td>
+          <td>set the mode for&nbsp; <a href="../quickstart.html#routes">next
+              waypoint switching</a> - late/early/90</td>
+          <td>late</td>
         </tr>
       </tbody>
     </table>
@@ -432,7 +498,7 @@
         </tr>
         <tr>
           <td>mdnsEnabled</td>
-          <td>Announce the service via mnds (will allo Bonjour apps to find it)</td>
+          <td>Announce the service via mnds (will allow Bonjour apps to find it)</td>
           <td>on</td>
         </tr>
         <tr>
@@ -446,6 +512,9 @@
     <p>The internal GPS of the device.</p>
     <h4>MDNSResolver</h4>
     <p>The handler for resolving and announcing mdns names.</p>
+    <h4>Remote Channel</h4>
+    <p>The handler for using the <a href="../hints/RemoteControl.html">Remote
+        Control</a> function.</p>
     <h4>TcpReader</h4>
     <table style="width: 100%" border="1">
       <tbody>
@@ -494,6 +563,11 @@
             received within readTimeout.</td>
           <td>on</td>
         </tr>
+        <tr>
+          <td>stripLeading</td>
+          <td>Strip any characters in a line before a ! or $</td>
+          <td>off</td>
+        </tr>
       </tbody>
     </table>
     <h4>TcpWriter</h4>
@@ -530,6 +604,20 @@
           <td>readData</td>
           <td>If active also read data from an established connection (otherwise
             write only)</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>stripLeading</td>
+          <td>Strip any characters in a line before a ! or $ (only if readData
+            is on)</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>sendOwn</td>
+          <td>Send out data that was received on the same connection (only
+            visible if readData on).<br>
+            Normally you should not enable this as you easily could create
+            loops.</td>
           <td>off</td>
         </tr>
         <tr>
@@ -573,6 +661,11 @@
           <td>Show the connection to be inactive if no NMEA data have been
             received for this time (seconds).</td>
           <td>10</td>
+        </tr>
+        <tr>
+          <td>stripLeading</td>
+          <td>Strip any characters in a line before a ! or $</td>
+          <td>off</td>
         </tr>
       </tbody>
     </table>
@@ -658,11 +751,11 @@
       </tbody>
     </table>
     <h4>UsbConnection</h4>
-    <p>AvNav will get activated when an USB device is connected. Typically it
-      makes sense to start AvNav first and afterwards connect the USB device.
-      This way you can allow permanent access to the USB device for AvNav. AvNav
-      will immediately start up the configuration dialog for the newly connected
-      device.</p>
+    <p>AvNav will get activated when an USB device is connected (if you enabled
+      this in the settings). Typically it makes sense to start AvNav first and
+      afterwards connect the USB device. This way you can allow permanent access
+      to the USB device for AvNav. AvNav will immediately start up the
+      configuration dialog for the newly connected device.</p>
     <p><img src="android-connect-usb.png" alt="" class="fimage"></p>
     <table style="width: 100%" border="1">
       <tbody>

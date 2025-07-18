@@ -99,12 +99,12 @@
       konfiguriert man dazu einen TcpWriter, in den zugreifenden Apps verbindet
       man sich über die Adresse 127.0.0.1 und den vorher konfigurierten Port).</p>
     <h2>Karten und gespeicherte Daten</h2>
-    <p>AvNav speichert alle seine Daten und die Karten in einem
-      Arbeitsverzeichnis. Es kann gewählt werden, ob das Verzeichnis im
-      "internal storage" oder im "external storage" liegt. Je nach Gerät <b>kann</b>
-      das externe Verzeichnis auf einer SD Karte liegen. In beiden Fällen ist
-      das Verzeichnis aufgrund der Android-Restriktionen aber nicht für andere
-      Apps zugreifbar. <br>
+    <p><a name="workingdirectory" id="workingdirectory"></a>AvNav speichert alle
+      seine Daten und die Karten in einem Arbeitsverzeichnis. Es kann gewählt
+      werden, ob das Verzeichnis im "internal storage" oder im "external
+      storage" liegt. Je nach Gerät <b>kann</b> das externe Verzeichnis auf
+      einer SD Karte liegen. In beiden Fällen ist das Verzeichnis aufgrund der
+      Android-Restriktionen aber nicht für andere Apps zugreifbar. <br>
       Daher müssen die Daten über die AvNav App geladen oder exportiert werden.
       Ausnahme ist ein zusätzliches externes Kartenverzeichnis, aus dem AvNav
       gemf Karten (oder xml Dateien) lesen kann.</p>
@@ -125,23 +125,39 @@
       Einführungsseite:</p>
     <img alt="" src="android-start-first.png" class="fimage"><br>
     Nach dem Klick kommt man auf die Einstellungsseite:<br>
-    <img src="android-settings-main.png" alt="" class="fimage"><br>
-    Hier können neben anderen Einstellungen z. B. die Verzeichnisse&nbsp; für
-    Karten und Tracks gesetzt werden.<br>
+    <img src="android-settings-main.png" class="fimage"><br>
+    Hier können neben anderen Einstellungen z. B. das interne oder externe
+    Arbeitsverzeichnis gewählt sowie das externe Karten-Verzeichnis gesetzt
+    werde.<br>
+    Ausserdem können hier auch alle Einstellungen zurückgesetzt werden.<br>
     Eine Liste aller Einstellungen findet sich <a href="#Settings">hier</a>.<br>
     Die Einstellungen für die NMEA-Datenquellen und einige Weitere erreicht man
     in der App über die <a href="../userdoc/statuspage.html">"Server/Status"-Seite</a>
     <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">.<br>
-    <br>
-    <p> Die "Settings"-Seite kann über den "OK"-Button (oben rechts) oder über
-      den "Zurück"-Button verlassen werden. Man erreicht dadurch die <a href="../userdoc/mainpage.html">Hauptseite</a>
-      der App.</p>
-    <img src="android-mainpage.png" alt="" class="fimage"><br>
+    <p>Die "Settings"-Seite kann über den "OK"-Button (oben rechts) oder über
+      den "Zurück"-Button verlassen werden. <br>
+      Immer wenn die Einstellungen verlassen werden, prüft AvNav ob die
+      notwendigen Berechtigungen erteil wurden.<br>
+      AvNav braucht die folgenden Berechtigungen:</p>
+    <ul>
+      <li>genauer Standort (GPS) während der Nutzung der App</li>
+      <li>Benachrichtigungen für eine Anzeige, das AvNav läuft, auch wenn es im
+        Hintergrund ist</li>
+    </ul>
+    <p>Zusätzlich prüft AvNav ob der Energiesparmodus aktiv ist. Falls ja, kann
+      AvNav im Hintergrund nicht das interne GPS des Gerätes nutzen. AvNav zeigt
+      dann eine Warnung an.</p>
+    <p>Anschliessend wird die <a href="../userdoc/mainpage.html">Hauptseite</a>
+      der App aufgerufen. Beim ersten Start erhält man vorher noch einen Dialog
+      um den Nutzungsbedingungen zuzustimmen und es wird eine Liste der zur
+      Verfügung stehenden Layouts zur Auswahl angeboten.</p>
+    <p> <img src="android-mainpage.png" alt="" class="fimage"></p>
     Im Bild ist wird eine gültige Position (oberer grüner Punkt) und bisher noch
-    keine gültigen AIS Daten (unterer roter Punkt) empfangen.<br>
+    keine gültigen AIS Daten (unterer gelber Punkt) empfangen.<br>
     Um zu den Android Einstellungen zu gelangen, muss zunächst die <a href="../userdoc/settingspage.html">Einstellungsseite</a>
     in der App aufgerufen werden, dort klickt man dann auf den "Android"-Button.<br>
     Bei weiteren Starts erreicht man sofort die Hauptseite der App.<br>
+    Für eine Beschreibung der Benutzung siehe <a href="../userdoc/mainpage.html">hier</a>.<br>
     <br>
     <h2>Externer Zugriff</h2>
     <p> (neu ab 20210424).</p>
@@ -170,11 +186,11 @@
       Anzeige nur im Hintergrund laufen. Das kann genuzt werden, wenn die
       Anzeige für Benutzer auf einem anderen Gerät erfolgen soll - oder wenn
       eine andere App für die Navigation genutzt wird und nur der Multiplexer
-      von AvNav benötigt wird.</p>
-    <p>Dazu wird nach dem Start auf der Hauptseite über <img src="../viewerimages/icons-new/ic_clear.svg"
+      von AvNav benötigt wird.<br>
+      Dazu wird nach dem Start auf der Hauptseite über <img src="../viewerimages/icons-new/ic_clear.svg"
         alt="" class="inlineimage">der Beenden-Dialog aufgerufen und dort
-      "BACKGROUND" ausgewählt.</p>
-    <p>Über die Benachrichtigung (in der Android-Nachrichtenzeile) kann die App
+      "BACKGROUND" ausgewählt.<br>
+      Über die Benachrichtigung (in der Android-Nachrichtenzeile) kann die App
       wieder in den Vordergrund geholt - oder direkt beendet werden.</p>
     <br>
     <h2> <a id="Settings" name="Settings"></a>Einstellungen</h2>
@@ -196,15 +212,21 @@
         </tr>
         <tr>
           <td>working directory</td>
-          <td>das Arbeitsverzeichnis (mit den Unterverzeichnissen charts,tracks,
-            routes)</td>
-          <td>/storage/sdcard/avnav</td>
+          <td>man kann auswählen, wo das AvNav <a href="#workingdirectory">Arbeitsverzeichnis</a>
+            liegen soll (internal storage oder external storage)</td>
+          <td>internal storage</td>
         </tr>
         <tr>
           <td>additional charts directory</td>
           <td>ein zusätzliches Kartenverzeichnis, das sinnvollerweise auf einer
             externen SD-Karte angelegt werden sollte </td>
-          <td>/storage/sdcard/avnav/charts</td>
+          <td>---</td>
+        </tr>
+        <tr>
+          <td>reset external chart dir</td>
+          <td>setze das zusätzliche Kartenverzeichnis zurück</td>
+          <td><br>
+          </td>
         </tr>
         <tr>
           <td>show demo charts</td>
@@ -218,14 +240,31 @@
           <td>Hier können die durch den Server erzeugten Alarm-Sounds
             abgeschaltet werden. Im Browser müssen diese ggf. zusätzlich
             abgeschaltet werden.</td>
-          <td><br>
+          <td>ein<br>
           </td>
         </tr>
         <tr>
           <td>Hide System Bars</td>
           <td>Verbergen der Android Kopf- und Fusszeile</td>
-          <td><br>
+          <td>ein<br>
           </td>
+        </tr>
+        <tr>
+          <td>autoconnect USB devices</td>
+          <td>Wenn eingeschaltet wird AvNav gestartet sobald ein unterstütztes
+            USB Gerät verbunden wird. Falls dieser Schalter ausgeschaltet ist,
+            kann man USB Geräte auch über den + Button auf der Server/Status
+            Seite konfigurieren.</td>
+          <td>ein</td>
+        </tr>
+        <tr>
+          <td>allow unknown plugins</td>
+          <td>AvNav hat ein (experimentelles) Plugin interface, das es anderen
+            Apps ermöglicht, AvNav über bereitgestellte Funktionen zu
+            informieren (im Moment nur Karten). Mit diesem Schalter können das
+            auch plugins, die noch nicht in AvNav bekannt sind. Anmerkung:
+            avocharts benötigt das nicht.</td>
+          <td>ein</td>
         </tr>
         <tr>
           <td>reset to defaults</td>
@@ -327,6 +366,17 @@
           <td><br>
           </td>
         </tr>
+        <tr>
+          <td>priority</td>
+          <td>Falls dieser Handler Daten liest (oder erzeugt) werden sie vom
+            Dekoder potentiell gelsen und in den internen Speicher von AvNav
+            geschrieben. Falls mehrere Handler die gleichen Daten liefern (z.B.
+            Position) muss entschieden werden, welche davon in den internen
+            Speicher geschrieben werden sollen. Dazu wird diese Einstellung
+            genutzt. Daten mit höherer Priorität gewinnen.</td>
+          <td><br>
+          </td>
+        </tr>
       </tbody>
     </table>
     <p>Die vorhandenen "Handler" und ihre Parameter. Es werden nur die
@@ -359,13 +409,18 @@
         </tr>
         <tr>
           <td>aisAge</td>
-          <td>erlaubtes Alter für AIS-Daten</td>
+          <td>erlaubtes Alter für AIS-Daten (in sec)</td>
           <td>1200</td>
         </tr>
         <tr>
-          <td>readTimeout</td>
-          <td>Timeout in s für die Anzeige ob valide NMEA Daten empfangen werden</td>
-          <td>10</td>
+          <td>queueAge</td>
+          <td>AvNav hat eine interne Warteschlage (queue), die empfangene Daten
+            aufnimmt und an die Ausgänge weiterreicht. Wenn ein Ausgang zu
+            langsam ist, kann er potentiell nicht alle einlaufenden Daten sofort
+            weiterleiten und diese verbleiben längere Zeit in der Warteschlange.
+            Wenn die Daten älter sind als die hier eingestellte Zeit (in ms),
+            werden sie aus der Warteschlange gelöscht.</td>
+          <td>3000</td>
         </tr>
       </tbody>
     </table>
@@ -381,6 +436,23 @@
           <td>computeRMB</td>
           <td>erzeuge NMEA-RMB-Datensätze, wenn ein Routing aktiv ist.</td>
           <td>an</td>
+        </tr>
+        <tr>
+          <td>computeAPB</td>
+          <td>rezeuge NMEA-APB Datensätze, wenn ein Routing aktiv ist</td>
+          <td>an</td>
+        </tr>
+        <tr>
+          <td>useRhumbLine</td>
+          <td>setze den <a href="../quickstart.html#routes">Routing Mode</a>
+            auf rhumbLine</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>nextWpMode</td>
+          <td>setze den <a href="../quickstart.html#routes">Modus zum Wegepunkt
+              Weiterschalten</a> - late/early/90</td>
+          <td>late</td>
         </tr>
       </tbody>
     </table>
@@ -442,12 +514,12 @@
         </tr>
         <tr>
           <td>mdnsEnabled</td>
-          <td>macht den Service per "mDNS" bekannt.</td>
+          <td>macht den Service per "mDNS" (Bonjour) bekannt.</td>
           <td>an</td>
         </tr>
         <tr>
           <td>mdnsService</td>
-          <td>Der Name unter dem die App per "mDNS" erreichbar ist.</td>
+          <td>Der Name unter dem die App per mDNS/Bonjour erreichbar ist.</td>
           <td>avnav-android</td>
         </tr>
       </tbody>
@@ -457,6 +529,10 @@
     <h4>MDNSResolver</h4>
     <p>Der Handler für die Auflösung und das Bekanntmachen von "mDNS"
       (Bonjour/Avahi) Services.</p>
+    <h4>Remote Channel</h4>
+    <p>Der Handler für die <a href="../hints/RemoteControl.html">Fernsteuerung</a>
+      .</p>
+    <p></p>
     <h4>TcpReader</h4>
     <table style="width: 100%" border="1">
       <tbody>
@@ -505,6 +581,12 @@
             readTimeout erreicht wird.</td>
           <td>an</td>
         </tr>
+        <tr>
+          <td>stripLeading</td>
+          <td>entfernt alle Zeichen in einer empfangenen Zeile vor einem ! oder
+            $</td>
+          <td>aus</td>
+        </tr>
       </tbody>
     </table>
     <h4>TcpWriter</h4>
@@ -539,6 +621,19 @@
           <td>Wenn aktiv, empfängt AvNav auch NMEA-Daten über eine aufgebaute
             Verbindung</td>
           <td>aus</td>
+        </tr>
+        <tr>
+          <td>stripLeading</td>
+          <td>entfernt alle Zeichen in einer empfangenen Zeile vor einem ! oder
+            $ (nur wenn readData aktiv ist)</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>sendOwn</td>
+          <td>Sende Date, die auf der gleichen Verbindung empfangen wurden (nur
+            sichtbar wenn readData an ist). Normalerweise sollte man das nicht
+            einschalten, weil man sonst sehr leicht Schleifen erzeugen kann.</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>mdnsEnabled</td>
@@ -578,6 +673,12 @@
           <td>zeige die Verbindung als inaktiv, wenn für die eingestellte Zeit
             (sec) keine Daten empfangen wurden.</td>
           <td>10</td>
+        </tr>
+        <tr>
+          <td>stripLeading</td>
+          <td>entfernt alle Zeichen in einer empfangenen Zeile vor einem ! oder
+            $</td>
+          <td>aus</td>
         </tr>
       </tbody>
     </table>
@@ -664,11 +765,11 @@
       </tbody>
     </table>
     <h4>UsbConnection</h4>
-    <p>AvNav wird aktiv, wenn ein USB-Gerät angeschlossen wird. Es ist daher
-      sinnvoll, zunächst AvNav zu starten und danach das USB-Gerät
-      anzuschließen. Das Gerät kann dann direkt so konfiguriert werden, dass
-      AvNav immer auf dieses Gerät zugreifen darf. AvNav startet dann sofort den
-      Dialog zur Konfiguration des Gerätes.</p>
+    <p>AvNav wird aktiv, wenn ein USB-Gerät angeschlossen wird (wenn man das in
+      den Einstellungen aktiviert hat). Es ist daher sinnvoll, zunächst AvNav zu
+      starten und danach das USB-Gerät anzuschließen. Das Gerät kann dann direkt
+      so konfiguriert werden, dass AvNav immer auf dieses Gerät zugreifen darf.
+      AvNav startet dann sofort den Dialog zur Konfiguration des Gerätes.</p>
     <p><img src="android-connect-usb.png" alt="" class="fimage"></p>
     <table style="width: 100%" border="1">
       <tbody>
