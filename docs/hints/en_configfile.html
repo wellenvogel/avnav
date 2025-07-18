@@ -102,7 +102,8 @@
             be considered. To e.g. only pass $GPRMC sentences (and any other
             $xxRMC) the filter would be: $RMC.<br>
             If you prefix the filter with a ^ it will be negated, i.e. ^$RMC
-            means. No $xxRMC records. For AIS data you can use "!" or "!AIVDM" .</td>
+            means. No $xxRMC records. For AIS data you can use "!" or "!AIVDM" .<br>
+            Multiple entries must be separated with a comma.</td>
           <td>$RMC,^$RMB,!AIVDM</td>
         </tr>
         <tr>
@@ -220,13 +221,33 @@
         </tr>
       </tbody>
     </table>
-    <h3>AVNFeeder</h3>
-    <p>The internal NMEA list and decoder unit. category 2 (once, optional since
-      version 20200325).</p>
-    <p>This part has no parameters anymore. In previous versions you could
-      configure gpsd here, so potentially there still will be some parameters in
-      your configuration. When you previously had an old version installed this
-      entity will be named AVNGpsdFeeder.</p>
+    <h3>AVNQueue</h3>
+    <p>The internal NMEA list and decoder unit. category 2 (once, optional ).</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>online</td>
+          <td>Description</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>maxList</td>
+          <td>X</td>
+          <td>max number of NMEA records in the queue</td>
+          <td>300</td>
+        </tr>
+        <tr>
+          <td>naxAge</td>
+          <td>X</td>
+          <td>max age in seconds an entry is kept in the queue. Older entries
+            are discarded.<br>
+            This prevents slow outputs to send out data that is already very
+            old.</td>
+          <td>3</td>
+        </tr>
+      </tbody>
+    </table>
     <h3>AVNHttpServer</h3>
     <p>The internal HTTP server. category 1 (once, mandatory).</p>
     <p>Apart from parameters for the AVNHttpServer there are some child entries
@@ -423,7 +444,7 @@
           <td>X</td>
           <td>Timeout in s, if no data received within this time the device will
             be closed and reopened.</td>
-          <td>1</td>
+          <td>2</td>
         </tr>
         <tr>
           <td>bytesize</td>
@@ -706,8 +727,21 @@
         <tr>
           <td>stripLeading</td>
           <td>X</td>
-          <td>Remove anything before $ or ! in received lines.</td>
+          <td>remove anything before $ or ! in received lines.</td>
           <td>off</td>
+        </tr>
+        <tr>
+          <td>joinMulticast</td>
+          <td>X</td>
+          <td>join a <a href="https://en.wikipedia.org/wiki/Multicast">multicast</a>
+            group</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>multicastAddr</td>
+          <td>X</td>
+          <td>address of the multicast group to join</td>
+          <td>224.0.0.1</td>
         </tr>
       </tbody>
     </table>
@@ -732,14 +766,14 @@
           <td>port</td>
           <td>X</td>
           <td>UDP destination port</td>
-          <td><br>
+          <td>2000<br>
           </td>
         </tr>
         <tr>
           <td>host</td>
           <td>X</td>
           <td>UDP destination address</td>
-          <td><br>
+          <td>localhost<br>
           </td>
         </tr>
         <tr>
@@ -859,6 +893,12 @@
           <td>the name that this service will be visible with in MDNS</td>
           <td>avnav-server</td>
         </tr>
+        <tr>
+          <td>sendOwn</td>
+          <td>X</td>
+          <td>send out data received on the same connection</td>
+          <td>false</td>
+        </tr>
       </tbody>
     </table>
     <h3>AVNSocketReader</h3>
@@ -952,6 +992,12 @@
           <td>Remove anything before $ or ! in received lines.</td>
           <td>false</td>
         </tr>
+        <tr>
+          <td>sendOwn</td>
+          <td>X</td>
+          <td>send out data received on the same connection</td>
+          <td>false</td>
+        </tr>
       </tbody>
     </table>
     <h3>AVNNmea0183ServiceReader</h3>
@@ -1010,6 +1056,12 @@
           <td>X</td>
           <td>, separated list of source names that will not be sent out</td>
           <td>empty</td>
+        </tr>
+        <tr>
+          <td>sendOwn</td>
+          <td>X</td>
+          <td>send out data received on the same connection</td>
+          <td>false</td>
         </tr>
         <tr>
           <td>name</td>
@@ -1247,7 +1299,8 @@
           <td>true</td>
         </tr>
         <tr>
-          <td></td>
+          <td><br>
+          </td>
           <td>X</td>
           <td>XDR transducer name for pressure</td>
           <td>Barometer</td>
@@ -1466,38 +1519,25 @@
           <td>default/template</td>
         </tr>
         <tr>
-          <td>importDir</td>
-          <td><br>
-          </td>
-          <td>directory to read charts for import</td>
-          <td>&lt;datadir&gt;/import</td>
-        </tr>
-        <tr>
-          <td>workDir</td>
-          <td><br>
-          </td>
-          <td>working directory for the converter</td>
-          <td>&lt;datadir&gt;/work</td>
-        </tr>
-        <tr>
-          <td>waittime</td>
+          <td>filesettle</td>
           <td>X</td>
           <td>converter waittime in seconds to start conversion after a
             new/changed file has been detected </td>
           <td>30</td>
         </tr>
         <tr>
-          <td>knownExtensions</td>
+          <td>dirsettle</td>
           <td>X</td>
-          <td>list of extensions the WebApp offers to upload to the importer.</td>
-          <td>kap,map,geo</td>
+          <td>converter waittime in seconds to start conversion after a
+            new/changed directory has been detected </td>
+          <td>10</td>
         </tr>
         <tr>
-          <td>keepInfoTime</td>
-          <td><br>
-          </td>
-          <td>time in seconds an information on import is kept </td>
-          <td>30</td>
+          <td>scanInterval</td>
+          <td>X</td>
+          <td>time (in s) between 2 scans of the import directory, 0 disables
+            automatic sacnning (still triggered when upload a file)</td>
+          <td>0</td>
         </tr>
         <tr>
           <td>enabled</td>
@@ -1778,6 +1818,12 @@
             n2k - generate a RMC record (important to have date and time on
             NMEA0183)</td>
           <td>30</td>
+        </tr>
+        <tr>
+          <td>readPos</td>
+          <td>X</td>
+          <td>read position from 129025 and cog/sog from 129026</td>
+          <td>true</td>
         </tr>
         <tr>
           <td>sourceName</td>
