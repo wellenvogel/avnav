@@ -36,7 +36,8 @@ public class UdpReceiver extends ChannelWorker {
                 SOURCE_PRIORITY_PARAMETER,
                 EXTERNAL_ACCESS,
                 FILTER_PARAM,
-                READ_TIMEOUT_PARAMETER
+                READ_TIMEOUT_PARAMETER,
+                STRIP_LEADING_PARAMETER
                 );
         status.canDelete=true;
         status.canEdit=true;
@@ -56,6 +57,7 @@ public class UdpReceiver extends ChannelWorker {
         Integer port=PORT_PARAMETER.fromJson(parameters);
         int priority=SOURCE_PRIORITY_PARAMETER.fromJson(parameters);
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
+        boolean stripLeading=STRIP_LEADING_PARAMETER.fromJson(parameters);
         addClaim(CLAIM_UDPPORT,port.toString(),true);
         if (channel != null){
             try{
@@ -99,6 +101,13 @@ public class UdpReceiver extends ChannelWorker {
                             String record = new String(content, start, end  - start);
                             record = record.trim();
                             if (record.length() > 0) {
+                                record=AvnUtil.removeNonNmeaChars(record);
+                                if (stripLeading){
+                                    record=AvnUtil.stripLeading(record);
+                                }
+                                if (! record.startsWith("!") && ! record.startsWith("$") ){
+                                    AvnLog.dfs("broken line \"%s\"",record);
+                                }
                                 if (AvnUtil.matchesNmeaFilter(record,nmeaFilter)) {
                                     queue.add(record, source,priority);
                                 }
