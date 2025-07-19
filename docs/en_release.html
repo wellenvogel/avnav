@@ -33,7 +33,7 @@ sudo systemctl start avnav</div>
         Update plugin</a> you can edit the configuration file from this plugin
       without the requirement to enter the command line.<br>
     </p>
-    <p>On this page you will only find notes for <a href="../downloads/release/">released
+    <p>In this documentation you will only find notes for <a href="../downloads/release/">released
         versions</a>. For <a href="../downloads/daily/">daily builds</a> refer
       to the <a href="https://github.com/wellenvogel/avnav/commits/master">commits
         on GitHub</a> .</p>
@@ -111,8 +111,8 @@ sudo systemctl start avnav</div>
             </tr>
             <tr>
               <td>Always Info on Chart Click</td>
-              <td>now you only have "Feature Info on Click" to disable a chart
-                klick handling completely. You still can emulate a click at the
+              <td>now you only have "Feature Info on Click" to disable chart
+                click handling completely. You still can emulate a click at the
                 center (crosshair) with the <img src="viewerimages/icons-new/center-action.svg"
                   alt="" class="inlineimage">"CenterAction" button</td>
             </tr>
@@ -130,25 +130,25 @@ sudo systemctl start avnav</div>
         AisTargetWidget.</li>
       <li>When you are creating a new <a href="userdoc/addonconfigpage.html">User
           App</a> you can directly upload the necessary icon file from the
-        creation dialog. Additionally you can choose&nbsp;&nbsp; icons that are
+        creation dialog. Additionally you can choose icons that are
         part of AvNav.<br>
         This resolves <a href="https://github.com/wellenvogel/avnav/issues/372">#372</a>:
         allow icon upload directly in user app dialog</li>
-      <li>The handling for missing values (i.e. data that has not been received
+      <li>The handling for missing values (i.e. data that have not been received
         by NMEA or from SignalK) has been adapted. In the past many widgets or
-        other displays have been showing "0" for non existing values. This has
+        other displays were showing "0" for non existing values. This has
         been fixed. This resolves <a href="https://github.com/wellenvogel/avnav/issues/347">#347</a>/<a
           href="https://github.com/wellenvogel/avnav/issues/348">#348 </a>
         handling for missing values</li>
-      <li>Widgets with a formatter that have a "unit" parameter can take over
-        this value to be used as the unit for the display (by leaving the unit
+      <li>Widgets with a formatter holding a "unit" parameter can use
+        this value as the unit to be displayed (by leaving the unit
         empty in the layout editor)</li>
       <li>The font handling for items on the map has been improved. There are
         settings (settings/map) to control some font parameters and <a href="hints/overlays.html">overlays</a>
         also include font parameters in the settings.</li>
-      <li>The UDP reader is able to handle mulicast</li>
+      <li>The UDP reader is able to handle multicast</li>
       <li>AvNav can decode PGNs 129025/129026 directly from canboat</li>
-      <li>Internally some restructuring (new library versions - especiall
+      <li>Some internal restructuring (new library versions - especially
         reactjs 18), restructured dialog handling</li>
     </ul>
     <p><i> <b>AvNav Android</b></i></p>
