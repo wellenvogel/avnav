@@ -377,6 +377,11 @@ export class EditableSelectParameter extends EditableParameter{
         super(plain,EditableSelectParameter.TYPE,opt_noFreeze);
         const theList=super.getList();
         if (theList === undefined) throw new Error("missing list parameter for select "+this.name);
+        if (theList instanceof Promise){
+            //"silent" resolve - do nothing
+            theList.then(()=>{},()=>{});
+            return;
+        }
         if (! (theList instanceof Array) ) throw new Error("list parameter must be an array or a function for "+this.name);
         theList.forEach((item)=>{
             if (item === undefined) return;
@@ -387,28 +392,40 @@ export class EditableSelectParameter extends EditableParameter{
     }
     getList(){
         let list=super.getList();
-        if (!(list instanceof Array)) {
-            //just get a list with the default value
-            list=[];
-            if (this.default !== undefined) list.push(this.default);
-            return list;
+        const fillDefault=(clist)=>{
+            if (!(clist instanceof Array)) {
+                //just get a list with the default value
+                clist=[];
+                if (this.default !== undefined) clist.push(this.default);
+                return clist;
+            }
+            return clist;
         }
-        return list;
+        if (list instanceof Promise){
+            return list.then((plist)=>{return fillDefault(plist)})
+        }
+        return fillDefault(list);
     }
     setValue(values, value,check) {
         if (check){
             const list=this.getList();
-            let found=false;
-            for (let i=0;i<list.length;i++){
-                const lv=EditableSelectParameter.getValueFromListEntry(list[i]);
-                //intentionally allow to convert e.g. strings to numbers
-                if (lv == value){
-                    value=lv;
-                    found=true;
-                    break;
+            if (!(list instanceof Promise)) {
+                let found = false;
+                for (let i = 0; i < list.length; i++) {
+                    const lv = EditableSelectParameter.getValueFromListEntry(list[i]);
+                    //intentionally allow to convert e.g. strings to numbers
+                    if (lv == value) {
+                        value = lv;
+                        found = true;
+                        break;
+                    }
                 }
+                if (!found) throw new Error("value " + value + " for " + this.name + " not in list");
             }
-            if (! found) throw new Error("value "+value+" for "+this.name+" not in list");
+            else{
+                //silent resolve
+                list.then(()=>{},()=>{});
+            }
         }
         return super.setValue(values, value,check);
     }

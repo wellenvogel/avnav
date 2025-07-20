@@ -24,7 +24,7 @@
  * a definition for editable parameters
  */
 
-import React from "react";
+import React, {useState} from "react";
 import {DBOk, DialogButtons, DialogFrame, showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import {Checkbox, ColorSelector, Input, InputReadOnly, InputSelect} from "./Inputs";
@@ -41,6 +41,7 @@ import Helper from "../util/helper";
 import Button from "./Button";
 import {KeyHelper} from "../util/keys";
 import globalStore from "../util/globalstore";
+import Toast from "./Toast";
 
 
 
@@ -274,6 +275,7 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
         cHelper(this);
     }
     render({currentValues,initialValues,className,onChange}){
+        const [dynamicList,setDynamicList]=useState(undefined);
         if (!this.canEdit()){
             return <InputReadOnly
                 {...getCommonParam({ep:this,currentValues,initialValues,className})}
@@ -281,7 +283,17 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
         }
         let displayList=[];
         const current=this.getValue(currentValues);
-        this.getList().forEach((item)=>{
+        let theList=dynamicList;
+        if (theList === undefined){
+            theList=this.getList();
+            if (theList instanceof Promise){
+                theList
+                    .then((plist)=>setDynamicList(plist||[]))
+                    .catch((e)=>{Toast(e);setDynamicList([])})
+                theList=[];
+            }
+        }
+        theList.forEach((item)=>{
             let label=EditableSelectParameter.getLabelFromListEntry(item);
             if (label === undefined) label="";
             else label=label+"";
