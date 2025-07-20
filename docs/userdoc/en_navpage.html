@@ -447,7 +447,9 @@
         editor</a>.</p>
     <p>If you click on the lower right displays you will be taken to the <a href="dashboardpage.html">dashboard</a>.</p>
     <p><a name="lowerleftclick" id="lowerleftclick"></a>Clicking on the lower
-      left displays will bring up a couple of additional waypoint buttons.</p>
+      left displays will bring up a couple of additional waypoint buttons,
+      depending on waypoint or route being active. If neither applies, just the
+      AnchorWatch button will be shown. </p>
     <h2>Waypoint Buttons</h2>
     <p><img src="navpage-waypoint-buttons.png" alt="" class="fimage"> </p>
     <table style="width: 100%" border="1">
@@ -475,13 +477,6 @@
           <td>WpEdit</td>
           <td>edit waypoint<br>
             you can change the waypoint's name and position in the dialog</td>
-        </tr>
-        <tr>
-          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
-          </td>
-          <td>WpGoto</td>
-          <td>start navigation to this waypoint<br>
-            only visible if there is no active route</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
@@ -521,6 +516,14 @@
           </td>
           <td>WpPrevious</td>
           <td>center chart to previous waypoint</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"></td>
+          <td>WpGoto</td>
+          <td>If you selected a point in the route (with the <img src="../viewerimages/icons-new/ic_arrow_forward.svg"
+              alt="" class="inlineimage"> or <img src="../viewerimages/icons-new/ic_arrow_back.svg"
+              alt="" class="inlineimage"> buttons) that differs from the current
+            navigation target you can start navigation to this point.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
@@ -637,8 +640,8 @@
           <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
           </td>
           <td>goto</td>
-          <td>Start a waypoint navigation to the position denoted in the track's Feature Info.
-            This slightly differs from the "Goto" in the feature
+          <td>Start a waypoint navigation to the position denoted in the track's
+            Feature Info. This slightly differs from the "Goto" in the feature
             list as the latter targets the position clicked on the map.</td>
         </tr>
         <tr>
@@ -660,10 +663,10 @@
           <td>Delete</td>
           <td>Clean the current track. This will rename the current track file
             to a file with a suffix (like from 2025-07-03.gpx to
-            2025-07-03-1.gpx). It will potentially also rename
-            files from the day before (depending on the length of the track).
-            Track writing afterwards continues as normal - but the history is
-            removed from the display.</td>
+            2025-07-03-1.gpx). It will potentially also rename files from the
+            day before (depending on the length of the track). Track writing
+            afterwards continues as normal - but the history is removed from the
+            display.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
@@ -689,7 +692,8 @@
           <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
           </td>
           <td>goto</td>
-          <td>Start a waypoint navigation to the position denoted in the route's Feature Info. This slightly differs from the "Goto" in the feature
+          <td>Start a waypoint navigation to the position denoted in the route's
+            Feature Info. This slightly differs from the "Goto" in the feature
             list as the latter targets the position clicked on the map.</td>
         </tr>
         <tr>
@@ -725,9 +729,9 @@
     <p><img src="navpage-measure2.png" alt="" class="fimage"></p>
     <p>By tapping the <img src="../viewerimages/icons-new/center-action.svg" alt=""
         class="inlineimage"> CenterAction button again (or tapping on the map)
-      you will get action buttons to end the measure or to extend the measure. You can
-      also end the measure by clicking the small red measure icon in upper right
-      of the map.</p>
+      you will get action buttons to end the measure or to extend the measure.
+      You can also end the measure by clicking the small red measure icon in
+      upper right of the map.</p>
     <p><img src="navpage-measure3.png" alt="" class="fimage"></p>
     <p>Actions:</p>
     <table style="width: 100%" border="1">
@@ -762,8 +766,8 @@
     <ol>
       <li>Unlock Chart (if on)</li>
       <li>Stop Navigation (if active)</li>
-      <li>Move chart until your target is below the center (crosshair), use zoom if
-        necessary</li>
+      <li>Move chart until your target is below the center (crosshair), use zoom
+        if necessary</li>
       <li>LockMarker (start navigation) </li>
       <li>Lock Chart</li>
     </ol>
