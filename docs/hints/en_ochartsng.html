@@ -124,7 +124,7 @@
       plugin, select the "Charts" tab.</p>
     <img src="ochartsng-gui-charts1.png" class="fimage">
     <p>Use "Get Fingerprint" to create the fingerprint file. If you are using an
-      o-charts dongle - just select "Get Fingerprint(Dongle)". The dongle button
+      o-charts dongle - just select the "Get Fingerprint(Dongle) button". This button
       will only be visible if a dongle has been detected (dongle line is green).</p>
     <p><img src="ochartsng-gui-charts2.png" class="fimage"></p>
     <p>Choose Download to save the created file on your device.</p>
@@ -141,7 +141,8 @@
     <h4>Assigning to your System</h4>
     <img src="ocharts-assign.png" alt="" class="fimage">
     <p>At 1 you can assign charts to your system (in this screenshot this is not
-      available anymore as the max amount of 2 systems are already assigned). At
+      available anymore as the max amount of 2 systems are already assigned).
+      The number of permitted systems has recently been increased to 5. At
       2 you request the mail holding the download link (you would do the same
       for updates - in the screenshot: last version I have downloaded is 21,
       latest available is 23)</p>
@@ -164,9 +165,9 @@
       using Enable/Disable/Auto. Chart sets not required anymore can be deleted.
     </p>
     <p>Important hint: As the charts will only be available at the o-charts page
-      as long as they are valid just keep the downloaded zip file at a safe
-      place. You can still upload and use those charts at AvNav ochartsng even
-      after the validity period (but you will not receive any updates).</p>
+      as long as they are valid, you may want to keep the downloaded zip file at a safe
+      place. AvNav OchartsNG can still upload and use those charts even
+      after their validity period (but you will not receive any updates).</p>
     <p>After all charts are successfully read the status should change to green
       (READY).</p>
     <p><img src="ochartsng-upload4.png" class="fimage"></p>
@@ -240,7 +241,7 @@
     <ol>
       <li>The modifications apply to the server's chart settings - so they will
         become effective for all displays.</li>
-      <li>If you change the look and feel all data in the internal cache is
+      <li>If you change the look and feel all data in the internal cache are
         wiped and the chart tiles must be rendered from scratch. So this will
         (potentially) introduce some delays on systems with less computing
         power.</li>
@@ -251,7 +252,7 @@
     <img src="ochartsng-settings1.png" class="fimage">
     <p>If you change a setting (1) it will be displayed bold. Changes will only
       become effective when you click "Update Settings"(2).<br>
-      When you changed the settings the chart display will be rebuild. This will
+      When you changed the settings the chart display will be rebuilt. This will
       typically cause a small delay with no display at all.</p>
     <p>By selecting "Cancel" you can revert your changes. "Defaults" will reset
       to the built-in defaults. Most parameters are similar to the ones you find
@@ -416,7 +417,7 @@
         </tr>
         <tr>
           <td>SymbolScale</td>
-          <td>Scale the display of symbols. Some of the symbols are build out of
+          <td>Scale the display of symbols. Some of the symbols are built from of
             raster data - so a scale &gt; 2 could already make theme look very
             ugly.</td>
           <td>1</td>
@@ -447,8 +448,9 @@
       features. Those detail settings will only become effective when using the
       display category "User Standard".</p>
     <h2><a name="featureinfo"></a>Feature Info (Object Query)</h2>
-    <p>When you click on a chart you will have AvNav's Feature info. This will
-      be extended by some important information found around the click position.</p>
+    <p>When you click on the chart a list of features (charts, overlays, AIS-objects and more)
+      around this point is displayed.
+      Selecting the chart from the list opens the chart's Feature Info window.</p>
     <img src="FeatureInfo-OCharts1.png" alt="" class="fimage">
     <p>By clicking "Info" you can view the raw information from the chart.</p>
     <p><img src="ochartsng-featureinfo2.png" class="fimage"> </p>
@@ -486,7 +488,7 @@
         builds directory</a>.</p>
     <p>To use one of those packages just download and install the package
       (replace the version by the one you want): </p>
-    <div class="code">cd /home/pi/avnav<br>wget -O avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20240214/avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo apt install ./avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo systemctl restart avnav</div>
+    <div class="code">cd /home/pi/avnav<br>wget -O avnav-ochartsng_20250624-raspbian-bullseye_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20250624/avnav-ochartsng_20250624-raspbian-bullseye_arm64.deb<br>sudo apt install ./avnav-ochartsng_20250624-raspbian-bullseye_armhf.deb<br>sudo systemctl restart avnav</div>
     <h2><a name="Releases"></a></h2>
     <p> You can also download to a PC, transfer by scp/WinScp to the pi and
       install then. </p>
@@ -643,11 +645,6 @@
           <td>50</td>
         </tr>
         <tr>
-          <td>Testmode</td>
-          <td>internal testing only</td>
-          <td>false</td>
-        </tr>
-        <tr>
           <td>Use alt key</td>
           <td>See below for the <a href="#androidbetarelease">hints</a> about
             Release/Beta Versions</td>
@@ -666,7 +663,7 @@
     <p>When done with the settings tap the back arrow.</p>
     <p>You can now start the chart provider by tapping "START".</p>
     <p><img src="ochartsng-android-running.jpg" class="fimage"></p>
-    <p>When the provider process is up an running you will see the indication in
+    <p>When the provider process is up and running you will see the indication in
       the notification bar. If something goes wrong just try to have a look at
       the output (tapping "OUT") or the log (tapping "LOG").</p>
     <p>Tapping "APP" will open up a browser window with the ochartsng app - the
@@ -724,7 +721,7 @@
     <p>If you run ochartsng on a different system (e.g. on Android) you need an
       installation of AvNav either on a <a href="#Installation">linux machine</a>
       or on <a href="../install.html#Windows">Windows</a>.</p>
-    <p>Ochartsng itself cannot run on Windows but the conversion tooling can. So
+    <p>Ochartsng itself cannot run on Windows but the conversion tool can. So
       after you installed AvNav on Windows just open the "Update" Dialog and
       enter the Url of the ochartsng-s57 converter for Windows:</p>
     <ul>

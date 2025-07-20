@@ -22,7 +22,7 @@
         <tr>
           <td>Icon</td>
           <td>Name</td>
-          <td>Funktion</td>
+          <td>Function</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
@@ -62,7 +62,7 @@
           <td>LockMarker<br>
           </td>
           <td><a href="#waypoint">start waypoint navigation</a>.<br>
-            the center of the chart (cross) will become the target waypoint.<br>
+            the center of the chart (crosshair) will become the target waypoint.<br>
             only visible if there is no active route or waypoint<br>
           </td>
         </tr>
@@ -307,7 +307,7 @@
     <h3><a name="aiscomputations" id="aiscomputations"></a>CPA and Motion Vector
       Computations</h3>
     <p>To compute the CPA data and the motion vectors AvNav considers the
-      received data of an AIS target (position,COG,SOG, HDG) and the data of the
+      received data of an AIS target (position, COG, SOG) and the data of the
       own boat (position, COG, SOG).</p>
     <p>Before version 202507xx the computation uses the AIS target data as shown
       on the map and the boat data as shown when this data is computed.</p>
@@ -426,7 +426,7 @@
     <ul>
       <li> Position </li>
       <li>ETA </li>
-      <li>Course</li>
+      <li> Bearing</li>
       <li> Distance (nm) </li>
     </ul>
     <p>On the right the boat data:</p>
@@ -443,7 +443,7 @@
     <p>You can set up averaging (settings-&gt;navigation) for the boat data
       (position, course, speed). If turned on the captions at the displays will
       turn red.</p>
-    <p>All display can be adapted with the <a href="../hints/layouts.html">layout
+    <p>All data displays can be adapted with the <a href="../hints/layouts.html">layout
         editor</a>.</p>
     <p>If you click on the lower right displays you will be taken to the <a href="dashboardpage.html">dashboard</a>.</p>
     <p><a name="lowerleftclick" id="lowerleftclick"></a>Clicking on the lower
@@ -565,7 +565,7 @@
       <li>the current chart</li>
     </ul>
     <p><img src="navpage-featureinfo1.png" alt="" class="fimage"></p>
-    <p>This dialog will immediately allow you to start a simple way point
+    <p>This dialog will allow you to immediately start a simple way point
       navigation ("Goto") or to create a new route using the selected point as
       starting point.</p>
     <p>Clicking on any of the items will bring up a second dialog with more
@@ -637,9 +637,9 @@
           <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
           </td>
           <td>goto</td>
-          <td>Start a waypoint navigation to the closest point in the current
-            track. This can be slightly different from the "Goto" in the feature
-            list as this really targets the klick point on the map.</td>
+          <td>Start a waypoint navigation to the position denoted in the track's Feature Info.
+            This slightly differs from the "Goto" in the feature
+            list as the latter targets the position clicked on the map.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
@@ -660,9 +660,9 @@
           <td>Delete</td>
           <td>Clean the current track. This will rename the current track file
             to a file with a suffix (like from 2025-07-03.gpx to
-            2025-07-03-1.gpx). Additionally it will potentially also rename
+            2025-07-03-1.gpx). It will potentially also rename
             files from the day before (depending on the length of the track).
-            TRack writing afterwards continues as normal - but the history is
+            Track writing afterwards continues as normal - but the history is
             removed from the display.</td>
         </tr>
         <tr>
@@ -689,10 +689,8 @@
           <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
           </td>
           <td>goto</td>
-          <td>Start a waypoint navigation to the closest point in the route
-            (like shown in the info). This can be slightly different from the
-            "Goto" in the feature list as this really targets the klick point on
-            the map.</td>
+          <td>Start a waypoint navigation to the position denoted in the route's Feature Info. This slightly differs from the "Goto" in the feature
+            list as the latter targets the position clicked on the map.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
@@ -727,7 +725,7 @@
     <p><img src="navpage-measure2.png" alt="" class="fimage"></p>
     <p>By tapping the <img src="../viewerimages/icons-new/center-action.svg" alt=""
         class="inlineimage"> CenterAction button again (or tapping on the map)
-      you will get actions to end the measure or to extend the measure. You can
+      you will get action buttons to end the measure or to extend the measure. You can
       also end the measure by clicking the small red measure icon in upper right
       of the map.</p>
     <p><img src="navpage-measure3.png" alt="" class="fimage"></p>
@@ -763,8 +761,8 @@
     <p>Steps:</p>
     <ol>
       <li>Unlock Chart (if on)</li>
-      <li>Stop Nav</li>
-      <li>Move chart until your target is below the center (cross), use zoom if
+      <li>Stop Navigation (if active)</li>
+      <li>Move chart until your target is below the center (crosshair), use zoom if
         necessary</li>
       <li>LockMarker (start navigation) </li>
       <li>Lock Chart</li>
@@ -783,7 +781,7 @@
       you have a "Center" display at the left side. This shows the center
       position, the course and distance from the boat to the center and from the
       waypoint to the center. For a simple bearing just move the chart center
-      (cross) to the bearing target and read the bearing from the "Center"
+      (crosshair) to the bearing target and read the bearing from the "Center"
       display.</p>
     <p>To start a route - change with&nbsp; <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage">to the <a href="editroutepage.html">route
