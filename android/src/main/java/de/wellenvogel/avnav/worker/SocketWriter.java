@@ -85,6 +85,7 @@ public class SocketWriter extends ChannelWorker {
                 FILTER_PARAM.cloneCondition(READ_DATA_CONDITION),
                 REPLY_RECEIVED_PARAMETER.cloneCondition(READ_DATA_CONDITION),
                 STRIP_LEADING_PARAMETER.cloneCondition(READ_DATA_CONDITION),
+                QUEUE_AGE_PARAMETER,
                 mdnsEnableParameter,
                 mdnsNameParameter
                 );

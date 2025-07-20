@@ -358,6 +358,15 @@
           <td>empty<br>
           </td>
         </tr>
+        <tr>
+          <td>queueAge</td>
+          <td>AvNav internally uses a queue to transfer NMEA data from it's
+            receivers (inputs) to it's senders (outputs). Whene an output is
+            slow it potentially cannot send all data at the same speed as they
+            arrive in the queue. If an item is sitting in the queue longer then
+            this time (in ms) the item is droppped.</td>
+          <td>3000</td>
+        </tr>
       </tbody>
     </table>
     <p>The "Handlers" and their parameters:</p>
@@ -395,15 +404,6 @@
           <td>Timeout in seconds for the display whether valid data is available
             or not</td>
           <td>10</td>
-        </tr>
-        <tr>
-          <td>queueAge</td>
-          <td>AvNav internally uses a queue to transfer NMEA data from it's
-            receivers (inputs) to it's senders (outputs). Whene an output is
-            slow it potentially cannot send all data at the same speed as they
-            arrive in the queue. If an item is sitting in the queue longer then
-            this time (in ms) the item is droppped.</td>
-          <td>3000</td>
         </tr>
       </tbody>
     </table>

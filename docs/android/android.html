@@ -377,6 +377,16 @@
           <td><br>
           </td>
         </tr>
+        <tr>
+          <td>queueAge</td>
+          <td>AvNav hat eine interne Warteschlage (queue), die empfangene Daten
+            aufnimmt und an die Ausgänge weiterreicht. Wenn ein Ausgang zu
+            langsam ist, kann er potentiell nicht alle einlaufenden Daten sofort
+            weiterleiten und diese verbleiben längere Zeit in der Warteschlange.
+            Wenn die Daten älter sind als die hier eingestellte Zeit (in ms),
+            werden sie aus der Warteschlange gelöscht.</td>
+          <td>3000</td>
+        </tr>
       </tbody>
     </table>
     <p>Die vorhandenen "Handler" und ihre Parameter. Es werden nur die
@@ -411,16 +421,6 @@
           <td>aisAge</td>
           <td>erlaubtes Alter für AIS-Daten (in sec)</td>
           <td>1200</td>
-        </tr>
-        <tr>
-          <td>queueAge</td>
-          <td>AvNav hat eine interne Warteschlage (queue), die empfangene Daten
-            aufnimmt und an die Ausgänge weiterreicht. Wenn ein Ausgang zu
-            langsam ist, kann er potentiell nicht alle einlaufenden Daten sofort
-            weiterleiten und diese verbleiben längere Zeit in der Warteschlange.
-            Wenn die Daten älter sind als die hier eingestellte Zeit (in ms),
-            werden sie aus der Warteschlange gelöscht.</td>
-          <td>3000</td>
         </tr>
       </tbody>
     </table>
