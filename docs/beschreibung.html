@@ -18,13 +18,13 @@
       den Server im Boots-Netz und damit die eigentliche Darstellung von Karten
       und Daten läuft auf einem Webbrowser und ist so unabhängig vom jeweiligen
       Betriebssystem der zugreifenden Geräte. AvNav ist konsequent für die
-      Bedienung per Touchscreen ausgelegt Darüber hinaus bietet AvNav die
+      Bedienung per Touchscreen ausgelegt. Darüber hinaus bietet AvNav die
       Möglichkeit, für jedes Gerät, das man benutzen möchte, Layouts zu
       definieren, um so das Aussehen der App z.B. auf unterschiedliche
       Bildschirmgrößen anzupassen.</p>
     <h2>Karten</h2>
     <p>Einmal können Rasterkarten, die nicht herstellerverschlüsselt sind,
-      verwendet werden. Vektorkarten Typs OESenc können ebenfalls genutzt
+      verwendet werden. Vektorkartendes Typs OESenc können ebenfalls genutzt
       werden. Sie sind allerdings nicht kostenlos und können über den
       O-Charts-Shop bezogen werden. Für Details siehe unter <a href="charts.html">Karten</a>.</p>
     <h2>Varianten</h2>
@@ -142,7 +142,7 @@
     <p><img class="fimage" src="software.png" name="Grafik2" width="600" border="0"
         align="LEFT"><br clear="LEFT">
       <br>
-      Der Server versucht alle am Raspberry angeschlossenen seriellen Geräte zu
+      Der Server versucht, alle am Raspberry angeschlossenen seriellen Geräte zu
       erkennen und deren NMEA-Daten zu lesen. Typisch werden die Geräte über
       Seriell-USB Wandler angeschlossen (z.B. PL2303). Man muss ein wenig
       aufpassen, dass man einen Wandler hat, der vom Raspberry auch sauber
@@ -153,12 +153,12 @@
       versucht er ein "auto bauding" zwischen 4800 und 34000 Baud und bemüht
       sich, NMEA Daten zu erkennen. Falls keine Daten empfangen werden, wird die
       Schnittstelle geschlossen und das Spiel beginnt von vorn. Damit „überlebt“
-      der Server auch das Anschliessen/Abstecken von Wandlern während des
+      der Server auch das Anschließen/Abstecken von Wandlern während des
       Betriebes oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein
       RO4800 mit AIS-Decoder an einem Seriell-USB-Wandler, die GPS Daten werden
       durchgereicht. Alternativ versucht AvNav auch Kontakt zu seriellen
       Bluetooth-Geräten aufzunehmen. Falls die App per "discovery" Geräte
-      findet, versucht sie von diesen ebenfalls NMEA-Daten zu lesen. Das wurde
+      findet, versucht sie, von diesen ebenfalls NMEA-Daten zu lesen. Das wurde
       z.B. mit einer Holux GPS Slim236 getestet. In diesem Sinne arbeitet der
       AvNav-Server auch als NMEA-Multiplexer.</p>
     <p>Alle GPS-Daten werden intern in eine Liste eingefügt und per TCP
@@ -167,32 +167,32 @@
       (intern:SocketWriter) auf Port 34567.</p>
     <p>Daneben lassen sich Daten auch per TCP, UDP oder direkt über die
       seriellen Schnittstellen des Raspberry lesen und schreiben.</p>
-    <p>Anschliessend werden die NMEA Daten an den Decoder weitergereicht. Die
+    <p>Anschliessend werden die NMEA-Daten an den Decoder weitergereicht. Die
       dekodierten GPS- und AIS-Daten werden im Server abgelegt ("NMEA decoded
-      data") und für den Zugriff per HTTP aus der WebApp bereitgestellt.
+      data") und für den Zugriff per HTTP aus der Web App bereitgestellt.
       Zusätzlich werden die dekodierten Daten auch benutzt, um Trackdateien zu
       schreiben.</p>
-    <p>Über den integrierten WebServer kann der Zugriff auf diese dekodierten
+    <p>Über den integrierten Web Server kann der Zugriff auf diese dekodierten
       Daten erfolgen (per HTTP GET, Antwort als json).</p>
-    <p>Der Route-Handler wertet eingestellte Routen (bzw. Wegpunkte) aus und
+    <p>Der Route Handler wertet eingestellte Routen (bzw. Wegpunkte) aus und
       berechnet daraus die Daten für eine Autopilot-Steuerung. Diese werden als
-      RMB NMEA Datensätze wieder in die internen NMEA Daten eingespeist und
+      RMB-NMEA-Datensätze wieder in die internen NMEA-Daten eingespeist und
       stehen so an allen Schnittstellen zur Verfügung.</p>
-    Falls gültige GPS Zeitinformationen empfangen werden, wird die Systemzeit
+    Falls gültige GPS-Zeitinformationen empfangen werden, wird die Systemzeit
     des Raspberry entsprechend eingestellt.
     <p>Auf dem Raspberry gibt es noch einen Service, der den AvNav-Server beim
-      Systemstart automatisch startet und es auch ermöglicht, ihn geordnet zu
+      Systemstart automatisch startet und der es auch ermöglicht, ihn geordnet zu
       beenden.</p>
     <p>Da der gesamte Server in Python geschrieben ist, kann er auch (vor allem
       zu Testzwecken) unter Windows, Osx (Mac) oder Linux laufen. Dazu muss
-      Python ab 3.7 installiert sein (die Windows Installation bringt das selbst
+      Python ab 3.7 installiert sein (die Windows-Installation bringt das selbst
       mit). Falls reale serielle Daten gelesen werden sollen, muss dazu noch <a
         href="http://pyserial.sourceforge.net/">pyserial</a> installiert werden.</p>
     <p>Der Server kann in weiten Grenzen durch eine XML-Datei konfiguriert
-      werden, für die verschiedenen Nutzungsfälle liegen dokumentierte Beispiele
+      werden. Für die verschiedenen Nutzungsfälle liegen dokumentierte Beispiele
       vor. In den Versionen ab 20210322 können die meisten Einstellungen auch
       direkt in der App vorgenommen werden.</p>
-    Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so dass
+    Die ausgelieferte avnav_server.xml-Datei enthält Kommentare, sodass
     Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.
     <p>Die Software ist auf <a href="https://github.com/wellenvogel/avnav">github</a>
       verfügbar - für die Installation sei die separate <a href="install.html">Beschreibung
@@ -245,7 +245,7 @@
             <p>.../data/tracks</p>
           </td>
           <td width="72%">
-            <p>Die trackfiles (gpx). Sie werden in einem File pro Tag
+            <p>Die trackfiles (gpx). Sie werden pro Tag in einem File 
               gespeichert, ausserdem werden Nmea-Logs aufgezeichnet.</p>
           </td>
         </tr>
@@ -256,7 +256,7 @@
         <tr>
           <td>.../data/import</td>
           <td>Hier abgelegte Karten werden konvertiert in das "gemf"-Format,
-            sodass die WebApp sie verarbeiten kann</td>
+            sodass die Web App sie verarbeiten kann</td>
         </tr>
       </tbody>
     </table>
@@ -274,11 +274,11 @@
       Kommunikation mit dem Server geschieht per Ajax durch den
       JavaScript-Anteil. Das Layout ist optimiert für die Darstellung auf einem
       7 Zoll-Tablet oder größer, bei mir momentan im Einsatz: Nexus 7 am
-      Navitisch, Blackberry Playbook draussen, sie läuft aber natürlich auch auf
+      Navitisch und Blackberry Playbook draussen. Sie läuft aber natürlich auch auf
       größeren Tablets (Ipad) oder auf einem Laptop/Desktop. Eine sinnvolle
       Nutzung ist ab etwa 900x540 Pixel möglich.</p>
     <h2><a name="urlParameters"></a>URL Parameter</h2>
-    <p>Die WebApp unterstützt eine Reihe von URL Parametern mit denen man einige
+    <p>Die Web App unterstützt eine Reihe von URL-Parametern, mit denen man einige
       Funktionen steuern kann.</p>
     <table width="100%" border="1">
       <tbody>
@@ -288,7 +288,7 @@
         </tr>
         <tr>
           <td>defaultLayout</td>
-          <td>Der Name eines existierenden <a href="hints/layouts.html">Layouts</a>
+          <td>Der Name eines existierenden <a href="hints/layouts.html">Layouts</a>,
             das als initiales Layout genutzt wird. </td>
         </tr>
         <tr>
@@ -304,7 +304,7 @@
             angeben. Command muss ein existierendes Kommando sein, das
             beim&nbsp; <a href="hints/configfile.html#AVNCommandHandler">AVNCommandHandler</a>
             konfiguriert wurde. Das wird ausgeführt, wenn der Fullscreen Button
-            geklickt wird (anstelle der Fullscreen Funktion im Browser).<br>
+            geklickt wird (anstelle der Fullscreen-Funktion im Browser).<br>
             Beispiel: fullscreen=server:fullCommand</td>
         </tr>
         <tr>
@@ -313,23 +313,23 @@
             angeben. Command muss ein existierendes Kommando sein, das
             beim&nbsp; <a href="hints/configfile.html#AVNCommandHandler">AVNCommandHandler</a>
             konfiguriert wurde. Das wird ausgeführt, wenn der Dimm Button
-            geklickt wird (anstelle der Nutzung einer Dimm Funktion in Java
+            geklickt wird (anstelle der Nutzung einer Dimm-Funktion in Java
             Script - wie bei AvNav auf Android)<br>
             Beispiel: dimm=server:dimmCommand</td>
         </tr>
         <tr>
           <td>noCloseDialog</td>
-          <td>Kein Dialog der warnt, wenn die AvNav Seite verlassen werden soll.<br>
+          <td>Abschalten des Dialogs, der davor warnt, dass die AvNav-Seite verlassen werden soll.<br>
             Beispiel: noCloseDialog=true</td>
         </tr>
         <tr>
           <td>splitMode</td>
-          <td>Starte AvNav im Split Mode.<br>
+          <td>Startet AvNav im Split Mode.<br>
             Beispiel: splitMode=yes</td>
         </tr>
         <tr>
           <td>preventAlarms</td>
-          <td>Zeige keine Alarme.<br>
+          <td>Unterdrückt Alarme.<br>
             Beispiel: preventAlarms=true</td>
           <td><br>
           </td>
@@ -337,7 +337,7 @@
       </tbody>
     </table>
     <br>
-    Zur Beschreibung der WebApp <a href="userdoc/index.html">hier</a>.<br>
+    Zur Beschreibung der Web App <a href="userdoc/index.html">hier</a>.<br>
     <br>
   </body>
 </html>
