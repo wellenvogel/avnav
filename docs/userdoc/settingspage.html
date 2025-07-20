@@ -78,9 +78,9 @@
     </table>
     <p>Auf dieser Seite können viele Parameter gesetzt werden, die die
       Darstellung beeinflussen. Alle diese Einstellungen werden für den
-      aktuellen Browser (und die aktuelle URL von avnav) gespeichert. Sie sind
+      aktuell genutzten Browser (und die aktuelle URL von AvNav) gespeichert. Sie sind
       also nicht auf dem Server gespeichert, sondern im Browser.</p>
-    <p>Die meisten Werte können separat auf ihre Defaults zurückgesetzt werden -
+    <p>Die meisten Werte können separat auf ihre Defaultwerte zurückgesetzt werden -
       das globale Rücksetzen kann über <img src="../viewerimages/icons-new/ic_delete.svg"
         alt="" class="inlineimage">erfolgen. Wenn die Seite ohne Speichern
       verlassen werden soll, erfolgt eine Rückfrage.</p>
@@ -120,7 +120,7 @@
         <tr>
           <td>Buttons</td>
           <td>show shade when buttons hidden</td>
-          <td>Zeige einen abgdunkelten Bereich auf der rechten Seite, wenn die
+          <td>Zeige einen abgedunkelten Bereich auf der rechten Seite, wenn die
             Button-Leiste unsichtbar ist. Das markiert den Bereich auf der
             Karte, der geklickt werden muss, um die Button-Leiste zurück zu
             holen.</td>
@@ -129,8 +129,8 @@
         <tr>
           <td>Layout</td>
           <td>red icons in title</td>
-          <td>Zeige kleine rote icons in der oeber rechten Seitenecke für
-            Ankerwache und disconnected mode</td>
+          <td>Zeige kleine rote Icons in der oberen rechten Seitenecke für
+            Ankerwache und den "disconnected mode"</td>
           <td>on</td>
         </tr>
         <tr>
@@ -170,8 +170,8 @@
           <td>Navigation</td>
           <td>Rotation Tolerance</td>
           <td>Wenn Course Up gewählt wurde, wird die Kartenausrichtung nicht
-            immer schnell an den aktuellen Kurs angepasst, solange die
-            Kurs-Änderung unter diesem Wert bleibt. Das führt zu einer deutlich
+            schnellstmöglich an den aktuellen Kurs angepasst, solange die
+            Kurs-Änderung unter dem hier einzustellenden Wert bleibt. Das führt zu einer deutlich
             ruhigeren Anzeige.</td>
           <td>15</td>
         </tr>
@@ -180,16 +180,18 @@
           <td>zero SOG detect<br>
             (20220421)</td>
           <td>Wenn das Boot nach COG ausgerichtet wird, kann entschieden werden,
-            ab einer minimalen SOG keine Kurs-Vektoren mehr zu zeigen und das
-            Boat als Kreis darzustellen</td>
+            ab welchem Mindestwert für SOG keine Kurs-Vektoren mehr gezeigt werden. Dann wird das
+            Boot als Kreis dargestellt</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>Navigation</td>
           <td>zero SOG detect below<br>
             (20220421)</td>
-          <td>Switch off the course vectors, map rotation and show the boat as
-            circle if SOG is below this value (only if zero SOG detect on)</td>
+          <td>Schaltet die Anzeige des Kursvektors und die Kartenausrichtung ab,
+            wenn SOG unter dem angezeigten Wert bleibt.
+            Das Boot wird dann als Kreis dargestellt
+            (nur, wenn "zero SOG detect" angeschaltet ist)</td>
           <td><br>
           </td>
         </tr>
@@ -226,8 +228,8 @@
         <tr>
           <td>AIS</td>
           <td>min speed (kn) for AIS target display</td>
-          <td>nur wenn "only show moving AIS targets" - Die minimale
-            Geschwindigkeit, um ein AIS Ziel als bewegt zu sehen.</td>
+          <td>nur wenn "only show moving AIS targets" aktiv ist - Die minimale
+            Geschwindigkeit, um ein AIS Ziel als bewegt zu definieren.</td>
           <td>0.5kn</td>
         </tr>
         <tr>
@@ -242,7 +244,7 @@
           <td>Map</td>
           <td>start with last map</td>
           <td>Wenn aktiv zeigt die WebApp beim Aufruf direkt die <a href="navpage.html">Navigationsseite</a>
-            mit der letzten genutzten Karte (seit 20240616).</td>
+            mit der zuletzt genutzten Karte (seit 20240616).</td>
           <td>aus</td>
         </tr>
         <tr>
@@ -261,7 +263,7 @@
         <tr>
           <td>Map</td>
           <td>scale the map display</td>
-          <td>Manche Rasterkarten haben eine sehr feine Darstellung, so das u.U.
+          <td>Manche Rasterkarten haben eine sehr feine Darstellung, so dass u.U.
             Schrift schlecht lesbar ist. Mit dieser Einstellung kann die Anzeige
             der Karten-Kacheln vergrößert (oder auch verkleinert) werden, um sie
             an die eigenen Bedürfnisse anzupassen.</td>
@@ -272,9 +274,9 @@
           <td>zoom up lower layers</td>
           <td>Wenn in einer Karte für den aktuell gewählten Zoom-Level keine
             Kacheln vorhanden sind, werden niedriger aufgelöste Kacheln geladen
-            und enstprechend vergrößert. Da das jeweils neue Abfragen zum Server
-            erfordert, kann das u.U. die Performance beeinflussen. Der Wert gibt
-            an, wieviele kleinere Zoom-Level probiert werden, um eine Kachel zu
+            und entsprechend vergrößert. Da das jeweils neue Abfragen zum Server
+            erfordert, kann das u.U. die Performance negativ beeinflussen. Der Wert gibt
+            an, wieviele kleinere Zoom-Level probiert werden, um eine geeignete Kachel zu
             finden.</td>
           <td>4</td>
         </tr>
@@ -291,9 +293,9 @@
           <td>Map</td>
           <td>Click Tolerance</td>
           <td>Der "Einfangbereich" in Pixeln für den Click auf Kartenobjekte.
-            Ein grosser Bereich führt u.U. dazu, das die falschen Objekte
+            Ein grosser Bereich führt u.U. dazu, dass die falschen Objekte
             angeklickt werden. Ein zu kleiner Bereich macht den Klick sehr
-            mühsam auf touch-Geräten.</td>
+            mühsam auf Touch-Geräten.</td>
           <td>60</td>
         </tr>
         <tr>
@@ -311,8 +313,8 @@
         <tr>
           <td>Route</td>
           <td>Approach</td>
-          <td>Entfernung zum Wegpunkt (in Metern) ab der ein potentielles
-            Weiterschalten zum nächsten Wegpunkt erfolgt wenn:<br>
+          <td>Entfernung zum Wegpunkt (in Metern), ab der ein potenzielles
+            Weiterschalten zum nächsten Wegpunkt erfolgt, wenn:<br>
             - die Entfernung zum Wegepunkt&nbsp; zunimmt<br>
             - die Entfernung zum nächsten Wegepunkt abnimmt</td>
           <td><br>
