@@ -52,10 +52,8 @@
       avnav-xxx-plugin folgen. Der Inhalt sollte in das Verzeichnis
       /usr/lib/avnav/plugins/&lt;pluginName&gt; entpackt werden.<br>
       Ein solches plugin wird zu einem "system plugin".<br>
-      Plugin Pakete sollten den Namen des plugins (d.h. denb Verzeichnis-Namen)
-      als Metadaten Feld mit dem Namen packages should contain the name of the
-      plugin (i.e. the directory name) as a meta data field "avnav-plugin"
-      enthalten.<br>
+      Plugin Pakete sollten den Namen des plugins (d.h. den Verzeichnis-Namen)
+      als Metadaten Feld mit dem Namen "avnav-plugin" enthalten.<br>
       Beispiel:</p>
     <p class="code">avnav-plugin: system-obp-plotterv3</p>
     <p>Das unterstützt den AvNav Updater dabei festzustellen, ob ein
@@ -80,8 +78,8 @@
         - integriert <a href="https://mapproxy.org/">MapProxy</a> für Zugriff
         und Download verschiedener online Kartenquellen</li>
       <li><a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Obp-RC-Remote</a>
-        - plugin für die Nutzung der <a href="https://www.segeln-forum.de/board194-boot-technik/board195-open-boat-projects-org/78328-fernbedienung-f%C3%BCr-den-raspberry/">Fernbedienung</a>
-        von <a href="https://www.segeln-forum.de/user/19350-chrhartz">Christian</a></li>
+        - plugin für die Nutzung der <a href="https://www.segeln-forum.de/thread/78328-fernbedienung-f%C3%BCr-den-raspberry/?postID=2237852#post2237852">Fernbedienung</a>
+        von <a href="https://www.segeln-forum.de/cms/user/19350-chrhartz/">Christian</a></li>
       <li><a href="https://github.com/kdschmidt1/Sail_Instrument">Sail-Instrument-Plugin</a>
         - Dekodierung und Berechnung von weiteren Kurs- und Winddaten,Sail
         Instrument</li>
@@ -102,7 +100,7 @@
     <p>Die Zeichnung gibt einen groben Überblick über die interne Struktur des
       AvNav Servers und die Punkte, an denen ein Plugin Daten auslesen oder
       einspeisen kann.</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Punkt</td>
@@ -197,10 +195,11 @@ def pluginInfo(cls):<br>  return {
     <p>Für das Plugin können in der <a href="configfile.html#plugins">avnav_server.xml</a>
       Parameter konfiguriert werden, diese sind dann über das API
       (getConfigValue) abrufbar.</p>
-      <a name="PluginAPI"></a><h3>Plugin API</h3>
+    <a name="PluginAPI"></a>
+    <h3>Plugin API</h3>
     <p>Am <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
       stehen die folgenden Funktionen zur Verfügung</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Funktion</td>
@@ -256,17 +255,14 @@ def pluginInfo(cls):<br>  return {
               App</a> registrieren. Dafür nötig ist eine URL und eine Icon
             Datei. Die Icon Datei sollte mit im Plugin Verzeichnis liegen. In
             der URL kann $HOST verwendet werden, das wird dann durch die
-            korrekte IP Adresse des AvNav Servers ersetzt. Beispiel im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
-              Plugin</a>.</td>
+            korrekte IP Adresse des AvNav Servers ersetzt. </td>
         </tr>
         <tr>
           <td>registerLayout</td>
           <td>Falls das Plugin z.B. eigene Widgets mitbringt, ist es u.U.
             hilfreich ein vorbereitetes Layout mitzuliefern, das der Nutzer dann
             auswählen kann. Das Layout dazu nach der Erstellung mit dem <a href="layouts.html">Layout
-              Editor</a> herunterladen und im Plugin Verzeichnis speichern.
-            Beispiel wieder im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
-              Plugin</a>.</td>
+              Editor</a> herunterladen und im Plugin Verzeichnis speichern. </td>
         </tr>
         <tr>
           <td>registerSettingsFile<br>
