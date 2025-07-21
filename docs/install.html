@@ -16,9 +16,9 @@
     <p>Um den Start zu vereinfachen, gibt es fertige Images für den Raspberry
       Pi. Ab Version 20220421 unterstützen die Images sowohl den sogenannten
       "headless" Betrieb - d.h. es ist weder Tastatur noch Monitor am Pi
-      angeschlossen als auch einen Betrieb mit einem angeschlossener (Touch-)
+      angeschlossen, als auch einen Betrieb mit einem angeschlossenen (Touch-)
       Bildschirm (gerne auch optional Tastatur und Maus).</p>
-    <p>AvNav ist von der Bedienung für Touch Geräte optimiert - aber man kann es
+    <p>AvNav ist von der Bedienung für Touch-Geräte optimiert - aber man kann es
       natürlich auch mit Bildschirm, Tastatur und Maus bedienen.</p>
     <p>Wie man die Images nutzt, hängt also vom Anwendungsfall ab. Im "headless"
       Betrieb wird der Raspberry nur als Server eingesetzt, die Anzeige erfolgt
@@ -26,12 +26,12 @@
       Wenn ein Monitor und Peripherie wie Tastatur und Maus direkt an den
       Raspberry angeschlossen werden, sollte man einen Pi4 oder Pi5 mit
       mindestens 2GB Speicher wählen. </p>
-    <p>Wenn man ein komplettes Desktop System mit vielen weiteren Anwendungen
+    <p>Wenn man ein komplettes Desktop-System mit vielen weiteren Anwendungen
       haben möchte, kann die <a href="#openplotter">OpenPlotter</a>-Variante
       eine gute Basis sein. Dafür empfiehlt sich ein Pi4 oder Pi5 mit 4GB
       Speicher. Auch 2GB Arbeitsspeicher wird ausreichen - dann bleibt aber
       nicht viel Raum für zukünftige Anforderungen. </p>
-    <p>Die früher vorhandenen speziellen AvNav Touch images werden leider nicht
+    <p>Die früher vorhandenen speziellen AvNav Touch Images werden leider nicht
       mehr weiter gepflegt.</p>
     <h2><a name="Headless"></a>AvNav Images(vormals HeadlessImages)</h2>
     <p>Diese Images werden von <a href="https://www.segeln-forum.de/cms/user/27970-blacksea/">BlackSea</a>
@@ -42,8 +42,7 @@
         - bis Pi4</a> oder <a href="https://www.free-x.de/raspbian/bookworm">bookworm</a>)
       herunter und transferiert es z.B. mit dem <a href="https://www.raspberrypi.com/documentation/computers/getting-started.html#raspberry-pi-imager">raspi-imager</a>&nbsp;
       auf eine SD Karte.<br>
-      Beim Imager dazu unter "CHOOSE OS" "Use Custom" auswählen und die img
-      Datei selektieren. Keine customisations.<br>
+      Beim Imager dazu unter "CHOOSE OS" "Use Custom" auswählen und die *.img-Datei selektieren.<br>
     </p>
     <p>Diese Images enthalten </p>
     <ul>
@@ -62,14 +61,14 @@
     Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces
     zu AvNav und von dort zu <a href="hints/CanboatAndSignalk.html">SignalK</a>
     geleitet werden. AvNav holt sich zusätzlich alle Daten von SignalK und kann
-    diese anzeigen. Für Details zur SignalK Integration siehe die <a href="hints/CanboatAndSignalk.html#SignalK">Beschreibung</a>.<br>
+    diese anzeigen. Für Details zur SignalK-Integration siehe die <a href="hints/CanboatAndSignalk.html#SignalK">Beschreibung</a>.<br>
     NMEA2000-Daten laufen über Canboat zu SignalK und zu AvNav.<br>
-    Für Details zu canboat siehe <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.
+    Für Details zu Canboat siehe <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.
     <h3><a name="preparation"></a>Image Vorbereitung</h3>
     <p>neu ab Version "20210322", erweitert ab Version "20220421"</p>
     <p>Bevor die fertig vorbereitete SD-Karte im Raspberry verwendet wird,
       sollte man einige Einstellungen anpassen. Das gilt vor allem für
-      Passworte:<br>
+      Passwörter:<br>
       Die Images haben eine Konfigurationsdatei "avnav.conf". Sie findet sich in
       der ersten Partition der SD-Karte (Boot-Partition). Diese Datei kann mit
       einem Texteditor angepasst werden.<br>
@@ -89,10 +88,10 @@
         <tr>
           <td><a name="configSEQUENCE"></a>ConfigSequence</td>
           <td>1</td>
-          <td>Wenn man erreichen möchte, das die Einstellungen aus avnav.conf
+          <td>Wenn man erreichen möchte, dass die Einstellungen aus avnav.conf
             noch einmal neu im System aktiviert werden sollen, kann man diesen
             Wert erhöhen. AvNav merkt sich sonst, welche Einstellungen bereits
-            aufgesetzt wurden und setzt diese nicht erneut.</td>
+            aufgesetzt wurden, und setzt diese nicht erneut.</td>
         </tr>
         <tr>
           <td style="width: 187px;">Wifi SSID</td>
@@ -112,7 +111,7 @@
         <tr>
           <td>User pi password</td>
           <td>raspberry</td>
-          <td>Das ist das Passwort für den Nutzer "pi". Dieser Standard- User
+          <td>Das ist das Passwort für den Nutzer "pi". Dieser Standard-User
             wird genutzt, wenn man sich per SSH verbindet oder wenn man direkt
             per Monitor und Tastatur auf den Raspberry zugreift. Das Passwort
             für den User "pi" sollte ebenfalls unbedingt geändert werden.</td>
@@ -122,11 +121,11 @@
           <td>None</td>
           <td>Hier kann man aus unterstützten Basis-Platinen wählen.<br>
             <ul>
-              <li><b>MCS:</b> Wenn diese Optoin aktiviert ist, wird beim
+              <li><b>MCS:</b> Wenn diese Option aktiviert ist, wird beim
                 nächsten Bootvorgang die notwendige Software für den <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine
                   Control Server von GeDad</a> aktiviert. Die Änderung der
                 Einstellung führt dann zu einem automatischen Reboot, wenn der
-                Raspberry das erste mal mit dieser Einstellung startet.</li>
+                Raspberry das erste Mal mit dieser Einstellung startet.</li>
               <li><b>OBPPLOTTERV3:</b> Hiermit werden die Einstellungen für den
                 <a href="https://open-boat-projects.org/de/10-plotter-raspi-4b">Open
                   Boat Projects Plotter (V3) </a>gesetzt.</li>
@@ -140,14 +139,14 @@
             entsprechenden Einträge für die Overlays in /boot/config.txt machen
             und die CAN Netzwerk-Schnittstellen anlegen.<br>
             <ul>
-              <li>WAVESHAREB: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29">waveshare
+              <li>WAVESHAREB: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29">Waveshare
                   RS485 CAN HAT (B)</a></li>
-              <li>WAVESHAREA8: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">waveshare
+              <li>WAVESHAREA8: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
                   RS485 CAN HAT (8Mhz)<br>
                 </a></li>
-              <li>WAVESHAREA12: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">waveshare
+              <li>WAVESHAREA12: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
                   RS485 CAN HAT (12 Mhz)</a></li>
-              <li>WAVESHARE2CH: <a href="https://www.waveshare.com/wiki/2-CH_CAN_HAT">waveshare
+              <li>WAVESHARE2CH: <a href="https://www.waveshare.com/wiki/2-CH_CAN_HAT">Waveshare
                   2CH CAN HAT</a></li>
               <li>PICANM: <a href="https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196">PICAN-M</a></li>
               <li>MCARTHUR: <a href="https://github.com/OpenMarine/MacArthur-HAT">MacArthur
@@ -159,22 +158,22 @@
           <td><a name="configMODULES"></a>Module RTL8188EU</td>
           <td>aus</td>
           <td>Wenn eingeschaltet, wird der <a href="https://github.com/lwfinger/rtl8188eu/tree/v5.2.2.4">Kernel-Treiber</a>
-            für WLAN Adapter mit dem Chipsatz RTL8188EU per <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
+            für WLAN-Adapter mit dem Chipsatz RTL8188EU per <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
             eingerichtet.<br>
-            Wenn der Kernel des Systems aktualisiert wird (Kommandozeile) wird
+            Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird
             der Treiber neu übersetzt.<br>
-            Bisher nicht für bookworm Images verfügbar, da es diese Treiber
+            Bisher nicht für Bookworm-Images verfügbar, da es diese Treiber
             nicht gibt.</td>
         </tr>
         <tr>
           <td><a name="configMODULES"></a>Module RTL8192EU</td>
           <td>aus</td>
           <td>Wenn eingeschaltet, wird der <a href="https://github.com/Mange/rtl8192eu-linux-driver">Kernel
-              Treiber</a> für WLAN Adapter mit dem Chipsatz RTL8192EU per <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
+              Treiber</a> für WLAN-Adapter mit dem Chipsatz RTL8192EU per <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
             eingerichtet.<br>
-            Wenn der Kernel des Systems aktualisiert wird (Kommandozeile) wird
+            Wenn der Kernel des Systems aktualisiert wird (Kommandozeile), wird
             der Treiber neu übersetzt.<br>
-            Bisher nicht für bookworm Images verfügbar, da es diese Treiber
+            Bisher nicht für Bookworm-Images verfügbar, da es diese Treiber
             nicht gibt.</td>
         </tr>
         <tr>
@@ -185,7 +184,7 @@
         <tr>
           <td>WifiCountry</td>
           <td>Germany</td>
-          <td>Das Land (muss für den Wifi Adapter aus legalen Gründen gesetzt
+          <td>Das Land (sollte für den Wifi-Adapter aus rechtlichen Gründen gesetzt
             werden)</td>
         </tr>
         <tr>
@@ -222,27 +221,27 @@
             (ab 20220421)</td>
           <td>96</td>
           <td>Nur für den lokalen Bilschirm.<br>
-            Die dots/inch für das angeschlossene Display. Beim Klick öffnet sich
+            Die Auflösung in dots/inch für das angeschlossene Display. Beim Klick öffnet sich
             ein kleiner Rechner, in dem die Abmessungen des Bildschirmes in mm
-            und Pixel angegeben werden können, daraus wird der DPI Wert
+            und Pixel angegeben werden können, daraus wird der DPI-Wert
             berechnet.<br>
-            Basierend auf diesem Wert, werden einige Anzeige-Elemente skaliert.</td>
+            Basierend auf diesem Wert werden einige Anzeige-Elemente skaliert.</td>
         </tr>
         <tr>
           <td>OnScreen KeyboardHeight<br>
             (ab 20220421)</td>
           <td>7</td>
-          <td>Die Höhe einer Tastenzeile beim angezeigten OnScreen keyboard. Bei
-            korrekter DPI Einstellung sollte dieser Wert ein guter Kompromiss
+          <td>Die Höhe einer Tastenzeile beim angezeigten OnScreen Keyboard. Bei
+            korrekter DPI-Einstellung sollte dieser Wert ein guter Kompromiss
             sein.<br>
-            Wenn man den Wert sehr gross wählt, bleibt u.U. bei angezeigter
+            Wenn man den Wert sehr groß wählt, bleibt u.U. bei angezeigter
             Tastatur nicht mehr genug Bildschirmfläche...</td>
         </tr>
         <tr>
           <td>HideCursor<br>
             (ab 20220421)</td>
           <td>an</td>
-          <td>Verbergen des Cursors auf dem lokalen Bildchschirm. Wenn mit einer
+          <td>Verbergen des Cursors auf dem lokalen Bildschirm. Wenn mit einer
             Maus gearbeitet werden soll, muss dieser Schalter auf "aus" gesetzt
             werden.</td>
         </tr>
@@ -276,28 +275,28 @@
     <p>Prinzipiell kann man sich auf mehrere Arten mit dem Raspberry verbinden:</p>
     <ol>
       <li>per Ethernet-Kabel<br>
-        Das geht entweder durch Anschluss einen einen Router oder Switch oder
+        Das geht entweder durch Anschluss an einen einen Router oder Switch oder
         über eine einfache Verbindung z.B. direkt zu einem Laptop.</li>
       <li>per internem WLAN<br>
-        Standardmässig macht der Pi einen Access-point mit der in der
-        Konfiguration gewählten SSID auf. Er hängt dort jeweils noch eine nummer
-        an (falls man weitere WLAN Adapter anschliesst, kann man auch mehrere
+        Standardmässig macht der Pi einen Access-Point mit der in der
+        Konfiguration gewählten SSID auf. Er hängt dort jeweils noch eine Nummer
+        an (falls man weitere WLAN-Adapter anschliesst, kann man auch mehrere
         Access Points erzeugen).</li>
       <li>per USB von einem Android Gerät<br>
-        Moderne Android Geräte haben meist eine "USB-Tethering" Funktion, über
+        Moderne Android-Geräte haben meist eine "USB-Tethering" Funktion, über
         die man das WLAN oder die Mobilfunk-Verbindung per USB weitergeben kann
         (leider meist nur Geräte mit Mobilfunk). <br>
         Über diesen Weg kann man sich auch mit dem Pi verbinden.</li>
       <li>Über ein anderes WLAN.<br>
-        Das erfodert aber zunächst eine der anderen Verbindungsmöglichkeiten, da
-        man die Zugangsdaten einstellen muss. Ausserdem erfordert es einen
-        zusätzlichen WLAN Adapter, der ein eine bestimmte USB Buchse gesteckt
-        werden muss (ausser man hat in der Konfiguration "Internal Wifi as
+        Das erfordert aber zunächst eine der anderen Verbindungsmöglichkeiten, da
+        man die Zugangsdaten einstellen muss. Außerdem erfordert es einen
+        zusätzlichen WLAN Adapter, der in eine bestimmte USB-Buchse gesteckt
+        werden muss (außer man hat in der Konfiguration "Internal Wifi as
         Client" gewählt).</li>
     </ol>
-    <h4>Verbindung per Ethernet Kabel</h4>
-    <p>Wenn man den Pi mit einem Router verbindet (z.B. im Heimnetz) dann erhält
-      er von diesem eine IP Adresse. Über diese Adresse kann man sich mit dem Pi
+    <h4>Verbindung per Ethernet-Kabel</h4>
+    <p>Wenn man den Pi mit einem Router verbindet (z.B. im Heimnetz), dann erhält
+      er von diesem eine IP-Adresse. Über diese Adresse kann man sich mit dem Pi
       verbinden.<br>
       Da es oft mühsam ist, diese Adresse herauszufinden, macht sich der Pi im
       Netz per <a href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a>
@@ -305,37 +304,37 @@
       Auf diese Weise kann man sich z.B. mit einem Browser einfach zu AvNav
       verbinden:</p>
     <div class="code">http://xxxx.local:8080</div>
-    <p>xxx ist dabei der in der Image Konfiguration gewählte Hostname.<br>
+    <p>xxx ist dabei der in der Image-Konfiguration gewählte Hostname.<br>
       Auch ein Zugang per SSH (unter Windows z.B. per <a href="https://www.chiark.greenend.org.uk/%7Esgtatham/putty/">putty</a>)
       íst auf diese Weise möglich - das Zugangs-Passwort für den Nutzer pi wurde
-      ja in der Image Konfiguration gesetzt.</p>
+      bereits in der Image-Konfiguration gesetzt.</p>
     <p>Falls man sich mit einem Netzwerkkabel direkt z.B. mit einem Laptop
-      verbindet, wird der Pi nach einiger Zeit selbständig eine IP Adresse
+      verbindet, wird der Pi nach einiger Zeit selbständig eine IP-Adresse
       aufsetzen. Das kann 1...2 Minuten dauern. Diese gehört zum sogenannten
-      Automatic Private IP Addressing Bereich 169.254.x.x. Die meisten Desktop
+      Automatic Private IP Addressing-Bereich 169.254.x.x. Die meisten Desktop
       Systeme unterstützen das ebenfalls (unter Linux muss man es ggf. explizit
       anschalten). <br>
       Wenn also der Laptop auch auf seinem Ethernet Interface eine solche
       Adresse aufgesetzt hat, sollte eine Verbindung wie beschrieben per
       xxxx.local funktionieren.</p>
     <p>Falls der Zugriff über die xxx.local Adresse nicht funktionieren sollte,
-      muss man versuchen, die IP Adresse des Pi zu ermitteln (z.B. in der
+      muss man versuchen, die IP-Adresse des Pi zu ermitteln (z.B. in der
       Administration des heimischen Routers).</p>
     <h4><a name="connect-wifi"></a>Verbindung über das eingebaute WLAN</h4>
     <p>Man kann das WLAN-Netzwerk verwenden, das der Raspberry erzeugt hat. Die
       SSID und das Passwort wurden wie oben beschrieben in der Datei
       "avnav.conf" definiert (mit noch einer angehängten Nummer).</p>
     <p> Auch hier steht man vor dem Problem, zunächst die IP-Adresse des Pi
-      herauszufinden. Wie schon beim Ethernet Zugang beschrieben, sollte auch
+      herauszufinden. Wie schon beim Ethernet-Zugang beschrieben, sollte auch
       hier der Zugriff per mDNS funktionieren.</p>
     <div class="code">http://xxx.local</div>
-    <p>Falls das nicht funktioniert, kann man es mit den festen IP Adressen
+    <p>Falls das nicht funktioniert, kann man es mit den festen IP-Adressen
       192.168.30.10, 192.168.40.10, 192.168.50.10, 192.168.60.10 versuchen:</p>
     <div class="code">http://192.168.30.10</div>
     <p><br>
     </p>
     <p>Das sollte die <a href="userdoc/index.html">Hauptseite</a> von AvNav
-      laden. Es sollte auch möglich seine, xxxx.local zu benutzen, wenn man sich
+      laden. Es sollte auch möglich sein, xxxx.local zu benutzen, wenn man sich
       mit dem Raspberry per SSH verbinden will (z.B. <a href="https://www.putty.org/">putty</a>
       unter Windows).<br>
     </p>
@@ -353,10 +352,10 @@
       Seite dann aber fehlschlägt, kann es an einer Besonderheit von Android
       liegen, wenn zusätzlich z.B. per Mobilfunk eine Internet-Verbindung aktiv
       ist. In diesem Falle sollte man mobile Daten zeitweilig abschalten.</p>
-    <p>Ab der Version 1.12 unterstützt die Android BonjourBrowser app auch SSH.
+    <p>Ab der Version 1.12 unterstützt die Android BonjourBrowser App auch SSH.
       Das AvNav Image (ab 20220421) macht auch seinen SSH Zugang per mDNS
-      bekannt. Wenn man unter Android dann noch einen passenden SSh client
-      installiert (beispielsweise <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>)
+      bekannt. Wenn man unter Android dann noch einen passenden SSh Client
+      installiert (beispielsweise <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>),
       kann man sich auf diese Weise auch per SSH mit dem Pi verbinden. Das ist
       für ein normales Arbeiten meist nicht so komfortabel - aber für den
       Notfall kann man so ein paar Kommandos eingeben.</p>
@@ -367,21 +366,21 @@
       Eventuell wurde die avnav.conf zuvor nicht korrekt gespeichert.<br>
       Eine Root-Shell kann man mit sudo -i erhalten.</p>
     <h4><a name="connect-usb"></a>Verbindung von Android über USB</h4>
-    <p>Dazu benötigt man ein Android Gerät, das USB Tethering unterstützt (meist
+    <p>Dazu benötigt man ein Android-Gerät, das USB Tethering unterstützt (meist
       bei den Verbindungseinstellungen). Nachdem man das Gerät per USB mit dem
       Pi verbunden hat, muss man das USB Tethering einschalten (wird meist
       automatisch wieder ausgeschaltet, wenn man die Verbindung trennt).<br>
       Neben der Möglichkeit, den Pi so mit dem Internet zu verbinden, kann man
       auch auf den Pi mit dem Browser oder per SSH zugreifen. Da auch wieder die
-      Ermittlung der IP Adresse erfolgen muss, empfehle ich wieder die <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Bonjour
+      Ermittlung der IP-Adresse erfolgen muss, empfehle ich wieder die <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Bonjour
         Browser App</a> zu installieren - siehe unter <a href="#connect-wifi">WLAN</a>.
-      Für SSH Zugriffe ebenfalls wieder <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>.</p>
+      Für SSH-Zugriffe ebenfalls wieder <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>.</p>
     <p>Über diesen Weg kann man auch auf den Pi zugreifen, falls z.B. das WLAN
-      nicht funktioniert. Im BonjourBrowser wird man 2 http: Adressen finden
-      (Port 8080 für AvNav und Port 3000 für SignalK). Dazu (ab 20220421) noch
+      nicht funktioniert. Im BonjourBrowser wird man 2 http:-Adressen finden
+      (Port 8080 für AvNav und Port 3000 für SignalK), dazu (ab 20220421) noch
       einen SSH Zugang.</p>
     <h4><a name="connect-clientwifi"></a>Verbindung über ein anderes WLAN</h4>
-    <p>Wenn man wie unten beschrieben eine WLAN Verbindung zu einem anderen
+    <p>Wenn man wie unten beschrieben eine WLAN-Verbindung zu einem anderen
       Netzwerk eingerichtet hat (erfordert einen WLAN Stick oder Umschaltung des
       internen WLANs auf Client), kann man den Zugriff auf den Pi über dieses
       Netzwerk freigeben ("external access" beim Aufsetzen).</p>
@@ -389,36 +388,36 @@
       eines eigenen LTE Routers). <b>Auf keinen Fall sollte man das in einem
         öffentlichen WLAN erlauben - der Zugriff ist nicht geschützt und
         prinzipiell kann jeder aus dem Netz auf den Pi zugreifen</b>.</p>
-    <p>Wenn man mit dem client Netzwerk verbunden ist, kann man wieder wie unter
+    <p>Wenn man mit dem client-Netzwerk verbunden ist, kann man wieder wie unter
       <a href="#connect-wifi">WLAN</a> beschrieben auf den Pi zugreifen.</p>
     <h3>Pi mit dem Internet verbinden</h3>
-    <p>Für einige Funktionen (z.B. update von Software) benötigt der Pi eine
-      Internet Verbindung. Diese wird natürlich nicht für die grundlegenden
+    <p>Für einige Funktionen (z.B. Update von Software) benötigt der Pi eine
+      Internet-Verbindung. Diese wird natürlich nicht für die grundlegenden
       Navigationsfunktionen benötigt.</p>
-    <p>Vor der Image Version 20220421 ist dabei zu beachten, das der Pi nicht
-      automatisch seine Zeit einstellt, wenn kein GPS angeschlossen ist. Das
-      kann bei vielen Internet Zugriffen zu Problemen führen. <br>
+    <p>Vor der Image-Version 20220421 ist dabei zu beachten, dass der Pi seine Systemzeit nicht
+      automatisch einstellt, solange kein GPS angeschlossen ist. Das
+      kann bei vielen Internet-Zugriffen zu Problemen führen. <br>
       Ab der Version 20220421 synchronisiert der Pi nach einer Wartezeit
-      automatisch seine Zeit mit dem Netz (ntp).</p>
+      automatisch seine Systemzeit mit dem Netz (ntp).</p>
     <p>Für die Verbindung zum Internet gibt es die folgenden Möglichkeiten:</p>
     <ol>
-      <li>Ethernet Verbindung zu einem Router</li>
+      <li>Ethernet-Verbindung zu einem Router</li>
       <li>Verbindung über ein anderes WLAN</li>
-      <li>Verbindung über ein per USB angeschlossenes Android Gerät</li>
+      <li>Verbindung über ein per USB angeschlossenes Android-Gerät</li>
     </ol>
     <p>Der Pi stellt seine Internet-Verbindung grundsätzlich über sein eigenes
       WLAN auch verbundenen Geräten zur Verfügung.</p>
     <h4>Verbindung über Ethernet Kabel</h4>
-    <p>Hier wird der Pi über ein Ethernet Kabel an einen Router angeschlossen.<br>
+    <p>Hier wird der Pi über ein Ethernet-Kabel an einen Router angeschlossen.<br>
       Dazu ist auf dem Pi nichts weiter einzurichten, das sollte automatisch
       gehen.<br>
-      Auf einigen Pi3 kann es vorkommen, das ein Netzwerkkabel was erst nach dem
-      boot angeschlossen wird, nicht richtig erkannt wird. In diesem Falle den
-      Pi mit angeschlossenem Netzwerk neu starten.</p>
+      Auf einigen Pi3 kann es vorkommen, dass ein Netzwerkkabel, das erst nach dem
+      Bootvorgng angeschlossen wird, nicht richtig erkannt wird. In diesem Falle den
+      Pi mit angeschlossenem Netzwerkkabel neu starten.</p>
     <h4>Verbindung über ein anderes WLAN</h4>
-    <p>Dazu wird ein weiterer WLAN Adapter (USB Adapter) benötigt. Bitte vorher
+    <p>Dazu wird ein weiterer WLAN-Adapter (USB-Adapter) benötigt. Bitte vorher
       die Kompatibilität mit dem Pi prüfen - z.B. <a href="https://elinux.org/RPi_USB_Wi-Fi_Adapters">hier</a>.</p>
-    <p>Der Stick muss wie im Bild gesteck sein (auf dem Pi4/Pi5 die blaue USB
+    <p>Der Stick muss wie im Bild gesteckt sein (auf dem Pi4/Pi5 die blaue USB
       Buchse an der Platinen-Seite). <br>
       Der interne Name des Netzwerk-Interfaces ist wlan-av1.&nbsp; </p>
     <p></p>
@@ -426,24 +425,24 @@
     <p>Alternativ kann in der Image-Konfiguration "InternalWifi as Client"
       gesetzt werden, damit wird der interne WLAN Adapter für die Verbindung zu
       anderen Netzten verfügbar. Dann benötigt man aber einen anderen Zugriff
-      zum Verbinden mit dem Pi da er keinen Access Point mehr aufmacht.</p>
+      zum Verbinden mit dem Pi, da er keinen Access Point mehr aufmacht.</p>
     <p>Man kann die Verbindung zu einem WLAN in der <a href="userdoc/wpapage.html">App</a>
       konfigurieren.<br>
       Bei jedem WLAN, mit dem man sich verbindet, kann man auswählen, ob ein
-      Zugriff auf den Pi von aussen möglich sein soll ("external access"). Wenn
+      Zugriff auf den Pi von außen möglich sein soll ("external access"). Wenn
       das nicht ausgewählt ist, kann über dieses WLAN nicht auf AvNav
       zugegriffen werden. Bitte die <a href="#connect-clientwifi">Hinweise zum
         Zugriff</a> beachten.</p>
     <h4>Verbindung über ein per USB angeschlossenes Android Gerät</h4>
     <p>Wie bereits beim <a href="#connect-usb">Zugriff</a> beschrieben, kann
-      man ein Android Gerät mit USB Tethering verbinden. Intern ensteht ein
+      man ein Android-Gerät mit USB Tethering verbinden. Intern ensteht ein
       Netzwerkinterface usb0.<br>
       Darüber kann der Pi ebenfalls auf das Internet zugreifen.</p>
     <p>Das kann eine einfache Möglichkeit sein, wenn man den Zugriff nur
-      temporär braucht und keinen zusätzlichen WLAN Adapter zur Verfügung hat.<br>
-      Falls man vorher anders mit dem Internet verbunden war, kann es sein, das
-      der Pi die USB Verbindung erst nach einem Neustart wirklich nutzt
-      (Achtung: USB Tethering auf dem Android Gerät wieder einschalten, wird
+      temporär braucht und keinen zusätzlichen WLAN-Adapter zur Verfügung hat.<br>
+      Falls man vorher anders mit dem Internet verbunden war, kann es sein, dass
+      der Pi die USB-Verbindung erst nach einem Neustart wirklich nutzt
+      (Achtung: USB Tethering auf dem Android-Gerät wieder einschalten, wird
       beim Pi-Neustart normalerweise ausgeschaltet).</p>
     <p><br>
     </p>
@@ -451,7 +450,7 @@
     <h3>Technische Details<br>
     </h3>
     <p>Der Raspberry wird ein (oder mehrere) WLAN-Netzwerke aufsetzen, eines mit
-      dem internen Adapter und weitere mit potentiell gesteckten WLAN-Sticks.
+      dem internen Adapter und weitere mit potenziell gesteckten WLAN-Sticks.
       Diese Netzwerke haben die Adressen:192.168.20.0/24, 192.168.30.0/24,
       192.168.40.0/24, 192.168.50.0/24. Der Raspberry selbst hat dabei jeweils
       die Adresse 192.168.x.10.</p>
@@ -469,23 +468,23 @@
     <h2><a name="Touch"></a>Image mit Bildschirm</h2>
     <p> <span>In früheren Versionen gab es ein eigenes AvNav Touch Image.</span><br>
       Dieses wird jedoch nicht mehr weiter gepflegt.<br>
-      Ab der Versiion 20220421 wurde daher der Support für einen angeschlossenen
-      Bildschirm (mit dem Schwerpunkt touch) in die AvNav images integriert.</p>
+      Ab der Version 20220421 wurde daher der Support für einen direkt angeschlossenen
+      Bildschirm (mit dem Schwerpunkt touch) in die AvNav Images integriert.</p>
     <p>Wie unter <a href="#preparation">Vorbereitung</a> beschrieben, kann man
       die Unterstützung für einen Bildschirm dort aktivieren.<br>
-      Wenn das dort eingeschaltet wurde, startet ein service "avnav-startx".
+      Wenn die Bildschirm-Unterstützung eingeschaltet wurde, startet ein service "avnav-startx".
       Dieser erzeugt einen lokalen X Server, eine Nutzer-Sitzung für den Nutzer
       pi mit <a href="https://openbox.org/help/Contents">openbox</a> als
       Fenster-Manager und Firefox im Kiosk Mode.</p>
     <p>Als Bildschirm-Tastatur (On Screen Keyboard) wird <a href="http://manpages.ubuntu.com/manpages/bionic/man1/onboard.1.html">onboard</a>
       verwendet.</p>
-    <p>Auf der AvNav Hauptseite (und auf einigen anderen Seiten) wird ein
+    <p>Auf der AvNav-Hauptseite (und auf einigen anderen Seiten) wird ein
       "Raspberry" Button angezeigt, mit diesem wechselt man auf einen zweiten
       virtuellen Bildschirm, auf dem man einen Dateimanager, ein Terminal und
       verschiedene weitere Tools findet.<br>
       Das System ist ganz bewusst nicht als ein komplettes Desktop-System
-      ausgelegt, um möglichst Resourcen schonend zu arbeiten.</p>
-    <p>Da man an die Systemtools nur über den Button in der AvNav app
+      ausgelegt, um möglichst ressourcenschonend zu arbeiten.</p>
+    <p>Da man an die Systemtools nur über den Button in der AvNav App
       herankommt, ist es sinnvoll, sich einen weiteren Zugang zum Pi wie weiter
       oben beschrieben zuzulegen.<br>
       Damit kann man im Fehlerfall auf das System zugreifen.<br>
@@ -493,20 +492,20 @@
     <div class="code">sudo systemctl restart avnav-startx</div>
     <p>erfolgen.<br>
       Falls Firefox einmal nicht mehr richtig starten möchte, kann man das
-      Nutzerprofil entfernen. Das wird beim nächsten Start neu angelegt.<br>
-      <b>Achtung</b>: AvNav Einstellungen, die nicht auf dem Server gespeichert
+      Nutzerprofil entfernen. Das wird beim nächsten Start automatisch neu angelegt.<br>
+      <b>Achtung</b>: AvNav-Einstellungen, die nicht auf dem Server gespeichert
       wurden, gehen dabei verloren.</p>
     <div class="code">sudo systemctl stop avnav-startx<br>rm -rf /home/pi/.mozilla/firefox/avnav<br>sudo systemctl start avnav-startx</div>
     <p>Ab Version 20230614 wird auf dem Hauptbildschirm immer dann, wen AvNav
       nicht (oder nicht komplett) aktiv ist, ein zusätzliches Panel angezeigt.</p>
     <p><img src="xui-ffpanel.png" alt="" class="fimage"><br>
     </p>
-    <p>Über diese Panel können einige Navigationsfunktionen in firefox gesteuert
+    <p>Über dieses Panel können einige Navigationsfunktionen in Firefox gesteuert
       werden, es kann zum 2. Bildschirm (system) gewechselt werden - und man
-      kann die (oben beschriebene) Reset-Funktion für das firefox Nutzerprofil
+      kann die (oben beschriebene) Reset-Funktion für das Firefox-Nutzerprofil
       ausführen (<img src="viewerimages/SailBoatRed96.png" alt="" class="inlineimage">).</p>
-    <p>Damit ist eine Bedienung des Systems auch möglich, wenn einmal AvNav
-      nicht komplett startet. Die Reset Funktion findet sich auch auf dem
+    <p>Damit ist eine Bedienung des Systems auch möglich, wenn AvNav wider Erwarten
+      nicht komplett startet. Die Reset-Funktion findet sich auch auf dem
       System-Bildschirm (allerdings nur für komplette Neu-Installationen).</p>
     <h2 class="western"><a name="Packages"></a>Paket Installation</h2>
     <h3>Repositories</h3>
@@ -547,18 +546,18 @@ sudo systemctl start avnav</div>
     <h3><a name="userservice"></a>User Service</h3>
     <p>Ab 20240520 kann man AvNav als ein <a href="https://wiki.archlinux.org/title/Systemd/User">user
         systemd service</a> für den eigenen Nutzer automatisch starten lassen.
-      Um diesen Service zu aktivieren ruft man </p>
+      Um diesen Service zu aktivieren, ruft man </p>
     <div class="code">avnavservice enable [port]</div>
-    <p>auf. Der Service startet automatisch wenn sich der Nutzer einlogged und
+    <p>auf. Der Service startet automatisch, wenn sich der Nutzer einloggt, und
       stoppt, wenn er sich abmeldet. Um den Service bereits beim Systemstart zu
-      aktivieren muss man den "linger" mode für den Nutzer setzen:</p>
+      aktivieren, muss man den "linger" mode für den Nutzer setzen:</p>
     <div class="code">loginctl enable-linger</div>
     <p>Für Details siehe die <a href="https://wiki.archlinux.org/title/Systemd/User">systemd
         Dokumentation</a>.</p>
-    <p>Um den Status zu prüfen nutzt man</p>
+    <p>Um den Status zu prüfen, nutzt man</p>
     <div class="code">systemctl --user status avnav</div>
     <p>AvNav nutzt das (default) Datenverzeichnis $HOME/avnav.</p>
-    <p>Um den Service wieder zu deaktivieren nutzt man </p>
+    <p>Um den Service wieder zu deaktivieren, nutzt man </p>
     <div class="code">avnavservice disable</div>
     <h3>Download</h3>
     Alternativ kann man auch die Debian-Pakete direkt von der Download-Seite
@@ -567,30 +566,30 @@ sudo systemctl start avnav</div>
       <li><a title="downloads/releases" href="../downloads/release">Releases</a></li>
       <li><a href="../downloads/daily">Tägliche Builds</a></li>
     </ul>
-    <p> Nach dem Herunterladen kann man die Pakete auf einem raspberry pi mit<br>
+    <p> Nach dem Herunterladen kann man die Pakete auf einem Raspberry Pi mit<br>
     </p>
     <div class="code">sudo apt install ./avnav_xxxxxxxx_all.deb
 </div> installieren.<br>
-    <p>Falls man sein raspberry pi System vergleichbar zu unseren Images
+    <p>Falls man sein Raspberry Pi-System vergleichbar zu unseren Images
       aufsetzen möchte, kann man dazu noch das "avnav-raspi"-Paket installieren.<br>
-      Das ändert die Netzwerk-Konfiguration so , wie AvNav das möchte, sorgt
-      dafür, das AvNav unter dem Nutzer "pi" startet und aktiviert das
-      Einstellen der Systemzeit sowie das Verwalten von WLAN client Netzwerken.</p>
+      Das ändert die Netzwerk-Konfiguration so, wie AvNav das möchte, sorgt
+      dafür, dass AvNav unter dem Nutzer "pi" startet, und aktiviert das
+      Einstellen der Systemzeit sowie das Verwalten von WLAN Client-Netzwerken.</p>
     Ich würde in jedem Fall empfehlen, das <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
       Update-Plugin</a> zu installieren - aus dem Paket Repository mit
     <div class="code">sudo apt-get install avnav-update-plugin</div>
     <p>oder mittels Download von&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a><br>
-      <b>Hinweis</b>: Die start/stop Funktionen im Update-Plugin funktionieren
-      (noch) nicht mit einem avnav, das als systemd user Service gestartet
+      <b>Hinweis</b>: Die Start/Stop-Funktionen im Update-Plugin funktionieren
+      (noch) nicht mit einem Avnav, das als systemd user Service gestartet
       wurde. Das ist aber kein Problem, da man AvNav auch aus der App selbst
       restarten kann.</p>
-    <p>Wenn man nicht das "avnav-raspi"-Paket installiert, man aber AvNav mit
+    <p>Wenn man nicht das "avnav-raspi"-Paket installiert, aber AvNav mit
       einem anderen Nutzer als "avnav" - also z.B. dem Nutzer pi starten
       möchte,&nbsp; sollte man wie beschrieben den Start als systemd user
       Service nutzen.</p>
     Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten
     lassen.<br>
-    <p>Wenn man avnav als systemweiten Service mit einem anderen Nutzer laufen
+    <p>Wenn man Avnav als systemweiten Service mit einem anderen Nutzer laufen
       lassen möchte, kann man auch folgende Schritte abarbeiten:</p>
     <div class="code">/usr/lib/systemd/system/avnav.service.d</div>
     anlegen und dort die Datei anvav.conf mit folgendem Inhalt anlegen:
@@ -629,22 +628,22 @@ sudo apt install openplotter-avnav</div>
       geben sollte. Die Defaultwerte sind: :8080 für den Browserzugriff, :8082
       für ocharts.</p>
     <p>Wenn man AvNav mit der OpenPlotter-App installiert, empfängt AvNav alle
-      NMEA-Daten von SignalK und sucht nicht selbst nach USB Geräten. Alle
+      NMEA-Daten von SignalK und sucht nicht selbst nach USB-Geräten. Alle
       Geräte-Konfigurationen oder Schnittstellen-Einrichtungen können so direkt
       in OpenPlotter und SignalK vorgenommen werden.</p>
     <h2><a name="Windows"></a>Windows</h2>
     <p> Für Windows gibt es einen Installer (neu ab 20240520). Die aktuelle
       Version zum Download findet man <a href="../downloads/release/latest/avnav-service-latest.exe">hier</a>.
       Dieser Installer erzeugt eine App "avnavservice" die (als default)
-      automatisch startet(User autostart). Dieser Service erzeugt eine
-      Notifikation (Icon) die bei Klick ein Menü mit den wichtigsten Funktionen
-      zeigt. Dieser service enhält noch nicht die eigentliche AvNav software
+      automatisch startet (User autostart). Dieser Service erzeugt eine
+      Notifikation (Icon), die bei Klick ein Menü mit den wichtigsten Funktionen
+      zeigt. Dieser Service enhält noch nicht die eigentliche AvNav-Software
       (oder die notwendigen Python Pakete). Aber über das Menü können diese
       installiert werden.<br>
       Für eine Deinstallation von avnavservice bitte die Systemsteuerung nutzen.</p>
     <p><img src="windows-notification-1.png" alt=""></p>
     <p><img src="windows-notification-2.png" alt=""></p>
-    <p>Das service Menü hat die folgenden Einträge:</p>
+    <p>Das Service-Menü hat die folgenden Einträge:</p>
     <table width="100%" border="1">
       <tbody>
         <tr>
@@ -653,10 +652,10 @@ sudo apt install openplotter-avnav</div>
         </tr>
         <tr>
           <td>Start</td>
-          <td>Startet den AvNav Server. Nur aktive, wenn die AvNav software
+          <td>Startet den AvNav Server. Nur aktiv, wenn die AvNav-Software
             installiert wurde und der Server noch nicht läuft. Der Service merkt
-            sich ob AvNav gestartet wurde und wird es beim nächsten Stat
-            automatisch wieder staerten, wenn nicht zischenzeitlich "Stop"
+            sich, ob AvNav gestartet wurde, und wird es beim nächsten Start
+            automatisch wieder starten, wenn nicht zwischenzeitlich "Stop"
             aktiviert wurde.</td>
         </tr>
         <tr>
@@ -669,10 +668,10 @@ sudo apt install openplotter-avnav</div>
         </tr>
         <tr>
           <td>Logs</td>
-          <td>Öffnet ein Explorer Fenster im AvNav log Verzeichnis
+          <td>Öffnet ein Explorer-Fenster im AvNav log-Verzeichnis
             (PROFILEDIR/AvNav/logs). Dort gibt es das normale avnav.log und
-            zusätzlich die Ausgabe vom startup(service-err.log).<br>
-            Um z.B. zur AvNav XML Konfiguration zu gelangen, muss man nur im
+            zusätzlich die Ausgabe vom Startup(service-err.log).<br>
+            Um z.B. zur AvNav XML-Konfiguration zu gelangen, muss man nur im
             Explorer ein Verzeichnis nach oben navigieren.</td>
         </tr>
         <tr>
@@ -681,13 +680,13 @@ sudo apt install openplotter-avnav</div>
         </tr>
         <tr>
           <td>Update</td>
-          <td>Diser Eintrag ist "Install" wenn die AvNav Software noch nicht
+          <td>Dieser Eintrag ist "Install", wenn die AvNav-Software noch nicht
             installiert wurde.<br>
             Ein Installationsdialog wird geöffnet(siehe <a href="#windowsinstall">unten</a>).</td>
         </tr>
         <tr>
           <td>Remove</td>
-          <td>Entfernt die installierte AvNav Software (aber alle Nutzerdaten
+          <td>Entfernt die installierte AvNav-Software (aber alle Nutzerdaten
             unter PROFILEDIR/AvNav bleiben erhalten).<br>
             Vor einer Deinstallation von avnavservice (über
             Systemsteuerung/Software) sollte das genutzt werden - sonst muss man
@@ -709,30 +708,30 @@ sudo apt install openplotter-avnav</div>
     <h3><a name="windowsinstall"></a>Installation</h3>
     <p>Nach Klick auf Install/Update wird ein kleiner Dialog angezeigt.</p>
     <p><img src="windows-install-1.png" alt=""></p>
-    Die hier eingetragene URL zeigt auf die aktuelle AvNav software. Aber man
-    kann hier jede URL eingeben, die auf ein aktuelles AvNav Softwarepaket zeigt
+    Die hier eingetragene URL zeigt auf die aktuelle AvNav-Software. Aber man
+    kann hier jede URL eingeben, die auf ein aktuelles AvNav-Softwarepaket zeigt
     (zip Datei) - z.B. von den <a href="../downloads/daily">daily</a> oder <a
       href="../downloads/release">release</a> Seiten. <br>
-    <p>Nach OK wird ein Installationsfenster angezeigt mit dem Fortschritt.</p>
+    <p>Nach OK wird ein Fenster mit dem Installationsfortschritt angezeigt.</p>
     <p><img src="windows-install-2.png" alt="" class="fimage image"></p>
-    Nachdem man diese Fenster geshlossen hat, kann man den AvNav Server über
+    Nachdem man diese Fenster geschlossen hat, kann man den AvNav Server über
     "Start" im Menü wieder starten.<br>
     <h3>Windows Hinweise</h3>
     <p>Der avnavservice erfordert Powershell (&gt;= 5.x) - das sollte auf allen
-      modernen Windows Systemen verfügbar sein. Wenn die AvNav Installation auf
-      einen Fehler läuft kann es sein, das die neuesten C/C++ Bibliotheken nicht
+      modernen Windows Systemen verfügbar sein. Wenn die AvNav-Installation in
+      einen Fehler läuft, kann es sein, dass die neuesten C/C++ Bibliotheken nicht
       installiert sind. Diese kann man von <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170">Microsoft</a>
       herunter laden. Der direkte Link ist normalerweise <a href="https://aka.ms/vs/17/release/vc_redist.x64.exe">hier</a>.
     </p>
-    <p>Dieser neue Windows service ersetzt die alte AvNavNet installation mit
+    <p>Dieser neue Windows-Service ersetzt die alte AvNavNet-Installation mit
       einer eigenen GUI. Releases ab 20240520 sind nicht mehr kompatibel mit der
       alten Version. Es wird empfohlen, die alte Installation komplett zu
       entfernen, ehe der neue Installer genutzt wird.</p>
     <p>Die Karten-Konvertierung ist nun ohnehin komplett in AvNav integriert und
-      kann so genutzt werden wie in der App Dokumentation beschrieben.<br>
+      kann so genutzt werden wie in der App-Dokumentation beschrieben.<br>
       Man kann serielle Geräte, die am Windows System angeschlossen sind, ganz
       normal benutzen(z.B. einen GPS Stick).</p>
     <p>Da der AvNav Server im Hintergrund läuft, kann man ihn zum Beispiel auch
-      als NMEA Multiplexer und Logger nutzen.</p>
+      als NMEA-Multiplexer und Logger nutzen.</p>
   </body>
 </html>
