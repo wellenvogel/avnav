@@ -51,6 +51,51 @@ class Key(object):
   def getKey(self):
     return AVNStore.BASE_KEY_GPS+"."+self.key
 
+class Sat:
+  def __init__(self,nr,used=False):
+    self.nr=nr
+    self.used=used
+    self.ts=time.monotonic()
+  def valid(self,validTime):
+    return self.ts >= validTime
+  def update(self,used=None):
+    if used is not None:
+      self.used=used
+    self.ts=time.monotonic()
+  def isUsed(self,validTime):
+    return self.used and self.valid(validTime)
+
+class SatList:
+  def __init__(self,expiryTime):
+    self.lock=threading.Lock()
+    self.store={}
+    self.expiryTime=expiryTime
+  def cleanup(self):
+    validTime=time.monotonic()-self.expiryTime
+    with self.lock:
+      self.store={k:self.store[k] for k in self.store if self.store[k].valid(validTime)}
+  def add(self,numbers,used=None):
+    if type(numbers) is not list:
+      numbers=[numbers]
+    with self.lock:
+      for number in numbers:
+        if number:
+          number=int(number)
+          existing=self.store.get(number)
+          if existing is None:
+            existing=Sat(number)
+            self.store[number]=existing
+          existing.update(used)
+    self.cleanup()
+  def getNum(self):
+    validTime=time.monotonic()-self.expiryTime
+    with self.lock:
+      used=sum(1 for k,v in self.store.items() if v.isUsed(validTime))
+      return (len(self.store),used)
+
+
+
+
 class NMEAParser(object):
   DEFAULT_SOURCE_PRIORITY=50
   DEFAULT_API_PRIORITY=60
@@ -128,6 +173,8 @@ class NMEAParser(object):
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data
     self.navdata=navdata # type: AVNStore
+    self.satStore={}
+    self.lock=threading.Lock()
   @classmethod
   def formatTime(cls,ts):
     t = ts.isoformat()
@@ -138,6 +185,13 @@ class NMEAParser(object):
       t += "Z"
     return t
   #------------------ some nmea data specific methods -------------------
+  def _getSatStore(self,source):
+    with self.lock:
+      st=self.satStore.get(source)
+      if st is None:
+        st=SatList(self.navdata.getExpiryPeriod())
+        self.satStore[source]=st
+      return st
 
 
   def addToNavData(self,data,record=None,source='internal',priority=0,timestamp=None):
@@ -317,20 +371,26 @@ class NMEAParser(object):
         if mode >= 1 and all(darray[i] for i in (2,3,4,5)):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[2],darray[3])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[4],darray[5])
-        if darray[7]:
-          rt[self.K_SATUSED.key]=int(darray[7])
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
         return True
       if tag == 'GSA':
-        numUsed=sum(1 for i in range(3,15) if darray[i])
-        rt[self.K_SATUSED.key]=numUsed
+        store=self._getSatStore(source)
+        store.add(darray[3:15],True)
+        (existing,used)=store.getNum()
+        rt[self.K_SATUSED.key]=used
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
         return True
       if tag=='GSV':
-        if darray[3]:
-          rt[self.K_SATVIEW.key]=int(darray[3])
-        else:
-          return False
+        store=self._getSatStore(source)
+        start=4
+        numbers=[]
+        while start < len(darray):
+          if darray[start]:
+            numbers.append(darray[start])
+          start+=4
+        store.add(numbers)
+        (existing,used)=store.getNum()
+        rt[self.K_SATVIEW.key]=existing
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag=='GLL':

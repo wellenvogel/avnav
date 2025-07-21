@@ -13,8 +13,8 @@
       erweitern.</p>
     <p>Dabei ist es zunächst einmal möglich, neue Anzeigen zu definieren, die
       dann im Layout Editor ausgewählt werden können. Prinzipiell kann man dort
-      natürlich beliebigen Java Script Code ausführen - muss dabei aber
-      natürlich zusehen, die Funktionen von AvNav nicht zu stören.</p>
+      beliebigen Java Script Code ausführen - muss dabei aber natürlich zusehen,
+      die Funktionen von AvNav nicht zu stören.</p>
     <p>Der Java Script Code liegt in der Datei user.js im Verzeichnis
       BASEDIR/user/viewer.<br>
       BASEDIR ist z.B. auf dem pi /home/pi/avnav/data.</p>
@@ -34,11 +34,22 @@
         alt="" class="inlineimage"> und AvNav neu laden.</p>
     <p>Es empfiehlt sich, die Datei in regelmäßigen Abständen nach dem
       Bearbeiten herunterzuladen und noch einmal irgenwo zu speichern - es gibt
-      keine Versionsverwaltung in AvNav.</p>
+      keine Versionsverwaltung in AvNav.<br>
+      Ein erprobter Weg zur Bearbeitung ist die Nutzung von 2 Browserfenstern
+      oder Tabs:</p>
+    <ul>
+      <li>In einem Fenster macht man die Bearbeitung und speichert die Datei</li>
+      <li>Im anderen Fenster lädt man AvNav jeweils neu und testet die
+        Änderungen (dabei ist auch die Nutzung der Browser Entwicklerwerkzeuge
+        hilfreich, weil man hier u.U. Fehlermeldungen sehen kann - oder sogar
+        den Code debuggen kann).</li>
+    </ul>
+    <p>Auf diese Weise kann man recht zügig Änderungen vornehmen und ihre
+      Funktion testen.</p>
     <p>Das aktuelle Template kann man auch <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">auf
         github</a> finden.</p>
     <h2><a name="widgets" id="widgets"></a>Anzeigen (Widgets)</h2>
-    <p>Man kann im Wesentlichen die folgenden Arten von Anzeigen hinzufügen:</p>
+    <p>Man kann die folgenden Arten von Anzeigen hinzufügen:</p>
     <ul>
       <li>Widgets mit eigenem Formatter (und ggf. festen Werten) basierend auf
         dem Default Widget (Beispiel 1 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
@@ -313,8 +324,8 @@
           <td>userWidget</td>
           <td>---</td>
           <td>eventHandler ist keine Funktion sondern ein array. Falls im
-            renderHtml event Handler angegeben werden (z.B. &lt;button
-            onclick="clickHandler"/&gt;), dann muss in der initFunction&nbsp;
+            renderHtml event Handler angegeben werden - z.B. &lt;button
+            onclick="clickHandler"/&gt;, dann muss in der initFunction&nbsp;
             eine Funktion clickHandler hier registriert werden:<br>
             this.eventHandler.clickHandler=function(ev){...}<br>
             Siehe <a href="https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L150">TestPlugin</a>.</td>
@@ -381,8 +392,9 @@
     <p><br>
     </p>
     <h2><a name="widgetparameter" id="widgetparameter"></a>Widget Parameter</h2>
-    <p>Neben der Widget Definition können hier noch Parameter angegeben werden,
-      die dann im Layout Editor für das Widget angezeigt werden.</p>
+    <p>Neben der Widget Definition können beim registrieren des Widgets noch
+      Parameter angegeben werden, die dann im Layout Editor für das Widget
+      angezeigt werden.</p>
     <p>Beispiele sind im <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
         Template</a> zu finden. Die Werte, die im Layout Editor für diese
       Parameter angegeben werden, stehen später in den renderHtml und
@@ -407,7 +419,7 @@
         <tr>
           <td>type</td>
           <td>String</td>
-          <td>STRING, NUMBER, KEY, SELECT, ARRAY, BOOLEAN, COLOR<br>
+          <td>STRING, NUMBER,FLOAT, KEY, SELECT, ARRAY, BOOLEAN, COLOR<br>
             Der Typ für den Parameter. Je nach Typ wird er dem Nutzer
             unterschiedlich angezeigt.<br>
             Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für
@@ -427,7 +439,10 @@
           <td>Array<br>
             (nur für type SELECT)</td>
           <td>Ein Array von Strings oder von Objekten {name:'xxx',value:'yyy'} -
-            diese Werte werden&nbsp; zur Auswahl angezeigt.</td>
+            diese Werte werden&nbsp; zur Auswahl angezeigt.<br>
+            Statt eines Arrays kann auch eine Funktion angegeben werden, die ein
+            Array zurückgibt - oder eine Funktion, die eine Promise zurückgibt,
+            deren resolve Funktion dann das Array liefert.</td>
         </tr>
       </tbody>
     </table>

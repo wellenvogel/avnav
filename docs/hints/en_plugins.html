@@ -75,8 +75,8 @@
         - integrate <a href="https://mapproxy.org/">MapProxy</a> to access and
         download from various online chart sources</li>
       <li><a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Obp-RC-Remote</a>
-        - plugin using the IR <a href="https://www.segeln-forum.de/board194-boot-technik/board195-open-boat-projects-org/78328-fernbedienung-f%C3%BCr-den-raspberry/">Remote</a>
-        from <a href="https://www.segeln-forum.de/user/19350-chrhartz">Christian</a></li>
+        - plugin using the IR <a href="https://www.segeln-forum.de/thread/78328-fernbedienung-f%C3%BCr-den-raspberry/?postID=2237852#post2237852">Remote</a>
+        from <a href="https://www.segeln-forum.de/cms/user/19350-chrhartz/">Christian</a></li>
       <li><a href="https://github.com/kdschmidt1/Sail_Instrument">Sail-Instrument-Plugin</a>
         - decoding and computation of course and wind data, Sail Instrument</li>
       <li><a href="https://gitlab.strukturpunkt.de/kfr/avnav-rudder-angel">rudder-angle</a>
@@ -98,7 +98,7 @@
     <p>The diagram provides a rough overview of the AvNav server's internal
       structure together with the points (interfaces) where plugins can
       interact.</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Point</td>
@@ -183,10 +183,11 @@ def pluginInfo(cls):<br>  return {
     </ol>
     <p>You can provide parameters for the plugin in <a href="configfile.html#plugins">avnav_server.xml.</a>
       They can be read at the API using getConfigValue.</p>
-      <a name="PluginAPI"></a><h3>Plugin API</h3>
+    <a name="PluginAPI"></a>
+    <h3>Plugin API</h3>
     <p>The <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
       provides the following functions:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Function</td>
@@ -238,17 +239,14 @@ def pluginInfo(cls):<br>  return {
           <td>You can register a <a href="../userdoc/addonconfigpage.html">user
               app</a> as a plugin. You need an URL and an icon file. The icon
             file should be located in the plugin directory. You can use $HOST
-            inside the URL. It will be replaced by the AvNav server's address.
-            Example in the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
-              plugin</a>.</td>
+            inside the URL. It will be replaced by the AvNav server's address. </td>
         </tr>
         <tr>
           <td>registerLayout</td>
           <td>If the plugin provides its own widgets it could make sense to
             provide a layout for the user to select. Just save the layout in the
             plugin directory after creating it with the <a href="layouts.html">layout
-              editor</a>. Example within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
-              plugin</a>.</td>
+              editor</a>. </td>
         </tr>
         <tr>
           <td>registerSettingsFile<br>
