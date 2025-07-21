@@ -27,7 +27,7 @@
       (avnav-ocharts). Die Umwandlung erfolgt dabei im laufenden Betrieb immer
       dann, wenn die Karten dargestellt werden sollen (teilweise initial in
       einen cache). Damit kann mit diesen Karten weitgehend normal gearbeitet
-      werden ohne dass man sich um diesen Prozess kümmern muss.</p>
+      werden, ohne dass man sich um diesen Prozess kümmern muss.</p>
     <p>Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
       betrifft auch die Installation (die Karten können nicht über die normale <a
         href="../userdoc/downloadpage.html">Download-Seite</a> hochgeladen
@@ -49,8 +49,8 @@
     <p>Um bei ocharts Karten kaufen zu können, muss <a href="https://o-charts.org/shop/de/autenticacion?back=my-account">dort</a>
       zunächst ein Konto angelegt werden.</p>
     <p>Anschliessend muss man seine Systeme, auf denen man die Karten nutzen
-      möchte <a href="https://o-charts.org/shop/de/module/occharts/occharts">auf
-        der Seite von o-charts</a> registrieren. AvNav benutzt dabei den <a href="https://manuals.o-charts.org/oesenc_de_DE.html">"Offline"
+      möchte <a href="https://o-charts.org/shop/de/module/occharts/occhartsOesu">auf
+        der Seite von o-charts</a> registrieren. AvNav benutzt dabei den <a href="https://o-charts.org/manuals/offline.php?lng=de">"Offline"
         Prozess</a> . </p>
     <p>Dieser besteht aus den folgenden Schritten:</p>
     <ol>
@@ -139,9 +139,9 @@
     <p>Nun sind die Karten verfügbar und können genutzt werden.<br>
       Unter dem Tab Status kann man etwas mehr Details erhalten.</p>
     <img src="ocharts-status-filling.png" alt="" class="fimage">
-    <p>Im Bild ist zu sehen, das nach dem Hochladen jetzt automatisch bereits
+    <p>Im Bild ist zu sehen, dass nach dem Hochladen jetzt automatisch bereits
       eine Erzeugung von Kartenkacheln angelaufen ist ("Cache Prefill"). Das
-      sorgt dafür, das die Verzögerungen, die sonst bei der Nutzung durch die
+      sorgt dafür, dass die Verzögerungen, die sonst bei der Nutzung durch die
       begrenzten Resourcen des Raspberry Pi entstehen können, verringert werden.
       Dazu wird nach einem bestimmten Verfahren ein Teil der Kacheln im Bereich
       des Kartensatzes vorab erzeugt und in einem Cache File gespeichert.</p>
@@ -175,7 +175,7 @@
       angeklickt wird.</p>
     <p>Mit Cancel können die Änderungen zurückgenommen werden, Defaults setzt
       die Einstellungen auf Default-Werte. Die Parameter entsprechen weitgehend
-      den bei <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
+      den bei <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:manual_basic:set_options:charts:vector_display">OpenCPN
         vorhandenen Settings</a>.</p>
     <p>Die folgende Tabelle listet die Einstellungen.</p>
     <table border="1" width="100%">
@@ -286,9 +286,9 @@
         <tr>
           <td>OverZoom</td>
           <td>Anzahl der Zoom Stufen, die eine niedriger aufgelöste Karte
-            vergrößert wird,wenn es keine besser aufgelöste Karte gibt.<br>
-            <b>Hinweis</b>: Scale,UnderZoom und OverZoom bestimmen massgeblich,
-            wie aufwendig der Render-Vorgang ist, d.h. wieviele Karten an der
+            vergrößert wird, wenn es keine besser aufgelöste Karte gibt.<br>
+            <b>Hinweis</b>: Scale, UnderZoom und OverZoom bestimmen massgeblich,
+            wie aufwändig der Render-Vorgang ist, d.h. wieviele Karten an der
             Erzeugung einer Kachel beteiligt werden müssen. Kleinere Werte
             führen zu weniger Karten (schneller) können aber in bestimmten
             Bereichen zu weissen Flächen zwischen Karten-Teilen führen. Die
@@ -324,9 +324,8 @@
       vom plugin) gibt es eine Information zu den Objekt Eigenschaften bei Klick
       auf die Karte.</p>
     <img src="FeatureInfo-OCharts1.png" alt="" class="fimage">
-    <p>Es wird in dieser Darstellung zunächst die komprimierte Information zu
-      einem Objekt angezeigt. Diese ist jedoch nur für Lichter, Tonnen und
-      einige andere ausgewählte Klassen so verfügbar.</p>
+    <p>Es wird zunächst eine Liste der an dieser Position verfügbaren 
+      Objekte angezeigt. Wählt man die Karte, erhält man (wie dargestellt) komprimierte Informationen dazu.</p>
     <p>Über "Info" können die Roh-Informationen der Karten angezeigt werden.</p>
     <p><img src="FeatureInfo-OCharts2.png" alt="" class="fimage"> </p>
     <br>
@@ -341,7 +340,7 @@
     </ul>
     <p>installiert werden. Für das Paket avnav-ocharts-provider ist mindestens
       die Version 20200606 nötig. Das Paket avnav-oesenc ist das oesenc-pi
-      plugin - allerdings so verpackt, das es nach
+      plugin - allerdings so verpackt, dass es nach
       /usr/lib/avnav/plugins/ocharts installiert wird, um Konflikte mit einer
       OpenCPN Installation zu vermeiden.</p>
     <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ocharts-plugin avnav-oesenc<br>sudo systemctl restart avnav</div>
