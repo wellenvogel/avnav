@@ -10,7 +10,7 @@
     <p>Diese Seite ist die im Normalfall für die Navigation genutzte
       Darstellung.<br>
       Dieses Bild zeigt einen gesetzten Wegpunkt (Marker locked) – das Boot ist
-      auf Kurs und der Kartenmittelpunkt wird permanent auf das Boot zentriert.</p>
+      auf Kurs, und der Kartenmittelpunkt wird permanent auf das Boot zentriert.</p>
     <div><img src="navi-routing-wp-ais.png" name="Grafik4" class="fimage"></div>
     <div><b><br>
       </b></div>
@@ -63,7 +63,7 @@
           <td>LockMarker<br>
           </td>
           <td><a href="#waypoint">Navigation starten</a>.<br>
-            Der aktuelle Kartenmittelpunkt (Kreuz) wird zum Ziel-Wegpunkt.<br>
+            Der aktuelle Kartenmittelpunkt (Fadenkreuz) wird zum Ziel-Wegpunkt.<br>
             Nur sichtbar, wenn momentan keine Navigation aktiv ist.<br>
           </td>
         </tr>
@@ -95,7 +95,7 @@
           </td>
           <td>CenterAction</td>
           <td>Die gleiche Aktion wie beim Klick auf die Karte (bezogen auf den
-            Kartenmittelpunkt - das Kreuz). Zeigt die <a href="#featurelist">Liste
+            Kartenmittelpunkt - das Fadenkreuz). Zeigt die <a href="#featurelist">Liste
               der Features</a> an dieser Position.</td>
         </tr>
         <tr>
@@ -178,7 +178,7 @@
     <p>Um das Schiff kann man bis zu 3 Kreise in entsprechenden Entfernungen
       einstellen um Abstände zu schätzen (Über Einstellungen-&gt;Navigation
       Display, Standard 300m und 1000m). </p>
-    <p>(ab 202011xx) In Vorausrichting ("Course Vector") kann man die Länge der
+    <p>(ab 202011xx) In Vorausrichtung ("Course Vector") kann man die Länge der
       Linie in den Settings (Navigation/Boat Course Vector Length) einstellen.
       Man stellt die Sekunden ein, die Länge berechnet sich dann aus der
       aktuellen Geschwindigkeit (default: 10 Minuten).&nbsp; Die Dicke der
@@ -309,7 +309,7 @@
       hinterlassen würden.</p>
     <h2 id="gekr-mmte-vektoren">Gekrümmte Vektoren</h2>
     <p>Aktiviert man <a href="settingspage.html">settings</a>-&gt;AIS-&gt;curved-vectors,
-      so wird eine in den AIS-Daten vorhandene rate-of-turn (ROT) ausgewertet
+      so wird eine eventuell in den AIS-Daten vorhandene rate-of-turn (ROT) ausgewertet
       und die Drehung des Targets bei der Darstellung der Vektoren
       berücksichtigt. Die TMVs und RMVs werden dann als gekrümmte Linien
       dargestellt. Die gekrümmten Vektoren zeigen eine potenzielle Kollision
@@ -317,8 +317,8 @@
     <p><img src="aisvectors-curved.png" alt="curved vectors" class="image"></p>
     <h3><a name="aiscomputations" id="aiscomputations"></a>Berechnung von CPA
       und Bewegungsvektoren</h3>
-    <p>Um CPA und Bewegungsvektoren zu berechnen benutzt AvNav die von einem AIS
-      Ziel empfangenen Daten (position,COG,SOG, HDG) und die Daten des eigenen
+    <p>Um CPA und Bewegungsvektoren zu berechnen, benutzt AvNav die von einem AIS
+      Ziel empfangenen Daten (position, COG, SOG) und die Daten des eigenen
       Bootes (position, COG, SOG).</p>
     <p>Vor Version 202507xx benutzte die Berechnung die Daten der AIS Ziele so,
       wie sie auf der Karten angezeigt werden und die Bootdaten von dem
@@ -327,11 +327,11 @@
     <ul>
       <li>Den Punkt, an dem sich die beiden Kurse treffen (unser Kurs und der
         Kurs vom AIS Ziel - beide COG)</li>
-      <li>Den Punkt an dem wir die minimale Distanz zum AIS Ziel haben - die
+      <li>Den Punkt, an dem wir die minimale Distanz zum AIS Ziel haben - die
         CPA.</li>
     </ul>
     <p>Es werden auch die Zeiten berechnet, um diese Punkte zu erreichen.
-      Negative Zeiten bedeuten dabei, das wir an diesem Punkt bereits vorbei
+      Negative Zeiten bedeuten dabei, dass wir an diesem Punkt bereits vorbei
       sind.<br>
       Abhängig davon wird entschieden, wie wir das Ziel passieren:</p>
     <ul>
@@ -343,7 +343,7 @@
         kleinsten Abstand bereits passiert</li>
     </ul>
     <p>Basierend auf der berechneten DCPA (minimale Entfernung am CPA Punkt) und
-      TCPA (Zeit bis zum CPA Punkt) setzt AvNav eine Warnung für das Ziel wenn
+      TCPA (Zeit bis zum CPA Punkt) setzt AvNav eine Warnung für das Ziel, wenn
       die Werte unter den konfigurierten Schwellwerten liegen.</p>
     <h4><a name="aispriority" id="aispriority"></a>Priorität</h4>
     <p>Um zu entscheiden, welches Ziel im AisTargetWidget angezeigt wird und für
@@ -353,7 +353,7 @@
     <ol>
       <li>Ziele mit Warnung (d.h. CPA &lt; warning CPA und TCPA &lt; warning
         TCPA aber &gt; 0)<br>
-        Diese werten nach TCPA sortiert, niedrigste TCPA ganz oben.</li>
+        Diese werden nach TCPA sortiert, niedrigste TCPA ganz oben.</li>
       <li>Andere Ziele sortiert nach kleinstem (dx)²+(dy)² .<br>
         Für TCPA &lt; 0 (also kleinster Abstand schon in der Vergangenheit)
         dx=dy=distance/warningDistance.<br>
@@ -363,25 +363,25 @@
       Navigation sortieren.</p>
     <p>Die bisherige (vor Version 202507xx) genutzte Berechnung hat einige
       Nachteile:</p>
-    <p>Ein AIS Ziel befindet sich normalerweise in Fahrt und AIS Nachrichten
+    <p>Ein AIS Ziel befindet sich normalerweise in Fahrt, und AIS Nachrichten
       werden nur in relativ großen Zeitabständen gesendet/empfangen. Ausserdem
       lädt der Anzeigeteil von AvNav (im Browser) die AIS Daten nur in
       bestimmten Abständen (settings/UpdateTimes/AIS - default 5 Sekunden).
       Damit werden die AIS Symbole auf der Karte an einer Position dargestellt,
       die sie einige Zeit in der Vergangenheit hatten. Und auch die darauf
       basierenden (CPA/Distance) Berechnungen sind damit nicht ganz korrekt -
-      sie nutzen die Boot position/course/speed zur Zeit der Berechnung und AIS
+      sie nutzen die Boot position/course/speed zur Zeit der Berechnung, und AIS
       Ziel position/course/speed von einem Zeitpunkt an dem die Nachricht vom
       Ziel versendet wurde.</p>
     <p>Wenn man eine typische Situation hat mit einem Ziel, dem man sich
-      annähert wird man eine ständige Änderung in den berechneten CPA Werten
+      annähert, wird man eine ständige Änderung in den berechneten CPA Werten
       erleben - auch wenn das Boot und das Ziel Kurs und Geschwindigkeit
       beibehalten.</p>
     <p>Ab Version 202507xx bietet AvNav die Option (aktiv als default,
-      settings/AIS/CPA from estimated) CPA und Bewegungsvektoren aus einer
+      settings/AIS/CPA from estimated), CPA und Bewegungsvektoren aus einer
       geschätzten Position des AIS Zieles zu berechnen. Diese Position ist die
-      gleiche, die als Schattensymbol auf der Karte dargestellt wird. Die
-      Berechnung nimmt dabei an, das das AIS Ziel Kurs und Geschwindigkeit
+      selbe, die als Schattensymbol auf der Karte dargestellt wird. Die
+      Berechnung nimmt dabei an, dass das AIS Ziel Kurs und Geschwindigkeit
       beibehält und berücksichtigt das Alter der AIS Information.</p>
     <p>Dieses Alter berücksichtigt die folgenden Zeiten:</p>
     <ol>
@@ -393,20 +393,20 @@
         update time - settings/UpdateTimes/AIS - 5s).</li>
     </ol>
     <p>Wenn man diese Berechnung nutzt, erhält man normalerweise einen
-      konstanten CPA wenn Boot course/speed und AIS Ziel course/speed gleich
+      konstanten CPA, wenn Boot course/speed und AIS Ziel course/speed gleich
       bleiben. In den meisten Fällen erhält man damit ein besseres Resultat.</p>
     <p>Es gibt allerdings 2 Probleme, die man damit nicht lösen kann:</p>
     <ol>
       <li>Wenn die Berechnung der Zeit zwischen dem Empfang der AIS Nachricht
         und der Abholung durch den Browser nicht korrekt ist (z.B. fehlende
-        Zeitsynchronisation zwischen AvNav und SignalK) wird man immer
-        fehlerhafte Resultate bekommen. Problematisch ist, das man das u.U.
+        Zeitsynchronisation zwischen AvNav und SignalK), wird man immer
+        fehlerhafte Resultate bekommen. Problematisch ist, dass man das u.U.
         nicht bemerkt, da der Fehler über die Zeit konstant bleibt.</li>
       <li>Wenn das AIS Ziel Kurs oder Geschwindigkeit verändert, ist die
         geschätzte Position falsch. Das ist allerdings im Normalfall nur ein
         temporäres Problem solange diese Änderung andauert.<br>
         Im Prinzip könnte man auch ROT (rate of turn) eines Zieles
-        berücksichtigen - allerdings ist es nicht sehr wahrscheinlich, das ROT
+        berücksichtigen - allerdings ist es nicht sehr wahrscheinlich, dass ROT
         über eine längere Zeit konstant ist - daher wird das nicht benutzt.</li>
     </ol>
     <p>Da beide Berechnungen ihre Limitierungen haben, kann der Nutzer am Ende
@@ -420,7 +420,7 @@
     <h2>Anzeigen (Widgets)</h2>
     <p>Links befinden sich (von oben nach unten):</p>
     <ul>
-      <li>Die aktuelle Zoom-Stufe der Karte (wenn Auto Zoom aktiv, ist in
+      <li>Die aktuelle Zoom-Stufe der Karte (bei aktiviertem Auto Zoom ist in
         Klammern die gewünschte)</li>
       <li>Das nächste AIS Ziel (ggf. rot bei Warnung) oder das ausgewählte AIS
         Ziel (gelb)</li>
@@ -428,7 +428,7 @@
     </ul>
     <p>Die Darstellung des nächsten AIS Zieles (geringste momentane Entfernung)
       färbt sich rot, wenn eine CPA von 500m (einstellbar) unterschritten wird.
-      Gelb bedeuted, dass nicht das nächste Ziel, sondern ein separat
+      Gelb bedeutet, dass nicht das nächste Ziel, sondern ein separat
       ausgewähltes Ziel (siehe unten AIS) angezeigt wird. Ein Klick auf diese
       Fläche oder ein AIS Ziel in der Feature Liste (nach Klick auf die Karte) <a
         href="#aisinfo">AIS Info </a> .</p>
@@ -587,7 +587,7 @@
       <li>AIS Targets</li>
       <li>die aktuelle Route</li>
       <li>der aktuelle track</li>
-      <li>die aktuelle Meßlinie</li>
+      <li>die aktuelle Messlinie</li>
       <li>das Boot</li>
       <li>ein (oder mehrere) Overlays</li>
       <li>die aktuelle Karte</li>
@@ -645,16 +645,16 @@
         </tr>
       </tbody>
     </table>
-    <h3>Vector Karten</h3>
+    <h3>Vektor Karten</h3>
     <p><img src="navpage-featureinfo-ocharts.png" alt="" class="fimage"></p>
-    <p>Wenn es ein wichtiges Objekt an der Position gibt (Tonne, Licht) wird
+    <p>Wenn es ein wichtiges Objekt an der Position gibt (Tonne, Licht), wird
       eine Zusammenfassung angezeigt. Mit "Info" bekommt man eine detaillierte
       Auflistung der Kartenobjekte.</p>
     <h3>Aktueller Track</h3>
     <p><img src="navpage-featureinfo-track2.png" alt="" class="fimage"></p>
-    <p>Wenn man in die Nähe des altuellen Tracks geklickt hat und dieser in der
+    <p>Wenn man in die Nähe des aktuellen Tracks geklickt hat, und dieser in der
       Feature Liste enthalten ist, können wir die Feature Info für ihn bekommen.<br>
-      Die verfügbarne Aktionen:</p>
+      Die verfügbaren Aktionen:</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -702,7 +702,7 @@
       </tbody>
     </table>
     <h2>Aktuelle Route</h2>
-    <p>Wenn wir auf einen Punkt der aktuellen Route klicken wird sie in der
+    <p>Wenn wir auf einen Punkt der aktuellen Route klicken, wird sie in der
       Feature Liste angezeigt. Mit Klick darauf bekommen wir einen Route Feature
       Info Dialog.</p>
     <p><img src="navpage-featureinfo-route.png" alt="" class="fimage"></p>
@@ -748,7 +748,7 @@
       auf die Boot-Position gelockt ist.</p>
     <p><img src="navpage-measure1.png" alt="" class="fimage"></p>
     <p>Mit Klick auf den "Measure" button wird auf der aktuellen Position ein
-      Icon plaziert (see usericons) und zum Kartenmittelpunkt wird eine Linie
+      Icon platziert (see usericons) und zum Kartenmittelpunkt wird eine Linie
       angezeigt mit der Richtung und dem Abstand vom Startpunkt. Auch im Center
       Widget werden die entsprechenden Daten angezeigt.</p>
     <p><img src="navpage-measure2.png" alt="" class="fimage"></p>
@@ -782,7 +782,7 @@
         </tr>
       </tbody>
     </table>
-    <p>Wenn es eine aktive Messung gibt und man in der Feature Liste auf
+    <p>Wenn es eine aktive Messung gibt, und man in der Feature Liste auf
       "measure" klickt, erhält man die Option, die Messung in eine Route
       umzuwandeln.</p>
     <p><img src="navpage-measure-toroute.png" alt=""> </p>
@@ -792,7 +792,7 @@
     <ol>
       <li>Unlock Boot (falls an)</li>
       <li>Stop Nav</li>
-      <li>Karte verschieben bis Mittelpunkt (Kreuz) auf gewünschter Position
+      <li>Karte verschieben bis Mittelpunkt (Fadenkreuz) auf gewünschter Position
         (Zoom nutzen)</li>
       <li>LockMarker </li>
       <li>Lock Boot </li>
@@ -809,10 +809,10 @@
     <h3>Peilungen</h3>
     <p>Wenn man einen Wegpunkt aktiv hat (Marker Button grün) und die Karte
       nicht auf das Schiff "gelockt" ist (Schiffsbutton nicht grün), wird beim
-      Bewegen der Karte ein Kreuz im Zentrum gezeigt, und links erscheint eine
+      Bewegen der Karte ein Fadenkreuz im Zentrum gezeigt, und links erscheint eine
       Anzeige des aktuellen Abstandes vom Marker bzw. Schiff zum
-      Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
-      auf Peilziel verschieben und Peilung ablesen.</p>
+      Kartenmittelpunkt. Damit kann man einfache Peilungen machen - das Peilziel auf den Mittelpunkt
+      verschieben und die Peilung ablesen.</p>
     Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
       alt="" class="inlineimage">zum <a href="editroutepage.html">Routen Editor</a>.
   </body>
