@@ -230,78 +230,81 @@ public class Decoder extends Worker {
     static class GSVStore{
        static class Sat{
            public int number;
-           boolean used=false;
+           public String talker="";
            long lastSeen;
-           public Sat(int number){
+           public Sat(int number,String talker){
                this.number=number;
+               this.talker=talker;
                this.lastSeen=SystemClock.uptimeMillis();
            }
            boolean valid(long validTime){
                return this.lastSeen >= validTime;
            }
-           boolean used(long validTime){
-               return this.used && this.valid(validTime);
-           }
-           void update(){
+
+           void update(String talker){
+               if (talker != null){
+                   this.talker=talker;
+               }
                this.lastSeen=SystemClock.uptimeMillis();
            }
-           void update(boolean used){
-               this.lastSeen=SystemClock.uptimeMillis();
-               this.used=used;
-           }
+
        }
        long expiryTime;
 
-        private HashMap<Integer,Sat> satellites=new HashMap<Integer,Sat>();
+        private final HashMap<Integer,Sat> satellites=new HashMap<Integer,Sat>();
+        private final HashMap<Integer,Sat> used=new HashMap<Integer,Sat>();
 
         public GSVStore(long expiryTime){
             this.expiryTime=expiryTime;
         }
 
         synchronized void cleanup(){
+            cleanupUsed();
+            cleanupSats();
+        }
+        synchronized void cleanupSats(){
             long validTime=SystemClock.uptimeMillis()-expiryTime;
             satellites.entrySet().removeIf(integerSatEntry -> !integerSatEntry.getValue().valid(validTime));
+        }
+        synchronized void cleanupUsed(){
+            long validTime=SystemClock.uptimeMillis()-expiryTime;
+            used.entrySet().removeIf(integerSatEntry -> !integerSatEntry.getValue().valid(validTime));
         }
         synchronized int getSatCount(){
             return satellites.size();
         }
         synchronized int getNumUsed(){
-            long validTime=SystemClock.uptimeMillis()-expiryTime;
-            int rt=0;
-            for (Sat s:satellites.values()){
-                if (s.used(validTime)) rt++;
-            }
-            return rt;
+            return used.size();
         }
         public synchronized void addSentence(GSVSentence gsv){
             for (SatelliteInfo info:gsv.getSatelliteInfo()){
                 int id=Integer.parseInt(info.getId());
                 Sat existing=satellites.get(id);
                 if (existing == null){
-                    existing=new Sat(id);
+                    existing=new Sat(id,gsv.getTalkerId().toString());
                     satellites.put(id,existing);
                 }
-                existing.update();
+                existing.update(gsv.getTalkerId().toString());
             }
-            cleanup();
+            cleanupSats();
         }
         public synchronized void addSentence(GSASentence gsa){
             for (String sid:gsa.getSatelliteIds()){
                 int id=Integer.parseInt(sid);
-                Sat existing=satellites.get(id);
+                Sat existing=used.get(id);
                 if (existing == null){
-                    existing=new Sat(id);
-                    satellites.put(id,existing);
+                    existing=new Sat(id,gsa.getTalkerId().toString());
+                    used.put(id,existing);
                 }
-                existing.update(true);
+                existing.update(gsa.getTalkerId().toString());
             }
-            cleanup();
+            cleanupUsed();
         }
 
     }
 
     static class GSVStores {
-        private HashMap<String,GSVStore> stores=new HashMap<>();
+        private final HashMap<String,GSVStore> stores=new HashMap<>();
         public synchronized GSVStore getStore(String k,long expiry) {
             GSVStore rt=stores.get(k);
             if (rt == null) {
@@ -596,7 +599,7 @@ public class Decoder extends Worker {
                                     AvnLog.dfs("%s: MTW sentence",getTypeName() );
                                     try {
                                         double waterTemp = d.getTemperature() + 273.15;
-                                        addNmeaData(this.K_VWTT, waterTemp, entry, posAge);
+                                        addNmeaData(K_VWTT, waterTemp, entry, posAge);
                                     }catch (DataNotAvailableException ignored){}
                                     continue;
                                 }
