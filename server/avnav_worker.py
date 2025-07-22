@@ -598,16 +598,21 @@ class AVNWorker(InfoHandler):
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
   def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
+    logInfo=None
+    rt=False
     with  self.__statusLock:
       existing=self.status.get(name)
       if existing:
         if existing.update(status,info,timeout=timeout):
-          AVNLog.info("%s",str(existing))
-          return True
+          logInfo=str(existing)
+          rt=True
       else:
         ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
         self.status[name]=ns
-        AVNLog.info("%s",str(ns))
+        logInfo=str(ns)
+    if logInfo is not None:
+      AVNLog.info("%s",logInfo)
+    return rt
   def refreshInfo(self,name,timeout=None):
     with self.__statusLock:
       existing=self.status.get(name)
