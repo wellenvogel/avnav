@@ -19,7 +19,7 @@
       or a <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
         RS485 CAN-HAT</a> ) or USB attached devices like the Actisene NGT-1. For
       simple adapters you need to ensure that they have 2 voltage supplies (3.3V
-      and 5V) to be usable for the raspberry pi. Many of the simple ones do not
+      and 5V) to be usable for the Raspberry Pi. Many of the simple ones do not
       have that!</p>
     <img title="Canboat" alt="" src="Canboat.png" width="800">
     <p>In the diagram the basic setup is shown as we provide it with the <a href="../install.html#Headless">headless
@@ -29,7 +29,7 @@
       typically you need to enable an overlay in /boot/config.txt. Appropriate
       entries are prepared to use the MCP2515 and only need to be uncommented.
       Potentially you have to adjust the clock frequency and the GPIO pin used
-      for the interrupt. Such can adapters are listed as network interface
+      for the interrupt. Such CAN adapters are listed as network interface
       (probably they require configuration, but they are preconfigured in the
       images).<br>
       The interface should be visible with</p>
@@ -75,7 +75,7 @@
     <p>The SocketReader at localhost:2599 reads NMEA0183 data from n2kd.</p>
     <p>Direct reading of NMEA2000 data from n2kd is handled by a plugin.
       Therefore an entry has to be created in AVNPluginHandler. The settings as
-      in above example activate the plugin.&nbsp; allowKeyOverwrite permits the
+      shown in the above example activate the plugin.&nbsp; allowKeyOverwrite permits the
       plugin to set date and time.&nbsp; autoSendRMC=30 will advise AvNav to
       send out a RMC record every one second (if no other RMC records are seen
       within 30 seconds). For further explanation of the plugin parameters refer
@@ -101,14 +101,14 @@
         be decoded from the NMEA data directly by AvNav.<br>
         Exception: NMEA2000 data that are received via canboat will have to be
         sent in parallel to SignalK.</li>
-      <li>NMEA data will be received by SignalK first and will be sent to via
-        HTTP-Json and websocket to AvNav.<br>
+      <li>NMEA data will be received by SignalK first and will be sent to AvNav via
+        HTTP-Json and websocket.<br>
         This flow is used by OpenPlotter e.g..</li>
     </ol>
     <p>For both variants AvNav can also send own data to SignalK. Currently
       those are routing data to the next way point (either as RMB/APB NMEA0183
       data or as SignalK delta update - see below).</p>
-    <p>Additionally Notifications (Alarms) can be fetched and sent from/to
+    <p>Additionally notifications (alarms) can be fetched and sent from/to
       SignalK.</p>
     <p>With the version 20220421 the SignalK integration is not any longer
       handled by a plugin but by a dedicated "handler" - AVNSignalKHandler. You
@@ -131,16 +131,16 @@
       updates via a websocket connection is used. The polling will ensure proper
       sync of data, the websocket stream will give fast updates.</p>
     <p>On the configured SocketWriter connection AvNav will also send its
-      routing data as RMB / APB Sätze towards SignalK.<br>
+      routing data as RMB / APB records towards SignalK.<br>
       Additionally you can enable the sending and receiving of SignalK
       notifications at the AVNSignalKHandler.</p>
-    <p>Data that is arriving directly at SignalK via other pathes will be
+    <p>Data that is arriving directly at SignalK via other paths will be
       available in AvNav (as described below gps.signalk...) -&nbsp; <b>but
         they cannot be used for AvNav's navigation functions</b>.</p>
     <p>If you would like to route your data to SignalK first you should have a
       look at the <a href="#flow2">other data flow</a>. </p>
     <p>An advantage of flow 1 (NMEA to AvNav first) is the fact that this would
-      still work even is SignalK is not available or not working for some
+      still work even if SignalK is not available or not working for some
       reason.</p>
     <h3><a name="flow2" id="flow2"></a>2. NMEA to SignalK first</h3>
     <p>With this flow (that is preconfigured at OpenPlotter from AvNavInstaller
@@ -181,7 +181,7 @@
       AvNav tries to address such mixed configurations with a "sourcePriority"
       at every connection. All NMEA connections have a default priority of 50
       compared to a default of 40 for The AVNSignalKHandler. This way data that
-      is decoded by AvNav itself will always win against data received from
+      is decoded by AvNav itself will always "win" against data received from
       SignalK (until you change the priorities).</p>
     <h3>Konfiguration</h3>
     <p>The AVNSignalKHandler has the following configuration.</p>
@@ -206,13 +206,13 @@
         </tr>
         <tr>
           <td>decodeData</td>
-          <td>If switched on the received data will be used for AvNav's
+          <td>If switched on, the received data will be used for AvNav's
             navigation functions. See <a href="#mapping">Mapping</a>.</td>
           <td>off (on at OpenPlotter)</td>
         </tr>
         <tr>
           <td>fetchAis</td>
-          <td>If switched on AIS data (/vessels/*) is fetched from SignalK every
+          <td>If switched on, AIS data (/vessels/*) is fetched from SignalK every
             10s (aisQueryPeriod) and stored in AvNav as AIS data.</td>
           <td>off (on at OpenPlotter)</td>
         </tr>
@@ -228,24 +228,24 @@
         </tr>
         <tr>
           <td>host</td>
-          <td>The SignalK server hostname/the IP address.</td>
+          <td>The SignalK server hostname/ IP address.</td>
           <td>localhost</td>
         </tr>
         <tr>
           <td>aisQueryPeriod</td>
-          <td>Intervall (in s) for fetching AIS data</td>
+          <td>Interval (in s) for fetching AIS data</td>
           <td>10</td>
         </tr>
         <tr>
           <td>period</td>
-          <td>Period in ms for HTTP-Json queries to SignalK. if the python
+          <td>Period in ms for HTTP-Json queries to SignalK. If the python
             websocket libraries are available (the default) this interval will
             be enlarged close to the expiry time of navigation data in AvNav.</td>
           <td>1000</td>
         </tr>
         <tr>
           <td>fetchCharts</td>
-          <td>Fetch informations about charts installed at SignalK. It requires
+          <td>Fetch informations about charts installed at SignalK. This requires
             the SignalK-chart-provider plugin to be installed.</td>
           <td>on</td>
         </tr>
@@ -256,28 +256,28 @@
         </tr>
         <tr>
           <td>chartProxyMode</td>
-          <td>If SignalK is running on a different computer then AvNav it could
-            happen that the Browser that displays AvNav cannot directly reach
+          <td>If SignalK is running on a different computer than AvNav, it may
+            happen, that the browser which displays AvNav cannot directly reach
             this computer. Therefore AvNav can proxy the chart requests to
             SignalK.<br>
             This creates some additional load on AvNav and can be switched off.
             Normally you can leave the default.<br>
             <i>sameHost</i>: only proxy if SignalK is running on a different
-            computer then AvNav<br>
+            computer than AvNav<br>
             <i>never</i>: no proxy at all (you can use this if the browser can
             directly reach SignalK at the address configured here)<br>
-            <i>always</i>: alsways proxy. Can be used if e.g. the SignalK port
-            cannot directly be reached from outside.</td>
+            <i>always</i>: always proxy. Can be used if e.g. the SignalK port
+            cannot be reached directly from outside.</td>
           <td>sameHost</td>
         </tr>
         <tr>
           <td>ignoreTimestamp</td>
           <td>Normally AvNav will consider the timestamp of SignalK data and
-            will ignore data that is to old (expiryPeriod in AVNConfig). A
+            will ignore data that is too old (expiryPeriod in AVNConfig). A
             potential time difference between SignalK and AvNav is considered.<br>
             Sometimes SignalK does not use it's own local time for those time
-            stamps but instead uses time stamps from the received data.
-            Especially when using simulation data those times can be in the past
+            stamps, but instead uses time stamps from the received data.
+            Especially when using simulation data those times may lie in the past
             and AvNav would ignore such data.<br>
             By setting this flag AvNav will ignore those time stamps and will
             use it's own local time instead. It will update the timestamp
@@ -299,7 +299,7 @@
           <td>The name of a SignalK user with write access at the SignalK
             server. This user must exist with the correct rights at SignalK.<br>
             Unfortunately SignalK has no interface to find out whether a
-            particular user is able to write certain pathes. Only for localhost
+            particular user is able to write certain paths. Only for localhost
             AvNav will check if the user has (in principle) write access.</td>
           <td>admin</td>
         </tr>
@@ -310,7 +310,7 @@
             the SignalK configuration is located at the default path
             $HOME/.signalk/security.json).<br>
             If you encounter an error in the status display at "authentication"
-            it could become necessary to set this password also for local access
+            it might become necessary to set this password also for local access
             (e.g. the config being located at a different location).<br>
             Remark: The password will be stored in clear text in
             avnav_server.xml.</td>
@@ -334,7 +334,7 @@
         <tr>
           <td>notifyWhiteList</td>
           <td>A comma separated list of SignalK notifications, that should be
-            received. The pathes are without the leading "notifications." e.g.:
+            received. The paths are without the leading "notifications." e.g.:
             navigation.arrivalCircleEntered,mob,fire,sinking.<br>
             If the list is empty all notifications will be received but still
             the notifyBlacklist is considered.</td>
@@ -368,7 +368,7 @@
         the code</a>).</p>
     <p>Remark: Courses/angles are stored in degrees inside AvNav whereas SignalK
       used rad. The mapping will convert between them. If there are multiple
-      SignalK pathes in a mapping the first available will be used.</p>
+      SignalK paths in a mapping the first available will be used.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -625,10 +625,10 @@
         </tr>
       </tbody>
     </table>
-    <p>If the AvNav routing mode is rhumbline all "courseGreatCircle" are
+    <p>If the AvNav routing mode is switched to rhumbline all "courseGreatCircle" are
       replaced with "courseRhumbline". The doubled sending of some values with
-      different pathes works around some issues on the signalK side (like <a href="https://github.com/SignalK/signalk-to-nmea2000/issues/94">https://github.com/SignalK/signalk-to-nmea2000/issues/94</a>).</p>
-    <p>For notifications there only a few mappings, other will be mapped to
+      different paths will work around some issues on the signalK side (like <a href="https://github.com/SignalK/signalk-to-nmea2000/issues/94">https://github.com/SignalK/signalk-to-nmea2000/issues/94</a>).</p>
+    <p>For notifications there are only a few mappings, other will be mapped to
       "sk:"+name in AvNav. Example: notifications.sinking will become
       sk:sinking.</p>
     <table style="width: 100%" border="1">
@@ -662,8 +662,8 @@
       </tbody>
     </table>
     <p>SignalK notifications without a mapping will be assigned to a category
-      based on their state. With the catgeory you can define in
-      AVNCommandHandler which command should be executed and which sound should
+      based on their state. Using the category in
+      AVNCommandHandler you can define  which command should be executed and which sound should
       be used.</p>
     <p>emergency -&gt; critical<br>
       normal -&gt; normal</p>

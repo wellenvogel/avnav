@@ -24,7 +24,7 @@
     <h2 class="western">Installation und Inbetriebnahme</h2>
     <p>AvNav gibt es in 2 Varianten:</p>
     <ol>
-      <li>Client-Server Variante.<br>
+      <li>Client-Server-Variante<br>
         Dabei wird der Server auf einem Linux- oder Windows-System installiert
         (z.B. einem Raspberry Pi). Als "Client" für die Bedienung dient ein
         beliebiger Browser z.B. auf einem Tablet.</li>
@@ -32,7 +32,7 @@
         Hier ist die gesamte Funktionalität in einer App gebündelt. Auch hier
         können weitere Geräte per Browser zusätzlich zugreifen.</li>
     </ol>
-    <h3>Client Server Variante</h3>
+    <h3>Client-Server-Variante</h3>
     <p>AvNav steht als <a href="install.html#Packages">Paket für verschiedene
         Linux-Distributionen</a> (Debian Pakete, Rpm) sowie als <a href="install.html#Windows">Installer
         für Windows</a> zur Verfügung.<br>
@@ -42,7 +42,7 @@
       Außerdem pflegen wir <a href="install.html#Headless">Images für den
         Raspberry Pi</a>. Eine ausführliche Beschreibung findet sich im Kapitel
       <a href="install.html">Installation</a>.</p>
-    <p>Nach der Installation und Start der App kann man sich mit dem Browser zu
+    <p>Nach Installation und Start der App kann man sich mit dem Browser zu
       AvNav verbinden. Dadurch startet die <a href="userdoc/index.html">WebApp</a>.<br>
       Wenn man unsere Images nutzt, erzeugt der Raspberry ein WLAN (Name und
       Passwort können angepasst werden). Für Details, wie man sich nach der
@@ -79,7 +79,7 @@
     <h2>NMEA-Daten</h2>
     <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export"
         width="600" border="0"> </p>
-    <h3>Client Server Variante</h3>
+    <h3>Client-Server-Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
       oder UDP empfangen werden können. Eine Multiplexer-Funktion erlaubt es,
@@ -167,9 +167,9 @@
       Desktop-System.</p>
     <p>Außerdem kann AvNav <a href="hints/ocharts.html">o-charts</a>- Karten
       verarbeiten, unter Android <a href="hints/ochartsng.html">mit der
-        avocharts app (ochartsng)</a>. Der O-Charts-Shop bietet Karten für
+        avocharts App (ochartsng)</a>. Der O-Charts-Shop bietet Karten für
       Open-Source-Software zu sehr günstigen Preisen an.</p>
-    <p>Mit dem <a href="hints/ochartsng.html">ochartsng</a> plugin kann AvNav
+    <p>Mit dem <a href="hints/ochartsng.html">ochartsng</a> Plugin kann AvNav
       auch freie S57 Karten anzeigen (nach Konvertierung) - z.b. -&nbsp; <a href="https://nauticalcharts.noaa.gov/charts/noaa-enc.html">NOAA</a>..</p>
     <p>Karten müssen in AvNav installiert werden, bevor sie genutzt werden
       können. Das kann auf der <a href="userdoc/downloadpage.html">Files/Download
@@ -221,21 +221,21 @@
       automatisches Weiterschalten zum nächsten Wegpunkt.</p>
     <p>Ab Version 20220819 kann AvNav zwei verschiedene Routing Modi nutzen<a name="RoutingMode"></a>:</p>
     <h3><a href="https://en.wikipedia.org/wiki/Great_circle">great circle</a></h3>
-    Hier wird eine Route so berechnet das man den kürzesten Weg zwischen Start
-    und Ziel hat. Der Nachteil daran ist, das sich der Kurs im Verlauf der Route
+    Hier wird eine Route so berechnet, dass man den kürzesten Weg zwischen Start
+    und Ziel hat. Der Nachteil daran ist, dass sich der Kurs im Verlauf der Route
     permanent ändert. Eine solche Route ist in der Kartendarstellung keine
-    Strecke sondern eine Kurve.<br>
+    Strecke, sondern eine Kurve.<br>
     In älteren Versionen hat AvNav immer great circle Routen berechnet, diese
     aber (fälschlich) als Strecken dargestellt.<br>
     Für kürzere Distanzen (&lt; 100nm) spielt das aber praktisch keine Rolle.
     <h3><a href="https://en.wikipedia.org/wiki/Rhumb_line">rhumb line</a></h3>
-    Hier wird die Route so berechnet, das ein konstanter Kurs gesteuert werden
+    Hier wird die Route so berechnet, dass ein konstanter Kurs gesteuert werden
     kann. Die Kartendarstellung ist eine Strecke.
     <p>Die Umschaltung erfolgt im Router auf der&nbsp;<img src="viewerimages/icons-new/status.svg"
         alt="" class="inlineimage"> <a href="userdoc/settingspage.html">Server/Status
         Seite</a>. Für das&nbsp;<img src="viewerimages/icons-new/straighten.svg"
-        alt="" class="inlineimage"> Mess-Tool kann in den Einstellungen der Web
-      App (unter Navigation/Measure Display RhumbLine) der Modus separat
+        alt="" class="inlineimage"> Mess-Tool kann der Modus in den Einstellungen der Web
+      App (unter Navigation/ Measure Display RhumbLine) separat
       eingestellt werden. Damit können leicht die beiden Wege verglichen werden.</p>
     <h3><a name="nextwp"></a>Wegepunkt Weiterschaltung</h3>
     <p>Für die automatische Weiterschaltung zum nächsten Wegepunkt in einer
@@ -249,14 +249,13 @@
           alt="" class="inlineimage"> <a href="userdoc/settingspage.html">Server/Status
           Seite</a>: nextWpMode) - neu ab 20220819<br>
         "late" (der default und in älteren Versionen): Die Entfernung zum
-        aktuellen Wegepunkt nimmt nicht mehr ab aber die Entfernung zum nächsten
-        Wegepunkt nimmt ab<br>
+        aktuellen Wegepunkt nimmt nicht mehr ab, aber die Entfernung zum nächsten
+        Wegepunkt veringert sich.<br>
         "90": Der Wegepunkt liegt "querab" (genauer: Das Boot hat eine Linie +/-
         90° zum originalen Wegepunktkurs überquert)<br>
-        "early": Die Weiterschaltung erfolgt eine (einstellbare) Zeit nach dem
-        Wegepunkt-Alarm ohne weitere Bedingungen</li>
+        "early": Nach dem Wegepunkt-Alarm erfolgt die Weiterschaltung nach einer (einstellbaren) Zeit ohne weitere Bedingungen.</li>
     </ol>
-    Es ist wichtig zu beachten, das die Weiterschaltung nur erfolgt, wenn beide
+    Es ist wichtig zu beachten, dass die Weiterschaltung nur erfolgt, wenn beide
     Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist,
     kann man jederzeit durch Klick auf die Widgets links unten die
     Wegepunkt-Buttons anzeigen und den <img src="viewerimages/icons-new/nextwp.svg"
@@ -288,8 +287,8 @@
       <li>eine Ankerwache<br>
         Sie kann auf den <a href="userdoc/dashboardpage.html#anchorwatch">Dashboard-Seiten</a>
         aktiviert werden. Abhängig vom Layout werden die Anzeigen angepasst. Bei
-        Verlassen des vorgegebenen Bereiches (oder bei Ausfall des GPS-Signals)
-        erfolgt eine Alarmierung</li>
+        Verlassen des vorgegebenen Bereichs (oder bei Ausfall des GPS-Signals)
+        erfolgt eine Alarmierung.</li>
       <li>bei Erreichen des nächsten Wegepunktes</li>
       <li>"Mensch über Bord" (MOB)<br>
         Für das Auslösen eines MOB-Alarms ist in allen Ansichten von AvNav eine
@@ -314,15 +313,15 @@
       einen Nachtmodus <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">
       geschaltet werden. Dann sind alle Anzeigen entsprechend angepasst.</p>
     <h2>Fernsteuerung</h2>
-    <p>AvNav kann die Anzeige Funktionen auf einem Gerät von einem anderen Gerät
+    <p>AvNav kann die Anzeigefunktionen auf einem Gerät von einem anderen Gerät
       oder vom Server aus steuern. Für Details siehe die <a href="hints/RemoteControl.html">Beschreibung</a>
       dazu.</p>
     <h2>Anpassung</h2>
     <p>AvNav kann in unterschiedlicher Weise an eigene Bedürfnisse angepasst
       werden. Da die gesamte Darstellung im Browser abläuft, kann man das
       Aussehen mit <a href="hints/usercss.html">CSS</a> anpassen.</p>
-    <p>Die Konfiguration des Servers arfolgt über die Datei <a href="hints/configfile.html">avnav_server.xml</a>.
-      Eine Änderung sollte im Normalfall jedoch nicht in der Datei direkt
+    <p>Die Konfiguration des Servers erfolgt über die Datei <a href="hints/configfile.html">avnav_server.xml</a>.
+      Eine Änderung sollte im Normalfall jedoch nicht direkt in der Datei
       erfolgen, sondern über die Bearbeitungsmöglichkeiten auf der <a href="userdoc/statuspage.html">Server/Status-Seite</a>.</p>
     <p>Neben der bereits beschriebenen Anpassung der Layouts im <a href="hints/layouts.html">Layout-Editor</a>
       können ohne größeren Aufwand eigene Anzeigen mit ein wenig <a href="hints/userjs.html">Java
