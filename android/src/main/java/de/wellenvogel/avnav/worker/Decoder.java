@@ -227,92 +227,116 @@ public class Decoder extends Worker {
         }
     }
 
-    static class GSVStore{
-       static class Sat{
-           public int number;
-           boolean used=false;
-           long lastSeen;
-           public Sat(int number){
-               this.number=number;
-               this.lastSeen=SystemClock.uptimeMillis();
-           }
-           boolean valid(long validTime){
-               return this.lastSeen >= validTime;
-           }
-           boolean used(long validTime){
-               return this.used && this.valid(validTime);
-           }
-           void update(){
-               this.lastSeen=SystemClock.uptimeMillis();
-           }
-           void update(boolean used){
-               this.lastSeen=SystemClock.uptimeMillis();
-               this.used=used;
-           }
-       }
-       long expiryTime;
+    static class GSVStore {
+        static class Sat {
+            public int number;
+            public String talker = "";
+            long lastSeen;
 
-        private HashMap<Integer,Sat> satellites=new HashMap<Integer,Sat>();
+            public Sat(int number, String talker) {
+                this.number = number;
+                this.talker = talker;
+                this.lastSeen = SystemClock.uptimeMillis();
+            }
 
-        public GSVStore(long expiryTime){
-            this.expiryTime=expiryTime;
+            boolean valid(long validTime) {
+                return this.lastSeen >= validTime;
+            }
+
+            void update(String talker) {
+                if (talker != null) {
+                    this.talker = talker;
+                }
+                this.lastSeen = SystemClock.uptimeMillis();
+            }
+
         }
 
-        synchronized void cleanup(){
-            long validTime=SystemClock.uptimeMillis()-expiryTime;
+        long expiryTime;
+        int priority;
+        String source;
+        private final HashMap<Integer, Sat> satellites = new HashMap<Integer, Sat>();
+        private final HashMap<Integer, Sat> used = new HashMap<Integer, Sat>();
+
+        public GSVStore(String source,long expiryTime,int priority) {
+            this.expiryTime = expiryTime;
+            this.priority=priority;
+            this.source=source;
+        }
+        synchronized void cleanup() {
+            cleanupUsed();
+            cleanupSats();
+        }
+
+        synchronized void cleanupSats() {
+            long validTime = SystemClock.uptimeMillis() - expiryTime;
             satellites.entrySet().removeIf(integerSatEntry -> !integerSatEntry.getValue().valid(validTime));
         }
-        synchronized int getSatCount(){
+
+        synchronized void cleanupUsed() {
+            long validTime = SystemClock.uptimeMillis() - expiryTime;
+            used.entrySet().removeIf(integerSatEntry -> !integerSatEntry.getValue().valid(validTime));
+        }
+
+        synchronized int getSatCount() {
             return satellites.size();
         }
-        synchronized int getNumUsed(){
-            long validTime=SystemClock.uptimeMillis()-expiryTime;
-            int rt=0;
-            for (Sat s:satellites.values()){
-                if (s.used(validTime)) rt++;
-            }
-            return rt;
+
+        synchronized int getNumUsed() {
+            return used.size();
         }
-        public synchronized void addSentence(GSVSentence gsv){
-            for (SatelliteInfo info:gsv.getSatelliteInfo()){
-                int id=Integer.parseInt(info.getId());
-                Sat existing=satellites.get(id);
-                if (existing == null){
-                    existing=new Sat(id);
-                    satellites.put(id,existing);
+
+        public synchronized void addSentence(GSVSentence gsv) {
+            for (SatelliteInfo info : gsv.getSatelliteInfo()) {
+                int id = Integer.parseInt(info.getId());
+                Sat existing = satellites.get(id);
+                if (existing == null) {
+                    existing = new Sat(id, gsv.getTalkerId().toString());
+                    satellites.put(id, existing);
                 }
-                existing.update();
+                existing.update(gsv.getTalkerId().toString());
             }
-            cleanup();
+            cleanupSats();
         }
-        public synchronized void addSentence(GSASentence gsa){
-            for (String sid:gsa.getSatelliteIds()){
-                int id=Integer.parseInt(sid);
-                Sat existing=satellites.get(id);
-                if (existing == null){
-                    existing=new Sat(id);
-                    satellites.put(id,existing);
+
+        public synchronized void addSentence(GSASentence gsa) {
+            for (String sid : gsa.getSatelliteIds()) {
+                int id = Integer.parseInt(sid);
+                Sat existing = used.get(id);
+                if (existing == null) {
+                    existing = new Sat(id, gsa.getTalkerId().toString());
+                    used.put(id, existing);
                 }
-                existing.update(true);
+                existing.update(gsa.getTalkerId().toString());
             }
-            cleanup();
+            cleanupUsed();
         }
 
     }
 
     static class GSVStores {
-        private HashMap<String,GSVStore> stores=new HashMap<>();
-        public synchronized GSVStore getStore(String k,long expiry) {
+        private final HashMap<String,GSVStore> stores=new HashMap<>();
+        public synchronized GSVStore getStore(String k,long expiry,int priority) {
             GSVStore rt=stores.get(k);
             if (rt == null) {
-                rt=new GSVStore(expiry);
+                rt=new GSVStore(k,expiry,priority);
                 stores.put(k,rt);
             }
             rt.expiryTime=expiry;
+            rt.priority=priority;
             return rt;
         }
         public synchronized GSVStore getStore(String k) {
             return stores.get(k);
+        }
+        public synchronized GSVStore getHPStore() {
+            GSVStore found=null;
+            for (GSVStore s:stores.values()){
+                if (found == null || found.priority < s.priority){
+                    found=s;
+                }
+            }
+            return found;
         }
 
         public synchronized void cleanup(boolean force) {
@@ -490,7 +514,7 @@ public class Decoder extends Worker {
                                 line = correctTalker(line);
                                 Sentence s = factory.createParser(line);
                                 if (s instanceof GSVSentence) {
-                                    GSVStore store=gsvStores.getStore(entry.source,posAge);
+                                    GSVStore store=gsvStores.getStore(entry.source,posAge,entry.priority);
                                     GSVSentence gsv = (GSVSentence) s;
                                     store.addSentence(gsv);
                                     AvnLog.dfs("%s: GSV sentence (%d/%d) numSat=%d" ,
@@ -499,7 +523,7 @@ public class Decoder extends Worker {
                                     continue;
                                 }
                                 if (s instanceof GSASentence) {
-                                    GSVStore store=gsvStores.getStore(entry.source,posAge);
+                                    GSVStore store=gsvStores.getStore(entry.source,posAge,entry.priority);
                                     store.addSentence((GSASentence) s);
                                     continue;
                                 }
@@ -596,7 +620,7 @@ public class Decoder extends Worker {
                                     AvnLog.dfs("%s: MTW sentence",getTypeName() );
                                     try {
                                         double waterTemp = d.getTemperature() + 273.15;
-                                        addNmeaData(this.K_VWTT, waterTemp, entry, posAge);
+                                        addNmeaData(K_VWTT, waterTemp, entry, posAge);
                                     }catch (DataNotAvailableException ignored){}
                                     continue;
                                 }
@@ -860,10 +884,13 @@ public class Decoder extends Worker {
         if (pSource != null){
             gsv=gsvStores.getStore(pSource);
         }
+        else{
+            gsv=gsvStores.getHPStore();
+        }
         SatStatus rt=null;
         if (gsv != null){
             gsv.cleanup();
-            rt=new SatStatus(gsv.getSatCount(),gsv.getNumUsed(),fetcher.hasData(),pSource,posValid);
+            rt=new SatStatus(gsv.getSatCount(),gsv.getNumUsed(),fetcher.hasData(),gsv.source,posValid);
         }
         else {
             rt = new SatStatus(0, 0, fetcher.hasData(),pSource,posValid);

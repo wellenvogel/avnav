@@ -252,7 +252,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
                 List<String> rt = Creator.getAvailableUsbDevices(ctx);
-                return filterByClaims(CLAIM_USB,rt,false);
+                return filterByClaims(CLAIM_USB,rt,true);
             }
         };
         parameterDescriptions.insertParams(deviceSelect,BAUDRATE_PARAMETER,FLOW_CONTROL);

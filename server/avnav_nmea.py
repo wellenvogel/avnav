@@ -52,46 +52,57 @@ class Key(object):
     return AVNStore.BASE_KEY_GPS+"."+self.key
 
 class Sat:
-  def __init__(self,nr,used=False):
+  def __init__(self,nr,talker):
     self.nr=nr
-    self.used=used
+    self.talker=talker
     self.ts=time.monotonic()
   def valid(self,validTime):
     return self.ts >= validTime
-  def update(self,used=None):
-    if used is not None:
-      self.used=used
+  def update(self,talker=None):
+    if talker is not None:
+      self.talker=talker
     self.ts=time.monotonic()
-  def isUsed(self,validTime):
-    return self.used and self.valid(validTime)
+
 
 class SatList:
   def __init__(self,expiryTime):
     self.lock=threading.Lock()
     self.store={}
+    self.usedStore={}
     self.expiryTime=expiryTime
-  def cleanup(self):
+  def cleanup(self,used=None):
     validTime=time.monotonic()-self.expiryTime
     with self.lock:
-      self.store={k:self.store[k] for k in self.store if self.store[k].valid(validTime)}
-  def add(self,numbers,used=None):
+      if used is None or used == False:
+        self.store={k:self.store[k] for k in self.store if self.store[k].valid(validTime)}
+      if used is None or used:
+        self.usedStore={k:self.usedStore[k] for k in self.usedStore if self.usedStore[k].valid(validTime)}
+  def add(self,numbers,talker,used=False):
     if type(numbers) is not list:
       numbers=[numbers]
+    store=self.store if not used else self.usedStore
+    num=0
     with self.lock:
       for number in numbers:
         if number:
           number=int(number)
-          existing=self.store.get(number)
+          existing=store.get(number)
           if existing is None:
-            existing=Sat(number)
-            self.store[number]=existing
-          existing.update(used)
-    self.cleanup()
+            existing=Sat(number,talker)
+            store[number]=existing
+          existing.update(talker)
+          num+=1
+    self.cleanup(used)
+    return num
+  def getUsed(self):
+    validTime=time.monotonic()-self.expiryTime
+    with self.lock:
+      return sum(1 for k,v in self.usedStore.items() if v.valid(validTime))
   def getNum(self):
     validTime=time.monotonic()-self.expiryTime
     with self.lock:
-      used=sum(1 for k,v in self.store.items() if v.isUsed(validTime))
-      return (len(self.store),used)
+      return sum(1 for k,v in self.store.items() if v.valid(validTime))
+
 
 
 
@@ -362,6 +373,7 @@ class NMEAParser(object):
       return self.ais_packet_scanner(data,source=source,sourcePriority=sourcePriority,timestamp=timestamp)
 
     tag=darray[0][3:]
+    talker=darray[0][1:3]
     rt={}
     #currently we only take the time from RMC
     #as only with this one we have really a valid complete timestamp
@@ -371,14 +383,15 @@ class NMEAParser(object):
         if mode >= 1 and all(darray[i] for i in (2,3,4,5)):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[2],darray[3])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[4],darray[5])
-        self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
+        self.addToNavData(rt,source=source,record=tag,timestamp=timestamp,priority=basePriority)
         return True
       if tag == 'GSA':
         store=self._getSatStore(source)
-        store.add(darray[3:15],True)
-        (existing,used)=store.getNum()
+        an=store.add(darray[3:15],talker,True)
+        used=store.getUsed()
+        AVNLog.debug("GSA: added %d used %d",an,used)
         rt[self.K_SATUSED.key]=used
-        self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
+        self.addToNavData(rt,source=source,record=tag,timestamp=timestamp,priority=basePriority)
         return True
       if tag=='GSV':
         store=self._getSatStore(source)
@@ -388,9 +401,8 @@ class NMEAParser(object):
           if darray[start]:
             numbers.append(darray[start])
           start+=4
-        store.add(numbers)
-        (existing,used)=store.getNum()
-        rt[self.K_SATVIEW.key]=existing
+        store.add(numbers,talker,False)
+        rt[self.K_SATVIEW.key]=store.getNum()
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag=='GLL':
