@@ -2,7 +2,7 @@
 <html lang="de">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <title>AvnNav Karten Konvertieren</title>
+    <title>AvnNav Karten und Overlays</title>
     <meta content="Andreas Vogel" name="author">
     <meta content="AvNav Raspberry" name="keywords">
     <script type="text/javascript">
@@ -27,15 +27,15 @@
       kann man sich wie einen Papierzylinder vorstellen, der senkrecht steht und
       am Äquator um die Erde gewickelt wird). Jeder Punkt mit seinen Koordinaten
       (Länge/Breite) wird dann auf diesen Zylinder projiziert. Wie man das
-      macht, welche Einheiten in der Projektion verwendet werden, und ob die
+      macht, welche Einheiten in der Projektion verwendet werden und ob die
       Erde als Kugel oder Ellipsoid mit verschiedenen Parametern modelliert
       wird, beschreiben die verschiedenen Projektionen. Die WebApp benutzt die
-      sogenannte Google-Mercator Projektion (die Erde wird dabei als Kugel
-      betrachtet) - mit dem EPSG code 900913. Die Einheiten auf dem Papier sind
+      sogenannte Google-Mercator-Projektion (die Erde wird dabei als Kugel
+      betrachtet) - mit dem EPSG Code 900913. Die Einheiten auf dem Papier sind
       dabei Meter (die man natürlich in die entsprechenden Koordinaten umrechnen
       kann). Karten in einem anderen Format (z.B. WGS84 – Erde als Ellipsoid,
       immer in Grad) müssen daher ggf. reprojiziert werden. </p>
-    <p>Die gesamte Projektionsfläche wird bei der Google Projektion in Kacheln
+    <p>Die gesamte Projektionsfläche wird bei der Google-Projektion in Kacheln
       unterteilt. Der Zoom Level gibt an, in wieviele Kacheln die Fläche
       unterteilt wird. Zoom Level 0 bedeutet: die gesamte Erde (von -85° bis
       +85° Breite – darüber ist die Projektion nicht definiert) auf einer Kachel
@@ -54,7 +54,7 @@
       Level 18 oder 19 (60cm/pixel bzw. 30cm/pixel). Um damit arbeiten zu
       können, werden die verschiedenen Detailgrade dann in Layern (Schichten)
       übereinandergelegt. Wenn es für ein Gebiet einen Layer mit besserem
-      (grösserem) Zoom Level gibt, wird dieser angezeigt - wenn nicht, der mit
+      (größerem) Zoom Level gibt, wird dieser angezeigt - wenn nicht, der mit
       der geringeren Auflösung (ggf. noch vergrössert). Um unsere Anzeigegeräte
       nicht zu überlasten, kann man typisch mit 3-5 Kartenlayern arbeiten (je
       nach Gerät...).</p>
@@ -63,17 +63,17 @@
     <p>AvNav kann direkt Karten verarbeiten, die im Format <a href="http://www.cgtk.co.uk/gemf">gemf</a>
       oder <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
       vorliegen. Diese Formate sind sogenannte Raster Formate, sie enthalten die
-      fertigen Kartenkacheln. Ausserdem können auch online Kartendienste
+      fertigen Kartenkacheln. Außerdem können auch Online-Kartendienste
       verwendet werden, die ein solches Format bereitstellen.
     </p>
-    <p>Ausserdem kann AvNav mit seinem <a href="userdoc/importerpage.html">Importer</a>
-      eine ganze Reihe von weiteren Kartenformaten umwandeln um sie nutzbar zu
-      machen. Das sind insbesondere Karten im .KAP Format.</p>
-    <p>AvNav kann auch Vertor Karten von <a href="https://o-charts.org/">o-charts</a>
+    <p>Außerdem kann AvNav mit seinem <a href="userdoc/importerpage.html">Importer</a>
+      eine ganze Reihe von weiteren Kartenformaten umwandeln, um sie nutzbar zu
+      machen. Das sind insbesondere Karten im *.KAP Format.</p>
+    <p>AvNav kann auch Vektorkarten von <a href="https://o-charts.org/">o-charts</a>
       (mit dem&nbsp; <a href="hints/ocharts.html">ocharts</a> oder <a href="hints/ochartsng.html">ochartsng</a>
-      plugin) und S57 Karten (nach Konvertierung über den Importer und das <a href="hints/ochartsng.html">ochartsng</a>
+      plugin) und S57-Karten (nach Konvertierung über den Importer und das <a href="hints/ochartsng.html">ochartsng</a>
       plugin) nutzen. Diese Vektorkarten werden bei der Nutzung durch die
-      plugins automatisch in Kartenkacheln umgewandelt. </p>
+      Plugins automatisch in Kartenkacheln umgewandelt. </p>
     <p>Hinweis zu mbtiles: Bei diesem Format muss ggf. noch die richtige interne
       Anordnung der Kacheln gewählt werden - der Standard is "xyz", es gibt aber
       auch Dateien, die im "tms" Format vorliegen. Eine Umschaltung kann auf der
@@ -87,7 +87,7 @@
       einem von AvNav nutzbaren Format (gemf, mbtiles, o-charts) oder in einem
       Format, das erst noch umgewandelt werden muss(z.B. BSB - .kap Dateien oser
       s57). </p>
-    <p>Es sind auch Tools verfügbar, um solche Karten innerhalb oder ausserhalb
+    <p>Es sind auch Tools verfügbar, um solche Karten innerhalb oder außerhalb
       von AvNav herunterzuladen.</p>
     <p>Eine Liste von Kartenquellen:</p>
     <ul>
@@ -104,9 +104,8 @@
         Plugin</li>
       <li>Download von S57 und Konvertierung/Nutzung mit dem <a href="hints/ochartsng.html">ochartsng</a>
         plugin</li>
-      <li>Nutzung von Karten vom <a href="https://github.com/SignalK/charts-plugin">signalK
-          chart provider</a> &nbsp; (wenn die <a href="hints/CanboatAndSignalk.html#SignalK">signalK
-          Integration</a> aktiv ist).</li>
+      <li>Nutzung von Karten vom <a href="https://github.com/SignalK/charts-plugin">SignalK
+          Chart Provider</a> &nbsp; (wenn die <a href="hints/CanboatAndSignalk.html#SignalK">SignalK-Integration</a> aktiv ist).</li>
       <li>Nutzung von online Kartenquellen wenn sie das default url Format
         unterstützen. Das kann man in einer xml Datei konfigurieren. Ein
         Beispiel findet man unter der <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">Online
@@ -114,8 +113,7 @@
       <li>...</li>
     </ul>
     <h2><a name="installation" id="installation"></a>Installation von Karten</h2>
-    <p>Nach der Installation ist in AvNav zunächst nur eine/einige
-      Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
+    <p>Nach der Installation sind in AvNav zunächst nur einige Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
       zunächst bei AvNav installiert werden.<br>
       Die Karten können direkt in der WebApp hochgeladen werden. </p>
     <p>Der Weg dafür hängt vom Kartentyp ab.</p>
@@ -128,57 +126,57 @@
         auf der Files/Download Seite</a> beachten.</p>
     <h3>Karten mit Konvertierung (kap, s57)</h3>
     <p>In den normalen Versionen (nicht Android) können ab 20200325 auch Karten,
-      die erst noch konvertiert werden müssen über den <a href="userdoc/importerpage.html">Importer</a>
+      die erst noch konvertiert werden müssen, über den <a href="userdoc/importerpage.html">Importer</a>
       hochgeladen werden.<br>
       s57 Karten erfordern dabei ein installiertes <a href="hints/ochartsng.html">ochartsng</a>
       plugin.<br>
-      Es sollte beachtet werden, das die Konvertierung ein rechenintensiver
-      Prozeß sein kann, der auf einem Raspberry Pi viele Stunden dauern kann.
-      Das sollte daher ggf. auf einem Desktop Rechner erfolgen.<br>
+      Es sollte beachtet werden, dass die Konvertierung ein rechenintensiver
+      Prozess sein kann, der auf einem Raspberry Pi viele Stunden dauern kann.
+      Das sollte daher ggf. auf einem Desktop-Rechner erfolgen.<br>
       Da die Konvertierungsfunktion unter Android nicht zur Verfügung steht,
       sollte hierfür AvNav noch einmal auf einem Linux- oder Windows-System <a
-        href="install.html">installiert</a> werden und die Konvertierung dort
-      ausgeführt werden. Die erzeugten Dateien können dann direkt im Importer
+        href="install.html">installiert</a> werden, um dort die Konvertierung
+      durchzuführen. Die erzeugten Dateien können dann direkt im Importer
       heruntergeladen und unter Android installiert werden.</p>
     <h3>Vektorkarten (o-charts, s57)</h3>
     <p>Diese Karten erfordern ein installiertes <a href="hints/ocharts.html">ocharts</a>/<a
         href="hints/ochartsng.html">ochartsng</a> Plugin (unter Android die
       avocharts app - siehe <a href="hints/ochartsng.html#android">ochartsng</a>).
-      Für Windows können diese nicht genutzt werden, da die plugins nicht für
-      Windows bereitstehen (ausser dem Konverter von s57 nach ocharts). Für
+      Für Windows können diese nicht genutzt werden, da die Plugins nicht für
+      Windows bereitstehen (außer dem Konverter von S57 nach Ocharts). Für
       Details siehe die <a href="hints/ocharts.html">ocharts</a>/<a href="hints/ochartsng.html">ochartsng</a>
-      Beschreibungen. S57 Karten, die über den Importer hochgeladen wurden,
+      Beschreibungen. S57-Karten, die über den Importer hochgeladen wurden,
       werden sofort im <a href="hints/ochartsng.html">ochartsng</a> Plugin
       aktiv.</p>
     <h3>Download von Karten in AvNav</h3>
     <p>Wenn das <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">MapProxy
-        plugin</a> installiert ist, werden dessen Karten in AvNav sofort
+        Plugin</a> installiert ist, werden dessen Karten in AvNav sofort
       sichtbar und müssen nicht getrennt installiert werden.</p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
     <p>Ab Version 20201219 kann AvNav über (und unter) den eigentlichen Karten
-      noch weitere Informationen anzeigen bzw. Karten können kombiniert werden.</p>
+      noch weitere Informationen anzeigen, bzw. Karten können kombiniert werden.</p>
     <p>Für Details siehe <a href="hints/overlays.html">Overlays</a>.<br>
     </p>
     <h2 class="western"><a id="Convert" name="Convert"></a>Download von Karten
       mit dem Mobile Atlas Creator</h2>
     <p>Für die Nutzung des <a href="https://mobac.sourceforge.io/">Mobile Atlas
-        Creators</a> ist ausser Java und dem MOBAC selbst keine weitere Software
+        Creators</a> ist außer Java und dem MOBAC selbst keine weitere Software
       auf dem PC/Laptop nötig. Man muss beim Download der Karten allerdings ein
       gewisses Schema einhalten, damit die Karten in das oben beschriebene
       Layer-Konzept passen und die Datenmengen überschaubar bleiben. </p>
     <p>Dazu sollte man (je nach Kartenquelle) z.B. 3 Layer vorsehen: Übersicht(
       Zoom Level 7-10) Navigation (level 10-15), Details (Level 16-18).
-      Anschliessend sollte man im MOBAC layerweise vorgehen. Dazu jeweils als
+      Anschließend sollte man im MOBAC layerweise vorgehen. Dazu jeweils als
       gewünschte Zoom Level die zum Layer gehörigen anklicken (links oben),
       danach alle Teilbereiche jeweils markieren und unter einem beliebigen
       Namen dem Atlas hinzufügen. Das jeweils für die anderen Layer wiederholen
-      (dabei sinnvolle Auswahlen treffen). Anschliessend sollte man die
+      (dabei sinnvolle Auswahlen treffen). Anschließend sollte man die
       Atlas-Konfiguration unter einem beliebigen Namen speichern - die kann man
-      ggf. noch für weitere Versuche brauchen. Als output Format OsmDroid GEMF
+      ggf. noch für weitere Versuche brauchen. Als output-Format OsmDroid GEMF
       (File-&gt;convertAtlasFormat) wählen und die Atlas-Erzeugung starten. Im
-      output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry <a
+      output-Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den Raspberry <a
         href="#installation">installieren</a>. <br>
-      Auf der <a href="mapsources.html">Mapsources Seite</a> sammle ich chart
-      sources für den mobac, die für uns nützlich sein könnten. </p>
+      Auf der <a href="mapsources.html">Mapsources Seite</a> sammle ich Chart
+      Sources für den Mobac, die für uns nützlich sein könnten. </p>
   </body>
 </html>
