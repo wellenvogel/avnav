@@ -16,4 +16,15 @@ nt.style.setProperty("display",ds?"-moz-box":"none","important");}
 //set window size
 xdotool search --name "AVNav-Web.*Mozilla Firefox" windowsize 1000 800
 
+//videos
+Android:
+(1) connect with adb 
+(2) /usr/local/scrcpy-linux-x86_64-v3.3.1/scrcpy
+
+all:
+(kazam) - screencast , framerate 24 H264
+(OpenShot Video Editor)
+
+
+
 
