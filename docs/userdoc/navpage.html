@@ -320,7 +320,7 @@
     <p>Um CPA und Bewegungsvektoren zu berechnen, benutzt AvNav die von einem AIS
       Ziel empfangenen Daten (position, COG, SOG) und die Daten des eigenen
       Bootes (position, COG, SOG).</p>
-    <p>Vor Version 202507xx benutzte die Berechnung die Daten der AIS Ziele so,
+    <p>Vor Version 20250723 benutzte die Berechnung die Daten der AIS Ziele so,
       wie sie auf der Karten angezeigt werden und die Bootdaten von dem
       Zeitpunkt, wenn die Berechnung erfolgte.</p>
     <p>AvNav berechnet:</p>
@@ -361,7 +361,7 @@
     </ol>
     <p>Auf diese Weise lassen sich die Ziele nach ihrer Bedeutung für die
       Navigation sortieren.</p>
-    <p>Die bisherige (vor Version 202507xx) genutzte Berechnung hat einige
+    <p>Die bisherige (vor Version 20250723) genutzte Berechnung hat einige
       Nachteile:</p>
     <p>Ein AIS Ziel befindet sich normalerweise in Fahrt, und AIS Nachrichten
       werden nur in relativ großen Zeitabständen gesendet/empfangen. Ausserdem
@@ -377,7 +377,7 @@
       annähert, wird man eine ständige Änderung in den berechneten CPA Werten
       erleben - auch wenn das Boot und das Ziel Kurs und Geschwindigkeit
       beibehalten.</p>
-    <p>Ab Version 202507xx bietet AvNav die Option (aktiv als default,
+    <p>Ab Version 20250723 bietet AvNav die Option (aktiv als default,
       settings/AIS/CPA from estimated), CPA und Bewegungsvektoren aus einer
       geschätzten Position des AIS Zieles zu berechnen. Diese Position ist die
       selbe, die als Schattensymbol auf der Karte dargestellt wird. Die
@@ -411,7 +411,7 @@
     </ol>
     <p>Da beide Berechnungen ihre Limitierungen haben, kann der Nutzer am Ende
       entscheiden, welche genutzt werden soll.</p>
-    <p>Ab Version 202507xx werden alle AIS Berechnungen in einem separaten
+    <p>Ab Version 20250723 werden alle AIS Berechnungen in einem separaten
       Thread (worker) im Browser durchgeführt und werden bei jeder
       Positionsänderung wiederholt. In älteren Versionen wurden die Berechnungen
       nur ausgeführt, wenn neue AIS Daten abgerufen wurden.</p>

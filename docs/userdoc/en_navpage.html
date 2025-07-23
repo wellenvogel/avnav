@@ -309,7 +309,7 @@
     <p>To compute the CPA data and the motion vectors AvNav considers the
       received data of an AIS target (position, COG, SOG) and the data of the
       own boat (position, COG, SOG).</p>
-    <p>Before version 202507xx the computation uses the AIS target data as shown
+    <p>Before version 20250723 the computation uses the AIS target data as shown
       on the map and the boat data as shown when this data is computed.</p>
     <p>AvNav computes:</p>
     <ul>
@@ -345,7 +345,7 @@
         For TCPA &gt;= 0 dx=tcpa/warningTime, dy=cpa/warningDistance</li>
     </ol>
     <p>This way the targets should be sorted by their importance.</p>
-    <p>The originally (before 202507xx) used computation approach has some
+    <p>The originally (before 20250723) used computation approach has some
       drawbacks:</p>
     <p>The AIS target normally moves and AIS messages are only received at
       certain time intervals. Moreover the AvNav viewer part (in the browser)
@@ -360,7 +360,7 @@
       approach in the near future you will observe a constant change in the
       computed CPA (and motion vector) data - even if the target keeps
       course/speed and your vessel also keeps course and speed.</p>
-    <p>Starting from version 202507xx AvNav will give you the option (activated
+    <p>Starting from version 20250723 AvNav will give you the option (activated
       by default, settings/AIS/CPA from estimated) to compute the CPA and motion
       vector data from an estimated position of the AIS target. This position is
       the same as the one drawn on the map as a "shadow". The estimation simply
@@ -395,7 +395,7 @@
     </ol>
     <p>As both computations have their limits AvNav leaves the decision to the
       user - defaulting to use the estimated position.</p>
-    <p>Starting from 202507xx all AIS computations are done in the browser in a
+    <p>Starting from 20250723 all AIS computations are done in the browser in a
       separate thread (worker) and will be repeated each time the boat position
       changes or new AIS data is fetched from the server. In versions before
       most computations have only been executed when fetching new AIS data.</p>
