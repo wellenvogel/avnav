@@ -5,6 +5,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.lib.ObjectId
 import org.gradle.api.*
+import org.redline_rpm.header.*;
 buildscript{
     repositories{
         mavenCentral()
@@ -12,6 +13,7 @@ buildscript{
     dependencies{
         classpath localGroovy()
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:11.1.0'
+        //classpath 'com.netflix.nebula:gradle-ospackage-plugin:12.0.0'
         classpath 'commons-net:commons-net:3.3'
         classpath 'org.eclipse.jgit:org.eclipse.jgit:4.6.0.201612231935-r'
         classpath group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'
@@ -154,6 +156,7 @@ ospackage {
     requires('python3-pyudev')
     requires('python3-imaging').or('python3-pil')
     requires('python3-netifaces')
+    requires('python3-legacy-cgi').or('python3','3.13',Flags.LESS)
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
