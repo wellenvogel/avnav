@@ -44,7 +44,7 @@ const WindGraphics = (props) => {
         let f1 = w / width;
         let f2 = h / height;
         let f = Math.min(f1, f2);
-        let fontSize = f * height / 5;
+        let fontSize = f * height / 6;
         let mvx = (w - width * f) / 2;
         let mvy = (h - height * f) / 2;
         ctx.translate(mvx > 0 ? 0.9 * mvx : 0, mvy > 0 ? mvy : 0); //move the drawing to the middle
@@ -120,8 +120,8 @@ const WindGraphics = (props) => {
             if (winddirection > 180) winddirection -= 360;
             show180=true;
         }
-        let txt = Formatter.formatDirection(winddirection,undefined,show180).replace(/ /g, "0");
-        let xFactor = -0.8;
+        let txt = Formatter.formatDirection(winddirection,undefined,show180,true);
+        let xFactor = -1.0;
         if (winddirection < 0) xFactor = -1.0;
         ctx.fillStyle = colors.text;
         ctx.fillText(txt, xFactor * fontSize, 0.4 * fontSize);
@@ -132,8 +132,8 @@ const WindGraphics = (props) => {
         ctx.lineWidth = pointer_linewidth;
         ctx.lineCap = 'round';
         ctx.strokeStyle = colors.pointer;
-        ctx.moveTo(0, -40);
-        ctx.lineTo(0, -40 - pointer_lenght);
+        ctx.moveTo(0, -60);
+        ctx.lineTo(0, -60 - pointer_lenght);
         ctx.stroke();
     }
     const canvasRef = (item) => {
