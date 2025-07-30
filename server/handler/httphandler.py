@@ -402,7 +402,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
               if mdist<=dist:
                 inRange=True
           if inRange:
-            fentry['distance']=mdist*AVNUtil.NM #have this in m
             frt.append(fentry)
           else:
             AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
