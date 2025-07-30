@@ -37,7 +37,6 @@ import formatter from '../util/formatter';
 import Requests from "../util/requests";
 import Helper from "../util/helper";
 
-let x=a.y;
 let boatData={
     position: new navobjects.Point(undefined,undefined),
     speed: undefined,
