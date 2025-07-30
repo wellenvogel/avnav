@@ -87,7 +87,9 @@ const WindWidget = (props) => {
         }
     }
     let windSpeedStr = props.formatter(wind.windSpeed);
+    let show180=false;
     if (!props.show360 && wind.suffix !== 'TD') {
+        show180=true;
         if (wind.windAngle > 180) wind.windAngle -= 360;
     }
     return (
@@ -96,7 +98,7 @@ const WindWidget = (props) => {
                 <React.Fragment>
                     <WidgetHead caption={props.caption?props.caption:'W' + wind.suffix}/>
                     <div className="widgetData">
-                        {Formatter.formatDirection(wind.windAngle)}
+                        {Formatter.formatDirection(wind.windAngle,undefined,show180)}
                         <span className="unit">°</span>
                         /{windSpeedStr}
                         <span className="unit">{props.unit}</span>
@@ -105,7 +107,7 @@ const WindWidget = (props) => {
                 :
                 <React.Fragment>
                         <WidgetFrame addClass="windInner" resize={true} mode={props.mode} caption={names[wind.suffix].angle} unit='°'>
-                            <div className='widgetData'>{Formatter.formatDirection(wind.windAngle)}</div>
+                            <div className='widgetData'>{Formatter.formatDirection(wind.windAngle,undefined,show180)}</div>
                         </WidgetFrame>
                         <WidgetFrame addClass="windInner" resize={true} mode={props.mode} caption={names[wind.suffix].speed} unit={props.unit}>
                             <div className='widgetData'>{windSpeedStr}</div>

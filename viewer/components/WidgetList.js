@@ -20,6 +20,7 @@ import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
+import Formatter from "../util/formatter";
 let widgetList=[
     {
         name: 'SOG',
@@ -163,12 +164,15 @@ let widgetList=[
         unit: "\u00b0",
         caption: 'Wind Angle',
         storeKeys:WindStoreKeys,
-        formatter: 'formatDirection360',
+        formatter: 'formatString',
         editableParameters: {
-            formatterParameters: true,
+            formatterParameters: false,
+            formatter: false,
             value: false,
             caption: false,
-            kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
+            kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'},
+            show360: {type:'BOOLEAN',default: false,description:'always show 360°'},
+            leadingZero:{type:'BOOLEAN',default: false,description:'show leading zeroes (012)'}
         },
         translateFunction: (props)=>{
             const captions={
@@ -176,8 +180,17 @@ let widgetList=[
                 TD: 'TWD',
                 TA: 'TWA'
             };
+            const formatter={
+                A: (v)=>Formatter.formatDirection(v,undefined,!props.show360,props.leadingZero),
+                TD: (v)=>Formatter.formatDirection(v,undefined,false,props.leadingZero),
+                TA:(v)=>Formatter.formatDirection(v,undefined,!props.show360,props.laedingZero),
+            }
             let wind=getWindData(props);
-            return {...props,value:wind.windAngle, caption:captions[wind.suffix] }
+            const fmt=formatter[wind.suffix];
+            let value;
+            if (!fmt) value=Formatter.formatDirection(wind.windAngle);
+            else value=fmt(wind.windAngle);
+            return {...props,value:value, caption:captions[wind.suffix] }
         }
     },
     {
