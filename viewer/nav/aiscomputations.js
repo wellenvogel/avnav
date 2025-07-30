@@ -470,7 +470,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                 else aisItem.priority= pow2(aisItem.cpadata.tcpa/options.warningTime)+pow2(aisItem.cpadata.cpa/options.warningDist);
             }
         }
-        if (boatCog!== undefined && boatSpeed !== undefined) {
+        if (boatCog!== undefined && boatSpeed !== undefined || true) {
             computeCourseVectors(aisItem, boatPos, boatCog, boatSpeed, options);
         }
     })

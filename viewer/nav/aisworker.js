@@ -23,7 +23,13 @@
  ###############################################################################
  * AIS computations
  */
-
+//https://stackoverflow.com/questions/61406859/web-worker-onerror-event-handler-not-triggered-when-rethrowing-an-error-in-the-c
+self.addEventListener('unhandledrejection', function (event) {
+    // the event object has two special properties:
+    // event.promise - the promise that generated the error
+    // event.reason  - the unhandled error object
+    throw event.reason;
+});
 
 import {handleReceivedAisData} from "./aiscomputations";
 import navobjects from "./navobjects";
@@ -31,7 +37,7 @@ import formatter from '../util/formatter';
 import Requests from "../util/requests";
 import Helper from "../util/helper";
 
-
+let x=a.y;
 let boatData={
     position: new navobjects.Point(undefined,undefined),
     speed: undefined,
@@ -161,8 +167,12 @@ self.onmessage=async ({data})=>{
             handleError(received.error,data.sequence)
             return;
         }
-        receivedAisData=received.data;
-        computeResponse(data);
+        try {
+            receivedAisData = received.data;
+            computeResponse(data);
+        }catch (e){
+            handleError(e,data.sequence,true);
+        }
     }
     if (data.type === 'boat' ){
         let now=Helper.now();
@@ -177,15 +187,27 @@ self.onmessage=async ({data})=>{
             return;
         }
         overloadCount=0;
-        computeResponse(data);
-        lastResponse=now;
+        try {
+            computeResponse(data);
+            lastResponse = now;
+        }catch (e){
+            handleError(e,data.sequence,true);
+        }
     }
     if (data.type === 'config'){
-        computeResponse(data);
+        try {
+            computeResponse(data);
+        }catch(e){
+            handleError(e,data.sequence,true);
+        }
     }
     if (data.type === 'hidden'){
         if (data.hiddenTargets === undefined) return;
         hiddenTargets=data.hiddenTargets;
-        computeResponse(data);
+        try {
+            computeResponse(data);
+        }catch(e){
+            handleError(e,data.sequence,true);
+        }
     }
 }

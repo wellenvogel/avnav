@@ -485,6 +485,21 @@ const NavPage=(props)=>{
     useKeyEventHandlerPlain("centerToTarget",'page', setCenterToTarget);
     useKeyEventHandlerPlain("navNext",'page',navNext);
     useKeyEventHandlerPlain("toggleNav",'page',()=>navToWp(!activeRoute.hasActiveTarget()));
+    useEffect(() => {
+        if (! globalStore.getData(keys.properties.aisShowErrors)) return;
+        const aisErrors=NavHandler.getAisHandler().getErrors();
+        if ((aisErrors instanceof Array) && aisErrors.length > 0){
+            showDialog(dialogCtx.current,()=><DialogFrame className={'AisErrorDialog'} title={"AIS Errors"}>
+                    {aisErrors.map((aiserror)=><DialogRow>
+                            <div className={'inputLabel'}>{(new Date(aiserror.ts)).toLocaleTimeString()}</div>
+                            <div className={'value'}>{aiserror.entry+""}</div>
+                        </DialogRow>)
+                    }
+                    <DialogButtons buttonList={DBCancel()}/>
+                </DialogFrame>
+            );
+        }
+    }, []);
     const showAisInfo=useCallback((mmsi)=>{
         if (! mmsi) return;
         showDialog(dialogCtx,()=>{
