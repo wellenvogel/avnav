@@ -280,14 +280,17 @@ const computeCpa=(src,dst,options)=>{
     rt.tcpa=0;
     rt.cpa=curdistance;
     let maxDistance=6371e3*1000*Math.PI; //half earth
-    let appr=computeApproach(courseToTarget,curdistance,src.course,src.speed,dst.course,dst.speed,options.minAISspeed,maxDistance);
-    if (appr.dd !== undefined && appr.ds !== undefined) {
+    let appr;
+    if (src.course !== undefined && src.speed !== undefined && dst.course !== undefined && dst.speed !== undefined) {
+        appr=computeApproach(courseToTarget, curdistance, src.course, src.speed, dst.course, dst.speed, options.minAISspeed, maxDistance);
+    }
+    if (appr && appr.dd !== undefined && appr.ds !== undefined) {
         let xpoint = options.useRhumbLine?
             llsrc.rhumbDestinationPoint(appr.dd,src.course):
             llsrc.destinationPoint(appr.dd,src.course);
         rt.crosspoint = new navobjects.Point(xpoint.lon, xpoint.lat);
     }
-    if (!appr.tm){
+    if (!appr || !appr.tm){
         rt.tcpa=undefined;
         rt.cpa=curdistance;
         rt.passFront=undefined;
@@ -421,7 +424,7 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
         }
         aisItem.fromEstimated=(options.cpaEstimated && aisItem.estimated);
         let targetPos=(aisItem.fromEstimated)?aisItem.estimated:aisItem.receivedPos;
-        if (boatPos.lat !== undefined && boatPos.lon !== undefined && boatCog !== undefined && boatSpeed !== undefined) {
+        if (boatPos.lat !== undefined && boatPos.lon !== undefined ) {
             let dst = NavCompute.computeDistance(boatPos, targetPos, options.useRhumbLine);
             aisItem.distance = dst.dts;
             aisItem.headingTo = dst.course;
@@ -467,7 +470,9 @@ export const computeAis=(aisData,boatPos,boatCog,boatSpeed, options)=>{
                 else aisItem.priority= pow2(aisItem.cpadata.tcpa/options.warningTime)+pow2(aisItem.cpadata.cpa/options.warningDist);
             }
         }
-        computeCourseVectors(aisItem,boatPos,boatCog,boatSpeed,options);
+        if (boatCog!== undefined && boatSpeed !== undefined) {
+            computeCourseVectors(aisItem, boatPos, boatCog, boatSpeed, options);
+        }
     })
     if (aisWarningAis !== undefined){
         aisWarningAis.nextWarning=true;
