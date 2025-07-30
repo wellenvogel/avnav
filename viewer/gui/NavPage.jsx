@@ -487,6 +487,7 @@ const NavPage=(props)=>{
     useKeyEventHandlerPlain("toggleNav",'page',()=>navToWp(!activeRoute.hasActiveTarget()));
     useEffect(() => {
         if (! globalStore.getData(keys.properties.aisShowErrors)) return;
+        if (LayoutHandler.isEditing()) return;
         const aisErrors=NavHandler.getAisHandler().getErrors();
         if ((aisErrors instanceof Array) && aisErrors.length > 0){
             showDialog(dialogCtx.current,()=><DialogFrame className={'AisErrorDialog'} title={"AIS Errors"}>
