@@ -821,8 +821,10 @@ class NMEAParser(object):
               else:
                   expected_range = expected
               actual = values['length']
-              if not (actual >= expected_range[0] and actual <= expected_range[1]):
+              if not (actual >= expected_range[0]):
                   raise Exception("invalid length %d(%d..%d)"%(actual,expected_range[0],expected_range[1]))
+              if not ( actual <= expected_range[1]):
+                AVNLog.debug("AIS message type %s to long, expected %d, got %d",str(values['msgtype']),expected_range[1],actual)
           # We're done, hand back a decoding
           #AVNLog.ld('decoded AIS data',cooked)
           self.storeAISdata(cooked,source=source,priority=priority,timestamp=timestamp)

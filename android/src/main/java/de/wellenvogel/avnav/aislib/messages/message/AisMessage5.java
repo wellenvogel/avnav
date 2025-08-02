@@ -97,7 +97,7 @@ public class AisMessage5 extends AisStaticCommon {
         BinArray binArray = vdm.getBinArray();
         int len=binArray.getLength();
         //seems that sometimes we receive broken class 5 mesages being to short...
-        if (len > 424 || len < 323) {
+        if (len > 426 || len < 323) {
             throw new AisMessageException("Message 5 wrong length " + binArray.getLength());
         }
 
