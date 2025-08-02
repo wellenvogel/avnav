@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
@@ -373,7 +374,8 @@ public class RequestHandler {
                 }
                 ExtendedWebResourceResponse rt=tryDirectRequest(uri,method);
                 if (rt != null) return rt;
-                InputStream is= service.getAssets().open(path);
+                InputStream is= (view != null)?view.getContext().getAssets().open(path):service.getAssets().open(path);
+                Log.i(LOGPRFX,String.format("loading asset %s from %s (%d avail)",path,Thread.currentThread().getId(),is.available()));
                 return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
             } catch (Throwable e) {
                 e.printStackTrace();

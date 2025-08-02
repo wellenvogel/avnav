@@ -477,20 +477,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowFileAccess(true);
-        if (Build.VERSION.SDK_INT >= 16){
+        try {
+            WebSettings settings = webView.getSettings();
+            settings.setAllowUniversalAccessFromFileURLs(true);
+        }catch (Exception e){}
+        if (BuildConfig.DEBUG) {
+            webView.setWebContentsDebuggingEnabled(true);
             try {
-                WebSettings settings = webView.getSettings();
-                Method m = WebSettings.class.getDeclaredMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
-                m.setAccessible(true);
-                m.invoke(settings, true);
-            }catch (Exception e){}
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
-            try {
-                Method m=WebView.class.getDeclaredMethod("setWebContentsDebuggingEnabled",boolean.class);
-                m.setAccessible(true);
-                m.invoke(webView,true);
-                m=WebSettings.class.getDeclaredMethod("setMediaPlaybackRequiresUserGesture",boolean.class);
+                Method m=WebSettings.class.getDeclaredMethod("setMediaPlaybackRequiresUserGesture",boolean.class);
                 m.setAccessible(true);
                 m.invoke(webView.getSettings(),false);
             } catch (Exception e) {
@@ -508,10 +502,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    if (request.getMethod().equalsIgnoreCase("head")){
-                        WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
-                        if (rt != null) return rt;
-                    }
+                    WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
+                    if (rt != null) return rt;
                 }
                 return super.shouldInterceptRequest(view, request);
             }
@@ -538,9 +530,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                WebResourceResponse rt=handleRequest(view,url,"GET");
-                if (rt==null) return super.shouldInterceptRequest(view, url);
-                return rt;
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    WebResourceResponse rt = handleRequest(view, url, "GET");
+                    if (rt == null) return super.shouldInterceptRequest(view, url);
+                    return rt;
+                }
+                return super.shouldInterceptRequest(view, url);
             }
 
             @Override
