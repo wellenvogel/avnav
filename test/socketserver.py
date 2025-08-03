@@ -28,7 +28,7 @@ class Reader:
         print("reader stopped")
         return
 
-def sendSock(file,sock,sleeptime):
+def sendSock(file,sock,sleeptime,rmcMode):
   f=None
   try:
     f=open(file,"rb")
@@ -41,6 +41,8 @@ def sendSock(file,sock,sleeptime):
   rthread=Thread(target=reader.readfunction)
   rthread.setDaemon(True)
   rthread.start()
+  lastSent=None
+  lastTs=None
   while True:
     lbytes=[]
     try:
@@ -67,7 +69,31 @@ def sendSock(file,sock,sleeptime):
             sfail+=1
             if sfail > 10:
                 raise Exception("Exception on write, error counter exceeded")
-        time.sleep(sleeptime)
+        if rmcMode:
+          if len(lbytes) > 6 and lbytes[3:6] == b'RMC':
+            fields=lbytes.split(b',')
+            if len(fields) >= 2:
+              try:
+                ts=int(fields[1])
+              except:
+                ts=0
+                if lastTs is not None:
+                  ts=lastTs+sleeptime
+              now=time.time()
+              if lastSent is not None and lastTs is not None:
+                diff=ts-lastTs
+                if diff > 0:
+                  nextSend=lastSent+diff
+                  if now < nextSend:
+                    wt=nextSend-now
+                    if wt > 10:
+                      print("##wait expected %d, used 10"%wt)
+                      wt=10
+                    time.sleep(wt)
+              lastSent=now
+              lastTs=ts
+        else:
+          time.sleep(sleeptime)
       else:
         raise Exception("EOF on "+file)
     except:
@@ -81,7 +107,9 @@ def sendSock(file,sock,sleeptime):
       break
         
 
-def listen(port,sfile,sleeptime):
+def listen(port,sfile,sleeptime,rmcMode=False):
+  if rmcMode:
+    print("Running in RMC mode")
   listener=socket.socket()
   listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
   listener.bind(("0.0.0.0",port))
@@ -90,11 +118,20 @@ def listen(port,sfile,sleeptime):
   while True:
     client=listener.accept()
     print("Client connected %s:%d"%client[0].getpeername())
-    writer=threading.Thread(target=sendSock,args=(sfile,client[0],sleeptime))
+    writer=threading.Thread(target=sendSock,args=(sfile,client[0],sleeptime,rmcMode))
     writer.setDaemon(True)
     writer.start()
     #sendSock(sfile,client[0],sleeptime)
   
 
 if __name__ == "__main__":
-  listen(int(sys.argv[1]),sys.argv[2],float(sys.argv[3]))  
+  start=1
+  rmcMode=False
+  while start < len(sys.argv) and sys.argv[start][0] == '-':
+    if sys.argv[start] == '-r':
+      rmcMode=True
+    else:
+      print("invalid option %s"%sys.argv[start],file=sys.stderr)
+      sys.exit(1)
+    start+=1
+  listen(int(sys.argv[start]),sys.argv[start+1],float(sys.argv[start+2]),rmcMode=rmcMode)
