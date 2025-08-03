@@ -40,7 +40,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
             rt.put("name",(isUser?USERPREFIX:SYSTEMPREFIX)+name);
-            rt.put("url",prefix+"/"+(isUser?USERPREFIX:SYSTEMPREFIX)+name+".json");
+            rt.put("url",prefix+"/"+(isUser?USERPREFIX:SYSTEMPREFIX)+name+SUFFIX);
             rt.put("canDelete",isUser);
             rt.put("time",mtime/1000);
             rt.put("isServer",true);
@@ -73,7 +73,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         else{
             if (hardCheck) throw new Exception("invalid name "+fileName+" must start with "+ItemInfo.USERPREFIX);
         }
-        return fileName+".json";
+        return fileNameFromName(fileName);
     }
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
@@ -139,7 +139,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         String [] list;
         list= context.getAssets().list(systemDir);
         for (String name :list){
-            if (!name.endsWith(".json")) continue;
+            if (!name.endsWith(SUFFIX)) continue;
             if (name.equals("keys.json")) continue;
             ItemInfo li=new ItemInfo(getType(), getPrefix(), name.replaceAll("\\.json$",""), false,BuildConfig.TIMESTAMP);
             rt.add(li);
@@ -150,7 +150,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         JSONArray rt=new JSONArray();
         if (!dir.isDirectory()) return rt;
         for (File f: dir.listFiles()){
-            if (!f.getName().endsWith(".json")) continue;
+            if (!f.getName().endsWith(SUFFIX)) continue;
             if (! f.isFile()) continue;
             ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName().replaceAll("\\.json$",""),true,f.lastModified());
             li.size=f.length();
@@ -171,15 +171,20 @@ public class ScopedItemHandler implements INavRequestHandler{
         }
     }
 
+    final static String SUFFIX=".json";
+    private String fileNameFromName(String name){
+        if (name.endsWith(SUFFIX)) return name;
+        return name+SUFFIX;
+    }
     public InputStream getItemForReading(String name) throws IOException {
         if (name.startsWith(ItemInfo.SYSTEMPREFIX)){
             name=name.substring(ItemInfo.SYSTEMPREFIX.length());
-            String filename=name+".json";
+            String filename=fileNameFromName(name);
             return context.getAssets().open(systemDir+"/"+filename);
         }
         if (name.startsWith(ItemInfo.USERPREFIX)){
             name=name.substring(ItemInfo.USERPREFIX.length());
-            String filename=name+".json";
+            String filename=fileNameFromName(name);
             File ifile=new File(userDir,filename);
             if (! ifile.canRead()) throw new IOException("unable to read file: "+ifile.getAbsolutePath());
             return new FileInputStream(ifile);
