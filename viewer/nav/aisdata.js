@@ -41,7 +41,13 @@ class WorkerErrorHistory{
         this.maxAge=30000;
     }
     add(entry){
-        this.history.push({ts:Helper.now(),entry:entry})
+        let txt=entry;
+        let details;
+        if (entry instanceof Object){
+            txt=entry.message||entry+"";
+            details=entry.details||entry.stack;
+        }
+        this.history.push({ts:Helper.now(),entry:txt,details: details})
         if (this.history.length > this.max) this.history.shift();
     }
     getEntries(now=Helper.now()){
@@ -156,7 +162,11 @@ class AisData {
         this.worker.onerror=(error)=>{
             base.log("aisworker error:",error);
             let finfo=error.filename.replace(/.*\//,'')+':'+error.lineno;
-            this.workerErrors.add(error.message+"["+finfo+"]");
+            this.workerErrors.add(
+                {message: error.message,
+                 details:finfo
+                }
+            );
         };
         this.postWorker({
             type: 'config',
@@ -177,7 +187,10 @@ class AisData {
                 this.sendBoatData();
             }
             if ((this.lastReceived +3 * RECOMPUTE_TRIGGER) < now){
-                this.workerErrors.add("no response from AIS worker");
+                this.workerErrors.add({
+                    message: "no response from AIS worker",
+                    details: (this.lastReceived===0)?"no response at all":"no response for "+(now-this.lastReceived)+" ms"
+                });
             }
         },RECOMPUTE_TRIGGER*1.1);
     }
