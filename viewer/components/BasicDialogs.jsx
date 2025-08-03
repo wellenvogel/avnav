@@ -77,8 +77,8 @@ export const ConfirmDialog = ({title, text, resolveFunction, children}) => {
         ]}/>
     </DialogFrame>
 }
-export const AlertDialog = ({text, resolveFunction,children}) => {
-    return <DialogFrame title={"Alert"}>
+export const AlertDialog = ({text, resolveFunction,children,className}) => {
+    return <DialogFrame title={"Alert"} className={className}>
         <DialogText>{text}</DialogText>
         {children}
         <DialogButtons buttonList={DBOk(resolveFunction )}/>

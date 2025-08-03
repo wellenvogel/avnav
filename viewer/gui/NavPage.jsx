@@ -56,6 +56,7 @@ import navdata from "../nav/navdata.js";
 import base from "../base";
 import {checkName, ItemNameDialog, nameProposal} from "../components/ItemNameDialog";
 import {ItemActions} from "../components/FileDialog";
+import {showErrorList} from "../components/ErrorListDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -488,18 +489,12 @@ const NavPage=(props)=>{
     useEffect(() => {
         if (! globalStore.getData(keys.properties.aisShowErrors)) return;
         if (LayoutHandler.isEditing()) return;
-        const aisErrors=NavHandler.getAisHandler().getErrors();
-        if ((aisErrors instanceof Array) && aisErrors.length > 0){
-            showDialog(dialogCtx.current,()=><DialogFrame className={'AisErrorDialog'} title={"AIS Errors"}>
-                    {aisErrors.map((aiserror)=><DialogRow>
-                            <div className={'inputLabel'}>{(new Date(aiserror.ts)).toLocaleTimeString()}</div>
-                            <div className={'value'}>{aiserror.entry+""}</div>
-                        </DialogRow>)
-                    }
-                    <DialogButtons buttonList={DBCancel()}/>
-                </DialogFrame>
-            );
-        }
+        showErrorList({
+            dialogCtx:dialogCtx,
+            title: 'AIS Errors',
+            className: 'AisErrorDialog',
+            fillFunction: ()=>NavHandler.getAisHandler().getErrors()
+        });
     }, []);
     const showAisInfo=useCallback((mmsi)=>{
         if (! mmsi) return;
