@@ -144,7 +144,7 @@ class AisData {
                             }
                         }
                     }
-                    if (nearestAisTarget === undefined) {
+                    if (nearestAisTarget === undefined && data.data[0].nearest) {
                         nearestAisTarget = aisproxy(data.data[0]);
                     }
                 }
