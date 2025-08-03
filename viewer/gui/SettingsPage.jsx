@@ -32,6 +32,7 @@ import LocalStorage from '../util/localStorageManager';
 import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
+import Helper from "../util/helper";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -623,6 +624,21 @@ class SettingsPage extends React.Component{
                             fixedPrefix={'user.'}
                             fixedExt={'json'}
                             checkName={(newName)=> {
+                                if (newName) {
+                                    let checkName=newName.replace(/^user./,'').replace(/\.json$/,'');
+                                    if (! checkName){
+                                        return {
+                                            error:'name must not be empty',
+                                            proposal: LayoutHandler.nameToBaseName(LayoutHandler.name)
+                                        }
+                                    }
+                                    if (checkName.indexOf('.') >= 0){
+                                        return {
+                                            error: 'names must not contain a .',
+                                            proposal: checkName.replace(/\./g,'')
+                                        }
+                                    }
+                                }
                                 let cr=checkName(newName,undefined,undefined);
                                 if (cr) return cr;
                                 cr=checkName(newName,list,(item)=>item.name+'.json');
@@ -639,7 +655,7 @@ class SettingsPage extends React.Component{
                             }}
                         />)
                             .then((res)=> {
-                                LayoutHandler.startEditing(res.name);
+                                LayoutHandler.startEditing(LayoutHandler.fileNameToServerName(res.name));
                                 this.props.history.pop();
                             })
                             .catch(()=> {
