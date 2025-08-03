@@ -352,7 +352,7 @@ let keys={
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
-        aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for target/estimated display",PropertyType.RANGE,[0.1,40]),
+        aisMinDisplaySpeed: new Property(0.2,"boat/target below (kn) not moving",PropertyType.RANGE,[0.05,40]),
         aisOnlyShowMoving: new Property(false,"only show moving targets",PropertyType.CHECKBOX),
         aisListUpdateTime: new Property(5,"update time(s) for list",PropertyType.RANGE,[1,20]),
         aisReducedList: new Property(false,"reduce details in list",PropertyType.CHECKBOX),
@@ -364,7 +364,6 @@ let keys={
         aisShowErrors: new Property(false,"show AIS computation errors",PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
-        minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa
         maxAisTPA: new Property(3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
         aisWarningCpa: new Property(500, "Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
         aisWarningTpa: new Property(900, "Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
@@ -468,6 +467,7 @@ let keys={
         windKnots: new Property(true, "wind knots", PropertyType.DELETED),
         showMeasure: new Property(true,"Show Measure Button",PropertyType.DELETED),
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.DELETED),
+        minAISspeed: new Property(0.1,"",PropertyType.DELETED), //minimal speed in m/s that we consider when computing cpa/tcpa
     }
 };
 
