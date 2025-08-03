@@ -1068,7 +1068,6 @@ class MapHolder extends DrawingPositionConverter {
                 return this.onClick(evt);
             });
             this.olmap.on('pointerdrag', () => this.userAction(true));
-            this.olmap.on('pointermove', () => this.userAction(true));
             this.olmap.on('singleclick', () => this.userAction(true));
             this.olmap.on('postrender', (evt) => this.postrender(evt));
             this.olmap.getView().on('change:resolution', (evt) => {
