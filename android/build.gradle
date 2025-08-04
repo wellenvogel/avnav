@@ -118,10 +118,13 @@ android {
     signingConfigs {
 
     def ks=System.getenv("ANDROID_KEYSTORE")
+    def ksbeta = System.getenv("ANDROID_KEYSTORE_BETA")
     def kspw=System.getenv("ANDROID_KEYPASS")
     def kalias=System.getenv("ANDROID_KEYALIAS")
     def kpw= System.getenv("ANDROID_KEYPASS")
-    if (ks != null && ksp != null && kalias != null && kpwd != null) {
+    def hasCfg=false
+    if (ks != null && kspw != null && kalias != null && kpw != null) {
+        hasCfg=true
         config {
             storeFile file(ks)
             storePassword kspw
@@ -129,7 +132,16 @@ android {
             keyPassword kpw
         }
     }
-    else{
+    if(ksbeta != null && kspw != null && kalias != null && kpw != null) {
+        hasCfg=true
+        create("beta") {
+            storeFile file(ksbeta)
+            storePassword kspw
+            keyAlias kalias
+            keyPassword kpw
+        }
+    }
+    if (!hasCfg){
         logger.warn("no signing config set...")
     }
     }
@@ -147,7 +159,12 @@ android {
             manifestPlaceholders.suffix=".debug"
         }
         beta {
-            if (System.getenv("ANDROID_KEYSTORE") != null) {
+            def jksbeta=System.getenv("ANDROID_KEYSTORE_BETA")
+            if (jksbeta != null) {
+                logger.lifecycle("using keystore $jksbeta for beta")
+                signingConfig signingConfigs.beta
+            }
+            else if (System.getenv("ANDROID_KEYSTORE") != null) {
                 signingConfig signingConfigs.config
             }
             else{

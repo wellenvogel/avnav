@@ -61,12 +61,20 @@ jobs:
               ref: "refs/tags/"+process.env.TAG_NAME,
               sha: context.sha
             })  
-      
+
+      - name: JKS
+        run: |
+           echo "${{ secrets.BETA_KEYSTORE }}" > beta.keystore.asc
+           gpg -d --passphrase "${{ secrets.BETA_KEYSTORE_PW1 }}" --batch beta.keystore.asc > keystore.jks
+
       - name: gradle build
         env:  
           AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
           AVNAV_REPO_BASE: "/downloads"
+          ANDROID_KEYSTORE_BETA: ${{ github.workspace}}/keystore.jks
+          ANDROID_KEYALIAS: "wellenvogel"
+          ANDROID_KEYPASS: ${{ secrets.ANDROID_KEYPASS }}
         run: ./gradlew upload
       
       - name: gradle repo upload
