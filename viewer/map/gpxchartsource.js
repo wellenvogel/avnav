@@ -233,16 +233,16 @@ class GpxChartSource extends ChartSourceBase{
             if (image) image.setScale(scale);
             let textStyle=rt.getText();
             if (textStyle) {
+                textStyle = textStyle.clone();
                 textStyle.setScale(scale);
-                if (!textStyle.getText()){
-                    const txt=feature.get('name')||feature.get('desc');
-                    if (txt){
-                        textStyle=textStyle.clone();
-                        textStyle.setText(txt);
-                        rt.setText(textStyle);
-                    }
-
+                const txt = feature.get('name') || feature.get('desc')||feature.get('description');
+                if (txt) {
+                    textStyle.setText(txt);
                 }
+                else{
+                    textStyle.setText('');
+                }
+                rt.setText(textStyle);
             }
             return rt;
         }
@@ -405,7 +405,7 @@ class GpxChartSource extends ChartSourceBase{
             if (geometry){
                 coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
                 const route=feature.get('route')
-                if (rt instanceof RouteFeatureInfo && route){
+                if (route && route instanceof routeobjects.Route){
                         const routePoint=getClosestRoutePoint(route,coordinates);
                         if (routePoint) rt.point=routePoint;
                 }
