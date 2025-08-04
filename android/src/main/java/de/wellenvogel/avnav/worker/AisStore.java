@@ -116,8 +116,9 @@ public class AisStore {
 
     public static JSONObject objectFromMessage(AisMessage msg){
         JSONObject rt=null;
+        int msgId=msg.getMsgId();
         try {
-            switch (msg.getMsgId()) {
+            switch (msgId) {
                 case 1:
                 case 2:
                 case 3: {
@@ -151,13 +152,21 @@ public class AisStore {
                 {
                     AisStaticCommon m = (AisStaticCommon) msg;
                     rt = new JSONObject();
+                    int part24=1;
+                    if (msgId == 24){
+                        part24=((AisMessage24)msg).getPartNumber();
+                    }
                     rt.put("mmsi", m.getUserId());
-                    rt.put("callsign", m.getCallsign()!=null?m.getCallsign().replaceAll("@*$",""):"");
-                    rt.put("shipname", m.getName()!=null?m.getName().replaceAll("@*$",""):"");
-                    rt.put("shiptype", m.getShipType());
-                    rt.put("length",m.getDimBow()+m.getDimStern());
-                    rt.put("beam",m.getDimPort()+m.getDimStarboard());
-                    if (msg.getMsgId() == 5) {
+                    if (msgId == 5 || part24 == 0) {
+                        rt.put("shipname", m.getName() != null ? m.getName().replaceAll("@*$", "") : "");
+                    }
+                    if (msgId == 5 || part24 != 0) {
+                        rt.put("callsign", m.getCallsign() != null ? m.getCallsign().replaceAll("@*$", "") : "");
+                        rt.put("shiptype", m.getShipType());
+                        rt.put("length", m.getDimBow() + m.getDimStern());
+                        rt.put("beam", m.getDimPort() + m.getDimStarboard());
+                    }
+                    if (msgId == 5) {
                         AisMessage5 m5=(AisMessage5)msg;
                         rt.put("imo_id", m5.getImo());
                         rt.put("destination", m5.getDest()!=null?m5.getDest().replaceAll("@*$",""):"");
