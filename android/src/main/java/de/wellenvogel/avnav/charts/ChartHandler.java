@@ -599,6 +599,12 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
 
         }
+        if (command.equals("deleteFromOverlays")){
+            String name=AvnUtil.getMandatoryParameter(uri,"name");
+            String type=AvnUtil.getMandatoryParameter(uri,"itemType");
+            deleteFromOverlays(type,name);
+            return RequestHandler.getReturn();
+        }
         return RequestHandler.getErrorReturn("unknown request");
     }
 
