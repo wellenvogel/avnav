@@ -24,17 +24,16 @@
       <li>Es werden wesentlich weniger externe Pakete benötigt. Insbesondere
         auch keine lauffähige X11 Umgebung.</li>
       <li>Es wird weniger Speicher benötigt.</li>
-      <li>...</li>
     </ul>
-    <p><a name="restrictions"></a>Momentan ist diese Implementierung im Beta
-      Zustand. Es gibt daher noch einige Einschränkungen und es können auch noch
-      Fehler vorhanden sein.</p>
+    <p><a name="restrictions"></a>Gegenüber dem alten ocharts plugin gibt es die
+      folgenden Einschränkungen:</p>
     <ul>
-      <li>Es können noch keine oeRNC Karten (Rasterkarten von o-charts) gelesen
-        werden</li>
-      <li>Es können Anzeige Fehler auftreten</li>
-      <li>Unter Android kann man nicht die gleiche Lizenz für OpenCPN und AvNav
-        benutzen</li>
+      <li><span style="color: red;">Es können keine oeRNC Karten (Rasterkarten
+          von o-charts) gelesen werden</span></li>
+      <li>Karten von OpenCPN können nicht direkt genutzt werden. Da OpenCPN
+        keine definierte Struktur der Konfiguration bietet, müssen die Karten
+        noch einmal parallel im plugin installiert werden. Ausser auf Android
+        wird allerdings der gleiche Key genutzt.</li>
     </ul>
     <h2>Übersicht</h2>
     <div class="toc"> </div>
@@ -84,8 +83,8 @@
     Um bei ocharts Karten kaufen zu können, muss <a href="https://o-charts.org/shop/de/autenticacion?back=my-account">dort</a>
     zunächst ein Konto angelegt werden.<br>
     Anschliessend muss man seine Systeme, auf denen man die Karten nutzen möchte
-    <a href="https://o-charts.org/shop/en/8-oesenc">auf der
-      Seite von o-charts</a> registrieren.
+    <a href="https://o-charts.org/shop/en/8-oesenc">auf der Seite von o-charts</a>
+    registrieren.
     <p>Für den gesamten Prozeß gibt es zwei Wege - den "<a href="https://o-charts.org/manuals/?lng=en">Online
         Proceß</a> " und den <a href="https://o-charts.org/manuals/offline.php?lng=en">"Offline
         Prozeß"</a> . <br>
@@ -138,8 +137,8 @@
     <p><img src="ochartsng-gui-charts2.png" class="fimage"></p>
     <p>Im Dialog die erzeugte Datei auf meinem Gerät speichern.</p>
     <h4>Hochladen des Fingerprints zu o-charts</h4>
-    <p>Auf die <a href="https://o-charts.org/shop/en/8-oesenc">o-charts
-        Seit</a>e gehen und den Fingerprint hochladen.</p>
+    <p>Auf die <a href="https://o-charts.org/shop/en/8-oesenc">o-charts Seit</a>e
+      gehen und den Fingerprint hochladen.</p>
     <img src="ocharts-buying.png" alt="" class="fimage">
     <p>Mit Choose File die unter 2. gespeicherte Datei wählen. Dazu einen
       sinnvollen Namen vergeben (dieser findet sich später in den Mails mit den
@@ -269,7 +268,7 @@
       den bei <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
         vorhandenen Settings</a>.</p>
     Die folgende Tabelle listet die Einstellungen.
-    <table width="100%" border="1">
+    <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
@@ -468,25 +467,23 @@
     <p><img src="ochartsng-featureinfo2.png" class="fimage"> </p>
     <p> Mit einem Klick auf den (blauen) Karten-Namen bekommt man einige weitere
       Informationen zur Karte.</p>
-    <img src="ochartsng-featureinfo3.png" alt="" class="fimage">
+    <p> <img src="ochartsng-featureinfo3.png" alt="" class="fimage"> </p>
+    Mit dem Button "Charts" kann man sich eine Liste der an dieser Stelle
+    genutzten Karten anzeigen lassen.<br>
+    Mit dem Schalter "RenderedOnly" werden nur die Objekte aus den Karten in der
+    Liste angezeigt, die auch momentan im Bild dargestellt wurden (sonst werden
+    alle Objekte in der Nähe des Klicks angezeigt).<br>
     <h2><a name="Installation"></a>Installation</h2>
     <h3>Linux/Raspberry</h3>
     <p>Das Plugin ist als debian Paket vorhanden.<br>
-      Da es sich momentan noch im Beta-Status befindet, ist es noch nicht in den
-      normalen Repositories(Verzeichnissen) vorhanden.</p>
-    <p>Für die <a href="../install.html#Headless">AvNav Images</a> bekommt man
-      die Pakete im "beta" Verzeichnis. Um dieses zu aktivieren kann man die
-      Datei /etc/apt/sources.list.d/extra.list bearbeiten und das beta
-      Verzeichnis aktivieren.<br>
-      Kommando:</p>
-    <div class="code">sudo nano /etc/apt/sources.list.d/extra.list</div>
-    <div class="code"><span style="color: red;">#</span>deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debpreview bullseye main contrib non-free
-    deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free</div>
-    <p>Einfach das # in der debpreview Zeile entfernen. Anschliessend kann man
-      die Pakete mit dem avnav-updater installieren:</p>
+      Es ist in den normalen Repositories(Verzeichnissen) vorhanden.</p>
+    <p>Für die <a href="../install.html#Headless">AvNav Images</a>&nbsp; kann
+      man die Pakete mit dem avnav-updater installieren:</p>
     <ul>
       <li>avnav-ochartsng</li>
     </ul>
+    <p>Neue Images (nach 202508nn) haben das Paket bereits standardmässig
+      installiert.</p>
     <p>Wenn man es direkt von der Kommandozeile machen möchte, kann man das mit
       den folgenden Kommandos tun:</p>
     <ul>
@@ -498,7 +495,8 @@
         Paket-Installationsbeschreibung</a>.</p>
     <div class="code">deb https://www.free-x.de/debpreview bullseye main contrib non-free</div>
     <p>Alternativ kann man die Pakete auch aus dem <a href="../../downloads/daily-ochartsng">daily
-        builds Verzeichnis</a> herunterladen und installieren.</p>
+        builds Verzeichnis</a> bzw. <a href="../../downloads/release-ochartsng">Release
+        Verzeichnis</a> herunterladen und installieren.</p>
     <p>Das kann man z.B. mit den folgenden Kommandos tun (die Version durch die
       gewünschte ersetzen): </p>
     <div class="code">cd /home/pi/avnav<br>wget -O avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20240214/avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo apt install ./avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo systemctl restart avnav</div>
@@ -507,22 +505,25 @@
       und sie von dort z.B. mit WinSCP auf den Raspberry Pi übertragen und dann
       dort installieren.</p>
     <h4>AvNav-ocharts und AvNav-ochartsng zusammen</h4>
-    <p>Wenn man das neue ochartsng Plugin installiert wird es einen Konflikt mit
-      dem bisherigen ocharts Plugin geben. Sie versuchen beide, den gleichen
-      Port (8082) zu benutzen, eines von beiden wird daher nicht starten.<br>
-      Die vorgeschlagene Lösung ist, das alte Plugin auf der <img src="../viewerimages/icons-new/status.svg"
+    <p>Wenn man das neue ochartsng Plugin installiert, benutzt es initial einen
+      anderen Port (8083)&nbsp; als das alte Plugin, so das es keine Konflikte
+      gibt. (Achtung: Beta Versionen vor 20250804 nutzen initial Port 8082 so
+      das es einen Konflikt mit dem bisherigen ocharts Plugin geben wird - dann
+      umstallen).<br>
+      Im Normalfall sollte man das alte Plugin auf der <img src="../viewerimages/icons-new/status.svg"
         alt="" class="inlineimage"> <a href="../userdoc/statuspage.html">server/status
-        Seite</a> zu disablen.<br>
-      Zusätzlich kann man im neuen Plugin den Schalter "useLegacy" aktivieren
-      (in der <a href="#PluginConfig">Plugin Konfiguration)</a>. Mit diesem
-      Schalter aktiviert benutzt das neue Plugin auch alle Karten, die vorher
-      mit dem alten installiert wurden.</p>
+        Seite</a> disablen.<br>
+      Im neuen Plugin kann man den Schalter "useLegacy" aktivieren (in der <a href="#PluginConfig">Plugin
+        Konfiguration)</a>. Mit diesem Schalter aktiviert benutzt das neue
+      Plugin auch alle Karten, die vorher mit dem alten installiert wurden.
+      Alternativ kann man die Karten auch erneut zum neuen Plugin hochladen
+      (oder direkt aus dem Shop, wenn sie noch gültig sind).</p>
     <p>Wenn man beide Plugins parallel nutzen möchte, muss man z.B. beim neuen
       Plugin den Port ändern (beispielsweise auf 8083). Um beide gemeinsam
       laufen zu lassen, sollte das System über ausreichend RAM verfügen (2GB).</p>
     <h3>Android</h3>
-    <p>Für Android git es eine eigene App die ochartsng enthält. Diese muss
-      separat installiert werden.</p>
+    <p>Für Android git es eine eigene App (avocharts) die ochartsng enthält.
+      Diese muss separat installiert werden.</p>
     <p>Siehe <a href="#android">AndroidApp</a> weiter unten..</p>
     <h2><a name="Releases"></a>Releases</h2>
     <p>Alle Releases und alle Beta-Versionen (Entwickler Versionen oder daily
@@ -534,8 +535,15 @@
     <ul>
     </ul>
     <h3>Release Versionen</h3>
-    <p>-- bisher keine --</p>
+    <p> <span style="font-weight: bold;">20250804</span> <a title="release/20250804"
+        href="../../downloads/release-ochartsng/20250804">link</a></p>
+    <p><i><b>Initiale Release</b></i></p>
     <ul>
+      <li><b>Android</b>: <span style="color: red;">Falls vorher eine Beta
+          genutzt wurde, bitte den Key dort exportieren und unter Einstellungen
+          "alt key" aktivieren und den exportierten Key importieren. Nur so
+          können die Karten erneut heruntergeladen werden. </span>Siehe auch
+        die <a href="#androidbetarelease">Hinweise</a>. </li>
     </ul>
     <h2><a name="License"></a>License Notes</h2>
     Die Nutzung der Karten für AvNav mit dem oesenc-pi Plugin ist so mit
@@ -557,7 +565,7 @@
       unter "plugins/system-ochartsng"&nbsp; geändert werden.</p>
     <p><img src="ochartsng-edit-plugin.png" class="fimage"> </p>
     <p>Those are:</p>
-    <table width="100%" border="1">
+    <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
@@ -606,11 +614,8 @@
       Karten für die <a href="../android/android.html">AvNav Android App</a>
       bereit.<br>
       Dazu gibt es die separate Android App&nbsp; "avocharts".</p>
-    <p>Im Moment ist die App noch nicht im google play store vorhanden, da sie
-      ja noch im Beta Stadium ist. Man muss sie daher aus dem <a href="../../downloads/daily-ochartsng">daily
-        builds Verzeichnis</a>&nbsp; herunterladen und auf dem Gerät
-      installieren (Dazu muss man ggf. die Installation aus externen Quellen
-      erlauben).</p>
+    <p><br>
+    </p>
     <p><img src="ochartsng-android-main.jpg" class="fimage"></p>
     <p>Wenn man die App startet kann man zunächst einige Einstellungen anpassen.<br>
       Wenn man diese Bild sieht (Status rot) läuft der eigentliche Karten-Server
@@ -631,7 +636,7 @@
       oder auf das Einstellungssymbol (oben rechts) klicken.</p>
     <p><img src="ochartsng-android-settings.jpg" alt="" class="fimage"></p>
     <br>
-    <table width="100%" border="1">
+    <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
