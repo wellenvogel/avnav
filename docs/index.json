@@ -14,7 +14,8 @@
         {"title":"Import und Export","en_title":"Import and Export","url":"userdoc/downloadpage.html"},
         {"title":"Konfiguration und Anpassung","en_title":"Configuration and Adaptation","url":"hints/index.html"},
         {"title":"Erweiterungen und Zusätze","en_title":"Extensions and AddOns","url":"hints/extensions.html"},
-        {"title":"Index","url":"docmap.html"}
+        {"title":"Index","url":"docmap.html"},
+        {"title":"Alles","url":"onepage.html","en_title":"One Page"}
     
     ]
 }
