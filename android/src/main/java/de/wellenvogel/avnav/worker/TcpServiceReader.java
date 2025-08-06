@@ -43,7 +43,13 @@ public class TcpServiceReader extends SingleConnectionHandler {
     };
 
     private EditableParameter.StringListParameter servicesParameter=
-            new EditableParameter.StringListParameter("service", R.string.labelSettingsSelectService,null);
+            new EditableParameter.StringListParameter("service", R.string.labelSettingsSelectService,null){
+                @Override
+                void init() {
+                    super.init();
+                    existingUnchecked=true;
+                }
+            };
 
 
     private TcpServiceReader(String name, GpsService ctx, NmeaQueue queue,String typeName) throws JSONException {

@@ -40,22 +40,33 @@ public class EditableParameter {
         String description;
         int descriptionId=-1;
         boolean mandatory=false;
+        boolean existingUnchecked=false;
         public ConditionList conditions;
+
+        /**
+         * an init method that is called at the end of every constructor
+         * that allows for simple anonymous derived classes that can modify
+         * the base parameter settings
+         */
+        void init(){}
 
         EditableParameterBase(String name, int descriptionId, T defaultValue) {
             this.name = name;
             this.descriptionId = descriptionId;
             this.defaultValue = defaultValue;
             mandatory = defaultValue == null;
+            init();
 
         }
         EditableParameterBase(String name, int descriptionId,T defaultValue, ConditionList conditions){
             this(name,descriptionId,defaultValue);
             this.conditions=conditions;
+            init();
         }
         EditableParameterBase(String name) {
             this.name = name;
             mandatory=true;
+            init();
         }
         EditableParameterBase(EditableParameterBase<T> other){
             name=other.name;
@@ -64,6 +75,7 @@ public class EditableParameter {
             descriptionId=other.descriptionId;
             mandatory=other.mandatory;
             conditions=other.conditions;
+            init();
         }
         public EditableParameterBase<T> setConditions(AvnUtil.KeyValue...paramters){
             conditions=new ConditionList(paramters);
@@ -100,6 +112,7 @@ public class EditableParameter {
             rt.put("default",defaultValue);
             rt.put("editable",true);
             rt.put("mandatory",mandatory);
+            rt.put("existingUnchecked",existingUnchecked);
             if (description != null) rt.put("description",description);
             if (descriptionId >= 0) rt.put("descriptionId",descriptionId);
             if (conditions != null && conditions.size() > 0){
@@ -261,7 +274,6 @@ public class EditableParameter {
             super(name);
             list=values;
         }
-
         public StringListParameter(StringListParameter stringListParameter) {
             super(stringListParameter);
             list=stringListParameter.list;
