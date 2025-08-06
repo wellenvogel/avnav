@@ -78,7 +78,6 @@ class TimeSource(object):
     return self.externalTs
   def getCurrent(self):
     return self.externalTs
-
   @classmethod
   def formatTs(cls,ts):
     if ts is None:
@@ -232,15 +231,15 @@ class AVNBaseConfig(AVNWorker):
     self.setInfo(self.TIME_CHILD,'disabled',WorkerStatus.INACTIVE)
     self.setInfo(self.GPSPOS_CHILD,'no valid position',WorkerStatus.ERROR)
     hasFix=False
-    lastchecktime=None
+    lastchecktime=0
     gpsTime=TimeSource(TimeSource.SOURCE_GPS,self.fetchGpsTime,self.setInfo)
     ntpTime=TimeSource(TimeSource.SOURCE_NTP,self.fetchNtpTime,self.setInfo)
-    lastSource=gpsTime
+    lastSource=None
     startutc=time.time()
     startupTime=time.monotonic()
+    lastNtpCheck=startupTime #initially wait at least switchtime
     diffToMonotonic=startutc-startupTime
     AVNLog.debug("monotonic diff startup %f",diffToMonotonic)
-    lastGpsOk=False
     while not self.shouldStop():
       settimeperiod=self.P_SETTIME_PERIOD.fromDict(self.param)
       switchtime=self.P_SWITCHTIME.fromDict(self.param)
@@ -286,6 +285,27 @@ class AVNBaseConfig(AVNWorker):
           AVNLog.warn("lost GPS fix")
         hasFix=False
       try:
+        '''
+        check handling:
+        lastSource: last source that has been used to check the system time
+        lastchecktime: monotonic of the last check of system time
+        we check the gps in every loop (1s)
+        if ok:
+          - if we used the gps for the last check systemtime we must wait until we passed lastchecktime+settimeperiod
+          - if not we only wait for lastchecktime+switchtime
+        if nok:
+          - check the ntp TODO: check again (remember last ntp check time: lastntpcheck)
+          - if ok:
+             - if we used ntp for the last check systemtime we must wait until we passed lastchecktime+settimeperiod
+             - if not we only wait for lastchecktime+switchtime
+          - if nok:
+          
+        if we have a valid source and waiting time passed:
+          - check systemtime
+          - remember lastchecktime
+          - remember lastSource 
+          
+        '''
         allowedDiff=self.P_SYSTIMEDIFF.fromDict(self.param)
         settimecmd=self.P_SETTIME_CMD.fromDict(self.param)
         setTimeEnabled=self.P_SETTIME.fromDict(self.param)
@@ -296,45 +316,57 @@ class AVNBaseConfig(AVNWorker):
           checkSource=None
           gpsOk=gpsTime.fetch()
           #compute next check time
-          nextCheck=None
+          waittime=settimeperiod
+          nextNtpCheck = None
           if gpsOk:
-            if not lastGpsOk and lastchecktime is not None:
-              lastchecktime=curmonotonic
-            lastGpsOk=True
+            if lastSource is None:
+              #never checked the system time - so we can do this immediately
+              waittime=0
+            elif lastSource != gpsTime:
+              #we checked from NTP last time
+              waittime=switchtime
+            else:
+              waittime=settimeperiod
             checkSource=gpsTime
-            #1 startup - do it once now
-            if lastchecktime is None:
-              nextCheck=curmonotonic-1
-            else:
-              if gpsTime.equal(lastSource):
-                nextCheck=lastchecktime+settimeperiod
-              else:
-                nextCheck=lastchecktime+switchtime
           else:
-            if lastGpsOk:
-              lastchecktime=curmonotonic
-            lastGpsOk=False
-            if lastchecktime is None:
-              #wait to check NTP on startup
-              nextCheck=startupTime+switchtime
+            #should we query NTP?
+            #if we did not use NTP for the last check
+            #we query immediately after switchtime (but at most with switchtime period)
+            #when the last source for a check (lastSourc) was GPS we also wait switchtime after last valid GPS
+            #otherwise we check the last NTP query
+            #if ok we only query with lastchecktime + settime
+            #otherwise with switchtime period
+            if lastSource != ntpTime:
+              nextNtpCheck=max(lastNtpCheck+switchtime,lastchecktime+switchtime)
+              if lastSource == gpsTime and gpsTime.lastValid is not None:
+                  nextNtpCheck=max(nextNtpCheck,gpsTime.lastValid+switchtime)
             else:
-              if ntpTime.equal(lastSource):
-                nextCheck=lastchecktime+settimeperiod
+              if ntpTime.getCurrent():
+                nextNtpCheck=lastchecktime+settimeperiod
               else:
-                nextCheck=lastchecktime+switchtime
-            if nextCheck <= curmonotonic:
+                #we used NTP for the last system check
+                #but the last query was NOK - so we need to wait at least switchtime to query again
+                nextNtpCheck=lastNtpCheck+switchtime
+            if nextNtpCheck <= curmonotonic:
+              lastNtpCheck=curmonotonic
               if ntpTime.fetch():
                 checkSource=ntpTime
+                nextNtpCheck=None #only for display
+                waittime=0
               else:
-                #try again to fetch NTP after switchtime
-                nextCheck=curmonotonic+switchtime
-                lastchecktime=curmonotonic
-          diff=nextCheck-curmonotonic
+                #just for display
+                nextNtpCheck=curmonotonic+switchtime
+          targetTime=lastchecktime+waittime
+          diff = targetTime-curmonotonic
           if diff < 0:
             diff=0
-          self.setInfo(self.NEXT_CHILD,"in %d seconds"%diff,WorkerStatus.NMEA)
+          if nextNtpCheck is not None:
+            ntpdiff=nextNtpCheck-curmonotonic
+            self.setInfo(self.NEXT_CHILD, "NTP after %d seconds" % ntpdiff, WorkerStatus.NMEA)
+          else:
+            self.setInfo(self.NEXT_CHILD,"after %d seconds"%diff,WorkerStatus.NMEA)
 
-          if checkSource is not None and nextCheck <= curmonotonic:
+          if checkSource is not None and (lastchecktime+waittime) <= curmonotonic:
             now=time.time()
             AVNLog.debug("checking time from %s(%s) against local %s",checkSource.name,
                          TimeSource.formatTs(checkSource.getCurrent()),
