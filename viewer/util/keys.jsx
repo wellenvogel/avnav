@@ -452,7 +452,7 @@ let keys={
             aisTrackingColor: new Property('#f8a601', "Tracking", PropertyType.COLOR),
             routeApproachingColor: new Property('#FA584A', "Approach", PropertyType.COLOR),
             widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20]),
-            useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX,undefined,true)
+            useHdpi: new Property(true,"Increase Fonts on High Res",PropertyType.CHECKBOX,undefined,true)
         },
         /**
          * old properties are kept here to avoid warnings on import
