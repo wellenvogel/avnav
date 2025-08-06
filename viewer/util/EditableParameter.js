@@ -37,7 +37,8 @@ const assignableProperties={
     description: undefined,
     mandatory: false,
     readOnly: false,
-    checker: undefined
+    checker: undefined,
+    existingUnchecked: false //allow to keep an existing value even if the check would fail (still marking it red in the UI)
 }
 
 export const EditableParameterTypes={
@@ -226,9 +227,14 @@ export class EditableParameter extends Object{
     /**
      * check if a vlaue is ok
      * @param values
+     * @param [opt_old]
      */
-    hasError(values){
+    hasError(values,opt_old){
         const cv=this.getValue(values);
+        if (opt_old && this.existingUnchecked){
+            const ov=this.getValue(opt_old)
+            if (ov == cv) return false;
+        }
         try{
             this.setValue({},cv,true);
             return false;

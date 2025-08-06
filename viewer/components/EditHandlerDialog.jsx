@@ -147,7 +147,7 @@ const EditHandlerDialog=(props)=>{
     let renderValues={...currentValues,...modifiedValues};
     let dataValid=true;
     parameters.forEach((parameter)=>{
-        if (parameter.hasError(renderValues)) dataValid=false;
+        if (parameter.hasError(renderValues,currentValues)) dataValid=false;
     })
         let renderName=name||'';
         if (props.child){

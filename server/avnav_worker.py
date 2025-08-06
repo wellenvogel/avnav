@@ -83,7 +83,7 @@ class WorkerParameter(object):
         raise ParamValueError("invalid valuetype %s"%self.valuetype)
     else:
       self.valuetype=self.type if self.type != self.T_FILTER else self.T_STRING
-
+    self.existingUnchecked=False #allow to keep existing values in the UI
   def _getValue(self,val):
     if self.valuetype == self.T_NUMBER:
       return int(val)
@@ -115,6 +115,7 @@ class WorkerParameter(object):
                            mandatory=self.mandatory,
                            condition=self.condition,
                            valuetype=self.valuetype)
+    rt.existingUnchecked=self.existingUnchecked
     if resolveList:
       if callable(self.rangeOrList):
         rt.rangeOrList=self.rangeOrList()
