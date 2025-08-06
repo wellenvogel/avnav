@@ -74,7 +74,7 @@ def sendSock(file,sock,sleeptime,rmcMode):
             fields=lbytes.split(b',')
             if len(fields) >= 2:
               try:
-                ts=int(fields[1])
+                ts=float(fields[1])
               except:
                 ts=0
                 if lastTs is not None:
@@ -82,6 +82,7 @@ def sendSock(file,sock,sleeptime,rmcMode):
               now=time.time()
               if lastSent is not None and lastTs is not None:
                 diff=ts-lastTs
+                #print("###diff: %f"%diff)
                 if diff > 0:
                   nextSend=lastSent+diff
                   if now < nextSend:
