@@ -110,6 +110,10 @@ if [ "$AVNAV_PSK" != "" ] ; then
     logger -t $prfx "using AVNAV_PSK from $CONFIGAVNAV"
     sed -i -e "s/wpa_passphrase *=.*/wpa_passphrase=$AVNAV_PSK/" $tmpf
 fi
+if [ "$AVNAV_WIFI_COUNTRY" != "" ] ; then
+    logger -t $prfx "using AVNAV_WIFI_COUNTRY $AVNAV_WIFI_COUNTRY"
+    echo "country_code=$AVNAV_WIFI_COUNTRY" >> $tmpf
+fi
 logger -t $prfx "starting normal hostapd"
 $0 -r $HOSTAPD $pidfile $tmpf $net &
 

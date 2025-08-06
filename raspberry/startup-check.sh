@@ -149,7 +149,7 @@ if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "
     cfgfile=/etc/wpa_supplicant/wpa_supplicant.conf
     current=`sed -n 's/^ *country *= *//p' $cfgfile | sed 's/#.*//'| tr -d '" \n\r'`
     if [ "$current" = "$AVNAV_WIFI_COUNTRY" ] ; then
-        log "AVNAV_WIFI_COUNTRY already correctly set in system"
+        log "AVNAV_WIFI_COUNTRY already correctly set for wpa_supplicant"
     else
         if [ "$current" != "" ] ; then
             sed -i "s/^ *country *=.*/country=$AVNAV_WIFI_COUNTRY/" $cfgfile
@@ -159,6 +159,7 @@ if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "
         fi
         needsReboot=1
     fi
+    (raspi-config nonint do_wifi_country "$AVNAV_WIFI_COUNTRY") || log "unable to set wifi country in config, ignore"
     hasChanges=1
     LAST_WIFI_COUNTRY="$AVNAV_WIFI_COUNTRY"
 else
