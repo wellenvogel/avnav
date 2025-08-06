@@ -71,14 +71,19 @@ def sendSock(file,sock,sleeptime,rmcMode):
                 raise Exception("Exception on write, error counter exceeded")
         if rmcMode:
           if len(lbytes) > 6 and lbytes[3:6] == b'RMC':
+            ts=0
             fields=lbytes.split(b',')
             if len(fields) >= 2:
-              try:
-                ts=float(fields[1])
-              except:
-                ts=0
-                if lastTs is not None:
-                  ts=lastTs+sleeptime
+              tstr=fields[1][0:6]
+              if len(tstr) != 6:
+                print("unexpected ts %s"%tstr)
+              else:
+                try:
+                  ts=int(tstr[0:2])*3600+int(tstr[2:4])*60+int(tstr[4:6])
+                except:
+                  ts=0
+              if ts == 0 and lastTs is not None:
+                ts=lastTs+sleeptime
               now=time.time()
               if lastSent is not None and lastTs is not None:
                 diff=ts-lastTs
