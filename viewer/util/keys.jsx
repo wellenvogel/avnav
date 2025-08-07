@@ -241,6 +241,7 @@ let keys={
             hasActiveInputs: K,
             preventSizeChange:K,
             windowDimensions: K,
+            windowDimForce: new D("will always update - regardless of preventSizeChange"),
             layoutEditing:K,
             layoutSequence: K, //updated on layout load
             layoutReverts: K,

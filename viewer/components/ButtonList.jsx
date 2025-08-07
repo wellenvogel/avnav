@@ -13,7 +13,7 @@ const ButtonList = (iprops) => {
             buttonHeight: keys.gui.global.computedButtonHeight,
             buttonWidth: keys.gui.global.computedButtonWidth,
             buttonSize: keys.properties.style.buttonSize,
-            dimensions: keys.gui.global.windowDimensions,
+            dimensions: keys.gui.global.windowDimForce,
             buttonCols: keys.properties.buttonCols,
             cancelTop: keys.properties.cancelTop,
             isEditing: keys.gui.global.layoutEditing,

@@ -444,14 +444,15 @@ class App extends React.Component {
     }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
-        if (globalStore.getData(keys.gui.global.preventSizeChange,false)) return;
         if (! this.appRef.current) return;
         let current=this.appRef.current.getBoundingClientRect();
         if (! current) return;
+        this.computeButtonSizes();
+        globalStore.storeData(keys.gui.global.windowDimForce,{width:current.width,height:current.height});
+        if (globalStore.getData(keys.gui.global.preventSizeChange,false)) return;
         let small = current.width <globalStore.getData(keys.properties.smallBreak);
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
         globalStore.storeData(keys.gui.global.windowDimensions,{width:current.width,height:current.height});
-        this.computeButtonSizes();
 
     }
     computeButtonSizes(){
