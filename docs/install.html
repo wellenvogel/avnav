@@ -79,7 +79,7 @@
     </p>
     <a href="../configGen/index.html"><img src="ConfigImagesUi.png" class="image"></a>
     <p>Die Bedeutung der Felder:</p>
-    <table width="100%" border="1">
+    <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
@@ -185,8 +185,8 @@
         <tr>
           <td>WifiCountry</td>
           <td>Germany</td>
-          <td>Das Land (muss für den Wifi Adapter aus rechtlichen Gründen gesetzt
-            werden)</td>
+          <td>Das Land (muss für den Wifi Adapter aus rechtlichen Gründen
+            gesetzt werden)</td>
         </tr>
         <tr>
           <td>InternalWifi as Client</td>
@@ -222,10 +222,10 @@
             (ab 20220421)</td>
           <td>96</td>
           <td>Nur für den lokalen Bilschirm.<br>
-            Die Auflösung in dots/inch für das angeschlossene Display. Beim Klick öffnet sich
-            ein kleiner Rechner, in dem die Abmessungen des Bildschirmes in mm
-            und Pixel angegeben werden können, daraus wird der DPI-Wert
-            berechnet.<br>
+            Die Auflösung in dots/inch für das angeschlossene Display. Beim
+            Klick öffnet sich ein kleiner Rechner, in dem die Abmessungen des
+            Bildschirmes in mm und Pixel angegeben werden können, daraus wird
+            der DPI-Wert berechnet.<br>
             Basierend auf diesem Wert werden einige Anzeige-Elemente skaliert.</td>
         </tr>
         <tr>
@@ -289,16 +289,16 @@
         (leider meist nur Geräte mit Mobilfunk). <br>
         Über diesen Weg kann man sich auch mit dem Pi verbinden.</li>
       <li>Über ein anderes WLAN.<br>
-        Das erfordert aber zunächst eine der anderen Verbindungsmöglichkeiten, da
-        man die Zugangsdaten einstellen muss. Außerdem erfordert es einen
+        Das erfordert aber zunächst eine der anderen Verbindungsmöglichkeiten,
+        da man die Zugangsdaten einstellen muss. Außerdem erfordert es einen
         zusätzlichen WLAN Adapter, der in eine bestimmte USB-Buchse gesteckt
         werden muss (außer man hat in der Konfiguration "Internal Wifi as
         Client" gewählt).</li>
     </ol>
     <h4>Verbindung per Ethernet-Kabel</h4>
-    <p>Wenn man den Pi mit einem Router verbindet (z.B. im Heimnetz), dann erhält
-      er von diesem eine IP-Adresse. Über diese Adresse kann man sich mit dem Pi
-      verbinden.<br>
+    <p>Wenn man den Pi mit einem Router verbindet (z.B. im Heimnetz), dann
+      erhält er von diesem eine IP-Adresse. Über diese Adresse kann man sich mit
+      dem Pi verbinden.<br>
       Da es oft mühsam ist, diese Adresse herauszufinden, macht sich der Pi im
       Netz per <a href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a>
       (Bonjour, Avahi) bekannt.<br>
@@ -395,9 +395,9 @@
     <p>Für einige Funktionen (z.B. Update von Software) benötigt der Pi eine
       Internet-Verbindung. Diese wird natürlich nicht für die grundlegenden
       Navigationsfunktionen benötigt.</p>
-    <p>Vor der Image-Version 20220421 ist dabei zu beachten, dass der Pi seine Systemzeit nicht
-      automatisch einstellt, solange kein GPS angeschlossen ist. Das
-      kann bei vielen Internet-Zugriffen zu Problemen führen. <br>
+    <p>Vor der Image-Version 20220421 ist dabei zu beachten, dass der Pi seine
+      Systemzeit nicht automatisch einstellt, solange kein GPS angeschlossen
+      ist. Das kann bei vielen Internet-Zugriffen zu Problemen führen. <br>
       Ab der Version 20220421 synchronisiert der Pi nach einer Wartezeit
       automatisch seine Systemzeit mit dem Netz (ntp).</p>
     <p>Für die Verbindung zum Internet gibt es die folgenden Möglichkeiten:</p>
@@ -412,9 +412,9 @@
     <p>Hier wird der Pi über ein Ethernet-Kabel an einen Router angeschlossen.<br>
       Dazu ist auf dem Pi nichts weiter einzurichten, das sollte automatisch
       gehen.<br>
-      Auf einigen Pi3 kann es vorkommen, dass ein Netzwerkkabel, das erst nach dem
-      Bootvorgng angeschlossen wird, nicht richtig erkannt wird. In diesem Falle den
-      Pi mit angeschlossenem Netzwerkkabel neu starten.</p>
+      Auf einigen Pi3 kann es vorkommen, dass ein Netzwerkkabel, das erst nach
+      dem Bootvorgng angeschlossen wird, nicht richtig erkannt wird. In diesem
+      Falle den Pi mit angeschlossenem Netzwerkkabel neu starten.</p>
     <h4>Verbindung über ein anderes WLAN</h4>
     <p>Dazu wird ein weiterer WLAN-Adapter (USB-Adapter) benötigt. Bitte vorher
       die Kompatibilität mit dem Pi prüfen - z.B. <a href="https://elinux.org/RPi_USB_Wi-Fi_Adapters">hier</a>.</p>
@@ -469,14 +469,15 @@
     <h2><a name="Touch"></a>Image mit Bildschirm</h2>
     <p> <span>In früheren Versionen gab es ein eigenes AvNav Touch Image.</span><br>
       Dieses wird jedoch nicht mehr weiter gepflegt.<br>
-      Ab der Version 20220421 wurde daher der Support für einen direkt angeschlossenen
-      Bildschirm (mit dem Schwerpunkt touch) in die AvNav Images integriert.</p>
+      Ab der Version 20220421 wurde daher der Support für einen direkt
+      angeschlossenen Bildschirm (mit dem Schwerpunkt touch) in die AvNav Images
+      integriert.</p>
     <p>Wie unter <a href="#preparation">Vorbereitung</a> beschrieben, kann man
       die Unterstützung für einen Bildschirm dort aktivieren.<br>
-      Wenn die Bildschirm-Unterstützung eingeschaltet wurde, startet ein service "avnav-startx".
-      Dieser erzeugt einen lokalen X Server, eine Nutzer-Sitzung für den Nutzer
-      pi mit <a href="https://openbox.org/help/Contents">openbox</a> als
-      Fenster-Manager und Firefox im Kiosk Mode.</p>
+      Wenn die Bildschirm-Unterstützung eingeschaltet wurde, startet ein service
+      "avnav-startx". Dieser erzeugt einen lokalen X Server, eine Nutzer-Sitzung
+      für den Nutzer pi mit <a href="https://openbox.org/help/Contents">openbox</a>
+      als Fenster-Manager und Firefox im Kiosk Mode.</p>
     <p>Als Bildschirm-Tastatur (On Screen Keyboard) wird <a href="http://manpages.ubuntu.com/manpages/bionic/man1/onboard.1.html">onboard</a>
       verwendet.</p>
     <p>Auf der AvNav-Hauptseite (und auf einigen anderen Seiten) wird ein
@@ -493,7 +494,8 @@
     <div class="code">sudo systemctl restart avnav-startx</div>
     <p>erfolgen.<br>
       Falls Firefox einmal nicht mehr richtig starten möchte, kann man das
-      Nutzerprofil entfernen. Das wird beim nächsten Start automatisch neu angelegt.<br>
+      Nutzerprofil entfernen. Das wird beim nächsten Start automatisch neu
+      angelegt.<br>
       <b>Achtung</b>: AvNav-Einstellungen, die nicht auf dem Server gespeichert
       wurden, gehen dabei verloren.</p>
     <div class="code">sudo systemctl stop avnav-startx<br>rm -rf /home/pi/.mozilla/firefox/avnav<br>sudo systemctl start avnav-startx</div>
@@ -501,19 +503,19 @@
       nicht (oder nicht komplett) aktiv ist, ein zusätzliches Panel angezeigt.</p>
     <p><img src="xui-ffpanel.png" alt="" class="fimage"><br>
     </p>
-    <p>Über dieses Panel können einige Navigationsfunktionen in Firefox gesteuert
-      werden, es kann zum 2. Bildschirm (system) gewechselt werden - und man
-      kann die (oben beschriebene) Reset-Funktion für das Firefox-Nutzerprofil
-      ausführen (<img src="viewerimages/SailBoatRed96.png" alt="" class="inlineimage">).</p>
-    <p>Damit ist eine Bedienung des Systems auch möglich, wenn AvNav wider Erwarten
-      nicht komplett startet. Die Reset-Funktion findet sich auch auf dem
-      System-Bildschirm (allerdings nur für komplette Neu-Installationen).</p>
+    <p>Über dieses Panel können einige Navigationsfunktionen in Firefox
+      gesteuert werden, es kann zum 2. Bildschirm (system) gewechselt werden -
+      und man kann die (oben beschriebene) Reset-Funktion für das
+      Firefox-Nutzerprofil ausführen (<img src="viewerimages/SailBoatRed96.png"
+        alt="" class="inlineimage">).</p>
+    <p>Damit ist eine Bedienung des Systems auch möglich, wenn AvNav wider
+      Erwarten nicht komplett startet. Die Reset-Funktion findet sich auch auf
+      dem System-Bildschirm (allerdings nur für komplette Neu-Installationen).</p>
     <h2 class="western"><a name="Packages"></a>Paket Installation</h2>
     <h3>Repositories</h3>
     Dank Oleg gibt es&nbsp; fertige Paket-Repositories, die man in sein
     Debian-Linux einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf
     jeder anderen Debian-Variante (z.B. Ubuntu). <br>
-    Informationen dazu findet man wieder in seiner <a href="https://github.com/free-x/avnav/wiki">Beschreibung</a>.<br>
     <p>Die Paketquellen bindet man wie folgt ein. Das ist nur nötig, wenn man
       nicht das AvNav-Image nutzt.</p>
     <p> Debian Buster (amd64,armhf,arm64)</p>
@@ -584,10 +586,9 @@ sudo systemctl start avnav</div>
       (noch) nicht mit einem AvNav, das als systemd user Service gestartet
       wurde. Das ist aber kein Problem, da man AvNav auch aus der App selbst
       restarten kann.</p>
-    <p>Wenn man nicht das "avnav-raspi"-Paket installiert, aber AvNav mit
-      einem anderen Nutzer als "avnav" - also z.B. dem Nutzer pi starten
-      möchte,&nbsp; sollte man wie beschrieben den Start als systemd user
-      Service nutzen.</p>
+    <p>Wenn man nicht das "avnav-raspi"-Paket installiert, aber AvNav mit einem
+      anderen Nutzer als "avnav" - also z.B. dem Nutzer pi starten möchte,&nbsp;
+      sollte man wie beschrieben den Start als systemd user Service nutzen.</p>
     Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten
     lassen.<br>
     <p>Wenn man AvNav als systemweiten Service mit einem anderen Nutzer laufen
@@ -645,7 +646,7 @@ sudo apt install openplotter-avnav</div>
     <p><img src="windows-notification-1.png" alt=""></p>
     <p><img src="windows-notification-2.png" alt=""></p>
     <p>Das Service-Menü hat die folgenden Einträge:</p>
-    <table width="100%" border="1">
+    <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Bezeichnung</td>
@@ -720,8 +721,8 @@ sudo apt install openplotter-avnav</div>
     <h3>Windows Hinweise</h3>
     <p>Der avnavservice erfordert Powershell (&gt;= 5.x) - das sollte auf allen
       modernen Windows Systemen verfügbar sein. Wenn die AvNav-Installation in
-      einen Fehler läuft, kann es sein, dass die neuesten C/C++ Bibliotheken nicht
-      installiert sind. Diese kann man von <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170">Microsoft</a>
+      einen Fehler läuft, kann es sein, dass die neuesten C/C++ Bibliotheken
+      nicht installiert sind. Diese kann man von <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170">Microsoft</a>
       herunter laden. Der direkte Link ist normalerweise <a href="https://aka.ms/vs/17/release/vc_redist.x64.exe">hier</a>.
     </p>
     <p>Dieser neue Windows-Service ersetzt die alte AvNavNet-Installation mit
