@@ -16,6 +16,7 @@ import DialogButton from "./DialogButton";
 import MapHolder from '../map/mapholder';
 import NavCompute from "../nav/navcompute";
 import {ConfirmDialog} from "./BasicDialogs";
+import PropTypes from "prop-types";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -37,7 +38,9 @@ export const stopAnchorWithConfirm=(opt_resolveOnInact,opt_dialogContext)=>{
     })
 }
 const WatchDialog=(props)=> {
-    const [radius,setRadius]=useState(globalStore.getData(keys.properties.anchorWatchDefault));
+    const [radius,setRadius]=useState((props.currentRadius!==undefined)?
+        props.currentRadius:
+        globalStore.getData(keys.properties.anchorWatchDefault));
     const [bearing,setBearing]=useState(0);
     const [distance,setDistance]=useState(0);
     const dialogContext=useDialogContext();
@@ -113,12 +116,21 @@ const WatchDialog=(props)=> {
         </DialogButtons>
     </DialogFrame>
 }
+
+WatchDialog.PropTypes={
+    active: PropTypes.bool,
+    position: PropTypes.object,
+    setCallback: PropTypes.func,
+    stopCallback: PropTypes.func,
+    currentRadius: PropTypes.number
+}
 export const WatchDialogWithFunctions=(props)=> {
     const dialogContext=useDialogContext();
     let router = NavData.getRoutingHandler();
     let pos = NavData.getCurrentPosition();
     let isActive=false;
-    if (activeRoute.anchorWatch() !== undefined) {
+    let currentRadius=activeRoute.anchorWatch();
+    if (currentRadius !== undefined) {
         isActive=true;
     }
     if (!pos && ! isActive) {
@@ -130,6 +142,7 @@ export const WatchDialogWithFunctions=(props)=> {
         {...props}
         active={isActive}
         position={pos}
+        currentRadius={currentRadius}
         setCallback={(values)=>{
             AlarmHandler.stopAlarm('anchor');
             router.anchorOn(values.refPoint,values.radius);
