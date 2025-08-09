@@ -236,7 +236,7 @@ export const reloadPage=()=>{
     if (window.location.hash){
         url+=window.location.hash;
     }
-    window.location.href = url;
+    window.location.replace(url);
 }
 Helper.concat=concat;
 Helper.concatsp=concatsp;
