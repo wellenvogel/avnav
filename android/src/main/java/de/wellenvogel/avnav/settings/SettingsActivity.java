@@ -328,6 +328,30 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }));
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ! checkBatteryOptimizationOff(this)){
+            int request = getNextPermissionRequestCode();
+            openRequests.add(new DialogRequest(request, new Runnable() {
+                @Override
+                public void run() {
+                    DialogBuilder.confirmDialog(SettingsActivity.this, 0, R.string.batteryOptimization, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            openRequests.clear();
+                            if (i == DialogInterface.BUTTON_POSITIVE) {
+                                Uri uri = new Uri.Builder()
+                                        .scheme("package")
+                                        .opaquePart(getPackageName())
+                                        .build();
+                                startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri));
+                            }
+                            else {
+                                if (!runNextDialog()) resultOk();
+                            }
+                        }
+                    });
+                }
+            }));
+        }
         if (! checkNotificationPermission(this)){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 openRequests.add(new PermissionRequestDialog(
@@ -390,6 +414,13 @@ public class SettingsActivity extends PreferenceActivity {
         }
         return true;
     }
+    public static boolean checkBatteryOptimizationOff(final Context context){
+        PowerManager pm= (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return pm.isIgnoringBatteryOptimizations(context.getPackageName());
+        }
+        return true;
+    }
 
     public static boolean checkNotificationPermission(final Context ctx){
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU){
@@ -415,6 +446,7 @@ public class SettingsActivity extends PreferenceActivity {
         if (! checkPermissions) return true;
         NeededPermissions perm=GpsService.getNeededPermissions(activity);
         if (perm.bluetooth && ! checkBluetooth(activity)) return false;
+        if (! checkBatteryOptimizationOff(activity)) return false;
         if (! perm.gps) return true;
         if (! checkGpsEnabled(activity)) return false;
         if (! checkGpsPermission(activity)) return false;
