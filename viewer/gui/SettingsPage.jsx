@@ -477,7 +477,7 @@ class SettingsPage extends React.Component{
                 onClick: ()=> {
                     self.confirmAbortOrDo().then(() => {
                         leavehandler.stop();
-                        window.location.href = window.location.href;
+                        Helper.reloadPage();
                     });
                 },
                 storeKeys:{

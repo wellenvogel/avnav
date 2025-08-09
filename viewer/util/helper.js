@@ -216,12 +216,35 @@ export const getNameAndExt=(fn)=>{
     }
     return [fn,''];
 }
+export const reloadPage=()=>{
+    let url=window.location.protocol+"//"+window.location.host+window.location.pathname;
+    const newTag='_='+encodeURIComponent((new Date).getTime());
+    if (window.location.search){
+        let hasReplaced=false;
+        let add=window.location.search.replace(/[?&]_=[^&#]*/,(m)=>{
+            hasReplaced=true;
+            return m.replace(/_=.*/,newTag);
+        })
+        if (! hasReplaced){
+            add+="&"+newTag;
+        }
+        url+=add;
+    }
+    else{
+        url+="?"+newTag;
+    }
+    if (window.location.hash){
+        url+=window.location.hash;
+    }
+    window.location.href = url;
+}
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
 Helper.now=now;
 Helper.iterate=iterate;
 Helper.getNameAndExt=getNameAndExt;
+Helper.reloadPage=reloadPage;
 
 export default Helper;
 

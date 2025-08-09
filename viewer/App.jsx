@@ -53,6 +53,7 @@ import mapholder from "./map/mapholder";
 import 'drag-drop-touch';
 import {ConfirmDialog} from "./components/BasicDialogs";
 import PropTypes from "prop-types";
+import Helper from "./util/helper";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -499,7 +500,7 @@ class App extends React.Component {
             " to "+newVersion+". Would you like to reload?"} title={"Server version change"}/>)
             .then(()=>{
                 LeaveHandler.stop();
-                window.location.replace(window.location.href);
+                Helper.reloadPage();
             })
             .catch(()=>this.serverVersion=newVersion);
     }
@@ -513,7 +514,7 @@ class App extends React.Component {
                 <h1>Internal Error</h1>
                 <button
                     className="button"
-                    onClick={()=>window.location.href=window.location.href}
+                    onClick={()=>Helper.reloadPage()}
                     >
                     Reload App
                 </button>
