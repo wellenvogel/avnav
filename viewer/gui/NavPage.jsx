@@ -46,7 +46,7 @@ import MapEventGuard from "../hoc/MapEventGuard";
 import {
     BoatFeatureInfo,
     FeatureAction,
-    FeatureInfo, WpFeatureInfo
+    FeatureInfo, RouteFeatureInfo, WpFeatureInfo
 } from "../map/featureInfo";
 import {loadRoutes} from "../components/RouteInfoHelper";
 import routeobjects, {Measure} from "../nav/routeobjects";
@@ -179,9 +179,13 @@ const navToWp=(on)=>{
     RouteHandler.routeOff();
     MapHolder.triggerRender();
 };
-const gotoFeature=(featureInfo)=>{
+const gotoFeature=(featureInfo,opt_noRoute)=>{
     let target = featureInfo.point;
     if (!target) return;
+    if (opt_noRoute && target instanceof navobjects.WayPoint) {
+        target=target.clone()
+        delete target.routeName;
+    }
     if (! target.name) target.name=globalStore.getData(keys.properties.markerDefaultName);
     RouteHandler.wpOn(target);
 }
@@ -576,10 +580,25 @@ const NavPage=(props)=>{
                 name: 'goto',
                 label: 'Goto',
                 onClick: (featureInfo) => {
+                    gotoFeature(featureInfo,true);
+                },
+                condition: (featureInfo) => {
+                    return featureInfo.validPoint() &&
+                        !(featureInfo instanceof WpFeatureInfo ) &&
+                        ! (featureInfo instanceof BoatFeatureInfo)
+                }
+            }));
+            additionalActions.push(new FeatureAction({
+                name: 'start',
+                label: 'Start',
+                onClick: (featureInfo) => {
                     gotoFeature(featureInfo);
                 },
                 condition: (featureInfo) => {
-                    return featureInfo.validPoint() && !(featureInfo instanceof WpFeatureInfo ) && ! (featureInfo instanceof BoatFeatureInfo)
+                    return featureInfo.validPoint() &&
+                        !(featureInfo instanceof WpFeatureInfo ) &&
+                        ! (featureInfo instanceof BoatFeatureInfo) &&
+                        (featureInfo instanceof RouteFeatureInfo)
                 }
             }));
             additionalActions.push(new FeatureAction({
