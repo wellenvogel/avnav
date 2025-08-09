@@ -16,6 +16,7 @@ import java.nio.channels.DatagramChannel;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.MovingSum;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 public class UdpReceiver extends ChannelWorker {
@@ -27,6 +28,7 @@ public class UdpReceiver extends ChannelWorker {
         }
     }
     long lastReceived=0;
+    MovingSum receiveCounter=new MovingSum(10);
     UdpReceiver(String name, GpsService ctx, NmeaQueue queue) {
         super(name, ctx, queue);
         parameterDescriptions.addParams(
@@ -77,6 +79,8 @@ public class UdpReceiver extends ChannelWorker {
         else{
             bindAddress=new InetSocketAddress(AvnUtil.getLocalHost(),port);
         }
+        channel.socket().setBroadcast(true);
+        channel.socket().setReuseAddress(true);
         channel.socket().bind(bindAddress);
         String source=getSourceName();
         setStatus(WorkerStatus.Status.STARTED,"listening on port "+port+", external access "+allowExternal);
@@ -110,7 +114,7 @@ public class UdpReceiver extends ChannelWorker {
                                 }
                                 if (AvnUtil.matchesNmeaFilter(record,nmeaFilter)) {
                                     queue.add(record, source,priority);
-                                }
+                                    receiveCounter.add(1);                                }
                             }
                         }
                         start = end+1;
@@ -123,6 +127,7 @@ public class UdpReceiver extends ChannelWorker {
                     if (record.length() > 0) {
                         if (AvnUtil.matchesNmeaFilter(record,nmeaFilter)) {
                             queue.add(record, source,priority);
+                            receiveCounter.add(1);
                         }
                     }
                 }
@@ -158,10 +163,14 @@ public class UdpReceiver extends ChannelWorker {
                 }
             }
             else{
-                if (status.status != WorkerStatus.Status.NMEA && lastReceived > 0){
-                    setStatus(WorkerStatus.Status.NMEA,"receiving at "+
+                if ((status.status != WorkerStatus.Status.NMEA && lastReceived > 0)
+                        || receiveCounter.shouldUpdate(1000)
+                ){
+                    receiveCounter.add(0);
+                    float avg=receiveCounter.avg();
+                    setStatus(avg>0?WorkerStatus.Status.NMEA: WorkerStatus.Status.STARTED,"receiving at "+
                             PORT_PARAMETER.fromJson(parameters)+", external access "+
-                            EXTERNAL_ACCESS.fromJson(parameters));
+                            EXTERNAL_ACCESS.fromJson(parameters)+String.format(", rcv=%.2f/s ", avg));
                 }
             }
         }
