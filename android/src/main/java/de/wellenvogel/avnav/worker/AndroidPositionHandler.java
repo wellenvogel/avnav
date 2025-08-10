@@ -7,6 +7,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
@@ -34,6 +36,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 
 /**
@@ -42,7 +48,8 @@ import java.util.TimeZone;
 public class AndroidPositionHandler extends ChannelWorker implements LocationListener , GpsStatus.Listener {
 
 
-    private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
+    private static final long MAXLOCWAIT=2000; //max time we consider a location to be valid
+    private static final long CHECKTIME=900; //if there was no location update for this time - query
 
     //location data
     private LocationManager locationService;
@@ -57,6 +64,29 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private boolean stopped=true;
     private Thread satStatusProvider;
     private GnssStatus.Callback gnssStatus;
+    private LocationListener locationListener=new LocationListener() {
+        @Override
+        public void onLocationChanged(@NonNull Location location) {
+            AndroidPositionHandler.this.onLocationChanged(location);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            AndroidPositionHandler.this.onStatusChanged(provider, status, extras);
+        }
+
+        @Override
+        public void onProviderEnabled(@NonNull String provider) {
+            AndroidPositionHandler.this.onProviderEnabled(provider);
+        }
+
+        @Override
+        public void onProviderDisabled(@NonNull String provider) {
+            AndroidPositionHandler.this.onProviderDisabled(provider);
+        }
+    };
+
+    private final Executor executor= Executors.newFixedThreadPool(1);
 
     private static EditableParameter.IntegerParameter PRIORITY_PARAMETER= SOURCE_PRIORITY_PARAMETER.clone(40);
     AndroidPositionHandler(String name, GpsService ctx, NmeaQueue queue) {
@@ -114,7 +144,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                                 queue.add(gsv.toSentence(), getSourceName(), priority);
                             }
                             Location loc = location;
-                            if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
+                            if (loc != null && (SystemClock.uptimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
                                 GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
                                 gsa.setMode(FaaMode.AUTOMATIC);
                                 gsa.setFixStatus(GpsFixStatus.GPS_3D);
@@ -196,7 +226,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                                 queue.add(gsv.toSentence(), getSourceName(),priority);
                             }
                             Location loc = location;
-                            if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
+                            if (loc != null && (SystemClock.uptimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
                                 GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
                                 gsa.setMode(FaaMode.AUTOMATIC);
                                 gsa.setFixStatus(GpsFixStatus.GPS_3D);
@@ -227,10 +257,25 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     public void check(){
         if (stopped) return;
         if (! isRegistered) tryEnableLocation();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if ((lastValidLocation+CHECKTIME) < SystemClock.uptimeMillis()) {
+                try {
+                    locationService.getCurrentLocation(LocationManager.GPS_PROVIDER, null, executor, new Consumer<Location>() {
+                        @Override
+                        public void accept(Location location) {
+                            if (location != null) {
+                                onLocationChanged(location);
+                            }
+                        }
+                    });
+                } catch (Throwable t) {
+                }
+            }
+        }
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public synchronized void onLocationChanged(Location location) {
         AvnLog.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
@@ -243,7 +288,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 AvnLog.e("unable to create RMC from position: "+e);
             }
 
-        lastValidLocation=System.currentTimeMillis();
+        lastValidLocation= SystemClock.uptimeMillis();
 
     }
 
@@ -269,7 +314,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    locationService.removeUpdates(AndroidPositionHandler.this);
+                    locationService.removeUpdates(locationListener);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         locationService.unregisterGnssStatusCallback(AndroidPositionHandler.this.gnssStatus);
                     }
@@ -301,7 +346,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        locationService.requestLocationUpdates(currentProvider, 400, 0, AndroidPositionHandler.this);
+                        locationService.requestLocationUpdates(currentProvider, CHECKTIME/2, 0, locationListener);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 locationService.registerGnssStatusCallback(AndroidPositionHandler.this.gpsService.getMainExecutor(), AndroidPositionHandler.this.gnssStatus);
                         }
