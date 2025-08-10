@@ -307,12 +307,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
 
 
-    private void stopGpsService(){
+    private void stopGpsService(boolean stopMe){
         AvnLog.i(LOGPRFX,"stop gps service");
         GpsService service=gpsService;
         if (service !=null){
             gpsService=null;
-            service.stopMe();
+            service.stopMe(stopMe);
         }
         Intent intent = new Intent(this, GpsService.class);
         try {
@@ -378,6 +378,21 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
     }
 
+    @Override
+    public void restartService() {
+        AvnLog.i(LOGPRFX,"service restart triggered");
+        if (gpsService != null){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    AvnLog.i(LOGPRFX,"service restart executing");
+                    stopGpsService(false);
+                    startGpsService();
+                }
+            });
+        }
+    }
+
     //to be called e.g. from js
     public void goBack(){
         try {
@@ -434,7 +449,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             unbindService(mConnection);
         }catch (Exception e){}
         if (exitRequested) {
-            stopGpsService();
+            stopGpsService(true);
             //System.exit(0);
         }
         else{
@@ -472,7 +487,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (webView != null) return;
         AvnLog.i(LOGPRFX,"initializeWebView");
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
-        jsInterface=new JavaScriptApi(this,getRequestHandler());
+        jsInterface=new JavaScriptApi(this);
         webView=(WebView)findViewById(R.id.webmain);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setAllowFileAccess(true);

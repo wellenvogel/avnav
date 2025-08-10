@@ -9,6 +9,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public interface IWorker {
+    boolean isEnabled();
+
     interface PermissionCallback{
         void permissionNeeded(NeededPermissions perm);
     }
