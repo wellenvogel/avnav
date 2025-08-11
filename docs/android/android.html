@@ -152,7 +152,8 @@
       um den Nutzungsbedingungen zuzustimmen, und es wird eine Liste der zur
       Verfügung stehenden Layouts zur Auswahl angeboten.</p>
     <p> <img src="android-mainpage.png" alt="" class="fimage"></p>
-    Das Bild zeigt den Empfang einer gültigen Position (oberer grüner Punkt), aber bisher keinen Empfang von gültigen AIS-Daten (unterer gelber Punkt).<br>
+    Das Bild zeigt den Empfang einer gültigen Position (oberer grüner Punkt),
+    aber bisher keinen Empfang von gültigen AIS-Daten (unterer gelber Punkt).<br>
     Um zu den Android Einstellungen zu gelangen, muss zunächst die <a href="../userdoc/settingspage.html">Einstellungsseite</a>
     in der App aufgerufen werden, dort klickt man dann auf den "Android"-Button.<br>
     Bei weiteren Starts erreicht man sofort die Hauptseite der App.<br>
@@ -160,9 +161,10 @@
     <br>
     <h2>Externer Zugriff</h2>
     <p> (neu ab 20210424).</p>
-    <p>Die App ermöglicht es, dass man sich mit einem Browser von anderen Geräten
-      verbinden kann. Dazu muss in der App der Web-Server aktiviert werden (<a href="../userdoc/statuspage.html">Status/Server
-        Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">).<br>
+    <p>Die App ermöglicht es, dass man sich mit einem Browser von anderen
+      Geräten verbinden kann. Dazu muss in der App der Web-Server aktiviert
+      werden (<a href="../userdoc/statuspage.html">Status/Server Seite</a> <img
+        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">).<br>
       Bei der Aktivierung des Web-Servers muss zunächst "externalAccess"
       aktiviert werden. Mit "mdnsEnabled wird dafür gesorgt, dass sich eine
       Bonjour-fähige App (z.B. <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)sich
@@ -176,8 +178,8 @@
     </ul>
     <span style="color: #cccccc;"> Im Normal-Modus ist der Browser in die App
       integriert, sie wird wie eine normale Android-App genutzt.<br>
-      Im "External-Browser"-Modus startet die App einen kleinen Webserver
-      über einen einstellbaren Port (voreingestellt: 34567).</span><br>
+      Im "External-Browser"-Modus startet die App einen kleinen Webserver über
+      einen einstellbaren Port (voreingestellt: 34567).</span><br>
     <br>
     <br>
     <h2>Hintergrund</h2>
@@ -482,7 +484,8 @@
         </tr>
         <tr>
           <td>minTime</td>
-          <td>Minimale Zeit (in sec), bevor ein neuer Trackpunkt geschrieben wird</td>
+          <td>Minimale Zeit (in sec), bevor ein neuer Trackpunkt geschrieben
+            wird</td>
           <td>10</td>
         </tr>
         <tr>
@@ -582,8 +585,8 @@
         </tr>
         <tr>
           <td>closeOnTimeout</td>
-          <td>Schließe die Verbindung und öffne sie erneut, wenn das
-            readTimeout erreicht wird.</td>
+          <td>Schließe die Verbindung und öffne sie erneut, wenn das readTimeout
+            erreicht wird.</td>
           <td>an</td>
         </tr>
         <tr>
@@ -687,6 +690,17 @@
         </tr>
       </tbody>
     </table>
+    <p><span style="color: red;">Wichtiger Hinweis</span>: Aufgrund von
+      Einschränkungen des Android Systems können UDP Nachrichten an eine
+      Broadcast-Adresse nicht empfangen werden, wenn das Gerät in den
+      Standby-Modus (Bildschirm aus) geht. Nachrichten direkt an die IP Adresse
+      des Gerätes werden auch im Standby weiterhin empfangen. Falls also solche
+      Broadcast UDP Sender genutzt werden sollen, muss des Gerät aktiv bleiben.
+      Man kann aber den <img src="../viewerimages/icons-new/brightness_low.svg"
+        alt="" class="inlineimage">Dim Button in AvNav nutzen um die
+      Hintergrundbeleuchtung zu dimmen und den Stromverbrauch zu reduzieren.
+      Siehe auch das <a href="https://github.com/wellenvogel/avnav/issues/510">GitHub
+        Issue #510</a>.</p>
     <h4>UdpWriter</h4>
     <p>Ein UDP-Writer sendet NMEA-Daten per UDP an eine andere App.</p>
     <table style="width: 100%" border="1">
@@ -763,8 +777,8 @@
         </tr>
         <tr>
           <td>closeOnTimeout</td>
-          <td>Schließe die Verbindung und öffne sie erneut, wenn das
-            readTimeout erreicht wird.</td>
+          <td>Schließe die Verbindung und öffne sie erneut, wenn das readTimeout
+            erreicht wird.</td>
           <td>an</td>
         </tr>
       </tbody>

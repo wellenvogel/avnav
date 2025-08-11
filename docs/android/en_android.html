@@ -675,6 +675,16 @@
         </tr>
       </tbody>
     </table>
+    <p><span style="color: red;">Important Hint</span>: Due to limits in the
+      Android system you cannot receive UDP messages being sent to a broadcast
+      address when the device is in standby mode (screen off). You will still
+      receive messages directly being sent to the device IP address. If you are
+      going to use UDP senders with a broadcast address you have to ensure that
+      the device remains active (will happen by default if AvNav is in
+      foreground). You can use the <img src="../viewerimages/icons-new/brightness_low.svg"
+        alt="" class="inlineimage">Dim Button within AvNav to reduce the
+      backlight and save energy this way. Refer to the <a href="https://github.com/wellenvogel/avnav/issues/510">GitHub
+        issue #510</a>.</p>
     <h4>UdpWriter</h4>
     <p>An UdpWriter will send out NMEA data via UDP to another app.</p>
     <table style="width: 100%" border="1">
