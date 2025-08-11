@@ -32,6 +32,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.DownloadListener;
+import android.webkit.ServiceWorkerClient;
+import android.webkit.ServiceWorkerController;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -472,6 +474,25 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         nextDownload.fileName=fileName;
         startNextDownload(nextDownload,mimeType);
     }
+    private WebResourceResponse handleRequest(WebView view, String url, String method){
+        RequestHandler handler= getRequestHandler();
+        WebResourceResponse rt=null;
+        if (handler != null) {
+            try {
+                rt = handler.handleRequest(view,url,method);
+            }catch (Throwable t){
+                AvnLog.e("web request for "+url+" failed",t);
+                InputStream is=new ByteArrayInputStream(new byte[]{});
+                if (Build.VERSION.SDK_INT >= 21){
+                    return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
+                }
+                else {
+                    return null;
+                }
+            }
+        }
+        return rt;
+    }
 
     private void initializeWebView(){
         if (webView != null) return;
@@ -498,6 +519,23 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         String htmlPage = null;
         RequestHandler handler=getRequestHandler();
         if (handler != null) htmlPage=handler.getStartPage();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            //try to workaround on some chrome bug that uses this controller
+            // failed 'importScripts' on 'WorkerGlobalScope'
+            //see https://issues.chromium.org/issues/356827071
+            //    https://issues.chromium.org/issues/356399846
+            //    https://docs.google.com/document/d/1qrRBDKg7YU7bwgmAgqv_1vljYlySehh-dZEpIx-rQ8E/edit?tab=t.0
+            ServiceWorkerController.getInstance().setServiceWorkerClient(new ServiceWorkerClient(){
+                @Nullable
+                @Override
+                public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+                    AvnLog.i(LOGPRFX,"service worker load "+request.getUrl().toString());
+                    WebResourceResponse rt=handleRequest(null,request.getUrl().toString(),request.getMethod());
+                    if (rt != null) return rt;
+                    return super.shouldInterceptRequest(request);
+                }
+            });
+        }
         webView.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Toast.makeText(MainActivity.this, "Oh no! " + description, Toast.LENGTH_SHORT).show();
@@ -513,25 +551,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 return super.shouldInterceptRequest(view, request);
             }
 
-            private WebResourceResponse handleRequest(WebView view, String url, String method){
-                RequestHandler handler= getRequestHandler();
-                WebResourceResponse rt=null;
-                if (handler != null) {
-                    try {
-                        rt = handler.handleRequest(view,url,method);
-                    }catch (Throwable t){
-                        AvnLog.e("web request for "+url+" failed",t);
-                        InputStream is=new ByteArrayInputStream(new byte[]{});
-                        if (Build.VERSION.SDK_INT >= 21){
-                            return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
-                        }
-                        else {
-                            return null;
-                        }
-                    }
-                }
-                return rt;
-            }
+
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
