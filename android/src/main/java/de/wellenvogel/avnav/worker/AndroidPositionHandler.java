@@ -381,7 +381,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     @Override
     NeededPermissions needsPermissions() {
         NeededPermissions rt=new NeededPermissions();
-        rt.gps=true;
+        rt.gps= isEnabled()?NeededPermissions.Mode.NEEDED: NeededPermissions.Mode.NOT_NEEDED;
         return rt;
     }
 

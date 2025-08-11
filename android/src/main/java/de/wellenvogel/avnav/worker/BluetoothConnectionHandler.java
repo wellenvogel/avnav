@@ -112,7 +112,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
     @Override
     NeededPermissions needsPermissions() {
         NeededPermissions rt=new NeededPermissions();
-        rt.bluetooth=true;
+        rt.bluetooth= isEnabled()?NeededPermissions.Mode.NEEDED: NeededPermissions.Mode.NOT_NEEDED;
         return rt;
     }
 

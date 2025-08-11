@@ -65,6 +65,8 @@ import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsEnabled;
+import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 
 /**
  * Created by andreas on 12.12.14.
@@ -248,26 +250,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             String config = postData.getAsString();
             updateWorkerConfig(worker, new JSONObject(config));
             updateConfigSequence();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                //it could happen that the type of service needs to change
-                if (worker.getId() == WGPS.id) {
-                    //check if enabled/disabled
-                    boolean enabledNow = worker.isEnabled();
-                    int expectedFgType = enabledNow ?ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION:ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
-                    if (expectedFgType != lastStartFgType){
-                        AvnLog.i(LOGPRFX,String.format("detected new required fgtype %d, was %d",expectedFgType,lastStartFgType));
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                MainActivityActions mactions=getMainActions();
-                                if (mactions != null){
-                                    mactions.restartService();
-                                }
-                            }
-                        });
-                    }
-                }
-            }
             return RequestHandler.getReturn();
         }
         if ("deleteHandler".equals(command)){
@@ -550,7 +532,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 JSONObject config = handlerConfig.getJSONObject(i);
                 if (WorkerFactory.BLUETOOTH_NAME.equals(Worker.typeFromConfig(config))
                         && Worker.ENABLED_PARAMETER.fromJson(config)) {
-                    rt.bluetooth = true;
+                    rt.bluetooth = NeededPermissions.Mode.NEEDED;
                     break;
                 }
             }
@@ -560,15 +542,15 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         SharedPreferences prefs = ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String gpsConfig=prefs.getString(WGPS.configName,null);
         if (gpsConfig == null){
-            rt.gps=true;
+            rt.gps= NeededPermissions.Mode.NEEDED;
         }
         else{
             JSONObject o= null;
             try {
                 o = new JSONObject(gpsConfig);
-                rt.gps=Worker.ENABLED_PARAMETER.fromJson(o);
+                rt.gps=Worker.ENABLED_PARAMETER.fromJson(o)? NeededPermissions.Mode.NEEDED: NeededPermissions.Mode.NOT_NEEDED;
             } catch (JSONException e) {
-                rt.gps=true;
+                rt.gps= NeededPermissions.Mode.NEEDED;
             }
         }
         return rt;
@@ -721,6 +703,39 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         edit.commit();
     }
+    public static int computeRequiredRunningMode(boolean gpsEnabled,Context ctx,boolean showToast){
+        int fgType=0;
+        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.Q) {
+            fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+            if (gpsEnabled) {
+                fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+                if (!checkGpsEnabled(ctx) || !checkGpsPermission(ctx)) {
+                    fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+                    if (showToast) {
+                        Toast.makeText(ctx, R.string.missingGps, Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        }
+        return fgType;
+    }
+    private synchronized void checkRunningMode(boolean needsGps){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            int expectedFgType = computeRequiredRunningMode(needsGps,this,false);
+            if (expectedFgType != lastStartFgType) {
+                AvnLog.i(LOGPRFX, String.format("detected new required fgtype %d, was %d", expectedFgType, lastStartFgType));
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        MainActivityActions mactions = getMainActions();
+                        if (mactions != null) {
+                            mactions.restartService();
+                        }
+                    }
+                });
+            }
+        }
+    }
     private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
         JSONObject oldConfig=worker.getConfig();
         worker.setParameters(newConfig, false,true);
@@ -739,18 +754,21 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             public void permissionNeeded(NeededPermissions perm) {
                 MainActivityActions actions=getMainActions();
                 if (actions == null) return;
-                if (perm.bluetooth){
+                if (perm.bluetooth == NeededPermissions.Mode.NEEDED){
                     if(!SettingsActivity.checkBluetooth(GpsService.this)){
                         if (Build.VERSION.SDK_INT >= 31) {
                             actions.showPermissionRequest(new String[]{Manifest.permission.BLUETOOTH_CONNECT}, false);
                         }
                     }
                 }
-                if (perm.gps){
+                if (perm.gps == NeededPermissions.Mode.NEEDED){
                     if (!SettingsActivity.checkGpsPermission(GpsService.this)){
                         actions.showPermissionRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                                 Manifest.permission.ACCESS_COARSE_LOCATION}, false);
                     }
+                }
+                if (perm.gps != NeededPermissions.Mode.UNCHANGED){
+                    checkRunningMode(perm.gps == NeededPermissions.Mode.NEEDED);
                 }
             }
         }); //will restart
@@ -1300,6 +1318,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     public void timerAction() throws JSONException {
         AvnLog.i(LOGPRFX,"timer action");
+        IWorker gpsWorker=findWorkerById(WGPS.id);
+        if (gpsWorker != null){
+            checkRunningMode(gpsWorker.isEnabled());
+        }
         checkAnchor();
         checkApproach();
         checkMob();

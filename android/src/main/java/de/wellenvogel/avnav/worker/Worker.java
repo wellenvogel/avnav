@@ -299,13 +299,13 @@ public abstract class Worker implements IWorker {
         try {
             //check if we have a defined enabled parameter
             //otherwise use the generic one
-            if (isEnabled()) {
-                if (permissionCallback != null){
-                    NeededPermissions perm=needsPermissions();
-                    if (perm != null){
-                        permissionCallback.permissionNeeded(perm);
-                    }
+            if (permissionCallback != null){
+                NeededPermissions perm=needsPermissions();
+                if (perm != null){
+                    permissionCallback.permissionNeeded(perm);
                 }
+            }
+            if (isEnabled()) {
                 running = true;
                 mainThread = new Thread(new Runnable() {
                     @Override

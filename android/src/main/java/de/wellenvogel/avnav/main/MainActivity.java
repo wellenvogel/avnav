@@ -290,18 +290,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }
         }
-        int fgType=0;
-        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.Q) {
-            NeededPermissions perm = GpsService.getNeededPermissions(activity);
-            fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
-            if (perm.gps) {
-                fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
-                if (!checkGpsEnabled(this) || !checkGpsPermission(this)) {
-                    fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
-                    Toast.makeText(this, R.string.missingGps, Toast.LENGTH_LONG).show();
-                }
-            }
-        }
+        NeededPermissions perm = GpsService.getNeededPermissions(activity);
+        int fgType=GpsService.computeRequiredRunningMode(perm.gps == NeededPermissions.Mode.NEEDED,this,true);
         return doStartGpsService(fgType);
 
     }

@@ -265,12 +265,12 @@ public class SettingsActivity extends PreferenceActivity {
     private void runPermissionDialogs(){
         SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         NeededPermissions perm=GpsService.getNeededPermissions(this);
-        if (perm.gps && !checkGpsPermission(this)) {
+        if ((perm.gps == NeededPermissions.Mode.NEEDED) && !checkGpsPermission(this)) {
             int request = getNextPermissionRequestCode();
             openRequests.add(new PermissionRequestDialog(this, request, true, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION}, false));
         }
-        if (perm.gps && ! checkGpsEnabled(this)){
+        if ((perm.gps == NeededPermissions.Mode.NEEDED) && ! checkGpsEnabled(this)){
             int request=getNextPermissionRequestCode();
             openRequests.add(new DialogRequest(request, new Runnable() {
                 @Override
@@ -308,7 +308,7 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }));
         }
-        if (perm.gps && ! checkPowerSavingMode(this)){
+        if ((perm.gps == NeededPermissions.Mode.NEEDED) && ! checkPowerSavingMode(this)){
             int request = getNextPermissionRequestCode();
             openRequests.add(new DialogRequest(request, new Runnable() {
                 @Override
@@ -362,7 +362,7 @@ public class SettingsActivity extends PreferenceActivity {
             }
 
         }
-        if (perm.bluetooth && ! checkBluetooth(this)){
+        if ((perm.bluetooth == NeededPermissions.Mode.NEEDED) && ! checkBluetooth(this)){
             if (Build.VERSION.SDK_INT >= 31) {
                 openRequests.add(new PermissionRequestDialog(
                         this,
@@ -445,9 +445,9 @@ public class SettingsActivity extends PreferenceActivity {
         if (! checkNotificationPermission(activity)) return false;
         if (! checkPermissions) return true;
         NeededPermissions perm=GpsService.getNeededPermissions(activity);
-        if (perm.bluetooth && ! checkBluetooth(activity)) return false;
+        if ((perm.bluetooth == NeededPermissions.Mode.NEEDED) && ! checkBluetooth(activity)) return false;
         if (! checkBatteryOptimizationOff(activity)) return false;
-        if (! perm.gps) return true;
+        if (perm.gps != NeededPermissions.Mode.NEEDED) return true;
         if (! checkGpsEnabled(activity)) return false;
         if (! checkGpsPermission(activity)) return false;
         if (! checkPowerSavingMode(activity)) return false;
