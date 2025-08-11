@@ -40,6 +40,54 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">202508xx</span> <a title="release/202508xx"
+        href="../downloads/release/202508xx">link</a></p>
+    <p><i><b>Bug Fixes for 20250723</b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/498">#498</a>:
+        various errors in AIS computations</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/497">#497</a>:
+        correctly show +/- 180° in wind displays</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/431">#431</a>:
+        AvNav not displaying AIS vessel names</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/501">#501</a>:
+        Wrong layoutName in settings
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/458">#458</a>:
+        Android Install doesn't offer to update beta
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/503">#503</a>:
+        Removing overlay not working
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/495">#495</a>:
+        Wrong waypoint names
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/504">#504</a>:
+        AIS targets with SOG 0 has wrong COG orientation on display
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/499">#499</a>:
+        settime issue: system time doesn't get set
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/500">#500</a>:
+        AvNav Updater page gets trunctated in 100% zoom
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/507">#507</a>:
+        Android Anchor Watch: radius (m) - changes ignored
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/510">#510</a>:
+        warn the user if battery optimization is not switched off for AvNav
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/511">#511</a>:
+        UDP reader on Android only listens exclusively on port
+      </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/512">#512</a>:
+        Android: no Background Position when starting with internal GPS enabled or without GPS permissions
+      </li>
+      <li>have both start and goto in feature info for routes</li>
+      <li>avoid js loading error by adding a query parameter to url on reload</li>
+      <li>correctly set wifi country for hostapd and with raspi-config</li>
+      <li>allow to disable NMEA0183 service readers if service is not active</li>
+    </ul>
     <p> <span style="font-weight: bold;">20250723</span> <a title="release/20250723"
         href="../downloads/release/20250723">link</a></p>
     <p><i><b>Main Changes</b></i></p>
@@ -64,7 +112,7 @@ sudo systemctl start avnav</div>
         the <a href="hints/layouts.html">layout editor</a>.<br>
         To support systems with only a basic set of sensors (GPS) an additional
         default-min layout has been added.<br>
-        <table width="100%" border="1">
+        <table border="1" width="100%">
           <tbody>
             <tr>
               <td>Removed Setting</td>
