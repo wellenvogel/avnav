@@ -102,7 +102,6 @@ let widgetList=[
     {
         name: 'DST',
         default: "---",
-        unit: "nm",
         caption: 'DST',
         storeKeys:{
             value: keys.nav.wp.distance,
