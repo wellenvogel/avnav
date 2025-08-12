@@ -434,6 +434,7 @@ class AisLayer{
      * @returns {StyleEntry}
      */
     getStyleEntry(item) {
+        const WILDCARD_STATUS="-status*";
         let cl = AisFormatter.format('clazz', item);
         let typeSuffix;
         let statusSuffix;
@@ -450,7 +451,8 @@ class AisLayer{
             styleMap[base],
             (typeSuffix !== undefined) ? styleMap[base + typeSuffix] : undefined,
             (statusSuffix !== undefined) ? styleMap[base + statusSuffix] : undefined,
-            (statusSuffix !== undefined) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
+            (typeSuffix !== undefined) ? styleMap[base+typeSuffix+WILDCARD_STATUS]:undefined,
+            (statusSuffix !== undefined && typeSuffix !== undefined) ? styleMap[base + typeSuffix + statusSuffix] : undefined,
         );
         let style = cloneDeep(symbol.style);
         if (!symbol.image || !style.size) {
