@@ -143,9 +143,16 @@
           </td>
         </tr>
         <tr>
-          <td>aisImage-typeFishing</td>
+          <td>aisImage-Fishing</td>
           <td>Icon für AIS Ziele mit dem ship type 30 (Fishing), <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L120">siehe
               den code</a> für die Werte</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage-Fishing-status1</td>
+          <td>Icon für AIS Ziele mit dem navigational Status 1 (At Anchor) und
+            type 30 (Fishing)</td>
           <td><br>
           </td>
         </tr>
@@ -164,6 +171,33 @@
         </tr>
       </tbody>
     </table>
+    <p>Das Setzen der Images folgt Prioritäten :</p>
+    <ol>
+      <li>aisImage-Fishing-status1</li>
+      <li>aisImage-Fishing-status* (since 20250812)</li>
+      <li>aisImage-status1</li>
+      <li>aisImage-Fishing</li>
+    </ol>
+    <p>Man muss daher beachten, das man eventuell mehrere Einträge machen muss,
+      wenn man z.B. für einen Typ ein bestimmtes Icon haben möchte (insbesondere
+      vor Version 20250812) - in den defaults gibt es schon Einträge für die
+      Status-Werte 1,2,3,4,5,6,7 - man muss dann z.B. für den Typ Passenger
+      Einträge für </p>
+    <ul>
+      <li>aisImage-Passenger-status1</li>
+      <li>aisImage-Passenger-status2</li>
+      <li>aisImage-Passenger-status3</li>
+      <li>aisImage-Passenger-status4</li>
+      <li>aisImage-Passenger-status5</li>
+      <li>aisImage-Passenger-status6</li>
+      <li>aisImage-Passenger-status7</li>
+    </ul>
+    <p>erzeugen. <br>
+      Ab Version 20250812 erlaubt die Definition auch einen "wildcard" Status.
+      So kann man für das Beispiel angeben:</p>
+    <ul>
+      <li>aisImage-Passenger-status*</li>
+    </ul>
     <p>Falls man nicht mit "replaceColor" arbeiten möchte, kann man
       unterschiedliche Icons für die Zustände angeben:</p>
     <p>aisWarningImage, aisNormalImage, aisWarningImage-status1, ...</p>

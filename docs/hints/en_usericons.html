@@ -135,9 +135,16 @@
           </td>
         </tr>
         <tr>
-          <td>aisImage-typeFishing</td>
+          <td>aisImage-Fishing</td>
           <td>Icon for AIS targets with ship type 30(Fishing), <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L120">see
               the code</a> for values</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage-Fishing-status1</td>
+          <td>Icon for AIS targets with ship type 30(Fishing) and navigationl
+            status 1(At Anchor)</td>
           <td><br>
           </td>
         </tr>
@@ -156,6 +163,31 @@
         </tr>
       </tbody>
     </table>
+    <p>Setting of the icons uses priorities :</p>
+    <ol>
+      <li>aisImage-Fishing-status1</li>
+      <li>aisImage-Fishing-status* (since 20250812)</li>
+      <li>aisImage-status1</li>
+      <li>aisImage-Fishing</li>
+    </ol>
+    <p>Potentially you need to define multiple entries if you want to set an
+      icon for a particular type e.g. (especially before 20250812) - in the
+      defaults there are already entries for status values 1,2,3,4,5,6,7 - so
+      for y type "Passenger" you need to create entries for </p>
+    <ul>
+      <li>aisImage-Passenger-status1</li>
+      <li>aisImage-Passenger-status2</li>
+      <li>aisImage-Passenger-status3</li>
+      <li>aisImage-Passenger-status4</li>
+      <li>aisImage-Passenger-status5</li>
+      <li>aisImage-Passenger-status6</li>
+      <li>aisImage-Passenger-status7</li>
+    </ul>
+    Starting from 20250812 the definition will also accept a wildcard status. So
+    for the example you can define:
+    <ul>
+      <li>aisImage-Passenger-status*</li>
+    </ul>
     <p>If you do not want to use "replaceColor" you can define different icons
       depending on the state:</p>
     <p>aisWarningImage, aisNormalImage, aisWarningImage-status1, ...</p>
