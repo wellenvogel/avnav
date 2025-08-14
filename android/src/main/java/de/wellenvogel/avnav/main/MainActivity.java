@@ -771,7 +771,16 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             });
             dlText = findViewById(R.id.dlInfo);
             sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            PreferenceManager.setDefaultValues(this, Constants.PREFNAME, Context.MODE_PRIVATE, R.xml.sound_preferences, false);
+            boolean dfs=false;
+            try {
+                dfs = sharedPrefs.getBoolean(Constants.DEFAULTS_SET, false);
+            }catch (Throwable t){}
+            if (! dfs) {
+                AvnLog.i(LOGPRFX,"MainActivity: setting defaults");
+                PreferenceManager.setDefaultValues(this, Constants.PREFNAME, Context.MODE_PRIVATE, R.xml.sound_preferences, true);
+                PreferenceManager.setDefaultValues(this, Constants.PREFNAME, Context.MODE_PRIVATE, R.xml.main_preferences, true);
+                sharedPrefs.edit().putBoolean(Constants.DEFAULTS_SET,true).apply();
+            }
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             assetManager = getAssets();
             sharedPrefs.registerOnSharedPreferenceChangeListener(this);
@@ -979,13 +988,19 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private void handleBars(){
         SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         boolean hideStatus=sharedPrefs.getBoolean(Constants.HIDE_BARS,false);
+        AvnLog.dfk(LOGPRFX,"handleBars,hide=%s",hideStatus);
+        View decorView = getWindow().getDecorView();
+        int flags=0;
         if (hideStatus ) {
-            View decorView = getWindow().getDecorView();
-            int flags=View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            flags=View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
             flags+=View.SYSTEM_UI_FLAG_FULLSCREEN;
             flags+=View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            decorView.setSystemUiVisibility(flags);
         }
+        else{
+            flags=decorView.getSystemUiVisibility();
+            flags &= ~(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY+View.SYSTEM_UI_FLAG_FULLSCREEN+View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
+        decorView.setSystemUiVisibility(flags);
     }
     @Override
     protected void onResume() {

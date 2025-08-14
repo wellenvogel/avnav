@@ -15,6 +15,7 @@ public class Constants {
     public static final String AUTOUSB="handleUsb";
     public static final String EXTERNALACCESS="externalaccess";
     public static final String ALARMSOUNDS="alarmSounds";
+    public static final String DEFAULTS_SET="_defaults_set";
     public static final String IPNMEA="ip.nmea";
     public static final String IPAIS="ip.ais";
     public static final String IPADDR="ip.addr";
@@ -34,6 +35,7 @@ public class Constants {
     public static final String ADDON_CONFIG="addon.config";
     //new handler config
     public static final String HANDLER_CONFIG="internal.handler";
+
 
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
