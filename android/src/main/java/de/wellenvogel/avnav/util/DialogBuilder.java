@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.util;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -71,15 +72,15 @@ public class DialogBuilder {
         return this;
     }
 
-    public DialogBuilder setButton(int text, final int buttonId, final DialogInterface.OnClickListener listener){
+    public Button setButton(int text, final int buttonId, final DialogInterface.OnClickListener listener){
         createDialog();
         Integer layoutId=idMap.get(buttonId);
         if (layoutId == null){
-            return this;
+            return null;
         }
         Button b=(Button)mView.findViewById(layoutId);
         if (b == null){
-            return this;
+            return null;
         }
         b.setText(text);
         b.setVisibility(View.VISIBLE);
@@ -89,9 +90,32 @@ public class DialogBuilder {
                 listener.onClick(mDialog,buttonId);
             }
         });
-        return this;
+        return b;
     }
-    public DialogBuilder setPositiveButton(int text, final DialogInterface.OnClickListener listener){
+    public Button setIconButton(int icon, final int buttonId, final DialogInterface.OnClickListener listener){
+        createDialog();
+        Integer layoutId=idMap.get(buttonId);
+        if (layoutId == null){
+            return null;
+        }
+        Button b=(Button)mView.findViewById(layoutId);
+        if (b == null){
+            return null;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            Drawable dr = mContext.getDrawable(icon);
+            b.setCompoundDrawablesWithIntrinsicBounds(dr,null,null,null);
+        }
+        b.setVisibility(View.VISIBLE);
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onClick(mDialog,buttonId);
+            }
+        });
+        return b;
+    }
+    public Button setPositiveButton(int text, final DialogInterface.OnClickListener listener){
         return setButton(text, DialogInterface.BUTTON_POSITIVE, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -100,7 +124,7 @@ public class DialogBuilder {
             }
         });
     }
-    public DialogBuilder setNegativeButton(int text, final DialogInterface.OnClickListener listener){
+    public Button setNegativeButton(int text, final DialogInterface.OnClickListener listener){
         return setButton(text, DialogInterface.BUTTON_NEGATIVE, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -109,7 +133,7 @@ public class DialogBuilder {
             }
         });
     }
-    public DialogBuilder setNeutralButton(int text, final DialogInterface.OnClickListener listener){
+    public Button setNeutralButton(int text, final DialogInterface.OnClickListener listener){
         return setButton(text, DialogInterface.BUTTON_NEUTRAL, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -171,6 +195,16 @@ public class DialogBuilder {
     public void setTitle(CharSequence title){
         mTitle=title;
         setText(R.id.title,title);
+    }
+    public void setFontSize(int viewId,float sz){
+        createDialog();
+        if (mView == null) return;
+        TextView tv=null;
+        try {
+            tv = (TextView) mView.findViewById(viewId);
+        } catch (Exception e){}
+        if (tv == null) return;
+        tv.setTextSize(sz);
     }
 
     /**

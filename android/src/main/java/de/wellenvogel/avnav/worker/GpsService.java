@@ -310,7 +310,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     @Override
     public IBinder onBind(Intent arg0)
     {
-        AvnLog.i(LOGPRFX,"Service bind called");
+        AvnLog.i(LOGPRFX,"Service bind called, running="+isRunning);
         return mBinder;
     }
 

@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.main;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
@@ -14,7 +13,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -53,7 +51,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -71,8 +73,6 @@ import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.worker.WorkerFactory;
 
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
-import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsEnabled;
-import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
 
 
@@ -250,27 +250,85 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
     };
 
+
+    public void showCrashDialog(Throwable t) {
+        AvnLog.e("crash detected",t);
+        StringWriter msg = new StringWriter();
+        PrintWriter ps = new PrintWriter(msg);
+        String date= DateFormat.getDateInstance().format(new Date());
+        ps.print("Date: ");
+        ps.println(date);
+        ps.print("Version: ");
+        ps.printf("%s %s", BuildConfig.APPLICATION_ID,BuildConfig.VERSION_CODE);
+        ps.println("");
+        ps.print("Device: ");
+        ps.printf("%s-%s", Build.MANUFACTURER,Build.MODEL);
+        ps.println("");
+        ps.print("Android: ");
+        ps.println(android.os.Build.VERSION.SDK_INT);
+        ps.print("Exception: ");
+        ps.println(t);
+        t.printStackTrace(ps);
+        ps.flush();
+        DialogBuilder builder = new DialogBuilder(this, R.layout.dialog_share);
+        builder.createDialog();
+        builder.setFontSize(R.id.question,10);
+        builder.setText(R.id.title, "AvNav Crashed");
+        builder.setText(R.id.question, msg.toString());
+        builder.setButton(R.string.ok, DialogInterface.BUTTON_POSITIVE, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                builder.dismiss();
+                mainShutdown();
+            }
+        });
+        builder.setIconButton(android.R.drawable.ic_menu_share, DialogInterface.BUTTON_NEUTRAL, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, msg.toString());
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "AvNav crash "+date);
+
+                try {
+                    startActivity(Intent.createChooser(shareIntent, "Export Crash Data"));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Error exporting data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                builder.dismiss();
+                mainShutdown();
+            }
+        }).setText(R.string.share);
+        builder.show();
+
+    }
+
     private boolean doStartGpsService(int fgType){
         AvnLog.i(Constants.LOGPRFX, "MainActivity create GpsService");
         bindAction = new Runnable() {
             @Override
             public void run() {
+                AvnLog.i(LOGPRFX,"MainActivity: Service bind action - initWebView");
                 initializeWebView();
             }
         };
-        Intent intent = new Intent(this, GpsService.class);
-        intent.putExtra(Constants.SERVICE_TYPE,fgType);
-        bindService(intent,mConnection,0);
-        if (Build.VERSION.SDK_INT >= 26){
-            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
-            startForegroundService(intent);
+        try {
+            Intent intent = new Intent(this, GpsService.class);
+            intent.putExtra(Constants.SERVICE_TYPE, fgType);
+            if (Build.VERSION.SDK_INT >= 26) {
+                AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService in foreground");
+                startForegroundService(intent);
+            } else {
+                AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
+                startService(intent);
+            }
+            bindService(intent, mConnection, 0);
+            serviceNeedsRestart = false;
+            return true;
+        }catch (Throwable t){
+            showCrashDialog(t);
         }
-        else {
-            AvnLog.i(Constants.LOGPRFX, "MainActivity starting GpsService");
-            startService(intent);
-        }
-        serviceNeedsRestart=false;
-        return true;
+        return false;
     }
 
     private boolean startGpsService(){
@@ -692,7 +750,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        handleUsbDeviceAttach(intent);
+        try {
+            handleUsbDeviceAttach(intent);
+        }catch (Throwable t){
+            showCrashDialog(t);
+        }
     }
 
     @Override
@@ -700,29 +762,33 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         AvnLog.i(LOGPRFX,"MainActivity:onCreate");
         super.onCreate(savedInstanceState);
         if (running) return;
-        showsDialog=false;
-        setContentView(R.layout.main);
-        dlProgress=findViewById(R.id.dlIndicator);
-        dlProgress.setOnClickListener(view -> {
-            if (download != null) download.stop();
-        });
-        dlText=findViewById(R.id.dlInfo);
-        sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        assetManager=getAssets();
-        sharedPrefs.registerOnSharedPreferenceChangeListener(this);
-        reloadReceiver =new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                sendEventToJs(Constants.JS_RELOAD,1);
-            }
-        };
-        IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
-        AvnUtil.registerUnexportedReceiver(this,reloadReceiver,triggerFilter);
-        running=true;
-        handleUsbDeviceAttach(getIntent());
-        checkForInitialDialogs();
+        try {
+            showsDialog = false;
+            setContentView(R.layout.main);
+            dlProgress = findViewById(R.id.dlIndicator);
+            dlProgress.setOnClickListener(view -> {
+                if (download != null) download.stop();
+            });
+            dlText = findViewById(R.id.dlInfo);
+            sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            PreferenceManager.setDefaultValues(this, Constants.PREFNAME, Context.MODE_PRIVATE, R.xml.sound_preferences, false);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            assetManager = getAssets();
+            sharedPrefs.registerOnSharedPreferenceChangeListener(this);
+            reloadReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    sendEventToJs(Constants.JS_RELOAD, 1);
+                }
+            };
+            IntentFilter triggerFilter = new IntentFilter((Constants.BC_RELOAD_DATA));
+            AvnUtil.registerUnexportedReceiver(this, reloadReceiver, triggerFilter);
+            running = true;
+            handleUsbDeviceAttach(getIntent());
+            checkForInitialDialogs();
+        }catch (Throwable t){
+            showCrashDialog(t);
+        }
     }
 
     @Override
@@ -927,7 +993,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         super.onResume();
         handleBars();
         if (! showsDialog){
-            onResumeInternal();
+            try {
+                onResumeInternal();
+            }catch (Throwable t){
+                showCrashDialog(t);
+            }
         }
     }
 

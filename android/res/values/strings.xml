@@ -135,4 +135,5 @@
     <string name="nfalarm">Cancel Alarm</string>
     <string name="resetChartDir">reset external chart dir</string>
     <string name="batteryOptimization">Battery Optimization is active for AvNav.\nThis will prevent normal network traffic while in background.\nOK to disable it in the settings.</string>
+    <string name="share">Share</string>
 </resources>
