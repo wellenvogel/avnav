@@ -60,6 +60,7 @@ module.exports = (env, argv) => {
     }
 
     var devtool = "inline-source-map";
+    //var devtool = "source-map";
     var resolveAlias = {};
     resolveAlias['React$'] = __dirname + "/node_modules/react/index.js";
     var cleanOutput=false;
@@ -121,6 +122,11 @@ module.exports = (env, argv) => {
         },
         module: {
             rules: [
+                {
+                    test: /\.js$/,
+                    enforce: "pre",
+                    use: ["source-map-loader"],
+                },
                 {
                     test: path.join(__dirname,"version.js"),
                     loader: 'val-loader',
