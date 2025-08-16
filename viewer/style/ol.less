@@ -8,7 +8,7 @@
 .ol-scale-step-marker {
     width: 1px;
     height: 15px;
-    background-color: #000000;
+    .nightBackColor(black,@nightColor);
     float: right;
     z-index: 10;
 }
@@ -18,7 +18,8 @@
   height: 10px;
   z-index: 9;
   box-sizing: border-box;
-  border: 1px solid black;
+  border: 1px solid;
+  .nightBorderColor(black,@nightColor);
 }
 .ol-scale-step-text {
   position: absolute;
@@ -41,4 +42,10 @@
   bottom: 0;
   left: calc(50% - 80px);
   margin-bottom: 0.8em;
+}
+.ol-scale-singlebar-odd{
+  .nightBackColor(white,@nightColor)
+}
+.ol-scale-singlebar-even{
+  .nightBackColor(black,black)
 }
