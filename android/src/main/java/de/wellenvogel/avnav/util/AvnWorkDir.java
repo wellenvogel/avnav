@@ -3,6 +3,8 @@ package de.wellenvogel.avnav.util;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,18 +70,33 @@ public class AvnWorkDir {
         if (withTitles) {
             StringBuilder title = new StringBuilder();
             String avail = String.format("%dMB free", f.getFreeSpace() / (1024 * 1024));
+            if (isExisting(f)){
+                title.append("*");
+            }
             title.append(rt.shortName).append(" - ");
-            title.append(avail);
             if (isExternal) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     if (Environment.isExternalStorageRemovable(f)) {
-                        title.append(" REMOVABLE");
+                        title.append(" removable");
+                    }
+                    if (Environment.isExternalStorageEmulated(f)){
+                        title.append(" emulated");
                     }
                 }
             }
-            if (isExisting(f)){
-                title.append(" EXISTING");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                StorageManager sm=ctx.getSystemService(StorageManager.class);
+                if (sm != null){
+                    StorageVolume sv=sm.getStorageVolume(f);
+                    if (sv != null){
+                        String d=sv.getDescription(ctx);
+                        if (d != null){
+                            title.append(" [").append(d).append("]");
+                        }
+                    }
+                }
             }
+            title.append(' ').append(avail);
             rt.title = title.toString();
         }
         return rt;
