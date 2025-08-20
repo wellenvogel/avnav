@@ -17,11 +17,13 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.DocumentsContract;
 import android.widget.CheckBox;
+import android.widget.ListPopupWindow;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.List;
 
+import androidx.appcompat.view.menu.ListMenuPresenter;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -146,6 +148,25 @@ public class MainSettingsFragment extends SettingsFragment {
                 }
             });
         }
+        ListPreference wd=(ListPreference)getPreferenceScreen().findPreference(Constants.WORKDIR);
+        wd.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                ListPreference lp=(ListPreference)preference;
+                String ov=lp.getValue();
+                String nv=(String)newValue;
+                if (nv != null && nv.equals(ov)) return false;
+                DialogBuilder.confirmDialog(MainSettingsFragment.this.getActivity(), R.string.warning, R.string.wdChange, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == DialogInterface.BUTTON_POSITIVE){
+                            lp.setValue(nv);
+                        }
+                    }
+                });
+                return false;
+            }
+        });
         setDefaults(R.xml.main_preferences,true);
     }
 

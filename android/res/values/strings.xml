@@ -136,4 +136,6 @@
     <string name="resetChartDir">reset external chart dir</string>
     <string name="batteryOptimization">Battery Optimization is active for AvNav.\nThis will prevent normal network traffic while in background.\nOK to disable it in the settings.</string>
     <string name="share">Share</string>
+    <string name="wdChange">Changing the working directory will make all your current data invisible. But you can switch back any time later.</string>
+    <string name="warning">Warning</string>
 </resources>
