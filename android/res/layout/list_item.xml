@@ -8,7 +8,7 @@
     android:textAppearance="@style/DialogSecond"
         android:background="@drawable/list_selector"
         android:gravity="left|center_vertical"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
         android:minHeight="56sp"
         android:text="lala" />
     <!--android:checkMark="?android:attr/listChoiceIndicatorSingle" -->
