@@ -37,6 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.R;
 
 import static android.content.Context.RECEIVER_EXPORTED;
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
@@ -132,21 +133,50 @@ public class AvnUtil {
         return line;
     }
 
+    public static class WorkDir extends AvnWorkDir{
+        public WorkDir(boolean withTitles) {
+            super(withTitles);
+        }
+
+        @Override
+        String getConfigBase(boolean ext) {
+            return ext?Constants.EXTERNAL_WORKDIR:Constants.INTERNAL_WORKDIR;
+        }
+
+        @Override
+        String getShortName(String configName,Context ctx) {
+            if (configName.equals(Constants.INTERNAL_WORKDIR)){
+                return ctx.getResources().getString(R.string.internalStorage);
+            }
+            if (configName.equals(Constants.EXTERNAL_WORKDIR)){
+                return ctx.getResources().getString(R.string.externalStorage);
+            }
+            String sfx=configName.substring(Constants.EXTERNAL_WORKDIR.length());
+            if (sfx.isEmpty()) return configName;
+            return ctx.getResources().getString(R.string.externalStorage)+"-"+sfx;
+        }
+
+        @Override
+        String[] getDefaultDirs() {
+            return new String[]{"charts","tracks","routes","user"};
+        }
+    }
+
     public static File workdirStringToFile(String wd, Context context){
-        if (wd.equals(Constants.INTERNAL_WORKDIR)){
-            return context.getFilesDir();
-        }
-        if (wd.equals(Constants.EXTERNAL_WORKDIR)){
-            return context.getExternalFilesDir(null);
-        }
-        return new File(wd);
+        WorkDir parser=new WorkDir(false);
+        return parser.getFileForConfig(context,wd);
     }
     public static File getWorkDir(SharedPreferences pref, Context context){
         if (pref == null){
             pref=getSharedPreferences(context);
         }
         String wd=pref.getString(Constants.WORKDIR,"");
-        return workdirStringToFile(wd,context);
+        File rt=workdirStringToFile(wd,context);
+        if (rt == null){
+            AvnLog.e("unable to find requested workdir "+wd);
+            return context.getFilesDir();
+        }
+        return rt;
     }
 
     public static SharedPreferences getSharedPreferences(Context ctx){
@@ -282,7 +312,7 @@ public class AvnUtil {
         float d13=start.distanceTo(current);
         float w13=start.bearingTo(current);
         float w12=start.bearingTo(end);
-        double rt=Math.asin(Math.sin(d13/R)*Math.sin(Math.toRadians(w13)-Math.toRadians(w12)))*R;
+        double rt=Math.asin(Math.sin(d13/ ERADIUS)*Math.sin(Math.toRadians(w13)-Math.toRadians(w12)))* ERADIUS;
         return rt;
     }
 
@@ -300,7 +330,7 @@ public class AvnUtil {
         }
         return rhumbLineXTE(start,end,current);
     }
-    public static final double R=6371000; //app. earth radius
+    public static final double ERADIUS =6371000; //app. earth radius
 
     public static double rhumbLineDistance(Location start, Location end){
         double lat1 = start.getLatitude();
@@ -327,7 +357,7 @@ public class AvnUtil {
 
         //distance is pythagoras on 'stretched' Mercator projection, √(Δφ² + q²·Δλ²)
         double d = Math.sqrt(dlatr * dlatr + q * q * dlonr * dlonr);  // angular distance in radians
-        d = d * R;
+        d = d * ERADIUS;
         return d;
     }
 

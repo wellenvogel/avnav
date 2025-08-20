@@ -26,6 +26,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.AvnWorkDir;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
 
@@ -58,7 +59,6 @@ public class MainSettingsFragment extends SettingsFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.main_preferences);
-        final ListPreference myPref = (ListPreference) findPreference(Constants.WORKDIR);
         final EditTextPreference myChartPref = (EditTextPreference) findPreference(Constants.CHARTDIR);
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -91,7 +91,7 @@ public class MainSettingsFragment extends SettingsFragment {
                     FolderChooseDialog.dialogTitle=getString(R.string.selectChartDir);
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
-                    String startDir=myChartPref.getText();
+                    String startDir;
                     File workDir= AvnUtil.getWorkDir(null,getActivity());
                     try{
 
@@ -178,28 +178,43 @@ public class MainSettingsFragment extends SettingsFragment {
     private void fillData() {
         ListPreference wd=(ListPreference)getPreferenceScreen().findPreference(Constants.WORKDIR);
         if (wd != null){
-            wd.setEntryValues(new String[]{Constants.INTERNAL_WORKDIR,Constants.EXTERNAL_WORKDIR});
+            AvnUtil.WorkDir parser=new AvnUtil.WorkDir(true);
             SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
             String workdir = prefs.getString(Constants.WORKDIR, Constants.INTERNAL_WORKDIR);
-            wd.setEntries(new String[]{
-                    getResources().getString(R.string.internalStorage),
-                    getResources().getString(R.string.externalStorage)
-            });
-            if (workdir.equals(Constants.INTERNAL_WORKDIR)) wd.setValueIndex(0);
-            if (workdir.equals(Constants.EXTERNAL_WORKDIR)) wd.setValueIndex(1);
+            parser.fill(getActivity());
+            List<AvnWorkDir.Entry> entries=parser.getEntries();
+            String [] labels=new String[entries.size()];
+            String [] values=new String[entries.size()];
+            int selected=-1;
+            for (int idx=0;idx < entries.size();idx++){
+                AvnWorkDir.Entry e=entries.get(idx);
+                labels[idx]=e.getTitle();
+                values[idx]=e.getConfigName();
+                if (e.getConfigName().equals(workdir)) selected=idx;
+            }
+            wd.setEntryValues(values);
+            wd.setEntries(labels);
+            if (selected >= 0) wd.setValueIndex(selected);
             updateListSummary(wd);
         }
     }
     private void updateListSummary(ListPreference l){
-        l.setSummary(l.getEntry());
+        l.setSummary(getShortWd(getActivity(),l.getValue()));
+    }
+
+    static private String getShortWd(Context ctx,String configName){
+        AvnUtil.WorkDir parser=new AvnUtil.WorkDir(false);
+        AvnWorkDir.Entry e=parser.getEntryForConfig(ctx,configName);
+        if (e == null){
+            return "unknown";
+        }
+        return e.getShortName();
     }
 
     public static String getSummary(Activity a){
         SharedPreferences prefs = a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String workdir = prefs.getString(Constants.WORKDIR, Constants.INTERNAL_WORKDIR);
-        return workdir.equals(Constants.INTERNAL_WORKDIR)?
-                a.getResources().getString(R.string.internalStorage):
-                a.getResources().getString(R.string.externalStorage);
+        return getShortWd(a,workdir);
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
