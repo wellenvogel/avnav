@@ -40,6 +40,7 @@ public class Constants {
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
     public static final String DEMOCHARTS="demo";
+    public static final String EXTERNALCHARTS="external";
     public static final String CHARTOVERVIEW="avnav.xml";
     public static final String USB_DEVICE_EXTRA = "usbDevice" ;
     public static final String SERVICE_TYPE = "foregroundType";

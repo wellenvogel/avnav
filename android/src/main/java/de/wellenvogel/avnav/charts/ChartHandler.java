@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,6 +60,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     private final Object chartHandlerMonitor=new Object();
     private boolean loading=true;
     private long updateSequence=0;
+
+    private static final String CKEY="chartKey";
 
     public ChartHandler(Context a, RequestHandler h){
         handler=h;
@@ -274,11 +277,39 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         HashMap<String,Chart> currentCharts=chartList; //atomic
         return currentCharts.get(url);
     }
-    public synchronized Chart getChartDescriptionByChartKey(String key){
+    public synchronized JSONObject getChartDescriptionByChartKey(String key, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (key == null) return null;
-        //we rely on the the key (url) being the same as our chart key
-        HashMap<String,Chart> currentCharts=chartList; //atomic
-        return currentCharts.get(key);
+        if (key.startsWith(Constants.EXTERNALCHARTS)){
+            int el=Constants.EXTERNALCHARTS.length();
+            if (key.length() < (el+2)) return null;
+            key=key.substring(el+1);
+            int sidx=key.indexOf('@');
+            if (sidx < 0 || sidx >= (key.length()-1)) return null;
+            String mapKey=key.substring(0,sidx);
+            synchronized (externalCharts) {
+                JSONArray charts =externalCharts.get(mapKey);
+                if (charts == null) return null;
+                String ckey=key.substring(sidx+1);
+                for (int i=0;i<charts.length();i++){
+                    try {
+                        JSONObject cobj=charts.getJSONObject(i);
+                        if (ckey.equals(cobj.optString(CKEY))){
+                            return convertExternalChart(cobj,mapKey,serverInfo);
+                        }
+                    } catch (JSONException e) {
+
+                    }
+                }
+            }
+            return null;
+        }
+        else {
+            //we rely on the the key (url) being the same as our chart key
+            HashMap<String, Chart> currentCharts = chartList; //atomic
+            Chart chart=currentCharts.get(key);
+            if (chart == null) return null;
+            return chart.toJson();
+        }
     }
 
     private void readChartDir(String chartDirStr,String index,HashMap<String, Chart> arr) {
@@ -382,6 +413,27 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     }
     private static final String[] REPLACE_KEYS=new String[]{"url","tokenUrl","icon"};
 
+    private JSONObject convertExternalChart(JSONObject chart, String key, RequestHandler.ServerInfo serverInfo) throws Exception {
+        JSONObject o = new JSONObject(chart.toString()); //no nice copy constructor...
+        if (serverInfo != null) {
+            for (String ok : REPLACE_KEYS) {
+                if (o.has(ok)) {
+                    String value = o.getString(ok);
+                    value=serverInfo.replaceHostInUrl(value);
+                    o.put(ok, value);
+                }
+            }
+        }
+        if (o.has(CKEY)) {
+            String original = o.getString(CKEY);
+            String cfgName=key + "@" + DirectoryRequestHandler.safeName(original, false);
+            o.put(CKEY, Constants.EXTERNALCHARTS + ":" + cfgName);
+            if (!o.has("overlayConfig")) {
+                o.put("overlayConfig", cfgName+ ".cfg");
+            }
+        }
+        return o;
+    }
     @Override
     public JSONObject handleListExtended(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
@@ -408,20 +460,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                         if (charts == null) continue;
                         for (int i = 0; i < charts.length(); i++) {
                             JSONObject ce=charts.getJSONObject(i);
-                            JSONObject o = new JSONObject(ce.toString()); //no nice copy constructor...
-                            if (serverInfo != null) {
-                                for (String ok : REPLACE_KEYS) {
-                                    if (o.has(ok)) {
-                                        String value = o.getString(ok);
-                                        value=serverInfo.replaceHostInUrl(value);
-                                        o.put(ok, value);
-                                    }
-                                }
-                            }
-                            if (! o.has("overlayConfig") && o.has("chartKey")) {
-                                o.put("overlayConfig", key + "@" + DirectoryRequestHandler.safeName(o.getString("chartKey"), false) + ".cfg");
-                            }
-                            rt.put(o);
+                            rt.put(convertExternalChart(ce,key,serverInfo));
                         }
                     }catch (Exception x){
                         Log.e(Constants.LOGPRFX,"error in external charts for "+key,x);
@@ -493,7 +532,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 for (int i=0;i<overlays.length();i++){
                     JSONObject overlay=overlays.getJSONObject(i);
                     if (type.equals(overlay.optString("type"))) {
-                        String overlayName = type.equals("chart") ? overlay.optString("chartKey") : overlay.optString("name");
+                        String overlayName = type.equals("chart") ? overlay.optString(CKEY) : overlay.optString("name");
                         if (name.equals(overlayName)){
                             AvnLog.d("removing overlay "+name+" from "+f.getAbsolutePath());
                             hasChanges=true;
@@ -560,7 +599,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 }
             }
             if (expandCharts){
-                List<String> blackList= Arrays.asList("type", "chartKey", "opacity", "chart");
+                List<String> blackList= Arrays.asList("type", CKEY, "opacity", "chart");
                 String[] expandKeys=new String[]{"overlays","defaults"};
                 for (String key : expandKeys){
                     if (! localConfig.has(key)) continue;
@@ -569,9 +608,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                     for (int idx=0;idx<overlays.length();idx++){
                         JSONObject overlay=overlays.getJSONObject(idx);
                         if (overlay.has("type") && "chart".equals(overlay.getString("type"))){
-                            Chart chart=getChartDescriptionByChartKey(overlay.optString("chartKey"));
+                            JSONObject chart=getChartDescriptionByChartKey(overlay.optString(CKEY),serverInfo);
                             if (chart != null){
-                                merge(overlay,chart.toJson(),blackList);
+                                merge(overlay,chart,blackList);
                             }
                             else{
                                 continue; //skip this entry in the returned list
