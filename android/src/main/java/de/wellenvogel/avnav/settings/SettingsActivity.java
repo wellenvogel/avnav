@@ -5,10 +5,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -427,7 +429,15 @@ public class SettingsActivity extends PreferenceActivity {
     public static boolean checkBatteryOptimizationOff(final Context context){
         PowerManager pm= (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return pm.isIgnoringBatteryOptimizations(context.getPackageName());
+            if (! pm.isIgnoringBatteryOptimizations(context.getPackageName())){
+                //only return false here if the device has a battery
+                //this is no 100% solution as its not sure that no battery really means it would not run standby optimizations
+                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                Intent batteryStatus = context.registerReceiver(null, ifilter);
+                if (batteryStatus.getBooleanExtra(BatteryManager.EXTRA_PRESENT,false)){
+                    return false;
+                }
+            }
         }
         return true;
     }
