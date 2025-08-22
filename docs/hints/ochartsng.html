@@ -268,7 +268,7 @@
       den bei <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
         vorhandenen Settings</a>.</p>
     Die folgende Tabelle listet die Einstellungen.
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -535,6 +535,18 @@
     <ul>
     </ul>
     <h3>Release Versionen</h3>
+    <p> <span style="font-weight: bold;">20250822</span> <a title="release/20250822"
+        href="../../downloads/release-ochartsng/20250822">link</a></p>
+    <p>Kleine Korrekturen und Auswahl des Arbeitsverzeichnisses für Android</p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/ochartsng/issues/27">#27</a>:
+        Android: crash if started without notification permissions </li>
+      <li><a href="https://github.com/wellenvogel/ochartsng/issues/28">#28</a>:
+        Android: <a href="#workingdirectory">allow to use the external SD card</a>,
+        improved diagnostics for the chart installer </li>
+      <li><a href="https://github.com/wellenvogel/ochartsng/pull/29">#29</a>:
+        build preparation for debian trixie </li>
+    </ul>
     <p> <span style="font-weight: bold;">20250812</span></p>
     <p><i><b>Nur Android im Store - es ist die gleiche Release wie 20250804 (nur
           eine neue Versionsnummer).<br>
@@ -569,7 +581,7 @@
       unter "plugins/system-ochartsng"&nbsp; geändert werden.</p>
     <p><img src="ochartsng-edit-plugin.png" class="fimage"> </p>
     <p>Those are:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -638,9 +650,9 @@
     <h3><a name="androidsettings"></a>Einstellungen</h3>
     <p>Um Einstellungen anzupassen kann man auf die angezeigten Einstellungen
       oder auf das Einstellungssymbol (oben rechts) klicken.</p>
-    <p><img src="ochartsng-android-settings.jpg" alt="" class="fimage"></p>
+    <p><img src="ochartsng-android-settings.png" class="fimage"></p>
     <br>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -658,6 +670,12 @@
           <td>LogLevel</td>
           <td>0 - errors, 1- info, 2- debug</td>
           <td>1</td>
+        </tr>
+        <tr>
+          <td>Workdir</td>
+          <td>Das <a href="#workingdirectory">Arbeitsverzeichnis</a> für
+            Karten, Logs und Einstellungen</td>
+          <td>internal</td>
         </tr>
         <tr>
           <td>Shutdown</td>
@@ -694,8 +712,84 @@
     </table>
     <p>Wenn man die Einstellungen fertig angepasst hat, geht man mit dem Pfeil
       zurück wieder auf die Hauptseite.</p>
+    <h3><a name="workingdirectory"></a>Arbeitsverzeichnis (neu ab 20250822)</h3>
+    <p>AvOcharts speichert Karten, Logs und die Einstellungen von Main Settings
+      und Detailled Settings unter einem Verzeichnis auf dem Gerät. (Working
+      Directory). Dieses Verzeichnis ist unabhängig vom <a href="../android/android.html#workingdirectory">AvNav
+        Arbeitsverzeichnis</a>.</p>
+    <p>Man hat die folgende Auswahl:</p>
+    <p><img src="ochartsng-android-workdir.png" alt="" class="fimage"> </p>
+    <p>Je nach Gerät können Sie verschiedene Speicherorte für Ihre Daten
+      auswählen (technische Informationen finden Sie in der <a href="https://developer.android.com/training/data-storage/app-specific?hl=de">Android-Dokumentation</a>).
+      Wenn Ihr Gerät über eine SD-Karte verfügt, gibt es die oben gezeigte
+      Auswahl:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+        </tr>
+        <tr>
+          <td>Internal Storage</td>
+          <td>Dies ist ein Speicherort im internen Flash-Speicher Ihres Geräts.
+            Er ist vollständig privat und (sofern Ihr Gerät nicht gerootet ist)
+            nicht für andere Apps wie z. B. einen Dateimanager zugänglich.<br>
+            Dies ist die Standardeinstellung.<br>
+            The "*" in front of the entry shows that this directory was already
+            used as working directory and contains data.</td>
+        </tr>
+        <tr>
+          <td>External Storage</td>
+          <td>Dieser Speicher befindet sich weiterhin im internen
+            Flash-Speicher, wird jedoch vom Android-System anders behandelt (und
+            daher als "extern - emuliert" bezeichnet). Andere Apps können auf
+            diesen Speicherort zugreifen.Der Pfad für einen Dateimanager lautet
+            typischerweise [interner
+            Speicher]/Android/data/de.wellenvogel.avnav.main/files (oder
+            [interner
+            Speicher]/Android/data/de.wellenvogel.avnav.main.beta/files für eine
+            Beta-Version).</td>
+        </tr>
+        <tr>
+          <td>External Storage-1</td>
+          <td>Dieser Pfad ist nur sichtbar, wenn Ihr Gerät eine SD-Karte
+            installiert hat. Als Erklärung wird auch „removable [SD-Karte]“
+            angezeigt.<br>
+            Falls verfügbar, befindet sich dieses Verzeichnis tatsächlich auf
+            einer externen SD-Karte. Wenn Sie es verwenden möchten, muss die
+            SD-Karte immer installiert ist, wenn avocharts (oder AvNav) läuft.
+            Falls die SD Karten entfernt wird, während avocharts läuft, kann es
+            zum Absturz kommen.<br>
+            Andere Apps wie ein Dateimanager können auf die Daten zugreifen.<br>
+            Der Speicherort ist [SD
+            card]/Android/data/de.wellenvogel.ochartsprovider/files (or [SD
+            card]/Android/data/de.wellenvogel.ochartsprovider.beta/files).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Wenn man das Arbeitsverzeichnis ändert, werden alle Ihre Daten im alten
+      Arbeitsverzeichnis für avocharts unsichtbar (sie bleiben jedoch verfügbar
+      und man kann jederzeit zum alten Verzeichnis zurückkehren).</p>
+    <p>Beim Start von avocharts wird geprüft, ob das ausgewählte
+      Arbeitsverzeichnis noch verfügbar ist (und man wird aufgefordert, ein
+      anderes auszuwählen, falls nicht).<br>
+      Wenn avocharts durch Autostart von AvNav gestartet wird, versucht es einen
+      Fallback auf das interne Arbeitsverzeichnis, falls das gewählte nicht
+      verfügbar ist (z.B. SD Karte entfernt).</p>
+    <p>Für externe Verzeichnisse kann man grundsätzlich einen Dateimanager
+      verwenden, um Daten dorthin und von dort zu kopieren. avocharts erkennt
+      diese Daten jedoch potentiell nicht, wenn es gerade läuft. Daher empfiehlt
+      es sich, die Daten direkt in der App hochzuladen. Man kann aber z.B. eine
+      Zip-Datei mit diesen Daten als Backup erstellen. Und man kann sehr einfach
+      die Log Dateien von avocharts sehen.</p>
+    <p>Alle (potentiellen) Abrbeitsverzeichnisse werden gelöscht, wenn man
+      avocharts deinstalliert (oder seine Daten löscht).</p>
+    <p>Hinweis: Einstellungen (aus der Tabelle hier darüber) werden nicht im
+      Arbeitsverzeichnis abgelegt.</p>
+    <h3>Erster Start<br>
+    </h3>
     <p>Man kann nun den Karten-Server mit "START" loslaufen lassen.</p>
-    <p><img src="ochartsng-android-running.jpg" class="fimage"></p>
+    <p><img src="ochartsng-android-running.png" class="fimage"></p>
     <p>Wenn der Server läuft, wird das in der Benachrichtigungszeile angezeigt.
       Wenn der Start nicht erfolgreich ist (Status wird wieder rot) kann man in
       die Ausgabe ("OUT") und in das Log ("LOG") schauen.</p>

@@ -261,7 +261,7 @@
       at&nbsp; <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
         settings</a>.</p>
     <p>The following parameters are available.</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -520,12 +520,24 @@
     <ul>
     </ul>
     <h3>Release Versions</h3>
+    <p> <span style="font-weight: bold;">20250822</span> <a title="release/20250822"
+        href="../../downloads/release-ochartsng/20250822">link</a></p>
+    <p>Small Fixes and Working Directory selection for Android</p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/ochartsng/issues/27">#27</a>:
+        Android: crash if started without notification permissions </li>
+      <li><a href="https://github.com/wellenvogel/ochartsng/issues/28">#28</a>:
+        Android: <a href="#workingdirectory">allow to use the external SD card</a>,
+        improved diagnostics for the chart installer </li>
+      <li><a href="https://github.com/wellenvogel/ochartsng/pull/29">#29</a>:
+        build preparation for debian trixie </li>
+    </ul>
     <p><span style="font-weight: bold;">20250812</span> </p>
     <p><i><b>Only Android Store - same content like 20250804 (only new version
           number).</b></i></p>
     <p> <span style="font-weight: bold;">20250804</span> <a title="release/20250804"
         href="../../downloads/release-ochartsng/20250804">link</a></p>
-    <p><i><b>Initiale Release</b></i></p>
+    <p><i><b>Initial Release</b></i></p>
     <ul>
       <li><b>Android</b>: <span style="color: red;">If you already have been
           using a beta version, please export the key there, enable "alt key" in
@@ -552,7 +564,7 @@
       at "plugins/system-ochartsng" .</p>
     <p><img src="ochartsng-edit-plugin.png" class="fimage"> </p>
     <p>Those are:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -606,7 +618,7 @@
     <p>Currently the app is not (yet) available in the google play store as it
       is still in beta status. So you need to download it from the <a href="../../downloads/daily-ochartsng">daily
         builds directory</a> and install it (allow external sources).</p>
-    <p><img src="ochartsng-android-main.jpg" class="fimage"></p>
+    <p><img src="ochartsng-android-main.png" class="fimage"></p>
     <p>After you started up avocharts for the first time you can adapt some
       settings.<br>
       When you see this picture the real ocharts provider process is still not
@@ -625,9 +637,9 @@
     <h3><a name="androidsettings"></a>Settings</h3>
     <p>To adapt settings tap on the shown settings or on the settings icon on
       the upper right.</p>
-    <p><img src="ochartsng-android-settings.jpg" alt="" class="fimage"></p>
+    <p><img src="ochartsng-android-settings.png" class="fimage"></p>
     <br>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -646,6 +658,12 @@
           <td>LogLevel</td>
           <td>0 - errors, 1- info, 2- debug</td>
           <td>1</td>
+        </tr>
+        <tr>
+          <td>WorkDir</td>
+          <td><a href="#workingdirectory">Location for storing all data</a> like
+            charts and render settings(new since 20250822)</td>
+          <td>internal</td>
         </tr>
         <tr>
           <td>Shutdown</td>
@@ -675,8 +693,81 @@
       </tbody>
     </table>
     <p>When done with the settings tap the back arrow.</p>
+    <h3><a name="workingdirectory"></a>Working Directory (new since 20250822)</h3>
+    <p>AvOcharts will store all charts, logs and the settings you can configure
+      in Main Settings and Detailled Settings in a storage location on your
+      device (Working Directory). This directory is independent from <a href="../android/android.html#workingdirectory">AvNav's
+        working directory</a>.</p>
+    <p>You have the following choices:</p>
+    <p><img src="ochartsng-android-workdir.png" alt="" class="fimage"> </p>
+    <p>Depending on the device you can select different locations where your
+      data is stored (refer to the <a href="https://developer.android.com/training/data-storage/app-specific?hl=en">Android
+        doc</a> for some technical background). If your device has an SD card
+      you will see a selection like above:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Explanation</td>
+        </tr>
+        <tr>
+          <td>Internal Storage</td>
+          <td>This is a location in the internal flash memory of your device.
+            It's completely private and (if your device is not rooted) is not
+            accessible for other apps like a file manager.<br>
+            The "*" in front of the entry shows that this directory was already
+            used as working directory and contains data.</td>
+        </tr>
+        <tr>
+          <td>External Storage</td>
+          <td>This is a storage still being located in the internal flash memory
+            but treated differently by the Android system (and therefore named
+            "external - emulated"). Other apps can access this data location.<br>
+            You can choose this location if you would like other apps (like a
+            file manager) to access the data. The path for a file manager would
+            typically be [internal
+            memory]/Android/data/de.wellenvogel.ochartsprovider/files (or
+            [internal
+            memory]/Android/data/de.wellenvogel.avnav.ochartsprovider.beta/files
+            for a beta version)</td>
+        </tr>
+        <tr>
+          <td>External Storage-1</td>
+          <td>This will only be visible if your device has an SD card installed.
+            Typically you will also see "removable [SD Card]" as explanation.<br>
+            If available this directory really is located on an external SD
+            card. If you plan to use this, just be sure to always have the SD
+            card installed, when you run AvNav (or avocharts). If you remove it
+            while AvNav is running it could crash.<br>
+            Other apps like a file manger can access the data.<br>
+            The location is [SD
+            card]/Android/data/de.wellenvogel.ochartsprovider/files (or [SD
+            card]/Android/data/de.wellenvogel.ochartsprovider.beta/files).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>When you change the WorkDir all your data in the old WorkDir will become
+      invisible to avocharts (although they remain available and you can switch
+      back to the old one at any time).</p>
+    <p>When avocharts starts up it checks if the selected working directory is
+      still available (and will prompt you to choose a different one if not).<br>
+      If you let it autostart from AvNav it will try to fall back to the
+      internal working directory if the selected directory is not available
+      (e.g. SD card removed).</p>
+    <p>For the external directories you can in principle use a file manager to
+      copy data to and from those locations but avocharts is not prepared to
+      detect those data when it is running - so the preferred way&nbsp; is to
+      upload data to those locations directly within the app. But you could e.g.
+      create a zip of the data as a backup. And you can easily access the logs
+      of avocharts.</p>
+    <p>All the WorkDir directories will be emptied if you deinstall avocharts
+      (or clean it's data).</p>
+    <p>Important hint: Settings (i.e. the ones in the table above) are not
+      stored in the WorkDir.<br>
+    </p>
+    <h3>Starting Up the first Time</h3>
     <p>You can now start the chart provider by tapping "START".</p>
-    <p><img src="ochartsng-android-running.jpg" class="fimage"></p>
+    <p><img src="ochartsng-android-running.png" class="fimage"></p>
     <p>When the provider process is up and running you will see the indication
       in the notification bar. If something goes wrong just try to have a look
       at the output (tapping "OUT") or the log (tapping "LOG").</p>
@@ -685,7 +776,7 @@
     <p><img src="ochartsng-android-webmain.jpg" alt="" class="fimage"></p>
     <p>You now can e.g. register at the ocharts shop (on android this is only
       possible using the Online Process).</p>
-    <h3><a name="androidbetarelease"></a>Beta and Release Versions</h3>
+    <h3><a name="androidbetarelease"></a>Android Beta and Release Versions</h3>
     <p>Due to the way that the ocharts license daemon is working you will
       normally not be able to use charts that you installed with the release
       version within the beta version and vice versa.<br>
