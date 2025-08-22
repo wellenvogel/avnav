@@ -102,23 +102,85 @@
       supports USB OTG. As a sender for NMEA data you can e.g. use the raspberry
       version - or any other NMEA0183-wifi gateway. You can also use a plain
       bluetooth GPS mouse if your device does not have an internal GPS.</p>
-    <h2>Charts and stored Data</h2>
+    <h2>Charts and stored Data (Working Directory)</h2>
     <p><a name="workingdirectory" id="workingdirectory"></a>AvNav stores its
-      data and charts in a working directory. You can choose between "internal
-      storage" or "external storage" for this directory. Depending on the device
-      the external storage <b>could</b> be located on the SD card. In any case
-      other apps cannot access this directory.<br>
-      So you have to load or export all data using the AvNav app itself.<br>
-      There is only one exception: you can choose an "additonal chart directory"
-      that can be used to store charts in gemf or xml format. This directory can
-      be created and accessed outside AvNav.</p>
+      data and charts in a working directory. </p>
+    <p>From the Android Settings you can choose the working directory (extended
+      since 202508xx).</p>
+    <img src="android-settings-workdir.png" class="fimage">
+    <p>Depending on the device you can select different locations where
+      your data is stored (refer to the <a href="https://developer.android.com/training/data-storage/app-specific?hl=en">Android
+        doc</a> for some technical background). If your device has an SD card
+      you will see a selection like above:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Explanation</td>
+        </tr>
+        <tr>
+          <td>Internal Storage</td>
+          <td>This is a location in the internal flash memory of your device.
+            It's completely private and (if your device is not rooted) is not
+            accessible for other apps like a file manager.<br>
+            This is the default. Its also available in versions before 202508xx.<br>
+            The "*" in front of the entry shows that this directory was already
+            used as working directory and contains data.</td>
+        </tr>
+        <tr>
+          <td>External Storage</td>
+          <td>This is a storage still being located in the internal flash memory
+            but treated differently by the Android system (and therefore named
+            "external - emulated"). Other apps can access this data location.<br>
+            You can choose this location if you would like other apps (like a
+            file manager) to access the data (and it is also available before
+            202508xx). The path for a file manager would typically be [internal
+            memory]/Android/data/de.wellenvogel.avnav.main/files (or [internal
+            memory]/Android/data/de.wellenvogel.avnav.main.beta/files for a beta
+            version)</td>
+        </tr>
+        <tr>
+          <td>External Storage-1</td>
+          <td>This will only be visible if your device has an SD card installed.
+            Typically you will also see "removable [SD Card]" as explanation.<br>
+            If available this directory really is located on an external SD
+            card. If you plan to use this, just be sure to always have the SD
+            card installed, when you run AvNav. If you remove it while AvNav is
+            running it could crash.<br>
+            Other apps like a file manger can access the data.<br>
+            The location is [SD
+            card]/Android/data/de.wellenvogel.avnav.main/files (or [SD
+            card]/Android/data/de.wellenvogel.avnav.main.beta/files).<br>
+            Not available before version 202508xx.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>When you change the WorkDir all your data in the old WorkDir will become
+      invisible to AvNav (although they remain available and you can switch back
+      to the old one at any time).</p>
+    <p>When AvNav starts up it checks if the selected working directory is still
+      available (and will prompt you to choose a different one if not).</p>
+    <p>For the external directories you can in principle use a file manager to
+      copy data to and from those locations but AvNav is not prepared to detect
+      those data when it is running - so the preferred way&nbsp; is to upload
+      data to those locations directly within the app. But you could e.g. create
+      a zip of the data as a backup.</p>
+    <p>All the WorkDir directories will be emptied if you deinstall AvNav (or
+      clean it's data).</p>
+    <p>Important hint: Settings (i.e. configuration of the multiplexer and other
+      android settings) are not stored in the WorkDir.<br>
+    </p>
+    <p>If you choose an "additonal chart directory" this is located outside of
+      AvNav and you can keep charts in gemf or xml format there.&nbsp; This
+      directory can be created and accessed outside AvNav and it will not be
+      touched when deinstalling AvNav or removing it's data.</p>
     <p>Charts are expected to be available in gemf- <a href="../charts.html#chartformats">Format</a>.
-      Since 20200325 you can alos have "mbtiles" or "*.xml files". </p>
+      Since 20200325 you can also have "mbtiles" or "*.xml files". </p>
     <ul>
     </ul>
-    <p>Copy the charts either to the "additional charts dir" or <a href="../userdoc/downloadpage.html">upload
-        them in the app</a> . Some demo charts are preinstalled - but they need
-      an online connection.<br>
+    <p>Copy the charts either to the "additional charts dir" (gemf or xml only)
+      or <a href="../userdoc/downloadpage.html">upload them in the app</a> .
+      Some demo charts are preinstalled - but they need an online connection.<br>
       To use o-charts (or S57 charts) you need to install <a href="../hints/ochartsng.html#android">avocharts</a>
       and install your charts there.</p>
     To save data from AvNav or upload data you should have a file manager
@@ -129,8 +191,8 @@
     <img alt="" src="android-start-first.png" class="fimage"><br>
     After clicking ok you will see the main settings page.<br>
     <img src="android-settings-main.png" class="fimage"><br>
-    Amongst other settings, you can select the working directory and the
-    external charts directory. <br>
+    Amongst other settings, you can select the <a href="#workingdirectory">working
+      directory</a> and the external charts directory. <br>
     A complete list of settings can be found <a href="#Settings">here</a>.<br>
     You can leave the settings page with the upper right button or by pressing
     the back button.<br>
@@ -141,10 +203,11 @@
       <li>Access to fine location (GPS) as long as the app is running</li>
       <li>Notifications to show you an info as long as AvNav is running (even
         when in background)</li>
+      <li>disabled battery optimization for AvNav</li>
     </ul>
-    <p>Additionally AvNav will check if energy saving is enabled. If enabled
-      AvNav will not be able to use the internal GPS while in background. So you
-      will be asked to disable it.</p>
+    <p>Additionally AvNav will check if (global) energy saving is enabled. If
+      enabled AvNav will not be able to use the internal GPS while in
+      background. So you will be asked to disable it.</p>
     <p>Afterwards yo will get to the <a href="../userdoc/mainpage.html">main
         page</a> of the app (typically you will be prompted to accept the
       conditions before and to select one of the available layouts).</p>

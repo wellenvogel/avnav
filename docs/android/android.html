@@ -98,28 +98,102 @@
       um NMEA-Daten für andere Android-Apps bereitzustellen. In AvNav
       konfiguriert man dazu einen TcpWriter, in den zugreifenden Apps verbindet
       man sich über die Adresse 127.0.0.1 und den vorher konfigurierten Port).</p>
-    <h2>Karten und gespeicherte Daten</h2>
+    <h2>Karten und gespeicherte Daten (Arbeitsverzeichnis)</h2>
+    <h2></h2>
     <p><a name="workingdirectory" id="workingdirectory"></a>AvNav speichert alle
-      seine Daten und die Karten in einem Arbeitsverzeichnis. Es kann gewählt
-      werden, ob das Verzeichnis im "internal storage" oder im "external
-      storage" liegt. Je nach Gerät <b>kann</b> das externe Verzeichnis auf
-      einer SD-Karte liegen. In beiden Fällen ist das Verzeichnis aufgrund der
-      Android-Restriktionen aber nicht für andere Apps zugreifbar. <br>
-      Daher müssen die Daten über die AvNav App geladen oder exportiert werden.
-      Ausnahme ist ein zusätzliches externes Kartenverzeichnis, aus dem AvNav
-      gemf-Karten (oder xml Dateien) lesen kann.</p>
-    <p>Die Karten werden im gemf- <a href="../charts.html#chartformats">Format</a>
-      erwartet, ab Version 20200325 auch als "mbtiles" oder "*.xml files". </p>
+      seine Daten und die Karten in einem Arbeitsverzeichnis.</p>
+    <p>Von den Android Einstellungen kann man das Arbeitsverzeichnis (working
+      directory) auswählen (erweitert ab 202508xx).</p>
+    <img src="android-settings-workdir.png" class="fimage">
+    <p>Je nach Gerät können Sie verschiedene Speicherorte für Ihre Daten
+      auswählen (technische Informationen finden Sie in der <a href="https://developer.android.com/training/data-storage/app-specific?hl=de">Android-Dokumentation</a>).
+      Wenn Ihr Gerät über eine SD-Karte verfügt, wird die oben gezeigte Auswahl
+      angezeigt:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Erklärung</td>
+        </tr>
+        <tr>
+          <td>Interner Speicher</td>
+          <td>Dies ist ein Speicherort im internen Flash-Speicher Ihres Geräts.
+            Er ist vollständig privat und (sofern Ihr Gerät nicht gerootet ist)
+            nicht
+            für andere Apps wie z. B. einen Dateimanager zugänglich.<br>
+            Dies ist die Standardeinstellung. Es ist auch in Versionen vor
+            202508xx verfügbar.<br>
+            Das "*" vor dem Eintrag zeigt an, dass dieses Verzeichnis bereits
+            als Arbeitsverzeichnis verwendet wurde und Daten enthält.</td>
+        </tr>
+        <tr>
+          <td>Externer Speicher</td>
+          <td>Dieser Speicher befindet sich weiterhin im internen
+            Flash-Speicher, wird jedoch vom Android-System anders behandelt (und
+            daher als
+            "extern - emuliert" bezeichnet). Andere Apps können auf diesen
+            Speicherort zugreifen.<br>
+            Sie können diesen Speicherort auswählen, wenn andere Apps (z. B. ein
+            Dateimanager) auf die Daten zugreifen sollen (er ist auch vor
+            202508xx verfügbar). Der Pfad für einen Dateimanager lautet
+            typischerweise [interner
+            Speicher]/Android/data/de.wellenvogel.avnav.main/files (oder
+            [interner
+            Speicher]/Android/data/de.wellenvogel.avnav.main.beta/files für eine
+            Beta-Version).</td>
+        </tr>
+        <tr>
+          <td>Externer Speicher-1</td>
+          <td>Dieser Pfad ist nur sichtbar, wenn Ihr Gerät eine SD-Karte
+            installiert hat. Als Erklärung wird auc „removable [SD-Karte]“
+            angezeigt.<br>
+            Falls verfügbar, befindet sich dieses Verzeichnis tatsächlich auf
+            einer externen SD-Karte. Wenn Sie es verwenden möchten, muss die
+            SD-Karte immer installiert ist, wenn AvNav läuft. Falls die SD
+            Karten entfernt wird, während AvNav läuft, kann es zum Absturz
+            kommen.<br>
+            Andere Apps wie ein Dateimanager können auf die Daten zugreifen.<br>
+            Der Speicherort ist
+            [SD-Karte]/Android/data/de.wellenvogel.avnav.main/files (oder
+            [SD-Karte]/Android/data/de.wellenvogel.avnav.main.beta/files).<br>
+            Nicht verfügbar vor Version 202508xx.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Wenn man das Arbeitsverzeichnis ändert, werden alle Ihre Daten im alten
+      Arbeitsverzeichnis für AvNav unsichtbar (sie bleiben jedoch verfügbar und
+      man kann jederzeit zum alten Verzeichnis zurückkehren).</p>
+    <p>Beim Start von AvNav wird geprüft, ob das ausgewählte Arbeitsverzeichnis
+      noch verfügbar ist (und man wird aufgefordert, ein anderes auszuwählen,
+      falls nicht).</p>
+    <p>Für externe Verzeichnisse kann man grundsätzlich einen Dateimanager
+      verwenden, um Daten dorthin und von dort zu kopieren. AvNav erkennt diese
+      Daten jedoch potentiell nicht, wenn es gerade läuft. Daher empfiehlt es
+      sich, die Daten direkt in der App hochzuladen. Man kann aber z.B. eine
+      Zip-Datei mit diesen Daten als Backup erstellen.</p>
+    <p>Alle WorkDir-Verzeichnisse werden geleert, wenn man AvNav deinstalliert
+      (oder die Daten bereinigt).</p>
+    <p>Wichtiger Hinweis: Einstellungen (z. B. die Konfiguration des
+      Multiplexers und andere Android-Einstellungen) werden nicht im WorkDir
+      gespeichert.<br>
+    </p>
+    <p>Wenn man ein zusätzliches Kartenverzeichnis wählt, befindet sich dieses
+      außerhalb von AvNav. Dort kann man Karten im Gemf- oder XML-Format
+      speichern. Dieses Verzeichnis kann außerhalb von AvNav erstellt und
+      aufgerufen werden. Es wird bei der Deinstallation von AvNav oder beim
+      Entfernen der Daten nicht berührt.</p>
+    <p>Karten müssen im Gemf- <a href="../charts.html#chartformats">Format</a>
+      verfügbar sein.
+      Seit dem 20200305 sind auch "mbtiles"- oder "*.xml"-Dateien möglich.</p>
     <ul>
     </ul>
-    <p>Die Karten müssen auf das Gerät in das "external charts dir" kopiert oder
-      <a href="../userdoc/downloadpage.html">in der App hochgeladen</a> werden .
-      Zusätzlich sind einige Demo-Karten vorinstalliert, die allerdings eine
-      Online-Verbindung erfordern.</p>
-    <p>Um O-Charts-Vektorkarten (oder S57-Karten) zu nutzen, muss man <a href="../hints/ochartsng.html#android">avocharts</a>
-      installieren und die Karten dort hochladen.</p>
-    <p>Um Daten auf dem Gerät zu speichern oder sie vom Gerät zu laden, sollte
-      sinnvollerweise ein Dateimanager auf dem Android-Gerät installiert sein.</p>
+    <p>Kopieren Sie die Karten entweder in das "Zusätzliche Kartenverzeichnis"
+      (nur Gemf oder XML)
+      oder <a href="../userdoc/downloadpage.html">laden Sie sie in die App hoch</a>.
+      Einige Demo-Karten sind vorinstalliert, benötigen aber eine
+      Online-Verbindung.<br>
+      Um O-Charts (oder S57-Karten) zu verwenden, muss man&nbsp; <a href="../hints/ochartsng.html#android">avocharts</a>
+      installieren und die Karten dort installieren.</p>
     <h2>Benutzung</h2>
     <p>Nach dem erstmaligen Start der App befindet man sich auf einer
       Einführungsseite:</p>
