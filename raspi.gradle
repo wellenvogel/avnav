@@ -33,7 +33,7 @@ ospackage {
     requires 'hostapd'
     requires 'dnsmasq'
     requires 'mpg123'
-    requires 'ntp'
+    requires('ntp').or('ntpsec')
     requires 'avahi-autoipd'
     requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
     requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
