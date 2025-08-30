@@ -89,6 +89,11 @@ fi
 sed -i -e '/^iface *wlan0/,/^[^ ]/d' -e '/wlan0/d' /etc/network/interfaces
 
 BOOTCFG=/boot/avnav.conf
+. /etc/os-release
+if [ $VERSION_ID -ge 12 ]
+then
+  BOOTCFG=/boot/firmware/avnav.conf
+fi
 
 if [ ! -e "$BOOTCFG" ] ; then
     echo "creating $BOOTCFG"
