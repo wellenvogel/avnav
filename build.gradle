@@ -12,7 +12,7 @@ buildscript{
     }
     dependencies{
         classpath localGroovy()
-        classpath 'com.netflix.nebula:gradle-ospackage-plugin:11.1.0'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:12.1.0'
         classpath 'commons-net:commons-net:3.3'
         classpath 'org.eclipse.jgit:org.eclipse.jgit:4.6.0.201612231935-r'
         classpath group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'

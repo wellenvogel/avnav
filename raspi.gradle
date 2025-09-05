@@ -8,7 +8,7 @@ buildscript{
 		mavenCentral()
 	}
     dependencies{
-        classpath 'com.netflix.nebula:gradle-ospackage-plugin:11.1.0'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:12.1.0'
     }
 }
 
