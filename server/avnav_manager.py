@@ -304,7 +304,7 @@ class AVNHandlerManager(object):
     existingConfig=True
     if not os.path.exists(filename):
       if not allowNoConfig:
-        AVNLog.error("unable to read config file %s",filename)
+        AVNLog.errorOut("unable to read config file %s",filename)
         return False
       existingConfig=False
     self.cfgfileName=filename
@@ -315,7 +315,7 @@ class AVNHandlerManager(object):
       else:
         self.parseDomAndCreateHandlers(filename)
     except Exception as e:
-      AVNLog.error("error parsing cfg file %s : %s",filename,traceback.format_exc())
+      AVNLog.errorOut("error parsing cfg file %s : %s",filename,traceback.format_exc())
       self.parseError=str(e)
       return False
     for handler in avnav_handlerList.getAllHandlerClasses():
@@ -333,7 +333,7 @@ class AVNHandlerManager(object):
               raise Exception("invalid main node or main node name for autoInstantiate")
             self.parseHandler(node.documentElement, handler, domAttached=False)
           except Exception:
-              AVNLog.error("error parsing default config %s for %s:%s",ai,name,traceback.format_exc())
+              AVNLog.errorOut("error parsing default config %s for %s:%s",ai,name,traceback.format_exc())
               return False
     return len(AVNWorker.getAllHandlers()) > 0
 
@@ -391,7 +391,7 @@ class AVNHandlerManager(object):
     cfg.update(self.baseParam)
     instance=handlerClass.createInstance(cfg)
     if instance is None:
-      AVNLog.error("unable to instantiate handler %s",element.tagName)
+      AVNLog.errorOut("unable to instantiate handler %s",element.tagName)
     else:
       instance.setConfigChanger(ConfigChanger(self, self.domObject, domAttached, element, childPointer))
     return instance
@@ -429,7 +429,7 @@ class AVNHandlerManager(object):
         try:
           os.unlink(full)
         except:
-          AVNLog.error("unable to remove old cfg file %s:%s",full,traceback.format_exc())
+          AVNLog.errorOut("unable to remove old cfg file %s:%s",full,traceback.format_exc())
 
   def getBackupName(self,fileName):
     now=datetime.datetime.utcnow()
@@ -489,7 +489,7 @@ class AVNHandlerManager(object):
     try:
       os.rename(tmpName,self.cfgfileName)
     except Exception as e:
-      AVNLog.error("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,str(e))
+      AVNLog.errorOut("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,str(e))
       raise
 
   def startHandlers(self,navData):

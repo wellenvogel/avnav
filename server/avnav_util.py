@@ -75,7 +75,9 @@ class LogFilter(logging.Filter):
 
 class AVNLog(object):
   logger=logging.getLogger('avn')
+  formatter = AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
   consoleHandler=None
+  consoleErrorHandler=logging.StreamHandler()
   fhandler=None
   debugToFile=False
   logDir=None
@@ -121,9 +123,10 @@ class AVNLog(object):
       numeric_level = getattr(logging, level.upper(), None)
       if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % level)
-    formatter=AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
     cls.consoleHandler=logging.StreamHandler()
-    cls.consoleHandler.setFormatter(formatter)
+    cls.consoleHandler.setFormatter(cls.formatter)
+    cls.consoleErrorHandler.setLevel(logging.INFO)
+    cls.consoleErrorHandler.setFormatter(cls.formatter)
     cls.logger.propagate=False
     cls.logger.addHandler(cls.consoleHandler)
     cls.logger.setLevel(numeric_level)
@@ -260,6 +263,15 @@ class AVNLog(object):
   @classmethod
   def error(cls,str,*args,**kwargs):
     cls.logger.error(str,*args,**kwargs)
+
+  @classmethod
+  def errorOut(cls, str, *args, **kwargs):
+      logger=logging.getLogger('avnout')
+      if cls.fhandler is not None:
+          logger.addHandler(cls.fhandler)
+      if cls.consoleErrorHandler is not None:
+          logger.addHandler(cls.consoleErrorHandler)
+      logger.error(str, *args, **kwargs)
   @classmethod
   def ld(cls,*parms):
     cls.logger.debug(' '.join(map(repr,parms)))

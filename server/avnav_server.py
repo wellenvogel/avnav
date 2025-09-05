@@ -189,18 +189,18 @@ def main(argv):
     AVNLog.info("not config %s and fallback %s found, starting with defaults",usedCfgFile,fallbackName)
     rt=handlerManager.readConfigAndCreateHandlers(cfgname,allowNoConfig=True)
     if rt is False:
-      AVNLog.error("unable to start with empty config")
+      AVNLog.errorOut("unable to start with empty config")
       sys.exit(1)
   else:
     rt=handlerManager.readConfigAndCreateHandlers(cfgname)
     if rt is False:
       if os.path.exists(fallbackName) and not options.failOnError:
-        AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)
-        writeStderr("error when parsing %s, trying fallback %s"%(cfgname,fallbackName))
+        AVNLog.errorOut("error when parsing %s, trying fallback %s",cfgname,fallbackName)
+        #writeStderr("error when parsing %s, trying fallback %s"%(cfgname,fallbackName))
         usedCfgFile=fallbackName
         rt=handlerManager.readConfigAndCreateHandlers(fallbackName)
         if not rt:
-          AVNLog.error("unable to parse config file %s", fallbackName)
+          AVNLog.errorOut("unable to parse config file %s", fallbackName)
           sys.exit(1)
         createFailedBackup(cfgname)
         try:
@@ -208,16 +208,16 @@ def main(argv):
           shutil.copyfile(fallbackName,tmpName)
           os.replace(tmpName,cfgname)
         except Exception as e:
-          AVNLog.error("unable to create %s from %s: %s",cfgname,fallbackName,str(e))
+          AVNLog.errorOut("unable to create %s from %s: %s",cfgname,fallbackName,str(e))
         handlerManager.cfgfileName=cfgname #we just did read the fallback - but if we write...
 
       else:
-        AVNLog.error("unable to parse config file %s, no fallback found",cfgname)
-        writeStderr("unable to parse config file %s, no fallback found"%cfgname)
+        AVNLog.errorOut("unable to parse config file %s, no fallback found",cfgname)
+        #writeStderr("unable to parse config file %s, no fallback found"%cfgname)
         if not options.failOnError and canRestart:
           if createFailedBackup(cfgname):
-            AVNLog.error("removing invalid config file %s",cfgname)
-            writeStderr("removing invalid config file %s"%cfgname)
+            AVNLog.errorOut("removing invalid config file %s",cfgname)
+            #writeStderr("removing invalid config file %s"%cfgname)
             os.unlink(cfgname)
         sys.exit(1)
     else:
@@ -225,7 +225,7 @@ def main(argv):
   baseConfig=AVNWorker.findHandlerByName("AVNConfig") #type: AVNBaseConfig
   httpServer=AVNWorker.findHandlerByName(AVNHttpServer.getConfigName())
   if baseConfig is None:
-    AVNLog.error("internal error: base config not loaded")
+    AVNLog.errorOut("internal error: base config not loaded")
     sys.exit(1)
   baseConfig.setVersion(AVNAV_VERSION)
   parseError=handlerManager.parseError
@@ -303,7 +303,7 @@ def main(argv):
       time.sleep(1)
 
   except Exception as e:
-    AVNLog.error("Exception in main %s",traceback.format_exc())
+    AVNLog.errorOut("Exception in main %s",traceback.format_exc())
   AVNLog.info("stopping")
   sighandler(None, None)
    
