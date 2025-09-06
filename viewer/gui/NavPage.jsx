@@ -13,7 +13,7 @@ import {
     DialogButtons, DialogFrame, DialogRow,
     DialogText, OverlayDialog, showDialog, showPromiseDialog, useDialogContext
 } from '../components/OverlayDialog.jsx';
-import Helper from '../util/helper.js';
+import Helper, {injectav} from '../util/helper.js';
 import {
     useKeyEventHandlerPlain,
     useStoreHelper,
@@ -523,13 +523,17 @@ const NavPage=(props)=>{
         if (wpButtonsVisible === on) return;
         setWpButtonsVisible(on);
     },[wpButtonsVisible]);
-    const widgetClick=useCallback((item,data,panel,invertEditDirection)=>{
+    const widgetClick=useCallback((ev)=>{
+        const avev=injectav(ev);
+        const item=avev.avnav.item||{};
+        const panel=avev.avnav.panelName||"";
         let pagePanels=LayoutHandler.getPagePanels(PAGENAME);
         let idx=pagePanels.indexOf(OVERLAYPANEL);
         if (idx >=0){
             pagePanels.splice(idx,1);
         }
         if (LayoutHandler.isEditing()) {
+            const invertEditDirection=avev.avnav.invertEditDirection;
             showDialog(dialogCtx, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
                 pageWithOptions={PAGENAME}
@@ -539,7 +543,7 @@ const NavPage=(props)=>{
             return;
         }
         if (item.name == "AisTarget"){
-            let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
+            let mmsi=avev.avnav.mmsi;
             showAisInfo(mmsi);
             return;
         }

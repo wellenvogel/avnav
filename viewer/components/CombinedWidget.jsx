@@ -155,6 +155,7 @@ export const CombinedWidget=(props)=>{
         weightSum+=getWeight(child);
     });
     const dragFrame=sortContext.id+":"+dragId;
+    const itemClick=editing?undefined:cl;
     return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl}>
         { (editing && locked) && <div className="icon locked">Locked</div>}
         <ItemList
@@ -177,9 +178,11 @@ export const CombinedWidget=(props)=>{
                 let Item = theFactory.createWidget(item, {...childProperties,style:style});
                 cidx++;
                 return (iprops)=>{
-                    return  <Item key={cidx} {...iprops} mode={mode} editing={editing}/>
+                    return  <Item key={cidx} {...iprops} mode={mode} editing={editing} />
             }}
             }
+            onItemClick={itemClick}
+
         />
     </div>
 }

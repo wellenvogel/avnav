@@ -32,7 +32,7 @@ import LocalStorage from '../util/localStorageManager';
 import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
-import Helper from "../util/helper";
+import Helper, {avitem, injectav, setav} from "../util/helper";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -109,11 +109,16 @@ const SectionItem=(props)=>{
     );
 };
 
+const createValueChanged=(props)=>{
+    return (value)=> {
+        props.onClick(setav(undefined, {value: value}));
+    }
+}
 const CheckBoxSettingsItem=(props)=>{
     return (
         <Checkbox
             className={props.className}
-            onChange={props.onClick}
+            onChange={createValueChanged(props)}
             label={props.label}
             value={props.value}/>
     );
@@ -132,8 +137,10 @@ const CheckBoxListSettingsItem=(lprops)=>{
             onChange={(nv)=>{
                 let newProps=assign({},current);
                 newProps[props.label]=nv;
-                lprops.onClick(newProps);
+                const cf=createValueChanged(lprops);
+                cf(newProps);
             }}
+            key={props.label}
             label={props.label}
             value={props.value}/>)}
     </div>);
@@ -179,7 +186,7 @@ const RangeSettingsItem=(properties)=> {
                         dialogContext.showDialog(()=>{
                             return <RangeItemDialog
                                 {...properties}
-                                resolveFunction={(nv)=>properties.onClick(nv)}/>
+                                resolveFunction={createValueChanged(properties)}/>
                         })
                         }}>
         <div className="label">{properties.label}</div>
@@ -201,9 +208,7 @@ const ListSettingsItem=(properties)=> {
     return <div className={properties.className}>
             <div className="label">{properties.label}</div>
             <Radio
-                onChange={function(newVal){
-                            properties.onClick(newVal);
-                        }}
+                onChange={createValueChanged(properties)}
                 itemList={items}
                 value={properties.value}>
             </Radio>
@@ -231,15 +236,14 @@ const SelectSettingsItem=(properties)=> {
     return(
         <InputSelect
             className={properties.className}
-            onChange={function(newVal){
-                properties.onClick(newVal);
-            }}
+            onChange={createValueChanged(properties)}
             itemList={items}
             changeOnlyValue={true}
             value={value}
             label={properties.label}
             resetCallback={(ev)=>{
-                properties.onClick(properties.defaultv);
+                const cf=createValueChanged(properties);
+                cf(properties.defaultv);
             }}
         >
         </InputSelect>
@@ -256,7 +260,7 @@ const ColorSettingsItem=(properties)=>{
 
     return <ColorSelector
                className={properties.className}
-               onChange={properties.onClick}
+               onChange={createValueChanged(properties)}
                label={properties.label}
                default={properties.defaultv}
                value={properties.value}
@@ -309,6 +313,7 @@ const LayoutItem=(props)=>
             onClick={isEditing}
         />
     }
+    const valueChanged=createValueChanged(props);
     const changeFunction=(newVal)=>{
         if (LayoutHandler.isEditing()) {
             isEditing();
@@ -316,7 +321,7 @@ const LayoutItem=(props)=>
         }
         LayoutHandler.loadLayout(newVal,true)
             .then((layout)=>{
-                props.onClick(newVal);
+                valueChanged(newVal);
             })
             .catch((error)=>{
                 Toast(error+"");
@@ -344,7 +349,7 @@ const LayoutItem=(props)=>
             value={props.value}
             label={props.label}
             resetCallback={(ev)=>{
-                props.onClick(props.defaultv)
+                valueChanged(props.defaultv)
             }}
         />;
 };
@@ -596,7 +601,9 @@ class SettingsPage extends React.Component{
                 if (e) Toast(e);
             })
     }
-    changeItem(item,value){
+    changeItem(ev){
+        const item=avitem(ev);
+        const value=avitem(ev,'value')
         this.values.setValue(item.name,value);
     }
 
@@ -702,7 +709,8 @@ class SettingsPage extends React.Component{
             });
         }
     }
-    sectionClick(item){
+    sectionClick(ev){
+        const item=avitem(ev);
         this.handlePanel(item.name);
     }
     componentDidMount(){

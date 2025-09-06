@@ -26,6 +26,7 @@ import {DynamicTitleIcons} from "../components/TitleIcons";
 import {showDialog} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
+import {injectav} from "../util/helper";
 const MINPAGE=1;
 const MAXPAGE=5;
 const PANEL_LIST=['left','m1','m2','m3','right'];
@@ -205,7 +206,9 @@ const GpsPage = (props) => {
                 }
             }
         ]);
-    const onItemClick = useCallback((item, data, panelInfo) => {
+    const onItemClick = useCallback((ev, panelInfo) => {
+        const avev=injectav(ev);
+        const item=avev.avnav.item;
         if (! item) return;
         if (LayoutHandler.isEditing()) {
             showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
@@ -221,7 +224,7 @@ const GpsPage = (props) => {
             return;
         }
         if (item && item.name === "AisTarget") {
-            let mmsi = (data && data.mmsi) ? data.mmsi : item.mmsi;
+            let mmsi = avev.avnav.mmsi;
             if (mmsi === undefined) return;
             showDialog(dialogCtxRef, () => {
                 return <AisInfoWithFunctions
@@ -272,8 +275,8 @@ const GpsPage = (props) => {
             },
             itemList: panelData.list,
             fontSize: fontSize,
-            onItemClick: (item, data) => {
-                onItemClick(item, data, panelData);
+            onItemClick: (ev) => {
+                onItemClick(ev, panelData);
             },
             onClick: () => {
                 if (LayoutHandler.isEditing()) {

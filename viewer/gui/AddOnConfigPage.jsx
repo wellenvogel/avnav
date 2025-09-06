@@ -9,8 +9,8 @@ import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
-import assign from "object-assign";
 import {showPromiseDialog} from "../components/OverlayDialog";
+import {avitem} from "../util/helper";
 
 
 const AddonItem=(props)=>{
@@ -100,7 +100,8 @@ class AddonConfigPage extends React.Component{
                         history={self.props.history}
                         />
                 }}
-                onItemClick={(item)=>{
+                onItemClick={(ev)=>{
+                    const item=avitem(ev);
                     let itemUrl=(item.originalUrl !== undefined)?item.originalUrl:item.url;
                     showPromiseDialog(undefined,(props)=>
                         <UserAppDialog {...props} fixed={{name:item.name}} addon={{...item,url:itemUrl}}/>

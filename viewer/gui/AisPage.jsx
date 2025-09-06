@@ -20,7 +20,7 @@ import Compare from "../util/compare";
 import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
-import Helper from "../util/helper";
+import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 
@@ -332,7 +332,8 @@ const AisPage =(props)=>{
                     />
                     <AisList
                         itemClass={MemoAisItem}
-                        onItemClick={(item)=> {
+                        onItemClick={(ev)=> {
+                            const item=avitem(ev);
                             let accessor=aisproxy(item);
                             showDialog(dialogContext.current,()=>{
                                 return <AisInfoWithFunctions

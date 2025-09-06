@@ -10,7 +10,7 @@ import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
-import Helper from '../util/helper.js';
+import Helper, {avitem} from '../util/helper.js';
 import {showDialog} from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
@@ -87,7 +87,6 @@ class Dialog extends React.Component{
     }
     render(){
         let id=this.props.id;
-        let self=this;
         return (
             <div className="wpaDialog inner">
                 <div>
@@ -98,12 +97,12 @@ class Dialog extends React.Component{
                             label="Password"
                             type="password"
                             name="psk"
-                            onChange={(value)=>self.setState({psk:value})}
+                            onChange={(value)=>this.setState({psk:value})}
                             value={this.state.psk}/>
                         {this.props.showAccess?
                             <Checkbox
                                 dialogRow={true}
-                                onChange={(newVal)=>self.setState({allowAccess:newVal})}
+                                onChange={(newVal)=>this.setState({allowAccess:newVal})}
                                 label="External access"
                                 value={this.state.allowAccess}/>
                             :null
@@ -135,7 +134,6 @@ class WpaPage extends React.Component{
             interface:undefined,
             showAccess: undefined
         }
-        let self=this;
         this.buttons=[
             Mob.mobDefinition(this.props.history),
             {
@@ -165,13 +163,12 @@ class WpaPage extends React.Component{
     }
 
     doQuery(timerSequence){
-        let self=this;
         Requests.getJson("?request=wpa&command=all",{
             sequenceFunction:this.timer.currentSequence,
             timeout: timeout*0.9,
             checkOk: false
         }).then((json)=>{
-            self.numErrors=0;
+            this.numErrors=0;
             this.setState({
                 interface: json.status,
                 showAccess: json.showAccess
@@ -199,19 +196,18 @@ class WpaPage extends React.Component{
                 }
             }
             this.listItemStore.storeData(LISTKEY,itemList);
-            self.timer.startTimer(timerSequence);
+            this.timer.startTimer(timerSequence);
 
         }).catch((error)=>{
-            self.numErrors++;
-            if (self.numErrors > 3){
-                self.numErrors=0;
+            this.numErrors++;
+            if (this.numErrors > 3){
+                this.numErrors=0;
                 Toast("Status query error: "+Helper.escapeHtml(error));
             }
-            self.timer.startTimer(timerSequence);
+            this.timer.startTimer(timerSequence);
         })
     }
     wpaRequest(request,message,param){
-        let self=this;
         Toast("sending "+message);
         Requests.getJson("?request=wpa&command="+request,{},
             param
@@ -221,8 +217,8 @@ class WpaPage extends React.Component{
             Toast(message+"...Error");
         })
     }
-    itemClick(item,itemData){
-        let self=this;
+    itemClick(ev){
+        const item=avitem(ev);
         if (!item || ! item.ssid || item.id === undefined) return;
         const resultCallback=(type,psk,allowAccess)=>{
             let data={
@@ -234,7 +230,7 @@ class WpaPage extends React.Component{
                 if (allowAccess){
                     data.allowAccess=allowAccess;
                 }
-                self.wpaRequest('connect', 'connect to ' + Helper.escapeHtml(data.ssid), data);
+                this.wpaRequest('connect', 'connect to ' + Helper.escapeHtml(data.ssid), data);
                 return;
             }
             if (type == 'enable'){
@@ -245,11 +241,11 @@ class WpaPage extends React.Component{
                     //allow to change the PSK with enable
                     data.psk=psk;
                 }
-                self.wpaRequest(type,type+' '+Helper.escapeHtml(data.ssid),data);
+                this.wpaRequest(type,type+' '+Helper.escapeHtml(data.ssid),data);
                 return;
             }
             if (type == 'remove' || type == 'disable'){
-                self.wpaRequest(type,type+' '+Helper.escapeHtml(data.ssid),data);
+                this.wpaRequest(type,type+' '+Helper.escapeHtml(data.ssid),data);
                 return;
             }
         };
@@ -266,7 +262,6 @@ class WpaPage extends React.Component{
     componentWillUnmount(){
     }
     render(){
-        let self=this;
         const MainContent=(props)=> {
             return(
             <React.Fragment>
@@ -280,7 +275,7 @@ class WpaPage extends React.Component{
                     storeKeys={{
                         itemList:LISTKEY
                     }}
-                    onItemClick={self.itemClick}
+                    onItemClick={this.itemClick}
                     listRef={(node)=>this.listRef=node}
                     />
             </React.Fragment>
@@ -296,7 +291,7 @@ class WpaPage extends React.Component{
                             <MainContent
                             />
                         }
-                buttonList={self.buttons}/>
+                buttonList={this.buttons}/>
         );
     }
 }

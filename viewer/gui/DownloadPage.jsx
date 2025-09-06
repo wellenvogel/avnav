@@ -14,7 +14,7 @@ import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
-import Helper from '../util/helper.js';
+import Helper, {avitem, setav} from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
@@ -113,7 +113,7 @@ const DownloadItem=(props)=>{
     if (! actions.showDelete ) dataClass+=" noDelete";
     return(
         <div className={cls} onClick={function(ev){
-            props.onClick('select')
+            props.onClick(setav(ev,{action:'select'}));
         }}>
             {(props.icon) &&
             <span className="icon" style={{backgroundImage:"url('"+(props.icon)+"')"}}/>
@@ -121,7 +121,7 @@ const DownloadItem=(props)=>{
             {actions.showDelete &&<Button name="Delete" className="Delete smallButton" onClick={(ev)=>{
                 ev.preventDefault();
                 ev.stopPropagation();
-                props.onClick('delete');
+                props.onClick(setav(ev,{action:'delete'}));
             }}/>}
             <div className="itemMain">
                 <div className={dataClass}>
@@ -522,8 +522,10 @@ class DownloadPage extends React.Component{
                             itemClass={DownloadItem}
                             scrollable={true}
                             itemList={this.state.items}
-                            onItemClick={(item,data)=>{
-                                if (data === 'delete'){
+                            onItemClick={(ev)=>{
+                                const item=avitem(ev);
+                                const action=avitem(ev,'action');
+                                if (action === 'delete'){
                                     return deleteItem(item,this.fillData);
                                 }
                                 if (self.props.options && self.props.options.selectItemCallback){

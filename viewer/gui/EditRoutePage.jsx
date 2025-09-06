@@ -19,7 +19,7 @@ import {
     showPromiseDialog,
     useDialogContext
 } from '../components/OverlayDialog.jsx';
-import Helper from '../util/helper.js';
+import Helper, {injectav, setav} from '../util/helper.js';
 import {useTimer} from '../util/GuiHelpers.js';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';
@@ -692,7 +692,11 @@ const EditRoutePage = (props) => {
         }
     }, []);
 
-    const widgetClick = (item, data, panel, invertEditDirection) => {
+    const widgetClick = (ev) => {
+        const av=injectav(ev);
+        const item=av.avnav.item||{};
+        const panel=av.avnav.panelName;
+        const invertEditDirection=av.avnav.invertEditDirection;
         let currentEditor = getCurrentEditor();
         if (item.name === "EditRoute") {
             if (globalStore.getData(keys.gui.global.layoutEditing)) return;
@@ -707,14 +711,15 @@ const EditRoutePage = (props) => {
             return;
         }
         if (item.name === 'RoutePoints') {
+            const point=av.avnav.point;
             if (LayoutHandler.isEditing()) return;
-            if (data && data.idx !== undefined) {
+            if (point && point.idx !== undefined) {
                 let lastSelected = currentEditor.getIndex();
-                currentEditor.setNewIndex(data.idx);
+                currentEditor.setNewIndex(point.idx);
                 MapHolder.setCenter(currentEditor.getPointAt());
-                setLastCenteredWp(data.idx);
-                if (lastSelected === data.idx && lastCenteredWp === data.idx) {
-                    startWaypointDialog(data, data.idx, dialogCtxRef);
+                setLastCenteredWp(point.idx);
+                if (lastSelected === point.idx && lastCenteredWp === point.idx) {
+                    startWaypointDialog(point, point.idx, dialogCtxRef);
                 }
             }
             return;
@@ -1037,7 +1042,7 @@ const EditRoutePage = (props) => {
         {
             name: 'Menu',
             onClick: () => {
-                widgetClick({name: "EditRoute"})
+                widgetClick(setav(undefined,{item:{name: "EditRoute"}}))
             },
             overflow: true,
             editDisable: true
@@ -1084,6 +1089,7 @@ const EditRoutePage = (props) => {
             panelCreator={getPanelList}
             buttonList={buttons}
             overlayContent={overlayContent}
+            dialogCtxRef={dialogCtxRef}
         />
     );
 }

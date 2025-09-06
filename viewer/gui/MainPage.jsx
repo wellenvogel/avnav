@@ -25,6 +25,7 @@ import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
 import LayoutHandler from "../util/layouthandler";
+import {avitem} from "../util/helper";
 
 
 const getImgSrc=function(color){
@@ -157,7 +158,8 @@ class MainPage extends React.Component {
      * the click handler for the charts
      * @param entry - the chart entry
      */
-    showNavpage(entry) {
+    showNavpage(ev) {
+        const entry= avitem(ev);
         base.log("activating navpage with url " + entry.url);
         MapHolder.setChartEntry(entry);
         this.props.history.push('navpage');

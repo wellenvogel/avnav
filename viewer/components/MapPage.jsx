@@ -22,7 +22,7 @@ import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import {getOverlayConfigName} from "../map/chartsourcebase";
 import mapholder from "../map/mapholder.js";
-import Helper, {concatsp} from "../util/helper";
+import Helper, {concatsp, injectav} from "../util/helper";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import {DynamicTitleIcons} from "./TitleIcons";
 import ButtonList from "./ButtonList";
@@ -187,8 +187,11 @@ const MapPage =(iprops)=>{
                               return widgetCreator(widget,mode)
                           }}
                           itemList={panelItems.list}
-                          onItemClick={(item,data)=>{
-                              props.onItemClick(item,data,panelItems.name,invertEditDirection)
+                          onItemClick={(ev)=>{
+                              const avev=injectav(ev);
+                              avev.avnav.panelName=panelItems.name;
+                              avev.avnav.invertEditDirection=invertEditDirection;
+                              props.onItemClick(avev);
                           }}
                           onClick={()=>{
                               EditWidgetDialog.createDialog(undefined,layoutPage,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});

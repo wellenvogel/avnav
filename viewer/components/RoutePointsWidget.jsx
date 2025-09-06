@@ -11,6 +11,7 @@ import WaypointItem from './WayPointItem.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import GuiHelper from '../util/GuiHelpers.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {injectav} from "../util/helper";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -46,9 +47,15 @@ const RoutePointsWidget = (props) => {
                     return RoutePoint(props.showLatLon)
                 }}
                 scrollable={true}
-                onItemClick={(item) => {
-                    if (props.onClick)
-                        props.onClick(new routeobjects.RoutePoint(item))
+                onItemClick={(ev) => {
+                    if (props.onClick) {
+                        const avev = injectav(ev);
+                        if (avev.avnav.item) {
+                            avev.avnav.point=new routeobjects.RoutePoint(avev.avnav.item)
+                            delete avev.avnav.item; //let the container fill this
+                            props.onClick(avev);
+                        }
+                    }
                 }}
                 onClick={(ev) => {
                     if (props.isEditing && props.onClick) {
@@ -65,6 +72,7 @@ const RoutePointsWidget = (props) => {
 
 
 RoutePointsWidget.propTypes={
+    //onClick: add an avnav.point property for the clicked route point
     ...WidgetProps,
     route:          PropTypes.instanceOf(routeobjects.Route),
     isActive:       PropTypes.bool,

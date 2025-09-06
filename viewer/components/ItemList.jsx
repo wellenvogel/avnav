@@ -13,6 +13,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
+import {injectav} from "../util/helper";
 
 const getKey=function(obj,opt_keyFunction){
     if (opt_keyFunction){
@@ -51,16 +52,18 @@ const Content=(props)=>{
                 }
                 let onClick;
                 if (!itemProps.onClick && props.onItemClick) {
-                    onClick=(data)=>{
+                    onClick=(idata)=>{
+                        const data=injectav(idata);
                         if (data && data.stopPropagation) data.stopPropagation();
                         if (data && data.preventDefault) data.preventDefault();
                         if (props.reverse){
                             let len=props.itemList?props.itemList.length:0;
-                            props.onItemClick({...itemProps,index:len-itemProps.index},data);
+                            data.avnav.item=data.avnav.item?{...data.avnav.item,index:len-itemProps.index}:{...itemProps,index:len-itemProps.index};
                         }
                         else {
-                            props.onItemClick(itemProps, data);
+                            data.avnav.item=data.avnav.item?{...data.avnav.item,index:itemProps.index}:{...itemProps};
                         }
+                        props.onItemClick(data);
                     }
                 }
                 return <ItemClass onClick={onClick} key={itemProps.key} {...itemProps}/>

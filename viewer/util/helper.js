@@ -4,6 +4,7 @@
  */
 
 import compare from './compare';
+import {inject} from "@webassemblyjs/leb128/lib/bits";
 /**
  *
  * @constructor
@@ -238,6 +239,33 @@ export const reloadPage=()=>{
     }
     window.location.replace(url);
 }
+export const isObject = (value) => {
+    return typeof value === 'object'
+        && value !== null
+        && !Array.isArray(value)
+        && !(value instanceof RegExp)
+        && !(value instanceof Date)
+        && !(value instanceof Set)
+        && !(value instanceof Map)
+}
+export const injectav=(obj)=>{
+    if (obj === undefined){ obj={};}
+    if (! isObject(obj)){ throw new Error("expecting an object or undefined for injectav, found "+typeof(obj)+ ": "+obj);}
+    if (obj.avnav === undefined){ obj.avnav = {};}
+    if (! isObject(obj.avnav)){ throw new Error("injectav: avnav exists, no object: "+typeof(obj.avnav)) ;}
+    return obj;
+}
+export const avitem=(obj,itemName='item',defaultv={})=>{
+    const rt=injectav(obj).avnav[itemName];
+    if (rt === undefined){ return defaultv;}
+    return rt
+}
+export const setav=(obj,avdata)=>{
+    if (! isObject(avdata)){ throw new Error("setav: expecting an object as data, got "+typeof(avdata)+": "+avdata);}
+    const av=injectav(obj);
+    av.avnav={...av.avnav,...avdata};
+    return av;
+}
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
@@ -245,6 +273,10 @@ Helper.now=now;
 Helper.iterate=iterate;
 Helper.getNameAndExt=getNameAndExt;
 Helper.reloadPage=reloadPage;
+Helper.isObject=isObject;
+Helper.injectav=injectav;
+Helper.avitem=avitem;
+Helper.setav=setav;
 
 export default Helper;
 
