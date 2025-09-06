@@ -242,9 +242,9 @@ def main(argv):
   if httpServer is not None and options.urlmap is not None:
     urlmaps = options.urlmap if isinstance(options.urlmap,list) else [options.urlmap]
     for urlmap in urlmaps:
-      for mapping in re.split("\s*,\s*",urlmap):
+      for mapping in re.split(r"\s*,\s*",urlmap):
         try:
-          url,path=re.split("\s*=\s*",mapping,2)
+          url,path=re.split(r"\s*=\s*",mapping,2)
           httpServer.pathmappings[url] = path
           AVNLog.info("set url mapping %s=%s"%(url,path))
         except:
