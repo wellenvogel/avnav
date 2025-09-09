@@ -45,6 +45,18 @@ body{
   overflow: hidden;
   position: relative;
 }
+.app.rotated{
+    &.rotateCW {
+      rotate: 90deg;
+      transform: translateX(-50vw) translateX(50vh) translateY(-50vw) translateY(50vh);
+    }
+    &.rotateCCW {
+      rotate: -90deg;
+      transform: translateX(50vw) translateX(-50vh) translateY(50vw) translateY(-50vh);
+    }
+    height: 100vw;
+    width: 100vh;
+}
 .pageFrame{
   background-color: white;
   &.nightMode{

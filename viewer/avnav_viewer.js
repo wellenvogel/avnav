@@ -91,6 +91,7 @@ export default function() {
     }
     propertyHandler.resetToSaved();
     propertyHandler.savePrefixedValues();
+    propertyHandler.notifyFrame();
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
     let body=document.querySelector('body');

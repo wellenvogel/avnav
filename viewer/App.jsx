@@ -333,6 +333,7 @@ class App extends React.Component {
                 propertyHandler.setPrefixKeys(json.keys);
                 propertyHandler.resetToSaved();
                 propertyHandler.incrementSequence();
+                propertyHandler.notifyFrame();
             })
             .catch((error)=>{
                 console.log("splitkeys.json: "+error);
@@ -443,15 +444,16 @@ class App extends React.Component {
         lastError.componentStack=(errorInfo||{}).componentStack;
         this.setState({error:2});
     }
+    isRotated(){
+        return globalStore.getData(keys.properties.displayRotation) !== 'none';
+    }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
         if (! this.appRef.current) return;
         let current=this.appRef.current.getBoundingClientRect();
         if (! current) return;
         this.computeButtonSizes();
-        const rotation=window.getComputedStyle(this.appRef.current).rotate;
-        let swap=false;
-        if (rotation === '-90deg' || rotation === '90deg'){swap=true}
+        let swap=this.isRotated();
         const dimensions={width:swap?current.height:current.width,height:swap?current.width:current.height};
         globalStore.storeData(keys.gui.global.windowDimForce,dimensions);
         if (globalStore.getData(keys.gui.global.preventSizeChange,false)) return;
@@ -538,6 +540,12 @@ class App extends React.Component {
         appClass+=" "+layoutClass;
         if (this.props.smallDisplay) appClass+=" smallDisplay";
         if (this.props.nightMode) appClass+=" nightMode";
+        const rotation=globalStore.getData(keys.properties.displayRotation);
+        if (rotation !== 'none' && ! globalStore.getData(keys.gui.global.splitMode)) {
+            appClass += " rotated";
+            if (rotation === '90cw') appClass += " rotateCW";
+            else appClass+= " rotateCCW";
+        }
         let location=this.leftHistoryState.getValue('location');
         if (location !== "warningpage") {
             if (! this.titleSet) {

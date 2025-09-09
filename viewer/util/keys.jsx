@@ -291,6 +291,7 @@ let keys={
             scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
             user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
+        displayRotation: new Property('none','rotate the display',PropertyType.SELECT,['none','90cw','90ccw']),
         startNavPage: new Property(false,"start with last map",PropertyType.CHECKBOX),
         startLastSplit: new Property(false,"start with last split mode",PropertyType.CHECKBOX),
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),

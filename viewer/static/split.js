@@ -8,19 +8,22 @@
         return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
     }
     var PNAME="avnavsplit.percent";
-    var dragPosition=-1;
     var dragstartX=-1;
     var mover=document.getElementById('mover');
     var f1=document.getElementById('left');
     var f2=document.getElementById('right');
     var frame=document.getElementById('split_main');
-    var setMover=function(opt_pos){
-        if (opt_pos === undefined) {
-            var rect = f1.getBoundingClientRect();
-            opt_pos=rect.width;
-        }
+    var rotation='none';
+    var isRotated=()=>{
+        return rotation !== 'none';
+    }
+    var setMover=function(opt_offset){
+        var rect = f1.getBoundingClientRect();
+        var pos=isRotated()?rect.height: rect.width;
+        if (opt_offset) pos+=opt_offset
         var mrect=mover.getBoundingClientRect();
-        mover.style.left=(opt_pos-mrect.width/2)+'px';
+        mover.style.left = (pos - mrect.width / 2) + 'px';
+
     }
     var setSplit=function(percent){
         f1.style.width=(percent)+"%";
@@ -33,41 +36,75 @@
             mover.style.opacity=0.3;
         },5000)
     }
-    var setSplitFromPos=function(pos){
+    var setSplitFromPos=function(offset){
         var r=frame.getBoundingClientRect();
-        var percent=pos*100/r.width;
+        var r1=f1.getBoundingClientRect();
+        var npos=r1.width;
+        if (isRotated()){
+            if (rotation === '90ccw') npos=r1.top;
+            else npos=r1.height;
+        }
+        npos+=offset;
+        var percent=npos*100/(isRotated()?r.height:r.width);
         if (percent < 0) percent=0;
         if (percent >= 99.999) percent=99.999;
+        if (rotation === '90ccw') percent=100-percent
         setSplit(percent);
+        window.setTimeout(()=>{
+            setMover();
+        },100)
+    }
+    var setRotationClass=()=>{
+        const classes={
+            "90cw":"rotateCW",
+            "90ccw": "rotateCCW"
+        };
+        for (let k in classes){
+            if (rotation === k) {
+                if (!document.body.classList.contains(classes[k])) {
+                    document.body.classList.add(classes[k]);
+                }
+            }
+            else{
+                document.body.classList.remove(classes[k]);
+            }
+        }
     }
     mover.addEventListener('dragstart',function(ev){
-        dragstartX=ev.screenX;
+        ev.stopPropagation();
+        dragstartX=isRotated()?ev.screenY:ev.screenX;
         mover.style.opacity=0.6;
     });
     mover.addEventListener('touchstart',function(ev){
         ev.preventDefault();
+        ev.stopPropagation();
         var touchobj = ev.changedTouches[0];    // erster Finger des touchstart-Events
-        dragPosition = parseInt(touchobj.screenX);
+        dragstartX = isRotated()?parseInt(touchobj.screenY):parseInt(touchobj.screenX);
         mover.style.opacity=0.6;
-        setMover(dragPosition);
     });
     mover.addEventListener('touchmove',function(ev){
+        ev.stopPropagation();
+        if (dragstartX < 0) return;
         var touchobj = ev.changedTouches[0];
-        dragPosition = parseInt(touchobj.screenX);
-        setMover(dragPosition);
+        var dragPosition = isRotated()?parseInt(touchobj.screenY):parseInt(touchobj.screenX);
+        setMover(dragPosition-dragstartX);
     })
     mover.addEventListener('touchend',function(ev){
+        ev.stopPropagation();
+        if (dragstartX < 0) return;
         var touchobj = ev.changedTouches[0];
-        dragPosition = parseInt(touchobj.screenX);
-        setSplitFromPos(dragPosition);
+        var dragPosition = isRotated()?parseInt(touchobj.screenY):parseInt(touchobj.screenX);
+        setSplitFromPos(dragPosition-dragstartX);
+        dragstartX=-1;
     })
     mover.addEventListener('dragend',function(ev){
         ev.preventDefault();
-        var left=f1.getBoundingClientRect().width;
+        ev.stopPropagation();
         if (dragstartX < 0) return;
-        left += ev.screenX - dragstartX;
+        var  pos= (isRotated()?ev.screenY: ev.screenX);
+        //if (rotation === '90ccw') pos=-pos;
+        setSplitFromPos(pos-dragstartX);
         dragstartX=-1;
-        setSplitFromPos(left);
     })
 
     var percent=50;
@@ -78,6 +115,11 @@
         }
     }
     var location=window.location.href+'';
+    var protation=getParam("rotation",location);
+    if (protation){
+        rotation=protation
+    }
+    setRotationClass();
     location=location.replace('viewer_split','avnav_viewer');
     var singleLocation=location;
     var FWPARAM=["fullscreen","dimm"];
@@ -136,6 +178,10 @@
             })
         }
         if (type === 'settingsChanged'){
+            if (ev.data.rotation){
+                rotation = ev.data.rotation;
+                setRotationClass()
+            }
             msgAll('reloadSettings');
         }
         if (type === 'finishSplit'){

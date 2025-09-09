@@ -115,7 +115,6 @@ class PropertyHandler {
     saveUserData(data,opt_forPrefix) {
         let raw = JSON.stringify(data);
         LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
-        splitsupport.sendToFrame('settingsChanged');
     }
 
     setItem(obj,path,value,opt_skip){
@@ -133,6 +132,9 @@ class PropertyHandler {
         }
         return obj;
     }
+    notifyFrame(){
+        splitsupport.sendToFrame('settingsChanged',{rotation:globalStore.getData(keys.properties.displayRotation)});
+    }
     savePrefixedValues(){
         let saveDataSplit={}
         let hasPrefix=LocalStorage.hasPrefix();
@@ -145,6 +147,7 @@ class PropertyHandler {
             }
         }
         this.saveUserData(saveDataSplit, true);
+        this.notifyFrame()
     }
     dataChanged(storeKeys){
         let saveData={};
@@ -166,6 +169,7 @@ class PropertyHandler {
         if (hasPrefix) {
             this.saveUserData(saveDataSplit, true);
         }
+        this.notifyFrame()
         this.incrementSequence();
     }
 
