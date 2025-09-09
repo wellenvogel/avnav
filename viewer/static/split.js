@@ -7,25 +7,60 @@
         // Return the unescaped value minus everything starting from the equals sign or an empty string
         return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
     }
-    var PNAME="avnavsplit.percent";
-    var dragstartX=-1;
-    var mover=document.getElementById('mover');
-    var f1=document.getElementById('left');
-    var f2=document.getElementById('right');
-    var frame=document.getElementById('split_main');
-    var rotation='none';
-    var isRotated=()=>{
-        return rotation !== 'none';
+    let PNAME="avnavsplit.percent";
+    let dragstartX=-1;
+    let mover=document.getElementById('mover');
+    let f1=document.getElementById('left');
+    let f2=document.getElementById('right');
+    let frame=document.getElementById('split_main');
+    let rotation='none';
+    let currentPercent=50;
+    /**
+     * get the screen X offset corrected by rotation
+     * none:
+     *   screenX - startPos
+     * 90cw:
+     *   screenY - startPos
+     * 90ccw:
+     *   screenY if startPos === undefined
+     *   - (screenY - startPos)
+     * @param event
+     * @param startPos
+     */
+    let getScreeOffsetX=function(event,startPos){
+        let val;
+        if (rotation === 'none'){
+            val=event.screenX;
+            if (startPos === undefined) return val;
+            return val-startPos;
+        }
+        if (rotation === '90cw'){
+            val=event.screenY;
+            if (startPos === undefined) return val;
+            return val-startPos;
+        }
+        if (rotation === '90ccw'){
+            val=event.screenY;
+            if (startPos === undefined) return val;
+            return -(val-startPos);
+        }
     }
-    var setMover=function(opt_offset){
-        var rect = f1.getBoundingClientRect();
-        var pos=isRotated()?rect.height: rect.width;
+    let getElementWidth=function(rect){
+        if (rotation === 'none'){
+            return rect.width;
+        }
+        return rect.height;
+    }
+    let setMover=function(opt_offset){
+        let rect = f1.getBoundingClientRect();
+        let pos=getElementWidth(rect);
         if (opt_offset) pos+=opt_offset
-        var mrect=mover.getBoundingClientRect();
-        mover.style.left = (pos - mrect.width / 2) + 'px';
+        let mrect=mover.getBoundingClientRect();
+        mover.style.left = (pos - getElementWidth(mrect) / 2) + 'px';
 
     }
-    var setSplit=function(percent){
+    let setSplit=function(percent){
+        currentPercent=percent;
         f1.style.width=(percent)+"%";
         f2.style.width=(100-percent)+"%";
         setMover();
@@ -36,25 +71,20 @@
             mover.style.opacity=0.3;
         },5000)
     }
-    var setSplitFromPos=function(offset){
-        var r=frame.getBoundingClientRect();
-        var r1=f1.getBoundingClientRect();
-        var npos=r1.width;
-        if (isRotated()){
-            if (rotation === '90ccw') npos=r1.top;
-            else npos=r1.height;
-        }
-        npos+=offset;
-        var percent=npos*100/(isRotated()?r.height:r.width);
+    let setSplitFromPos=function(offset){
+        let r=frame.getBoundingClientRect();
+        let width=getElementWidth(r)
+        let currentPos=currentPercent*width/100;
+        currentPos+=offset;
+        let percent=currentPos*100/width;
         if (percent < 0) percent=0;
         if (percent >= 99.999) percent=99.999;
-        if (rotation === '90ccw') percent=100-percent
         setSplit(percent);
         window.setTimeout(()=>{
             setMover();
         },100)
     }
-    var setRotationClass=()=>{
+    let setRotationClass=()=>{
         const classes={
             "90cw":"rotateCW",
             "90ccw": "rotateCCW"
@@ -69,68 +99,67 @@
                 document.body.classList.remove(classes[k]);
             }
         }
+        setMover();
     }
     mover.addEventListener('dragstart',function(ev){
         ev.stopPropagation();
-        dragstartX=isRotated()?ev.screenY:ev.screenX;
+        dragstartX=getScreeOffsetX(ev);
         mover.style.opacity=0.6;
     });
     mover.addEventListener('touchstart',function(ev){
         ev.preventDefault();
         ev.stopPropagation();
-        var touchobj = ev.changedTouches[0];    // erster Finger des touchstart-Events
-        dragstartX = isRotated()?parseInt(touchobj.screenY):parseInt(touchobj.screenX);
+        let touchobj = ev.changedTouches[0];    // erster Finger des touchstart-Events
+        dragstartX = getScreeOffsetX(touchobj);
         mover.style.opacity=0.6;
     });
     mover.addEventListener('touchmove',function(ev){
         ev.stopPropagation();
         if (dragstartX < 0) return;
-        var touchobj = ev.changedTouches[0];
-        var dragPosition = isRotated()?parseInt(touchobj.screenY):parseInt(touchobj.screenX);
-        setMover(dragPosition-dragstartX);
+        let touchobj = ev.changedTouches[0];
+        let dragPosition = getScreeOffsetX(touchobj,dragstartX);
+        setMover(dragPosition);
     })
     mover.addEventListener('touchend',function(ev){
         ev.stopPropagation();
         if (dragstartX < 0) return;
-        var touchobj = ev.changedTouches[0];
-        var dragPosition = isRotated()?parseInt(touchobj.screenY):parseInt(touchobj.screenX);
-        setSplitFromPos(dragPosition-dragstartX);
+        let touchobj = ev.changedTouches[0];
+        let dragPosition = getScreeOffsetX(touchobj,dragstartX);
+        setSplitFromPos(dragPosition);
         dragstartX=-1;
     })
     mover.addEventListener('dragend',function(ev){
         ev.preventDefault();
         ev.stopPropagation();
         if (dragstartX < 0) return;
-        var  pos= (isRotated()?ev.screenY: ev.screenX);
-        //if (rotation === '90ccw') pos=-pos;
-        setSplitFromPos(pos-dragstartX);
+        let  pos= getScreeOffsetX(ev,dragstartX);
+        setSplitFromPos(pos);
         dragstartX=-1;
     })
 
-    var percent=50;
     if (window.localStorage){
-        var ps=window.localStorage.getItem(PNAME);
+        let ps=window.localStorage.getItem(PNAME);
         if (ps){
-            percent=parseInt(ps);
+            currentPercent=parseInt(ps);
         }
     }
-    var location=window.location.href+'';
-    var protation=getParam("rotation",location);
+    let location=window.location.href+'';
+    let protation=getParam("rotation",location);
     if (protation){
         rotation=protation
     }
     setRotationClass();
     location=location.replace('viewer_split','avnav_viewer');
-    var singleLocation=location;
-    var FWPARAM=["fullscreen","dimm"];
-    var fwValues={};
+    let singleLocation=location;
+    let FWPARAM=["fullscreen","dimm"];
+    let fwValues={};
     FWPARAM.forEach(function(p){
-        var v=getParam(p,singleLocation);
+        let v=getParam(p,singleLocation);
         if (v) fwValues[p]=v;
     })
     singleLocation=singleLocation.replace(/\?.*/,'');
-    var i;
-    var delim="?";
+    let i;
+    let delim="?";
     for (i in fwValues){
         singleLocation+=delim+encodeURIComponent(i)+"="+encodeURIComponent(fwValues[i]);
         delim="&";
@@ -138,12 +167,12 @@
     if (! location.match(/[?]/)) location+='?';
     location+="&splitMode=true";
     if (window.location.search.match(/split=/)){
-        var np=window.location.search.replace(/.*split=/,'').replace(/[^0-9].*/,'');
+        let np=window.location.search.replace(/.*split=/,'').replace(/[^0-9].*/,'');
         if (! isNaN(np)){
             percent=np;
         }
     }
-    setSplit(percent);
+    setSplit(currentPercent);
     f1.src=location+"&storePrefix=1&preventAlarms=true&ignoreAndroidBack=true";
     f2.src=location+"&storePrefix=2";
     window.addEventListener('resize',function(){setMover()});
