@@ -49,6 +49,8 @@ import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
 import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
 import {createRoot} from "react-dom/client";
+import {loadJs, loadOrUpdateCss} from "./util/helper";
+import csswatch, {USERCSSID} from "./util/csswatch";
 
 
 if (! window.avnav){
@@ -126,25 +128,31 @@ export default function() {
     if (getParam('splitMode') === 'true'){
         globalStore.storeData(keys.gui.global.splitMode,true);
     }
-    let lateLoads=["/user/viewer/user.js"];
+    const usercss={id:USERCSSID,url:"/user/viewer/user.css"};
+    let lateLoads=[usercss, "/user/viewer/user.js"];
+    csswatch.addWatch(usercss.url,usercss.id,keys.properties.autoUpdateUserCss);
 
     const loadScripts=(loadList)=>{
-        let fileref=undefined;
         for (let i in  loadList) {
-            let scriptname=loadList[i];
-            if (scriptname.match(/js$/)){ //if filename is a external JavaScript file
-                fileref=document.createElement('script');
-                fileref.setAttribute("type","text/javascript");
-                fileref.setAttribute("src", scriptname);
+            let script=loadList[i];
+            let scriptname;
+            let id;
+            try {
+                if (typeof (script) === 'object') {
+                    scriptname = script.url;
+                    id = script.id
+                }
+                else{
+                    scriptname = script;
+                }
+                if (scriptname.match(/js$/)) { //if filename is a external JavaScript file
+                    loadJs(scriptname);
+                } else { //if filename is an external CSS file
+                    loadOrUpdateCss(scriptname, id);
+                }
+            }catch (e){
+                console.log("error loading script/css "+scriptname+": ",e);
             }
-            else { //if filename is an external CSS file
-                fileref=document.createElement("link");
-                fileref.setAttribute("rel", "stylesheet");
-                fileref.setAttribute("type", "text/css");
-                fileref.setAttribute("href", scriptname);
-            }
-            if (typeof fileref!="undefined")
-                document.getElementsByTagName("head")[0].appendChild(fileref)
         }
     };
     let addScripts="addScripts";

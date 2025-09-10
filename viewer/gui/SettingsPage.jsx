@@ -46,7 +46,7 @@ const settingsSections={
         keys.properties.showSplitButton],
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
-        keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit],
+        keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit, keys.properties.autoUpdateUserCss],
     AIS:        [keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
         keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,

@@ -82,6 +82,13 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
       except Exception as e:
         AVNLog.error("unable to delete addons for %s:%s", name, e)
 
+  def handleUpload(self, name, handler, requestparam):
+      rt=super().handleUpload(name, handler, requestparam)
+      if name in self.FLIST:
+          self.navdata.updateChangeCounter('config')
+      return rt
+
+
   def getPathFromUrl(self, path, handler=None,requestParam=None):
     if path == 'user.js':
       fname=os.path.join(self.baseDir,path)

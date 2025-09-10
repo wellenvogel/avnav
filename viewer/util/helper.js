@@ -4,7 +4,7 @@
  */
 
 import compare from './compare';
-import {inject} from "@webassemblyjs/leb128/lib/bits";
+
 /**
  *
  * @constructor
@@ -217,12 +217,12 @@ export const getNameAndExt=(fn)=>{
     }
     return [fn,''];
 }
-export const reloadPage=()=>{
-    let url=window.location.protocol+"//"+window.location.host+window.location.pathname;
+const injectDateIntoUrl=(oldurl)=>{
+    let url=oldurl.protocol+"//"+oldurl.host+oldurl.pathname;
     const newTag='_='+encodeURIComponent((new Date).getTime());
-    if (window.location.search){
+    if (oldurl.search){
         let hasReplaced=false;
-        let add=window.location.search.replace(/[?&]_=[^&#]*/,(m)=>{
+        let add=oldurl.search.replace(/[?&]_=[^&#]*/,(m)=>{
             hasReplaced=true;
             return m.replace(/_=.*/,newTag);
         })
@@ -234,9 +234,13 @@ export const reloadPage=()=>{
     else{
         url+="?"+newTag;
     }
-    if (window.location.hash){
-        url+=window.location.hash;
+    if (oldurl.hash){
+        url+=oldurl.hash;
     }
+    return url;
+}
+export const reloadPage=()=>{
+    let url=injectDateIntoUrl(window.location);
     window.location.replace(url);
 }
 export const isObject = (value) => {
@@ -265,6 +269,33 @@ export const setav=(obj,avdata)=>{
     const av=injectav(obj);
     av.avnav={...av.avnav,...avdata};
     return av;
+}
+
+export const loadJs=(url)=>{
+    let nUrl=injectDateIntoUrl(new URL(url,window.location.href));
+    const fileref=document.createElement('script');
+    fileref.setAttribute("type","text/javascript");
+    fileref.setAttribute("src", nUrl);
+    document.head.appendChild(fileref);
+}
+export const loadOrUpdateCss=(url,id)=>{
+    if (id){
+        let existing=document.head.querySelector('#'+id);
+        if (existing && existing.href){
+            let nUrl=injectDateIntoUrl(new URL(url?url:existing.href,window.location.href));
+            existing.href=nUrl;
+            return true;
+        }
+    }
+    if (! url) return false;
+    let fileref=document.createElement("link");
+    fileref.setAttribute("rel", "stylesheet");
+    fileref.setAttribute("type", "text/css");
+    let nUrl=injectDateIntoUrl(new URL(url,window.location.href));
+    fileref.setAttribute("href", nUrl);
+    if (id) fileref.setAttribute("id",id);
+    document.head.appendChild(fileref);
+    return true;
 }
 Helper.concat=concat;
 Helper.concatsp=concatsp;

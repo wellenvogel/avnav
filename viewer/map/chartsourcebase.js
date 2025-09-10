@@ -39,6 +39,7 @@ import {
     EditableNumberParameter,
     EditableSelectParameter
 } from "../util/EditableParameter";
+import Requests from "../util/requests";
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -145,33 +146,26 @@ class ChartSourceBase {
     /**
      * returns a promise that resolves to 1 for changed
      */
-    checkSequence(force){
-        let lastRemoveSequence=this.removeSequence;
-        return new Promise((resolve,reject)=>{
-            if (! globalstore.getData(keys.gui.capabilities.fetchHead,false)){
-                resolve(0);
-                return;
-            }
-            if (! this.visible){
-                resolve(0);
-                return;
-            }
-            fetch(this.getUrl(),{method:'HEAD'})
-                .then((response)=>{
-                    if (this.removeSequence !== lastRemoveSequence || (! this.isReady() && ! force)) {
-                        resolve(0);
-                        return;
-                    }
-                    let newSequence=response.headers.get('last-modified');
-                    if (newSequence !== this.sequence) {
-                        this.sequence=newSequence;
-                        let drawn=this.redraw();
-                        resolve(drawn?0:1);
-                    }
-                    else resolve(0)
-                })
-                .catch((e)=>resolve(0))
-        });
+    checkSequence(force) {
+        let lastRemoveSequence = this.removeSequence;
+        if (!globalstore.getData(keys.gui.capabilities.fetchHead, false)) {
+            return Promise.resolve(0);
+        }
+        if (!this.visible) {
+            return Promise.resolve(0);
+        }
+        return Requests.getLastModified(this.getUrl())
+            .then((lastModified) => {
+                if (this.removeSequence !== lastRemoveSequence || (!this.isReady() && !force)) {
+                    return 0;
+                }
+                if (lastModified !== this.sequence) {
+                    this.sequence = lastModified;
+                    let drawn = this.redraw();
+                    return (drawn ? 0 : 1);
+                } else return (0)
+            })
+            .catch((e) => 0);
     }
 
     isEqual(other){

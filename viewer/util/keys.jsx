@@ -306,6 +306,7 @@ let keys={
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30]), //tolerance for slow rotation
         courseUpAlwaysCOG: new Property(false,"CourseUp always COG",PropertyType.CHECKBOX),
         maxButtons: new Property(8),
+        autoUpdateUserCss: new Property(true,"AutoUpdate user.css",PropertyType.CHECKBOX),
         positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [500, 5000, 10]), //1000ms
         trackQueryTimeout: new Property(5000, "Track (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
         routeQueryTimeout: new Property(1000, "Route (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms

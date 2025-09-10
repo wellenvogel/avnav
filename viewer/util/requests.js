@@ -1,7 +1,31 @@
+/*
+# Copyright (c) 2022,2025 Andreas Vogel andreas@wellenvogel.net
+
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+*/
+
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import assign from 'object-assign';
 import 'whatwg-fetch-timeout';
+import globalstore from "./globalstore";
+import base from "../base";
 
 
 const prepare=(url,options,defaults)=>{
@@ -242,6 +266,23 @@ let RequestHandler={
         } catch (e) {
             if (param.errorhandler) param.errorhandler(param,e);
         }
+    },
+    getLastModified:(url)=>{
+        if (! globalstore.getData(keys.gui.capabilities.fetchHead,false)){
+            return Promise.resolve(0);
+        }
+        const options={
+            timeout: parseInt(globalStore.getData(keys.properties.networkTimeout)),
+            method:'HEAD'
+        }
+        return fetch(url,options)
+            .then((response)=>{
+                    return response.headers.get('last-modified')
+                }
+                ,(err)=>{
+                base.log("error getLastModified "+url+": "+err);
+                return 0;
+                })
     }
 };
 Object.freeze(RequestHandler);
