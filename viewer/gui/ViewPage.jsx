@@ -16,7 +16,6 @@ import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
-import InputMonitor from '../hoc/InputMonitor.jsx';
 import {ItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {languageMap} from "../components/EditDialog";
@@ -24,7 +23,7 @@ import {languageMap} from "../components/EditDialog";
 const MAXEDITSIZE=50000;
 
 
-class ViewPageBase extends React.Component{
+class ViewPage extends React.Component{
     constructor(props){
         super(props);
         let self=this;
@@ -52,7 +51,7 @@ class ViewPageBase extends React.Component{
         this.state=state;
         this.changed=this.changed.bind(this);
         this.flask=undefined;
-        keyhandler.disable();
+        keyhandler.setPageMode(globalStore.getData(keys.properties.keyModeEdit));
     }
 
     buttons() {
@@ -205,7 +204,7 @@ class ViewPageBase extends React.Component{
 
     }
     componentWillUnmount(){
-        keyhandler.enable();
+        keyhandler.setPageMode();
     }
     render(){
         let self=this;
@@ -254,7 +253,6 @@ class ViewPageBase extends React.Component{
     }
 }
 
-var ViewPage=InputMonitor(ViewPageBase);
 ViewPage.VIEWABLES=Object.keys(languageMap).concat(GuiHelpers.IMAGES);
 ViewPage.EDITABLES=Object.keys(languageMap);
 ViewPage.MAXEDITSIZE=MAXEDITSIZE;

@@ -1,5 +1,8 @@
 import base from '../base.js';
 import remotechannel, {COMMANDS} from "./remotechannel";
+import {PageKeyMode} from "./keys";
+
+
 
 class Mapping{
     constructor(idx,page,component,action){
@@ -18,18 +21,17 @@ class KeyHandler{
         this.registrations={};
         this.page=undefined;
         this.ALLPAGES="all";
-        this.enabled=true;
+        this.mode=PageKeyMode.ALL;
         this.dialogComponents=[]; //components registered here will be handled in dialogs
         this.remoteSubscription=remotechannel.subscribe(COMMANDS.key,(msg)=>{
             this.handleKey(msg);
         })
     }
-    disable(){
-        this.enabled=false;
+    setPageMode(mode){
+        if (! mode) mode=PageKeyMode.ALL;
+        this.mode=mode;
     }
-    enable(){
-        this.enabled=true;
-    }
+
     registerDialogComponent(component){
         if (this.dialogComponents.indexOf(component)>=0) return;
         this.dialogComponents.push(component);
@@ -133,14 +135,16 @@ class KeyHandler{
             try {
                 mapping = this.findMappingForType(lidx, key, page,opt_inDialog);
                 if (mapping) return mapping;
-                mapping = this.findMappingForType(lidx, key,this.ALLPAGES ,opt_inDialog);
+                if (this.mode !== PageKeyMode.EXPLICIT) {
+                    mapping = this.findMappingForType(lidx, key, this.ALLPAGES, opt_inDialog);
+                }
             } catch (e) {
                 base.log("error when searching keymapping: " + e)
             }
             if (mapping) return mapping;
         }
         mapping=this.findMappingForType(undefined,key,page,opt_inDialog);
-        if (mapping) return mapping;
+        if (mapping || this.mode === PageKeyMode.EXPLICIT) return mapping;
         return this.findMappingForType(undefined,key,this.ALLPAGES,opt_inDialog);
 
     }
@@ -194,7 +198,6 @@ class KeyHandler{
     }
 
     handleKeyEvent(keyEvent,opt_inDialog) {
-        if (!this.enabled) return;
         if (!keyEvent) return;
         let key = keyEvent.key;
         if (!key) return;
@@ -206,6 +209,7 @@ class KeyHandler{
     handleKey(key,opt_inDialog,opt_keyEvent){
         base.log("handle key: "+key);
         if (! this.keymappings) return;
+        if (this.mode === PageKeyMode.NONE) return
         let page=this.page;
         let mapping=this.findMappingForPage(key,page,opt_inDialog);
         if (! mapping) return;

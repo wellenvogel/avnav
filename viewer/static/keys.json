@@ -77,5 +77,11 @@
       "ShowGps": "d",
       "Night":["c","Control-c","Control-g"]
     }
+  },
+  "viewpage": {
+    "button": {
+      "ViewPageSave": "Control-s",
+      "Cancel":"Escape"
+    }
   }
 }

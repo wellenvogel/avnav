@@ -449,10 +449,7 @@ class App extends React.Component {
         let current=this.appRef.current.getBoundingClientRect();
         if (! current) return;
         this.computeButtonSizes();
-        const rotation=window.getComputedStyle(this.appRef.current).rotate;
-        let swap=false;
-        if (rotation === '-90deg' || rotation === '90deg'){swap=true}
-        const dimensions={width:swap?current.height:current.width,height:swap?current.width:current.height};
+        const dimensions={width:current.width,height:current.height};
         globalStore.storeData(keys.gui.global.windowDimForce,dimensions);
         if (globalStore.getData(keys.gui.global.preventSizeChange,false)) return;
         let small = dimensions.width <globalStore.getData(keys.properties.smallBreak);
