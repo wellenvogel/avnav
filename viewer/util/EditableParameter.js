@@ -51,7 +51,8 @@ export const EditableParameterTypes={
     ICON: 7,
     KEY: 8,
     UNKNOWN: 10,
-    OTHER_BASE: 100
+    WIDGET_BASE: 100,
+    PROP_BASE: 200
 };
 
 

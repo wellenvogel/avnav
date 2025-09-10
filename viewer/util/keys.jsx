@@ -8,6 +8,7 @@ import redBubble from '../images/RedBubble40.png';
 import greenBubble from '../images/GreenBubble40.png';
 import yellowBubble from '../images/YellowBubble40.png';
 import AisFormatter from "../nav/aisformatter";
+import {EditableParameterTypes} from "./EditableParameter";
 
 const K=999; //the real value does not matter
 const V=888; //keys that can be used as value display
@@ -15,16 +16,16 @@ const V=888; //keys that can be used as value display
 let valueKeys=[]; // a list of keys that can be used to display values in widgets
 
 export const PropertyType={
-    CHECKBOX:0,
-    RANGE:1,
-    LIST:2,
-    COLOR:3,
-    LAYOUT:4,
-    SELECT: 5,
-    INTERNAL: 6,
-    MULTICHECKBOX: 7,
-    STRING: 8,
-    DELETED: 100
+    CHECKBOX:EditableParameterTypes.BOOLEAN,
+    RANGE:EditableParameterTypes.FLOAT,
+    LIST:EditableParameterTypes.SELECT,
+    COLOR:EditableParameterTypes.COLOR,
+    LAYOUT:EditableParameterTypes.PROP_BASE+1,
+    SELECT: EditableParameterTypes.SELECT,
+    INTERNAL: EditableParameterTypes.PROP_BASE,
+    MULTICHECKBOX: EditableParameterTypes.PROP_BASE+2, //unused?
+    STRING: EditableParameterTypes.STRING,
+    DELETED: EditableParameterTypes.PROP_BASE+10
 };
 
 /**

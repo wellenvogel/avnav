@@ -33,6 +33,7 @@ import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import Helper, {avitem, setav} from "../util/helper";
+import {default as EditableParameterUIFactory} from "../components/EditableParameterUI";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -269,7 +270,7 @@ const ColorSettingsItem=(properties)=>{
         ;
 };
 
-const createSettingsItem=(item)=>{
+const ocreateSettingsItem=(item)=>{
     if (item.type == PropertyType.CHECKBOX){
         return CheckBoxSettingsItem;
     }
@@ -296,6 +297,28 @@ const createSettingsItem=(item)=>{
             <div className="label">{props.label}</div>
             <div className="value">{props.value}</div>
         </div>)
+    }
+};
+
+const createSettingsItem=(item)=>{
+    let rt=EditableParameterUIFactory.createEditableParameterUI({
+        type: item.type,
+        default: item.defaultv,
+        list: item.values,
+        displayName: item.label,
+        name:item.name
+    })
+    return (props)=>{
+        const values={};
+        values[item.name] = item.value;
+        return rt.render({
+            currentValues:values,
+            className:props.className,
+            onChange: (nv)=>{
+                const avev=setav(undefined,{item:item,value:nv[item.name]});
+                props.onClick(avev);
+            }
+        });
     }
 };
 
@@ -800,7 +823,7 @@ class SettingsPage extends React.Component{
                     itemList={sectionItems}
                 /> : null}
                 {rightVisible ? <ItemList
-                    className="settingsList"
+                    className="settingsList dialogObjects"
                     scrollable={true}
                     itemCreator={createSettingsItem}
                     itemList={settingsItems}

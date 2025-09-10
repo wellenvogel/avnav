@@ -218,10 +218,10 @@ body{
 
 
 .dialog {
-  & > div{
+  & > div {
     min-width: 0;
   }
-  font-size: 1.1em;
+
   z-index: 121;
   padding: 0.6em;
   background-color: white;
@@ -229,17 +229,23 @@ body{
   .flex-display();
   .nightColors();
   .mdShadow2();
-  &.nested{
+
+  &.nested {
     font-size: 1em;
   }
+
   overflow: auto;
   max-height: 100%;
   max-width: 100%;
-  .flexInner{
+
+  .flexInner {
     .flex-display();
     .flex-direction(column);
   }
-
+  .dialogObjects();
+}
+.dialogObjects{
+  font-size: 1.1em;
   .inputFrame{
     width: 20em;
     min-width: 5em;

@@ -49,7 +49,7 @@ class PropertyHandler {
         this.prefixKeys=[];
         for (let k in this.propertyDescriptions){
             let description=this.propertyDescriptions[k];
-            if (description instanceof SplitProperty){
+            if (description.isSplit()){
                 this.prefixKeys.push(k);
             }
         }

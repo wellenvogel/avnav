@@ -36,7 +36,7 @@ export const filterByEditables=(editableParameters,values)=>{
     return rt;
 }
 class FormatterParameterUI extends EditableParameter {
-    static TYPE=EditableParameterTypes.OTHER_BASE+1;
+    static TYPE=EditableParameterTypes.WIDGET_BASE+1;
     constructor(plain) {
         super(plain, FormatterParameterUI.TYPE,true);
         if (this.default !== undefined){
