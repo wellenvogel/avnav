@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.worker.GpsService;
@@ -126,5 +127,16 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
                     RequestHandler.mimeType(foundFile.getName()),
                     "", out);
 
+    }
+
+    @Override
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        boolean rt=super.handleUpload(postData, name, ignoreExisting);
+        if (rt){
+            if (Arrays.asList(templateFiles).contains(name) || Arrays.asList(emptyJsonFiles).contains(name)){
+                this.gpsService.updateConfigSequence();
+            }
+        }
+        return rt;
     }
 }

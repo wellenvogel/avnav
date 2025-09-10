@@ -198,7 +198,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return false;
     }
 
-    private void updateConfigSequence(){
+    public void updateConfigSequence(){
         synchronized (configSequenceLock){
             configSequence++;
         }
