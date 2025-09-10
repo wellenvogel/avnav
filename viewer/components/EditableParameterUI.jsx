@@ -113,7 +113,7 @@ const ItemButtons=({description,onReset})=>{
     </div>
 }
 
-export const EditableParameterListUI=({values,parameters,initialValues,onChange})=>{
+export const EditableParameterListUI=({values,parameters,initialValues,onChange,itemClassName})=>{
     if (! parameters) return null;
     return <React.Fragment>
         {parameters.map((param)=>{
@@ -124,6 +124,7 @@ export const EditableParameterListUI=({values,parameters,initialValues,onChange}
               currentValues={values}
               onChange={(nv)=>onChange(nv)}
               initialValues={initialValues}
+              className={itemClassName}
           ></param.render>
         })}
     </React.Fragment>

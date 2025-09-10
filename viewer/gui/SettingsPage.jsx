@@ -33,7 +33,7 @@ import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import Helper, {avitem, setav} from "../util/helper";
-import {default as EditableParameterUIFactory} from "../components/EditableParameterUI";
+import {default as EditableParameterUIFactory, EditableParameterListUI} from "../components/EditableParameterUI";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -300,7 +300,7 @@ const ocreateSettingsItem=(item)=>{
     }
 };
 
-const createSettingsItem=(item)=>{
+const itemUiFromPlain=(item)=>{
     let rt=EditableParameterUIFactory.createEditableParameterUI({
         type: item.type,
         default: item.defaultv,
@@ -308,6 +308,11 @@ const createSettingsItem=(item)=>{
         displayName: item.label,
         name:item.name
     })
+    return rt;
+}
+
+const createSettingsItem=(item)=>{
+    let rt=itemUiFromPlain(item);
     return (props)=>{
         const values={};
         values[item.name] = item.value;
@@ -546,7 +551,8 @@ class SettingsPage extends React.Component{
             leftPanelVisible:true,
             section:'Layer'
         };
-        this.values=stateHelper(this,globalStore.getMultiple(this.flattenedKeys));
+        this.initialValues=globalStore.getMultiple(this.flattenedKeys)
+        this.values=stateHelper(this,this.initialValues);
         this.defaultValues={};
         this.flattenedKeys.forEach((key)=>{
             let description=KeyHelper.getKeyDescriptions()[key];
@@ -799,7 +805,7 @@ class SettingsPage extends React.Component{
                         value: value,
                         className: className
                     });
-                    settingsItems.push(item);
+                    settingsItems.push(itemUiFromPlain(item));
                 }
             }
         }
@@ -822,13 +828,19 @@ class SettingsPage extends React.Component{
                     onItemClick={self.sectionClick}
                     itemList={sectionItems}
                 /> : null}
-                {rightVisible ? <ItemList
-                    className="settingsList dialogObjects"
-                    scrollable={true}
-                    itemCreator={createSettingsItem}
-                    itemList={settingsItems}
-                    onItemClick={self.changeItem}
-                /> : null}
+                {rightVisible ? <div
+                    className="settingsList dialogObjects">
+                        <EditableParameterListUI
+                            values={this.values.getValues()}
+                            initialValues={this.initialValues}
+                            parameters={settingsItems}
+                            onChange={(nv)=>{
+                                for (let k in nv){
+                                    this.values.setValue(k,nv[k]);
+                            }}}
+                            itemClassName={'listEntry'}
+                        />
+                    </div> : null}
             </div>);
     };
     render() {

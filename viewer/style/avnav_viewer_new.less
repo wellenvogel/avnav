@@ -1507,26 +1507,21 @@ span.valuePrefix{
       &.expand{
         .flex-grow(1);
         width: 100%;
+        margin:0;
       }
     }
     .settingsList{
+      input,.input{
+        border-bottom: none;
+        width: 10em;
+      }
+      .inputFrame{
+        width: 10em;
+      }
+      overflow: auto;
       .flex-grow(1);
-      overflow-x: hidden;
-      .label, .inputLabel{
-        width: 11em;
-      }
-      .value, .checkBox {
-        .mdText2();
-      }
-      .colorSelector .input{
-        .mdText2();
-      }
-      .colorValue{
-        width: 1.5em;
-        height: 1.5em;
-      }
-      .listEntry{
-        .flex-align-items(center)
+      & .dialogRow{
+        line-height: unset;
       }
     }
     .sectionList,.settingsList{
