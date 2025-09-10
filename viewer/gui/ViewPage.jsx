@@ -51,7 +51,6 @@ class ViewPage extends React.Component{
         this.state=state;
         this.changed=this.changed.bind(this);
         this.flask=undefined;
-        keyhandler.setPageMode(globalStore.getData(keys.properties.keyModeEdit));
     }
 
     buttons() {
@@ -204,7 +203,6 @@ class ViewPage extends React.Component{
 
     }
     componentWillUnmount(){
-        keyhandler.setPageMode();
     }
     render(){
         let self=this;

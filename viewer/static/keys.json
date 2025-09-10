@@ -79,9 +79,16 @@
     }
   },
   "viewpage": {
+    "_config": {
+      "mode": "explicit"
+    },
     "button": {
       "ViewPageSave": "Control-s",
       "Cancel":"Escape"
+    },
+    "dialogButton": {
+      "Cancel": "Escape",
+      "cancel": "Escape"
     }
   }
 }
