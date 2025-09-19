@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
@@ -24,6 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+import os
 
 from avnav_store import *
 hasAisDecoder=False
@@ -856,3 +858,66 @@ def to360(a):
     "limit a to [0,360)"
     while a < 0: a += 360
     return a % 360
+
+
+if __name__ == '__main__':
+    def usage():
+        print(f"usage: {sys.argv[0]} infile",file=sys.stderr)
+        sys.exit(1)
+    if len(sys.argv) < 2:
+        usage()
+    infile=sys.argv[1]
+    if not os.path.isfile(infile):
+        print(f"no such file: {infile}",file=sys.stderr)
+        sys.exit(1)
+    logfile=os.path.join('/tmp',f"parsertest{os.getpid()}.log")
+    print(f"logging to {logfile}",file=sys.stderr)
+    AVNLog.initLoggingSecond(logging.DEBUG,logfile,consoleOff=False,debugToFile=False)
+    class MyNavData:
+        def __init__(self):
+            self.aisstat={}
+
+        def getExpiryPeriod(self):
+            return 3000
+        def setAisValue(self,mmsi, data, source='test', priority=1, timestamp=None):
+            type = data.get('type')
+            print(f"AIS mmsi={mmsi} type={type} data={data} priority={priority} timestamp={timestamp}")
+            if mmsi is None:
+                mmsi='---'
+            current=self.aisstat.get(mmsi)
+            if current is None:
+                current={}
+                self.aisstat[mmsi]=current
+            if type is None:
+                type="none"
+            count=current.get(type)
+            if count is None:
+                count=0
+            current[type]=count+1
+
+        def print_stats(self):
+            overall={}
+            print("###statistics")
+            for k,v in sorted(self.aisstat.items()):
+                values=""
+                for t,c in sorted(v.items()):
+                    values += f"{t}:{c} "
+                    oc=overall.get(t,0)
+                    overall[t]=oc+c
+                print(f"{k}: {values}")
+            print("###overall")
+            for k,v in sorted(overall.items()):
+                print(f"{k}: {v}")
+
+        def setValue(self,key, data, source='test', priority=1, record=None, timestamp=None):
+            print(f"NMEA key={key} data={data} priority={priority} record={record} timestamp={timestamp}")
+    navdata = MyNavData()
+    parser=NMEAParser(navdata)
+    with open(infile,'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            print(line)
+            parser.parseData(line,source='test')
+    navdata.print_stats()
