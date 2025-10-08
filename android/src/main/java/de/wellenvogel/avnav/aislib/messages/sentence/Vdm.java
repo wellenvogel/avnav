@@ -35,6 +35,8 @@ public class Vdm extends EncapsulatedSentence {
      */
     private boolean ownMessage;
 
+    private boolean newVdm=true;
+
     /**
      * Helper method parsing line to SentenceLine and passing to parse
      * 
@@ -69,12 +71,19 @@ public class Vdm extends EncapsulatedSentence {
         }
 
         // Channel, relaxed may be null
+        Character channel;
         if (sl.getFields().get(4).length() > 0) {
-            this.channel = sl.getFields().get(4).charAt(0);
+            channel = sl.getFields().get(4).charAt(0);
         } else {
-            this.channel = 0;
+            channel = 0;
         }
-
+        if (! newVdm && channel != this.channel){
+            //in principle there could be messages from different radio channels being mixed
+            //up - just detect this at least
+            throw new SentenceException("different channels parsed into one vdm, old "+this.channel+", new "+channel);
+        }
+        this.channel=channel;
+        newVdm=false;
         // Padding bits
         int padBits = parseInt(sl.getFields().get(6));
 
