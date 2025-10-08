@@ -154,6 +154,7 @@ export const getCommonParam=({ep,currentValues,initialValues,className,onChange}
             onChange(ep.reset(undefined))
         }:undefined}
     />
+    rt.onChange=onChange;
     return rt
 }
 

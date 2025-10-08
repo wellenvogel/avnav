@@ -33,7 +33,12 @@ import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import Helper, {avitem, setav} from "../util/helper";
-import {default as EditableParameterUIFactory, EditableParameterListUI} from "../components/EditableParameterUI";
+import {
+    default as EditableParameterUIFactory,
+    EditableParameterListUI,
+    getCommonParam
+} from "../components/EditableParameterUI";
+import {EditableStringParameterBase} from "../util/EditableParameter";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -300,7 +305,62 @@ const ocreateSettingsItem=(item)=>{
     }
 };
 
+class LayoutParameterUI extends EditableStringParameterBase{
+    constructor(props) {
+        super(props,props.type,true);
+        this.render=this.render.bind(this);
+        Object.freeze(this);
+    }
+    render({currentValues,initialValues,className,onChange}){
+        const isEditing=()=>{
+            Toast("cannot change layout during editing");
+        }
+        if (LayoutHandler.isEditing()){
+            return <InputReadOnly
+                {...getCommonParam({ep:this,currentValues,className,initialValues})}
+                value={LayoutHandler.name}
+                onClick={isEditing}
+            />
+        }
+        const changeFunction=(newVal)=>{
+            if (LayoutHandler.isEditing()) {
+                isEditing();
+                return;
+            }
+            LayoutHandler.loadLayout(newVal.value,true)
+                .then((layout)=>{
+                    onChange(this.setValue(undefined, newVal.value));
+                })
+                .catch((error)=>{
+                    Toast(error+"");
+                })
+        };
+        return <InputSelect
+            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:changeFunction})}
+            itemList={(currentLayout)=>{
+                    return LayoutHandler.listLayouts()
+                        .then((list)=>{
+                            let displayList=[];
+                            list.forEach((el)=>{
+                                let le={label:el.name,value:el.name};
+                                if (currentLayout === el.name ) le.selected=true;
+                                displayList.push(le);
+                            });
+                            return displayList;
+                        })}
+            }
+            />
+    }
+}
+
 const itemUiFromPlain=(item)=>{
+    if (item.type === PropertyType.LAYOUT){
+        return new LayoutParameterUI({type: item.type,
+            default: item.defaultv,
+            list: item.values,
+            displayName: item.label,
+            name:item.name})
+    }
     let rt=EditableParameterUIFactory.createEditableParameterUI({
         type: item.type,
         default: item.defaultv,
@@ -311,21 +371,7 @@ const itemUiFromPlain=(item)=>{
     return rt;
 }
 
-const createSettingsItem=(item)=>{
-    let rt=itemUiFromPlain(item);
-    return (props)=>{
-        const values={};
-        values[item.name] = item.value;
-        return rt.render({
-            currentValues:values,
-            className:props.className,
-            onChange: (nv)=>{
-                const avev=setav(undefined,{item:item,value:nv[item.name]});
-                props.onClick(avev);
-            }
-        });
-    }
-};
+
 
 const LayoutItem=(props)=>
 {
