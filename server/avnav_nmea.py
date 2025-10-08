@@ -720,7 +720,7 @@ class NMEAParser(object):
       AVNLog.ld("empty position in %s",str(data))
       return False
     except Exception as e:
-      AVNLog.info(" error parsing nmea data " + str(data) + "\n" + traceback.format_exc())
+      AVNLog.info(" error parsing nmea data %s:%s", str(data),traceback.format_exc())
 
   @classmethod
   def convertXdrValue(self, value, unit):
@@ -762,13 +762,20 @@ class NMEAParser(object):
     try:
         expect = fields[1]
         fragment = fields[2]
+        messageid= fields[3]
         channel = fields[4]
+        key=f"{channel}-{messageid}"
         if fragment == '1':
-          cpl=self.payloads.get(channel)
-          if cpl is not None and cpl != '':
+          cpl=self.payloads.get(key)
+          if cpl is not None:
             AVNLog.debug('channel %s still open with %s',channel,self.payloads[channel])
-          self.payloads[channel] = ''
-        self.payloads[channel] += fields[5]
+          self.payloads[key] = fields[5]
+        else:
+            if self.payloads.get(key) is None:
+                AVNLog.error('invalid multi part ais message, missing #1: %s',line)
+                return False
+            else:
+                self.payloads[key] += fields[5]
         try:
             # This works because a mangled pad literal means
             # a malformed packet that will be caught by the CRC check.
@@ -790,9 +797,12 @@ class NMEAParser(object):
         AVNLog.debug("fragments now complete on channel %s with number %s: %s", channel, fragment,line.strip())
     # Render assembled payload to packed bytes
     bits = ais.BitVector()
-    bits.from_sixbit(self.payloads[channel], pad)
-    rt=self.parse_ais_messages(self.payloads[channel], bits,source=source,priority=basePriority,timestamp=timestamp)
-    self.payloads[channel]=''
+    bits.from_sixbit(self.payloads[key], pad)
+    rt=self.parse_ais_messages(self.payloads[key], bits,source=source,priority=basePriority,timestamp=timestamp)
+    try:
+        del self.payloads[key]
+    except:
+        pass
     return rt
 
 
@@ -832,7 +842,7 @@ class NMEAParser(object):
           self.storeAISdata(cooked,source=source,priority=priority,timestamp=timestamp)
           return True
       except:
-          AVNLog.debug("exception %s while decoding AIS data %s",traceback.format_exc())
+          AVNLog.debug("exception while decoding AIS data %s:%s",raw,traceback.format_exc())
           return False
 
   def storeAISdata(self,bitfield,source='internal',priority=0,timestamp=None):
@@ -867,7 +877,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         usage()
     infile=sys.argv[1]
-    if not os.path.isfile(infile):
+    if infile != "-" and not os.path.isfile(infile):
         print(f"no such file: {infile}",file=sys.stderr)
         sys.exit(1)
     logfile=os.path.join('/tmp',f"parsertest{os.getpid()}.log")
@@ -913,7 +923,7 @@ if __name__ == '__main__':
             print(f"NMEA key={key} data={data} priority={priority} record={record} timestamp={timestamp}")
     navdata = MyNavData()
     parser=NMEAParser(navdata)
-    with open(infile,'r') as f:
+    with open(infile,'r') if infile != "-" else sys.stdin as f:
         for line in f:
             line = line.strip()
             if not line:
