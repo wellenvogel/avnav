@@ -43,15 +43,17 @@ export const WidgetProps={
 }
 
 export const WidgetHead=(props)=> {
-    if (props.unit === undefined && props.caption === undefined) return null;
-    const infoMiddle = (props.infoMiddle !== undefined) ? props.infoMiddle : props.disconnect ?
+    if (! Helper.isset(props.unit,true) &&
+        ! Helper.isset(props.caption,true)
+        && ! Helper.isset(props.infoMiddle,true))return null;
+    const infoMiddle = (Helper.isset(props.infoMiddle,true)) ? props.infoMiddle : props.disconnect ?
         <div className={'disconnectedIcon'}/>
         :undefined;
     return (
         <div className="widgetHead">
-            <div className='infoLeft'>{props.caption}</div>
+            {Helper.isset(props.caption, true) && <div className='infoLeft'>{props.caption}</div>}
             {infoMiddle !== undefined && <div className={'infoMiddle'}>{infoMiddle}</div>}
-            {props.unit !== undefined ?
+            {Helper.isset(props.unit,true) ?
                 <div className='infoRight'>{props.unit}</div>
                 : <div className='infoRight'></div>
             }

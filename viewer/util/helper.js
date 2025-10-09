@@ -190,6 +190,12 @@ export const concatsp=(...args)=>{
 export const unsetOrTrue=(item)=>{
     return !!(item === undefined || item);
 }
+export const isset=(item,opt_empty)=>{
+    if (item === undefined) return false;
+    if (! opt_empty) return true;
+    if (item !== '') return true;
+    return false;
+}
 export const now=()=>{
     return (new Date()).getTime();
 }
@@ -308,6 +314,7 @@ Helper.isObject=isObject;
 Helper.injectav=injectav;
 Helper.avitem=avitem;
 Helper.setav=setav;
+Helper.isset=isset;
 
 export default Helper;
 
