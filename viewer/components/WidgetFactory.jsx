@@ -276,7 +276,7 @@ class WidgetFactory{
             name=name.name;
         }
         let plist=this.editableParametersCache[name];
-        //if (plist) return plist;
+        if (plist) return plist;
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];

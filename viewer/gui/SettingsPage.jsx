@@ -171,14 +171,17 @@ const itemUiFromPlain=(item)=>{
             default: item.defaultv,
             list: item.values,
             displayName: item.label,
-            name:item.name})
+            name:item.name,
+            description: item.description
+        })
     }
     let rt=EditableParameterUIFactory.createEditableParameterUI({
         type: item.type,
         default: item.defaultv,
         list: item.values,
         displayName: item.label,
-        name:item.name
+        name:item.name,
+        description: item.description
     })
     return rt;
 }

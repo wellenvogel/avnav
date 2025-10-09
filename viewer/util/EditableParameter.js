@@ -345,6 +345,18 @@ export class EditableFloatParameter extends EditableParameter{
     constructor(plain,opt_noFreeze) {
         super(plain,EditableFloatParameter.TYPE,opt_noFreeze);
     }
+    getRange() {
+        let rt={};
+        const list = this.getList();
+        if (! list || ! (list instanceof Array)) return rt;
+        if (list.length >= 1) {
+            rt.min = parseFloat(list[0]);
+        }
+        if (list.length >= 2) {
+            rt.max = parseFloat(list[1]);
+        }
+        return rt;
+    }
     setValue(values, value,check) {
         let parsed=(value!==undefined)?parseFloat(value):value;
         if (check){
