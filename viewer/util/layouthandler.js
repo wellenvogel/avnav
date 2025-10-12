@@ -91,6 +91,9 @@ class LayoutHandler{
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
         this.actions=[];
         this.currentTransaction=undefined;
+        this.styleSheet=document.createElement("style");
+        this.styleSheet.setAttribute("id","layoutStyle");
+        document.head.appendChild(this.styleSheet);
     }
     dataChanged(skeys){
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
@@ -129,7 +132,7 @@ class LayoutHandler{
                 let storedLayout = this._loadFromStorage();
                 if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                     this.name = storedLayout.name;
-                    this.layout = storedLayout.data;
+                    this._setLayout(storedLayout.data);
                     this.temporaryLayouts[this.name] = this.layout;
                     self.activateLayout();
                     resolve(this.layout);
@@ -146,7 +149,7 @@ class LayoutHandler{
                         let storedLayout = this._loadFromStorage();
                         if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                             this.name = storedLayout.name;
-                            this.layout = storedLayout.data;
+                            this._setLayout(storedLayout.data);
                             this.temporaryLayouts[this.name] = this.layout;
                             self.activateLayout();
                             resolve(this.layout);
@@ -203,7 +206,7 @@ class LayoutHandler{
     loadLayout(name, opt_checkOnly){
         let self=this;
         if (! opt_checkOnly) {
-            this.layout=undefined;
+            this._setLayout(undefined);
             this.name=name;
             this._setEditing(false);
         }
@@ -214,7 +217,7 @@ class LayoutHandler{
                 }
                 else {
                     let layout=this.temporaryLayouts[name];
-                    if (! opt_checkOnly) this.layout=layout;
+                    if (! opt_checkOnly) this._setLayout(layout);
                     resolve(layout);
                 }
                 return;
@@ -227,7 +230,7 @@ class LayoutHandler{
                         reject("layout error: "+error);
                         return;
                     }
-                    if (! opt_checkOnly) this.layout = json;
+                    if (! opt_checkOnly) this._setLayout(json);
                     resolve(json);
                 },
                 (error)=> {
@@ -239,7 +242,7 @@ class LayoutHandler{
                             let layoutData=JSON.parse(raw);
                             if (layoutData.name == name && layoutData.data){
                                 if (! opt_checkOnly) {
-                                    this.layout = layoutData.data;
+                                    this._setLayout(layoutData.data);
                                     if (name.match(/^user\./)) {
                                         self.uploadLayout(name.replace(/^user\./, ''), this.layout)
                                             .then(() => {
@@ -264,6 +267,25 @@ class LayoutHandler{
 
     nameToBaseName(name){
         return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin\./,'').replace(/\.json$/,'').replace(/.*\./,'');
+    }
+    _setLayout(layout){
+        this.layout=layout;
+        if (layout && layout.css){
+            this.styleSheet.textContent=layout.css;
+        }
+        else{
+            this.styleSheet.textContent="";
+        }
+    }
+
+    getCss(){
+        if (! this.layout) return;
+        return this.layout.css;
+    }
+    updateCss(css){
+        if (! this.layout) return;
+        this.layout.css=css;
+        this._setLayout(this.layout);
     }
 
     uploadLayout(name,layout,opt_overwrite){
@@ -295,7 +317,7 @@ class LayoutHandler{
                 this.temporaryLayouts[layoutName] = layout;
                 if (isActive){
                     this.name=layoutName;
-                    this.layout=layout;
+                    this._setLayout(layout);
                     this.activateLayout();
                 }
                 resolve({status:'OK'});
@@ -310,7 +332,7 @@ class LayoutHandler{
                 then((result)=>{
                     if (isActive){
                         this.name=layoutName;
-                        this.layout=layout;
+                        this._setLayout(layout);
                         this.activateLayout();
                     }
                     resolve(result);
