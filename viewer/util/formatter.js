@@ -75,7 +75,7 @@ const formatLonLats=function(lonlat,format='DDM',hemFirst=false){
     return lat + ' ' + lon;
 };
 formatLonLats.parameters=[
-    {name:'format',type:'SELECT',list:['DD','DDM','DMS','OLC'],default:'DDM'},
+    {name:'format',type:'SELECT',list:['DD','DDM','DMS'],default:'DDM'},
     {name:'hemFirst',type:'BOOLEAN',default:false}
 ];
 
@@ -170,7 +170,6 @@ formatDecimalOpt.parameters=[
  */
 const formatDistance=function(distance,opt_unit){
     let number=parseFloat(distance);
-    if (isNaN(number)) return "    -"; //4 spaces
     let factor=navcompute.NM;
     if (opt_unit == 'm') factor=1;
     if (opt_unit == 'km') factor=1000;
