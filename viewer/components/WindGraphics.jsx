@@ -75,7 +75,7 @@ const WindGraphics = (props) => {
         ctx.arc(width / 2, height / 2, radius * 0.97, 0, 2 * Math.PI);
         ctx.stroke();
         let start, end;
-        if (current.suffix === 'A') {
+        if (current.suffix.endsWith('A')) {
             // Write left partial circle
             ctx.beginPath();
             ctx.strokeStyle = colors.red; // red
@@ -171,7 +171,6 @@ WindGraphics.predefined= {
             default: 'auto',
             description:'which wind data to be shown\nauto will try apparent, trueAngle, trueDirection and display the first found data'
         },
-        formatter: true,
         formatterParameters: true,
         caption: true
     },
