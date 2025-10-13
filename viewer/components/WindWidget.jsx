@@ -16,21 +16,13 @@ export const getWindData=(props)=>{
     if (kind !== 'true' && kind !== 'apparent' && kind !== 'trueAngle' && kind !== 'trueDirection') kind='auto';
     if (kind === 'auto'){
         if (props.windAngle !== undefined && props.windSpeed !== undefined){
-            windAngle=props.windAngle;
-            windSpeed=props.windSpeed;
-            suffix='A';
-        }
-        else{
-            if (props.windAngleTrue !== undefined){
-                windAngle=props.windAngleTrue;
-                windSpeed=props.windSpeedTrue;
-                suffix="TA";
-            }
-            else{
-                windAngle=props.windDirectionTrue;
-                windSpeed=props.windSpeedTrue;
-                suffix="TD";
-            }
+            kind = 'apparent';
+        } else if (props.windAngleTrue !== undefined && props.windSpeedTrue !== undefined){
+            kind = 'trueAngle';
+        } else if (props.windDirectionTrue !== undefined && props.windSpeedTrue !== undefined){
+            kind = 'trueDirection';
+        } else {
+            kind = 'apparent';
         }
     }
     if (kind === 'apparent'){
@@ -71,7 +63,6 @@ export const WindProps={
 }
 
 const WindWidget = (props) => {
-    let wind = getWindData(props);
     const names = {
         A: {
             speed: 'AWS',
@@ -86,32 +77,30 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
-    let windSpeedStr = props.formatter(wind.windSpeed);
-    let show180=false;
-    if (!props.show360 && wind.suffix !== 'TD') {
-        show180=true;
-        if (wind.windAngle > 180) wind.windAngle -= 360;
-    }
+    let wind = getWindData(props);
+    let a180 = !(props.show360 || wind.suffix.endsWith('D'));
+    let angle = Formatter.formatDirection(wind.windAngle,false,a180,true);
+    let unit = ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : 'kn';
+    let speed = Formatter.formatSpeed(wind.windSpeed,unit);
     return (
-        <WidgetFrame {...props} addClass="windWidget" caption={undefined} unit={undefined} resize={props.mode === 'horizontal'}>
+        <WidgetFrame {...props} addClass="windWidget" caption={undefined} unit={undefined}>
             {(props.mode === 'horizontal') ?
                 <React.Fragment>
-                    <WidgetHead caption={props.caption?props.caption:'W' + wind.suffix}/>
+                    <WidgetHead caption={props.caption?props.caption:'W' + wind.suffix} unit={'°/'+unit}/>
                     <div className="widgetData">
-                        {Formatter.formatDirection(wind.windAngle,undefined,show180)}
-                        <span className="unit">°</span>
-                        /{windSpeedStr}
-                        <span className="unit">{props.unit}</span>
+                        {angle}/{speed}
                     </div>
                 </React.Fragment>
                 :
                 <React.Fragment>
-                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode} caption={names[wind.suffix].angle} unit='°'>
-                            <div className='widgetData'>{Formatter.formatDirection(wind.windAngle,undefined,show180)}</div>
-                        </WidgetFrame>
-                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode} caption={names[wind.suffix].speed} unit={props.unit}>
-                            <div className='widgetData'>{windSpeedStr}</div>
-                        </WidgetFrame>
+                        <div className="windInner">
+                            <WidgetHead caption={names[wind.suffix].angle} unit='°'/>
+                            <div className='widgetData'>{angle}</div>
+                        </div>
+                        <div className="windInner">
+                            <WidgetHead caption={names[wind.suffix].speed} unit={unit}/>
+                            <div className='widgetData'>{speed}</div>
+                        </div>
                 </React.Fragment>
             }
         </WidgetFrame>
@@ -128,6 +117,7 @@ WindWidget.propTypes={
 
 WindWidget.predefined= {
     storeKeys: WindStoreKeys,
+    formatter: 'formatSpeed',
     editableParameters: {
         show360: {type: 'BOOLEAN', default: false},
         kind: {
@@ -136,10 +126,9 @@ WindWidget.predefined= {
             default: 'auto',
             description: 'which wind data to be shown\nauto will try apparent, trueAngle, trueDirection and display the first found data'
         },
-        formatter: true,
+        formatter: false,
         formatterParameters: true
     },
-    formatter :'formatSpeed'
-}
+};
 
 export default WindWidget;

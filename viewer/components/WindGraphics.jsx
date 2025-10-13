@@ -115,12 +115,8 @@ const WindGraphics = (props) => {
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2, height / 2);
         ctx.font = fontSize + "px "+globalstore.getData(keys.properties.fontBase);
-        let show180=false;
-        if (!props.show360 && current.suffix !== 'TD') {
-            if (winddirection > 180) winddirection -= 360;
-            show180=true;
-        }
-        let txt = Formatter.formatDirection(winddirection,undefined,show180,true);
+        let a180 = !(props.show360 || current.suffix.endsWith('D'));
+        let txt = Formatter.formatDirection(winddirection,false,a180,true);
         let xFactor = -1.0;
         if (winddirection < 0) xFactor = -1.0;
         ctx.fillStyle = colors.text;
@@ -141,13 +137,16 @@ const WindGraphics = (props) => {
         setTimeout(drawWind, 0);
     }
     setTimeout(drawWind, 0);
-    let current = getWindData(props);
-    let windSpeed = props.formatter(current.windSpeed);
+    let wind = getWindData(props);
+    let a180 = !(props.show360 || wind.suffix.endsWith('D'));
+    let angle = Formatter.formatDirection(wind.windAngle,false,a180);
+    let unit = ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : 'kn';
+    let speed = Formatter.formatSpeed(wind.windSpeed,unit);
     return (
-        <WidgetFrame {...props} addClass="windGraphics"  caption={props.caption} resize={false}>
+        <WidgetFrame {...props} addClass="windGraphics" unit={unit} caption={props.caption} resize={false}>
             <canvas className='widgetData' ref={canvasRef}></canvas>
-            <div className="windSpeed">{windSpeed}</div>
-            <div className="windReference">{current.suffix}</div>
+            <div className="windSpeed">{speed}</div>
+            <div className="windReference">{wind.suffix}</div>
         </WidgetFrame>
 
     );
