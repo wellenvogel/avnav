@@ -20,7 +20,7 @@ const formatLonLatsDecimal=function(coordinate,axis,format='DDM',hemFirst=false)
       let str="____\u00B0__.___'";
       if(format=='DD') str="____._____\u00B0"; // use _ to prevent line breaks
       if(format=='DMS') str="____\u00B0__'__._\"";
-      return hemFirst?hem+str:str+hem;
+      return hemFirst?'_'+str:str+'_';
     }
     coordinate = Helper.to180(coordinate); // normalize to ±180°
     let deg = Math.abs(coordinate);
