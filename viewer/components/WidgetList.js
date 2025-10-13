@@ -25,7 +25,6 @@ const degrees='\u00b0';
 let widgetList=[
     {
         name: 'SOG',
-        default: "---",
         caption: 'SOG',
         storeKeys: {
             value: keys.nav.gps.speed,
@@ -76,7 +75,6 @@ let widgetList=[
     },
     {
         name: 'Position',
-        default: "-------------",
         caption: 'BOAT',
         storeKeys:{
             value: keys.nav.gps.position,
@@ -125,7 +123,6 @@ let widgetList=[
     },
     {
         name: 'DST',
-        default: "---",
         caption: 'DST',
         storeKeys:{
             value: keys.nav.wp.distance,
@@ -168,7 +165,6 @@ let widgetList=[
     },
     {
         name: 'VMG',
-        default: "---",
         caption: 'VMG',
         storeKeys: {
             value: keys.nav.wp.vmg
@@ -181,7 +177,6 @@ let widgetList=[
     },
     {
         name: 'STW',
-        default: '---',
         caption: 'STW',
         storeKeys:{
             value: keys.nav.gps.waterSpeed
@@ -193,7 +188,6 @@ let widgetList=[
     },
     {
         name: 'WindAngle',
-        default: "---",
         unit: degrees,
         caption: 'Wind Angle',
         storeKeys:WindStoreKeys,
@@ -229,7 +223,6 @@ let widgetList=[
     },
     {
         name: 'WindSpeed',
-        default: "---",
         caption: 'Wind Speed',
         storeKeys:WindStoreKeys,
         formatter: 'formatSpeed',
@@ -254,8 +247,6 @@ let widgetList=[
     },
     {
         name: 'WaterTemp',
-        default: '---',
-        unit: '°',
         caption: 'Water Temp',
         storeKeys: {
             value: keys.nav.gps.waterTemp
@@ -271,7 +262,6 @@ let widgetList=[
     },
     {
         name: 'AnchorBearing',
-        default: "---",
         unit: degrees,
         caption: 'ACHR-BRG',
         storeKeys:{
@@ -285,7 +275,6 @@ let widgetList=[
     },
     {
         name: 'AnchorDistance',
-        default: "---",
         caption: 'ACHR-DST',
         storeKeys:{
             value:keys.nav.anchor.distance
@@ -298,7 +287,6 @@ let widgetList=[
     },
     {
         name: 'AnchorWatchDistance',
-        default: "---",
         caption: 'ACHR-WATCH',
         storeKeys:{
             value:keys.nav.anchor.watchDistance
@@ -312,7 +300,6 @@ let widgetList=[
 
     {
         name: 'RteDistance',
-        default: "---",
         caption: 'RTE-DST',
         storeKeys:{
             value:keys.nav.route.remain,
@@ -330,7 +317,6 @@ let widgetList=[
     },
     {
         name: 'RteEta',
-        default: " --:--:-- ",
         storeKeys:{
             value:keys.nav.route.eta,
             time:keys.nav.gps.rtime,
@@ -352,7 +338,6 @@ let widgetList=[
     },
     {
         name: 'LargeTime',
-        default: "--:--",
         caption: 'Time',
         storeKeys:{
             value:keys.nav.gps.rtime,
@@ -372,7 +357,6 @@ let widgetList=[
     },
     {
         name: 'WpPosition',
-        default: "-------------",
         caption: 'MRK',
         storeKeys:{
             value:keys.nav.wp.position,
@@ -423,7 +407,6 @@ let widgetList=[
     },
     {
         name: 'DepthDisplay',
-        default: "---",
         caption: 'DPT',
         unit: 'm',
         storeKeys:{
@@ -504,7 +487,6 @@ let widgetList=[
     },
     {
         name: 'Default', //a way to access the default widget providing all parameters in the layout
-        default: "---",
     },
     {
         name: 'RadialGauge',
@@ -520,7 +502,6 @@ let widgetList=[
     },
     {
         name: 'signalKPressureHpa',
-        default: "---",
         formatter: 'skPressure',
         editableParameters: {
             unit:false
@@ -528,7 +509,6 @@ let widgetList=[
     },
     {
         name:'signalKCelsius',
-        default: "---",
         formatter: 'skTemperature',
         editableParameters: {
             unit: false,
