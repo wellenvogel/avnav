@@ -221,7 +221,7 @@ formatSpeed.parameters=[
 const formatDirection=function(dir,opt_rad,opt_180,opt_lz){
     dir=opt_rad ? Helper.degrees(dir) : dir;
     dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
-    return formatDecimal(dir,3,0,(!!opt_lz && !!opt_180),!!opt_lz);
+    return formatDecimal(dir,3,0,opt_180,opt_lz);
 };
 formatDirection.parameters=[
     {name:'inputRadian',type:'BOOLEAN',default:false},
@@ -230,7 +230,7 @@ formatDirection.parameters=[
 ];
 
 const formatDirection360=function(dir,opt_lz){
-    return formatDecimal(dir,3,0,false,!!opt_lz);
+    return formatDecimal(dir,3,0,false,opt_lz);
 };
 formatDirection360.parameters=[
     {name:'leadingZero',type:'BOOLEAN',default: false,description:'show leading zeroes (012)'}
@@ -241,49 +241,47 @@ formatDirection360.parameters=[
  * @param {Date} curDate
  * @returns {string}
  */
-const formatTime=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "--:--:--";
-    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
-    return datestr;
+const formatTime=function(curDate, seconds=true){
+    if (!(curDate instanceof Date)) return "--:--"+(seconds?':--':'');
+    return this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
+           this.formatDecimal(curDate.getMinutes(),2,0,false,true)+(seconds?":"+
+           this.formatDecimal(curDate.getSeconds(),2,0,false,true):'');
 };
-formatTime.parameters=[]
+formatTime.parameters=[
+    {name:'seconds',type:'BOOLEAN',default:true}
+];
 /**
  *
  * @param {Date} curDate
  * @returns {string} hh:mm
  */
 const formatClock=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "--:--";
-    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
-    return datestr;
+    if (!(curDate instanceof Date)) return "--:--";
+    return this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
+           this.formatDecimal(curDate.getMinutes(),2,0,false,true);
 };
-formatClock.parameters=[]
+formatClock.parameters=[];
 /**
  * format date and time
  * @param {Date} curDate
  * @returns {string}
  */
 const formatDateTime=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "----/--/-- --:--:--";
-    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+    if (!(curDate instanceof Date)) return "----/--/-- --:--:--";
+    return this.formatDecimal(curDate.getFullYear(),4,0,false,true)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0,false,true)+"/"+
         this.formatDecimal(curDate.getDate(),2,0,false,true)+" "+
         this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
         this.formatDecimal(curDate.getMinutes(),2,0,false,true)+":"+
         this.formatDecimal(curDate.getSeconds(),2,0,false,true);
-    return datestr;
 };
 formatDateTime.parameters=[];
 
 const formatDate=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "----/--/--";
-    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
-        this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
-        this.formatDecimal(curDate.getDate(),2,0);
-    return datestr;
+    if (!(curDate instanceof Date)) return "----/--/--";
+    return this.formatDecimal(curDate.getFullYear(),4,0,false,true)+"/"+
+           this.formatDecimal(curDate.getMonth()+1,2,0,false,true)+"/"+
+           this.formatDecimal(curDate.getDate(),2,0,false,true);
 };
 formatDate.parameters=[];
 
@@ -295,13 +293,13 @@ const formatPressure=function(data,opt_unit){
     try {
         if (!opt_unit || opt_unit.toLowerCase() === 'pa') return formatDecimal(data);
         if (opt_unit.toLowerCase() === 'hpa') {
-            return (parseFloat(data)/100).toFixed(2)
+            return (parseFloat(data)/100).toFixed(2);
         }
         if (opt_unit.toLowerCase() === 'bar') {
             return formatDecimal(parseFloat(data)/100000,2,4,false);
         }
     }catch(e){
-        return "-----";
+        return "---";
     }
 }
 formatPressure.parameters=[
@@ -311,17 +309,20 @@ formatPressure.parameters=[
 const formatTemperature=function(data,opt_unit){
     try{
         if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
-            return formatDecimal(data,3,1);
+            return formatFloat(data,3,1);
         }
         if (opt_unit.toLowerCase().match(/^c/)){
-            return formatDecimal(parseFloat(data)-273.15,3,1)
+            return formatFloat(parseFloat(data)-273.15,3,1)
+        }
+        if (opt_unit.toLowerCase().match(/^f/)){
+            return formatFloat(parseFloat(data)*9/5+32,3,1)
         }
     }catch(e){
-        return "-----"
+        return "---"
     }
 }
 formatTemperature.parameters=[
-    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'kelvin'}
+    {name:'unit',type:'SELECT',list:['celsius','kelvin','fahrenheit'],default:'kelvin'}
 ]
 
 const skTemperature=formatTemperature;
@@ -332,6 +333,7 @@ export default {
     formatTime,
     formatDecimalOpt,
     formatDecimal,
+    formatFloat,
     formatLonLats,
     formatLonLatsDecimal,
     formatDistance,
