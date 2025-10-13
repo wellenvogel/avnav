@@ -81,43 +81,67 @@ formatLonLats.parameters=[
 
 
 /**
+ * format number with N digits
+ * at max N-1 digits after decimal point
+ * there are at least N digits and a decimal point at a variable position
+ * like the display of a multimeter in auto-range mode
+ * bigger numbers: more digits are appended to the right if necessary
+ * smaller numbers: up to maxPlaces decimal places are added or they get rounded to zero
+ * negative numbers: minus sign is added if necessary
+ * @param digits = number of (significant) digits in total, negative: padding space is added for sign
+ * @param maxPlaces = max. number of decimal places (after the decimal point, default = digits-1)
+ * @param leadingZeroes = use leading zeroes instead of spaces
+ * returns string with at least digits(+1 if digits<0) characters
+ */
+const formatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
+	let signed = digits<0;
+  digits = Math.abs(digits);
+  if(maxPlaces==null) maxPlaces=digits-1;
+  if(isNaN(number)) return '-'.repeat(digits+(signed?1:0)-maxPlaces)+(maxPlaces?'.'+'-'.repeat(maxPlaces):'');
+  if(digits==0) return number.toFixed(0);
+  if(number<0 && !signed) digits-=1;
+  let sign = number<0 ? '-' : signed ? ' ' : '';
+  number = Math.abs(number);
+  let decPlaces = digits-1-Math.floor(Math.log10(Math.abs(number)));
+  decPlaces = Math.max(0,Math.min(decPlaces,Math.max(0,maxPlaces)));
+  let str = number.toFixed(decPlaces);
+  let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
+  if(leadingZeroes) {
+    return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
+  } else {
+    return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
+  }
+};
+formatFloat.parameters=[
+    {name:'digits',type:'NUMBER'},
+    {name:'maxPlaces',type:'NUMBER'},
+];
+
+/**
  * format a number with a fixed number of fractions
  * @param number
- * @param fix
- * @param fract
- * @param addSpace if set - add a space for positive numbers
- * @param prefixZero if set - use 0 instead of space to fill the fixed digits
+ * @param fix total # digits
+ * @param fract # of fractional digits
+ * @param addSpace if set - add a padding space for sign
+ * @param prefixZero if set - print leading zeroes, not space
  * @returns {string}
  */
 
 const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
-    let sign="";
     number=parseFloat(number);
-    if (isNaN(number)){
-        rt="";
-        while (fix > 0) {
-            rt+="-";
-            fix--;
-        }
-        return rt;
-    }
-    if (addSpace !== undefined && addSpace) sign=" ";
+    if (isNaN(number)) return '-'.repeat(fix-fract)+(fract?'.'+'-'.repeat(fract):'');
+    let sign = addSpace ? ' ' : '';
     if (number < 0) {
         number=-number;
-        sign="-";
+        sign='-';
     }
-    let rt=(prefixZero?"":sign)+number.toFixed(fract);
-    let v=10;
-    fix-=1;
-    while (fix > 0){
-        if (number < v){
-            if (prefixZero) rt="0"+rt;
-            else  rt=" "+rt;
-        }
-        v=v*10;
-        fix-=1;
+    let str = number.toFixed(fract); // formatted number w/o sign
+    let n = fix+fract+(fract?1:0); // expected length of string w/o sign
+    if(prefixZero || fix<0) {
+      return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
+    } else {
+      return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
     }
-    return prefixZero?(sign+rt):rt;
 };
 formatDecimal.parameters=[
     {name:'fix',type:'NUMBER'},
@@ -127,11 +151,8 @@ formatDecimal.parameters=[
 ];
 const formatDecimalOpt=function(number,fix,fract,addSpace,prefixZero){
     number=parseFloat(number);
-    if (isNaN(number)) return formatDecimal(number,fix,fract,addSpace,prefixZero);
-    if (Math.floor(number) == number){
-        return formatDecimal(number,fix,0,addSpace,prefixZero);
-    }
-    return formatDecimal(number,fix,fract,addSpace,prefixZero);
+    let isint = Math.floor(number) == number;
+    return formatDecimal(number,fix,isint?0:fract,addSpace,prefixZero);
 };
 
 formatDecimalOpt.parameters=[
