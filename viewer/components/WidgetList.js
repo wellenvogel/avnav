@@ -96,7 +96,41 @@ let widgetList=[
         name: 'TimeStatus',
         caption: 'GPS',
         wclass: TimeStatusWidget,
-        storeKeys: TimeStatusWidget.storeKeys
+        storeKeys: TimeStatusWidget.storeKeys,
+    },
+    {
+        name: 'GNSSStatus',
+        caption: 'GNSS Status',
+        storeKeys:{
+            fix: keys.nav.gps.fixType,
+            qual: keys.nav.gps.fixQuality,
+            sats: keys.nav.gps.satInview,
+            used: keys.nav.gps.satUsed,
+            hdop: keys.nav.gps.HDOP,
+            valid: keys.nav.gps.valid,
+        },
+        formatter: 'formatString',
+        editableParameters: {
+            unit: false,
+            value: false,
+        },
+        translateFunction: (props)=>{
+            const ok = props.valid && (props.fix??3)>1 && (props.qual??1)>0;
+            const warn = (props.hdop??0)>5;
+            let q = props.qual??'';
+            if(q==0) q='';
+            if(q==1) q='';
+            if(q==2) q='SBAS';
+            if(q==4) q='fixed RTK';
+            if(q==5) q='floating RTK';
+            if(q==6) q='dead reckoning';
+            if(q==8) q='simulated';
+            return {...props,
+              unit: warn?'HDOP':ok?'OK':'ERR',
+              addClass: warn?'warning':ok?'ok':'error',
+              value: `${props.fix??'-'}D ${props.used??'--'}/${props.sats??'--'} H${props.hdop??'--.-'} ${q}`
+            }
+        },
     },
     {
         name: 'ETA',
