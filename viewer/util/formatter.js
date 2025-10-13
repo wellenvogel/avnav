@@ -171,43 +171,51 @@ formatDecimalOpt.parameters=[
 const formatDistance=function(distance,opt_unit){
     let number=parseFloat(distance);
     let factor=navcompute.NM;
+    if (opt_unit == 'ft') factor=1/3.280839895; // feet
+    if (opt_unit == 'yd') factor=3/3.280839895; // yards
     if (opt_unit == 'm') factor=1;
     if (opt_unit == 'km') factor=1000;
-    number=number/factor;
-    if (number < 1){
-        return formatDecimal(number,undefined,2,false);
-    }
-    if (number < 100){
-        return formatDecimal(number,undefined,1,false);
-    }
-    return formatDecimal(number,undefined,0,false);
+    number/=factor;
+    return formatFloat(number,3);
 };
 formatDistance.parameters=[
-    {name:'unit',type:'SELECT',list:['nm','m','km'],default:'nm'}
+    {name:'unit',type:'SELECT',list:['nm','m','km','ft','yd'],default:'nm'}
 ];
 
 /**
  *
  * @param speed in m/s
- * @param opt_unit one of kn,ms,kmh
+ * @param opt_unit one of kn,ms,kmh,bft
  * @returns {*}
  */
 
 const formatSpeed=function(speed,opt_unit){
     let number=parseFloat(speed);
-    if (isNaN(number)) return "  -"; //2 spaces
-    let factor=3600/navcompute.NM;
-    if (opt_unit == 'ms') factor=1;
-    if (opt_unit == 'kmh') factor=3.6;
-    number=number*factor;
-    if (number < 100){
-        return formatDecimal(number,undefined,1,false);
+    if (opt_unit == 'bft') {
+      let v=number*3600/navcompute.NM;
+      if(v<=1)  return ' 0';
+      if(v<=3)  return ' 1';
+      if(v<=6)  return ' 2';
+      if(v<=10) return ' 3';
+      if(v<=16) return ' 4';
+      if(v<=21) return ' 5';
+      if(v<=27) return ' 6';
+      if(v<=33) return ' 7';
+      if(v<=40) return ' 8';
+      if(v<=47) return ' 9';
+      if(v<=55) return '10';
+      if(v<=63) return '11';
+      return '12';
     }
-    return formatDecimal(number,undefined,0,false);
+    let factor=3600/navcompute.NM;
+    if (opt_unit == 'ms' || opt_unit == 'm/s') factor=1;
+    if (opt_unit == 'kmh' || opt_unit == 'km/h') factor=3.6;
+    number*=factor;
+    return formatFloat(number,3,1);
 };
 
 formatSpeed.parameters=[
-    {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
+    {name:'unit',type:'SELECT',list:['kn','ms','kmh','bft','m/s','km/h'],default:'kn'}
 ];
 
 const formatDirection=function(dir,opt_rad,opt_180,opt_lz){
