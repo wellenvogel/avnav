@@ -5,43 +5,59 @@
 import navcompute from '../nav/navcompute.js';
 import Helper from "./helper.js";
 
+function pad(num, size, pad='0') {
+    return (''+num).trim().padStart(size,pad);
+}
+
 /**
  *
  * @param {number} coordinate
  * @param axis
  * @returns {string}
  */
-const formatLonLatsDecimal=function(coordinate,axis){
+const formatLonLatsDecimal=function(coordinate,axis,format='DDM',hemFirst=false){
+    if(coordinate==null) {
+      let str="____\u00B0__.___'";
+      if(format=='DD') str="____._____\u00B0"; // use _ to prevent line breaks
+      if(format=='DMS') str="____\u00B0__'__._\"";
+      return hemFirst?hem+str:str+hem;
+    }
     coordinate = Helper.to180(coordinate); // normalize to ±180°
-
-    let abscoordinate = Math.abs(coordinate);
-    let coordinatedegrees = Math.floor(abscoordinate);
-
-    let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-    let numdecimal=2;
-    //correctly handle the toFixed(x) - will do math rounding
-    if (coordinateminutes.toFixed(numdecimal) == 60){
-        coordinatedegrees+=1;
-        coordinateminutes=0;
-    }
-    if( coordinatedegrees < 10 ) {
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    if (coordinatedegrees < 100 && axis == 'lon'){
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    let str = coordinatedegrees + "\u00B0";
-
-    if( coordinateminutes < 10 ) {
-        str +="0";
-    }
-    str += coordinateminutes.toFixed(numdecimal) + "'";
+    let deg = Math.abs(coordinate);
+    let padding = 2;
+    let str = '\u00A0';
+    let hem = coordinate < 0 ? "S" :"N";
     if (axis == "lon") {
-        str += coordinate < 0 ? "W" :"E";
-    } else {
-        str += coordinate < 0 ? "S" :"N";
+        padding = 3;
+        str = '';
+        hem = coordinate < 0 ? "W" :"E";
     }
-    return str;
+    if(format=='DD') {
+      str += pad(deg.toFixed(5),padding+6) + "\u00B0";
+    } else if(format=='DMS') {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      let MIN = Math.floor(min);
+      let sec = 60*(min-MIN);
+      if (sec.toFixed(1).startsWith('60.')){
+          MIN+=1;
+          sec=0;
+          if(MIN==60){
+            MIN=0;
+            DEG+=1;
+          }
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(MIN,2) + "'" + pad(sec.toFixed(1),4) + '"';
+    } else {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      if (min.toFixed(3).startsWith('60.')){
+          DEG+=1;
+          min=0;
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(min.toFixed(3),6) + "'";
+    }
+    return hemFirst?hem+str:str+hem;
 };
 
 /**
@@ -49,15 +65,20 @@ const formatLonLatsDecimal=function(coordinate,axis){
  * @param {Point} lonlat
  * @returns {string}
  */
-const formatLonLats=function(lonlat){
-    if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
-        return "-----";
+const formatLonLats=function(lonlat,format='DDM',hemFirst=false){
+    if(format=='OLC') {
+      if(!lonlat||lonlat.lat==null||lonlat.lon==null) return "________+__";
+      return new OpenLocationCode().encode(lonlat.lat,lonlat.lon);
     }
-    let ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
-    let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
-    return ns + ', ' + ew;
+    let lat=this.formatLonLatsDecimal(lonlat?.lat, 'lat', format, hemFirst);
+    let lon=this.formatLonLatsDecimal(lonlat?.lon, 'lon', format, hemFirst);
+    return lat + ' ' + lon;
 };
-formatLonLats.parameters=[];
+formatLonLats.parameters=[
+    {name:'format',type:'SELECT',list:['DD','DDM','DMS','OLC'],default:'DDM'},
+    {name:'hemFirst',type:'BOOLEAN',default:false}
+];
+
 
 /**
  * format a number with a fixed number of fractions
