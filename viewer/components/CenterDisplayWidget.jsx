@@ -19,7 +19,7 @@ const CenterDisplayWidget = (props) => {
     }
     return (
         <WidgetFrame {...props} addClass="centerDisplayWidget" caption="Center" unit={undefined}>
-            {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
+            {!small && <div className="widgetData Position">{Formatter.formatLonLats(props.centerPosition,props.positionFmt)}</div>}
             {(measurePosition !== undefined) &&
                 <div className="widgetData">
                     <div className="label measure"></div>
