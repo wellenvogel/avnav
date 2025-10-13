@@ -51,7 +51,13 @@ apt-get install -y --no-install-recommends xserver-xorg-video-all \
   openbox lxterminal dconf-cli firefox-esr dbus-x11 python3-xlib \
   nemo xfce4-panel mousepad xdotool menu libglib2.0-bin || err "unable to install"
 
-copyNE /boot avnav.conf 
+if [ -d /boot/firmware ]
+then
+  copyNE /boot/firmware avnav.conf
+else
+  copyNE /boot avnav.conf
+fi
+
 cp $pdir/avnav-startx.service /etc/systemd/system || err
 systemctl daemon-reload
 
