@@ -33,6 +33,7 @@ const LayoutFinishedDialog=(props)=>{
                         return true;
                     }}
                     fileName={"layout-"+layouthandler.name+".css"}
+                    showCollapse={true}
                     />);
                 break;
         }

@@ -1468,10 +1468,21 @@ span.valuePrefix{
   .editFileDialog{
     width: 90vw;
     height: 90vh;
+    &.collapsed{
+      .edit{
+        opacity: 0;
+      }
+      .dialogTitle{
+        opacity: 0;
+      }
+    }
     .edit{
       .flex(1);
       position: relative;
     }
+  }
+  .dialog:has(.collapsed){
+    background-color: unset;
   }
   .EditRouteDialog{
     &.activeRoute{
