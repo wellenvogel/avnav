@@ -46,6 +46,10 @@ const AisFullDisplay=(display)=> {
                 <span className="aisData">{display.headingTo}</span>
                 <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
             </div>
+            <div className="widgetData">
+
+                <span className="aisData">&nbsp;</span>
+            </div>
         </div>
     }
     <div className="aisPart">
