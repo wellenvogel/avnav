@@ -1,0 +1,381 @@
+{
+  "description": "The system default layout. No keys and no properties.",
+  "layoutVersion": 1,
+  "properties": {
+    "layers": {
+      "ais": true
+    }
+  },
+  "widgets": {
+    "gpspage1": {
+      "left": [
+        {
+          "className": "modern",
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "className": "modern",
+          "name": "DST",
+          "weight": 1.5
+        },
+        {
+          "className": "modern half",
+          "name": "XteDisplay",
+          "weight": 1
+        },
+        {
+          "className": "modern half",
+          "name": "ETA"
+        },
+        {
+          "className": "modern half",
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "className": "modern",
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "className": "modern",
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "className": "modern",
+          "formatterParameters": [
+            3,
+            1,
+            true,
+            true
+          ],
+          "name": "DepthDisplay",
+          "weight": 1.5
+        },
+        {
+          "className": "modern half",
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "Empty",
+          "weight": 0.5
+        }
+      ],
+      "right": [
+        {
+          "className": "modern",
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "className": "modern",
+          "name": "SOG",
+          "weight": 1.5
+        },
+        {
+          "className": "modern half",
+          "name": "TimeStatus"
+        },
+        {
+          "className": "modern half",
+          "name": "Position"
+        },
+        {
+          "className": "modern half",
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage2": {
+      "left": [
+        {
+          "className": "modern",
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "className": "modern",
+          "name": "DepthDisplay"
+        },
+        {
+          "className": "modern half",
+          "name": "DST",
+          "weight": 0.75
+        },
+        {
+          "className": "modern half",
+          "name": "SOG",
+          "weight": 0.75
+        },
+        {
+          "className": "modern half",
+          "name": "ETA"
+        },
+        {
+          "className": "modern half",
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "className": "modern",
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "className": "modern half",
+          "name": "WindGraphics",
+          "weight": 2.5
+        },
+        {
+          "className": "modern half",
+          "name": "DateTime"
+        },
+        {
+          "className": "modern half",
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage3": {
+      "left": [
+        {
+          "className": "modern",
+          "formatterParameters": [
+            ""
+          ],
+          "name": "BRG"
+        },
+        {
+          "className": "modern",
+          "formatterParameters": [
+            ""
+          ],
+          "name": "COG"
+        },
+        {
+          "className": "modern half",
+          "caption": "COG",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "name": "linGauge_Compass"
+        },
+        {
+          "className": "modern half",
+          "caption": "COG",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "name": "radGauge_Compass",
+          "weight": 3
+        }
+      ],
+      "right": [
+        {
+          "className": "modern",
+          "formatterParameters": [
+            "nm"
+          ],
+          "name": "DST"
+        },
+        {
+          "className": "modern",
+          "formatterParameters": [
+            "kn"
+          ],
+          "name": "VMG"
+        },
+        {
+          "className": "modern",
+          "formatterParameters": [
+            "kn"
+          ],
+          "name": "SOG"
+        },
+        {
+          "className": "modern half",
+          "caption": "SOG",
+          "unit": "kn",
+          "storeKeys": {
+            "value": "nav.gps.speed"
+          },
+          "colorPlate": "#fff",
+          "maxValue": 10,
+          "startHighlight": 6,
+          "formatterParameters": [
+            "kn"
+          ],
+          "name": "radGauge_Speed",
+          "weight": 3
+        }
+      ]
+    },
+    "navpage": {
+      "left": [
+        {
+          "name": "CenterDisplay"
+        },
+        {
+          "name": "Zoom"
+        },
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "ActiveRoute"
+        },
+        {
+          "name": "LargeTime"
+        }
+      ],
+      "left_small": [
+        {
+          "name": "ActiveRoute"
+        }
+      ],
+      "top_small": [
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "LargeTime"
+        },
+        {
+          "name": "Zoom"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "className": "centered",
+          "name": "BRG"
+        },
+        {
+          "className": "centered",
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "className": "centered",
+          "name": "COG"
+        },
+        {
+          "className": "centered",
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ],
+      "bottomLeft_anchor": [
+        {
+          "name": "AnchorBearing",
+          "caption": "ACHR-BRG",
+          "unit": "°"
+        },
+        {
+          "name": "AnchorDistance",
+          "caption": "ACHR-DST",
+          "unit": "m",
+          "formatterParameters": [
+            "m"
+          ]
+        },
+        {
+          "name": "AnchorWatchDistance"
+        }
+      ]
+    },
+    "editroutepage": {
+      "left": [
+        {
+          "name": "EditRoute"
+        },
+        {
+          "name": "RoutePoints"
+        }
+      ],
+      "left_small": [],
+      "top_small": [
+        {
+          "name": "EditRoute"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ]
+    },
+    "gpspage4": {},
+    "gpspage5": {}
+  },
+  "css": "/*\n  CSS classes that can be used for widgets:\n  modern\n  half (together with modern)\n  centered\n  \n  for documentation refer below\n*/\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 3em;\n}\n\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget.modern .widgetHead {\n    border-bottom: unset;\n    border-top: 2px solid;\n    background-color: unset;\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget.modern .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used together\n   with modern for smaller caption and unit */\n.hfield .widgetContainer .widget.modern.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n\n/* when using the \"modern\" class just\n   have some margin on the right and no extra room for the caption\n   on the AIS target widget on dashboard pages */\n.hfield .widget.aisTargetWidget.modern .aisPart {\n  padding-right: 0.5em;\n  }\n.hfield .widget.aisTargetWidget.modern .widgetHead {\n  height:0; \n  }\n  \n/* a CSS class \"centered\" for centered text in widgets */\n.widget.centered .widgetData{\n  margin-right: auto;\n}\n "
+}
