@@ -1,21 +1,31 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, showDialog, useDialogContext} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 import {EditDialog} from "./EditDialog";
 import layouthandler from "../util/layouthandler.js";
+import Toast from "./Toast";
 
 const LayoutFinishedDialog=(props)=>{
     const dialogContext=useDialogContext();
     const buttonFunction=useCallback( (mode)=>{
         switch (mode) {
-            case 1:
-                LayoutHandler.activateLayout(true);
-                if (props.finishCallback) props.finishCallback(true);
+            case 1: {
+                if (LayoutHandler.isEditing()) {
+                    LayoutHandler.activateLayout();
+                    const name = LayoutHandler.getLayout()
+                    const layout = layouthandler.getLayout();
+                    layoutLoader.uploadLayout(name, layout, true)
+                        .then(() => {
+                            if (props.finishCallback) props.finishCallback(true);
+                        })
+                        .catch((e) => Toast(e + ""))
+                }
+                }
                 break;
             case 2:
-                LayoutHandler.loadStoredLayout();
+                LayoutHandler.resetEditing();
                 if (props.finishCallback) props.finishCallback(true);
                 break;
             case 3:

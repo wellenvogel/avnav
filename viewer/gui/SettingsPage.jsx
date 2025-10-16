@@ -15,7 +15,7 @@ import {
     showPromiseDialog,
     useDialogContext
 } from '../components/OverlayDialog.jsx';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {LayoutAndName, layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly, Input} from '../components/Inputs.jsx';
@@ -39,6 +39,8 @@ import {
     getCommonParam
 } from "../components/EditableParameterUI";
 import {EditableStringParameterBase} from "../util/EditableParameter";
+import layouthandler from "../util/layouthandler.js";
+import cloneDeep from "clone-deep";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -138,19 +140,13 @@ class LayoutParameterUI extends EditableStringParameterBase{
                 isEditing();
                 return;
             }
-            LayoutHandler.loadLayout(newVal.value,true)
-                .then((layout)=>{
-                    onChange(this.setValue(undefined, newVal.value));
-                })
-                .catch((error)=>{
-                    Toast(error+"");
-                })
+            onChange(this.setValue(undefined, newVal.value));
         };
         return <InputSelect
             {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:changeFunction})}
             onChange={changeFunction}
             itemList={(currentLayout)=>{
-                    return LayoutHandler.listLayouts()
+                    return layoutLoader.listLayouts()
                         .then((list)=>{
                             let displayList=[];
                             list.forEach((el)=>{
@@ -207,19 +203,22 @@ class SettingsPage extends React.Component{
                     let values=this.values.getValues(true);
                     //if the layout changed we need to set it
                     const layoutName = values[keys.properties.layoutName];
+                    const finish=()=>{
+                        LayoutHandler.activateLayout();
+                        globalStore.storeMultiple(values);
+                        this.props.history.pop();
+                    }
                     if (!LayoutHandler.hasLoaded(layoutName)) {
-                        LayoutHandler.loadLayout(layoutName)
-                            .then((res) => {
-                                LayoutHandler.activateLayout();
-                                globalStore.storeMultiple(values);
-                                this.props.history.pop();
+                        values[keys.properties.layoutName]=this.initialValues[keys.properties.layoutName];
+                        layoutLoader.loadLayout(layoutName)
+                            .then((layout) => {
+                                LayoutHandler.setLayoutAndName(layout,layoutName)
+                                finish();
                             })
                             .catch((err) => Toast(err));
                         return;
                     }
-                    LayoutHandler.activateLayout();
-                    globalStore.storeMultiple(values);
-                    this.props.history.pop();
+                    finish()
                 }
             },
             {
@@ -244,7 +243,7 @@ class SettingsPage extends React.Component{
                     for (let key in masterValues){
                         let description = KeyHelper.getKeyDescriptions()[key];
                         if (description.type === PropertyType.LAYOUT){
-                            promises.push(LayoutHandler.loadLayout(masterValues[key],true));
+                            promises.push(layoutLoader.loadLayout(masterValues[key]));
                         }
                     }
                     Promise.all(promises)
@@ -336,6 +335,7 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     this.confirmAbortOrDo().then(()=> {
+                        LayoutHandler.setLayoutAndName(this.initialLayout.layout,this.initialLayout.name,true);
                         this.props.history.pop();
                 });
                 }
@@ -357,6 +357,7 @@ class SettingsPage extends React.Component{
         };
         this.initialValues=globalStore.getMultiple(this.flattenedKeys)
         this.values=stateHelper(this,this.initialValues);
+        this.layoutSettings=stateHelper(this,propertyhandler.getLayoutSettings(),'layoutSettings')
         this.defaultValues={};
         this.flattenedKeys.forEach((key)=>{
             let description=KeyHelper.getKeyDescriptions()[key];
@@ -364,6 +365,7 @@ class SettingsPage extends React.Component{
                 this.defaultValues[key] = description.defaultv;
             }
         })
+        this.initialLayout=new LayoutAndName(LayoutHandler.getName(),cloneDeep(LayoutHandler.getLayout()));
 
     }
     /**
@@ -439,6 +441,9 @@ class SettingsPage extends React.Component{
         const item=avitem(ev);
         const value=avitem(ev,'value')
         this.values.setValue(item.name,value);
+        if (item.name === keys.properties.layoutName ){
+            this.updateLayout(value);
+        }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -449,18 +454,20 @@ class SettingsPage extends React.Component{
 
     resetChanges(){
         this.values.setState(globalStore.getMultiple(this.flattenedKeys),true);
+        LayoutHandler.setLayoutAndName(this.initialLayout.layout,this.initialLayout.name,true);
+        this.layoutSettings.setState(propertyhandler.getLayoutSettings(),true);
     }
 
     handleLayoutClick(){
         let isEditing=LayoutHandler.isEditing();
         if (! isEditing){
             let startDialog=()=> {
-                LayoutHandler.listLayouts()
+                layoutLoader.listLayouts()
                     .then((list)=> {
                         showPromiseDialog(undefined,(dprops)=><ItemNameDialog
                             {...dprops}
                             title={"Start Layout Editor"}
-                            iname={LayoutHandler.nameToBaseName(LayoutHandler.name)}
+                            iname={layoutLoader.nameToBaseName(LayoutHandler.name)}
                             fixedPrefix={'user.'}
                             fixedExt={'json'}
                             checkName={(newName)=> {
@@ -469,7 +476,7 @@ class SettingsPage extends React.Component{
                                     if (! checkName){
                                         return {
                                             error:'name must not be empty',
-                                            proposal: LayoutHandler.nameToBaseName(LayoutHandler.name)
+                                            proposal: layoutLoader.nameToBaseName(LayoutHandler.name)
                                         }
                                     }
                                     if (checkName.indexOf('.') >= 0){
@@ -495,7 +502,7 @@ class SettingsPage extends React.Component{
                             }}
                         />)
                             .then((res)=> {
-                                LayoutHandler.startEditing(LayoutHandler.fileNameToServerName(res.name));
+                                LayoutHandler.startEditing(layoutLoader.fileNameToServerName(res.name));
                                 this.props.history.pop();
                             })
                             .catch(()=> {
@@ -519,8 +526,22 @@ class SettingsPage extends React.Component{
         }
     }
 
+    updateLayout(newLayoutName){
+        if (! LayoutHandler.hasLoaded(newLayoutName)){
+            return layoutLoader.loadLayout(newLayoutName)
+                .then((layoutAndName)=>{
+                    LayoutHandler.setLayoutAndName(layoutAndName.layout,layoutAndName.name);
+                    return true;
+                })
+        }
+        return Promise.resolve(true);
+    }
+
     resetData(){
         let values=assign({},this.defaultValues);
+        const newLayoutName=values[keys.properties.layoutName];
+        this.updateLayout(newLayoutName)
+            .then((res)=> {},(err)=>Toast(err+""));
         this.values.setState(values,true);
     }
     hasChanges(){

@@ -30,7 +30,7 @@ import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
-import LayoutHandler from './util/layouthandler.js';
+import LayoutHandler, {layoutLoader} from './util/layouthandler.js';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
@@ -339,7 +339,8 @@ class App extends React.Component {
             }
         ));
         this.pendingActions.push(LayoutHandler.loadStoredLayout(true)
-            .then((layout)=>{})
+            .then((layout)=>{
+            })
             .catch((error)=>{Toast(error)})
         );
         let lastChart=mapholder.getLastChartKey();

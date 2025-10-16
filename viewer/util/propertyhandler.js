@@ -4,15 +4,14 @@
 
 import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
-import keys, {KeyHelper, PropertyType, SplitProperty} from './keys.jsx';
+import keys, {KeyHelper, PropertyType} from './keys.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
-import LayoutHandler from './layouthandler';
+import LayoutHandler, {layoutLoader} from './layouthandler';
 import RequestHandler from "./requests";
 import Requests from "./requests";
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 import splitsupport from "./splitsupport";
-import {object} from "prop-types";
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -36,7 +35,6 @@ const hex2rgba= (hex, opacity)=> {
  */
 class PropertyHandler {
     constructor(propertyDescriptions) {
-        let self=this;
         this.propertyPrefix=KeyHelper.keyNodeToString(keys.properties)+".";
         this.propertyDescriptions = KeyHelper.getKeyDescriptions(true);
         this.getProperties=this.getProperties.bind(this);
@@ -47,6 +45,7 @@ class PropertyHandler {
         this.dataChanged=this.dataChanged.bind(this);
         this.resetToSaved=this.resetToSaved.bind(this);
         this.prefixKeys=[];
+        this.layoutSettings={};
         for (let k in this.propertyDescriptions){
             let description=this.propertyDescriptions[k];
             if (description.isSplit()){
@@ -151,6 +150,7 @@ class PropertyHandler {
         let saveDataSplit={}
         let hasPrefix=LocalStorage.hasPrefix();
         for (let dk in this.propertyDescriptions){
+            if (dk in this.layoutSettings) continue
             let v=globalStore.getData(dk);
             if (this.prefixKeys.indexOf(dk) >= 0 && hasPrefix){
                 //in any case also write default values to prefixed settings
@@ -199,15 +199,12 @@ class PropertyHandler {
     }
 
 
-    resetToSaved(){
-        let self=this;
-        let defaults=KeyHelper.getDefaultKeyValues();
-        globalStore.storeMultiple(defaults,undefined,true);
+    _getSavedValues(){
+        let values=KeyHelper.getDefaultKeyValues();
         try {
             let ndata = this.loadUserData();
             let prefixData = this.loadUserData(true);
             if (ndata) {
-                let userData={};
                 for (let k in this.propertyDescriptions){
                     let v=KeyHelper.getValue(ndata,k,1);
                     if (this.prefixKeys.indexOf(k) >= 0){
@@ -215,15 +212,19 @@ class PropertyHandler {
                         if (pv !== undefined) v=pv;
                     }
                     if ( v === undefined) continue;
-                    if (v !== globalStore.getData(k)){
-                        userData[k]=v;
-                    }
+                    values[k]=v;
                 }
-                globalStore.storeMultiple(userData, undefined, true, true);
             }
         }catch (e){
             base.log("Exception reading user data "+e);
         }
+        return values;
+    }
+
+    resetToSaved(){
+        const saved=this._getSavedValues()
+        globalStore.storeMultiple(saved,undefined,true);
+        globalStore.storeMultiple(this.layoutSettings, undefined, true);
         globalStore.storeData(keys.gui.global.propertiesLoaded,true);
     }
 
@@ -236,7 +237,32 @@ class PropertyHandler {
             }
         }
         globalStore.storeMultiple(changes);
+        globalStore.storeMultiple(this.layoutSettings, undefined, true, true);
         //set some initial properties
+    }
+
+    setLayoutSettings(settings) {
+        const saved=this._getSavedValues()
+        const toReset={};
+        for (let k in this.layoutSettings){
+            toReset[k]=saved[k];
+        }
+        this.layoutSettings={};
+        if (settings && (typeof settings === 'object')) {
+            for (let k in settings) {
+                if (k === keys.properties.layoutName) continue;
+                if (this.propertyDescriptions[k] === undefined) continue;
+                this.layoutSettings[k] = settings[k]; //TODO: check allowed value
+            }
+        }
+        globalStore.storeMultiple({...toReset,...this.layoutSettings});
+        return true;
+    }
+    isLayoutSetting(path){
+        return path in this.layoutSettings;
+    }
+    getLayoutSettings(){
+        return {...this.layoutSettings};
     }
 
     /**
@@ -365,7 +391,7 @@ class PropertyHandler {
                         break;
                     case PropertyType.LAYOUT:
                         promises.push(
-                            LayoutHandler.loadLayout(v,true)
+                            layoutLoader.loadLayout(v)
                                 .then((o) => {
                                         let rt = {};
                                         rt[dk] = v;
@@ -515,8 +541,9 @@ class PropertyHandler {
 
             }
             if (newLayout){
-                LayoutHandler.loadLayout(newLayout)
-                    .then((ok)=>{
+                layoutLoader.loadLayout(newLayout)
+                    .then((layout)=>{
+                        LayoutHandler.setLayoutAndName(layout,newLayout);
                         resolve(values);
                     })
                     .catch((e)=>reject("unable to load layout: "+e));

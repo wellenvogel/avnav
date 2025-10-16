@@ -37,7 +37,7 @@ import OverlayDialog, {
 } from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
-import LayoutHandler from "../util/layouthandler";
+import LayoutHandler, {layoutLoader} from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
@@ -83,7 +83,7 @@ const getLocalDataFunction=(item)=>{
         return ()=>{ return RouteHandler.getLocalRouteXml(item.name)}
     }
     if (item.type === 'layout'){
-        return LayoutHandler.getLocalDownload(item.name);
+        return layoutLoader.getLocalDownload(item.name);
     }
 }
 const getDownloadFileName=(item)=>{
@@ -264,7 +264,7 @@ export class ItemActions{
                 rt.headline='Layouts';
                 rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
                 rt.showView = async (item)=>{
-                    const layout = await LayoutHandler.loadLayout(item.name,true);
+                    const layout = await layoutLoader.loadLayout(item.name);
                     return {
                         name:item.name+".json",
                         data: JSON.stringify(layout,undefined,"  ")
@@ -274,14 +274,14 @@ export class ItemActions{
                 rt.showDownload = true;
                 rt.extForView='json';
                 rt.nameForDownload=(name)=>{
-                    return LayoutHandler.nameToBaseName(name)+".json";
+                    return layoutLoader.nameToBaseName(name)+".json";
                 }
                 rt.nameForUpload=(name)=>{
-                    return LayoutHandler.fileNameToServerName(name);
+                    return layoutLoader.fileNameToServerName(name);
                 }
                 rt.serverNameToClientName=(name)=>name+'.json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
-                    return LayoutHandler.uploadLayout(name,data,overwrite);
+                    return layoutLoader.uploadLayout(name,data,overwrite);
                 }
                 rt.fixedPrefix=USER_PREFIX;
                 break;
@@ -707,7 +707,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + info.name + "?"}/>);
     ok.then(function () {
         if (info.type === 'layout') {
-            LayoutHandler.deleteItem(info.name)
+            layoutLoader.deleteLayout(info.name)
                 .then((res)=> {
                     doneAction();
                 })
