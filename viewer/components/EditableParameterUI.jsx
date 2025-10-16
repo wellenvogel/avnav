@@ -119,12 +119,19 @@ export const EditableParameterListUI=({values,parameters,initialValues,onChange,
         {parameters.map((param)=>{
           if (! param) return null;
             if (! param.checkConditions(values,parameters)) return null;
+            let cl;
+            if (typeof itemClassName === 'function'){
+                cl = itemClassName(param);
+            }
+            else{
+                cl=itemClassName;
+            }
           return <param.render
               key={param.name}
               currentValues={values}
               onChange={(nv)=>onChange(nv)}
               initialValues={initialValues}
-              className={itemClassName}
+              className={cl}
           ></param.render>
         })}
     </React.Fragment>

@@ -249,17 +249,7 @@ class LayoutLoader{
     getCssFromLayout(layout){
         return (layout||{}).css;
     }
-    getLayoutProperties(layout,allowedKeys){
-        if (!layout || ! allowedKeys)return {}
-        const rt={};
-        if (! layout.properties) return rt;
-        for (let k in allowedKeys){
-            if (k in layout.properties){
-                rt[k] = layout.properties[k];
-            }
-        }
-        return rt;
-    }
+
 
     listLayouts() {
         let activeLayout = globalStore.getData(keys.properties.layoutName);
@@ -406,6 +396,17 @@ class LayoutHandler{
     getCss(){
         if (! this.layout) return;
         return this.layout.css;
+    }
+    getLayoutProperties(allowedKeys){
+        if (! this.layout || ! allowedKeys)return {}
+        const rt={};
+        if (! this.layout.properties) return rt;
+        for (let k in allowedKeys){
+            if (k in this.layout.properties){
+                rt[k] = this.layout.properties[k];
+            }
+        }
+        return rt;
     }
     updateCss(css){
         if (! this.layout) return;

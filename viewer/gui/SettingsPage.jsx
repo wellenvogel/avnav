@@ -5,21 +5,18 @@
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
-import React, {useState} from 'react';
+import React from 'react';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import assign from 'object-assign';
 import {
-    DialogButtons,
-    DialogFrame, showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showDialog,
+    showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import LayoutHandler, {LayoutAndName, layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly, Input} from '../components/Inputs.jsx';
-import DB from '../components/DialogButton.jsx';
+import {InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
@@ -32,14 +29,13 @@ import LocalStorage from '../util/localStorageManager';
 import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
-import Helper, {avitem, setav} from "../util/helper";
+import Helper, {avitem} from "../util/helper";
 import {
     default as EditableParameterUIFactory,
     EditableParameterListUI,
     getCommonParam
 } from "../components/EditableParameterUI";
 import {EditableStringParameterBase} from "../util/EditableParameter";
-import layouthandler from "../util/layouthandler.js";
 import cloneDeep from "clone-deep";
 
 const settingsSections={
@@ -335,7 +331,7 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     this.confirmAbortOrDo().then(()=> {
-                        LayoutHandler.setLayoutAndName(this.initialLayout.layout,this.initialLayout.name,true);
+                        this.resetChanges();
                         this.props.history.pop();
                 });
                 }
@@ -437,12 +433,13 @@ class SettingsPage extends React.Component{
                 if (e) Toast(e);
             })
     }
-    changeItem(ev){
-        const item=avitem(ev);
-        const value=avitem(ev,'value')
-        this.values.setValue(item.name,value);
-        if (item.name === keys.properties.layoutName ){
+    changeItem(key,value){
+        this.values.setValue(key,value);
+        if (key === keys.properties.layoutName ){
             this.updateLayout(value);
+        }
+        if (LayoutHandler.isEditing()){
+            this.layoutSettings.setValue(key,value);
         }
     }
 
@@ -455,7 +452,8 @@ class SettingsPage extends React.Component{
     resetChanges(){
         this.values.setState(globalStore.getMultiple(this.flattenedKeys),true);
         LayoutHandler.setLayoutAndName(this.initialLayout.layout,this.initialLayout.name,true);
-        this.layoutSettings.setState(propertyhandler.getLayoutSettings(),true);
+        const layoutSettings=LayoutHandler.getLayoutProperties(this.initialValues);
+        this.layoutSettings.setState(layoutSettings,true);
     }
 
     handleLayoutClick(){
@@ -598,6 +596,8 @@ class SettingsPage extends React.Component{
         }
         let settingsItems = [];
         let sectionChanges={};
+        const layoutSettings=this.layoutSettings.getValues();
+        const itemClasses={};
         for (let section in settingsSections) {
             for (let s in settingsSections[section]) {
                 let key = settingsSections[section][s];
@@ -618,13 +618,15 @@ class SettingsPage extends React.Component{
                 if (propertyhandler.isPrefixProperty(key)){
                     className+=" prefix";
                 }
+                if (key in layoutSettings){
+                    className+=" layoutSetting";
+                }
                 if (section === currentSection) {
                     let item = {...description,
                         name: key,
-                        value: value,
-                        className: className
                     };
                     settingsItems.push(itemUiFromPlain(item));
+                    itemClasses[key]=className;
                 }
             }
         }
@@ -655,9 +657,9 @@ class SettingsPage extends React.Component{
                             parameters={settingsItems}
                             onChange={(nv)=>{
                                 for (let k in nv){
-                                    this.values.setValue(k,nv[k]);
+                                    this.changeItem(k,nv[k]);
                             }}}
-                            itemClassName={'listEntry'}
+                            itemClassName={(param)=> Helper.concatsp('listEntry',itemClasses[param.name])}
                         />
                     </div> : null}
             </div>);
