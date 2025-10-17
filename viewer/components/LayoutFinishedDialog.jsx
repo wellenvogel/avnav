@@ -4,7 +4,6 @@ import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, showDialog, useDialogContext} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 import {EditDialog} from "./EditDialog";
-import layouthandler from "../util/layouthandler.js";
 import Toast from "./Toast";
 
 const LayoutFinishedDialog=(props)=>{
@@ -14,8 +13,8 @@ const LayoutFinishedDialog=(props)=>{
             case 1: {
                 if (LayoutHandler.isEditing()) {
                     LayoutHandler.activateLayout();
-                    const name = LayoutHandler.getLayout()
-                    const layout = layouthandler.getLayout();
+                    const name = LayoutHandler.getName();
+                    const layout = LayoutHandler.getLayout();
                     layoutLoader.uploadLayout(name, layout, true)
                         .then(() => {
                             if (props.finishCallback) props.finishCallback(true);
@@ -33,16 +32,16 @@ const LayoutFinishedDialog=(props)=>{
             case 4:
                 dialogContext.replaceDialog((dprops)=><EditDialog
                     {...dprops}
-                    data={layouthandler.getCss()||""}
+                    data={LayoutHandler.getCss()||""}
                     language="css"
                     saveFunction={(data)=>{
-                        layouthandler.updateCss(data);
+                        LayoutHandler.updateCss(data);
                     }}
                     resolveFunction={(data)=>{
-                        layouthandler.updateCss(data);
+                        LayoutHandler.updateCss(data);
                         return true;
                     }}
-                    fileName={"layout-"+layouthandler.name+".css"}
+                    fileName={"layout-"+LayoutHandler.getName()+".css"}
                     showCollapse={true}
                     />);
                 break;

@@ -331,6 +331,19 @@ class LayoutHandler{
         this.styleSheet.setAttribute("id","layoutStyle");
         document.head.appendChild(this.styleSheet);
         this.savedLayout=undefined;
+        this.storeProviderId = globalStore.registerProvider(
+            (key) => {
+                if (this.layout && this.layout.properties) {
+                    return key in this.layout.properties
+                }
+                return false;
+            },
+            (key) => {
+                if (this.layout && this.layout.properties) {
+                    return this.layout.properties[key];
+                }
+            }
+        );
     }
     canEdit(name){
         if (name === undefined) name=this.name;
@@ -397,16 +410,25 @@ class LayoutHandler{
         if (! this.layout) return;
         return this.layout.css;
     }
-    getLayoutProperties(allowedKeys){
-        if (! this.layout || ! allowedKeys)return {}
+    getLayoutProperties(allowedKeys,layout){
+        if (! layout || ! allowedKeys)return {}
         const rt={};
-        if (! this.layout.properties) return rt;
+        if (! layout.properties) return rt;
         for (let k in allowedKeys){
-            if (k in this.layout.properties){
-                rt[k] = this.layout.properties[k];
+            if (k in layout.properties){
+                rt[k] = layout.properties[k];
             }
         }
         return rt;
+    }
+
+    /**
+     * set the layout properties
+     * no check, no copy
+     * @param properties
+     */
+    updateLayoutProperties(properties){
+        this.layout.properties=properties;
     }
     updateCss(css){
         if (! this.layout) return;
@@ -416,6 +438,7 @@ class LayoutHandler{
     hasLoaded(layoutName){
         if (this.name !== layoutName)return false;
         if (! this.layout) return false;
+        return true;
     }
     getLayoutWidgets(){
         if (! this.layout || ! this.layout.widgets) return {};

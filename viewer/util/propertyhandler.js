@@ -45,7 +45,6 @@ class PropertyHandler {
         this.dataChanged=this.dataChanged.bind(this);
         this.resetToSaved=this.resetToSaved.bind(this);
         this.prefixKeys=[];
-        this.layoutSettings={};
         for (let k in this.propertyDescriptions){
             let description=this.propertyDescriptions[k];
             if (description.isSplit()){
@@ -239,30 +238,6 @@ class PropertyHandler {
         globalStore.storeMultiple(changes);
         globalStore.storeMultiple(this.layoutSettings, undefined, true, true);
         //set some initial properties
-    }
-
-    setLayoutSettings(settings) {
-        const saved=this._getSavedValues()
-        const toReset={};
-        for (let k in this.layoutSettings){
-            toReset[k]=saved[k];
-        }
-        this.layoutSettings={};
-        if (settings && (typeof settings === 'object')) {
-            for (let k in settings) {
-                if (k === keys.properties.layoutName) continue;
-                if (this.propertyDescriptions[k] === undefined) continue;
-                this.layoutSettings[k] = settings[k]; //TODO: check allowed value
-            }
-        }
-        globalStore.storeMultiple({...toReset,...this.layoutSettings});
-        return true;
-    }
-    isLayoutSetting(path){
-        return path in this.layoutSettings;
-    }
-    getLayoutSettings(){
-        return {...this.layoutSettings};
     }
 
     /**

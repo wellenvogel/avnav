@@ -200,11 +200,18 @@ class SettingsPage extends React.Component{
                     //if the layout changed we need to set it
                     const layoutName = values[keys.properties.layoutName];
                     const finish=()=>{
-                        LayoutHandler.activateLayout();
-                        globalStore.storeMultiple(values);
+                        if (LayoutHandler.isEditing()){
+                            if (this.layoutSettings.isChanged()){
+                                LayoutHandler.updateLayoutProperties(this.layoutSettings.getState(true));
+                            }
+                        }
+                        else {
+                            LayoutHandler.activateLayout();
+                            globalStore.storeMultiple(values);
+                        }
                         this.props.history.pop();
                     }
-                    if (!LayoutHandler.hasLoaded(layoutName)) {
+                    if (!LayoutHandler.hasLoaded(layoutName) && ! LayoutHandler.isEditing()) {
                         values[keys.properties.layoutName]=this.initialValues[keys.properties.layoutName];
                         layoutLoader.loadLayout(layoutName)
                             .then((layout) => {
@@ -331,7 +338,6 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     this.confirmAbortOrDo().then(()=> {
-                        this.resetChanges();
                         this.props.history.pop();
                 });
                 }
@@ -353,7 +359,7 @@ class SettingsPage extends React.Component{
         };
         this.initialValues=globalStore.getMultiple(this.flattenedKeys)
         this.values=stateHelper(this,this.initialValues);
-        this.layoutSettings=stateHelper(this,propertyhandler.getLayoutSettings(),'layoutSettings')
+        this.layoutSettings=stateHelper(this,LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()),'layoutSettings');
         this.defaultValues={};
         this.flattenedKeys.forEach((key)=>{
             let description=KeyHelper.getKeyDescriptions()[key];
@@ -361,7 +367,6 @@ class SettingsPage extends React.Component{
                 this.defaultValues[key] = description.defaultv;
             }
         })
-        this.initialLayout=new LayoutAndName(LayoutHandler.getName(),cloneDeep(LayoutHandler.getLayout()));
 
     }
     /**
@@ -434,12 +439,23 @@ class SettingsPage extends React.Component{
             })
     }
     changeItem(key,value){
-        this.values.setValue(key,value);
-        if (key === keys.properties.layoutName ){
-            this.updateLayout(value);
-        }
         if (LayoutHandler.isEditing()){
             this.layoutSettings.setValue(key,value);
+        }
+        else{
+            if (key in this.layoutSettings.getState()) {
+                Toast("cannot change layout settings when not editing");
+                return;
+            }
+            this.values.setValue(key,value);
+            if (key === keys.properties.lastLoadedName){
+                layoutLoader.loadLayout(value)
+                    .then((layout)=>{
+                        const layoutSettings=LayoutHandler.getLayoutProperties(this.initialValues,layout);
+                        this.layoutSettings.setState(layoutSettings,true);
+                    })
+                    .catch((e)=>{Toast(e+"")})
+            }
         }
     }
 
@@ -450,10 +466,8 @@ class SettingsPage extends React.Component{
     }
 
     resetChanges(){
-        this.values.setState(globalStore.getMultiple(this.flattenedKeys),true);
-        LayoutHandler.setLayoutAndName(this.initialLayout.layout,this.initialLayout.name,true);
-        const layoutSettings=LayoutHandler.getLayoutProperties(this.initialValues);
-        this.layoutSettings.setState(layoutSettings,true);
+        this.values.reset();
+        this.layoutSettings.reset();
     }
 
     handleLayoutClick(){
@@ -520,7 +534,15 @@ class SettingsPage extends React.Component{
             }).catch(()=>{});
         }
         else{
-            showDialog(undefined,()=><LayoutFinishedDialog finishCallback={()=>this.changeItem({name:keys.properties.layoutName},LayoutHandler.name)}/> )
+            const dialog=()=>showDialog(undefined,()=><LayoutFinishedDialog /> )
+            if (! this.hasChanges()){
+                dialog();
+                return;
+            }
+            this.confirmAbortOrDo().then(()=>{
+                this.resetChanges();
+                dialog();
+            },()=>{})
         }
     }
 
@@ -536,14 +558,21 @@ class SettingsPage extends React.Component{
     }
 
     resetData(){
-        let values=assign({},this.defaultValues);
-        const newLayoutName=values[keys.properties.layoutName];
-        this.updateLayout(newLayoutName)
-            .then((res)=> {},(err)=>Toast(err+""));
-        this.values.setState(values,true);
+        if (LayoutHandler.isEditing()){
+            this.layoutSettings.setState({},true);
+        }
+        else {
+            const oldLayoutName = this.values.getValue(keys.properties.layoutName);
+            let values = assign({}, this.defaultValues);
+            const newLayoutName = values[keys.properties.layoutName];
+            this.values.setState(values, true);
+            if (oldLayoutName !== newLayoutName){
+                this.changeItem(keys.properties.layoutName,newLayoutName); //reset layoutSettings
+            }
+        }
     }
     hasChanges(){
-        return this.values.isChanged();
+        return this.values.isChanged() || this.layoutSettings.isChanged();
     }
     leftPanelVisible(){
         return this.state.leftPanelVisible;
@@ -640,6 +669,7 @@ class SettingsPage extends React.Component{
             }
             sitem.className = className;
         });
+        const currentValues={...this.values.getState(),...this.layoutSettings.getState()};
         return (
             <div className="leftSection">
                 { leftVisible ? <ItemList
@@ -652,7 +682,7 @@ class SettingsPage extends React.Component{
                 {rightVisible ? <div
                     className="settingsList dialogObjects">
                         <EditableParameterListUI
-                            values={this.values.getValues()}
+                            values={currentValues}
                             initialValues={this.initialValues}
                             parameters={settingsItems}
                             onChange={(nv)=>{

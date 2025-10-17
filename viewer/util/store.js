@@ -61,6 +61,7 @@ class CallbackDescriptor {
     }
 }
 
+
 /**
  * @class
  * @constructor
@@ -73,9 +74,26 @@ class Store {
          */
         this.callbacks = [];
         this.data = {};
+        this.provider = {}; //data provider for keys (prefixes)
+        this.providerId=0;
         this.name=name;
     }
 
+    /**
+     *
+     * @returns the id to be used for deregister
+     * @param hasCallback
+     * @param getValueCallback
+     */
+    registerProvider(hasCallback,getValueCallback){
+        this.providerId++;
+        this.provider[this.providerId]={has:hasCallback,getValue:getValueCallback};
+        return this.providerId;
+    }
+
+    deregisterProvider(providerId){
+        delete this.provider[providerId];
+    }
     /**
      * find a callback in the list of registered callbacks
      * @param {UpdateCallback||function} callback
@@ -142,7 +160,6 @@ class Store {
      * @param opt_omitHandler e reference to a handler to be omitted
      */
     callCallbacks(keys, opt_omitHandler) {
-        let self = this;
         this.callbacks.forEach(function (cbItem) {
             if (opt_omitHandler) {
                 if (opt_omitHandler === cbItem.callback) return;
@@ -170,7 +187,18 @@ class Store {
      * @returns {*}
      */
     getData(key, opt_default) {
-        let rt = this.data[key];
+        let rt;
+        let ext=false;
+        for (let k in this.provider) {
+            if (this.provider[k].has(key)){
+                rt=this.provider[k].getValue(key);
+                ext=true;
+                break;
+            }
+        }
+        if (! ext) {
+            rt = this.data[key];
+        }
         if (rt !== undefined) return rt;
         if (typeof opt_default === 'function') return opt_default();
         return opt_default;
@@ -181,7 +209,6 @@ class Store {
      * @param keys single key or array or object (keys used and being translated)
      */
     getMultiple(keys) {
-        let self = this;
         let storeKeys = keys;
         let rt = {};
         if (!(storeKeys instanceof Array)) {
@@ -189,9 +216,9 @@ class Store {
                 for (let k in storeKeys) {
                     let v = undefined;
                     if (typeof (storeKeys[k]) === 'object') {
-                        v = self.getMultiple(storeKeys[k]);
+                        v = this.getMultiple(storeKeys[k]);
                     } else {
-                        v = self.getData(storeKeys[k]);
+                        v = this.getData(storeKeys[k]);
                     }
                     rt[k] = v;
                 }
@@ -201,7 +228,7 @@ class Store {
             }
         }
         storeKeys.forEach((key) => {
-            let v = self.getData(key);
+            let v = this.getData(key);
             rt[key] = v;
         });
         return rt;
@@ -230,7 +257,6 @@ class Store {
      * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
      */
     storeMultiple(data, keyTranslations, opt_noCallbacks, opt_omitUndefined) {
-        let self = this;
         let changeKeys = [];
         if (data === undefined && keyTranslations === undefined) return;
         for (let k in (keyTranslations !== undefined) ? keyTranslations : data) {
@@ -238,7 +264,7 @@ class Store {
             if (storeKey === undefined) continue;
             let v = (data !== undefined) ? data[k] : undefined;
             if (typeof (storeKey) === 'object') {
-                let subChanged = self.storeMultiple(v, storeKey, true, opt_omitUndefined);
+                let subChanged = this.storeMultiple(v, storeKey, true, opt_omitUndefined);
                 changeKeys = changeKeys.concat(subChanged);
                 continue;
             }
