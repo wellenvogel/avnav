@@ -615,11 +615,15 @@ class SettingsPage extends React.Component{
         }
         let settingsItems = [];
         let sectionChanges={};
+        let sectionHasLayoutSettings={};
         const layoutSettings=this.layoutSettings.getValues();
         const itemClasses={};
         for (let section in settingsSections) {
             for (let s in settingsSections[section]) {
                 let key = settingsSections[section][s];
+                if (key in this.layoutSettings.getValues()){
+                    sectionHasLayoutSettings[section]=true;
+                }
                 if (settingsConditions[key] !== undefined){
                     if (! settingsConditions[key](this.values.getValues())) continue;
                 }
@@ -666,6 +670,9 @@ class SettingsPage extends React.Component{
             }
             if ((sectionChanges[sitem.name] || {}).isDefault !== false) {
                 className += " defaultValue";
+            }
+            if (sectionHasLayoutSettings[sitem.name]){
+                className+=" layoutSetting";
             }
             sitem.className = className;
         });
