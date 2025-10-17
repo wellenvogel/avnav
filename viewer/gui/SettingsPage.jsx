@@ -6,14 +6,14 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
 import React from 'react';
-import Page from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import assign from 'object-assign';
 import {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
-import LayoutHandler, {LayoutAndName, layoutLoader} from '../util/layouthandler.js';
+import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {InputSelect, InputReadOnly} from '../components/Inputs.jsx';
@@ -36,8 +36,8 @@ import {
     getCommonParam
 } from "../components/EditableParameterUI";
 import {EditableStringParameterBase} from "../util/EditableParameter";
-import cloneDeep from "clone-deep";
 import Button from "../components/Button";
+import ButtonList from "../components/ButtonList";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -352,7 +352,6 @@ class SettingsPage extends React.Component{
         this.handleLayoutClick=this.handleLayoutClick.bind(this);
         this.changeItem=this.changeItem.bind(this);
         this.confirmAbortOrDo=this.confirmAbortOrDo.bind(this);
-        this.MainContent=this.MainContent.bind(this);
         this.flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         this.state={
             leftPanelVisible:true,
@@ -368,6 +367,7 @@ class SettingsPage extends React.Component{
                 this.defaultValues[key] = description.defaultv;
             }
         })
+        this.renderItemCache={};
 
     }
     /**
@@ -586,12 +586,12 @@ class SettingsPage extends React.Component{
     }
     componentDidMount(){
     }
-    MainContent(props){
-        let leftVisible = props.leftPanelVisible;
-        let rightVisible = !props.small || !props.leftPanelVisible;
+    render() {
+        let leftVisible = this.state.leftPanelVisible;
+        let rightVisible = !this.props.small || !leftVisible
         let leftClass = "sectionList";
         if (!rightVisible) leftClass += " expand";
-        let currentSection = props.section|| 'Layer';
+        let currentSection = this.state.section|| 'Layer';
         let sectionItems = [];
         for (let s in settingsSections) {
             let sectionCondition=sectionConditions[s];
@@ -644,7 +644,17 @@ class SettingsPage extends React.Component{
                     let item = {...description,
                         name: key,
                     };
-                    settingsItems.push(itemUiFromPlain(item));
+                    //do not recreate items on each render
+                    //as this would loose focus on every change
+                    //to avoid a separate creation step
+                    //we simply keep every item that has been rendered available
+                    //as only then it needs to be persistent
+                    let uiItem=this.renderItemCache[item.name];
+                    if ( uiItem === undefined ){
+                        uiItem=itemUiFromPlain(item);
+                        this.renderItemCache[item.name]=uiItem;
+                    }
+                    settingsItems.push(uiItem);
                     itemClasses[key]=className;
                 }
             }
@@ -661,17 +671,23 @@ class SettingsPage extends React.Component{
         });
         const layoutEditing=LayoutHandler.isEditing();
         const currentValues={...this.values.getState(),...this.layoutSettings.getState()};
-        return (
-            <div className="leftSection">
-                { leftVisible ? <ItemList
-                    className={leftClass}
-                    scrollable={true}
-                    itemClass={SectionItem}
-                    onItemClick={this.sectionClick}
-                    itemList={sectionItems}
-                /> : null}
-                {rightVisible ? <div
-                    className="settingsList dialogObjects">
+        return <PageFrame
+            {...this.props}
+            id={'settingspage'}
+            >
+            <PageLeft
+                title={"Settings"+((this.props.small && !this.state.leftPanelVisible)?" "+this.state.section:"")}
+            >
+                <div className="leftSection">
+                    { leftVisible ? <ItemList
+                        className={leftClass}
+                        scrollable={true}
+                        itemClass={SectionItem}
+                        onItemClick={this.sectionClick}
+                        itemList={sectionItems}
+                    /> : null}
+                    {rightVisible ? <div
+                        className="settingsList dialogObjects">
                         <EditableParameterListUI
                             values={currentValues}
                             initialValues={this.initialValues}
@@ -679,7 +695,7 @@ class SettingsPage extends React.Component{
                             onChange={(nv)=>{
                                 for (let k in nv){
                                     this.changeItem(k,nv[k]);
-                            }}}
+                                }}}
                             itemClassName={(param)=> Helper.concatsp('listEntry',itemClasses[param.name])}
                             itemchildren={(param)=>{
                                 if (! (param.name in this.layoutSettings.getValues())  || ! layoutEditing) return null;
@@ -694,24 +710,12 @@ class SettingsPage extends React.Component{
                             }}
                         />
                     </div> : null}
-            </div>);
-    };
-    render() {
-        let MainContent=this.MainContent;
-        return (
-            <Page
-                {...this.props}
-                id="settingspage"
-                mainContent={
-                            <MainContent
-                                section={this.state.section}
-                                leftPanelVisible={this.state.leftPanelVisible}
-                                small={this.props.small}
-                            />
-                        }
-                buttonList={this.buttons}
-                title={"Settings"+((this.props.small && !this.state.leftPanelVisible)?" "+this.state.section:"")}
-                />);
+                </div>);
+            </PageLeft>
+            <ButtonList
+                itemList={this.buttons}
+            />
+        </PageFrame>
     }
 }
 SettingsPage.propTypes=Page.pageProperties;
