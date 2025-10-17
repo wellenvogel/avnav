@@ -423,6 +423,15 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
             newState[changedName]=!shallowcompare(values,initialValues);
             thisref.setState(newState);
         },
+        deleteValue:(key)=>{
+            if (! (key in thisref.state[valueName])) return;
+            let values=assign({},thisref.state[valueName]);
+            delete values[key];
+            let newState={};
+            newState[valueName]=values;
+            newState[changedName]=true;
+            thisref.setState(newState);
+        },
         setState:(partialState,opt_overwrite)=>{
             let values;
             if (! opt_overwrite) values=assign({},thisref.state[valueName],partialState);

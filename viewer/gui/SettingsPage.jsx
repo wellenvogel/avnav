@@ -37,6 +37,7 @@ import {
 } from "../components/EditableParameterUI";
 import {EditableStringParameterBase} from "../util/EditableParameter";
 import cloneDeep from "clone-deep";
+import Button from "../components/Button";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -120,13 +121,13 @@ class LayoutParameterUI extends EditableStringParameterBase{
         this.render=this.render.bind(this);
         Object.freeze(this);
     }
-    render({currentValues,initialValues,className,onChange}){
+    render({currentValues,initialValues,className,onChange,children}){
         const isEditing=()=>{
             Toast("cannot change layout during editing");
         }
         if (LayoutHandler.isEditing()){
             return <InputReadOnly
-                {...getCommonParam({ep:this,currentValues,className,initialValues})}
+                {...getCommonParam({ep:this,currentValues,className,initialValues,children})}
                 value={LayoutHandler.name}
                 onClick={isEditing}
             />
@@ -139,7 +140,7 @@ class LayoutParameterUI extends EditableStringParameterBase{
             onChange(this.setValue(undefined, newVal.value));
         };
         return <InputSelect
-            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:changeFunction})}
+            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:changeFunction,children})}
             onChange={changeFunction}
             itemList={(currentLayout)=>{
                     return layoutLoader.listLayouts()
@@ -546,17 +547,6 @@ class SettingsPage extends React.Component{
         }
     }
 
-    updateLayout(newLayoutName){
-        if (! LayoutHandler.hasLoaded(newLayoutName)){
-            return layoutLoader.loadLayout(newLayoutName)
-                .then((layoutAndName)=>{
-                    LayoutHandler.setLayoutAndName(layoutAndName.layout,layoutAndName.name);
-                    return true;
-                })
-        }
-        return Promise.resolve(true);
-    }
-
     resetData(){
         if (LayoutHandler.isEditing()){
             this.layoutSettings.setState({},true);
@@ -669,6 +659,7 @@ class SettingsPage extends React.Component{
             }
             sitem.className = className;
         });
+        const layoutEditing=LayoutHandler.isEditing();
         const currentValues={...this.values.getState(),...this.layoutSettings.getState()};
         return (
             <div className="leftSection">
@@ -690,6 +681,17 @@ class SettingsPage extends React.Component{
                                     this.changeItem(k,nv[k]);
                             }}}
                             itemClassName={(param)=> Helper.concatsp('listEntry',itemClasses[param.name])}
+                            itemchildren={(param)=>{
+                                if (! (param.name in this.layoutSettings.getValues())  || ! layoutEditing) return null;
+                                return <Button
+                                    name={"SettingsLayout"}
+                                    className={"smallButton"}
+                                    onClick={(ev)=>{
+                                        ev.stopPropagation();
+                                        this.layoutSettings.deleteValue(param.name);
+                                    }}
+                                />
+                            }}
                         />
                     </div> : null}
             </div>);

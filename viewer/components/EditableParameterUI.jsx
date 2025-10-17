@@ -98,7 +98,7 @@ const getMinMax=(ep)=>{
     }
     return {}
 }
-const ItemButtons=({description,onReset})=>{
+const ItemButtons=({description,onReset,children})=>{
     if (! description && ! onReset) return null;
     return <div className={"paramButtons"}>
         {description && <HelpButton description={description}/> }
@@ -110,10 +110,11 @@ const ItemButtons=({description,onReset})=>{
                 onReset();
             }}
         />}
+        {children}
     </div>
 }
 
-export const EditableParameterListUI=({values,parameters,initialValues,onChange,itemClassName})=>{
+export const EditableParameterListUI=({values,parameters,initialValues,onChange,itemClassName,itemchildren})=>{
     if (! parameters) return null;
     return <React.Fragment>
         {parameters.map((param)=>{
@@ -126,18 +127,19 @@ export const EditableParameterListUI=({values,parameters,initialValues,onChange,
             else{
                 cl=itemClassName;
             }
+          const children=itemchildren?itemchildren(param):undefined
           return <param.render
               key={param.name}
               currentValues={values}
               onChange={(nv)=>onChange(nv)}
               initialValues={initialValues}
               className={cl}
-          ></param.render>
+          >{children}</param.render>
         })}
     </React.Fragment>
 }
 
-export const getCommonParam=({ep,currentValues,initialValues,className,onChange})=>{
+export const getCommonParam=({ep,currentValues,initialValues,className,onChange,children})=>{
     const v=ep.getValue(currentValues);
     const errorClass=checkerHelper(ep,v)?undefined:'error';
     let rt={
@@ -160,7 +162,7 @@ export const getCommonParam=({ep,currentValues,initialValues,className,onChange}
         onReset={(onChange && ('default' in ep))?()=>{
             onChange(ep.reset(undefined))
         }:undefined}
-    />
+    >{children}</ItemButtons>;
     return rt
 }
 
@@ -193,10 +195,10 @@ export class EditableBooleanParameterUI extends EditableBooleanParameter{
         super(props,true);
         cHelper(this);
     }
-    render({currentValues,initialValues,className,onChange}) {
+    render({currentValues,initialValues,className,onChange,children}) {
         return <Checkbox
             frame={true}
-            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:this.canEdit()?onChange:undefined})}
+            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:this.canEdit()?onChange:undefined,children})}
             readOnly={!this.canEdit()}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv));
@@ -211,8 +213,8 @@ export class EditableStringParameterUI extends EditableStringParameter{
         cHelper(this);
     }
 
-    render({currentValues,initialValues,className,onChange}){
-        const common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:this.canEdit()?onChange:undefined});
+    render({currentValues,initialValues,className,onChange,children}){
+        const common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:this.canEdit()?onChange:undefined,children});
         if (common.value === undefined) common.value='';
         if (!this.canEdit()){
             return <InputReadOnly
@@ -234,9 +236,9 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
         super(props,true);
         cHelper(this);
     }
-    render({currentValues,initialValues,className,onChange}){
+    render({currentValues,initialValues,className,onChange,children}){
         const canEdit=this.canEdit();
-        let common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:canEdit?onChange:undefined});
+        let common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:canEdit?onChange:undefined,children});
         if (isNaN(common.value)) common.value="";
         if (!canEdit){
             return <InputReadOnly
@@ -261,14 +263,14 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
         super(props,true);
         cHelper(this);
     }
-    render({currentValues,initialValues,className,onChange}){
+    render({currentValues,initialValues,className,onChange,children}){
         if (!this.canEdit()){
             return <InputReadOnly
-                {...getCommonParam({ep:this,currentValues,initialValues,className})}
+                {...getCommonParam({ep:this,currentValues,initialValues,className,children})}
             />
         }
         return <Input
-            {...getCommonParam({ep:this,currentValues,initialValues,className,onChange})}
+            {...getCommonParam({ep:this,currentValues,initialValues,className,onChange,children})}
             type={'number'}
             step={"any"}
             onChange={(nv)=>{
@@ -282,11 +284,11 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
         super(props,true);
         cHelper(this);
     }
-    render({currentValues,initialValues,className,onChange}){
+    render({currentValues,initialValues,className,onChange,children}) {
         const [dynamicList,setDynamicList]=useState(undefined);
         if (!this.canEdit()){
             return <InputReadOnly
-                {...getCommonParam({ep:this,currentValues,initialValues,className})}
+                {...getCommonParam({ep:this,currentValues,initialValues,className,children})}
             />
         }
         let displayList=[];
@@ -316,7 +318,7 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
             return 0;
         })
         return <InputSelect
-            {...getCommonParam({ep:this,currentValues,initialValues,className,onChange})}
+            {...getCommonParam({ep:this,currentValues,initialValues,className,onChange,children})}
             list={displayList}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv.value))
@@ -361,16 +363,16 @@ export class EditableKeyParameterUI extends EditableKeyParameter {
         })
         return finalList;
     }
-    render({currentValues, initialValues,className, onChange}) {
+    render({currentValues, initialValues,className, onChange,children}) {
         if (!this.canEdit()) {
             return <InputReadOnly
-                {...getCommonParam({ep:this, currentValues,initialValues, className})}
+                {...getCommonParam({ep:this, currentValues,initialValues, className,children})}
             />
         }
 
         const currentKeys = currentValues ? currentValues[EditableKeyParameter.KEY] : {};
         return <InputSelect
-            {...getCommonParam({ep:this, currentValues,initialValues, className, onChange})}
+            {...getCommonParam({ep:this, currentValues,initialValues, className, onChange,children})}
             list={()=>this.getDisplayList(currentValues)}
             onChange={(nv) => {
                 onChange(this.setValue({[EditableKeyParameter.KEY]: currentKeys}, nv.value))
@@ -384,9 +386,9 @@ class EditableColorParameterUI extends EditableColorParameter{
         cHelper(this);
     }
 
-    render({currentValues, initialValues,className, onChange}) {
+    render({currentValues, initialValues,className, onChange,children}) {
         return <ColorSelector
-            {...getCommonParam({ep:this, currentValues,initialValues, className,onChange:this.canEdit()?onChange:undefined})}
+            {...getCommonParam({ep:this, currentValues,initialValues, className,onChange:this.canEdit()?onChange:undefined,children})}
             readOnly={!this.canEdit()}
             onChange={(nv) => {
                 onChange(this.setValue(undefined, nv))
@@ -406,11 +408,11 @@ class EditableIconParameterUI extends EditableIconParameter{
         super(props,true);
         cHelper(this);
     }
-    render({currentValues,initialValues,className,onChange}) {
+    render({currentValues,initialValues,className,onChange,children}) {
         const dialogContext=useDialogContext();
         const url=this.getValue(currentValues);
         return <InputReadOnly
-            {...getCommonParam({ep:this,currentValues,initialValues,className:Helper.concatsp(className,'iconInput'),onChange:this.canEdit()?onChange:undefined})}
+            {...getCommonParam({ep:this,currentValues,initialValues,className:Helper.concatsp(className,'iconInput'),onChange:this.canEdit()?onChange:undefined,children})}
             value={<RenderIcon url={url}/>}
             onClick={()=>{
                 if (! this.canEdit()) return;
