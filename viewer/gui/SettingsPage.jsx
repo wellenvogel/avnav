@@ -529,6 +529,7 @@ class SettingsPage extends React.Component{
             let startDialog=()=> {
                 layoutLoader.listLayouts()
                     .then((list)=> {
+                        const currentName=LayoutHandler.getName()+".json";
                         showPromiseDialog(undefined,(dprops)=><ItemNameDialog
                             {...dprops}
                             title={"Start Layout Editor"}
@@ -555,8 +556,13 @@ class SettingsPage extends React.Component{
                                 if (cr) return cr;
                                 cr=checkName(newName,list,(item)=>item.name+'.json');
                                 if (cr){
-                                    return {
-                                        info: "existing"
+                                    if (newName === currentName) {
+                                        return {
+                                            info: "existing"
+                                        }
+                                    }
+                                    else{
+                                        return cr;
                                     }
                                 }
                                 else{
