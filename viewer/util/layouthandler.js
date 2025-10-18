@@ -246,11 +246,6 @@ class LayoutLoader{
         return;
     }
 
-    getCssFromLayout(layout){
-        return (layout||{}).css;
-    }
-
-
     listLayouts() {
         let activeLayout = globalStore.getData(keys.properties.layoutName);
         if (this.storeLocally) {
@@ -318,6 +313,9 @@ class LayoutLoader{
 
 export const layoutLoader=new LayoutLoader();
 
+const FORBIDDEN_LAYOUTSETTINGS=[
+    keys.properties.layoutName
+]
 class LayoutHandler{
     constructor(){
         this.layout=undefined;
@@ -344,6 +342,16 @@ class LayoutHandler{
                 }
             }
         );
+        const propertyKeys=KeyHelper.flattenedKeys(keys.properties);
+        this.allowedLayoutProperties={}
+        propertyKeys.forEach(propertyKey=>{
+            if (FORBIDDEN_LAYOUTSETTINGS.indexOf(propertyKey) < 0 ) {
+                this.allowedLayoutProperties[propertyKey] = true;
+            }
+        })
+    }
+    getAllowedLayoutProperties(){
+        return {...this.allowedLayoutProperties};
     }
     canEdit(name){
         if (name === undefined) name=this.name;
@@ -410,11 +418,12 @@ class LayoutHandler{
         if (! this.layout) return;
         return this.layout.css;
     }
-    getLayoutProperties(allowedKeys,layout){
-        if (! layout || ! allowedKeys)return {}
+    getLayoutProperties(layout){
+        if (! layout) layout=this.layout;
+        if (! layout) return {};
         const rt={};
         if (! layout.properties) return rt;
-        for (let k in allowedKeys){
+        for (let k in this.allowedLayoutProperties){
             if (k in layout.properties){
                 rt[k] = layout.properties[k];
             }
@@ -428,7 +437,16 @@ class LayoutHandler{
      * @param properties
      */
     updateLayoutProperties(properties){
-        this.layout.properties=properties;
+        if (! this.layout) return;
+        if (!properties || Object.keys(properties).length === 0) {
+            delete this.layout.properties;
+        }
+        this.layout.properties={};
+        for (let k in this.allowedLayoutProperties){
+            if (k in properties){
+                this.layout.properties[k] = properties[k];
+            }
+        }
     }
     updateCss(css){
         if (! this.layout) return;

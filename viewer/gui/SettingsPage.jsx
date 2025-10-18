@@ -375,7 +375,7 @@ class SettingsPage extends React.Component{
         };
         this.initialValues=this.getStoreValues();
         this.values=stateHelper(this,this.initialValues);
-        this.layoutSettings=stateHelper(this,LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()),'layoutSettings');
+        this.layoutSettings=stateHelper(this,LayoutHandler.getLayoutProperties(),'layoutSettings');
         this.defaultValues={};
         this.flattenedKeys.forEach((key)=>{
             let description=KeyHelper.getKeyDescriptions()[key];
@@ -503,7 +503,7 @@ class SettingsPage extends React.Component{
             if (key === keys.properties.lastLoadedName){
                 layoutLoader.loadLayout(value)
                     .then((layout)=>{
-                        const layoutSettings=LayoutHandler.getLayoutProperties(this.initialValues,layout);
+                        const layoutSettings=LayoutHandler.getLayoutProperties(layout);
                         this.layoutSettings.setState(layoutSettings,true);
                     })
                     .catch((e)=>{Toast(e+"")})
@@ -520,7 +520,7 @@ class SettingsPage extends React.Component{
     resetChanges(){
         this.initialValues=this.getStoreValues();
         this.values.reset(this.initialValues);
-        this.layoutSettings.reset(LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()));
+        this.layoutSettings.reset(LayoutHandler.getLayoutProperties());
     }
 
     handleLayoutClick(){
@@ -589,7 +589,7 @@ class SettingsPage extends React.Component{
             const dialog=()=>showDialog(undefined,
                 ()=><LayoutFinishedDialog finishCallback={()=>{
                     //potentially we did fallback to the old layout
-                    this.layoutSettings.reset(LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()));
+                    this.layoutSettings.reset(LayoutHandler.getLayoutProperties());
                 }}/> )
             if (! this.hasChanges()){
                 dialog();
