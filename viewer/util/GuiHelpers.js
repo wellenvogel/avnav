@@ -411,7 +411,7 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
         changedName=opt_namePrefix+changedName;
     }
     if (! thisref.state) thisref.state={};
-    thisref.state[valueName]=assign({},initialValues);
+    thisref.state[valueName]= assign({},initialValues);
     thisref.state[changedName]=false;
     let rt={
         setValue:(key,value)=>{
@@ -447,8 +447,11 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
         isItemChanged(name){
             return ! shallowcompare(rt.getValue(name),initialValues[name]);
         },
-        reset(){
+        reset(opt_newInitial){
             let newState={};
+            if (opt_newInitial){
+                initialValues={...opt_newInitial}
+            }
             newState[valueName]=assign({},initialValues);
             newState[changedName]=false;
             thisref.setState(newState);

@@ -184,16 +184,19 @@ class Store {
      * if no data is there undefined is returned
      * @param key
      * @param opt_default an optional default value
+     * @param opt_ignoreProvider ignore any installed providers
      * @returns {*}
      */
-    getData(key, opt_default) {
+    getData(key, opt_default,opt_ignoreProvider) {
         let rt;
         let ext=false;
-        for (let k in this.provider) {
-            if (this.provider[k].has(key)){
-                rt=this.provider[k].getValue(key);
-                ext=true;
-                break;
+        if (! opt_ignoreProvider) {
+            for (let k in this.provider) {
+                if (this.provider[k].has(key)) {
+                    rt = this.provider[k].getValue(key);
+                    ext = true;
+                    break;
+                }
             }
         }
         if (! ext) {
@@ -207,8 +210,9 @@ class Store {
     /**
      * fetch an object containing the keys provided as parameter
      * @param keys single key or array or object (keys used and being translated)
+     * @param opt_ignoreProvider
      */
-    getMultiple(keys) {
+    getMultiple(keys,opt_ignoreProvider) {
         let storeKeys = keys;
         let rt = {};
         if (!(storeKeys instanceof Array)) {
@@ -216,9 +220,9 @@ class Store {
                 for (let k in storeKeys) {
                     let v = undefined;
                     if (typeof (storeKeys[k]) === 'object') {
-                        v = this.getMultiple(storeKeys[k]);
+                        v = this.getMultiple(storeKeys[k],opt_ignoreProvider);
                     } else {
-                        v = this.getData(storeKeys[k]);
+                        v = this.getData(storeKeys[k],undefined,opt_ignoreProvider);
                     }
                     rt[k] = v;
                 }
@@ -228,7 +232,7 @@ class Store {
             }
         }
         storeKeys.forEach((key) => {
-            let v = this.getData(key);
+            let v = this.getData(key,undefined,opt_ignoreProvider);
             rt[key] = v;
         });
         return rt;

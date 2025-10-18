@@ -10,6 +10,9 @@ import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import assign from 'object-assign';
 import {
+    DBCancel,
+    DialogButtons,
+    DialogFrame, DialogText,
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
@@ -38,6 +41,7 @@ import {
 import {EditableStringParameterBase} from "../util/EditableParameter";
 import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
+import DialogButton from "../components/DialogButton";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -180,7 +184,30 @@ const itemUiFromPlain=(item)=>{
 }
 
 
-
+const HasChangesDialog=({resolveFunction})=>{
+    return <DialogFrame>
+        <DialogText>Settings changed</DialogText>
+        <DialogButtons
+            buttonList={[
+                DBCancel(),
+                {
+                    name:'delete',
+                    label:'Discard',
+                    onClick: ()=>{
+                        resolveFunction(false);
+                    }
+                },
+                {
+                    name:'SettingsOK',
+                    label:'Activate',
+                    onClick: ()=>{
+                        resolveFunction(true);
+                    }
+                }
+            ]}
+        />
+    </DialogFrame>
+}
 
 class SettingsPage extends React.Component{
     constructor(props){
@@ -193,42 +220,15 @@ class SettingsPage extends React.Component{
                         this.handlePanel(undefined);
                         return;
                     }
-                    if (!this.hasChanges()){
-                        this.props.history.pop();
-                        return;
-                    }
-                    let values=this.values.getValues(true);
-                    //if the layout changed we need to set it
-                    const layoutName = values[keys.properties.layoutName];
-                    const finish=()=>{
-                        if (LayoutHandler.isEditing()){
-                            if (this.layoutSettings.isChanged()){
-                                LayoutHandler.updateLayoutProperties(this.layoutSettings.getState(true));
-                            }
-                        }
-                        else {
-                            LayoutHandler.activateLayout();
-                            globalStore.storeMultiple(values);
-                        }
-                        this.props.history.pop();
-                    }
-                    if (!LayoutHandler.hasLoaded(layoutName) && ! LayoutHandler.isEditing()) {
-                        values[keys.properties.layoutName]=this.initialValues[keys.properties.layoutName];
-                        layoutLoader.loadLayout(layoutName)
-                            .then((layout) => {
-                                LayoutHandler.setLayoutAndName(layout,layoutName)
-                                finish();
-                            })
-                            .catch((err) => Toast(err));
-                        return;
-                    }
-                    finish()
+                    this.saveChanges()
+                        .then(()=>this.props.history.pop())
+                        .catch((err)=>{Toast(err+"")})
                 }
             },
             {
                 name: 'SettingsDefaults',
                 onClick:()=> {
-                    this.confirmAbortOrDo().then(()=> {
+                    this.confirmAbortOrDo(false).then(()=> {
                         this.resetData();
                     });
                 }
@@ -260,8 +260,7 @@ class SettingsPage extends React.Component{
                 name:'SettingsAndroid',
                 visible: globalStore.getData(keys.gui.global.onAndroid,false),
                 onClick:()=>{
-                    this.confirmAbortOrDo().then(()=> {
-                        this.resetChanges();
+                    this.confirmAbortOrDo(true).then(()=> {
                         this.props.history.pop();
                         avnav.android.showSettings();
                     });
@@ -287,8 +286,7 @@ class SettingsPage extends React.Component{
             {
                 name: 'SettingsAddons',
                 onClick:()=>{
-                    this.confirmAbortOrDo().then(()=>{
-                        this.resetChanges();
+                    this.confirmAbortOrDo(true).then(()=>{
                         this.props.history.push("addonconfigpage");
                     });
                 },
@@ -299,7 +297,16 @@ class SettingsPage extends React.Component{
             {
                 name: 'SettingsSave',
                 onClick:()=>this.saveSettings(),
-                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings),
+                storeKeys:{
+                    editing: keys.gui.global.layoutEditing,
+                    connected:keys.properties.connectedMode,
+                    allowed: keys.gui.capabilities.uploadSettings
+                },
+                updateFunction:(state)=>{
+                    return {
+                        visible: ! state.editing && state.connected && state.allowed
+                    }
+                },
                 overflow: true
             },
             {
@@ -310,13 +317,22 @@ class SettingsPage extends React.Component{
                         this.loadSettings();
                     });
                 },
-                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings),
+                storeKeys:{
+                    editing: keys.gui.global.layoutEditing,
+                    connected:keys.properties.connectedMode,
+                    allowed: keys.gui.capabilities.uploadSettings
+                },
+                updateFunction:(state)=>{
+                    return {
+                        visible: ! state.editing && state.connected && state.allowed
+                    }
+                },
                 overflow: true
             },
             {
                 name: 'SettingsReload',
                 onClick: ()=> {
-                    this.confirmAbortOrDo().then(() => {
+                    this.confirmAbortOrDo(true).then(() => {
                         leavehandler.stop();
                         Helper.reloadPage();
                     });
@@ -338,7 +354,7 @@ class SettingsPage extends React.Component{
                         this.handlePanel(undefined);
                         return;
                     }
-                    this.confirmAbortOrDo().then(()=> {
+                    this.confirmAbortOrDo(true).then(()=> {
                         this.props.history.pop();
                 });
                 }
@@ -357,7 +373,7 @@ class SettingsPage extends React.Component{
             leftPanelVisible:true,
             section:'Layer'
         };
-        this.initialValues=globalStore.getMultiple(this.flattenedKeys)
+        this.initialValues=this.getStoreValues();
         this.values=stateHelper(this,this.initialValues);
         this.layoutSettings=stateHelper(this,LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()),'layoutSettings');
         this.defaultValues={};
@@ -370,26 +386,61 @@ class SettingsPage extends React.Component{
         this.renderItemCache={};
 
     }
+    getStoreValues(){
+        return globalStore.getMultiple(this.flattenedKeys,true);
+    }
+    saveChanges(){
+        if (! this.hasChanges()) return Promise.resolve(true);
+        let values=this.values.getValues(true);
+        //if the layout changed we need to set it
+        const layoutName = values[keys.properties.layoutName];
+        const finish=()=>{
+            if (LayoutHandler.isEditing()){
+                if (this.layoutSettings.isChanged()){
+                    LayoutHandler.updateLayoutProperties(this.layoutSettings.getState(true));
+                }
+            }
+            else {
+                LayoutHandler.activateLayout();
+                globalStore.storeMultiple(values);
+            }
+            this.resetChanges();
+            return true;
+        }
+        if (!LayoutHandler.hasLoaded(layoutName) && ! LayoutHandler.isEditing()) {
+            values[keys.properties.layoutName]=this.initialValues[keys.properties.layoutName];
+            return layoutLoader.loadLayout(layoutName)
+                .then((layout) => {
+                    LayoutHandler.setLayoutAndName(layout,layoutName)
+                    return finish();
+                })
+        }
+        return Promise.resolve(finish());
+    }
     /**
-     * will fire a confirm dialog and resolve to 1 on changes, resolve to 0 on no changes
+     * will check for changes and revert or save changes
      * @returns {Promise}
      */
-    confirmAbortOrDo(){
+    confirmAbortOrDo(allowSave){
         if (this.hasChanges()) {
-            return new Promise((resolve)=>{
-                showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"discard changes?"}/>)
-                    .then(()=>{
-                        resolve(0);
+            if (allowSave) {
+                return showPromiseDialog(undefined, (props) => <HasChangesDialog {...props} />)
+                    .then((save) => {
+                        if (save) {
+                            return this.saveChanges();
+                        } else {
+                            this.resetChanges();
+                            return true;
+                        }
                     })
-                    .catch((e)=>{
-                        console.log(e);
-                    })
-            })
+            }
+            else{
+                return showPromiseDialog(undefined, (props) => <ConfirmDialog {...props}
+                    text={"discard settings changes?"}/>)
+            }
         }
         else {
-            return new Promise((resolve)=>{
-                resolve(0);
-            });
+            return Promise.resolve(0);
         }
     }
     saveSettings(){
@@ -467,8 +518,9 @@ class SettingsPage extends React.Component{
     }
 
     resetChanges(){
-        this.values.reset();
-        this.layoutSettings.reset();
+        this.initialValues=this.getStoreValues();
+        this.values.reset(this.initialValues);
+        this.layoutSettings.reset(LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()));
     }
 
     handleLayoutClick(){
@@ -529,19 +581,21 @@ class SettingsPage extends React.Component{
                 startDialog();
                 return;
             }
-            this.confirmAbortOrDo().then(()=>{
-                this.resetChanges();
+            this.confirmAbortOrDo(true).then(()=>{
                 startDialog();
             }).catch(()=>{});
         }
         else{
-            const dialog=()=>showDialog(undefined,()=><LayoutFinishedDialog /> )
+            const dialog=()=>showDialog(undefined,
+                ()=><LayoutFinishedDialog finishCallback={()=>{
+                    //potentially we did fallback to the old layout
+                    this.layoutSettings.reset(LayoutHandler.getLayoutProperties(this.initialValues,LayoutHandler.getLayout()));
+                }}/> )
             if (! this.hasChanges()){
                 dialog();
                 return;
             }
-            this.confirmAbortOrDo().then(()=>{
-                this.resetChanges();
+            this.confirmAbortOrDo(true).then(()=>{
                 dialog();
             },()=>{})
         }
@@ -677,13 +731,14 @@ class SettingsPage extends React.Component{
             sitem.className = className;
         });
         const layoutEditing=LayoutHandler.isEditing();
+        const title=layoutEditing?"LayoutSettings":"Settings";
         const currentValues={...this.values.getState(),...this.layoutSettings.getState()};
         return <PageFrame
             {...this.props}
             id={'settingspage'}
             >
             <PageLeft
-                title={"Settings"+((this.props.small && !this.state.leftPanelVisible)?" "+this.state.section:"")}
+                title={title+((this.props.small && !this.state.leftPanelVisible)?" "+this.state.section:"")}
             >
                 <div className="leftSection">
                     { leftVisible ? <ItemList
@@ -707,7 +762,7 @@ class SettingsPage extends React.Component{
                             itemchildren={(param)=>{
                                 if (! (param.name in this.layoutSettings.getValues())  || ! layoutEditing) return null;
                                 return <Button
-                                    name={"SettingsLayout"}
+                                    name={"SettingsLayoutOff"}
                                     className={"smallButton"}
                                     onClick={(ev)=>{
                                         ev.stopPropagation();
@@ -717,7 +772,7 @@ class SettingsPage extends React.Component{
                             }}
                         />
                     </div> : null}
-                </div>);
+                </div>
             </PageLeft>
             <ButtonList
                 itemList={this.buttons}
