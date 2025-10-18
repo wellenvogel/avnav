@@ -149,7 +149,6 @@ class PropertyHandler {
         let saveDataSplit={}
         let hasPrefix=LocalStorage.hasPrefix();
         for (let dk in this.propertyDescriptions){
-            if (dk in this.layoutSettings) continue
             let v=globalStore.getData(dk);
             if (this.prefixKeys.indexOf(dk) >= 0 && hasPrefix){
                 //in any case also write default values to prefixed settings
@@ -223,7 +222,6 @@ class PropertyHandler {
     resetToSaved(){
         const saved=this._getSavedValues()
         globalStore.storeMultiple(saved,undefined,true);
-        globalStore.storeMultiple(this.layoutSettings, undefined, true);
         globalStore.storeData(keys.gui.global.propertiesLoaded,true);
     }
 
@@ -236,7 +234,6 @@ class PropertyHandler {
             }
         }
         globalStore.storeMultiple(changes);
-        globalStore.storeMultiple(this.layoutSettings, undefined, true, true);
         //set some initial properties
     }
 
