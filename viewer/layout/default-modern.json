@@ -52,7 +52,7 @@
             true,
             true
           ],
-          "name": "DepthDisplay",
+          "name": "DepthDisplayFlex",
           "weight": 1.5
         },
         {
@@ -98,7 +98,7 @@
         },
         {
           "className": "modern",
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "className": "modern half",
@@ -132,7 +132,7 @@
           "name": "AnchorWatchDistance"
         },
         {
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "name": "Empty"
@@ -245,7 +245,7 @@
           "name": "WindDisplay"
         },
         {
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "name": "AisTarget"
@@ -267,7 +267,7 @@
           "name": "WindDisplay"
         },
         {
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "name": "AisTarget"

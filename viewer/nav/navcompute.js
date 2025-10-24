@@ -191,6 +191,17 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
 };
 NavCompute.NM=1852; //m per NM
 
+export const unitToFactor=(unit)=>{
+    if (unit == 'ft') return 1/3.280839895; // feet
+    if (unit == 'yd') return 3/3.280839895; // yards
+    if (unit == 'km') return 1000.0;
+    if (unit == 'nm') return NavCompute.NM;
+    return 1.0;
+}
+export const DEPTH_UNITS=['nm','m','km','ft','yd'];
+
+NavCompute.unitToFactor=unitToFactor;
+NavCompute.DEPTH_UNITS=DEPTH_UNITS;
 export default NavCompute;
 
 

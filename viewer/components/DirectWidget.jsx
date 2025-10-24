@@ -13,7 +13,9 @@ const DirectWidget=(wprops)=>{
     let val;
     let vdef=props.default||'0';
     if (props.value !== undefined) {
-        val=props.formatter?props.formatter(props.value):vdef+"";
+        if (props.minValue != null && parseFloat(props.value) < props.minValue)val=vdef;
+        else if(props.maxValue != null && parseFloat(props.value) > props.maxValue)val=vdef;
+        else val=props.formatter?props.formatter(props.value):vdef+"";
     }
     else{
         if (! isNaN(vdef) && props.formatter) val=props.formatter(vdef);
@@ -35,6 +37,8 @@ const DirectWidget=(wprops)=>{
 DirectWidget.propTypes = {
     name: PropTypes.string,
     unit: PropTypes.string,
+    minValue: PropTypes.number,
+    maxValue: PropTypes.number,
     ...WidgetProps,
     value: PropTypes.any,
     isAverage: PropTypes.bool,

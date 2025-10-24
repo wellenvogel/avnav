@@ -2,8 +2,12 @@
  * Created by andreas on 04.05.14.
  */
 
-import navcompute from '../nav/navcompute.js';
+import navcompute, {DEPTH_UNITS, unitToFactor} from '../nav/navcompute.js';
 import Helper from "./helper.js";
+
+function pad(num, size, pad='0') {
+    return (''+num).trim().padStart(size,pad);
+}
 
 /**
  *
@@ -121,28 +125,90 @@ formatDecimalOpt.parameters=[
 ];
 
 /**
+ * format number with N digits
+ * at max N-1 digits after decimal point
+ * there are at least N digits and a decimal point at a variable position
+ * like the display of a multimeter in auto-range mode
+ * bigger numbers: more digits are appended to the right if necessary
+ * smaller numbers: up to maxPlaces decimal places are added or they get rounded to zero
+ * negative numbers: minus sign is added if necessary
+ * @param digits = number of (significant) digits in total, negative: padding space is added for sign
+ * @param maxPlaces = max. number of decimal places (after the decimal point, default = digits-1)
+ * @param leadingZeroes = use leading zeroes instead of spaces
+ * returns string with at least digits(+1 if digits<0) characters
+ */
+const formatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
+    if (digits == null) digits=3;
+    let signed = digits<0;
+    digits = Math.abs(digits);
+    if(maxPlaces==null) maxPlaces=digits-1;
+    if(isNaN(number)) return '-'.repeat(digits+(signed?1:0)-maxPlaces)+(maxPlaces?'.'+'-'.repeat(maxPlaces):'');
+    if(digits==0) return number.toFixed(0);
+    if(number<0 && !signed) digits-=1;
+    let sign = number<0 ? '-' : signed ? ' ' : '';
+    number = Math.abs(number);
+    let decPlaces = digits-1-Math.floor(Math.log10(Math.abs(number)));
+    decPlaces = Math.max(0,Math.min(decPlaces,Math.max(0,maxPlaces)));
+    let str = number.toFixed(decPlaces);
+    let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
+    if(leadingZeroes) {
+        return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
+    } else {
+        return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
+    }
+};
+formatFloat.parameters=[
+    {name:'digits',type:'NUMBER',default: 3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
+    {name:'maxPlaces',type:'NUMBER',default:2,description:"max. number of decimal places (after the decimal point, default = digits-1)"},
+    {name: 'leadingZeroes', type: 'BOOLEAN',description: "use leading zeroes instead of spaces"}
+];
+/**
  * format a distance
  * show 99.9 for values < 100, show 999 for values >= 100, max 5
  * @param distance in m
  * @param opt_unit one of nm,m,km
+ * @param opt_fixed if > 0 set this much digits at min
+ * @param opt_fillRight if set - extend the fractional part
  */
-const formatDistance=function(distance,opt_unit){
+const formatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
     let number=parseFloat(distance);
     if (isNaN(number)) return "    -"; //4 spaces
-    let factor=navcompute.NM;
-    if (opt_unit == 'm') factor=1;
-    if (opt_unit == 'km') factor=1000;
+    let factor=unitToFactor(opt_unit||'nm');
     number=number/factor;
-    if (number < 1){
-        return formatDecimal(number,undefined,2,false);
+    let fract=0;
+    let fixed=undefined;
+    if (number < 1) {
+        fract = 2;
+        fixed = 1;
     }
-    if (number < 100){
-        return formatDecimal(number,undefined,1,false);
+    else if (number < 10){
+        fract=1;
+        fixed=1;
     }
-    return formatDecimal(number,undefined,0,false);
+    else if (number < 100){
+        fract=1;
+        fixed=2;
+    }
+    else{
+        fixed=1+Math.floor(Math.log10(Math.abs(number)));
+    }
+    if (opt_fixed == null || opt_fixed < (fixed+fract)){
+        fixed=undefined;
+    }
+    if (fixed != null){
+        if (opt_fillRight){
+            fract+=opt_fixed-(fixed+fract);
+        }
+        else{
+            fixed+=opt_fixed-(fixed+fract);
+        }
+    }
+    return formatDecimal(number,fixed,fract,false,true);
 };
 formatDistance.parameters=[
-    {name:'unit',type:'SELECT',list:['nm','m','km'],default:'nm'}
+    {name:'unit',type:'SELECT',list:DEPTH_UNITS,default:'nm'},
+    {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits. Leave at 0 to have this flexible.'},
+    {name:'fillRight', type: 'BOOLEAN',default: false, description:'let the fractional part extend to have the requested number of digits (only if numDigits > 0)'}
 ];
 
 /**
@@ -283,6 +349,7 @@ export default {
     formatTime,
     formatDecimalOpt,
     formatDecimal,
+    formatFloat,
     formatLonLats,
     formatLonLatsDecimal,
     formatDistance,

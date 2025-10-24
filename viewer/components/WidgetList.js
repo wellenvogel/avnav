@@ -21,6 +21,7 @@ import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
 import Formatter from "../util/formatter";
+import {DepthDisplayFlex} from "./DepthWidgetFlex";
 let widgetList=[
     {
         name: 'SOG',
@@ -350,7 +351,14 @@ let widgetList=[
             value:keys.nav.gps.depthBelowTransducer
         },
         formatter: 'formatDecimal',
-        formatterParameters: [3,1,true]
+        formatterParameters: [3,1,true],
+        editableParameters: {
+            maxValue: {type:'NUMBER',default:12000,description:'consider any value above this (in meters) as invalid'}
+        }
+    },
+    {
+      name: 'DepthDisplayFlex',
+      wclass: DepthDisplayFlex
     },
     {
         name: 'XteDisplay',

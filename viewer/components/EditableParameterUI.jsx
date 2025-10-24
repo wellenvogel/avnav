@@ -259,21 +259,51 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
 }
 
 export class EditableFloatParameterUI extends EditableFloatParameter{
-    constructor(props) {
+    constructor(props,opt_converter) {
         super(props,true);
+        this.converter=opt_converter;
         cHelper(this);
+    }
+    //override
+    clone(updates){
+        let param;
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        if (! updates) param=this;
+        else {
+            param=this.assign(undefined,this);
+            param.type=this.type;
+            this.assign(param,updates,true);
+        }
+        let rt=new this.constructor(param,this.converter);
+        return rt;
+    }
+    convertToDisplay(cv,currentValues){
+        if (!this.converter || ! this.converter.toDisplay || ! this.converter.fromDisplay){
+            return cv;
+        }
+        const nv=this.converter.toDisplay(currentValues,cv.value);
+        const checker=cv.checkFunction;
+        cv.value=nv;
+        cv.checkFunction=(nv)=>{
+            return checker(this.converter.fromDisplay(currentValues,nv));
+        }
+        return cv;
     }
     render({currentValues,initialValues,className,onChange,children}){
         if (!this.canEdit()){
+            const cp=this.convertToDisplay(getCommonParam({ep:this,currentValues,initialValues,className,children}),currentValues);
             return <InputReadOnly
-                {...getCommonParam({ep:this,currentValues,initialValues,className,children})}
+                {...cp}
             />
         }
         return <Input
-            {...getCommonParam({ep:this,currentValues,initialValues,className,onChange,children})}
+            {...this.convertToDisplay(getCommonParam({ep:this,currentValues,initialValues,className,onChange,children}),currentValues)}
             type={'number'}
             step={"any"}
             onChange={(nv)=>{
+                if (this.converter && this.converter.fromDisplay){
+                    nv=this.converter.fromDisplay(currentValues,nv);
+                }
                 onChange(this.setValue(undefined,nv))
             }}
         />
