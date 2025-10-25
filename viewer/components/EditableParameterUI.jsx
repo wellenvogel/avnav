@@ -265,6 +265,9 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
         cHelper(this);
     }
     //override
+    //add a converter parameter
+    // converter.fromDisplay(currentValues,displayValue) - return value to be stored
+    // converter.toDisplay(currentValues,currentValue) - return value to be displayed
     assign(target,plain,onlyExisting){
         return this.assignImpl({...assignableProperties,converter:undefined},target,plain,onlyExisting);
     }
@@ -276,8 +279,10 @@ export class EditableFloatParameterUI extends EditableFloatParameter{
         const nv=this.converter.toDisplay(currentValues,cv.value);
         const checker=cv.checkFunction;
         cv.value=nv;
-        cv.checkFunction=(nv)=>{
-            return checker(this.converter.fromDisplay(currentValues,nv));
+        if (checker) {
+            cv.checkFunction = (nv) => {
+                return checker(this.converter.fromDisplay(currentValues, nv));
+            }
         }
         return cv;
     }

@@ -32,7 +32,7 @@ import {EditableFloatParameterUI} from "./EditableParameterUI";
 import {DEPTH_UNITS, unitToFactor} from "../nav/navcompute";
 import {concatsp} from "../util/helper";
 
-export const DepthDisplayFlex=(props)=>{
+const DepthDisplayFlex=(props)=>{
     const iprops={...props};
     iprops.unit=props.dunit;
     iprops.formatter=(v)=>{
@@ -102,7 +102,7 @@ DepthDisplayFlex.predefined={
             name:'offset',
             displayName:'offset',
             default:0,
-            description:'Add this offset to the measured value from depthBelowTransducer',
+            description:'Add this offset to the measured value',
             converter: unitConverter
         }),
         warningd:new EditableFloatParameterUI({
@@ -121,4 +121,38 @@ DepthDisplayFlex.predefined={
     },
     caption: 'DBT'
 
+}
+
+export const DepthBelowTransducer=(props)=>{
+    return <DepthDisplayFlex {...props} />
+}
+DepthBelowTransducer.displayName="DepthBelowTransducer";
+DepthBelowTransducer.propTypes=DepthDisplayFlex.propTypes;
+DepthBelowTransducer.predefined={
+    ...DepthDisplayFlex.predefined
+};
+
+export const DepthBelowKeel=(props)=>{
+    return <DepthDisplayFlex {...props} />
+}
+DepthBelowKeel.propTypes=DepthDisplayFlex.propTypes;
+DepthBelowKeel.predefined={
+    ...DepthDisplayFlex.predefined,
+    storeKeys:{
+        value: keys.nav.gps.depthBelowKeel
+    },
+    caption:'DBK'
+}
+DepthBelowKeel.displayName="DepthBelowKeel";
+
+export const DepthBelowWater=(props)=>{
+    return <DepthDisplayFlex {...props} />
+}
+DepthBelowWater.propTypes=DepthDisplayFlex.propTypes;
+DepthBelowWater.predefined={
+    ...DepthDisplayFlex.predefined,
+    storeKeys:{
+        value: keys.nav.gps.depthBelowWaterline
+    },
+    caption:'DBW'
 }

@@ -21,7 +21,7 @@ import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
 import Formatter from "../util/formatter";
-import {DepthDisplayFlex} from "./DepthWidgetFlex";
+import {DepthBelowKeel, DepthBelowTransducer, DepthBelowWater} from "./DepthWidgetFlex";
 let widgetList=[
     {
         name: 'SOG',
@@ -357,8 +357,16 @@ let widgetList=[
         }
     },
     {
-      name: 'DepthDisplayFlex',
-      wclass: DepthDisplayFlex
+      name: 'DepthBelowTransducer',
+      wclass: DepthBelowTransducer
+    },
+    {
+        name: 'DepthBelowKeel',
+        wclass: DepthBelowKeel
+    },
+    {
+        name: 'DepthBelowWater',
+        wclass: DepthBelowWater
     },
     {
         name: 'XteDisplay',
