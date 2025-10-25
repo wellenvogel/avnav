@@ -21,6 +21,7 @@ import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
 import Formatter from "../util/formatter";
+import {DepthDisplayFlex} from "./DepthWidgetFlex";
 const degrees='\u00b0';
 let widgetList=[
     {
@@ -442,38 +443,19 @@ let widgetList=[
     {
         name: 'DepthDisplay',
         caption: 'DPT',
-        unit: 'm',
         storeKeys:{
-            DBK: keys.nav.gps.depthBelowKeel,
-            DBS: keys.nav.gps.depthBelowWaterline,
-            DBT: keys.nav.gps.depthBelowTransducer,
+            value: keys.nav.gps.depthBelowTransducer,
             visible: keys.properties.showDepth,
         },
         formatter: 'formatDistance',
         formatterParameters: ['m'],
-        translateFunction: (props)=>{
-            let kind=props.kind;
-            if(kind=='auto') {
-              kind='DBT';
-              if(props.DBK !== undefined) kind='DBK';
-              if(props.DBS !== undefined) kind='DBS';
-            }
-            let depth=undefined;
-            if(kind=='DBT') depth=props.DBT;
-            if(kind=='DBK') depth=props.DBK;
-            if(kind=='DBS') depth=props.DBS;
-            return {...props,
-              value: depth,
-              caption: kind,
-              unit: ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : props.unit,
-            }
-        },
-        editableParameters:{
-            unit: false,
-            value: false,
-            caption: false,
-            kind: {type:'SELECT',list:['auto','DBT','DBK','DBS'],default:'auto'}
-        },
+        editableParameters: {
+            maxValue: {type:'NUMBER',default:12000,description:'consider any value above this (in meters) as invalid'}
+        }
+    },
+    {
+      name: 'DepthDisplayFlex',
+      wclass: DepthDisplayFlex
     },
     {
         name: 'XteDisplay',

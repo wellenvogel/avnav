@@ -256,7 +256,8 @@ const GpsPage = (props) => {
             let fw = width / layoutBaseParam.layoutWidth || 0;
             let fh = dimensions.height / layoutBaseParam.layoutHeight || 0;
             if (fw > 0 && fh > 0) {
-                fontSize = fontSize * Math.min(fh, fw);
+                const factor=Math.min(fh, fw);
+                if (factor < 1 ) fontSize = fontSize * factor;
             }
         }
     }

@@ -18,10 +18,11 @@ import {ConfirmDialog} from "./BasicDialogs";
 import Requests from "../util/requests";
 import Helper from "../util/helper";
 
-export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName}) => {
+export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}) => {
     const flask = useRef();
     const editElement = useRef();
     const [changed, setChanged] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
     const everChanged=useRef(false);
     if (changed)everChanged.current=true;
     const dialogContext = useDialogContext();
@@ -39,7 +40,57 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
         flask.current.updateCode(data, true);
         flask.current.onUpdate(() => setChanged(true));
     }, []);
-    return <DialogFrame title={title || fileName } className={"editFileDialog"}>
+    const buttonList=[
+        {
+            name: 'upload',
+            label: 'Import',
+            onClick: () => {
+                setCollapsed(false);
+                setUploadSequence((old) => old + 1)
+            },
+            close: false
+        },
+        () => <DownloadButton
+            useDialogButton={true}
+            localData={() => flask.current.getCode()}
+            fileName={fileName}
+            name={"download"}
+            close={false}
+        >Download</DownloadButton>,
+        {
+            name: 'save',
+            close: false,
+            onClick: () => {
+                setChanged(false);
+                setCollapsed(false);
+                promiseResolveHelper({
+                    ok: ()=>{
+                        setChanged(false);
+                    },
+                    err: () => {
+                        setChanged(true)
+                    }
+                }, saveFunction, flask.current.getCode())
+            },
+            visible: !!saveFunction,
+            disabled: !changed
+        },
+        DBCancel(),
+        DBOk(() => {
+                promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, flask.current.getCode());
+            }, {disabled: !everChanged.current, close: false}
+        )
+    ];
+    if (showCollapse) {
+        buttonList.splice(0,0,{
+            name: collapsed?'show':'hide',
+            close: false,
+            onClick: () => {
+                setCollapsed(!collapsed);
+            }
+        })
+    }
+    return <DialogFrame title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
         <UploadHandler
             uploadSequence={uploadSequence}
             local={true}
@@ -58,40 +109,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             errorCallback={(err) => Toast(err)}
         />
         <div className={"edit"} ref={editElement}></div>
-        <DialogButtons buttonList={[
-            {
-                name: 'upload',
-                label: 'Import',
-                onClick: () => setUploadSequence((old) => old + 1),
-                close: false
-            },
-            () => <DownloadButton
-                useDialogButton={true}
-                localData={() => flask.current.getCode()}
-                fileName={fileName}
-                name={"download"}
-                close={false}
-            >Download</DownloadButton>,
-            {
-                name: 'save',
-                close: false,
-                onClick: () => {
-                    setChanged(false);
-                    promiseResolveHelper({
-                        err: () => {
-                            setChanged(true)
-                        }
-                    }, saveFunction, flask.current.getCode())
-                },
-                visible: !!saveFunction,
-                disabled: !changed
-            },
-            DBCancel(),
-            DBOk(() => {
-                    promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, flask.current.getCode());
-                }, {disabled: !everChanged.current, close: false}
-            )
-        ]}></DialogButtons>
+        <DialogButtons buttonList={buttonList}></DialogButtons>
     </DialogFrame>
 }
 

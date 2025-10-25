@@ -43,7 +43,7 @@
           "formatterParameters": ["m"]
         },
         {
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "name": "Empty"
@@ -100,7 +100,7 @@
           "formatterParameters": ["m"]
         },
         {
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "name": "Empty"
@@ -116,7 +116,7 @@
           "weight": 0.75
         },
         {
-          "name": "DepthDisplay"
+          "name": "DepthDisplayFlex"
         },
         {
           "name": "AisTarget"

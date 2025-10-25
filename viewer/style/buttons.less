@@ -444,6 +444,9 @@ button{
       border-color: @editingColor;
     }
   }
+  &.SettingsLayoutOff{
+    .iconButton('ballot-off.svg');
+  }
   &.SettingsSave{
     .iconButton('save.svg')
   }
@@ -588,10 +591,10 @@ button{
   .editOverlaysDialog &.after{
     .dialogIconButton('navigate_next.svg');
   }
-  .editOverlaysDialog &.hide{
+  &.hide{
     .dialogIconButton('visibility_off.svg');
   }
-  .editOverlaysDialog &.show{
+  &.show{
     .dialogIconButton('visibility.svg');
   }
 

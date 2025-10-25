@@ -12,11 +12,16 @@ import {concatsp} from "../util/helper";
 const DirectWidget=(wprops)=>{
     const props=wprops.translateFunction?{...wprops,...wprops.translateFunction({...wprops})}:wprops;
     let val;
+    let vdef=props.default||'---';
     try {
+      if (props.value != null) {
+          if(props.minValue != null && parseFloat(props.value) < props.minValue) { vdef='<<<'; throw new Error(); }
+          if(props.maxValue != null && parseFloat(props.value) > props.maxValue) { vdef='>>>'; throw new Error(); }
+      }
       val=props.formatter?props.formatter(props.value):props.value;
-      val=(val==null?'':''+val)||props.default||'---';
+      val=(val==null?'':''+val)||vdef;
     }catch(error){
-      val=props.default||'---';
+      val=vdef;
     }
     if(!/^-\d/.test(val)) val=val.replaceAll('-','\u2012'); // replace - by digit wide hyphen if not a neg. number, _ would also work well
     const display={
@@ -36,6 +41,8 @@ const DirectWidget=(wprops)=>{
 DirectWidget.propTypes = {
     name: PropTypes.string,
     unit: PropTypes.string,
+    minValue: PropTypes.number,
+    maxValue: PropTypes.number,
     ...WidgetProps,
     value: PropTypes.any,
     isAverage: PropTypes.bool,
