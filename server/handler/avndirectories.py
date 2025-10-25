@@ -27,10 +27,11 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
+import os.path
 
+from typing_extensions import override
 
 from avnav_manager import *
-from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 from avndirectorybase import AVNDirectoryHandlerBase
@@ -143,10 +144,46 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
     self.baseDir=os.path.join(self.httpServer.handlePathmapping('viewer'),'images')
 
 
+class AVNPluginDirHandler(AVNDirectoryHandlerBase):
+  PREFIX = "/plugindir"
+  @classmethod
+  def getPrefix(cls):
+    return cls.PREFIX
+  @override
+  @classmethod
+  def getStartupGroup(cls):
+    '''must be started after the plugin handler'''
+    return 3
+  def startInstance(self, navdata):
+    self.pluginhandler = self.findHandlerByName("AVNPluginHandler")
+    self.baseDir=self.pluginhandler.getUserDir()
+    return super().startInstance(navdata)
+
+  def __init__(self,param):
+    super().__init__(param, "plugin")
+    self.baseDir = None
+
+  def listDirectory(self, includeDirs=False, baseDir=None):
+      dlist=[entry for entry in super().listDirectory(True, baseDir) if entry.isDirectory]
+      return dlist
+
+  def handleDownload(self, name, handler, requestparam):
+      if name is None:
+          raise Exception("missing name")
+      name = AVNUtil.clean_filename(name)
+      (filename, baseDir) = self.convertLocalPath(name)
+      if filename is None:
+          return None
+      if baseDir is not None:
+          filename = os.path.join(baseDir, filename)
+      if not os.path.exists(filename) or not os.path.isdir(filename):
+          raise Exception("plugin %s not found" % filename)
+      return AVNZipDownload(name+".zip",filename,prefix=name)
 
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)
 avnav_handlerList.registerHandler(AVNUserHandler)
 avnav_handlerList.registerHandler(AVNImagesHandler)
 avnav_handlerList.registerHandler(AVNIconHandler)
+avnav_handlerList.registerHandler(AVNPluginDirHandler)
 

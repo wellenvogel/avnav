@@ -512,7 +512,7 @@ class AVNPluginHandler(AVNWorker):
   def run(self):
     builtInDir=self.getStringParam('builtinDir')
     systemDir=AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'), belowData=False)
-    userDir=AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
+    userDir=self.getUserDir()
     directories={
       self.D_BUILTIN:{
         'dir':builtInDir,
@@ -856,6 +856,8 @@ class AVNPluginHandler(AVNWorker):
       return {'status':'request not found %s'%sub}
     raise Exception("unable to handle routing request of type %s:%s" % (type, command))
 
+  def getUserDir(self):
+      return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
 
 
 avnav_handlerList.registerHandler(AVNPluginHandler)

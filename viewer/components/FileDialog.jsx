@@ -338,6 +338,15 @@ export class ItemActions{
                 rt.showEdit= editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && isConnected;
                 rt.showOverlay = canEditOverlays && allowedOverlay;
                 break;
+            case 'plugin':
+                rt.headline='Plugins';
+                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.showView = false;
+                rt.showRename = false;
+                rt.showDownload=true;
+                rt.showEdit= false;
+                rt.showOverlay = false;
+                break;
         }
         return rt;
     }

@@ -805,6 +805,8 @@ class AVNZipDownload(AVNDownload):
       @return:
       '''
       return next(self.iter,None)
+    def close(self):
+        pass
 
   def __init__(self, fileName, baseDir, prefix=None):
     super().__init__(None,dlname=fileName)

@@ -534,12 +534,16 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     self.wfile.write(wbytes)
 
   def writeFromDownload(self,download: AVNDownload,filename:str=None,noattach:bool=False):
-    self.send_response(200)
     size = download.getSize()
+    stream = None
+    stream = download.getStream()
     if download.dlname is not None:
       filename=download.dlname
     if download.noattach is not None:
       noattach=download.noattach
+    #after we have sent the content type headers or and_headers we cannot really handle errors
+    #so wey try to do "dangerous" things before this line
+    self.send_response(200)
     if filename is not None and filename != "" and not noattach:
       self.send_header("Content-Disposition", "attachment; %s"%AVNDownload.fileToAttach(filename))
     self.send_header("Content-type", download.getMimeType(self))
@@ -549,8 +553,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.send_header('Transfer-Encoding', 'chunked')
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
-    stream = None
-    stream = download.getStream()
     if size is not None:
       self.writeStream(size, stream)
     else:
@@ -576,8 +578,9 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
             self.writeFromDownload(dl,
               filename=self.getRequestParam(requestParam, "filename")
               ,noattach=self.getRequestParam(requestParam, 'noattach') is not None)
-          except:
+          except Exception as e:
             AVNLog.debug("error when downloading %s: %s",dl.filename,traceback.format_exc())
+            raise e
           return
         #legacy handling
         #TODO: removethis
@@ -610,7 +613,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         data = io.BytesIO(("error: %s"%str(e)).encode(errors='ignore'))
         data.seek(0)
         self.send_response(200)
-        self.send_header("Content-type", "application/octet-stream")
+        self.send_header("Content-type", "text/html")
         self.end_headers()
         try:
           self.copyfile(data, self.wfile)

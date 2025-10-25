@@ -140,10 +140,10 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def autoScanIncludeDirectories(cls):
     return False
 
-  def __init__(self,param,type):
+  def __init__(self,param,dtype):
     AVNWorker.__init__(self,param)
     self.baseDir=None
-    self.type=type
+    self.type=dtype
     self.httpServer=None
     self.itemList={}
     self.lock = threading.Lock()
@@ -327,7 +327,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
                                       time=os.path.getmtime(fullname),
                                       size=os.path.getsize(fullname),
                                       baseDir=baseDir,
-                                      canDelete=True,isDir=isDir)
+                                      canDelete=True,isDirectory=isDir)
       data.append(element)
     return data
 

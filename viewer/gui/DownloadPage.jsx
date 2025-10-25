@@ -290,6 +290,7 @@ class DownloadPage extends React.Component{
             this.getButtonParam('DownloadPageUser','user',true),
             this.getButtonParam('DownloadPageImages','images',true),
             this.getButtonParam('DownloadPageOverlays','overlay',true),
+            this.getButtonParam('DownloadPagePlugins','plugin',true),
             {
                 name:'DownloadPageUpload',
                 visible: (this.state.type === 'route' || this.state.type.type === 'layout'
