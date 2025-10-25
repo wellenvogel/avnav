@@ -168,14 +168,15 @@ formatFloat.parameters=[
  * @param opt_fixed if > 0 set this much digits at min
  * @param opt_fillRight if set - extend the fractional part
  */
-const formatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
+const formatDistance=function(distance,opt_unit,digits,maxFrac){
     let number=parseFloat(distance);
     let factor=unitToFactor(opt_unit||'nm');
-    number/=factor;
-    return formatFloat(number,3);
+    return formatFloat(number/factor,digits,maxFrac);
 };
 formatDistance.parameters=[
     {name:'unit',type:'SELECT',list:DEPTH_UNITS,default:'nm'},
+    {name:'digits',type:'NUMBER',default:3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
+    {name:'maxFrac',type:'NUMBER',default:1,description:"max. number of decimal places (after the decimal point, default = digits-1)"},
 ];
 
 /**
