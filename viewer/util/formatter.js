@@ -116,21 +116,18 @@ formatFloat.parameters=[
 /**
  * format a number with a fixed number of fractions
  * @param number
- * @param fix total # digits
- * @param fract # of fractional digits
+ * @param fix number of integer digits (before .)
+ * @param fract number of fractional digits (after .)
  * @param addSpace if set - add a padding space for sign
  * @param prefixZero if set - print leading zeroes, not space
- * @returns {string}
+ * @returns number as string, always with decimal point
  */
 
 const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
     number=parseFloat(number);
-    if (isNaN(number)) return '-'.repeat(fix-fract)+(fract?'.'+'-'.repeat(fract):'');
+    if (!isFinite(number)) return '-'.repeat(fix)+(fract?'.'+'-'.repeat(fract):'');
     let sign = addSpace ? ' ' : '';
-    if (number < 0) {
-        number=-number;
-        sign='-';
-    }
+    if (number < 0) { number=-number; sign='-'; }
     let str = number.toFixed(fract); // formatted number w/o sign
     let n = fix+fract+(fract?1:0); // expected length of string w/o sign
     if(prefixZero || fix<0) {
@@ -140,16 +137,19 @@ const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
     }
 };
 formatDecimal.parameters=[
-    {name:'fix',type:'NUMBER'},
-    {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'},
-    {name: 'prefixZero',type:'BOOLEAN'}
+    {name:'fix',type:'NUMBER',description:'number of integer digits (before .)'},
+    {name:'fract',type:'NUMBER',description:'number of fractional digits (after .)'},
+    {name:'addSpace',type:'BOOLEAN',description:'add single padding space for sign'},
+    {name:'prefixZero',type:'BOOLEAN',description:'add leading zeroes'}
 ];
+
+// like formatDecimal, but with OPTional decimal point if number is integer
 const formatDecimalOpt=function(number,fix,fract,addSpace,prefixZero){
     number=parseFloat(number);
     let isint = Math.floor(number) == number;
     return formatDecimal(number,fix,isint?0:fract,addSpace,prefixZero);
 };
+formatDecimalOpt.parameters=formatDecimal.parameters;
 
 formatDecimalOpt.parameters=[
     {name:'fix',type:'NUMBER'},
