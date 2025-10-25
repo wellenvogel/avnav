@@ -42,7 +42,7 @@
           "name": "AnchorWatchDistance"
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "Empty"
@@ -83,7 +83,7 @@
           "weight": 0.75
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "ETA"
@@ -230,7 +230,7 @@
           "name": "WindDisplay"
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "AisTarget"
@@ -252,7 +252,7 @@
           "name": "WindDisplay"
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "AisTarget"

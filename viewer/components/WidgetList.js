@@ -21,7 +21,7 @@ import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
 import Formatter from "../util/formatter";
-import {DepthDisplayFlex} from "./DepthWidgetFlex";
+import {DepthBelowKeel, DepthBelowTransducer, DepthBelowWater} from "./DepthWidgetFlex";
 const degrees='\u00b0';
 let widgetList=[
     {
@@ -442,36 +442,28 @@ let widgetList=[
     },
     {
         name: 'DepthDisplay',
+        caption: 'DBT',
         storeKeys:{
-            DBK: keys.nav.gps.depthBelowKeel,
-            DBS: keys.nav.gps.depthBelowWaterline,
-            DBT: keys.nav.gps.depthBelowTransducer,
-            visible: keys.properties.showDepth,
+            value:keys.nav.gps.depthBelowTransducer
         },
         formatter: 'formatDistance',
         formatterParameters: ['m',3,1],
-        translateFunction: (props)=>{
-            let kind=props.kind;
-            let depth=null;
-            depth=props.DBT;
-            if(kind=='DBK') depth=props.DBK;
-            if(kind=='DBS') depth=props.DBS;
-            return {...props,
-              value: depth,
-              caption: props.caption||kind,
-              unit: ((props.formatterParameters instanceof Array) && props.formatterParameters.length > 0) ? props.formatterParameters[0] : props.unit,
-            }
-        },
         editableParameters: {
             unit: false,
-            value: false,
-            kind: {type:'SELECT',list:['DBT','DBK','DBS'],default:'DBT',description:'kind of depth value, DBT=below transducer, DBK=below keel, DBS=below surface/waterline'},
-            maxValue: {type:'NUMBER',default:12000,description:'consider any value above this (in meters) as invalid'}
+            maxValue: {type:'NUMBER',default:999,description:'consider any value above this (in meters) as invalid'}
         }
     },
     {
-        name: 'DepthDisplayFlex',
-        wclass: DepthDisplayFlex
+        name: 'DepthBelowTransducer',
+        wclass: DepthBelowTransducer
+    },
+    {
+        name: 'DepthBelowKeel',
+        wclass: DepthBelowKeel
+    },
+    {
+        name: 'DepthBelowWater',
+        wclass: DepthBelowWater
     },
     {
         name: 'XteDisplay',

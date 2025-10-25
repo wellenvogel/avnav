@@ -22,7 +22,7 @@
 
 import Helper from "./helper";
 
-const assignableProperties={
+export const assignableProperties={
     name: undefined,
     default: undefined,
     list: undefined,
@@ -74,18 +74,21 @@ export class EditableParameter extends Object{
         if (this.displayName === undefined) this.displayName=this.name;
         if (! opt_noFreeze) Object.freeze(this);
     }
-    assign(target,plain,onlyExisting){
+    assignImpl(properties,target,plain,onlyExisting){
         if (! target) target={};
-        for (let k in assignableProperties){
+        for (let k in properties){
             if (Object.hasOwn(plain,k)){
                 target[k]=plain[k];
                 if (target[k] === null) target[k]=undefined;
             }
             else{
-                if (! onlyExisting) target[k]=assignableProperties[k];
+                if (! onlyExisting) target[k]=properties[k];
             }
         }
         return target;
+    }
+    assign(target,plain,onlyExisting){
+        return this.assignImpl(assignableProperties,target,plain,onlyExisting);
     }
     clone(updates){
         let param;

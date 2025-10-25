@@ -32,16 +32,12 @@ import {EditableFloatParameterUI} from "./EditableParameterUI";
 import {DEPTH_UNITS, unitToFactor} from "../nav/navcompute";
 import {concatsp} from "../util/helper";
 
-export const DepthDisplayFlex=(props)=>{
+const DepthDisplayFlex=(props)=>{
     const iprops={...props};
     iprops.unit=props.dunit;
     iprops.formatter=(v)=>{
         return formatter.formatDistance(v,props.dunit,props.digits,props.maxFrac);
     }
-    iprops.value=props.DBT;
-    if(props.kind=='DBK') iprops.value=props.DBK;
-    if(props.kind=='DBS') iprops.value=props.DBS;
-    iprops.caption=props.caption||props.kind;
     if (iprops.offset && iprops.value != null){
         iprops.value+=parseFloat(iprops.offset );
     }
@@ -77,21 +73,13 @@ const unitConverter={
 }
 DepthDisplayFlex.predefined={
     storeKeys:{
-        DBK: keys.nav.gps.depthBelowKeel,
-        DBS: keys.nav.gps.depthBelowWaterline,
-        DBT: keys.nav.gps.depthBelowTransducer,
+        value: keys.nav.gps.depthBelowTransducer
     },
     editableParameters:{
         formatter: false,
         formatterParams:false,
         unit: false,
         caption: true,
-        kind: {
-            type:'SELECT',
-            list:['DBT','DBK','DBS'],
-            default:'DBT',
-            description:'kind of depth value, DBT=below transducer, DBK=below keel, DBS=below surface/waterline'
-        },
         dunit:{
             type:'SELECT',
             displayName:"unit",
@@ -115,18 +103,57 @@ DepthDisplayFlex.predefined={
             name:'offset',
             displayName:'offset',
             default:0,
-            description:'Add this offset to the measured value from depthBelowTransducer',
-        },unitConverter),
+            description:'Add this offset to the measured value',
+            converter: unitConverter
+        }),
         warningd:new EditableFloatParameterUI({
             name:'warningd',
             displayName:'warning',
             default: 0,
-            description: 'Add a warning color to the display if the depth (including offset) goes below this value'
-            },unitConverter),
+            description: 'Add a warning color to the display if the depth (including offset) goes below this value',
+            converter: unitConverter
+            }),
         maxValue:new EditableFloatParameterUI({
             name:'maxValue',
             default: 12000,
             description:'Any value above this is considered to be invalid',
-        },unitConverter),
+            converter: unitConverter
+            }),
     },
+    caption: 'DBT'
+
+}
+
+export const DepthBelowTransducer=(props)=>{
+    return <DepthDisplayFlex {...props} />
+}
+DepthBelowTransducer.displayName="DepthBelowTransducer";
+DepthBelowTransducer.propTypes=DepthDisplayFlex.propTypes;
+DepthBelowTransducer.predefined={
+    ...DepthDisplayFlex.predefined
+};
+
+export const DepthBelowKeel=(props)=>{
+    return <DepthDisplayFlex {...props} />
+}
+DepthBelowKeel.propTypes=DepthDisplayFlex.propTypes;
+DepthBelowKeel.predefined={
+    ...DepthDisplayFlex.predefined,
+    storeKeys:{
+        value: keys.nav.gps.depthBelowKeel
+    },
+    caption:'DBK'
+}
+DepthBelowKeel.displayName="DepthBelowKeel";
+
+export const DepthBelowWater=(props)=>{
+    return <DepthDisplayFlex {...props} />
+}
+DepthBelowWater.propTypes=DepthDisplayFlex.propTypes;
+DepthBelowWater.predefined={
+    ...DepthDisplayFlex.predefined,
+    storeKeys:{
+        value: keys.nav.gps.depthBelowWaterline
+    },
+    caption:'DBW'
 }

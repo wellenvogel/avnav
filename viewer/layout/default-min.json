@@ -43,7 +43,7 @@
           "formatterParameters": ["m"]
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "Empty"
@@ -100,7 +100,7 @@
           "formatterParameters": ["m"]
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "Empty"
@@ -116,7 +116,7 @@
           "weight": 0.75
         },
         {
-          "name": "DepthDisplayFlex"
+          "name": "DepthBelowTransducer"
         },
         {
           "name": "AisTarget"
