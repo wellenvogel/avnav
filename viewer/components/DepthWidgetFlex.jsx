@@ -103,19 +103,21 @@ DepthDisplayFlex.predefined={
             displayName:'offset',
             default:0,
             description:'Add this offset to the measured value from depthBelowTransducer',
-        },unitConverter
-        ),
+            converter: unitConverter
+        }),
         warningd:new EditableFloatParameterUI({
             name:'warningd',
             displayName:'warning',
             default: 0,
-            description: 'Add a warning color to the display if the depth (including offset) goes below this value'
-            },unitConverter),
+            description: 'Add a warning color to the display if the depth (including offset) goes below this value',
+            converter: unitConverter
+            }),
         maxValue:new EditableFloatParameterUI({
             name:'maxValue',
             default: 12000,
             description:'Any value above this is considered to be invalid',
-        },unitConverter),
+            converter: unitConverter
+            }),
     },
     caption: 'DBT'
 

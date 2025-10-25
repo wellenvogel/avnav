@@ -29,6 +29,7 @@ import {DBOk, DialogButtons, DialogFrame, showPromiseDialog, useDialogContext} f
 import {IconDialog} from "./IconDialog";
 import {Checkbox, ColorSelector, Input, InputReadOnly, InputSelect} from "./Inputs";
 import editableParameterFactory, {
+    assignableProperties,
     EditableBooleanParameter,
     EditableColorParameter,
     EditableFloatParameter,
@@ -259,24 +260,15 @@ export class EditableNumberParameterUI extends EditableNumberParameter{
 }
 
 export class EditableFloatParameterUI extends EditableFloatParameter{
-    constructor(props,opt_converter) {
+    constructor(props) {
         super(props,true);
-        this.converter=opt_converter;
         cHelper(this);
     }
     //override
-    clone(updates){
-        let param;
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        if (! updates) param=this;
-        else {
-            param=this.assign(undefined,this);
-            param.type=this.type;
-            this.assign(param,updates,true);
-        }
-        let rt=new this.constructor(param,this.converter);
-        return rt;
+    assign(target,plain,onlyExisting){
+        return this.assignImpl({...assignableProperties,converter:undefined},target,plain,onlyExisting);
     }
+
     convertToDisplay(cv,currentValues){
         if (!this.converter || ! this.converter.toDisplay || ! this.converter.fromDisplay){
             return cv;
