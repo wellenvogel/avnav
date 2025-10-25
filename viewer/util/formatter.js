@@ -77,43 +77,6 @@ formatLonLats.parameters=[
 
 
 /**
- * format number with N digits
- * at max N-1 digits after decimal point
- * there are at least N digits and a decimal point at a variable position
- * like the display of a multimeter in auto-range mode
- * bigger numbers: more digits are appended to the right if necessary
- * smaller numbers: up to maxPlaces decimal places are added or they get rounded to zero
- * negative numbers: minus sign is added if necessary
- * @param digits = number of (significant) digits in total, negative: padding space is added for sign
- * @param maxPlaces = max. number of decimal places (after the decimal point, default = digits-1)
- * @param leadingZeroes = use leading zeroes instead of spaces
- * returns string with at least digits(+1 if digits<0) characters
- */
-const formatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
-	let signed = digits<0;
-  digits = Math.abs(digits);
-  if(maxPlaces==null) maxPlaces=digits-1;
-  if(isNaN(number)) return '-'.repeat(digits+(signed?1:0)-maxPlaces)+(maxPlaces?'.'+'-'.repeat(maxPlaces):'');
-  if(digits==0) return number.toFixed(0);
-  if(number<0 && !signed) digits-=1;
-  let sign = number<0 ? '-' : signed ? ' ' : '';
-  number = Math.abs(number);
-  let decPlaces = digits-1-Math.floor(Math.log10(Math.abs(number)));
-  decPlaces = Math.max(0,Math.min(decPlaces,Math.max(0,maxPlaces)));
-  let str = number.toFixed(decPlaces);
-  let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
-  if(leadingZeroes) {
-    return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
-  } else {
-    return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
-  }
-};
-formatFloat.parameters=[
-    {name:'digits',type:'NUMBER'},
-    {name:'maxPlaces',type:'NUMBER'},
-];
-
-/**
  * format a number with a fixed number of fractions
  * @param number
  * @param fix number of integer digits (before .)
@@ -151,50 +114,51 @@ const formatDecimalOpt=function(number,fix,fract,addSpace,prefixZero){
 };
 formatDecimalOpt.parameters=formatDecimal.parameters;
 
-formatDecimalOpt.parameters=[
-    {name:'fix',type:'NUMBER'},
-    {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'},
-    {name: 'prefixZero',type:'BOOLEAN'}
-];
+// clamp x to a<=x<=b
+function clamp(a,x,b) {
+  return Math.max(a,Math.min(x,b));
+}
 
 /**
- * format number with N digits
+ * format number with N significant digits
+ * naming: the number 12.345 has 5 TOTAL digits, 2 INTEGER digits, 3 FRACTIONAL digits
  * at max N-1 digits after decimal point
- * there are at least N digits and a decimal point at a variable position
- * like the display of a multimeter in auto-range mode
- * bigger numbers: more digits are appended to the right if necessary
- * smaller numbers: up to maxPlaces decimal places are added or they get rounded to zero
+ * there are at least N total digits and the decimal point at a variable position and and optional sign
+ * it's like the display of a multimeter in auto-range mode
+ * bigger numbers: more integer digits are appended to the left if necessary, fractional digits are removed
+ * smaller numbers: up to maxFrac fractional digits are added (can get rounded to zero)
  * negative numbers: minus sign is added if necessary
- * @param digits = number of (significant) digits in total, negative: padding space is added for sign
- * @param maxPlaces = max. number of decimal places (after the decimal point, default = digits-1)
+ * @param digits = number of total digits, negative: single padding space is added for sign
+ * @param maxFrac = max. number of fractional digits (default = digits-1), negative: fixed value of fractional digits
  * @param leadingZeroes = use leading zeroes instead of spaces
- * returns string with at least digits(+1 if digits<0) characters
+ * returns string with at least digits (+1 if digits<0) (+1 if maxFrac!=0) characters
  */
-const formatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
-    if (digits == null) digits=3;
+const formatFloat=function(number, digits, maxFrac, leadingZeroes=false) {
+    if (!digits) digits=3;
     let signed = digits<0;
     digits = Math.abs(digits);
-    if(maxPlaces==null) maxPlaces=digits-1;
-    if(isNaN(number)) return '-'.repeat(digits+(signed?1:0)-maxPlaces)+(maxPlaces?'.'+'-'.repeat(maxPlaces):'');
+    if(maxFrac==null) maxFrac=digits-1;
+    maxFrac=clamp(0,maxFrac,digits-1);
+    number=parseFloat(number); // null-->NaN
+    if(!isFinite(number)) return '-'.repeat(digits+(signed?1:0)-maxFrac)+(maxFrac?'.'+'-'.repeat(maxFrac):'');
     if(digits==0) return number.toFixed(0);
-    if(number<0 && !signed) digits-=1;
+    if(number<0 && !signed) digits-=1; // make room for unexpected sign
     let sign = number<0 ? '-' : signed ? ' ' : '';
     number = Math.abs(number);
-    let decPlaces = digits-1-Math.floor(Math.log10(Math.abs(number)));
-    decPlaces = Math.max(0,Math.min(decPlaces,Math.max(0,maxPlaces)));
+    let decPlaces = digits-1-Math.floor(Math.log10(number));
+    decPlaces = clamp(0,decPlaces,maxFrac);
     let str = number.toFixed(decPlaces);
     let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
     if(leadingZeroes) {
-        return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
+        return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // -001.23
     } else {
-        return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
+        return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // __-1.23
     }
 };
 formatFloat.parameters=[
-    {name:'digits',type:'NUMBER',default: 3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
-    {name:'maxPlaces',type:'NUMBER',default:2,description:"max. number of decimal places (after the decimal point, default = digits-1)"},
-    {name: 'leadingZeroes', type: 'BOOLEAN',description: "use leading zeroes instead of spaces"}
+    {name:'digits',type:'NUMBER',default:3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
+    {name:'maxFrac',type:'NUMBER',default:2,list:[0,20],description:"max. number of decimal places (after the decimal point, default = digits-1)"},
+    {name:'leadingZeroes',type:'BOOLEAN',description: "use leading zeroes instead of spaces"}
 ];
 /**
  * format a distance
