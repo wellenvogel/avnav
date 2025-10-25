@@ -23,7 +23,8 @@ const DirectWidget=(wprops)=>{
     }catch(error){
       val=vdef;
     }
-    if(!/^-\d/.test(val)) val=val.replaceAll('-','\u2012'); // replace - by digit wide hyphen if not a neg. number, _ would also work well
+    if(!/^-\d/.test(val)) val=val.replaceAll('-','\u2012'); // replace - by digit wide hyphen (figure dash) if not a neg. number, _ would also work well
+    val=val.replaceAll(':','\uA789'); // replace : with raised colon, looks better in time format 00:00
     const display={
         value:val
     };
