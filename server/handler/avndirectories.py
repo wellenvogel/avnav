@@ -28,6 +28,7 @@
 #
 ###############################################################################
 import os.path
+import shutil
 
 from typing_extensions import override
 
@@ -179,6 +180,18 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
       if not os.path.exists(filename) or not os.path.isdir(filename):
           raise Exception("plugin %s not found" % filename)
       return AVNZipDownload(name+".zip",filename,prefix=name)
+
+  def handleDelete(self, name):
+      if not self.canDelete():
+          raise Exception("delete not possible")
+      if name is None:
+          raise Exception("missing name")
+      name = AVNUtil.clean_filename(name)
+      filename = os.path.join(self.baseDir, name)
+      if not os.path.exists(filename) or not os.path.isdir(filename):
+          raise Exception("plugin %s not found" % filename)
+      self.pluginhandler.deletePlugin(name)
+      shutil.rmtree(filename)
 
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)

@@ -274,6 +274,7 @@ class DownloadPage extends React.Component{
         };
     }
     getButtons(){
+        const itemActions=ItemActions.create({type: this.state.type},globalStore.getData(keys.properties.connectedMode,true))
         let rt=[
             this.getButtonParam('DownloadPageCharts','chart'),
             {
@@ -293,15 +294,7 @@ class DownloadPage extends React.Component{
             this.getButtonParam('DownloadPagePlugins','plugin',true),
             {
                 name:'DownloadPageUpload',
-                visible: (this.state.type === 'route' || this.state.type.type === 'layout'
-                    || (this.state.type ==='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
-                    || (this.state.type === 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
-                    || (this.state.type === 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
-                    || (this.state.type === 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
-                    || (this.state.type === 'settings' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
-                    || (this.state.type === 'layout' && globalStore.getData(keys.gui.capabilities.uploadLayout,false))
-                    || (this.state.type === 'track' && globalStore.getData(keys.gui.capabilities.uploadTracks,false))) &&
-                    globalStore.getData(keys.properties.connectedMode,true),
+                visible: itemActions.showUpload,
                 onClick:()=>{
                     this.setState({uploadSequence:this.state.uploadSequence+1});
                 }

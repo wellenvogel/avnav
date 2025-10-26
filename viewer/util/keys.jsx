@@ -233,6 +233,7 @@ let keys={
             uploadOverlays: K,
             uploadTracks: K,
             uploadSettings: K,
+            uploadPlugins: K,
             canConnect: K,
             config: K,
             debugLevel: K,

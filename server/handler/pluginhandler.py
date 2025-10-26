@@ -27,6 +27,7 @@
 import importlib.util
 import inspect
 import json
+import signal
 from typing import Dict, Any
 
 from alarmhandler import AVNAlarmHandler
@@ -69,7 +70,7 @@ def normalizedName(name):
     return name
 
 class ApiImpl(AVNApi):
-  def __init__(self,parent,store,queue,prefix,moduleFile,internal=False):
+  def __init__(self,parent,store,queue,prefix,moduleFile,internal=False,directory=None):
     """
 
     @param parent: the pluginhandler instance to access cfg data
@@ -96,6 +97,9 @@ class ApiImpl(AVNApi):
     self.settingsFiles=[]
     self.jsCssOnly=False
     self.internal=internal
+    self.directory=directory
+    self.thread=None
+    self.plugin=None
 
   def isEnabled(self):
     return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
@@ -103,11 +107,28 @@ class ApiImpl(AVNApi):
     self.jsCssOnly=True
     self.phandler.setChildEditable(self.prefix,True)
 
-  def stop(self):
+  def stop(self,force=False):
     if self.jsCssOnly:
       return
-    if self.stopHandler is None:
+    if self.stopHandler is None and not force:
       raise Exception("plugin %s cannot be stopped during runtime"%self.prefix)
+    try:
+        if self.stopHandler is not None:
+            self.thread = None
+            self.stopHandler()
+        else:
+            running = self.thread
+            try:
+                #if the plugin is using shouldStopMainThread
+                self.thread=None
+            except:
+                pass
+            if running is not None and running.isAlive():
+                AVNLog.debug("trying to stop plugin main thread %s"%self.prefix)
+                signal.pthread_kill(running.ident, signal.SIGTERM)
+            pass
+    except:
+        pass
     try:
       charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
       charthandler.registerExternalProvider(self.prefix, None)
@@ -157,7 +178,6 @@ class ApiImpl(AVNApi):
       pass
     self.converters.clear()
 
-    self.stopHandler()
 
 
   def getPrefixForItems(self):
@@ -428,7 +448,7 @@ class ApiImpl(AVNApi):
 
   def shouldStopMainThread(self):
     current=threading.get_ident()
-    running=self.phandler.startedThreads.get(self.prefix)
+    running=self.thread
     if running is None:
       return True
     return running.ident != current
@@ -462,6 +482,20 @@ class ApiImpl(AVNApi):
     self.log("clearing all alarms")
     alarmhandler.stopAll()
 
+class PluginApiProxy():
+    '''
+    proxy class that restricts the plugin access for
+    ApiImpl to the methods defined in AVNApi
+    '''
+    def __init__(self,impl,name):
+        self.__impl=impl
+        self.__check=AVNApi()
+        self.__name=name
+    def __getattr__(self, item):
+        if hasattr(self.__check, item):
+            return getattr(self.__impl, item)
+        AVNLog.debug("plugin %s:trying to acccess invalid api method %s",name,item)
+        raise NotImplemented()
 
 class AVNPluginHandler(AVNWorker):
   createdApis: Dict[str, ApiImpl]
@@ -474,10 +508,7 @@ class AVNPluginHandler(AVNWorker):
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.queue=None
-    self.createdPlugins={}
-    self.createdApis={} 
-    self.startedThreads={}
-    self.pluginDirs={} #key: moduleName, Value: dir
+    self.createdApis={}
     self.configLock=threading.Lock()
 
 
@@ -509,36 +540,28 @@ class AVNPluginHandler(AVNWorker):
   D_SYSTEM='system'
   D_USER='user'
   ALL_DIRS=[D_BUILTIN,D_SYSTEM,D_USER]
+  def createModuleName(self,name,type=D_USER):
+      return type+'-'+name
   def run(self):
+    newApis={}
     builtInDir=self.getStringParam('builtinDir')
     systemDir=AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'), belowData=False)
     userDir=self.getUserDir()
     directories={
-      self.D_BUILTIN:{
-        'dir':builtInDir,
-        'prefix':'builtin'
-      },
-      self.D_SYSTEM:{
-        'dir':systemDir,
-        'prefix':'system'
-      },
-      self.D_USER:{
-        'dir':userDir,
-        'prefix':'user'
-      }
+      self.D_BUILTIN: builtInDir,
+      self.D_SYSTEM:systemDir,
+      self.D_USER:userDir
     }
-
-
-    for basedir in self.ALL_DIRS:
-      dircfg=directories[basedir]
-      if not os.path.isdir(dircfg['dir']):
+    for dirtype in self.ALL_DIRS:
+      modulesDir=directories[dirtype]
+      if not os.path.isdir(modulesDir):
         continue
-      for dirname in os.listdir(dircfg['dir']):
-        dir=os.path.join(dircfg['dir'],dirname)
+      for dirname in os.listdir(modulesDir):
+        dir=os.path.join(modulesDir,dirname)
         if not os.path.isdir(dir):
           continue
         module=None
-        moduleName=dircfg['prefix'] + "-" + dirname
+        moduleName=self.createModuleName(dirname,dirtype)
         if self.isHidden(moduleName):
           AVNLog.info("module %s is hidden by environment")
           continue
@@ -546,22 +569,23 @@ class AVNPluginHandler(AVNWorker):
           module=self.loadPluginFromDir(dir, moduleName)
         except:
           AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
-        api = ApiImpl(self,self.navdata,self.queue,moduleName,inspect.getfile(module) if module is not None else module,internal=(basedir==self.D_BUILTIN))
-        self.createdApis[moduleName]=api
+        api = ApiImpl(self,self.navdata,self.queue,moduleName,
+                      inspect.getfile(module) if module is not None else module,internal=(dirtype==self.D_BUILTIN),directory=dir)
         if module is not None:
-          self.pluginDirs[moduleName]=os.path.realpath(dir)
           self.instantiateHandlersFromModule(moduleName,module,api)
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
-            self.pluginDirs[moduleName]=dir
             self.setInfo(moduleName,"java script/css only",WorkerStatus.STARTED)
             api.setJsCssOnly()
-    for name in list(self.createdApis.keys()):
-      self.startPluginThread(name)
+        newApis[moduleName] = api
+    for api in list(newApis.values()):
+      self.startPluginThread(api)
+    self.createdApis=newApis
     AVNLog.info("pluginhandler finished")
 
   def stop(self):
     super().stop()
+    #TODO: cleanup APIs
     for api in self.createdApis.values():
       try:
         AVNLog.info("stopping plugin %s",api.prefix)
@@ -569,12 +593,12 @@ class AVNPluginHandler(AVNWorker):
       except:
         pass
 
-  def runPlugin(self,api,plugin):
+  def runPlugin(self,api):
     api.log("run started")
     api.setStatus(WorkerStatus.INACTIVE, "plugin started")
     try:
       api.registerKeys()
-      plugin.run()
+      api.plugin.run()
       api.log("plugin run finshed")
       if api.isEnabled():
         api.setStatus(WorkerStatus.INACTIVE,"plugin run finished")
@@ -584,43 +608,35 @@ class AVNPluginHandler(AVNWorker):
       api.error("plugin run exception: %s",traceback.format_exc())
       api.setStatus(WorkerStatus.ERROR,"plugin exception %s"%str(e))
 
-  def startPluginThread(self,name):
-    current=self.startedThreads.get(name)
+  def startPluginThread(self,api: ApiImpl):
+    current=api.thread
     if current is not None:
       if current.is_alive():
         return
-      try:
-        del self.startedThreads[name]
-      except:
-        pass
-    plugin = self.createdPlugins.get(name)
-    api = self.createdApis[name]
-    if api is None:
-      self.setInfo(name,'internal error: api not created for plugin',WorkerStatus.ERROR)
-      return
+      api.thread=None
     enabled = api.isEnabled()
     if not enabled:
-      AVNLog.info("plugin %s is disabled by config", name)
-      self.setInfo(name, "disabled by config", WorkerStatus.INACTIVE)
+      AVNLog.info("plugin %s is disabled by config", api.prefix)
+      self.setInfo(api.prefix, "disabled by config", WorkerStatus.INACTIVE)
       return
     if api.jsCssOnly:
-      self.setInfo(name, "javascript/css only", WorkerStatus.NMEA)
+      self.setInfo(api.prefix, "javascript/css only", WorkerStatus.NMEA)
       return
-    if plugin is None:
-      self.setInfo(name,'no plugin could be created',WorkerStatus.ERROR)
+    if api.plugin is None:
+      self.setInfo(api.prefix,'no plugin could be created',WorkerStatus.ERROR)
       return
-    AVNLog.info("starting plugin %s", name)
-    thread = threading.Thread(target=self.runPlugin,args=[api,plugin])
+    AVNLog.info("starting plugin %s", api.prefix)
+    thread = threading.Thread(target=self.runPlugin,args=[api])
     thread.setDaemon(True)
-    thread.setName("Plugin: %s" % (name))
+    thread.setName("Plugin: %s" % (api.prefix))
     thread.start()
-    self.startedThreads[name] = thread
+    api.thread = thread
 
   def instantiateHandlersFromModule(self,modulename, module,api):
     MANDATORY_METHODS = ['run']
     MANDATORY_CLASSMETHODS=['pluginInfo']
 
-    obj = getattr(module, "Plugin")
+    obj = getattr(module, "Plugin",None)
     if obj is None:
       return
     ic = inspect.isclass(obj)
@@ -660,9 +676,10 @@ class AVNPluginHandler(AVNWorker):
               if path is None:
                 raise Exception("missing path in entry %s" % (str(entry)))
           api.storeKeys=mData
-          pluginInstance = obj(api)
+          proxy=PluginApiProxy(api,api.prefix)
+          pluginInstance = obj(proxy)
           AVNLog.info("created plugin %s",modulename)
-          self.createdPlugins[modulename]=pluginInstance
+          api.plugin=pluginInstance
           self.setInfo(modulename,"created",WorkerStatus.STARTED)
         except Exception as e:
           self.setInfo(modulename,"unable to create plugin: %s"%str(e), WorkerStatus.ERROR)
@@ -689,22 +706,19 @@ class AVNPluginHandler(AVNWorker):
     return None
 
   def changeChildConfigDict(self, childName, configDict):
-    self.configLock.acquire()
-    hasChanges = False
-    try:
-      childIdx=0
-      currentList=self.param.get(childName)
-      if currentList is None:
-        childIdx=-1
-      for k,v in configDict.items():
-        if currentList is None or len(currentList) < 1 or \
-            currentList[0].get(k) != str(v):
-          hasChanges=True
-          childIdx=self.changeChildConfig(childName, childIdx, k, str(v),delayWriteOut=True)
-    finally:
-      self.configLock.release()
-    if hasChanges:
-      self.writeConfigChanges()
+    with self.configLock:
+        hasChanges = False
+        childIdx=0
+        currentList=self.param.get(childName)
+        if currentList is None:
+          childIdx=-1
+        for k,v in configDict.items():
+          if currentList is None or len(currentList) < 1 or \
+              currentList[0].get(k) != str(v):
+            hasChanges=True
+            childIdx=self.changeChildConfig(childName, childIdx, k, str(v),delayWriteOut=True)
+        if hasChanges:
+          self.writeConfigChanges()
 
   def setChildEditable(self,child,enable=True):
     existing=self.status.get(child)
@@ -763,17 +777,13 @@ class AVNPluginHandler(AVNWorker):
         if not newEnabled:
           if api.stopHandler is None and not api.jsCssOnly:
             raise Exception("plugin %s cannot stop during runtime")
-          try:
-            del self.startedThreads[child]
-          except:
-            pass
           api.stop()
           if api.jsCssOnly:
             self.setInfo(child,"disabled by config",WorkerStatus.INACTIVE)
       del param['enabled']
     if len(list(param.keys())) < 1:
       #startPluginThread is intelligent enough to know if we must start
-      self.startPluginThread(child)
+      self.startPluginThread(api)
       return
     checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
     if api.paramChange is None:
@@ -782,7 +792,7 @@ class AVNPluginHandler(AVNWorker):
     #maybe allowKeyOverrides has changed...
     api.registerKeys()
     #startPluginThread is intelligent enough to know if we must start
-    self.startPluginThread(child)
+    self.startPluginThread(api)
 
   def getStatusProperties(self):
     rt={}
@@ -800,17 +810,13 @@ class AVNPluginHandler(AVNWorker):
       localPath= command[len(URL_PREFIX) + 1:].split("/", 1)
       if len(localPath) < 2:
         raise Exception(404,"missing plugin path")
-      dir=self.pluginDirs.get(localPath[0])
-      if dir is None:
-        raise Exception("plugin %s not found"%localPath[0])
       api=self.createdApis.get(localPath[0])
-      if api is None or not api.isEnabled():
+      if api is None:
+        raise Exception("plugin %s not found" % localPath[0])
+      if  not api.isEnabled():
         raise Exception("plugin %s disabled"%localPath[0])
       if localPath[1][0:3] == 'api':
         #plugin api request
-        api=self.createdApis.get(localPath[0])
-        if api is None:
-          raise Exception("no plugin %s found"%localPath[0])
         if api.requestHandler is None:
           raise Exception("plugin %s does not handle requests " % localPath[0])
         if handler is None:
@@ -840,11 +846,10 @@ class AVNPluginHandler(AVNWorker):
     if atype == "api":
       if sub=="list":
         data=[]
-        for k in list(self.pluginDirs.keys()):
-          api=self.createdApis[k]
+        for k,api in self.createdApis.items():
           if api is None or not api.isEnabled():
             continue
-          dir=self.pluginDirs[k]
+          dir=api.directory
           element={'name':k,'dir':dir}
           if os.path.exists(os.path.join(dir,"plugin.js")):
             element['js']= URL_PREFIX + "/" + k + "/plugin.js"
@@ -858,6 +863,23 @@ class AVNPluginHandler(AVNWorker):
 
   def getUserDir(self):
       return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
+
+  def updatePlugin(self,name,type=D_USER):
+      pass
+  def deletePlugin(self,name,type=D_USER):
+      name=self.createdApis.get(name,type)
+      api=self.createdApis.get(name)
+      if api is None:
+          return False
+      try:
+          AVNLog.info("deleting plugin %s" % name)
+          api.stop(True)
+      except:
+          pass
+      try:
+          del self.createdApis[name]
+      except:
+          pass
 
 
 avnav_handlerList.registerHandler(AVNPluginHandler)

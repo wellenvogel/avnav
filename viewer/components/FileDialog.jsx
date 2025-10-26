@@ -137,6 +137,7 @@ export class ItemActions{
         this.showImportLog=false;
         this.showDownload=false;
         this.showIsServer=false;
+        this.showUpload=false;
         this.timeText='';
         this.infoText='';
         this.className='';
@@ -201,6 +202,7 @@ export class ItemActions{
                 if (props.originalScheme){
                     rt.className+=' userAction';
                 }
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
                 break;
             case 'track':
                 rt.headline='Tracks';
@@ -209,6 +211,7 @@ export class ItemActions{
                 rt.showView=viewable;
                 rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
                 rt.showOverlay=allowedOverlay && canEditOverlays;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
                 break;
             case 'route':
                 rt.headline='Routes';
@@ -259,6 +262,7 @@ export class ItemActions{
                         return Promise.reject(e);
                     }
                 }
+                rt.showUpload=isConnected;
                 break;
             case 'layout':
                 rt.headline='Layouts';
@@ -284,6 +288,7 @@ export class ItemActions{
                     return layoutLoader.uploadLayout(name,data,overwrite);
                 }
                 rt.fixedPrefix=USER_PREFIX;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadLayout,false)
                 break;
             case 'settings':
                 rt.headline='Settings';
@@ -311,6 +316,7 @@ export class ItemActions{
                        .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
                 }
                 rt.fixedPrefix=USER_PREFIX;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)
                 break;
             case 'user':
                 rt.headline='User';
@@ -321,6 +327,7 @@ export class ItemActions{
                 rt.showDownload=true;
                 rt.showApp=isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
                 rt.isApp=rt.showApp && props.isAddon;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadUser,false)
                 break;
             case 'images':
                 rt.headline='Images';
@@ -328,6 +335,7 @@ export class ItemActions{
                 rt.showView = viewable;
                 rt.showRename = isConnected && props.canDelete !== false;
                 rt.showDownload=true;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadImages,false)
                 break;
             case 'overlay':
                 rt.headline='Overlays';
@@ -337,6 +345,7 @@ export class ItemActions{
                 rt.showDownload=true;
                 rt.showEdit= editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && isConnected;
                 rt.showOverlay = canEditOverlays && allowedOverlay;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)
                 break;
             case 'plugin':
                 rt.headline='Plugins';
@@ -346,6 +355,7 @@ export class ItemActions{
                 rt.showDownload=true;
                 rt.showEdit= false;
                 rt.showOverlay = false;
+                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
                 break;
         }
         return rt;
