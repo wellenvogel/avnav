@@ -602,7 +602,7 @@ class AVNPluginHandler(AVNWorker):
       with self.configLock:
           return self.createdApis.get(name)
 
-  def loadAndPreparePlugin(self, dir, moduleName):
+  def loadAndPreparePlugin(self, dir, moduleName,dirtype):
       if self.isHidden(moduleName):
           AVNLog.info("module %s is hidden by environment")
           return
@@ -640,7 +640,7 @@ class AVNPluginHandler(AVNWorker):
         if not os.path.isdir(dir):
           continue
         moduleName=self.createModuleName(dirname,dirtype)
-        api=self.loadAndPreparePlugin(dir,moduleName)
+        api=self.loadAndPreparePlugin(dir,moduleName,dirtype)
         newApis[moduleName] = api
     for api in list(newApis.values()):
       api.startPluginThread()
@@ -905,7 +905,7 @@ class AVNPluginHandler(AVNWorker):
       if not os.path.isdir(dir):
           AVNLog.error("plugin dir %s is not a directory",dir)
           return False
-      api=self.loadAndPreparePlugin(dir,name)
+      api=self.loadAndPreparePlugin(dir,name,type)
       if api is None:
           AVNLog.error("unable to load plugin %s",name)
           return False
