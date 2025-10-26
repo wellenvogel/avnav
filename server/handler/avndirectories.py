@@ -29,6 +29,7 @@
 ###############################################################################
 import os.path
 import shutil
+from zipfile import ZipFile
 
 from typing_extensions import override
 
@@ -193,6 +194,34 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
       self.pluginhandler.deletePlugin(name)
       shutil.rmtree(filename)
 
+  def handleUpload(self, name, handler, requestparam):
+      if not name.lower().endswith(".zip"):
+          raise Exception("only zip files allowed")
+      rt= super().handleUpload(name, handler, requestparam)
+      filename=os.path.join(self.baseDir, name)
+      if not os.path.exists(filename):
+          raise Exception(f"file {filename} not found after upload")
+      zip = ZipFile(filename)
+      dirname=name[0:-4]
+      try:
+        hasEntries=False
+        for entry in zip.infolist():
+            AVNLog.debug(f"zip entry {entry}")
+            if entry.is_dir():
+                if entry.filename != dirname:
+                    raise Exception(f"directory in zip {entry.filename} does not match plugin name {dirname}")
+            else:
+                if not (os.path.dirname(entry.filename)+os.path.sep).startswith(dirname+os.path.sep) :
+                    raise Exception(f"directory of {entry.filename} does not match plugin name {dirname}")
+                else:
+                    hasEntries=True
+        if not hasEntries:
+            raise Exception(f"no files in zip {name}")
+        zip.extractall(self.baseDir)
+        self.pluginhandler.updatePlugin(dirname)
+      finally:
+        os.unlink(filename)
+      return rt
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)
 avnav_handlerList.registerHandler(AVNUserHandler)

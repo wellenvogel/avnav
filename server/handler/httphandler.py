@@ -648,6 +648,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     except Exception as e:
       self.send_response(409,str(e))
       self.end_headers()
+      self.close_connection=True
       return None
 
 

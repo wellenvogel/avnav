@@ -896,22 +896,22 @@ class AVNPluginHandler(AVNWorker):
       return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
 
   def updatePlugin(self,name,type=D_USER):
-      name = self.createModuleName(name, type)
+      moduleName = self.createModuleName(name, type)
       if type != self.D_USER:
           return False
-      AVNLog.info("update plugin %s",name)
+      AVNLog.info("update plugin %s",moduleName)
       self.deletePlugin(name, type)
       dir=os.path.join(self.getUserDir(),name)
       if not os.path.isdir(dir):
           AVNLog.error("plugin dir %s is not a directory",dir)
           return False
-      api=self.loadAndPreparePlugin(dir,name,type)
+      api=self.loadAndPreparePlugin(dir,moduleName,type)
       if api is None:
           AVNLog.error("unable to load plugin %s",name)
           return False
       api.startPluginThread()
       with self.configLock:
-          self.createdApis[name] = api
+          self.createdApis[moduleName] = api
       return True
 
   def deletePlugin(self,name,type=D_USER):

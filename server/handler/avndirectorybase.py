@@ -505,7 +505,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     outname = os.path.join(self.baseDir, filename)
     data = AVNUtil.getHttpRequestParam(requestparam, '_json')
     if data is not None:
-      decoded = json.loads(data)
       stream=io.BytesIO(data.encode('utf-8'))
       self.writeAtomic(outname,stream,overwrite)
     else:
