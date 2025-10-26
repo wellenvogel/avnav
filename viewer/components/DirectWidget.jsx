@@ -1,4 +1,4 @@
-/**
+ /**
  * Created by andreas on 23.02.16.
  */
 
@@ -15,16 +15,21 @@ const DirectWidget=(wprops)=>{
     let vdef=props.default||'---';
     try {
       if (props.value != null) {
-          if(props.minValue != null && parseFloat(props.value) < props.minValue) { vdef='<<<'; throw new Error(); }
-          if(props.maxValue != null && parseFloat(props.value) > props.maxValue) { vdef='>>>'; throw new Error(); }
+          let outOfRange=0;
+          if(parseFloat(props.value) < props.minValue) outOfRange=-1;
+          if(parseFloat(props.value) > props.maxValue) outOfRange=+1;
+          if(outOfRange) {
+            vdef=props.formatter?props.formatter(null):vdef; // placeholder with correct with
+            if (outOfRange<0) vdef=vdef.replace(/./g,'<'); // underflow
+            if (outOfRange>0) vdef=vdef.replace(/./g,'>'); // overflow
+            throw new Error();
+          }
       }
       val=props.formatter?props.formatter(props.value):props.value;
       val=(val==null?'':''+val)||vdef;
     }catch(error){
       val=vdef;
     }
-    if(!/^-\d/.test(val)) val=val.replaceAll('-','\u2012'); // replace - by digit wide hyphen (figure dash) if not a neg. number, _ would also work well
-    val=val.replaceAll(':','\uA789'); // replace : with raised colon, looks better in time format 00:00
     const display={
         value:val
     };
