@@ -195,15 +195,17 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
       shutil.rmtree(filename)
 
   def handleUpload(self, name, handler, requestparam):
+      self.checkName(name)
       if not name.lower().endswith(".zip"):
           raise Exception("only zip files allowed")
-      rt= super().handleUpload(name, handler, requestparam)
-      filename=os.path.join(self.baseDir, name)
-      if not os.path.exists(filename):
-          raise Exception(f"file {filename} not found after upload")
-      zip = ZipFile(filename)
-      dirname=name[0:-4]
+      uploadName=f"{name}-{threading.get_ident()}"
+      filename = os.path.join(self.baseDir, uploadName)
       try:
+        rt= super().handleUpload(uploadName, handler, requestparam)
+        if not os.path.exists(filename):
+          raise Exception(f"file {filename} not found after upload")
+        zip = ZipFile(filename)
+        dirname=name[0:-4]
         hasEntries=False
         for entry in zip.infolist():
             AVNLog.debug(f"zip entry {entry}")
