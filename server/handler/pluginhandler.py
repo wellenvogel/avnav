@@ -598,6 +598,29 @@ class AVNPluginHandler(AVNWorker):
   ALL_DIRS=[D_BUILTIN,D_SYSTEM,D_USER]
   def createModuleName(self,name,type=D_USER):
       return type+'-'+name
+  def getApi(self,name):
+      with self.configLock:
+          return self.createdApis.get(name)
+
+  def loadAndPreparePlugin(self, dir, moduleName):
+      if self.isHidden(moduleName):
+          AVNLog.info("module %s is hidden by environment")
+          return
+      module = None
+      try:
+          module = self.loadPluginFromDir(dir, moduleName)
+      except:
+          AVNLog.error("error loading plugin from %s:%s", dir, traceback.format_exc())
+      api = ApiImpl(self, self.navdata, self.queue, moduleName,
+                    inspect.getfile(module) if module is not None else module, internal=(dirtype == self.D_BUILTIN),
+                    directory=dir)
+      if module is not None:
+          self.instantiateHandlersFromModule(moduleName, module, api)
+      else:
+          if os.path.exists(os.path.join(dir, "plugin.js")) or os.path.exists(os.path.join(dir, "plugin.css")):
+              self.setInfo(moduleName, "java script/css only", WorkerStatus.STARTED)
+              api.setJsCssOnly()
+      return api
   def run(self):
     newApis={}
     builtInDir=self.getStringParam('builtinDir')
@@ -616,23 +639,8 @@ class AVNPluginHandler(AVNWorker):
         dir=os.path.join(modulesDir,dirname)
         if not os.path.isdir(dir):
           continue
-        module=None
         moduleName=self.createModuleName(dirname,dirtype)
-        if self.isHidden(moduleName):
-          AVNLog.info("module %s is hidden by environment")
-          continue
-        try:
-          module=self.loadPluginFromDir(dir, moduleName)
-        except:
-          AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
-        api = ApiImpl(self,self.navdata,self.queue,moduleName,
-                      inspect.getfile(module) if module is not None else module,internal=(dirtype==self.D_BUILTIN),directory=dir)
-        if module is not None:
-          self.instantiateHandlersFromModule(moduleName,module,api)
-        else:
-          if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
-            self.setInfo(moduleName,"java script/css only",WorkerStatus.STARTED)
-            api.setJsCssOnly()
+        api=self.loadAndPreparePlugin(dir,moduleName)
         newApis[moduleName] = api
     for api in list(newApis.values()):
       api.startPluginThread()
@@ -642,13 +650,14 @@ class AVNPluginHandler(AVNWorker):
   def stop(self):
     super().stop()
     #TODO: cleanup APIs
-    for api in self.createdApis.values():
-      try:
-        AVNLog.info("stopping plugin %s",api.prefix)
-        api.stop(True,True)
-      except:
-        pass
-    self.createdApis={}
+    with self.configLock:
+        for api in self.createdApis.values():
+          try:
+            AVNLog.info("stopping plugin %s",api.prefix)
+            api.stop(True,True)
+          except:
+            pass
+        self.createdApis={}
 
   def startPluginThread(self,api: ApiImpl):
       return api.startPluginThread()
@@ -750,7 +759,7 @@ class AVNPluginHandler(AVNWorker):
         self.setInfo(child,'created',WorkerStatus.INACTIVE,childId=child)
 
   def getEditableChildParameters(self, child):
-    api=self.createdApis.get(child)
+    api=self.getApi(child)
     if api is None:
       return []
     editables=api.editables
@@ -787,7 +796,7 @@ class AVNPluginHandler(AVNWorker):
   def updateConfig(self, param, child=None):
     if child is None:
       return super().updateConfig(param, child)
-    api = self.createdApis.get(child)
+    api = self.getApi(child)
     if api is None:
       raise Exception("plugin %s not found"%child)
     if self.ENABLE_PARAMETER.name in param:
@@ -831,7 +840,7 @@ class AVNPluginHandler(AVNWorker):
       localPath= command[len(URL_PREFIX) + 1:].split("/", 1)
       if len(localPath) < 2:
         raise Exception(404,"missing plugin path")
-      api=self.createdApis.get(localPath[0])
+      api=self.getApi(localPath[0])
       if api is None:
         raise Exception("plugin %s not found" % localPath[0])
       if  not api.isEnabled():
@@ -867,16 +876,17 @@ class AVNPluginHandler(AVNWorker):
     if atype == "api":
       if sub=="list":
         data=[]
-        for k,api in self.createdApis.items():
-          if api is None or not api.isEnabled():
-            continue
-          dir=api.directory
-          element={'name':k,'dir':dir}
-          if os.path.exists(os.path.join(dir,"plugin.js")):
-            element['js']= URL_PREFIX + "/" + k + "/plugin.js"
-          if os.path.exists(os.path.join(dir,"plugin.css")):
-            element['css']= URL_PREFIX + "/" + k + "/plugin.css"
-          data.append(element)
+        with self.configLock:
+            for k,api in self.createdApis.items():
+              if api is None or not api.isEnabled():
+                continue
+              dir=api.directory
+              element={'name':k,'dir':dir}
+              if os.path.exists(os.path.join(dir,"plugin.js")):
+                element['js']= URL_PREFIX + "/" + k + "/plugin.js"
+              if os.path.exists(os.path.join(dir,"plugin.css")):
+                element['css']= URL_PREFIX + "/" + k + "/plugin.css"
+              data.append(element)
         rt={'status':'OK','data':data}
         return rt
       return {'status':'request not found %s'%sub}
@@ -886,21 +896,39 @@ class AVNPluginHandler(AVNWorker):
       return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
 
   def updatePlugin(self,name,type=D_USER):
-      pass
+      name = self.createModuleName(name, type)
+      if type != self.D_USER:
+          return False
+      AVNLog.info("update plugin %s",name)
+      self.deletePlugin(name, type)
+      dir=os.path.join(self.getUserDir(),name)
+      if not os.path.isdir(dir):
+          AVNLog.error("plugin dir %s is not a directory",dir)
+          return False
+      api=self.loadAndPreparePlugin(dir,name)
+      if api is None:
+          AVNLog.error("unable to load plugin %s",name)
+          return False
+      api.startPluginThread()
+      with self.configLock:
+          self.createdApis[name] = api
+      return True
+
   def deletePlugin(self,name,type=D_USER):
       name=self.createModuleName(name,type)
-      api=self.createdApis.get(name)
-      if api is None:
-          return False
-      try:
-          AVNLog.info("deleting plugin %s" % name)
-          api.stop(True)
-      except:
-          pass
-      try:
-          del self.createdApis[name]
-      except:
-          pass
+      with self.configLock:
+        api=self.createdApis.get(name)
+        if api is None:
+            return False
+        try:
+            AVNLog.info("deleting plugin %s" % name)
+            api.stop(True)
+        except:
+            pass
+        try:
+            del self.createdApis[name]
+        except:
+            pass
       self.deleteInfo(name)
 
 
