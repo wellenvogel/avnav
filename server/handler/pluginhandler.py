@@ -100,6 +100,8 @@ class ApiImpl(AVNApi):
     self.directory=directory
     self.thread=None
     self.plugin=None
+    self.proxy=None
+    self.stopped=False
 
   def isEnabled(self):
     return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
@@ -107,7 +109,7 @@ class ApiImpl(AVNApi):
     self.jsCssOnly=True
     self.phandler.setChildEditable(self.prefix,True)
 
-  def stop(self,force=False):
+  def stop(self,force=False,soft=False):
     if self.jsCssOnly:
       return
     if self.stopHandler is None and not force:
@@ -123,12 +125,16 @@ class ApiImpl(AVNApi):
                 self.thread=None
             except:
                 pass
-            if running is not None and running.isAlive():
-                AVNLog.debug("trying to stop plugin main thread %s"%self.prefix)
-                signal.pthread_kill(running.ident, signal.SIGTERM)
-            pass
-    except:
-        pass
+            if running is not None and running.is_alive():
+                AVNLog.info("plugin %s main thread %s without stop handler",self.prefix,running.ident)
+    except Exception as e:
+        AVNLog.error("error stopping plugin main thread %s:%s",self.prefix,str(e))
+    if force and self.proxy is not None:
+        #disconnect the plugin code
+        #even if we cannot stop
+        self.proxy.disable(soft=soft)
+    if force:
+        self.stopped=True
     try:
       charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
       charthandler.registerExternalProvider(self.prefix, None)
@@ -293,6 +299,8 @@ class ApiImpl(AVNApi):
     return rt
 
   def setStatus(self,value,info):
+    if self.stopped:
+      return
     self.phandler.setInfo(self.prefix,info,value)
 
   def registerUserApp(self, url, iconFile, title=None,preventConnectionLost=False):
@@ -482,6 +490,45 @@ class ApiImpl(AVNApi):
     self.log("clearing all alarms")
     alarmhandler.stopAll()
 
+  def startPluginThread(self):
+      current = self.thread
+      if current is not None:
+          if current.is_alive():
+              return
+          self.thread = None
+      enabled = self.isEnabled()
+      if not enabled:
+          AVNLog.info("plugin %s is disabled by config", self.prefix)
+          self.setStatus( WorkerStatus.INACTIVE,"disabled by config")
+          return
+      if self.jsCssOnly:
+          self.setStatus( WorkerStatus.NMEA,"javascript/css only")
+          return
+      if self.plugin is None:
+          self.setStatus( WorkerStatus.ERROR, 'no plugin could be created')
+          return
+      AVNLog.info("starting plugin %s", self.prefix)
+      thread = threading.Thread(target=self.runPlugin, args=[])
+      thread.setDaemon(True)
+      thread.setName("Plugin: %s" % (self.prefix))
+      thread.start()
+      self.thread = thread
+
+  def runPlugin(self):
+      self.log("run started")
+      self.setStatus(WorkerStatus.INACTIVE, "plugin started")
+      try:
+          self.registerKeys()
+          self.plugin.run()
+          self.log("plugin run finshed")
+          if self.isEnabled():
+              self.setStatus(WorkerStatus.INACTIVE, "plugin run finished")
+          else:
+              self.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
+      except Exception as e:
+          self.error("plugin run exception: %s", traceback.format_exc())
+          self.setStatus(WorkerStatus.ERROR, "plugin exception %s" % str(e))
+
 class PluginApiProxy():
     '''
     proxy class that restricts the plugin access for
@@ -491,11 +538,20 @@ class PluginApiProxy():
         self.__impl=impl
         self.__check=AVNApi()
         self.__name=name
+        self.__softDisabled=False
+    def __default(self,*args,**kwargs):
+        pass
     def __getattr__(self, item):
+        if self.__softDisabled:
+            return self.__default
         if hasattr(self.__check, item):
             return getattr(self.__impl, item)
-        AVNLog.debug("plugin %s:trying to acccess invalid api method %s",name,item)
+        AVNLog.debug("plugin %s:trying to acccess invalid api method %s",self.__name,item)
         raise NotImplemented()
+    def disable(self,soft=False):
+        self.__softDisabled=soft
+        self.__check=None
+        self.__impl=None
 
 class AVNPluginHandler(AVNWorker):
   createdApis: Dict[str, ApiImpl]
@@ -579,7 +635,7 @@ class AVNPluginHandler(AVNWorker):
             api.setJsCssOnly()
         newApis[moduleName] = api
     for api in list(newApis.values()):
-      self.startPluginThread(api)
+      api.startPluginThread()
     self.createdApis=newApis
     AVNLog.info("pluginhandler finished")
 
@@ -589,48 +645,13 @@ class AVNPluginHandler(AVNWorker):
     for api in self.createdApis.values():
       try:
         AVNLog.info("stopping plugin %s",api.prefix)
-        api.stop()
+        api.stop(True,True)
       except:
         pass
-
-  def runPlugin(self,api):
-    api.log("run started")
-    api.setStatus(WorkerStatus.INACTIVE, "plugin started")
-    try:
-      api.registerKeys()
-      api.plugin.run()
-      api.log("plugin run finshed")
-      if api.isEnabled():
-        api.setStatus(WorkerStatus.INACTIVE,"plugin run finished")
-      else:
-        api.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
-    except Exception as e:
-      api.error("plugin run exception: %s",traceback.format_exc())
-      api.setStatus(WorkerStatus.ERROR,"plugin exception %s"%str(e))
+    self.createdApis={}
 
   def startPluginThread(self,api: ApiImpl):
-    current=api.thread
-    if current is not None:
-      if current.is_alive():
-        return
-      api.thread=None
-    enabled = api.isEnabled()
-    if not enabled:
-      AVNLog.info("plugin %s is disabled by config", api.prefix)
-      self.setInfo(api.prefix, "disabled by config", WorkerStatus.INACTIVE)
-      return
-    if api.jsCssOnly:
-      self.setInfo(api.prefix, "javascript/css only", WorkerStatus.NMEA)
-      return
-    if api.plugin is None:
-      self.setInfo(api.prefix,'no plugin could be created',WorkerStatus.ERROR)
-      return
-    AVNLog.info("starting plugin %s", api.prefix)
-    thread = threading.Thread(target=self.runPlugin,args=[api])
-    thread.setDaemon(True)
-    thread.setName("Plugin: %s" % (api.prefix))
-    thread.start()
-    api.thread = thread
+      return api.startPluginThread()
 
   def instantiateHandlersFromModule(self,modulename, module,api):
     MANDATORY_METHODS = ['run']
@@ -676,8 +697,8 @@ class AVNPluginHandler(AVNWorker):
               if path is None:
                 raise Exception("missing path in entry %s" % (str(entry)))
           api.storeKeys=mData
-          proxy=PluginApiProxy(api,api.prefix)
-          pluginInstance = obj(proxy)
+          api.proxy=PluginApiProxy(api,api.prefix)
+          pluginInstance = obj(api.proxy)
           AVNLog.info("created plugin %s",modulename)
           api.plugin=pluginInstance
           self.setInfo(modulename,"created",WorkerStatus.STARTED)
@@ -783,7 +804,7 @@ class AVNPluginHandler(AVNWorker):
       del param['enabled']
     if len(list(param.keys())) < 1:
       #startPluginThread is intelligent enough to know if we must start
-      self.startPluginThread(api)
+      api.startPluginThread()
       return
     checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
     if api.paramChange is None:
@@ -792,7 +813,7 @@ class AVNPluginHandler(AVNWorker):
     #maybe allowKeyOverrides has changed...
     api.registerKeys()
     #startPluginThread is intelligent enough to know if we must start
-    self.startPluginThread(api)
+    api.startPluginThread()
 
   def getStatusProperties(self):
     rt={}
@@ -867,7 +888,7 @@ class AVNPluginHandler(AVNWorker):
   def updatePlugin(self,name,type=D_USER):
       pass
   def deletePlugin(self,name,type=D_USER):
-      name=self.createdApis.get(name,type)
+      name=self.createModuleName(name,type)
       api=self.createdApis.get(name)
       if api is None:
           return False
@@ -880,6 +901,7 @@ class AVNPluginHandler(AVNWorker):
           del self.createdApis[name]
       except:
           pass
+      self.deleteInfo(name)
 
 
 avnav_handlerList.registerHandler(AVNPluginHandler)

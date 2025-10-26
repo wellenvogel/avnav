@@ -618,12 +618,13 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)
 
   def registerExternalProvider(self,name,callback):
-    AVNLog.info("registering external chart provider %s",name)
     if callback is not None:
+      AVNLog.info("ChartHandler: registering external chart provider %s", name)
       self.externalProviders[name]=ExternalProvider(
         self.getPrefix(),name,callback)
       self.wakeUp()
     else:
+      AVNLog.info("ChartHandler: deregistering external chart provider %s", name)
       if self.externalProviders.get(name):
         try:
           del self.externalProviders[name]
