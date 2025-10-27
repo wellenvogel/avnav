@@ -373,7 +373,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
         raise Exception("no handler")
       baseUrl=handler.getPageRoot()
       url=baseUrl+"/"+url
-    rt=handler.translate_path(re.sub("\?.*","",url))
+    rt=handler.translate_path(re.sub(r"\?.*","",url))
     if rt is None:
       raise Exception(error)
     return rt
@@ -493,8 +493,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return AVNUtil.getReturnData()
 
   def handleUpload(self,name,handler,requestparam):
-    overwrite = AVNUtil.getHttpRequestParam(requestparam, 'overwrite')
-    overwrite = overwrite.lower() == 'true' if overwrite is not None else False
+    overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
     filename = name
     if filename is None:
       raise Exception("missing name in upload request")

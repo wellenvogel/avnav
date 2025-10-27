@@ -148,6 +148,8 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
 
 class AVNPluginDirHandler(AVNDirectoryHandlerBase):
   PREFIX = "/plugindir"
+  UPLOAD_NAME="upload"
+  EXT='.zip'
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
@@ -165,6 +167,14 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
     super().__init__(param, "plugin")
     self.baseDir = None
 
+  def onPreRun(self):
+      super().onPreRun()
+      try:
+          for file in os.listdir(self.baseDir):
+              if file.startswith(self.UPLOAD_NAME) and file.endswith(self.EXT):
+                  os.unlink(os.path.join(self.baseDir,file))
+      except Exception as e:
+          AVNLog.error("unable to cleanup upload files: %s",str(e))
   def listDirectory(self, includeDirs=False, baseDir=None):
       dlist=[entry for entry in super().listDirectory(True, baseDir) if entry.isDirectory]
       return dlist
@@ -180,7 +190,13 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
           filename = os.path.join(baseDir, filename)
       if not os.path.exists(filename) or not os.path.isdir(filename):
           raise Exception("plugin %s not found" % filename)
-      return AVNZipDownload(name+".zip",filename,prefix=name)
+      def filter(fn):
+          if fn is None:
+              return True
+          if fn.find('__pycache__') >= 0:
+              return False
+          return True
+      return AVNZipDownload(name+".zip",filename,prefix=name,filter=filter)
 
   def handleDelete(self, name):
       if not self.canDelete():
@@ -193,34 +209,47 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
           raise Exception("plugin %s not found" % filename)
       self.pluginhandler.deletePlugin(name)
       shutil.rmtree(filename)
-
+  def checkPath(self,path,base,isdir=False):
+      parts=path.split('/')
+      if len(parts) < 1:
+          raise Exception(f"invalid path [{path}]")
+      if not isdir and len(parts) < 2:
+          raise Exception(f"plugin: [{path}] files must be in a sub directory")
+      if parts[0] != base:
+          raise Exception(f"plugin: [{path}] all files must be below {base}")
+      for fn in parts[1:]:
+          clean=AVNUtil.clean_filename(fn)
+          if clean != fn:
+              raise Exception(f"plugin: [{path}] invalid part in path {fn}")
   def handleUpload(self, name, handler, requestparam):
       self.checkName(name)
-      if not name.lower().endswith(".zip"):
-          raise Exception("only zip files allowed")
-      uploadName=f"{name}-{threading.get_ident()}"
+      if name.lower().endswith(self.EXT):
+          name=name[0:-len(self.EXT)]
+      overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
+      plugindir=os.path.join(self.baseDir,name)
+      if os.path.exists(plugindir) and not overwrite:
+          raise Exception(f"plugin {plugindir} already exists")
+      uploadName=f"{self.UPLOAD_NAME}-{threading.get_ident()}{self.EXT}"
       filename = os.path.join(self.baseDir, uploadName)
+      if os.path.exists(filename):
+          os.unlink(filename)
       try:
         rt= super().handleUpload(uploadName, handler, requestparam)
         if not os.path.exists(filename):
           raise Exception(f"file {filename} not found after upload")
         zip = ZipFile(filename)
-        dirname=name[0:-4]
         hasEntries=False
         for entry in zip.infolist():
             AVNLog.debug(f"zip entry {entry}")
-            if entry.is_dir():
-                if entry.filename != dirname:
-                    raise Exception(f"directory in zip {entry.filename} does not match plugin name {dirname}")
-            else:
-                if not (os.path.dirname(entry.filename)+os.path.sep).startswith(dirname+os.path.sep) :
-                    raise Exception(f"directory of {entry.filename} does not match plugin name {dirname}")
-                else:
-                    hasEntries=True
+            self.checkPath(entry.filename,name,isdir=entry.is_dir())
+            if not entry.is_dir():
+                hasEntries=True
         if not hasEntries:
             raise Exception(f"no files in zip {name}")
         zip.extractall(self.baseDir)
-        self.pluginhandler.updatePlugin(dirname)
+        now=time.time()
+        os.utime(plugindir,(now,now))
+        self.pluginhandler.updatePlugin(name)
       finally:
         os.unlink(filename)
       return rt

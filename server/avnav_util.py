@@ -736,7 +736,7 @@ class AVNZipDownload(AVNDownload):
   see https://github.com/pR0Ps/zipstream-ng
   and https://stackoverflow.com/questions/6657820/how-to-convert-an-iterable-to-a-stream
   '''
-  def zipGenerator(self,path,prefix=None):
+  def zipGenerator(self,path,prefix=None,filter=None):
     class WStream(io.RawIOBase):
       """An unseekable stream for the ZipFile to write to"""
       def __init__(self):
@@ -760,9 +760,14 @@ class AVNZipDownload(AVNDownload):
     def iter_files(path):
       for dirpath, _, files in os.walk(path, followlinks=True):
         if not files:
+          if filter is not None and not filter(dirpath):
+              return
           yield dirpath  # Preserve empty directories
         for f in files:
-          yield os.path.join(dirpath, f)
+          fn=os.path.join(dirpath, f)
+          if filter is not None and not filter(fn):
+            continue
+          yield fn
 
     def read_file(path):
       with open(path, "rb") as fp:
@@ -808,18 +813,19 @@ class AVNZipDownload(AVNDownload):
     def close(self):
         pass
 
-  def __init__(self, fileName, baseDir, prefix=None):
+  def __init__(self, fileName, baseDir, prefix=None,filter=None):
     super().__init__(None,dlname=fileName)
     self.baseDir=baseDir
     self.prefix=prefix
     self.stream=None
+    self.filter=filter
 
   def getSize(self):
     return None
 
   def getStream(self):
     if self.stream is None:
-      self.stream=self.IteratorStream(self.zipGenerator(self.baseDir,self.prefix))
+      self.stream=self.IteratorStream(self.zipGenerator(self.baseDir,self.prefix,filter=self.filter))
     return self.stream
 
   def getMimeType(self, handler=None):
