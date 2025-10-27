@@ -79,11 +79,11 @@ const UploadHandler = (props) => {
      *      resolves withe an object with name, uploadParameters (object)
      *      or rejects
      */
-    const checkName = useCallback((name) => {
+    const checkName = useCallback((name,file) => {
         if (!props.checkNameCallback) {
             return Promise.resolve({name:name});
         }
-        let rt = props.checkNameCallback(name);
+        let rt = props.checkNameCallback(name,file);
         if (rt instanceof Promise) return rt.then(
             (res)=>res,
             (err)=>{
@@ -97,8 +97,8 @@ const UploadHandler = (props) => {
             } else reject({error:rt});
         })
     }, [props.checkNameCallback]);
-    const checkNameWithDialog=useCallback((name,fixedPrefix)=>{
-        return checkName((fixedPrefix||'')+name)
+    const checkNameWithDialog=useCallback((name,fixedPrefix,file)=>{
+        return checkName((fixedPrefix||'')+name,file)
             .then((res)=>res)
             .catch((err)=>{
                 if (err.proposal || err.dialog){
@@ -109,7 +109,7 @@ const UploadHandler = (props) => {
     },[checkName,dialogContext])
     const upload = useCallback((file,fixedPrefix) => {
         if (!file || !props.type) return;
-        checkNameWithDialog(file.name,fixedPrefix)
+        checkNameWithDialog(file.name,fixedPrefix,file)
             .then((res) => {
                 if (!props.local) {
                     uploadServer(file, res.name, res.type || props.type, res.uploadParameters, res)

@@ -29,9 +29,12 @@ import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/Edit
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
-import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
+import {checkName, ItemNameDialog, safeName} from "../components/ItemNameDialog";
 import routeobjects from "../nav/routeobjects";
 import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
+import {BlobReader, ZipReader} from "@zip.js/zip.js";
+import {indexOf} from "core-js/internals/array-includes";
+import {ConfirmDialog} from "../components/BasicDialogs";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -291,7 +294,7 @@ class DownloadPage extends React.Component{
             this.getButtonParam('DownloadPageUser','user',true),
             this.getButtonParam('DownloadPageImages','images',true),
             this.getButtonParam('DownloadPageOverlays','overlay',true),
-            this.getButtonParam('DownloadPagePlugins','plugin',true),
+            this.getButtonParam('DownloadPagePlugins','plugin',true,keys.gui.capabilities.uploadPlugins),
             {
                 name:'DownloadPageUpload',
                 visible: itemActions.showUpload,
@@ -315,43 +318,39 @@ class DownloadPage extends React.Component{
      *   type: if set, use this type for the upload instead of the original type
      *   uploadParameters: an object containing parameters that will be added tp the upload url
      * @param name
-     * @returns {ThenPromise<unknown>}
+     * @param file the file object
+     * @returns {Promise}
      */
-    checkNameForUpload(name){
-        return new Promise((resolve,reject)=>{
+    checkNameForUpload(name,file){
             let actions=ItemActions.create({type:this.state.type},false);
             let ext=Helper.getExt(name);
             let serverName=actions.nameForUpload(name);
+            const accessor=this.createAccessor(actions);
             let rt={name:serverName};
             if (this.state.type === 'route'){
                 if (ext !== "gpx") {
-                    reject("only gpx for routes");
-                    return;
+                    return Promise.reject("only gpx for routes");
                 }
-                resolve(rt);
+                return Promise.resolve(rt);
             }
             if (this.state.type === 'track'){
                 if (ext !== "gpx") {
-                    reject("only gpx for tracks");
-                    return;
+                    return Promise.reject("only gpx for tracks");
                 }
             }
             if (this.state.type === 'images'){
                 if (GuiHelpers.IMAGES.indexOf(ext) < 0){
-                    reject("only images of types "+GuiHelpers.IMAGES.join(","));
-                    return;
+                    return Promise.reject("only images of types "+GuiHelpers.IMAGES.join(","));
                 }
             }
             if (this.state.type === 'settings'){
                 if (ext !== 'json'){
-                    reject("only .json files allowed for settings");
-                    return;
+                    return Promise.reject("only .json files allowed for settings");
                 }
             }
             if (this.state.type === 'layout') {
                 if (ext !== 'json') {
-                    reject("only .json files allowed for layouts");
-                    return;
+                    return Promise.reject("only .json files allowed for layouts");
                 }
             }
             if (this.state.type === 'chart'){
@@ -361,7 +360,7 @@ class DownloadPage extends React.Component{
                     let importConfig=checkExt(ext,this.state.chartImportExtensions);
                     if (importConfig.allow) {
                         let resolved=false;
-                        showDialog(undefined,(dprops)=>{
+                        return showPromiseDialog(undefined,(dprops)=>{
                             return(
                                 <ImportDialog
                                     {...dprops}
@@ -372,35 +371,118 @@ class DownloadPage extends React.Component{
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});
                                         }
-                                        resolve({name:props.name,type:'import',uploadParameters:{subdir:subdir},showImportPage:true});
+                                        dprops.resolveFunction({name:props.name,type:'import',uploadParameters:{subdir:subdir},showImportPage:true});
                                     }}
-                                    cancelFunction={()=>reject("canceled")}
                                     name={name}
                                     subdir={this.state.importSubDir}
                                 />
                             );
-                        },()=>window.setTimeout(()=>{if (! resolved) reject("cancelled")},0));
-                        return;
+                        });
                     }
                     else{
-                        reject("unknown chart type \""+ext+'"');
-                        return;
+                        return Promise.reject("unknown chart type \""+ext+'"');
                     }
                 }
                 //fallthrough to check existing...
             }
-            const accessor=this.createAccessor(actions);
+            if (this.state.type === 'plugin'){
+                if (ext !== 'zip'){
+                    return Promise.reject("only .zip files allowed for plugins");
+                }
+                if (file){
+                    let foundName
+                    const check=(foundName)=>{
+                        const existing = this.entryExists(foundName);
+                        if (existing) {
+                            return showPromiseDialog(undefined, (dprops) => <ConfirmDialog
+                                {...dprops}
+                                title={`plugin ${foundName} already exists`}
+                                text={'Update the existing plugin?'}
+                            />)
+                                .then(() => {
+                                    return {
+                                        name: foundName,
+                                        uploadParameters: {overwrite: true}
+                                    }
+                                })
+                        }
+                        return Promise.resolve({name: foundName});
+                    }
+
+                    try {
+                        const pluginfiles = ['plugin.py', 'plugin.js', 'plugin.css', 'plugin.json'];
+                        const forbiddenBaseChars = new RegExp('[^0-9a-zA-Z_-]');
+                        const zipFileReader = new BlobReader(file);
+                        const zipReader = new ZipReader(zipFileReader);
+                        return zipReader.getEntries()
+                            .then((entries) => {
+                                let hasFiles = false;
+                                entries.forEach(entry => {
+                                    if (!entry.filename) {
+                                        throw {error: "invalid entry in zip without filename"}
+                                    }
+                                    const parts = entry.filename.split("/");
+                                    if (parts.length < 1) {
+                                        throw {error: "invalid entry in zip without filename"}
+                                    }
+                                    if (!entry.directory && parts.length < 2) {
+                                        throw {error: `files must be located in a sub directory in the zip: ${entry.filename}`}
+                                    }
+                                    parts.forEach(part => {
+                                        const sname = safeName(part);
+                                        if (sname !== part || part === '.' || part === '..') {
+                                            throw {error: `invalid characters in file name ${entry.filename} (${part}}`}
+                                        }
+                                    })
+                                    if (foundName) {
+                                        if (parts[0] !== foundName) {
+                                            throw {error: `all files in zip must be under one sub directory ${foundName} : ${entry.filename}`}
+                                        }
+                                    } else {
+                                        foundName = parts[0];
+                                        if (forbiddenBaseChars.test(foundName)) {
+                                            throw {error: `the plugin directory contains forbidden characters ${foundName}`}
+                                        }
+                                    }
+                                    if (!entry.directory) {
+                                        if (pluginfiles.indexOf(parts[parts.length - 1]) >= 0) {
+                                            hasFiles = true;
+                                        }
+                                    }
+                                })
+                                if (!hasFiles) {
+                                    throw {error: "no plugin files in zip"}
+                                }
+                                return check(foundName);
+                            });
+                    }catch (e){
+                        foundName=name.replace(/\.zip$/,'');
+                        return showPromiseDialog(undefined, (dprops) => <ConfirmDialog
+                            {...dprops}
+                            title={"Old browser"}
+                            text={"Your browser seems to be too old to check the zip file.\n"+
+                                  "If the plugin directory is equal to the name of the zip we can import any way.\n"+
+                                  "Try the import?"
+                                }
+                            className={'pre'}
+                            />)
+                            .then(() => {
+                                return check(foundName)
+                            })
+                    }
+                }
+
+            }
             const existing=this.entryExists(name,accessor);
             if (existing){
                 existing.dialog=true;
                 existing.fixedPrefix=actions.fixedPrefix;
                 existing.fixedExt=ext;
-                reject(existing);
+                return Promise.reject(existing);
             }
             else{
-                resolve(rt);
+                return Promise.resolve(rt);
             }
-        })
     }
 
     /**

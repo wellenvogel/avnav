@@ -67,8 +67,8 @@ export const SelectDialog = ({resolveFunction, title, list, optResetCallback, ok
     );
 
 };
-export const ConfirmDialog = ({title, text, resolveFunction, children}) => {
-    return <DialogFrame title={title || ''}>
+export const ConfirmDialog = ({title, text, resolveFunction, children,className}) => {
+    return <DialogFrame title={title || ''} className={className} >
         <div className="dialogText">{text}</div>
         {children}
         <DialogButtons buttonList={[

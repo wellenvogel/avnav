@@ -356,6 +356,11 @@ export class ItemActions{
                 rt.showEdit= false;
                 rt.showOverlay = false;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
+                rt.nameForUpload=name=>name.replace(/\.zip$/,'')
+                rt.nameForDownload=name=>{
+                    if (! Helper.endsWith(name,'.zip')) return name+".zip";
+                    return name;
+                }
                 break;
         }
         return rt;
