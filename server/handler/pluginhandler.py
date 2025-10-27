@@ -109,7 +109,7 @@ class ApiImpl(AVNApi):
     self.jsCssOnly=True
     self.phandler.setChildEditable(self.prefix,True)
 
-  def stop(self,force=False,soft=False):
+  def stop(self,force=False):
     if self.jsCssOnly:
       return
     if self.stopHandler is None and not force:
@@ -132,7 +132,7 @@ class ApiImpl(AVNApi):
     if force and self.proxy is not None:
         #disconnect the plugin code
         #even if we cannot stop
-        self.proxy.disable(soft=soft)
+        self.proxy.disable()
     if force:
         self.stopped=True
     try:
@@ -528,7 +528,12 @@ class ApiImpl(AVNApi):
       except Exception as e:
           self.error("plugin run exception: %s", traceback.format_exc())
           self.setStatus(WorkerStatus.ERROR, "plugin exception %s" % str(e))
-
+      except StoppedException as e:
+          self.log("plugin run stopped by StopException")
+          self.setStatus(WorkerStatus.INACTIVE, "plugin stopped")
+class StoppedException(BaseException):
+    def __init__(self):
+        BaseException.__init__(self)
 class PluginApiProxy():
     '''
     proxy class that restricts the plugin access for
@@ -538,18 +543,18 @@ class PluginApiProxy():
         self.__impl=impl
         self.__check=AVNApi()
         self.__name=name
-        self.__softDisabled=False
-    def __default(self,*args,**kwargs):
-        pass
+    def shouldStopMainThread(self):
+        if self.__impl is not None:
+            return self.__impl.shouldStopMainThread()
+        return True
     def __getattr__(self, item):
-        if self.__softDisabled:
-            return self.__default
+        if self.__check is None:
+            raise StoppedException()
         if hasattr(self.__check, item):
             return getattr(self.__impl, item)
         AVNLog.debug("plugin %s:trying to acccess invalid api method %s",self.__name,item)
         raise NotImplemented()
-    def disable(self,soft=False):
-        self.__softDisabled=soft
+    def disable(self):
         self.__check=None
         self.__impl=None
 
@@ -654,7 +659,7 @@ class AVNPluginHandler(AVNWorker):
         for api in self.createdApis.values():
           try:
             AVNLog.info("stopping plugin %s",api.prefix)
-            api.stop(True,True)
+            api.stop(True)
           except:
             pass
         self.createdApis={}
