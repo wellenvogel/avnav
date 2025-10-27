@@ -187,7 +187,7 @@ class ApiImpl(AVNApi):
 
 
   def getPrefixForItems(self):
-    return re.sub(".*\.","",self.prefix)
+    return re.sub(r".*\.","",self.prefix)
 
   def log(self, str, *args):
     AVNLog.info("%s",str % args)
