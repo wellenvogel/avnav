@@ -628,14 +628,9 @@ class AVNPluginHandler(AVNWorker):
       return api
   def run(self):
     newApis={}
-    builtInDir=self.getStringParam('builtinDir')
-    systemDir=AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'), belowData=False)
-    userDir=self.getUserDir()
-    directories={
-      self.D_BUILTIN: builtInDir,
-      self.D_SYSTEM:systemDir,
-      self.D_USER:userDir
-    }
+    directories={}
+    for dtype in self.ALL_DIRS:
+        directories[dtype]=self.getPluginBaseDir(dtype)
     for dirtype in self.ALL_DIRS:
       modulesDir=directories[dirtype]
       if not os.path.isdir(modulesDir):
@@ -897,8 +892,14 @@ class AVNPluginHandler(AVNWorker):
       return {'status':'request not found %s'%sub}
     raise Exception("unable to handle routing request of type %s:%s" % (type, command))
 
-  def getUserDir(self):
-      return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
+  def getPluginBaseDir(self, type=D_USER):
+      if type == self.D_USER:
+        return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
+      if type == self.D_BUILTIN:
+        return self.getStringParam('builtinDir')
+      if type == self.D_SYSTEM:
+        return AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'),
+                                                      belowData=False)
 
   def updatePlugin(self,name,type=D_USER):
       moduleName = self.createModuleName(name, type)
@@ -906,7 +907,7 @@ class AVNPluginHandler(AVNWorker):
           return False
       AVNLog.info("update plugin %s",moduleName)
       self.deletePlugin(name, type)
-      dir=os.path.join(self.getUserDir(),name)
+      dir=os.path.join(self.getPluginBaseDir(), name)
       if not os.path.isdir(dir):
           AVNLog.error("plugin dir %s is not a directory",dir)
           return False

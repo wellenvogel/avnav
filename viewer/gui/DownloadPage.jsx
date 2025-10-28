@@ -207,7 +207,11 @@ class DownloadPage extends React.Component{
                 newItems.push(items[i]);
             }
         }
-        newItems.sort(itemSort);
+        //keep plugins sorted as they arrive from the server
+        //sort others by date
+        if (this.state.type !== 'plugin') {
+            newItems.sort(itemSort);
+        }
         this.setState({items:newItems});
     };
 
@@ -392,7 +396,7 @@ class DownloadPage extends React.Component{
                 if (file){
                     let foundName;
                     const check=(foundName)=>{
-                        const existing = this.entryExists(foundName);
+                        const existing = this.entryExists(foundName,accessor);
                         if (existing) {
                             return showPromiseDialog(undefined, (dprops) => <ConfirmDialog
                                 {...dprops}
