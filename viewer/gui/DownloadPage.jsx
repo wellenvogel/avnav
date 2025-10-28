@@ -469,7 +469,10 @@ class DownloadPage extends React.Component{
                                     throw {error: "no plugin files in zip"}
                                 }
                                 return check(foundName);
-                            });
+                            },
+                                (err) => {
+                                    throw {error:err}
+                                });
                     }
                 }
 
