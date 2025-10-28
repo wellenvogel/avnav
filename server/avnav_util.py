@@ -635,7 +635,7 @@ class AVNUtil(object):
 
   @classmethod
   def clean_filename(cls,filename):
-    replace=re.compile('[\u0000-\u001f\u007f"*/:<>?\\\|]')
+    replace=re.compile(r'[\u0000-\u001f\u007f"*/:<>?\\\|]')
     if filename is None:
       return None
     return replace.sub('',filename)
