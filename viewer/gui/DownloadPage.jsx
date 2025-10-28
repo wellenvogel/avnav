@@ -390,7 +390,7 @@ class DownloadPage extends React.Component{
                     return Promise.reject("only .zip files allowed for plugins");
                 }
                 if (file){
-                    let foundName
+                    let foundName;
                     const check=(foundName)=>{
                         const existing = this.entryExists(foundName);
                         if (existing) {
@@ -409,7 +409,21 @@ class DownloadPage extends React.Component{
                         return Promise.resolve({name: foundName});
                     }
 
-                    try {
+                    if (typeof TransformStream == "undefined") {
+                        foundName = name.replace(/\.zip$/, '');
+                        return showPromiseDialog(undefined, (dprops) => <ConfirmDialog
+                            {...dprops}
+                            title={"Old browser"}
+                            text={"Your browser seems to be too old to check the zip file.\n" +
+                                "If the plugin directory is equal to the name of the zip we can import any way.\n" +
+                                "Try the import?"
+                            }
+                            className={'pre'}
+                        />)
+                            .then(() => {
+                                return check(foundName)
+                            })
+                    } else {
                         const pluginfiles = ['plugin.py', 'plugin.js', 'plugin.css', 'plugin.json'];
                         const forbiddenBaseChars = new RegExp('[^0-9a-zA-Z_-]');
                         const zipFileReader = new BlobReader(file);
@@ -429,9 +443,10 @@ class DownloadPage extends React.Component{
                                         throw {error: `files must be located in a sub directory in the zip: ${entry.filename}`}
                                     }
                                     parts.forEach(part => {
+                                        if (part === '') return;
                                         const sname = safeName(part);
                                         if (sname !== part || part === '.' || part === '..') {
-                                            throw {error: `invalid characters in file name ${entry.filename} (${part}}`}
+                                            throw {error: `invalid characters in file name ${entry.filename} (${part})`}
                                         }
                                     })
                                     if (foundName) {
@@ -455,20 +470,6 @@ class DownloadPage extends React.Component{
                                 }
                                 return check(foundName);
                             });
-                    }catch (e){
-                        foundName=name.replace(/\.zip$/,'');
-                        return showPromiseDialog(undefined, (dprops) => <ConfirmDialog
-                            {...dprops}
-                            title={"Old browser"}
-                            text={"Your browser seems to be too old to check the zip file.\n"+
-                                  "If the plugin directory is equal to the name of the zip we can import any way.\n"+
-                                  "Try the import?"
-                                }
-                            className={'pre'}
-                            />)
-                            .then(() => {
-                                return check(foundName)
-                            })
                     }
                 }
 
