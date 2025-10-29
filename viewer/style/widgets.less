@@ -3,19 +3,29 @@
 
 @x: rgba(255, 20, 7, 0.54);
 
-@horizontalContainerHeight: 4.2em;
-@horizontalContainerDoubleHeight: 8.2em;
+@widgetBorderWidth: 2px;
 @horizontalWidgetHeight: 4em;
+@horizontalContainerHeight: calc(@horizontalWidgetHeight + 2*@widgetBorderWidth);
+@horizontalContainerDoubleHeight: calc(2*@horizontalWidgetHeight + 3*@widgetBorderWidth);
 @infoFontSize: 0.71em;
 
 .widgetInfo(){
   font-size: @infoFontSize;
   opacity: 0.7;
 }
+#navpage {
+  .widgetContainer {
+    padding: @widgetBorderWidth;
+    gap: @widgetBorderWidth;
+  }
+  .widgetContainer:empty { display: none; }
+  .widgetContainer.vertical   { padding-bottom: 0; }
+  .widgetContainer.bottomLeft { padding-right: 0; }
+}
 .widget{
   position: relative;
   z-index: 100;
-  margin: 1px;
+  margin: 0;
   overflow: hidden;
   pointer-events: all;
   font-variant-numeric: tabular-nums;
@@ -140,7 +150,7 @@
     .flex-shrink(0);
     margin-left: 0;
     margin-right: 2px;
-    width: calc(100% - 2px);
+    width: 100%;
   }
   .editing &{
     .widget{
