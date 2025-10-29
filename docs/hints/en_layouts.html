@@ -118,20 +118,32 @@
           <td>same as formatDecimal</td>
         </tr>
         <tr>
+          <td>formatFloat</td>
+          <td>format as floating-point number</td>
+          <td>digits: number of digits in total, negative values indicate signed numbers inserting a placeholder for the sign if necessary<br/>
+              maxFrac: max. number of fractional digits<br/>
+              leadingZeroes: show leading zeroes<br/>
+          </td>
+        </tr>
+        <tr>
           <td>formatDistance</td>
-          <td>distance in nm/m/km</td>
-          <td>unit:<br>
-            nm - distance in nm<br>
-            m- distance in m instead of nm<br>
-            km - distance&nbsp; in km instead of nm</td>
+          <td>distance in selected unit</td>
+          <td>unit: distance unit<br>
+            nm - nautical miles<br>
+            m - meters<br>
+            km - Kilometers<br>
+            ft - feet<br>
+            yd - Yards<br>
+            digits: number of digits in total (see formatFloat)<br/>
+            maxFrac: max. number of fractional digits (see formatFloat)</td>
         </tr>
         <tr>
           <td>formatSpeed</td>
-          <td>speed in kn|m/s|km/h</td>
-          <td>unit:<br>
-            ms - m/s instead of kn<br>
-            kmh - km/h instead of kn<br>
-            kn - kn</td>
+          <td>speed in selected unit</td>
+          <>unit: speed unit<br>
+            kn - Knots<br>
+            ms or m/s - meters per second<br>
+            kmh or km/h - kilometers per hour</td>
         </tr>
         <tr>
           <td>formatDirection</td>
