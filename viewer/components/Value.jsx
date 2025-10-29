@@ -8,8 +8,11 @@ import PropTypes from 'prop-types';
  */
 const Value=function(props){
     if (! props.value) return null;
-    let prefix=(props.value+"").replace(/[^ ].*/,'');
-    let remain=(props.value+"").replace(/^ */,'');
+    let val=''+props.value;
+    val=val.replaceAll('-','\u2012'); // replace - by digit wide hyphen (figure dash)
+    val=val.replaceAll(':','\uA789'); // replace : with raised colon, looks better in time format 00:00
+    let prefix=val.replace(/[^ ].*/,'');
+    let remain=val.replace(/^ */,'');
     return(
         <React.Fragment>
             <span className='valuePrefix'>{prefix.replace(/ /g,'0')}</span>
