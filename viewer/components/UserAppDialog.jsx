@@ -338,8 +338,8 @@ const UserAppDialog = (props) => {
                                 data={data}
                                 fileName={name}
                                 title={"Edit "+name}
-                                saveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
-                                resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
+                                saveFunction={async (mData)=> await uploadFromEdit(name,mData,true,'user')}
+                                resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true,'user')}
                             />)
                         }catch (e){
                             if (e) Toast(e);
