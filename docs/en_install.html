@@ -499,9 +499,15 @@ echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/
     <p> Debian Bookworm (amd64,armhf,arm64) </p>
     <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bookworm main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
+    <p> Debian Trixie (amd64,armhf,arm64)</p>
+    <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
+echo -e "Types: deb\nURIs: https://www.free-x.de/debian\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/oss.boating.gpg" | sudo tee -a /etc/apt/sources.list.d/boating.sources</div>
     <p>Ubuntu Jammy (amd64)</p>
     <div class="code">wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu jammy main" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
+   <p> Ubuntu Noble (amd64,arm64)</p>
+    <div class="code">wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
+echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu noble main" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
     For the installation on a linux system you need to execute:
     <div class="code">sudo apt update
 sudo apt install avnav </div>
