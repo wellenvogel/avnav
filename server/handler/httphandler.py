@@ -355,7 +355,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     handler = self.server.getRequestHandler('api', rtype)
     if handler is None:
       raise Exception("no handler found for request %s"%rtype)
-    rtj = handler.handleApiRequest('api', rtype, requestParam,handler=self)
+    command=AVNUtil.getHttpRequestParam(requestParam,'command',True)
+    rtj = handler.handleApiRequest('api', command, requestParam,handler=self)
     if isinstance(rtj, dict) or isinstance(rtj, list):
       rtj = json.dumps(rtj,cls=Encoder)
     return rtj

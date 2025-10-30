@@ -303,9 +303,10 @@ class AVNWpaHandler(AVNWorker):
     except:
       return None
 
-  def handleApiRequest(self,type,subtype,requestparam,**kwargs):
+  def handleApiRequest(self,type,command,requestparam,**kwargs):
     start=time.monotonic()
-    command=self.getRequestParam(requestparam, 'command')
+    if type != 'api':
+        raise Exception(f"invalid command {type} for wpa")
     AVNLog.debug("wpa api request %s",command)
     rt=None
     if command is None:

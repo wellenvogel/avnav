@@ -831,50 +831,44 @@ class AVNPluginHandler(AVNWorker):
   def getHandledCommands(self):
     return {"api":"plugins","path":URL_PREFIX}
 
-  def handleApiRequest(self,atype,command,requestparam,**kwargs):
-    if atype == 'path':
-      handler = kwargs.get('handler')
-      '''path mapping request, just return the module path
-         command is the original url
-      '''
-      localPath= command[len(URL_PREFIX) + 1:].split("/", 1)
+  def handlePathRequest(self, path, requestparam, server=None, handler=None):
+      localPath = path[len(URL_PREFIX) + 1:].split("/", 1)
       if len(localPath) < 2:
-        raise Exception(404,"missing plugin path")
-      api=self.getApi(localPath[0])
+          raise Exception(404, "missing plugin path")
+      api = self.getApi(localPath[0])
       if api is None:
-        raise Exception("plugin %s not found" % localPath[0])
-      if  not api.isEnabled():
-        raise Exception("plugin %s disabled"%localPath[0])
+          raise Exception("plugin %s not found" % localPath[0])
+      if not api.isEnabled():
+          raise Exception("plugin %s disabled" % localPath[0])
       if localPath[1][0:3] == 'api':
-        #plugin api request
-        if api.requestHandler is None:
-          raise Exception("plugin %s does not handle requests " % localPath[0])
-        if handler is None:
-          raise Exception("no handler for plugin %s request" % localPath[0])
-        rt=api.requestHandler(localPath[1][4:],handler,requestparam)
-        if type(rt) is dict:
-          handler.sendNavResponse(json.dumps(rt))
-          return True
-        return rt
+          # plugin api request
+          if api.requestHandler is None:
+              raise Exception("plugin %s does not handle requests " % localPath[0])
+          if handler is None:
+              raise Exception("no handler for plugin %s request" % localPath[0])
+          rt = api.requestHandler(localPath[1][4:], handler, requestparam)
+          if type(rt) is dict:
+              handler.sendNavResponse(json.dumps(rt))
+              return True
+          return rt
       if localPath[1] == 'plugin.js':
-        if handler is None:
-          AVNLog.error("plugin.js request without handler")
-          return None
-        fname=os.path.join(dir,'plugin.js')
-        name=localPath[0]
-        url= URL_PREFIX + "/" + name
-        addCode="var AVNAV_PLUGIN_NAME=\"%s\";\n"%(name)
-        return handler.sendJsFile(fname,url,addCode)
-      return os.path.join(dir,kwargs.get('server').plainUrlToPath(localPath[1],False))
+          if handler is None:
+              AVNLog.error("plugin.js request without handler")
+              return None
+          fname = os.path.join(api.directory, 'plugin.js')
+          name = localPath[0]
+          url = URL_PREFIX + "/" + name
+          addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
+          return handler.sendJsFile(fname, url, addCode)
+      return os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
 
+  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
     '''
     handle the URL based requests
     :param type: ???
     :return: the answer
     '''
-    sub=AVNUtil.getHttpRequestParam(requestparam,'command')
-    if atype == "api":
-      if sub=="list":
+    if self.apiCondition("list",type,command):
         data=[]
         with self.configLock:
             for k,api in self.createdApis.items():
@@ -889,8 +883,7 @@ class AVNPluginHandler(AVNWorker):
               data.append(element)
         rt={'status':'OK','data':data}
         return rt
-      return {'status':'request not found %s'%sub}
-    raise Exception("unable to handle routing request of type %s:%s" % (type, command))
+    raise Exception(f"unable to handle plugin request {type} [{command}]")
 
   def getPluginBaseDir(self, type=D_USER):
       if type == self.D_USER:

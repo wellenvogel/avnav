@@ -201,9 +201,11 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     else:
       return {}
 
+  def registerPathHandler(self,prefix,handler):
+    self.externalHandlers[prefix]=handler
   def registerRequestHandler(self,type,command,handler):
     if type == 'path':
-      self.externalHandlers[command]=handler
+      self.registerPathHandler(command,handler)
       return
     if type == 'websocket':
       self.webSocketHandlers[command]=handler
@@ -259,7 +261,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
         try:
-          return self.externalHandlers[prefix].handleApiRequest('path', path, requestParam, server=self,handler=handler)
+          return self.externalHandlers[prefix].handlePathRequest(path, requestParam, server=self,handler=handler)
         except:
           AVNLog.error("external mapping failed for %s: %s",path,traceback.format_exc())
         return None

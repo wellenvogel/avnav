@@ -809,8 +809,8 @@ class AVNImporter(AVNWorker):
       if fpath == path and fext != ext:
         return f
 
-  def handleApiRequest(self, type, subtype, requestparam, **kwargs):
-    if type == "list":
+  def handleApiRequest(self, type, command, requestparam, handler=None,**kwargs):
+    if self.apiCondition("list",type,command):
       status=self.getInfo(['main','converter'])
       items=[]
       if status is not None and status.get('items') is not None:
@@ -842,7 +842,7 @@ class AVNImporter(AVNWorker):
           canst['realname']=can.getFileOrDir()
         items.append(canst)
       return AVNUtil.getReturnData(items=items)
-    if type == "delete":
+    if self.apiCondition("delete",type,command):
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       if not name.startswith('conv:'):
         return AVNUtil.getReturnData(error="unknown item "+name)
@@ -853,7 +853,7 @@ class AVNImporter(AVNWorker):
         return AVNUtil.getReturnData(error="unable to delete")
       self.wakeUp()
       return AVNUtil.getReturnData()
-    if type == "download":
+    if self.apiCondition("download",type,command):
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       candidate=self.findCandidate(name)
       if candidate is None:
@@ -873,8 +873,7 @@ class AVNImporter(AVNWorker):
       filename=os.path.basename(dlfile)
       return AVNDownload(dlfile,dlname=filename)
 
-    if type == "upload":
-      handler=kwargs.get('handler')
+    if self.apiCondition("upload",type,command):
       if handler is None:
         return AVNUtil.getReturnData(error="no handler")
       name=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"name",True))
@@ -903,11 +902,9 @@ class AVNImporter(AVNWorker):
       return AVNUtil.getReturnData()
 
     if type == "api":
-      command=AVNUtil.getHttpRequestParam(requestparam,"command",True)
       if (command == "extensions"):
         return AVNUtil.getReturnData(items=self.allExtensions(True))
       if (command == "getlog"):
-        handler=kwargs.get('handler')
         name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
         lastBytes=AVNUtil.getHttpRequestParam(requestparam,"maxBytes",False)
         candidate=None
@@ -965,7 +962,7 @@ class AVNImporter(AVNWorker):
       if command == 'rescan':
         self.wakeUp()
         return AVNUtil.getReturnData()
-    return AVNUtil.getReturnData(error="unknown command for import")
+    return AVNUtil.getReturnData(error=f"unknown request for import {type} [{command}")
 
   def registerConverter(self,id,converter:ConverterApi):
     with self.listlock:

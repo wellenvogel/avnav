@@ -488,7 +488,7 @@ class AVNWorker(InfoHandler):
     return None
 
   @classmethod
-  def getAllHandlers(cls,disabled=False):
+  def getAllHandlers(cls,disabled=False) -> 'list[AVNWorker]':
     """get the list of all instantiated handlers
     :param disabled if set to true also return disabled handler
     """
@@ -1117,7 +1117,17 @@ class AVNWorker(InfoHandler):
     """
     return None
 
-  def handleApiRequest(self,type,command,requestparam,**kwargs):
+  def getHandledPathes(self):
+      hc=self.getHandledCommands()
+      if isinstance(hc,dict):
+          path=hc.get('path')
+          if path is not None:
+              return [path]
+      return []
+
+  def handlePathRequest(self, path, requestparam,server=None,handler=None):
+      return self.handleApiRequest('api',path, requestparam, server=server,handler=handler);
+  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
     """
     handle an http request , handling/parameter/return depend on type
     raise an exception on error
@@ -1132,6 +1142,18 @@ class AVNWorker(InfoHandler):
     :return: json
     """
     raise Exception("handler for %s:%s not implemented in %s"%(type,command,self.getConfigName()))
+
+  @classmethod
+  def apiCondition(cls,value,type,command):
+      '''
+      handle api requests of old and new type
+      the value must be either equal to type or type must be 'api' and value must be equal to command
+      :param value: the value to check against
+      :param type: the old style type or 'api'
+      :param command: only used if type == 'api'
+      :return:
+      '''
+      return value==type or (type == 'api' and value==command)
     
   #we have 2 startup groups - one for the feeders and 2 for the rest
   #by default we start in groupd 2

@@ -269,9 +269,15 @@ def main(argv):
       if handledCommands is not None:
         if isinstance(handledCommands,dict):
           for h in list(handledCommands.keys()):
-            httpServer.registerRequestHandler(h,handledCommands[h],handler)
+            if h != 'path':
+                httpServer.registerRequestHandler(h,handledCommands[h],handler)
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
+      pathes=handler.getHandledPathes()
+      if pathes is not None:
+          for path in pathes:
+              httpServer.registerPathHandler(path,handler)
+
     httpServer.registerRequestHandler('api','config',handlerManager)
     httpServer.registerRequestHandler('download', 'config', handlerManager)
     optPort=getattr(options,A_SERVERPORT)

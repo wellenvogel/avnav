@@ -291,68 +291,51 @@ class AVNUserAppHandler(AVNWorker):
       if addon.get('canDelete') == True and addon.get('url') == url:
         self.handleDelete(addon.get('name'))
 
-  def handleApiRequest(self, type, subtype, requestparam, **kwargs):
-    if type == 'api':
-      command=AVNUtil.getHttpRequestParam(requestparam,'command',True)
-      name=AVNUtil.getHttpRequestParam(requestparam,'name',False)
-      if command == 'delete':
-        self.handleDelete(name)
-        return AVNUtil.getReturnData()
-      elif command == 'list':
-        includeInvalid = AVNUtil.getHttpRequestParam(requestparam, "invalid")
-        return self.handleList(kwargs.get('handler'),includeInvalid is not None and includeInvalid.lower() == 'true')
-      elif command == 'update':
-        url=AVNUtil.getHttpRequestParam(requestparam,'url',True)
-        icon=AVNUtil.getHttpRequestParam(requestparam,'icon',True)
-        title=AVNUtil.getHttpRequestParam(requestparam,'title')
-        newWindow=AVNUtil.getHttpRequestParam(requestparam,'newWindow')
-        param = {}
-        param['icon'] = icon
-        param['title'] = title
-        param['url'] = url
-        param['newWindow']=newWindow
-        param['keepUrl'] = url.startswith("http")
-        doAdd=False
-        if name is None:
-          doAdd=True
-          name=self.computeKey(param)
-          #add
-          for entry in self.addonList:
-            if entry['name'] == name:
-              raise Exception("trying to add an already existing url %s"%url)
-        param['name']=name
-        if not url.startswith("http"):
-          userFile=self.findFileForUrl(url)
-          if userFile is None:
-            raise Exception("unable to find a local file for %s"%url)
-        if not icon.startswith("http"):
-          iconFile=self.findFileForUrl(icon)
-          if iconFile is None:
-            raise Exception("unable to find an icon file for %s"%icon)
-        idx=self.findChild(name)
-        if idx < 0 and not doAdd:
-          raise Exception("did not find a user app with this name")
-        for k in list(param.keys()):
-          idx=self.changeChildConfig(self.CHILDNAME,idx,k,param[k],True)
-        self.writeConfigChanges()
-        self.fillList()
-        return AVNUtil.getReturnData()
-      raise Exception("unknown command for %s api request: %s"%(self.type,command))
-
-    if type == "list":
-      includeInvalid=AVNUtil.getHttpRequestParam(requestparam,"invalid")
-      return self.handleList(kwargs.get('handler'),includeInvalid is not None and includeInvalid.lower() == 'true')
-
-    if type == 'delete':
-      name = AVNUtil.getHttpRequestParam(requestparam, "name",True)
-      self.handleDelete(name)
-      return AVNUtil.getReturnData()
-
-    raise Exception("unable to handle user request %s"%(type))
-
-
-
-
+  def handleApiRequest(self, type, command, requestparam, handler=None, **kwargs):
+      name = AVNUtil.getHttpRequestParam(requestparam, 'name', False)
+      if self.apiCondition('delete', type, command):
+          self.handleDelete(name)
+          return AVNUtil.getReturnData()
+      elif self.apiCondition('list', type, command):
+          includeInvalid = AVNUtil.getHttpRequestParam(requestparam, "invalid")
+          return self.handleList(handler, includeInvalid is not None and includeInvalid.lower() == 'true')
+      elif self.apiCondition('update', type, command):
+          url = AVNUtil.getHttpRequestParam(requestparam, 'url', True)
+          icon = AVNUtil.getHttpRequestParam(requestparam, 'icon', True)
+          title = AVNUtil.getHttpRequestParam(requestparam, 'title')
+          newWindow = AVNUtil.getHttpRequestParam(requestparam, 'newWindow')
+          param = {}
+          param['icon'] = icon
+          param['title'] = title
+          param['url'] = url
+          param['newWindow'] = newWindow
+          param['keepUrl'] = url.startswith("http")
+          doAdd = False
+          if name is None:
+              doAdd = True
+              name = self.computeKey(param)
+              # add
+              for entry in self.addonList:
+                  if entry['name'] == name:
+                      raise Exception("trying to add an already existing url %s" % url)
+          param['name'] = name
+          if not url.startswith("http"):
+              userFile = self.findFileForUrl(url)
+              if userFile is None:
+                  raise Exception("unable to find a local file for %s" % url)
+          if not icon.startswith("http"):
+              iconFile = self.findFileForUrl(icon)
+              if iconFile is None:
+                  raise Exception("unable to find an icon file for %s" % icon)
+          idx = self.findChild(name)
+          if idx < 0 and not doAdd:
+              raise Exception("did not find a user app with this name")
+          for k in list(param.keys()):
+              idx = self.changeChildConfig(self.CHILDNAME, idx, k, param[k], True)
+          self.writeConfigChanges()
+          self.fillList()
+          return AVNUtil.getReturnData()
+      raise Exception(f"unable to handle user request {type} [{command}]")
 
 avnav_handlerList.registerHandler(AVNUserAppHandler)
 

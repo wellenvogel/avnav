@@ -513,9 +513,8 @@ class AVNHandlerManager(object):
 
   def updateChangeCounter(self):
     self.navData.updateChangeCounter('config')
-  def handleApiRequest(self,request,type,requestParam,**kwargs):
-
-    if request == 'download':
+  def handleApiRequest(self,request,command,requestParam,**kwargs):
+    if AVNWorker.apiCondition('download',request,command) :
       maxBytes=AVNUtil.getHttpRequestParam(requestParam,'maxBytes')
       if AVNLog.fhandler is None:
         raise Exception("logging not initialized")
@@ -528,9 +527,6 @@ class AVNHandlerManager(object):
       return rt
     if request != "api":
       raise Exception("unknown request %s"%request)
-    if type != 'config':
-      raise Exception("unknown config request %s"%type)
-    command=AVNUtil.getHttpRequestParam(requestParam,'command',mantadory=True)
     rt={'status':'OK'}
     if command == 'createHandler':
       tagName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=True)

@@ -524,45 +524,38 @@ class AVNDirectoryHandlerBase(AVNWorker):
       raise Exception("file %s not found" % filename)
     return AVNDownload(filename)
 
-  def handleApiRequest(self, type, subtype, requestparam, **kwargs):
-    handler = kwargs.get('handler')
+  def handlePathRequest(self, path, requestparam, server=None,handler=None):
+      if self.getPrefix() is None:
+        raise Exception("Internal error: no handler prefix for %s"%path)
+      if not path.startswith(self.getPrefix()+"/"):
+        raise Exception("Internal routing error: handler prefix %s for %s" % (self.getPrefix(),path))
+      path = path[len(self.getPrefix()) + 1:]
+      return self.getPathFromUrl(path,handler=handler,requestParam=requestparam)
+
+  def handleApiRequest(self, type, subtype, requestparam,handler=None, **kwargs):
     name = AVNUtil.getHttpRequestParam(requestparam, 'name')
-    if type == 'api':
-      command=AVNUtil.getHttpRequestParam(requestparam,'command',True)
-      if command=='rename':
+    command=AVNUtil.getHttpRequestParam(requestparam,'command',type == 'api')
+    if self.apiCondition('rename',type,command):
         if name is None:
           raise Exception("parameter name missing for rename")
         newName=AVNUtil.getHttpRequestParam(requestparam,'newName',True)
         return self.handleRename(name,newName,requestparam)
-      elif command == 'delete':
+    elif self.apiCondition('delete',type,command):
         self.handleDelete(name)
         return AVNUtil.getReturnData()
-      elif command == 'list':
+    elif self.apiCondition('list',type,command):
         return self.handleList(handler)
-      else:
-        return self.handleSpecialApiRequest(command,requestparam,kwargs.get('handler'))
-    if type == 'path':
-      if self.getPrefix() is None:
-        raise Exception("Internal error: no handler prefix for %s"%subtype)
-      if not subtype.startswith(self.getPrefix()+"/"):
-        raise Exception("Internal routing error: handler prefix %s for %s" % (self.getPrefix(),subtype))
-      path = subtype[len(self.getPrefix()) + 1:]
-      return self.getPathFromUrl(path,handler=handler,requestParam=requestparam)
-
-    if type == "list":
-      return self.handleList(handler)
-
-    if type == 'upload':
+    elif self.apiCondition('upload',type,command):
       return self.handleUpload(name,handler,requestparam)
-
-    if type == 'download':
+    elif self.apiCondition('download',type,command):
       return self.handleDownload(name,handler,requestparam)
-
-    if type == 'delete':
+    elif self.apiCondition('delete',type,command):
       self.handleDelete(name)
       return AVNUtil.getReturnData()
-
-    raise Exception("unable to handle user request %s"%(type))
+    else:
+        if type == 'api':
+            return self.handleSpecialApiRequest(command,requestparam,kwargs.get('handler'))
+    raise Exception(f"unable to handle user request {type} [{command}]")
 
   TMP_PREFIX='__avn.'
   tmpCount=0

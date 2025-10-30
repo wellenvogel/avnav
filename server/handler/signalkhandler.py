@@ -1754,14 +1754,14 @@ class AVNSignalKHandler(AVNWorker):
   def getHandledCommands(self):
     return {'path': self.PREFIX+"/"+self.CHARTPREFIX}
 
-  def handleApiRequest(self, type, command, requestparam, **kwargs):
-    handler = kwargs.get('handler')
-    if type == 'path':
-      prefix=self.PREFIX+"/"+self.CHARTPREFIX
-      if not command.startswith(prefix+"/"):
-        raise Exception("unknown path %s"%command)
-      path=command[len(prefix)+1:]
-      return self.handleChartRequest(path,handler)
+  def handlePathRequest(self, path, requestparam, server=None, handler=None):
+      prefix = self.PREFIX + "/" + self.CHARTPREFIX
+      if not path.startswith(prefix + "/"):
+          raise Exception("unknown path %s" % path)
+      path = path[len(prefix) + 1:]
+      return self.handleChartRequest(path, handler)
+
+  def handleApiRequest(self, type, command, requestparam, handler=None,**kwargs):
     raise Exception("unable to handle user request %s"%(type))
 
   AVNAV_XML="""<?xml version="1.0" encoding="UTF-8" ?>

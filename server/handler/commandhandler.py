@@ -368,11 +368,10 @@ class AVNCommandHandler(AVNWorker):
 
   def getHandledCommands(self):
     return "command"
-  def handleApiRequest(self,type,command,requestparam,**kwargs):
+  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
     if type == 'api':
       command=AVNUtil.getHttpRequestParam(requestparam,"action",mantadory=False)
       if command is not None:
-        handler=kwargs.get('handler')
         isLocal=False
         try:
           remoteIp=handler.client_address[0]

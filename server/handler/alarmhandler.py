@@ -454,7 +454,7 @@ class AVNAlarmHandler(AVNWorker):
   def getHandledCommands(self):
     return {"api":"alarm","download":"alarm"}
 
-  def handleApiRequest(self,type,command,requestparam,**kwargs):
+  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
     '''
     handle the URL based requests
     :param type: api
@@ -467,7 +467,7 @@ class AVNAlarmHandler(AVNWorker):
     stop=name,name {status: ok|err}
     media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
     '''
-    if type == "download":
+    if self.apiCondition("download",type,command):
       name = AVNUtil.getHttpRequestParam(requestparam, "name",mantadory=True)
       AVNLog.debug("download alarm %s",name)
       running=None
@@ -494,6 +494,8 @@ class AVNAlarmHandler(AVNWorker):
       rt['size']=fsize
       rt['stream']=fh
       return rt
+    if type != 'api':
+        return AVNUtil.getReturnData(error=f"invalid alarm request {type}")
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')
@@ -511,20 +513,20 @@ class AVNAlarmHandler(AVNWorker):
                   }
       return {"status":"OK","data":rt}
     mode="start"
-    command=AVNUtil.getHttpRequestParam(requestparam,"start")
-    if command is None:
-      command = AVNUtil.getHttpRequestParam(requestparam, "stop")
+    alarm=AVNUtil.getHttpRequestParam(requestparam,"start")
+    if alarm is None:
+      alarm = AVNUtil.getHttpRequestParam(requestparam, "stop")
       mode="stop"
-      if command is None:
+      if alarm is None:
         rt={'info':"missing request parameter start or stop",'status':'error'}
         return rt
     rt={'status':'ok'}
     if mode == "start":
       category=AVNUtil.getHttpRequestParam(requestparam,'defaultCategory')
-      if not self.startAlarm(command,defaultCategory=category):
+      if not self.startAlarm(alarm,defaultCategory=category):
         rt['status']='error'
       return rt
-    if not self.stopAlarm(command):
+    if not self.stopAlarm(alarm):
       rt['status'] = 'error'
     return rt
 
