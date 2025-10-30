@@ -35,7 +35,7 @@ const prepare=(url,options,defaults)=>{
     let rurl="";
     if (typeof(url) === 'string') rurl=url;
     let ioptions=assign({},defaults,options);
-    if ( ioptions.useNavUrl !== false){
+    if ( ioptions.useNavUrl !== false || rurl === ''){
         rurl=globalStore.getData(keys.properties.navUrl)+rurl;
     }
     //new syntax for parametr object instead of url

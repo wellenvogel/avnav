@@ -897,7 +897,10 @@ class AVNImporter(AVNWorker):
       if dupl is not None:
         return AVNUtil.getReturnData(error="name conflict with %s (same base)"%dupl)
       fname=os.path.join(dir,name)
-      AVNDirectoryHandlerBase.writeAtomic(fname,handler.rfile,True,int(kwargs.get('flen')))
+      flenstr=handler.headers.get('Content-Length')
+      if flenstr is None:
+          raise Exception("missing content length header in upload")
+      AVNDirectoryHandlerBase.writeAtomic(fname,handler.rfile,True,int(flenstr))
       self.wakeUp()
       return AVNUtil.getReturnData()
 

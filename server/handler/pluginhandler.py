@@ -848,7 +848,7 @@ class AVNPluginHandler(AVNWorker):
               raise Exception("no handler for plugin %s request" % localPath[0])
           rt = api.requestHandler(localPath[1][4:], handler, requestparam)
           if type(rt) is dict:
-              handler.sendNavResponse(json.dumps(rt))
+              handler.sendJsonResponse(json.dumps(rt))
               return True
           return rt
       if localPath[1] == 'plugin.js':

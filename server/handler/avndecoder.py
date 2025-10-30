@@ -24,7 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from avnav_util import MovingSum
+from avnav_util import MovingSum, AVNUtil
 from avnav_worker import *
 from avnqueue import Fetcher
 import avnav_handlerList
@@ -87,6 +87,100 @@ class AVNDecoder(AVNWorker):
                      "decoded %.4g/s"%self.decoded.avg(),
                      WorkerStatus.NMEA if self.decoded.val()>0 else WorkerStatus.INACTIVE)
       self._fetcher.report()
+
+  def getHandledCommands(self):
+      return 'decoder'
+
+  def handleApiRequest(self, type, command, requestparam, handler=None, **kwargs):
+      if type != 'api':
+          raise Exception(f"invalid request for decoder {type}")
+      if command == 'gps':
+          return self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
+      if command == 'ais':
+          rt = self.navdata.getAisData()
+          lat = None
+          lon = None
+          lat1 = None
+          lon1 = None
+          dist = None
+          try:
+              lat = float(AVNUtil.getHttpRequestParam(requestparam, 'lat'))
+              lon = float(AVNUtil.getHttpRequestParam(requestparam,'lon'))
+              dist = float(AVNUtil.getHttpRequestParam(requestparam, 'distance'))  # distance in NM
+              rq = AVNUtil.getHttpRequestParam(requestparam, 'lat1')
+              if rq is not None:
+                  lat1 = float(rq)
+              rq = AVNUtil.getHttpRequestParam(requestparam, 'lon1')
+              if rq is not None:
+                  lon1 = float(rq)
+          except:
+              pass
+          frt = []
+          if not lat is None and not lon is None and not dist is None:
+              dest = (lat, lon)
+              AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f", lat, lon, dist)
+              dest1 = None
+              if lat1 is not None and lon1 is not None:
+                  dest1 = (lat1, lon1)
+                  AVNLog.debug("additional AIS range lat=%f,lon=%f,dist=%f", lat1, lon1, dist)
+              for entry in rt:
+                  try:
+                      fentry = entry
+                      tlon = fentry.get('lon')
+                      tlat = fentry.get('lat')
+                      if tlon is None or tlat is None:
+                          continue
+                      mdist = AVNUtil.distance((tlat, tlon), dest)
+                      inRange = False
+                      if mdist <= dist:
+                          inRange = True
+                      else:
+                          if dest1 is not None:
+                              mdist = AVNUtil.distance((tlat, tlon), dest1)
+                              if mdist <= dist:
+                                  inRange = True
+                      if inRange:
+                          frt.append(fentry)
+                      else:
+                          AVNLog.debug("filtering out %s due to distance %f", str(fentry['mmsi']), mdist)
+                  except:
+                      AVNLog.debug("unable to convert ais data: %s", traceback.format_exc())
+          else:
+              for entry in rt:
+                  try:
+                      frt.append(entry)
+                  except Exception as e:
+                      AVNLog.debug("unable to convert ais data: %s", traceback.format_exc())
+          return frt
+      if command == 'nmeaStatus':
+          rtv = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
+          # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
+          status = "red"
+          if rtv.get(NMEAParser.K_LAT.key) is not None and rtv.get(NMEAParser.K_LON.key) is not None:
+              status = "green"
+          info = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(),
+                                                    includeInfo=True)  # we just want the last source of position
+          src = 'unknown'
+          if info is not None:
+              src = info.source
+          satInview = rtv.get(NMEAParser.K_SATVIEW.key)
+          if satInview is None:
+              satInview = 0
+          satUsed = rtv.get(NMEAParser.K_SATUSED.key)
+          if satUsed is None:
+              satUsed = 0
+          statusNmea = {"status": status, "source": src,
+                        "info": "Sat %d visible/%d used" % (int(satInview), int(satUsed))}
+
+          status = "red"
+          numAis = self.navdata.getAisCounter()
+          if numAis > 0:
+              status = "green"
+          src = self.navdata.getLastAisSource()
+          statusAis = {"status": status, "source": src, "info": "%d targets" % (numAis)}
+          rt = {"status": "OK", "data": {"nmea": statusNmea, "ais": statusAis}}
+          return rt
+      raise Exception(f"Unknown command {command} for decoder api")
 
 class AVNGpsdFeeder(AVNDecoder):
   '''

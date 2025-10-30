@@ -24,12 +24,12 @@
  */
 import React, {useCallback, useEffect, useState} from "react";
 import keys from '../util/keys.jsx';
-import {Input, InputReadOnly, InputSelect, Radio} from "./Inputs";
+import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog, {
+import {
     DialogButtons,
     DialogFrame,
     DialogRow,
@@ -37,7 +37,7 @@ import OverlayDialog, {
 } from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
-import LayoutHandler, {layoutLoader} from "../util/layouthandler";
+import {layoutLoader} from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
@@ -112,10 +112,11 @@ const showConvertFunctions = {
         dialogContext.replaceDialog(()=><TrackConvertDialog history={history} name={item.name}/>);
     }
 }
-const buildRequestParameters=(request,item,opt_additional)=>{
+const buildRequestParameters=(command,item,opt_additional)=>{
     return {...Helper.filteredAssign(additionalUrlParameters,item),
             ...opt_additional,
-            request: request,
+            request: 'api',
+            command: command,
             type: item.type,
             name:item.name
         }
@@ -376,8 +377,9 @@ const AddRemoveOverlayDialog = (props) => {
     const [changed, setChanged] = useState(false);
     let titles = {add: "Add to Charts", remove: "Remove from Charts"}
     useEffect(() => {
-        Requests.getJson('', {}, {
-            request: 'list',
+        Requests.getJson({
+            request:'api',
+            command: 'list',
             type: 'chart'
         })
             .then((data) => {
@@ -395,7 +397,7 @@ const AddRemoveOverlayDialog = (props) => {
     }, [chartList]);
     const execute = useCallback(() => {
         if (action === 'remove') {
-            Requests.getJson('', {}, {
+            Requests.getJson({
                 request: 'api',
                 type: 'chart',
                 command: 'deleteFromOverlays',
@@ -738,7 +740,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
             return;
         }
         if (info.type !== "route") {
-            Requests.getJson('', {}, buildRequestParameters('delete',info))
+            Requests.getJson( buildRequestParameters('delete',info))
                 .then(() => {
                     if (info.type === 'track') {
                         NavHandler.resetTrack();
@@ -782,14 +784,13 @@ export const FileDialogWithActions=(props)=>{
             }
         };
         const schemeAction=(newScheme)=>{
-            return Requests.getJson('',{},
-                buildRequestParameters('api',item,
-                    {command:'scheme',newScheme:newScheme}));
+            return Requests.getJson(
+                buildRequestParameters('scheme',item,
+                    {newScheme:newScheme}));
         };
         let renameAction=(name,newName)=>{
-            Requests.getJson('',{},
-                buildRequestParameters('api',item,
-                    {command:'rename',newName:newName}))
+            Requests.getJson( buildRequestParameters('rename',item,
+                    {newName:newName}))
                 .then(()=>{
                     doneAction();
                 })

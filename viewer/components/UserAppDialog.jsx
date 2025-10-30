@@ -21,7 +21,11 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     const [uploadSequence,setUploadSequence]=useState(0);
     const [userFiles,setUserFiles]=useState([]);
     const listFiles=(name)=>{
-        Requests.getJson("?request=list&type=user")
+        Requests.getJson({
+            request:'api',
+            type:'user',
+            command:'list'
+        })
             .then((data) => {
                 let nuserFiles = [];
                 if (data.items) {
@@ -114,7 +118,11 @@ const TranslateUrlDialog=({resolveFunction,current})=>{
     useEffect(() => {
         (async ()=> {
             try {
-                const data = await Requests.getJson("?request=list&type=user");
+                const data = await Requests.getJson({
+                    request:'api',
+                    command:'list',
+                    type:'user'
+                });
                 if (data.items) {
                     data.items.forEach((el) => {
                         if (Helper.getExt(el.name) === 'html') {
@@ -319,8 +327,9 @@ const UserAppDialog = (props) => {
                             return;
                         }
                         try{
-                            const data = await Requests.getHtmlOrText("", {useNavUrl:true}, {
-                                request: 'download',
+                            const data = await Requests.getHtmlOrText({
+                                request:'api',
+                                command: 'download',
                                 type: 'user',
                                 name: name,
                                 noattach: true

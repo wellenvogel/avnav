@@ -124,7 +124,8 @@ EditDialog.propTypes={
 export const uploadFromEdit = async (name, data, overwrite,type) => {
     try {
         await Requests.postPlain({
-            request: 'upload',
+            request: 'api',
+            command: 'upload',
             type: type,
             name: name,
             overwrite: overwrite

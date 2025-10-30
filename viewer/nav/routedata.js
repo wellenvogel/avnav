@@ -498,9 +498,10 @@ RouteData.prototype.listRoutes=function(includeServer){
         }
         let editingName=editingRoute.getRouteName();
         let canDelete=globalStore.getData(keys.properties.connectedMode,false);
-        Requests.getJson('',{},{
-            request:'list',
-            type:'route'
+        Requests.getJson({
+            request:'api',
+            type:'route',
+            command:'list'
         })
             .then((data)=>{
                 for (let i = 0; i < data.items.length; i++) {
@@ -595,9 +596,10 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         LocalStorage.removeItem(STORAGE_NAMES.ROUTE,localName);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
-        Requests.getJson('',{},{
-            request:'delete',
+        Requests.getJson({
+            request:'api',
             type:'route',
+            command:'delete',
             name: this._ensureGpx(name)
         })
             .then((res)=>{
@@ -630,9 +632,10 @@ RouteData.prototype._ensureGpx=function(name){
 
 RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
     name=this._ensureGpx(name);
-    Requests.getHtmlOrText('',{useNavUrl:true},{
-        request:'download',
+    Requests.getHtmlOrText({
+        request:'api',
         type:'route',
+        command:'download',
         name:name
     })
         .then((xml)=>{
@@ -898,17 +901,15 @@ RouteData.prototype._handleLegResponse = function (serverData) {
  */
 RouteData.prototype.startQuery=function() {
     this._checkNextWp();
-    let url = "?request=route&command=getleg";
     let timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
-    let self = this;
     if (! this.connectMode ){
         this.lastReceivedLeg=undefined;
         this.lastReceivedRoute=undefined;
         this.lastSentRoute=undefined;
         this.lastSentLeg=undefined;
         this.lastLegSequence=undefined;
-        self.timer=window.setTimeout(function() {
-            self.startQuery();
+        this.timer=window.setTimeout(()=> {
+            this.startQuery();
         },timeout);
         return;
     }
@@ -916,31 +917,35 @@ RouteData.prototype.startQuery=function() {
         let currentLegSequence=globalStore.getData(keys.nav.gps.updateleg);
         if (this.lastLegSequence === undefined || this.lastLegSequence !== currentLegSequence || this.lastReceivedLeg === undefined) {
             this.lastLegSequence=currentLegSequence;
-            Requests.getJson(url, {checkOk: false}).then(
+            Requests.getJson({
+                request:'api',
+                type:'route',
+                command:'getleg'
+            }, {checkOk: false}).then(
                 (data)=> {
-                    let change = self._handleLegResponse(data);
+                    let change = this._handleLegResponse(data);
                     base.log("leg data change=" + change);
-                    self.timer = window.setTimeout(function () {
-                        self.startQuery();
+                    this.timer = window.setTimeout(()=> {
+                        this.startQuery();
                     }, timeout);
                 }
             ).catch(
                 (error)=> {
                     base.log("query leg error");
-                    self.routeErrors++;
-                    if (self.routeErrors > 10) {
+                    this.routeErrors++;
+                    if (this.routeErrors > 10) {
                         base.log("lost route");
-                        self.serverConnected = false;
+                        this.serverConnected = false;
                     }
-                    self.timer = window.setTimeout(function () {
-                        self.startQuery();
+                    this.timer = window.setTimeout(()=> {
+                        this.startQuery();
                     }, timeout);
                 }
             );
         }
         else{
-            self.timer = window.setTimeout(function () {
-                self.startQuery();
+            this.timer = window.setTimeout( ()=> {
+                this.startQuery();
             }, timeout);
         }
     }
@@ -951,18 +956,18 @@ RouteData.prototype.startQuery=function() {
         //we always query the server to let him overwrite what we have...
         this._downloadRoute(editingRoute.getRouteName(),
                 (nRoute)=>{
-                if (self.isEditingActiveRoute()) return;
+                if (this.isEditingActiveRoute()) return;
                 nRoute.server=true;
-                let change = nRoute.differsTo(self.lastReceivedRoute);
+                let change = nRoute.differsTo(this.lastReceivedRoute);
                 base.log("route data change=" + change);
                 if (change) {
-                    self.lastReceivedRoute = nRoute;
+                    this.lastReceivedRoute = nRoute;
                     editingRoute.modify((data)=> {
                         //maybe the editing route has changed in between...
                         if (! data.route || data.route.name != nRoute.name) return;
                         if (nRoute.differsTo(data.route)) {
                             let oldPoint=data.route.getPointAtIndex(data.index);
-                            data.route = self.lastReceivedRoute.clone();
+                            data.route = this.lastReceivedRoute.clone();
                             data.index=data.route.findBestMatchingIdx(oldPoint);
                             if (data.index < 0) data.index=0;
                             return true;
@@ -1042,14 +1047,13 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef){
  */
 RouteData.prototype._sendRoute=function(route, opt_callback,opt_overwrite){
     //send route to server
-    let self=this;
-    let sroute=route.clone();
-    Requests.postPlain('',route.toXml(),{},{
-        request:'upload',
+    Requests.postPlain({
+        request:'api',
+        command:'upload',
         type:'route',
         name: this._ensureGpx(route.name),
         overwrite: opt_overwrite
-    })
+    },route.toXml())
         .then((res)=>{
             base.log("route sent to server");
             if (opt_callback)opt_callback();
@@ -1106,7 +1110,11 @@ RouteData.prototype._legChangedLocally=function(leg){
         if (leg.hasRoute()){
             this._sendRoute(leg.currentRoute,undefined,true);
         }
-        Requests.postJson("?request=route&command=setleg",legJson).then(
+        Requests.postJson({
+            request:'api',
+            type:'route',
+            command:'setleg'
+        },legJson).then(
             (data)=>{
                 base.log("new leg sent to server");
             }

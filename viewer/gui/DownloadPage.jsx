@@ -15,7 +15,7 @@ import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
 import Helper, {avitem, setav} from '../util/helper.js';
-import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
+import {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
@@ -64,7 +64,8 @@ class FileInfo{
 
 const fillDataServer=(type)=>{
     return Requests.getJson({
-        request:'listdir',
+        request:'api',
+        command:'list',
         type: type
     }).then((json)=>{
         let list=[];
@@ -578,7 +579,8 @@ class DownloadPage extends React.Component{
                 else {
                     let data = "";
                     Requests.postPlain({
-                        request: 'upload',
+                        request:'api',
+                        command: 'upload',
                         type: this.state.type,
                         name: name
                     }, data)

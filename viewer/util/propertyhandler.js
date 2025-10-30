@@ -422,7 +422,8 @@ class PropertyHandler {
                 data=JSON.stringify(data,undefined,2);
             }
             return Requests.postPlain({
-                request:'upload',
+                request:'api',
+                command:'upload',
                 type:'settings',
                 name: fileName,
                 overwrite: !!opt_overwrite
@@ -532,7 +533,8 @@ class PropertyHandler {
             return Promise.resolve([]);
         }
         return RequestHandler.getJson({
-            request: 'listdir',
+            request:'api',
+            command: 'list',
             type: 'settings'
         }).then((json)=>{
             if (!opt_forSelect) return json.items;

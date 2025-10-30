@@ -77,8 +77,9 @@ export const IconDialog=(props)=>{
         SOURCES.forEach((src) => {
             const active=!!(sources & src.flag);
             if (! active) return;
-            Requests.getJson("", undefined, {
-                request: 'list',
+            Requests.getJson( {
+                request:'api',
+                command: 'list',
                 type: src.type
             })
                 .then((data) => {

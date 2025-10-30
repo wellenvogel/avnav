@@ -109,8 +109,9 @@ const ImportStatusDialog=(props)=>{
             <DB name="delete"
                 onClick={() => {
                     Requests.getJson({
+                        request:'api',
                         type:'import',
-                        request:'delete',
+                        command:'delete',
                         name:props.name
                     })
                         .then((res)=>{
@@ -298,7 +299,8 @@ const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,change
     }
     const timer = useTimer((seq) => {
         Requests.getJson({
-            request: 'list',
+            request:'api',
+            command: 'list',
             type: 'import'
         }).then((json) => {
             handleStatus(json.items);

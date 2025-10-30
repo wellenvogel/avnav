@@ -174,7 +174,11 @@ export default function() {
         let scriptsLoaded=false;
         //load the user and plugin stuff
         if (loadPlugins) {
-            Requests.getJson("?request=plugins&command=list").then(
+            Requests.getJson({
+                request:'api',
+                type:'plugins',
+                command:"list"
+            }).then(
                 (json)=> {
                     if (json.data) {
                         json.data.forEach((plugin)=> {
@@ -206,7 +210,11 @@ export default function() {
     for (let k in keys.gui.capabilities){
         falseCapabilities[k]=false;
     }
-    Requests.getJson("?request=capabilities").then((json)=>{
+    Requests.getJson({
+        request:'api',
+        type:'config',
+        command:'capabilities'
+    }).then((json)=>{
         let capabilities=assign({},falseCapabilities,json.data);
         globalStore.storeMultiple(capabilities,keys.gui.capabilities);
         doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));

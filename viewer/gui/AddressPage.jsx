@@ -46,10 +46,13 @@ class AddressPage extends React.Component{
     }
     doQuery(){
         let currentSequence=this.querySequence;
-        let self=this;
-        Requests.getJson("?request=status",{checkOk:false}).then(
+        Requests.getJson({
+            request:'api',
+            type:'config',
+            command:'status'
+        },{checkOk:false}).then(
             (json)=>{
-                if (self.querySequence != currentSequence) return;
+                if (this.querySequence != currentSequence) return;
                 let list=[];
                 if (json.handler){
                     json.handler.forEach((el)=>{
@@ -61,12 +64,12 @@ class AddressPage extends React.Component{
                     });
                 }
                 globalStore.storeData(keys.gui.addresspage.addressList,list);
-                self.timer=window.setTimeout(self.doQuery,globalStore.getData(keys.properties.statusQueryTimeout));
+                this.timer=window.setTimeout(()=>this.doQuery(),globalStore.getData(keys.properties.statusQueryTimeout));
             },
             (error)=>{
-                if (self.querySequence != currentSequence) return;
+                if (this.querySequence != currentSequence) return;
                 globalStore.storeData(keys.gui.addresspage.addressList,[]);
-                self.timer=window.setTimeout(self.doQuery,globalStore.getData(keys.properties.statusQueryTimeout));
+                this.timer=window.setTimeout(()=>this.doQuery(),globalStore.getData(keys.properties.statusQueryTimeout));
             });
     }
     componentDidMount(){
@@ -74,15 +77,13 @@ class AddressPage extends React.Component{
         this.doQuery();
     }
     componentWillUnmount(){
-        let self=this;
-        if (self.timer){
-            window.clearTimeout(self.timer);
-            delete self.timer;
+        if (this.timer){
+            window.clearTimeout(this.timer);
+            delete this.timer;
         }
-        self.querySequence++;
+        this.querySequence++;
     }
     render(){
-        let self=this;
         let MainContent=Dynamic((props)=>{
             if (! props.addressList || props.addressList.length < 1) return null;
             let itemList=[];
@@ -103,7 +104,7 @@ class AddressPage extends React.Component{
 
         return (
             <Page
-                {...self.props}
+                {...this.props}
                 id="addresspage"
                 title="Server Addresses"
                 mainContent={
@@ -111,7 +112,7 @@ class AddressPage extends React.Component{
                                 storeKeys={{addressList:keys.gui.addresspage.addressList}}
                             />
                         }
-                buttonList={self.buttons}/>
+                buttonList={this.buttons}/>
         );
     }
 }

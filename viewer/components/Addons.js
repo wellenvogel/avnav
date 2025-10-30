@@ -7,12 +7,14 @@ const readAddOns = function (opt_showToast,opt_includeInvalid) {
     return new Promise((resolve, reject)=> {
         if (!globalStore.getData(keys.gui.capabilities.addons)) resolve([]);
         let req={
+            request:'api',
+            command:'list',
             type:"addon"
         };
         if (opt_includeInvalid){
             req.invalid=true;
         }
-        Requests.getJson("?request=list",{},req).then((json)=> {
+        Requests.getJson(req).then((json)=> {
                 let items = [];
                 for (let e in json.items) {
                     let item = json.items[e];
@@ -52,7 +54,10 @@ const findAddonByUrl=(addons,url,opt_all)=>{
  * @returns {*}
  */
 const updateAddon=(name,url,icon,title,newWindow)=>{
-   return Requests.getJson("?request=api&type=addon&command=update",{},{
+   return Requests.getJson({
+       request:'api',
+       type:'addon',
+       command:'update',
        url:url,
        title: title,
        icon:icon,
@@ -62,9 +67,13 @@ const updateAddon=(name,url,icon,title,newWindow)=>{
 };
 
 const removeAddon=(name)=>{
-    return Requests.getJson("?request=api&type=addon&command=delete",{},{
-        name:name
-    })
+    return Requests.getJson(
+        {
+            request:'api',
+            type:'addon',
+            command:'delete',
+            name:name
+        })
 };
 
 export default  {

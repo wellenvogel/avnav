@@ -118,7 +118,8 @@ class ViewPage extends React.Component{
                     else{
                         uploadFunction=(name,data,overwrite)=>{
                             return Requests.postPlain({
-                                request:'upload',
+                                request:'api',
+                                command:'upload',
                                 type:self.type,
                                 overwrite: overwrite,
                                 name: name

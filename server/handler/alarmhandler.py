@@ -484,16 +484,8 @@ class AVNAlarmHandler(AVNWorker):
       file=self.getSoundFile(alarmInfo.sound)
       if file is None:
         return None
-      fh=open(file,"rb")
-      if fh is None:
-        AVNLog.error("unable to find alarm sound %s",file)
-        return None
       fsize=os.path.getsize(file)
-      rt={}
-      rt['mimetype'] = "audio/mpeg"
-      rt['size']=fsize
-      rt['stream']=fh
-      return rt
+      return AVNDownload(file,size=fsize,mimeType="audio/mpeg")
     if type != 'api':
         return AVNUtil.getReturnData(error=f"invalid alarm request {type}")
     status=AVNUtil.getHttpRequestParam(requestparam,"status")

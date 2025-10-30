@@ -60,8 +60,10 @@ class DebugDialog extends React.Component{
         this.save=this.save.bind(this);
     }
     componentDidMount() {
-        Requests.getJson('',undefined,{
-            request:'currentloglevel'
+        Requests.getJson({
+            request:'api',
+            type:'config',
+            command:'currentloglevel'
         })
             .then((data)=>{
                 let ns={};
@@ -73,8 +75,10 @@ class DebugDialog extends React.Component{
     }
 
     save(){
-        Requests.getJson('',undefined,{
-            request:'debuglevel',
+        Requests.getJson({
+            request:'api',
+            type:'config',
+            command:'loglevel',
             level: this.state.isDebug?'debug':'info',
             timeout:this.state.timeout,
             filter:this.state.pattern ||''
@@ -178,18 +182,21 @@ class StatusList extends React.Component{
         this.doQuery(undefined,data);
     }
     doQuery(sequence,focusItem){
-        let self=this;
-        Requests.getJson("?request=status",{checkOk:false}).then(
+        Requests.getJson({
+            request:'api',
+            type:'config',
+            command:'status'
+        }).then(
             (json)=>{
-                self.timer.guardedCall(sequence,()=> {
-                    self.queryResult(json,focusItem)
-                    self.timer.startTimer(sequence);
+                this.timer.guardedCall(sequence,()=> {
+                    this.queryResult(json,focusItem)
+                    this.timer.startTimer(sequence);
                 });
             },
             (error)=>{
                 this.timer.guardedCall(sequence,()=> {
-                    self.errors++;
-                    if (self.errors > 4) {
+                    this.errors++;
+                    if (this.errors > 4) {
                         let newState = {itemList: []};
                         newState.serverError = true;
                         if (this.props.onChange) {
@@ -197,7 +204,7 @@ class StatusList extends React.Component{
                         }
                         this.setState(newState);
                     }
-                    self.timer.startTimer(sequence);
+                    this.timer.startTimer(sequence);
                 });
             });
     }
@@ -267,7 +274,7 @@ class StatusPage extends React.Component{
     }
     componentDidMount(){
         if (! globalStore.getData(keys.gui.capabilities.config)) return;
-        Requests.getJson('',undefined,{
+        Requests.getJson({
             request:'api',
             type:'config',
             command:'canRestart'
@@ -282,7 +289,7 @@ class StatusPage extends React.Component{
     restartServer(){
         showPromiseDialog(undefined,(props)=><ConfirmDialog {...props} text={"really restart the AvNav server software?"}/>)
             .then((v)=>{
-                Requests.getJson('',undefined,{
+                Requests.getJson({
                     request:'api',
                     type:'config',
                     command:'restartServer'
@@ -330,7 +337,12 @@ class StatusPage extends React.Component{
                     visible: !props.android && this.state.shutdown && props.connected,
                     onClick:()=>{
                         showPromiseDialog(undefined, (props)=><ConfirmDialog {...props} text={"really shutdown the server computer?"}/>).then(function(){
-                            Requests.getJson("?request=command&start=shutdown").then(
+                            Requests.getJson({
+                                request:'api',
+                                type:'command',
+                                command:'manage',
+                                start:'shutdown'
+                            }).then(
                                 (json)=>{
                                     Toast("shutdown started");
                                 },

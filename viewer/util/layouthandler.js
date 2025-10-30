@@ -164,8 +164,13 @@ class LayoutLoader{
                 return Promise.resolve(layout);
             }
         }
-        return Requests.getJson("?request=download&noattach=true&type=layout&name=" +
-            encodeURIComponent(name), {checkOk: false}).then(
+        return Requests.getJson({
+            request:'api',
+            type:'layout',
+            command:'download',
+            noattach:true,
+            name:name
+        }, {checkOk: false}).then(
             (json) => {
                 let error = this.checkLayout(json);
                 if (error !== undefined) {
@@ -216,7 +221,8 @@ class LayoutLoader{
             return Promise.resolve({status: 'OK'});
         }
         return Requests.postPlain({
-            request: 'upload',
+            request:'api',
+            command: 'upload',
             type: 'layout',
             name: layoutName,
             overwrite: !!opt_overwrite
@@ -263,7 +269,11 @@ class LayoutLoader{
             }
             return Promise.resolve(rt);
         }
-        return Requests.getJson("?request=listdir&type=layout").then((json) => {
+        return Requests.getJson({
+            request:'api',
+            type:'layout',
+            command:'list'
+        }).then((json) => {
             let list = [];
             for (let i = 0; i < json.items.length; i++) {
                 let fi = {};
@@ -292,7 +302,8 @@ class LayoutLoader{
                 return Promise.resolve(true);
         }
         return Requests.getJson({
-            request: 'delete',
+            request:'api',
+            command: 'delete',
             type: 'layout',
             name: name
         })

@@ -270,7 +270,8 @@ def main(argv):
         if isinstance(handledCommands,dict):
           for h in list(handledCommands.keys()):
             if h != 'path':
-                httpServer.registerRequestHandler(h,handledCommands[h],handler)
+                rtype='api' if h != 'websocket' else 'websocket'
+                httpServer.registerRequestHandler(rtype,handledCommands[h],handler)
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
       pathes=handler.getHandledPathes()
@@ -279,7 +280,6 @@ def main(argv):
               httpServer.registerPathHandler(path,handler)
 
     httpServer.registerRequestHandler('api','config',handlerManager)
-    httpServer.registerRequestHandler('download', 'config', handlerManager)
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
       httpServer.param[AVNHttpServer.PORT_CONFIG]=optPort

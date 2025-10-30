@@ -49,7 +49,11 @@ class BottomLine extends React.Component {
         }
 
         timerCall(sequence) {
-            Requests.getJson("?request=nmeaStatus")
+            Requests.getJson({
+                request:'api',
+                type:'decoder',
+                command:'nmeaStatus'
+            })
                 .then((json)=> {
                     this.timer.guardedCall(sequence,()=> {
                         this.setState({status: json.data});
@@ -318,7 +322,7 @@ class MainPage extends React.Component {
     };
 
     readOverlays(newChartList){
-        return Requests.getJson('',{},{
+        return Requests.getJson({
             request:'api',
             type:'chart',
             command:'listOverlays'
@@ -337,7 +341,11 @@ class MainPage extends React.Component {
 
     }
     fillList(sequence) {
-        Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
+        Requests.getJson({
+            request:'api',
+            type:'chart',
+            command:'list'
+        },{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
                 let items = [];
                 let current=mapholder.getBaseChart();
                 let lastChartKey=current?current.getChartKey():mapholder.getLastChartKey();

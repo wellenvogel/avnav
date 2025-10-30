@@ -127,8 +127,9 @@ const OverlayItemDialog = (props) => {
 
     const getItemList = (type) => {
         const filledLists={};
-        Requests.getJson("", {}, {
-            request: 'listdir',
+        Requests.getJson( {
+            request:'api',
+            command: 'list',
             type: type
         })
             .then((data) => {
@@ -826,7 +827,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
         expandCharts: true,
         mergeDefault: !noDefault
     };
-    Requests.getJson("", {}, getParameters)
+    Requests.getJson( getParameters)
         .then((config) => {
             if (!config.data) return;
             if (config.data.useDefault === undefined) config.data.useDefault = true;
@@ -840,11 +841,12 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                         if (newConfig.isEmpty()) {
                             //we can tell the server to delete the config
                             let param = {
-                                request: 'delete',
+                                request:'api',
+                                command: 'delete',
                                 type: 'chart',
                                 name: overlayConfig.getName()
                             }
-                            Requests.getJson('', {}, param)
+                            Requests.getJson( param)
                                 .then(() => {
                                     if (opt_callback) opt_callback(newConfig.getWriteBackData());
                                 })
@@ -854,12 +856,13 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                                 })
                         } else {
                             let postParam = {
-                                request: 'upload',
+                                request:'api',
+                                command: 'upload',
                                 type: 'chart',
                                 name: overlayConfig.getName(),
                                 overwrite: true
                             };
-                            Requests.postPlain("", JSON.stringify(newConfig.getWriteBackData(), undefined, 2), {}, postParam)
+                            Requests.postPlain(postParam, JSON.stringify(newConfig.getWriteBackData(), undefined, 2))
                                 .then((res) => {
                                     if (opt_callback) opt_callback(newConfig.getWriteBackData());
                                 })

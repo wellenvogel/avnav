@@ -781,7 +781,7 @@ class MapHolder extends DrawingPositionConverter {
                 expandCharts: true,
                 mergeDefault: true
             };
-            Requests.getJson("", {}, cfgParam)
+            Requests.getJson( cfgParam)
                 .then((config) => {
                     config = config.data;
                     if (!config) {

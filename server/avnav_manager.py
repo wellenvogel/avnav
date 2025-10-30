@@ -563,6 +563,69 @@ class AVNHandlerManager(object):
         raise Exception("AvNav cannot restart")
       self.shouldStop=True
       return rt
+    if command == 'status':
+        rt = []
+        allHandlers = AVNWorker.getAllHandlers(True)
+        # find for each type the first id
+        typIds = {}
+        for h in allHandlers:
+            type = h.getConfigName()
+            if typIds.get(type) is None:
+                typIds[type] = h.getId()
+        # get the sorted list of typeIds
+        typeList = sorted(typIds.keys(), key=lambda k: typIds[k])
+        for type in typeList:
+            for handler in AVNWorker.getAllHandlers(True):
+                if handler.getConfigName() != type: continue
+                entry = {'configname': handler.getConfigName(),
+                         'config': handler.getParam(),
+                         'name': handler.getStatusName(),
+                         'info': handler.getInfo(),
+                         'disabled': handler.isDisabled(),
+                         'properties': handler.getStatusProperties() if not handler.isDisabled() else {},
+                         'canDelete': handler.canDeleteHandler(),
+                         'canEdit': handler.canEdit(),
+                         'id': handler.getId()
+                         }
+                rt.append(entry)
+        return AVNUtil.getReturnData(handler=rt)
+    if command == 'loglevel':
+        level=AVNUtil.getHttpRequestParam(requestParam, 'level',True)
+        timeout=AVNUtil.getHttpRequestParam(requestParam, 'timeout',False)
+        if timeout is not None:
+            timeout=float(timeout)
+        filter=AVNUtil.getHttpRequestParam(requestParam, 'filter',True)
+        crt=AVNLog.changeLogLevelAndFilter(level,filter,timeout)
+        if crt:
+            return AVNUtil.getReturnData()
+        else:
+            return AVNUtil.getReturnData(error=f"invalid level {level}")
+    if command == 'currentLogLevel':
+        (level, filter) = AVNLog.getCurrentLevelAndFilter()
+        return AVNUtil.getReturnData(level=level,filter=filter)
+
+    if command == 'capabilities':
+        rt = {
+            'addons': True,
+            'uploadCharts': True,
+            'plugins': True,
+            'uploadRoute': True,
+            'uploadLayout': True,
+            'uploadUser': True,
+            'uploadImages': True,
+            'uploadImport': True,
+            'uploadOverlays': True,
+            'uploadTracks': True,
+            'uploadSettings': True,
+            'uploadPlugins': True,
+            'canConnect': True,
+            'config': True,
+            'debugLevel': True,
+            'log': True,
+            'remoteChannel': True,
+            'fetchHead': True
+        }
+        return AVNUtil.getReturnData(data=rt)
 
     id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=False)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)

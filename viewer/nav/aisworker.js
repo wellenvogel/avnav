@@ -57,8 +57,10 @@ const computeAis=()=>{
 
 const queryData=async (distance,center,timeout,navUrl)=>{
     let param = {
-        request: 'ais',
-        distance:  formatter.formatDecimal(distance, 4, 1)
+        distance:  formatter.formatDecimal(distance, 4, 1),
+        request:'api',
+        type:'decoder',
+        command: 'ais'
     };
     for (let idx = 0; idx < center.length; idx++) {
         if (!center[idx]) continue;
@@ -69,7 +71,7 @@ const queryData=async (distance,center,timeout,navUrl)=>{
     return Requests.getJson(navUrl, {
         checkOk: false,
         timeout: timeout/2,
-        useNavUrl: false
+        useNavUrl:false
         },param).then(
         (data) => {
             aisErrors=0;

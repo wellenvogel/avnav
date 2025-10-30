@@ -532,9 +532,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
       path = path[len(self.getPrefix()) + 1:]
       return self.getPathFromUrl(path,handler=handler,requestParam=requestparam)
 
-  def handleApiRequest(self, type, subtype, requestparam,handler=None, **kwargs):
+  def handleApiRequest(self, type, command, requestparam,handler=None, **kwargs):
     name = AVNUtil.getHttpRequestParam(requestparam, 'name')
-    command=AVNUtil.getHttpRequestParam(requestparam,'command',type == 'api')
     if self.apiCondition('rename',type,command):
         if name is None:
           raise Exception("parameter name missing for rename")

@@ -1802,7 +1802,7 @@ class AVNSignalKHandler(AVNWorker):
       raise Exception("chart %s not found"%chartName)
     if parr[1] == "sequence":
       sData={'status':'OK','sequence':self.configSequence}
-      handler.sendNavResponse(json.dumps(sData))
+      handler.sendJsonResponse(json.dumps(sData))
       return
     if parr[1] == "avnav.xml":
       requestHost = handler.headers.get('host')

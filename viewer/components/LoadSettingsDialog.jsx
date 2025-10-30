@@ -74,7 +74,8 @@ export const loadSettings = (currentValues, defaultName, opt_title, opt_preventD
                     if (s.name === selected) selectedEntry=s;
                 })
                 return RequestHandler.getJson({
-                        request: 'download',
+                        request:'api',
+                        command: 'download',
                         type: 'settings',
                         noattach: true,
                         name: selected

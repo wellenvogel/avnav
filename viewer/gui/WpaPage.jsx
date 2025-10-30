@@ -163,7 +163,11 @@ class WpaPage extends React.Component{
     }
 
     doQuery(timerSequence){
-        Requests.getJson("?request=wpa&command=all",{
+        Requests.getJson({
+            request:'api',
+            type:'wpa',
+            command:"all"
+        },{
             sequenceFunction:this.timer.currentSequence,
             timeout: timeout*0.9,
             checkOk: false
@@ -209,7 +213,11 @@ class WpaPage extends React.Component{
     }
     wpaRequest(request,message,param){
         Toast("sending "+message);
-        Requests.getJson("?request=wpa&command="+request,{},
+        Requests.getJson({
+                request:'api',
+                type:'wpa',
+                command:request
+            },{},
             param
         ).then((json)=>{
 

@@ -195,10 +195,9 @@ export const getTrackInfo = (trackName,opt_point) => {
     let trackInfo=new TrackInfo(opt_point);
     return new Promise((resolve, reject) => {
         if (!trackName) reject("missing track name");
-        Requests.getHtmlOrText('', {
-            useNavUrl: true
-        }, {
-            request: 'download',
+        Requests.getHtmlOrText({
+            request:'api',
+            command: 'download',
             type: 'track',
             name: trackName
         })

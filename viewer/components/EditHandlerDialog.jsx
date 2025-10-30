@@ -59,7 +59,7 @@ const EditHandlerDialog=(props)=>{
         else{
             param.command='getAddAttributes';
         }
-        RequestHandler.getJson('',undefined,param)
+        RequestHandler.getJson(param)
             .then((data)=>{
                 if (props.handlerId === undefined && data.handlerId !== undefined){
                     setHandlerId(data.handlerId);
@@ -103,7 +103,7 @@ const EditHandlerDialog=(props)=>{
 
     const updateValues=()=>{
         let param=getRequestParam({command:'setConfig'});
-        RequestHandler.postJson('',modifiedValues,undefined,param)
+        RequestHandler.postJson(param,modifiedValues)
             .then((data)=>{
                 dialogContext.closeDialog();
             })
@@ -117,14 +117,14 @@ const EditHandlerDialog=(props)=>{
         showPromiseDialog(dialogContext,ConfirmDialog,{text:text})
             .then(()=> {
                 let param = getRequestParam({command: props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
-                return RequestHandler.getJson('', undefined, param);
+                return RequestHandler.getJson( param);
             },()=>{})
             .then(() => dialogContext.closeDialog())
             .catch(e => Toast(e));
     }
     const addHandler=()=>{
         let param=getRequestParam({handlerName:props.handlerName,command:'createHandler'});
-        RequestHandler.postJson('',modifiedValues,undefined,param)
+        RequestHandler.postJson(param,modifiedValues)
             .then((data)=>{
                 if (props.createdCallback){
                     props.createdCallback(data.id)
@@ -233,7 +233,7 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_don
 }
 
 EditHandlerDialog.createAddDialog=(opt_doneCallback,dialogCtx)=>{
-    RequestHandler.getJson('',undefined,{
+    RequestHandler.getJson({
         request:'api',
         type: 'config',
         command: 'getAddables'

@@ -72,7 +72,12 @@ class AlarmHandler{
         let currentSequence=globalStore.getData(keys.nav.gps.updatealarm);
         if (this.lastSequence === undefined || this.lastSequence != currentSequence) {
             this.lastSequence=currentSequence;
-            Requests.getJson("?request=alarm&status=all")
+            Requests.getJson({
+                request:'api',
+                type:'alarm',
+                command:'manage',
+                status:'all'
+            })
                 .then((json)=> {
                     this.startTimer();
                     let old = globalStore.getData(keys.nav.alarms.all);
@@ -110,7 +115,12 @@ class AlarmHandler{
             delete this.localAlarms[type];
             return;
         }
-        Requests.getJson("?request=alarm&stop="+type).then(
+        Requests.getJson({
+            request:'api',
+            type:'alarm',
+            command:'manage',
+            stop:type
+        }).then(
             (json)=>{
 
             }

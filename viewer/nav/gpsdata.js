@@ -186,21 +186,24 @@ GpsData.prototype.computeKeys=function(key,data,base){
  *
  */
 GpsData.prototype.startQuery=function(){
-    let self=this;
     let timeout=parseInt(globalStore.getData(keys.properties.positionQueryTimeout,1000));
-    Requests.getJson("?request=gps",{checkOk:false}).then(
+    Requests.getJson({
+        request:'api',
+        type:'decoder',
+        command:"gps"
+    },{checkOk:false}).then(
         (data)=>{
-            self.handleGpsResponse(data,true);
-            self.timer=window.setTimeout(function(){
-                self.startQuery();
+            this.handleGpsResponse(data,true);
+            this.timer=window.setTimeout(()=>{
+                this.startQuery();
             },timeout);
         }
     ).catch(
         (error)=>{
             base.log("query position error");
-            self.handleGpsResponse({},false);
-            self.timer=window.setTimeout(function(){
-                self.startQuery();
+            this.handleGpsResponse({},false);
+            this.timer=window.setTimeout(()=>{
+                this.startQuery();
             },timeout);
         }
     );
