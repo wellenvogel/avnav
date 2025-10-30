@@ -1751,8 +1751,8 @@ class AVNSignalKHandler(AVNWorker):
       AVNLog.debug("unable to list charts: %s"%traceback.format_exc())
       return []
 
-  def getHandledCommands(self):
-    return {'path': self.PREFIX+"/"+self.CHARTPREFIX}
+  def getHandledPathes(self):
+      return [self.PREFIX + "/" + self.CHARTPREFIX]
 
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
       prefix = self.PREFIX + "/" + self.CHARTPREFIX
@@ -1833,7 +1833,7 @@ class AVNSignalKHandler(AVNWorker):
       raise Exception("invalid request to chart %s: %s" % (chartName, url))
     replaceV={'z':parr[2],
               'x':parr[3],
-              'y':re.sub("\..*","",parr[4])}
+              'y':re.sub(r"\..*","",parr[4])}
     skurl=chart['internal']['url']
     for k in list(replaceV.keys()):
       skurl=skurl.replace("{"+k+"}",replaceV[k])

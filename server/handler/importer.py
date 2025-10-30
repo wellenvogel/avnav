@@ -782,9 +782,7 @@ class AVNImporter(AVNWorker):
 
 
   def getHandledCommands(self):
-    type="import"
-    rt = {"api": type, "upload": type, "list": type, "download": type, "delete": type}
-    return rt
+    return "import"
 
   def findCandidate(self,key,isName=False):
     currentCandidates=self.candidates #thread safe copy

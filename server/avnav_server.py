@@ -267,11 +267,6 @@ def main(argv):
     for handler in AVNWorker.getAllHandlers(disabled=True):
       handledCommands=handler.getHandledCommands()
       if handledCommands is not None:
-        if isinstance(handledCommands,dict):
-          for h in list(handledCommands.keys()):
-            if h != 'path' and h != 'websocket':
-                httpServer.registerRequestHandler(handledCommands[h],handler)
-        else:
           httpServer.registerRequestHandler(handledCommands,handler)
       pathes=handler.getHandledPathes()
       if pathes is not None:

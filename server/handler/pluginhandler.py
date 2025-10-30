@@ -829,7 +829,10 @@ class AVNPluginHandler(AVNWorker):
     return rt
 
   def getHandledCommands(self):
-    return {"api":"plugins","path":URL_PREFIX}
+    return "plugins"
+
+  def getHandledPathes(self):
+      return [URL_PREFIX]
 
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
       localPath = path[len(URL_PREFIX) + 1:].split("/", 1)

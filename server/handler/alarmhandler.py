@@ -452,7 +452,7 @@ class AVNAlarmHandler(AVNWorker):
 
 
   def getHandledCommands(self):
-    return {"api":"alarm","download":"alarm"}
+    return "alarm"
 
   def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
     '''

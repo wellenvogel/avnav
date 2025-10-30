@@ -243,11 +243,13 @@ class AVNUserAppHandler(AVNWorker):
     return rt
 
   def getHandledCommands(self):
-    rt={"api": self.TYPE, "list": self.TYPE, "delete": self.TYPE}
-    prefix=self.getPrefix()
-    if prefix is not None:
-      rt["path"]=prefix
-    return rt
+    return self.TYPE
+
+  def getHandledPathes(self):
+      prefix = self.getPrefix()
+      if prefix is not None:
+          return [prefix]
+      return []
 
   def checkName(self,name,doRaise=True):
     cleanName=AVNUtil.clean_filename(name)

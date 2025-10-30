@@ -465,19 +465,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return True
 
   def getHandledCommands(self):
-    rt={"api": self.type}
-    if self.canUpload():
-      rt["upload"]=self.type
-    if self.canList():
-      rt["list"]=self.type
-    if self.canDownload():
-      rt["download"]=self.type
-    if self.canDelete():
-      rt["delete"]= self.type
-    prefix=self.getPrefix()
-    if prefix is not None:
-      rt["path"]=prefix
-    return rt
+    return self.type
+
+  def getHandledPathes(self):
+      prefix = self.getPrefix()
+      if prefix is not None:
+          return [prefix]
+      return []
 
   def handleRename(self,name,newName,requestparam):
     self.checkName(name)
