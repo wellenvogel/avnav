@@ -350,7 +350,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     """
     if type is None:
       raise Exception("missing parameter type for api request")
-    handler = self.server.getRequestHandler('api', type)
+    handler = self.server.getRequestHandler(type)
     if handler is None:
       raise Exception("no handler found for request %s"%type)
     if command == 'upload':

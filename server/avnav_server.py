@@ -269,17 +269,19 @@ def main(argv):
       if handledCommands is not None:
         if isinstance(handledCommands,dict):
           for h in list(handledCommands.keys()):
-            if h != 'path':
-                rtype='api' if h != 'websocket' else 'websocket'
-                httpServer.registerRequestHandler(rtype,handledCommands[h],handler)
+            if h != 'path' and h != 'websocket':
+                httpServer.registerRequestHandler(handledCommands[h],handler)
         else:
-          httpServer.registerRequestHandler('api',handledCommands,handler)
+          httpServer.registerRequestHandler(handledCommands,handler)
       pathes=handler.getHandledPathes()
       if pathes is not None:
           for path in pathes:
               httpServer.registerPathHandler(path,handler)
-
-    httpServer.registerRequestHandler('api','config',handlerManager)
+      websockets=handler.getWebsocketPrefixes()
+      if websockets is not None:
+          for websocket in websockets:
+              httpServer.registerWebsocketHandler(websocket,handler)
+    httpServer.registerRequestHandler('config',handlerManager)
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
       httpServer.param[AVNHttpServer.PORT_CONFIG]=optPort

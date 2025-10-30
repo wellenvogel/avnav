@@ -1124,7 +1124,8 @@ class AVNWorker(InfoHandler):
           if path is not None:
               return [path]
       return []
-
+  def getWebsocketPrefixes(self):
+      return []
   def handlePathRequest(self, path, requestparam,server=None,handler=None):
       return self.handleApiRequest('api',path, requestparam, server=server,handler=handler);
   def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
@@ -1143,6 +1144,8 @@ class AVNWorker(InfoHandler):
     """
     raise Exception("handler for %s:%s not implemented in %s"%(type,command,self.getConfigName()))
 
+  def handleWebSocketRequest(self, type, path, handler=None, **kwargs):
+    raise NotImplementedError(f"websocket not enabled for {type}")
   @classmethod
   def apiCondition(cls,value,type,command):
       '''

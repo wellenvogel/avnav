@@ -131,8 +131,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     self.interfaceReader=None
     self.addresslist=[]
     self.handlerMap={}
-    self.externalHandlers={} #prefixes that will be handled externally
-    self.webSocketHandlers={}
+    self.externalHandlers={} #type: dict[str,AVNWorker] #prefixes that will be handled externally
+    self.webSocketHandlers={} #type: dict[str,AVNWorker]
     self.requestHandler=RequestHandlerClass
   
   def run(self):
@@ -203,22 +203,13 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
 
   def registerPathHandler(self,prefix,handler):
     self.externalHandlers[prefix]=handler
-  def registerRequestHandler(self,type,command,handler):
-    if type == 'path':
-      self.registerPathHandler(command,handler)
-      return
-    if type == 'websocket':
-      self.webSocketHandlers[command]=handler
-      return
-    if self.handlerMap.get(type) is None:
-      self.handlerMap[type]={}
-    self.handlerMap[type][command]=handler
+  def registerWebsocketHandler(self,prefix,handler):
+      self.webSocketHandlers[prefix]=handler
+  def registerRequestHandler(self,type,handler):
+    self.handlerMap[type]=handler
 
-  def getRequestHandler(self,type,command):
-    typeMap=self.handlerMap.get(type)
-    if typeMap is None:
-      return None
-    handler=typeMap.get(command)
+  def getRequestHandler(self,type):
+    handler=self.handlerMap.get(type)
     if handler is None:
       return None
     if handler.isDisabled():
@@ -284,7 +275,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
         try:
-          return self.webSocketHandlers[prefix].handleApiRequest('websocket', path, requestParam, server=self,handler=handler)
+          return self.webSocketHandlers[prefix].handleWebSocketRequest(prefix, path,handler=handler)
         except:
           AVNLog.error("no websocket handler %s: %s",path,traceback.format_exc())
         return None
