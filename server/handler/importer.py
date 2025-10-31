@@ -781,7 +781,7 @@ class AVNImporter(AVNWorker):
       AVNLog.error("unable to start converter for %s:%s",name,traceback.format_exc())
 
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return "import"
 
   def findCandidate(self,key,isName=False):
@@ -807,8 +807,8 @@ class AVNImporter(AVNWorker):
       if fpath == path and fext != ext:
         return f
 
-  def handleApiRequest(self, type, command, requestparam, handler=None,**kwargs):
-    if self.apiCondition("list",type,command):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
+    if command == "list":
       status=self.getInfo(['main','converter'])
       items=[]
       if status is not None and status.get('items') is not None:
@@ -840,7 +840,7 @@ class AVNImporter(AVNWorker):
           canst['realname']=can.getFileOrDir()
         items.append(canst)
       return AVNUtil.getReturnData(items=items)
-    if self.apiCondition("delete",type,command):
+    if command == "delete":
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       if not name.startswith('conv:'):
         return AVNUtil.getReturnData(error="unknown item "+name)
@@ -851,7 +851,7 @@ class AVNImporter(AVNWorker):
         return AVNUtil.getReturnData(error="unable to delete")
       self.wakeUp()
       return AVNUtil.getReturnData()
-    if self.apiCondition("download",type,command):
+    if command == "download":
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       candidate=self.findCandidate(name)
       if candidate is None:
@@ -871,7 +871,7 @@ class AVNImporter(AVNWorker):
       filename=os.path.basename(dlfile)
       return AVNDownload(dlfile,dlname=filename)
 
-    if self.apiCondition("upload",type,command):
+    if command == "upload":
       if handler is None:
         return AVNUtil.getReturnData(error="no handler")
       name=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"name",True))
@@ -902,68 +902,67 @@ class AVNImporter(AVNWorker):
       self.wakeUp()
       return AVNUtil.getReturnData()
 
-    if type == "api":
-      if (command == "extensions"):
-        return AVNUtil.getReturnData(items=self.allExtensions(True))
-      if (command == "getlog"):
-        name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
-        lastBytes=AVNUtil.getHttpRequestParam(requestparam,"maxBytes",False)
-        candidate=None
-        rt=None
-        if name == '_current':
-          running=self.runningConversion
-          if running is not None and running.running:
-            candidate=self.runningConversion.candidate
-          if candidate is None:
-            rt=AVNDownloadError("no conversion running")
-        else:
-          candidate=self.findCandidate(name)
-        if rt is None:
-          if candidate is None:
-            rt=AVNDownloadError("%s not found"%name)
-        if rt is None:
-          logName=self.getLogFileName(candidate.name,True)
-          if logName is None:
-            rt=AVNDownloadError("log for %s not found"%name)
-          if rt is None:
-            filename=os.path.basename(logName)
-            rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
-        handler.writeFromDownload(rt)
-        return None
-      if command == 'cancel':
+    if (command == "extensions"):
+      return AVNUtil.getReturnData(items=self.allExtensions(True))
+    if (command == "getlog"):
+      name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
+      lastBytes=AVNUtil.getHttpRequestParam(requestparam,"maxBytes",False)
+      candidate=None
+      rt=None
+      if name == '_current':
         running=self.runningConversion
-        if running is None or not running.running:
-          return AVNUtil.getReturnData(error="no conversion running")
-        name=AVNUtil.getHttpRequestParam(requestparam,"name",False)
-        if name is not None and name != (ConversionCandidate.KPRFX+running.candidate.name):
-          return AVNUtil.getReturnData(error="%s not running any more"%name)
-        self.stopConversion(running.candidate.name)
-        self.wakeUp()
-        return AVNUtil.getReturnData()
-      if command == 'restart':
-        name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
-        candidate=self.findCandidate(name)
+        if running is not None and running.running:
+          candidate=self.runningConversion.candidate
         if candidate is None:
-          return AVNUtil.getReturnData(error="%s not found"%name)
-        if candidate.getState() == ConversionCandidate.State.CONVERTING:
-          return AVNUtil.getReturnData(error="%s currently converting"%name)
-        self.deleteLastResult(candidate.name)
-        self.wakeUp()
-        return AVNUtil.getReturnData()
-      if command == 'disable':
-        name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
+          rt=AVNDownloadError("no conversion running")
+      else:
         candidate=self.findCandidate(name)
+      if rt is None:
         if candidate is None:
-          return AVNUtil.getReturnData(error="%s not found"%name)
-        if candidate.getState() == ConversionCandidate.State.CONVERTING:
-          return AVNUtil.getReturnData(error="%s currently converting"%name)
-        self.saveLastResult(candidate.name,ConversionResult(None,disabled=True))
-        self.wakeUp()
-        return AVNUtil.getReturnData()
-      if command == 'rescan':
-        self.wakeUp()
-        return AVNUtil.getReturnData()
-    return AVNUtil.getReturnData(error=f"unknown request for import {type} [{command}")
+          rt=AVNDownloadError("%s not found"%name)
+      if rt is None:
+        logName=self.getLogFileName(candidate.name,True)
+        if logName is None:
+          rt=AVNDownloadError("log for %s not found"%name)
+        if rt is None:
+          filename=os.path.basename(logName)
+          rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
+      handler.writeFromDownload(rt)
+      return None
+    if command == 'cancel':
+      running=self.runningConversion
+      if running is None or not running.running:
+        return AVNUtil.getReturnData(error="no conversion running")
+      name=AVNUtil.getHttpRequestParam(requestparam,"name",False)
+      if name is not None and name != (ConversionCandidate.KPRFX+running.candidate.name):
+        return AVNUtil.getReturnData(error="%s not running any more"%name)
+      self.stopConversion(running.candidate.name)
+      self.wakeUp()
+      return AVNUtil.getReturnData()
+    if command == 'restart':
+      name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
+      candidate=self.findCandidate(name)
+      if candidate is None:
+        return AVNUtil.getReturnData(error="%s not found"%name)
+      if candidate.getState() == ConversionCandidate.State.CONVERTING:
+        return AVNUtil.getReturnData(error="%s currently converting"%name)
+      self.deleteLastResult(candidate.name)
+      self.wakeUp()
+      return AVNUtil.getReturnData()
+    if command == 'disable':
+      name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
+      candidate=self.findCandidate(name)
+      if candidate is None:
+        return AVNUtil.getReturnData(error="%s not found"%name)
+      if candidate.getState() == ConversionCandidate.State.CONVERTING:
+        return AVNUtil.getReturnData(error="%s currently converting"%name)
+      self.saveLastResult(candidate.name,ConversionResult(None,disabled=True))
+      self.wakeUp()
+      return AVNUtil.getReturnData()
+    if command == 'rescan':
+      self.wakeUp()
+      return AVNUtil.getReturnData()
+    return AVNUtil.getReturnData(error=f"unknown request for import {command}")
 
   def registerConverter(self,id,converter:ConverterApi):
     with self.listlock:

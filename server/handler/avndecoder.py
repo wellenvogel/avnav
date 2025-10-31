@@ -88,12 +88,10 @@ class AVNDecoder(AVNWorker):
                      WorkerStatus.NMEA if self.decoded.val()>0 else WorkerStatus.INACTIVE)
       self._fetcher.report()
 
-  def getHandledCommands(self):
+  def getApiType(self):
       return 'decoder'
 
-  def handleApiRequest(self, type, command, requestparam, handler=None, **kwargs):
-      if type != 'api':
-          raise Exception(f"invalid request for decoder {type}")
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
       if command == 'gps':
           return self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
       if command == 'ais':

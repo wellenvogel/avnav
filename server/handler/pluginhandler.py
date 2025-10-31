@@ -828,7 +828,7 @@ class AVNPluginHandler(AVNWorker):
     rt={}
     return rt
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return "plugins"
 
   def getHandledPathes(self):
@@ -865,13 +865,12 @@ class AVNPluginHandler(AVNWorker):
           return handler.sendJsFile(fname, url, addCode)
       return os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
 
-  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     '''
-    handle the URL based requests
-    :param type: ???
-    :return: the answer
-    '''
-    if self.apiCondition("list",type,command):
+      handle the URL based requests
+      :return: the answer
+      '''
+    if command == "list":
         data=[]
         with self.configLock:
             for k,api in self.createdApis.items():
@@ -886,7 +885,7 @@ class AVNPluginHandler(AVNWorker):
               data.append(element)
         rt={'status':'OK','data':data}
         return rt
-    raise Exception(f"unable to handle plugin request {type} [{command}]")
+    raise Exception(f"unable to handle plugin request {command}")
 
   def getPluginBaseDir(self, type=D_USER):
       if type == self.D_USER:

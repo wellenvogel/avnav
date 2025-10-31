@@ -242,7 +242,7 @@ class AVNUserAppHandler(AVNWorker):
     rt = AVNUtil.getReturnData(items=outdata)
     return rt
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return self.TYPE
 
   def getHandledPathes(self):
@@ -293,15 +293,15 @@ class AVNUserAppHandler(AVNWorker):
       if addon.get('canDelete') == True and addon.get('url') == url:
         self.handleDelete(addon.get('name'))
 
-  def handleApiRequest(self, type, command, requestparam, handler=None, **kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
       name = AVNUtil.getHttpRequestParam(requestparam, 'name', False)
-      if self.apiCondition('delete', type, command):
+      if command == 'delete':
           self.handleDelete(name)
           return AVNUtil.getReturnData()
-      elif self.apiCondition('list', type, command):
+      elif command == 'list':
           includeInvalid = AVNUtil.getHttpRequestParam(requestparam, "invalid")
           return self.handleList(handler, includeInvalid is not None and includeInvalid.lower() == 'true')
-      elif self.apiCondition('update', type, command):
+      elif command == 'update':
           url = AVNUtil.getHttpRequestParam(requestparam, 'url', True)
           icon = AVNUtil.getHttpRequestParam(requestparam, 'icon', True)
           title = AVNUtil.getHttpRequestParam(requestparam, 'title')
@@ -337,7 +337,7 @@ class AVNUserAppHandler(AVNWorker):
           self.writeConfigChanges()
           self.fillList()
           return AVNUtil.getReturnData()
-      raise Exception(f"unable to handle user request {type} [{command}]")
+      raise Exception(f"unable to handle user api request {command}")
 
 avnav_handlerList.registerHandler(AVNUserAppHandler)
 

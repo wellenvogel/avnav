@@ -27,21 +27,50 @@ import 'whatwg-fetch-timeout';
 import globalstore from "./globalstore";
 import base from "../base";
 
+/**
+ *
+ * @param url either a string or a dict with request parameters
+ *            if it is a dict it's treated as an api request using the api url
+ *            if it is a string it depends on the flag useNavUrl in options - if not set or true the navurl will be prepended
+ * @param options
+ * @returns {string}
+ */
+export const prepareUrl=(url, options)=>{
+    if (url === undefined) {
+        return undefined;
+    }
+    let rurl="";
+    if (typeof(url) === 'string') {
+        rurl=url;
+        if ( options && options.useNavUrl !== false ) {
+            rurl = globalStore.getData(keys.properties.navUrl) + rurl;
+        }
+        return rurl;
+    }
+    //new syntax for parameter object instead of url
+    if (typeof(url) === 'object'){
+        rurl=globalStore.getData(keys.properties.navUrl)
+        const {request,type,command,...other} = url;
+        if (request && request !== 'api'){
+            throw new Error("invalid request "+request);
+        }
+        if ((type !== undefined) && (command !== undefined)){
+            rurl=addParameters(rurl+'/'+type+'/'+command,other);
+        }
+        else {
+            rurl = addParameters(rurl, url);
+        }
+    }
+    return rurl;
 
-const prepare=(url,options,defaults)=>{
+};
+
+const prepareInternal=(url, options, defaults)=>{
     if (url === undefined) {
         return [undefined,undefined];
     }
-    let rurl="";
-    if (typeof(url) === 'string') rurl=url;
     let ioptions=assign({},defaults,options);
-    if ( ioptions.useNavUrl !== false || rurl === ''){
-        rurl=globalStore.getData(keys.properties.navUrl)+rurl;
-    }
-    //new syntax for parametr object instead of url
-    if (typeof(url) === 'object'){
-        rurl=addParameters(rurl,url);
-    }
+    let rurl=prepareUrl(url, ioptions);
     if (ioptions.timeout === undefined) ioptions.timeout=parseInt(globalStore.getData(keys.properties.networkTimeout));
     let headers=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
@@ -53,7 +82,7 @@ const prepare=(url,options,defaults)=>{
     if (headers) requestOptions.headers=headers;
     requestOptions.timeout=ioptions.timeout;
     return [rurl,requestOptions];
-};
+}
 
 const handleJson=(rurl,requestOptions,options)=>{
     return new Promise((resolve,reject)=>{
@@ -142,11 +171,11 @@ let RequestHandler={
      * @param opt_parameter
      */
     getJson:(url,options,opt_parameter)=>{
-        let [rurl,requestOptions]=prepare(url,options);
+        let [rurl,requestOptions]=prepareInternal(url,options);
         return handleJson(addParameters(rurl,opt_parameter),requestOptions,options);
     },
     postJson:(url,body,options,opt_parameters)=>{
-        let [rurl,requestOptions]=prepare(url,options);
+        let [rurl,requestOptions]=prepareInternal(url,options);
         requestOptions.method='POST';
         rurl=addParameters(rurl,opt_parameters);
         if (!requestOptions.headers) requestOptions.headers={};
@@ -160,7 +189,7 @@ let RequestHandler={
     },
 
     postPlain:(url,body,options,opt_parameters)=>{
-        let [rurl,requestOptions]=prepare(url,options);
+        let [rurl,requestOptions]=prepareInternal(url,options);
         rurl=addParameters(rurl,opt_parameters);
         requestOptions.method='POST';
         if (!requestOptions.headers) requestOptions.headers={};
@@ -180,7 +209,7 @@ let RequestHandler={
      * @param opt_parameter request parameters
      */
     getHtmlOrText:(url,options,opt_parameter)=>{
-        let [rurl,requestOptions]=prepare(url,options,{useNavUrl:false,noCache:false});
+        let [rurl,requestOptions]=prepareInternal(url,{...options,useNavUrl:false,noCache:false});
         return new Promise((resolve,reject)=>{
           rurl=addParameters(rurl,opt_parameter)
           if (!rurl) {

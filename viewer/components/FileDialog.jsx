@@ -26,7 +26,7 @@ import React, {useCallback, useEffect, useState} from "react";
 import keys from '../util/keys.jsx';
 import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
-import Requests from "../util/requests";
+import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import {
@@ -96,14 +96,13 @@ const getDownloadUrl=(item)=>{
         if (item.server === false) return;
         if (! name.match(/\.gpx$/)) name+=".gpx";
     }
-    let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
-        encodeURIComponent(item.type)+"&name="+
-        encodeURIComponent(name)+"&filename="+encodeURIComponent(getDownloadFileName(item));
-    for (let k in additionalUrlParameters){
-        if (item[k] !== undefined){
-            url+="&"+k+"="+encodeURIComponent(item[k])
-        }
-    }
+    let url= prepareUrl({
+        ...additionalUrlParameters,
+        command:'download',
+        type:item.type,
+        name:name,
+        filename:getDownloadFileName(item)
+    });
     return url;
 }
 
@@ -365,8 +364,11 @@ export class ItemActions{
 }
 
 const getImportLogUrl=(name)=>{
-    return globalStore.getData(keys.properties.navUrl)+
-        "?request=api&type=import&command=getlog&name="+encodeURIComponent(name);
+    return prepareUrl({
+        type:'import',
+        command:'getlog',
+        name:name
+    });
 }
 
 

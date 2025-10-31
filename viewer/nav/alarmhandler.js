@@ -1,4 +1,4 @@
-import Requests from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests.js';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
@@ -140,7 +140,11 @@ class AlarmHandler{
             }
         }
         return {
-            src: globalStore.getData(keys.properties.navUrl) + "?request=download&type=alarm&name=" + encodeURIComponent(alarmConfig.name),
+            src: prepareUrl({
+                command:'download',
+                type:'alarm',
+                name:alarmConfig.name
+            }),
             repeat: alarmConfig.repeat,
             enabled: true
         };

@@ -8,7 +8,7 @@ import helper from '../util/helper.js';
 import Helper from '../util/helper.js';
 import React from 'react';
 import Page from '../components/Page.jsx';
-import Requests from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import Toast, {hideToast} from '../components/Toast.jsx';
 import {showPromiseDialog} from '../components/OverlayDialog.jsx';
@@ -169,9 +169,13 @@ class ViewPage extends React.Component{
         if (! language) language="text";
         return language;
     }
-    getUrl(includeNavUrl){
+    getUrl(){
         if (this.url) return this.url;
-        return (includeNavUrl?globalStore.getData(keys.properties.navUrl):"")+"?request=download&type="+this.type+"&name="+encodeURIComponent(this.name);
+        return prepareUrl({
+            command:'download',
+            type:this.type,
+            name:this.name
+        });
     }
     componentDidMount(){
         let self=this;
@@ -185,7 +189,7 @@ class ViewPage extends React.Component{
         if (this.url && this.props.options.useIframe){
             return;
         }
-        Requests.getHtmlOrText(this.getUrl(true),{noCache:true}).then((text)=>{
+        Requests.getHtmlOrText(this.getUrl(),{noCache:true}).then((text)=>{
             if (! this.state.readOnly || this.canChangeMode()) {
                 let language = self.getLanguage();
                 this.flask = new CodeFlask(self.refs.editor, {
@@ -225,11 +229,11 @@ class ViewPage extends React.Component{
             {showView &&
                 <div className={viewClass}>
                     {(mode == 1)&&  <div dangerouslySetInnerHTML={{__html: viewData}}/>}
-                    {(mode == 0) && <img className="readOnlyImage" src={this.getUrl(true)}/>}
+                    {(mode == 0) && <img className="readOnlyImage" src={this.getUrl()}/>}
                     {(mode == 2) && <textarea className="readOnlyText" defaultValue={viewData} readOnly={true}/>}
                     {(mode == 4) &&
                     <div className="addOnFrame">
-                        <iframe className="viewPageIframe addOn" src={this.getUrl(true)}/>
+                        <iframe className="viewPageIframe addOn" src={this.getUrl()}/>
                     </div>
                     }
                 </div>}

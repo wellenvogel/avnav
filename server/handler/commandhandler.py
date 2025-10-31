@@ -366,9 +366,9 @@ class AVNCommandHandler(AVNWorker):
         rt.append(el)
     return rt
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return "command"
-  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     if type == 'api':
       command=AVNUtil.getHttpRequestParam(requestparam,"action",mantadory=False)
       if command is not None:

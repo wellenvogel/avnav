@@ -25,7 +25,7 @@
 
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
-import Requests from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import ItemList from "../components/ItemList";
 import {useTimer} from "../util/GuiHelpers";
@@ -177,13 +177,21 @@ const ImportStatusDialog=(props)=>{
             {props.canDownload && <DownloadButton name="download"
                                                   close={false}
                                                   useDialogButton={true}
-                                                  url={globalStore.getData(keys.properties.navUrl)+"?request=download&type=import&name="+encodeURIComponent(props.name)}
+                                                  url={prepareUrl({
+                                                      type:'import',
+                                                      command:'download',
+                                                      name: props.name
+                                                  })}
                                 >Download</DownloadButton>
             }
             {props.hasLog &&
             <DB name="log"
                 onClick={() => {
-                    let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(props.name);
+                    let url= prepareUrl({
+                        type: 'import',
+                        command:'getlog',
+                        name:props.name
+                    });
                     dialogContext.replaceDialog((dlprops)=>{
                         return <LogDialog
                             baseUrl={url}
@@ -230,7 +238,11 @@ const ConverterDialog=(props)=>{
             {isRunning &&
             <DB name="log"
                 onClick={() => {
-                    let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name=_current";
+                    let url= prepareUrl({
+                        type:'import',
+                        command:'getlog',
+                        name:'_current'
+                    });
                     dialogContext.replaceDialog((dlprops)=>{
                         return <LogDialog
                             baseUrl={url}

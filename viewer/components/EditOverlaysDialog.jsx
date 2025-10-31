@@ -11,7 +11,7 @@ import {Input,Checkbox,InputSelect,Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
-import Requests from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
@@ -155,8 +155,12 @@ const OverlayItemDialog = (props) => {
                     data.items.forEach((item) => {
                         item.type = type;
                         if (type === 'route') {
-                            if (!item.url) item.url = globalStore.getData(keys.properties.navUrl) +
-                                "?request=download&type=route&name=" + encodeURIComponent(item.name) + "&extension=.gpx";
+                            if (!item.url) item.url = prepareUrl({
+                                command:'download',
+                                type:'route',
+                                name:item.name,
+                                extension:'.gpx'
+                            });
                             if (!item.name.match(/\.gpx/)) item.name += ".gpx";
                         }
                         item.label = item.name;

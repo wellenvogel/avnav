@@ -1761,8 +1761,8 @@ class AVNSignalKHandler(AVNWorker):
       path = path[len(prefix) + 1:]
       return self.handleChartRequest(path, handler)
 
-  def handleApiRequest(self, type, command, requestparam, handler=None,**kwargs):
-    raise Exception("unable to handle user request %s"%(type))
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
+    raise Exception("unable to handle user request %s"%(command))
 
   AVNAV_XML="""<?xml version="1.0" encoding="UTF-8" ?>
   <TileMapService version="1.0.0" >

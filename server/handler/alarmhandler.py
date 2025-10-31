@@ -451,23 +451,22 @@ class AVNAlarmHandler(AVNWorker):
         return fn
 
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return "alarm"
 
-  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     '''
-    handle the URL based requests
-    :param type: api
-    :param command: alarm
-    :param requestparam: url parameters
-    :param kwargs:
-    :return: the answer
-    status=name,name,|all returns a hash {name:{name:alarmName,running:true}
-    start=name returns {status:ok|error}
-    stop=name,name {status: ok|err}
-    media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
-    '''
-    if self.apiCondition("download",type,command):
+      handle the URL based requests
+      :param command: alarm
+      :param requestparam: url parameters
+      :param kwargs:
+      :return: the answer
+      status=name,name,|all returns a hash {name:{name:alarmName,running:true}
+      start=name returns {status:ok|error}
+      stop=name,name {status: ok|err}
+      media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
+      '''
+    if command =="download":
       name = AVNUtil.getHttpRequestParam(requestparam, "name",mantadory=True)
       AVNLog.debug("download alarm %s",name)
       running=None
@@ -486,8 +485,6 @@ class AVNAlarmHandler(AVNWorker):
         return None
       fsize=os.path.getsize(file)
       return AVNDownload(file,size=fsize,mimeType="audio/mpeg")
-    if type != 'api':
-        return AVNUtil.getReturnData(error=f"invalid alarm request {type}")
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')

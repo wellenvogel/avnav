@@ -1110,7 +1110,7 @@ class AVNWorker(InfoHandler):
   def freeAllUsedResources(self):
     self.usedResources=[]
 
-  def getHandledCommands(self):
+  def getApiType(self):
     """get the API commands that will be handled by this instance
        the return must either be a single string or a dict
        of the form {'api':'route','download':'route','upload':'route','list':'route'}
@@ -1118,31 +1118,21 @@ class AVNWorker(InfoHandler):
     return None
 
   def getHandledPathes(self):
-      hc=self.getHandledCommands()
-      if isinstance(hc,dict):
-          path=hc.get('path')
-          if path is not None:
-              return [path]
       return []
   def getWebsocketPrefixes(self):
       return []
   def handlePathRequest(self, path, requestparam,server=None,handler=None):
-      return self.handleApiRequest('api',path, requestparam, server=server,handler=handler);
-  def handleApiRequest(self,type,command,requestparam,handler=None,**kwargs):
+      raise Exception(f"no path mapping for {path} in {self.getConfigName()}")
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     """
-    handle an http request , handling/parameter/return depend on type
-    raise an exception on error
-    :param type:
-           api - return a json with the response
-           download: return a dict with: mimetype,size,stream
-           upload: -- (exception on error)
-           list: dict with {status:OK,items:[]}, items: list of dict{name:xxx,time:xxx}
-    :param command: the (sub)command
-    :param requestparam: the HTTP request parameter
-    :param kwargs: on upload: rfile,flen
-    :return: json
-    """
-    raise Exception("handler for %s:%s not implemented in %s"%(type,command,self.getConfigName()))
+      handle an http request , handling/parameter/return depend on type
+      raise an exception on error
+      :param command: the (sub)command
+      :param requestparam: the HTTP request parameter
+      :param kwargs: on upload: rfile,flen
+      :return: json
+      """
+    raise Exception("handler for %s not implemented in %s"%(command,self.getConfigName()))
 
   def handleWebSocketRequest(self, type, path, handler=None, **kwargs):
     raise NotImplementedError(f"websocket not enabled for {type}")

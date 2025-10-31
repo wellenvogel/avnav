@@ -464,7 +464,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def canDownload(self):
     return True
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return self.type
 
   def getHandledPathes(self):
@@ -526,29 +526,27 @@ class AVNDirectoryHandlerBase(AVNWorker):
       path = path[len(self.getPrefix()) + 1:]
       return self.getPathFromUrl(path,handler=handler,requestParam=requestparam)
 
-  def handleApiRequest(self, type, command, requestparam,handler=None, **kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     name = AVNUtil.getHttpRequestParam(requestparam, 'name')
-    if self.apiCondition('rename',type,command):
+    if command == 'rename':
         if name is None:
           raise Exception("parameter name missing for rename")
         newName=AVNUtil.getHttpRequestParam(requestparam,'newName',True)
         return self.handleRename(name,newName,requestparam)
-    elif self.apiCondition('delete',type,command):
+    elif command == 'delete':
         self.handleDelete(name)
         return AVNUtil.getReturnData()
-    elif self.apiCondition('list',type,command):
+    elif command == 'list':
         return self.handleList(handler)
-    elif self.apiCondition('upload',type,command):
+    elif command == 'upload':
       return self.handleUpload(name,handler,requestparam)
-    elif self.apiCondition('download',type,command):
+    elif command == 'download':
       return self.handleDownload(name,handler,requestparam)
-    elif self.apiCondition('delete',type,command):
+    elif command == 'delete':
       self.handleDelete(name)
       return AVNUtil.getReturnData()
     else:
-        if type == 'api':
-            return self.handleSpecialApiRequest(command,requestparam,kwargs.get('handler'))
-    raise Exception(f"unable to handle user request {type} [{command}]")
+        return self.handleSpecialApiRequest(command,requestparam,handler)
 
   TMP_PREFIX='__avn.'
   tmpCount=0

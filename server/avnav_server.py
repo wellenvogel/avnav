@@ -265,7 +265,7 @@ def main(argv):
         AVNLog.info("set path mapping for %s to %s",k,v)
         httpServer.pathmappings[k]=v
     for handler in AVNWorker.getAllHandlers(disabled=True):
-      handledCommands=handler.getHandledCommands()
+      handledCommands=handler.getApiType()
       if handledCommands is not None:
           httpServer.registerRequestHandler(handledCommands,handler)
       pathes=handler.getHandledPathes()

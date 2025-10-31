@@ -27,7 +27,7 @@ import PropTypes from 'prop-types';
 import Button from "./Button";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
-import Requests from "../util/requests";
+import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
 import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
@@ -149,16 +149,12 @@ const UploadHandler = (props) => {
         reader.readAsText(file);
     }, [props.doneCallback, error]);
     const uploadServer = useCallback((file, name, type, opt_options, opt_param) => {
-        let url = globalStore.getData(keys.properties.navUrl)
-            + "?request=upload&type=" + type
-            + "&name=" + encodeURIComponent(name);
-        if (opt_options) {
-            for (let k in opt_options) {
-                if (opt_options[k] !== undefined) {
-                    url += "&" + k + "=" + encodeURIComponent(opt_options[k]);
-                }
-            }
-        }
+        let url = prepareUrl({
+            ...opt_options,
+            type:type,
+            command:'upload',
+            name:name
+        })
         let currentSequence = uploadSequenceRef.current;
         Requests.uploadFile(url, file, {
             starthandler: function (param, xhdr) {

@@ -89,7 +89,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       return None
     rt={
                      "basedir":"",
-                     "navurl":"/viewer/avnav_navi.php", #those must be absolute with /
+                     "navurl":"/api", #those must be absolute with /
+                     "navurlCompat":"/viewer/avnav_navi.php",
                      "index":"/viewer/avnav_viewer.html",
                      "chartbase": "maps", #this is the URL without leading /!
                      cls.PORT_CONFIG:"8080",
@@ -114,7 +115,6 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     if pathmappings.get('user') is None:
       pathmappings['user']=os.path.join(datadir,'user')
     self.pathmappings=pathmappings
-    self.navurl=cfgparam['navurl']
     self.overwrite_map=({
                               '.png': 'image/png',
                               '.js': 'text/javascript; charset=utf-8',
@@ -153,6 +153,22 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       self.interfaceReader.daemon=True
       self.interfaceReader.start()
     self.serve_forever()
+
+  def isNavUrl(self,url):
+      '''
+      returns the trailing path after the navurl if the url matches the navurl
+      can be empty
+      returns None otherwise
+      :param url:
+      :return:
+      '''
+      if url is None:
+          return None
+      cfg=self.getConfigParam()
+      for navurl in [cfg.get('navurl'),cfg.get('navurlCompat')]:
+        if navurl is not None and url.startswith(navurl):
+            return url[len(navurl)+1:]
+      return None
 
   def handlePathmapping(self,path):
     if not self.pathmappings is None:

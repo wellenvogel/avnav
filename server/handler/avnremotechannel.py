@@ -212,18 +212,16 @@ class AVNRemoteChannelHandler(AVNWorker):
 
 
   PREFIX='remotechannels'
-  def getHandledCommands(self):
+  def getApiType(self):
     return self.PREFIX
 
   def getWebsocketPrefixes(self):
       return ["/"+self.PREFIX]
 
-  def handleApiRequest(self, type, command, requestparam,handler=None, **kwargs):
-    if type == 'api':
-      if command == 'enabled':
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
+    if command == 'enabled':
         return {'status':'OK','enabled': self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param)}
-      return {'status':'invalid command '+command}
-    raise Exception(f"invalid api request {type}")
+    raise Exception(f"invalid api request {command}")
 
   def handleWebSocketRequest(self, type, path, handler=None, **kwargs):
     if handler is None:

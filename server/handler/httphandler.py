@@ -94,7 +94,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
   def do_POST(self):
     maxlen=5000000
     (path,sep,query) = self.path.partition('?')
-    if not path.startswith(self.server.navurl):
+    trailing=self.server.isNavUrl(path)
+    if trailing is None:
       self.send_error(404, "unsupported post url")
       return
     try:
@@ -115,7 +116,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         postvars = {}
       requestParam=urllib.parse.parse_qs(query,True)
       requestParam.update(postvars)
-      self.handleNavRequest(path,requestParam)
+      self.handleNavRequest(trailing,requestParam)
     except Exception as e:
       txt=traceback.format_exc()
       AVNLog.ld("unable to process request for ",path,query,txt)
@@ -214,9 +215,10 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         return None
       if extPath is not None:
         return extPath
-      if path.startswith(self.server.navurl):
+      trailing=self.server.isNavUrl(path)
+      if trailing is not None:
         requestParam=urllib.parse.parse_qs(query,True)
-        self.handleNavRequest(path,requestParam)
+        self.handleNavRequest(trailing,requestParam)
         return None
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
@@ -275,7 +277,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
 
   DIRECT_RMAP=['download','upload','list','delete','upload']
   def mapOldStyleRequest(self,requestType,type):
-      if requestType == 'gps' or requestType== 'self':
+      if requestType == 'gps' or requestType== 'self' or requestType is None:
           return ('decoder','gps')
       if requestType == 'ais' or requestType == 'nmeaStatus':
           return ('decoder',requestType)
@@ -290,33 +292,42 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           return (type,requestType)
       if requestType == 'listDir':
           return (type,'list')
-  #handle a navigational query
-  #request parameters:
-  #request=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
-  #request: gps,status,...
-  #filter is a key of the map in the form prefix-suffix
 
-  def handleNavRequest(self,path,requestParam):
+  def handleNavRequest(self,trailing,requestParam):
+    ''' handle an api query
+      request parameters:
+      request=api&type=decoder&command=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
+      or
+      /decoder/gps?&filter=TPV&bbox=54.531,13.014,54.799,13.255
+    '''
     #check if we have something behind the navurl
-    #treat this as a filename and set it ion the request parameter
-    fname=path[(len(self.server.navurl)+1):]
-    if fname is not None and fname != "":
-      fname=fname.split('?',1)[0]
-      if fname != "":
-        if requestParam.get('filename') is None:
-          requestParam['filename']=[fname.encode('utf-8')]
-    requestType=AVNUtil.getHttpRequestParam(requestParam,'request',False)
-    if requestType is None:
-      requestType='gps'
-    AVNLog.ld('navrequest ',requestParam)
+    #treat this as type/command
     type=None
+    command=None
+    requestType=None
+    if trailing is not None and trailing != "":
+        #new style requests
+        tparts=trailing.split("/")
+        if len(tparts) >= 2:
+            type=tparts[0]
+            command=tparts[1]
+            requestType='api'
+    requestTypeP=AVNUtil.getHttpRequestParam(requestParam,'request',False)
+    if requestTypeP is not None:
+        requestType=requestTypeP
+    AVNLog.ld('navrequest ',requestParam)
     try:
       rtj=None
-      type=AVNUtil.getHttpRequestParam(requestParam,'type',False)
-      command=None
+      typeP=AVNUtil.getHttpRequestParam(requestParam,'type',False)
+      if typeP is not None:
+          type=typeP
       converted=self.mapOldStyleRequest(requestType,type)
       if converted is None:
-          command=AVNUtil.getHttpRequestParam(requestParam,'command',True)
+          commandP=AVNUtil.getHttpRequestParam(requestParam,'command',False)
+          if commandP is not None:
+              command=commandP
+          if command is None:
+              raise Exception(f"missing parameter command for api request {type}")
       else:
           type=converted[0]
           command=converted[1]
@@ -355,7 +366,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       raise Exception("no handler found for request %s"%type)
     if command == 'upload':
         self.connection.settimeout(30)
-    rtj = handler.handleApiRequest('api', command, requestParam,handler=self)
+    rtj = handler.handleApiRequest(command, requestParam, handler=self)
     return rtj
 
   def writeStream(self,bToSend,fh):

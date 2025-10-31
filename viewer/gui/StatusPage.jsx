@@ -9,7 +9,7 @@ import keys from '../util/keys.jsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
-import Requests from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests.js';
 import {
     showDialog,
     showPromiseDialog
@@ -366,7 +366,10 @@ class StatusPage extends React.Component{
                         showDialog(undefined,(props)=>{
                             return <LogDialog
                                 {...props}
-                                baseUrl={globalStore.getData(keys.properties.navUrl)+"?request=download&type=config"}
+                                baseUrl={prepareUrl({
+                                    type:'config',
+                                    command:'download',
+                                }) }
                                 title={'AvNav Log'}
                             />
                         });

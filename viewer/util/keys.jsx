@@ -389,7 +389,7 @@ let keys={
         networkTimeout: new Property(8000,"Network timeout(ms)",PropertyType.RANGE,[1000,20000,100]),
         wpaQueryTimeout: new Property(10000), //ms
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
-        navUrl: new Property("/viewer/avnav_navi.php"),
+        navUrl: new Property("/api"),
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px

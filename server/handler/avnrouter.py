@@ -766,7 +766,6 @@ class AVNRouter(AVNDirectoryHandlerBase):
     rt = AVNUtil.getReturnData(items=data)
     return rt
   def handleSpecialApiRequest(self,command,requestparam,handler):
-    command=AVNUtil.getHttpRequestParam(requestparam, 'command',True)
     if (command == 'getleg'):
       if self.currentLeg is None:
         return {}
