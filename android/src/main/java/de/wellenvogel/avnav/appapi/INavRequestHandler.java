@@ -39,7 +39,7 @@ public interface INavRequestHandler {
      */
     boolean handleDelete(String name, Uri uri) throws Exception;
 
-    JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception;
+    JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception;
 
     /**
      * handle a direct request if our prefix matches

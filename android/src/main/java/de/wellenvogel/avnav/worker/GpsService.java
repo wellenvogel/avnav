@@ -25,8 +25,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
-import android.view.View;
-import android.widget.RemoteViews;
+
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -64,7 +63,6 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
-import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsEnabled;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 
@@ -205,11 +203,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (serverInfo != null){
             return RequestHandler.getErrorReturn("can only handle config locally");
         }
-        String command=AvnUtil.getMandatoryParameter(uri,"command");
         if ("createHandler".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             String config=postData.getAsString();

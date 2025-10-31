@@ -530,7 +530,8 @@ public class WebServer extends Worker {
             };
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
-            registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
+            registry.register(RequestHandler.NAVURL+"*",navRequestHandler);
+            registry.register(RequestHandler.NAVURL_COMPAT+"*",navRequestHandler);
             for (INavRequestHandler h: gpsService.getRequestHandler().getHandlers()){
                 String prefix=h.getPrefix();
                 if (prefix == null) continue;

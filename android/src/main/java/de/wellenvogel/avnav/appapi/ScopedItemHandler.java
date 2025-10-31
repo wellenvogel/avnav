@@ -111,8 +111,7 @@ public class ScopedItemHandler implements INavRequestHandler{
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        String command= AvnUtil.getMandatoryParameter(uri,"command");
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("list")){
             RequestHandler.getReturn(new AvnUtil.KeyValue("data",handleList(uri, serverInfo)));
         }

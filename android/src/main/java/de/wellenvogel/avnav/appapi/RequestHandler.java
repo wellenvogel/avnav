@@ -20,6 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +50,8 @@ public class RequestHandler {
      */
     public static final String INTERNAL_URL_PREFIX ="http://assets";
     public static final String ROOT_PATH="/viewer";
-    protected static final String NAVURL="viewer/avnav_navi.php";
+    protected static final String NAVURL="/api";
+    protected static final String NAVURL_COMPAT="/viewer/avnav_navi.php";
     GpsService service;
     private SharedPreferences preferences;
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
@@ -368,12 +370,12 @@ public class RequestHandler {
         if (path == null) return null;
         if (url.startsWith(INTERNAL_URL_PREFIX)){
             try {
-                if (path.startsWith("/")) path=path.substring(1);
-                if (path.startsWith(NAVURL)){
+                if (path.startsWith(NAVURL) || path.startsWith(NAVURL_COMPAT)){
                     return handleNavRequest(uri,null);
                 }
                 ExtendedWebResourceResponse rt=tryDirectRequest(uri,method);
                 if (rt != null) return rt;
+                if (path.startsWith("/")) path=path.substring(1);
                 InputStream is= (view != null)?view.getContext().getAssets().open(path):service.getAssets().open(path);
                 Log.i(LOGPRFX,String.format("loading asset %s from %s (%d avail)",path,Thread.currentThread().getId(),is.available()));
                 return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
@@ -506,22 +508,84 @@ public class RequestHandler {
         boolean isJson(){return jsonResponse != null;}
         Object getJson(){return jsonResponse;}
     }
+    static class RType{
+        public String type=null;
+        public String command=null;
+        public RType(String type, String command){
+            this.type=type;
+            this.command=command;
+        }
+        public RType(){}
+        void setCommand(String command){
+            if (command != null) this.command=command;
+        }
+        void setType(String type){
+            if (type != null) this.type=type;
+        }
+        boolean compare(String type,String command){
+            return type.equals(this.type) && command.equals(this.command);
+        }
+    }
+
+    RType mapOldStyleRequest(String request,RType tc){
+        if ("api".equals(request)) return tc;
+        RType rt=new RType(tc.type,tc.command);
+        if (Arrays.asList(new String[]{null,"gps","self"}).contains(request)){
+            rt.type="decoder";
+            rt.command="gps";
+            return rt;
+        }
+        if (Arrays.asList(new String[]{"ais","nmeaStatus"}).contains(request)){
+            rt.type="decoder";
+            rt.command=request;
+            return rt;
+        }
+        if (Arrays.asList(new String[]{"status","loglevel","currentLogLevel"}).contains(request)){
+            rt.type="config";
+            rt.command=request;
+            return rt;
+        }
+        if (Arrays.asList(new String[]{"download","upload","list","delete"}).contains(request)){
+            rt.command=request;
+            return rt;
+        }
+        if ("listDir".equals(request)){
+            rt.command="list";
+            return rt;
+        }
+        return rt;
+    }
     NavResponse handleNavRequestInternal(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
         long start=SystemClock.uptimeMillis();
         if (uri.getPath() == null) return null;
         String remain=uri.getPath();
-        if (remain.startsWith("/")) remain=remain.substring(1);
+        String request=null;
+        RType typeAndCommand=new RType();
         if (remain != null) {
-            remain=remain.substring(Math.min(remain.length(),NAVURL.length()+1));
+            if (remain.startsWith(NAVURL)) {
+                remain = remain.substring(Math.min(remain.length(), NAVURL.length() + 1));
+            }
+            else{
+                remain = remain.substring(Math.min(remain.length(), NAVURL_COMPAT.length() + 1));
+            }
+            String[] parts=remain.split("/");
+            if (parts.length >= 2){
+                typeAndCommand.setType(parts[0]);
+                typeAndCommand.setCommand(parts[1]);
+                request="api";
+            }
         }
-        String type=uri.getQueryParameter("request");
-        if (type == null) type="gps";
+        String prequest=uri.getQueryParameter("request");
+        if (prequest != null) request=prequest;
+        typeAndCommand.setType(uri.getQueryParameter("type"));
+        typeAndCommand.setCommand(uri.getQueryParameter("command"));
+        typeAndCommand=mapOldStyleRequest(request,typeAndCommand);
         Object fout=null;
         InputStream is=null;
         int len=0;
         boolean handled=false;
         try{
-            if (type.equals("gps")){
+            if (typeAndCommand.compare("decoder","gps")){
                 handled=true;
                 JSONObject navLocation=null;
                 if (getGpsService() != null) {
@@ -532,7 +596,7 @@ public class RequestHandler {
                 }
                 fout=navLocation;
             }
-            if (type.equals("nmeaStatus")){
+            else if (typeAndCommand.compare("decoder","nmeaStatus")){
                 handled=true;
                 JSONObject o=new JSONObject();
                 if (getGpsService() != null) {
@@ -545,7 +609,7 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            if (type.equals("ais")) {
+            else if (typeAndCommand.compare("decoder","ais")) {
                 handled=true;
                 ArrayList<Location> centers=new ArrayList<Location>();
                 String sdistance=uri.getQueryParameter("distance");
@@ -570,17 +634,17 @@ public class RequestHandler {
                     fout=getGpsService().getAisData(centers, distance);
                 }
             }
-            if (type.equals("route")){
+            else if ("route".equals(typeAndCommand.type)){
                 if (getGpsService() != null && getRouteHandler() != null) {
-                    JSONObject o=getRouteHandler().handleApiRequest(uri,postData, null);
+                    JSONObject o=getRouteHandler().handleApiRequest(typeAndCommand.command, uri, postData, null);
                     if (o != null){
                         handled=true;
                         fout=o;
                     }
                 }
             }
-            if (type.equals("listdir") || type.equals("list")){
-                String dirtype=uri.getQueryParameter("type");
+            else if ("list".equals(typeAndCommand.command)){
+                String dirtype=typeAndCommand.type;
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
                     if (handler instanceof NavRequestHandlerBase){
@@ -593,14 +657,13 @@ public class RequestHandler {
                 }
 
             }
-            if (type.equals("download")){
+            else if ("download".equals(typeAndCommand.command)){
                 boolean setAttachment=true;
-                String dltype=uri.getQueryParameter("type");
                 String name=uri.getQueryParameter("name");
                 String noattach=uri.getQueryParameter("noattach");
                 if (noattach != null && noattach.equals("true")) setAttachment=false;
                 ExtendedWebResourceResponse resp=null;
-                INavRequestHandler handler=getHandler(dltype);
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
                 if (handler != null){
                     handled=true;
                     try {
@@ -610,7 +673,7 @@ public class RequestHandler {
                         return null;
                     }
                 }
-                if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
+                if (!handled && typeAndCommand.type != null && typeAndCommand.type.equals("alarm") && name != null) {
                     AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name, service);
                     if (info != null){
                         AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info, service);
@@ -645,20 +708,19 @@ public class RequestHandler {
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return new NavResponse(resp);
             }
-            if (type.equals("delete")) {
+            else if ("delete".equals(typeAndCommand.command)) {
                 JSONObject o=new JSONObject();
-                String dtype = uri.getQueryParameter("type");
                 String name = uri.getQueryParameter("name");
-                INavRequestHandler handler=getHandler(dtype);
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
                 if (handler != null){
                     handled=true;
                     try {
                         boolean deleteOk = handler.handleDelete(name, uri);
-                        if (!"chart".equals(dtype)) {
+                        if (!"chart".equals(typeAndCommand.type)) {
                             INavRequestHandler chartHandler = getHandler("chart");
                             if (chartHandler != null) {
                                 try {
-                                    ((ChartHandler) chartHandler).deleteFromOverlays(dtype, name);
+                                    ((ChartHandler) chartHandler).deleteFromOverlays(typeAndCommand.type, name);
                                 } catch (Exception e){
                                     AvnLog.e("exception when trying to delete from overlays",e);
                                 }
@@ -675,7 +737,7 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            if (type.equals("status")){
+            else if (typeAndCommand.compare("config","status")){
                 handled=true;
                 JSONObject o=new JSONObject();
                 JSONArray items=new JSONArray();
@@ -688,7 +750,7 @@ public class RequestHandler {
                 o.put("handler",items);
                 fout=o;
             }
-            if (type.equals("alarm")){
+            else if ("alarm".equals(typeAndCommand.type)){
                 handled=true;
                 JSONObject o=null;
                 String status=uri.getQueryParameter("status");
@@ -725,11 +787,11 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            if (type.equals("upload")){
+            else if ("upload".equals(typeAndCommand.command)){
                 fout=handleUploadRequest(uri,postData);
                 if (fout != null) handled=true;
             }
-            if (type.equals("capabilities")){
+            else if (typeAndCommand.compare("config","capabilities")){
                 //see keys.jsx in viewer - gui.capabilities
                 handled=true;
                 JSONObject o=new JSONObject();
@@ -753,12 +815,12 @@ public class RequestHandler {
                 }
                 fout=getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
             }
-            if (type.equals("api")){
+            else {
                 try {
-                    String apiType = AvnUtil.getMandatoryParameter(uri, "type");
+                    String apiType = typeAndCommand.type;
                     LazyHandlerAccess handler = handlerMap.get(apiType);
                     if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
-                    JSONObject resp=handler.getHandler().handleApiRequest(uri,postData, serverInfo);
+                    JSONObject resp=handler.getHandler().handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
                     if (resp == null){
                         fout=getErrorReturn("api request returned null");
                     }
@@ -771,13 +833,13 @@ public class RequestHandler {
 
             }
             if (!handled){
-                AvnLog.d(LOGPRFX,"unhandled nav request "+type);
+                AvnLog.d(LOGPRFX,"unhandled nav request "+typeAndCommand.type);
             }
             long done=SystemClock.uptimeMillis();
             if ((done-start) > 3000){
                 long dummy=done-start;
                 dummy=dummy+1;
-                AvnLog.d(LOGPRFX,"long navrequest "+type+" duration: "+dummy);
+                AvnLog.d(LOGPRFX,"long navrequest "+typeAndCommand.type+" duration: "+dummy);
             }
             if (fout != null) return new NavResponse(fout);
             return new NavResponse(getErrorReturn("request not handled"));
