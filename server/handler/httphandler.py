@@ -277,6 +277,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
 
   DIRECT_RMAP=['download','upload','list','delete','upload']
   def mapOldStyleRequest(self,requestType,type):
+      if requestType == 'api':
+          return None
       if requestType == 'gps' or requestType== 'self' or requestType is None:
           return ('decoder','gps')
       if requestType == 'ais' or requestType == 'nmeaStatus':
@@ -286,8 +288,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           return ('config',requestType)
       if type is None:
           raise Exception(f"missing parameter type for {requestType}")
-      if requestType == 'api':
-          return None
       if requestType in self.DIRECT_RMAP:
           return (type,requestType)
       if requestType == 'listDir':
