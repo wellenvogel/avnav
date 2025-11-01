@@ -156,7 +156,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private static final String LOGPRFX="Avnav:GpsService";
     private BroadcastReceiver broadCastReceiverStop;
     private BroadcastReceiver broadCastReceiverPlugin;
-    private boolean mdnsUpdateRunning;
 
     @Override
     public void updated() {
@@ -200,6 +199,21 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         synchronized (configSequenceLock){
             configSequence++;
         }
+    }
+    public void updateAlarmSequence(){
+        synchronized (configSequenceLock){
+            alarmSequence++;
+        }
+    }
+    void setUpdateInfo(JSONObject o) throws JSONException {
+        synchronized (configSequenceLock){
+            o.put("updatealarm",alarmSequence);
+            o.put("updateconfig",configSequence);
+            o.put("version",avnavVersion);
+        }
+        RouteHandler routeHandler=getRouteHandler();
+        if (routeHandler != null) o.put("updateleg",routeHandler.getLegSequence());
+        else o.put("updateleg",-1);
     }
 
     @Override
@@ -631,7 +645,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         edit.commit();
     }
 
-    private Decoder getDecoder(){
+    public Decoder getDecoder(){
         IWorker decoder=findWorkerById(WDECODER.id);
         return (Decoder)decoder;
     }
@@ -1587,35 +1601,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     }
 
-    public JSONObject getGpsData() throws JSONException{
-        Decoder dec=getDecoder();
-        JSONObject rt=dec!=null?dec.getGpsData():null;
-        if (rt == null){
-            rt=new JSONObject();
-        }
-        rt.put("updatealarm",alarmSequence);
-        long legSequence=-1;
-        RouteHandler routeHandler=getRouteHandler();
-        if (routeHandler != null) legSequence=routeHandler.getLegSequence();
-        rt.put("updateleg",legSequence);
-        synchronized (configSequenceLock){
-            rt.put("updateconfig",configSequence);
-        }
-        if (avnavVersion != 0) {
-            rt.put("version", avnavVersion);
-        }
-        return rt;
-    }
 
     private Location getLocation() throws JSONException {
         Decoder dec=getDecoder();
         return dec!=null?dec.getLocation():null;
     }
 
-    public JSONArray getAisData(List<Location> centers, double distance){
-        Decoder dec=getDecoder();
-        return dec != null?dec.getAisData(centers,distance):null;
-    }
 
     public void setMediaUpdater(IMediaUpdater u) {
         mediaUpdater = u;
@@ -1630,58 +1621,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
 
-    /**
-     * get the status for NMEA and AIS
-     * @return
-     * nmea: { source: internal, status: green , info: 3 visible/2 used}
-     * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
-     * @throws JSONException
-     */
-    public JSONObject getNmeaStatus() throws JSONException {
-        JSONObject nmea = new JSONObject();
-        nmea.put("source", "unknown");
-        nmea.put("status", "red");
-        nmea.put("info", "disabled");
-        JSONObject ais = new JSONObject();
-        ais.put("source", "unknown");
-        ais.put("status", "red");
-        ais.put("info", "disabled");
-        Decoder decoder=getDecoder();
-        if (decoder != null) {
-            Decoder.SatStatus st = decoder.getSatStatus();
-            nmea.put("source", st.getSource());
-            if (st.hasValidPosition()) {
-                nmea.put("status", "green");
-                nmea.put("info", "sats: " + st.getNumSat() + " / " + st.getNumUsed());
-            } else {
-                if (st.isGpsEnabled()) {
-                    nmea.put("info", "con, sats: " + st.getNumSat() + " / " + st.getNumUsed());
-                    nmea.put("status", "yellow");
-                } else {
-                    nmea.put("info", "disconnected");
-                    nmea.put("status", "red");
-                }
-            }
-            ais.put("source", decoder.getLastAisSource());
-            int aisTargets = decoder.numAisData();
-            if (aisTargets > 0) {
-                ais.put("status", "green");
-                ais.put("info", aisTargets + " targets");
-            } else {
-                if (st.isGpsEnabled()) {
-                    ais.put("info", "connected");
-                    ais.put("status", "yellow");
-                } else {
-                    ais.put("info", "disconnected");
-                    ais.put("status", "red");
-                }
-            }
-        }
-        JSONObject rt = new JSONObject();
-        rt.put("nmea", nmea);
-        rt.put("ais", ais);
-        return rt;
-    }
+
     public synchronized JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         for (IWorker w: internalWorkers){

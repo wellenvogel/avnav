@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
@@ -56,6 +57,10 @@ import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
+import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -65,7 +70,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class Decoder extends Worker {
+public class Decoder extends Worker  implements INavRequestHandler {
     private static final String K_SET = "currentSet";
     private static final String K_DFT = "currentDrift";
     private static final String K_HDGT = "headingTrue";
@@ -108,6 +113,127 @@ public class Decoder extends Worker {
 
     private void addParameters(){
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE, QUEUE_AGE_PARAMETER);
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        throw new InvalidCommandException("download not suppoerted for decoder");
+    }
+
+    @Override
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        throw new InvalidCommandException("upload not suppoerted for decoder");
+    }
+
+    @Override
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        throw new InvalidCommandException("list not suppoerted for decoder");
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        throw new InvalidCommandException("delete not suppoerted for decoder");
+    }
+
+    /**
+     * get the status for NMEA and AIS
+     * @return
+     * nmea: { source: internal, status: green , info: 3 visible/2 used}
+     * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
+     * @throws JSONException
+     */
+    private JSONObject getNmeaStatus() throws JSONException {
+        JSONObject nmea = new JSONObject();
+        nmea.put("source", "unknown");
+        nmea.put("status", "red");
+        nmea.put("info", "disabled");
+        JSONObject ais = new JSONObject();
+        ais.put("source", "unknown");
+        ais.put("status", "red");
+        ais.put("info", "disabled");
+        SatStatus st = getSatStatus();
+        nmea.put("source", st.getSource());
+        if (st.hasValidPosition()) {
+            nmea.put("status", "green");
+            nmea.put("info", "sats: " + st.getNumSat() + " / " + st.getNumUsed());
+        } else {
+            if (st.isGpsEnabled()) {
+                nmea.put("info", "con, sats: " + st.getNumSat() + " / " + st.getNumUsed());
+                nmea.put("status", "yellow");
+            } else {
+                nmea.put("info", "disconnected");
+                nmea.put("status", "red");
+            }
+        }
+        ais.put("source", getLastAisSource());
+        int aisTargets = numAisData();
+        if (aisTargets > 0) {
+            ais.put("status", "green");
+            ais.put("info", aisTargets + " targets");
+        } else {
+            if (st.isGpsEnabled()) {
+                ais.put("info", "connected");
+                ais.put("status", "yellow");
+            } else {
+                ais.put("info", "disconnected");
+                ais.put("status", "red");
+            }
+        }
+        JSONObject rt = new JSONObject();
+        rt.put("nmea", nmea);
+        rt.put("ais", ais);
+        return rt;
+    }
+    @Override
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if ("gps".equals(command)) {
+            JSONObject o = getGpsData();
+            gpsService.setUpdateInfo(o);
+            return o;
+        }
+        if ("gpsV2".equals(command)) {
+            JSONObject o = getGpsData();
+            gpsService.setUpdateInfo(o);
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", o));
+        }
+        if ("nmeaStatus".equals(command)) {
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", getNmeaStatus()));
+        }
+        if ("ais".equals(command)) {
+            ArrayList<Location> centers = new ArrayList<Location>();
+            String sdistance = uri.getQueryParameter("distance");
+            double lat = 0, lon = 0, distance = 0;
+            String[] suffixes = new String[]{"", "1"};
+            for (String sfx : suffixes) {
+                String slat = uri.getQueryParameter("lat" + sfx);
+                String slon = uri.getQueryParameter("lon" + sfx);
+                try {
+                    if (slat != null) lat = Double.parseDouble(slat);
+                    if (slon != null) lon = Double.parseDouble(slon);
+                    Location l = new Location((String) null);
+                    l.setLatitude(lat);
+                    l.setLongitude(lon);
+                    centers.add(l);
+                } catch (Exception e) {
+                }
+            }
+            try {
+                if (sdistance != null) distance = Double.parseDouble(sdistance);
+            } catch (Exception e) {
+            }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data", getAisData(centers, distance)));
+        }
+        throw new InvalidCommandException("command "+command+" not handled in decoder");
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
+        return "";
     }
 
     private static class NmeaEntry {

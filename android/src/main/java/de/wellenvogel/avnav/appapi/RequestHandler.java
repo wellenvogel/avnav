@@ -74,6 +74,7 @@ public class RequestHandler {
     public static String TYPE_ADDON="addon";
     public static String TYPE_CONFIG="config";
     public static String TYPE_REMOTE="remotechannels";
+    public static String TYPE_DECODER="decoder";
 
 
     static final String LOGPRFX="AvNav:requestHandler";
@@ -300,6 +301,14 @@ public class RequestHandler {
             public INavRequestHandler getHandler() {
                 GpsService s=getGpsService();
                 if (s != null) return s.getRemoteChannel();
+                return null;
+            }
+        });
+        handlerMap.put(TYPE_DECODER, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                GpsService s=getGpsService();
+                if (s != null) return s.getDecoder();
                 return null;
             }
         });
@@ -585,65 +594,7 @@ public class RequestHandler {
         int len=0;
         boolean handled=false;
         try{
-            if (typeAndCommand.compare("decoder","gps")){
-                handled=true;
-                JSONObject navLocation=null;
-                if (getGpsService() != null) {
-                    navLocation=getGpsService().getGpsData();
-                    if (navLocation == null) {
-                        navLocation = new JSONObject();
-                    }
-                }
-                fout=navLocation;
-            }
-            else if (typeAndCommand.compare("decoder","nmeaStatus")){
-                handled=true;
-                JSONObject o=new JSONObject();
-                if (getGpsService() != null) {
-                    JSONObject status = getGpsService().getNmeaStatus();
-                    o.put("data", status);
-                    o.put("status", "OK");
-                }
-                else{
-                    o.put("status","no gps service");
-                }
-                fout=o;
-            }
-            else if (typeAndCommand.compare("decoder","ais")) {
-                handled=true;
-                ArrayList<Location> centers=new ArrayList<Location>();
-                String sdistance=uri.getQueryParameter("distance");
-                double lat=0,lon=0,distance=0;
-                String[] suffixes=new String[]{"","1"};
-                for (String sfx:suffixes){
-                    String slat=uri.getQueryParameter("lat"+sfx);
-                    String slon=uri.getQueryParameter("lon"+sfx);
-                    try{
-                        if (slat != null) lat=Double.parseDouble(slat);
-                        if (slon != null) lon=Double.parseDouble(slon);
-                        Location l=new Location((String)null);
-                        l.setLatitude(lat);
-                        l.setLongitude(lon);
-                        centers.add(l);
-                    }catch(Exception e){}
-                }
-                try{
-                    if (sdistance != null)distance=Double.parseDouble(sdistance);
-                }catch (Exception e){}
-                if (getGpsService() !=null){
-                    fout=getGpsService().getAisData(centers, distance);
-                }
-            }
-            else if ("route".equals(typeAndCommand.type)){
-                if (getGpsService() != null && getRouteHandler() != null) {
-                    JSONObject o=getRouteHandler().handleApiRequest(typeAndCommand.command, uri, postData, null);
-                    if (o != null){
-                        handled=true;
-                        fout=o;
-                    }
-                }
-            }
-            else if ("list".equals(typeAndCommand.command)){
+            if ("list".equals(typeAndCommand.command)){
                 String dirtype=typeAndCommand.type;
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
@@ -818,6 +769,9 @@ public class RequestHandler {
             else {
                 try {
                     String apiType = typeAndCommand.type;
+                    if (typeAndCommand.command == null){
+                        throw new Exception("invalid api request "+apiType+" without command");
+                    }
                     LazyHandlerAccess handler = handlerMap.get(apiType);
                     if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
                     JSONObject resp=handler.getHandler().handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);

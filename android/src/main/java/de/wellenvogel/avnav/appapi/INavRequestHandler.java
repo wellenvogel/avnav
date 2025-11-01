@@ -9,6 +9,12 @@ import java.io.FileNotFoundException;
 
 public interface INavRequestHandler {
 
+    public class InvalidCommandException extends Exception{
+        public InvalidCommandException(String reason){
+            super(reason);
+        }
+    };
+
     ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception;
 
     /**
