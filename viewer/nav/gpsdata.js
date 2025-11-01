@@ -190,9 +190,10 @@ GpsData.prototype.startQuery=function(){
     Requests.getJson({
         request:'api',
         type:'decoder',
-        command:"gps"
-    },{checkOk:false}).then(
+        command:"gpsV2"
+    },).then(
         (data)=>{
+            if (! data.data) throw new Error("no data in gps response");
             this.handleGpsResponse(data,true);
             this.timer=window.setTimeout(()=>{
                 this.startQuery();

@@ -69,7 +69,6 @@ const queryData=async (distance,center,timeout,navUrl)=>{
         param['lon' + sfx] = formatter.formatDecimal(center[idx].lon, 3, 5, false, true);
     }
     return Requests.getJson(navUrl, {
-        checkOk: false,
         timeout: timeout/2,
         useNavUrl:false
         },param).then(
@@ -77,8 +76,8 @@ const queryData=async (distance,center,timeout,navUrl)=>{
             aisErrors=0;
             let now = Helper.now();
             let aisList = [];
-            if (data['class'] && data['class'] == "error") aisList = [];
-            else aisList = data;
+            if (! data.data) aisList = [];
+            else aisList = data.data;
             aisList.forEach((ais) => {
                 ais.receiveTime = now;
             })

@@ -94,6 +94,8 @@ class AVNDecoder(AVNWorker):
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
       if command == 'gps':
           return self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
+      if command == 'gpsV2':
+          return AVNUtil.getReturnData(data=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS))
       if command == 'ais':
           rt = self.navdata.getAisData()
           lat = None
@@ -149,7 +151,7 @@ class AVNDecoder(AVNWorker):
                       frt.append(entry)
                   except Exception as e:
                       AVNLog.debug("unable to convert ais data: %s", traceback.format_exc())
-          return frt
+          return AVNUtil.getReturnData(data=frt)
       if command == 'nmeaStatus':
           rtv = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
           # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
