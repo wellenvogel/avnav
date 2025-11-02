@@ -57,7 +57,8 @@ class AVNDirectoryListEntry(object):
     self.name=name
     self.type=type
     self.prefix=prefix
-    self.url=prefix+"/"+urllib.parse.quote(name.encode('utf-8'))
+    if prefix is not None:
+        self.url=prefix+"/"+urllib.parse.quote(name.encode('utf-8'))
     self.time=time
     self.size=size
     self.canDelete=canDelete
@@ -309,8 +310,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return True
 
 
-  def listDirectory(self,includeDirs=False,baseDir=None):
-    # type: (bool,str) -> list[AVNDirectoryListEntry]
+  def listDirectory(self,includeDirs=False,baseDir=None,extensions=None):
+    # type: (bool,str,list[str]|None) -> list[AVNDirectoryListEntry]
     data = []
     if baseDir is None:
       baseDir=self.baseDir
@@ -323,6 +324,11 @@ class AVNDirectoryHandlerBase(AVNWorker):
         if not includeDirs:
           continue
         isDir=True
+      else:
+        if extensions is not None:
+          (path,ext)=os.path.splitext(f)
+          if not ext in extensions:
+              continue
       element = self.getListEntryClass()(self.type, self.getPrefix(), f,
                                       time=os.path.getmtime(fullname),
                                       size=os.path.getsize(fullname),
@@ -467,11 +473,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getApiType(self):
     return self.type
 
-  def getHandledPathes(self):
-      prefix = self.getPrefix()
-      if prefix is not None:
-          return [prefix]
-      return []
+  def getHandledPath(self):
+      return  self.getPrefix()
 
   def handleRename(self,name,newName,requestparam):
     self.checkName(name)
@@ -625,7 +628,8 @@ class AVNScopedDirectoryEntry(AVNDirectoryListEntry):
     else:
       self.scopePrefix=ltype
     self.scopedName=self.scopePrefix+"."+self.name
-    self.url=self.prefix+"/"+urllib.parse.quote(self.scopedName.encode('utf-8'))
+    if self.prefix is not None:
+        self.url=self.prefix+"/"+urllib.parse.quote(self.scopedName.encode('utf-8'))
     self.canDelete=ltype == self.T_USER
 
   def isSame(self, other):
@@ -719,8 +723,8 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     if self.systemDir is not None:
       self.systemItems=self.listDirectory(baseDir=self.systemDir)
 
-  def listDirectory(self, includeDirs=False, baseDir=None):
-    items=super().listDirectory(includeDirs, baseDir)
+  def listDirectory(self, includeDirs=False, baseDir=None,extensions=None):
+    items=super().listDirectory(includeDirs, baseDir,extensions)
     scope=AVNScopedDirectoryEntry.T_USER
     if baseDir is not None and baseDir == self.systemDir:
       scope=AVNScopedDirectoryEntry.T_SYSTEM

@@ -1751,8 +1751,8 @@ class AVNSignalKHandler(AVNWorker):
       AVNLog.debug("unable to list charts: %s"%traceback.format_exc())
       return []
 
-  def getHandledPathes(self):
-      return [self.PREFIX + "/" + self.CHARTPREFIX]
+  def getHandledPath(self):
+      return self.PREFIX + "/" + self.CHARTPREFIX
 
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
       prefix = self.PREFIX + "/" + self.CHARTPREFIX

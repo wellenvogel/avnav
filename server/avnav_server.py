@@ -268,14 +268,12 @@ def main(argv):
       handledCommands=handler.getApiType()
       if handledCommands is not None:
           httpServer.registerRequestHandler(handledCommands,handler)
-      pathes=handler.getHandledPathes()
-      if pathes is not None:
-          for path in pathes:
-              httpServer.registerPathHandler(path,handler)
-      websockets=handler.getWebsocketPrefixes()
-      if websockets is not None:
-          for websocket in websockets:
-              httpServer.registerWebsocketHandler(websocket,handler)
+      path=handler.getHandledPath()
+      if path is not None:
+        httpServer.registerPathHandler(path,handler)
+      websocket=handler.getWebsocketPrefix()
+      if websocket is not None:
+        httpServer.registerWebsocketHandler(websocket,handler)
     httpServer.registerRequestHandler('config',handlerManager)
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:

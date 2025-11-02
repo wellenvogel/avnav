@@ -831,8 +831,8 @@ class AVNPluginHandler(AVNWorker):
   def getApiType(self):
     return "plugins"
 
-  def getHandledPathes(self):
-      return [URL_PREFIX]
+  def getHandledPath(self):
+      return URL_PREFIX
 
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
       localPath = path[len(URL_PREFIX) + 1:].split("/", 1)

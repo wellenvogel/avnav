@@ -1117,10 +1117,10 @@ class AVNWorker(InfoHandler):
     """
     return None
 
-  def getHandledPathes(self):
-      return []
-  def getWebsocketPrefixes(self):
-      return []
+  def getHandledPath(self):
+      return None
+  def getWebsocketPrefix(self):
+      return None
   def handlePathRequest(self, path, requestparam,server=None,handler=None):
       raise Exception(f"no path mapping for {path} in {self.getConfigName()}")
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):

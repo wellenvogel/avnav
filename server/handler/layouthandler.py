@@ -35,7 +35,6 @@ from avndirectorybase import *
 from avnav_util import *
 
 TYPE="layout"
-PREFIX="/layouts"
 
 
 class AVNLayoutHandler(AVNScopedDirectoryHandler):
@@ -52,7 +51,7 @@ class AVNLayoutHandler(AVNScopedDirectoryHandler):
 
   @classmethod
   def getPrefix(cls):
-    return PREFIX
+    return None
 
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)

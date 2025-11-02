@@ -215,8 +215,8 @@ class AVNRemoteChannelHandler(AVNWorker):
   def getApiType(self):
     return self.PREFIX
 
-  def getWebsocketPrefixes(self):
-      return ["/"+self.PREFIX]
+  def getWebsocketPrefix(self):
+      return "/"+self.PREFIX
 
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     if command == 'enabled':

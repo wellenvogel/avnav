@@ -245,11 +245,8 @@ class AVNUserAppHandler(AVNWorker):
   def getApiType(self):
     return self.TYPE
 
-  def getHandledPathes(self):
-      prefix = self.getPrefix()
-      if prefix is not None:
-          return [prefix]
-      return []
+  def getHandledPath(self):
+      return self.getPrefix()
 
   def checkName(self,name,doRaise=True):
     cleanName=AVNUtil.clean_filename(name)
