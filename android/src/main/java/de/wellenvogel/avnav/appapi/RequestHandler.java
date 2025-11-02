@@ -537,28 +537,29 @@ public class RequestHandler {
     }
 
     RType mapOldStyleRequest(String request,RType tc){
-        if ("api".equals(request)) return tc;
         RType rt=new RType(tc.type,tc.command);
-        if (Arrays.asList(new String[]{null,"gps","self"}).contains(request)){
-            rt.type="decoder";
-            rt.command="gps";
-            return rt;
+        if (! "api".equals(request)) {
+            if (Arrays.asList(new String[]{null, "gps", "self"}).contains(request)) {
+                rt.type = TYPE_DECODER;
+                rt.command = "gps";
+                return rt;
+            }
+            if (Arrays.asList(new String[]{"ais", "nmeaStatus"}).contains(request)) {
+                rt.type = TYPE_DECODER;
+                rt.command = request;
+                return rt;
+            }
+            if (Arrays.asList(new String[]{"status", "loglevel", "currentLogLevel"}).contains(request)) {
+                rt.type = TYPE_CONFIG;
+                rt.command = request;
+                return rt;
+            }
+            if (Arrays.asList(new String[]{"download", "upload", "list", "delete"}).contains(request)) {
+                rt.command = request;
+                return rt;
+            }
         }
-        if (Arrays.asList(new String[]{"ais","nmeaStatus"}).contains(request)){
-            rt.type="decoder";
-            rt.command=request;
-            return rt;
-        }
-        if (Arrays.asList(new String[]{"status","loglevel","currentLogLevel"}).contains(request)){
-            rt.type="config";
-            rt.command=request;
-            return rt;
-        }
-        if (Arrays.asList(new String[]{"download","upload","list","delete"}).contains(request)){
-            rt.command=request;
-            return rt;
-        }
-        if ("listDir".equals(request)){
+        if ("listDir".equals(request) || "listDir".equals(rt.command)){
             rt.command="list";
             return rt;
         }
@@ -574,8 +575,12 @@ public class RequestHandler {
             if (remain.startsWith(NAVURL)) {
                 remain = remain.substring(Math.min(remain.length(), NAVURL.length() + 1));
             }
-            else{
+            else if (remain.startsWith(NAVURL_COMPAT)){
                 remain = remain.substring(Math.min(remain.length(), NAVURL_COMPAT.length() + 1));
+            }
+            else{
+                AvnLog.e("invalid call to handleNavRequestInternal with url "+remain);
+                return null;
             }
             String[] parts=remain.split("/");
             if (parts.length >= 2){
@@ -688,19 +693,6 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            else if (typeAndCommand.compare("config","status")){
-                handled=true;
-                JSONObject o=new JSONObject();
-                JSONArray items=new JSONArray();
-                if (getGpsService() != null) {
-                    JSONArray gpsStatus=getGpsService().getStatus();
-                    for (int i=0;i<gpsStatus.length();i++){
-                        items.put(gpsStatus.get(i));
-                    }
-                }
-                o.put("handler",items);
-                fout=o;
-            }
             else if ("alarm".equals(typeAndCommand.type)){
                 handled=true;
                 JSONObject o=null;
@@ -742,30 +734,6 @@ public class RequestHandler {
                 fout=handleUploadRequest(uri,postData);
                 if (fout != null) handled=true;
             }
-            else if (typeAndCommand.compare("config","capabilities")){
-                //see keys.jsx in viewer - gui.capabilities
-                handled=true;
-                JSONObject o=new JSONObject();
-                o.put("addons",true);
-                o.put("uploadCharts",true);
-                o.put("plugins",false);
-                o.put("uploadRoute",true);
-                o.put("uploadLayout",true);
-                o.put("uploadSettings",true);
-                o.put("canConnect",true);
-                o.put("uploadUser",true);
-                o.put("uploadImages",true);
-                o.put("uploadOverlays",true);
-                o.put("uploadTracks",true);
-                o.put("remoteChannel",true);
-                o.put("fetchHead",Constants.HAS_HEAD_SUPPORT|| serverInfo != null);
-                if (serverInfo == null) {
-                    //we can only handle the config stuff internally
-                    //as potentially there are permission dialogs
-                    o.put("config", true);
-                }
-                fout=getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
-            }
             else {
                 try {
                     String apiType = typeAndCommand.type;
@@ -774,6 +742,7 @@ public class RequestHandler {
                     }
                     LazyHandlerAccess handler = handlerMap.get(apiType);
                     if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
+                    handled=true;
                     JSONObject resp=handler.getHandler().handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
                     if (resp == null){
                         fout=getErrorReturn("api request returned null");

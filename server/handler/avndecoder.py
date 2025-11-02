@@ -93,6 +93,8 @@ class AVNDecoder(AVNWorker):
 
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
       if command == 'gps':
+          #legacy: keep this to allow old clients to at least detect the update
+          #and ask the user to reload
           return self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
       if command == 'gpsV2':
           return AVNUtil.getReturnData(data=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS))
@@ -178,8 +180,7 @@ class AVNDecoder(AVNWorker):
               status = "green"
           src = self.navdata.getLastAisSource()
           statusAis = {"status": status, "source": src, "info": "%d targets" % (numAis)}
-          rt = {"status": "OK", "data": {"nmea": statusNmea, "ais": statusAis}}
-          return rt
+          return AVNUtil.getReturnData(data={"nmea": statusNmea, "ais": statusAis})
       raise Exception(f"Unknown command {command} for decoder api")
 
 class AVNGpsdFeeder(AVNDecoder):

@@ -153,6 +153,6 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
 
     @Override
     public String getPrefix() {
-        return RequestHandler.TYPE_REMOTE;
+        return null;
     }
 }

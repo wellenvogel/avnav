@@ -218,6 +218,31 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if ("capabilities".equals(command)){
+            JSONObject o=new JSONObject();
+            o.put("addons",true);
+            o.put("uploadCharts",true);
+            o.put("plugins",false);
+            o.put("uploadRoute",true);
+            o.put("uploadLayout",true);
+            o.put("uploadSettings",true);
+            o.put("canConnect",true);
+            o.put("uploadUser",true);
+            o.put("uploadImages",true);
+            o.put("uploadOverlays",true);
+            o.put("uploadTracks",true);
+            o.put("remoteChannel",true);
+            o.put("fetchHead",Constants.HAS_HEAD_SUPPORT|| serverInfo != null);
+            if (serverInfo == null) {
+                //we can only handle the config stuff internally
+                //as potentially there are permission dialogs
+                o.put("config", true);
+            }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
+        }
+        if ("status".equals(command)){
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("handler",getStatus()));
+        }
         if (serverInfo != null){
             return RequestHandler.getErrorReturn("can only handle config locally");
         }

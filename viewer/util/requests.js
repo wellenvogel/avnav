@@ -145,7 +145,10 @@ const addParameters=(url,parameters)=>{
 };
 const handleAndroidPost=(url,body)=>{
     return new Promise((resolve,reject)=> {
-        let res=JSON.parse(avnav.android.handleUpload(url, body));
+        //we need to build the full url here
+        //as the navUrl could just be relative
+        const fullUrl=new URL(url,window.location.href);
+        let res=JSON.parse(avnav.android.handleUpload(fullUrl.toString(), body));
         if (res.status === 'OK'){
             resolve(res);
             return;

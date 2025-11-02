@@ -233,7 +233,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
 
     @Override
     public String getPrefix() {
-        return "";
+        return null;
     }
 
     private static class NmeaEntry {
