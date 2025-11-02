@@ -194,7 +194,7 @@ GpsData.prototype.startQuery=function(){
     },).then(
         (data)=>{
             if (! data.data) throw new Error("no data in gps response");
-            this.handleGpsResponse(data,true);
+            this.handleGpsResponse(data.data,true);
             this.timer=window.setTimeout(()=>{
                 this.startQuery();
             },timeout);
