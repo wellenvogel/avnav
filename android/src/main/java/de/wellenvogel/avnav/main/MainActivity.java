@@ -53,7 +53,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -309,7 +312,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public void run() {
                 AvnLog.i(LOGPRFX,"MainActivity: Service bind action - initWebView");
-                initializeWebView();
+                try {
+                    initializeWebView();
+                }catch (Exception e){
+                    showCrashDialog(e);
+                }
             }
         };
         try {
@@ -552,7 +559,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return rt;
     }
 
-    private void initializeWebView(){
+    private void initializeWebView() throws UnsupportedEncodingException {
         if (webView != null) return;
         AvnLog.i(LOGPRFX,"initializeWebView");
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
@@ -718,7 +725,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/avnav_viewer.html?navurl=avnav_navi.php";
+        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/avnav_viewer.html?navurl="+ URLEncoder.encode(RequestHandler.NAVURL, StandardCharsets.UTF_8.toString());
         if (BuildConfig.DEBUG) start+="&logNmea=1";
         if (htmlPage != null) {
             webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);
@@ -972,7 +979,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             gpsService.onResumeInternal();
         }
         if (webView == null) {
-            initializeWebView();
+            try {
+                initializeWebView();
+            }catch (Throwable t){
+                showCrashDialog(t);
+            }
         }
         AvnLog.i(LOGPRFX,"MainActivity:onResumeInternal done");
     }

@@ -50,7 +50,7 @@ public class RequestHandler {
      */
     public static final String INTERNAL_URL_PREFIX ="http://assets";
     public static final String ROOT_PATH="/viewer";
-    protected static final String NAVURL="/api";
+    public static final String NAVURL="/api";
     protected static final String NAVURL_COMPAT="/viewer/avnav_navi.php";
     GpsService service;
     private SharedPreferences preferences;
