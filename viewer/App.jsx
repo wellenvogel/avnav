@@ -301,7 +301,8 @@ class App extends React.Component {
                     MapHolder.setImageStyles(data);
                 })
                 .catch((error) => {
-                    Toast("unable to load user image definitions: " + error);
+                    const canConnect=globalStore.getData(keys.gui.capabilities.canConnect);
+                    if (canConnect !== false) Toast("unable to load user image definitions: " + error);
                 }))
         );
         this.pendingActions.push(Requests.getJson("keys.json", {useNavUrl: false, checkOk: false})
