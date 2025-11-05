@@ -186,7 +186,7 @@ export class ItemActions{
         if (props.time !== undefined) {
             rt.timeText=Formatter.formatDateTime(new Date(props.time*1000));
         }
-        rt.infoText=props.name;
+        rt.infoText=props.displayName||props.name;
         if (props.active){
             rt.className+=' activeEntry';
         }
@@ -534,7 +534,7 @@ export const FileDialog = (props) => {
     let schemeChanged = allowed.showScheme && (((props.current.scheme || "tms") !== scheme) || props.current.originalScheme);
     let extendedInfoRows = TYPE_INFO_ROWS[props.current.type];
     return (
-        <DialogFrame className="fileDialog" title={props.current.name}>
+        <DialogFrame className="fileDialog" title={props.current.displayName||props.current.name}>
             {props.current.info !== undefined ?
                 <DialogRow>
                     <span className="itemInfo">{props.current.info}</span>

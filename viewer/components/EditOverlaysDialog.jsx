@@ -147,7 +147,7 @@ const OverlayItemDialog = (props) => {
                 if (type === 'chart') {
                     //prepare select list
                     data.items.forEach((item) => {
-                        item.label = item.name;
+                        item.label = item.displayName||item.name;
                         item.value = item.chartKey;
                     });
                 }
@@ -839,7 +839,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
             showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
                     {...props}
-                    chartName={chartItem.name}
+                    chartName={chartItem.displayName||chartItem.name}
                     current={overlayConfig}
                     updateCallback={(newConfig) => {
                         if (newConfig.isEmpty()) {

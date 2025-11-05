@@ -285,7 +285,7 @@ class MainPage extends React.Component {
         return (
             <div className={cls} onClick={props.onClick}>
                 <img src={props.icon||chartImage}/>
-                <span className="chartName">{props.name}</span>
+                <span className="chartName">{props.displayName||props.name}</span>
                 {isConnected && <Button
                     className="smallButton"
                     name="MainOverlays"
