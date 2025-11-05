@@ -31,8 +31,10 @@ import io
 import json
 import shutil
 import urllib.request, urllib.parse, urllib.error
+from fileinput import filename
 from zipfile import ZipFile
 from typing import List
+
 from avnav_manager import AVNHandlerManager
 from avnav_nmea import *
 from avnav_worker import *
@@ -52,25 +54,42 @@ class AVNDirectoryListEntry(object):
   @classmethod
   def getFilteredKeys(self):
     return []
-  def __init__(self,type,prefix,name,time=0,size=0,
-               canDelete=False,isDirectory=False,canDownload=True,**kwargs):
+  def __init__(self,type,name,time=0,size=0,
+               canDelete=False,isDirectory=False,canDownload=True,
+               extension=None,scope=None,url=None,filename=None,userData=None,displayName=None,**kwargs):
     self.name=name
+    self.displayName=displayName
     self.type=type
-    self.prefix=prefix
-    if prefix is not None:
-        self.url=prefix+"/"+urllib.parse.quote(name.encode('utf-8'))
+    self.url=url
     self.time=time
     self.size=size
     self.canDelete=canDelete
     self.isDirectory=isDirectory
     self.canDownload=canDownload
+    self.extension=extension
+    self.scope=scope
+    self._filename=filename
+    self._userData=userData
 
+  def getFileName(self):
+      return self._filename
+  def getUserData(self):
+      return self._userData
+  def setUserData(self,userData):
+      self._userData=userData
   def isSame(self,other):
     # type: (AVNDirectoryListEntry) -> bool
     if other is None:
       return False
-    if self.name == other.name and self.prefix == other.prefix and self.isDirectory == other.isDirectory:
-      return True
+    if self.name != other.name:
+        return False
+    if self.isDirectory != other.isDirectory:
+        return False
+    if self.scope != other.scope:
+        return False
+    if self.extension != other.extension:
+        return False
+
     return False
 
   def isModified(self, other):
@@ -90,6 +109,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   '''
   handle the files in the user directory
   '''
+  SCOPE_USER="user."
   @classmethod
   def getPrefix(cls):
     return None
@@ -102,9 +122,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     }
     return rt
 
-  @classmethod
-  def nameToUrl(cls,name):
-    return cls.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
   @classmethod
   def preventMultiInstance(cls):
@@ -122,25 +139,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     """
     return AVNDirectoryListEntry
 
-  @classmethod
-  def getAutoScanExtensions(cls):
-    """
-    if a derived class overloads this
-    there will be a periodic reading of the directory
-    and self.itemList will be filled with descriptions of the type
-    the key will be the value returned by getKey of the item description
-    returned by getListEntryClass (the must inherit from AVNDirectoryListEntry
-    Callbacks:
-    #onItemAdd when a new entry is to be added
-    #onItemRemove when an entry has been removed from the list
-    @return:
-    """
-    return []
-
-  @classmethod
-  def autoScanIncludeDirectories(cls):
-    return False
-
   def __init__(self,param,dtype):
     AVNWorker.__init__(self,param)
     self.baseDir=None
@@ -155,31 +153,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
       raise Exception("unable to find AVNHttpServer")
     super().startInstance(navdata)
 
-  def onItemAdd(self,itemDescription):
-    # type: (AVNDirectoryListEntry) -> AVNDirectoryListEntry or None
-    """
-    called when the directory is scanned and this new item
-    is to be inserted
-    @param itemDescription:
-    @return: an itemDescription to be added or None
-    """
-    return itemDescription
-
-  def onItemRemove(self,itemDescription):
-    """
-    being called after an entry has been removed from the list
-    @param itemDescription:
-    @return:
-    """
-    pass
-
-  def onItemDelete(self,itemDescription):
-    """
-    being called after an entry has been removed from the list
-    @param itemDescription:
-    @return: True if the delete should be handled by this base class
-    """
-    return True
 
   def onPreRun(self):
     pass
@@ -187,69 +160,39 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def periodicRun(self):
     pass
 
+  def getFixedExtension(self):
+      return None
 
   def getSleepTime(self):
     return self.getFloatParam('interval')
 
-  def removeItem(self, name):
-    """
-    remove an item from the list of scanned items
-    @param name:
-    @return:
-    """
-    item=self.itemList.get(name)
-    if item is None:
-      return
-    try:
-      del self.itemList[name]
-    except:
-      pass
-    self.onItemRemove(item)
 
-  def _scanDirectory(self):
-    AVNLog.debug("scan directory %s",self.baseDir)
-    if not self.autoScanIncludeDirectories() and len(self.getAutoScanExtensions()) < 1:
-      return
-    try:
-      if not os.path.isdir(self.baseDir):
-        AVNLog.debug("basedir %s is no directory",self.baseDir)
-        return
-      newContent=self.listDirectory(self.autoScanIncludeDirectories())
-      with self.lock:
-        oldContent=list(self.itemList.values())
-        currentlist = []
-        for f in newContent:
-          name=f.name
-          if not f.isDirectory:
-            (path,ext)=os.path.splitext(name)
-            if not ext in self.getAutoScanExtensions():
-              continue
-          AVNLog.debug("found matching file/dir %s", f)
-          currentlist.append(f)
-        for old in oldContent:  # type: AVNDirectoryListEntry
-          if old is None:
-            continue
-          if not self.listContains(currentlist,old):
-            AVNLog.info("closing chart/overlay file %s", old)
-            self.removeItem(old.getKey())
-        for newitem in currentlist:  # type: AVNDirectoryListEntry
-          olditem = self.itemList.get(newitem.getKey())
-          if olditem is not None:
-            if olditem.isModified(newitem):
-              AVNLog.info("closing file %s due to changed timestamp", newitem.name)
-              self.removeItem(olditem.getKey())
+  def listDirAndCompare(self,includeDirs=False,extensions=None,previousItems=None,onItem=None,scope=None) -> dict[str,AVNDirectoryListEntry]:
+    newContent = self.listDirectory(includeDirs,self.baseDir,extensions=extensions,scope=scope)
+    rt={}
+    for f in newContent:
+        if previousItems is not None and onItem is not None:
+            oldItem=previousItems.get(f.name)
+            if oldItem is not None:
+                if f.isModified(oldItem):
+                    add=onItem(f,"add")
+                    if add:
+                        rt[f.name]=f
+                else:
+                    rt[oldItem.name]=oldItem
             else:
-              continue
-          AVNLog.info("trying to add file %s", newitem.name)
-          filteritem=self.onItemAdd(newitem)
-          if filteritem is None:
-            AVNLog.info("file %s filtered out", newitem.name)
-            continue
-
-          self.itemList[newitem.getKey()] = newitem
-          AVNLog.info("successfully added file %s", newitem.name)
-    except:
-      AVNLog.error("Exception in periodic scan %s, ignore", traceback.format_exc())
+                add=onItem(f,"add")
+                if add:
+                    rt[f.name]=f
+        elif onItem is not None:
+            add=onItem(f,"add")
+            if add:
+                rt[f.name] = f
+    if previousItems is not None and onItem is not None:
+        for old in previousItems.values():
+            if rt.get(old.name) is None:
+                onItem(old,"remove")
+    return rt
 
 
   # thread run method - just try forever
@@ -266,8 +209,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.setInfo('main', "handling %s"%self.baseDir, WorkerStatus.NMEA)
     while not self.shouldStop():
       try:
-        if len(self.getAutoScanExtensions()) > 0 or self.autoScanIncludeDirectories():
-          self._scanDirectory()
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
@@ -291,35 +232,51 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def handleDelete(self,name):
     if not self.canDelete():
       raise Exception("delete not possible")
-    if name is None:
-      raise Exception("missing name")
-    with self.lock:
-      self.removeItem(name)
-    name = AVNUtil.clean_filename(name)
-    filename = os.path.join(self.baseDir, name)
+    fname=self.checkName(name)
+    filename = os.path.join(self.baseDir, fname)
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     os.unlink(filename)
     chartHandler = self.findHandlerByName('AVNChartHandler')
     if chartHandler is not None:
       chartHandler.deleteFromOverlays(self.type, name)
-    self._scanDirectory()
 
   @classmethod
   def canList(cls):
     return True
 
+  def buildUrl(self,name,extension=None,scope=None):
+      '''
+      build an url if the handler supports this
+      :param name: either the complete name below basedir (extension None) or the base name
+      :param extension: the extension (if we have a fixed extension
+      :param scope: the scope if
+      :return:
+      '''
+      if self.getPrefix() is None:
+          return None
+      if scope is not None:
+          return None
+      if extension is not None:
+          name=name+extension
+      return self.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
-  def listDirectory(self,includeDirs=False,baseDir=None,extensions=None):
+  def listDirectory(self,includeDirs=False,baseDir=None,extensions=None,scope=None):
     # type: (bool,str,list[str]|None) -> list[AVNDirectoryListEntry]
+    if extensions is not None:
+        if not isinstance(extensions,list):
+            extensions=[extensions]
     data = []
     if baseDir is None:
       baseDir=self.baseDir
     if not os.path.exists(baseDir):
       return []
     for f in os.listdir(str(baseDir)):
+      if f.startswith(self.TMP_PREFIX):
+          continue
       fullname = os.path.join(str(baseDir), f)
       isDir=False
+      ext=None
       if not os.path.isfile(fullname):
         if not includeDirs:
           continue
@@ -329,44 +286,58 @@ class AVNDirectoryHandlerBase(AVNWorker):
           (path,ext)=os.path.splitext(f)
           if not ext in extensions:
               continue
-      element = self.getListEntryClass()(self.type, self.getPrefix(), f,
+          f=path
+      if scope is None:
+          name=f
+      else:
+          name=scope + f
+      element = self.getListEntryClass()(self.type, name,
                                       time=os.path.getmtime(fullname),
                                       size=os.path.getsize(fullname),
+                                      filename=fullname,
                                       baseDir=baseDir,
-                                      canDelete=True,isDirectory=isDir)
+                                      canDelete=scope is None or scope == self.SCOPE_USER,isDirectory=isDir,extension=ext,scope=scope,url=self.buildUrl(name,ext,scope))
       data.append(element)
     return data
-
-  def listContains(self,list,entry):
-    # type: (list[AVNDirectoryListEntry], AVNDirectoryListEntry) -> bool
-    for e in list:
-      if e.isSame(entry):
-        return True
-    return False
-
 
   def handleList(self,handler=None):
     if not self.canList():
       raise Exception("list not possible")
     if not os.path.exists(self.baseDir):
       return AVNUtil.getReturnData("directory %s does not exist" % self.baseDir)
-    data=self.listDirectory()
+    extensions = self.getFixedExtension()
+    extensions = [extensions] if extensions is not None else None
+    data=self.listDirectory(False,self.baseDir,extensions)
     rt = AVNUtil.getReturnData(items=data)
     return rt
 
 
   def checkName(self,name,doRaise=True):
+    '''
+    check a name received in a request and return the local file name
+    this will be the name "as is" if self.getFixedExtension() is None, else the extension is appended
+    :param name:
+    :param doRaise:
+    :return:
+    '''
+    if name is None:
+      if doRaise:
+          raise Exception("name can't be None")
+      return None
     if name.startswith(self.TMP_PREFIX):
       if doRaise:
         raise Exception("name %s not allowed to start with %s"%(name,self.TMP_PREFIX))
       else:
-        return False
+        return None
     cleanName=AVNUtil.clean_filename(name)
     if name != cleanName:
       if doRaise:
         raise Exception("name %s is invalid"%name)
-      return False
-    return True
+      return None
+    extension=self.getFixedExtension()
+    if extension is None:
+        return name
+    return name+extension
 
   def tryFallbackOrFail(self,requestParam,handler,error):
     if requestParam is None:
@@ -476,50 +447,47 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getHandledPath(self):
       return  self.getPrefix()
 
+  def _rename(self,fullName,targetName):
+      src = os.path.join(self.baseDir, fullName)
+      if not os.path.exists(src):
+          raise Exception("file %s not found" % fullName)
+      dst = os.path.join(self.baseDir, targetName)
+      if os.path.exists(dst):
+          raise Exception("%s already exists" % targetName)
+      os.rename(src, dst)
+      return AVNUtil.getReturnData()
   def handleRename(self,name,newName,requestparam):
-    self.checkName(name)
-    self.checkName(newName)
-    src = os.path.join(self.baseDir, name)
-    if not os.path.exists(src):
-      raise Exception("file %s not found" % name)
-    dst = os.path.join(self.baseDir, newName)
-    if os.path.exists(dst):
-      raise Exception("%s already exists" % newName)
-    os.rename(src, dst)
-    self._scanDirectory()
-    return AVNUtil.getReturnData()
+    name=self.checkName(name)
+    newName=self.checkName(newName)
+    return self._rename(name,newName)
 
+  def _upload(self,filename,handler,requestparam):
+      rlen = handler.headers.get("Content-Length")
+      if rlen is None:
+          raise Exception("Content-Length not set in upload request")
+      overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
+      outname = os.path.join(self.baseDir, filename)
+      data = AVNUtil.getHttpRequestParam(requestparam, '_json')
+      if data is not None:
+          stream = io.BytesIO(data.encode('utf-8'))
+          self.writeAtomic(outname, stream, overwrite)
+      else:
+          self.writeAtomic(outname, handler.rfile, overwrite, int(rlen))
+      return AVNUtil.getReturnData()
   def handleUpload(self,name,handler,requestparam):
-    overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
-    filename = name
-    if filename is None:
-      raise Exception("missing name in upload request")
-    self.checkName(filename)
-    rlen = handler.headers.get("Content-Length")
-    if rlen is None:
-      raise Exception("Content-Length not set in upload request")
-    outname = os.path.join(self.baseDir, filename)
-    data = AVNUtil.getHttpRequestParam(requestparam, '_json')
-    if data is not None:
-      stream=io.BytesIO(data.encode('utf-8'))
-      self.writeAtomic(outname,stream,overwrite)
-    else:
-      self.writeAtomic(outname,handler.rfile,overwrite,int(rlen))
-    self._scanDirectory()
-    return AVNUtil.getReturnData()
+    filename = self.checkName(name)
+    return self._upload(filename,handler,requestparam)
 
+  def _download(self,fname):
+      filename = os.path.join(self.baseDir, fname)
+      if not os.path.exists(filename):
+          raise Exception("file %s not found" % filename)
+      return AVNDownload(filename)
   def handleDownload(self,name,handler,requestparam):
     if name is None:
       raise Exception("missing name")
-    name = AVNUtil.clean_filename(name)
-    (filename,baseDir)=self.convertLocalPath(name)
-    if filename is None:
-      return None
-    if baseDir is not None:
-      filename = os.path.join(baseDir, filename)
-    if not os.path.exists(filename):
-      raise Exception("file %s not found" % filename)
-    return AVNDownload(filename)
+    name=self.checkName(name)
+    return self._download(name)
 
   def handlePathRequest(self, path, requestparam, server=None,handler=None):
       if self.getPrefix() is None:
@@ -605,111 +573,25 @@ class AVNDirectoryHandlerBase(AVNWorker):
       if mtime > time.time() or mtime < removeTime:
         os.unlink(fn)
 
-class AVNScopedDirectoryEntry(AVNDirectoryListEntry):
-  T_SYSTEM='system'
-  T_USER='user'
-  T_PLUGIN='plugin'
-  T_ALL=[T_SYSTEM,T_USER,T_PLUGIN]
-  def __init__(self, type,prefix,name, **kwargs):
-    super().__init__(type, prefix, name,
-                     **kwargs)
-    self.baseDir=kwargs.get('baseDir')
-    self.scopedName=None
-    self.itemType=self.T_USER
-    self.canDelete=False
-    self.fileName=kwargs.get('fileName')
-    self.scopePrefix=self.T_USER
-  def setName(self,ltype,prefix=None):
-    if not ltype in self.T_ALL:
-      ltype=self.T_USER
-    self.itemType=ltype
-    if prefix is not None:
-      self.scopePrefix=ltype+"."+prefix
-    else:
-      self.scopePrefix=ltype
-    self.scopedName=self.scopePrefix+"."+self.name
-    if self.prefix is not None:
-        self.url=self.prefix+"/"+urllib.parse.quote(self.scopedName.encode('utf-8'))
-    self.canDelete=ltype == self.T_USER
-
-  def isSame(self, other):
-    rt=super().isSame(other)
-    if not rt:
-      return rt
-    return self.scopePrefix == other.scopePrefix
-
-  @classmethod
-  def getExtension(cls):
-    return '.json'
-
-  @classmethod
-  def nameToClientName(cls,name):
-    if not name:
-      return
-    if name.endswith(cls.getExtension()):
-        name=name[0:- len(cls.getExtension())]
-    return name
-
-  @classmethod
-  def clientNameToName(cls,clientName):
-    if not clientName:
-      return clientName
-    if clientName.endswith(cls.getExtension()):
-      return clientName
-    return clientName+cls.getExtension()
-
-  def serialize(self):
-    '''
-    when we send to the client it expects
-    the full name in the name field
-    @return:
-    '''
-    rt=super().serialize()
-    name=rt.get('scopedName')
-    rt['name']=self.nameToClientName(name)
-    return rt
-
-  def toPlain(self):
-    return self.__dict__
-
-  def getKey(self):
-    return self.scopedName
-
-  @classmethod
-  def stripPrefix(cls,name):
-    if not name:
-      return name
-    for p in cls.T_ALL:
-      if name.startswith(p+"."):
-        return name[len(p)+1:]
-    return name
-
-  @classmethod
-  def getType(cls,name):
-    if not name:
-      return cls.T_USER
-    for p in cls.T_ALL:
-      if name.startswith(p+"."):
-        return p
-    return cls.T_USER
 
 class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
+  SCOPE_SYSTEM='system.'
+  SCOPE_PLUGIN='plugin.'
   '''
   a handler for items that can be located in a system directory (read only),
   a user directory and can be added by plugins
-  it uses the autoscan feature of the base
-  you must implemenzt the getAutoScanExtensions
+  it only can handle fixed extensions
   '''
-  def __init__(self, param,type):
+  def __init__(self, param,type,fixedExtension):
     super().__init__(param, type)
     self.baseDir= AVNHandlerManager.getDirWithDefault(self.param,'userDir',type)
     self.systemDir=None
-    self.systemItems: List[AVNScopedDirectoryEntry]  =[]
-    self.pluginItems : List[AVNScopedDirectoryEntry] =[]
+    self.systemItems: List[AVNDirectoryListEntry]  =[]
+    self.pluginItems : List[AVNDirectoryListEntry] =[]
+    self.extension=fixedExtension
 
-  @classmethod
-  def getListEntryClass(cls):
-    return AVNScopedDirectoryEntry
+  def getFixedExtension(self):
+      return self.extension
 
   def getSystemDir(self):
     '''
@@ -721,93 +603,94 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     super().onPreRun()
     self.systemDir = self.getSystemDir()
     if self.systemDir is not None:
-      self.systemItems=self.listDirectory(baseDir=self.systemDir)
+      self.systemItems=self.listDirectory(baseDir=self.systemDir,scope=self.SCOPE_SYSTEM,extensions=self.getFixedExtension())
 
-  def listDirectory(self, includeDirs=False, baseDir=None,extensions=None):
-    items=super().listDirectory(includeDirs, baseDir,extensions)
-    scope=AVNScopedDirectoryEntry.T_USER
-    if baseDir is not None and baseDir == self.systemDir:
-      scope=AVNScopedDirectoryEntry.T_SYSTEM
-    for item in items:
-      item.setName(scope)
-    return items
-
-  def onItemAdd(self, itemDescription: AVNScopedDirectoryEntry):
-    '''automatically added items are from the user dir'''
-    itemDescription.setName(AVNScopedDirectoryEntry.T_USER)
-    return itemDescription
 
   def handleList(self, handler=None):
+    own=self.listDirectory(baseDir=self.baseDir,scope=self.SCOPE_USER,extensions=self.getFixedExtension())
     with self.lock:
-      items=self.systemItems+self.pluginItems+list(self.itemList.values())
+      items=self.systemItems+self.pluginItems+own
       return AVNUtil.getReturnData(items=items)
 
-  def findItem(self,name)-> AVNScopedDirectoryEntry:
-    with self.lock:
-      for item in self.systemItems+self.pluginItems+list(self.itemList.values()):
-        if item.scopedName == name:
-          return item
-
-  def clientNameToScopedName(self, clientName: str):
-    return self.getListEntryClass().clientNameToName(clientName)
-
-  def convertLocalPath(self, path) -> (str, str or None):
-    name=self.clientNameToScopedName(path)
-    item=self.findItem(name)
-    if not item:
-      return (None,None)
-    if item.fileName:
-      return (item.fileName,None)
-    return (item.name,item.baseDir)
+  def checkName(self, name, doRaise=True,scope=AVNDirectoryHandlerBase.SCOPE_USER):
+      name=super().checkName(name, doRaise)
+      if scope is not None:
+          if not name.startswith(scope):
+              raise Exception(f"name {name} does not match scope {scope}")
+          return name[len(scope):]
+      return name
 
   def handleDelete(self, name):
-    name=self.clientNameToScopedName(name)
-    item=self.findItem(name)
-    if not item:
+    name=self.checkName(name,scope=self.SCOPE_USER)
+    fname=os.path.join(self.baseDir,name)
+    if not os.path.isfile(fname):
       raise Exception("%s %s not found"%(self.type,name))
-    if not item.canDelete:
-      raise Exception("%s cannot be deleted "%(name))
-    return super().handleDelete(item.name)
+    os.unlink(fname)
+    return AVNUtil.getReturnData()
 
   def handleRename(self, name, newName, requestparam):
-    name=self.clientNameToScopedName(name)
-    item=self.findItem(name)
-    if not item:
-      return AVNUtil.getReturnData(error="%s %s not found"%(self.type,name))
-    if not item.canDelete:
-      return AVNUtil.getReturnData(error="unable to rename %s "%(name))
-    return super().handleRename(
-      item.name,
-      self.getListEntryClass().stripPrefix(self.clientNameToScopedName(newName))
-      , requestparam)
+    name=self.checkName(name,scope=self.SCOPE_USER)
+    newName=self.checkName(newName,scope=self.SCOPE_USER)
+    return self._rename(name,newName)
 
   def handleUpload(self, name, handler, requestparam):
-    name=self.clientNameToScopedName(name)
-    if AVNScopedDirectoryEntry.getType(name) != AVNScopedDirectoryEntry.T_USER:
-      return AVNUtil.getReturnData(error="cannot upload %s"%name)
-    return super().handleUpload(self.getListEntryClass().stripPrefix(name), handler, requestparam)
+    fname=self.checkName(name,scope=self.SCOPE_USER)
+    return self._upload(fname,handler,requestparam)
+
+  def findSystemOrPluginItem(self,name):
+      with self.lock:
+          for item in self.systemItems:
+              if item.name == name:
+                  return item
+          for item in self.pluginItems:
+              if item.name == name:
+                  return item
+      return None
+
+  def handleDownload(self, name, handler, requestparam):
+      item=self.findSystemOrPluginItem(name)
+      if item is not None:
+          if item.scope == self.SCOPE_SYSTEM:
+            sname=self.checkName(name,scope=self.SCOPE_SYSTEM)
+            sfile=os.path.join(self.baseDir,sname)
+            if not os.path.isfile(sfile):
+                raise Exception("%s %s not found"%(self.type,sfile))
+            return AVNDownload(sfile)
+          elif item.scope.startswith(self.SCOPE_PLUGIN):
+            sfile=item.getFileName()
+            if not os.path.isfile(sfile):
+                raise Exception("%s %s not found"%(self.type,sfile))
+            return AVNDownload(sfile)
+
+
+      fname=self.checkName(name,scope=self.SCOPE_USER)
+      return self._download(fname)
+
 
   def registerPluginItem(self,pluginName,name,fileName):
     if not os.path.exists(fileName):
       return False
-    name=self.clientNameToScopedName(name)
+    scope=self.SCOPE_PLUGIN+pluginName+"."
+    if name.endswith(self.extension):
+        raise Exception(f"the item name must not end with {self.extension}")
+    self.checkName(scope+name,scope=self.SCOPE_PLUGIN)
     AVNLog.debug("register plugin item %s",name)
-    info=AVNScopedDirectoryEntry(self.type, self.getPrefix(), name, time=os.path.getmtime(fileName),
+    info=AVNDirectoryListEntry(self.type, scope+ name, time=os.path.getmtime(fileName),
                                  baseDir=os.path.dirname(fileName),
-                                 fileName=fileName)
-    info.setName(AVNScopedDirectoryEntry.T_PLUGIN, prefix=pluginName)
-    if self.findItem(info.scopedName) is not None:
+                                 fileName=fileName,
+                                 scope=scope,
+                                 extension=self.getFixedExtension())
+    if self.findSystemOrPluginItem(info.name) is not None:
       AVNLog.error("trying to register an already existing plugin item %s",name)
       return False
     with self.lock:
       self.pluginItems.append(info)
+    return True
 
   def deregisterPluginItem(self,pluginName,name):
-    name=self.clientNameToScopedName(name)
-    AVNLog.debug("deregister plugin item %s",name)
-    info=AVNScopedDirectoryEntry(self.type, self.getPrefix(), name)
-    info.setName(AVNScopedDirectoryEntry.T_PLUGIN, prefix=pluginName)
-    existing=self.findItem(info.scopedName)
+    scope=self.SCOPE_PLUGIN+pluginName+"."
+    AVNLog.debug("deregister plugin item %s%s",scope,name)
+    existing=self.findSystemOrPluginItem(scope+name)
     if not existing:
       AVNLog.error("item %s not found",name)
       return False

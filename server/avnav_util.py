@@ -44,6 +44,8 @@ import math
 import threading
 from math import copysign
 import zipfile
+from typing import Any
+
 
 class Enum(set):
     def __getattr__(self, name):
@@ -650,6 +652,9 @@ class AVNUtil(object):
 
 
 class ChartFile(object):
+  def __init__(self):
+      self._upzoom=None
+      self._hasImporterLog=False
   def wakeUp(self):
     pass
   def getScheme(self):
@@ -668,8 +673,25 @@ class ChartFile(object):
     @return:
     '''
     return None
-  def getAvnavXml(self,upzoom=None):
+  def getAvnavXml(self):
     return None
+  def setUpzoom(self,upzoom):
+      self._upzoom=upzoom
+  def getUpzoom(self):
+    return self._upzoom
+  def setHasImporterLog(self,flag):
+    self._hasImporterLog=flag
+  def deleteFiles(self):
+      pass
+  def mergeAdditions(self,item:dict[str,Any]):
+      item['hasImporterLog']=self._hasImporterLog
+      item['upzoom']=self._upzoom
+      item['sequence']=self.getChangeCount()
+      item['scheme']=self.getScheme()
+      item['originalScheme']=self.getOriginalScheme()
+
+
+
 
 
 class AVNDownload(object):

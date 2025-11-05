@@ -81,7 +81,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     super(AVNUserHandler, self).handleDelete(name)
     if self.addonHandler is not None:
       try:
-        self.addonHandler.deleteByUrl(self.nameToUrl(name))
+        self.addonHandler.deleteByUrl(self.buildUrl(name))
       except Exception as e:
         AVNLog.error("unable to delete addons for %s:%s", name, e)
 

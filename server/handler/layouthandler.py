@@ -38,16 +38,12 @@ TYPE="layout"
 
 
 class AVNLayoutHandler(AVNScopedDirectoryHandler):
-  ALLOWED_EXTENSIONS=['.json']
 
   def __init__(self, param):
-    super().__init__(param, TYPE)
+    super().__init__(param, TYPE,'.json')
     self.baseDir= AVNHandlerManager.getDirWithDefault(self.param,'userDir',TYPE)
     self.type=TYPE
 
-  @classmethod
-  def getAutoScanExtensions(cls):
-    return cls.ALLOWED_EXTENSIONS
 
   @classmethod
   def getPrefix(cls):

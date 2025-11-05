@@ -37,7 +37,8 @@ from avnav_util import AVNLog, ChartFile
 
 
 class GemfFile(ChartFile):
-  def __init__(self,filename):
+  def __init__(self, filename):
+    super().__init__()
     self.filename=filename
     self.handles=[]
     self.sources=[]
@@ -244,13 +245,13 @@ class GemfFile(ChartFile):
   def getScheme(self):
     return None
 
-  def getAvnavXml(self,upzoom=2):
+  def getAvnavXml(self):
     if not self.isOpen:
       return None
     try:
       data = self.getSources()
       options = {}
-      options['upzoom'] = upzoom
+      options['upzoom'] = self._upzoom
       rt = create_overview.getGemfInfo(data, options)
       AVNLog.info("created GEMF overview for %s", self.filename)
       AVNLog.debug("overview for %s:%s", self.filename, rt)

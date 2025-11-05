@@ -72,6 +72,7 @@ class QueueEntry(object):
 
 class MBTilesFile(ChartFile):
   def __init__(self,filename,timeout=300):
+    super().__init__()
     self.filename=filename
     self.isOpen=False
     self.cond=threading.Condition()
@@ -173,7 +174,7 @@ class MBTilesFile(ChartFile):
           pass
     return None
 
-  def getAvnavXml(self,upzoom=2):
+  def getAvnavXml(self):
     if not self.isOpen:
       return None
     ranges=[]

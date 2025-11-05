@@ -455,7 +455,8 @@ class AVNWorker(InfoHandler):
     return rt
   @classmethod
   def resetHandlerList(cls):
-    cls.allHandlers=[]
+      with cls.handlerListLock:
+        cls.allHandlers=[]
 
   def findFeeder(self,feedername=None):
     if feedername is None:
