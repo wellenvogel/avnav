@@ -3,11 +3,13 @@ import PropTypes from 'prop-types';
 import {
     DialogButtons,
     DialogFrame,
-    DialogRow, showDialog, showPromiseDialog,
+    DialogRow,
+    showDialog,
+    showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
-import {Input,Checkbox,InputSelect,Radio} from './Inputs.jsx';
+import {Checkbox, Input, InputSelect, Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
@@ -16,9 +18,12 @@ import Toast from './Toast.jsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import {editableOverlayParameters, getOverlayConfigName} from '../map/chartsourcebase'
-import globalStore from "../util/globalstore";
-import keys from '../util/keys';
-import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
+import OverlayConfig, {
+    DEFAULT_OVERLAY_CONFIG,
+    fetchOverlayConfig,
+    getKeyFromOverlay,
+    OVERLAY_ID
+} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import chartImage from '../images/Chart60.png';
 import editableParameterUI, {EditableParameterListUI} from "./EditableParameterUI";
@@ -832,33 +837,8 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
         if (!typeOk) return false;
         opt_addEntry = assign({opacity: 1, enabled: true}, opt_addEntry);
     }
-    let getParameters = {
-        request: 'api',
-        type: 'chart',
-        overlayConfig: configName,
-        command: 'getConfig',
-        expandCharts: true
-    };
-    let defaultConfig;
-    let config;
-    const requests=[
-        Requests.getJson(getParameters)
-            .then((json)=>{
-                config = json.data;
-            })];
-    if (configName !== DEFAULT_OVERLAY_CONFIG) {
-        requests.push(
-            Requests.getJson({...getParameters, overlayConfig: DEFAULT_OVERLAY_CONFIG})
-                .then((config) => {
-                    defaultConfig = config.data;
-                }));
-    }
-    Promise.all(requests)
-        .then((result)=>{
-            if (! config) throw new Error("unable to load overlay config");
-            if (configName !== DEFAULT_OVERLAY_CONFIG && ! defaultConfig) throw new Error("unable to load default config");
-            if (config.useDefault === undefined) config.useDefault = true;
-            let overlayConfig = new OverlayConfig(config,true,defaultConfig?defaultConfig.overlays:undefined);
+    fetchOverlayConfig(configName)
+        .then((overlayConfig) => {
             showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
                     {...props}
@@ -910,7 +890,6 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
 
     return true;
 };
-const DEFAULT_OVERLAY_CONFIG = "default.cfg";
 export const DEFAULT_OVERLAY_CHARTENTRY = {
     type: 'chart',
     name: 'DefaultOverlays',

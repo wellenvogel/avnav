@@ -34,7 +34,7 @@ import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle, Circle as olCircle, Stroke as olStroke, Fill as olFill} from 'ol/style';
 import * as olTransforms from 'ol/proj/transforms';
 import {ScaleLine as olScaleLine} from 'ol/control';
-import OverlayConfig from "./overlayconfig";
+import OverlayConfig, {fetchOverlayConfig} from "./overlayconfig";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
@@ -773,24 +773,15 @@ class MapHolder extends DrawingPositionConverter {
                 checkChanges();
                 return;
             }
-            let cfgParam = {
-                request: 'api',
-                type: 'chart',
-                overlayConfig: chartSource.getOverlayConfigName(),
-                command: 'getConfig',
-                expandCharts: true,
-                mergeDefault: true
-            };
-            Requests.getJson( cfgParam)
-                .then((config) => {
-                    config = config.data;
-                    if (!config) {
+            fetchOverlayConfig(chartSource.getOverlayConfigName())
+                .then((overlayConfig) => {
+                    if (!overlayConfig) {
                         this.overlayConfig = new OverlayConfig();
                         if (resetOverrides) this.overlayOverrides = this.overlayConfig.copy();
                         checkChanges();
                         return;
                     }
-                    this.overlayConfig = new OverlayConfig(config);
+                    this.overlayConfig = overlayConfig;
                     if (resetOverrides) {
                         this.overlayOverrides = this.overlayConfig.copy();
                     } else {

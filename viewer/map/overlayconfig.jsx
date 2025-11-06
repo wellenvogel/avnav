@@ -24,6 +24,7 @@
  */
 import shallowcompare from '../util/compare';
 import Helper from "../util/helper";
+import Requests from "../util/requests";
 
 /**
  * we sort the overlays into 6 buckets (from lowest to highest)
@@ -410,3 +411,35 @@ export default class OverlayConfig{
         return this.config.defaults.length > 0;
     }
 }
+
+export const fetchOverlayConfig=(configName)=>{
+    let getParameters = {
+        request: 'api',
+        type: 'chart',
+        overlayConfig: configName,
+        command: 'getConfig',
+        expandCharts: true
+    };
+    let defaultConfig;
+    let config;
+    const requests=[
+        Requests.getJson(getParameters)
+            .then((json)=>{
+                config = json.data;
+            })];
+    if (configName !== DEFAULT_OVERLAY_CONFIG) {
+        requests.push(
+            Requests.getJson({...getParameters, overlayConfig: DEFAULT_OVERLAY_CONFIG})
+                .then((config) => {
+                    defaultConfig = config.data;
+                }));
+    }
+    return Promise.all(requests)
+        .then((result)=> {
+            if (!config) throw new Error("unable to load overlay config");
+            if (configName !== DEFAULT_OVERLAY_CONFIG && !defaultConfig) throw new Error("unable to load default config");
+            if (config.useDefault === undefined) config.useDefault = true;
+            return new OverlayConfig(config, true, defaultConfig ? defaultConfig.overlays : undefined);
+        })
+}
+export const DEFAULT_OVERLAY_CONFIG = "default.cfg";
