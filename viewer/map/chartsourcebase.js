@@ -93,7 +93,8 @@ class ChartSourceBase {
         this.visible=true;
     }
     getName(){
-        return (this.chartEntry||{}).name||'unknown';
+        const e=this.chartEntry||{};
+        return e.displayName||e.name||'unknown';
     }
     getConfig(){
         return(assign({},this.chartEntry));

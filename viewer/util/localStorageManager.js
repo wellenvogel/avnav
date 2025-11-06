@@ -1,7 +1,7 @@
 import assign from 'object-assign';
 export const PREFIX_NAMES={
     LAYOUT:'avnav.layout',
-    LASTCHART:'avnav.lastChart',
+    LASTCHART:'avnav.lastChartV2',
     ROUTING: 'avnav.routing',
     ROUTE: 'avnav.route.', //prefix for routes, let them sync via the server
     CENTER: 'avnav.center',

@@ -449,7 +449,8 @@ const NavPage=(props)=>{
     const checkChartCount=useRef(30);
     const history=props.history;
     const loadTimer = useTimer((seq) => {
-        if (!needsChartLoad()) return;
+        const neededChart=needsChartLoad();
+        if (!neededChart) return;
         checkChartCount.current--;
         if (checkChartCount.current < 0) {
             history.pop();
@@ -460,7 +461,7 @@ const NavPage=(props)=>{
             command:'list'
         }, {timeout: 3 * parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json) => {
             (json.items || []).forEach((chartEntry) => {
-                if (chartEntry.name === neededChart) {
+                if (chartEntry.name === neededChart.key) {
                     MapHolder.setChartEntry(chartEntry);
                     setSequence(sequence + 1);
                     return;
@@ -876,7 +877,7 @@ const NavPage=(props)=>{
                         <OverlayDialog
                             closeCallback={() => history.pop()}>
                             <DialogFrame title={"Waiting for chart"}>
-                                <DialogText>{neededChart}</DialogText>
+                                <DialogText>{neededChart.name||neededChart.key}</DialogText>
                                 <DialogButtons buttonList={DBCancel()}/>
                             </DialogFrame>
                         </OverlayDialog>

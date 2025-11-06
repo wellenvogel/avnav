@@ -348,7 +348,8 @@ class MainPage extends React.Component {
         },{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
                 let items = [];
                 let current=mapholder.getBaseChart();
-                let lastChartKey=current?current.getChartKey():mapholder.getLastChartKey();
+                let lastLoaded=mapholder.getLastChartKey();
+                let lastChartKey=current?current.getChartKey():lastLoaded?lastLoaded.key:undefined;
                 let i=0;
                 let selectedChart;
                 let isLoading= json.loading;

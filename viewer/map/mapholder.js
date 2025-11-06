@@ -615,7 +615,9 @@ class MapHolder extends DrawingPositionConverter {
         const baseClass = this.findChartSource('chart', entry.url);
         this._baseChart = new baseClass(this, {...entry, type: 'chart', enabled: true, baseChart: true})
         try {
-            LocalStorage.setItem(STORAGE_NAMES.LASTCHART, undefined, this._baseChart.getChartKey());
+            const key=this._baseChart.getChartKey();
+            const dp=this._baseChart.getName();
+            LocalStorage.setItem(STORAGE_NAMES.LASTCHART, undefined, JSON.stringify({key:this._baseChart.getChartKey(),name:dp}));
         } catch (e) {
         }
         if (!opt_noRemote) {
@@ -630,6 +632,9 @@ class MapHolder extends DrawingPositionConverter {
         let rt;
         try {
             rt = LocalStorage.getItem(STORAGE_NAMES.LASTCHART);
+            if (rt){
+                rt=JSON.parse(rt);
+            }
             return rt;
         } catch (e) {
         }
