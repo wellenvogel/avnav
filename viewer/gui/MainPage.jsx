@@ -365,9 +365,9 @@ class MainPage extends React.Component {
                 })
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
-                    if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.url;
+                    chartEntry.key=chartEntry.name;
                     chartEntry.hasOverlays=!!this.state.overlays[chartEntry.overlayConfig];
-                    if (lastChartKey === chartEntry.key){
+                    if (lastChartKey === chartEntry.name){
                         selectedChart=i;
                     }
                     items.push(chartEntry);

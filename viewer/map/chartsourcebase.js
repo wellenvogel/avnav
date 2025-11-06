@@ -42,7 +42,7 @@ import {
 import Requests from "../util/requests";
 
 export const getOverlayConfigName=(chartEntry)=>{
-    return chartEntry.overlayConfig || chartEntry.chartKey;
+    return chartEntry.overlayConfig;
 }
 class ChartSourceBase {
 
@@ -178,7 +178,7 @@ class ChartSourceBase {
     }
 
     getChartKey() {
-        let chartBase = this.chartEntry.chartKey;
+        let chartBase = this.chartEntry.name;
         if (!chartBase) chartBase = this.chartEntry.url;
         return chartBase;
     }

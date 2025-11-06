@@ -206,7 +206,7 @@ const MapPage =(iprops)=>{
         />
         },[props.onItemClick]);
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
-        let mapClass=concatsp("map",chartEntry.chartKey?chartEntry.chartKey.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
+        let mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
         let className=Helper.concatsp(props.className,"mapPage",props.mapFloat?"mapFloat":undefined);

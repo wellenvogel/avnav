@@ -359,7 +359,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                 if overlay.get('type') != type:
                   newOverlays.append(overlay)
                   continue
-                overlayName=overlay.get('name') if type != 'chart' else overlay.get('chartKey')
+                overlayName=overlay.get('name')
                 if overlayName == name:
                   AVNLog.debug("removing overlay entry %s from %s",name,info.name)
                   isModified=True
@@ -387,7 +387,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       for name in [overlayName if not altOnly else None,self.ovlKeyToName.get(overlayName)]:
           if name is None:
               continue
-          overlayConfig = self.itemList[name]
+          overlayConfig = self.itemList.get(name)
           if overlayConfig is not None:
             try:
               del self.itemList[overlayName]
@@ -439,7 +439,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       rt=entry.serialize()
       chart=entry.getUserData()
       rt['overlayConfig']=self.getOverlayConfigName(entry.name)
-      rt['chartKey']=rt['name']
       chart.mergeAdditions(rt)
       return rt
 
@@ -573,6 +572,10 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                   if overlay.get('type') == 'chart':
                       newEntry = overlay.copy()
                       chartKey = overlay.get('chartKey') or overlay.get('name')
+                      try:
+                          del newEntry['chartKey']
+                      except KeyError:
+                          pass
                       if chartKey is None:
                           continue
                       if not chartKey.startswith(self.SCOPE_USER) and not chartKey.startswith(ExternalChart.SCOPE_EXT):
@@ -585,7 +588,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                           newEntry['name']=newName
                           newOverlays.append(newEntry)
                       else:
-                          newOverlays.append(overlay)
+                          newOverlays.append(newEntry)
                   else:
                       newOverlays.append(overlay)
               rt[ovlname] = newOverlays

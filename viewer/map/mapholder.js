@@ -773,7 +773,7 @@ class MapHolder extends DrawingPositionConverter {
                 checkChanges();
                 return;
             }
-            fetchOverlayConfig(chartSource.getOverlayConfigName())
+            fetchOverlayConfig(chartSource.getOverlayConfigName(),true)
                 .then((overlayConfig) => {
                     if (!overlayConfig) {
                         this.overlayConfig = new OverlayConfig();

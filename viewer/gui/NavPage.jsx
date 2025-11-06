@@ -460,8 +460,7 @@ const NavPage=(props)=>{
             command:'list'
         }, {timeout: 3 * parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json) => {
             (json.items || []).forEach((chartEntry) => {
-                if (!chartEntry.key) chartEntry.key = chartEntry.chartKey || chartEntry.url;
-                if (chartEntry.key === neededChart) {
+                if (chartEntry.name === neededChart) {
                     MapHolder.setChartEntry(chartEntry);
                     setSequence(sequence + 1);
                     return;

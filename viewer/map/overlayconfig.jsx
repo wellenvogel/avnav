@@ -61,7 +61,7 @@ const itemToBucket=function(buckets,item){
 const filterOverlayItem=(item)=>{
     let rt=undefined;
     if (item.type === 'chart') {
-        let filter={chartKey:true,type:true,opacity:true,enabled:true,bucket:true};
+        let filter={chartKey:true,name:true,displayName:true,type:true,opacity:true,enabled:true,bucket:true};
         filter[OVERLAY_ID]=true;
         rt=Helper.filteredAssign(filter,item);
     }
@@ -201,7 +201,6 @@ export default class OverlayConfig{
      */
     writeBack(overlayList){
         this.checkMutable();
-        let self=this;
         if (! overlayList) return false;
         let newDefaults=[];
         let newOverlays=[];
@@ -209,7 +208,7 @@ export default class OverlayConfig{
         let currentBucket='L2';
         let normalItemBuckets=['L2','L1','H1','H2'];
         overlayList.forEach((item) => {
-            if (self.isChartBucket(item)) {
+            if (this.isChartBucket(item)) {
                 currentBucket = 'M';
                 return;
             }
@@ -412,13 +411,13 @@ export default class OverlayConfig{
     }
 }
 
-export const fetchOverlayConfig=(configName)=>{
+export const fetchOverlayConfig=(configName,expand)=>{
     let getParameters = {
         request: 'api',
         type: 'chart',
         overlayConfig: configName,
         command: 'getConfig',
-        expandCharts: true
+        expandCharts: expand
     };
     let defaultConfig;
     let config;

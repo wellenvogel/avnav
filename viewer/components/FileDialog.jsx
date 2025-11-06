@@ -62,8 +62,7 @@ const RouteHandler=NavHandler.getRoutingHandler();
  * @type {{url: boolean, chartKey: boolean}}
  */
 export const additionalUrlParameters={
-    url:true,
-    chartKey:true
+    url:true
 }
 
 export const ItemDownloadButton=(props)=>{
@@ -374,7 +373,7 @@ const getImportLogUrl=(name)=>{
 
 const AddRemoveOverlayDialog = (props) => {
     const [chartList, setChartList] = useState([DEFAULT_OVERLAY_CHARTENTRY]);
-    const [chart, setChart] = useState(DEFAULT_OVERLAY_CHARTENTRY.chartKey);
+    const [chart, setChart] = useState(DEFAULT_OVERLAY_CHARTENTRY.name);
     const [action, setAction] = useState('add');
     const [changed, setChanged] = useState(false);
     let titles = {add: "Add to Charts", remove: "Remove from Charts"}
@@ -394,7 +393,7 @@ const AddRemoveOverlayDialog = (props) => {
     }, []);
     const findChart = useCallback((chartKey) => {
         for (let i = 0; i < chartList.length; i++) {
-            if (chartList[i].chartKey === chartKey) return chartList[i];
+            if (chartList[i].name === chartKey) return chartList[i];
         }
     }, [chartList]);
     const execute = useCallback(() => {
@@ -425,12 +424,12 @@ const AddRemoveOverlayDialog = (props) => {
     }, [action,chart]);
     const getChartSelectionList = useCallback(() => {
         if (action === 'remove') {
-            return {label: DEFAULT_OVERLAY_CHARTENTRY.name, value: DEFAULT_OVERLAY_CHARTENTRY.chartKey};
+            return {label: DEFAULT_OVERLAY_CHARTENTRY.displayName, value: DEFAULT_OVERLAY_CHARTENTRY.name};
         }
         let rt = [];
         chartList.forEach((chart) => {
-            if (!chart.chartKey) return;
-            rt.push({label: chart.name, value: chart.chartKey});
+            if (!chart.name) return;
+            rt.push({label: chart.displayName||chart.name, value: chart.name});
         })
         return rt;
     }, [action, chartList]);

@@ -303,7 +303,7 @@ class AvnavChartSource extends ChartSourceBase{
         }
         return new Promise((resolve, reject)=> {
             if (!url) {
-                reject("no map url for "+(this.chartEntry.name||this.chartEntry.chartKey));
+                reject("no map url for "+(this.chartEntry.name));
                 return;
             }
             let xmlUrl = url + "/avnav.xml";
@@ -347,7 +347,6 @@ class AvnavChartSource extends ChartSourceBase{
 ;
     parseLayerlist(layerdata, baseurl,upZoom) {
         let self = this;
-        let chartKey = baseurl;
         let ll = [];
         let xmlDoc = Helper.parseXml(layerdata);
         Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function (tm) {
@@ -507,7 +506,6 @@ class AvnavChartSource extends ChartSourceBase{
             let layerOptions={
                 source: source
             };
-            let extent=rt.extent;
             if (self.chartEntry.opacity !== undefined) layerOptions.opacity=parseFloat(self.chartEntry.opacity);
             let layer = new olTileLayer(layerOptions);
             if (upZoom > 0) {
@@ -609,7 +607,7 @@ class AvnavChartSource extends ChartSourceBase{
                     }
                     if (topInfo) {
                         let info=new ChartFeatureInfo({
-                            chartKey: this.getChartKey(),
+                            name: this.getChartKey(),
                             title:this.getName(),
                             isOverlay: ! this.isBaseChart()
                             });

@@ -153,7 +153,7 @@ const OverlayItemDialog = (props) => {
                     //prepare select list
                     data.items.forEach((item) => {
                         item.label = item.displayName||item.name;
-                        item.value = item.chartKey;
+                        item.value = item.name;
                     });
                 }
                 if (type === 'overlay' || type === 'route' || type === 'track') {
@@ -168,7 +168,7 @@ const OverlayItemDialog = (props) => {
                             });
                             if (!item.name.match(/\.gpx/)) item.name += ".gpx";
                         }
-                        item.label = item.name;
+                        item.label = item.displayName||item.name;
                         item.value = item.url;
                         if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name)) >= 0) {
                             pushHelper(filledLists,'knownOverlays',item);
@@ -299,7 +299,7 @@ const OverlayItemDialog = (props) => {
     return (
         <DialogFrame className="selectDialog editOverlayItemDialog" title={props.title || 'Edit Overlay'}>
             <DialogRow className="info"><span
-                className="inputLabel">Overlay</span>{current.name}</DialogRow>
+                className="inputLabel">Overlay</span>{current.displayName||current.name}</DialogRow>
             {loading ?
                 <div className="loadingIndicator">Analyzing...</div>
                 :
@@ -332,13 +332,16 @@ const OverlayItemDialog = (props) => {
                                 dialogRow={true}
                                 label="chart name"
                                 value={{
-                                    value: current.chartKey,
-                                    label: current.name
+                                    value: current.name,
+                                    label: current.displayName||current.name
                                 }}
                                 list={itemLists.chart.list}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
-                                    updateCurrent({chartKey: nv.chartKey, name: nv.name});
+                                    updateCurrent({name: nv.name,
+                                        displayName:nv.displayName,
+                                        chartKey:undefined
+                                    });
                                 }}
                             />
                         </React.Fragment> :
@@ -346,7 +349,7 @@ const OverlayItemDialog = (props) => {
                             <InputSelect
                                 dialogRow={true}
                                 label="overlay name"
-                                value={current.name}
+                                value={{label:current.displayName||current.name,value:current.name}}
                                 list={filteredNameList()}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
@@ -421,7 +424,7 @@ const OverlayElement=(props)=>{
              onClick={(ev)=>onClick(ev,'select')} {...dd}>
             <div className="itemInfo">
                 <div className="infoRow">
-                    <span className="inputLabel">Name</span><span className="valueText">{props.name}</span>
+                    <span className="inputLabel">Name</span><span className="valueText">{props.displayName||props.name}</span>
                 </div>
                 <div className="infoRow">
                     <span className="inputLabel">Type</span><span className="valueText">{props.type+(props.isDefault?"   [default]":"")}</span>
@@ -785,7 +788,7 @@ const EditOverlaysDialog = (props) => {
                 <DB
                     name="reset"
                     onClick={reset}
-                    close={false}
+                    close={!!props.resetCallback}
                 >Reset
                 </DB>
                 <DB name="cancel">Cancel</DB>
@@ -837,7 +840,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
         if (!typeOk) return false;
         opt_addEntry = assign({opacity: 1, enabled: true}, opt_addEntry);
     }
-    fetchOverlayConfig(configName)
+    fetchOverlayConfig(configName,false)
         .then((overlayConfig) => {
             showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
@@ -892,8 +895,8 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
 };
 export const DEFAULT_OVERLAY_CHARTENTRY = {
     type: 'chart',
-    name: 'DefaultOverlays',
-    chartKey: DEFAULT_OVERLAY_CONFIG,
+    displayName: 'DefaultOverlays',
+    name: DEFAULT_OVERLAY_CONFIG,
     overlayConfig: DEFAULT_OVERLAY_CONFIG,
     canDelete: false,
     canDownload: false,
