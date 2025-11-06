@@ -95,13 +95,9 @@ const getDownloadUrl=(item)=>{
         if (item.server === false) return;
         if (! name.match(/\.gpx$/)) name+=".gpx";
     }
-    let url= prepareUrl({
-        ...additionalUrlParameters,
-        command:'download',
-        type:item.type,
-        name:name,
-        filename:getDownloadFileName(item)
-    });
+    let url= prepareUrl(buildRequestParameters('download',item,{
+        filename:getDownloadFileName(item),
+    }));
     return url;
 }
 
@@ -202,6 +198,7 @@ export class ItemActions{
                     rt.className+=' userAction';
                 }
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
+                rt.nameForDownload=(name)=>name.replace(/^[^@]*@/,'');
                 break;
             case 'track':
                 rt.headline='Tracks';

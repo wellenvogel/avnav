@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -140,34 +139,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     public void stop(){
         isStopped=true;
         triggerUpdate(false);
-    }
-
-    /**
-     * open a file for download
-     * @param uriPart -
-     *                chart/index/type/name/
-     *                it is the same like the url returned by {@link Chart#toJson()}
-     * @return
-     */
-    public static ParcelFileDescriptor getFileFromUri(String uriPart, Context ctx) throws Exception {
-        if (uriPart == null) return null;
-        KeyAndParts kp=urlToKey(uriPart,true,true);
-        if (kp.originalParts[2].equals(INDEX_INTERNAL)){
-            File chartBase=getInternalChartsDir(ctx);
-            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(kp.originalParts[4],true));
-            if (!chartFile.exists() || ! chartFile.canRead()) return null;
-            return ParcelFileDescriptor.open(chartFile,ParcelFileDescriptor.MODE_READ_ONLY);
-        }
-        if (kp.originalParts[2].equals(INDEX_EXTERNAL)){
-            String secondChartDirStr=AvnUtil.getSharedPreferences(ctx).getString(Constants.CHARTDIR,"");
-            if (secondChartDirStr.isEmpty()) return null;
-            if (!secondChartDirStr.startsWith("content:")) return null;
-            DocumentFile dirFile=DocumentFile.fromTreeUri(ctx,Uri.parse(secondChartDirStr));
-            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(kp.originalParts[4],true));
-            if (chartFile == null) return null;
-            return ctx.getContentResolver().openFileDescriptor(chartFile.getUri(),"r");
-        }
-        return null;
     }
 
     public void removeExternalCharts(String key){
@@ -327,9 +298,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             return null;
         }
         else {
-            //we rely on the the key (url) being the same as our chart key
-            HashMap<String, Chart> currentCharts = chartList; //atomic
-            Chart chart=currentCharts.get(key);
+            Chart chart=getChartDescription(key);
             if (chart == null) return null;
             return chart.toJson();
         }
@@ -402,16 +371,19 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     /**
      * download chart - only works for single file charts
      * otherwise we would pick up only the first file
-     * @param name - ignored
-     * @param uri - we expect an url parameter that has been filled by {@link Chart#toJson()}
-     *              so it has charts/charts/index/typ/name
-     * @return
+     * does not work for plugin charts
+     * @param name - the chart key
+     * @param uri - other parameters (ignored)
+     * @return {{@link ExtendedWebResourceResponse}}
      * @throws Exception
      */
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
-        String url=AvnUtil.getMandatoryParameter(uri,"url");
-        ParcelFileDescriptor fd=getFileFromUri(url, context);
+        Chart chart=getChartDescription(name);
+        if (chart == null){
+            throw new IOException("chart "+name+" not found for download");
+        }
+        ParcelFileDescriptor fd=chart.getDownloadFd(context);
         if (fd == null) return null;
         ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(fd.getStatSize(),
                 "application/octet-stream",
@@ -511,9 +483,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             }
             return false;
         }
-        String charturl=AvnUtil.getMandatoryParameter(uri,"url");
-        KeyAndParts kp=urlToKey(charturl,true,true);
-        Chart chart= getChartDescription(kp.key);
+        Chart chart= getChartDescription(name);
         if (chart == null){
             return false;
         }
@@ -585,10 +555,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("scheme")){
+            String name=AvnUtil.getMandatoryParameter(uri,"name");
             String scheme=AvnUtil.getMandatoryParameter(uri,"newScheme");
-            String url=AvnUtil.getMandatoryParameter(uri,"url");
-            KeyAndParts kp=urlToKey(url,true,true);
-            Chart chart= getChartDescription(kp.key);
+            Chart chart= getChartDescription(name);
             if (chart == null){
                 return RequestHandler.getErrorReturn("chart not found");
             }

@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.charts;
 
 import android.content.Context;
+import android.os.ParcelFileDescriptor;
 
 import androidx.annotation.NonNull;
 import androidx.documentfile.provider.DocumentFile;
@@ -10,6 +11,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -103,6 +105,18 @@ public class Chart implements AvnUtil.IJsonObect {
         }
     }
 
+    ParcelFileDescriptor getDownloadFd(Context ctx) throws FileNotFoundException {
+        if (documentFile != null){
+            return ctx.getContentResolver().openFileDescriptor(documentFile.getUri(),"r");
+        }
+        if (realFile != null){
+            if (! realFile.exists() || ! realFile.canRead()){
+                throw new FileNotFoundException("unable to read "+realFile.getName());
+            }
+            return ParcelFileDescriptor.open(realFile,ParcelFileDescriptor.MODE_READ_ONLY);
+        }
+        throw new FileNotFoundException("no file found for "+name);
+    }
     synchronized boolean closeInactive(){
         if (chartReader == null) return false;
         if (lastTouched < (System.currentTimeMillis() -INACTIVE_CLOSE)) {
