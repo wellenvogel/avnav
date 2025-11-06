@@ -103,7 +103,10 @@ class AVNDirectoryListEntry(object):
 
   def getKey(self):
     return self.name
-
+  def copy(self):
+      rt=AVNDirectoryListEntry(self.type,self.name,self.time)
+      rt.__dict__=self.__dict__.copy()
+      return rt
 
 class AVNDirectoryHandlerBase(AVNWorker):
   '''
@@ -165,35 +168,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
   def getSleepTime(self):
     return self.getFloatParam('interval')
-
-
-  def listDirAndCompare(self,includeDirs=False,extensions=None,previousItems=None,onItem=None,scope=None) -> dict[str,AVNDirectoryListEntry]:
-    newContent = self.listDirectory(includeDirs,self.baseDir,extensions=extensions,scope=scope)
-    rt={}
-    for f in newContent:
-        if previousItems is not None and onItem is not None:
-            oldItem=previousItems.get(f.name)
-            if oldItem is not None:
-                if f.isModified(oldItem):
-                    add=onItem(f,"add")
-                    if add:
-                        rt[f.name]=f
-                else:
-                    rt[oldItem.name]=oldItem
-            else:
-                add=onItem(f,"add")
-                if add:
-                    rt[f.name]=f
-        elif onItem is not None:
-            add=onItem(f,"add")
-            if add:
-                rt[f.name] = f
-    if previousItems is not None and onItem is not None:
-        for old in previousItems.values():
-            if rt.get(old.name) is None:
-                onItem(old,"remove")
-    return rt
-
 
   # thread run method - just try forever
   def run(self):

@@ -154,6 +154,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     #especially for external providers we use the chart key now to address in the map
     #and to build the overlay name
     self.ovlKeyToName={} #new ovl name to old ovl name
+    self.ovlNameToKey={}
     self.nameToKey={} #old external chart name to new external chart name
   @classmethod
   def getConfigName(cls):
@@ -216,7 +217,35 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               currenConfig=self.getOverlayConfigName(key)
               oldConfig=self.getOverlayConfigName(name)
               self.ovlKeyToName[currenConfig]=oldConfig
+              self.ovlNameToKey[oldConfig]=currenConfig
       return True
+
+  def listDirAndCompare(self,includeDirs=False,extensions=None,previousItems=None,onItem=None,scope=None) -> dict[str,AVNDirectoryListEntry]:
+    newContent = self.listDirectory(includeDirs,self.baseDir,extensions=extensions,scope=scope)
+    rt={}
+    for f in newContent:
+        if previousItems is not None and onItem is not None:
+            oldItem=previousItems.get(f.name)
+            if oldItem is not None:
+                if f.isModified(oldItem):
+                    add=onItem(f,"add")
+                    if add:
+                        rt[f.name]=f
+                else:
+                    rt[oldItem.name]=oldItem
+            else:
+                add=onItem(f,"add")
+                if add:
+                    rt[f.name]=f
+        elif onItem is not None:
+            add=onItem(f,"add")
+            if add:
+                rt[f.name] = f
+    if previousItems is not None and onItem is not None:
+        for old in previousItems.values():
+            if rt.get(old.name) is None:
+                onItem(old,"remove")
+    return rt
 
   def periodicRun(self):
     if self.baseDir is None or not os.path.isdir(self.baseDir):
@@ -248,12 +277,11 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         return True
     with self.lock:
         newList=self.listDirAndCompare(self.baseDir,None,self.itemList,onItem=itemAction,scope=self.SCOPE_USER)
+        self.itemList=newList
     for item in newitems:
         self.onItemAdd(item)
     for item in removeditems:
         self.onItemRemove(item)
-    with self.lock:
-        self.itemList=newList
   def onItemAdd(self, itemDescription):
     # type: (AVNDirectoryListEntry) -> bool
     if itemDescription is None:
@@ -603,7 +631,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               for overlay in overlays:
                 if overlay.get('type') == 'chart':
                   # update with the final chart config
-                  chartKey=overlay.get('name') or overlay.get('chartKey')
+                  chartKey=overlay.get('chartKey') or overlay.get('name')
                   chartDescription=self.getChartDescriptionByKey(chartKey,hostip)
                   if chartDescription is not None:
                     overlay.update(dict([k_v for k_v in list(chartDescription.items()) if k_v[0] not in noMerge]))
@@ -613,8 +641,22 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               rt[ovlname]=newOverlays
         return AVNUtil.getReturnData(data=rt)
       if command == 'listOverlays':
-        rt=[item for item in list(self.itemList.values()) if isinstance(item.getUserData(),OverlayData)]
-        return AVNUtil.getReturnData(data=rt)
+        with self.lock:
+            rt=[item for item in list(self.itemList.values()) if isinstance(item.getUserData(),OverlayData)]
+            migrated=[]
+            for ovl in rt:
+                n=ovl.name
+                if n.startswith(self.SCOPE_USER) or n.startswith(ExternalChart.SCOPE_EXT) or n == self.DEFAULT_CHART_CFG:
+                    migrated.append(ovl)
+                else:
+                    newName=self.ovlNameToKey.get(n)
+                    if newName is not None and self.itemList.get(newName) is None:
+                        novl=ovl.copy()
+                        novl.name=newName
+                        migrated.append(novl)
+                    else:
+                        migrated.append(ovl)
+        return AVNUtil.getReturnData(data=migrated)
       if command == 'deleteFromOverlays':
         if name is None:
           return AVNUtil.getReturnData(error="missing name")
