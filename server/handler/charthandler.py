@@ -32,7 +32,7 @@ import avnav_handlerList
 import gemf_reader
 import mbtiles_reader
 from avnav_util import *
-from avnav_worker import WorkerStatus
+from avnav_worker import WorkerStatus, AVNWorker
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 
 
@@ -74,6 +74,7 @@ class XmlChartFile(ChartFile):
 
 
 class ExternalChart(ChartFile):
+    SCOPE_EXT = "ext@"
     def __init__(self, ext,prefix):
         super().__init__()
         self.ext=ext
@@ -82,11 +83,11 @@ class ExternalChart(ChartFile):
     def mergeAdditions(self, item: dict[str, Any]):
         super().mergeAdditions(item)
         for k,v in self.ext.items():
-            if k != 'name' and k != 'keyPrefix':
+            if k != 'name' and k != 'keyPrefix' and k != 'chartKey':
                 item[k]=v
     def buildKey(self):
         key = self.ext.get('chartKey') or self.ext.get('name')
-        return AVNUtil.clean_filename(self._prefix+'@'+key)
+        return self.SCOPE_EXT+self._prefix+'@'+key
     def buildAltKey(self):
         key = self.ext.get('name')
         if key is None:
@@ -128,13 +129,8 @@ class ExternalProvider(object):
   def getList(self):
     return list(self.charts.values())
 
-  def getChartByKey(self,chartKey,makeCopy=False):
-    rt=self.charts.get(chartKey)
-    if rt is None:
-      return None
-    if not makeCopy:
-      return rt
-    return rt.copy()
+  def getChartByKey(self,chartKey):
+    return self.charts.get(chartKey)
 
 class OverlayData:
     def __init__(self,jsonData):
@@ -157,8 +153,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     #we maintain maps to convert to and from the new keys
     #especially for external providers we use the chart key now to address in the map
     #and to build the overlay name
-    self.keyToName={}
-    self.nameToKey={}
+    self.ovlKeyToName={} #new ovl name to old ovl name
+    self.nameToKey={} #old external chart name to new external chart name
   @classmethod
   def getConfigName(cls):
     return "AVNChartHandler"
@@ -212,12 +208,14 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       ext=item.getUserData()
       if not isinstance(ext,ExternalChart):
           return False
-      name=AVNUtil.clean_filename(ext.buildAltKey())
+      name=ext.buildAltKey()
       key=ext.buildKey()
       if name is not None and name != key:
           with self.lock:
-              self.keyToName[key]=name
               self.nameToKey[name]=key
+              currenConfig=self.getOverlayConfigName(key)
+              oldConfig=self.getOverlayConfigName(name)
+              self.ovlKeyToName[currenConfig]=oldConfig
       return True
 
   def periodicRun(self):
@@ -295,10 +293,10 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       AVNLog.error("error opening chart %s:%s",itemDescription.name,traceback.format_exc())
       return False
 
-  def getOverlayConfigName(self,itemDescription):
-    if itemDescription is None:
+  def getOverlayConfigName(self,name):
+    if name is None:
       return None
-    return AVNUtil.clean_filename(itemDescription.name) +self.OVL_EXT
+    return AVNUtil.clean_filename(name) +self.OVL_EXT
   def handleDownload(self, name, handler, requestparam):
     chartDescription=self.itemList.get(name)
     if chartDescription is None:
@@ -324,7 +322,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
             userData=info.getUserData()
             if not isinstance(userData,OverlayData):
                 continue
-            overlayConfig=userData.jsonData
+            overlayConfig=self.migrateOverlay(info.name,userData.jsonData)
             overlays=overlayConfig.get('overlays')
             isModified=False
             if overlays is not None:
@@ -352,6 +350,23 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       self.wakeUp()
     return numChanged
 
+  def deleteOverlay(self,overlayName,altOnly=False):
+      '''
+      lock must already be held
+      :param chartName:
+      :return:
+      '''
+      for name in [overlayName if not altOnly else None,self.ovlKeyToName.get(overlayName)]:
+          if name is None:
+              continue
+          overlayConfig = self.itemList[name]
+          if overlayConfig is not None:
+            try:
+              del self.itemList[overlayName]
+            except KeyError:
+              pass
+            os.unlink(overlayConfig.getFileName())
+
   def handleDelete(self,name):
     chartEntry=None
     chart=None
@@ -365,18 +380,10 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         if not isinstance(chart,ChartFile):
             raise Exception("item %s is no chart - cannot delete",name)
         del self.itemList[name]
-        overlayName=self.getOverlayConfigName(chartEntry)
-        overlayConfig=self.itemList[overlayName]
-        if overlayConfig is not None:
-            try:
-                del self.itemList[overlayName]
-            except KeyError:
-                pass
+        self.deleteOverlay(overlayName = self.getOverlayConfigName(chartEntry.name))
     if self.importer is not None:
         self.importer.deleteImport(chartEntry.name)
     chart.deleteFiles()
-    if overlayConfig is not None:
-        os.unlink(overlayConfig.getFileName())
     self.deleteFromOverlays('chart',chartEntry.name)
     self.wakeUp()
     return AVNUtil.getReturnData()
@@ -396,18 +403,14 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     #potentially remove an old style overlay config
     if ext == self.OVL_EXT:
         with self.lock:
-            alt=self.keyToName.get(path)
-            if alt is not None and alt != path:
-                oldovl=self.itemList.get(alt+self.OVL_EXT)
-        if oldovl is not None and isinstance(oldovl.getUserData(), OverlayData):
-            os.unlink(oldovl.getFileName())
+            self.deleteOverlay(name,altOnly=True)
     self.wakeUp()
     return rt
 
   def entryToList(self,entry:AVNDirectoryListEntry):
       rt=entry.serialize()
       chart=entry.getUserData()
-      rt['overlayConfig']=self.getOverlayConfigName(entry)
+      rt['overlayConfig']=self.getOverlayConfigName(entry.name)
       rt['chartKey']=rt['name']
       chart.mergeAdditions(rt)
       return rt
@@ -478,20 +481,20 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     '''
     if chartKey is None:
       return None
-    ckp=chartKey.split("@",1)
-    if len(ckp) != 2:
-        return None
     item=None
-    if ckp[0] == self.SCOPE_USER:
+    if chartKey.startswith(self.SCOPE_USER):
       #internal chart
       with self.lock:
           item=self.itemList.get(chartKey)
-    else:
+    elif chartKey.startswith(ExternalChart.SCOPE_EXT):
+        ckp=chartKey.split("@")
+        if len(ckp) < 3:
+            return None
         with self.lock:
-            provider=self.externalProviders.get(ckp[0])
+            provider=self.externalProviders.get(ckp[1])
             if provider is None:
                 return None
-            item=provider.getChartByKey(chartKey,True)
+            item=provider.getChartByKey(chartKey)
     if item is None:
       return None
     if returnItem:
@@ -506,23 +509,61 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       (path, ext) = os.path.splitext(configName)
       if ext != self.OVL_EXT:
           return False
-      spl = configName.split("@")
-      if len(spl) != 2:
-          return False
-      for i in [0, 1]:
-          if spl[i] != AVNUtil.clean_filename(spl[i]):
+      if path.startswith(self.SCOPE_USER):
+          path=path[len(self.SCOPE_USER):]
+          if path != AVNUtil.clean_filename(path):
               return False
+      elif path.startswith(ExternalChart.SCOPE_EXT):
+          path=path[len(ExternalChart.SCOPE_EXT):]
+          spl = path.split("@")
+          if len(spl) != 2:
+            return False
+          for i in [0, 1]:
+            if spl[i] != AVNUtil.clean_filename(spl[i]):
+              return False
+      else:
+          return False
       return True
-  def findOldConfig(self,configName):
-      if not configName.endswith(self.OVL_EXT):
+
+  def migrateOverlay(self,configName,configJson):
+      '''
+      migrate old chart names into new ones
+      :param configName:
+      :param configJson:
+      :return:
+      '''
+      if configName is None:
           return None
-      chartName=configName[:-len(self.OVL_EXT)]
-      with self.lock:
-          oldName=self.keyToName.get(chartName)
-          if oldName is None:
-              return None
-          altConfigName=oldName+self.OVL_EXT
-          return self.itemList.get(altConfigName)
+      rt=configJson.copy()
+      rt['name']=configName
+      rt['defaults']=[]
+      for ovlname in ['overlays']:
+          overlays = rt.get(ovlname)
+          if overlays is not None:
+              newOverlays = []
+              for overlay in overlays:
+                  if overlay.get('type') == 'chart':
+                      newEntry = overlay.copy()
+                      chartKey = overlay.get('chartKey') or overlay.get('name')
+                      if chartKey is None:
+                          continue
+                      if not chartKey.startswith(self.SCOPE_USER) and not chartKey.startswith(ExternalChart.SCOPE_EXT):
+                          newName=self.nameToKey.get(chartKey)
+                          AVNLog.debug("old chart name in overlay %s - new %s",chartKey,newName)
+                          if newName is None:
+                              #it seems this chart is not available - so remove it from the overlay
+                              continue
+                          newEntry['displayName']=newEntry.get('name')
+                          newEntry['name']=newName
+                          newOverlays.append(newEntry)
+                      else:
+                          newOverlays.append(overlay)
+                  else:
+                      newOverlays.append(overlay)
+              rt[ovlname] = newOverlays
+      return rt
+
+
   def handleSpecialApiRequest(self, command, requestparam, handler):
     hostip=self.getRequestIp(handler)
     name=AVNUtil.getHttpRequestParam(requestparam, "name")
@@ -539,13 +580,10 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       if (command == "getConfig"):
         configName = AVNUtil.getHttpRequestParam(requestparam, "overlayConfig", True)
         expandCharts = AVNUtil.getHttpRequestFlag(requestparam, "expandCharts", False)
-        mergeDefault = AVNUtil.getHttpRequestFlag(requestparam, "mergeDefault", False)
         rt={}
-        if configName == self.DEFAULT_CHART_CFG:
-          mergeDefault=False
         overlay=self.itemList.get(configName)
         if overlay is None and configName != self.DEFAULT_CHART_CFG:
-          overlay=self.findOldConfig(configName)
+          overlay=self.itemList.get(self.ovlKeyToName.get(configName))
         if overlay is None:
           if configName != self.DEFAULT_CHART_CFG and not self.checkConfigName(configName):
             return AVNUtil.getReturnData(error="invalid config name")
@@ -553,41 +591,26 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         else:
           if not isinstance(overlay.getUserData(),OverlayData):
             return AVNUtil.getReturnData(error="invalid config")
-          rt = overlay.getUserData().jsonData.copy()
+          rt = self.migrateOverlay(configName,overlay.getUserData().jsonData)
           rt['name']=configName
-        default = {}
-        if mergeDefault:
-          defaultCfg = self.itemList.get(self.DEFAULT_CHART_CFG)
-          if defaultCfg is not None:
-            default=defaultCfg.getUserData().jsonData
-            if default.get('overlays') is not None:
-              rt['defaults'] = []+default['overlays']
+        rt['defaults']=[]
         if expandCharts:
-          noMerge = ['type', 'chartKey', 'opacity', 'chart']
-          for ovlname in ['defaults', 'overlays']:
+          noMerge = ['type', 'opacity', 'chart']
+          for ovlname in ['overlays']:
             overlays = rt.get(ovlname)
             if overlays is not None:
               newOverlays=[]
               for overlay in overlays:
                 if overlay.get('type') == 'chart':
                   # update with the final chart config
-                  chartKey=overlay.get('chartKey')
+                  chartKey=overlay.get('name') or overlay.get('chartKey')
                   chartDescription=self.getChartDescriptionByKey(chartKey,hostip)
-                  if chartDescription is None:
-                      #maybe we have an old overlay config here and we must consider the chartkey
-                      #to be build from the name
-                      with self.lock:
-                          chartKey=self.nameToKey.get(chartKey)
-                      chartDescription=self.getChartDescriptionByKey(chartKey,hostip)
                   if chartDescription is not None:
                     overlay.update(dict([k_v for k_v in list(chartDescription.items()) if k_v[0] not in noMerge]))
                     newOverlays.append(overlay)
                 else:
                   newOverlays.append(overlay)
               rt[ovlname]=newOverlays
-        else:
-          rt = default
-        rt['name'] = configName
         return AVNUtil.getReturnData(data=rt)
       if command == 'listOverlays':
         rt=[item for item in list(self.itemList.values()) if isinstance(item.getUserData(),OverlayData)]

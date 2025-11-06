@@ -86,9 +86,10 @@ export const getKeyFromOverlay=(overlay)=>{
     return overlay[OVERLAY_ID];
 }
 export default class OverlayConfig{
-    constructor(overlayConfig,opt_mutable) {
+    constructor(overlayConfig,opt_mutable,opt_defaults) {
         this.config=overlayConfig||{};
         this.mutable=opt_mutable||false;
+        if (opt_defaults) this.config.defaults=opt_defaults;
         if (! this.config.defaults) this.config.defaults=[];
         else{
             let newDefaults=[];

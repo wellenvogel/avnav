@@ -13,7 +13,7 @@ import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
 import Requests, {prepareUrl} from '../util/requests.js';
 import Toast from './Toast.jsx';
-import Helper from '../util/helper.js';
+import Helper, {avitem, injectav, setav} from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import {editableOverlayParameters, getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
@@ -406,8 +406,14 @@ const BaseElement=(props)=>{
 
 const OverlayElement=(props)=>{
     const dd=useAvNavSortable(props.dragId);
+    const onClick=(ev,action)=>{
+        if (props.onClick){
+            props.onClick(setav(ev,{item:props,action:action}));
+        }
+    }
     return (
-        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")} onClick={()=>props.onClick('select')} {...dd}>
+        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")}
+             onClick={(ev)=>onClick(ev,'select')} {...dd}>
             <div className="itemInfo">
                 <div className="infoRow">
                     <span className="inputLabel">Name</span><span className="valueText">{props.name}</span>
@@ -422,7 +428,7 @@ const OverlayElement=(props)=>{
                     className="overlayEnabled"
                     value={props.enabled || false}
                     onChange={(nv) => {
-                        props.onClick(nv ? "enable" : "disable")
+                        onClick({},nv ? "enable" : "disable");
                     }}
                 />
                 }
@@ -431,7 +437,7 @@ const OverlayElement=(props)=>{
                         className={"smallButton " + ((props.isDefault || props.preventEdit) ? "disabled" : "")}
                         onClick={(ev) => {
                             ev.stopPropagation();
-                            props.onClick('edit')
+                            onClick(ev,'edit');
                         }}
                 />
                 }
@@ -448,8 +454,9 @@ const CombinedOverlayElement=(props)=> {
             className="defaultOverlayItems"
             itemClass={OverlayElement}
             itemList={props.items}
-            onItemClick={(item,data)=>{
-                props.onClick({item:item,data:data});
+            onItemClick={(ev)=>{
+                const avevent=injectav(ev);
+                props.onClick(avevent);
             }}
             />
     );
@@ -704,7 +711,9 @@ const EditOverlaysDialog = (props) => {
                     } else return OverlayElement;
                 }}
                 selectedIndex={props.preventEdit ? undefined : selectedIndex}
-                onItemClick={(item, data) => {
+                onItemClick={(ev) => {
+                    const data=avitem(ev,'action')
+                    const item=avitem(ev);
                     if (data === 'select') {
                         setSelectedIndex(item.index);
                         return;
@@ -811,7 +820,8 @@ EditOverlaysDialog.propTypes = {
  * @return {boolean}
  */
 EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
-    if (!getOverlayConfigName(chartItem)) return false;
+    const configName=getOverlayConfigName(chartItem);
+    if (!configName) return false;
     if (opt_addEntry) {
         //check for an allowed item that we can add
         if (!opt_addEntry.type) return false;
@@ -822,20 +832,33 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
         if (!typeOk) return false;
         opt_addEntry = assign({opacity: 1, enabled: true}, opt_addEntry);
     }
-    let noDefault = getOverlayConfigName(chartItem) === DEFAULT_OVERLAY_CONFIG;
     let getParameters = {
         request: 'api',
         type: 'chart',
-        overlayConfig: getOverlayConfigName(chartItem),
+        overlayConfig: configName,
         command: 'getConfig',
-        expandCharts: true,
-        mergeDefault: !noDefault
+        expandCharts: true
     };
-    Requests.getJson( getParameters)
-        .then((config) => {
-            if (!config.data) return;
-            if (config.data.useDefault === undefined) config.data.useDefault = true;
-            let overlayConfig = new OverlayConfig(config.data);
+    let defaultConfig;
+    let config;
+    const requests=[
+        Requests.getJson(getParameters)
+            .then((json)=>{
+                config = json.data;
+            })];
+    if (configName !== DEFAULT_OVERLAY_CONFIG) {
+        requests.push(
+            Requests.getJson({...getParameters, overlayConfig: DEFAULT_OVERLAY_CONFIG})
+                .then((config) => {
+                    defaultConfig = config.data;
+                }));
+    }
+    Promise.all(requests)
+        .then((result)=>{
+            if (! config) throw new Error("unable to load overlay config");
+            if (configName !== DEFAULT_OVERLAY_CONFIG && ! defaultConfig) throw new Error("unable to load default config");
+            if (config.useDefault === undefined) config.useDefault = true;
+            let overlayConfig = new OverlayConfig(config,true,defaultConfig?defaultConfig.overlays:undefined);
             showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
                     {...props}
@@ -876,7 +899,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                                 });
                         }
                     }}
-                    noDefault={noDefault || false}
+                    noDefault={configName === DEFAULT_OVERLAY_CONFIG}
                     addEntry={opt_addEntry}
                 />
             });
