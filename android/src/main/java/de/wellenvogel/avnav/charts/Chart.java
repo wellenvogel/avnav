@@ -31,6 +31,10 @@ public class Chart implements AvnUtil.IJsonObect {
     static final String STYPE_GEMF ="gemf";
     static final String STYPE_MBTILES ="mbtiles";
     static final String STYPE_XML ="xml";
+    static final String CKEY="name";
+    static final String EXT_CKEY="chartKey"; //chartkey for external charts
+    static final String DPNAME_KEY="displayName";
+    static final String OVLCFG_KEY="overlayConfig";
     private String keyPrefix;
     private String name;
     protected Context context;
@@ -182,7 +186,7 @@ public class Chart implements AvnUtil.IJsonObect {
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
         }
-        e.put("name", (realFile!=null)?realFile.getName():documentFile.getName());
+        e.put("displayName", (realFile!=null)?realFile.getName():documentFile.getName());
         e.put("time", getLastModified() / 1000);
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+keyPrefix+URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20"));
         e.put("canDelete",canDelete());
@@ -190,7 +194,7 @@ public class Chart implements AvnUtil.IJsonObect {
         e.put("canDownload",isXml() || (numFiles == 1));
         e.put("sequence",sequence);
         e.put("scheme",scheme);
-        e.put("chartKey",getChartKey());
+        e.put("name",getChartKey());
         e.put("overlayConfig",getConfigName());
         if (orignalScheme != null){
             e.put("originalScheme",orignalScheme);

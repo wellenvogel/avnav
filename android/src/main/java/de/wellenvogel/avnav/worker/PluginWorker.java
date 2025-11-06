@@ -33,7 +33,7 @@ public class PluginWorker extends Worker{
         }
     }
     static final String NAME_PARAM="_name";
-    static final String TYPENAME="Plugin";
+    public static final String TYPENAME="Plugin";
     private static final String C_CHARTS="charts";
     private static final String C_ADDONS="addons";
     static final EditableParameter.IntegerParameter TIMEOUT_PARAMETER=

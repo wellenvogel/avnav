@@ -429,12 +429,10 @@ public class RequestHandler {
         return htmlPage;
     }
 
-    JSONObject handleUploadRequest(Uri uri,PostVars postData) throws Exception{
-        String dtype = uri.getQueryParameter("type");
-        if (dtype == null ) throw new IOException("missing parameter type for upload");
+    JSONObject handleUploadRequest(String type,Uri uri,PostVars postData) throws Exception{
         String overwrite=uri.getQueryParameter("overwrite");
         String name=uri.getQueryParameter("name");
-        INavRequestHandler handler=getHandler(dtype);
+        INavRequestHandler handler=getHandler(type);
         if (handler != null){
             boolean success=handler.handleUpload(postData,name,overwrite != null && overwrite.equals("true"));
             JSONObject rt=new JSONObject();
@@ -731,7 +729,7 @@ public class RequestHandler {
                 fout=o;
             }
             else if ("upload".equals(typeAndCommand.command)){
-                fout=handleUploadRequest(uri,postData);
+                fout=handleUploadRequest(typeAndCommand.type, uri,postData);
                 if (fout != null) handled=true;
             }
             else {
@@ -740,10 +738,10 @@ public class RequestHandler {
                     if (typeAndCommand.command == null){
                         throw new Exception("invalid api request "+apiType+" without command");
                     }
-                    LazyHandlerAccess handler = handlerMap.get(apiType);
-                    if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
+                    INavRequestHandler handler = getHandler(apiType);
+                    if (handler == null ) throw new Exception("no handler for api request "+apiType);
                     handled=true;
-                    JSONObject resp=handler.getHandler().handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
+                    JSONObject resp=handler.handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
                     if (resp == null){
                         fout=getErrorReturn("api request returned null");
                     }

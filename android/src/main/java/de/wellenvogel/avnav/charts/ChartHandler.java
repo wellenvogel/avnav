@@ -14,6 +14,10 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -30,11 +34,13 @@ import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.worker.PluginWorker;
 
 import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
 import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 
@@ -57,12 +63,28 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     private boolean loading=true;
     private long updateSequence=0;
 
-    private static final String CKEY="chartKey";
+    private boolean allowColon=true;
 
     public ChartHandler(Context a, RequestHandler h){
         handler=h;
         context =a;
         startUpdater();
+        File base=getInternalChartsDir(a);
+        if (base.isDirectory()){
+            try{
+                File tf=new File(base,DirectoryRequestHandler.TMP_PRFX+":_");
+                OutputStream fo=new FileOutputStream(tf);
+                fo.write(1);
+                fo.close();
+                tf.delete();
+            } catch (IllegalArgumentException e) {
+                AvnLog.i(LOGPRFX,"do not allow : in chart overlay configs");
+                allowColon=false;
+            } catch (IOException e) {
+
+            }
+        }
+
     }
 
     private void triggerUpdate(boolean wait){
@@ -284,12 +306,17 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             String mapKey=key.substring(0,sidx);
             synchronized (externalCharts) {
                 JSONArray charts =externalCharts.get(mapKey);
+                if (charts == null && mapKey.startsWith(PluginWorker.TYPENAME)){
+                    //the old typename used to start with a capital letter
+                    mapKey="Plugin"+mapKey.substring(PluginWorker.TYPENAME.length());
+                    charts=externalCharts.get(mapKey);
+                }
                 if (charts == null) return null;
                 String ckey=key.substring(sidx+1);
                 for (int i=0;i<charts.length();i++){
                     try {
                         JSONObject cobj=charts.getJSONObject(i);
-                        if (ckey.equals(cobj.optString(CKEY))){
+                        if (ckey.equals(cobj.optString(Chart.CKEY))){
                             return convertExternalChart(cobj,mapKey,serverInfo);
                         }
                     } catch (JSONException e) {
@@ -420,13 +447,17 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 }
             }
         }
-        if (o.has(CKEY)) {
-            String original = o.getString(CKEY);
+        if (o.has(Chart.CKEY)){
+            o.put(Chart.DPNAME_KEY,o.getString(Chart.CKEY));
+            o.remove(Chart.CKEY);
+        }
+        if (o.has(Chart.EXT_CKEY)) {
+            String original = o.getString(Chart.EXT_CKEY);
             String cfgName=key + "@" + DirectoryRequestHandler.safeName(original, false);
-            o.put(CKEY, Constants.EXTERNALCHARTS + ":" + cfgName);
-            if (!o.has("overlayConfig")) {
-                o.put("overlayConfig", cfgName+ ".cfg");
-            }
+            if (!allowColon) cfgName=cfgName.replace(':','.');
+            o.put(Chart.CKEY, Constants.EXTERNALCHARTS + ":" + cfgName);
+            o.put(Chart.OVLCFG_KEY, cfgName+ CFG_EXTENSION);
+            o.remove(Chart.EXT_CKEY);
         }
         return o;
     }
@@ -528,7 +559,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 for (int i=0;i<overlays.length();i++){
                     JSONObject overlay=overlays.getJSONObject(i);
                     if (type.equals(overlay.optString("type"))) {
-                        String overlayName = type.equals("chart") ? overlay.optString(CKEY) : overlay.optString("name");
+                        String overlayName = type.equals("chart") ? overlay.optString(Chart.CKEY) : overlay.optString("name");
                         if (name.equals(overlayName)){
                             AvnLog.d("removing overlay "+name+" from "+f.getAbsolutePath());
                             hasChanges=true;
@@ -567,11 +598,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         if (command.equals("getConfig")){
             String configName=DirectoryRequestHandler.safeName(AvnUtil.getMandatoryParameter(uri,"overlayConfig"),true);
             boolean expandCharts=AvnUtil.getFlagParameter(uri,"expandCharts",false);
-            boolean mergeDefault=AvnUtil.getFlagParameter(uri,"mergeDefault",false);
-            if (configName.equals(DEFAULT_CFG)) mergeDefault=false;
             File cfgFile=new File(getInternalChartsDir(this.context),configName);
             JSONObject localConfig=new JSONObject();
-            JSONObject globalConfig=new JSONObject();
             if (cfgFile.exists()){
                 try{
                     localConfig=AvnUtil.readJsonFile(cfgFile,MAX_CONFIG_SIZE);
@@ -581,21 +609,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 }
             }
             localConfig.put("name",configName);
-            File globalCfgFile=new File(getInternalChartsDir(this.context),DEFAULT_CFG);
-            if (mergeDefault && globalCfgFile.exists()){
-                try{
-                    globalConfig=AvnUtil.readJsonFile(globalCfgFile,MAX_CONFIG_SIZE);
-                }
-                catch (Exception e){
-                    AvnLog.e("unable to read default chart config "+globalCfgFile.getAbsolutePath(),e);
-                }
-                if (globalConfig.has("overlays")){
-                    localConfig.put("defaults",globalConfig.get("overlays"));
-                }
-            }
             if (expandCharts){
-                List<String> blackList= Arrays.asList("type", CKEY, "opacity", "chart");
-                String[] expandKeys=new String[]{"overlays","defaults"};
+                List<String> blackList= Arrays.asList("type", Chart.CKEY, "opacity", "chart");
+                String[] expandKeys=new String[]{"overlays"};
                 for (String key : expandKeys){
                     if (! localConfig.has(key)) continue;
                     JSONArray overlays=localConfig.getJSONArray(key);
@@ -603,7 +619,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                     for (int idx=0;idx<overlays.length();idx++){
                         JSONObject overlay=overlays.getJSONObject(idx);
                         if (overlay.has("type") && "chart".equals(overlay.getString("type"))){
-                            JSONObject chart=getChartDescriptionByChartKey(overlay.optString(CKEY),serverInfo);
+                            JSONObject chart=getChartDescriptionByChartKey(overlay.optString(Chart.CKEY),serverInfo);
                             if (chart != null){
                                 merge(overlay,chart,blackList);
                             }
