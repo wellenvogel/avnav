@@ -67,24 +67,14 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     public ChartHandler(Context a, RequestHandler h){
         handler=h;
         context =a;
-        startUpdater();
-        File base=getInternalChartsDir(a);
-        if (base.isDirectory()){
-            try{
-                File tf=new File(base,DirectoryRequestHandler.TMP_PRFX+":_");
-                OutputStream fo=new FileOutputStream(tf);
-                fo.write(1);
-                fo.close();
-                tf.delete();
-            } catch (IllegalArgumentException e) {
-                AvnLog.i(LOGPRFX,"do not allow : in chart overlay configs");
-                allowColon=false;
-            } catch (IOException e) {
-                AvnLog.i(LOGPRFX,"do not allow : in chart overlay configs");
-                allowColon=false;
-            }
+        SharedPreferences sharedPrefs=context.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        try{
+            allowColon=!sharedPrefs.getBoolean(Constants.WORKDIR_NOCOLON,false);
+        }catch (Throwable t){
+            AvnLog.e("unable to get nocolon from prefs",t);
         }
-
+        AvnLog.i(LOGPRFX,"ChartHandler: allowColon="+allowColon);
+        startUpdater();
     }
 
     private void triggerUpdate(boolean wait){

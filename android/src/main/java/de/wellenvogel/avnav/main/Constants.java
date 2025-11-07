@@ -9,6 +9,8 @@ import android.os.Build;
 public class Constants {
     //settings
     public static final String WORKDIR="workdir";
+
+    public static final String WORKDIR_NOCOLON="workdirNoColon"; //set if the workdir cannot handle a colon in file names
     public static final String CHARTDIR="chartdir";
     public static final String RESET_CHARTDIR="resetChartdir";
     public static final String SHOWDEMO="showdemo";

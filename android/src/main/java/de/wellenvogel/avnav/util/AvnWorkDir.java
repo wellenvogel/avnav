@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.util;
 
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -7,11 +9,15 @@ import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.Nullable;
+
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 
 public class AvnWorkDir {
     private final boolean withTitles;
@@ -202,7 +208,16 @@ public class AvnWorkDir {
         }
         throw new InvalidWorkdirException("workdir "+cfg+" not found");
     }
-    public void createDirs(File base) throws IOException {
+
+    /**
+     * create the subdirs
+     * @param baseentry the entry for the base dir
+     * @return true if the workdir cannot handle a : in file names
+     * @throws IOException
+     */
+    public boolean createDirs(Context ctx,Entry baseentry) throws IOException {
+        if (baseentry == null) throw new IOException("no base dir");
+        File base=baseentry.getFile();
         if (! base.exists() || ! base.isDirectory()){
             throw new IOException("base dir "+base.getAbsolutePath()+" is no directory");
         }
@@ -225,5 +240,55 @@ public class AvnWorkDir {
                 throw new IOException("unable to create sub dir "+sdir.getAbsolutePath());
             }
         }
+        //we need to find out if the used file system allows colons in file names
+        //we cannot simply always prevent colons as this would break compatibility
+        //to older versions
+        boolean allowColon = true;
+        if (baseentry.isExternal()) {
+            boolean shouldCheck=true;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (! Environment.isExternalStorageRemovable(base)){
+                    //non removable storage will never have FAT/FAT32
+                    //so we can be sure that we can safely use a colon in file names
+                    shouldCheck=false;
+                }
+                else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        StorageManager sm = ctx.getSystemService(StorageManager.class);
+                        if (sm != null) {
+                            StorageVolume sv = sm.getStorageVolume(base);
+                            if (sv != null) {
+                                String uuid = sv.getUuid();
+                                //FAT and FAT32 have an UUID of xxxx-xxxx
+                                //if we have an UUID we do not need the write check as we know
+                                //a nine characters UUID is FAT/FAT32
+                                if (uuid != null) {
+                                    shouldCheck = false;
+                                    allowColon = uuid.length() != 9;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (shouldCheck) {
+                //we could not determine the FS type
+                //so make a write check
+                //this has a minimal risk of failing due to some other reason
+                //and this way it could in theory change the result on subsequent starts
+                //but at the end this is not very likely
+                try {
+                    File tf = new File(base, DirectoryRequestHandler.TMP_PRFX + ":_");
+                    OutputStream fo = new FileOutputStream(tf);
+                    fo.write(1);
+                    fo.close();
+                    tf.delete();
+                } catch (IllegalArgumentException | IOException e) {
+                    AvnLog.i(LOGPRFX, "do not allow : in chart overlay configs");
+                    allowColon = false;
+                }
+            }
+        }
+        return !allowColon;
     }
 }

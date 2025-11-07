@@ -300,7 +300,7 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }));
         }
-        if (!checkOrCreateWorkDir(this,sharedPrefs.getString(Constants.WORKDIR,""))) {
+        if (!checkOrCreateWorkDir(this,sharedPrefs)) {
             int request = getNextPermissionRequestCode();
             openRequests.add(new DialogRequest(request, new Runnable() {
                 @Override
@@ -459,7 +459,7 @@ public class SettingsActivity extends PreferenceActivity {
     public static boolean checkSettings(Activity activity, boolean checkPermissions){
         handleMigrations(activity);
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        if (! checkOrCreateWorkDir(activity,sharedPrefs.getString(Constants.WORKDIR,""))){
+        if (! checkOrCreateWorkDir(activity,sharedPrefs)){
             return false;
         }
         if (! checkNotificationPermission(activity)) return false;
@@ -474,13 +474,24 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
-    private static boolean checkOrCreateWorkDir(Context ctx,String cfg) {
+    private static boolean checkOrCreateWorkDir(Context ctx,SharedPreferences prefs) {
+        String cfg=prefs.getString(Constants.WORKDIR,"");
         if (cfg.isEmpty()) return false;
         AvnUtil.WorkDir parser=new AvnUtil.WorkDir(false);
-        File workDir=parser.getFileForConfig(ctx,cfg);
+        AvnWorkDir.Entry wdentry= parser.getEntryForConfig(ctx,cfg);
+        if (wdentry == null) return false;
+        File workDir= wdentry.getFile();
         if (workDir == null) return false;
         try{
-            parser.createDirs(workDir);
+            boolean nocolon=parser.createDirs(ctx,wdentry);
+            boolean currentNoColon=false;
+            try{
+                currentNoColon=prefs.getBoolean(Constants.WORKDIR_NOCOLON,false);
+            }catch (Throwable t){}
+            if (nocolon != currentNoColon){
+                AvnLog.i("setting nocolon for workdir to "+nocolon);
+                prefs.edit().putBoolean(Constants.WORKDIR_NOCOLON,nocolon).commit();
+            }
         } catch (Exception e) {
             return false;
         }
