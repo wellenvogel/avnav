@@ -454,6 +454,7 @@ const NavPage=(props)=>{
         checkChartCount.current--;
         if (checkChartCount.current < 0) {
             history.pop();
+            return;
         }
         Requests.getJson({
             request:'api',
@@ -466,8 +467,8 @@ const NavPage=(props)=>{
                     setSequence(sequence + 1);
                     return;
                 }
-                loadTimer.startTimer(seq);
             })
+            loadTimer.startTimer(seq);
         })
             .catch(() => {
                 loadTimer.startTimer(seq)
