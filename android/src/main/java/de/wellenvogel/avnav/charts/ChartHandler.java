@@ -80,7 +80,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 AvnLog.i(LOGPRFX,"do not allow : in chart overlay configs");
                 allowColon=false;
             } catch (IOException e) {
-
+                AvnLog.i(LOGPRFX,"do not allow : in chart overlay configs");
+                allowColon=false;
             }
         }
 
