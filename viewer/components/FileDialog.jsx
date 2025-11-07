@@ -85,9 +85,9 @@ const getLocalDataFunction=(item)=>{
         return layoutLoader.getLocalDownload(item.name);
     }
 }
-const getDownloadFileName=(item)=>{
+export const getDownloadFileName=(item)=>{
     let actions=ItemActions.create(item,false);
-    return actions.nameForDownload(item.name);
+    return item.downloadName||actions.nameForDownload(item.name);
 }
 const getDownloadUrl=(item)=>{
     let name=item.name;

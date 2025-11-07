@@ -56,7 +56,7 @@ class AVNDirectoryListEntry(object):
     return []
   def __init__(self,type,name,time=0,size=0,
                canDelete=False,isDirectory=False,canDownload=True,
-               extension=None,scope=None,url=None,filename=None,userData=None,displayName=None,**kwargs):
+               extension=None,scope=None,url=None,filename=None,userData=None,displayName=None,downloadName=None,**kwargs):
     self.name=name
     self.displayName=displayName
     self.type=type
@@ -68,6 +68,7 @@ class AVNDirectoryListEntry(object):
     self.canDownload=canDownload
     self.extension=extension
     self.scope=scope
+    self.downloadName=downloadName
     self._filename=filename
     self._userData=userData
 
@@ -235,11 +236,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
           name=name+extension
       return self.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
-  def listDirectory(self,includeDirs=False,baseDir=None,extensions=None,scope=None):
+  def listDirectory(self,includeDirs=False,baseDir=None,extension=None,scope=None):
     # type: (bool,str,list[str]|None) -> list[AVNDirectoryListEntry]
-    if extensions is not None:
-        if not isinstance(extensions,list):
-            extensions=[extensions]
     data = []
     if baseDir is None:
       baseDir=self.baseDir
@@ -248,6 +246,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     for f in os.listdir(str(baseDir)):
       if f.startswith(self.TMP_PREFIX):
           continue
+      originalName=f
       fullname = os.path.join(str(baseDir), f)
       isDir=False
       ext=None
@@ -256,9 +255,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
           continue
         isDir=True
       else:
-        if extensions is not None:
+        if extension is not None:
           (path,ext)=os.path.splitext(f)
-          if not ext in extensions:
+          if ext != extension:
               continue
           f=path
       if scope is None:
@@ -270,7 +269,12 @@ class AVNDirectoryHandlerBase(AVNWorker):
                                       size=os.path.getsize(fullname),
                                       filename=fullname,
                                       baseDir=baseDir,
-                                      canDelete=scope is None or scope == self.SCOPE_USER,isDirectory=isDir,extension=ext,scope=scope,url=self.buildUrl(name,ext,scope))
+                                      downloadName=originalName,
+                                      canDelete=scope is None or scope == self.SCOPE_USER,
+                                      isDirectory=isDir,
+                                      extension=ext,
+                                      scope=scope,
+                                      url=self.buildUrl(name,ext,scope))
       data.append(element)
     return data
 
@@ -577,11 +581,11 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     super().onPreRun()
     self.systemDir = self.getSystemDir()
     if self.systemDir is not None:
-      self.systemItems=self.listDirectory(baseDir=self.systemDir,scope=self.SCOPE_SYSTEM,extensions=self.getFixedExtension())
+      self.systemItems=self.listDirectory(baseDir=self.systemDir,scope=self.SCOPE_SYSTEM,extension=self.getFixedExtension())
 
 
   def handleList(self, handler=None):
-    own=self.listDirectory(baseDir=self.baseDir,scope=self.SCOPE_USER,extensions=self.getFixedExtension())
+    own=self.listDirectory(baseDir=self.baseDir,scope=self.SCOPE_USER,extension=self.getFixedExtension())
     with self.lock:
       items=self.systemItems+self.pluginItems+own
       return AVNUtil.getReturnData(items=items)

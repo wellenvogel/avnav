@@ -220,8 +220,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               self.ovlNameToKey[oldConfig]=currenConfig
       return True
 
-  def listDirAndCompare(self,includeDirs=False,extensions=None,previousItems=None,onItem=None,scope=None) -> dict[str,AVNDirectoryListEntry]:
-    newContent = self.listDirectory(includeDirs,self.baseDir,extensions=extensions,scope=scope)
+  def listDirAndCompare(self,includeDirs=False,previousItems=None,onItem=None,scope=None) -> dict[str,AVNDirectoryListEntry]:
+    newContent = self.listDirectory(includeDirs,self.baseDir,scope=scope)
     rt={}
     for f in newContent:
         if previousItems is not None and onItem is not None:
@@ -276,7 +276,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
             return True
         return True
     with self.lock:
-        newList=self.listDirAndCompare(self.baseDir,None,self.itemList,onItem=itemAction,scope=self.SCOPE_USER)
+        newList=self.listDirAndCompare(self.baseDir,self.itemList,onItem=itemAction,scope=self.SCOPE_USER)
         self.itemList=newList
     for item in newitems:
         self.onItemAdd(item)

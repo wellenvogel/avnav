@@ -647,15 +647,10 @@ public class RequestHandler {
                     resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
                 }
                 if (setAttachment) {
-                    String value="attachment";
-                    if (remain != null && ! remain.isEmpty()) {
-                        value+="; filename=\""+remain+"\"";
-                    }
-                    else{
-                        String fn=uri.getQueryParameter("filename");
-                        if (fn != null){
-                            value+="; filename=\"" + DirectoryRequestHandler.safeName(fn,false)+"\"";
-                        }
+                    String value = "attachment";
+                    String fn = uri.getQueryParameter("filename");
+                    if (fn != null) {
+                        value += "; filename=\"" + DirectoryRequestHandler.safeName(fn, false) + "\"";
                     }
                     resp.setHeader("Content-Disposition", value);
                 }
