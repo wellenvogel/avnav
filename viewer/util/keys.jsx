@@ -266,7 +266,8 @@ let keys={
             remoteChannelState:K,
             preventAlarms: K,
             ignoreAndroidBack: K,
-            remoteChannelActive: K
+            remoteChannelActive: K,
+            navUrl: K,
         },
         gpspage:{
             pageNumber:K,
@@ -389,7 +390,6 @@ let keys={
         networkTimeout: new Property(8000,"Network timeout(ms)",PropertyType.RANGE,[1000,20000,100]),
         wpaQueryTimeout: new Property(10000), //ms
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
-        navUrl: new Property("/api"),
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
@@ -482,6 +482,7 @@ let keys={
         showMeasure: new Property(true,"Show Measure Button",PropertyType.DELETED),
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.DELETED),
         minAISspeed: new Property(0.1,"",PropertyType.DELETED), //minimal speed in m/s that we consider when computing cpa/tcpa
+        navUrl: new Property("/api","",PropertyType.DELETED),
     }
 };
 

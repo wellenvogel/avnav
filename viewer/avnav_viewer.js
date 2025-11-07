@@ -69,7 +69,7 @@ function getParam(key)
     // Return the unescaped value minus everything starting from the equals sign or an empty string
     return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
 }
-
+const DEFAULT_NAVURL='/api';
 /**
  * main function called when dom is loaded
  *
@@ -106,11 +106,12 @@ export default function() {
     if (getParam('log')) avnav.debugMode=true;
     let navurl=getParam('navurl');
     if (navurl){
-        globalStore.storeData(keys.properties.navUrl,navurl,true);
+        globalStore.storeData(keys.gui.global.navUrl,navurl,true);
         globalStore.storeData(keys.properties.routingServerError,false,true);
     }
     else {
         globalStore.storeData(keys.properties.routingServerError,true,true);
+        globalStore.storeData(keys.gui.global.navUrl,DEFAULT_NAVURL,true);
     }
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){

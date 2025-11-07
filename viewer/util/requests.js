@@ -43,13 +43,13 @@ export const prepareUrl=(url, options)=>{
     if (typeof(url) === 'string') {
         rurl=url;
         if ( options && options.useNavUrl !== false ) {
-            rurl = globalStore.getData(keys.properties.navUrl) + rurl;
+            rurl = globalStore.getData(keys.gui.global.navUrl) + rurl;
         }
         return rurl;
     }
     //new syntax for parameter object instead of url
     if (typeof(url) === 'object'){
-        rurl=globalStore.getData(keys.properties.navUrl)
+        rurl=globalStore.getData(keys.gui.global.navUrl);
         const {request,type,command,...other} = url;
         if (request && request !== 'api'){
             throw new Error("invalid request "+request);
