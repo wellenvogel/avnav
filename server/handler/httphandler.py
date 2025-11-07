@@ -366,6 +366,13 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       raise Exception("no handler found for request %s"%type)
     if command == 'upload':
         self.connection.settimeout(30)
+        try:
+            return handler.handleApiRequest(command, requestParam, handler=self)
+        except Exception as e:
+            self.send_response(409, str(e))
+            self.end_headers()
+            self.close_connection=True
+            return None
     rtj = handler.handleApiRequest(command, requestParam, handler=self)
     return rtj
 
