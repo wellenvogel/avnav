@@ -3,7 +3,9 @@ package de.wellenvogel.avnav.appapi;
 import android.os.Build;
 import android.webkit.WebResourceResponse;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,6 +20,8 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     public Object userData; //allow to store some user data here to correctly handle the life cycle
     DateFormat httpTimeFormat=null;
     long length;
+    int statusCode=200;
+    String reason="OK";
     private HashMap<String,String> headers=new HashMap<String, String>();
     public ExtendedWebResourceResponse(long length, String mime, String encoding, InputStream is){
         super(mime,encoding,is);
@@ -25,6 +29,15 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setResponseHeaders(headers);
         }
+    }
+    public ExtendedWebResourceResponse(int statusCode,String error){
+        super("text/html",StandardCharsets.UTF_8.toString(),new ByteArrayInputStream(new byte[]{}));
+        this.length=0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setResponseHeaders(headers);
+        }
+        this.statusCode=statusCode;
+        reason=error;
     }
     public long getLength(){
         return length;
@@ -42,5 +55,15 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     }
     public HashMap<String,String> getHeaders() {
         return headers;
+    }
+
+    @Override
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    @Override
+    public String getReasonPhrase() {
+        return reason;
     }
 }

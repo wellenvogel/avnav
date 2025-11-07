@@ -544,12 +544,21 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         WebResourceResponse rt=null;
         if (handler != null) {
             try {
-                rt = handler.handleRequest(view,url,method);
+                rt = handler.handleRequest(view, url, method);
+            }catch (RequestHandler.RequestException r){
+                AvnLog.e("web request for "+url+" failed",r);
+                if (Build.VERSION.SDK_INT >= 21){
+                    return new ExtendedWebResourceResponse(r.statusCode,r.getMessage());
+                }
+                else {
+                    return null;
+                }
+
             }catch (Throwable t){
                 AvnLog.e("web request for "+url+" failed",t);
                 InputStream is=new ByteArrayInputStream(new byte[]{});
                 if (Build.VERSION.SDK_INT >= 21){
-                    return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
+                    return new ExtendedWebResourceResponse(500,t.getMessage());
                 }
                 else {
                     return null;

@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -379,15 +380,18 @@ public class RequestHandler {
         if (path == null) return null;
         if (url.startsWith(INTERNAL_URL_PREFIX)){
             try {
-                if (path.startsWith(NAVURL) || path.startsWith(NAVURL_COMPAT)){
-                    return handleNavRequest(uri,null);
+                if (path.startsWith(NAVURL) || path.startsWith(NAVURL_COMPAT)) {
+                    return handleNavRequest(uri, null);
                 }
-                ExtendedWebResourceResponse rt=tryDirectRequest(uri,method);
+                ExtendedWebResourceResponse rt = tryDirectRequest(uri, method);
                 if (rt != null) return rt;
-                if (path.startsWith("/")) path=path.substring(1);
-                InputStream is= (view != null)?view.getContext().getAssets().open(path):service.getAssets().open(path);
-                Log.i(LOGPRFX,String.format("loading asset %s from %s (%d avail)",path,Thread.currentThread().getId(),is.available()));
-                return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
+                if (path.startsWith("/")) path = path.substring(1);
+                InputStream is = (view != null) ? view.getContext().getAssets().open(path) : service.getAssets().open(path);
+                Log.i(LOGPRFX, String.format("loading asset %s from %s (%d avail)", path, Thread.currentThread().getId(), is.available()));
+                return new ExtendedWebResourceResponse(-1, mimeType(path), "", is);
+            } catch (RequestException r){
+                r.printStackTrace();
+                throw r;
             } catch (Throwable e) {
                 e.printStackTrace();
                 throw new Exception("error processing "+url+": "+e.getLocalizedMessage());
@@ -491,6 +495,13 @@ public class RequestHandler {
         }
         return null;
     }
+    static public class RequestException extends Exception{
+        public int statusCode=500;
+        public RequestException(String r,int code){
+            super(r);
+            statusCode=code;
+        }
+    }
 
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData) throws Exception{
         return handleNavRequest(uri,postData,null);
@@ -507,7 +518,7 @@ public class RequestHandler {
         NavResponse(ExtendedWebResourceResponse r){response=r;}
         ExtendedWebResourceResponse getResponse() throws UnsupportedEncodingException {
             if (response != null) return response;
-            byte o[]=jsonResponse.toString().getBytes("UTF-8");
+            byte o[]=jsonResponse.toString().getBytes(StandardCharsets.UTF_8);
             long len=o.length;
             InputStream is = new ByteArrayInputStream(o);
             return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
@@ -577,8 +588,9 @@ public class RequestHandler {
                 remain = remain.substring(Math.min(remain.length(), NAVURL_COMPAT.length() + 1));
             }
             else{
-                AvnLog.e("invalid call to handleNavRequestInternal with url "+remain);
-                return null;
+                RequestException e=new RequestException("invalid call to handleNavRequestInternal with url"+remain,500);
+                AvnLog.e("",e);
+                throw e;
             }
             String[] parts=remain.split("/");
             if (parts.length >= 2){
@@ -643,8 +655,7 @@ public class RequestHandler {
                     }
                 }
                 if (resp == null) {
-                    byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
-                    resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
+                    resp = new ExtendedWebResourceResponse(404,"file " + ((name != null) ? name : "<null>") + " not found");
                 }
                 if (setAttachment) {
                     String value = "attachment";
@@ -724,8 +735,12 @@ public class RequestHandler {
                 fout=o;
             }
             else if ("upload".equals(typeAndCommand.command)){
-                fout=handleUploadRequest(typeAndCommand.type, uri,postData);
-                if (fout != null) handled=true;
+                try {
+                    fout = handleUploadRequest(typeAndCommand.type, uri, postData);
+                    if (fout != null) handled = true;
+                }catch (Throwable t){
+                    throw new RequestException(t.getMessage(),409);
+                }
             }
             else {
                 try {
@@ -761,7 +776,15 @@ public class RequestHandler {
             return new NavResponse(getErrorReturn("request not handled"));
         } catch (JSONException jse) {
             return new NavResponse(getErrorReturn(jse.getMessage()));
+        } catch (RequestException r){
+            AvnLog.e("exception for "+remain,r);
+            throw r;
+        } catch(Throwable t){
+            AvnLog.e("exception for "+remain,t);
+            throw new RequestException(t.getMessage(),500);
         }
+
+
     }
 
 

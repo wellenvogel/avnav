@@ -277,7 +277,21 @@ public class WebServer extends Worker {
                             postData,
                             getServerInfo(currentTarget));
                 }
-            }catch (Throwable t){
+            }catch (RequestHandler.RequestException u){
+                AvnLog.e("error handling request "+url,u);
+                httpResponse.setStatusCode(u.statusCode);
+                httpResponse.setReasonPhrase(u.getMessage());
+                if (u.statusCode == 409) {
+                    HttpServerConnection con = (HttpServerConnection) httpContext.getAttribute(ExecutionContext.HTTP_CONNECTION);
+                    //in principle we should call response interceptors here
+                    //but as we do not have any we skip this
+                    con.sendResponseHeader(httpResponse);
+                    con.sendResponseEntity(httpResponse);
+                    con.close();
+                }
+                return;
+            }
+            catch (Throwable t){
                 AvnLog.e("error handling request "+url,t);
                 if (postData != null) {
                     postData.closeInput();
