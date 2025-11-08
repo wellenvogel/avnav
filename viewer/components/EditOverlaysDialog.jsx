@@ -828,8 +828,6 @@ EditOverlaysDialog.propTypes = {
  * @return {boolean}
  */
 EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
-    const configName=getOverlayConfigName(chartItem);
-    if (!configName) return false;
     if (opt_addEntry) {
         //check for an allowed item that we can add
         if (!opt_addEntry.type) return false;
@@ -840,36 +838,36 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
         if (!typeOk) return false;
         opt_addEntry = assign({opacity: 1, enabled: true}, opt_addEntry);
     }
-    fetchOverlayConfig(configName,false)
+    fetchOverlayConfig(chartItem,false)
         .then((overlayConfig) => {
             showDialog(undefined,(props) => {
                 return <EditOverlaysDialog
                     {...props}
-                    chartName={chartItem.displayName||chartItem.name}
+                    chartName={chartItem?(chartItem.displayName||chartItem.name):'Default'}
                     current={overlayConfig}
                     updateCallback={(newConfig) => {
                         if (newConfig.isEmpty()) {
                             //we can tell the server to delete the config
                             let param = {
                                 request:'api',
-                                command: 'delete',
+                                command: 'deleteConfig',
                                 type: 'chart',
-                                name: overlayConfig.getName()
+                                name: chartItem?chartItem.name:undefined,
                             }
                             Requests.getJson( param)
                                 .then(() => {
                                     if (opt_callback) opt_callback(newConfig.getWriteBackData());
                                 })
                                 .catch((err) => {
-                                    Toast("unable to save overlay config: " + error);
+                                    Toast("unable to save overlay config: " + err);
                                     if (opt_callback) opt_callback();
                                 })
                         } else {
                             let postParam = {
                                 request:'api',
-                                command: 'upload',
+                                command: 'saveConfig',
                                 type: 'chart',
-                                name: overlayConfig.getName(),
+                                name: chartItem?chartItem.name:undefined,
                                 overwrite: true
                             };
                             Requests.postPlain(postParam, JSON.stringify(newConfig.getWriteBackData(), undefined, 2))
@@ -882,7 +880,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                                 });
                         }
                     }}
-                    noDefault={configName === DEFAULT_OVERLAY_CONFIG}
+                    noDefault={!chartItem}
                     addEntry={opt_addEntry}
                 />
             });

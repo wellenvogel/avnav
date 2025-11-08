@@ -547,7 +547,9 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               rt[ovlname] = newOverlays
       return rt
 
-
+  CGETCONFIG="getConfig"
+  CSAVECONFIG="saveConfig"
+  CDELCONFIG="deleteConfig"
   def handleSpecialApiRequest(self, command, requestparam, handler):
     hostip=self.getRequestIp(handler)
     name=AVNUtil.getHttpRequestParam(requestparam, "name")
@@ -561,7 +563,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           return AVNUtil.getReturnData(error="chart %s not found"%name)
         changed = chartEntry.getUserData().changeScheme(scheme)
         return AVNUtil.getReturnData()
-      if (command == "getConfig"):
+      if command == self.CGETCONFIG:
         expandCharts = AVNUtil.getHttpRequestFlag(requestparam, "expandCharts", False)
         isDefault=False
         overlay=None
@@ -610,20 +612,26 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                   newOverlays.append(overlay)
               rt[ovlname]=newOverlays
         return AVNUtil.getReturnData(data=rt)
-      if command == "saveConfig":
+      if command == self.CSAVECONFIG or command == self.CDELCONFIG:
+          names=[]
           if name is None:
-              return AVNUtil.getReturnData(error="missing chart name")
-          chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
-          if chartEntry is None:
+              ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
+          else:
+            chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
+            if chartEntry is None:
               return AVNUtil.getReturnData(error="chart %s not found" % name)
-          names = self.getOverlayConfigNames(chartEntry)
-          if len(names) < 1:
+            names = self.getOverlayConfigNames(chartEntry)
+            if len(names) < 1:
               return AVNUtil.getReturnData(error="unable to compute overlay name for %s" % name)
-          name = names[0][len(self.SCOPE_USER):]
-          filename = os.path.join(self.baseDir, name)
-          rt = super()._upload(filename, handler, requestparam)
+            ovlname = names[0]
+          delstart=0
+          rt=AVNUtil.getReturnData()
+          if command == self.CSAVECONFIG:
+            delstart=1
+            filename = os.path.join(self.baseDir, ovlname)
+            rt = super()._upload(filename, handler, requestparam,overwrite=True)
           with self.lock:
-            for name in names[1:]:
+            for name in names[delstart:]:
                 old=self.ovlConfigs.get(name)
                 if old is not None:
                     try:

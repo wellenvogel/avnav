@@ -440,19 +440,19 @@ class AVNDirectoryHandlerBase(AVNWorker):
     newName=self.checkName(newName)
     return self._rename(name,newName)
 
-  def _upload(self,filename,handler,requestparam):
+  def _upload(self,filename,handler,requestparam,overwrite=False):
       rlen = handler.headers.get("Content-Length")
       if rlen is None:
           raise RequestException("Content-Length not set in upload request",code=409)
-      overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
+      dooverwrite = overwrite or AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
       try:
         outname = os.path.join(self.baseDir, filename)
         data = AVNUtil.getHttpRequestParam(requestparam, '_json')
         if data is not None:
           stream = io.BytesIO(data.encode('utf-8'))
-          self.writeAtomic(outname, stream, overwrite)
+          self.writeAtomic(outname, stream, dooverwrite)
         else:
-          self.writeAtomic(outname, handler.rfile, overwrite, int(rlen))
+          self.writeAtomic(outname, handler.rfile, dooverwrite, int(rlen))
         return AVNUtil.getReturnData()
       except RequestException as r:
           raise r

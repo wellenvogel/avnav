@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
@@ -23,7 +26,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
-public class Chart implements AvnUtil.IJsonObect {
+public class Chart implements IChartWithConfig {
     static final int TYPE_GEMF=1;
     static final int TYPE_MBTILES=2;
     static final int TYPE_XML=3;
@@ -33,10 +36,6 @@ public class Chart implements AvnUtil.IJsonObect {
     static final String STYPE_GEMF ="gemf";
     static final String STYPE_MBTILES ="mbtiles";
     static final String STYPE_XML ="xml";
-    static final String CKEY="name";
-    static final String EXT_CKEY="chartKey"; //chartkey for external charts
-    static final String DPNAME_KEY="displayName";
-    static final String OVLCFG_KEY="overlayConfig";
     private String keyPrefix;
     private String name;
     protected Context context;
@@ -210,7 +209,6 @@ public class Chart implements AvnUtil.IJsonObect {
         e.put("sequence",sequence);
         e.put("scheme",scheme);
         e.put("name",getChartKey());
-        e.put("overlayConfig",getConfigName());
         if (orignalScheme != null){
             e.put("originalScheme",orignalScheme);
         }
@@ -241,5 +239,10 @@ public class Chart implements AvnUtil.IJsonObect {
     @Override
     public String toString() {
         return "Chart: t=" + typeToStr(type) + ",k=" + getChartKey();
+    }
+
+    @Override
+    public List<String> getChartCfgs() {
+        return Collections.singletonList(getConfigName());
     }
 }

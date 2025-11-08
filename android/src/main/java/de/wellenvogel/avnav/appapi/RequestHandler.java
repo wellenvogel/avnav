@@ -677,16 +677,6 @@ public class RequestHandler {
                     handled=true;
                     try {
                         boolean deleteOk = handler.handleDelete(name, uri);
-                        if (!"chart".equals(typeAndCommand.type)) {
-                            INavRequestHandler chartHandler = getHandler("chart");
-                            if (chartHandler != null) {
-                                try {
-                                    ((ChartHandler) chartHandler).deleteFromOverlays(typeAndCommand.type, name);
-                                } catch (Exception e){
-                                    AvnLog.e("exception when trying to delete from overlays",e);
-                                }
-                            }
-                        }
                         if (deleteOk) {
                             o.put("status", "OK");
                         } else {
