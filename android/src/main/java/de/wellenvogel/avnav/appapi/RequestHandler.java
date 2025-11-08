@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.appapi;
 
+import android.app.sdksandbox.RequestSurfacePackageException;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
@@ -745,19 +746,21 @@ public class RequestHandler {
             else {
                 try {
                     String apiType = typeAndCommand.type;
-                    if (typeAndCommand.command == null){
-                        throw new Exception("invalid api request "+apiType+" without command");
+                    if (typeAndCommand.command == null) {
+                        throw new Exception("invalid api request " + apiType + " without command");
                     }
                     INavRequestHandler handler = getHandler(apiType);
-                    if (handler == null ) throw new Exception("no handler for api request "+apiType);
-                    handled=true;
-                    JSONObject resp=handler.handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
-                    if (resp == null){
-                        fout=getErrorReturn("api request returned null");
+                    if (handler == null)
+                        throw new Exception("no handler for api request " + apiType);
+                    handled = true;
+                    JSONObject resp = handler.handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
+                    if (resp == null) {
+                        fout = getErrorReturn("api request returned null");
+                    } else {
+                        fout = resp;
                     }
-                    else{
-                        fout=resp;
-                    }
+                }catch(RequestException r){
+                    throw r;
                 }catch (Throwable t){
                     fout=getErrorReturn("exception: "+t.getLocalizedMessage());
                 }
