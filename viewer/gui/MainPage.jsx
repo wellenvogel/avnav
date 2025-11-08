@@ -17,15 +17,16 @@ import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
-import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog.jsx';
+import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
 import FullScreen from '../components/Fullscreen';
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
-import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
 import LayoutHandler from "../util/layouthandler";
 import {avitem} from "../util/helper";
+import {shallowEqual} from "shallow-equal";
+import {RecursiveCompare} from "../util/compare";
 
 
 const getImgSrc=function(color){
@@ -120,7 +121,6 @@ class MainPage extends React.Component {
             addOns:[],
             selectedChart:0,
             sequence:0,
-            overlays:{},
             loading: false
         };
         this.fillList=this.fillList.bind(this);
@@ -240,7 +240,7 @@ class MainPage extends React.Component {
             {
                 name: 'NavOverlays',
                 onClick: ()=> {
-                    EditOverlaysDialog.createDialog(DEFAULT_OVERLAY_CHARTENTRY,()=>MapHolder.setRedraw(true));
+                    EditOverlaysDialog.createDialog(undefined,()=>MapHolder.setRedraw(true));
                 },
                 editDisable: true,
                 overflow: true,
@@ -280,7 +280,7 @@ class MainPage extends React.Component {
         let cls="chartItem";
         if (props.selected) cls+=" activeEntry";
         if (props.originalScheme) cls+=" userAction";
-        cls+=props.hasOverlays?" withOverlays":" noOverlays";
+        cls+=props.hasOverlay?" withOverlays":" noOverlays";
         let isConnected=globalStore.getData(keys.properties.connectedMode,false);
         return (
             <div className={cls} onClick={props.onClick}>
@@ -319,26 +319,6 @@ class MainPage extends React.Component {
         if (newIndex != currentIndex){
             this.setState({selectedChart:newIndex});
         }
-    };
-
-    readOverlays(newChartList){
-        return Requests.getJson({
-            request:'api',
-            type:'chart',
-            command:'listOverlays'
-        })
-            .then((json)=>{
-                let overlays={};
-                for (let i in json.data){
-                    let overlay=json.data[i];
-                    overlays[overlay.name]=overlay;
-                }
-                for (let i in newChartList){
-                    newChartList[i].hasOverlays=!!overlays[newChartList[i].overlayConfig];
-                }
-                return{overlays:overlays,chartList:newChartList};
-            },(e)=>{return {chartList:newChartList}})
-
     }
     fillList(sequence) {
         Requests.getJson({
@@ -367,14 +347,13 @@ class MainPage extends React.Component {
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
                     chartEntry.key=chartEntry.name;
-                    chartEntry.hasOverlays=!!(this.state.overlays||{})[chartEntry.overlayConfig];
                     if (lastChartKey === chartEntry.name){
                         selectedChart=i;
                     }
                     items.push(chartEntry);
                     i++;
                 }
-                let newState={};
+                let newState={chartList:items};
                 if (selectedChart === undefined && items.length > 0){
                     selectedChart=0;
                     current=undefined; //it seems that the last chart from the mapholder is not available any more
@@ -390,25 +369,12 @@ class MainPage extends React.Component {
                         }
                     }
                 }
-                if (newState.selectedChart !== this.state.selectedChart)  this.setState(newState);
-                this.readOverlays(items).then((newState)=>{
-                    this.setState((state,props)=>{
-                        let rt={};
-                        if (! RecursiveCompare(state.chartList,newState.chartList)){
-                            rt.chartList=newState.chartList;
-                        }
-                        if (!RecursiveCompare(state.overlays,newState.overlays)) rt.overlays=newState.overlays;
-                        if (state.loading !== isLoading){
-                            rt.loading=isLoading;
-                        }
-                        if (! rt.chartList && ! rt.overlays && rt.loading === undefined) return null;
-                        return rt;
-                    });
-                    if (sequence !== undefined) {
-                        this.timer.setTimeout(isLoading?EMPTY_QUERY_INTERVAL:DEFAULT_QUERY_INTERVAL)
-                        this.timer.startTimer(sequence);
-                    }
-                });
+                if (! RecursiveCompare(this.state.chartList,items) ||
+                    (newState.selectedChart !== this.state.selectedChart))  this.setState(newState);
+                if (sequence !== undefined) {
+                    this.timer.setTimeout(isLoading?EMPTY_QUERY_INTERVAL:DEFAULT_QUERY_INTERVAL)
+                    this.timer.startTimer(sequence);
+                }
             },
             (error)=>{
                 Toast("unable to read chart list: "+error);

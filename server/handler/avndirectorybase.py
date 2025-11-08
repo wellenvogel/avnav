@@ -39,6 +39,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_util import AVNDownload
+from httphandler import RequestException
 from httpserver import AVNHttpServer
 
 
@@ -442,16 +443,21 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def _upload(self,filename,handler,requestparam):
       rlen = handler.headers.get("Content-Length")
       if rlen is None:
-          raise Exception("Content-Length not set in upload request")
+          raise RequestException("Content-Length not set in upload request",code=409)
       overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
-      outname = os.path.join(self.baseDir, filename)
-      data = AVNUtil.getHttpRequestParam(requestparam, '_json')
-      if data is not None:
+      try:
+        outname = os.path.join(self.baseDir, filename)
+        data = AVNUtil.getHttpRequestParam(requestparam, '_json')
+        if data is not None:
           stream = io.BytesIO(data.encode('utf-8'))
           self.writeAtomic(outname, stream, overwrite)
-      else:
+        else:
           self.writeAtomic(outname, handler.rfile, overwrite, int(rlen))
-      return AVNUtil.getReturnData()
+        return AVNUtil.getReturnData()
+      except RequestException as r:
+          raise r
+      except Exception as e:
+        raise RequestException(str(e), code=409)
   def handleUpload(self,name,handler,requestparam):
     filename = self.checkName(name)
     return self._upload(filename,handler,requestparam)

@@ -46,6 +46,12 @@ class Encoder(json.JSONEncoder):
       return o.serialize()
     return super(Encoder, self).default(o)
 
+class RequestException(Exception):
+    def __init__(self,str,code=500):
+        super().__init__(str)
+        self.code=code
+
+
 
 class AVNHTTPHandler(HTTPWebSocketsHandler):
   wsHandler: WebSocketHandler
@@ -373,7 +379,14 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
             self.end_headers()
             self.close_connection=True
             return None
-    rtj = handler.handleApiRequest(command, requestParam, handler=self)
+    try:
+        rtj = handler.handleApiRequest(command, requestParam, handler=self)
+    except RequestException as e:
+        self.send_response(e.code, str(e))
+        self.end_headers()
+        if e.code == 409:
+            self.close_connection = True
+        return None
     return rtj
 
   def writeStream(self,bToSend,fh):

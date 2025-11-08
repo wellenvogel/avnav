@@ -183,9 +183,6 @@ class ChartSourceBase {
         if (!chartBase) chartBase = this.chartEntry.url;
         return chartBase;
     }
-    getOverlayConfigName(){
-        return getOverlayConfigName(this.chartEntry);
-    }
 
     prepareInternal(){
         return new Promise((resolve,reject)=>{

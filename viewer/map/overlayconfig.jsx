@@ -411,11 +411,11 @@ export default class OverlayConfig{
     }
 }
 
-export const fetchOverlayConfig=(configName,expand)=>{
+export const fetchOverlayConfig=(chartItem,expand)=>{
     let getParameters = {
         request: 'api',
         type: 'chart',
-        overlayConfig: configName,
+        name:chartItem?chartItem.name:undefined,
         command: 'getConfig',
         expandCharts: expand
     };
@@ -426,9 +426,9 @@ export const fetchOverlayConfig=(configName,expand)=>{
             .then((json)=>{
                 config = json.data;
             })];
-    if (configName !== DEFAULT_OVERLAY_CONFIG) {
+    if (chartItem) {
         requests.push(
-            Requests.getJson({...getParameters, overlayConfig: DEFAULT_OVERLAY_CONFIG})
+            Requests.getJson({...getParameters, name:undefined})
                 .then((config) => {
                     defaultConfig = config.data;
                 }));
@@ -436,7 +436,7 @@ export const fetchOverlayConfig=(configName,expand)=>{
     return Promise.all(requests)
         .then((result)=> {
             if (!config) throw new Error("unable to load overlay config");
-            if (configName !== DEFAULT_OVERLAY_CONFIG && !defaultConfig) throw new Error("unable to load default config");
+            if (chartItem && !defaultConfig) throw new Error("unable to load default config");
             if (config.useDefault === undefined) config.useDefault = true;
             return new OverlayConfig(config, true, defaultConfig ? defaultConfig.overlays : undefined);
         })
