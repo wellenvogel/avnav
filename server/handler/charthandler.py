@@ -365,9 +365,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if isinstance(chart,ChartFile):
       chart.close()
 
-  def deleteFromOverlays(self,type,name):
-    return 0
-
   def handleDelete(self,name):
     chartEntry=None
     chart=None
@@ -392,7 +389,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if self.importer is not None:
         self.importer.deleteImport(chartEntry.name)
     chart.deleteFiles()
-    self.deleteFromOverlays('chart',chartEntry.name)
     self.wakeUp()
     return AVNUtil.getReturnData()
 
@@ -658,8 +654,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           return rt
       if command == 'listOverlays':
         return AVNUtil.getReturnData(data=[])
-      if command == 'deleteFromOverlays':
-        return AVNUtil.getReturnData()
     except Exception as e:
       return AVNUtil.getReturnData(error=str(e))
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)

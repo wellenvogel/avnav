@@ -213,9 +213,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     os.unlink(filename)
-    chartHandler = self.findHandlerByName('AVNChartHandler')
-    if chartHandler is not None:
-      chartHandler.deleteFromOverlays(self.type, name)
 
   @classmethod
   def canList(cls):

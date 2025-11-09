@@ -18,9 +18,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,7 +38,6 @@ import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
 import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
-import static de.wellenvogel.avnav.main.Constants.EXTERNALCHARTS;
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
@@ -620,49 +617,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     }
 
     /**
-     * delete an entry from the overlay configs
-     * @param type
-     * @param name
-     */
-    public int deleteFromOverlays(String type, String name){
-        int numChanges=0;
-        if (type == null || name == null) return numChanges;
-        for (File f : baseDir.listFiles()){
-            if (!f.getName().endsWith(CFG_EXTENSION)) continue;
-            try{
-                JSONObject config=AvnUtil.readJsonFile(f,MAX_CONFIG_SIZE);
-                if (!config.has("overlays")) continue;
-                JSONArray overlays=config.getJSONArray("overlays");
-                JSONArray newOverlays=new JSONArray();
-                boolean hasChanges=false;
-                for (int i=0;i<overlays.length();i++){
-                    JSONObject overlay=overlays.getJSONObject(i);
-                    if (type.equals(overlay.optString("type"))) {
-                        String overlayName = type.equals("chart") ? overlay.optString(Chart.CKEY) : overlay.optString("name");
-                        if (name.equals(overlayName)){
-                            AvnLog.d("removing overlay "+name+" from "+f.getAbsolutePath());
-                            hasChanges=true;
-                            continue;
-                        }
-                    }
-                    newOverlays.put(overlay);
-                }
-                if (hasChanges){
-                    config.put("overlays",newOverlays);
-                    numChanges++;
-                    DirectoryRequestHandler.writeAtomic(f,
-                            new ByteArrayInputStream(config.toString(2).getBytes(StandardCharsets.UTF_8)),
-                            true);
-                }
-            } catch(Exception e){
-                AvnLog.e("error reading/updating overlay config "+f.getAbsolutePath(),e);
-                continue;
-            }
-        }
-        return numChanges;
-    }
-
-    /**
      * will migrate the naming and tries to replace chart names
      * no copy
      * @param config
@@ -783,9 +737,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
            JSONArray rt=new JSONArray();
             return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
 
-        }
-        if (command.equals("deleteFromOverlays")){
-            return RequestHandler.getReturn();
         }
         return RequestHandler.getErrorReturn("unknown request");
     }

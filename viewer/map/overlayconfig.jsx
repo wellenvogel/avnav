@@ -442,26 +442,26 @@ export const fetchOverlayConfig=(chartItem)=>{
         })
 }
 
-export const expandOverlayList=(overlayList)=>{
-    if (! overlayList || overlayList.length === 0) return Promise.resolve(overlayList);
-    const queries=[];
-    overlayList.forEach(ovl=>{
-        const name=ovl.name;
-        if (! name) {
-            queries.push(()=>Promise.reject("no overlay name"));
-        }
-        let type=ovl.type;
+export const expandOverlayList = (overlayList) => {
+    if (!overlayList || overlayList.length === 0) return Promise.resolve(overlayList);
+    const queries = [];
+    overlayList.forEach(ovl => {
+        let type = ovl.type;
         if (ovl.type === 'base') {
-            queries.push(()=>Promise.resolve({item:{}}));
+            queries.push(Promise.resolve({item: {}}));
+            return;
         }
-        else {
-            queries.push(Requests.getJson({
-                    type: type,
-                    command: 'info',
-                    name: name
-                })
-            );
+        const name = ovl.name;
+        if (!name) {
+            queries.push(Promise.reject("no overlay name"));
+            return;
         }
+        queries.push(Requests.getJson({
+                type: type,
+                command: 'info',
+                name: name
+            })
+        );
     })
     return Promise.allSettled(queries)
         .then((results)=>{

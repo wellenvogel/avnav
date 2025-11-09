@@ -802,6 +802,9 @@ class MapHolder extends DrawingPositionConverter {
                                     newSources.push(chartSource);
                                     return;
                                 }
+                                if (overlay.error){
+                                    return;
+                                }
                                 const overlaySourceClass = this.findChartSource(overlay.type, overlay.url);
                                 if (overlaySourceClass) newSources.push(new overlaySourceClass(this, overlay));
                             });

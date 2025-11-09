@@ -394,21 +394,6 @@ const AddRemoveOverlayDialog = (props) => {
         }
     }, [chartList]);
     const execute = useCallback(() => {
-        if (action === 'remove') {
-            Requests.getJson({
-                request: 'api',
-                type: 'chart',
-                command: 'deleteFromOverlays',
-                name: props.current.name,
-                itemType: props.current.type
-            })
-                .then(() => {
-                })
-                .catch((error) => {
-                    Toast(error)
-                })
-            return;
-        }
         if (action === 'add') {
             let chartInfo = findChart(chart);
             if (!chartInfo) return;
