@@ -131,6 +131,11 @@ public class Decoder extends Worker  implements INavRequestHandler {
     }
 
     @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        return null;
+    }
+
+    @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         throw new InvalidCommandException("delete not suppoerted for decoder");
     }

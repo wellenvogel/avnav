@@ -40,6 +40,7 @@ import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
 import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
+import static de.wellenvogel.avnav.main.Constants.EXTERNALCHARTS;
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
@@ -55,12 +56,13 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
 
     static class ExternalChart implements IChartWithConfig{
         String key;
+        String chartKey;
         JSONObject chart;
         boolean allowColon;
         public ExternalChart(String key,JSONObject chart,boolean allowColon) throws Exception {
             this.key=key;
             this.chart=new JSONObject(chart.toString());
-            String chartKey=keyFromExternalChart();
+            chartKey=keyFromExternalChart();
             if (this.chart.has(Chart.CKEY)){
                 this.chart.put(Chart.DPNAME_KEY,this.chart.getString(Chart.CKEY));
                 this.chart.remove(Chart.CKEY);
@@ -86,11 +88,19 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         @Override
         public List<String> getChartCfgs() {
             ArrayList<String> rt=new ArrayList<>();
-            for (String ckey: new String[]{Chart.CKEY,Chart.DPNAME_KEY}){
+            try {
+                String first=DirectoryRequestHandler.safeName(chartKey,false)+CFG_EXTENSION;
+                if (!allowColon) first=first.replace(':','.');
+                rt.add(first);
+            } catch (Exception e) {
+                //should never occur as safeName only throws when required
+            }
+
+            for (String ckey: new String[]{Chart.DPNAME_KEY}){
                 if (! chart.has(ckey)) continue;
                 String name= null;
                 try {
-                    name = key+"@"+ DirectoryRequestHandler.safeName(chart.getString(key),false);
+                    name = key+"@"+ DirectoryRequestHandler.safeName(chart.getString(ckey),false);
                 } catch (Exception e) {
                     continue;
                 }
@@ -102,11 +112,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
 
         @Override
         public String getChartKey() {
-            try {
-                return keyFromExternalChart();
-            } catch (Exception e) {
-                return null;
-            }
+            return chartKey;
         }
 
         @Override
@@ -375,9 +381,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             synchronized (externalCharts) {
                 List<ExternalChart> charts =externalCharts.get(mapKey);
                 if (charts == null) return null;
-                String ckey=key.substring(sidx+1);
                 for (ExternalChart e:charts){
-                    if (ckey.equals(e.getChartKey())){
+                    if (key.equals(e.getChartKey())){
                         return e;
                     }
                 }
@@ -515,6 +520,14 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         triggerUpdate(true);
         return true;
     }
+
+    @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        IChartWithConfig item=getChartDescriptionByChartKey(name);
+        return chartDescriptionToJson(item,serverInfo);
+    }
+
     private static final String[] REPLACE_KEYS=new String[]{"url","tokenUrl","icon"};
 
     private File getChartCfg(IChartWithConfig chart){
@@ -648,8 +661,38 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         }
         return numChanges;
     }
+
+    /**
+     * will migrate the naming and tries to replace chart names
+     * no copy
+     * @param config
+     * @return
+     */
+    private JSONObject migrateConfig(String name,JSONObject config) throws JSONException {
+            config.put("name",name);
+            config.put("defaults",new JSONArray());
+            if (config.has("overlays")){
+                JSONArray overlays=config.getJSONArray("overlays");
+                for (int i=0;i<overlays.length();i++){
+                    JSONObject overlay=overlays.getJSONObject(i);
+                    if ("chart".equals(overlay.optString("type"))){
+                        String chartKey=overlay.optString("chartKey",null);
+                        String cname=overlay.optString("name",null);
+                        if (chartKey != null){
+                            overlay.remove("chartKey");
+                            if (cname != null && ! overlay.has("displayName")){
+                                overlay.put("displayName",cname);
+                            }
+                            overlay.put("name",chartKey);
+                        }
+                    }
+                }
+            }
+            return config;
+    }
     private static String CGETCONFIG="getConfig";
     private static String CSAVECONFIG="saveConfig";
+    private static String CDELCONFIG="deleteConfig";
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("scheme")){
@@ -662,9 +705,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             chart.setScheme(scheme);
             return RequestHandler.getReturn();
         }
-        if (command.equals(CGETCONFIG) || command.equals(CSAVECONFIG)){
+        if (command.equals(CGETCONFIG) || command.equals(CSAVECONFIG) || command.equals(CDELCONFIG)){
             String name=uri.getQueryParameter("name");
-            boolean expandCharts=AvnUtil.getFlagParameter(uri,"expandCharts",false);
             File cfgFile=null;
             String configName=null;
             List<String> cfgNames= Collections.emptyList();
@@ -672,6 +714,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 //default
                 configName=DEFAULT_CFG;
                 cfgFile=new File(baseDir,configName);
+                cfgNames=Collections.singletonList(configName);
             }
             else{
                 IChartWithConfig description=getChartDescriptionByChartKey(name);
@@ -681,10 +724,12 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 cfgNames=description.getChartCfgs();
                 if (cfgNames.isEmpty())return RequestHandler.getErrorReturn("no config name for "+name);
                 if (command.equals(CGETCONFIG)) {
+                    if (cfgNames.size() > 0){
+                        configName=cfgNames.get(0);
+                    }
                     for (String n : cfgNames) {
                         OverlayConfig cfg = overlays.get(n);
                         if (cfg != null) {
-                            configName = n;
                             cfgFile = cfg.file;
                             break;
                         }
@@ -694,6 +739,16 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                     configName=cfgNames.get(0);
                     cfgFile=new File(baseDir,configName);
                 }
+            }
+            if (command.equals(CDELCONFIG)){
+                for (String oname:cfgNames){
+                    OverlayConfig ovl=overlays.get(oname);
+                    if (ovl != null){
+                        ovl.file.delete();
+                    }
+                }
+                triggerUpdate(true);
+                return RequestHandler.getReturn();
             }
             if (configName == null){
                 return RequestHandler.getErrorReturn("no config for chart "+name);
@@ -713,36 +768,14 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             }
             else {
                 JSONObject localConfig = new JSONObject();
-                if (cfgFile.exists()) {
+                if (cfgFile != null && cfgFile.exists()) {
                     try {
                         localConfig = AvnUtil.readJsonFile(cfgFile, MAX_CONFIG_SIZE);
                     } catch (Exception e) {
                         AvnLog.e("unable to read chart config " + cfgFile.getAbsolutePath(), e);
                     }
                 }
-                localConfig.put("name", configName);
-                if (expandCharts) {
-                    List<String> blackList = Arrays.asList("type", Chart.CKEY, "opacity", "chart");
-                    String[] expandKeys = new String[]{"overlays"};
-                    for (String key : expandKeys) {
-                        if (!localConfig.has(key)) continue;
-                        JSONArray overlays = localConfig.getJSONArray(key);
-                        JSONArray newOverlays = new JSONArray();
-                        for (int idx = 0; idx < overlays.length(); idx++) {
-                            JSONObject overlay = overlays.getJSONObject(idx);
-                            if (overlay.has("type") && "chart".equals(overlay.getString("type"))) {
-                                JSONObject chart = chartDescriptionToJson(getChartDescriptionByChartKey(overlay.optString(Chart.CKEY)), serverInfo);
-                                if (chart != null) {
-                                    merge(overlay, chart, blackList);
-                                } else {
-                                    continue; //skip this entry in the returned list
-                                }
-                            }
-                            newOverlays.put(overlay);
-                        }
-                        localConfig.put(key, newOverlays);
-                    }
-                }
+                migrateConfig(configName,localConfig);
                 return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", localConfig));
             }
         }

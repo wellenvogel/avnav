@@ -411,13 +411,12 @@ export default class OverlayConfig{
     }
 }
 
-export const fetchOverlayConfig=(chartItem,expand)=>{
+export const fetchOverlayConfig=(chartItem)=>{
     let getParameters = {
         request: 'api',
         type: 'chart',
         name:chartItem?chartItem.name:undefined,
-        command: 'getConfig',
-        expandCharts: expand
+        command: 'getConfig'
     };
     let defaultConfig;
     let config;
@@ -438,7 +437,51 @@ export const fetchOverlayConfig=(chartItem,expand)=>{
             if (!config) throw new Error("unable to load overlay config");
             if (chartItem && !defaultConfig) throw new Error("unable to load default config");
             if (config.useDefault === undefined) config.useDefault = true;
-            return new OverlayConfig(config, true, defaultConfig ? defaultConfig.overlays : undefined);
+            const overlayConfig= new OverlayConfig(config, true, defaultConfig ? defaultConfig.overlays : undefined);
+            return overlayConfig;
+        })
+}
+
+export const expandOverlayList=(overlayList)=>{
+    if (! overlayList || overlayList.length === 0) return Promise.resolve(overlayList);
+    const queries=[];
+    overlayList.forEach(ovl=>{
+        const name=ovl.name;
+        if (! name) {
+            queries.push(()=>Promise.reject("no overlay name"));
+        }
+        let type=ovl.type;
+        if (ovl.type === 'base') {
+            queries.push(()=>Promise.resolve({item:{}}));
+        }
+        else {
+            queries.push(Requests.getJson({
+                    type: type,
+                    command: 'info',
+                    name: name
+                })
+            );
+        }
+    })
+    return Promise.allSettled(queries)
+        .then((results)=>{
+            const finalResult=[];
+            for (let i=0;i<overlayList.length;i++){
+                const res=results[i];
+                if (res.status === 'fulfilled'){
+                    const item=(res.value||{}).item;
+                    if (! item){
+                        finalResult.push({...overlayList[i],error:'not found'});
+                    }
+                    else{
+                        finalResult.push({...item,...overlayList[i]});
+                    }
+                }
+                else{
+                    finalResult.push({...overlayList[i],error:res.reason});
+                }
+            }
+            return finalResult;
         })
 }
 export const DEFAULT_OVERLAY_CONFIG = "default.cfg";

@@ -133,6 +133,21 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         return rt;
     }
 
+    @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        JSONArray items=handleList(uri,serverInfo);
+        for (int i=0;i<items.length();i++){
+            try{
+                JSONObject item=items.getJSONObject(i);
+                if (item.has("name") && name.equals(item.getString("name"))){
+                    return item;
+                }
+            }catch (Exception e){}
+        }
+        return null;
+    }
+
     private ArrayList<AddonInfo> getAddons(boolean check){
         ArrayList<AddonInfo> rt=new ArrayList<AddonInfo>();
         SharedPreferences prefs=AvnUtil.getSharedPreferences(context);

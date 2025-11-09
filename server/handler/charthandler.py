@@ -438,7 +438,14 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                 clist.append(le)
     return AVNUtil.getReturnData(items=clist)
 
-
+  def handleInfo(self,name,handler=None):
+      if name is None:
+          return AVNUtil.getReturnData()
+      hostip = self.getRequestIp(handler)
+      item=self.getChartDescriptionByKey(name,hostip)
+      if item is None:
+          return AVNUtil.getReturnData(error=f"chart {name} not found")
+      return AVNUtil.getReturnData(item=item)
   def getPathFromUrl(self, path, handler=None, requestParam=None):
     parts=path.split("/")
     if len(parts) < 1:
@@ -524,23 +531,31 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               for overlay in overlays:
                   if overlay.get('type') == 'chart':
                       newEntry = overlay.copy()
-                      chartKey = overlay.get('chartKey') or overlay.get('name')
+                      chartKey = overlay.get('chartKey')
                       try:
                           del newEntry['chartKey']
                       except KeyError:
                           pass
-                      if chartKey is None:
-                          continue
-                      if not chartKey.startswith(self.SCOPE_USER) and not chartKey.startswith(ExternalChart.SCOPE_EXT):
-                          newName=self.nameToKey.get(chartKey)
-                          AVNLog.debug("old chart name in overlay %s - new %s",chartKey,newName)
-                          if newName is None:
-                              #it seems this chart is not available - so remove it from the overlay
-                              continue
-                          newEntry['displayName']=newEntry.get('name')
-                          newEntry['name']=newName
-                          newOverlays.append(newEntry)
+                      if chartKey is not None:
+                          if not chartKey.startswith(self.SCOPE_USER) and not chartKey.startswith(ExternalChart.SCOPE_EXT):
+                              #old external config
+                              #migrate name->displayName, chartkey->mappingTable[chartKey]->name
+                              newName=self.nameToKey.get(chartKey)
+                              AVNLog.debug("old chart name in overlay %s - new %s",chartKey,newName)
+                              if newName is None:
+                                  #it seems this chart is not available - so remove it from the overlay
+                                  continue
+                              newEntry['displayName']=newEntry.get('name')
+                              newEntry['name']=newName
+                              newOverlays.append(newEntry)
+                          elif chartKey.startswith(self.SCOPE_USER):
+                              #old user config - migrate name->displayName chartkey->name
+                              if newEntry.get('displayName') is None:
+                                    newEntry['displayName']=newEntry.get('name')
+                              newEntry['name']=chartKey
+                          #else would be a new config that still contained a chartKey - no need to migrate
                       else:
+                          #no chartkey - so it seems to be a new entry
                           newOverlays.append(newEntry)
                   else:
                       newOverlays.append(overlay)
@@ -603,7 +618,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
               for overlay in overlays:
                 if overlay.get('type') == 'chart':
                   # update with the final chart config
-                  chartKey=overlay.get('chartKey') or overlay.get('name')
+                  chartKey=overlay.get('name')
                   chartDescription=self.getChartDescriptionByKey(chartKey,hostip)
                   if chartDescription is not None:
                     overlay.update(dict([k_v for k_v in list(chartDescription.items()) if k_v[0] not in noMerge]))

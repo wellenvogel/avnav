@@ -284,11 +284,25 @@ class AVNDirectoryHandlerBase(AVNWorker):
       raise Exception("list not possible")
     if not os.path.exists(self.baseDir):
       return AVNUtil.getReturnData("directory %s does not exist" % self.baseDir)
-    extensions = self.getFixedExtension()
-    extensions = [extensions] if extensions is not None else None
-    data=self.listDirectory(False,self.baseDir,extensions)
+    extension = self.getFixedExtension()
+    data=self.listDirectory(False,self.baseDir,extension)
     rt = AVNUtil.getReturnData(items=data)
     return rt
+
+  def handleInfo(self,name,handler=None):
+      if not self.canList():
+          raise Exception("list not possible")
+      if not os.path.exists(self.baseDir):
+          return AVNUtil.getReturnData("directory %s does not exist" % self.baseDir)
+      if name is None:
+          return AVNUtil.getReturnData()
+      extension = self.getFixedExtension()
+      data = self.listDirectory(False, self.baseDir, extension)
+      for item in data:
+          if item.name == name:
+            return AVNUtil.getReturnData(item=item)
+      return AVNUtil.getReturnData(error=f"{self.type}: {name} not found")
+
 
 
   def checkName(self,name,doRaise=True):
@@ -497,6 +511,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
       return self.handleUpload(name,handler,requestparam)
     elif command == 'download':
       return self.handleDownload(name,handler,requestparam)
+    elif command == 'info':
+      return self.handleInfo(name,handler)
     elif command == 'delete':
       self.handleDelete(name)
       return AVNUtil.getReturnData()

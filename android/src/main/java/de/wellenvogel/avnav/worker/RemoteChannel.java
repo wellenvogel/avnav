@@ -134,6 +134,11 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     }
 
     @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        return null;
+    }
+
+    @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         return false;
     }

@@ -71,6 +71,21 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     }
 
     @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        JSONArray items=iconFiles; //atomic
+        for (int i=0;i<items.length();i++){
+            try{
+                JSONObject item=items.getJSONObject(i);
+                if (item.has("name") && name.equals(item.getString("name"))){
+                    return item;
+                }
+            }catch (Exception e){}
+        }
+        return null;
+    }
+
+    @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         throw new IOException("delete not allowed");
     }

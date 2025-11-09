@@ -84,22 +84,37 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
        return "/"+urlPrefix+"/"+
                URLEncoder.encode(name,"utf-8");
     }
+
+    private JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
+        JSONObject el=new JSONObject();
+        el.put("name",localFile.getName());
+        el.put("size",localFile.length());
+        el.put("time",localFile.lastModified()/1000);
+        el.put("url",getUrlFromName(localFile.getName()));
+        el.put("type",type);
+        el.put("canDelete",true);
+        return el;
+    }
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()){
-                JSONObject el=new JSONObject();
-                el.put("name",localFile.getName());
-                el.put("size",localFile.length());
-                el.put("time",localFile.lastModified()/1000);
-                el.put("url",getUrlFromName(localFile.getName()));
-                el.put("type",type);
-                el.put("canDelete",true);
-                rt.put(el);
+                rt.put(fileToItem(localFile));
             }
         }
         return rt;
+    }
+
+    @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        name=safeName(name,true);
+        File localFile=new File(workDir,name);
+        if (localFile.isFile()){
+            return fileToItem(localFile);
+        }
+        return null;
     }
 
     @Override

@@ -27,7 +27,7 @@ public class DemoChart extends Chart{
 
     @Override
     public String getConfigName() {
-        return Constants.DEMOCHARTS+CFG_DELIM+fileName;
+        return Constants.DEMOCHARTS+CFG_DELIM+fileName+CFG_EXTENSION;
     }
 
     @Override
@@ -41,15 +41,13 @@ public class DemoChart extends Chart{
         AvnLog.d(Constants.LOGPRFX,"found demo chart "+fileName);
         String url="/"+ Constants.CHARTPREFIX+"/"+key;
         JSONObject e = new JSONObject();
-        e.put("name", name);
+        e.put(DPNAME_KEY, name);
         e.put("url",url);
-        e.put("chartKey",key);
-        e.put("charturl",url);
+        e.put(CKEY,key);
         e.put("canDelete",false);
         e.put("canDownload",false);
         e.put("time", BuildConfig.TIMESTAMP/1000);
         e.put("sequence",0);
-        e.put("overlayConfig",url.replace('/','@')+CFG_EXTENSION);
         return e;
     }
 
