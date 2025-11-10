@@ -97,6 +97,20 @@ Helper.filteredAssign=function(){
     return rt;
 };
 
+Helper.blackListAssign=function(){
+    let args = Array.prototype.slice.call(arguments);
+    let filter=args.shift();
+    let rt={};
+    for (let k in args){
+        let o=args[k];
+        if (! o) continue;
+        for (let ok in o){
+            if (! (ok in filter) ) rt[ok]=o[ok];
+        }
+    }
+    return rt;
+};
+
 /**
  * replace any ${name} with the values of the replacement object
  * e.g. templateReplace("test${a} test${zzz}",{a:"Hello",zzz:"World"})

@@ -575,14 +575,11 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         changed = chartEntry.getUserData().changeScheme(scheme)
         return AVNUtil.getReturnData()
       if command == self.CGETCONFIG:
-        expandCharts = AVNUtil.getHttpRequestFlag(requestparam, "expandCharts", False)
-        isDefault=False
         overlay=None
         if name is None or name == "":
             #get default
             ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
             overlay=self.ovlConfigs.get(ovlname)
-            isDefault=True
         else:
             chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
             if chartEntry is None:
@@ -605,23 +602,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           rt = self.migrateOverlay(ovlname,ovl)
           rt['name']=ovlname
         rt['defaults']=[]
-        if expandCharts:
-          noMerge = ['type', 'opacity', 'chart']
-          for ovlname in ['overlays']:
-            overlays = rt.get(ovlname)
-            if overlays is not None:
-              newOverlays=[]
-              for overlay in overlays:
-                if overlay.get('type') == 'chart':
-                  # update with the final chart config
-                  chartKey=overlay.get('name')
-                  chartDescription=self.getChartDescriptionByKey(chartKey,hostip)
-                  if chartDescription is not None:
-                    overlay.update(dict([k_v for k_v in list(chartDescription.items()) if k_v[0] not in noMerge]))
-                    newOverlays.append(overlay)
-                else:
-                  newOverlays.append(overlay)
-              rt[ovlname]=newOverlays
         return AVNUtil.getReturnData(data=rt)
       if command == self.CSAVECONFIG or command == self.CDELCONFIG:
           names=[]
@@ -652,8 +632,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                     os.unlink(old.getFileName())
           self.wakeUp()
           return rt
-      if command == 'listOverlays':
-        return AVNUtil.getReturnData(data=[])
     except Exception as e:
       return AVNUtil.getReturnData(error=str(e))
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)

@@ -34,7 +34,7 @@ import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle, Circle as olCircle, Stroke as olStroke, Fill as olFill} from 'ol/style';
 import * as olTransforms from 'ol/proj/transforms';
 import {ScaleLine as olScaleLine} from 'ol/control';
-import OverlayConfig, {expandOverlayList, fetchOverlayConfig} from "./overlayconfig";
+import OverlayConfig, {fetchOverlayConfig} from "./overlayconfig";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
@@ -786,33 +786,30 @@ class MapHolder extends DrawingPositionConverter {
                         checkChanges();
                         return;
                     }
-                    this.overlayConfig = overlayConfig;
-                    if (resetOverrides) {
-                        this.overlayOverrides = this.overlayConfig.copy();
-                    } else {
-                        let newOverrides = this.overlayConfig.copy();
-                        newOverrides.mergeOverrides(this.overlayOverrides);
-                        this.overlayOverrides = newOverrides;
-                    }
-                    let overlays = this.overlayConfig.getOverlayList();
-                    return expandOverlayList(overlays)
-                        .then((overlays)=> {
+                    return overlayConfig.getExpandedConfig(false)
+                        .then((expandedConfig) => {
+                            this.overlayConfig = expandedConfig;
+                            if (resetOverrides) {
+                                this.overlayOverrides = this.overlayConfig.copy();
+                            } else {
+                                let newOverrides = this.overlayConfig.copy();
+                                newOverrides.mergeOverrides(this.overlayOverrides);
+                                this.overlayOverrides = newOverrides;
+                            }
+                            let overlays = this.overlayConfig.getOverlayList();
                             overlays.forEach((overlay) => {
                                 if (overlay.type === 'base') {
                                     newSources.push(chartSource);
                                     return;
                                 }
-                                if (overlay.error){
+                                if (overlay.error) {
                                     return;
                                 }
                                 const overlaySourceClass = this.findChartSource(overlay.type, overlay.url);
                                 if (overlaySourceClass) newSources.push(new overlaySourceClass(this, overlay));
                             });
                             checkChanges();
-                        });
-                })
-                .catch((error) => {
-                    reject("unable to query overlays:" + error);
+                        })
                 })
 
         });
