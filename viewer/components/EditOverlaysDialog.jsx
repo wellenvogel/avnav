@@ -436,7 +436,12 @@ const OverlayElement=(props)=>{
         }
     }
     return (
-        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")}
+        <div className={Helper.concatsp("listEntry","overlayElement",
+                props.selected?"activeEntry":undefined,
+                props.enabled?undefined:" disabled",
+                props.isDefault?"defaultOverlay":undefined,
+                getItemError(props)?"withError":undefined
+        )}
              onClick={(ev)=>onClick(ev,'select')} {...dd}>
             <div className="itemInfo">
                 <div className="infoRow">
@@ -487,7 +492,7 @@ const CombinedOverlayElement=(props)=> {
     );
 }
 
-const HiddenCombinedOverlayElement=(props)=>{
+const HiddenOverlayElement=(props)=>{
     const dd=useAvNavSortable(props.dragId);
     return <div className="empty" {...dd}></div>
 }
@@ -706,7 +711,11 @@ const EditOverlaysDialog = (props) => {
     let isEditingDefault = props.current.getName() === DEFAULT_OVERLAY_CONFIG;
     let title = props.title || (isEditingDefault ? 'Edit Default Overlays' : 'Edit Overlays');
     return (
-        <DialogFrame className={"selectDialog editOverlaysDialog" + (props.preventEdit ? " preventEdit" : "")}
+        <DialogFrame className={Helper.concatsp(
+            "selectDialog",
+                 "editOverlaysDialog",
+                 props.preventEdit ? "preventEdit" : undefined,
+                 props.preventEdit && props.hideErrors ? "hideErrors" : undefined)}
                      title={title}>
             {!isEditingDefault &&
                 <DialogRow className="info"><span className="inputLabel">Chart</span>{props.chartName}
@@ -732,7 +741,7 @@ const EditOverlaysDialog = (props) => {
                     if (item.type === 'base') return BaseElement;
                     if (item.itemClass === CombinedOverlayElement) {
                         if (useDefault) return CombinedOverlayElement
-                        else return HiddenCombinedOverlayElement
+                        else return HiddenOverlayElement
                     } else return OverlayElement;
                 }}
                 selectedIndex={props.preventEdit ? undefined : selectedIndex}
@@ -834,7 +843,8 @@ EditOverlaysDialog.propTypes = {
     editCallback: PropTypes.func,  //only meaningful if preventEdit is set
     closeCallback: PropTypes.func.isRequired,
     preventEdit: PropTypes.bool,
-    addEntry: PropTypes.object //if this is set, immediately start with appending this entry
+    addEntry: PropTypes.object, //if this is set, immediately start with appending this entry
+    hideErrors: PropTypes.bool //if set do not show items with errors (only with preventEdit = true)
 };
 
 /**

@@ -333,6 +333,7 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
                 return true;
             }:undefined}
             preventEdit={true}
+            hideErrors={true}
             />;
     });
 };
