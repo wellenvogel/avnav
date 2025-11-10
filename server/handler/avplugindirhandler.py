@@ -38,7 +38,7 @@ from pluginhandler import AVNPluginHandler
 class AVNPluginDirHandler(AVNDirectoryHandlerBase):
   PREFIX = "/plugindir"
   UPLOAD_NAME="upload"
-  USERNAME_PREFIX=AVNPluginHandler.D_USER+"-"
+  SCOPE_USER=AVNPluginHandler.D_USER+"-"
   EXT='.zip'
   @classmethod
   def getPrefix(cls):
@@ -67,22 +67,18 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
           AVNLog.error("unable to cleanup upload files: %s",str(e))
 
   def updatePluginListEntry(self,entry:AVNDirectoryListEntry,ptype=AVNPluginHandler.D_USER):
-      if not entry.name.startswith(ptype+"-"):
-          entry.name=ptype+'-'+entry.name
-      if ptype != AVNPluginHandler.D_USER:
-          entry.canDownload=False
-          entry.canDelete=False
-  def listDirectory(self, includeDirs=False, baseDir=None):
-      dlist = [entry for entry in super().listDirectory(True, baseDir) if entry.isDirectory]
+      pass
+  def listDirectory(self, includeDirs=False,baseDir=None,extension=None,scope=None):
+      dlist = [entry for entry in super().listDirectory(True, baseDir,scope=self.SCOPE_USER) if entry.isDirectory]
       for e in dlist:
           self.updatePluginListEntry(e,AVNPluginHandler.D_USER)
       blist = [entry for entry in
-               super().listDirectory(True, self.pluginhandler.getPluginBaseDir(AVNPluginHandler.D_BUILTIN)) if
+               super().listDirectory(True, self.pluginhandler.getPluginBaseDir(AVNPluginHandler.D_BUILTIN), scope=AVNPluginHandler.D_BUILTIN+"-") if
                entry.isDirectory]
       for e in blist:
           self.updatePluginListEntry(e,AVNPluginHandler.D_BUILTIN)
       slist = [entry for entry in
-               super().listDirectory(True, self.pluginhandler.getPluginBaseDir(AVNPluginHandler.D_SYSTEM)) if
+               super().listDirectory(True, self.pluginhandler.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),scope=AVNPluginHandler.D_SYSTEM+"-") if
                entry.isDirectory]
       for e in slist:
           self.updatePluginListEntry(e,AVNPluginHandler.D_SYSTEM)
@@ -94,9 +90,9 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
       if name is None:
           raise Exception("missing name")
       name = AVNUtil.clean_filename(name)
-      if not name.startswith(self.USERNAME_PREFIX):
+      if not name.startswith(self.SCOPE_USER):
           raise Exception(f"plugin {name} is no user plugin")
-      name=name[len(self.USERNAME_PREFIX):]
+      name=name[len(self.SCOPE_USER):]
       (filename, baseDir) = self.convertLocalPath(name)
       if filename is None:
           return None
@@ -118,9 +114,9 @@ class AVNPluginDirHandler(AVNDirectoryHandlerBase):
       if name is None:
           raise Exception("missing name")
       name = AVNUtil.clean_filename(name)
-      if not name.startswith(self.USERNAME_PREFIX):
+      if not name.startswith(self.SCOPE_USER):
           raise Exception(f"plugin {name} is no user plugin")
-      name=name[len(self.USERNAME_PREFIX):]
+      name=name[len(self.SCOPE_USER):]
       filename = os.path.join(self.baseDir, name)
       if not os.path.exists(filename) or not os.path.isdir(filename):
           raise Exception("plugin %s not found" % filename)
