@@ -17,12 +17,12 @@ import Requests, {prepareUrl} from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {editableOverlayParameters, getOverlayConfigName} from '../map/chartsourcebase'
+import {editableOverlayParameters} from '../map/chartsourcebase'
 import OverlayConfig, {
     DEFAULT_OVERLAY_CONFIG,
     fetchOverlayConfig,
     getKeyFromOverlay,
-    OVERLAY_ID
+    OVERLAY_ID, overlayExpandsValue
 } from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import chartImage from '../images/Chart60.png';
@@ -338,7 +338,9 @@ const OverlayItemDialog = (props) => {
                                 list={itemLists.chart.list}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
-                                    updateCurrent({name: nv.name,
+                                    updateCurrent({
+                                        ...overlayExpandsValue(),
+                                        name: nv.name,
                                         displayName:nv.displayName,
                                         chartKey:undefined
                                     });
@@ -353,7 +355,10 @@ const OverlayItemDialog = (props) => {
                                 list={filteredNameList()}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
-                                    let newState = {url: nv.url, name: nv.name};
+                                    let newState = {
+                                        ...overlayExpandsValue(),
+                                        url: nv.url, name: nv.name, displayName:nv.displayName
+                                    };
                                     if (Helper.getExt(nv.name) === 'kmz') {
                                         newState[editableOverlayParameters.icon.name] = nv.url;
                                         newState.url += "/doc.kml";
@@ -363,6 +368,7 @@ const OverlayItemDialog = (props) => {
                                     analyseOverlay(newState.url, initial);
                                 }}
                             />
+                            <ErrorRow item={current}/>
                             <EditableParameterListUI
                                 values={current}
                                 parameters={parameters}
@@ -385,7 +391,7 @@ const OverlayItemDialog = (props) => {
                             if (changes.opacity > 1) changes.opacity = 1;
                             props.resolveFunction(changes);
                         }}
-                        disabled={(!changed && !props.forceOk) || !current.name||!dataValid}
+                        disabled={(!changed && !props.forceOk) || !current.name||!dataValid || !!getItemError(current)}
                     >Ok</DB>
                     : null}
 
@@ -411,7 +417,17 @@ const BaseElement=(props)=>{
     </div>
     );
 }
-
+const getItemError=(props)=>{
+    if (!props) return;
+    return props.error || (props.nonexistent?"not found":undefined);
+}
+const ErrorRow=({item})=>{
+    const error=getItemError(item);
+    if (!error)return null;
+    return <div className="infoRow errorText">
+        <span className="inputLabel"></span><span className="valueText">{error}</span>
+    </div>
+}
 const OverlayElement=(props)=>{
     const dd=useAvNavSortable(props.dragId);
     const onClick=(ev,action)=>{
@@ -429,6 +445,7 @@ const OverlayElement=(props)=>{
                 <div className="infoRow">
                     <span className="inputLabel">Type</span><span className="valueText">{props.type+(props.isDefault?"   [default]":"")}</span>
                 </div>
+                <ErrorRow item={props}/>
             </div>
             <div className="actions">
                 {props.type !== 'base' &&
@@ -799,7 +816,6 @@ const EditOverlaysDialog = (props) => {
                             let updatedOverlays = currentConfig;
                             updatedOverlays.writeBack(displayListToOverlays(list));
                             updatedOverlays.setUseDefault(useDefault);
-                            updatedOverlays.cleanupMerged();
                             props.updateCallback(updatedOverlays);
                         }}
                         disabled={!isChanged}
@@ -899,7 +915,6 @@ export const DEFAULT_OVERLAY_CHARTENTRY = {
     type: 'chart',
     displayName: 'DefaultOverlays',
     name: DEFAULT_OVERLAY_CONFIG,
-    overlayConfig: DEFAULT_OVERLAY_CONFIG,
     canDelete: false,
     canDownload: false,
     time: (new Date()).getTime() / 1000,

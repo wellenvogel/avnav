@@ -20,7 +20,6 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
-import {getOverlayConfigName} from "../map/chartsourcebase";
 import mapholder from "../map/mapholder.js";
 import Helper, {concatsp, injectav} from "../util/helper";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
@@ -309,7 +308,7 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
     if (! current) return;
     let currentChart=MapHolder.getCurrentChartEntry()||{};
     showDialog(dialogContext,(props)=> {
-        let canEdit=getOverlayConfigName(currentChart) !== undefined && globalStore.getData(keys.properties.connectedMode,false) ;
+        let canEdit=globalStore.getData(keys.properties.connectedMode,false) ;
         return <EditOverlaysDialog
             {...props}
             chartName={opt_chartName||currentChart.name}

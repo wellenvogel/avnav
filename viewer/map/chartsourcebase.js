@@ -40,10 +40,6 @@ import {
     EditableSelectParameter
 } from "../util/EditableParameter";
 import Requests from "../util/requests";
-
-export const getOverlayConfigName=(chartEntry)=>{
-    return chartEntry.overlayConfig;
-}
 class ChartSourceBase {
 
     COLOR_INVISIBLE='rgba(0,0,0,0)';

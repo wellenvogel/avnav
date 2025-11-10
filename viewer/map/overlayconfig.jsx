@@ -91,6 +91,24 @@ const DEFAULT_EXPAND_FILTER={
     nonexistent:true,
     url: true
 }
+export const overlayResetExpands=(item,opt_copy)=>{
+    if (! item) return;
+    if (opt_copy) item={...item};
+    for (let k in DEFAULT_EXPAND_FILTER){
+        delete item[k];
+    }
+    return item;
+}
+/**
+ * get an object with all expansion values set to a defined value
+ * @param opt_value - the value to be set
+ * @returns {{error: boolean, nonexistent: boolean, url: boolean}}
+ */
+export const overlayExpandsValue=(opt_value)=>{
+    const rt={...DEFAULT_EXPAND_FILTER};
+    for (let k in rt) rt[k]=opt_value;
+    return rt;
+}
 const NEVER_EXPAND_FILTER={
     [OVERLAY_ID]:true,
     ...OVERRIDE_KEYS,
@@ -176,9 +194,7 @@ export default class OverlayConfig{
             const items=this.config[scope];
             if (! items ) return;
             items.forEach(item=>{
-                for (let k in DEFAULT_EXPAND_FILTER) {
-                    delete item[k];
-                }
+                overlayResetExpands(item);
             })
         })
     }
@@ -406,10 +422,16 @@ export default class OverlayConfig{
      * @returns {{overlays: *, name: *, useDefault: boolean, defaultsOverride: {}}}
      */
     getWriteBackData(){
+        const overlays=[];
+        if (this.config && this.config.overlays) {
+            this.config.overlays.forEach((item) => {
+                overlays.push(overlayResetExpands(item, true));
+            })
+        }
         return {
             useDefault: this.config.useDefault,
             name: this.config.name,
-            overlays: this.config.overlays,
+            overlays: overlays,
             defaultsOverride: this.config.defaultsOverride
         }
     }

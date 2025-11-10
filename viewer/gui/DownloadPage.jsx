@@ -26,7 +26,6 @@ import {
     ItemDownloadButton, ItemActions, FileDialogWithActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
-import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
 import {checkName, ItemNameDialog, safeName} from "../components/ItemNameDialog";
@@ -35,6 +34,7 @@ import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {indexOf} from "core-js/internals/array-includes";
 import {ConfirmDialog} from "../components/BasicDialogs";
+import {DEFAULT_OVERLAY_CONFIG} from "../map/overlayconfig";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -617,8 +617,8 @@ class DownloadPage extends React.Component{
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
                                 }
-                                if (item.type === 'chart' && getOverlayConfigName(item) === getOverlayConfigName(DEFAULT_OVERLAY_CHARTENTRY)){
-                                    EditOverlaysDialog.createDialog(item,()=>this.fillData());
+                                if (item.type === 'chart' && item.name === DEFAULT_OVERLAY_CONFIG){
+                                    EditOverlaysDialog.createDialog(undefined,()=>this.fillData());
                                     return;
                                 }
                                 const accessor=this.createAccessor();
