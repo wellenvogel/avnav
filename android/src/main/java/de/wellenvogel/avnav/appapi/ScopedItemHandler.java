@@ -36,24 +36,39 @@ public class ScopedItemHandler implements INavRequestHandler{
         public boolean isUser;
         private String prefix="";
         private String type="";
+        private String fixedExtension;
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
             rt.put("name",(isUser?USERPREFIX:SYSTEMPREFIX)+name);
             rt.put("url",prefix+"/"+(isUser?USERPREFIX:SYSTEMPREFIX)+name+SUFFIX);
             rt.put("canDelete",isUser);
+            rt.put("canDownload",true);
             rt.put("time",mtime/1000);
             rt.put("isServer",true);
+            if (fixedExtension != null){
+                rt.put("extension",fixedExtension);
+            }
+            if (isUser){
+                //only items with this prefix are checkd for upload
+                rt.put("checkPrefix",USERPREFIX);
+            }
             if (size != -1) rt.put("size",size);
             rt.put("type",type);
             return rt;
         }
-        public ItemInfo(String type, String prefix, String name, boolean isUser, long mtime){
+        public ItemInfo(String type, String prefix, String name, boolean isUser, long mtime,String fixedExtension){
+            if (fixedExtension != null && name != null){
+                if (name.toLowerCase().endsWith(fixedExtension)){
+                    name=name.substring(0,name.length()-fixedExtension.length());
+                }
+            }
             this.name=name;
             this.isUser=isUser;
             this.mtime=mtime;
             this.prefix=prefix;
             this.type=type;
+            this.fixedExtension=fixedExtension;
         }
     }
 
@@ -155,7 +170,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         for (String name :list){
             if (!name.endsWith(SUFFIX)) continue;
             if (name.equals("keys.json")) continue;
-            ItemInfo li=new ItemInfo(getType(), getPrefix(), name.replaceAll("\\.json$",""), false,BuildConfig.TIMESTAMP);
+            ItemInfo li=new ItemInfo(getType(), getPrefix(), name, false,BuildConfig.TIMESTAMP,SUFFIX);
             rt.add(li);
         }
         return rt;
@@ -166,7 +181,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         for (File f: dir.listFiles()){
             if (!f.getName().endsWith(SUFFIX)) continue;
             if (! f.isFile()) continue;
-            ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName().replaceAll("\\.json$",""),true,f.lastModified());
+            ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName(),true,f.lastModified(),SUFFIX);
             li.size=f.length();
             rt.put(li.toJson());
         }

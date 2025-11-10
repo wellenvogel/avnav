@@ -32,7 +32,6 @@ import {checkName, ItemNameDialog, safeName} from "../components/ItemNameDialog"
 import routeobjects from "../nav/routeobjects";
 import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
-import {indexOf} from "core-js/internals/array-includes";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {DEFAULT_OVERLAY_CONFIG} from "../map/overlayconfig";
 
@@ -329,34 +328,15 @@ class DownloadPage extends React.Component{
     checkNameForUpload(name,file){
             let actions=ItemActions.create({type:this.state.type},false);
             let ext=Helper.getExt(name);
+            if (this.state.type !== 'chart') {
+                const error = actions.checkExtension(ext, actions.headline);
+                if (error) return Promise.reject(error);
+            }
             let serverName=actions.nameForUpload(name);
             const accessor=this.createAccessor(actions);
             let rt={name:serverName};
             if (this.state.type === 'route'){
-                if (ext !== "gpx") {
-                    return Promise.reject("only gpx for routes");
-                }
                 return Promise.resolve(rt);
-            }
-            if (this.state.type === 'track'){
-                if (ext !== "gpx") {
-                    return Promise.reject("only gpx for tracks");
-                }
-            }
-            if (this.state.type === 'images'){
-                if (GuiHelpers.IMAGES.indexOf(ext) < 0){
-                    return Promise.reject("only images of types "+GuiHelpers.IMAGES.join(","));
-                }
-            }
-            if (this.state.type === 'settings'){
-                if (ext !== 'json'){
-                    return Promise.reject("only .json files allowed for settings");
-                }
-            }
-            if (this.state.type === 'layout') {
-                if (ext !== 'json') {
-                    return Promise.reject("only .json files allowed for layouts");
-                }
             }
             if (this.state.type === 'chart'){
                 let directExtensions=['gemf','mbtiles','xml'];
@@ -364,7 +344,6 @@ class DownloadPage extends React.Component{
                     //check for import
                     let importConfig=checkExt(ext,this.state.chartImportExtensions);
                     if (importConfig.allow) {
-                        let resolved=false;
                         return showPromiseDialog(undefined,(dprops)=>{
                             return(
                                 <ImportDialog
@@ -372,7 +351,6 @@ class DownloadPage extends React.Component{
                                     allowNameChange={true}
                                     allowSubDir={importConfig.subdir}
                                     resolveFunction={(props,subdir)=>{
-                                        resolved=true;
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});
                                         }
@@ -391,9 +369,6 @@ class DownloadPage extends React.Component{
                 //fallthrough to check existing...
             }
             if (this.state.type === 'plugin'){
-                if (ext !== 'zip'){
-                    return Promise.reject("only .zip files allowed for plugins");
-                }
                 if (file){
                     let foundName;
                     const check=(foundName)=>{
@@ -485,8 +460,12 @@ class DownloadPage extends React.Component{
             const existing=this.entryExists(name,accessor);
             if (existing){
                 existing.dialog=true;
-                existing.fixedPrefix=actions.fixedPrefix;
-                existing.fixedExt=ext;
+                existing.fixedPrefix=actions.prefixForDisplay();
+                existing.keepExtension=true;
+                existing.checkName=(cname,file)=>{
+                    const rs=this.entryExists(cname,accessor);
+                    return rs;
+                }
                 return Promise.reject(existing);
             }
             else{
@@ -545,7 +524,7 @@ class DownloadPage extends React.Component{
     }
     createAccessor(opt_actions){
         if (! opt_actions) opt_actions=ItemActions.create({type:this.state.type},false);
-        return (data)=>data?opt_actions.serverNameToClientName(data.name):data;
+        return (data)=>opt_actions.nameForCheck(data);
     }
     createItem(){
         const accessor=this.createAccessor();
@@ -654,7 +633,7 @@ class DownloadPage extends React.Component{
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
                             uploadSequence={this.state.uploadSequence}
                             checkNameCallback={this.checkNameForUpload}
-                            fixedPrefix={actions.fixedPrefix}
+                            fixedPrefix={actions.prefixForDisplay()}
                         />
                         {(this.state.type === "user")?
                             <DynamicButton

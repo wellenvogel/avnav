@@ -25,38 +25,44 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Button from "./Button";
-import globalStore from "../util/globalstore";
-import keys from "../util/keys";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
 import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {ItemNameDialog} from "./ItemNameDialog";
 import Helper from "../util/helper";
-import androidEventHandler from "../util/androidEventHandler";
 
 const MAXUPLOADSIZE=100000;
 
 const showNameDialog=({result,name,checkName,dialogContext})=>{
     if (! result ) return Promise.reject(result);
-    if (name){
-        if (result.fixedExt && Helper.endsWith(name,"."+result.fixedExt)){
-            name=name.substring(0,name.length-result.fixedExt.length-1);
-        }
-        if (result.fixedPrefix && Helper.startsWith(name,result.fixedPrefix)){
-            name=name.substring(result.fixedPrefix.length);
-        }
-    }
     return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
         {...dprops}
+        {...result}
         iname={name}
         title={`select new name for ${name}`}
         checkName={checkName}
-        fixedPrefix={result.fixedPrefix}
-        fixedExt={result.fixedExt}
     />)
         .then((res)=>Promise.resolve(res))
         .catch((err)=>Promise.reject({error:err||'cancelled'}))
+}
+
+const checkNameHelper=(callback,name,file)=>{
+    if (!callback) {
+        return Promise.resolve({name:name});
+    }
+    let rt = callback(name,file);
+    if (rt instanceof Promise) return rt.then(
+        (res)=>res,
+        (err)=>{
+            if (err instanceof Object) return Promise.reject(err);
+            return Promise.reject({error:err});
+        });
+    if (typeof (rt) === 'object') {
+        if (!rt.error) return Promise.resolve(rt);
+        else return Promise.reject(rt);
+    }
+    return Promise.reject({error:rt});
 }
 
 const UploadHandler = (props) => {
@@ -80,29 +86,20 @@ const UploadHandler = (props) => {
      *      or rejects
      */
     const checkName = useCallback((name,file) => {
-        if (!props.checkNameCallback) {
-            return Promise.resolve({name:name});
-        }
-        let rt = props.checkNameCallback(name,file);
-        if (rt instanceof Promise) return rt.then(
-            (res)=>res,
-            (err)=>{
-            if (err instanceof Object) return Promise.reject(err);
-            return Promise.reject({error:err});
-        });
-        return new Promise((resolve, reject) => {
-            if (typeof (rt) === 'object') {
-                if (!rt.error) resolve(rt);
-                else reject(rt);
-            } else reject({error:rt});
-        })
+        return checkNameHelper(props.checkNameCallback,name,file);
     }, [props.checkNameCallback]);
     const checkNameWithDialog=useCallback((name,fixedPrefix,file)=>{
-        return checkName((fixedPrefix||'')+name,file)
+        return checkName(name,file)
             .then((res)=>res)
             .catch((err)=>{
                 if (err.proposal || err.dialog){
-                    return showNameDialog({name:name,result:err,checkName,dialogContext})
+                    return showNameDialog({
+                        name:err.name||name,
+                        result:err,
+                        checkName:err.checkName?
+                            err.checkName
+                            :checkName,
+                        dialogContext})
                 }
                 else return Promise.reject(err)
             })

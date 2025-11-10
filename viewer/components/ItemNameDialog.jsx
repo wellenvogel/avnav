@@ -43,39 +43,37 @@ export const nameProposal=(prefix)=>{
     const dt=new Date();
     return (prefix||'')+formatter.formatDateTime(dt).replace(/[: /]/g,'');
 }
-export const shrinkName=(name,fixedPrefix,fixedExt)=>{
-    if (!name) return name;
-    let rt=name;
-    if (fixedPrefix) {
-        if (Helper.startsWith(rt, fixedPrefix)) rt=rt.substring(fixedPrefix.length);
-    }
-    if (fixedExt){
-        if (Helper.endsWith(rt,"."+fixedExt)){
-            rt=rt.substring(0,rt.length-fixedExt.length-1)
-        }
-    }
-    return rt;
-}
 
-export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName}) => {
-    const [name, setName] = useState(()=>shrinkName(iname||'',fixedPrefix,fixedExt));
+export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension}) => {
+    const fixedExtRef=useRef(undefined);
+    if (keepExtension && fixedExtRef.current === undefined) {
+        let ext = Helper.getExt(iname || '');
+        fixedExtRef.current = ext||'';
+    }
+    const removeFixedExt=useCallback((name)=>{
+        if (! name || ! keepExtension) return name;
+        if (! fixedExtRef.current) return name;
+        if (Helper.getExt(name) !== fixedExtRef.current) return name;
+        return name.substring(0,name.length-fixedExtRef.current.length-1);
+    },[keepExtension]);
+    const fullName=useCallback((name)=>{
+        if (!fixedExtRef.current ) return name;
+        return name+'.'+fixedExtRef.current;
+    },[])
+    const [name, setName] = useState(iname ||'');
     const [error, setError] = useState();
     const [proposal,setProposal]=useState();
     const [info,setInfo]=useState();
     const dialogContext = useDialogContext();
     const parametersFromCheck=useRef();
     const titlevalue = title ? title : (iname ? "Modify FileName" : "Create FileName");
-    const completeName = (nn) => {
-        if (!fixedExt) return (fixedPrefix?fixedPrefix:'')+nn;
-        return (fixedPrefix?fixedPrefix:'')+nn + "." + fixedExt;
-    }
     let mandatoryFunction=false;
     if (mandatory){
         if (typeof(mandatory) === 'function') mandatoryFunction=mandatory;
         else mandatoryFunction=(name)=>(name === undefined || name === null || ! name);
     }
     useEffect(() => {
-        checkNameAndSet(completeName(name));
+        checkNameAndSet(name);
     }, []);
     const checkResult=useCallback((res)=>{
         if (! res){
@@ -89,7 +87,9 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
                 if (! res.error){
                     setError(undefined);
                     setProposal(undefined);
-                    if ('name' in res){setName(res.name)}
+                    if ('name' in res){
+                        setName(res.name)
+                    }
                     parametersFromCheck.current=res;
                 }
                 else {
@@ -122,14 +122,15 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
           name:'reset',
           label:'Clear',
           onClick: ()=>{
-              setName('');
-              checkNameAndSet(completeName(''));
+              const nn=fullName('');
+              setName(nn);
+              checkNameAndSet(nn);
           },
           close: false
         },
         DBCancel(),
         DBOk(() => {
-            promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, {name:completeName(name)});
+            promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, {name:name});
         }, {close: false, disabled: valueMissing(mandatoryFunction, name) || !!error})
     ];
     if (proposal){
@@ -137,26 +138,28 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             name: 'Propose',
             label: 'Propose',
             onClick: ()=>{
-                let pname=shrinkName(proposal,fixedPrefix,fixedExt);
+                let pname=proposal;
                 setName(pname);
-                checkNameAndSet(completeName(pname));
+                checkNameAndSet(pname);
             },
             close:false
         })
     }
+    const fixedSuffix=fixedExtRef.current?fixedExtRef.current:fixedExt;
     return <DialogFrame className={"itemNameDialog"} title={titlevalue}>
         <Input
             dialogRow={true}
-            value={name}
+            value={removeFixedExt(name)}
             onChange={(nv) => {
+                nv=fullName(nv);
                 setName(nv);
-                checkNameAndSet(completeName(nv));
+                checkNameAndSet(nv);
             }}
             className={error?'error':undefined}
             mandatory={mandatoryFunction}
             label={fixedPrefix?fixedPrefix:''}
         >
-            {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
+            {fixedSuffix && <span className={"ext"}>.{fixedSuffix}</span>}
         </Input>
         {error && <DialogRow className={"errorText"}><span className={'inputLabel'}></span>{error}</DialogRow>}
         {info && <DialogRow className={"info"}><span className={'inputLabel'}>{info}</span> </DialogRow>}
@@ -172,7 +175,9 @@ ItemNameDialog.propTypes={
                                //can return a promise - resolve means ok, reject like return object/string
     title: PropTypes.func, //use this as dialog title
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
-    fixedExt: PropTypes.string //set a fixed extension
+    fixedExt: PropTypes.string,  //set a fixed extension (display only)
+    fixedPrefix: PropTypes.string, //set a fixed prefix (display only)
+    keepExtension: PropTypes.bool //do not allow to change the extension
 }
 export const safeName=(name)=>{
     if (! name) return;

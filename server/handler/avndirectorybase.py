@@ -57,7 +57,9 @@ class AVNDirectoryListEntry(object):
     return []
   def __init__(self,type,name,time=0,size=0,
                canDelete=False,isDirectory=False,canDownload=True,
-               extension=None,scope=None,url=None,filename=None,userData=None,displayName=None,downloadName=None,**kwargs):
+               extension=None,scope=None,url=None,filename=None,
+               userData=None,displayName=None,downloadName=None,
+               checkPrefix=None,**kwargs):
     self.name=name
     self.displayName=displayName
     self.type=type
@@ -67,9 +69,10 @@ class AVNDirectoryListEntry(object):
     self.canDelete=canDelete
     self.isDirectory=isDirectory
     self.canDownload=canDownload
-    self.extension=extension
+    self.extension=extension #if this is set we have a fixed extension
     self.scope=scope
     self.downloadName=downloadName
+    self.checkPrefix=checkPrefix #if set this must be added to file names in check before upload
     self._filename=filename
     self._userData=userData
 
@@ -272,6 +275,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
                                       isDirectory=isDir,
                                       extension=ext,
                                       scope=scope,
+                                      checkPrefix=scope if scope == self.SCOPE_USER else None,
                                       url=self.buildUrl(name,ext,scope))
       data.append(element)
     return data

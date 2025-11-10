@@ -54,6 +54,7 @@ import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {ItemNameDialog} from "./ItemNameDialog";
+import GuiHelpers from "../util/GuiHelpers";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -86,8 +87,8 @@ const getLocalDataFunction=(item)=>{
     }
 }
 export const getDownloadFileName=(item)=>{
-    let actions=ItemActions.create(item,false);
-    return item.downloadName||actions.nameForDownload(item.name);
+    let actions=ItemActions.create(item,globalStore.getData(keys.properties.connectedMode));
+    return actions.nameForDownload(item);
 }
 const getDownloadUrl=(item)=>{
     let name=item.name;
@@ -136,8 +137,10 @@ export class ItemActions{
         this.timeText='';
         this.infoText='';
         this.className='';
-        this.extForView='';
-        this.fixedPrefix=undefined;
+        this.extForView=undefined;
+        this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
+        this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
+        this.nameDialogPrefix=undefined; //show a prefix in the name dialog
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -149,23 +152,85 @@ export class ItemActions{
         this.localUploadFunction=undefined;
         /**
          * convert an entity name as received from the server to a name we offer when downloading
-         * @param name
+         * @param item from list or info
          * @returns {*}
          */
-        this.nameForDownload=(name)=>name;
+        this.nameForDownload=(item)=>{
+            if (item.downloadName) return item.downloadName;
+            let name=item.name||item.type||"download";
+            if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
+            if (this.fixedExtension) name=name+"."+this.fixedExtension;
+            return name;
+        }
         /**
-         * convert a local file name into an entity name as the server would create
+         * convert a local file name into an entity name as the server would accept in upload
          * @param name
          * @returns {*}
          */
-        this.nameForUpload=(name)=>name;
+        this.nameForUpload=(name)=>{
+            if (! name) return name;
+            if (! this.fixedExtension) return name;
+            if (Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
+                return name.substr(0,name.length-this.fixedExtension.length-1);
+            }
+            return name;
+        }
         /**
-         * convert the server name to the complete
-         * client name to check for existance
-         * @param name
-         * @returns {*}
+         * get a name to compare against a local file name
+         * @param item
+         * @param opt_ext - if true add an fixed extension
          */
-        this.serverNameToClientName=(name)=>this.nameForDownload(name);
+        this.nameForCheck=(item,opt_ext)=>{
+            if (this.hasScope && ! item.checkPrefix) return;
+            if (! item.name) return;
+            let name=item.name;
+            if (this.hasScope){
+                name=name.substring(item.checkPrefix.length);
+            }
+            if (opt_ext && this.fixedExtension){
+                name+="."+this.fixedExtension;
+            }
+            return name;
+        }
+        this.hasScope=undefined;
+        /**
+         * get a prefix to be shown in upload/rename dialogs
+         * @returns {string|undefined}
+         */
+        this.prefixForDisplay=()=>{
+            return this.hasScope?'user.':undefined;
+        }
+    }
+    postCreate(){
+        this.nameForDownload=this.nameForDownload.bind(this);
+        this.nameForUpload=this.nameForUpload.bind(this);
+        this.nameForCheck=this.nameForCheck.bind(this);
+        this.prefixForDisplay=this.prefixForDisplay.bind(this);
+        if (! this.extForView){
+            if (this.fixedExtension) this.extForView=this.fixedExtension;
+            else this.extForView='';
+        }
+        if (! this.allowedExtensions){
+            if (this.fixedExtension){
+                this.allowedExtensions=[this.fixedExtension];
+            }
+        }
+        if (this.hasScope === undefined && this.fixedExtension){
+            this.hasScope=true;
+        }
+    }
+
+    /**
+     * check or allowed extensions, return an error text if not allowed
+     * @param ext
+     * @param opt_title
+     */
+    checkExtension(ext,opt_title){
+        if (! ext || ! this.allowedExtensions) return ;
+        if (this.allowedExtensions.indexOf(ext) >=0) return;
+        const title=opt_title?opt_title+": ":"";
+        return title+`extension ${ext} not allowed, only `+this.allowedExtensions.join(",");
+
     }
     static create(props,isConnected){
         if (typeof(props) === 'string') props={type:props};
@@ -173,7 +238,7 @@ export class ItemActions{
             return new ItemActions();
         }
         let rt=new ItemActions(props.type);
-        let ext=Helper.getExt(props.name);
+        let ext=props.extension||Helper.getExt(props.name);
         let viewable=ViewPage.VIEWABLES.indexOf(ext)>=0;
         let editableSize=props.size !== undefined && props.size < ViewPage.MAXEDITSIZE;
         let allowedOverlay=KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0;
@@ -193,12 +258,13 @@ export class ItemActions{
                 rt.showOverlay=canEditOverlays;
                 rt.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
                 rt.showImportLog=props.hasImportLog;
-                rt.showDownload=props.canDelete;
+                rt.showDownload=props.canDownload;
                 if (props.originalScheme){
                     rt.className+=' userAction';
                 }
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
-                rt.nameForDownload=(name)=>name.replace(/^[^@]*@/,'');
+                rt.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
+                rt.hasScope=true;
                 break;
             case 'track':
                 rt.headline='Tracks';
@@ -208,6 +274,7 @@ export class ItemActions{
                 rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
                 rt.showOverlay=allowedOverlay && canEditOverlays;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
+                rt.allowedExtensions=['gpx']
                 break;
             case 'route':
                 rt.headline='Routes';
@@ -229,16 +296,9 @@ export class ItemActions{
                 rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
                 rt.showOverlay=canEditOverlays;
                 rt.showDownload=true;
-                rt.extForView='gpx';
+                rt.fixedExtension='gpx';
                 rt.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
                     " nm, "+props.numpoints+" points";
-                rt.nameForDownload=(name)=>{
-                    if (! name.match(/\.gpx$/)) name+=".gpx";
-                    return name;
-                }
-                rt.nameForUpload=(name)=>{
-                    return name.replace(/\.gpx$/,'');
-                }
                 rt.localUploadFunction=(name,data)=>{
                     //name is ignored
                     try{
@@ -272,19 +332,12 @@ export class ItemActions{
                 };
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
-                rt.extForView='json';
-                rt.nameForDownload=(name)=>{
-                    return layoutLoader.nameToBaseName(name)+".json";
-                }
-                rt.nameForUpload=(name)=>{
-                    return layoutLoader.fileNameToServerName(name);
-                }
-                rt.serverNameToClientName=(name)=>name+'.json';
+                rt.fixedExtension='json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
                     return layoutLoader.uploadLayout(name,data,overwrite);
                 }
-                rt.fixedPrefix=USER_PREFIX;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadLayout,false)
+                rt.hasScope=true;
                 break;
             case 'settings':
                 rt.headline='Settings';
@@ -293,26 +346,13 @@ export class ItemActions{
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 rt.showRename=isConnected && props.canDelete;
-                rt.extForView='json';
-                rt.nameForDownload=(name)=>{
-                    return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
-                }
-                rt.nameForUpload=(name)=>{
-                    let serverName=name;
-                    ['user','system','plugin'].forEach((prefix)=>{
-                        if (serverName.indexOf(prefix+".") === 0){
-                            serverName=serverName.substr(prefix.length+1);
-                        }
-                    });
-                    return USER_PREFIX+serverName.replace(/\.json$/,'');
-                }
-                rt.serverNameToClientName=(name)=>name+'.json';
+                rt.fixedExtension='json';
                 rt.localUploadFunction=(name,data,overwrite)=>{
                    return PropertyHandler.verifySettingsData(data, true,true)
                        .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
                 }
-                rt.fixedPrefix=USER_PREFIX;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)
+                rt.hasScope=true;
                 break;
             case 'user':
                 rt.headline='User';
@@ -332,6 +372,7 @@ export class ItemActions{
                 rt.showRename = isConnected && props.canDelete !== false;
                 rt.showDownload=true;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadImages,false)
+                rt.allowedExtensions=GuiHelpers.IMAGES;
                 break;
             case 'overlay':
                 rt.headline='Overlays';
@@ -352,9 +393,12 @@ export class ItemActions{
                 rt.showEdit= false;
                 rt.showOverlay = false;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
-                rt.serverNameToClientName=(name)=>name.replace(/^user-/,'')
+                rt.allowedExtensions=['zip'];
+                rt.hasScope=true;
+                rt.prefixForDisplay=()=>'user-';
                 break;
         }
+        rt.postCreate();
         return rt;
     }
 }
