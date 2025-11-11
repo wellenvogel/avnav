@@ -47,7 +47,7 @@ export const nameProposal=(prefix)=>{
 export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension}) => {
     const fixedExtRef=useRef(undefined);
     if (keepExtension && fixedExtRef.current === undefined) {
-        let ext = Helper.getExt(iname || '');
+        let [fn,ext] = Helper.getNameAndExt(iname || '');
         fixedExtRef.current = ext||'';
     }
     const removeFixedExt=useCallback((name)=>{

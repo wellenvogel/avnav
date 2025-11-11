@@ -499,9 +499,10 @@ const AddRemoveOverlayDialog = (props) => {
         if (action === 'remove') {
             return {label: 'All Charts', value: undefined};
         }
+        const chartForDisplay=findChart(chart) || {};
         return (
             {
-                label: (findChart(chart) || {}).name,
+                label: chartForDisplay.displayName||chartForDisplay.name,
                 value: chart
             })
     }, [action, chart]);
@@ -594,6 +595,10 @@ export const FileDialog = (props) => {
     let rename = changed && !existingName && (name !== props.current.name);
     let schemeChanged = allowed.showScheme && (((props.current.scheme || "tms") !== scheme) || props.current.originalScheme);
     let extendedInfoRows = TYPE_INFO_ROWS[props.current.type];
+    //if we have a scoped item we can (currently) only rename user items
+    //and user items must always have a checkPrefix. By using this we do not need to knoew the user prefix here
+    //in the code but can lease this to the server
+    const allowRename=allowed.showRename && ( ! allowed.hasScope || props.current.checkPrefix);
     return (
         <DialogFrame className="fileDialog" title={props.current.displayName||props.current.name}>
             {props.current.info !== undefined ?
@@ -632,7 +637,7 @@ export const FileDialog = (props) => {
                     className="mbtilesType"/>
 
             }
-            {(allowed.showRename && ! existingName) &&
+            {(allowRename && ! existingName) &&
                     <InputReadOnly
                         dialogRow={true}
                         label={"new name"}
@@ -641,23 +646,39 @@ export const FileDialog = (props) => {
                     />
             }
             <DialogButtons>
-                {allowed.showRename && <DB
+                {allowRename && <DB
                     name={"Rename"}
                     onClick={()=>{
+                        let fixedPrefix=undefined;
+                        let dname=name;
+                        if (allowed.hasScope){
+                            fixedPrefix=props.current.checkPrefix;
+                            dname=name.substr(fixedPrefix.length);
+                        }
                         showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
                             title={`Rename ${name}`}
                             {...dprops}
-                            iname={name}
-                            checkName={(name)=>props.checkName?props.checkName(name):undefined}
+                            iname={dname}
+                            fixedPrefix={fixedPrefix}
+                            keepExtension={true}
+                            checkName={(name)=>{
+                                if (! name){
+                                    return {
+                                        error: 'must not be empty',
+                                        proposal: dname
+                                    }
+                                }
+                                return props.checkName?props.checkName(name):undefined
+                            }}
                         />)
                             .then((res)=>{
-                                onRename(res.name)
+                                onRename(fixedPrefix?fixedPrefix+res.name:res.name)
                             })
                             .catch(()=>{})
                     }}
                     close={false}
                 >Rename</DB>}
-                {(allowed.showRename || allowed.showScheme) ?
+                {(allowRename || allowed.showScheme) ?
                     <DB name="ok"
                         onClick={() => {
                             let action = "";
@@ -789,7 +810,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
         if (opt_resultCallback) opt_resultCallback(info);
     };
-    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + info.displayName||info.name + "?"}/>);
+    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + (info.displayName||info.name) + "?"}/>);
     ok.then(function () {
         if (info.type === 'layout') {
             layoutLoader.deleteLayout(info.name)
