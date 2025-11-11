@@ -55,6 +55,7 @@ import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {ItemNameDialog} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
+import {removeItemsFromOverlays} from "../map/overlayconfig";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -447,12 +448,14 @@ const getImportLogUrl=(name)=>{
     });
 }
 
-
+const ALLCHARTS={label:'AllCharts',value: ''};
 const AddRemoveOverlayDialog = (props) => {
+    const dialogContext=useDialogContext();
     const [chartList, setChartList] = useState([DEFAULT_OVERLAY_CHARTENTRY]);
     const [chart, setChart] = useState(DEFAULT_OVERLAY_CHARTENTRY.name);
     const [action, setAction] = useState('add');
     const [changed, setChanged] = useState(false);
+    const [running,setRunning] = useState(false);
     let titles = {add: "Add to Charts", remove: "Remove from Charts"}
     useEffect(() => {
         Requests.getJson({
@@ -477,16 +480,43 @@ const AddRemoveOverlayDialog = (props) => {
         if (action === 'add') {
             let chartInfo = findChart(chart);
             if (!chartInfo) return;
+            dialogContext.closeDialog();
             EditOverlaysDialog.createDialog(chartInfo,
                 undefined,
                 props.current
             );
             return;
         }
+        if (action === "remove"){
+            setRunning(true);
+            removeItemsFromOverlays(chartList.concat({}),[props.current])
+                .then((result) => {
+                    setRunning(false);
+                    let numRemoved=0;
+                    let errors="";
+                    result.forEach(item=>{
+                        numRemoved+=parseInt(item.info);
+                        if (item.status !== 'OK'){
+                            errors+=item.name+":"+item.status+","
+                        }
+                    })
+                    if (errors){
+                        Toast("ERROR: "+errors);
+                    }
+                    else {
+                        Toast(numRemoved + " removals");
+                    }
+                    dialogContext.closeDialog();
+                })
+            .catch((error) => {
+                setRunning(false);
+                Toast("Error:" + error);
+            });
+        }
     }, [action,chart]);
     const getChartSelectionList = useCallback(() => {
-        if (action === 'remove') {
-            return {label: DEFAULT_OVERLAY_CHARTENTRY.displayName, value: DEFAULT_OVERLAY_CHARTENTRY.name};
+        if (action === 'remove'){
+            return [ALLCHARTS]
         }
         let rt = [];
         chartList.forEach((chart) => {
@@ -497,7 +527,7 @@ const AddRemoveOverlayDialog = (props) => {
     }, [action, chartList]);
     const getCurrentChartValue = useCallback(() => {
         if (action === 'remove') {
-            return {label: 'All Charts', value: undefined};
+            return ALLCHARTS
         }
         const chartForDisplay=findChart(chart) || {};
         return (
@@ -508,6 +538,7 @@ const AddRemoveOverlayDialog = (props) => {
     }, [action, chart]);
     return (
         <DialogFrame className="AddRemoveOverlayDialog" title={"On Charts"}>
+            {running && <DialogRow>Running...</DialogRow>}
             <DialogRow>
                 <span className="itemInfo">{props.current.name}</span>
             </DialogRow>
@@ -538,7 +569,10 @@ const AddRemoveOverlayDialog = (props) => {
                 <DB name="ok"
                     onClick={() => {
                         execute();
-                    }}>Ok</DB>
+                    }}
+                    close={false}
+                    disabled={running}
+                >Ok</DB>
             </DialogButtons>
         </DialogFrame>
     )

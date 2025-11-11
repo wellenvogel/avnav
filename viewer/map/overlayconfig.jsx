@@ -545,6 +545,32 @@ export default class OverlayConfig{
     hasDefaults(){
         return this.config.defaults.length > 0;
     }
+
+    /**
+     * remove an item from the config
+     * item must have type and name
+     * @param item
+     */
+    removeItem(item){
+        if (! item || ! item.type || ! item.name) return false;
+        if (! this.config || ! this.config.overlays) return false;
+        let changed=false;
+        const newOverlays=[];
+        this.config.overlays.forEach((overlay)=>{
+            if (item.name !== overlay.name || item.type !== overlay.type) {
+                newOverlays.push(overlay);
+            }
+            else{
+                changed=true;
+            }
+        });
+        if (changed){
+            this.config.overlays=newOverlays;
+            this.hasChanges=true;
+        }
+        return changed;
+    }
+
 }
 
 export const fetchOverlayConfig=(chartItem)=>{
@@ -578,3 +604,80 @@ export const fetchOverlayConfig=(chartItem)=>{
         })
 }
 export const DEFAULT_OVERLAY_CONFIG = "default.cfg";
+
+export const removeItemsFromOverlays = (chartList, itemList) => {
+    const results = [];
+    const actions = [];
+    const alreadyHandled = {};
+    const updateResult = (idx, status, info) => {
+        results.forEach((item) => {
+            if (item.index === idx) {
+                item.status = status;
+                item.info = info;
+            }
+        })
+    }
+    const handleOneChart=async (requestName,chart)=>{
+        const data = await Requests.getJson({
+            type: 'chart',
+            command: 'getConfig',
+            name: requestName,
+        });
+        if (!data || ! data.data) throw new Error(" no overlay for " + chart);
+        let numChanges = 0;
+        const overlayConfig = new OverlayConfig(data.data);
+        itemList.forEach(item => {
+            if (overlayConfig.removeItem(item)) {
+                numChanges++;
+            }
+        })
+        if (numChanges) {
+            let postParam = {
+                request: 'api',
+                command: 'saveConfig',
+                type: 'chart',
+                name: requestName,
+                overwrite: true
+            };
+            await Requests.postPlain(postParam, JSON.stringify(overlayConfig.getWriteBackData(), undefined, 2))
+        }
+        return numChanges;
+    }
+    chartList.forEach(chart => {
+        if (chart instanceof Object) {
+            chart = chart.name;
+        }
+        if (alreadyHandled[chart]) {
+            return;
+        }
+        alreadyHandled[chart] = true;
+        const idx = results.length;
+        const resEntry = {
+            name: chart,
+            info: "not handled",
+            status: 'FAIL',
+            index: idx
+        }
+        const requestName=chart === DEFAULT_OVERLAY_CONFIG?undefined:chart;
+
+        actions.push(handleOneChart(requestName,chart));
+        resEntry.info = "started";
+        results.push(resEntry);
+    })
+    if (actions.length > 0) {
+         return Promise.allSettled(actions)
+            .then((actionResults) => {
+                for (let i = 0; i < actionResults.length; i++) {
+                    const res = actionResults[i];
+                    if (res.status === 'fulfilled') {
+                        updateResult(i, 'OK', res.value);
+                    } else {
+                        updateResult(i, res.reason || 'ERROR', res.reason);
+                    }
+                }
+                return results;
+            })
+    } else {
+        return Promise.resolve(results);
+    }
+}
