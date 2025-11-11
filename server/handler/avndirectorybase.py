@@ -532,7 +532,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   @classmethod
   def writeAtomic(cls,outname,instream,overwrite,requestedLength=-1):
     if not overwrite and os.path.exists(outname):
-      raise Exception("outname already exists")
+      raise Exception(f"{outname} already exists")
     tmp=cls.getTmpFor(outname)
     with open(tmp,"wb") as oh:
       bRead=0
@@ -625,7 +625,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     name=self.checkName(name,scope=self.SCOPE_USER)
     fname=os.path.join(self.baseDir,name)
     if not os.path.isfile(fname):
-      raise Exception("%s %s not found"%(self.type,name))
+      raise Exception("%s %s not found"%(self.type,fname))
     os.unlink(fname)
     return AVNUtil.getReturnData()
 
@@ -635,7 +635,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     return self._rename(name,newName)
 
   def handleUpload(self, name, handler, requestparam):
-    fname=self.checkName(name,scope=self.SCOPE_USER)
+    fname=self.checkName(name,scope=None)
     return self._upload(fname,handler,requestparam)
 
   def findSystemOrPluginItem(self,name):
@@ -651,19 +651,10 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
   def handleDownload(self, name, handler, requestparam):
       item=self.findSystemOrPluginItem(name)
       if item is not None:
-          if item.scope == self.SCOPE_SYSTEM:
-            sname=self.checkName(name,scope=self.SCOPE_SYSTEM)
-            sfile=os.path.join(self.baseDir,sname)
-            if not os.path.isfile(sfile):
-                raise Exception("%s %s not found"%(self.type,sfile))
-            return AVNDownload(sfile)
-          elif item.scope.startswith(self.SCOPE_PLUGIN):
             sfile=item.getFileName()
             if not os.path.isfile(sfile):
-                raise Exception("%s %s not found"%(self.type,sfile))
+                raise Exception("%s: %s not found"%(self.type,sfile))
             return AVNDownload(sfile)
-
-
       fname=self.checkName(name,scope=self.SCOPE_USER)
       return self._download(fname)
 

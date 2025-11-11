@@ -140,7 +140,6 @@ export class ItemActions{
         this.extForView=undefined;
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
         this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
-        this.nameDialogPrefix=undefined; //show a prefix in the name dialog
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -176,7 +175,7 @@ export class ItemActions{
             return name;
         }
         /**
-         * get a name to compare against a local file name
+         * get a name from a list entry to compare against a local file name
          * @param item
          * @param opt_ext - if true add an fixed extension
          */
@@ -200,11 +199,22 @@ export class ItemActions{
         this.prefixForDisplay=()=>{
             return this.hasScope?'user.':undefined;
         }
+        this.nameToBaseName=(name)=>{
+            if (! name) return name;
+            if (this.hasScope) {
+                name = name.replace(/^user\./, '').replace(/^system\./, '').replace(/^plugin\.[^.]*[.]*/, '');
+            }
+            if (this.fixedExtension && Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
+                name=name.substring(0,name.length-this.fixedExtension.length-1);
+            }
+            return name;
+        }
     }
     postCreate(){
         this.nameForDownload=this.nameForDownload.bind(this);
         this.nameForUpload=this.nameForUpload.bind(this);
         this.nameForCheck=this.nameForCheck.bind(this);
+        this.nameToBaseName=this.nameToBaseName.bind(this);
         this.prefixForDisplay=this.prefixForDisplay.bind(this);
         if (! this.extForView){
             if (this.fixedExtension) this.extForView=this.fixedExtension;
@@ -401,6 +411,23 @@ export class ItemActions{
         rt.postCreate();
         return rt;
     }
+}
+
+export const itemListToSelectList=(itemList,opt_selected)=>{
+    const rt=[];
+    if (! itemList) return rt;
+    itemList.forEach(item=>{
+        const sitem={
+            value:item.name,
+            key:item.name,
+            label:item.displayName||item.name,
+        };
+        if (opt_selected && item.name === opt_selected){
+            sitem.selected=true;
+        }
+        rt.push(sitem);
+    });
+    return rt;
 }
 
 const getImportLogUrl=(name)=>{
@@ -753,7 +780,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
         if (opt_resultCallback) opt_resultCallback(info);
     };
-    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + info.name + "?"}/>);
+    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + info.displayName||info.name + "?"}/>);
     ok.then(function () {
         if (info.type === 'layout') {
             layoutLoader.deleteLayout(info.name)

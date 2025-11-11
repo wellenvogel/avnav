@@ -528,7 +528,7 @@ class PropertyHandler {
         });
     }
 
-    listSettings(opt_forSelect){
+    listSettings(){
         if ( !globalStore.getData(keys.gui.capabilities.uploadSettings,false)){
             return Promise.resolve([]);
         }
@@ -537,10 +537,7 @@ class PropertyHandler {
             command: 'list',
             type: 'settings'
         }).then((json)=>{
-            if (!opt_forSelect) return json.items;
-            let rt=[];
-            json.items.forEach((item)=>rt.push({label:item.name,value:item.name}));
-            return rt;
+            return json.items;
         });
     }
 

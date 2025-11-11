@@ -67,6 +67,14 @@ class AVNNmeaLogger(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def autoInstantiate(cls):
+      return True
+
+  @classmethod
+  def preventMultiInstance(cls):
+      return True
+
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,data):

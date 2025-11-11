@@ -13,8 +13,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.main.BuildConfig;
+import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class ScopedItemHandler implements INavRequestHandler{
@@ -24,6 +29,8 @@ public class ScopedItemHandler implements INavRequestHandler{
     private String prefix=null;
     private String type=null;
     static final String PREFIX="layout";
+
+    private final HashMap<String,ItemInfo> systemItems=new HashMap<>();
 
 
 
@@ -36,19 +43,18 @@ public class ScopedItemHandler implements INavRequestHandler{
         public boolean isUser;
         private String prefix="";
         private String type="";
-        private String fixedExtension;
+        private String fileName;
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
-            rt.put("name",(isUser?USERPREFIX:SYSTEMPREFIX)+name);
-            rt.put("url",prefix+"/"+(isUser?USERPREFIX:SYSTEMPREFIX)+name+SUFFIX);
+            rt.put("name",name);
+            rt.put("url",prefix+"/"+name+SUFFIX);
             rt.put("canDelete",isUser);
             rt.put("canDownload",true);
             rt.put("time",mtime/1000);
             rt.put("isServer",true);
-            if (fixedExtension != null){
-                rt.put("extension",fixedExtension);
-            }
+            rt.put("downloadName",fileName);
+            rt.put("extension",SUFFIX);
             if (isUser){
                 //only items with this prefix are checkd for upload
                 rt.put("checkPrefix",USERPREFIX);
@@ -57,18 +63,18 @@ public class ScopedItemHandler implements INavRequestHandler{
             rt.put("type",type);
             return rt;
         }
-        public ItemInfo(String type, String prefix, String name, boolean isUser, long mtime,String fixedExtension){
-            if (fixedExtension != null && name != null){
-                if (name.toLowerCase().endsWith(fixedExtension)){
-                    name=name.substring(0,name.length()-fixedExtension.length());
+        public ItemInfo(String type, String prefix, String name, boolean isUser, long mtime){
+            this.fileName=name;
+            if (name != null){
+                if (name.toLowerCase().endsWith(SUFFIX)){
+                    name=name.substring(0,name.length()-SUFFIX.length());
                 }
             }
-            this.name=name;
+            this.name=(isUser?USERPREFIX:SYSTEMPREFIX)+name;
             this.isUser=isUser;
             this.mtime=mtime;
             this.prefix=prefix;
             this.type=type;
-            this.fixedExtension=fixedExtension;
         }
     }
 
@@ -104,9 +110,12 @@ public class ScopedItemHandler implements INavRequestHandler{
 
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
-            JSONArray li=readDir(userDir);
-            for (AvnUtil.IJsonObect o: readAssetsDir()){
-                li.put(o.toJson());
+            Map<String,ItemInfo> user=readDir(userDir);
+            JSONArray li=new JSONArray();
+            for (Map<String,ItemInfo> map: new Map[]{user,systemItems}){
+                for (AvnUtil.IJsonObect o: map.values()){
+                    li.put(o.toJson());
+                }
             }
             return li;
     }
@@ -114,26 +123,29 @@ public class ScopedItemHandler implements INavRequestHandler{
     @Override
     public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (name == null) return new JSONObject();
-        JSONArray items=handleList(uri,serverInfo);
-        for (int i=0;i<items.length();i++){
-            try{
-                JSONObject item=items.getJSONObject(i);
-                if (item.has("name") && name.equals(item.getString("name"))){
-                    return item;
-                }
-            }catch (Exception e){}
+        if (name.startsWith(ItemInfo.SYSTEMPREFIX)){
+            AvnUtil.IJsonObect item=systemItems.get(name);
+            if (item == null){
+                return null;
+            }
+            return item.toJson();
         }
-        return null;
+        Map<String,ItemInfo> items=readDir(userDir);
+        ItemInfo item=items.get(name);
+        if (item == null) return null;
+        return item.toJson();
     }
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        File item = new File(userDir, nameToUserFileName(name,true));
-        if (!item.exists() || !item.isFile()) {
-            throw new IOException(name + " not found");
+        Map<String,ItemInfo> items=readDir(userDir);
+        ItemInfo item=items.get(name);
+        if (item == null) throw new IOException("no user item "+name);
+        File userFile=new File(userDir,item.fileName);
+        if (!userFile.exists() || !userFile.isFile()) {
+            throw new IOException(userFile + " not found");
         }
-        return item.delete();
-
+        return userFile.delete();
     }
 
     public JSONObject handleRename(String oldName,String newName) throws Exception {
@@ -142,9 +154,6 @@ public class ScopedItemHandler implements INavRequestHandler{
 
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        if (command.equals("list")){
-            RequestHandler.getReturn(new AvnUtil.KeyValue("data",handleList(uri, serverInfo)));
-        }
         if (command.equals("rename")){
             String name=DirectoryRequestHandler.safeName(AvnUtil.getMandatoryParameter(uri,"name"),true);
             String newName=DirectoryRequestHandler.safeName(AvnUtil.getMandatoryParameter(uri,"newName"),true);
@@ -163,40 +172,42 @@ public class ScopedItemHandler implements INavRequestHandler{
         return prefix;
     }
 
-    private ArrayList<AvnUtil.IJsonObect> readAssetsDir() throws Exception {
-        ArrayList<AvnUtil.IJsonObect> rt=new ArrayList<>();
-        String [] list;
-        list= context.getAssets().list(systemDir);
-        for (String name :list){
-            if (!name.endsWith(SUFFIX)) continue;
-            if (name.equals("keys.json")) continue;
-            ItemInfo li=new ItemInfo(getType(), getPrefix(), name, false,BuildConfig.TIMESTAMP,SUFFIX);
-            rt.add(li);
-        }
-        return rt;
-    }
-    private JSONArray readDir(File dir) throws JSONException {
-        JSONArray rt=new JSONArray();
+    private Map<String,ItemInfo> readDir(File dir) throws JSONException {
+        HashMap<String,ItemInfo> rt=new HashMap<>();
         if (!dir.isDirectory()) return rt;
         for (File f: dir.listFiles()){
             if (!f.getName().endsWith(SUFFIX)) continue;
             if (! f.isFile()) continue;
-            ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName(),true,f.lastModified(),SUFFIX);
+            ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName(),true,f.lastModified());
             li.size=f.length();
-            rt.put(li.toJson());
+            rt.put(li.name,li);
         }
         return rt;
     }
 
 
-    public ScopedItemHandler(String type, Context context, String prefix, String systemDir, File userDir){
-        this.systemDir=systemDir;
-        this.userDir=userDir;
+    public ScopedItemHandler(String type, Context context, String prefix, String systemDir, File userDir) {
+        this.systemDir = systemDir;
+        this.userDir = userDir;
         this.context = context;
-        this.prefix=prefix;
-        this.type=type;
-        if (! userDir.isDirectory()){
+        this.prefix = prefix;
+        this.type = type;
+        if (!userDir.isDirectory()) {
             userDir.mkdirs();
+        }
+        String[] list = null;
+        try {
+            list = context.getAssets().list(systemDir);
+            if (list != null) {
+                for (String name : list) {
+                    if (!name.endsWith(SUFFIX)) continue;
+                    if (name.equals("keys.json")) continue;
+                    ItemInfo li = new ItemInfo(getType(), getPrefix(), name, false, BuildConfig.TIMESTAMP);
+                    systemItems.put(li.name,li);
+                }
+            }
+        } catch (IOException e) {
+            AvnLog.e(type + ": unable to read system items", e);
         }
     }
 
@@ -205,16 +216,16 @@ public class ScopedItemHandler implements INavRequestHandler{
         if (name.endsWith(SUFFIX)) return name;
         return name+SUFFIX;
     }
-    public InputStream getItemForReading(String name) throws IOException {
+    public InputStream getItemForReading(String name) throws Exception {
         if (name.startsWith(ItemInfo.SYSTEMPREFIX)){
-            name=name.substring(ItemInfo.SYSTEMPREFIX.length());
-            String filename=fileNameFromName(name);
-            return context.getAssets().open(systemDir+"/"+filename);
+            ItemInfo info=systemItems.get(name);
+            if (info == null) throw new IOException("system item "+name+" not found");
+            return context.getAssets().open(systemDir+"/"+info.fileName);
         }
         if (name.startsWith(ItemInfo.USERPREFIX)){
             name=name.substring(ItemInfo.USERPREFIX.length());
-            String filename=fileNameFromName(name);
-            File ifile=new File(userDir,filename);
+            name=DirectoryRequestHandler.safeName(name,true);
+            File ifile=new File(userDir,name+SUFFIX);
             if (! ifile.canRead()) throw new IOException("unable to read file: "+ifile.getAbsolutePath());
             return new FileInputStream(ifile);
         }

@@ -457,11 +457,13 @@ class DownloadPage extends React.Component{
                 }
 
             }
-            const existing=this.entryExists(name,accessor);
+            const existing=this.entryExists(serverName,accessor);
             if (existing){
                 existing.dialog=true;
                 existing.fixedPrefix=actions.prefixForDisplay();
-                existing.keepExtension=true;
+                if (! actions.fixedExtension) {
+                    existing.keepExtension = true;
+                }
                 existing.checkName=(cname,file)=>{
                     const rs=this.entryExists(cname,accessor);
                     return rs;

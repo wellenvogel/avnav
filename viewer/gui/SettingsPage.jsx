@@ -22,7 +22,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
-import {stateHelper, useStateObject} from "../util/GuiHelpers";
+import {useStateObject} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
@@ -41,7 +41,6 @@ import {
 import {EditableStringParameterBase} from "../util/EditableParameter";
 import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
-import DialogButton from "../components/DialogButton";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -310,18 +309,17 @@ const SettingsPage = (props) => {
 
     const saveSettings = useCallback(() => {
         let actions = ItemActions.create('settings');
-        let oldName = globalStore.getData(keys.properties.lastLoadedName).replace(/-*[0-9]*$/, '');
+        let oldName = actions.nameToBaseName(globalStore.getData(keys.properties.lastLoadedName)).replace(/-*[0-9]*$/, '');
         let suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
         let proposedName = actions.nameForUpload(oldName + "-" + suffix);
-        PropertyHandler.listSettings(true)
+        PropertyHandler.listSettings()
             .then((settings) => {
                 const checkFunction = (newName) => {
-                    return checkName(newName, settings, (item) => item.label + ".json");
+                    return checkName(newName, settings, actions.nameForCheck,true,true);
                 }
                 return showPromiseDialog(undefined, (dprops) => <ItemNameDialog
                     {...dprops}
                     fixedPrefix={'user.'}
-                    fixedExt={'json'}
                     title={"Select Name to save settings"}
                     iname={proposedName}
                     checkName={checkFunction}
@@ -348,7 +346,7 @@ const SettingsPage = (props) => {
             })
 
     }, []);
-    const loadSettings = useCallback(() => {
+    const loadSettingsCb = useCallback(() => {
         loadSettings(values.getState(), globalStore.getData(keys.properties.lastLoadedName))
             .then((settings) => values.setState(settings, true))
             .catch((e) => {
@@ -461,7 +459,7 @@ const SettingsPage = (props) => {
                 onClick: () => {
                     confirmAbortOrDo().then(() => {
                         resetChanges();
-                        loadSettings();
+                        loadSettingsCb();
                     });
                 },
                 storeKeys: {
@@ -551,34 +549,32 @@ const SettingsPage = (props) => {
             let startDialog = () => {
                 layoutLoader.listLayouts()
                     .then((list) => {
-                        const currentName = LayoutHandler.getName() + ".json";
+                        const currentName = LayoutHandler.getName();
+                        const itemActions=ItemActions.create({type:'layout'},
+                            globalStore.getData(keys.properties.connectedMode));
                         showPromiseDialog(undefined, (dprops) => <ItemNameDialog
                             {...dprops}
                             title={"Start Layout Editor"}
-                            iname={layoutLoader.nameToBaseName(LayoutHandler.name)}
+                            iname={itemActions.nameToBaseName(LayoutHandler.name)}
                             fixedPrefix={'user.'}
-                            fixedExt={'json'}
                             checkName={(newName) => {
-                                if (newName) {
-                                    let checkName = newName.replace(/^user./, '').replace(/\.json$/, '');
-                                    if (!checkName) {
+                                    if (!newName) {
                                         return {
                                             error: 'name must not be empty',
-                                            proposal: layoutLoader.nameToBaseName(LayoutHandler.name)
+                                            proposal: itemActions.nameToBaseName(LayoutHandler.name)
                                         }
                                     }
-                                    if (checkName.indexOf('.') >= 0) {
+                                    if (newName.indexOf('.') >= 0) {
                                         return {
                                             error: 'names must not contain a .',
-                                            proposal: checkName.replace(/\./g, '')
+                                            proposal: newName.replace(/\./g, '')
                                         }
                                     }
-                                }
                                 let cr = checkName(newName, undefined, undefined);
                                 if (cr) return cr;
-                                cr = checkName(newName, list, (item) => item.name + '.json');
+                                cr = checkName(newName, list,itemActions.nameForCheck );
                                 if (cr) {
-                                    if (newName === currentName) {
+                                    if ((layoutLoader.getUserPrefix()+newName) === currentName) {
                                         return {
                                             info: "existing"
                                         }
@@ -593,7 +589,7 @@ const SettingsPage = (props) => {
                             }}
                         />)
                             .then((res) => {
-                                LayoutHandler.startEditing(layoutLoader.fileNameToServerName(res.name));
+                                LayoutHandler.startEditing(layoutLoader.getUserPrefix()+res.name);
                                 props.history.pop();
                             })
                             .catch(() => {

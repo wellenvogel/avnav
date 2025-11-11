@@ -63,9 +63,7 @@ export const loadSettings = (currentValues, defaultName, opt_title, opt_preventD
                     .then((res)=>res.value)
             }
             else{
-                return new Promise((resolve,reject)=>{
-                    resolve(prefSettings);
-                })
+                return Promise.resolve(prefSettings);
             }
         })
         .then(

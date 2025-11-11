@@ -8,6 +8,7 @@ import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 import defaultLayout from '../layout/default.json';
 import cloneDeep from "clone-deep";
+import Helper from "./helper";
 const DEFAULT_NAME="system.default";
 
 const ACTION_MOVE=1;
@@ -83,7 +84,7 @@ export class LayoutAndName{
         this.layout = layout;
     }
 }
-
+const USER_PREFIX="user.";
 class LayoutLoader{
     constructor() {
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
@@ -197,13 +198,19 @@ class LayoutLoader{
         );
     }
 
+    /**
+     * upload a layout to the server
+     * @param name the layout name without user prefix and without .json
+     * @param layout
+     * @param opt_overwrite
+     * @returns {Promise<never>|Promise<Awaited<{status: string}>>|Promise<unknown>}
+     */
     uploadLayout(name, layout, opt_overwrite) {
         if (!name || !layout) {
             return Promise.reject("missing parameter name or layout");
         }
         //the provided name should always be without the user./system. prefix
         //when we upload we always create a user. entry...
-        name = this.nameToBaseName(name);
         try {
             if (typeof (layout) === 'string') {
                 layout = JSON.parse(layout);
@@ -215,31 +222,17 @@ class LayoutLoader{
         } catch (e) {
             return Promise.reject(e);
         }
-        let layoutName = this.fileNameToServerName(name);
         if (this.storeLocally) {
-            this.temporaryLayouts[layoutName] = layout;
+            this.temporaryLayouts[USER_PREFIX+name] = layout;
             return Promise.resolve({status: 'OK'});
         }
         return Requests.postPlain({
             request:'api',
             command: 'upload',
             type: 'layout',
-            name: layoutName,
+            name: name,
             overwrite: !!opt_overwrite
         }, JSON.stringify(layout, undefined, 2))
-    }
-
-    nameToBaseName(name) {
-        return name.replace(/^user\./, '').replace(/^system\./, '').replace(/^plugin\./, '').replace(/\.json$/, '').replace(/.*\./, '');
-    }
-    /**
-     * get the name the server will create from our local file name when we upload a layout
-     * @param name
-     * @returns {string}
-     */
-    fileNameToServerName(name){
-        name=this.nameToBaseName(name);
-        return "user."+name;
     }
     /**
      * check the layout
@@ -263,6 +256,7 @@ class LayoutLoader{
                     server: false,
                     canDelete: k != activeLayout,
                     active: k == activeLayout,
+                    checkPrefix: USER_PREFIX,
                     time: (new Date()).getTime() / 1000
                 };
                 rt.push(item);
@@ -320,6 +314,9 @@ class LayoutLoader{
             return JSON.stringify(layout, null, 2);
         };
     }
+    getUserPrefix(){
+        return USER_PREFIX;
+    }
 }
 
 export const layoutLoader=new LayoutLoader();
@@ -367,7 +364,7 @@ class LayoutHandler{
     canEdit(name){
         if (name === undefined) name=this.name;
         if (! name) return false;
-        return name.match(/^user\./)?true:false;
+        return Helper.startsWith(name,USER_PREFIX);
     }
     saveCurrent(){
         this.savedLayout=new LayoutAndName(this.name, cloneDeep(this.layout));
@@ -380,7 +377,7 @@ class LayoutHandler{
         this.activateLayout();
     }
     startEditing(name){
-        if (! this.canEdit(name)) return false;
+        if (! this.canEdit(name)) throw new Error(`invalid layout name ${name} for editing`);
         this.name=name;
         this.saveCurrent();
         this._setEditing(true);

@@ -16,6 +16,7 @@ import Toast from "../components/Toast";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import Helper from "../util/helper";
 import base from "../base";
+import {itemListToSelectList} from "../components/FileDialog";
 
 class WarningPage extends React.Component{
     constructor(props){
@@ -34,9 +35,10 @@ class WarningPage extends React.Component{
         }
         let flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         let prefSettings=Helper.getParam("defaultSettings");
-        PropertyHandler.listSettings(true)
+        PropertyHandler.listSettings()
             .then(
-                (settingsList)=>{
+                (settings)=>{
+                    const settingsList=itemListToSelectList(settings);
                     if (prefSettings && settingsList && settingsList.length > 0){
                         try {
                             for (let i=0;i<settingsList.length;i++){

@@ -191,9 +191,15 @@ export const TMP_PRFX="__avn.";
  * @param itemList the list of items
  * @param [opt_idx]{string|function} the value of each item to be checked, defaults to "name"
  * @param [opt_checkAllowed] set to false to disable the check for allowed file names
+ * @param opt_notEmpty error if empty
  * @returns {{proposal: *, error: string}} - returns undefined if ok
  */
-export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
+export const checkName=(name,itemList,opt_idx,opt_checkAllowed,opt_notEmpty)=>{
+    if (opt_notEmpty){
+        if (!name || name.match(/^ *$/)) return {
+            error:"must not be empty"
+        }
+    }
     if (! name) return;
     let rt=undefined;
     if (opt_checkAllowed !== false){
@@ -213,7 +219,13 @@ export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
             }
         }
     }
-    if (! rt ) return checkNameList(name,itemList,opt_idx);
+    if (! rt ) {
+        rt= checkNameList(name,itemList,opt_idx);
+        if (! rt) return;
+        rt.name=name;
+        return rt;
+    }
+    rt.name=name;
     if (! rt.proposal) return rt;
     const finalCheck=checkNameList(rt.proposal,itemList,opt_idx);
     if (! finalCheck) return rt;
@@ -236,7 +248,7 @@ const checkNameList=(name,itemList,opt_idxfct)=>{
     let prfx=fn.replace(/\d*$/,'');
     if (! prfx) prfx=fn;
     for (let i=0;i<itemList.length;i++) {
-        const v=opt_idxfct(itemList[i],name);
+        const v=opt_idxfct(itemList[i]);
         if (! v) continue;
         if (Helper.startsWith(v,prfx) && Helper.endsWith(v,ext)){
             let n=parseInt(v.substring(prfx.length));
