@@ -153,8 +153,9 @@ class ViewPage extends React.Component{
     getExt(){
         if (this.url) return Helper.getExt(this.url);
         if (this.html) return 'html';
-        let actions=ItemActions.create({type:this.type,name:this.name});
-        return actions.extForView;
+        const item={type:this.type,name:this.name,url:this.url};
+        let actions=ItemActions.create(item);
+        return actions.getExtensionForView(item);
     }
     isImage(){
         let ext=this.getExt().toLowerCase();

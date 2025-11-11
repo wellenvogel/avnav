@@ -131,7 +131,6 @@ export class ItemActions{
         this.showScheme=false;
         this.showConvertFunction=undefined;
         this.showImportLog=false;
-        this.showDownload=false;
         this.showIsServer=false;
         this.showUpload=false;
         this.timeText='';
@@ -209,6 +208,19 @@ export class ItemActions{
             }
             return name;
         }
+        this.getExtensionForView=(item)=>{
+            if (this.fixedExtension){
+                return this.fixedExtension;
+            }
+            if (this.extForView) {
+                return this.extForView;
+            }
+            const dlname=this.nameForDownload(item);
+            if (dlname){
+                return Helper.getExt(dlname);
+            }
+            return "";
+        }
     }
     postCreate(){
         this.nameForDownload=this.nameForDownload.bind(this);
@@ -216,10 +228,7 @@ export class ItemActions{
         this.nameForCheck=this.nameForCheck.bind(this);
         this.nameToBaseName=this.nameToBaseName.bind(this);
         this.prefixForDisplay=this.prefixForDisplay.bind(this);
-        if (! this.extForView){
-            if (this.fixedExtension) this.extForView=this.fixedExtension;
-            else this.extForView='';
-        }
+        this.getExtensionForView=this.getExtensionForView.bind(this);
         if (! this.allowedExtensions){
             if (this.fixedExtension){
                 this.allowedExtensions=[this.fixedExtension];
