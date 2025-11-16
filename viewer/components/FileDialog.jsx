@@ -398,7 +398,7 @@ export class ItemActions{
                 rt.showOverlay = canEditOverlays && allowedOverlay;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)
                 break;
-            case 'plugin':
+            case 'plugins':
                 rt.headline='Plugins';
                 rt.showDelete = isConnected && props.canDelete !== false;
                 rt.showView = false;

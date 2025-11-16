@@ -179,7 +179,7 @@ export default function() {
             Requests.getJson({
                 request:'api',
                 type:'plugins',
-                command:"list"
+                command:"listFiles"
             }).then(
                 (json)=> {
                     if (json.data) {

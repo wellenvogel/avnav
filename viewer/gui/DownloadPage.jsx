@@ -209,7 +209,7 @@ class DownloadPage extends React.Component{
         }
         //keep plugins sorted as they arrive from the server
         //sort others by date
-        if (this.state.type !== 'plugin') {
+        if (this.state.type !== 'plugins') {
             newItems.sort(itemSort);
         }
         this.setState({items:newItems});
@@ -298,7 +298,7 @@ class DownloadPage extends React.Component{
             this.getButtonParam('DownloadPageUser','user',true),
             this.getButtonParam('DownloadPageImages','images',true),
             this.getButtonParam('DownloadPageOverlays','overlay',true),
-            this.getButtonParam('DownloadPagePlugins','plugin',true,keys.gui.capabilities.uploadPlugins),
+            this.getButtonParam('DownloadPagePlugins','plugins',true,keys.gui.capabilities.uploadPlugins),
             {
                 name:'DownloadPageUpload',
                 visible: itemActions.showUpload,
@@ -368,7 +368,7 @@ class DownloadPage extends React.Component{
                 }
                 //fallthrough to check existing...
             }
-            if (this.state.type === 'plugin'){
+            if (this.state.type === 'plugins'){
                 if (file){
                     let foundName;
                     const check=(foundName)=>{
