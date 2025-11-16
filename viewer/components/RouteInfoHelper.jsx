@@ -45,26 +45,22 @@ export const INFO_ROWS=[
         }},
     {label:'next point',value:'nextTarget',formatter:(v)=>v.name}
     ];
-export const getRouteInfo = (routeName,opt_point) => {
-    return new Promise((resolve, reject) => {
-        if (!routeName) reject("missing route name");
-        RouteHandler.fetchRoute(routeName,false,(route)=>{
-                let info=RouteHandler.getInfoFromRoute(route);
-                let rt={
-                    length: info.length,
-                    numPoints: info.numpoints,
-                }
-                if (opt_point instanceof navobjects.Point ){
-                    const idx=route.getIndexFromPoint(opt_point);
-                    if (idx >= 0) {
-                        rt.remain = route.computeLength(idx, globalStore.getData(keys.nav.routeHandler.useRhumbLine));
-                    }
-                }
-                resolve(rt);
-            }
-            ,(error) => reject(error)
-        );
-    })
+export const getRouteInfo = async (routeName, opt_point) => {
+    if (!routeName) throw new Error("missing route name");
+    const route = await RouteHandler.fetchRoutePromise(routeName, false);
+    let info = RouteHandler.getInfoFromRoute(route);
+    let rt = {
+        length: info.length,
+        numPoints: info.numpoints,
+    }
+    if (opt_point instanceof navobjects.Point) {
+        const idx = route.getIndexFromPoint(opt_point);
+        if (idx >= 0) {
+            rt.remain = route.computeLength(idx, globalStore.getData(keys.nav.routeHandler.useRhumbLine));
+        }
+    }
+    return rt;
+
 }
 export const existsRoute = (name, availableRoutes) => {
     if (!availableRoutes) return false;

@@ -300,18 +300,12 @@ export class ItemActions{
                 rt.headline='Routes';
                 rt.showIsServer=props.server;
                 rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
-                rt.showView=async (item)=>{
-                    return new Promise((resolve,reject)=> {
-                        RouteHandler.fetchRoute(item.name, !item.server, (route) => {
-                            resolve({
-                                    name: item.name,
-                                    data: route.toXml()
-                                },
-                                (err) => {
-                                    reject(err)
-                                })
-                        })
-                    });
+                rt.showView = async (item) => {
+                    const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
+                    return {
+                        name: item.name,
+                        data: route.toXml()
+                    }
                 };
                 rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
                 rt.showOverlay=canEditOverlays;

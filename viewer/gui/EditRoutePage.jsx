@@ -272,26 +272,27 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
         {! list && <div className="loading">Loading...</div>}
         <SelectList
             list={displayList}
-            onClick={(entry)=>{
-                RouteHandler.fetchRoute(entry.originalName, !(entry.server && connectedMode) ,
-                    (nroute) => {
-                        if (!nroute) {
-                            Toast("unable to load route " + entry.originalName);
-                            return;
-                        }
-                        if (nroute.server != entry.server){
-                            //strange situation:
-                            //we have a local route that originally was a server route - but it is no longer
-                            //available at the server - or we have a local route that is also available on the server
-                            //so we try to correct
-                            nroute.server=entry.server;
-                        }
-                        if (resolveFunction) resolveFunction(nroute.clone());
-                        dialogContext.closeDialog();
-                    },
-                        (err)=>{Toast("unable to load route: "+err)});
+            onClick={async (entry) => {
+                try {
+                    const nroute = await RouteHandler.fetchRoutePromise(entry.originalName, !(entry.server && connectedMode));
+                    if (!nroute) {
+                        Toast("unable to load route " + entry.originalName);
+                        return;
+                    }
+                    if (nroute.server != entry.server) {
+                        //strange situation:
+                        //we have a local route that originally was a server route - but it is no longer
+                        //available at the server - or we have a local route that is also available on the server
+                        //so we try to correct
+                        nroute.server = entry.server;
+                    }
+                    if (resolveFunction) resolveFunction(nroute.clone());
+                    dialogContext.closeDialog();
+                } catch (err) {
+                    Toast("unable to load route: " + err)
+                }
             }}
-            />
+        />
         <UploadHandler
             local={true}
             uploadSequence={uploadSequence}
