@@ -706,7 +706,7 @@ export const FileDialog = (props) => {
                 >Rename</DB>}
                 {(allowRename || allowed.showScheme) ?
                     <DB name="ok"
-                        onClick={() => {
+                        onClick={async () => {
                             let action = "";
                             if (rename) action += "rename";
                             if (schemeChanged) {
@@ -715,7 +715,7 @@ export const FileDialog = (props) => {
                                     else action += ",scheme";
                                 }
                             }
-                            props.okFunction(action,
+                            await props.okFunction(action,
                                 {...props.current, name: name, scheme: scheme});
                         }}
                         disabled={!rename && !schemeChanged}
@@ -832,156 +832,122 @@ export const FileDialog = (props) => {
     );
 
 }
-export const deleteItem=(info,opt_resultCallback)=> {
-    let doneAction=()=> {
-        if (opt_resultCallback) opt_resultCallback(info);
-    };
-    let ok = showPromiseDialog(undefined,(dprops)=><ConfirmDialog {...dprops} text={"delete " + (info.displayName||info.name) + "?"}/>);
-    ok.then(function () {
-        if (info.type === 'layout') {
-            layoutLoader.deleteLayout(info.name)
-                .then((res)=> {
-                    doneAction();
-                })
-                .catch((err)=>{
-                    Toast("unable to delete layout "+info.name+": "+err);
-                    doneAction();
-                });
-            return;
-        }
-        if (info.type !== "route") {
-            Requests.getJson( buildRequestParameters('delete',info))
-                .then(() => {
-                    if (info.type === 'track') {
-                        NavHandler.resetTrack();
-                    }
-                    doneAction();
-                })
-                .catch((error) => {
-                    Toast("unable to delete " + info.name + ": " + error);
-                    doneAction();
-                })
-        } else {
-            if (RouteHandler.isActiveRoute(info.name)) {
-                Toast("unable to delete active route");
-                doneAction();
+export const deleteItem=async (info)=> {
+    try {
+        await showPromiseDialog(undefined, (dprops) => <ConfirmDialog {...dprops}
+                                                                      text={"delete " + (info.displayName || info.name) + "?"}/>);
+    }catch (pe) {
+        return (false);
+    }
+            if (info.type === 'layout') {
+                await layoutLoader.deleteLayout(info.name)
             }
-            RouteHandler.deleteRoute(info.name,
-                () => {
-                    doneAction();
-                },
-                (rinfo) => {
-                    Toast("unable to delete route: " + rinfo);
-                    doneAction();
-                },
-                !info.server //if we think this is a local route - just delete it local only
-            );
-        }
-    });
-    ok.catch(function () {
-        base.log("delete canceled");
-        doneAction();
-    });
+            else if (info.type !== "route") {
+                await Requests.getJson(buildRequestParameters('delete', info));
+                        if (info.type === 'track') {
+                            NavHandler.resetTrack();
+                        }
+            } else {
+                if (RouteHandler.isActiveRoute(info.name)) {
+                    Toast("unable to delete active route");
+                    return;
+                }
+                await RouteHandler.deleteRoutePromise(info.name,
+                    !info.server //if we think this is a local route - just delete it local only
+                );
+            }
+            await removeItemsFromOverlays(undefined,[info]);
 };
 
 export const FileDialogWithActions=(props)=>{
     const {doneCallback,item,history,checkExists,...forward}=props;
     const dialogContext=useDialogContext();
-    const actionFunction=(action,newItem)=>{
+    const actionFunction=async (action,newItem)=>{
         let doneAction=(pageChanged)=>{
             if (doneCallback){
                 doneCallback(action,newItem,pageChanged)
             }
         };
-        const schemeAction=(newScheme)=>{
-            return Requests.getJson(
-                buildRequestParameters('scheme',item,
-                    {newScheme:newScheme}));
-        };
-        let renameAction=(name,newName)=>{
-            Requests.getJson( buildRequestParameters('rename',item,
-                    {newName:newName}))
-                .then(()=>{
-                    doneAction();
-                })
-                .catch((error)=>{
-                    Toast("rename failed: "+error);
-                    doneAction();
-                });
-        };
-        if (action.match(/scheme/)){
-            schemeAction(newItem.scheme)
-                .then(()=>{
-                    if (action.match(/rename/)) renameAction(item.name,newItem.name);
-                    doneAction();
-                })
-                .catch((error)=>{
-                    Toast("change scheme failed: "+error);
-                    if (action.match(/rename/)) renameAction(item.name,newItem.name);
-                    doneAction();
-                });
-            return;
-        }
-        if (action === 'rename'){
-            return renameAction(item.name,newItem.name);
-        }
-        if (action === 'view'){
-            doneAction(true);
-            history.push('viewpage',{type:item.type,name:newItem.name,readOnly:true,data:newItem.data});
-            return;
-        }
-        if (action === 'edit'){
-            if (item.type === 'route'){
-                RouteHandler.fetchRoute(item.name,!item.server,
-                    (route)=>{
-                        let editor=new RouteEdit(RouteEdit.MODES.EDIT);
-                        editor.setNewRoute(route,0);
-                        doneAction(true);
-                        history.push('editroutepage',{center:true});
-                    },
-                    (error)=>{
-                        Toast(error);
-                        doneAction();
+        try {
+            const schemeAction = async (newScheme) => {
+                await Requests.getJson(
+                    buildRequestParameters('scheme', item,
+                        {newScheme: newScheme}));
+            };
+            let renameAction = async (name, newName) => {
+                await Requests.getJson(buildRequestParameters('rename', item,
+                    {newName: newName}))
+            };
+            if (action.match(/scheme/)) {
+                try {
+                    await schemeAction(newItem.scheme)
+                } catch (e) {
+                    Toast("change scheme failed: " + e);
+                }
+                if (action.match(/rename/)) await renameAction(item.name, newItem.name);
+                doneAction();
+                return;
+            }
+            if (action === 'rename') {
+                await renameAction(item.name, newItem.name);
+            }
+            if (action === 'view') {
+                doneAction(true);
+                history.push('viewpage', {type: item.type, name: newItem.name, readOnly: true, data: newItem.data});
+                return;
+            }
+            if (action === 'edit') {
+                if (item.type === 'route') {
+                    const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
+                    let editor = new RouteEdit(RouteEdit.MODES.EDIT);
+                    editor.setNewRoute(route, 0);
+                    doneAction(true);
+                    history.push('editroutepage', {center: true});
+                } else {
+                    doneAction(true);
+                    history.push('viewpage', {type: item.type, name: item.name});
+                }
+                return;
+            }
+            if (action === 'userapp') {
+                if (item.url) {
+                    dialogContext.replaceDialog((props) =>
+                            <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={() => {
+                            }}/>
+                        , () => doneAction())
+                }
+            }
+            if (action === 'delete') {
+                await deleteItem(item);
+                doneAction();
+                return;
+            }
+            if (action === 'overlay') {
+                doneAction();
+                if (item.type === 'chart') {
+                    return EditOverlaysDialog.createDialog(item)
+                } else {
+                    dialogContext.replaceDialog((props) => {
+                        return (
+                            <AddRemoveOverlayDialog
+                                {...props}
+                                current={item}
+                            />
+                        )
                     });
+                    return;
+                }
+            }
+            if (action === 'convert') {
+                let convertFunction = showConvertFunctions[newItem.type];
+                if (convertFunction) {
+                    convertFunction(dialogContext, history, newItem);
+                }
                 return;
             }
-            doneAction(true);
-            history.push('viewpage',{type:item.type,name:item.name});
-            return;
-        }
-        if (action === 'userapp'){
-            if (item.url) {
-                dialogContext.replaceDialog((props) =>
-                    <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={()=>{}}/>
-                ,()=>doneAction())
-            }
-        }
-        if (action === 'delete'){
-            return deleteItem(item,()=>doneAction());
-        }
-        if (action === 'overlay'){
+        }catch (e){
+            Toast(e+"");
             doneAction();
-            if (item.type === 'chart') {
-                return EditOverlaysDialog.createDialog(item )
-            }
-            else{
-                dialogContext.replaceDialog((props)=>{
-                    return(
-                        <AddRemoveOverlayDialog
-                            {...props}
-                            current={item}
-                        />
-                    )
-                });
-                return;
-            }
-        }
-        if ( action === 'convert'){
-            let convertFunction=showConvertFunctions[newItem.type];
-            if (convertFunction){
-                convertFunction(dialogContext,history,newItem);
-            }
-            return;
         }
     };
     return <FileDialog

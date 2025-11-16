@@ -576,6 +576,16 @@ RouteData.prototype._listRoutesLocal=function(){
     }
     return rt;
 };
+RouteData.prototype.deleteRoutePromise = function (name, opt_localonly) {
+    return new Promise((resolve, reject) => {
+        this.deleteRoute(name, () => {
+                resolve(true);
+            },
+            (err) => {
+                reject(err);
+            }, opt_localonly);
+    })
+}
 /**
  * delete a route both locally and on server
  * @param name
@@ -653,6 +663,14 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
         .catch((error)=>{
             if (opt_errorcallback) opt_errorcallback(error);
         })
+}
+RouteData.prototype.fetchRoutePromise=function(name,localOnly){
+    return new Promise((resolve,reject)=> {
+        this.fetchRoute(name, localOnly, (route) => {
+            resolve(route);
+        },
+            (err) => {reject(err)});
+    });
 }
 /**
  *

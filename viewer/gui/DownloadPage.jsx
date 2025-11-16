@@ -589,11 +589,17 @@ class DownloadPage extends React.Component{
                             itemClass={DownloadItem}
                             scrollable={true}
                             itemList={this.state.items}
-                            onItemClick={(ev)=>{
+                            onItemClick={async (ev)=>{
                                 const item=avitem(ev);
                                 const action=avitem(ev,'action');
                                 if (action === 'delete'){
-                                    return deleteItem(item,this.fillData);
+                                    try {
+                                        await deleteItem(item);
+                                    }catch (e) {
+                                        Toast(e);
+                                    }
+                                    this.fillData()
+                                    return;
                                 }
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
