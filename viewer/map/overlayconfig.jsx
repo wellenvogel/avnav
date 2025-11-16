@@ -605,7 +605,50 @@ export const fetchOverlayConfig=(chartItem)=>{
 }
 export const DEFAULT_OVERLAY_CONFIG = "default.cfg";
 
-export const removeItemsFromOverlays = (chartList, itemList) => {
+export const removeItemsFromOverlays = async (chartList, itemList) => {
+    if (! chartList) return false;
+    if (! itemList) return false;
+    const handleOneConfig=(overlayData,idx)=>{
+        let numChanges = 0;
+        const overlayConfig = new OverlayConfig(overlayData);
+        itemList.forEach(item => {
+            if (overlayConfig.removeItem(item)) {
+                numChanges++;
+            }
+        })
+        if (numChanges) {
+            return overlayConfig.getWriteBackData();
+        }
+        return undefined;
+    }
+    const results=await handleOverlays(chartList, handleOneConfig);
+    let numRemoved=0;
+    let errors="";
+    results.forEach(item=>{
+        if (item.status !== 'OK'){
+            errors+=item.name+":"+item.status+","
+        }
+        else{
+            numRemoved+=item.info?1:0;
+        }
+    })
+    return {
+        status: (errors !== "")?errors:'OK',
+        info: `removed from ${numRemoved} overlay${numRemoved!==1?'s':''}`,
+    }
+}
+/**
+ * execute a callback function on multiple overlay configs
+ * @param chartList the list of charts (as returned from a list request, each item must have the name property)
+ *                  if name is unset or DEFAULT_OVERLAY_CONFIG it adresses the default config
+ * @param callback a callback function that is called with
+ *        overlay - the raw overlay config as fetched from the server
+ *        idx     - the index in the chart list
+ *        if it returns a value this is send back as overlay config to the server
+ *        it can alos return a promise
+ * @returns {Promise<Awaited<*[]>|*>}
+ */
+export const handleOverlays = async (chartList, callback) => {
     const results = [];
     const actions = [];
     const alreadyHandled = {};
@@ -617,33 +660,39 @@ export const removeItemsFromOverlays = (chartList, itemList) => {
             }
         })
     }
-    const handleOneChart=async (requestName,chart)=>{
+    const writeBack=async (writeBackdata,requestName )=>{
+        let postParam = {
+            request: 'api',
+            command: 'saveConfig',
+            type: 'chart',
+            name: requestName,
+            overwrite: true
+        };
+        await Requests.postPlain(postParam, JSON.stringify(writeBackdata, undefined, 2))
+    }
+    const handleOneChart=async (requestName,chart,idx)=>{
         const data = await Requests.getJson({
             type: 'chart',
             command: 'getConfig',
             name: requestName,
         });
         if (!data || ! data.data) throw new Error(" no overlay for " + chart);
-        let numChanges = 0;
-        const overlayConfig = new OverlayConfig(data.data);
-        itemList.forEach(item => {
-            if (overlayConfig.removeItem(item)) {
-                numChanges++;
+        const  res=callback(data.data,idx);
+        if (res instanceof Promise) {
+            const wb=await res;
+            if (wb){
+                await writeBack(wb,requestName);
             }
-        })
-        if (numChanges) {
-            let postParam = {
-                request: 'api',
-                command: 'saveConfig',
-                type: 'chart',
-                name: requestName,
-                overwrite: true
-            };
-            await Requests.postPlain(postParam, JSON.stringify(overlayConfig.getWriteBackData(), undefined, 2))
+            return (!!wb)
         }
-        return numChanges;
+        else{
+            if (res) await writeBack(res,requestName);
+            return (!!res);
+        }
     }
+    let listIdx=-1;
     chartList.forEach(chart => {
+        listIdx+=1;
         if (chart instanceof Object) {
             chart = chart.name;
         }
@@ -660,24 +709,23 @@ export const removeItemsFromOverlays = (chartList, itemList) => {
         }
         const requestName=chart === DEFAULT_OVERLAY_CONFIG?undefined:chart;
 
-        actions.push(handleOneChart(requestName,chart));
+        actions.push(handleOneChart(requestName,chart,listIdx));
         resEntry.info = "started";
         results.push(resEntry);
     })
     if (actions.length > 0) {
-         return Promise.allSettled(actions)
-            .then((actionResults) => {
-                for (let i = 0; i < actionResults.length; i++) {
-                    const res = actionResults[i];
-                    if (res.status === 'fulfilled') {
-                        updateResult(i, 'OK', res.value);
-                    } else {
-                        updateResult(i, res.reason || 'ERROR', res.reason);
-                    }
-                }
-                return results;
-            })
+        const actionResults = await Promise.allSettled(actions);
+
+        for (let i = 0; i < actionResults.length; i++) {
+            const res = actionResults[i];
+            if (res.status === 'fulfilled') {
+                updateResult(i, 'OK', res.value);
+            } else {
+                updateResult(i, res.reason || 'ERROR', res.reason);
+            }
+        }
+        return results;
     } else {
-        return Promise.resolve(results);
+        return results;
     }
 }

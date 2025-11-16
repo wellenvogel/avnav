@@ -865,14 +865,15 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
         if (!typeOk) return false;
         opt_addEntry = assign({opacity: 1, enabled: true}, opt_addEntry);
     }
-    fetchOverlayConfig(chartItem,false)
+    const requestItem=(chartItem && chartItem.name !== DEFAULT_OVERLAY_CONFIG)?chartItem:undefined;
+    fetchOverlayConfig(requestItem,false)
         .then((unexpanded) => {
             return unexpanded.getExpandedConfig(true)
             .then((overlayConfig) => {
                 showDialog(undefined, (props) => {
                     return <EditOverlaysDialog
                         {...props}
-                        chartName={chartItem ? (chartItem.displayName || chartItem.name) : 'Default'}
+                        chartName={requestItem ? (requestItem.displayName || requestItem.name) : 'Default'}
                         current={overlayConfig}
                         updateCallback={(newConfig) => {
                             if (newConfig.isEmpty()) {
@@ -881,7 +882,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                                     request: 'api',
                                     command: 'deleteConfig',
                                     type: 'chart',
-                                    name: chartItem ? chartItem.name : undefined,
+                                    name: requestItem ? requestItem.name : undefined,
                                 }
                                 Requests.getJson(param)
                                     .then(() => {
@@ -896,7 +897,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                                     request: 'api',
                                     command: 'saveConfig',
                                     type: 'chart',
-                                    name: chartItem ? chartItem.name : undefined,
+                                    name: requestItem ? requestItem.name : undefined,
                                     overwrite: true
                                 };
                                 Requests.postPlain(postParam, JSON.stringify(newConfig.getWriteBackData(), undefined, 2))

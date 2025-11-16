@@ -476,7 +476,7 @@ const AddRemoveOverlayDialog = (props) => {
             if (chartList[i].name === chartKey) return chartList[i];
         }
     }, [chartList]);
-    const execute = useCallback(() => {
+    const execute = useCallback(async () => {
         if (action === 'add') {
             let chartInfo = findChart(chart);
             if (!chartInfo) return;
@@ -487,31 +487,19 @@ const AddRemoveOverlayDialog = (props) => {
             );
             return;
         }
-        if (action === "remove"){
+        if (action === "remove") {
             setRunning(true);
-            removeItemsFromOverlays(chartList.concat({}),[props.current])
-                .then((result) => {
-                    setRunning(false);
-                    let numRemoved=0;
-                    let errors="";
-                    result.forEach(item=>{
-                        numRemoved+=parseInt(item.info);
-                        if (item.status !== 'OK'){
-                            errors+=item.name+":"+item.status+","
-                        }
-                    })
-                    if (errors){
-                        Toast("ERROR: "+errors);
-                    }
-                    else {
-                        Toast(numRemoved + " removals");
-                    }
-                    dialogContext.closeDialog();
-                })
-            .catch((error) => {
+            try {
+                const result = await removeItemsFromOverlays(chartList.concat({}), [props.current]);
+                if (result.status !== 'OK') {
+                    throw new Error(result.status);
+                }
+                Toast(result.info);
+                dialogContext.closeDialog();
+            } catch (error) {
                 setRunning(false);
                 Toast("Error:" + error);
-            });
+            }
         }
     }, [action,chart]);
     const getChartSelectionList = useCallback(() => {
@@ -526,9 +514,6 @@ const AddRemoveOverlayDialog = (props) => {
         return rt;
     }, [action, chartList]);
     const getCurrentChartValue = useCallback(() => {
-        if (action === 'remove') {
-            return ALLCHARTS
-        }
         const chartForDisplay=findChart(chart) || {};
         return (
             {
@@ -538,7 +523,7 @@ const AddRemoveOverlayDialog = (props) => {
     }, [action, chart]);
     return (
         <DialogFrame className="AddRemoveOverlayDialog" title={"On Charts"}>
-            {running && <DialogRow>Running...</DialogRow>}
+            {running && <DialogRow><span className={"spinner"}/></DialogRow>}
             <DialogRow>
                 <span className="itemInfo">{props.current.name}</span>
             </DialogRow>
@@ -552,6 +537,7 @@ const AddRemoveOverlayDialog = (props) => {
                 }}
                 itemList={[{label: titles.add, value: "add"}, {label: titles.remove, value: "remove"}]}
             />
+            {action === 'add'?
             <InputSelect
                 dialogRow={true}
                 label="Chart"
@@ -562,9 +548,15 @@ const AddRemoveOverlayDialog = (props) => {
                 }}
                 changeOnlyValue={true}
                 itemList={getChartSelectionList()}
-            />
+            />:
+                <InputReadOnly
+                    dialogRow={true}
+                    label="Chart"
+                    value={ALLCHARTS.label}
+                />}
             <DialogButtons>
                 <DB name="cancel"
+                    disabled={running}
                 >Cancel</DB>
                 <DB name="ok"
                     onClick={() => {
