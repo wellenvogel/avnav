@@ -490,7 +490,7 @@ const AddRemoveOverlayDialog = (props) => {
         if (action === "remove") {
             setRunning(true);
             try {
-                const result = await removeItemsFromOverlays(chartList.concat({}), [props.current]);
+                const result = await removeItemsFromOverlays(undefined, [props.current]);
                 if (result.status !== 'OK') {
                     throw new Error(result.status);
                 }

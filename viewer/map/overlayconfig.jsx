@@ -606,49 +606,61 @@ export const fetchOverlayConfig=(chartItem)=>{
 export const DEFAULT_OVERLAY_CONFIG = "default.cfg";
 
 export const removeItemsFromOverlays = async (chartList, itemList) => {
-    if (! chartList) return false;
     if (! itemList) return false;
-    const handleOneConfig=(overlayData,idx)=>{
+    const handleOneConfig=(overlayConfig,idx)=>{
         let numChanges = 0;
-        const overlayConfig = new OverlayConfig(overlayData);
         itemList.forEach(item => {
             if (overlayConfig.removeItem(item)) {
                 numChanges++;
             }
         })
-        if (numChanges) {
-            return overlayConfig.getWriteBackData();
-        }
-        return undefined;
+        return numChanges;
     }
-    const results=await handleOverlays(chartList, handleOneConfig);
-    let numRemoved=0;
-    let errors="";
-    results.forEach(item=>{
-        if (item.status !== 'OK'){
-            errors+=item.name+":"+item.status+","
+    try {
+        const results = await handleOverlays(chartList, handleOneConfig);
+        let numRemoved = 0;
+        let errors = "";
+        results.forEach(item => {
+            if (item.status !== 'OK') {
+                errors += item.name + ":" + item.status + ","
+            } else {
+                numRemoved += item.info ? 1 : 0;
+            }
+        })
+        return {
+            status: (errors !== "") ? errors : 'OK',
+            info: `removed from ${numRemoved} overlay${numRemoved !== 1 ? 's' : ''}`,
         }
-        else{
-            numRemoved+=item.info?1:0;
+    }catch (error){
+        return {
+            status: error+""
         }
-    })
-    return {
-        status: (errors !== "")?errors:'OK',
-        info: `removed from ${numRemoved} overlay${numRemoved!==1?'s':''}`,
     }
 }
 /**
  * execute a callback function on multiple overlay configs
  * @param chartList the list of charts (as returned from a list request, each item must have the name property)
  *                  if name is unset or DEFAULT_OVERLAY_CONFIG it adresses the default config
+ *                  if not set - fetch all charts first
  * @param callback a callback function that is called with
- *        overlay - the raw overlay config as fetched from the server
+ *        overlay - the overlay config as fetched from the server
  *        idx     - the index in the chart list
- *        if it returns a value this is send back as overlay config to the server
- *        it can alos return a promise
+ *        return true to send back the overlay config to the server
+ *        it can also return a promise
  * @returns {Promise<Awaited<*[]>|*>}
  */
 export const handleOverlays = async (chartList, callback) => {
+    if (! chartList) {
+        const data=await Requests.getJson({
+            type:"chart",
+            command:"list"
+        });
+        chartList=data.items||[];
+        chartList.push({
+            name:DEFAULT_OVERLAY_CONFIG
+        })
+
+    }
     const results = [];
     const actions = [];
     const alreadyHandled = {};
@@ -660,7 +672,16 @@ export const handleOverlays = async (chartList, callback) => {
             }
         })
     }
-    const writeBack=async (writeBackdata,requestName )=>{
+    const writeBack=async (overlay,requestName )=>{
+        if (! overlay) return false;
+        if (overlay.isEmpty()){
+            await Requests.getJson({
+                type:'chart',
+                command: 'deleteConfig',
+                name: requestName
+            })
+            return;
+        }
         let postParam = {
             request: 'api',
             command: 'saveConfig',
@@ -668,7 +689,7 @@ export const handleOverlays = async (chartList, callback) => {
             name: requestName,
             overwrite: true
         };
-        await Requests.postPlain(postParam, JSON.stringify(writeBackdata, undefined, 2))
+        await Requests.postPlain(postParam, JSON.stringify(overlay.getWriteBackData(), undefined, 2))
     }
     const handleOneChart=async (requestName,chart,idx)=>{
         const data = await Requests.getJson({
@@ -677,16 +698,17 @@ export const handleOverlays = async (chartList, callback) => {
             name: requestName,
         });
         if (!data || ! data.data) throw new Error(" no overlay for " + chart);
-        const  res=callback(data.data,idx);
+        const overlay=new OverlayConfig(data.data);
+        const  res=callback(overlay,idx);
         if (res instanceof Promise) {
             const wb=await res;
             if (wb){
-                await writeBack(wb,requestName);
+                await writeBack(overlay,requestName);
             }
             return (!!wb)
         }
         else{
-            if (res) await writeBack(res,requestName);
+            if (res) await writeBack(overlay,requestName);
             return (!!res);
         }
     }
