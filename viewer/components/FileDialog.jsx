@@ -153,23 +153,36 @@ class Action{
             return rs;
         }
     }
+    _fhelper(name,item,options){
+        const target=this[name];
+        if (typeof target === 'function'){
+            return target(item,options);
+        }
+        return !!target;
+    }
     getButton(item,doneAction,options){
         return {
             name: this.name,
-            visible: this.visible,
+            visible: this._fhelper('visible',item,options),
             label: this.label,
-            onClick: async (ev)=>{
+            onClick: async (ev,dialogContext)=>{
                 try {
-                    const res = await this._ahelper(ev, item, options);
+                    const res = await this._ahelper(ev, item, {...options,dialogContext:dialogContext});
                     if (doneAction) {
                         doneAction(res);
                     }
+                    if (dialogContext && Helper.unsetorTrue(this.close)){
+                        dialogContext.closeDialog();
+                    }
                 }catch (e){
+                    if (dialogContext && Helper.unsetorTrue(this.close)){
+                        dialogContext.closeDialog();
+                    }
                     if (doneAction) {doneAction(e)}
                 }
             },
-            close: this.close,
-            disabled: this.disabled
+            close: false,
+            disabled: this._fhelper('disabled',item,options),
         }
     }
 
@@ -239,7 +252,8 @@ const renameDialog=async(item,options)=>{
             fixedPrefix={fixedPrefix}
             keepExtension={options.renameKeepExtension}
             checkName={(name)=>{
-                if (! name){
+                const [fn,ext]=Helper.getNameAndExt(name);
+                if (! name || (options.renameKeepExtension && ! fn)){
                     return {
                         error: 'must not be empty',
                         proposal: dname
@@ -247,9 +261,11 @@ const renameDialog=async(item,options)=>{
                 }
                 return checkName(name,itemList,nameForCheck);
             }}
+            mandatory={true}
         />);
         return fixedPrefix?fixedPrefix+res.name:res.name;
     } catch (e){
+        console.error(e);
         return;
     }
 }
@@ -269,7 +285,21 @@ const standardActions={
             if (! newName)return;
             await renameRequest(item,newName);
             //TODO: rename item in overlays
-    }})
+    }}),
+    view: new Action({
+        label: 'View',
+        name: 'view',
+        action: async (item,options)=>{
+            options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:options.getExtensionForView(item)});
+        },
+        visible: (item,options)=>{
+            if (! options.history) return false;
+            if (options.changed) return false;
+            if (! options.getExtensionForView) return false;
+            let ext=options.getExtensionForView(item);
+            return ViewPage.VIEWABLES.indexOf(ext)>=0;
+        }
+    })
 
 }
 export const USER_PREFIX='user.';
@@ -393,10 +423,11 @@ export class ItemActions{
             }
         }
     }
-    getItemAction(name){
+    getItemActionDef(name,item,doneAction,opt_options){
         for (let i in this.actions){
             const action=this.actions[i];
-            if (action.name === name) return action;
+            if (action.name === name)
+                return action.getButton(item,doneAction,{...this,...opt_options});
         }
     }
 
@@ -471,8 +502,8 @@ export class ItemActions{
                 rt.actions.push(standardActions.rename.copy({
                     visible:isConnected,
                 }))
+                rt.actions.push(standardActions.view.copy({}))
                 rt.showDownload=true;
-                rt.showView=viewable;
                 rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
                 rt.showOverlay=allowedOverlay && canEditOverlays;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
@@ -506,13 +537,18 @@ export class ItemActions{
                         return await RouteHandler.renameRoute(item.name,newName);
                     }
                 }))
-                rt.showView = async (item) => {
-                    const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
-                    return {
-                        name: item.name,
-                        data: route.toXml()
+                rt.actions.push(standardActions.view.copy({
+                    action: async (item, options) => {
+                        const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
+                        options.history.push('viewpage', {
+                            type: item.type,
+                            name: item.name,
+                            readOnly: true,
+                            ext:options.getExtensionForView(item),
+                            data: route.toXml()
+                        });
                     }
-                };
+                }))
                 rt.showEdit = mapholder.getCurrentChartEntry() !== undefined;
                 rt.showOverlay = canEditOverlays;
                 rt.showDownload = true;
@@ -550,13 +586,18 @@ export class ItemActions{
                         await removeItemsFromOverlays(item);
                     }
                 }))
-                rt.showView = async (item)=>{
-                    const layout = await layoutLoader.loadLayout(item.name);
-                    return {
-                        name:item.name+".json",
-                        data: JSON.stringify(layout,undefined,"  ")
+                rt.actions.push(standardActions.view.copy({
+                    action: async (item,options) => {
+                        const layout = await layoutLoader.loadLayout(item.name);
+                        options.history.push('viewpage', {
+                            type: item.type,
+                            name: item.name,
+                            readOnly: true,
+                            ext:options.getExtensionForView(item),
+                            data:JSON.stringify(layout,undefined,"  ")
+                        });
                     }
-                };
+                }))
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 rt.fixedExtension='json';
@@ -575,7 +616,7 @@ export class ItemActions{
                 rt.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.showView = true;
+                rt.actions.push(standardActions.view.copy({}))
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 rt.fixedExtension = 'json';
@@ -596,7 +637,7 @@ export class ItemActions{
                 rt.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.showView = viewable;
+                rt.actions.push(standardActions.view.copy({}))
                 rt.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
                 rt.showDownload = true;
                 rt.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
@@ -612,7 +653,7 @@ export class ItemActions{
                 rt.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.showView = viewable;
+                rt.actions.push(standardActions.view.copy({}))
                 rt.showDownload = true;
                 rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
                 rt.allowedExtensions = GuiHelpers.IMAGES;
@@ -626,7 +667,7 @@ export class ItemActions{
                 rt.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.showView = viewable;
+                rt.actions.push(standardActions.view.copy({}))
                 rt.showDownload = true;
                 rt.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
                 rt.showOverlay = canEditOverlays && allowedOverlay;
@@ -638,7 +679,6 @@ export class ItemActions{
                 rt.actions.push(standardActions.delete.copy({
                     visible: isConnected && props.canDelete !== false
                 }))
-                rt.showView = false;
                 rt.showRename = false;
                 rt.showDownload=true;
                 rt.showEdit= false;
@@ -859,7 +899,11 @@ export const FileDialog = (props) => {
     const dialogButtons=allowed.getActionButtons(props.current,(err)=>{
             if (err) Toast(err);
             props.okFunction("dummy")
-        });
+        },{
+        history:props.history,
+        changed: changed,
+        dialogContext: dialogContext,
+    });
     return (
         <DialogFrame className="fileDialog" title={props.current.displayName||props.current.name}>
             {props.current.info !== undefined ?
@@ -949,28 +993,6 @@ export const FileDialog = (props) => {
                         }}
                     >Convert</DB>
                 }
-                {(allowed.showView) ?
-                    <DB name="view"
-                        onClick={() => {
-                            if (typeof (allowed.showView) === 'function' ) {
-                                const rs=allowed.showView(props.current);
-                                if (rs instanceof Promise) {
-                                    rs
-                                        .then((res)=>props.okFunction('view',{...props.current,...res}))
-                                        .catch((err)=>Toast(err));
-                                    return;
-                                }
-                                props.okFunction('view',{...props.current,...rs});
-                                return;
-                            }
-                            props.okFunction('view', props.current);
-                        }}
-                        disabled={changed}
-                    >
-                        View
-                    </DB>
-                    :
-                    null}
                 {(allowed.showEdit) ?
                     <DB name="edit"
                         onClick={() => {
@@ -1119,6 +1141,7 @@ export const FileDialogWithActions=(props)=>{
     };
     return <FileDialog
         {...forward}
+        history={history}
         current={item}
         okFunction={actionFunction}
         checkName={checkExists}/>

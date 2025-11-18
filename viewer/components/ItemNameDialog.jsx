@@ -173,7 +173,7 @@ ItemNameDialog.propTypes={
     checkName: PropTypes.func, //if provided: return an error text if the name is invalid
                                //can also return an object with error, proposal to propose a new name
                                //can return a promise - resolve means ok, reject like return object/string
-    title: PropTypes.func, //use this as dialog title
+    title: PropTypes.string, //use this as dialog title
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string,  //set a fixed extension (display only)
     fixedPrefix: PropTypes.string, //set a fixed prefix (display only)
