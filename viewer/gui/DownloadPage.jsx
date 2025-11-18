@@ -112,7 +112,6 @@ const DownloadItem=(props)=>{
     let actions=ItemActions.create(props,globalStore.getData(keys.properties.connectedMode,false));
     let  cls="listEntry "+actions.className;
     let dataClass="downloadItemData";
-    if (! actions.showDelete ) dataClass+=" noDelete";
     return(
         <div className={cls} onClick={function(ev){
             props.onClick(setav(ev,{action:'select'}));
@@ -120,18 +119,12 @@ const DownloadItem=(props)=>{
             {(props.icon) &&
             <span className="icon" style={{backgroundImage:"url('"+(props.icon)+"')"}}/>
             }
-            {actions.showDelete &&<Button name="Delete" className="Delete smallButton" onClick={(ev)=>{
-                ev.preventDefault();
-                ev.stopPropagation();
-                props.onClick(setav(ev,{action:'delete'}));
-            }}/>}
             <div className="itemMain">
                 <div className={dataClass}>
                     <div className="date">{actions.timeText}</div>
                     <div className="info">{actions.infoText}</div>
                 </div>
                 <div className="infoImages">
-                    { actions.showView && <div className="viewimage"></div>}
                     { actions.showEdit && <div className="editimage"></div>}
                     { actions.showIsServer && <div className="listrasimage"></div>}
                     { actions.isApp && <div className="appimage"></div>}

@@ -30,6 +30,7 @@ import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import {
+    DBCancel, DBOk,
     DialogButtons,
     DialogFrame,
     DialogRow,
@@ -188,6 +189,39 @@ class Action{
 
 }
 //-------------------- action helper ---------------------
+const SchemeDialog = ({item, resolveFunction}) => {
+    const [scheme, setScheme] = useState(item.scheme);
+    return <DialogFrame title={`Change scheme for ${item.displayName}`}>
+        {item.originalScheme && <DialogRow className="userAction">
+                    <span className="inputLabel">
+                        original
+                    </span>
+            <span className="value">
+                        {item.originalScheme}
+                    </span>
+
+        </DialogRow>
+        }
+        <Radio
+            label="scheme"
+            value={scheme}
+            onChange={(v) => {
+                setScheme(v)
+            }}
+            itemList={[{label: "xyz", value: "xyz"}, {label: "tms", value: "tms"}]}
+            className="mbtilesType"/>
+        <DialogButtons
+            buttonList={[
+                DBCancel(),
+                DBOk(() => {
+                    resolveFunction(scheme)
+                }, {
+                    disabled: scheme === item.scheme
+                })
+            ]}
+        />
+    </DialogFrame>
+}
 
 const deleteItemQuery=async(item,dialogContext)=>{
     try {
@@ -310,13 +344,9 @@ export class ItemActions{
         this.actions=[]
         this.renameKeepExtension=true;
         this.showEdit=false;
-        this.showView=false;
-        this.showDelete=false;
-        this.showRename=false;
         this.showApp=false;
         this.isApp=false;
         this.showOverlay=false;
-        this.showScheme=false;
         this.showConvertFunction=undefined;
         this.showImportLog=false;
         this.showIsServer=false;
@@ -328,6 +358,9 @@ export class ItemActions{
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
         this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
         this.hasScope=false;
+        this.buildExtendedInfo=async (item)=>{}
+        this.extendedInfoRows=undefined;
+        this.infoRows=undefined;
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -458,7 +491,6 @@ export class ItemActions{
         }
         let rt=new ItemActions(props.type);
         let ext=props.extension||Helper.getExt(props.name);
-        let viewable=ViewPage.VIEWABLES.indexOf(ext)>=0;
         let editableSize=props.size !== undefined && props.size < ViewPage.MAXEDITSIZE;
         let allowedOverlay=KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0;
         let canEditOverlays=globalStore.getData(keys.gui.capabilities.uploadOverlays) && isConnected;
@@ -477,6 +509,31 @@ export class ItemActions{
                 rt.actions.push(standardActions.delete.copy({
                     visible: props.canDelete && isConnected
                 }));
+                rt.actions.push(new Action({
+                    name: 'scheme',
+                    label: 'Scheme',
+                    action: async (item, options) => {
+                        let newScheme;
+                        try {
+                            newScheme = await showPromiseDialog(options.dialogContext,
+                                (dprops) => <SchemeDialog
+                                    {...dprops}
+                                    item={item}
+                                />);
+                        } catch (e) {
+                            return;
+                        }
+                        if (newScheme) {
+                            await Requests.getJson({
+                                type: item.type,
+                                name: item.name,
+                                command: 'scheme',
+                                newScheme: newScheme
+                            })
+                        }
+                    },
+                    visible: isConnected && props.name && props.name.match(/.*\.mbtiles$/) && props.canDelete
+                }))
                 rt.showOverlay=canEditOverlays;
                 rt.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
                 rt.showImportLog=props.hasImportLog;
@@ -487,6 +544,9 @@ export class ItemActions{
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
                 rt.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
                 rt.hasScope=true;
+                if (props.scheme){
+                    rt.infoRows=[{label:'Scheme',value:'scheme'}]
+                }
                 break;
             case 'track':
                 rt.headline='Tracks';
@@ -508,6 +568,8 @@ export class ItemActions{
                 rt.showOverlay=allowedOverlay && canEditOverlays;
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
                 rt.allowedExtensions=['gpx']
+                rt.buildExtendedInfo=async (item)=>getTrackInfo(item.name)
+                rt.extendedInfoRows=TRACK_INFO_ROWS;
                 break;
             case 'route': {
                 canModify = !props.active && props.canDelete !== false && (!props.isServer || isConnected);
@@ -574,6 +636,8 @@ export class ItemActions{
                     }
                 }
                 rt.showUpload = isConnected;
+                rt.buildExtendedInfo=(item)=>getRouteInfo(item.name)
+                rt.extendedInfoRows=ROUTE_INFO_ROWS;
             }
                 break;
             case 'layout':
@@ -840,17 +904,6 @@ const AddRemoveOverlayDialog = (props) => {
         </DialogFrame>
     )
 }
-const INFO_ROWS=[
-
-];
-const TYPE_INFO_ROWS={
-    track: TRACK_INFO_ROWS,
-    route: ROUTE_INFO_ROWS
-}
-const INFO_FUNCTIONS={
-    track: getTrackInfo,
-    route: getRouteInfo
-};
 const infoRowDisplay=(row,data)=>{
     let v=data[row.value];
     if (v === undefined) return null;
@@ -860,42 +913,20 @@ const infoRowDisplay=(row,data)=>{
 }
 export const FileDialog = (props) => {
     const [changed, setChanged] = useState(false);
-    const [existingName, setExistingName] = useState(true);
-    const [name, setName] = useState(props.current.name);
-    const [scheme, setScheme] = useState(props.current.scheme);
     const [allowed, setAllowed] = useState(ItemActions.create(props.current, globalStore.getData(keys.properties.connectedMode, true)))
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
     useEffect(() => {
-        let f = INFO_FUNCTIONS[props.current.type];
+        let f = allowed.buildExtendedInfo;
         if (f) {
-            f(props.current.name).then((info) => {
-                setExtendedInfo(info);
-            }).catch(() => {
-            });
+            f(props.current).then(
+                (info)=>setExtendedInfo(info),
+                ()=>{}
+            );
         }
-    }, []);
+    }, [allowed]);
 
-    const onRename = (newName) => {
-        if (newName === name) return;
-        if (newName === props.current.name) {
-            setChanged(false);
-            setExistingName(true);
-            setName(newName);
-            return;
-        }
-        setExistingName(false);
-        setName(newName);
-        setChanged(true);
-    }
-    let cn = existingName ? "existing" : "";
-    let rename = changed && !existingName && (name !== props.current.name);
-    let schemeChanged = allowed.showScheme && (((props.current.scheme || "tms") !== scheme) || props.current.originalScheme);
-    let extendedInfoRows = TYPE_INFO_ROWS[props.current.type];
-    //if we have a scoped item we can (currently) only rename user items
-    //and user items must always have a checkPrefix. By using this we do not need to knoew the user prefix here
-    //in the code but can lease this to the server
-    const allowRename=allowed.showRename && ( ! allowed.hasScope || props.current.checkPrefix);
+    let extendedInfoRows = allowed.extendedInfoRows;
     const dialogButtons=allowed.getActionButtons(props.current,(err)=>{
             if (err) Toast(err);
             props.okFunction("dummy")
@@ -913,65 +944,14 @@ export const FileDialog = (props) => {
                 :
                 null
             }
-            {INFO_ROWS.map((row) => {
-                return infoRowDisplay(row, props);
+            {allowed.infoRows && allowed.infoRows.map((row)=>{
+                return infoRowDisplay(row,props.current)
             })}
             {extendedInfoRows && extendedInfoRows.map((row) => {
                 return infoRowDisplay(row, extendedInfo);
             })}
-            {(allowed.showScheme && props.current.originalScheme) &&
-                <DialogRow className="userAction">
-                    <span className="inputLabel">
-                        original DB scheme
-                    </span>
-                    <span className="value">
-                        {props.current.originalScheme}
-                    </span>
-
-                </DialogRow>
-            }
-            {allowed.showScheme &&
-                <Radio
-                    label="scheme"
-                    value={scheme}
-                    onChange={(v) => {
-                        setChanged(true);
-                        setScheme(v)
-                    }}
-                    itemList={[{label: "xyz", value: "xyz"}, {label: "tms", value: "tms"}]}
-                    className="mbtilesType"/>
-
-            }
-            {(allowRename && ! existingName) &&
-                    <InputReadOnly
-                        dialogRow={true}
-                        label={"new name"}
-                        className={cn}
-                        value={name}
-                    />
-            }
             <DialogButtons buttonList={dialogButtons}>
-                {(allowRename || allowed.showScheme) ?
-                    <DB name="ok"
-                        onClick={async () => {
-                            let action = "";
-                            if (rename) action += "rename";
-                            if (schemeChanged) {
-                                if (props.current.scheme !== scheme) {
-                                    if (action === "") action = "scheme";
-                                    else action += ",scheme";
-                                }
-                            }
-                            await props.okFunction(action,
-                                {...props.current, name: name, scheme: scheme});
-                        }}
-                        disabled={!rename && !schemeChanged}
-                    >
-                        Save
-                    </DB>
-                    :
-                    null
-                }
+
             </DialogButtons>
             <DialogButtons>
                 {allowed.showImportLog &&
@@ -1057,33 +1037,6 @@ export const FileDialogWithActions=(props)=>{
             }
         };
         try {
-            const schemeAction = async (newScheme) => {
-                await Requests.getJson(
-                    buildRequestParameters('scheme', item,
-                        {newScheme: newScheme}));
-            };
-            let renameAction = async (name, newName) => {
-                await Requests.getJson(buildRequestParameters('rename', item,
-                    {newName: newName}))
-            };
-            if (action.match(/scheme/)) {
-                try {
-                    await schemeAction(newItem.scheme)
-                } catch (e) {
-                    Toast("change scheme failed: " + e);
-                }
-                if (action.match(/rename/)) await renameAction(item.name, newItem.name);
-                doneAction();
-                return;
-            }
-            if (action === 'rename') {
-                await renameAction(item.name, newItem.name);
-            }
-            if (action === 'view') {
-                doneAction(true);
-                history.push('viewpage', {type: item.type, name: newItem.name, readOnly: true, data: newItem.data});
-                return;
-            }
             if (action === 'edit') {
                 if (item.type === 'route') {
                     const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
@@ -1104,11 +1057,6 @@ export const FileDialogWithActions=(props)=>{
                             }}/>
                         , () => doneAction())
                 }
-            }
-            if (action === 'delete') {
-                await deleteItem(item);
-                doneAction();
-                return;
             }
             if (action === 'overlay') {
                 doneAction();

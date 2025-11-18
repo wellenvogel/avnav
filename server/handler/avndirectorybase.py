@@ -238,7 +238,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       return self.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
   def listDirectory(self,includeDirs=False,baseDir=None,extension=None,scope=None):
-    # type: (bool,str,list[str]|None) -> list[AVNDirectoryListEntry]
+    # type: (bool,str,str|None,str|None) -> list[AVNDirectoryListEntry]
     data = []
     if baseDir is None:
       baseDir=self.baseDir

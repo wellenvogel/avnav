@@ -72,10 +72,15 @@ class AVNRoutingLeg(object):
     if not self.isAnchorWatch():
       return None
     return float(self.plain.get('anchorDistance'))
-  def getCurrentRoute(self):
+  def getCurrentRoute(self,activeOnly=False):
+    if activeOnly:
+        if not self.isActive():
+            return
+        if self.isAnchorWatch():
+            return
     return self.plain.get('currentRoute')
-  def getRouteName(self):
-    route=self.getCurrentRoute()
+  def getRouteName(self,activeOnly=False):
+    route=self.getCurrentRoute(activeOnly)
     if route is not None:
       return route.get('name')
 
@@ -135,30 +140,9 @@ class AVNRoutingLeg(object):
     return AVNRoutingLeg(self.plain if self.plain is None else self.plain.copy())
 
 class AVNRouteInfo(AVNDirectoryListEntry):
-  def __init__(self,type,prefix,name,**kwargs):
-    super(AVNRouteInfo,self).__init__(type,prefix,name,**kwargs)
-    self.name=name
-    self.length=0
-    self.numpoints=0
-    self.canDelete=True
-
-  def fillInfo(self,baseDir):
-    routeFile=os.path.join(baseDir,self.name)
-    try:
-      if os.path.isfile(routeFile):
-        content=""
-        with open(routeFile,"r",encoding='utf-8') as f:
-          content=f.read()
-        parser = gpxparser.GPXParser(content)
-        gpx = parser.parse()
-        if gpx.routes is None or len(gpx.routes) == 0:
-          AVNLog.error("no routes in %s",routeFile)
-        else:
-          route=gpx.routes[0]
-          self.numpoints=len(route.points)
-          self.length=route.length()/AVNUtil.NM
-    except Exception as e:
-      AVNLog.error("error when parsing route %s: %s",routeFile,str(e))
+  def __init__(self,type,name,active=False,**kwargs):
+    super().__init__(type,name,**kwargs)
+    self.active=active
 
   def __str__(self):
     return "Route: %s"%self.name
@@ -227,7 +211,6 @@ class AVNRouter(AVNDirectoryHandlerBase):
   currentLeg = None  # type: AVNRoutingLeg
   MAXROUTESIZE=500000
   PATH_PREFIX="/route"
-  ALLOWED_EXTENSIONS=['.gpx']
   currentLegName="currentLeg.json"
 
   @classmethod
@@ -262,16 +245,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return None
 
   @classmethod
-  def getListEntryClass(cls):
-    return AVNRouteInfo
-
-  @classmethod
   def getPrefix(cls):
     return cls.PATH_PREFIX
-
-  @classmethod
-  def getAutoScanExtensions(cls):
-    return cls.ALLOWED_EXTENSIONS
 
 
 
@@ -340,10 +315,6 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return self.getFloatParam('interval')
 
 
-  def onItemAdd(self, itemDescription):
-    # type: (AVNRouteInfo) -> AVNRouteInfo
-    itemDescription.fillInfo(self.baseDir)
-    return itemDescription
 
   def readCurrentLeg(self):
      if os.path.exists(self.currentLegFileName):
@@ -729,6 +700,10 @@ class AVNRouter(AVNDirectoryHandlerBase):
       will only be called if leg.anchorDistance is not none
   '''
 
+  @classmethod
+  def getListEntryClass(cls):
+      return AVNRouteInfo
+
   def useRhumbLine(self):
     return self.P_RHUMBLINE.fromDict(self.param)
 
@@ -761,10 +736,40 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.startStopAlarm(True,self.ALARMS.anchor)
     return
 
-  def handleList(self,handler=None):
-    data=list(self.itemList.values())
-    rt = AVNUtil.getReturnData(items=data)
-    return rt
+  def getFixedExtension(self):
+      return '.gpx'
+
+  def handleList(self, handler=None):
+      if not os.path.exists(self.baseDir):
+          return AVNUtil.getReturnData("directory %s does not exist" % self.baseDir)
+      extension = self.getFixedExtension()
+      data = self.listDirectory(False, self.baseDir, extension)
+      leg=self.getCurrentLeg()
+      routeName=leg.getRouteName(True) if leg is not None else None
+      if routeName is not None:
+          for routeInfo in data:
+              if routeInfo.name == routeName:
+                  routeInfo.active=True
+      return AVNUtil.getReturnData(items=data)
+
+  def handleInfo(self, name, handler=None):
+      rt=super().handleInfo(name, handler)
+      item=rt.get('item')
+      if item is not None:
+        leg=self.getCurrentLeg()
+        routeName=leg.getRouteName(True) if leg is not None else None
+        if routeName is not None and routeName == name:
+            item.active=True
+      return rt
+
+  def handleRename(self, name, newName, requestparam):
+      leg = self.getCurrentLeg()
+      routeName=leg.getRouteName(True) if leg is not None else None
+      if routeName is not None:
+          if newName == routeName:
+              return AVNUtil.getReturnData(error="unable to rename active route");
+      return super().handleRename(name, newName, requestparam)
+
   def handleSpecialApiRequest(self,command,requestparam,handler):
     if (command == 'getleg'):
       if self.currentLeg is None:
