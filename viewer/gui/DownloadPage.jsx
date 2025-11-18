@@ -18,7 +18,6 @@ import Helper, {avitem, setav} from '../util/helper.js';
 import {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
-import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {

@@ -38,9 +38,8 @@ import {
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import {layoutLoader} from "../util/layouthandler";
-import base from "../base";
 import NavHandler from "../nav/navdata";
-import Helper, {awaitHelper} from '../util/helper';
+import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import {TrackConvertDialog} from "./TrackConvertDialog";
@@ -53,7 +52,7 @@ import Formatter from '../util/formatter';
 import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
-import {ItemNameDialog} from "./ItemNameDialog";
+import {checkName, ItemNameDialog} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
 import {removeItemsFromOverlays} from "../map/overlayconfig";
 
@@ -135,27 +134,39 @@ class Action{
         }
         return rt;
     }
-    async _ahelper(ev, item,doneAction){
+
+    /**
+     * helper that calls the action function
+     * @param ev
+     * @param item the item
+     * @param options
+     * @returns {Promise<void>} resolves to undefined on success
+     * @private
+     */
+    async _ahelper(ev, item,options){
         if (typeof this.action !== 'function')return;
-        try {
-            const rs= this.action(item);
-            if (rs instanceof Promise){
-                await rs;
-                doneAction();
-                return;
-            }
-            doneAction();
-        }catch (e){
-            doneAction(e);
+        const rs= this.action(item,{...this,...options});
+        if (rs instanceof Promise) {
+            return await rs;
+        }
+        else {
+            return rs;
         }
     }
-    getButton(item,doneAction){
+    getButton(item,doneAction,options){
         return {
             name: this.name,
             visible: this.visible,
             label: this.label,
             onClick: async (ev)=>{
-                await this._ahelper(ev,item,doneAction);
+                try {
+                    const res = await this._ahelper(ev, item, options);
+                    if (doneAction) {
+                        doneAction(res);
+                    }
+                }catch (e){
+                    if (doneAction) {doneAction(e)}
+                }
             },
             close: this.close,
             disabled: this.disabled
@@ -163,25 +174,102 @@ class Action{
     }
 
 }
-export const deleteItem=async (info,dialogContext,opt_deleteFunction)=> {
+//-------------------- action helper ---------------------
+
+const deleteItemQuery=async(item,dialogContext)=>{
     try {
-        await showPromiseDialog(dialogContext, (dprops) => <ConfirmDialog {...dprops}
-                                                                          text={"delete " + (info.displayName || info.name) + "?"}/>);
+        await showPromiseDialog(dialogContext, (dprops) => <ConfirmDialog
+                                                                          {...dprops} text={"delete " + (item.displayName || item.name) + "?"}
+        />);
+        return true
     }catch (pe) {
-        return (false);
+        return false;
     }
-    if (!opt_deleteFunction) {
-        opt_deleteFunction = async () => Requests.getJson(buildRequestParameters('delete', info));
-    }
-    await awaitHelper(opt_deleteFunction(info,dialogContext));
-    await removeItemsFromOverlays(undefined,[info]);
+}
+const deleteRequest=async(item)=>{
+    return await Requests.getJson({
+        type: item.type,
+        command:'delete',
+        name:item.name
+    })
+}
+const renameRequest=async(item,newName)=>{
+    return await Requests.getJson({
+        type: item.type,
+        command:'rename',
+        name:item.name,
+        newName:newName
+    })
+}
+const removeItemFromOverlays=async(item)=>{
+    if (! item || ! item.name) return;
+    await removeItemsFromOverlays(undefined,[item]);
+}
+
+export const deleteItem=async (item,dialogContext)=> {
+    if (! await deleteItemQuery(item,dialogContext)) return;
+    await deleteRequest(item);
+    await removeItemFromOverlays(item);
 };
+
+const renameDialog=async(item,options)=>{
+    let fixedPrefix=undefined;
+    let dname=item.name;
+    if (options.hasScope){
+        fixedPrefix=item.checkPrefix;
+        if (! fixedPrefix) throw new Error("can only rename user items");
+        dname=dname.substr(fixedPrefix.length);
+    }
+    let itemList=options.list;
+    if (! itemList){
+        const res=await Requests.getJson({
+            type: item.type,
+            command:'list'
+        });
+        itemList=res.items||[];
+    }
+    const nameForCheck=options.nameForCheck?
+        (item)=>options.nameForCheck(item):
+        (item)=>item.name;
+    try{
+        const res=await showPromiseDialog(options.dialogContext,(dprops)=><ItemNameDialog
+            title={`Rename ${item.displayName||item.name}`}
+            {...dprops}
+            iname={dname}
+            fixedPrefix={fixedPrefix}
+            keepExtension={options.renameKeepExtension}
+            checkName={(name)=>{
+                if (! name){
+                    return {
+                        error: 'must not be empty',
+                        proposal: dname
+                    }
+                }
+                return checkName(name,itemList,nameForCheck);
+            }}
+        />);
+        return fixedPrefix?fixedPrefix+res.name:res.name;
+    } catch (e){
+        return;
+    }
+}
 const standardActions={
     delete: new Action({
             label: 'Delete',
             name: 'delete',
-            action: deleteItem
+            action: async (item,options)=>{
+                return await deleteItem(item,options.dialogContext)
+            }
         }),
+    rename: new Action({
+        label: 'Rename',
+        name: 'Rename',
+        action: async (item,options)=>{
+            const newName=await renameDialog(item,options);
+            if (! newName)return;
+            await renameRequest(item,newName);
+            //TODO: rename item in overlays
+    }})
 
 }
 export const USER_PREFIX='user.';
@@ -190,6 +278,7 @@ export class ItemActions{
         this.type=type;
         this.headline=type
         this.actions=[]
+        this.renameKeepExtension=true;
         this.showEdit=false;
         this.showView=false;
         this.showDelete=false;
@@ -208,6 +297,7 @@ export class ItemActions{
         this.extForView=undefined;
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
         this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
+        this.hasScope=false;
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -259,7 +349,6 @@ export class ItemActions{
             }
             return name;
         }
-        this.hasScope=undefined;
         /**
          * get a prefix to be shown in upload/rename dialogs
          * @returns {string|undefined}
@@ -303,9 +392,20 @@ export class ItemActions{
                 this.allowedExtensions=[this.fixedExtension];
             }
         }
-        if (this.hasScope === undefined && this.fixedExtension){
-            this.hasScope=true;
+    }
+    getItemAction(name){
+        for (let i in this.actions){
+            const action=this.actions[i];
+            if (action.name === name) return action;
         }
+    }
+
+    getActionButtons(item,doneAction,opt_options){
+        const rt=[]
+        this.actions.forEach(action=>{
+            rt.push(action.getButton(item,doneAction,{...this,...opt_options}));
+        })
+        return rt;
     }
 
     /**
@@ -339,6 +439,7 @@ export class ItemActions{
             rt.className+=' activeEntry';
         }
         rt.extForView=ext;
+        let canModify=isConnected && props.canDelete;
         switch (props.type){
             case 'chart':
                 rt.headline='Charts';
@@ -359,14 +460,17 @@ export class ItemActions{
             case 'track':
                 rt.headline='Tracks';
                 rt.actions.push(standardActions.delete.copy({
-                    visible:true,
+                    visible:isConnected,
                     action: async (info,dialogContext)=> {
-                        await deleteItem(info, dialogContext, async (dinfo) => {
-                            await Requests.getJson(buildRequestParameters('delete', dinfo));
+                        if (await deleteItemQuery(info,dialogContext)){
+                            await deleteRequest(info);
                             NavHandler.resetTrack();
-                        });
+                        }
                     }
                     }));
+                rt.actions.push(standardActions.rename.copy({
+                    visible:isConnected,
+                }))
                 rt.showDownload=true;
                 rt.showView=viewable;
                 rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
@@ -374,22 +478,34 @@ export class ItemActions{
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
                 rt.allowedExtensions=['gpx']
                 break;
-            case 'route':
-                rt.headline='Routes';
-                rt.showIsServer=props.server;
+            case 'route': {
+                canModify = !props.active && props.canDelete !== false && (!props.isServer || isConnected);
+                rt.headline = 'Routes';
+                rt.showIsServer = props.server;
                 rt.actions.push(standardActions.delete.copy({
-                    visible: !props.active && props.canDelete !== false  && ( !props.isServer || isConnected),
-                    action: async (item,dialogContext)=>{
-                        await deleteItem(item,dialogContext,async (ditem)=>{
-                            if (RouteHandler.isActiveRoute(ditem.name)) {
-                                throw new Error("unable to delete active route")
-                            }
-                            await RouteHandler.deleteRoutePromise(ditem.name,
-                                !ditem.server //if we think this is a local route - just delete it local only
-                            );
-                        })
+                    visible: canModify,
+                    action: async (item, options) => {
+                        if (!await deleteItemQuery(item, options.dialogContext)) return;
+                        if (RouteHandler.isActiveRoute(item.name)) {
+                            throw new Error("unable to delete active route")
+                        }
+                        await RouteHandler.deleteRoutePromise(item.name,
+                            item.server //if we think this is a local route - just delete it local only
+                        );
+                        await removeItemsFromOverlays(item);
                     }
                 }));
+                rt.actions.push(standardActions.rename.copy({
+                    visible:canModify,
+                    action: async (item, options) => {
+                        const newName=await renameDialog(item,options);
+                        if (!newName)return;
+                        if (RouteHandler.isActiveRoute(item.name)) {
+                            throw new Error("unable to rename active route")
+                        }
+                        return await RouteHandler.renameRoute(item.name,newName);
+                    }
+                }))
                 rt.showView = async (item) => {
                     const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
                     return {
@@ -397,41 +513,41 @@ export class ItemActions{
                         data: route.toXml()
                     }
                 };
-                rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
-                rt.showOverlay=canEditOverlays;
-                rt.showDownload=true;
-                rt.fixedExtension='gpx';
-                rt.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
-                    " nm, "+props.numpoints+" points";
-                rt.localUploadFunction=(name,data)=>{
+                rt.showEdit = mapholder.getCurrentChartEntry() !== undefined;
+                rt.showOverlay = canEditOverlays;
+                rt.showDownload = true;
+                rt.fixedExtension = 'gpx';
+                rt.infoText += "," + Formatter.formatDecimal(props.length, 4, 2) +
+                    " nm, " + props.numpoints + " points";
+                rt.localUploadFunction = (name, data) => {
                     //name is ignored
-                    try{
+                    try {
                         let route;
-                        if (data instanceof routeobjects.Route){
-                            route=data;
-                        }
-                        else {
+                        if (data instanceof routeobjects.Route) {
+                            route = data;
+                        } else {
                             route = new routeobjects.Route("");
                             route.fromXml(data);
                         }
-                        if (! route.name){
+                        if (!route.name) {
                             return Promise.reject("route has no name");
                         }
                         return RouteHandler.saveRoute(route);
-                    } catch(e){
+                    } catch (e) {
                         return Promise.reject(e);
                     }
                 }
-                rt.showUpload=isConnected;
+                rt.showUpload = isConnected;
+            }
                 break;
             case 'layout':
                 rt.headline='Layouts';
                 rt.actions.push(standardActions.delete.copy({
                     visible: isConnected &&  props.canDelete !== false && ! props.active,
-                    action:async (item,dialogContext)=>{
-                        await deleteItem(item,dialogContext,async (ditem)=>{
-                            await layoutLoader.deleteLayout(ditem.name)
-                        })
+                    action:async (item,options)=>{
+                        if (! await deleteItemQuery(item,options.dialogContext))return;
+                        await layoutLoader.deleteLayout(item.name)
+                        await removeItemsFromOverlays(item);
                     }
                 }))
                 rt.showView = async (item)=>{
@@ -450,58 +566,72 @@ export class ItemActions{
                 rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadLayout,false)
                 rt.hasScope=true;
                 break;
-            case 'settings':
-                rt.headline='Settings';
+            case 'settings': {
+                canModify= isConnected && props.canDelete !== false && !props.active;
+                rt.headline = 'Settings';
                 rt.actions.push(standardActions.delete.copy({
-                    visible:isConnected && props.canDelete !== false && ! props.active
+                    visible: canModify,
                 }));
+                rt.actions.push(standardActions.rename.copy({
+                    visible:canModify,
+                }))
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
-                rt.showRename=isConnected && props.canDelete;
-                rt.fixedExtension='json';
-                rt.localUploadFunction=(name,data,overwrite)=>{
-                   return PropertyHandler.verifySettingsData(data, true,true)
-                       .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
+                rt.fixedExtension = 'json';
+                rt.localUploadFunction = (name, data, overwrite) => {
+                    return PropertyHandler.verifySettingsData(data, true, true)
+                        .then((res) => PropertyHandler.uploadSettingsData(name, res.data, false, overwrite));
                 }
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)
-                rt.hasScope=true;
+                rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
+                rt.hasScope = true;
+            }
                 break;
-            case 'user':
-                rt.headline='User';
+            case 'user': {
+                rt.headline = 'User';
                 rt.actions.push(standardActions.delete.copy({
-                    visible:  isConnected && props.canDelete
+                    visible: canModify,
                 }))
-                rt.showRename=isConnected && props.canDelete;
-                rt.showView=viewable;
-                rt.showEdit=editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && props.canDelete && isConnected;
-                rt.showDownload=true;
-                rt.showApp=isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
-                rt.isApp=rt.showApp && props.isAddon;
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadUser,false)
-                break;
-            case 'images':
-                rt.headline='Images';
-                rt.actions.push(standardActions.delete.copy({
-                    visible: isConnected && props.canDelete
+                rt.renameKeepExtension=false;
+                rt.actions.push(standardActions.rename.copy({
+                    visible:canModify,
                 }))
                 rt.showView = viewable;
-                rt.showRename = isConnected && props.canDelete !== false;
-                rt.showDownload=true;
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadImages,false)
-                rt.allowedExtensions=GuiHelpers.IMAGES;
+                rt.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
+                rt.showDownload = true;
+                rt.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
+                rt.isApp = rt.showApp && props.isAddon;
+
+            }   rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadUser,false)
                 break;
-            case 'overlay':
-                rt.headline='Overlays';
+            case 'images': {
+                rt.headline = 'Images';
+                rt.actions.push(standardActions.delete.copy({
+                    visible: canModify,
+                }))
+                rt.actions.push(standardActions.rename.copy({
+                    visible:canModify,
+                }))
+                rt.showView = viewable;
+                rt.showDownload = true;
+                rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
+                rt.allowedExtensions = GuiHelpers.IMAGES;
+            }
+                break;
+            case 'overlay': {
+                rt.headline = 'Overlays';
                 rt.actions.push(standardActions.delete.copy({
                     visible: isConnected && props.canDelete !== false
                 }))
+                rt.actions.push(standardActions.rename.copy({
+                    visible:canModify,
+                }))
                 rt.showView = viewable;
-                rt.showRename = isConnected && props.canDelete !== false;
-                rt.showDownload=true;
-                rt.showEdit= editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && isConnected;
+                rt.showDownload = true;
+                rt.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
                 rt.showOverlay = canEditOverlays && allowedOverlay;
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)
+                rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
+            }
                 break;
             case 'plugins':
                 rt.headline='Plugins';
@@ -726,13 +856,10 @@ export const FileDialog = (props) => {
     //and user items must always have a checkPrefix. By using this we do not need to knoew the user prefix here
     //in the code but can lease this to the server
     const allowRename=allowed.showRename && ( ! allowed.hasScope || props.current.checkPrefix);
-    const dialogButtons=[];
-    allowed.actions.forEach(actions => {
-        dialogButtons.push(actions.getButton(props.current,(err)=>{
+    const dialogButtons=allowed.getActionButtons(props.current,(err)=>{
             if (err) Toast(err);
             props.okFunction("dummy")
-        }));
-    })
+        });
     return (
         <DialogFrame className="fileDialog" title={props.current.displayName||props.current.name}>
             {props.current.info !== undefined ?
@@ -780,38 +907,6 @@ export const FileDialog = (props) => {
                     />
             }
             <DialogButtons buttonList={dialogButtons}>
-                {allowRename && <DB
-                    name={"Rename"}
-                    onClick={()=>{
-                        let fixedPrefix=undefined;
-                        let dname=name;
-                        if (allowed.hasScope){
-                            fixedPrefix=props.current.checkPrefix;
-                            dname=name.substr(fixedPrefix.length);
-                        }
-                        showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-                            title={`Rename ${name}`}
-                            {...dprops}
-                            iname={dname}
-                            fixedPrefix={fixedPrefix}
-                            keepExtension={true}
-                            checkName={(name)=>{
-                                if (! name){
-                                    return {
-                                        error: 'must not be empty',
-                                        proposal: dname
-                                    }
-                                }
-                                return props.checkName?props.checkName(name):undefined
-                            }}
-                        />)
-                            .then((res)=>{
-                                onRename(fixedPrefix?fixedPrefix+res.name:res.name)
-                            })
-                            .catch(()=>{})
-                    }}
-                    close={false}
-                >Rename</DB>}
                 {(allowRename || allowed.showScheme) ?
                     <DB name="ok"
                         onClick={async () => {

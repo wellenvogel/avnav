@@ -656,7 +656,7 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
             if (opt_errorcallback) opt_errorcallback(error);
         })
 }
-RouteData.prototype.fetchRoutePromise=function(name,localOnly){
+RouteData.prototype.fetchRoutePromise=async function(name,localOnly){
     return new Promise((resolve,reject)=> {
         this.fetchRoute(name, localOnly, (route) => {
             resolve(route);
@@ -703,6 +703,9 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
 
 };
 
+RouteData.prototype.renameRoute=async function(name,newName){
+    throw new Error("route rename not implemented yet");
+}
 /*---------------------------------------------------------
  routing (next wp...)
  ----------------------------------------------------------*/
