@@ -785,6 +785,8 @@ export class RouteInfo {
          * @type {boolean}
          */
         this.active = false;
+        this.extension='.gpx'
+        this.downloadName=this.name+this.extension;
     }
 }
 routeobjects.RouteInfo=RouteInfo;

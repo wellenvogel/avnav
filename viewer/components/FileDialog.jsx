@@ -40,7 +40,7 @@ import ViewPage from "../gui/ViewPage";
 import {layoutLoader} from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
-import Helper from '../util/helper';
+import Helper, {awaitHelper} from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import {TrackConvertDialog} from "./TrackConvertDialog";
@@ -117,11 +117,79 @@ const buildRequestParameters=(command,item,opt_additional)=>{
             name:item.name
         }
 }
+class Action{
+    constructor({label,name,action,visible,close,disabled}) {
+        this.label=label;
+        this.action=action;
+        this.visible=visible;
+        this.name=name;
+        this.close=close;
+        this.disabled=disabled;
+    }
+    copy(updates){
+        const rt=new Action(this);
+        if (updates && updates instanceof Object){
+            for (let k in updates){
+                rt[k]=updates[k];
+            }
+        }
+        return rt;
+    }
+    async _ahelper(ev, item,doneAction){
+        if (typeof this.action !== 'function')return;
+        try {
+            const rs= this.action(item);
+            if (rs instanceof Promise){
+                await rs;
+                doneAction();
+                return;
+            }
+            doneAction();
+        }catch (e){
+            doneAction(e);
+        }
+    }
+    getButton(item,doneAction){
+        return {
+            name: this.name,
+            visible: this.visible,
+            label: this.label,
+            onClick: async (ev)=>{
+                await this._ahelper(ev,item,doneAction);
+            },
+            close: this.close,
+            disabled: this.disabled
+        }
+    }
+
+}
+export const deleteItem=async (info,dialogContext,opt_deleteFunction)=> {
+    try {
+        await showPromiseDialog(dialogContext, (dprops) => <ConfirmDialog {...dprops}
+                                                                          text={"delete " + (info.displayName || info.name) + "?"}/>);
+    }catch (pe) {
+        return (false);
+    }
+    if (!opt_deleteFunction) {
+        opt_deleteFunction = async () => Requests.getJson(buildRequestParameters('delete', info));
+    }
+    await awaitHelper(opt_deleteFunction(info,dialogContext));
+    await removeItemsFromOverlays(undefined,[info]);
+};
+const standardActions={
+    delete: new Action({
+            label: 'Delete',
+            name: 'delete',
+            action: deleteItem
+        }),
+
+}
 export const USER_PREFIX='user.';
 export class ItemActions{
     constructor(type) {
         this.type=type;
         this.headline=type
+        this.actions=[]
         this.showEdit=false;
         this.showView=false;
         this.showDelete=false;
@@ -274,7 +342,9 @@ export class ItemActions{
         switch (props.type){
             case 'chart':
                 rt.headline='Charts';
-                rt.showDelete=props.canDelete && isConnected;
+                rt.actions.push(standardActions.delete.copy({
+                    visible: props.canDelete && isConnected
+                }));
                 rt.showOverlay=canEditOverlays;
                 rt.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
                 rt.showImportLog=props.hasImportLog;
@@ -288,7 +358,15 @@ export class ItemActions{
                 break;
             case 'track':
                 rt.headline='Tracks';
-                rt.showDelete=true;
+                rt.actions.push(standardActions.delete.copy({
+                    visible:true,
+                    action: async (info,dialogContext)=> {
+                        await deleteItem(info, dialogContext, async (dinfo) => {
+                            await Requests.getJson(buildRequestParameters('delete', dinfo));
+                            NavHandler.resetTrack();
+                        });
+                    }
+                    }));
                 rt.showDownload=true;
                 rt.showView=viewable;
                 rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
@@ -299,7 +377,19 @@ export class ItemActions{
             case 'route':
                 rt.headline='Routes';
                 rt.showIsServer=props.server;
-                rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
+                rt.actions.push(standardActions.delete.copy({
+                    visible: !props.active && props.canDelete !== false  && ( !props.isServer || isConnected),
+                    action: async (item,dialogContext)=>{
+                        await deleteItem(item,dialogContext,async (ditem)=>{
+                            if (RouteHandler.isActiveRoute(ditem.name)) {
+                                throw new Error("unable to delete active route")
+                            }
+                            await RouteHandler.deleteRoutePromise(ditem.name,
+                                !ditem.server //if we think this is a local route - just delete it local only
+                            );
+                        })
+                    }
+                }));
                 rt.showView = async (item) => {
                     const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
                     return {
@@ -336,7 +426,14 @@ export class ItemActions{
                 break;
             case 'layout':
                 rt.headline='Layouts';
-                rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
+                rt.actions.push(standardActions.delete.copy({
+                    visible: isConnected &&  props.canDelete !== false && ! props.active,
+                    action:async (item,dialogContext)=>{
+                        await deleteItem(item,dialogContext,async (ditem)=>{
+                            await layoutLoader.deleteLayout(ditem.name)
+                        })
+                    }
+                }))
                 rt.showView = async (item)=>{
                     const layout = await layoutLoader.loadLayout(item.name);
                     return {
@@ -355,7 +452,9 @@ export class ItemActions{
                 break;
             case 'settings':
                 rt.headline='Settings';
-                rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
+                rt.actions.push(standardActions.delete.copy({
+                    visible:isConnected && props.canDelete !== false && ! props.active
+                }));
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
@@ -370,7 +469,9 @@ export class ItemActions{
                 break;
             case 'user':
                 rt.headline='User';
-                rt.showDelete=isConnected && props.canDelete;
+                rt.actions.push(standardActions.delete.copy({
+                    visible:  isConnected && props.canDelete
+                }))
                 rt.showRename=isConnected && props.canDelete;
                 rt.showView=viewable;
                 rt.showEdit=editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && props.canDelete && isConnected;
@@ -381,7 +482,9 @@ export class ItemActions{
                 break;
             case 'images':
                 rt.headline='Images';
-                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.actions.push(standardActions.delete.copy({
+                    visible: isConnected && props.canDelete
+                }))
                 rt.showView = viewable;
                 rt.showRename = isConnected && props.canDelete !== false;
                 rt.showDownload=true;
@@ -390,7 +493,9 @@ export class ItemActions{
                 break;
             case 'overlay':
                 rt.headline='Overlays';
-                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.actions.push(standardActions.delete.copy({
+                    visible: isConnected && props.canDelete !== false
+                }))
                 rt.showView = viewable;
                 rt.showRename = isConnected && props.canDelete !== false;
                 rt.showDownload=true;
@@ -400,7 +505,9 @@ export class ItemActions{
                 break;
             case 'plugins':
                 rt.headline='Plugins';
-                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.actions.push(standardActions.delete.copy({
+                    visible: isConnected && props.canDelete !== false
+                }))
                 rt.showView = false;
                 rt.showRename = false;
                 rt.showDownload=true;
@@ -619,6 +726,13 @@ export const FileDialog = (props) => {
     //and user items must always have a checkPrefix. By using this we do not need to knoew the user prefix here
     //in the code but can lease this to the server
     const allowRename=allowed.showRename && ( ! allowed.hasScope || props.current.checkPrefix);
+    const dialogButtons=[];
+    allowed.actions.forEach(actions => {
+        dialogButtons.push(actions.getButton(props.current,(err)=>{
+            if (err) Toast(err);
+            props.okFunction("dummy")
+        }));
+    })
     return (
         <DialogFrame className="fileDialog" title={props.current.displayName||props.current.name}>
             {props.current.info !== undefined ?
@@ -665,7 +779,7 @@ export const FileDialog = (props) => {
                         value={name}
                     />
             }
-            <DialogButtons>
+            <DialogButtons buttonList={dialogButtons}>
                 {allowRename && <DB
                     name={"Rename"}
                     onClick={()=>{
@@ -715,18 +829,6 @@ export const FileDialog = (props) => {
                         disabled={!rename && !schemeChanged}
                     >
                         Save
-                    </DB>
-                    :
-                    null
-                }
-                {allowed.showDelete ?
-                    <DB name="delete"
-                        onClick={() => {
-                            props.okFunction('delete', props.current.name);
-                        }}
-                        disabled={changed}
-                    >
-                        Delete
                     </DB>
                     :
                     null
@@ -826,32 +928,7 @@ export const FileDialog = (props) => {
     );
 
 }
-export const deleteItem=async (info)=> {
-    try {
-        await showPromiseDialog(undefined, (dprops) => <ConfirmDialog {...dprops}
-                                                                      text={"delete " + (info.displayName || info.name) + "?"}/>);
-    }catch (pe) {
-        return (false);
-    }
-            if (info.type === 'layout') {
-                await layoutLoader.deleteLayout(info.name)
-            }
-            else if (info.type !== "route") {
-                await Requests.getJson(buildRequestParameters('delete', info));
-                        if (info.type === 'track') {
-                            NavHandler.resetTrack();
-                        }
-            } else {
-                if (RouteHandler.isActiveRoute(info.name)) {
-                    Toast("unable to delete active route");
-                    return;
-                }
-                await RouteHandler.deleteRoutePromise(info.name,
-                    !info.server //if we think this is a local route - just delete it local only
-                );
-            }
-            await removeItemsFromOverlays(undefined,[info]);
-};
+
 
 export const FileDialogWithActions=(props)=>{
     const {doneCallback,item,history,checkExists,...forward}=props;
@@ -939,6 +1016,7 @@ export const FileDialogWithActions=(props)=>{
                 }
                 return;
             }
+            doneAction();
         }catch (e){
             Toast(e+"");
             doneAction();

@@ -560,7 +560,7 @@ RouteData.prototype._listRoutesLocal=function(){
     for (i=0;i<routeKeys.length;i++){
         key=routeKeys[i];
         let routeName=key.substr(STORAGE_NAMES.ROUTE.length);
-            rtinfo=new routeobjects.RouteInfo(this._ensureGpx(routeName));
+            rtinfo=new routeobjects.RouteInfo(routeName);
             try {
                 route=new routeobjects.Route();
                 route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,routeName));
@@ -592,7 +592,7 @@ RouteData.prototype.deleteRoutePromise = function (name, opt_localonly) {
  * @param opt_errorcallback
  */
 RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,opt_localonly){
-    let localName=name.replace(/\.gpx$/,'');
+    let localName=name;
     let rt=this._loadRoute(localName,true);
     if ((! rt || rt.server) && ! this.connectMode && ! opt_localonly){
         if (opt_errorcallback){
@@ -610,7 +610,7 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
             request:'api',
             type:'route',
             command:'delete',
-            name: this._ensureGpx(name)
+            name: name
         })
             .then((res)=>{
                 if (opt_okcallback) opt_okcallback();
@@ -629,19 +629,11 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
 };
 
 RouteData.prototype.getLocalRouteXml=function(name){
-    name=name.replace(/\.gpx$/,"");
     let route=this._loadRoute(name,true)
     if (! route) return;
     return route.toXml();
 }
-
-RouteData.prototype._ensureGpx=function(name){
-    if (! name.match(/\.gpx$/)) name+=".gpx";
-    return name;
-}
-
 RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
-    name=this._ensureGpx(name);
     Requests.getHtmlOrText({
         request:'api',
         type:'route',
@@ -651,7 +643,7 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
         .then((xml)=>{
             let newRoute=new routeobjects.Route();
             newRoute.fromXml(xml);
-            let routeName=name.replace(/\.gpx$/,'');
+            let routeName=name;
             if (newRoute.name !== routeName){
                 let error="downloaded route has invalid name expected="+routeName+", current="+newRoute.name;
                 if (opt_errorcallback) opt_errorcallback(error);
@@ -1032,7 +1024,6 @@ RouteData.prototype._localRouteExists=function(route) {
  * @returns {routeobjects.Route}
  */
 RouteData.prototype._loadRoute=function(name,opt_returnUndef){
-    if (name.match(/\.gpx$/)) name=name.replace(/\.gpx$/,'');
     let rt=new routeobjects.Route(name);
     try{
         let raw=LocalStorage.getItem(STORAGE_NAMES.ROUTE,name);
@@ -1069,7 +1060,7 @@ RouteData.prototype._sendRoute=function(route, opt_callback,opt_overwrite){
         request:'api',
         command:'upload',
         type:'route',
-        name: this._ensureGpx(route.name),
+        name:route.name,
         overwrite: opt_overwrite
     },route.toXml())
         .then((res)=>{
