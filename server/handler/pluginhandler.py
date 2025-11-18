@@ -27,8 +27,10 @@
 import importlib.util
 import inspect
 import json
+import shutil
 import signal
 from typing import Dict, Any
+from zipfile import ZipFile
 
 from alarmhandler import AVNAlarmHandler
 from avnav_api import AVNApi, ConverterApi
@@ -38,6 +40,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
+from avndirectorybase import AVNDirectoryHandlerBase
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
@@ -47,7 +50,7 @@ from charthandler import AVNChartHandler
 from settingshandler import AVNSettingsHandler
 from commandhandler import AVNCommandHandler
 
-URL_PREFIX= "/plugins"
+URL_PREFIX="/plugins"
 
 '''
 hide plugins if an environment variable with this prefix 
@@ -558,19 +561,32 @@ class PluginApiProxy():
         self.__check=None
         self.__impl=None
 
-class AVNPluginHandler(AVNWorker):
-  createdApis: Dict[str, ApiImpl]
+class AVNPluginHandler(AVNDirectoryHandlerBase):
   ENABLE_PARAMETER=WorkerParameter('enabled',
                                    type=WorkerParameter.T_BOOLEAN,
                                    default=True,
                                    description="enable this plugin")
+  PREFIX = URL_PREFIX
+  UPLOAD_NAME = "upload"
+  D_BUILTIN = 'builtin'
+  D_SYSTEM = 'system'
+  D_USER = 'user'
+  ALL_DIRS = [D_BUILTIN, D_SYSTEM, D_USER]
+  SCOPE_USER = D_USER + "-"
+  EXT = '.zip'
+
+  @classmethod
+  def getPrefix(cls):
+      return cls.PREFIX
+
 
   """a handler for plugins"""
   def __init__(self,param):
-    AVNWorker.__init__(self, param)
+    super().__init__(param,"plugins")
     self.queue=None
-    self.createdApis={}
+    self.createdApis={} #type: Dict[str, ApiImpl]
     self.configLock=threading.Lock()
+    self.baseDir=self.getPluginBaseDir(self.D_USER)
 
 
   @classmethod
@@ -592,15 +608,21 @@ class AVNPluginHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
 
+  def onPreRun(self):
+      super().onPreRun()
+      try:
+          for file in os.listdir(self.baseDir):
+              if file.startswith(self.UPLOAD_NAME) and file.endswith(self.EXT):
+                  os.unlink(os.path.join(self.baseDir,file))
+      except Exception as e:
+          AVNLog.error("unable to cleanup upload files: %s",str(e))
+
+
   def isHidden(self,name):
     ev=os.getenv(ENV_PREFIX+normalizedName(name))
     if ev == '1':
       return True
     return False
-  D_BUILTIN='builtin'
-  D_SYSTEM='system'
-  D_USER='user'
-  ALL_DIRS=[D_BUILTIN,D_SYSTEM,D_USER]
   def createModuleName(self,name,type=D_USER):
       return type+'-'+name
   def getApi(self,name):
@@ -828,14 +850,8 @@ class AVNPluginHandler(AVNWorker):
     rt={}
     return rt
 
-  def getApiType(self):
-    return "plugins"
-
-  def getHandledPath(self):
-      return URL_PREFIX
-
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
-      localPath = path[len(URL_PREFIX) + 1:].split("/", 1)
+      localPath = path[len(self.PREFIX) + 1:].split("/", 1)
       if len(localPath) < 2:
           raise Exception(404, "missing plugin path")
       api = self.getApi(localPath[0])
@@ -860,32 +876,121 @@ class AVNPluginHandler(AVNWorker):
               return None
           fname = os.path.join(api.directory, 'plugin.js')
           name = localPath[0]
-          url = URL_PREFIX + "/" + name
+          url = self.PREFIX + "/" + name
           addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
           return handler.sendJsFile(fname, url, addCode)
       return os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
 
-  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
-    '''
-      handle the URL based requests
-      :return: the answer
-      '''
-    if command == "list":
-        data=[]
-        with self.configLock:
-            for k,api in self.createdApis.items():
-              if api is None or not api.isEnabled():
-                continue
-              dir=api.directory
-              element={'name':k,'dir':dir}
-              if os.path.exists(os.path.join(dir,"plugin.js")):
-                element['js']= URL_PREFIX + "/" + k + "/plugin.js"
-              if os.path.exists(os.path.join(dir,"plugin.css")):
-                element['css']= URL_PREFIX + "/" + k + "/plugin.css"
-              data.append(element)
-        rt={'status':'OK','data':data}
-        return rt
-    raise Exception(f"unable to handle plugin request {command}")
+  def handleSpecialApiRequest(self, command, requestparam, handler):
+      if command == 'listFiles':
+          data = []
+          with self.configLock:
+              for k, api in self.createdApis.items():
+                  if api is None or not api.isEnabled():
+                      continue
+                  dir = api.directory
+                  element = {'name': k, 'dir': dir}
+                  if os.path.exists(os.path.join(dir, "plugin.js")):
+                      element['js'] = self.PREFIX + "/" + k + "/plugin.js"
+                  if os.path.exists(os.path.join(dir, "plugin.css")):
+                      element['css'] = self.PREFIX + "/" + k + "/plugin.css"
+                  data.append(element)
+          return AVNUtil.getReturnData(data=data)
+      return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
+
+  def listDirectory(self, includeDirs=False,baseDir=None,extension=None,scope=None):
+      dlist = [entry for entry in super().listDirectory(True, baseDir,scope=self.SCOPE_USER) if entry.isDirectory]
+      blist = [entry for entry in
+               super().listDirectory(True, self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN), scope=AVNPluginHandler.D_BUILTIN+"-") if
+               entry.isDirectory]
+      slist = [entry for entry in
+               super().listDirectory(True, self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),scope=AVNPluginHandler.D_SYSTEM+"-") if
+               entry.isDirectory]
+      dlist.extend(blist)
+      dlist.extend(slist)
+      return dlist
+
+  def handleDownload(self, name, handler, requestparam):
+      if name is None:
+          raise Exception("missing name")
+      name = AVNUtil.clean_filename(name)
+      if not name.startswith(self.SCOPE_USER):
+          raise Exception(f"plugin {name} is no user plugin")
+      name=name[len(self.SCOPE_USER):]
+      (filename, baseDir) = self.convertLocalPath(name)
+      if filename is None:
+          return None
+      if baseDir is not None:
+          filename = os.path.join(baseDir, filename)
+      if not os.path.exists(filename) or not os.path.isdir(filename):
+          raise Exception("plugin %s not found" % filename)
+      def filter(fn):
+          if fn is None:
+              return True
+          if fn.find('__pycache__') >= 0:
+              return False
+          return True
+      return AVNZipDownload(name+".zip",filename,prefix=name,filter=filter)
+
+  def handleDelete(self, name):
+      if not self.canDelete():
+          raise Exception("delete not possible")
+      if name is None:
+          raise Exception("missing name")
+      name = AVNUtil.clean_filename(name)
+      if not name.startswith(self.SCOPE_USER):
+          raise Exception(f"plugin {name} is no user plugin")
+      name=name[len(self.SCOPE_USER):]
+      filename = os.path.join(self.baseDir, name)
+      if not os.path.exists(filename) or not os.path.isdir(filename):
+          raise Exception("plugin %s not found" % filename)
+      self.deletePlugin(name)
+      shutil.rmtree(filename)
+  def checkPath(self,path,base,isdir=False):
+      parts=path.split('/')
+      if len(parts) < 1:
+          raise Exception(f"invalid path [{path}]")
+      if not isdir and len(parts) < 2:
+          raise Exception(f"plugin: [{path}] files must be in a sub directory")
+      if parts[0] != base:
+          raise Exception(f"plugin: [{path}] all files must be below {base}")
+      for fn in parts[1:]:
+          clean=AVNUtil.clean_filename(fn)
+          if clean != fn:
+              raise Exception(f"plugin: [{path}] invalid part in path {fn}")
+  def handleUpload(self, name, handler, requestparam):
+      self.checkName(name)
+      if name.lower().endswith(self.EXT):
+          name=name[0:-len(self.EXT)]
+      overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
+      plugindir=os.path.join(self.baseDir,name)
+      if os.path.exists(plugindir) and not overwrite:
+          raise Exception(f"plugin {plugindir} already exists")
+      uploadName=f"{self.UPLOAD_NAME}-{threading.get_ident()}{self.EXT}"
+      filename = os.path.join(self.baseDir, uploadName)
+      if os.path.exists(filename):
+          os.unlink(filename)
+      try:
+        rt= super().handleUpload(uploadName, handler, requestparam)
+        if not os.path.exists(filename):
+          raise Exception(f"file {filename} not found after upload")
+        zip = ZipFile(filename)
+        hasEntries=False
+        for entry in zip.infolist():
+            AVNLog.debug(f"zip entry {entry}")
+            self.checkPath(entry.filename,name,isdir=entry.is_dir())
+            if not entry.is_dir():
+                hasEntries=True
+        if not hasEntries:
+            raise Exception(f"no files in zip {name}")
+        zip.extractall(self.baseDir)
+        now=time.time()
+        os.utime(plugindir,(now,now))
+        self.updatePlugin(name)
+      finally:
+        os.unlink(filename)
+      return rt
+
 
   def getPluginBaseDir(self, type=D_USER):
       if type == self.D_USER:
