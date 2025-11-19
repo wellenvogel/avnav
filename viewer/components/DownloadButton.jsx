@@ -58,7 +58,7 @@ const DownloadButton=(props)=>{
             hiddenA.current.click();
         }
     }
-    let {useDialogButton,url,localData,fileName,type,...forward}=props;
+    let {useDialogButton,url,localData,fileName,...forward}=props;
     let Bt = useDialogButton ? DB : Button;
     if (!url && ! localData) return null;
         return (
@@ -74,8 +74,12 @@ const DownloadButton=(props)=>{
                 {!localData && <iframe
                     className="downloadFrame"
                     onLoad={(ev) => {
-                        let txt = ev.target.contentDocument.body.textContent;
-                        if (!txt) return;
+                        let txt;
+                        const doc= ev.target.contentDocument;
+                        if (doc.body) txt=doc.body.textContent;
+                        if (!txt) {
+                            return;
+                        }
                         Toast(txt);
                     }}
                     src={undefined}
@@ -113,7 +117,6 @@ DownloadButton.propTypes={
     className: PropTypes.string,
     useDialogButton: PropTypes.bool,
     fileName:  PropTypes.string,
-    type: PropTypes.string,
     onClick: PropTypes.func
 }
 

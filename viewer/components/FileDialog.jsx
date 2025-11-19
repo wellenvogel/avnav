@@ -58,64 +58,10 @@ import GuiHelpers from "../util/GuiHelpers";
 import {removeItemsFromOverlays} from "../map/overlayconfig";
 
 const RouteHandler=NavHandler.getRoutingHandler();
-/**
- * additional parameters that should be included in server requests
- * if they are set at the item
- * @type {{url: boolean, chartKey: boolean}}
- */
-export const additionalUrlParameters={
-    url:true
-}
-
-export const ItemDownloadButton=(props)=>{
-    let {item,...forwards}=props;
-    if (item.canDownload === false) return null;
-    let localData=props.localData||getLocalDataFunction(item);
-    return <DownloadButton
-        {...forwards}
-        url={localData?undefined:getDownloadUrl(item)}
-        fileName={getDownloadFileName(item)}
-        localData={localData}
-        type={item.type}
-        />
-}
-const getLocalDataFunction=(item)=>{
-    if (item.type === 'route' && ! item.server){
-        return ()=>{ return RouteHandler.getLocalRouteXml(item.name)}
-    }
-    if (item.type === 'layout'){
-        return layoutLoader.getLocalDownload(item.name);
-    }
-}
-export const getDownloadFileName=(item)=>{
-    let actions=new ItemActions(item);
-    return actions.nameForDownload();
-}
-const getDownloadUrl=(item)=>{
-    let name=item.name;
-    if (item.type==='route') {
-        if (item.server === false) return;
-        if (! name.match(/\.gpx$/)) name+=".gpx";
-    }
-    let url= prepareUrl(buildRequestParameters('download',item,{
-        filename:getDownloadFileName(item),
-    }));
-    return url;
-}
-
 const showConvertFunctions = {
     track: (dialogContext,history,item) => {
         dialogContext.replaceDialog(()=><TrackConvertDialog history={history} name={item.name}/>);
     }
-}
-const buildRequestParameters=(command,item,opt_additional)=>{
-    return {...Helper.filteredAssign(additionalUrlParameters,item),
-            ...opt_additional,
-            request: 'api',
-            command: command,
-            type: item.type,
-            name:item.name
-        }
 }
 class Action{
     constructor({label,name,action,visible,close,disabled,itemActions}) {
@@ -136,7 +82,7 @@ class Action{
         }
     }
     copy(updates){
-        const rt=new Action(this);
+        const rt=new this.constructor(this);
         if (updates && updates instanceof Object){
             for (let k in updates){
                 rt[k]=updates[k];
@@ -192,6 +138,40 @@ class Action{
         }
     }
 
+}
+
+class DownloadAction extends Action{
+    constructor({url,localData,fileName,...values}) {
+        super(values);
+        this.url=url;
+        this.localData=localData;
+        this.fileName=fileName;
+    }
+
+    getButton(options) {
+        const button= super.getButton(options);
+        if (this.localData){
+            button.localData=this._fhelper('localData',options);
+        }
+        else{
+            button.url=this._fhelper('url',options);
+        }
+        button.fileName=this._fhelper('fileName',options);
+        // eslint-disable-next-line react/display-name
+        return (props)=>{
+            if (! Helper.unsetorTrue(button.visible)){
+                return null;
+            }
+            return <DownloadButton
+                {...props}
+                fileName={button.fileName}
+                url={button.url}
+                localData={button.localData}
+                name={button.name}
+                useDialogButton={true}
+            >{button.label}</DownloadButton>;
+        }
+    }
 }
 //-------------------- action helper ---------------------
 const SchemeDialog = ({item, resolveFunction}) => {
@@ -339,6 +319,23 @@ const standardActions={
             let ext=action.itemActions.getExtensionForView();
             return ViewPage.VIEWABLES.indexOf(ext)>=0;
         }
+    }),
+    download:new DownloadAction({
+       label:'Download',
+       name: 'download',
+       visible:  (item,options,action)=>{
+           return item.canDownload
+       },
+       fileName:(item,options,action)=>action.itemActions.nameForDownload(),
+       url:(item,options,action)=>{
+           return prepareUrl({
+               type:item.type,
+               command:'download',
+               name:item.name,
+               filename: action.itemActions.nameForDownload()
+           })
+       }
+
     })
 
 }
@@ -543,8 +540,8 @@ export class ItemActions{
                     },
                     visible: isConnected && props.name && props.name.match(/.*\.mbtiles$/) && props.canDelete
                 }))
+                this.actions.push(standardActions.download.copy({}))
                 this.showOverlay=canEditOverlays;
-                this.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
                 this.showImportLog=props.hasImportLog;
                 if (props.originalScheme){
                     this.className+=' userAction';
@@ -572,6 +569,7 @@ export class ItemActions{
                     visible:isConnected,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.download.copy({}))
                 this.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
                 this.showOverlay=allowedOverlay && canEditOverlays;
                 this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
@@ -615,11 +613,15 @@ export class ItemActions{
                             type: item.type,
                             name: item.name,
                             readOnly: true,
-                            ext:options.getExtensionForView(item),
+                            ext:this.getExtensionForView(),
                             data: route.toXml()
                         });
                         return true;
                     }
+                }))
+                this.actions.push(standardActions.download.copy({
+                    localData: props.isServer?undefined:
+                        ()=>RouteHandler.getLocalRouteXml(props.name)
                 }))
                 this.showEdit = mapholder.getCurrentChartEntry() !== undefined;
                 this.showOverlay = canEditOverlays;
@@ -667,11 +669,14 @@ export class ItemActions{
                             type: item.type,
                             name: item.name,
                             readOnly: true,
-                            ext:options.getExtensionForView(item),
+                            ext:this.getExtensionForView(),
                             data:JSON.stringify(layout,undefined,"  ")
                         });
                         return true;
                     }
+                }))
+                this.actions.push(standardActions.download.copy({
+                    localData: layoutLoader.getLocalDownload(props.name)
                 }))
                 this.showEdit = isConnected && editableSize && props.canDelete;
                 this.fixedExtension='json';
@@ -691,6 +696,7 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.download.copy({}))
                 this.showEdit = isConnected && editableSize && props.canDelete;
                 this.fixedExtension = 'json';
                 this.localUploadFunction = (name, data, overwrite) => {
@@ -711,6 +717,7 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.download.copy({}))
                 this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
                 this.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
                 this.isApp = this.showApp && props.isAddon;
@@ -726,6 +733,7 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.download.copy({}))
                 this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
                 this.allowedExtensions = GuiHelpers.IMAGES;
             }
@@ -739,6 +747,7 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.download.copy({}))
                 this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
                 this.showOverlay = canEditOverlays && allowedOverlay;
                 this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
@@ -749,6 +758,7 @@ export class ItemActions{
                 this.actions.push(standardActions.delete.copy({
                     visible: isConnected && props.canDelete !== false
                 }))
+                this.actions.push(standardActions.download.copy({}))
                 this.showEdit= false;
                 this.showOverlay = false;
                 this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
@@ -1012,14 +1022,6 @@ export const FileDialog = (props) => {
                     :
                     null
                 }
-                <ItemDownloadButton
-                    name="download"
-                    disabled={changed}
-                    item={props.current || {}}
-                    useDialogButton={true}
-                >
-                    Download
-                </ItemDownloadButton>
                 {(allowed.showApp) &&
                     <DB name="userApp"
                         onClick={() => {

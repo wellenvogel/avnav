@@ -42,11 +42,12 @@ import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem, SelectList} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
 import plugimage from '../images/icons-new/plug.svg';
-import {ItemActions, ItemDownloadButton} from "../components/FileDialog";
+import {ItemActions} from "../components/FileDialog";
 import UploadHandler from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
 import {existsRoute, loadRoutes} from "../components/RouteInfoHelper";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
+import DownloadButton from "../components/DownloadButton";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -518,15 +519,12 @@ const EditRouteDialog = (props) => {
                  onClick={loadNewRoute}
                  close={false}
             >Load</DB>
-            <ItemDownloadButton
-                item={{
-                    type:'route',
-                    name:route.name,
-                    localData: ()=>route.toXml()
-                }}
+            <DownloadButton
+                fileName={route.name+".gpx"}
+                localData={()=>route.toXml()}
                 name={'download'}
                 useDialogButton={true}
-            >Download</ItemDownloadButton>
+            >Download</DownloadButton>
             <DB name="edit"
                 onClick={() => {
                     nameDialog("Choose New Name")

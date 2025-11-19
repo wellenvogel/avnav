@@ -22,7 +22,7 @@ import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {
     deleteItem,
-    ItemDownloadButton, ItemActions, FileDialogWithActions
+    ItemActions, FileDialogWithActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import PropertyHandler from '../util/propertyhandler';
@@ -102,11 +102,6 @@ const itemSort=(a,b)=>{
     return 0;
 };
 
-
-
-
-
-
 const DownloadItem=(props)=>{
 
     let actions=new ItemActions(props);
@@ -130,11 +125,6 @@ const DownloadItem=(props)=>{
                     { actions.isApp && <div className="appimage"></div>}
                 </div>
             </div>
-            <ItemDownloadButton
-                name="Download"
-                className="Download smallButton"
-                item={props}
-            />
         </div>
     );
 };
