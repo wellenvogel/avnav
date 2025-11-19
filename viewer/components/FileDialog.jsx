@@ -160,7 +160,7 @@ class Action{
      */
     async _ahelper(ev, options){
         if (typeof this.action !== 'function')return;
-        const rs= this.action(this.itemActions.item,options||{});
+        const rs= this.action(this.itemActions.item,options||{},this);
         if (rs instanceof Promise) {
             return await rs;
         }
@@ -171,7 +171,7 @@ class Action{
     _fhelper(name,options){
         const target=this[name];
         if (typeof target === 'function'){
-            return target(this.itemActions.item,options||{});
+            return target(this.itemActions.item,options||{},this);
         }
         return !!target;
     }
@@ -334,15 +334,14 @@ const standardActions={
             options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:this.itemActions.getExtensionForView(item)});
             return true;
         },
-        visible: (item,options)=>{
+        visible: (item,options,action)=>{
             if (! options.history) return false;
-            let ext=this.itemActions.getExtensionForView();
+            let ext=action.itemActions.getExtensionForView();
             return ViewPage.VIEWABLES.indexOf(ext)>=0;
         }
     })
 
 }
-export const USER_PREFIX='user.';
 export class ItemActions{
     constructor(item) {
         this.item=item||{};
@@ -547,7 +546,6 @@ export class ItemActions{
                 this.showOverlay=canEditOverlays;
                 this.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
                 this.showImportLog=props.hasImportLog;
-                this.showDownload=props.canDownload;
                 if (props.originalScheme){
                     this.className+=' userAction';
                 }
@@ -574,7 +572,6 @@ export class ItemActions{
                     visible:isConnected,
                 }))
                 this.actions.push(standardActions.view.copy({}))
-                this.showDownload=true;
                 this.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
                 this.showOverlay=allowedOverlay && canEditOverlays;
                 this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
@@ -626,7 +623,6 @@ export class ItemActions{
                 }))
                 this.showEdit = mapholder.getCurrentChartEntry() !== undefined;
                 this.showOverlay = canEditOverlays;
-                this.showDownload = true;
                 this.fixedExtension = 'gpx';
                 this.infoText += "," + Formatter.formatDecimal(props.length, 4, 2) +
                     " nm, " + props.numpoints + " points";
@@ -678,7 +674,6 @@ export class ItemActions{
                     }
                 }))
                 this.showEdit = isConnected && editableSize && props.canDelete;
-                this.showDownload = true;
                 this.fixedExtension='json';
                 this.localUploadFunction=(name,data,overwrite)=>{
                     return layoutLoader.uploadLayout(name,data,overwrite);
@@ -697,7 +692,6 @@ export class ItemActions{
                 }))
                 this.actions.push(standardActions.view.copy({}))
                 this.showEdit = isConnected && editableSize && props.canDelete;
-                this.showDownload = true;
                 this.fixedExtension = 'json';
                 this.localUploadFunction = (name, data, overwrite) => {
                     return PropertyHandler.verifySettingsData(data, true, true)
@@ -718,7 +712,6 @@ export class ItemActions{
                 }))
                 this.actions.push(standardActions.view.copy({}))
                 this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
-                this.showDownload = true;
                 this.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
                 this.isApp = this.showApp && props.isAddon;
 
@@ -733,7 +726,6 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
-                this.showDownload = true;
                 this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
                 this.allowedExtensions = GuiHelpers.IMAGES;
             }
@@ -747,7 +739,6 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
-                this.showDownload = true;
                 this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
                 this.showOverlay = canEditOverlays && allowedOverlay;
                 this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
@@ -758,8 +749,6 @@ export class ItemActions{
                 this.actions.push(standardActions.delete.copy({
                     visible: isConnected && props.canDelete !== false
                 }))
-                this.showRename = false;
-                this.showDownload=true;
                 this.showEdit= false;
                 this.showOverlay = false;
                 this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
