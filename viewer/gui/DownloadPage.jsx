@@ -109,7 +109,7 @@ const itemSort=(a,b)=>{
 
 const DownloadItem=(props)=>{
 
-    let actions=ItemActions.create(props,globalStore.getData(keys.properties.connectedMode,false));
+    let actions=new ItemActions(props);
     let  cls="listEntry "+actions.className;
     let dataClass="downloadItemData";
     return(
@@ -273,7 +273,7 @@ class DownloadPage extends React.Component{
         };
     }
     getButtons(){
-        const itemActions=ItemActions.create({type: this.state.type},globalStore.getData(keys.properties.connectedMode,true))
+        const itemActions=new ItemActions({type: this.state.type})
         let rt=[
             this.getButtonParam('DownloadPageCharts','chart'),
             {
@@ -318,7 +318,7 @@ class DownloadPage extends React.Component{
      * @returns {Promise}
      */
     checkNameForUpload(name,file){
-            let actions=ItemActions.create({type:this.state.type},false);
+            let actions=new ItemActions({type:this.state.type});
             let ext=Helper.getExt(name);
             if (this.state.type !== 'chart') {
                 const error = actions.checkExtension(ext, actions.headline);
@@ -474,7 +474,7 @@ class DownloadPage extends React.Component{
      *          if no function is returned, the upload will go to the server
      */
     getLocalUploadFunction(){
-        let actions=ItemActions.create(this.state.type);
+        let actions=new ItemActions({type:this.state.type});
         if (actions.localUploadFunction){
             return (obj)=> {
                 if (!obj) {
@@ -488,7 +488,7 @@ class DownloadPage extends React.Component{
                         let route=new routeobjects.Route();
                         route.fromXml(data)
                         if (! route.name) route.name=actions.nameForUpload(name);
-                        const existing=this.entryExists(actions.nameForDownload(route.name));
+                        const existing=this.entryExists(route.name);
                         if (existing){
                             showPromiseDialog(undefined,(dprops)=><ItemNameDialog
                                 {...dprops}
@@ -517,7 +517,7 @@ class DownloadPage extends React.Component{
         }
     }
     createAccessor(opt_actions){
-        if (! opt_actions) opt_actions=ItemActions.create({type:this.state.type},false);
+        if (! opt_actions) opt_actions=new ItemActions({type:this.state.type});
         return (data)=>opt_actions.nameForCheck(data);
     }
     createItem(){
@@ -570,7 +570,7 @@ class DownloadPage extends React.Component{
     };
     render(){
         let self=this;
-        const actions=ItemActions.create({type:this.state.type});
+        const actions=new ItemActions({type:this.state.type});
         let localDoneFunction=this.getLocalUploadFunction();
         return (
             <Page

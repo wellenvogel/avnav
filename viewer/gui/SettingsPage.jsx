@@ -308,7 +308,7 @@ const SettingsPage = (props) => {
     }, []);
 
     const saveSettings = useCallback(() => {
-        let actions = ItemActions.create('settings');
+        let actions = new ItemActions({type:'settings'});
         let oldName = actions.nameToBaseName(globalStore.getData(keys.properties.lastLoadedName)).replace(/-*[0-9]*$/, '');
         let suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
         let proposedName = actions.nameForUpload(oldName + "-" + suffix);
@@ -550,8 +550,7 @@ const SettingsPage = (props) => {
                 layoutLoader.listLayouts()
                     .then((list) => {
                         const currentName = LayoutHandler.getName();
-                        const itemActions=ItemActions.create({type:'layout'},
-                            globalStore.getData(keys.properties.connectedMode));
+                        const itemActions=new ItemActions({type:'layout'});
                         showPromiseDialog(undefined, (dprops) => <ItemNameDialog
                             {...dprops}
                             title={"Start Layout Editor"}

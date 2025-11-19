@@ -88,8 +88,8 @@ const getLocalDataFunction=(item)=>{
     }
 }
 export const getDownloadFileName=(item)=>{
-    let actions=ItemActions.create(item,globalStore.getData(keys.properties.connectedMode));
-    return actions.nameForDownload(item);
+    let actions=new ItemActions(item);
+    return actions.nameForDownload();
 }
 const getDownloadUrl=(item)=>{
     let name=item.name;
@@ -118,13 +118,22 @@ const buildRequestParameters=(command,item,opt_additional)=>{
         }
 }
 class Action{
-    constructor({label,name,action,visible,close,disabled}) {
+    constructor({label,name,action,visible,close,disabled,itemActions}) {
         this.label=label;
         this.action=action;
         this.visible=visible;
         this.name=name;
         this.close=close;
         this.disabled=disabled;
+        this.itemActions=itemActions;
+    }
+    _check(){
+        if (! this.itemActions){
+            this.itemActions=new ItemActions('dummy');
+        }
+        if (! (this.itemActions instanceof ItemActions)){
+            throw new Error("invalid itemActions for "+this.name)
+        }
     }
     copy(updates){
         const rt=new Action(this);
@@ -133,7 +142,12 @@ class Action{
                 rt[k]=updates[k];
             }
         }
+        rt._check();
         return rt;
+    }
+    connect(itemActions){
+        this.itemActions=itemActions;
+        this._check();
     }
 
     /**
@@ -144,9 +158,9 @@ class Action{
      * @returns {Promise<void>} resolves to undefined on success
      * @private
      */
-    async _ahelper(ev, item,options){
+    async _ahelper(ev, options){
         if (typeof this.action !== 'function')return;
-        const rs= this.action(item,{...this,...options});
+        const rs= this.action(this.itemActions.item,options||{});
         if (rs instanceof Promise) {
             return await rs;
         }
@@ -154,36 +168,27 @@ class Action{
             return rs;
         }
     }
-    _fhelper(name,item,options){
+    _fhelper(name,options){
         const target=this[name];
         if (typeof target === 'function'){
-            return target(item,options);
+            return target(this.itemActions.item,options||{});
         }
         return !!target;
     }
-    getButton(item,doneAction,options){
+    getButton(options){
         return {
             name: this.name,
-            visible: this._fhelper('visible',item,options),
+            visible: this._fhelper('visible',options),
             label: this.label,
-            onClick: async (ev,dialogContext)=>{
-                try {
-                    const res = await this._ahelper(ev, item, {...options,dialogContext:dialogContext});
-                    if (doneAction) {
-                        doneAction(res);
-                    }
-                    if (dialogContext && Helper.unsetorTrue(this.close)){
-                        dialogContext.closeDialog();
-                    }
-                }catch (e){
-                    if (dialogContext && Helper.unsetorTrue(this.close)){
-                        dialogContext.closeDialog();
-                    }
-                    if (doneAction) {doneAction(e)}
+            onClick: async (ev, dialogContext) => {
+                const res = await this._ahelper(ev, {...options, dialogContext: dialogContext});
+                if (res && dialogContext && Helper.unsetorTrue(this.close)) {
+                    dialogContext.closeDialog();
                 }
+                return;
             },
             close: false,
-            disabled: this._fhelper('disabled',item,options),
+            disabled: this._fhelper('disabled',options),
         }
     }
 
@@ -241,12 +246,13 @@ const deleteRequest=async(item)=>{
     })
 }
 const renameRequest=async(item,newName)=>{
-    return await Requests.getJson({
+    await Requests.getJson({
         type: item.type,
         command:'rename',
         name:item.name,
         newName:newName
     })
+    return true;
 }
 const removeItemFromOverlays=async(item)=>{
     if (! item || ! item.name) return;
@@ -257,6 +263,7 @@ export const deleteItem=async (item,dialogContext)=> {
     if (! await deleteItemQuery(item,dialogContext)) return;
     await deleteRequest(item);
     await removeItemFromOverlays(item);
+    return true;
 };
 
 const renameDialog=async(item,options)=>{
@@ -317,20 +324,19 @@ const standardActions={
         action: async (item,options)=>{
             const newName=await renameDialog(item,options);
             if (! newName)return;
-            await renameRequest(item,newName);
+            return await renameRequest(item,newName);
             //TODO: rename item in overlays
     }}),
     view: new Action({
         label: 'View',
         name: 'view',
         action: async (item,options)=>{
-            options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:options.getExtensionForView(item)});
+            options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:this.itemActions.getExtensionForView(item)});
+            return true;
         },
         visible: (item,options)=>{
             if (! options.history) return false;
-            if (options.changed) return false;
-            if (! options.getExtensionForView) return false;
-            let ext=options.getExtensionForView(item);
+            let ext=this.itemActions.getExtensionForView();
             return ViewPage.VIEWABLES.indexOf(ext)>=0;
         }
     })
@@ -338,9 +344,10 @@ const standardActions={
 }
 export const USER_PREFIX='user.';
 export class ItemActions{
-    constructor(type) {
-        this.type=type;
-        this.headline=type
+    constructor(item) {
+        this.item=item||{};
+        this.type=this.item.type;
+        this.headline=this.item.type
         this.actions=[]
         this.renameKeepExtension=true;
         this.showEdit=false;
@@ -358,7 +365,7 @@ export class ItemActions{
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
         this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
         this.hasScope=false;
-        this.buildExtendedInfo=async (item)=>{}
+        this.buildExtendedInfo=async ()=>{}
         this.extendedInfoRows=undefined;
         this.infoRows=undefined;
         /**
@@ -372,10 +379,10 @@ export class ItemActions{
         this.localUploadFunction=undefined;
         /**
          * convert an entity name as received from the server to a name we offer when downloading
-         * @param item from list or info
          * @returns {*}
          */
-        this.nameForDownload=(item)=>{
+        this.nameForDownload=()=>{
+            const item=this.item;
             if (item.downloadName) return item.downloadName;
             let name=item.name||item.type||"download";
             if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
@@ -397,7 +404,7 @@ export class ItemActions{
         }
         /**
          * get a name from a list entry to compare against a local file name
-         * @param item
+         * @param item an entry from the list
          * @param opt_ext - if true add an fixed extension
          */
         this.nameForCheck=(item,opt_ext)=>{
@@ -429,19 +436,21 @@ export class ItemActions{
             }
             return name;
         }
-        this.getExtensionForView=(item)=>{
+        this.getExtensionForView=()=>{
             if (this.fixedExtension){
                 return this.fixedExtension;
             }
             if (this.extForView) {
                 return this.extForView;
             }
-            const dlname=this.nameForDownload(item);
+            const dlname=this.nameForDownload();
             if (dlname){
                 return Helper.getExt(dlname);
             }
             return "";
         }
+        this.build();
+        this.postCreate()
     }
     postCreate(){
         this.nameForDownload=this.nameForDownload.bind(this);
@@ -455,19 +464,22 @@ export class ItemActions{
                 this.allowedExtensions=[this.fixedExtension];
             }
         }
+        this.actions.forEach(action=>{
+            action.connect(this);
+        })
     }
-    getItemActionDef(name,item,doneAction,opt_options){
+    getItemActionDef(name,doneAction,opt_options){
         for (let i in this.actions){
             const action=this.actions[i];
             if (action.name === name)
-                return action.getButton(item,doneAction,{...this,...opt_options});
+                return action.getButton(this.item,doneAction,{...this,...opt_options});
         }
     }
 
-    getActionButtons(item,doneAction,opt_options){
+    getActionButtons(doneAction,opt_options){
         const rt=[]
         this.actions.forEach(action=>{
-            rt.push(action.getButton(item,doneAction,{...this,...opt_options}));
+            rt.push(action.getButton(doneAction,opt_options));
         })
         return rt;
     }
@@ -484,32 +496,29 @@ export class ItemActions{
         return title+`extension ${ext} not allowed, only `+this.allowedExtensions.join(",");
 
     }
-    static create(props,isConnected){
-        if (typeof(props) === 'string') props={type:props};
-        if (! props || ! props.type){
-            return new ItemActions();
-        }
-        let rt=new ItemActions(props.type);
+    build(){
+        const props=this.item||{};
+        const isConnected=globalStore.getData(keys.properties.connectedMode);
         let ext=props.extension||Helper.getExt(props.name);
         let editableSize=props.size !== undefined && props.size < ViewPage.MAXEDITSIZE;
         let allowedOverlay=KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0;
         let canEditOverlays=globalStore.getData(keys.gui.capabilities.uploadOverlays) && isConnected;
         if (props.time !== undefined) {
-            rt.timeText=Formatter.formatDateTime(new Date(props.time*1000));
+            this.timeText=Formatter.formatDateTime(new Date(props.time*1000));
         }
-        rt.infoText=props.displayName||props.name;
+        this.infoText=props.displayName||props.name;
         if (props.active){
-            rt.className+=' activeEntry';
+            this.className+=' activeEntry';
         }
-        rt.extForView=ext;
+        this.extForView=ext;
         let canModify=isConnected && props.canDelete;
         switch (props.type){
             case 'chart':
-                rt.headline='Charts';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline='Charts';
+                this.actions.push(standardActions.delete.copy({
                     visible: props.canDelete && isConnected
                 }));
-                rt.actions.push(new Action({
+                this.actions.push(new Action({
                     name: 'scheme',
                     label: 'Scheme',
                     action: async (item, options) => {
@@ -530,52 +539,54 @@ export class ItemActions{
                                 command: 'scheme',
                                 newScheme: newScheme
                             })
+                            return true;
                         }
                     },
                     visible: isConnected && props.name && props.name.match(/.*\.mbtiles$/) && props.canDelete
                 }))
-                rt.showOverlay=canEditOverlays;
-                rt.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
-                rt.showImportLog=props.hasImportLog;
-                rt.showDownload=props.canDownload;
+                this.showOverlay=canEditOverlays;
+                this.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
+                this.showImportLog=props.hasImportLog;
+                this.showDownload=props.canDownload;
                 if (props.originalScheme){
-                    rt.className+=' userAction';
+                    this.className+=' userAction';
                 }
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
-                rt.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
-                rt.hasScope=true;
+                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
+                this.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
+                this.hasScope=true;
                 if (props.scheme){
-                    rt.infoRows=[{label:'Scheme',value:'scheme'}]
+                    this.infoRows=[{label:'Scheme',value:'scheme'}]
                 }
                 break;
             case 'track':
-                rt.headline='Tracks';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline='Tracks';
+                this.actions.push(standardActions.delete.copy({
                     visible:isConnected,
                     action: async (info,dialogContext)=> {
                         if (await deleteItemQuery(info,dialogContext)){
                             await deleteRequest(info);
                             NavHandler.resetTrack();
+                            return true;
                         }
                     }
                     }));
-                rt.actions.push(standardActions.rename.copy({
+                this.actions.push(standardActions.rename.copy({
                     visible:isConnected,
                 }))
-                rt.actions.push(standardActions.view.copy({}))
-                rt.showDownload=true;
-                rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
-                rt.showOverlay=allowedOverlay && canEditOverlays;
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
-                rt.allowedExtensions=['gpx']
-                rt.buildExtendedInfo=async (item)=>getTrackInfo(item.name)
-                rt.extendedInfoRows=TRACK_INFO_ROWS;
+                this.actions.push(standardActions.view.copy({}))
+                this.showDownload=true;
+                this.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
+                this.showOverlay=allowedOverlay && canEditOverlays;
+                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
+                this.allowedExtensions=['gpx']
+                this.buildExtendedInfo=async (item)=>getTrackInfo(item.name)
+                this.extendedInfoRows=TRACK_INFO_ROWS;
                 break;
             case 'route': {
                 canModify = !props.active && props.canDelete !== false && (!props.isServer || isConnected);
-                rt.headline = 'Routes';
-                rt.showIsServer = props.server;
-                rt.actions.push(standardActions.delete.copy({
+                this.headline = 'Routes';
+                this.showIsServer = props.server;
+                this.actions.push(standardActions.delete.copy({
                     visible: canModify,
                     action: async (item, options) => {
                         if (!await deleteItemQuery(item, options.dialogContext)) return;
@@ -586,9 +597,10 @@ export class ItemActions{
                             item.server //if we think this is a local route - just delete it local only
                         );
                         await removeItemsFromOverlays(item);
+                        return true;
                     }
                 }));
-                rt.actions.push(standardActions.rename.copy({
+                this.actions.push(standardActions.rename.copy({
                     visible:canModify,
                     action: async (item, options) => {
                         const newName=await renameDialog(item,options);
@@ -599,7 +611,7 @@ export class ItemActions{
                         return await RouteHandler.renameRoute(item.name,newName);
                     }
                 }))
-                rt.actions.push(standardActions.view.copy({
+                this.actions.push(standardActions.view.copy({
                     action: async (item, options) => {
                         const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
                         options.history.push('viewpage', {
@@ -609,15 +621,16 @@ export class ItemActions{
                             ext:options.getExtensionForView(item),
                             data: route.toXml()
                         });
+                        return true;
                     }
                 }))
-                rt.showEdit = mapholder.getCurrentChartEntry() !== undefined;
-                rt.showOverlay = canEditOverlays;
-                rt.showDownload = true;
-                rt.fixedExtension = 'gpx';
-                rt.infoText += "," + Formatter.formatDecimal(props.length, 4, 2) +
+                this.showEdit = mapholder.getCurrentChartEntry() !== undefined;
+                this.showOverlay = canEditOverlays;
+                this.showDownload = true;
+                this.fixedExtension = 'gpx';
+                this.infoText += "," + Formatter.formatDecimal(props.length, 4, 2) +
                     " nm, " + props.numpoints + " points";
-                rt.localUploadFunction = (name, data) => {
+                this.localUploadFunction = (name, data) => {
                     //name is ignored
                     try {
                         let route;
@@ -635,22 +648,23 @@ export class ItemActions{
                         return Promise.reject(e);
                     }
                 }
-                rt.showUpload = isConnected;
-                rt.buildExtendedInfo=(item)=>getRouteInfo(item.name)
-                rt.extendedInfoRows=ROUTE_INFO_ROWS;
+                this.showUpload = isConnected;
+                this.buildExtendedInfo=(item)=>getRouteInfo(item.name)
+                this.extendedInfoRows=ROUTE_INFO_ROWS;
             }
                 break;
             case 'layout':
-                rt.headline='Layouts';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline='Layouts';
+                this.actions.push(standardActions.delete.copy({
                     visible: isConnected &&  props.canDelete !== false && ! props.active,
                     action:async (item,options)=>{
                         if (! await deleteItemQuery(item,options.dialogContext))return;
                         await layoutLoader.deleteLayout(item.name)
                         await removeItemsFromOverlays(item);
+                        return true;
                     }
                 }))
-                rt.actions.push(standardActions.view.copy({
+                this.actions.push(standardActions.view.copy({
                     action: async (item,options) => {
                         const layout = await layoutLoader.loadLayout(item.name);
                         options.history.push('viewpage', {
@@ -660,101 +674,100 @@ export class ItemActions{
                             ext:options.getExtensionForView(item),
                             data:JSON.stringify(layout,undefined,"  ")
                         });
+                        return true;
                     }
                 }))
-                rt.showEdit = isConnected && editableSize && props.canDelete;
-                rt.showDownload = true;
-                rt.fixedExtension='json';
-                rt.localUploadFunction=(name,data,overwrite)=>{
+                this.showEdit = isConnected && editableSize && props.canDelete;
+                this.showDownload = true;
+                this.fixedExtension='json';
+                this.localUploadFunction=(name,data,overwrite)=>{
                     return layoutLoader.uploadLayout(name,data,overwrite);
                 }
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadLayout,false)
-                rt.hasScope=true;
+                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadLayout,false)
+                this.hasScope=true;
                 break;
             case 'settings': {
                 canModify= isConnected && props.canDelete !== false && !props.active;
-                rt.headline = 'Settings';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline = 'Settings';
+                this.actions.push(standardActions.delete.copy({
                     visible: canModify,
                 }));
-                rt.actions.push(standardActions.rename.copy({
+                this.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.actions.push(standardActions.view.copy({}))
-                rt.showEdit = isConnected && editableSize && props.canDelete;
-                rt.showDownload = true;
-                rt.fixedExtension = 'json';
-                rt.localUploadFunction = (name, data, overwrite) => {
+                this.actions.push(standardActions.view.copy({}))
+                this.showEdit = isConnected && editableSize && props.canDelete;
+                this.showDownload = true;
+                this.fixedExtension = 'json';
+                this.localUploadFunction = (name, data, overwrite) => {
                     return PropertyHandler.verifySettingsData(data, true, true)
                         .then((res) => PropertyHandler.uploadSettingsData(name, res.data, false, overwrite));
                 }
-                rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
-                rt.hasScope = true;
+                this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
+                this.hasScope = true;
             }
                 break;
             case 'user': {
-                rt.headline = 'User';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline = 'User';
+                this.actions.push(standardActions.delete.copy({
                     visible: canModify,
                 }))
-                rt.renameKeepExtension=false;
-                rt.actions.push(standardActions.rename.copy({
+                this.renameKeepExtension=false;
+                this.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.actions.push(standardActions.view.copy({}))
-                rt.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
-                rt.showDownload = true;
-                rt.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
-                rt.isApp = rt.showApp && props.isAddon;
+                this.actions.push(standardActions.view.copy({}))
+                this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
+                this.showDownload = true;
+                this.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
+                this.isApp = this.showApp && props.isAddon;
 
-            }   rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadUser,false)
+            }   this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadUser,false)
                 break;
             case 'images': {
-                rt.headline = 'Images';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline = 'Images';
+                this.actions.push(standardActions.delete.copy({
                     visible: canModify,
                 }))
-                rt.actions.push(standardActions.rename.copy({
+                this.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.actions.push(standardActions.view.copy({}))
-                rt.showDownload = true;
-                rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
-                rt.allowedExtensions = GuiHelpers.IMAGES;
+                this.actions.push(standardActions.view.copy({}))
+                this.showDownload = true;
+                this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
+                this.allowedExtensions = GuiHelpers.IMAGES;
             }
                 break;
             case 'overlay': {
-                rt.headline = 'Overlays';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline = 'Overlays';
+                this.actions.push(standardActions.delete.copy({
                     visible: isConnected && props.canDelete !== false
                 }))
-                rt.actions.push(standardActions.rename.copy({
+                this.actions.push(standardActions.rename.copy({
                     visible:canModify,
                 }))
-                rt.actions.push(standardActions.view.copy({}))
-                rt.showDownload = true;
-                rt.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
-                rt.showOverlay = canEditOverlays && allowedOverlay;
-                rt.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
+                this.actions.push(standardActions.view.copy({}))
+                this.showDownload = true;
+                this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
+                this.showOverlay = canEditOverlays && allowedOverlay;
+                this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
             }
                 break;
             case 'plugins':
-                rt.headline='Plugins';
-                rt.actions.push(standardActions.delete.copy({
+                this.headline='Plugins';
+                this.actions.push(standardActions.delete.copy({
                     visible: isConnected && props.canDelete !== false
                 }))
-                rt.showRename = false;
-                rt.showDownload=true;
-                rt.showEdit= false;
-                rt.showOverlay = false;
-                rt.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
-                rt.allowedExtensions=['zip'];
-                rt.hasScope=true;
-                rt.prefixForDisplay=()=>'user-';
+                this.showRename = false;
+                this.showDownload=true;
+                this.showEdit= false;
+                this.showOverlay = false;
+                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
+                this.allowedExtensions=['zip'];
+                this.hasScope=true;
+                this.prefixForDisplay=()=>'user-';
                 break;
         }
-        rt.postCreate();
-        return rt;
     }
 }
 
@@ -913,7 +926,7 @@ const infoRowDisplay=(row,data)=>{
 }
 export const FileDialog = (props) => {
     const [changed, setChanged] = useState(false);
-    const [allowed, setAllowed] = useState(ItemActions.create(props.current, globalStore.getData(keys.properties.connectedMode, true)))
+    const [allowed, setAllowed] = useState(new ItemActions(props.current))
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
     useEffect(() => {
@@ -927,14 +940,27 @@ export const FileDialog = (props) => {
     }, [allowed]);
 
     let extendedInfoRows = allowed.extendedInfoRows;
-    const dialogButtons=allowed.getActionButtons(props.current,(err)=>{
-            if (err) Toast(err);
-            props.okFunction("dummy")
-        },{
+    const dialogButtons=allowed.getActionButtons({
         history:props.history,
-        changed: changed,
         dialogContext: dialogContext,
     });
+    const doneAction=useCallback((res)=>{
+        if (res) Toast(res);
+        props.okFunction("dummy")
+    },[props.okFunction])
+    dialogButtons.forEach(button=>{
+        const onClick=button.onClick;
+        if (onClick){
+            button.onClick=async(ev,dialogContext)=>{
+                try{
+                    const res=await onClick(ev,dialogContext);
+                    doneAction(res);
+                }catch (e){
+                    doneAction(e);
+                }
+            }
+        }
+    })
     return (
         <DialogFrame className="fileDialog" title={props.current.displayName||props.current.name}>
             {props.current.info !== undefined ?

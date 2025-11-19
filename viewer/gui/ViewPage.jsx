@@ -110,7 +110,7 @@ class ViewPage extends React.Component{
                         }catch(e){
                         }
                     }
-                    let actions=ItemActions.create({type:self.type,name:self.name});
+                    let actions=new ItemActions({type:self.type,name:self.name});
                     let uploadFunction;
                     if (actions.localUploadFunction){
                         uploadFunction=actions.localUploadFunction;
@@ -154,8 +154,8 @@ class ViewPage extends React.Component{
         if (this.url) return Helper.getExt(this.url);
         if (this.html) return 'html';
         const item={type:this.type,name:this.name,url:this.url};
-        let actions=ItemActions.create(item);
-        return actions.getExtensionForView(item);
+        let actions=new ItemActions(item);
+        return actions.getExtensionForView();
     }
     isImage(){
         let ext=this.getExt().toLowerCase();

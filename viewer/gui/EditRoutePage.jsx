@@ -299,7 +299,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             type={'route'}
             doneCallback={(data)=>{
                 try {
-                    const actions=ItemActions.create({type:'route'},connectedMode)
+                    const actions=new ItemActions({type:'route'})
                     let nroute = new routeobjects.Route();
                     nroute.fromXml(data.data);
                     if (! nroute.name) {
@@ -476,7 +476,7 @@ const EditRouteDialog = (props) => {
             title={title}
         />)
             .then((res)=>{
-                const actions=ItemActions.create({type:'route'},connectedMode);
+                const actions=new ItemActions({type:'route'});
                 return actions.nameForUpload(res.name);
             })
     }
