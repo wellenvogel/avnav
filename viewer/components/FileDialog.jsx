@@ -310,8 +310,8 @@ const standardActions={
     view: new Action({
         label: 'View',
         name: 'view',
-        action: async (item,options)=>{
-            options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:this.itemActions.getExtensionForView(item)});
+        action: async (item,options,action)=>{
+            options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:action.itemActions.getExtensionForView()});
             return true;
         },
         visible: (item,options,action)=>{
@@ -336,7 +336,17 @@ const standardActions={
            })
        }
 
-    })
+    }),
+    edit: new Action({
+        label: 'Edit',
+        name: 'edit',
+        action: async (item,options,action)=>{
+            options.history.push('viewpage', {type: item.type, name: item.name, ext:action.itemActions.getExtensionForView(item)});
+            return true;
+        },
+        visible: false,
+        close: true
+    }),
 
 }
 export class ItemActions{
@@ -346,7 +356,6 @@ export class ItemActions{
         this.headline=this.item.type
         this.actions=[]
         this.renameKeepExtension=true;
-        this.showEdit=false;
         this.showApp=false;
         this.isApp=false;
         this.showOverlay=false;
@@ -481,7 +490,7 @@ export class ItemActions{
     }
 
     /**
-     * check or allowed extensions, return an error text if not allowed
+     * check for allowed extensions, return an error text if not allowed
      * @param ext
      * @param opt_title
      */
@@ -619,11 +628,20 @@ export class ItemActions{
                         return true;
                     }
                 }))
+                this.actions.push(standardActions.edit.copy({
+                    visible:canModify && mapholder.getCurrentChartEntry() !== undefined,
+                    action: async (item, options) => {
+                        const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
+                        let editor = new RouteEdit(RouteEdit.MODES.EDIT);
+                        editor.setNewRoute(route, 0);
+                        options.history.push('editroutepage', {center: true});
+                        return true;
+                    }
+                }))
                 this.actions.push(standardActions.download.copy({
                     localData: props.isServer?undefined:
                         ()=>RouteHandler.getLocalRouteXml(props.name)
                 }))
-                this.showEdit = mapholder.getCurrentChartEntry() !== undefined;
                 this.showOverlay = canEditOverlays;
                 this.fixedExtension = 'gpx';
                 this.infoText += "," + Formatter.formatDecimal(props.length, 4, 2) +
@@ -675,10 +693,12 @@ export class ItemActions{
                         return true;
                     }
                 }))
+                this.actions.push(standardActions.edit.copy({
+                    visible: isConnected && editableSize && props.canDelete
+                }))
                 this.actions.push(standardActions.download.copy({
                     localData: layoutLoader.getLocalDownload(props.name)
                 }))
-                this.showEdit = isConnected && editableSize && props.canDelete;
                 this.fixedExtension='json';
                 this.localUploadFunction=(name,data,overwrite)=>{
                     return layoutLoader.uploadLayout(name,data,overwrite);
@@ -696,8 +716,10 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.edit.copy({
+                    visible: isConnected && editableSize && props.canDelete
+                }))
                 this.actions.push(standardActions.download.copy({}))
-                this.showEdit = isConnected && editableSize && props.canDelete;
                 this.fixedExtension = 'json';
                 this.localUploadFunction = (name, data, overwrite) => {
                     return PropertyHandler.verifySettingsData(data, true, true)
@@ -717,8 +739,10 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.edit.copy({
+                    visible: editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected
+                }))
                 this.actions.push(standardActions.download.copy({}))
-                this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected;
                 this.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
                 this.isApp = this.showApp && props.isAddon;
 
@@ -747,8 +771,10 @@ export class ItemActions{
                     visible:canModify,
                 }))
                 this.actions.push(standardActions.view.copy({}))
+                this.actions.push(standardActions.edit.copy({
+                    visible: editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0  && isConnected
+                }))
                 this.actions.push(standardActions.download.copy({}))
-                this.showEdit = editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && isConnected;
                 this.showOverlay = canEditOverlays && allowedOverlay;
                 this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
             }
@@ -759,7 +785,6 @@ export class ItemActions{
                     visible: isConnected && props.canDelete !== false
                 }))
                 this.actions.push(standardActions.download.copy({}))
-                this.showEdit= false;
                 this.showOverlay = false;
                 this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
                 this.allowedExtensions=['zip'];
@@ -997,18 +1022,6 @@ export const FileDialog = (props) => {
                             props.okFunction('convert', props.current);
                         }}
                     >Convert</DB>
-                }
-                {(allowed.showEdit) ?
-                    <DB name="edit"
-                        onClick={() => {
-                            props.okFunction('edit', props.current);
-                        }}
-                        disabled={changed}
-                    >
-                        Edit
-                    </DB>
-                    :
-                    null
                 }
                 {(allowed.showOverlay) ?
                     <DB name="overlays"
