@@ -237,7 +237,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
           name=name+extension
       return self.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
-  def listDirectory(self,includeDirs=False,baseDir=None,extension=None,scope=None):
+  def listDirectory(self,includeDirs=False,baseDir=None,extension=None,scope=None,entryCallback=None):
     # type: (bool,str,str|None,str|None) -> list[AVNDirectoryListEntry]
     data = []
     if baseDir is None:
@@ -277,6 +277,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
                                       scope=scope,
                                       checkPrefix=scope if scope == self.SCOPE_USER else None,
                                       url=self.buildUrl(name,ext,scope))
+      if entryCallback is not None:
+          if not entryCallback(element):
+              continue
       data.append(element)
     return data
 

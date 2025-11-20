@@ -899,12 +899,23 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
       return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 
   def listDirectory(self, includeDirs=False,baseDir=None,extension=None,scope=None):
+      def noDownload(entry):
+          entry.canDownload = False
+          entry.downloadName=None
+          return True
       dlist = [entry for entry in super().listDirectory(True, baseDir,scope=self.SCOPE_USER) if entry.isDirectory]
       blist = [entry for entry in
-               super().listDirectory(True, self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN), scope=AVNPluginHandler.D_BUILTIN+"-") if
+               super().listDirectory(True,
+                                     self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN),
+                                     scope=AVNPluginHandler.D_BUILTIN+"-",
+                                     entryCallback=noDownload
+                                     ) if
                entry.isDirectory]
       slist = [entry for entry in
-               super().listDirectory(True, self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),scope=AVNPluginHandler.D_SYSTEM+"-") if
+               super().listDirectory(True,
+                                     self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),
+                                     scope=AVNPluginHandler.D_SYSTEM+"-",
+                                     entryCallback=noDownload) if
                entry.isDirectory]
       dlist.extend(blist)
       dlist.extend(slist)

@@ -869,7 +869,7 @@ class OverlayItemActions extends ItemActions{
         actions.push(standardActions.delete.copy({
             visible: canModify,
         }))
-        this.actions.push(standardActions.rename.copy({
+        actions.push(standardActions.rename.copy({
             visible:canModify,
         }))
         actions.push(standardActions.view.copy({}))
@@ -904,7 +904,7 @@ class PluginItemActions extends ItemActions{
         actions.push(standardActions.delete.copy({
             visible: this.isConnected()&& item.canDelete !== false
         }))
-        this.actions.push(standardActions.download.copy({}))
+        actions.push(standardActions.download.copy({}))
     }
 
     build() {
