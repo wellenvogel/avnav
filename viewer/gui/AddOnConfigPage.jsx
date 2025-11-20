@@ -11,9 +11,11 @@ import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
 import {showPromiseDialog} from "../components/OverlayDialog";
 import {avitem} from "../util/helper";
+import {useHistory} from "../components/HistoryProvider";
 
 
 const AddonItem=(props)=>{
+    const history=useHistory();
     let className="addonItem listEntry";
     if (props.invalid) className+=" invalid";
     if (props.className) className+=" "+props.className;
@@ -37,7 +39,7 @@ const AddonItem=(props)=>{
                                                window.open(props.url, props.name);
                                                return;
                                            }
-                                           props.history.push("addonpage", {addonName: props.name})
+                                           history.push("addonpage", {addonName: props.name})
                                        }
                                        }/>}
         </div>

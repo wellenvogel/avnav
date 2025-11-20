@@ -48,6 +48,7 @@ import {FeatureAction, FeatureInfo} from "../map/featureInfo";
 import {existsRoute, loadRoutes} from "../components/RouteInfoHelper";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import DownloadButton from "../components/DownloadButton";
+import {useHistory} from "../components/HistoryProvider";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -655,6 +656,7 @@ const getTargetFromInfo=(featureInfo)=> {
 const DEFAULT_ROUTE = "default";
 
 const EditRoutePage = (props) => {
+    const history=useHistory();
     const dialogCtxRef = useRef();
     const editorState=useStore({editor: activeRoute.getStoreKeys()});
     const activeState=useStore({storeKeys:activeRoute.getStoreKeys()})
@@ -934,10 +936,9 @@ const EditRoutePage = (props) => {
                         }));
                 }
                 additionalActions.push(hideAction);
-                additionalActions.push(linkAction(props.history));
+                additionalActions.push(linkAction(history));
             }
             showDialog(dialogCtxRef, (dprops) => <GuardedFeatureListDialog {...dprops}
-                                                                    history={props.history}
                                                                     featureList={featureList}
                                                                     additionalActions={additionalActions}
                                                                     listActions={pointActions}/>)
@@ -1022,7 +1023,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavGoto",
             onClick: () => {
-                startRouting(dialogCtxRef,undefined,props.history);
+                startRouting(dialogCtxRef,undefined,history);
             },
             editDisable: true,
             overflow: true
@@ -1055,19 +1056,19 @@ const EditRoutePage = (props) => {
             }
         },
         CenterActionButton,
-        Mob.mobDefinition(props.history),
+        Mob.mobDefinition(history),
         EditPageDialog.getButtonDef(PAGENAME,
             MapPage.PANELS, [LayoutHandler.OPTIONS.SMALL], dialogCtxRef),
         LayoutFinishedDialog.getButtonDef(undefined, dialogCtxRef),
         LayoutHandler.revertButtonDef((pageWithOptions) => {
             if (pageWithOptions.location !== props.location) {
-                props.history.replace(pageWithOptions.location, pageWithOptions.options);
+                history.replace(pageWithOptions.location, pageWithOptions.options);
             }
         }),
         {
             name: 'Cancel',
             onClick: () => {
-                props.history.pop()
+                history.pop()
             }
         }
     ];

@@ -44,6 +44,7 @@ import {WatchDialogWithFunctions} from "./AnchorWatchDialog";
 import MapEventGuard from "../hoc/MapEventGuard";
 import globalStore from "../util/globalstore";
 import MapHolder from "../map/mapholder";
+import {useHistory} from "./HistoryProvider";
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -150,7 +151,8 @@ const FeatureIcon=({feature,showOverlayIcon})=>{
     </React.Fragment>
 }
 
-export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions,className}) => {
+export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, listActions,className}) => {
+    const history=useHistory();
     const dialogContext = useDialogContext();
     const shouldKeep=useRef(false);
     const select = useCallback((featureInfo) => {
@@ -186,7 +188,6 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                     {...dprops}
                     featureInfo={featureInfo}
                     additionalActions={factions}
-                    history={history}
                     cancelAction={()=>{
                         shouldKeep.current=true;
                         return true;
@@ -201,7 +202,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         } else {
             dialogContext.closeDialog();
         }
-    }, [onSelectCb, additionalActions, history]);
+    }, [onSelectCb, additionalActions]);
     if (!(featureList instanceof Array) || featureList.length < 1) {
         dialogContext.closeDialog();
         return null;
@@ -244,7 +245,6 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
 }
 FeatureListDialog.propTypes={
     className: PropTypes.string,
-    history: PropTypes.object.isRequired,
     featureList: PropTypes.arrayOf(PropTypes.instanceOf(FeatureInfo)),
     onSelectCb: PropTypes.func, //return false to cancel
     additionalActions: PropTypes.arrayOf(PropTypes.instanceOf(FeatureAction)),
@@ -254,7 +254,7 @@ FeatureListDialog.propTypes={
 export const GuardedFeatureListDialog=MapEventGuard(FeatureListDialog);
 GuardedFeatureListDialog.propTypes=FeatureListDialog.propTypes;
 
-const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction}) => {
+const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
     useEffect(() => {
@@ -325,7 +325,6 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
 
 FeatureInfoDialog.propTypes={
     featureInfo: PropTypes.instanceOf(FeatureInfo),
-    history: PropTypes.object.isRequired,
     additionalActions: PropTypes.array,
     cancelAction: PropTypes.func
 }

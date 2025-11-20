@@ -27,6 +27,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
 import {injectav} from "../util/helper";
+import {useHistory} from "../components/HistoryProvider";
 const MINPAGE=1;
 const MAXPAGE=5;
 const PANEL_LIST=['left','m1','m2','m3','right'];
@@ -109,6 +110,7 @@ const layoutBaseParam={
 };
 
 const GpsPage = (props) => {
+    const history=useHistory();
     const [pageNumber, setPageNumberImpl] = useStoreState(keys.gui.gpspage.pageNumber, (currentNumber) => {
         if (props.options && props.options.widget && !props.options.returning) {
             let pagenNum = findPageWithWidget(props.options.widget);
@@ -170,7 +172,7 @@ const GpsPage = (props) => {
             name: 'GpsCenter',
             onClick: () => {
                 MapHolder.centerToGps();
-                props.history.pop();
+                history.pop();
             },
             editDisable: true
         }]
@@ -178,7 +180,7 @@ const GpsPage = (props) => {
         .concat([
             anchorWatch(false, dialogCtxRef),
             RemoteChannelDialog({overflow: true}, dialogCtxRef),
-            Mob.mobDefinition(props.history),
+            Mob.mobDefinition(history),
             EditPageDialog.getButtonDef(
                 getLayoutPage(pageNumber).layoutPage,
                 PANEL_LIST,
@@ -188,7 +190,7 @@ const GpsPage = (props) => {
             LayoutHandler.revertButtonDef((pageWithOptions) => {
                 let current = getLayoutPage(pageNumber);
                 if (pageWithOptions.location !== current.location) {
-                    props.history.replace(pageWithOptions.location, pageWithOptions.options);
+                    history.replace(pageWithOptions.location, pageWithOptions.options);
                     return;
                 }
                 if (current.layoutPage !== pageWithOptions.layoutPage) {
@@ -202,7 +204,7 @@ const GpsPage = (props) => {
             {
                 name: 'Cancel',
                 onClick: () => {
-                    props.history.pop();
+                    history.pop();
                 }
             }
         ]);
@@ -231,14 +233,14 @@ const GpsPage = (props) => {
                     mmsi={mmsi}
                     actionCb={(action, m) => {
                         if (action === 'AisInfoList') {
-                            props.history.push('aispage', {mmsi: m});
+                            history.push('aispage', {mmsi: m});
                         }
                     }}
                 />;
             })
             return;
         }
-        props.history.pop();
+        history.pop();
     }, [pageNumber]);
     let autohide = undefined;
     if (globalStore.getData(keys.properties.autoHideGpsPage)) {

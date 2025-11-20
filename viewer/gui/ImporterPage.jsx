@@ -43,6 +43,7 @@ import Helper from "../util/helper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DownloadButton from "../components/DownloadButton";
 import ButtonList from "../components/ButtonList";
+import {useHistory} from "../components/HistoryProvider";
 
 const HANDLER_NAME='AVNImporter';
 export const IMPORTERPAGE='importerpage';
@@ -357,6 +358,7 @@ const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,change
 })
 
 const ImporterPage = (props) => {
+    const history=useHistory();
     const [uploadSequence, setUploadSequence] = useState(0);
     const [isActive,setIsActive]=useState(false);
     const chartImportExtensions=useRef([]);
@@ -378,11 +380,11 @@ const ImporterPage = (props) => {
                 showEditHandlerDialog()
             }
         },
-        Mob.mobDefinition(props.history),
+        Mob.mobDefinition(history),
         {
             name: 'Cancel',
             onClick: () => {
-                props.history.pop()
+                history.pop()
             }
         }
     ];

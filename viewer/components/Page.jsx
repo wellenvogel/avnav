@@ -139,7 +139,6 @@ Page.pageProperties={
     style: PropTypes.object,
     options: PropTypes.object,
     location: PropTypes.string.isRequired,
-    history: PropTypes.object.isRequired,
     small: PropTypes.bool.isRequired
 }
 Page.propTypes=assign({},Page.pageProperties,{
@@ -152,7 +151,8 @@ Page.propTypes=assign({},Page.pageProperties,{
     style: PropTypes.object,
     buttonWidthChanged: PropTypes.func,
     autoHideButtons: PropTypes.any, // number of ms or undefined
-    windowDimensions: PropTypes.any
+    windowDimensions: PropTypes.any,
+    history: PropTypes.object
 });
 
 

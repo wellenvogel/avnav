@@ -49,6 +49,7 @@ import routeobjects from "../nav/routeobjects";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import {InfoItem} from "./BasicDialogs";
+import {useHistory} from "./HistoryProvider";
 
 const RouteHandler=navdata.getRoutingHandler();
 
@@ -281,6 +282,7 @@ const CONVERT_INFO_ROWS=[
     ];
 
 const AskEditRoute=(props)=>{
+    const history=useHistory();
     return  <div className="AskEditRouteDialog flexInner">
         <h3 className="dialogTitle">Route Created</h3>
         <div className="dialogRow">
@@ -294,7 +296,7 @@ const AskEditRoute=(props)=>{
                 onClick={()=>{
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                     editor.setNewRoute(props.route,0);
-                    props.history.push('editroutepage',{center:true});
+                    history.push('editroutepage',{center:true});
                 }}
             >Edit</DB>
         </div>
@@ -322,6 +324,7 @@ export const TrackConvertDialog=(props)=> {
     const [info,setInfo]=useState({});
     const [originalInfo,setOriginalInfo]=useState({});
     const dialogContext=useDialogContext();
+    const history=useHistory();
     useEffect(() => {
         getTrackInfo(props.name)
             .then((info) => {
@@ -368,7 +371,6 @@ export const TrackConvertDialog=(props)=> {
                 if (mapholder.getCurrentChartEntry()){
                     dialogContext.replaceDialog(()=>{
                         return <AskEditRoute
-                            history={props.history}
                             route={route}
                             />
                     })
@@ -456,6 +458,5 @@ export const TrackConvertDialog=(props)=> {
 }
 
 TrackConvertDialog.propTypes={
-    history: PropTypes.object.isRequired,
     name: PropTypes.string.isRequired
 }

@@ -54,6 +54,7 @@ import 'drag-drop-touch';
 import {ConfirmDialog} from "./components/BasicDialogs";
 import PropTypes from "prop-types";
 import Helper from "./util/helper";
+import {HistoryContext, useHistory} from "./components/HistoryProvider";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -84,16 +85,12 @@ class Other extends React.Component{
 }
 
 
-class MainWrapper extends React.Component{
-    constructor(props){
-        super(props);
-    }
-    render(){
-        return <MainPage {...this.props}/>
-    }
-    componentDidMount(){
-        this.props.history.reset(); //reset history if we reach the mainpage
-    }
+const MainWrapper=(props)=>{
+    const history=useHistory();
+    useEffect(()=>{
+        history.reset();
+    },[]);
+    return <MainPage {...props}/>
 }
 MainWrapper.propTypes=MainPage.propTypes;
 
@@ -115,44 +112,39 @@ const pages={
     addonconfigpage: AddonConfigPage,
     importerpage: ImporterPage
 };
-class Router extends Component {
-    constructor(props) {
-        super(props);
+const Router = (props) => {
+    const history = useHistory();
+    let Page = pages[props.location];
+    if (Page === undefined) {
+        Page = Other;
     }
-    render() {
-        let Page=pages[this.props.location];
-        if (Page === undefined){
-            Page=Other;
-        }
-        let className="pageFrame "+ (this.props.nightMode?"nightMode":"");
-        let style={};
-        if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
-        let dimStyle={opacity: 0.5};
-        return <div className={className}>
-            {this.props.dim ?
-                <div
-                    className="dimm"
-                    style={dimStyle}
-                    onClick={()=>Dimmer.trigger()}
-                    />
-                :null}
-                <Page
-                    style={style}
-                    options={this.props.options}
-                    location={this.props.location}
-                    history={this.props.history}
-                    small={this.props.smallDisplay}
-                    isEditing={this.props.isEditing}
-                    windowDimensions={this.props.windowDimensions}
-                />
-            </div>
-    }
+    let className = "pageFrame " + (props.nightMode ? "nightMode" : "");
+    let style = {};
+    if (props.nightMode) style['opacity'] = globalStore.getData(keys.properties.nightFade) / 100;
+    let dimStyle = {opacity: 0.5};
+    return <div className={className}>
+        {props.dim ?
+            <div
+                className="dimm"
+                style={dimStyle}
+                onClick={() => Dimmer.trigger()}
+            />
+            : null}
+        <Page
+            history={history}
+            style={style}
+            options={props.options}
+            location={props.location}
+            small={props.smallDisplay}
+            isEditing={props.isEditing}
+            windowDimensions={props.windowDimensions}
+        />
+    </div>
 }
-Router.propTypes={
+Router.propTypes = {
     location: PropTypes.string,
     isEditing: PropTypes.bool,
     windowDimensions: PropTypes.object,
-    history: PropTypes.instanceOf(History),
     options: PropTypes.object,
     dim: PropTypes.bool,
     nightMode: PropTypes.bool,
@@ -189,9 +181,10 @@ const GlobalDialog=()=>{
     return <DialogDisplay/>
 }
 
-const MainBody = ({location, options, history, nightMode}) => {
-
+const MainBody = ({ history, nightMode}) => {
+    const location=history.currentLocation(true);
     return (
+        <HistoryContext history={history}>
         <DialogContext
             showDialog={mainShowDialog}
         >
@@ -206,14 +199,19 @@ const MainBody = ({location, options, history, nightMode}) => {
                     smallDisplay: keys.gui.global.smallDisplay,
                     ...keys.gui.capabilities
                 }}
-                location={location}
-                options={options}
+                location={location.location}
+                options={location.options}
                 history={history}
                 nightMode={nightMode}
             />
         </DialogContext>
+        </HistoryContext>
     )
 };
+MainBody.propTypes = {
+    history: PropTypes.instanceOf(History),
+    nightMode: PropTypes.bool,
+}
 
 class App extends React.Component {
     appRef=createRef();

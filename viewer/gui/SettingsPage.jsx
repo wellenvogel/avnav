@@ -41,6 +41,7 @@ import {
 import {EditableStringParameterBase} from "../util/EditableParameter";
 import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
+import {useHistory} from "../components/HistoryProvider";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -216,6 +217,7 @@ const HasChangesDialog=({resolveFunction})=>{
 }
 
 const SettingsPage = (props) => {
+    const history=useHistory();
     const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);
     const [section, setSection] = useState('Layer');
     const flattenedKeys = useRef(undefined);
@@ -364,7 +366,7 @@ const SettingsPage = (props) => {
                         return;
                     }
                     saveChanges()
-                        .then(() => props.history.pop())
+                        .then(() => history.pop())
                         .catch((err) => {
                             Toast(err + "")
                         })
@@ -406,7 +408,7 @@ const SettingsPage = (props) => {
                 visible: globalStore.getData(keys.gui.global.onAndroid, false),
                 onClick: () => {
                     confirmAbortOrDo(true).then(() => {
-                        props.history.pop();
+                        history.pop();
                         avnav.android.showSettings();
                     });
                 }
@@ -432,7 +434,7 @@ const SettingsPage = (props) => {
                 name: 'SettingsAddons',
                 onClick: () => {
                     confirmAbortOrDo(true).then(() => {
-                        props.history.push("addonconfigpage");
+                        history.push("addonconfigpage");
                     });
                 },
                 storeKeys: {
@@ -491,7 +493,7 @@ const SettingsPage = (props) => {
                     }
                 },
             },
-            Mob.mobDefinition(props.history),
+            Mob.mobDefinition(history),
             {
                 name: 'Cancel',
                 onClick: () => {
@@ -500,7 +502,7 @@ const SettingsPage = (props) => {
                         return;
                     }
                     confirmAbortOrDo(false).then(() => {
-                        props.history.pop();
+                        history.pop();
                     });
                 }
             }
@@ -589,7 +591,7 @@ const SettingsPage = (props) => {
                         />)
                             .then((res) => {
                                 LayoutHandler.startEditing(layoutLoader.getUserPrefix()+res.name);
-                                props.history.pop();
+                                history.pop();
                             })
                             .catch(() => {
                             })

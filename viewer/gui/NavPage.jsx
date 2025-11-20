@@ -57,6 +57,7 @@ import base from "../base";
 import {checkName, ItemNameDialog, nameProposal} from "../components/ItemNameDialog";
 import {ItemActions} from "../components/FileDialog";
 import {showErrorList} from "../components/ErrorListDialog";
+import {useHistory} from "../components/HistoryProvider";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -447,7 +448,7 @@ const NavPage=(props)=>{
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
     const [sequence,setSequence]=useState(0);
     const checkChartCount=useRef(30);
-    const history=props.history;
+    const history=useHistory();
     const loadTimer = useTimer((seq) => {
         const neededChart=needsChartLoad();
         if (!neededChart) return;
@@ -721,7 +722,6 @@ const NavPage=(props)=>{
                 {...dprops}
                 featureList={featureList}
                 additionalActions={additionalActions}
-                history={history}
                 listActions={listActions}
             />)
             return true;

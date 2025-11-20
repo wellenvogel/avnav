@@ -23,6 +23,7 @@ import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
+import {useHistory} from "../components/HistoryProvider";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -222,6 +223,7 @@ const scrollWarning=(ev)=>{
     if (el) el.scrollIntoView();
 }
 const AisPage =(props)=>{
+    const history=useHistory();
         const options=props.options||{};
         let initialMmsi=useRef(options.mmsi);
         const [sortField,setSortField]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
@@ -243,7 +245,7 @@ const AisPage =(props)=>{
                 name:"AisNearest",
                 onClick:()=>{
                     navdata.getAisHandler().setTrackedTarget(0);
-                    props.history.pop();
+                    history.pop();
                 }
             },
             {
@@ -279,10 +281,10 @@ const AisPage =(props)=>{
                 },
                 toggle:()=>searchActive
             },
-            Mob.mobDefinition(props.history),
+            Mob.mobDefinition(history),
             {
                 name: 'Cancel',
-                onClick: ()=>{props.history.pop()}
+                onClick: ()=>{history.pop()}
             }
         ];
     let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
@@ -340,7 +342,7 @@ const AisPage =(props)=>{
                                     mmsi={accessor.mmsi}
                                     actionCb={(action,m)=>{
                                         if (action === 'AisNearest' || action === 'AisInfoLocate'){
-                                            props.history.pop();
+                                            history.pop();
                                         }
                                     }}
                                 />;

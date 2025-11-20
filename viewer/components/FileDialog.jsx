@@ -56,11 +56,12 @@ import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
 import {removeItemsFromOverlays} from "../map/overlayconfig";
+import {useHistory} from "./HistoryProvider";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const showConvertFunctions = {
-    track: (dialogContext,history,item) => {
-        dialogContext.replaceDialog(()=><TrackConvertDialog history={history} name={item.name}/>);
+    track: (dialogContext,item) => {
+        dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
     }
 }
 class Action{
@@ -953,6 +954,7 @@ export const FileDialog = (props) => {
     const [allowed, setAllowed] = useState(new ItemActions(props.current))
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
+    const history=useHistory();
     useEffect(() => {
         let f = allowed.buildExtendedInfo;
         if (f) {
@@ -965,7 +967,7 @@ export const FileDialog = (props) => {
 
     let extendedInfoRows = allowed.extendedInfoRows;
     const dialogButtons=allowed.getActionButtons({
-        history:props.history,
+        history:history,
         dialogContext: dialogContext,
     });
     const doneAction=useCallback((res)=>{
@@ -1058,7 +1060,8 @@ export const FileDialog = (props) => {
 
 
 export const FileDialogWithActions=(props)=>{
-    const {doneCallback,item,history,checkExists,...forward}=props;
+    const history=useHistory();
+    const {doneCallback,item,checkExists,...forward}=props;
     const dialogContext=useDialogContext();
     const actionFunction=async (action,newItem)=>{
         let doneAction=(pageChanged)=>{
@@ -1107,7 +1110,7 @@ export const FileDialogWithActions=(props)=>{
             if (action === 'convert') {
                 let convertFunction = showConvertFunctions[newItem.type];
                 if (convertFunction) {
-                    convertFunction(dialogContext, history, newItem);
+                    convertFunction(dialogContext, newItem);
                 }
                 return;
             }
@@ -1119,7 +1122,6 @@ export const FileDialogWithActions=(props)=>{
     };
     return <FileDialog
         {...forward}
-        history={history}
         current={item}
         okFunction={actionFunction}
         checkName={checkExists}/>
