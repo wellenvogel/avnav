@@ -64,23 +64,20 @@ const showConvertFunctions = {
         dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
     }
 }
+
+const getExtensionForView=(item)=>{
+    return item.extension||Helper.getExt(item.name);
+}
 class Action{
-    constructor({label,name,action,visible,close,disabled,itemActions}) {
+    constructor({label,name,action,visible,close,disabled,fixedExtension,hasScope}) {
         this.label=label;
         this.action=action;
         this.visible=visible;
         this.name=name;
         this.close=close;
         this.disabled=disabled;
-        this.itemActions=itemActions;
-    }
-    _check(){
-        if (! this.itemActions){
-            this.itemActions=new ItemActions('dummy');
-        }
-        if (! (this.itemActions instanceof ItemActions)){
-            throw new Error("invalid itemActions for "+this.name)
-        }
+        this.fixedExtension=fixedExtension;
+        this.hasScope=hasScope||false;
     }
     copy(updates){
         const rt=new this.constructor(this);
@@ -89,54 +86,54 @@ class Action{
                 rt[k]=updates[k];
             }
         }
-        rt._check();
         return rt;
-    }
-    connect(itemActions){
-        this.itemActions=itemActions;
-        this._check();
     }
 
     /**
      * helper that calls the action function
      * @param ev
      * @param item the item
-     * @param options
      * @returns {Promise<void>} resolves to undefined on success
      * @private
      */
-    async _ahelper(ev, options){
-        if (typeof this.action !== 'function')return;
-        const rs= this.action(this.itemActions.item,options||{},this);
-        if (rs instanceof Promise) {
-            return await rs;
-        }
-        else {
-            return rs;
+    async _ahelper(ev, item,dialogContext,history){
+        if (typeof this.action === 'function') {
+            let rs = this.action(this,item,dialogContext,history);
+            if (rs instanceof Promise) {
+                rs=await rs;
+            }
+            if (rs && dialogContext && Helper.unsetorTrue(this.close)) {
+                dialogContext.closeDialog();
+            }
         }
     }
-    _fhelper(name,options){
+    _fhelper(name,item){
         const target=this[name];
         if (typeof target === 'function'){
-            return target(this.itemActions.item,options||{},this);
+            return target(this,item);
         }
         return !!target;
     }
-    getButton(options){
-        return {
-            name: this.name,
-            visible: this._fhelper('visible',options),
-            label: this.label,
-            onClick: async (ev, dialogContext) => {
-                const res = await this._ahelper(ev, {...options, dialogContext: dialogContext});
-                if (res && dialogContext && Helper.unsetorTrue(this.close)) {
-                    dialogContext.closeDialog();
-                }
-                return;
-            },
-            close: false,
-            disabled: this._fhelper('disabled',options),
-        }
+    isVisible(item){
+       return  this._fhelper('visible',item)
+    }
+    getButton(item){
+        if (! this.isVisible(item)) return null;
+        return this.getButtonImpl(item);
+    }
+    getButtonImpl(item){
+        return (props)=> {
+            const history=useHistory();
+            return <DB
+            name={this.name}
+            visible={ this._fhelper('visible',item)}
+            label={this.label}
+            onClick={ async (ev, dialogContext) => {
+                await this._ahelper(ev, item,dialogContext,history);
+            }}
+            close= {false}
+            disabled={this._fhelper('disabled',item)}
+            >{this.label}</DB>}
     }
 
 }
@@ -149,28 +146,17 @@ class DownloadAction extends Action{
         this.fileName=fileName;
     }
 
-    getButton(options) {
-        const button= super.getButton(options);
-        if (this.localData){
-            button.localData=this._fhelper('localData',options);
-        }
-        else{
-            button.url=this._fhelper('url',options);
-        }
-        button.fileName=this._fhelper('fileName',options);
+    getButtonImpl(item) {
         // eslint-disable-next-line react/display-name
         return (props)=>{
-            if (! Helper.unsetorTrue(button.visible)){
-                return null;
-            }
             return <DownloadButton
                 {...props}
-                fileName={button.fileName}
-                url={button.url}
-                localData={button.localData}
-                name={button.name}
+                fileName={this._fhelper('fileName',item)}
+                url={this._fhelper('url',item)}
+                localData={this._fhelper('localData',item)}
+                name={this.name}
                 useDialogButton={true}
-            >{button.label}</DownloadButton>;
+            >{this.label}</DownloadButton>;
         }
     }
 }
@@ -247,15 +233,15 @@ export const deleteItem=async (item,dialogContext)=> {
     return true;
 };
 
-const renameDialog=async(item,options)=>{
+const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension,list})=>{
     let fixedPrefix=undefined;
     let dname=item.name;
-    if (options.hasScope){
+    if (hasScope){
         fixedPrefix=item.checkPrefix;
         if (! fixedPrefix) throw new Error("can only rename user items");
         dname=dname.substr(fixedPrefix.length);
     }
-    let itemList=options.list;
+    let itemList=list;
     if (! itemList){
         const res=await Requests.getJson({
             type: item.type,
@@ -263,19 +249,17 @@ const renameDialog=async(item,options)=>{
         });
         itemList=res.items||[];
     }
-    const nameForCheck=options.nameForCheck?
-        (item)=>options.nameForCheck(item):
-        (item)=>item.name;
+    if (! nameForCheck) nameForCheck=(item)=>item.name;
     try{
-        const res=await showPromiseDialog(options.dialogContext,(dprops)=><ItemNameDialog
+        const res=await showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
             title={`Rename ${item.displayName||item.name}`}
             {...dprops}
             iname={dname}
             fixedPrefix={fixedPrefix}
-            keepExtension={options.renameKeepExtension}
+            keepExtension={keepExtension}
             checkName={(name)=>{
                 const [fn,ext]=Helper.getNameAndExt(name);
-                if (! name || (options.renameKeepExtension && ! fn)){
+                if (! name || (keepExtension && ! fn)){
                     return {
                         error: 'must not be empty',
                         proposal: dname
@@ -295,15 +279,21 @@ const standardActions={
     delete: new Action({
             label: 'Delete',
             name: 'delete',
-            action: async (item,options)=>{
-                return await deleteItem(item,options.dialogContext)
+            action: async (action,item,dialogContext)=>{
+                return await deleteItem(item,dialogContext)
             }
         }),
     rename: new Action({
         label: 'Rename',
         name: 'Rename',
-        action: async (item,options)=>{
-            const newName=await renameDialog(item,options);
+        action: async (action,item,dialogContext)=>{
+            const newName=await renameDialog({
+                item,
+                dialogContext,
+                hasScope:action.hasScope,
+                keepExtension:action.keepExtension,
+                nameForCheck:action.nameForCheck
+            });
             if (! newName)return;
             return await renameRequest(item,newName);
             //TODO: rename item in overlays
@@ -311,29 +301,28 @@ const standardActions={
     view: new Action({
         label: 'View',
         name: 'view',
-        action: async (item,options,action)=>{
-            options.history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:action.itemActions.getExtensionForView()});
+        action: async (action,item,dialogContext,history)=>{
+            history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:action.fixedExtension||getExtensionForView(item)});
             return true;
         },
-        visible: (item,options,action)=>{
-            if (! options.history) return false;
-            let ext=action.itemActions.getExtensionForView();
+        visible: (action,item)=>{
+            let ext=action.fixedExtension||getExtensionForView(item);
             return ViewPage.VIEWABLES.indexOf(ext)>=0;
         }
     }),
     download:new DownloadAction({
        label:'Download',
        name: 'download',
-       visible:  (item,options,action)=>{
+       visible:  (action,item)=>{
            return item.canDownload
        },
-       fileName:(item,options,action)=>action.itemActions.nameForDownload(),
-       url:(item,options,action)=>{
+       fileName:(action,item)=>action.downloadName||item.downloadName,
+       url:(action,item)=>{
            return prepareUrl({
                type:item.type,
                command:'download',
                name:item.name,
-               filename: action.itemActions.nameForDownload()
+               filename: action.downloadName||item.downloadName
            })
        }
 
@@ -341,8 +330,8 @@ const standardActions={
     edit: new Action({
         label: 'Edit',
         name: 'edit',
-        action: async (item,options,action)=>{
-            options.history.push('viewpage', {type: item.type, name: item.name, ext:action.itemActions.getExtensionForView(item)});
+        action: async (action,item,dialogContext,history)=>{
+            history.push('viewpage', {type: item.type, name: item.name, ext:action.fixedExtension||getExtensionForView(item)});
             return true;
         },
         visible: false,
@@ -446,14 +435,7 @@ export class ItemActions{
             if (this.fixedExtension){
                 return this.fixedExtension;
             }
-            if (this.extForView) {
-                return this.extForView;
-            }
-            const dlname=this.nameForDownload();
-            if (dlname){
-                return Helper.getExt(dlname);
-            }
-            return "";
+            return getExtensionForView(this.item);
         }
         this.build();
         this.postCreate()
@@ -470,22 +452,12 @@ export class ItemActions{
                 this.allowedExtensions=[this.fixedExtension];
             }
         }
-        this.actions.forEach(action=>{
-            action.connect(this);
-        })
-    }
-    getItemActionDef(name,doneAction,opt_options){
-        for (let i in this.actions){
-            const action=this.actions[i];
-            if (action.name === name)
-                return action.getButton(this.item,doneAction,{...this,...opt_options});
-        }
     }
 
-    getActionButtons(doneAction,opt_options){
+    getActionButtons(){
         const rt=[]
         this.actions.forEach(action=>{
-            rt.push(action.getButton(doneAction,opt_options));
+            rt.push(action.getButton(this.item));
         })
         return rt;
     }
@@ -527,10 +499,10 @@ export class ItemActions{
                 this.actions.push(new Action({
                     name: 'scheme',
                     label: 'Scheme',
-                    action: async (item, options) => {
+                    action: async (action,item, dialogContext) => {
                         let newScheme;
                         try {
-                            newScheme = await showPromiseDialog(options.dialogContext,
+                            newScheme = await showPromiseDialog(dialogContext,
                                 (dprops) => <SchemeDialog
                                     {...dprops}
                                     item={item}
@@ -567,7 +539,7 @@ export class ItemActions{
                 this.headline='Tracks';
                 this.actions.push(standardActions.delete.copy({
                     visible:isConnected,
-                    action: async (info,dialogContext)=> {
+                    action: async (action,info,dialogContext)=> {
                         if (await deleteItemQuery(info,dialogContext)){
                             await deleteRequest(info);
                             NavHandler.resetTrack();
@@ -593,8 +565,8 @@ export class ItemActions{
                 this.showIsServer = props.server;
                 this.actions.push(standardActions.delete.copy({
                     visible: canModify,
-                    action: async (item, options) => {
-                        if (!await deleteItemQuery(item, options.dialogContext)) return;
+                    action: async (action,item, dialogContext) => {
+                        if (!await deleteItemQuery(item, dialogContext)) return;
                         if (RouteHandler.isActiveRoute(item.name)) {
                             throw new Error("unable to delete active route")
                         }
@@ -607,8 +579,8 @@ export class ItemActions{
                 }));
                 this.actions.push(standardActions.rename.copy({
                     visible:canModify,
-                    action: async (item, options) => {
-                        const newName=await renameDialog(item,options);
+                    action: async (action,item, dialogContext) => {
+                        const newName=await renameDialog({item,dialogContext,keepExtension:true});
                         if (!newName)return;
                         if (RouteHandler.isActiveRoute(item.name)) {
                             throw new Error("unable to rename active route")
@@ -617,9 +589,9 @@ export class ItemActions{
                     }
                 }))
                 this.actions.push(standardActions.view.copy({
-                    action: async (item, options) => {
+                    action: async (action,item, dialogContext,history) => {
                         const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
-                        options.history.push('viewpage', {
+                        history.push('viewpage', {
                             type: item.type,
                             name: item.name,
                             readOnly: true,
@@ -631,11 +603,11 @@ export class ItemActions{
                 }))
                 this.actions.push(standardActions.edit.copy({
                     visible:canModify && mapholder.getCurrentChartEntry() !== undefined,
-                    action: async (item, options) => {
+                    action: async (action,item, dialogContext,history) => {
                         const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
                         let editor = new RouteEdit(RouteEdit.MODES.EDIT);
                         editor.setNewRoute(route, 0);
-                        options.history.push('editroutepage', {center: true});
+                        history.push('editroutepage', {center: true});
                         return true;
                     }
                 }))
@@ -674,17 +646,17 @@ export class ItemActions{
                 this.headline='Layouts';
                 this.actions.push(standardActions.delete.copy({
                     visible: isConnected &&  props.canDelete !== false && ! props.active,
-                    action:async (item,options)=>{
-                        if (! await deleteItemQuery(item,options.dialogContext))return;
+                    action:async (action,item,dialogContext)=>{
+                        if (! await deleteItemQuery(item,dialogContext))return;
                         await layoutLoader.deleteLayout(item.name)
                         await removeItemsFromOverlays(item);
                         return true;
                     }
                 }))
                 this.actions.push(standardActions.view.copy({
-                    action: async (item,options) => {
+                    action: async (action,item,dialogContext,history) => {
                         const layout = await layoutLoader.loadLayout(item.name);
-                        options.history.push('viewpage', {
+                        history.push('viewpage', {
                             type: item.type,
                             name: item.name,
                             readOnly: true,
