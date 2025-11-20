@@ -25,7 +25,7 @@ import FullScreen from '../components/Fullscreen';
 import {useStateObject} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropertyHandler from '../util/propertyhandler';
-import {ItemActions} from "../components/FileDialog";
+import {createItemActions, ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
 import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
@@ -310,7 +310,7 @@ const SettingsPage = (props) => {
     }, []);
 
     const saveSettings = useCallback(() => {
-        let actions = new ItemActions({type:'settings'});
+        let actions = createItemActions({type:'settings'});
         let oldName = actions.nameToBaseName(globalStore.getData(keys.properties.lastLoadedName)).replace(/-*[0-9]*$/, '');
         let suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
         let proposedName = actions.nameForUpload(oldName + "-" + suffix);
@@ -552,7 +552,7 @@ const SettingsPage = (props) => {
                 layoutLoader.listLayouts()
                     .then((list) => {
                         const currentName = LayoutHandler.getName();
-                        const itemActions=new ItemActions({type:'layout'});
+                        const itemActions=createItemActions({type:'layout'});
                         showPromiseDialog(undefined, (dprops) => <ItemNameDialog
                             {...dprops}
                             title={"Start Layout Editor"}

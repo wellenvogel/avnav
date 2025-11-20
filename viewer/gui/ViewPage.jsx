@@ -16,7 +16,7 @@ import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {ItemActions} from "../components/FileDialog";
+import {createItemActions, ItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {languageMap} from "../components/EditDialog";
 
@@ -110,7 +110,7 @@ class ViewPage extends React.Component{
                         }catch(e){
                         }
                     }
-                    let actions=new ItemActions({type:self.type,name:self.name});
+                    let actions=createItemActions({type:self.type,name:self.name});
                     let uploadFunction;
                     if (actions.localUploadFunction){
                         uploadFunction=actions.localUploadFunction;
@@ -154,8 +154,8 @@ class ViewPage extends React.Component{
         if (this.url) return Helper.getExt(this.url);
         if (this.html) return 'html';
         const item={type:this.type,name:this.name,url:this.url};
-        let actions=new ItemActions(item);
-        return actions.getExtensionForView();
+        let actions=createItemActions(item);
+        return actions.getExtensionForView(item);
     }
     isImage(){
         let ext=this.getExt().toLowerCase();

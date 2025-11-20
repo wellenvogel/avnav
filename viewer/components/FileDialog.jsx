@@ -28,7 +28,10 @@ import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
-import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
+import EditOverlaysDialog, {
+    KNOWN_OVERLAY_EXTENSIONS,
+    DEFAULT_OVERLAY_CHARTENTRY, DEFAULT_OVERLAY_CHARTENTRY as item
+} from "./EditOverlaysDialog";
 import {
     DBCancel, DBOk,
     DialogButtons,
@@ -36,7 +39,6 @@ import {
     DialogRow,
     showPromiseDialog, useDialogContext
 } from "./OverlayDialog";
-import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
@@ -50,20 +52,15 @@ import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
 import Formatter from '../util/formatter';
-import routeobjects from "../nav/routeobjects";
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
 import {removeItemsFromOverlays} from "../map/overlayconfig";
 import {useHistory} from "./HistoryProvider";
+import globalStore from '../util/globalstore';
 
 const RouteHandler=NavHandler.getRoutingHandler();
-const showConvertFunctions = {
-    track: (dialogContext,item) => {
-        dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
-    }
-}
 
 const getExtensionForView=(item)=>{
     return item.extension||Helper.getExt(item.name);
@@ -337,32 +334,31 @@ const standardActions={
         visible: false,
         close: true
     }),
+    overlays: new Action({
+        label: 'Overlays',
+        name: 'overlays',
+        action: async (action,item,dialogContext,history)=>{
+            dialogContext.replaceDialog((props) => {
+                return (
+                    <AddRemoveOverlayDialog
+                        {...props}
+                        current={item}
+                    />
+                )
+            });
+        },
+        visible: false
+    })
 
 }
 export class ItemActions{
-    constructor(item) {
-        this.item=item||{};
-        this.type=this.item.type;
-        this.headline=this.item.type
-        this.actions=[]
-        this.renameKeepExtension=true;
-        this.showApp=false;
-        this.isApp=false;
-        this.showOverlay=false;
-        this.showConvertFunction=undefined;
-        this.showImportLog=false;
+    constructor(type) {
+        this.type=type;
+        this.headline=type
         this.showIsServer=false;
-        this.showUpload=false;
-        this.timeText='';
-        this.infoText='';
-        this.className='';
-        this.extForView=undefined;
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
         this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
         this.hasScope=false;
-        this.buildExtendedInfo=async ()=>{}
-        this.extendedInfoRows=undefined;
-        this.infoRows=undefined;
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -372,79 +368,13 @@ export class ItemActions{
          * @type {undefined}
          */
         this.localUploadFunction=undefined;
-        /**
-         * convert an entity name as received from the server to a name we offer when downloading
-         * @returns {*}
-         */
-        this.nameForDownload=()=>{
-            const item=this.item;
-            if (item.downloadName) return item.downloadName;
-            let name=item.name||item.type||"download";
-            if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
-            if (this.fixedExtension) name=name+"."+this.fixedExtension;
-            return name;
-        }
-        /**
-         * convert a local file name into an entity name as the server would accept in upload
-         * @param name
-         * @returns {*}
-         */
-        this.nameForUpload=(name)=>{
-            if (! name) return name;
-            if (! this.fixedExtension) return name;
-            if (Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
-                return name.substr(0,name.length-this.fixedExtension.length-1);
-            }
-            return name;
-        }
-        /**
-         * get a name from a list entry to compare against a local file name
-         * @param item an entry from the list
-         * @param opt_ext - if true add an fixed extension
-         */
-        this.nameForCheck=(item,opt_ext)=>{
-            if (this.hasScope && ! item.checkPrefix) return;
-            if (! item.name) return;
-            let name=item.name;
-            if (this.hasScope){
-                name=name.substring(item.checkPrefix.length);
-            }
-            if (opt_ext && this.fixedExtension){
-                name+="."+this.fixedExtension;
-            }
-            return name;
-        }
-        /**
-         * get a prefix to be shown in upload/rename dialogs
-         * @returns {string|undefined}
-         */
-        this.prefixForDisplay=()=>{
-            return this.hasScope?'user.':undefined;
-        }
-        this.nameToBaseName=(name)=>{
-            if (! name) return name;
-            if (this.hasScope) {
-                name = name.replace(/^user\./, '').replace(/^system\./, '').replace(/^plugin\.[^.]*[.]*/, '');
-            }
-            if (this.fixedExtension && Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
-                name=name.substring(0,name.length-this.fixedExtension.length-1);
-            }
-            return name;
-        }
-        this.getExtensionForView=()=>{
-            if (this.fixedExtension){
-                return this.fixedExtension;
-            }
-            return getExtensionForView(this.item);
-        }
+
         this.build();
         this.postCreate()
     }
     postCreate(){
-        this.nameForDownload=this.nameForDownload.bind(this);
         this.nameForUpload=this.nameForUpload.bind(this);
         this.nameForCheck=this.nameForCheck.bind(this);
-        this.nameToBaseName=this.nameToBaseName.bind(this);
         this.prefixForDisplay=this.prefixForDisplay.bind(this);
         this.getExtensionForView=this.getExtensionForView.bind(this);
         if (! this.allowedExtensions){
@@ -453,11 +383,90 @@ export class ItemActions{
             }
         }
     }
+    getExtensionForView(item){
+        if (this.fixedExtension){
+            return this.fixedExtension;
+        }
+        return getExtensionForView(item);
+    }
+    nameToBaseName(name){
+        if (! name) return name;
+        if (this.hasScope) {
+            name = name.replace(/^user\./, '').replace(/^system\./, '').replace(/^plugin\.[^.]*[.]*/, '');
+        }
+        if (this.fixedExtension && Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
+            name=name.substring(0,name.length-this.fixedExtension.length-1);
+        }
+        return name;
+    }
+    /**
+     * get a name from a list entry to compare against a local file name
+     * @param item an entry from the list
+     * @param opt_ext - if true add an fixed extension
+     */
+    nameForCheck(item,opt_ext){
+        if (this.hasScope && ! item.checkPrefix) return;
+        if (! item.name) return;
+        let name=item.name;
+        if (this.hasScope){
+            name=name.substring(item.checkPrefix.length);
+        }
+        if (opt_ext && this.fixedExtension){
+            name+="."+this.fixedExtension;
+        }
+        return name;
+    }
+    /**
+     * get a prefix to be shown in upload/rename dialogs
+     * @returns {string|undefined}
+     */
+    prefixForDisplay(){
+        return this.hasScope?'user.':undefined;
+    }
+    /**
+     * convert an entity name as received from the server to a name we offer when downloading
+     * @returns {*}
+     */
+    nameForDownload(item){
+        if (item.downloadName) return item.downloadName;
+        let name=item.name||item.type||"download";
+        if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
+        if (this.fixedExtension) name=name+"."+this.fixedExtension;
+        return name;
+    }
+    /**
+     * convert a local file name into an entity name as the server would accept in upload
+     * @param name
+     * @returns {*}
+     */
+    nameForUpload(name){
+        if (! name) return name;
+        if (! this.fixedExtension) return name;
+        if (Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
+            return name.substr(0,name.length-this.fixedExtension.length-1);
+        }
+        return name;
+    }
+    showUpload(){
+        return this.isConnected();
+    }
+    async buildExtendedInfo(item){
+        return {}
+    }
+    getExtendedInfoRows(item){
+        return  [];
+    }
+    fillActions(item,actions){
 
-    getActionButtons(){
-        const rt=[]
-        this.actions.forEach(action=>{
-            rt.push(action.getButton(this.item));
+    }
+    getActionButtons(item){
+        const actions= [];
+        this.fillActions(item,actions);
+        const rt=[];
+        actions.forEach(action=>{
+            if (action.isVisible(item)){
+                rt.push(action.getButton(item));
+            }
         })
         return rt;
     }
@@ -474,298 +483,461 @@ export class ItemActions{
         return title+`extension ${ext} not allowed, only `+this.allowedExtensions.join(",");
 
     }
-    build(){
-        const props=this.item||{};
-        const isConnected=globalStore.getData(keys.properties.connectedMode);
-        let ext=props.extension||Helper.getExt(props.name);
-        let editableSize=props.size !== undefined && props.size < ViewPage.MAXEDITSIZE;
-        let allowedOverlay=KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0;
-        let canEditOverlays=globalStore.getData(keys.gui.capabilities.uploadOverlays) && isConnected;
-        if (props.time !== undefined) {
-            this.timeText=Formatter.formatDateTime(new Date(props.time*1000));
-        }
-        this.infoText=props.displayName||props.name;
-        if (props.active){
-            this.className+=' activeEntry';
-        }
-        this.extForView=ext;
-        let canModify=isConnected && props.canDelete;
-        switch (props.type){
-            case 'chart':
-                this.headline='Charts';
-                this.actions.push(standardActions.delete.copy({
-                    visible: props.canDelete && isConnected
-                }));
-                this.actions.push(new Action({
-                    name: 'scheme',
-                    label: 'Scheme',
-                    action: async (action,item, dialogContext) => {
-                        let newScheme;
-                        try {
-                            newScheme = await showPromiseDialog(dialogContext,
-                                (dprops) => <SchemeDialog
-                                    {...dprops}
-                                    item={item}
-                                />);
-                        } catch (e) {
-                            return;
-                        }
-                        if (newScheme) {
-                            await Requests.getJson({
-                                type: item.type,
-                                name: item.name,
-                                command: 'scheme',
-                                newScheme: newScheme
-                            })
-                            return true;
-                        }
-                    },
-                    visible: isConnected && props.name && props.name.match(/.*\.mbtiles$/) && props.canDelete
-                }))
-                this.actions.push(standardActions.download.copy({}))
-                this.showOverlay=canEditOverlays;
-                this.showImportLog=props.hasImportLog;
-                if (props.originalScheme){
-                    this.className+=' userAction';
-                }
-                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadCharts,false)
-                this.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
-                this.hasScope=true;
-                if (props.scheme){
-                    this.infoRows=[{label:'Scheme',value:'scheme'}]
-                }
-                break;
-            case 'track':
-                this.headline='Tracks';
-                this.actions.push(standardActions.delete.copy({
-                    visible:isConnected,
-                    action: async (action,info,dialogContext)=> {
-                        if (await deleteItemQuery(info,dialogContext)){
-                            await deleteRequest(info);
-                            NavHandler.resetTrack();
-                            return true;
-                        }
-                    }
-                    }));
-                this.actions.push(standardActions.rename.copy({
-                    visible:isConnected,
-                }))
-                this.actions.push(standardActions.view.copy({}))
-                this.actions.push(standardActions.download.copy({}))
-                this.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
-                this.showOverlay=allowedOverlay && canEditOverlays;
-                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadTracks,false)
-                this.allowedExtensions=['gpx']
-                this.buildExtendedInfo=async (item)=>getTrackInfo(item.name)
-                this.extendedInfoRows=TRACK_INFO_ROWS;
-                break;
-            case 'route': {
-                canModify = !props.active && props.canDelete !== false && (!props.isServer || isConnected);
-                this.headline = 'Routes';
-                this.showIsServer = props.server;
-                this.actions.push(standardActions.delete.copy({
-                    visible: canModify,
-                    action: async (action,item, dialogContext) => {
-                        if (!await deleteItemQuery(item, dialogContext)) return;
-                        if (RouteHandler.isActiveRoute(item.name)) {
-                            throw new Error("unable to delete active route")
-                        }
-                        await RouteHandler.deleteRoutePromise(item.name,
-                            item.server //if we think this is a local route - just delete it local only
-                        );
-                        await removeItemsFromOverlays(item);
-                        return true;
-                    }
-                }));
-                this.actions.push(standardActions.rename.copy({
-                    visible:canModify,
-                    action: async (action,item, dialogContext) => {
-                        const newName=await renameDialog({item,dialogContext,keepExtension:true});
-                        if (!newName)return;
-                        if (RouteHandler.isActiveRoute(item.name)) {
-                            throw new Error("unable to rename active route")
-                        }
-                        return await RouteHandler.renameRoute(item.name,newName);
-                    }
-                }))
-                this.actions.push(standardActions.view.copy({
-                    action: async (action,item, dialogContext,history) => {
-                        const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
-                        history.push('viewpage', {
-                            type: item.type,
-                            name: item.name,
-                            readOnly: true,
-                            ext:this.getExtensionForView(),
-                            data: route.toXml()
-                        });
-                        return true;
-                    }
-                }))
-                this.actions.push(standardActions.edit.copy({
-                    visible:canModify && mapholder.getCurrentChartEntry() !== undefined,
-                    action: async (action,item, dialogContext,history) => {
-                        const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
-                        let editor = new RouteEdit(RouteEdit.MODES.EDIT);
-                        editor.setNewRoute(route, 0);
-                        history.push('editroutepage', {center: true});
-                        return true;
-                    }
-                }))
-                this.actions.push(standardActions.download.copy({
-                    localData: props.isServer?undefined:
-                        ()=>RouteHandler.getLocalRouteXml(props.name)
-                }))
-                this.showOverlay = canEditOverlays;
-                this.fixedExtension = 'gpx';
-                this.infoText += "," + Formatter.formatDecimal(props.length, 4, 2) +
-                    " nm, " + props.numpoints + " points";
-                this.localUploadFunction = (name, data) => {
-                    //name is ignored
-                    try {
-                        let route;
-                        if (data instanceof routeobjects.Route) {
-                            route = data;
-                        } else {
-                            route = new routeobjects.Route("");
-                            route.fromXml(data);
-                        }
-                        if (!route.name) {
-                            return Promise.reject("route has no name");
-                        }
-                        return RouteHandler.saveRoute(route);
-                    } catch (e) {
-                        return Promise.reject(e);
-                    }
-                }
-                this.showUpload = isConnected;
-                this.buildExtendedInfo=(item)=>getRouteInfo(item.name)
-                this.extendedInfoRows=ROUTE_INFO_ROWS;
-            }
-                break;
-            case 'layout':
-                this.headline='Layouts';
-                this.actions.push(standardActions.delete.copy({
-                    visible: isConnected &&  props.canDelete !== false && ! props.active,
-                    action:async (action,item,dialogContext)=>{
-                        if (! await deleteItemQuery(item,dialogContext))return;
-                        await layoutLoader.deleteLayout(item.name)
-                        await removeItemsFromOverlays(item);
-                        return true;
-                    }
-                }))
-                this.actions.push(standardActions.view.copy({
-                    action: async (action,item,dialogContext,history) => {
-                        const layout = await layoutLoader.loadLayout(item.name);
-                        history.push('viewpage', {
-                            type: item.type,
-                            name: item.name,
-                            readOnly: true,
-                            ext:this.getExtensionForView(),
-                            data:JSON.stringify(layout,undefined,"  ")
-                        });
-                        return true;
-                    }
-                }))
-                this.actions.push(standardActions.edit.copy({
-                    visible: isConnected && editableSize && props.canDelete
-                }))
-                this.actions.push(standardActions.download.copy({
-                    localData: layoutLoader.getLocalDownload(props.name)
-                }))
-                this.fixedExtension='json';
-                this.localUploadFunction=(name,data,overwrite)=>{
-                    return layoutLoader.uploadLayout(name,data,overwrite);
-                }
-                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadLayout,false)
-                this.hasScope=true;
-                break;
-            case 'settings': {
-                canModify= isConnected && props.canDelete !== false && !props.active;
-                this.headline = 'Settings';
-                this.actions.push(standardActions.delete.copy({
-                    visible: canModify,
-                }));
-                this.actions.push(standardActions.rename.copy({
-                    visible:canModify,
-                }))
-                this.actions.push(standardActions.view.copy({}))
-                this.actions.push(standardActions.edit.copy({
-                    visible: isConnected && editableSize && props.canDelete
-                }))
-                this.actions.push(standardActions.download.copy({}))
-                this.fixedExtension = 'json';
-                this.localUploadFunction = (name, data, overwrite) => {
-                    return PropertyHandler.verifySettingsData(data, true, true)
-                        .then((res) => PropertyHandler.uploadSettingsData(name, res.data, false, overwrite));
-                }
-                this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
-                this.hasScope = true;
-            }
-                break;
-            case 'user': {
-                this.headline = 'User';
-                this.actions.push(standardActions.delete.copy({
-                    visible: canModify,
-                }))
-                this.renameKeepExtension=false;
-                this.actions.push(standardActions.rename.copy({
-                    visible:canModify,
-                }))
-                this.actions.push(standardActions.view.copy({}))
-                this.actions.push(standardActions.edit.copy({
-                    visible: editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0 && props.canDelete && isConnected
-                }))
-                this.actions.push(standardActions.download.copy({}))
-                this.showApp = isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
-                this.isApp = this.showApp && props.isAddon;
-
-            }   this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadUser,false)
-                break;
-            case 'images': {
-                this.headline = 'Images';
-                this.actions.push(standardActions.delete.copy({
-                    visible: canModify,
-                }))
-                this.actions.push(standardActions.rename.copy({
-                    visible:canModify,
-                }))
-                this.actions.push(standardActions.view.copy({}))
-                this.actions.push(standardActions.download.copy({}))
-                this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadImages, false)
-                this.allowedExtensions = GuiHelpers.IMAGES;
-            }
-                break;
-            case 'overlay': {
-                this.headline = 'Overlays';
-                this.actions.push(standardActions.delete.copy({
-                    visible: isConnected && props.canDelete !== false
-                }))
-                this.actions.push(standardActions.rename.copy({
-                    visible:canModify,
-                }))
-                this.actions.push(standardActions.view.copy({}))
-                this.actions.push(standardActions.edit.copy({
-                    visible: editableSize && ViewPage.EDITABLES.indexOf(ext) >= 0  && isConnected
-                }))
-                this.actions.push(standardActions.download.copy({}))
-                this.showOverlay = canEditOverlays && allowedOverlay;
-                this.showUpload = isConnected && globalStore.getData(keys.gui.capabilities.uploadOverlays, false)
-            }
-                break;
-            case 'plugins':
-                this.headline='Plugins';
-                this.actions.push(standardActions.delete.copy({
-                    visible: isConnected && props.canDelete !== false
-                }))
-                this.actions.push(standardActions.download.copy({}))
-                this.showOverlay = false;
-                this.showUpload=isConnected && globalStore.getData(keys.gui.capabilities.uploadPlugins,false)
-                this.allowedExtensions=['zip'];
-                this.hasScope=true;
-                this.prefixForDisplay=()=>'user-';
-                break;
+    isConnected(){
+        return globalStore.getData(keys.properties.connectedMode);
+    }
+    canEditOverlays(){
+        return globalStore.getData(keys.gui.capabilities.uploadOverlays) && this.isConnected();
+    }
+    getInfoRows(item){
+        return []
+    }
+    getTimeText(item){
+        if (item.time !== undefined) {
+            return Formatter.formatDateTime(new Date(item.time*1000));
         }
     }
+    getInfoText(item){
+        return item.displayName||item.name
+    }
+    getClassName(item){
+        return item.isActive?"activeEntry":undefined;
+    }
+    build(){
+    }
+}
+
+class ChartItemActions extends ItemActions{
+    constructor() {
+        super('chart');
+    }
+    build(){
+        this.headline='Charts';
+        this.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
+        this.hasScope=true;
+
+    }
+    getInfoRows(item) {
+        if (item.scheme){
+            return [{label:'Scheme',value:'scheme'}]
+        }
+    }
+    showUpload() {
+        return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadCharts,false);
+    }
+    fillActions(item,actions) {
+        const isConnected=this.isConnected();
+        actions.push(standardActions.delete.copy({
+            visible: item.canDelete && isConnected
+        }));
+        actions.push(new Action({
+            name: 'scheme',
+            label: 'Scheme',
+            action: async (action,item, dialogContext) => {
+                let newScheme;
+                try {
+                    newScheme = await showPromiseDialog(dialogContext,
+                        (dprops) => <SchemeDialog
+                            {...dprops}
+                            item={item}
+                        />);
+                } catch (e) {
+                    return;
+                }
+                if (newScheme) {
+                    await Requests.getJson({
+                        type: item.type,
+                        name: item.name,
+                        command: 'scheme',
+                        newScheme: newScheme
+                    })
+                    return true;
+                }
+            },
+            visible: isConnected && item.name && item.name.match(/.*\.mbtiles$/) && item.canDelete
+        }))
+        actions.push(standardActions.download.copy({}))
+        actions.push(new Action({
+            name: 'overlays',
+            label: 'Overlays',
+            action: async (action,item, dialogContext) => {
+                EditOverlaysDialog.createDialog(item,()=>dialogContext.closeDialog());
+            },
+            visible: this.canEditOverlays(),
+            close: false
+        }))
+        actions.push(new Action({
+            name:'log',
+            label: 'Log',
+            action: async (action,item,dialogContext) => {
+                dialogContext.replaceDialog((dprops) => {
+                    return <LogDialog {...dprops}
+                                      baseUrl={prepareUrl({
+                                          type:'import',
+                                          command:'getlog',
+                                          name:item.name
+                                      })}
+                                      title={'Import Log'}
+                    />
+                })
+            },
+            close: false,
+            visible:item.hasImportLog
+        }))
+    }
+}
+
+class RouteItemActions extends ItemActions{
+    constructor() {
+        super('route');
+    }
+    build(){
+        this.headline = 'Routes';
+        this.fixedExtension='gpx';
+    }
+
+    showUpload() {
+        return super.showUpload();
+    }
+
+    async buildExtendedInfo(item) {
+        return getRouteInfo(item.name);
+    }
+
+    getExtendedInfoRows(item) {
+        return ROUTE_INFO_ROWS;
+    }
+
+    fillActions(item, actions) {
+        const canModify = !item.active && item.canDelete !== false &&
+            (!item.isServer || this.isConnected()) &&
+            ! RouteHandler.isActiveRoute(item.name)
+        ;
+        actions.push(standardActions.delete.copy({
+            visible: canModify,
+            action: async (action,item, dialogContext) => {
+                if (!await deleteItemQuery(item, dialogContext)) return;
+                if (RouteHandler.isActiveRoute(item.name)) {
+                    throw new Error("unable to delete active route")
+                }
+                await RouteHandler.deleteRoutePromise(item.name,
+                    item.server //if we think this is a local route - just delete it local only
+                );
+                await removeItemsFromOverlays(item);
+                return true;
+            }
+        }));
+        actions.push(standardActions.rename.copy({
+            visible:canModify,
+            action: async (action,item, dialogContext) => {
+                const newName=await renameDialog({item,dialogContext,keepExtension:true});
+                if (!newName)return;
+                if (RouteHandler.isActiveRoute(item.name)) {
+                    throw new Error("unable to rename active route")
+                }
+                return await RouteHandler.renameRoute(item.name,newName);
+            }
+        }))
+        actions.push(standardActions.view.copy({
+            action: async (action,item, dialogContext,history) => {
+                const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
+                history.push('viewpage', {
+                    type: item.type,
+                    name: item.name,
+                    readOnly: true,
+                    ext:this.getExtensionForView(),
+                    data: route.toXml()
+                });
+                return true;
+            }
+        }))
+        actions.push(standardActions.edit.copy({
+            visible:canModify && mapholder.getCurrentChartEntry() !== undefined,
+            action: async (action,item, dialogContext,history) => {
+                const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
+                let editor = new RouteEdit(RouteEdit.MODES.EDIT);
+                editor.setNewRoute(route, 0);
+                history.push('editroutepage', {center: true});
+                return true;
+            }
+        }))
+        actions.push(standardActions.download.copy({
+            localData: item.isServer?undefined:
+                ()=>RouteHandler.getLocalRouteXml(item.name),
+            downloadName: this.nameForDownload(item)
+        }))
+        actions.push(standardActions.overlays.copy({
+            visible: this.canEditOverlays()
+        }))
+    }
+}
+
+class TrackItemActions extends ItemActions{
+    constructor() {
+        super('track');
+    }
+
+
+    showUpload() {
+        return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadTracks,false);
+    }
+
+    async buildExtendedInfo(item) {
+        return getTrackInfo(item.name)
+    }
+
+    getExtendedInfoRows(item) {
+        return TRACK_INFO_ROWS;
+    }
+
+    fillActions(item, actions) {
+        actions.push(standardActions.delete.copy({
+            visible:this.isConnected(),
+            action: async (action,info,dialogContext)=> {
+                if (await deleteItemQuery(info,dialogContext)){
+                    await deleteRequest(info);
+                    NavHandler.resetTrack();
+                    return true;
+                }
+            }
+        }));
+        actions.push(standardActions.rename.copy({
+            visible:this.isConnected(),
+        }))
+        actions.push(standardActions.view.copy({
+            visible:Helper.getExt(item.name)==='gpx'
+        }))
+        actions.push(standardActions.download.copy({}))
+        actions.push(standardActions.overlays.copy({
+            visible:this.canEditOverlays() && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0,
+        }))
+        actions.push(new Action({
+            name:'convert',
+            action:(action,info,dialogContext)=>{
+                dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
+            },
+            visible: Helper.getExt(item.name)==='gpx'
+        }))
+
+    }
+    build() {
+        this.allowedExtensions=['gpx'];
+        this.headline='Tracks';
+    }
+}
+class LayoutItemActions extends ItemActions{
+    constructor() {
+        super('layout');
+    }
+
+
+    fillActions(item, actions) {
+        actions.push(standardActions.delete.copy({
+            visible: this.isConnected() &&  item.canDelete !== false && ! item.active,
+            action:async (action,item,dialogContext)=>{
+                if (! await deleteItemQuery(item,dialogContext))return;
+                await layoutLoader.deleteLayout(item.name)
+                await removeItemsFromOverlays(item);
+                return true;
+            }
+        }))
+        actions.push(standardActions.view.copy({
+            action: async (action,item,dialogContext,history) => {
+                const layout = await layoutLoader.loadLayout(item.name);
+                history.push('viewpage', {
+                    type: item.type,
+                    name: item.name,
+                    readOnly: true,
+                    ext:this.getExtensionForView(),
+                    data:JSON.stringify(layout,undefined,"  ")
+                });
+                return true;
+            }
+        }))
+        actions.push(standardActions.edit.copy({
+            visible: this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE && item.canDelete
+        }))
+        actions.push(standardActions.download.copy({
+            localData: layoutLoader.getLocalDownload(item.name)
+        }))
+    }
+
+    build() {
+        this.headline='Tracks';
+        this.hasScope=true;
+        this.fixedExtension='json';
+    }
+}
+
+class SettingsItemActions extends ItemActions{
+    constructor() {
+        super('settings');
+    }
+
+    fillActions(item, actions) {
+        const canModify= this.isConnected() && item.canDelete !== false && !item.active;
+        actions.push(standardActions.delete.copy({
+            visible: canModify,
+        }));
+        actions.push(standardActions.rename.copy({
+            visible:canModify,
+            keepExtension:true,
+        }))
+        actions.push(standardActions.view.copy({}))
+        actions.push(standardActions.edit.copy({
+            visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE
+        }))
+        actions.push(standardActions.download.copy({}))
+    }
+
+    build() {
+        this.headline='Settings';
+        this.hasScope=true;
+        this.fixedExtension='json';
+    }
+}
+class UserItemActions extends ItemActions{
+    constructor() {
+        super('user');
+    }
+
+    showUpload() {
+        return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadUser,false);
+    }
+
+    fillActions(item, actions) {
+        const canModify= this.isConnected() && item.canDelete !== false;
+        actions.push(standardActions.delete.copy({
+            visible: canModify,
+        }))
+        actions.push(standardActions.rename.copy({
+            visible:canModify,
+        }))
+        actions.push(standardActions.view.copy({}))
+        actions.push(standardActions.edit.copy({
+            visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE
+                && ViewPage.EDITABLES.indexOf(Helper.getExt(item.name)) >= 0
+        }))
+        actions.push(standardActions.download.copy({}))
+        actions.push(new Action({
+            name: 'userApp',
+            label: 'App',
+            action: async (action,item,dialogContext,history)=>{
+                dialogContext.replaceDialog((props) =>
+                    <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={() => {
+                    }}/>)
+            },
+            visible:this.isConnected() && Helper.getExt(item.name)==='html'
+        }))
+    }
+
+    build() {
+        this.headline='User';
+    }
+}
+class ImageItemActions extends ItemActions{
+    constructor() {
+        super('images');
+    }
+
+    fillActions(item, actions) {
+        let canModify=this.isConnected() && item.canDelete;
+        actions.push(standardActions.delete.copy({
+            visible: canModify,
+        }))
+        actions.push(standardActions.rename.copy({
+            visible:canModify,
+            keepExtension:true,
+        }))
+        actions.push(standardActions.view.copy({}))
+        actions.push(standardActions.download.copy({}))
+    }
+
+    build() {
+       this.headline = 'Images';
+       this.allowedExtensions = GuiHelpers.IMAGES;
+    }
+}
+
+class OverlayItemActions extends ItemActions{
+    constructor() {
+        super('overlay');
+    }
+
+    fillActions(item, actions) {
+        let canModify=this.isConnected() && item.canDelete !== false;
+        actions.push(standardActions.delete.copy({
+            visible: canModify,
+        }))
+        this.actions.push(standardActions.rename.copy({
+            visible:canModify,
+        }))
+        actions.push(standardActions.view.copy({}))
+        actions.push(standardActions.edit.copy({
+            visible: item.size !== undefined && item.size < ViewPage.MAXEDITSIZE &&
+                ViewPage.EDITABLES.indexOf(Helper.getExt(item.name)) >= 0
+                && canModify
+        }))
+        actions.push(standardActions.download.copy({}))
+        actions.push(standardActions.overlays.copy({
+            visible:this.canEditOverlays() && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0,
+        }))
+    }
+
+    build() {
+       this.headline = 'Overlays';
+    }
+    showUpload() {
+        return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadOverlays, false);
+    }
+}
+class PluginItemActions extends ItemActions{
+    constructor() {
+        super('plugins');
+    }
+
+    showUpload() {
+        return super.showUpload();
+    }
+
+    fillActions(item, actions) {
+        actions.push(standardActions.delete.copy({
+            visible: this.isConnected()&& item.canDelete !== false
+        }))
+        this.actions.push(standardActions.download.copy({}))
+    }
+
+    build() {
+        this.headline='Plugins';
+        this.hasScope=true;
+        this.allowedExtensions=['zip'];
+    }
+
+    prefixForDisplay() {
+        return 'user-';
+    }
+}
+const ITEM_TYPE_ACTIONS={
+    chart: new ChartItemActions(),
+    route: new RouteItemActions(),
+    track: new TrackItemActions(),
+    layout: new LayoutItemActions(),
+    settings: new SettingsItemActions(),
+    user: new UserItemActions(),
+    images: new ImageItemActions(),
+    overlay: new OverlayItemActions(),
+    plugins: new PluginItemActions(),
+}
+
+export const createItemActions=(type)=>{
+    if (type instanceof Object) {
+        type=type.type
+    }
+    if (type){
+        const rt=ITEM_TYPE_ACTIONS[type];
+        if (rt) return rt;
+    }
+    return new ItemActions(type||'dummy');
 }
 
 export const itemListToSelectList=(itemList,opt_selected)=>{
@@ -784,15 +956,6 @@ export const itemListToSelectList=(itemList,opt_selected)=>{
     });
     return rt;
 }
-
-const getImportLogUrl=(name)=>{
-    return prepareUrl({
-        type:'import',
-        command:'getlog',
-        name:name
-    });
-}
-
 const ALLCHARTS={label:'AllCharts',value: ''};
 const AddRemoveOverlayDialog = (props) => {
     const dialogContext=useDialogContext();
@@ -922,26 +1085,20 @@ const infoRowDisplay=(row,data)=>{
     return <InfoItem label={row.label} value={v}/>
 }
 export const FileDialog = (props) => {
-    const [changed, setChanged] = useState(false);
-    const [allowed, setAllowed] = useState(new ItemActions(props.current))
+    const allowed=createItemActions(props.current);
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
     const history=useHistory();
     useEffect(() => {
-        let f = allowed.buildExtendedInfo;
-        if (f) {
-            f(props.current).then(
+        allowed.buildExtendedInfo(props.current)
+        .then(
                 (info)=>setExtendedInfo(info),
                 ()=>{}
             );
-        }
     }, [allowed]);
 
-    let extendedInfoRows = allowed.extendedInfoRows;
-    const dialogButtons=allowed.getActionButtons({
-        history:history,
-        dialogContext: dialogContext,
-    });
+    let extendedInfoRows = allowed.getExtendedInfoRows(props.current);
+    const dialogButtons=allowed.getActionButtons(props.current);
     const doneAction=useCallback((res)=>{
         if (res) Toast(res);
         props.okFunction("dummy")
@@ -968,58 +1125,13 @@ export const FileDialog = (props) => {
                 :
                 null
             }
-            {allowed.infoRows && allowed.infoRows.map((row)=>{
+            {allowed.getInfoRows(props.current).map((row)=>{
                 return infoRowDisplay(row,props.current)
             })}
             {extendedInfoRows && extendedInfoRows.map((row) => {
                 return infoRowDisplay(row, extendedInfo);
             })}
             <DialogButtons buttonList={dialogButtons}>
-
-            </DialogButtons>
-            <DialogButtons>
-                {allowed.showImportLog &&
-                    <DB name={'log'}
-                        onClick={() => {
-                            dialogContext.replaceDialog((dprops) => {
-                                return <LogDialog {...dprops}
-                                                  baseUrl={getImportLogUrl(props.current.name)}
-                                                  title={'Import Log'}
-                                />
-                            })
-                        }}
-                    >Log</DB>
-                }
-                {allowed.showConvertFunction &&
-                    <DB name="toroute"
-                        onClick={() => {
-                            props.okFunction('convert', props.current);
-                        }}
-                    >Convert</DB>
-                }
-                {(allowed.showOverlay) ?
-                    <DB name="overlays"
-                        onClick={() => {
-                            props.okFunction('overlay', props.current);
-                        }}
-                        disabled={changed}
-                    >
-                        Overlays
-                    </DB>
-                    :
-                    null
-                }
-                {(allowed.showApp) &&
-                    <DB name="userApp"
-                        onClick={() => {
-                            props.okFunction('userapp', props.current);
-                        }}
-                        disabled={changed}
-                    >
-                        App
-                    </DB>
-
-                }
                 <DB name="cancel"
                 >
                     Cancel
@@ -1032,69 +1144,12 @@ export const FileDialog = (props) => {
 
 
 export const FileDialogWithActions=(props)=>{
-    const history=useHistory();
     const {doneCallback,item,checkExists,...forward}=props;
-    const dialogContext=useDialogContext();
-    const actionFunction=async (action,newItem)=>{
-        let doneAction=(pageChanged)=>{
-            if (doneCallback){
-                doneCallback(action,newItem,pageChanged)
-            }
-        };
-        try {
-            if (action === 'edit') {
-                if (item.type === 'route') {
-                    const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
-                    let editor = new RouteEdit(RouteEdit.MODES.EDIT);
-                    editor.setNewRoute(route, 0);
-                    doneAction(true);
-                    history.push('editroutepage', {center: true});
-                } else {
-                    doneAction(true);
-                    history.push('viewpage', {type: item.type, name: item.name});
-                }
-                return;
-            }
-            if (action === 'userapp') {
-                if (item.url) {
-                    dialogContext.replaceDialog((props) =>
-                            <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={() => {
-                            }}/>
-                        , () => doneAction())
-                }
-            }
-            if (action === 'overlay') {
-                doneAction();
-                if (item.type === 'chart') {
-                    return EditOverlaysDialog.createDialog(item)
-                } else {
-                    dialogContext.replaceDialog((props) => {
-                        return (
-                            <AddRemoveOverlayDialog
-                                {...props}
-                                current={item}
-                            />
-                        )
-                    });
-                    return;
-                }
-            }
-            if (action === 'convert') {
-                let convertFunction = showConvertFunctions[newItem.type];
-                if (convertFunction) {
-                    convertFunction(dialogContext, newItem);
-                }
-                return;
-            }
-            doneAction();
-        }catch (e){
-            Toast(e+"");
-            doneAction();
-        }
-    };
     return <FileDialog
         {...forward}
         current={item}
-        okFunction={actionFunction}
-        checkName={checkExists}/>
+        okFunction={()=>{
+            if (doneCallback) doneCallback
+        }}
+        />
 }

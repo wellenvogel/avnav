@@ -22,7 +22,7 @@ import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {
     deleteItem,
-    ItemActions, FileDialogWithActions
+    ItemActions, FileDialogWithActions, createItemActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import PropertyHandler from '../util/propertyhandler';
@@ -104,8 +104,8 @@ const itemSort=(a,b)=>{
 
 const DownloadItem=(props)=>{
 
-    let actions=new ItemActions(props);
-    let  cls="listEntry "+actions.className;
+    let actions=createItemActions(props);
+    let  cls=Helper.concatsp("listEntry",actions.getClassName(props));
     let dataClass="downloadItemData";
     return(
         <div className={cls} onClick={function(ev){
@@ -116,8 +116,8 @@ const DownloadItem=(props)=>{
             }
             <div className="itemMain">
                 <div className={dataClass}>
-                    <div className="date">{actions.timeText}</div>
-                    <div className="info">{actions.infoText}</div>
+                    <div className="date">{actions.getTimeText(props)}</div>
+                    <div className="info">{actions.getInfoText(props)}</div>
                 </div>
                 <div className="infoImages">
                     { actions.showEdit && <div className="editimage"></div>}
@@ -263,7 +263,7 @@ class DownloadPage extends React.Component{
         };
     }
     getButtons(){
-        const itemActions=new ItemActions({type: this.state.type})
+        const itemActions=createItemActions({type: this.state.type})
         let rt=[
             this.getButtonParam('DownloadPageCharts','chart'),
             {
@@ -283,7 +283,7 @@ class DownloadPage extends React.Component{
             this.getButtonParam('DownloadPagePlugins','plugins',true,keys.gui.capabilities.uploadPlugins),
             {
                 name:'DownloadPageUpload',
-                visible: itemActions.showUpload,
+                visible: itemActions.showUpload(),
                 onClick:()=>{
                     this.setState({uploadSequence:this.state.uploadSequence+1});
                 }
@@ -308,7 +308,7 @@ class DownloadPage extends React.Component{
      * @returns {Promise}
      */
     checkNameForUpload(name,file){
-            let actions=new ItemActions({type:this.state.type});
+            let actions=createItemActions({type:this.state.type});
             let ext=Helper.getExt(name);
             if (this.state.type !== 'chart') {
                 const error = actions.checkExtension(ext, actions.headline);
@@ -464,7 +464,7 @@ class DownloadPage extends React.Component{
      *          if no function is returned, the upload will go to the server
      */
     getLocalUploadFunction(){
-        let actions=new ItemActions({type:this.state.type});
+        let actions=createItemActions({type:this.state.type});
         if (actions.localUploadFunction){
             return (obj)=> {
                 if (!obj) {
@@ -507,7 +507,7 @@ class DownloadPage extends React.Component{
         }
     }
     createAccessor(opt_actions){
-        if (! opt_actions) opt_actions=new ItemActions({type:this.state.type});
+        if (! opt_actions) opt_actions=createItemActions({type:this.state.type});
         return (data)=>opt_actions.nameForCheck(data);
     }
     createItem(){
@@ -560,7 +560,7 @@ class DownloadPage extends React.Component{
     };
     render(){
         let self=this;
-        const actions=new ItemActions({type:this.state.type});
+        const actions=createItemActions({type:this.state.type});
         let localDoneFunction=this.getLocalUploadFunction();
         return (
             <Page

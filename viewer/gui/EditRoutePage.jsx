@@ -42,7 +42,7 @@ import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem, SelectList} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
 import plugimage from '../images/icons-new/plug.svg';
-import {ItemActions} from "../components/FileDialog";
+import {createItemActions, ItemActions} from "../components/FileDialog";
 import UploadHandler from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
 import {existsRoute, loadRoutes} from "../components/RouteInfoHelper";
@@ -301,7 +301,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             type={'route'}
             doneCallback={(data)=>{
                 try {
-                    const actions=new ItemActions({type:'route'})
+                    const actions=createItemActions({type:'route'})
                     let nroute = new routeobjects.Route();
                     nroute.fromXml(data.data);
                     if (! nroute.name) {
@@ -478,7 +478,7 @@ const EditRouteDialog = (props) => {
             title={title}
         />)
             .then((res)=>{
-                const actions=new ItemActions({type:'route'});
+                const actions=createItemActions({type:'route'});
                 return actions.nameForUpload(res.name);
             })
     }
