@@ -90,7 +90,7 @@ const DownloadButton=(props)=>{
                     close={useDialogButton?false:undefined}
                     onClick={(ev) => {
                         ev.stopPropagation();
-                        if (!url) {
+                        if (localData) {
                             saveLocal(fileName);
                         }
                         else {

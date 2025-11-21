@@ -21,8 +21,7 @@ import Addons from '../components/Addons.js';
 import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {
-    deleteItem,
-    ItemActions, FileDialogWithActions, createItemActions
+    FileDialogWithActions, createItemActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import PropertyHandler from '../util/propertyhandler';
@@ -314,7 +313,7 @@ class DownloadPage extends React.Component{
                 const error = actions.checkExtension(ext, actions.headline);
                 if (error) return Promise.reject(error);
             }
-            let serverName=actions.nameForUpload(name);
+            let serverName=name;
             const accessor=this.createAccessor(actions);
             let rt={name:serverName};
             if (this.state.type === 'route'){
@@ -477,7 +476,7 @@ class DownloadPage extends React.Component{
                     try{
                         let route=new routeobjects.Route();
                         route.fromXml(data)
-                        if (! route.name) route.name=actions.nameForUpload(name);
+                        if (! route.name) route.name=name;
                         const existing=this.entryExists(route.name);
                         if (existing){
                             showPromiseDialog(undefined,(dprops)=><ItemNameDialog
@@ -488,7 +487,7 @@ class DownloadPage extends React.Component{
                                 title={`route ${route.name} already exists`}
                                 />)
                                 .then((res)=>{
-                                    route.name=actions.nameForUpload(res.name);
+                                    route.name=res.name;
                                     actions.localUploadFunction(name,route)
                                         .then(()=>this.fillData(),(e)=>{Toast(e);this.fillData()})
                                 })
@@ -561,6 +560,8 @@ class DownloadPage extends React.Component{
     render(){
         let self=this;
         const actions=createItemActions({type:this.state.type});
+        const accessor=(data)=>actions.nameForCheck(data);
+        const uploadAction=actions.getUploadAction();
         let localDoneFunction=this.getLocalUploadFunction();
         return (
             <Page
@@ -574,15 +575,6 @@ class DownloadPage extends React.Component{
                             onItemClick={async (ev)=>{
                                 const item=avitem(ev);
                                 const action=avitem(ev,'action');
-                                if (action === 'delete'){
-                                    try {
-                                        await deleteItem(item);
-                                    }catch (e) {
-                                        Toast(e);
-                                    }
-                                    this.fillData()
-                                    return;
-                                }
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
                                 }
@@ -590,39 +582,37 @@ class DownloadPage extends React.Component{
                                     EditOverlaysDialog.createDialog(undefined,()=>this.fillData());
                                     return;
                                 }
-                                const accessor=this.createAccessor();
                                 showDialog(undefined,()=>
                                  <FileDialogWithActions
                                      item={item}
                                      history={this.props.history}
                                      doneCallback={(action,item,pageChanged)=>{
-                                         if (pageChanged) return;
-                                         if (action === 'userapp') this.readAddOns()
-                                         else this.fillData();
+                                         this.fillData();
+                                         this.readAddOns();
                                      }}
-                                     checkExists={(newName)=>{
-                                         //checkExisting
-                                         return this.entryExists(newName,accessor);
-                                     }}
-                                 />);
+                                 />,()=>{
+                                    this.fillData();
+                                    this.readAddOns();
+                                });
                             }}
                         />
                         <UploadHandler
-                            local={localDoneFunction !== undefined}
+                            local={uploadAction.hasLocalAction()}
                             type={this.state.type}
                             doneCallback={(param)=>{
-                                if (param.param && param.param.showImportPage){
+                                //TODO
+                                if (param && param.param && param.param.showImportPage){
                                     let options={};
                                     if (param.param.uploadParameters && param.param.uploadParameters.subdir) {
                                         options.subdir=param.param.uploadParameters.subdir;
                                     }
                                     this.props.history.push('importerpage',options);
                                 }
-                                localDoneFunction?localDoneFunction(param):this.fillData(param)
+                                this.fillData()
                             }}
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
                             uploadSequence={this.state.uploadSequence}
-                            checkNameCallback={this.checkNameForUpload}
+                            checkNameCallback={(file,dialogContext)=>uploadAction.checkFile(file,dialogContext)}
                             fixedPrefix={actions.prefixForDisplay()}
                         />
                         {(this.state.type === "user")?

@@ -152,7 +152,7 @@ export const IconDialog=(props)=>{
         <UploadHandler
             local={false}
             type={'images'}
-            doneCallback={(param)=>loadIcons(param.param.name,'images')}
+            doneCallback={(param)=>loadIcons(param.name,'images')}
             errorCallback={(err) => {
                 if (err) Toast(err);
             }}

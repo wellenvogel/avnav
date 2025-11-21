@@ -95,7 +95,7 @@ class AVNDirectoryListEntry(object):
     if self.extension != other.extension:
         return False
 
-    return False
+    return True
 
   def isModified(self, other):
     # type: (AVNDirectoryListEntry) -> bool

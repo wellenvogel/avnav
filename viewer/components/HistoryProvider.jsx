@@ -31,7 +31,7 @@ const buildContext=(history)=>{
         if (history) return history[name](...args);
     }
     const rt={};
-    for ( const n of ['replace','push','pop','reset','setOptions']){
+    for ( const n of ['replace','push','pop','reset','setOptions','currentLocation']){
         rt[n]=f(n)
     }
     return rt;

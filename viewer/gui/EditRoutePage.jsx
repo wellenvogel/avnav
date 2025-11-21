@@ -299,44 +299,23 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
             local={true}
             uploadSequence={uploadSequence}
             type={'route'}
-            doneCallback={(data)=>{
+            checkNameCallback={async (file)=>{
                 try {
                     const actions=createItemActions({type:'route'})
-                    let nroute = new routeobjects.Route();
-                    nroute.fromXml(data.data);
-                    if (! nroute.name) {
-                        nroute.setName(actions.nameForUpload(data.name));
-                    }
-                    const routeExists=(name)=> {
-                        return checkName(name,currentList.current,(item)=>item.value+".gpx")
-                    }
-                    const name=actions.serverNameToClientName(nroute.name);
-                    if (routeExists(name)) {
-                        showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-                            {...dprops}
-                            title={"route already exists, select new name"}
-                            checkName={routeExists}
-                            fixedExt={'gpx'}
-                            iname={nroute.name}
-                            />)
-                            .then((res)=>{
-                                nroute.setName(actions.nameForUpload(res.name));
-                                if (resolveFunction) resolveFunction(nroute);
-                                dialogContext.closeDialog();
-                            })
-                        return;
-                    }
-                    if (resolveFunction) resolveFunction(nroute);
-                    dialogContext.closeDialog();
+                    const uploadAction=actions.getUploadAction().copy({
+                        localAction: async (userData,file,name)=>{
+                            if (! userData.nroute) throw new Error("no route loaded");
+                            userData.nroute.name=name;
+                            if (resolveFunction) resolveFunction(userData.nroute);
+                            dialogContext.closeDialog();
+                        }
+                    });
+                    return uploadAction.checkFile(file,dialogContext);
                 }catch (e) {
                     Toast(e);
                 }
             }}
             errorCallback={(err)=>Toast(err)}
-            checkNameCallback={(name)=>{
-                if(Helper.getExt(name) !== 'gpx') return {error:"only .gpx files"};
-                return {name:name}
-            }}
         />
         <DialogButtons buttonList={[
             {
@@ -478,8 +457,7 @@ const EditRouteDialog = (props) => {
             title={title}
         />)
             .then((res)=>{
-                const actions=createItemActions({type:'route'});
-                return actions.nameForUpload(res.name);
+                return res.name;
             })
     }
     const writable= ! route.server || connectedMode;

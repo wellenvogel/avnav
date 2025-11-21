@@ -192,7 +192,7 @@ export const TMP_PRFX="__avn.";
  * @param [opt_idx]{string|function} the value of each item to be checked, defaults to "name"
  * @param [opt_checkAllowed] set to false to disable the check for allowed file names
  * @param opt_notEmpty error if empty
- * @returns {{proposal: *, error: string}} - returns undefined if ok
+ * @returns {{proposal: *, error: string}} - returns an object with name only if ok
  */
 export const checkName=(name,itemList,opt_idx,opt_checkAllowed,opt_notEmpty)=>{
     if (opt_notEmpty){
@@ -221,7 +221,7 @@ export const checkName=(name,itemList,opt_idx,opt_checkAllowed,opt_notEmpty)=>{
     }
     if (! rt ) {
         rt= checkNameList(name,itemList,opt_idx);
-        if (! rt) return;
+        if (! rt) return {name:name};
         rt.name=name;
         return rt;
     }

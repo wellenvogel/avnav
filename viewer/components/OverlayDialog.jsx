@@ -286,6 +286,7 @@ export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback)=>{
             if (window.avnav.android && window.avnav.android.dialogClosed){
                 window.avnav.android.dialogClosed();
             }
+            if (opt_cancelCallback) opt_cancelCallback();
         }
         globalContext.showDialog(dialog,cancel);
     }

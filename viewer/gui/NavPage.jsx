@@ -413,8 +413,7 @@ const createRouteFeatureAction=(history,opt_fromMeasure)=>{
                             listCtx.closeDialog();
                             const isConnected=globalStore.getData(keys.properties.connectedMode);
                             let newRoute = measure ? measure.clone() : new routeobjects.Route();
-                            const action=createItemActions({type:'route'});
-                            newRoute.setName(action.nameForUpload(res.name));
+                            newRoute.setName(res.name);
                             newRoute.server = isConnected;
                             if (!measure) {
                                 newRoute.addPoint(0, featureInfo.point);

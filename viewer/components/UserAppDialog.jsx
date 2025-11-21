@@ -57,7 +57,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
             checkNameCallback={(name)=>{
                 if (name && name.substring(name.length-4).toUpperCase() === 'HTML') {
                     let err=checkNameFunction(name);
-                    if (err) return err;
+                    if (err && err.error) return err;
                     return {name: name}
                 }
                 return "only files of type html allowed";

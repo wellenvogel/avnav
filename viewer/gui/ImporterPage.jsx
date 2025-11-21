@@ -466,7 +466,7 @@ const ImporterPage = (props) => {
                         if (err) Toast(err);
                     }}
                 uploadSequence={uploadSequence}
-                checkNameCallback={(name)=>checkNameForUpload(name)}
+                checkNameCallback={(file)=>checkNameForUpload(file.name)}
             />
         </PageLeft>
         <ButtonList itemList={isActive ? activeButtons.concat(buttons) : buttons}/>

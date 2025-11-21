@@ -313,7 +313,7 @@ const SettingsPage = (props) => {
         let actions = createItemActions({type:'settings'});
         let oldName = actions.nameToBaseName(globalStore.getData(keys.properties.lastLoadedName)).replace(/-*[0-9]*$/, '');
         let suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
-        let proposedName = actions.nameForUpload(oldName + "-" + suffix);
+        let proposedName = oldName + "-" + suffix;
         PropertyHandler.listSettings()
             .then((settings) => {
                 const checkFunction = (newName) => {
@@ -332,7 +332,7 @@ const SettingsPage = (props) => {
                 if (!settingsName || settingsName === 'user.') {
                     return Promise.reject();
                 }
-                proposedName = actions.nameForUpload(settingsName);
+                proposedName = settingsName;
                 return PropertyHandler.uploadSettingsData(
                     proposedName,
                     PropertyHandler.exportSettings(values.getState(true)),
