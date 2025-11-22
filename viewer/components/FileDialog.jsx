@@ -30,7 +30,7 @@ import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {
     KNOWN_OVERLAY_EXTENSIONS,
-    DEFAULT_OVERLAY_CHARTENTRY
+    DEFAULT_OVERLAY_CHARTENTRY, DEFAULT_OVERLAY_CHARTENTRY as item
 } from "./EditOverlaysDialog";
 import {
     DBCancel, DBOk,
@@ -61,6 +61,7 @@ import {useHistory} from "./HistoryProvider";
 import globalStore from '../util/globalstore';
 import {readTextFile} from "./UploadHandler";
 import routeobjects from "../nav/routeobjects";
+import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -74,6 +75,10 @@ export const listItems=async(type)=>{
     });
     return existing.items||[];
 }
+
+/**
+ * handler for uploads based on file type
+ */
 class UploadHandler{
     constructor({type,accessor}){
         this.type=type;
@@ -82,6 +87,8 @@ class UploadHandler{
         this.checkExisting=undefined;
         this.withDialog=false;
         this.localAction=undefined;
+        this.doneAction=undefined;
+        this.userData=undefined;
     }
     copy(updates){
         const rt=new this.constructor(this);
@@ -93,6 +100,7 @@ class UploadHandler{
                 rt[k]=updates[k];
             }
         }
+        rt.userData=undefined;
         return rt;
     }
 
@@ -104,9 +112,9 @@ class UploadHandler{
      */
     async _check(file,dialogContext){
         let rs={name:file.name};
-        const userData={};
+        this.userData={};
         if (this.checkFileAndName){
-            rs=await Helper.awaitHelper(this.checkFileAndName(userData,file.name,file));
+            rs=await Helper.awaitHelper(this.checkFileAndName(this.userData,file.name,file,dialogContext));
         }
         if (! rs) return;
         if (rs.error){
@@ -115,13 +123,15 @@ class UploadHandler{
         if (! rs.name){
             throw new Error("no name after check");
         }
-        const existing = await listItems(this.type);
+        if (rs.final){
+            return rs;
+        }
+        const existing = await listItems(rs.type||this.type);
         const accessor=(data)=>this.checkAccessor(data);
         if (this.withDialog){
             rs=await uploadCheckNameDialog({
                 dialogContext,
                 name:rs.name,
-                type: this.type,
                 keepExtension: true,
                 nameForCheck: accessor,
                 itemList:existing,
@@ -130,7 +140,7 @@ class UploadHandler{
         }
         else {
             if (this.checkExisting) {
-                rs = await Helper.awaitHelper(this.checkExisting(userData, dialogContext, rs.name, existing, accessor));
+                rs = await Helper.awaitHelper(this.checkExisting(this.userData, dialogContext, rs.name, existing, accessor));
             } else {
                 const oname=rs.name;
                 rs = checkName(rs.name, existing, accessor);
@@ -143,7 +153,7 @@ class UploadHandler{
             return;
         }
         if (this.localAction){
-            return await Helper.awaitHelper(this.localAction(userData,file,rs.name))
+            return await Helper.awaitHelper(this.localAction(this.userData,file,rs.name))
         }
         return rs;
     }
@@ -163,13 +173,18 @@ class UploadHandler{
             return Promise.reject(nameCheck.error);
         }
         return {
-            name:nameCheck.name,
-            file: file,
-            options: nameCheck.options
+            ...nameCheck,
+            file:file
         }
     }
     hasLocalAction(){
         return !!this.localAction;
+    }
+    async afterUpload(){
+        if (this.doneAction){
+            return await Helper.awaitHelper(this.doneAction(this.userData));
+        }
+        return false;
     }
 }
 class Action{
@@ -344,7 +359,12 @@ export const deleteItem=async (item,dialogContext)=> {
 
 export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtension,nameForCheck,itemList,checkFirst})=>{
     if (! itemList){
-        itemList=await listItems(type);
+        if (type) {
+            itemList = await listItems(type);
+        }
+        else{
+            itemList=[];
+        }
     }
     if (! nameForCheck) nameForCheck=(item)=>item.name;
     if (checkFirst){
@@ -699,6 +719,7 @@ export class ItemActions{
     }
 }
 
+let lastChartImportSubDir=undefined;
 class ChartItemActions extends ItemActions{
     constructor() {
         super('chart');
@@ -777,6 +798,53 @@ class ChartItemActions extends ItemActions{
             close: false,
             visible:item.hasImportLog
         }))
+    }
+
+    getUploadAction() {
+        const action=super.getUploadAction();
+        return action.copy({
+            checkFileAndName:async (userData,name,file,dialogContext)=>{
+                const [fn, ext] = Helper.getNameAndExt(name);
+                const err=this.checkExtension(ext);
+                if (! err){
+                    return {name:name}
+                }
+                const importExtensions=(await readImportExtensions())||[];
+                const importConfig=checkExt(ext,importExtensions);
+                if (!importConfig.allow){
+                    throw new Error(err);
+                }
+                const impres=await showPromiseDialog(dialogContext,
+                    (dprops)=> {
+                        userData.history=useHistory();
+                        return <ImportDialog
+                            {...dprops}
+                            allowNameChange={true}
+                            allowSubDir={importConfig.subdir}
+                            name={name}
+                            subdir={lastChartImportSubDir}
+                        />
+                    }
+                    )
+                if (impres){
+                    if (impres.subdir) {
+                        lastChartImportSubDir = impres.subdir;
+                        impres.options={subdir:impres.subdir};
+                        userData.subdir=impres.subdir;
+                        delete impres.subdir;
+                    }
+                    userData.importer=true;
+                    impres.final=true;
+                }
+                return impres;
+            },
+            withDialog: false,
+            doneAction:(userData)=>{
+                if (userData.importer && userData.history){
+                    userData.history.push('importerpage',{subdir:userData.subdir});
+                }
+            }
+        })
     }
 }
 

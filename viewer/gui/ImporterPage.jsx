@@ -432,11 +432,12 @@ const ImporterPage = (props) => {
         return showPromiseDialog(dialogContext, (dprops) => <ImportDialog
                 {...dprops}
                 allowNameChange={true}
-                resolveFunction={(oprops, subdir) => {
+                resolveFunction={(oprops) => {
+                    const subdir=(oprops||{}).subdir;
                     if (subdir !== importSubDir.current) {
                         importSubDir.current=subdir;
                     }
-                    dprops.resolveFunction({name: oprops.name, type: 'import', uploadParameters: {subdir: subdir}});
+                    dprops.resolveFunction({name: oprops.name, type: 'import', options: {subdir: subdir}});
                 }}
                 name={name}
                 allowSubDir={importConfig.subdir}

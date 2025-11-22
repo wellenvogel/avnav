@@ -34,6 +34,8 @@ import mbtiles_reader
 from avnav_util import *
 from avnav_worker import WorkerStatus, AVNWorker
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
+from httphandler import RequestException
+
 
 class ChartEntry(AVNDirectoryListEntry):
     def __init__(self, *args,hasOverlay=False,**kwargs):
@@ -397,10 +399,10 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def handleUpload(self, name, handler, requestparam):
     if name is None:
-      return AVNUtil.getReturnData(error="missing name")
+      raise Exception("missing name")
     (path,ext)=os.path.splitext(name)
     if ext not in self.ALLOWED_EXTENSIONS or ext == self.OVL_EXT:
-      return AVNUtil.getReturnData(error="unknown file type %s"%ext)
+      raise Exception("unknown file type %s"%ext)
     name=self.checkName(name)
     filename=os.path.join(self.baseDir,name)
     rt=super()._upload(filename,handler,requestparam)

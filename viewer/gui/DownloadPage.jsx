@@ -599,15 +599,9 @@ class DownloadPage extends React.Component{
                         <UploadHandler
                             local={uploadAction.hasLocalAction()}
                             type={this.state.type}
-                            doneCallback={(param)=>{
-                                //TODO
-                                if (param && param.param && param.param.showImportPage){
-                                    let options={};
-                                    if (param.param.uploadParameters && param.param.uploadParameters.subdir) {
-                                        options.subdir=param.param.uploadParameters.subdir;
-                                    }
-                                    this.props.history.push('importerpage',options);
-                                }
+                            doneCallback={async (param)=>{
+                                const rs=await uploadAction.afterUpload()
+                                if (rs) return;
                                 this.fillData()
                             }}
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
