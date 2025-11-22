@@ -86,7 +86,7 @@ export const listItems=async(type)=>{
             command:'list'
         })).items||[];
         items.forEach(item=>{
-            item.isServer=true;
+            item.server=true;
         })
     }
     return items;
@@ -565,7 +565,6 @@ export class ItemActions{
     constructor(type) {
         this.type=type;
         this.headline=type
-        this.showIsServer=false;
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
         this.allowedExtensions=undefined; //allowed file extensions for upload, cen be left empty if fixed extension is set or if all are allowed
         this.hasScope=false;
@@ -643,6 +642,15 @@ export class ItemActions{
         if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
         if (this.fixedExtension) name=name+"."+this.fixedExtension;
         return name;
+    }
+    canModify(item) {
+        return item.canDelete && (! item.server || this.isConnected());
+    }
+    canView(item) {
+        return false;
+    }
+    showIsServer(item){
+        return false;
     }
     getIconClass(item){
         if (item.isDirectory) return 'directory';
@@ -775,7 +783,7 @@ class ChartItemActions extends ItemActions{
     fillActions(item,actions) {
         const isConnected=this.isConnected();
         actions.push(standardActions.delete.copy({
-            visible: item.canDelete && isConnected
+            visible: this.canModify(item)
         }));
         actions.push(new Action({
             name: 'scheme',
@@ -801,7 +809,7 @@ class ChartItemActions extends ItemActions{
                     return true;
                 }
             },
-            visible: isConnected && item.name && item.name.match(/.*\.mbtiles$/) && item.canDelete
+            visible: this.canModify(item) && item.name && item.name.match(/.*\.mbtiles$/)
         }))
         actions.push(standardActions.download.copy({}))
         actions.push(new Action({
@@ -901,11 +909,22 @@ class RouteItemActions extends ItemActions{
         return ROUTE_INFO_ROWS;
     }
 
-    fillActions(item, actions) {
-        const canModify = !item.active && item.canDelete !== false &&
-            (!item.isServer || this.isConnected()) &&
+    canModify(item) {
+        return !item.active && item.canDelete !== false &&
+            (!item.server || this.isConnected()) &&
             ! RouteHandler.isActiveRoute(item.name)
-        ;
+    }
+
+    canView(item) {
+        return true;
+    }
+
+    showIsServer(item) {
+        return item.server;
+    }
+
+    fillActions(item, actions) {
+        const canModify = this.canModify(item);
         actions.push(standardActions.delete.copy({
             visible: canModify,
             action: async (action,item, dialogContext) => {
@@ -958,7 +977,7 @@ class RouteItemActions extends ItemActions{
             }
         }))
         actions.push(standardActions.download.copy({
-            localData: item.isServer?undefined:
+            localData: item.server?undefined:
                 ()=>RouteHandler.getLocalRouteXml(item.name),
             downloadName: this.nameForDownload(item)
         }))
@@ -1011,6 +1030,14 @@ class TrackItemActions extends ItemActions{
         return TRACK_INFO_ROWS;
     }
 
+    canModify(item) {
+        return this.isConnected();
+    }
+
+    canView(item) {
+        return Helper.getExt(item.name) === 'gpx';
+    }
+
     fillActions(item, actions) {
         actions.push(standardActions.delete.copy({
             visible:this.isConnected(),
@@ -1059,9 +1086,17 @@ class LayoutItemActions extends ItemActions{
     }
 
 
+    canModify(item) {
+        return super.canModify(item) && ! item.active;
+    }
+
+    canView(item) {
+        return true;
+    }
+
     fillActions(item, actions) {
         actions.push(standardActions.delete.copy({
-            visible: this.isConnected() &&  item.canDelete !== false && ! item.active,
+            visible: this.canModify(item) ,
             action:async (action,item,dialogContext)=>{
                 if (! await deleteItemQuery(item,dialogContext))return;
                 await layoutLoader.deleteLayout(item.name)
@@ -1103,6 +1138,14 @@ class LayoutItemActions extends ItemActions{
 class SettingsItemActions extends ItemActions{
     constructor() {
         super('settings');
+    }
+
+    canModify(item) {
+        return this.isConnected() && item.canDelete !== false && !item.active;
+    }
+
+    canView(item) {
+        return true;
     }
 
     fillActions(item, actions) {
@@ -1149,9 +1192,11 @@ class UserItemActions extends ItemActions{
     showUpload() {
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadUser,false);
     }
-
+    canView(item) {
+        return standardActions.view.isVisible(item);
+    }
     fillActions(item, actions) {
-        const canModify= this.isConnected() && item.canDelete !== false;
+        const canModify= this.canModify(item);
         actions.push(standardActions.delete.copy({
             visible: canModify,
         }))
@@ -1202,9 +1247,11 @@ class ImageItemActions extends ItemActions{
     constructor() {
         super('images');
     }
-
+    canView(item) {
+        return standardActions.view.isVisible(item);
+    }
     fillActions(item, actions) {
-        let canModify=this.isConnected() && item.canDelete;
+        let canModify=this.canModify(item);
         actions.push(standardActions.delete.copy({
             visible: canModify,
         }))
@@ -1226,9 +1273,11 @@ class OverlayItemActions extends ItemActions{
     constructor() {
         super('overlay');
     }
-
+    canView(item) {
+        return standardActions.view.isVisible(item);
+    }
     fillActions(item, actions) {
-        let canModify=this.isConnected() && item.canDelete !== false;
+        let canModify=this.canModify(item);
         actions.push(standardActions.delete.copy({
             visible: canModify,
         }))
@@ -1272,7 +1321,7 @@ class PluginItemActions extends ItemActions{
 
     fillActions(item, actions) {
         actions.push(standardActions.delete.copy({
-            visible: this.isConnected()&& item.canDelete !== false
+            visible: this.canModify(item),
         }))
         actions.push(standardActions.download.copy({}))
     }

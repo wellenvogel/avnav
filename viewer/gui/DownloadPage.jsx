@@ -68,9 +68,9 @@ const DownloadItem=(props)=>{
                     <div className="info">{actions.getInfoText(props)}</div>
                 </div>
                 <div className="infoImages">
-                    { actions.showEdit && <div className="editimage"></div>}
-                    { actions.showIsServer && <div className="listrasimage"></div>}
-                    { actions.isApp && <div className="appimage"></div>}
+                    { actions.canModify(props) && <span className="icon edit"></span>}
+                    { actions.showIsServer(props) && <span className="icon server"></span>}
+                    { actions.canView(props) && <span className="icon view"></span>}
                 </div>
             </div>
         </div>
