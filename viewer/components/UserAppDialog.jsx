@@ -14,6 +14,7 @@ import keys from "../util/keys";
 import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
+import {createItemActions} from "./FileDialog";
 
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
@@ -49,18 +50,21 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     useEffect(() => {
         listFiles();
     }, []);
+    const uploadAction=createItemActions('user').getUploadAction().copy({
+        checkFileAndName: (userData,name)=>{
+            if (! name) throw new Error("no file name");
+            if (Helper.getExt(name)!=='html') throw new Error("only HTML files");
+            return {name:name};
+        },
+        withDialog:false
+    });
     const checkNameFunction=(name)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>
         <UploadHandler
             uploadSequence={uploadSequence}
             type={'user'}
-            checkNameCallback={(name)=>{
-                if (name && Helper.getExt(name) === 'html') {
-                    let err=checkNameFunction(name);
-                    if (err && err.error) return err;
-                    return {name: name}
-                }
-                return {error:"only files of type html allowed"};
+            checkNameCallback={async (file)=>{
+                return uploadAction.checkFile(file,dialogContext);
             }}
             doneCallback={(v)=>listFiles(v.param.name)}
             errorCallback={(err)=>Toast(err)}
