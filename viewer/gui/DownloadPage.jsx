@@ -235,59 +235,6 @@ class DownloadPage extends React.Component{
         ];
         return rt;
     }
-    /**
-     * return a function that will receive the result of a local upload
-     * as an object with name and data
-     * @returns {function(*): void}
-     *          if no function is returned, the upload will go to the server
-     */
-    getLocalUploadFunction(){
-        let actions=createItemActions({type:this.state.type});
-        if (actions.localUploadFunction){
-            return (obj)=> {
-                if (!obj) {
-                    Toast("no data available after upload");
-                    return;
-                }
-                let data= obj.data;
-                let name=obj.name;
-                if (this.state.type === 'route'){
-                    try{
-                        let route=new routeobjects.Route();
-                        route.fromXml(data)
-                        if (! route.name) route.name=name;
-                        const existing=this.entryExists(route.name);
-                        if (existing){
-                            showPromiseDialog(undefined,(dprops)=><ItemNameDialog
-                                {...dprops}
-                                checkName={(name)=>this.entryExists(name)}
-                                fixedExt={'gpx'}
-                                iname={route.name}
-                                title={`route ${route.name} already exists`}
-                                />)
-                                .then((res)=>{
-                                    route.name=res.name;
-                                    actions.localUploadFunction(name,route)
-                                        .then(()=>this.fillData(),(e)=>{Toast(e);this.fillData()})
-                                })
-                            return;
-                        }
-                        data=route;
-                    }catch(e){}
-                }
-                actions.localUploadFunction(name, data)
-                    .then((ok) => this.fillData())
-                    .catch((e)=>{
-                        Toast(e);
-                        this.fillData();
-                    })
-            }
-        }
-    }
-    createAccessor(opt_actions){
-        if (! opt_actions) opt_actions=createItemActions({type:this.state.type});
-        return (data)=>opt_actions.nameForCheck(data);
-    }
     createItem(){
         const actions=createItemActions({type:this.state.type});
         const accessor=(data)=>actions.nameForCheck(data);
@@ -338,7 +285,6 @@ class DownloadPage extends React.Component{
         let self=this;
         const actions=createItemActions({type:this.state.type});
         const uploadAction=actions.getUploadAction();
-        this.getLocalUploadFunction();
         return (
             <Page
                 {...self.props}
@@ -352,10 +298,6 @@ class DownloadPage extends React.Component{
                                 const item=avitem(ev);
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
-                                }
-                                if (item.type === 'chart' && item.name === DEFAULT_OVERLAY_CONFIG){
-                                    EditOverlaysDialog.createDialog(undefined,()=>this.fillData());
-                                    return;
                                 }
                                 showDialog(undefined,()=>
                                  <FileDialog

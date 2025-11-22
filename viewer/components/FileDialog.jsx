@@ -30,7 +30,7 @@ import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {
     KNOWN_OVERLAY_EXTENSIONS,
-    DEFAULT_OVERLAY_CHARTENTRY
+    DEFAULT_OVERLAY_CHARTENTRY, DEFAULT_OVERLAY_CHARTENTRY as item
 } from "./EditOverlaysDialog";
 import {
     DBCancel, DBOk,
@@ -93,6 +93,15 @@ export const listItems=async(type)=>{
     return items;
 }
 
+const plainNameForCheck=(item)=>{
+    if (! item) return;
+    return item.name;
+}
+const scopedNameForCheck=(item)=>{
+    if (! item || ! item.name) return;
+    if (! item.checkPrefix) return;
+    return item.name.substring(item.checkPrefix.length);
+}
 /**
  * handler for uploads based on file type
  */
@@ -436,7 +445,7 @@ const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension
     if (! itemList){
         itemList=await listItems(item.type);
     }
-    if (! nameForCheck) nameForCheck=(item)=>item.name;
+    if (! nameForCheck) nameForCheck=hasScope?scopedNameForCheck:plainNameForCheck;
     try{
         const res=await showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
             title={`Rename ${item.displayName||item.name}`}
@@ -608,16 +617,9 @@ export class ItemActions{
      * @param opt_ext - if true add an fixed extension
      */
     nameForCheck(item,opt_ext){
-        if (this.hasScope && ! item.checkPrefix) return;
-        if (! item.name) return;
-        let name=item.name;
-        if (this.hasScope){
-            name=name.substring(item.checkPrefix.length);
-        }
-        if (opt_ext && this.fixedExtension){
-            name+="."+this.fixedExtension;
-        }
-        return name;
+        const res=this.hasScope?scopedNameForCheck(item):plainNameForCheck(item);
+        if (! opt_ext || ! res || ! this.fixedExtension) return res;
+        return res+"."+this.fixedExtension;
     }
     /**
      * get a prefix to be shown in upload/rename dialogs
@@ -916,7 +918,10 @@ class RouteItemActions extends ItemActions{
         actions.push(standardActions.rename.copy({
             visible:canModify,
             action: async (action,item, dialogContext) => {
-                const newName=await renameDialog({item,dialogContext,keepExtension:true});
+                const newName=await renameDialog({
+                    item,
+                    dialogContext,
+                    keepExtension:false});
                 if (!newName)return;
                 if (RouteHandler.isActiveRoute(item.name)) {
                     throw new Error("unable to rename active route")
@@ -1096,7 +1101,8 @@ class SettingsItemActions extends ItemActions{
         }));
         actions.push(standardActions.rename.copy({
             visible:canModify,
-            keepExtension:true,
+            keepExtension:false,
+            hasScope: true
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
@@ -1112,6 +1118,16 @@ class SettingsItemActions extends ItemActions{
     }
     showUpload() {
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadSettings,false);
+    }
+
+    getUploadAction() {
+        return super.getUploadAction().copy({
+            localAction: async (userData,file,name)=>{
+                const data=await readTextFile(file);
+                const verified=await PropertyHandler.verifySettingsData(data, true,true)
+                await PropertyHandler.uploadSettingsData(name,verified.data,false,false);
+            }
+        });
     }
 }
 class UserItemActions extends ItemActions{
@@ -1207,6 +1223,7 @@ class OverlayItemActions extends ItemActions{
         }))
         actions.push(standardActions.rename.copy({
             visible:canModify,
+            keepExtension:false,
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
