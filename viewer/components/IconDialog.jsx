@@ -35,6 +35,7 @@ import Toast from "./Toast";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {SelectList} from "./BasicDialogs";
+import {createItemActions} from "./FileDialog";
 
 const IMAGES_FLAG=1;
 const SOURCES=[
@@ -157,7 +158,8 @@ export const IconDialog=(props)=>{
                 if (err) Toast(err);
             }}
             uploadSequence={uploadSequence}
-            checkNameCallback={(name)=>{
+            checkNameCallback={(file)=>{
+                const name=file.name;
                 return new Promise((resolve,reject)=>{
                     if (contains(iconList, name, "name")) {
                         reject(name + " already exists");

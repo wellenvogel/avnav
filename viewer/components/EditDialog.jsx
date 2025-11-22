@@ -103,8 +103,8 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
                     }, () => {
                     })
             }}
-            checkNameCallback={(name) => {
-                return {name: name}
+            checkNameCallback={(file) => {
+                return {name: (file||{}).name}
             }}
             errorCallback={(err) => Toast(err)}
         />

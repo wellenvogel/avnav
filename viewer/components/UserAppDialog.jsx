@@ -55,12 +55,12 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
             uploadSequence={uploadSequence}
             type={'user'}
             checkNameCallback={(name)=>{
-                if (name && name.substring(name.length-4).toUpperCase() === 'HTML') {
+                if (name && Helper.getExt(name) === 'html') {
                     let err=checkNameFunction(name);
                     if (err && err.error) return err;
                     return {name: name}
                 }
-                return "only files of type html allowed";
+                return {error:"only files of type html allowed"};
             }}
             doneCallback={(v)=>listFiles(v.param.name)}
             errorCallback={(err)=>Toast(err)}
