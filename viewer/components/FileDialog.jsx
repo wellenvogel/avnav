@@ -45,8 +45,7 @@ import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
-import {TrackConvertDialog} from "./TrackConvertDialog";
-import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
+import {getTrackInfo, TrackConvertDialog,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
@@ -1047,6 +1046,12 @@ class TrackItemActions extends ItemActions{
         this.allowedExtensions=['gpx'];
         this.headline='Tracks';
     }
+
+    getIconClass(item) {
+        const [fn,ext]=Helper.getNameAndExt(item.name);
+        if (ext === 'gpx') return this.type;
+        return "user other";
+    }
 }
 class LayoutItemActions extends ItemActions{
     constructor() {
@@ -1248,6 +1253,12 @@ class OverlayItemActions extends ItemActions{
     }
     showUpload() {
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadOverlays, false);
+    }
+
+    getIconClass(item) {
+        const [fn,ext]=Helper.getNameAndExt(item.name);
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(ext) >= 0) return this.type;
+        return "user other"
     }
 }
 class PluginItemActions extends ItemActions{
