@@ -11,27 +11,20 @@ import React from 'react';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
-import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
 import Helper, {avitem, setav} from '../util/helper.js';
-import {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UploadHandler  from "../components/UploadHandler";
 import {
-    FileDialogWithActions, createItemActions, listItems, FileDialog
+    createItemActions, listItems, FileDialog
 } from '../components/FileDialog';
-import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
-import PropertyHandler from '../util/propertyhandler';
-import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
-import {checkName, ItemNameDialog, safeName} from "../components/ItemNameDialog";
-import routeobjects from "../nav/routeobjects";
+import {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
+import {readImportExtensions} from "../components/ImportDialog";
+import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
-import {BlobReader, ZipReader} from "@zip.js/zip.js";
-import {ConfirmDialog} from "../components/BasicDialogs";
-import {DEFAULT_OVERLAY_CONFIG} from "../map/overlayconfig";
-NavHandler.getRoutingHandler();
+
 const findInfo=(list,item)=>{
     for (let k=0;k < list.length;k++){
         if (list[k].name === item.name) return k;

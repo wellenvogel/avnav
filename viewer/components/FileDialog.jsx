@@ -63,6 +63,7 @@ import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
+import Addons from "./Addons";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -743,7 +744,15 @@ export class ItemActions{
         return globalStore.getData(keys.gui.capabilities.uploadOverlays) && this.isConnected();
     }
     getInfoRows(item){
-        return []
+        return [
+            {label:'Time',value:'time',formatter:(v,item)=>this.getTimeText(item)},
+            {label:'Size',value:'size',formatter:(v)=>{
+                if (v === 0) return undefined;
+                if (v < 10*1024) return v;
+                if (v < 10*1024*1024) return (v/1024).toFixed(1)+" k";
+                return (v/(1024*1024)).toFixed(1)+ " M";
+                }}
+        ]
     }
     getTimeText(item){
         if (item.time !== undefined) {
@@ -772,10 +781,11 @@ class ChartItemActions extends ItemActions{
 
     }
     getInfoRows(item) {
+        let rows=super.getInfoRows(item);
         if (item.scheme){
-            return [{label:'Scheme',value:'scheme'}]
+            rows=rows.concat([{label:'Scheme',value:'scheme'}] );
         }
-        return []
+        return rows;
     }
     showUpload() {
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadCharts,false);
@@ -1594,6 +1604,9 @@ const AddRemoveOverlayDialog = (props) => {
         </DialogFrame>
     )
 }
+AddRemoveOverlayDialog.propTypes = {
+    current: PropTypes.object.isRequired,
+}
 const infoRowDisplay=(row,data)=>{
     let v=data[row.value];
     if (v === undefined) return null;
@@ -1660,15 +1673,4 @@ export const FileDialog = (props) => {
 FileDialog.propTypes = {
     current: PropTypes.object.isRequired,
     okFunction: PropTypes.func
-}
-
-export const FileDialogWithActions=(props)=>{
-    const {doneCallback,item,checkExists,...forward}=props;
-    return <FileDialog
-        {...forward}
-        current={item}
-        okFunction={()=>{
-            if (doneCallback) doneCallback()
-        }}
-        />
 }
