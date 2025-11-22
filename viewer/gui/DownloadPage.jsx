@@ -21,7 +21,7 @@ import Addons from '../components/Addons.js';
 import UploadHandler  from "../components/UploadHandler";
 import chartImage from '../images/Chart60.png';
 import {
-    FileDialogWithActions, createItemActions
+    FileDialogWithActions, createItemActions, listItems
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import PropertyHandler from '../util/propertyhandler';
@@ -32,59 +32,7 @@ import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {DEFAULT_OVERLAY_CONFIG} from "../map/overlayconfig";
-
-const RouteHandler=NavHandler.getRoutingHandler();
-
-class FileInfo{
-    constructor(name,type,time) {
-        /**
-         * @type {String}
-         */
-        this.name = name;
-
-        /**
-         * @type {String} track,chart
-         */
-        this.type = type || "track";
-        /**
-         * @type {number} ms timestamp
-         */
-        this.time = time || 0;
-        /**
-         *
-         * @type {boolean}
-         */
-        this.canDelete = true;
-    }
-}
-
-
-const fillDataServer=(type)=>{
-    return Requests.getJson({
-        request:'api',
-        command:'list',
-        type: type
-    }).then((json)=>{
-        let list=[];
-        if (type === 'chart'){
-            list.push(assign({},DEFAULT_OVERLAY_CHARTENTRY));
-        }
-        for (let i=0;i<json.items.length;i++){
-            let fi=new FileInfo();
-            assign(fi,json.items[i]);
-            if (fi.name === undefined) continue;
-            fi.type=type;
-            fi.server=true;
-            if (! fi.icon && type === 'chart'){
-                fi.icon=chartImage;
-            }
-            if (fi.canDelete === undefined) fi.canDelete=false;
-            list.push(fi);
-        }
-        return(list);
-    });
-};
-
+NavHandler.getRoutingHandler();
 const findInfo=(list,item)=>{
     for (let k=0;k < list.length;k++){
         if (list[k].name === item.name) return k;
@@ -110,8 +58,10 @@ const DownloadItem=(props)=>{
         <div className={cls} onClick={function(ev){
             props.onClick(setav(ev,{action:'select'}));
         }}>
-            {(props.icon) &&
-            <span className="icon" style={{backgroundImage:"url('"+(props.icon)+"')"}}/>
+            {(props.icon)?
+                <span className="icon" style={{backgroundImage:"url('"+(props.icon)+"')"}}/>
+                :
+                <span className={Helper.concatsp('icon',actions.getIconClass(props))}/>
             }
             <div className="itemMain">
                 <div className={dataClass}>
@@ -198,30 +148,22 @@ class DownloadPage extends React.Component{
 
     fillData(){
         let type=this.state.type;
-        const loadFunction=()=> {
-            if (type === 'route') {
-                return RouteHandler.listRoutes(true);
-            }
-            if (type === 'layout') {
-                return layoutLoader.listLayouts()
-            }
-            if (type === 'settings'){
-                return PropertyHandler.listSettings();
-            }
-            return fillDataServer(type)
-                .then((items) => {
+        listItems(type)
+            .then((items) => {
+                if (type === 'chart'){
+                    items.push({...DEFAULT_OVERLAY_CHARTENTRY});
+                }
+                if (type === 'user'){
                     let addons = this.state.addOns;
                     items.forEach((item) => {
-                        if (item.type !== 'user') return;
+                        if (! item.url) return;
                         if (Addons.findAddonByUrl(addons, item.url)) {
                             item.isAddon = true;
                         }
                     });
-                    return items;
-                });
-        };
-        loadFunction()
-            .then((items)=>this.addItems(items,true))
+                }
+                this.addItems(items,true);
+            })
             .catch((error)=>{
                 Toast("unable to load "+type+": "+error);
                 this.addItems([],true);

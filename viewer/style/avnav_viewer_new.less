@@ -890,6 +890,10 @@ span.valuePrefix{
   .icon();
   background-image: url("@{iconBase}/@{url}");
 }
+.oldIconImage(@url){
+  .icon();
+  background-image: url("@{oldiconBase}/@{url}");
+}
 .maskImage(@url){
   .icon();
   mask-image: url("@{iconBase}/@{url}");
@@ -1430,6 +1434,44 @@ span.valuePrefix{
       .iconImage('apps.svg');
     }
 
+  }
+
+  //------ type icons ------
+  .icon.track{
+    .iconImage('track.svg');
+  }
+  .icon.route{
+    .iconImage('route.svg');
+  }
+  .icon.layout{
+    .iconImage('ballot.svg');
+  }
+  .icon.settings{
+    .iconImage('ic_settings.svg');
+  }
+  .icon.images{
+    .iconImage('image-icon.svg')
+  }
+  .icon.overlay{
+    .iconImage('layers-black.svg');
+  }
+  .icon.plugins{
+    .iconImage('extension.svg');
+  }
+  .icon.chart{
+    .oldIconImage('Chart60.png');
+  }
+  .icon.user.special{
+    .iconImage('ic_settings.svg');
+  }
+  .icon.user.html{
+    .iconImage('internet-web-browser.svg');
+  }
+  .icon.user.other{
+    .iconImage('draft.svg');
+  }
+  .icon.text{
+    .iconImage('ic_text_snippet.svg');
   }
 
   .downloadProgress{

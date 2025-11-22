@@ -69,11 +69,26 @@ const getExtensionForView=(item)=>{
     return item.extension||Helper.getExt(item.name);
 }
 export const listItems=async(type)=>{
-    const existing = await Requests.getJson({
-        type:type,
-        command:'list'
-    });
-    return existing.items||[];
+    let items;
+    if (type === 'route') {
+        items= await RouteHandler.listRoutes(true);
+    }
+    else if (type === 'layout') {
+        items= await layoutLoader.listLayouts()
+    }
+    else if (type === 'settings'){
+        items= await PropertyHandler.listSettings();
+    }
+    else {
+        items = (await Requests.getJson({
+            type:type,
+            command:'list'
+        })).items||[];
+        items.forEach(item=>{
+            item.isServer=true;
+        })
+    }
+    return items;
 }
 
 /**
@@ -414,10 +429,7 @@ const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension
     }
     let itemList=list;
     if (! itemList){
-        const res=await Requests.getJson({
-            type: item.type,
-            command:'list'
-        });
+        const res=await listItems(item.type);
         itemList=res.items||[];
     }
     if (! nameForCheck) nameForCheck=(item)=>item.name;
@@ -619,6 +631,10 @@ export class ItemActions{
         if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
         if (this.fixedExtension) name=name+"."+this.fixedExtension;
         return name;
+    }
+    getIconClass(item){
+        if (item.isDirectory) return 'directory';
+        return this.type;
     }
     showUpload(){
         return this.isConnected();
@@ -1131,6 +1147,24 @@ class UserItemActions extends ItemActions{
     build() {
         this.headline='User';
     }
+
+    getIconClass(item) {
+        const specialNames=['user.js','user.css','keys.json','splitkeys.json','images.json'];
+        if (specialNames.indexOf(item.name) >= 0){
+            return 'user special';
+        }
+        const [fn,ext]=Helper.getNameAndExt(item.name);
+        if (GuiHelpers.IMAGES.indexOf(ext)>= 0){
+            return 'images';
+        }
+        if (ext === 'html'){
+            return 'user html'
+        }
+        if (ext === 'txt'){
+            return 'text';
+        }
+        return 'user other';
+    }
 }
 class ImageItemActions extends ItemActions{
     constructor() {
@@ -1213,6 +1247,10 @@ class PluginItemActions extends ItemActions{
     prefixForDisplay() {
         return 'user-';
     }
+
+    getIconClass(item) {
+        return this.type;
+    }
 }
 const ITEM_TYPE_ACTIONS={
     chart: new ChartItemActions(),
@@ -1263,11 +1301,7 @@ const AddRemoveOverlayDialog = (props) => {
     const [running,setRunning] = useState(false);
     let titles = {add: "Add to Charts", remove: "Remove from Charts"}
     useEffect(() => {
-        Requests.getJson({
-            request:'api',
-            command: 'list',
-            type: 'chart'
-        })
+        listItems('chart')
             .then((data) => {
                 setChartList(
                     chartList.concat(data.items)
