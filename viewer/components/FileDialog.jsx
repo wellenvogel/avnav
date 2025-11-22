@@ -111,10 +111,11 @@ class UploadAction{
         this.checkAccessor=accessor||((item)=>item.name);
         this.checkFileAndName=undefined;
         this.checkExisting=undefined;
-        this.withDialog=false;
+        this.withDialog=true;
         this.localAction=undefined;
         this.doneAction=undefined;
         this.userData=undefined;
+        this.fixedPrefix=false;
     }
     copy(updates){
         const rt=new this.constructor(this);
@@ -161,7 +162,8 @@ class UploadAction{
                 keepExtension: true,
                 nameForCheck: accessor,
                 itemList:existing,
-                checkFirst:true
+                checkFirst:true,
+                fixedPrefix: this.fixedPrefix
             })
         }
         else {
@@ -177,6 +179,9 @@ class UploadAction{
         }
         if (! rs){
             return;
+        }
+        if (rs.error){
+            throw new Error(rs.error)
         }
         if (this.localAction){
             return await Helper.awaitHelper(this.localAction(this.userData,file,rs.name))
@@ -390,7 +395,7 @@ export const deleteItem=async (item,dialogContext)=> {
     return true;
 };
 
-export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtension,nameForCheck,itemList,checkFirst})=>{
+export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtension,nameForCheck,itemList,checkFirst,fixedPrefix})=>{
     if (! itemList){
         if (type) {
             itemList = await listItems(type);
@@ -416,6 +421,7 @@ export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtensio
             {...dprops}
             iname={name}
             keepExtension={keepExtension}
+            fixedPrefix={fixedPrefix}
             checkName={(name)=>{
                 const [fn,ext]=Helper.getNameAndExt(name);
                 if (! name || (keepExtension && ! fn)){
@@ -670,7 +676,8 @@ export class ItemActions{
             return {name:name};
         }
         return rt.copy({
-            checkFileAndName:nameChecker
+            checkFileAndName:nameChecker,
+            fixedPrefix: this.prefixForDisplay(),
         })
     }
     getActionButtons(item){
@@ -865,7 +872,6 @@ class ChartItemActions extends ItemActions{
                 }
                 return impres;
             },
-            withDialog: false,
             doneAction:(userData)=>{
                 if (userData.importer && userData.history){
                     userData.history.push('importerpage',{subdir:userData.subdir});
