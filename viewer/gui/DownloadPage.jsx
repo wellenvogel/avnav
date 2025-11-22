@@ -2,17 +2,17 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic, {useStoreState} from '../hoc/Dynamic.jsx';
 import Button, {DynamicButton} from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React from 'react';
-import Page from '../components/Page.jsx';
+import React, {useCallback, useEffect, useState} from 'react';
+import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import NavHandler from '../nav/navdata.js';
-import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
+import {showDialog, showPromiseDialog, useDialogContext} from '../components/OverlayDialog.jsx';
 import Helper, {avitem, setav} from '../util/helper.js';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
@@ -21,17 +21,11 @@ import {
     createItemActions, listItems, FileDialog
 } from '../components/FileDialog';
 import {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
-import {readImportExtensions} from "../components/ImportDialog";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import {EditDialogWithSave, getTemplate} from "../components/EditDialog";
-
-const findInfo=(list,item)=>{
-    for (let k=0;k < list.length;k++){
-        if (list[k].name === item.name) return k;
-    }
-    return -1;
-};
-
+import {useHistory} from "../components/HistoryProvider";
+import ButtonList from "../components/ButtonList";
+import PropTypes from "prop-types";
 const itemSort=(a,b)=>{
     if (a.time !== undefined && b.time !== undefined){
         return b.time - a.time;
@@ -70,134 +64,162 @@ const DownloadItem=(props)=>{
     );
 };
 
-
-class DownloadPage extends React.Component{
-    constructor(props){
-        super(props);
-        this.getButtons=this.getButtons.bind(this);
-        let type='chart';
-        if (props.options && props.options.downloadtype){
-            type=props.options.downloadtype;
-        }
-        this.state={
-            uploadSequence:0,
-            type:type,
-            items:[],
-            addOns:[],
-            chartImportExtensions:[],
-            importSubDir:''
-        };
-        this.changeType=this.changeType.bind(this);
-        this.entryExists=this.entryExists.bind(this);
-        this.fillData=this.fillData.bind(this);
-        this.readAddOns();
-        this.fillData();
-    }
-    componentDidMount() {
-        readImportExtensions()
-            .then((extList)=>{this.setState({chartImportExtensions:extList})});
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevState.type !== this.state.type || prevProps.reloadSequence !== this.props.reloadSequence){
-            this.fillData();
-        }
-    }
-
-    readAddOns () {
-        Addons.readAddOns(true)
-            .then((items)=>{
-                this.setState({addOns:items});
-                this.fillData();
-            })
-            .catch(()=>{});
-    };
-
-    addItems(items,opt_empty){
-        let current=opt_empty?[]:this.state.items||[];
-        let newItems=[];
-        for (let i in current){
-            newItems.push(current[i]);
-        }
-        for (let i in items){
-            let existingIdx=findInfo(newItems,items[i]);
-            if (existingIdx >= 0){
-                //update
-                newItems[existingIdx]=items[i];
+export const DownloadItemList=({type,selectCallback,uploadSequence})=>{
+    const [items,setItems]=useState([]);
+    const readItems=useCallback(async ()=>{
+        if (type !== 'user'){
+            const items=await listItems(type);
+            if (type === 'chart'){
+                items.push(DEFAULT_OVERLAY_CHARTENTRY)
             }
-            else{
-                newItems.push(items[i]);
+            if (type !== 'plugins') {
+                items.sort(itemSort);
+            }
+            setItems(items);
+            return;
+        }
+        const actions=[listItems(type),Addons.readAddOns()];
+        const result=await Promise.allSettled(actions);
+        const items=result[0].status==='fulfilled'?
+            result[0].value:[];
+        if (result[1].status==='fulfilled'){
+            items.forEach(item=>{
+                if (item.url){
+                    if (Addons.findAddonByUrl(result[1].value,item.url)){
+                        item.isAddon=true;
+                    }
+                }
+            })
+        }
+        items.sort(itemSort);
+        setItems(items);
+    },[type])
+    useEffect(()=>{
+        readItems().then(()=>{},(err)=>Toast(err));
+    },[type])
+    const dialogContext=useDialogContext();
+    const itemActions=createItemActions(type);
+    const createItem = useCallback(async () => {
+        const actions = itemActions;
+        const accessor = (data) => actions.nameForCheck(data);
+        const checker = (name) => checkName(name, items, accessor);
+        const res = await showPromiseDialog(undefined, (dprops) => <ItemNameDialog
+            {...dprops}
+            title={'enter filename'}
+            checkName={checker}
+            mandatory={true}
+        />);
+        const name = (res || {}).name;
+        if (!name) return;
+        const template = getTemplate(name);
+        if (template) {
+            await showPromiseDialog(undefined, (dprops) => <EditDialogWithSave
+                {...dprops}
+                type={'user'}
+                fileName={name}
+                data={template}
+            />)
+            return readItems();
+        } else {
+            let data = "";
+            try {
+                await Requests.postPlain({
+                    command: 'upload',
+                    type: type,
+                    name: name
+                }, data);
+                return readItems();
+            } catch (e) {
+                Toast(e + "");
+                return readItems()
             }
         }
-        //keep plugins sorted as they arrive from the server
-        //sort others by date
-        if (this.state.type !== 'plugins') {
-            newItems.sort(itemSort);
+    }, [type, items])
+    const uploadAction=itemActions.getUploadAction();
+    return <React.Fragment>
+    <ItemList
+    itemClass={DownloadItem}
+    scrollable={true}
+    itemList={items}
+    onItemClick={async (ev)=>{
+        const item=avitem(ev);
+        if (selectCallback){
+            return selectCallback(ev);
         }
-        this.setState({items:newItems});
-    };
-
-    fillData(){
-        let type=this.state.type;
-        listItems(type)
-            .then((items) => {
-                if (type === 'chart'){
-                    items.push({...DEFAULT_OVERLAY_CHARTENTRY});
-                }
-                if (type === 'user'){
-                    let addons = this.state.addOns;
-                    items.forEach((item) => {
-                        if (! item.url) return;
-                        if (Addons.findAddonByUrl(addons, item.url)) {
-                            item.isAddon = true;
-                        }
-                    });
-                }
-                this.addItems(items,true);
-            })
-            .catch((error)=>{
-                Toast("unable to load "+type+": "+error);
-                this.addItems([],true);
-            })
-    };
-
-
-    changeType(newType){
-        if (newType === this.state.type) return;
-        this.setState({
-            type:newType,
-            items: []
+        showDialog(dialogContext,()=>
+            <FileDialog
+                current={item}
+            />,()=>{
+                readItems();
         });
+    }}
+    />
+    <UploadHandler
+        local={uploadAction.hasLocalAction()}
+        type={type}
+        doneCallback={async (param)=>{
+            const rs=await uploadAction.afterUpload()
+            if (rs) return;
+            readItems();
+        }}
+        errorCallback={(err)=>{if (err) Toast(err);readItems();}}
+        uploadSequence={uploadSequence}
+        checkNameCallback={(file,dialogContext)=>uploadAction.checkFile(file,dialogContext)}
+    />
+    {(type === "user")?
+        <DynamicButton
+            className="fab"
+            name="DownloadPageCreate"
+            onClick={()=>{
+                createItem();
+            }}
+            storeKeys={{visible:keys.properties.connectedMode}}
+        />
+        :
+        null}
+</React.Fragment>
+}
+
+DownloadItemList.propTypes = {
+    type: PropTypes.string,
+    selectCallback: PropTypes.func,
+    uploadSequence: PropTypes.number,
+}
+const DownloadPage=(props)=>{
+    useStoreState(keys.gui.global.reloadSequence)
+    const [type,setType]=useState(
+        (props.options && props.options.downloadtype)?
+                    props.options.downloadtype:'chart');
+    const [uploadSequence,setUploadSequence]=useState(0);
+    const history=useHistory();
+    const changeType=useCallback((newType)=>{
+        if (newType === type) return;
+        setType(newType);
         //store the new type to have this available if we come back
-        this.props.history.replace(
-            this.props.history.currentLocation(),
+        history.replace(
+            history.currentLocation(),
             {
                 downloadtype:newType
             }
         )
-    }
-    entryExists(name,opt_idxfct){
-        let current=this.state.items;
-        return checkName(name,current,opt_idxfct);
-    };
-
-    getButtonParam(bName,bType,overflow, opt_capability){
-        let visible=this.state.type === bType || ! (this.props.options && this.props.options.allowChange === false);
+    },[type,history])
+    const actions=createItemActions(type);
+    const getButtonParam=useCallback((bName,bType,overflow, opt_capability)=>{
+        let visible=type === bType || ! (props.options && props.options.allowChange === false);
         if (opt_capability){
             visible = visible && globalStore.getData(opt_capability,false);
         }
         return {
             name: bName,
-            toggle:  this.state.type === bType,
+            toggle:  type === bType,
             visible:  visible,
-            onClick: () => this.changeType(bType),
+            onClick: () => changeType(bType),
             overflow: overflow === true
         };
-    }
-    getButtons(){
-        const itemActions=createItemActions({type: this.state.type})
+    },[type]);
+    const getButtons=()=>{
         let rt=[
-            this.getButtonParam('DownloadPageCharts','chart'),
+            getButtonParam('DownloadPageCharts','chart'),
             {
                 name: 'DownloadPageImporter',
                 onClick: ()=>this.props.history.push('importerpage'),
@@ -205,135 +227,42 @@ class DownloadPage extends React.Component{
                     visible: keys.gui.capabilities.uploadImport
                 }
             },
-            this.getButtonParam('DownloadPageTracks','track'),
-            this.getButtonParam('DownloadPageRoutes','route'),
-            this.getButtonParam('DownloadPageLayouts','layout'),
-            this.getButtonParam('DownloadPageSettings','settings',true,keys.gui.capabilities.uploadSettings),
-            this.getButtonParam('DownloadPageUser','user',true),
-            this.getButtonParam('DownloadPageImages','images',true),
-            this.getButtonParam('DownloadPageOverlays','overlay',true),
-            this.getButtonParam('DownloadPagePlugins','plugins',true,keys.gui.capabilities.uploadPlugins),
+            getButtonParam('DownloadPageTracks','track'),
+            getButtonParam('DownloadPageRoutes','route'),
+            getButtonParam('DownloadPageLayouts','layout'),
+            getButtonParam('DownloadPageSettings','settings',true,keys.gui.capabilities.uploadSettings),
+            getButtonParam('DownloadPageUser','user',true),
+            getButtonParam('DownloadPageImages','images',true),
+            getButtonParam('DownloadPageOverlays','overlay',true),
+            getButtonParam('DownloadPagePlugins','plugins',true,keys.gui.capabilities.uploadPlugins),
             {
                 name:'DownloadPageUpload',
-                visible: itemActions.showUpload(),
+                visible: actions.showUpload(),
                 onClick:()=>{
-                    this.setState({uploadSequence:this.state.uploadSequence+1});
+                    setUploadSequence(uploadSequence+1);
                 }
             },
-            Mob.mobDefinition(this.props.history),
+            Mob.mobDefinition(history),
             {
                 name: 'Cancel',
-                onClick: ()=>{this.props.history.pop()}
+                onClick: ()=>{history.pop()}
             }
         ];
         return rt;
     }
-    createItem(){
-        const actions=createItemActions({type:this.state.type});
-        const accessor=(data)=>actions.nameForCheck(data);
-        const checker=(name)=>checkName(name,this.state.items,accessor);
-        showPromiseDialog(undefined,(dprops)=><ItemNameDialog
-            {...dprops}
-            title={'enter filename'}
-            checkName={checker}
-            mandatory={true}
-        />)
-            .then((res)=>{
-                const name=(res||{}).name;
-                if (! name) return;
-                const template=getTemplate(name);
-                if (template){
-                    showPromiseDialog(undefined,(dprops)=><EditDialogWithSave
-                        {...dprops}
-                        type={'user'}
-                        fileName={name}
-                        data={template}
-                    />)
-                        .then(()=>this.fillData())
-                        .catch((e)=>{
-                            if (e) Toast(e);
-                            this.fillData();
-                        })
-                }
-                else {
-                    let data = "";
-                    Requests.postPlain({
-                        request:'api',
-                        command: 'upload',
-                        type: this.state.type,
-                        name: name
-                    }, data)
-                        .then((res) => {
-                            this.fillData();
-                        })
-                        .catch((error) => {
-                            Toast("creation failed: " + error);
-                            this.fillData();
-                        });
-                }
-            })
-            .catch(()=>{})
-    };
-    render(){
-        let self=this;
-        const actions=createItemActions({type:this.state.type});
-        const uploadAction=actions.getUploadAction();
         return (
-            <Page
-                {...self.props}
-                id="downloadpage"
-                mainContent={<React.Fragment>
-                        <ItemList
-                            itemClass={DownloadItem}
-                            scrollable={true}
-                            itemList={this.state.items}
-                            onItemClick={async (ev)=>{
-                                const item=avitem(ev);
-                                if (self.props.options && self.props.options.selectItemCallback){
-                                    return self.props.options.selectItemCallback(item);
-                                }
-                                showDialog(undefined,()=>
-                                 <FileDialog
-                                     current={item}
-                                 />,()=>{
-                                    this.fillData();
-                                    this.readAddOns();
-                                });
-                            }}
-                        />
-                        <UploadHandler
-                            local={uploadAction.hasLocalAction()}
-                            type={this.state.type}
-                            doneCallback={async (param)=>{
-                                const rs=await uploadAction.afterUpload()
-                                if (rs) return;
-                                this.fillData()
-                            }}
-                            errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
-                            uploadSequence={this.state.uploadSequence}
-                            checkNameCallback={(file,dialogContext)=>uploadAction.checkFile(file,dialogContext)}
-                            fixedPrefix={actions.prefixForDisplay()}
-                        />
-                        {(this.state.type === "user")?
-                            <DynamicButton
-                                className="fab"
-                                name="DownloadPageCreate"
-                                onClick={()=>{
-                                    this.createItem();
-                                }}
-                                storeKeys={{visible:keys.properties.connectedMode}}
-                            />
-                            :
-                            null}
-                    </React.Fragment>
-                }
-                title={actions.headline}
-                buttonList={this.getButtons()}
+            <PageFrame id={'downloadpage'}>
+                <PageLeft title={actions.headline}>
+                    <DownloadItemList
+                        type={type}
+                        uploadSequence={uploadSequence}
+                    />
+                </PageLeft>
+                <ButtonList
+                    itemList={getButtons()}
                 />
-        );
-    }
+            </PageFrame>
+        )
 }
 
-export default Dynamic(DownloadPage,{storeKeys:{
-        reloadSequence:keys.gui.global.reloadSequence
-    }});
+export default DownloadPage;
