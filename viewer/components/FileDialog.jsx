@@ -30,7 +30,7 @@ import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {
     KNOWN_OVERLAY_EXTENSIONS,
-    DEFAULT_OVERLAY_CHARTENTRY, DEFAULT_OVERLAY_CHARTENTRY as item
+    DEFAULT_OVERLAY_CHARTENTRY
 } from "./EditOverlaysDialog";
 import {
     DBCancel, DBOk,
@@ -54,7 +54,7 @@ import LogDialog from "./LogDialog";
 import Formatter from '../util/formatter';
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
-import {checkName, ItemNameDialog} from "./ItemNameDialog";
+import {checkName, ItemNameDialog, safeName} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
 import {removeItemsFromOverlays} from "../map/overlayconfig";
 import {useHistory} from "./HistoryProvider";
@@ -63,6 +63,7 @@ import {readTextFile} from "./UploadHandler";
 import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
+import {BlobReader, ZipReader} from "@zip.js/zip.js";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -95,7 +96,7 @@ export const listItems=async(type)=>{
 /**
  * handler for uploads based on file type
  */
-class UploadHandler{
+class UploadAction{
     constructor({type,accessor}){
         this.type=type;
         this.checkAccessor=accessor||((item)=>item.name);
@@ -653,7 +654,7 @@ export class ItemActions{
 
     }
     getUploadAction(){
-        let rt=new UploadHandler({type:this.type,accessor:(data)=>this.nameForCheck(data)});
+        let rt=new UploadAction({type:this.type,accessor:(data)=>this.nameForCheck(data)});
         if (! this.fixedExtension && (! this.allowedExtensions || this.allowedExtensions.length < 1)){
             return rt;
         }
@@ -1254,6 +1255,104 @@ class PluginItemActions extends ItemActions{
 
     getIconClass(item) {
         return this.type;
+    }
+
+    getUploadAction() {
+        return super.getUploadAction().copy({
+            checkFileAndName: async (userData,name,file,dialogContext)=> {
+                const [fn, ext] = Helper.getNameAndExt(name);
+                const accessor = (data) => this.nameForCheck(data);
+                if (ext !== 'zip') throw new Error("only zip files for plugins");
+                const existingItems = await listItems(this.type);
+                const check = async (foundName) => {
+                    let existing = checkName(foundName);
+                    if (existing && existing.error) {
+                        throw new Error(`the found plugin ${foundName} has an invalid name: ${existing.error}`);
+                    }
+                    existing = checkName(foundName, existingItems, accessor);
+                    if (existing && existing.error) {
+                        const res = await showPromiseDialog(dialogContext, (dprops) => <ConfirmDialog
+                            {...dprops}
+                            title={`plugin ${foundName} already exists`}
+                            text={'Update the existing plugin?'}
+                        />);
+                        if (res) {
+                            return {
+                                name: foundName,
+                                final: true,
+                                options: {overwrite: true}
+                            }
+                        }
+                        return;
+                    }
+                    return {name: foundName,final:true};
+                }
+                if (typeof TransformStream == "undefined") {
+                    const foundName = fn;
+                    const res = await showPromiseDialog(dialogContext, (dprops) => <ConfirmDialog
+                        {...dprops}
+                        title={"Old browser"}
+                        text={"Your browser seems to be too old to check the zip file.\n" +
+                            "If the plugin directory is equal to the name of the zip we can import any way.\n" +
+                            "Try the import?"
+                        }
+                        className={'pre'}
+                    />)
+                    if (res) {
+                        return check(foundName);
+                    }
+                    return;
+                }
+                const pluginfiles = ['plugin.py', 'plugin.js', 'plugin.css', 'plugin.json'];
+                const forbiddenBaseChars = new RegExp('[^0-9a-zA-Z_-]');
+                const zipFileReader = new BlobReader(file);
+                const zipReader = new ZipReader(zipFileReader);
+                let foundName;
+                const entries = await zipReader.getEntries()
+                let hasFiles = false;
+                entries.forEach(entry => {
+                    if (!entry.filename) {
+                        throw new Error("invalid entry in zip without filename")
+                    }
+                    const parts = entry.filename.split("/");
+                    if (parts.length < 1) {
+                        throw new Error( "invalid entry in zip without filename")
+                    }
+                    if (!entry.directory && parts.length < 2) {
+                        throw new Error(`files must be located in a sub directory in the zip: ${entry.filename}`)
+                    }
+                    if (!parts[0]){
+                        throw new Error(`first part in a filename must not be empty: ${entry.filename}`);
+                    }
+                    parts.forEach(part => {
+                        if (part === '') return;
+                        const sname = safeName(part);
+                        if (sname !== part || part === '.' || part === '..') {
+                            throw new Error( `invalid characters in file name ${entry.filename} (${part})`)
+                        }
+                    })
+                    if (foundName) {
+                        if (parts[0] !== foundName) {
+                            throw new Error(`all files in zip must be under one sub directory ${foundName} : ${entry.filename}`)
+                        }
+                    } else {
+                        foundName = parts[0];
+                        if (forbiddenBaseChars.test(foundName)) {
+                            throw new Error(`the plugin directory contains forbidden characters ${foundName}`)
+                        }
+                    }
+                    if (!entry.directory) {
+                        if (parts.length === 2 && pluginfiles.indexOf(parts[1]) >= 0) {
+                            hasFiles = true;
+                        }
+                    }
+                })
+                if (!hasFiles) {
+                    throw new Error( "no plugin files in zip")
+                }
+                return check(foundName);
+            }
+        })
     }
 }
 const ITEM_TYPE_ACTIONS={
