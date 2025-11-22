@@ -62,6 +62,7 @@ import globalStore from '../util/globalstore';
 import {readTextFile} from "./UploadHandler";
 import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
+import PropTypes from "prop-types";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -215,7 +216,10 @@ class Action{
         this.runAction=this.runAction.bind(this);
     }
     copy(updates){
-        const rt=new this.constructor(this);
+        const rt=new this.constructor({});
+        for (let k of Object.keys(this)){
+            rt[k]=this[k];
+        }
         if (updates && updates instanceof Object){
             for (let k in updates){
                 rt[k]=updates[k];
@@ -429,8 +433,7 @@ const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension
     }
     let itemList=list;
     if (! itemList){
-        const res=await listItems(item.type);
-        itemList=res.items||[];
+        itemList=await listItems(item.type);
     }
     if (! nameForCheck) nameForCheck=(item)=>item.name;
     try{
@@ -469,20 +472,21 @@ const standardActions={
     rename: new Action({
         label: 'Rename',
         name: 'Rename',
-        action: async (action,item,dialogContext)=>{
-            const newName=await renameDialog({
+        action: async (action, item, dialogContext) => {
+            const newName = await renameDialog({
                 item,
                 dialogContext,
-                hasScope:action.hasScope,
-                keepExtension:action.keepExtension,
-                nameForCheck:action.nameForCheck
+                hasScope: action.hasScope,
+                keepExtension: action.keepExtension,
+                nameForCheck: action.nameForCheck
             });
-            if (! newName)return;
-            return await action.execute(item,newName);
+            if (!newName) return;
+            return await action.execute(item, newName);
             //TODO: rename item in overlays
-            },
-        execute: async (item,newName)=>{
-            await renameRequest(item,newName);
+        }
+    }).copy({
+        execute: async (item, newName) => {
+            await renameRequest(item, newName);
             return true;
         }
     }),
@@ -1418,8 +1422,6 @@ const infoRowDisplay=(row,data)=>{
 export const FileDialog = (props) => {
     const allowed=createItemActions(props.current);
     const [extendedInfo, setExtendedInfo] = useState({});
-    const dialogContext = useDialogContext();
-    const history=useHistory();
     useEffect(() => {
         allowed.buildExtendedInfo(props.current)
         .then(
@@ -1432,7 +1434,7 @@ export const FileDialog = (props) => {
     const dialogButtons=allowed.getActionButtons(props.current);
     const doneAction=useCallback((res)=>{
         if (res) Toast(res);
-        props.okFunction("dummy")
+        if (props.okFunction)props.okFunction()
     },[props.okFunction])
     dialogButtons.forEach(button=>{
         const onClick=button.onClick;
@@ -1473,6 +1475,10 @@ export const FileDialog = (props) => {
 
 }
 
+FileDialog.propTypes = {
+    current: PropTypes.object.isRequired,
+    okFunction: PropTypes.func
+}
 
 export const FileDialogWithActions=(props)=>{
     const {doneCallback,item,checkExists,...forward}=props;

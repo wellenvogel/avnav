@@ -19,9 +19,8 @@ import {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UploadHandler  from "../components/UploadHandler";
-import chartImage from '../images/Chart60.png';
 import {
-    FileDialogWithActions, createItemActions, listItems
+    FileDialogWithActions, createItemActions, listItems, FileDialog
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import PropertyHandler from '../util/propertyhandler';
@@ -452,20 +451,18 @@ class DownloadPage extends React.Component{
         return (data)=>opt_actions.nameForCheck(data);
     }
     createItem(){
-        const accessor=this.createAccessor();
+        const actions=createItemActions({type:this.state.type});
+        const accessor=(data)=>actions.nameForCheck(data);
+        const checker=(name)=>checkName(name,this.state.items,accessor);
         showPromiseDialog(undefined,(dprops)=><ItemNameDialog
             {...dprops}
             title={'enter filename'}
-            checkName={(name)=>this.entryExists(name,accessor)}
+            checkName={checker}
             mandatory={true}
         />)
             .then((res)=>{
                 const name=(res||{}).name;
                 if (! name) return;
-                if (this.entryExists(name,accessor)) {
-                    Toast("already exists");
-                    return;
-                }
                 const template=getTemplate(name);
                 if (template){
                     showPromiseDialog(undefined,(dprops)=><EditDialogWithSave
@@ -502,9 +499,8 @@ class DownloadPage extends React.Component{
     render(){
         let self=this;
         const actions=createItemActions({type:this.state.type});
-        const accessor=(data)=>actions.nameForCheck(data);
         const uploadAction=actions.getUploadAction();
-        let localDoneFunction=this.getLocalUploadFunction();
+        this.getLocalUploadFunction();
         return (
             <Page
                 {...self.props}
@@ -516,7 +512,6 @@ class DownloadPage extends React.Component{
                             itemList={this.state.items}
                             onItemClick={async (ev)=>{
                                 const item=avitem(ev);
-                                const action=avitem(ev,'action');
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
                                 }
@@ -525,13 +520,8 @@ class DownloadPage extends React.Component{
                                     return;
                                 }
                                 showDialog(undefined,()=>
-                                 <FileDialogWithActions
-                                     item={item}
-                                     history={this.props.history}
-                                     doneCallback={(action,item,pageChanged)=>{
-                                         this.fillData();
-                                         this.readAddOns();
-                                     }}
+                                 <FileDialog
+                                     current={item}
                                  />,()=>{
                                     this.fillData();
                                     this.readAddOns();
