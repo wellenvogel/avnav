@@ -253,7 +253,11 @@ class Action{
             visible={ this._fhelper('visible',item)}
             label={this.label}
             onClick={ async (ev, dialogContext) => {
-                await this._ahelper(ev, item,dialogContext,history);
+                try {
+                    await this._ahelper(ev, item, dialogContext, history);
+                }catch (e){
+                    if (e) Toast(e+"");
+                }
             }}
             close= {false}
             disabled={this._fhelper('disabled',item)}
@@ -998,7 +1002,8 @@ class TrackItemActions extends ItemActions{
             visible:this.canEditOverlays() && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0,
         }))
         actions.push(new Action({
-            name:'convert',
+            name:'toroute',
+            label: 'ToRoute',
             action:(action,info,dialogContext)=>{
                 dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
             },
@@ -1049,7 +1054,7 @@ class LayoutItemActions extends ItemActions{
     }
 
     build() {
-        this.headline='Tracks';
+        this.headline='Layouts';
         this.hasScope=true;
         this.fixedExtension='json';
     }
