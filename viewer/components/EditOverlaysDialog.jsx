@@ -9,7 +9,7 @@ import {
     useDialogContext
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
-import {Checkbox, Input, InputSelect, Radio} from './Inputs.jsx';
+import {Checkbox, Input, InputReadOnly, InputSelect, Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
@@ -32,6 +32,10 @@ import cloneDeep from "clone-deep";
 import base from "../base";
 import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
+import {fetchItem, listItems} from "../util/itemFunctions";
+import {createItemActions} from "./FileDialog";
+import {DownloadItemListDialog} from "./DownloadItemList";
+import {WidgetProps as ovlitem} from "./WidgetBase";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};
@@ -47,6 +51,15 @@ const filterOverlayItem=(item)=>{
     return rt;
 };
 export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml','kmz','geojson'];
+
+const SELECT_FILTERS={
+    track: (name)=>{
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(name)) < 0) return "no overlay";
+    },
+    overlay:(name)=>{
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(name)) < 0) return "no overlay";
+    }
+}
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 const TYPE_LIST=[
     {label: 'overlay', value: 'overlay'},
@@ -85,23 +98,11 @@ const pushHelper=(dict,key,value)=>{
     dict[key].push(value);
 }
 const OverlayItemDialog = (props) => {
-    const [itemsFetchCount, setItemsFetchCount] = useState(0);
+    const [iconFiles, setIconFiles] = useState(0);
     const [itemInfo, setItemInfo] = useState({});
     const [loading, setLoading] = useState(false);
     const [changed, setChanged] = useState(false);
-    const sortLists = ['icons', 'chart', 'overlay', 'images', 'user', 'knownOverlays', 'iconFiles', 'route', 'track']
     const [current, setCurrent] = useState(props.current || {});
-    const itemLists = {
-        icons: useItemList([{label: "--none--"}, {label: "--DefaultGpxIcon--", value: DefaultGpxIcon}]),
-        chart: useItemList([]),
-        overlay: useItemList([]),
-        images: useItemList([]),
-        user: useItemList([]),
-        knownOverlays: useItemList([]),
-        iconFiles: useItemList([{label: "--none--",value:undefined}]),
-        route: useItemList([]),
-        track: useItemList([])
-    };
     let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
     const parameters=useMemo(()=>{
         const rt=[];
@@ -116,10 +117,9 @@ const OverlayItemDialog = (props) => {
                             default: current[editableOverlayParameters.icon.name]
                         }
                     }
-                    else {
-                        //fill icon list
-                        addOn = {
-                            list: itemLists.iconFiles.list
+                    else{
+                        addOn={
+                            list:iconFiles
                         }
                     }
                 }
@@ -128,91 +128,21 @@ const OverlayItemDialog = (props) => {
             })
         }
         return rt;
-    },[itemInfo,itemsFetchCount,iconsReadOnly])
-
-    const getItemList = (type) => {
-        const filledLists={};
-        Requests.getJson( {
-            request:'api',
-            command: 'list',
-            type: type
-        })
-            .then((data) => {
-                filledLists[type] = data.items;
-                if (type === 'user' || type === 'images' || type === 'overlay') {
-                    data.items.forEach((item) => {
-                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(item.name)) >= 0) {
-                            let el = assign({}, item);
-                            el.label = el.url;
-                            el.value = el.url;
-                            pushHelper(filledLists,'icons',el);
-                        }
-                    })
-                }
-                if (type === 'chart') {
-                    //prepare select list
-                    data.items.forEach((item) => {
-                        item.label = item.displayName||item.name;
-                        item.value = item.name;
-                    });
-                }
-                if (type === 'overlay' || type === 'route' || type === 'track') {
-                    data.items.forEach((item) => {
-                        item.type = type;
-                        if (type === 'route') {
-                            if (!item.url) item.url = prepareUrl({
-                                command:'download',
-                                type:'route',
-                                name:item.name,
-                                extension:'.gpx'
-                            });
-                        }
-                        item.label = item.displayName||item.name;
-                        item.value = item.url;
-                        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name)) >= 0) {
-                            pushHelper(filledLists,'knownOverlays',item);
-                        }
-                        if (KNOWN_ICON_FILE_EXTENSIONS.indexOf(Helper.getExt(item.name)) >= 0) {
-                            pushHelper(filledLists,'iconFiles',{...item, label: item.url});
-                        }
-                    });
-                }
-                for (let k in filledLists){
-                    if(itemLists[k]) {
-                        itemLists[k].setList((old)=>{
-                            let rt=old?old.concat(filledLists[k]):filledLists[k];
-                            if (sortLists.indexOf(k)>=0){
-                                rt.sort(itemSort);
-                            }
-                            return rt;
-                        });
-                    }
-                    else{
-                        base.log("invalid structure: "+k);
-                    }
-                }
-                setItemsFetchCount((old) => old + 1)
-            })
-            .catch((error) => {
-                Toast("error fetching list of " + type + ": " + error);
-            })
-    }
-    //we make them only a variable as we consider them to be static
-
-
+    },[itemInfo,iconFiles,iconsReadOnly])
     useEffect(() => {
-        getItemList('chart');
-        getItemList('overlay');
-        getItemList('images');
-        getItemList('user');
-        getItemList('route');
-        getItemList('track');
-    }, []);
-
-    useEffect(() => {
-        if (props.current && props.current.url && props.current.type !== 'chart') {
-            analyseOverlay(props.current.url);
+        if (props.current  && props.current.type !== 'chart') {
+            analyseOverlay(props.current);
         }
+        listItems('overlay').then((ovlitems)=>{
+            const ifiles=[{label:'--None--',value:undefined}];
+            ovlitems.forEach((ovlitem)=>{
+                if (KNOWN_ICON_FILE_EXTENSIONS.indexOf(Helper.getExt(ovlitem.name))< 0){
+                    return;
+                }
+                ifiles.push({label:ovlitem.displayName||ovlitem.name,value:ovlitem.url})
+            })
+            setIconFiles(ifiles);
+        },()=>{})
     }, []);
 
     const updateCurrent = (values, force) => {
@@ -238,56 +168,40 @@ const OverlayItemDialog = (props) => {
         newState[OVERLAY_ID]=current[OVERLAY_ID];
         updateCurrent(newState, true);
     }
-    const analyseOverlay = (url, initial) => {
+    const analyseOverlay = async (item, initial) => {
+        setItemInfo({});
+        if (item.type ==='chart'){
+            return;
+        }
+        if (!item.name) return;
         setLoading(true);
-        setItemInfo(    {});
-        Requests.getHtmlOrText(url)
-            .then((data) => {
-                try {
-                    let featureInfo={};
-                    try {
-                        const OverlayClass=Mapholder.findChartSource('overlay',url);
-                        if (typeof(OverlayClass.analyzeOverlay) === 'function'){
-                            featureInfo=OverlayClass.analyzeOverlay(data);
-                        }
-                    }catch (e){}
-                    if (!featureInfo.hasAny) {
-                        Toast(url + " is no valid overlay file");
-                        setLoading(false);
-                        setItemInfo({});
-                        updateCurrent({name: undefined})
-                    } else {
-                        setLoading(false);
-                        setItemInfo(featureInfo);
-                        if (initial) {
-                            let newItemState = {};
-                            updateCurrent({...newItemState});
-                        }
-                    }
-                } catch (e) {
-                    Toast(url + " is no valid overlay: " + e.message);
-                    setLoading(false);
-                    setItemInfo({});
-                    updateCurrent({name: undefined});
+        try {
+            const overlayData = await fetchItem(item);
+            if (!overlayData) throw new Error("no overlay data loaded");
+            let featureInfo = {};
+                const OverlayClass = Mapholder.findChartSourceForItem(item);
+                if (typeof (OverlayClass.analyzeOverlay) === 'function') {
+                    featureInfo = OverlayClass.analyzeOverlay(overlayData);
                 }
-            })
-            .catch((error) => {
-                Toast("unable to load " + url + ": " + error)
+            if (!featureInfo.hasAny) {
+                Toast(" no valid overlay file");
                 setLoading(false);
                 setItemInfo({});
-                updateCurrent({name: undefined});
-            })
-    }
-    const filteredNameList = () => {
-        let currentType = current.type;
-        let rt = [];
-        itemLists.knownOverlays.list.forEach((item) => {
-            if (item.type === currentType) rt.push(item);
-        })
-        if (currentType === 'track') {
-            rt.sort(trackSort);
+                updateCurrent({name: undefined})
+            } else {
+                setLoading(false);
+                setItemInfo(featureInfo);
+                if (initial) {
+                    let newItemState = {};
+                    updateCurrent({...newItemState});
+                }
+            }
+        } catch (e) {
+            Toast(" no valid overlay: " + e.message);
+            setLoading(false);
+            setItemInfo({});
+            updateCurrent({name: undefined});
         }
-        return rt;
     }
     let currentType = current.type;
 
@@ -295,6 +209,7 @@ const OverlayItemDialog = (props) => {
     parameters.forEach((parameter)=>{
         if (parameter.hasError(current||{})) dataValid=false;
     })
+    const dialogContext=useDialogContext();
     return (
         <DialogFrame className="selectDialog editOverlayItemDialog" title={props.title || 'Edit Overlay'}>
             <DialogRow className="info"><span
@@ -325,48 +240,40 @@ const OverlayItemDialog = (props) => {
                         onChange={(nv) => updateCurrent({opacity: parseFloat(nv)})}
                         type="number"
                     />
-                    {(currentType === 'chart') ?
-                        <React.Fragment>
-                            <InputSelect
-                                dialogRow={true}
-                                label="chart name"
-                                value={{
-                                    value: current.name,
-                                    label: current.displayName||current.name
-                                }}
-                                list={itemLists.chart.list}
-                                fetchCount={itemsFetchCount}
-                                onChange={(nv) => {
-                                    updateCurrent({
-                                        ...overlayExpandsValue(),
-                                        name: nv.name,
-                                        displayName:nv.displayName,
-                                        chartKey:undefined
-                                    });
-                                }}
-                            />
-                        </React.Fragment> :
-                        <React.Fragment>
-                            <InputSelect
-                                dialogRow={true}
-                                label="overlay name"
-                                value={{label:current.displayName||current.name,value:current.name}}
-                                list={filteredNameList()}
-                                fetchCount={itemsFetchCount}
-                                onChange={(nv) => {
-                                    let newState = {
-                                        ...overlayExpandsValue(),
-                                        url: nv.url, name: nv.name, displayName:nv.displayName
-                                    };
-                                    if (Helper.getExt(nv.name) === 'kmz') {
-                                        newState[editableOverlayParameters.icon.name] = nv.url;
-                                        newState.url += "/doc.kml";
-                                    }
-                                    let initial = current.name === undefined;
-                                    updateCurrent(newState);
-                                    analyseOverlay(newState.url, initial);
-                                }}
-                            />
+                    <React.Fragment>
+                        <InputReadOnly
+                            label={'name'}
+                            value={current.displayName||current.name}
+                            onClick={(ev)=>{
+                                dialogContext.showDialog((dp)=><DownloadItemListDialog
+                                    {...dp}
+                                    type={currentType}
+                                    showUpload={false}
+                                    noInfo={true}
+                                    noExtra={true}
+                                    filter={SELECT_FILTERS[currentType]}
+                                    selectCallback={async (ev)=>{
+                                        const item = avitem(ev);
+                                        let newState = {
+                                            ...overlayExpandsValue(),
+                                            url:undefined,
+                                            chartKey:undefined,
+                                            name: item.name,
+                                            displayName:item.displayName,
+                                            type: currentType
+                                        };
+                                        if (Helper.getExt(item.name) === 'kmz') {
+                                            newState[editableOverlayParameters.icon.name] = item.name;
+                                        }
+                                        let initial = current.name === undefined;
+                                        updateCurrent(newState);
+                                        await analyseOverlay(newState, initial);
+                                        const dc=avitem(ev,'dialogContext');
+                                        if (dc) dc.closeDialog();
+                                       return true;
+                                    }}
+                                />);
+                            }}/>
                             <ErrorRow item={current}/>
                             <EditableParameterListUI
                                 values={current}
@@ -375,7 +282,6 @@ const OverlayItemDialog = (props) => {
                                 initialValues={props.current}
                             />
                         </React.Fragment>
-                    }
                 </React.Fragment>
             }
             <DialogButtons>

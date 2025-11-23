@@ -23,11 +23,10 @@
  ###############################################################################
  */
 
-import {createItemActions, FileDialog, listItems} from "./FileDialog";
+import {createItemActions, FileDialog} from "./FileDialog";
 import Helper, {avitem, setav} from "../util/helper";
 import React, {useCallback, useEffect, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import Addons from "./Addons";
 import Toast from "./Toast";
 import {DBCancel, DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
@@ -38,6 +37,7 @@ import UploadHandler from "./UploadHandler";
 import {DynamicButton} from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
+import {listItems} from "../util/itemFunctions";
 
 const itemSort = (a, b) => {
     if (a.time !== undefined && b.time !== undefined) {
@@ -63,47 +63,40 @@ const DownloadItem = (props) => {
             }
             <div className="itemMain">
                 <div className={dataClass}>
-                    <div className="date">{actions.getTimeText(props)}</div>
+                    { ! props.noInfo && <div className="date">{actions.getTimeText(props)}</div>}
                     <div className="info">{actions.getInfoText(props)}</div>
                 </div>
+                {! props.noInfo &&
                 <div className="infoImages">
                     {actions.canModify(props) && <span className="icon edit"></span>}
                     {actions.showIsServer(props) && <span className="icon server"></span>}
                     {actions.canView(props) && <span className="icon view"></span>}
                 </div>
+                }
             </div>
         </div>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadSequence}) => {
+export const DownloadItemList = ({type, selectCallback, uploadSequence,noInfo,noExtra,showUpload,filter}) => {
     const [items, setItems] = useState([]);
     const readItems = useCallback(async () => {
-        if (type !== 'user') {
-            const items = await listItems(type);
-            if (type === 'chart') {
-                items.push(DEFAULT_OVERLAY_CHARTENTRY)
-            }
-            if (type !== 'plugins') {
-                items.sort(itemSort);
-            }
-            setItems(items);
-            return;
+        const items = await listItems(type);
+        if (type === 'chart' && !noExtra) {
+            items.push(DEFAULT_OVERLAY_CHARTENTRY)
         }
-        const actions = [listItems(type), Addons.readAddOns()];
-        const result = await Promise.allSettled(actions);
-        const items = result[0].status === 'fulfilled' ?
-            result[0].value : [];
-        if (result[1].status === 'fulfilled') {
+        if (type !== 'plugins') {
+            items.sort(itemSort);
+        }
+        if (filter) {
+            const filtered = [];
             items.forEach(item => {
-                if (item.url) {
-                    if (Addons.findAddonByUrl(result[1].value, item.url)) {
-                        item.isAddon = true;
-                    }
-                }
+                const ferr = filter(item.name);
+                if (!ferr) filtered.push(item);
             })
+            setItems(filtered);
+        } else {
+            setItems(items);
         }
-        items.sort(itemSort);
-        setItems(items);
     }, [type])
     useEffect(() => {
         readItems().then(() => {
@@ -114,7 +107,17 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence}) => {
     const createItem = useCallback(async () => {
         const actions = itemActions;
         const accessor = (data) => actions.nameForCheck(data);
-        const checker = (name) => checkName(name, items, accessor);
+        const checker = (name) => {
+            if (filter){
+                const ferr=filter(name);
+                if (ferr){
+                    return {
+                        error:ferr
+                    }
+                }
+            }
+            checkName(name, items, accessor);
+        }
         const res = await showPromiseDialog(undefined, (dprops) => <ItemNameDialog
             {...dprops}
             title={'enter filename'}
@@ -150,13 +153,17 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence}) => {
     const uploadAction = itemActions.getUploadAction();
     return <React.Fragment>
         <ItemList
-            itemClass={DownloadItem}
+            itemClass={(ip)=><DownloadItem
+                {...ip}
+                noInfo={noInfo}
+            />}
             scrollable={true}
             itemList={items}
             onItemClick={async (ev) => {
                 const item = avitem(ev);
+                setav(ev,{dialogContext:dialogContext});
                 if (selectCallback) {
-                    return selectCallback(ev);
+                    if (await Helper.awaitHelper(selectCallback(ev))) return;
                 }
                 showDialog(dialogContext, () =>
                     <FileDialog
@@ -181,7 +188,7 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence}) => {
             uploadSequence={uploadSequence}
             checkNameCallback={(file, dialogContext) => uploadAction.checkFile(file, dialogContext)}
         />
-        {(type === "user") ?
+        {(type === "user" && showUpload) ?
             <DynamicButton
                 className="fab"
                 name="DownloadPageCreate"
@@ -199,9 +206,13 @@ DownloadItemList.propTypes = {
     type: PropTypes.string,
     selectCallback: PropTypes.func,
     uploadSequence: PropTypes.number,
+    noInfo: PropTypes.bool,
+    noExtra: PropTypes.bool,
+    showUpload: PropTypes.bool,
+    filter: PropTypes.func,
 }
 
-export const DownloadItemListDialog=({type,selectCallback,showUpload})=>{
+export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,filter})=>{
     const actions=createItemActions(type);
     const [uploadSequence, setUploadSequence] = useState(0);
     const buttons=[];
@@ -219,6 +230,10 @@ export const DownloadItemListDialog=({type,selectCallback,showUpload})=>{
             type={type}
             selectCallback={selectCallback}
             uploadSequence={uploadSequence}
+            showUpload={showUpload}
+            noInfo={noInfo}
+            noExtra={noExtra}
+            filter={filter}
         />
         <DialogButtons buttonList={
             buttons
@@ -230,4 +245,7 @@ DownloadItemListDialog.propTypes = {
     type: PropTypes.string,
     selectCallback: PropTypes.func,
     showUpload: PropTypes.bool,
+    noInfo: PropTypes.bool,
+    noExtra: PropTypes.bool,
+    filter:PropTypes.func
 }

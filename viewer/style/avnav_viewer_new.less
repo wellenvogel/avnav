@@ -1383,7 +1383,7 @@ span.valuePrefix{
 
   }
 
-  #downloadpage{
+  #downloadpage {
     .itemMain {
       .flex-display();
       .flex-direction(row);
@@ -1391,50 +1391,60 @@ span.valuePrefix{
       .flex-wrap(wrap);
       .flex-align-items(start);
     }
-    .listEntry{
+
+    .listEntry {
       .flex-wrap(wrap);
       .flex-align-items(center);
     }
-    .downloadItemData{
+  }
+    .downloadItemData {
       .flex(1);
       padding-left: 0.8em;
       padding-right: 0.8em;
       .flex-display();
       .flex-direction(row);
       .flex-align-items(center);
-      @media(max-width: 35em){
+      @media (max-width: 35em) {
         .flex-direction(column);
         .flex-align-items(flex-start);
       }
-      .date{
+
+      .date {
         .mdText2();
         width: 11.5em;
       }
-      .info{
+
+      .info {
         .flex(1);
         word-break: break-all;
       }
-      &.noDelete{
+
+      &.noDelete {
         margin-left: 2.4em;
       }
-    }
-    .infoImages{
-      padding-left: 0.8em;
-    }
-    .icon.server{
-      .iconImage('plug.svg');
-    }
-    .icon.edit{
-      .iconImage('ic_edit.svg');
-    }
-    .icon.view{
-      .iconImage('visibility.svg');
-    }
-    .appimage{
-      .iconImage('apps.svg');
-    }
 
+    }
+.infoImages {
+  padding-left: 0.8em;
+
+
+  .icon.server {
+    .iconImage('plug.svg');
   }
+
+  .icon.edit {
+    .iconImage('ic_edit.svg');
+  }
+
+  .icon.view {
+    .iconImage('visibility.svg');
+  }
+
+  .appimage {
+    .iconImage('apps.svg');
+  }
+}
+
 
   //------ type icons ------
   .icon.track{

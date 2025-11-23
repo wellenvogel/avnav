@@ -52,6 +52,7 @@ import {
     WpFeatureInfo
 } from "./featureInfo";
 import Leavehandler from "../util/leavehandler";
+import {createItemActions} from "../components/FileDialog";
 
 
 export const EventTypes = {
@@ -710,6 +711,23 @@ class MapHolder extends DrawingPositionConverter {
             return GeoJsonChartSource;
         }
         throw Error("unsupported overlay: " + url)
+    }
+    findChartSourceForItem(item){
+        if (! item) item={};
+        if (item.type === 'chart') return AvNavChartSource;
+        const actions=createItemActions(item.type);
+        if (! actions ) throw Error("unknown item type "+item.type)
+        const ext=actions.getExtensionForView(item);
+        if (ext === 'gpx'){
+            return GpxChartSource;
+        }
+        if (ext === 'kml' || ext === 'kmz'){
+            return KmlChartSource;
+        }
+        if (ext === 'geojson'){
+            return GeoJsonChartSource;
+        }
+        throw new Error("unknown overlay extension "+ext);
     }
 
     getBaseChart() {

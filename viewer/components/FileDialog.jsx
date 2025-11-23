@@ -1,6 +1,6 @@
 /**
  *###############################################################################
- # Copyright (c) 2012-2020 Andreas Vogel andreas@wellenvogel.net
+ # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
  #
  #  Permission is hereby granted, free of charge, to any person obtaining a
  #  copy of this software and associated documentation files (the "Software"),
@@ -28,16 +28,15 @@ import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
-import EditOverlaysDialog, {
-    KNOWN_OVERLAY_EXTENSIONS,
-    DEFAULT_OVERLAY_CHARTENTRY, DEFAULT_OVERLAY_CHARTENTRY as item
-} from "./EditOverlaysDialog";
+import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY, KNOWN_OVERLAY_EXTENSIONS} from "./EditOverlaysDialog";
 import {
-    DBCancel, DBOk,
+    DBCancel,
+    DBOk,
     DialogButtons,
     DialogFrame,
     DialogRow,
-    showPromiseDialog, useDialogContext
+    showPromiseDialog,
+    useDialogContext
 } from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
 import {layoutLoader} from "../util/layouthandler";
@@ -45,8 +44,8 @@ import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
-import {getTrackInfo, TrackConvertDialog,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackConvertDialog";
-import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
+import {getTrackInfo, INFO_ROWS as TRACK_INFO_ROWS, TrackConvertDialog} from "./TrackConvertDialog";
+import {getRouteInfo, INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
@@ -63,34 +62,13 @@ import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
-import Addons from "./Addons";
+import {listItems} from "../util/itemFunctions";
+
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const getExtensionForView=(item)=>{
     return item.extension||Helper.getExt(item.name);
-}
-export const listItems=async(type)=>{
-    let items;
-    if (type === 'route') {
-        items= await RouteHandler.listRoutes(true);
-    }
-    else if (type === 'layout') {
-        items= await layoutLoader.listLayouts()
-    }
-    else if (type === 'settings'){
-        items= await PropertyHandler.listSettings();
-    }
-    else {
-        items = (await Requests.getJson({
-            type:type,
-            command:'list'
-        })).items||[];
-        items.forEach(item=>{
-            item.server=true;
-        })
-    }
-    return items;
 }
 
 const plainNameForCheck=(item)=>{

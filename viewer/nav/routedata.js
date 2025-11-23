@@ -545,6 +545,21 @@ RouteData.prototype.getInfoFromRoute=function(route){
     } catch(e){}
     return rtinfo;
 }
+
+RouteData.prototype._getLocalInfo=function(routeName){
+    if (! routeName) return;
+    try {
+        let editingName=editingRoute.getRouteName();
+        const rtinfo=new routeobjects.RouteInfo(routeName);
+        const route=new routeobjects.Route();
+        route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,routeName));
+        if (route.points) rtinfo.numpoints=route.points.length;
+        rtinfo.time=route.time;
+        if (this.isActiveRoute(rtinfo.name)) rtinfo.active=true;
+        if (rtinfo.name === editingName) rtinfo.canDelete=false;
+        return rtinfo;
+    } catch(e){}
+}
 /**
  * list local routes
  * returns a list of RouteInfo
@@ -553,30 +568,33 @@ RouteData.prototype.getInfoFromRoute=function(route){
 RouteData.prototype._listRoutesLocal=function(){
     let rt=[];
     let i=0;
-    let key,rtinfo,route;
+    let key;
     let routeKeys=LocalStorage.listByPrefix(STORAGE_NAMES.ROUTE);
-    let editingName=editingRoute.getRouteName();
-    let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
     for (i=0;i<routeKeys.length;i++){
         key=routeKeys[i];
         let routeName=key.substr(STORAGE_NAMES.ROUTE.length);
-        if (! routeName) continue;
-            rtinfo=new routeobjects.RouteInfo(routeName);
-            try {
-                route=new routeobjects.Route();
-                route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,routeName));
-                if (route.points) rtinfo.numpoints=route.points.length;
-                rtinfo.length=route.computeLength(0,useRhumbLine);
-                rtinfo.time=route.time;
-                if (this.isActiveRoute(rtinfo.name)) rtinfo.active=true;
-                if (rtinfo.name === editingName) rtinfo.canDelete=false;
-            } catch(e){}
+        const rtinfo=this._getLocalInfo(routeName);
+        if (rtinfo) {
             rt.push(rtinfo);
-
-
+        }
     }
     return rt;
 };
+RouteData.prototype.getInfo=async function(routeName,opt_localonly){
+    let info;
+    if (! opt_localonly) {
+        try {
+            info = await Requests.getJson({
+                type: 'route',
+                command: 'info',
+                name: routeName
+            })
+        } catch (e) {
+        }
+    }
+    if (info && info.name) return info;
+    return this._getLocalInfo(routeName);
+}
 RouteData.prototype.deleteRoutePromise = function (name, opt_localonly) {
     return new Promise((resolve, reject) => {
         this.deleteRoute(name, () => {
@@ -634,7 +652,7 @@ RouteData.prototype.getLocalRouteXml=function(name){
     if (! route) return;
     return route.toXml();
 }
-RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
+RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback,opt_returnraw){
     Requests.getHtmlOrText({
         request:'api',
         type:'route',
@@ -642,6 +660,10 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
         name:name
     })
         .then((xml)=>{
+            if (opt_returnraw){
+                okcallback(xml);
+                return;
+            }
             let newRoute=new routeobjects.Route();
             newRoute.fromXml(xml);
             let routeName=name;
@@ -657,12 +679,13 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
             if (opt_errorcallback) opt_errorcallback(error);
         })
 }
-RouteData.prototype.fetchRoutePromise=async function(name,localOnly){
+RouteData.prototype.fetchRoutePromise=async function(name,localOnly,opt_returnraw){
     return new Promise((resolve,reject)=> {
         this.fetchRoute(name, localOnly, (route) => {
             resolve(route);
         },
-            (err) => {reject(err)});
+            (err) => {reject(err)},
+            opt_returnraw);
     });
 }
 /**
@@ -672,10 +695,10 @@ RouteData.prototype.fetchRoutePromise=async function(name,localOnly){
  * @param okcallback
  * @param opt_errorcallback
  */
-RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback){
+RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback,opt_returnraw){
     let route;
     const loadLocal=(etxt)=>{
-        route=this._loadRoute(name,true);
+        route=this._loadRoute(name,true,opt_returnraw);
         if (route){
             setTimeout(function(){
                 okcallback(route);
@@ -1025,15 +1048,19 @@ RouteData.prototype._localRouteExists=function(route) {
  * @private
  * @param name
  * @param opt_returnUndef - if set, return undef instead of an empty route if not found
+ * @param opt_returnraw return the raw string
  * @returns {routeobjects.Route}
  */
-RouteData.prototype._loadRoute=function(name,opt_returnUndef){
+RouteData.prototype._loadRoute=function(name,opt_returnUndef,opt_returnraw){
     let rt=new routeobjects.Route(name);
     try{
         let raw=LocalStorage.getItem(STORAGE_NAMES.ROUTE,name);
         if (! raw && name == this.DEFAULTROUTE){
             //fallback to load the old default route
             raw=LocalStorage.getItem(this.FALLBACKROUTENAME);
+        }
+        if (opt_returnraw){
+            return raw;
         }
         if (raw) {
             base.log("route "+name+" successfully loaded");
