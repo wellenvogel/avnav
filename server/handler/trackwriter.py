@@ -482,24 +482,47 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     except Exception as e:
       AVNLog.error("exception in Trackwriter: %s", traceback.format_exc())
 
+  def _checkAndCloseCurrent(self,name):
+      if name.endswith(self.GPXEXT):
+          if self.fname == name[:-4]:
+              AVNLog.info("deleting current track!")
+              with self.tracklock:
+                  self.track = []
+                  self.modifySequence = time.monotonic()
+              with self.filelock:
+                  if self.currentFile is not None:
+                      self.currentFile.close()
+                      self.currentFile = None
+              return True
+      return False
 
   def handleDelete(self, name):
     rt=super(AVNTrackWriter, self).handleDelete(name)
+    self._checkAndCloseCurrent(name)
     if name.endswith(self.GPXEXT):
-      if self.fname == name[:-4]:
-        AVNLog.info("deleting current track!")
-        with self.tracklock:
-          self.track=[]
-          self.modifySequence=time.monotonic()
-        with self.filelock:
-          if self.currentFile is not None:
-            self.currentFile.close()
-            self.currentFile=None
       try:
         super().handleDelete(re.sub(r"%s$"%self.GPXEXT,self.WEXT,name))
       except:
         pass
     return rt
+
+  def handleRename(self, name, newName, requestparam):
+      name = self.checkName(name)
+      newName = self.checkName(newName)
+      rt=self._rename(name, newName)
+      self._checkAndCloseCurrent(name)
+      if name.endswith(self.GPXEXT):
+        wname= re.sub(r"%s$"%self.GPXEXT,self.WEXT,name)
+        wNewName=re.sub(r"%s$"%self.GPXEXT,self.WEXT,newName)
+        try:
+            self._rename(wname, wNewName,force=True)
+        except:
+            pass
+      return rt
+
+
+
+
 
   LISTED_EXTENSIONS=['.nmea','.nmea.gz','.gpx']
   def handleList(self, handler=None):

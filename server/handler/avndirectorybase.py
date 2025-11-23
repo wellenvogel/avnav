@@ -444,13 +444,16 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getHandledPath(self):
       return  self.getPrefix()
 
-  def _rename(self,fullName,targetName):
+  def _rename(self,fullName,targetName,force=False):
       src = os.path.join(self.baseDir, fullName)
       if not os.path.exists(src):
           raise Exception("file %s not found" % fullName)
       dst = os.path.join(self.baseDir, targetName)
       if os.path.exists(dst):
-          raise Exception("%s already exists" % targetName)
+          if force:
+            os.unlink(dst)
+          else:
+            raise Exception("%s already exists" % targetName)
       os.rename(src, dst)
       return AVNUtil.getReturnData()
   def handleRename(self,name,newName,requestparam):
