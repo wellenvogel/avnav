@@ -580,7 +580,7 @@ export default class OverlayConfig{
                 return;
             }
             changed++;
-            item.name=newName;
+            overlay.name=newName;
         });
         if (changed){
             this.hasChanges=true;

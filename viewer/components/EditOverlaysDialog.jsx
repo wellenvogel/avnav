@@ -166,7 +166,6 @@ const OverlayItemDialog = (props) => {
                                 name:item.name,
                                 extension:'.gpx'
                             });
-                            if (!item.name.match(/\.gpx/)) item.name += ".gpx";
                         }
                         item.label = item.displayName||item.name;
                         item.value = item.url;
