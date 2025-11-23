@@ -560,6 +560,7 @@ RouteData.prototype._listRoutesLocal=function(){
     for (i=0;i<routeKeys.length;i++){
         key=routeKeys[i];
         let routeName=key.substr(STORAGE_NAMES.ROUTE.length);
+        if (! routeName) continue;
             rtinfo=new routeobjects.RouteInfo(routeName);
             try {
                 route=new routeobjects.Route();

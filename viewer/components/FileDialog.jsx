@@ -109,11 +109,12 @@ class UploadAction{
     constructor({type,accessor}){
         this.type=type;
         this.checkAccessor=accessor||((item)=>item.name);
-        this.checkFileAndName=undefined;
-        this.checkExisting=undefined;
+        this.preCheck=undefined; //a function that returns an object with name and potentially error, final
+                                 //leaving name unset will cancel
+        this.postCheck=undefined;//same as pre check
         this.withDialog=true;
-        this.localAction=undefined;
-        this.doneAction=undefined;
+        this.localAction=undefined;//if set you can consume the file. Return undefined
+        this.doneAction=undefined; //called when the upload is finished
         this.userData=undefined;
         this.fixedPrefix=false;
     }
@@ -138,25 +139,29 @@ class UploadAction{
      * @returns {Promise<{proposal: *, error: string}|*>}
      */
     async _check(file,dialogContext){
-        let rs={name:file.name};
+        const checkRes=(res,completeResult)=>{
+            if (! res) return true;
+            if (res.error){
+                throw new Error(rs.error)
+            }
+            Object.assign(completeResult,res);
+            if (! res.name){
+                delete completeResult.name;
+            }
+            if (res.final){
+                return true;
+            }
+            return false;
+        }
+        let rs={};
         this.userData={};
-        if (this.checkFileAndName){
-            rs=await Helper.awaitHelper(this.checkFileAndName(this.userData,file.name,file,dialogContext));
-        }
-        if (! rs) return;
-        if (rs.error){
-            throw new Error(rs.error)
-        }
-        if (! rs.name){
-            throw new Error("no name after check");
-        }
-        if (rs.final){
-            return rs;
+        if (this.preCheck){
+            if (checkRes(await Helper.awaitHelper(this.preCheck(this.userData,file.name,file,dialogContext)),rs)) return rs;
         }
         const existing = await listItems(rs.type||this.type);
         const accessor=(data)=>this.checkAccessor(data);
         if (this.withDialog){
-            rs=await uploadCheckNameDialog({
+            if (checkRes(await uploadCheckNameDialog({
                 dialogContext,
                 name:rs.name,
                 keepExtension: true,
@@ -164,27 +169,21 @@ class UploadAction{
                 itemList:existing,
                 checkFirst:true,
                 fixedPrefix: this.fixedPrefix
-            })
+            }),rs)) return rs;
         }
         else {
-            if (this.checkExisting) {
-                rs = await Helper.awaitHelper(this.checkExisting(this.userData, dialogContext, rs.name, existing, accessor));
-            } else {
                 const oname=rs.name;
-                rs = checkName(rs.name, existing, accessor);
-                if (! rs){
-                    rs={name:oname}
+                let crs = checkName(rs.name, existing, accessor);
+                if (! crs){
+                    crs={name:oname}
                 }
-            }
+                if (checkRes(crs,rs)) return rs;
         }
-        if (! rs){
-            return;
-        }
-        if (rs.error){
-            throw new Error(rs.error)
+        if (this.postCheck) {
+            if (checkRes(await Helper.awaitHelper(this.postCheck(this.userData, rs.name, file, dialogContext,existing, accessor)),rs)) return rs;
         }
         if (this.localAction){
-            return await Helper.awaitHelper(this.localAction(this.userData,file,rs.name))
+            return await Helper.awaitHelper(this.localAction(this.userData,rs.name,file))
         }
         return rs;
     }
@@ -197,7 +196,7 @@ class UploadAction{
      */
     async checkFile(file,dialogContext){
         const nameCheck=await this._check(file,dialogContext);
-        if (! nameCheck){
+        if (! nameCheck || ! nameCheck.name){
             return ;
         }
         if (nameCheck.error){
@@ -684,7 +683,7 @@ export class ItemActions{
             return {name:name};
         }
         return rt.copy({
-            checkFileAndName:nameChecker,
+            preCheck:nameChecker,
             fixedPrefix: this.prefixForDisplay(),
         })
     }
@@ -854,7 +853,7 @@ class ChartItemActions extends ItemActions{
     getUploadAction() {
         const action=super.getUploadAction();
         return action.copy({
-            checkFileAndName:async (userData,name,file,dialogContext)=>{
+            preCheck:async (userData, name, file, dialogContext)=>{
                 const [fn, ext] = Helper.getNameAndExt(name);
                 const err=this.checkExtension(ext);
                 if (! err){
@@ -999,9 +998,9 @@ class RouteItemActions extends ItemActions{
     getUploadAction() {
         let action=super.getUploadAction();
         return action.copy({
-            checkFileAndName: async (userData,name,file)=>{
+            preCheck: async (userData, name, file)=>{
                 const [fn, ext] = Helper.getNameAndExt(name);
-                if (ext !== 'gpx') throw new Error("only gpx for routes");
+                if (ext !== this.fixedExtension) throw new Error(`only ${this.fixedExtension} for routes`);
                 const data=readTextFile(file);
                 userData.nroute=new routeobjects.Route();
                 userData.nroute.fromXml(data);
@@ -1013,7 +1012,7 @@ class RouteItemActions extends ItemActions{
                 }
             },
             withDialog: true,
-            localAction: async (userData,file,name)=>{
+            localAction: async (userData,name,file)=>{
                 if (!userData.nroute) throw new Error("no route after upload");
                 userData.nroute.name=name;
                 await RouteHandler.saveRoute(userData.nroute);
@@ -1186,7 +1185,7 @@ class SettingsItemActions extends ItemActions{
 
     getUploadAction() {
         return super.getUploadAction().copy({
-            localAction: async (userData,file,name)=>{
+            localAction: async (userData,name,file)=>{
                 const data=await readTextFile(file);
                 const verified=await PropertyHandler.verifySettingsData(data, true,true)
                 await PropertyHandler.uploadSettingsData(name,verified.data,false,false);
@@ -1352,7 +1351,7 @@ class PluginItemActions extends ItemActions{
 
     getUploadAction() {
         return super.getUploadAction().copy({
-            checkFileAndName: async (userData,name,file,dialogContext)=> {
+            preCheck: async (userData, name, file, dialogContext)=> {
                 const [fn, ext] = Helper.getNameAndExt(name);
                 const accessor = (data) => this.nameForCheck(data);
                 if (ext !== 'zip') throw new Error("only zip files for plugins");

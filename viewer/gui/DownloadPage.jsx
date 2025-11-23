@@ -50,7 +50,7 @@ const DownloadPage=(props)=>{
             getButtonParam('DownloadPageCharts','chart'),
             {
                 name: 'DownloadPageImporter',
-                onClick: ()=>this.props.history.push('importerpage'),
+                onClick: ()=>history.push('importerpage'),
                 storeKeys: {
                     visible: keys.gui.capabilities.uploadImport
                 }

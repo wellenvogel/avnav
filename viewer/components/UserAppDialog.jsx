@@ -51,12 +51,12 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
         listFiles();
     }, []);
     const uploadAction=createItemActions('user').getUploadAction().copy({
-        checkFileAndName: (userData,name)=>{
+        preCheck: (userData, name)=>{
             if (! name) throw new Error("no file name");
             if (Helper.getExt(name)!=='html') throw new Error("only HTML files");
             return {name:name};
         },
-        withDialog:false
+        withDialog:true
     });
     const checkNameFunction=(name)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>

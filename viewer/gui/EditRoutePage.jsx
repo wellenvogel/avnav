@@ -303,7 +303,7 @@ const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload
                 try {
                     const actions=createItemActions({type:'route'})
                     const uploadAction=actions.getUploadAction().copy({
-                        localAction: async (userData,file,name)=>{
+                        localAction: async (userData,name,file)=>{
                             if (! userData.nroute) throw new Error("no route loaded");
                             userData.nroute.name=name;
                             if (resolveFunction) resolveFunction(userData.nroute);
