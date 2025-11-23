@@ -571,6 +571,23 @@ export default class OverlayConfig{
         return changed;
     }
 
+    renameItem(item,newName){
+        if (! item || ! item.type || ! item.name || ! newName) return false;
+        if (! this.config || ! this.config.overlays) return false;
+        let changed=0;
+        this.config.overlays.forEach((overlay)=>{
+            if (item.name !== overlay.name || item.type !== overlay.type) {
+                return;
+            }
+            changed++;
+            item.name=newName;
+        });
+        if (changed){
+            this.hasChanges=true;
+        }
+        return changed;
+    }
+
 }
 
 export const fetchOverlayConfig=(chartItem)=>{
@@ -605,6 +622,32 @@ export const fetchOverlayConfig=(chartItem)=>{
 }
 export const DEFAULT_OVERLAY_CONFIG = "default.cfg";
 
+export const handleOverlaysSum = async (chartList, handleOneConfig) => {
+    try {
+        const results = await handleOverlays(chartList, handleOneConfig);
+        let num = 0;
+        let esum=0;
+        let errors = "";
+        results.forEach(item => {
+            if (item.status !== 'OK') {
+                errors += item.name + ":" + item.status + ","
+            } else {
+                const changes=parseInt(item.info);
+                num += changes;
+                if (changes) esum+=1;
+            }
+        })
+        return {
+            status: (errors !== "") ? errors : 'OK',
+            sum: num,
+            numOverlays:esum
+        }
+    }catch (error){
+        return {
+            status: error+""
+        }
+    }
+}
 export const removeItemsFromOverlays = async (chartList, itemList) => {
     if (! itemList) return false;
     const handleOneConfig=(overlayConfig,idx)=>{
@@ -616,26 +659,22 @@ export const removeItemsFromOverlays = async (chartList, itemList) => {
         })
         return numChanges;
     }
-    try {
-        const results = await handleOverlays(chartList, handleOneConfig);
-        let numRemoved = 0;
-        let errors = "";
-        results.forEach(item => {
-            if (item.status !== 'OK') {
-                errors += item.name + ":" + item.status + ","
-            } else {
-                numRemoved += item.info ? 1 : 0;
-            }
-        })
-        return {
-            status: (errors !== "") ? errors : 'OK',
-            info: `removed from ${numRemoved} overlay${numRemoved !== 1 ? 's' : ''}`,
-        }
-    }catch (error){
-        return {
-            status: error+""
-        }
+    const res=await handleOverlaysSum(chartList, handleOneConfig);
+    if (res.status==='OK'){
+        res.info=`removed ${res.sum} entries from ${res.numOverlays} overlays`;
     }
+    return res;
+}
+export const renameItemInOverlays=async (chartlist,item,newName)=>{
+    if (!item || ! newName) return false;
+    const handleOneConfig=(overlayConfig,idx)=>{
+        return overlayConfig.renameItem(item,newName);
+    }
+    const res=await handleOverlaysSum(chartlist,handleOneConfig);
+    if (res.status==='OK'){
+        res.info=`renamed ${res.sum} entries from ${res.numOverlays} overlays`;
+    }
+    return res;
 }
 /**
  * execute a callback function on multiple overlay configs

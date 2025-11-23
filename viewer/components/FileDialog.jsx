@@ -55,7 +55,7 @@ import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {checkName, ItemNameDialog, safeName} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
-import {DEFAULT_OVERLAY_CONFIG, removeItemsFromOverlays} from "../map/overlayconfig";
+import {DEFAULT_OVERLAY_CONFIG, removeItemsFromOverlays, renameItemInOverlays} from "../map/overlayconfig";
 import {useHistory} from "./HistoryProvider";
 import globalStore from '../util/globalstore';
 import {readTextFile} from "./UploadHandler";
@@ -496,8 +496,9 @@ const standardActions={
                 nameForCheck: action.nameForCheck
             });
             if (!newName) return;
-            return await action.execute(item, newName);
-            //TODO: rename item in overlays
+            const rs=await action.execute(item, newName);
+            await renameItemInOverlays(undefined,item,newName)
+            return rs;
         }
     }).copy({
         execute: async (item, newName) => {
@@ -967,7 +968,9 @@ class RouteItemActions extends ItemActions{
                 if (RouteHandler.isActiveRoute(item.name)) {
                     throw new Error("unable to rename active route")
                 }
-                return await RouteHandler.renameRoute(item.name,newName);
+                const rs= await RouteHandler.renameRoute(item.name,newName);
+                await renameItemInOverlays(undefined,item,newName);
+                return rs;
             }
         }))
         actions.push(standardActions.view.copy({
