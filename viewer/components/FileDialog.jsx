@@ -55,7 +55,7 @@ import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {checkName, ItemNameDialog, safeName} from "./ItemNameDialog";
 import GuiHelpers from "../util/GuiHelpers";
-import {removeItemsFromOverlays} from "../map/overlayconfig";
+import {DEFAULT_OVERLAY_CONFIG, removeItemsFromOverlays} from "../map/overlayconfig";
 import {useHistory} from "./HistoryProvider";
 import globalStore from '../util/globalstore';
 import {readTextFile} from "./UploadHandler";
@@ -790,7 +790,15 @@ class ChartItemActions extends ItemActions{
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadCharts,false);
     }
     fillActions(item,actions) {
-        const isConnected=this.isConnected();
+        actions.push(new Action({
+            label: 'Open',
+            name: 'openchart',
+            action: (action,item,dialogContext,history)=>{
+                mapholder.setChartEntry(item);
+                history.push('navpage');
+            },
+            visible: item.name !== DEFAULT_OVERLAY_CONFIG
+        }))
         actions.push(standardActions.delete.copy({
             visible: this.canModify(item)
         }));
