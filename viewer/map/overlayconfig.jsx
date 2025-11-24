@@ -109,11 +109,6 @@ export const overlayExpandsValue=(opt_value)=>{
     for (let k in rt) rt[k]=opt_value;
     return rt;
 }
-const NEVER_EXPAND_FILTER={
-    [OVERLAY_ID]:true,
-    ...OVERRIDE_KEYS,
-    opacity:true
-}
 export default class OverlayConfig{
     constructor(overlayConfig,opt_mutable,opt_defaults) {
         this.config=overlayConfig||{};
@@ -198,93 +193,6 @@ export default class OverlayConfig{
             })
         })
     }
-
-    /**
-     * get a config that is expanded by the results from item queries
-     * @param forEditor controls which parameters will be expanded
-     *        true: nonexistent,error,url
-     *        false: nonexistent, error, url + all parameters for chart Items
-     */
-    getExpandedConfig(forEditor){
-        const rt=this.copy();
-        if (! rt.config) return rt;
-        //build a list of necessary queries
-        //we try to optimize this to just query each combination of type and name
-        //only once
-        const queryList={};
-        ['overlays','defaults'].forEach((scope)=>{
-            const items=rt.config[scope];
-            if (! items) return;
-            for (let i=0;i<items.length;i++){
-                const item=items[i];
-                if (! item.type || ! item.name) continue;
-                const key=item.type+":"+item.name;
-                const current=queryList[key]||{
-                    type:item.type,
-                    name:item.name,
-                };
-                const idlist=current.idlist||[];
-                idlist.push({
-                    idx:i,
-                    scope:scope
-                });
-                current.idlist=idlist;
-                queryList[key]=current;
-            }
-        })
-        const queries=[];
-        const queryConfigs=[];
-        for (let k in queryList){
-            const query=queryList[k];
-            queryConfigs.push(query);
-            queries.push(Requests.getJson({
-                name:query.name,
-                type:query.type,
-                command:'info'
-            }))
-        }
-        if (queryConfigs.length===0) return Promise.resolve(rt);
-        const updateItem = (query, item) => {
-            if (!query.idlist) return;
-            query.idlist.forEach(id => {
-                const scopeitems = rt.config[id.scope];
-                if (!scopeitems) return;
-                const sitem = scopeitems[id.idx];
-                if (!sitem) return;
-                if (forEditor) {
-                    Object.assign(sitem, Helper.filteredAssign(DEFAULT_EXPAND_FILTER, item));
-                } else {
-                    if (sitem.type === 'chart') {
-                        Object.assign(sitem, Helper.blackListAssign(NEVER_EXPAND_FILTER, item));
-                    } else {
-                        Object.assign(sitem, Helper.filteredAssign(DEFAULT_EXPAND_FILTER, item));
-                    }
-                }
-            })
-        }
-        return Promise.allSettled(queries)
-            .then((results)=>{
-                for (let i=0;i<queryConfigs.length;i++){
-                    const res=results[i];
-                    const query=queryConfigs[i];
-                    if (res.status === 'fulfilled'){
-                        const item=(res.value||{}).item;
-                        if (! item){
-                            updateItem(query,{nonexistent:true,error:'not found'});
-                        }
-                        else{
-                            updateItem(query,item);
-                        }
-                    }
-                    else{
-                        updateItem(query,{error:res.reason});
-                    }
-                }
-                return rt;
-            })
-
-    }
-
     /**
      * fill an object (keys are the bucket names) with a copy of the overlay objects
      * @returns {{}}
