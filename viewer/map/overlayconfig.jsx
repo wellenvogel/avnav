@@ -581,6 +581,7 @@ export default class OverlayConfig{
             }
             changed++;
             overlay.name=newName;
+            delete overlay.url; //the url will be wrong any way
         });
         if (changed){
             this.hasChanges=true;
