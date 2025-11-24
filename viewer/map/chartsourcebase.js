@@ -40,6 +40,7 @@ import {
     EditableSelectParameter
 } from "../util/EditableParameter";
 import Requests from "../util/requests";
+import {fetchItemInfo, fetchSequence} from "../util/itemFunctions";
 class ChartSourceBase {
 
     COLOR_INVISIBLE='rgba(0,0,0,0)';
@@ -87,6 +88,10 @@ class ChartSourceBase {
         this.removeSequence=0;
 
         this.visible=true;
+        this.error=undefined;
+    }
+    getError(){
+        return this.error;
     }
     getName(){
         const e=this.chartEntry||{};
@@ -141,28 +146,29 @@ class ChartSourceBase {
     }
 
     /**
-     * returns a promise that resolves to 1 for changed
+     * returns a promise that resolves to true for changed
      */
-    checkSequence(force) {
+    async checkSequence(force) {
         let lastRemoveSequence = this.removeSequence;
         if (!globalstore.getData(keys.gui.capabilities.fetchHead, false)) {
-            return Promise.resolve(0);
+            return false;
         }
         if (!this.visible) {
-            return Promise.resolve(0);
+            return false;
         }
-        return Requests.getLastModified(this.getUrl())
-            .then((lastModified) => {
-                if (this.removeSequence !== lastRemoveSequence || (!this.isReady() && !force)) {
-                    return 0;
-                }
-                if (lastModified !== this.sequence) {
-                    this.sequence = lastModified;
-                    let drawn = this.redraw();
-                    return (drawn ? 0 : 1);
-                } else return (0)
-            })
-            .catch((e) => 0);
+        try {
+            const newSequence = await fetchSequence(this.chartEntry)
+            if (this.removeSequence !== lastRemoveSequence || (!this.isReady() && !force)) {
+                return false;
+            }
+            if (newSequence !== this.sequence) {
+                this.sequence = newSequence;
+                let drawn = this.redraw();
+                return !drawn;
+            } else return false;
+        } catch (e) {
+        }
+        return false;
     }
 
     isEqual(other){
@@ -180,51 +186,43 @@ class ChartSourceBase {
         return chartBase;
     }
 
-    prepareInternal(){
-        return new Promise((resolve,reject)=>{
-            reject("prepareInternal not implemented in base class");
-        })
+    async prepareInternal(){
+        throw new Error("prepareInternal not implemented in base class");
     }
 
-    prepare() {
-
-        const runPrepare=(resolve,reject)=>{
-            this.checkSequence(true)
-                .then((r)=> {
-                    this.prepareInternal()
-                        .then((layers) => {
-                            layers.forEach((layer)=>{
-                                if (!layer.avnavOptions) layer.avnavOptions={};
-                                layer.avnavOptions.chartSource=this;
-                            });
-                            this.layers = layers;
-                            if (!this.chartEntry.enabled) {
-                                this.visible=false;
-                                this.layers.forEach((layer) => layer.setVisible(false));
-                            }
-                            this.isReadyFlag = true;
-                            resolve(this.layers);
-                        })
-                        .catch((error) => {
-                            reject(error);
-                        });
-                })
-                .catch((e)=>reject(e));
-        };
-        return new Promise((resolve, reject)=> {
-            if (this.chartEntry.tokenUrl) {
-                CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
-                    .then((result)=> {
-                        this.encryptFunction = result.encryptFunction;
-                        runPrepare(resolve,reject)
-                    })
-                    .catch((error)=> {
-                        reject(error)
-                    });
-                return;
+    async prepare() {
+        const fullConfig = await fetchItemInfo(this.chartEntry);
+        //TODO: only merge allowed parts
+        Object.assign(this.chartEntry, fullConfig);
+        if (! this.chartEntry.url){
+            base.log("no url retrieved for "+this.chartEntry.name);
+            if (this.isBaseChart()){
+                throw new Error("unable to get an url for the base chart "+this.chartEntry.name);
             }
-            runPrepare(resolve,reject);
+            this.error="unable to get url for "+this.chartEntry.name;
+            this.visible=false;
+            this.layers=[];
+            this.isReadyFlag = true;
+            this.chartEntry.enabled=false;
+            return;
+        }
+        if (this.chartEntry.tokenUrl) {
+            const result = await CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
+            this.encryptFunction = result.encryptFunction;
+        }
+        await this.checkSequence(true);
+        const layers = await this.prepareInternal()
+        layers.forEach((layer) => {
+            if (!layer.avnavOptions) layer.avnavOptions = {};
+            layer.avnavOptions.chartSource = this;
         });
+        this.layers = layers;
+        if (!this.chartEntry.enabled) {
+            this.visible = false;
+            this.layers.forEach((layer) => layer.setVisible(false));
+        }
+        this.isReadyFlag = true;
+        return this.layers
     }
 
 
@@ -237,6 +235,7 @@ class ChartSourceBase {
     }
 
     setVisible(visible){
+        if (! this.getUrl()) return;
         this.visible=visible;
         if (! this.isReady()) return;
         this.layers.forEach((layer)=>layer.setVisible(visible));
@@ -318,6 +317,7 @@ class ChartSourceBase {
     }
 
     setEnabled(enabled,opt_update){
+        if (! this.getUrl()) return;
         this.mapholder.setEnabled(this,enabled,opt_update);
     }
 

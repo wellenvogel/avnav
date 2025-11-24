@@ -9,14 +9,13 @@ import {
     useDialogContext
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
-import {Checkbox, Input, InputReadOnly, InputSelect, Radio} from './Inputs.jsx';
+import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
-import Requests, {prepareUrl} from '../util/requests.js';
+import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.js';
-import GuiHelpers from '../util/GuiHelpers.js';
 import {editableOverlayParameters} from '../map/chartsourcebase'
 import OverlayConfig, {
     DEFAULT_OVERLAY_CONFIG,
@@ -24,18 +23,14 @@ import OverlayConfig, {
     getKeyFromOverlay,
     OVERLAY_ID, overlayExpandsValue
 } from '../map/overlayconfig';
-import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import chartImage from '../images/Chart60.png';
 import editableParameterUI, {EditableParameterListUI} from "./EditableParameterUI";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
-import base from "../base";
 import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
-import {fetchItem, listItems} from "../util/itemFunctions";
-import {createItemActions} from "./FileDialog";
+import {fetchItem, fetchItemInfo, listItems} from "../util/itemFunctions";
 import {DownloadItemListDialog} from "./DownloadItemList";
-import {WidgetProps as ovlitem} from "./WidgetBase";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};
@@ -67,36 +62,6 @@ const TYPE_LIST=[
     {label: 'route', value: 'route'},
     {label: 'track', value: 'track'},
     ]
-const itemSort=(a,b)=>{
-    let na=a.name;
-    let nb=b.name;
-    if (na === undefined && nb === undefined) return 0;
-    if (na === undefined) return -1;
-    if (nb === undefined) return 1;
-    na=na.toUpperCase();
-    nb=nb.toUpperCase();
-    if (na < nb) return -1;
-    if (na > nb) return 1;
-    return 0;
-}
-const trackSort=(a,b)=>{
-    let ta=a.time;
-    let tb=b.time;
-    if (ta < tb) return 1;
-    if (ta > tb) return -1;
-    return 0;
-}
-const useItemList=(initial)=>{
-    const [list,setList]=useState(initial);
-    return {
-        list:list,
-        setList:setList
-    }
-}
-const pushHelper=(dict,key,value)=>{
-    if (dict[key] === undefined) dict[key]=[];
-    dict[key].push(value);
-}
 const OverlayItemDialog = (props) => {
     const [iconFiles, setIconFiles] = useState(0);
     const [itemInfo, setItemInfo] = useState({});
@@ -130,7 +95,7 @@ const OverlayItemDialog = (props) => {
         return rt;
     },[itemInfo,iconFiles,iconsReadOnly])
     useEffect(() => {
-        if (props.current  && props.current.type !== 'chart') {
+        if (props.current  && props.current.type !== 'chart' && ! props.current.nonexistent) {
             analyseOverlay(props.current);
         }
         listItems('overlay').then((ovlitems)=>{
@@ -463,7 +428,7 @@ const EditOverlaysDialog = (props) => {
     const [list, setList] = useState(displayListFromOverlays(props.current.getOverlayList(true)));
     const [addEntry, setAddEntry] = useState(props.addEntry);
     const [useDefault, setUseDefault] = useState(props.current.getUseDefault());
-    const [isChanged, setIsChanged] = useState(false);
+    const [isChanged, setIsChanged] = useState(0);
     const updateList = (updatedList) => {
         let newList=updatedList.slice(0);
         let idx = selectedIndex;
@@ -481,7 +446,7 @@ const EditOverlaysDialog = (props) => {
         }
         if (count < 0) idx = -1;
         setList(newList);
-        setIsChanged(true);
+        setIsChanged(isChanged+1);
         setSelectedIndex(idx);
     }
     const showItemDialog = (item, opt_forceOk) => {
@@ -523,7 +488,7 @@ const EditOverlaysDialog = (props) => {
         if (addEntry) {
             let entry = addEntry;
             setAddEntry(undefined);
-            setIsChanged(true);
+            setIsChanged(isChanged+1);
             insert(false, entry);
         }
     }, []);
@@ -535,6 +500,54 @@ const EditOverlaysDialog = (props) => {
             }
         }
     }, []);
+    useEffect(() => {
+        const requests=[];
+        list.forEach(item => {
+            if (item.type === 'base') {
+                requests.push(Promise.resolve());
+                return;
+            }
+            requests.push(fetchItemInfo(item)
+                .then((info) => {
+                  if (! info || !info.url){
+                      return {
+                          nonexistent: true
+                      }
+                  }
+                },
+                (err) => {
+                    return {
+                        error: err
+                    };
+                })
+                .then((result)=>{
+                    const nv={
+                        nonexistent:undefined,
+                        error:undefined
+                    }
+                    Object.assign(nv,result);
+                    if (item.error !== nv.error || item.nonexistent !== nv.nonexistent) {
+                        return nv;
+                    }
+                })
+            );
+            Promise.all(requests)
+                .then((results)=>{
+                    const nlist=cloneDeep(list);
+                    let hasChanges=false;
+                    for (let i=0;i<results.length;i++){
+                        const nv=results[i];
+                        if (nv){
+                            hasChanges=true;
+                            Object.assign(nlist[i],nv);
+                        }
+                    }
+                    if (hasChanges){
+                        setList(nlist);
+                    }
+                })
+        })
+    },[isChanged])
     const updateItem = (item, newValues) => {
         let overlays = cloneDeep(list);
         let hasChanged = false;
@@ -583,7 +596,7 @@ const EditOverlaysDialog = (props) => {
         currentConfig.reset();
         setUseDefault(currentConfig.getUseDefault());
         setSelectedIndex(0);
-        setIsChanged(true);
+        setIsChanged(isChanged+1);
         updateList(displayListFromOverlays(currentConfig.getOverlayList()))
     }
     const editItem = (item) => {
@@ -600,7 +613,7 @@ const EditOverlaysDialog = (props) => {
 
     const enableDisableAll = (enabled) => {
         currentConfig.setAllEnabled(enabled);
-        setIsChanged(true);
+        setIsChanged(isChanged+1);
         updateList(displayListFromOverlays(currentConfig.getOverlayList()))
     }
     if (!props.current) {
@@ -632,7 +645,7 @@ const EditOverlaysDialog = (props) => {
                 label="use default"
                 onChange={(nv) => {
                     setUseDefault(nv);
-                    setIsChanged(true);
+                    setIsChanged(isChanged+1);
                 }}
                 value={useDefault || false}/>}
             <ItemList
@@ -772,9 +785,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
     }
     const requestItem=(chartItem && chartItem.name !== DEFAULT_OVERLAY_CONFIG)?chartItem:undefined;
     fetchOverlayConfig(requestItem,false)
-        .then((unexpanded) => {
-            return unexpanded.getExpandedConfig(true)
-            .then((overlayConfig) => {
+        .then((overlayConfig) => {
                 showDialog(undefined, (props) => {
                     return <EditOverlaysDialog
                         {...props}
@@ -819,7 +830,6 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
                         addEntry={opt_addEntry}
                     />
                 });
-            })
         })
         .catch((error) => {
             Toast("unable to get config: " + error);

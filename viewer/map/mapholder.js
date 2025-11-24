@@ -613,10 +613,9 @@ class MapHolder extends DrawingPositionConverter {
 
     setChartEntry(entry, opt_noRemote) {
         //set the new base chart
-        const baseClass = this.findChartSource('chart', entry.url);
+        const baseClass = this.findChartSourceForItem({...entry,type:'chart'});
         this._baseChart = new baseClass(this, {...entry, type: 'chart', enabled: true, baseChart: true})
         try {
-            const key=this._baseChart.getChartKey();
             const dp=this._baseChart.getName();
             LocalStorage.setItem(STORAGE_NAMES.LASTCHART, undefined, JSON.stringify({key:this._baseChart.getChartKey(),name:dp}));
         } catch (e) {
@@ -641,76 +640,31 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
-    prepareSourcesAndCreate(newSources) {
-        return new Promise((resolve, reject) => {
-            for (let k in this.sources) {
-                this.sources[k].destroy();
+    async prepareSourcesAndCreate(newSources) {
+        for (let k in this.sources) {
+            this.sources[k].destroy();
+        }
+        if (newSources) {
+            this.sources = newSources;
+        }
+        CryptHandler.resetHartbeats();
+        if (this.sources.length < 1) {
+            throw new Error("no sources");
+        }
+        //now trigger all prepares
+        const prepares = [];
+        for (let k in this.sources) {
+            prepares.push(this.sources[k].prepare());
+        }
+        const done = await Promise.all(prepares);
+        this.sources.forEach((source) => {
+            if (!source.isReady()) {
+                throw new Error(source.getName() + " not ready");
             }
-            if (newSources) {
-                this.sources = newSources;
-            }
-            CryptHandler.resetHartbeats();
-            if (this.sources.length < 1) {
-                reject("no sources");
-            }
-            let readyCount = 0;
-            //now trigger all prepares
-            for (let k in this.sources) {
-                this.sources[k].prepare()
-                    .then(() => {
-                        //check if all are ready now...
-                        readyCount++;
-                        let ready = true;
-                        for (let idx in this.sources) {
-                            if (!this.sources[idx].isReady()) {
-                                ready = false;
-                                break;
-                            }
-                        }
-                        if (ready) {
-                            this.updateOverlayConfig();
-                            this.initMap();
-                            resolve(1);
-                        } else {
-                            if (readyCount >= this.sources.length) {
-                                reject("internal error: not all sources are ready");
-                            }
-                        }
-                    })
-                    .catch((error) => {
-                        reject(error)
-                    });
-            }
-        });
-    }
-
-    /**
-     *
-     * @param type chart || overlay
-     *      type: chart:
-     *      type overlay:
-     * @param url (mandatory)
-     *
-     * @returns {ChartSourceBase}
-     */
-
-    findChartSource(type, url) {
-        if (type == 'chart') {
-            return AvNavChartSource;
-        }
-        if (!url) {
-            throw Error("missing url for overlay");
-        }
-        if (url.match(/\.gpx$/)) {
-            return GpxChartSource;
-        }
-        if (url.match(/\.kml$/)) {
-            return KmlChartSource;
-        }
-        if (url.match(/\.geojson$/)) {
-            return GeoJsonChartSource;
-        }
-        throw Error("unsupported overlay: " + url)
+        })
+        this.updateOverlayConfig();
+        this.initMap();
+        return true;
     }
     findChartSourceForItem(item){
         if (! item) item={};
@@ -796,7 +750,7 @@ class MapHolder extends DrawingPositionConverter {
                 checkChanges();
                 return;
             }
-            fetchOverlayConfig(chartSource.chartEntry,true)
+            fetchOverlayConfig(chartSource.chartEntry, true)
                 .then((overlayConfig) => {
                     if (!overlayConfig) {
                         this.overlayConfig = new OverlayConfig();
@@ -804,39 +758,39 @@ class MapHolder extends DrawingPositionConverter {
                         checkChanges();
                         return;
                     }
-                    return overlayConfig.getExpandedConfig(false)
-                        .then((expandedConfig) => {
-                            this.overlayConfig = expandedConfig;
-                            if (resetOverrides) {
-                                this.overlayOverrides = this.overlayConfig.copy();
-                            } else {
-                                let newOverrides = this.overlayConfig.copy();
-                                newOverrides.mergeOverrides(this.overlayOverrides);
-                                this.overlayOverrides = newOverrides;
-                            }
-                            let overlays = this.overlayConfig.getOverlayList();
-                            overlays.forEach((overlay) => {
-                                if (overlay.type === 'base') {
-                                    newSources.push(chartSource);
-                                    return;
-                                }
-                                if (overlay.error) {
-                                    return;
-                                }
-                                const overlaySourceClass = this.findChartSource(overlay.type, overlay.url);
-                                if (overlaySourceClass) newSources.push(new overlaySourceClass(this, overlay));
-                            });
-                            checkChanges();
-                        })
+                    this.overlayConfig = overlayConfig;
+                    if (resetOverrides) {
+                        this.overlayOverrides = this.overlayConfig.copy();
+                    } else {
+                        let newOverrides = this.overlayConfig.copy();
+                        newOverrides.mergeOverrides(this.overlayOverrides);
+                        this.overlayOverrides = newOverrides;
+                    }
+                    let overlays = this.overlayConfig.getOverlayList();
+                    overlays.forEach((overlay) => {
+                        if (overlay.type === 'base') {
+                            newSources.push(chartSource);
+                            return;
+                        }
+                        if (overlay.error) {
+                            return;
+                        }
+                        const overlaySourceClass = this.findChartSourceForItem(overlay);
+                        if (overlaySourceClass) newSources.push(new overlaySourceClass(this, overlay));
+                    });
+                    checkChanges();
                 })
-
-        });
-
+        })
     }
 
     getCurrentMergedOverlayConfig() {
         let rt = this.overlayConfig.copy();
         rt.mergeOverrides(this.overlayOverrides);
+        for (let source of this.sources) {
+            if (source.getError()) {
+                rt.removeItem(source.getConfig(), true);
+            }
+        }
         return rt;
     }
 

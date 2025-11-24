@@ -205,28 +205,26 @@ class GeoJsonChartSource extends ChartSourceBase{
         });
         return rt;
     }
-    prepareInternal() {
+
+    async prepareInternal() {
         let url = this.chartEntry.url;
-        return new Promise((resolve, reject)=> {
-            if (!url) {
-                reject("no url for "+this.chartEntry.name);
-                return;
-            }
-            this.source = new olVectorSource({
-                format: new olGeoJSON(),
-                url: url,
-                wrapX: false
-            });
-            let layerOptions={
-                source: this.source,
-                style: this.styleFunction,
-                opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
-            };
-            if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom=this.chartEntry.minZoom;
-            if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom=this.chartEntry.maxZoom;
-            let vectorLayer = new olVectorLayer(layerOptions);
-            resolve([vectorLayer]);
+        if (!url) {
+            throw new Error("no url for " + this.chartEntry.name);
+        }
+        this.source = new olVectorSource({
+            format: new olGeoJSON(),
+            url: url,
+            wrapX: false
         });
+        let layerOptions = {
+            source: this.source,
+            style: this.styleFunction,
+            opacity: this.chartEntry.opacity !== undefined ? parseFloat(this.chartEntry.opacity) : 1
+        };
+        if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom = this.chartEntry.minZoom;
+        if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom = this.chartEntry.maxZoom;
+        let vectorLayer = new olVectorLayer(layerOptions);
+        return [vectorLayer];
     }
     featureToInfo(feature,pixel){
         let rt=new OverlayFeatureInfo({

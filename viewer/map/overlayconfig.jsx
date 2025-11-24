@@ -550,23 +550,26 @@ export default class OverlayConfig{
      * remove an item from the config
      * item must have type and name
      * @param item
+     * @param opt_defaults if set - also remove entries from defaults
      */
-    removeItem(item){
+    removeItem(item,opt_defaults){
         if (! item || ! item.type || ! item.name) return false;
         if (! this.config || ! this.config.overlays) return false;
         let changed=false;
-        const newOverlays=[];
-        this.config.overlays.forEach((overlay)=>{
-            if (item.name !== overlay.name || item.type !== overlay.type) {
-                newOverlays.push(overlay);
+        const containers=opt_defaults?['overlays','defaults']:['overlays'];
+        for (let container of containers) {
+            const newOverlays=[];
+            (this.config[container]||[]).forEach((overlay) => {
+                if (item.name !== overlay.name || item.type !== overlay.type) {
+                    newOverlays.push(overlay);
+                } else {
+                    changed = true;
+                }
+            });
+            if (changed) {
+                this.config[container] = newOverlays;
+                this.hasChanges = true;
             }
-            else{
-                changed=true;
-            }
-        });
-        if (changed){
-            this.config.overlays=newOverlays;
-            this.hasChanges=true;
         }
         return changed;
     }

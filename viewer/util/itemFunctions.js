@@ -77,7 +77,7 @@ export const fetchItemInfo = async (item) => {
             command: 'info',
             name: item.name
         })
-        return res.data;
+        return res.item;
     } catch (e) {
     }
 }

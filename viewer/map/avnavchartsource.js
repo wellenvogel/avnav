@@ -41,6 +41,7 @@ import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
+import {fetchSequence} from "../util/itemFunctions";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -287,38 +288,27 @@ class AvnavChartSource extends ChartSourceBase{
         return true;
     }
 
-    prepareInternal() {
+    async prepareInternal() {
         let url = this.chartEntry.url;
-        let upZoom=0;
-        if (this.chartEntry.upzoom !== undefined && this.chartEntry.upzoom !== null && ! this.chartEntry.upzoom) {
-
-        }
-        else{
-            if (url.match(/^https*[:]/)){
-                upZoom=globalStore.getData(keys.properties.mapOnlineUpZoom);
-            }
-            else{
-                upZoom=globalStore.getData(keys.properties.mapUpZoom);
+        let upZoom = 0;
+        if (this.chartEntry.upzoom !== undefined && this.chartEntry.upzoom !== null && !this.chartEntry.upzoom) {
+        } else {
+            if (url.match(/^https*[:]/)) {
+                upZoom = globalStore.getData(keys.properties.mapOnlineUpZoom);
+            } else {
+                upZoom = globalStore.getData(keys.properties.mapUpZoom);
             }
         }
-        return new Promise((resolve, reject)=> {
-            if (!url) {
-                reject("no map url for "+(this.chartEntry.name));
-                return;
-            }
-            let xmlUrl = url + "/avnav.xml";
-            Requests.getHtmlOrText(xmlUrl, {
-                useNavUrl: false,
-                timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
-            })
-                .then((data)=> {
-                    let layers = this.parseLayerlist(data, url,upZoom);
-                    resolve(layers);
-                })
-                .catch((error)=> {
-                    reject("unable to load map: " + error);
-                })
-        });
+        if (!url) {
+            throw new Error("no map url for " + (this.chartEntry.name));
+        }
+        let xmlUrl = url + "/avnav.xml";
+        const data = await Requests.getHtmlOrText(xmlUrl, {
+            useNavUrl: false,
+            timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
+        })
+        let layers = this.parseLayerlist(data, url, upZoom);
+        return layers;
     }
 
 
@@ -521,32 +511,20 @@ class AvnavChartSource extends ChartSourceBase{
     }
 
 
-    checkSequence() {
-        let self=this;
+    async checkSequence() {
         //prevent from triggering a reload if we already have been destroyed
-        let destroySequence=this.destroySequence;
-        return new Promise((resolve,reject)=>{
-            if (! self.isReady() || destroySequence !== this.destroySequence) resolve(0);
-            let url = this.chartEntry.url + "/sequence?_="+(new Date()).getTime();
-            //set noCache to false to avoid pragma in header (CORS...)
-            Requests.getJson(url, {useNavUrl: false,noCache:false})
-                .then((data)=> {
-                    if (!data.sequence || this.destroySequence !== destroySequence) {
-                        resolve(0);
-                        return;
-                    }
-                    if (data.sequence !== self.chartEntry.sequence) {
-                        base.log("Sequence changed from "+self.chartEntry.sequence+" to "+data.sequence+" reload map");
-                        self.chartEntry.sequence=data.sequence;
-                        resolve(1);
-                        return;
-                    }
-                    resolve(0);
-                })
-                .catch((error)=> {
-                    reject(error);
-                });
-        });
+        let destroySequence = this.destroySequence;
+        if (!this.isReady() || destroySequence !== this.destroySequence) return false;
+        const newSequence = await fetchSequence(this.chartEntry);
+        if (this.destroySequence !== destroySequence) {
+            return false;
+        }
+        if (newSequence !== this.chartEntry.sequence) {
+            base.log("Sequence changed from " + this.chartEntry.sequence + " to " + newSequence + " reload map");
+            this.chartEntry.sequence = newSequence;
+            return true;
+        }
+        return false;
     }
 
     destroy() {
