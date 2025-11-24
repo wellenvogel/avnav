@@ -182,7 +182,6 @@ class ChartSourceBase {
 
     getChartKey() {
         let chartBase = this.chartEntry.name;
-        if (!chartBase) chartBase = this.chartEntry.url;
         return chartBase;
     }
 

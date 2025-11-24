@@ -894,7 +894,7 @@ const EditRoutePage = (props) => {
                     if (featureInfo.getType() !== FeatureInfo.TYPE.route || !featureInfo.isOverlay) return false;
                     if (!featureInfo.validPoint()) return false;
                     let routeName = featureInfo.urlOrKey;
-                    return routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName();
+                    return routeName  !== currentEditor.getRouteName();
                 }
                 additionalActions.push(new FeatureAction(
                     {

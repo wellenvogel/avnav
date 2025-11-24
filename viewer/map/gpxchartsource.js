@@ -382,15 +382,14 @@ class GpxChartSource extends ChartSourceBase{
         const ot=(this.chartEntry||{}).type;
         const oname=this.getName();
         const fname=feature.get('name');
-        const url=this.getUrl();
         if (ot==='track'){
-            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:oname});
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,name:this.getChartKey()});
         }
         else if (ot === 'route'){
             rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})
         }
         else{
-            rt=new OverlayFeatureInfo({title: oname,urlOrKey:url});
+            rt=new OverlayFeatureInfo({title: oname,name:this.getChartKey()});
         }
         rt.overlaySource=this;
         let geometry=feature.getGeometry();

@@ -231,7 +231,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, l
         }
         {featureList.map((feature) => {
             if (feature instanceof BaseFeatureInfo) return null;
-            return <DialogRow key={feature.urlOrKey||feature.title} className={'listEntry'} onClick={() => {
+            return <DialogRow key={feature.getKey()} className={'listEntry'} onClick={() => {
                 select(feature);
             }}>
                 <div className={'icons'}>
@@ -338,6 +338,16 @@ export const hideAction=new FeatureAction({
     condition: (featureInfo)=>featureInfo.isOverlay && featureInfo.overlaySource
     });
 
+const linkTitle=(featureInfo)=>{
+    if (featureInfo.userInfo){
+        let t=featureInfo.userInfo.title||
+            featureInfo.userInfo.linkText||
+            featureInfo.userInfo.desc||
+            featureInfo.userInfo.name;
+        if (t) return t;
+    }
+    return featureInfo.title||featureInfo.urlOrKey|featureInfo;
+}
 export const linkAction=(history)=>new FeatureAction({
     name:"info",
     label:'Info',
@@ -347,10 +357,10 @@ export const linkAction=(history)=>new FeatureAction({
         if (!userInfo.link && !userInfo.htmlInfo) return;
         let url = userInfo.link;
         if (userInfo.htmlInfo) {
-            history.push('viewpage', {html: userInfo.htmlInfo, name: userInfo.title || 'featureInfo'});
+            history.push('viewpage', {html: userInfo.htmlInfo, name: linkTitle(featureInfo)});
             return;
         }
-        history.push('viewpage', {url: url, name: userInfo.title, useIframe: true});
+        history.push('viewpage', {url: url, name: linkTitle(featureInfo), useIframe: true});
     }
 })
 

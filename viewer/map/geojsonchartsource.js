@@ -229,7 +229,7 @@ class GeoJsonChartSource extends ChartSourceBase{
     featureToInfo(feature,pixel){
         let rt=new OverlayFeatureInfo({
             title:this.getName(),
-            url: this.getUrl(),
+            name: this.getChartKey(),
             overlaySource: this
         });
         if (! feature) {

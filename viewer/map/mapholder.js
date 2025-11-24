@@ -1702,7 +1702,7 @@ class MapHolder extends DrawingPositionConverter {
         }
         let currentTrackPoint = this.tracklayer.findTarget(pixel);
         if (currentTrackPoint) {
-            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',urlOrKey:'current'}));
+            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',name:'current'}));
         }
         const detectedFeatures = [];
         this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
@@ -1733,7 +1733,7 @@ class MapHolder extends DrawingPositionConverter {
                 if (this.sources[i].isChart()) {
                     featureInfos.push(new ChartFeatureInfo({
                         title: this.sources[i].getName(),
-                        chartKey: this.sources[i].getChartKey(),
+                        name: this.sources[i].getChartKey(),
                         isOverlay: !this.sources[i].isBaseChart(),
                         point: clickPoint,
                         overlaySource: this.sources[i]
