@@ -177,15 +177,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 showsDialog=false;
                 sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
                 break;
-            case Constants.FILE_OPEN:
-                if (resultCode != RESULT_OK) {
-                    // Exit without doing anything else
-                    return;
-                } else {
-                    Uri returnUri = data.getData();
-                    if (jsInterface != null) jsInterface.saveFile(returnUri);
-                }
-                break;
             case Constants.FILE_OPEN_UPLOAD:
                 if (upload == null) return;
                 if (resultCode != RESULT_OK) {

@@ -134,34 +134,6 @@ const UploadHandler = (props) => {
     }, [props.uploadSequence,props.type,props.local]);
     const androidHandlers=useRef();
     androidHandlers.current= {
-
-        /**
-         * called from android when the file selection is ready
-         * @param eventData
-         */
-        fileCopyReady: (eventData) => {
-            if (!avnav.android) return;
-            let requestedId = androidSequence.current;
-            let {id} = eventData;
-            if (id !== requestedId) return;
-            let copyInfo = {
-                total: avnav.android.getFileSize(id),
-                loaded: 0,
-                loadedPercent: true
-            };
-            setStateHelper((old) => {
-                return {...old, ...copyInfo}
-            });
-            if (avnav.android.copyFile(id, null)) {
-                //we update the file size as with copyFile it is fetched again
-                setStateHelper((old) => {
-                    return {...old, total: avnav.android.getFileSize(id)}
-                });
-            } else {
-                error("unable to upload");
-                setStateHelper({});
-            }
-        },
         fileCopyPercent: (eventData) => {
             let {event, id} = eventData;
             if (event === "fileCopyPercent") {
@@ -208,7 +180,7 @@ const UploadHandler = (props) => {
                         if (avnav.android){
                             androidSequence.current = (new Date()).getTime();
                             const overwrite=(res.options||{}).overwrite;
-                            if (avnav.android.prepareFileUpload(res.type || props.type,res.name,!!overwrite,androidSequence.current)){
+                            if (avnav.android.startFileUpload(res.type || props.type,res.name,!!overwrite,androidSequence.current)){
                                 xhdrRef.current = {
                                     abort: () => {
                                         avnav.android.interruptCopy(androidSequence.current);
@@ -217,6 +189,14 @@ const UploadHandler = (props) => {
                                 androidCopyParam.current = {
                                     name: res.name
                                 }
+                                let copyInfo = {
+                                    total: avnav.android.getFileSize(androidSequence.current),
+                                    loaded: 0,
+                                    loadedPercent: true
+                                };
+                                setStateHelper((old) => {
+                                    return {...old, ...copyInfo}
+                                });
                             }
                             else{
                                 throw new Error("internal Error: upload not ready on Android")
