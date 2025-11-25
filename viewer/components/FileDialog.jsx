@@ -68,7 +68,8 @@ import {listItems} from "../util/itemFunctions";
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const getExtensionForView=(item)=>{
-    return item.extension||Helper.getExt(item.name);
+    if (item.extension) return item.extension.replace(/^\./,'');
+    return Helper.getExt(item.name);
 }
 
 const plainNameForCheck=(item)=>{

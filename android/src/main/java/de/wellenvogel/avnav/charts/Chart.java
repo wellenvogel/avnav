@@ -27,6 +27,8 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class Chart implements IChartWithConfig {
+    public static final String INDEX_INTERNAL = "1";
+    public static final String INDEX_EXTERNAL = "2";
     static final int TYPE_GEMF=1;
     static final int TYPE_MBTILES=2;
     static final int TYPE_XML=3;
@@ -45,6 +47,7 @@ public class Chart implements IChartWithConfig {
     private long lastModified;
     private long lastTouched;
     private int type;
+    private boolean isInternal=false;
 
     static String typeToStr(int type){
         switch (type){
@@ -65,6 +68,9 @@ public class Chart implements IChartWithConfig {
         this.lastModified=last;
         this.lastTouched=System.currentTimeMillis();
         this.type=type;
+        if (INDEX_INTERNAL.equals(index)){
+            isInternal=true;
+        }
     }
     public Chart(int type, Context context, DocumentFile f, String index, long last) throws Exception {
         this.context = context;
@@ -74,6 +80,9 @@ public class Chart implements IChartWithConfig {
         this.lastModified=last;
         this.lastTouched=System.currentTimeMillis();
         this.type=type;
+        if (INDEX_INTERNAL.equals(index)){
+            isInternal=true;
+        }
     }
 
     protected Chart(Context ctx) {
@@ -199,7 +208,8 @@ public class Chart implements IChartWithConfig {
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
         }
-        e.put("displayName", (realFile!=null)?realFile.getName():documentFile.getName());
+        String displayName=(realFile!=null)?realFile.getName():documentFile.getName();
+        e.put("displayName", isInternal?displayName:(displayName+" [ext]"));
         e.put("downloadName", (realFile!=null)?realFile.getName():documentFile.getName());
         e.put("time", getLastModified() / 1000);
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+keyPrefix+URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20"));
@@ -211,6 +221,9 @@ public class Chart implements IChartWithConfig {
         e.put("name",getChartKey());
         if (orignalScheme != null){
             e.put("originalScheme",orignalScheme);
+        }
+        if (isInternal){
+            e.put("checkPrefix",keyPrefix);
         }
         return e;
     }

@@ -614,12 +614,13 @@ public class RequestHandler {
                 String name=uri.getQueryParameter("name");
                 INavRequestHandler handler=getHandler(typeAndCommand.type);
                 if (handler != null){
+                    handled=true;
                     JSONObject item=handler.handleInfo(name,uri,serverInfo);
                     if (item == null) fout=getErrorReturn("item "+name+" not found");
                     else  fout=getReturn(new AvnUtil.KeyValue<JSONObject>("item",item));
                 }
             }
-            if ("list".equals(typeAndCommand.command)){
+            else if ("list".equals(typeAndCommand.command)){
                 String dirtype=typeAndCommand.type;
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){

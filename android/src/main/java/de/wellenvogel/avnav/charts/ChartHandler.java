@@ -56,7 +56,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         String chartKey;
         JSONObject chart;
         boolean allowColon;
-        public ExternalChart(String key,JSONObject chart,boolean allowColon) throws Exception {
+        String sourceName;
+        public ExternalChart(String key,String sourceName,JSONObject chart,boolean allowColon) throws Exception {
             this.key=key;
             this.chart=new JSONObject(chart.toString());
             chartKey=keyFromExternalChart();
@@ -68,7 +69,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 this.chart.put(Chart.CKEY, Constants.EXTERNALCHARTS + ":" + chartKey);
                 this.chart.remove(Chart.EXT_CKEY);
             }
+            this.chart.put("info",sourceName);
             this.allowColon=allowColon;
+            this.sourceName=sourceName;
         }
         private String keyFromExternalChart() throws Exception {
             String original=null;
@@ -120,8 +123,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     private static final String GEMFEXTENSION =".gemf";
     private static final String MBTILESEXTENSION =".mbtiles";
     private static final String XMLEXTENSION=".xml";
-    public static final String INDEX_INTERNAL = "1";
-    public static final String INDEX_EXTERNAL = "2";
     private static final String DEFAULT_CFG="default.cfg";
     private static final long MAX_CONFIG_SIZE=100000;
     private Context context;
@@ -213,11 +214,11 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             externalCharts.remove(key);
         }
     }
-    public void addExternalCharts(String key, JSONArray charts){
+    public void addExternalCharts(String key, JSONArray charts,String name){
         ArrayList<ExternalChart> extCharts=new ArrayList<>();
         for (int i=0;i<charts.length();i++){
             try{
-                ExternalChart echart=new ExternalChart(key,charts.getJSONObject(i),allowColon);
+                ExternalChart echart=new ExternalChart(key,name,charts.getJSONObject(i),allowColon);
                 extCharts.add(echart);
             } catch (Exception e) {
                 AvnLog.e("unable to add external chart ",e);
@@ -255,11 +256,11 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             AvnLog.e("unable to read overlays",n);
         }
         this.overlays=overlays; //atomic replace
-        readChartDir(chartDir.getAbsolutePath(), INDEX_INTERNAL,newGemfFiles);
+        readChartDir(chartDir.getAbsolutePath(), Chart.INDEX_INTERNAL,newGemfFiles);
         String secondChartDirStr=prefs.getString(Constants.CHARTDIR,"");
         if (! secondChartDirStr.isEmpty()){
             if (! secondChartDirStr.equals(workDir.getAbsolutePath())){
-                readChartDir(secondChartDirStr, INDEX_EXTERNAL,newGemfFiles);
+                readChartDir(secondChartDirStr, Chart.INDEX_EXTERNAL,newGemfFiles);
             }
         }
         if (handler.getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)) {
@@ -810,7 +811,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         }
         if (!parts[3].equals(Chart.STYPE_MBTILES) && ! parts[3].equals(Chart.STYPE_GEMF) && ! parts[3].equals(Chart.STYPE_XML))
             throw new Exception("invalid chart type "+parts[3]);
-        if (!parts[2].equals(INDEX_EXTERNAL) && ! parts[2].equals(INDEX_INTERNAL))
+        if (!parts[2].equals(Chart.INDEX_EXTERNAL) && ! parts[2].equals(Chart.INDEX_INTERNAL))
             throw new Exception("invalid chart index "+parts[2]);
         if (parts.length < 5) throw new Exception("invalid chart request " + url);
         //the name is url encoded in the key

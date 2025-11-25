@@ -126,7 +126,7 @@ public class PluginWorker extends Worker{
             status.unsetChildStatus(C_CHARTS);
             return;
         }
-        chartHandler.addExternalCharts(getKey(),charts);
+        chartHandler.addExternalCharts(getKey(),charts,"plugin: "+getPluginName());
         this.charts=charts;
         status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA,charts.length()+" registered");
     }

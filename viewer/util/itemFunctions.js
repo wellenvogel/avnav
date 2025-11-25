@@ -44,6 +44,9 @@ export const listItems = async (type) => {
             item.server = true;
         })
     }
+    if (items){
+        items.forEach(item => {item.type=type})
+    }
     return items;
 }
 export const fetchItem = async (item) => {
@@ -68,16 +71,19 @@ export const fetchItem = async (item) => {
 }
 export const fetchItemInfo = async (item) => {
     if (!item) return;
+    let rt;
     try {
         if (item.type === 'route') {
-            return await RouteHandler.getInfo(item.name);
+            rt= await RouteHandler.getInfo(item.name);
         }
         const res = await Requests.getJson({
             type: item.type,
             command: 'info',
             name: item.name
         })
-        return res.item;
+        rt=res.item;
+        if (rt) rt.type=item.type;
+        return rt;
     } catch (e) {
     }
 }

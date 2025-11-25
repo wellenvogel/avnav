@@ -83,6 +83,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         el.put("url",getUrlFromName(localFile.getName()));
         el.put("type",type);
         el.put("canDelete",true);
+        el.put("type",type);
         return el;
     }
     @Override

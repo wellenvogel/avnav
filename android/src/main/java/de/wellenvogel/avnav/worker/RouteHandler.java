@@ -398,8 +398,8 @@ public class RouteHandler extends DirectoryRequestHandler  {
                             Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
                             RouteInfo info = rt.getInfo(useRhumbLine);
                             if (!rt.name.equals(name)) {
-                                //TODO: make this more robust!
-                                throw new Exception("name in route " + rt.name + " does not match route file name");
+                                AvnLog.e("name in route " + rt.name + " does not match route file name "+name);
+                                rt.name=name;
                             }
                             info.mtime = f.lastModified();
                             info.size=f.length();
@@ -519,7 +519,6 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
 
     private void deleteRouteInfo(String name){
-        if (name.endsWith(".gpx")) name=name.substring(0,name.length()-4);
         synchronized (this){
             routeInfos.remove(name);
         }
@@ -531,6 +530,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        name+=SUFFIX;
         boolean rt=super.handleUpload(postData, name, ignoreExisting);
         if (rt) triggerParser();
         return rt;
@@ -538,7 +538,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        boolean rt=super.handleDelete(name, uri);
+        boolean rt=super.handleDelete(name+SUFFIX, uri);
         if (rt) deleteRouteInfo(name);
         return rt;
     }
