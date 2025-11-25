@@ -116,8 +116,17 @@ public class JavaScriptApi {
     private int getNextSocketId(){
         return WebSocket.getNextId();
     }
+
+    private Uri lastOpenedUri;
+
     public JavaScriptApi(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
+    }
+
+    public synchronized Uri setLastOpenedUri(Uri newUri){
+        Uri rt=lastOpenedUri;
+        lastOpenedUri=newUri;
+        return rt;
     }
 
     public void saveFile(Uri uri){
@@ -221,6 +230,26 @@ public class JavaScriptApi {
             Toast.makeText(mainActivity, res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
             return false;
         }
+        return true;
+    }
+    @JavascriptInterface
+    public boolean prepareFileUpload(String type,String name,boolean overwrite,long id){
+        if (detached) return false;
+        Uri lastOpened=setLastOpenedUri(null); //atomic get and reset
+        if (lastOpened == null){
+            return false;
+        }
+        UploadData data=uploadData;
+        if (data != null){
+            uploadData.interruptCopy(true);
+            uploadData=null;
+        }
+        INavRequestHandler handler=getRequestHandler().getHandler(type);
+        if (handler == null) return false;
+        data=new UploadData(mainActivity, handler,id,false);
+        data.setOverwrite(overwrite);
+        uploadData=data;
+        mainActivity.runOnUiThread(() -> uploadData.saveFile(lastOpened,name));
         return true;
     }
 

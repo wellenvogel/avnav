@@ -26,7 +26,6 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Button from "./Button";
 import Requests, {prepareUrl} from "../util/requests";
-import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
 import {useDialogContext} from "./OverlayDialog";
 import Helper from "../util/helper";
@@ -129,42 +128,12 @@ const UploadHandler = (props) => {
             xhdrRef.current.abort();
             xhdrRef.current = undefined;
         }
-        if (avnav.android) {
-            androidSequence.current = (new Date()).getTime();
-            androidCopyParam.current=undefined;
-            avnav.android.requestFile(props.type, androidSequence.current, props.local ? true : false);
-        }
         uploadSequenceRef.current=props.uploadSequence;
         setStateHelper({}); //trigger render
 
     }, [props.uploadSequence,props.type,props.local]);
     const androidHandlers=useRef();
     androidHandlers.current= {
-        /**
-         * called back from android if the file was completely read
-         * if we had set the "local" flag
-         * @param eventData
-         */
-        uploadAvailable: (eventData) => {
-            if (!avnav.android) return;
-            let {id} = eventData;
-            let requestedId = androidSequence.current;
-            if (id !== requestedId) return;
-            let filename = avnav.android.getFileName(id);
-            if (!filename) return;
-            let data = avnav.android.getFileData(id);
-            checkName({name:filename})
-                .then((res)=>{
-                    props.doneCallback({
-                        name: res.name,
-                        data: data,
-                        options: res.options
-                    })
-                })
-                .catch((err) => {
-                    if (err) Toast(err);
-                });
-        },
 
         /**
          * called from android when the file selection is ready
@@ -175,43 +144,23 @@ const UploadHandler = (props) => {
             let requestedId = androidSequence.current;
             let {id} = eventData;
             if (id !== requestedId) return;
-            let fileName = avnav.android.getFileName(id);
-            checkName({name:fileName})
-                .then((res) => {
-                    if (res) {
-                        xhdrRef.current = {
-                            abort: () => {
-                                avnav.android.interruptCopy(id);
-                            }
-                        };
-                        let copyInfo = {
-                            total: avnav.android.getFileSize(id),
-                            loaded: 0,
-                            loadedPercent: true
-                        };
-                        androidCopyParam.current = res || {};
-                        setStateHelper((old) => {
-                            return {...old, ...copyInfo}
-                        });
-                        if (avnav.android.copyFile(id, res.name)) {
-                            //we update the file size as with copyFile it is fetched again
-                            setStateHelper((old) => {
-                                return {...old, total: avnav.android.getFileSize(id)}
-                            });
-                        } else {
-                            error("unable to upload");
-                            setStateHelper({});
-                        }
-                    }
-                    else{
-                        setStateHelper({});
-                    }
-                })
-                .catch((err) => {
-                    avnav.android.interruptCopy(id)
-                    if (err) error(err);
+            let copyInfo = {
+                total: avnav.android.getFileSize(id),
+                loaded: 0,
+                loadedPercent: true
+            };
+            setStateHelper((old) => {
+                return {...old, ...copyInfo}
+            });
+            if (avnav.android.copyFile(id, null)) {
+                //we update the file size as with copyFile it is fetched again
+                setStateHelper((old) => {
+                    return {...old, total: avnav.android.getFileSize(id)}
                 });
-
+            } else {
+                error("unable to upload");
+                setStateHelper({});
+            }
         },
         fileCopyPercent: (eventData) => {
             let {event, id} = eventData;
@@ -251,11 +200,31 @@ const UploadHandler = (props) => {
     });
     const upload = useCallback((file) => {
         if (!file || !props.type) return;
+        xhdrRef.current=undefined;
         checkName(file)
             .then((res) => {
                 if (res) {
                     if (!props.local) {
-                        uploadServer(file, res.name, res.type || props.type, res.options, res)
+                        if (avnav.android){
+                            androidSequence.current = (new Date()).getTime();
+                            const overwrite=(res.options||{}).overwrite;
+                            if (avnav.android.prepareFileUpload(res.type || props.type,res.name,!!overwrite,androidSequence.current)){
+                                xhdrRef.current = {
+                                    abort: () => {
+                                        avnav.android.interruptCopy(androidSequence.current);
+                                    }
+                                };
+                                androidCopyParam.current = {
+                                    name: res.name
+                                }
+                            }
+                            else{
+                                throw new Error("internal Error: upload not ready on Android")
+                            }
+                        }
+                        else {
+                            uploadServer(file, res.name, res.type || props.type, res.options, res)
+                        }
                     } else {
                         readTextFile(file)
                             .then((data) => {
@@ -298,7 +267,7 @@ const UploadHandler = (props) => {
     };
     return (
         <React.Fragment>
-            {!avnav.android && <form className="hiddenUpload" method="post">
+            <form className="hiddenUpload" method="post">
                 <input type="file"
                        ref={(el) => {
                            if (!el) return;
@@ -310,7 +279,7 @@ const UploadHandler = (props) => {
                        name="file"
                        key={uploadSequenceRef.current}
                        onChange={(ev) => fileChange(ev,props.fixedPrefix)}/>
-            </form>}
+            </form>
             {loaded !== undefined && <div className="downloadProgress">
                 <div className="progressContainer">
                     <div className="progressInfo">{(loaded || 0) + "/" + (stateHelper.total || 0)}</div>

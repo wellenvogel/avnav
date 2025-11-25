@@ -131,7 +131,7 @@ class UploadAction{
             }
             return false;
         }
-        let rs={};
+        let rs={name:file.name};
         this.userData={};
         if (this.preCheck){
             if (checkRes(await Helper.awaitHelper(this.preCheck(this.userData,file.name,file,dialogContext)),rs)) return rs;
@@ -1603,7 +1603,7 @@ const infoRowDisplay=(row,data)=>{
     return <InfoItem label={row.label} value={v}/>
 }
 export const FileDialog = (props) => {
-    const allowed=createItemActions(props.current);
+    const allowed=createItemActions(props.current.type);
     const [extendedInfo, setExtendedInfo] = useState({});
     useEffect(() => {
         allowed.buildExtendedInfo(props.current)
@@ -1611,7 +1611,7 @@ export const FileDialog = (props) => {
                 (info)=>setExtendedInfo(info),
                 ()=>{}
             );
-    }, [allowed]);
+    }, [props.current.type]);
 
     let extendedInfoRows = allowed.getExtendedInfoRows(props.current);
     const dialogButtons=allowed.getActionButtons(props.current);

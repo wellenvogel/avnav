@@ -191,11 +191,13 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 if (resultCode != RESULT_OK) {
                     upload.onReceiveValue(null);
                     upload=null;
+                    if (jsInterface != null) jsInterface.setLastOpenedUri(null);
                     return;
                 } else {
                     Uri returnUri = data.getData();
                     upload.onReceiveValue(new Uri[]{returnUri});
                     upload=null;
+                    if (jsInterface != null) jsInterface.setLastOpenedUri(returnUri);
                 }
                 break;
             case Constants.FILE_OPEN_DOWNLOAD:
@@ -618,7 +620,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Nullable
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && (! "POST".equals(request.getMethod()))) {
                     WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
                     if (rt != null) return rt;
                 }

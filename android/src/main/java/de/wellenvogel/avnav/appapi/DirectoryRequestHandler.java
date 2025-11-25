@@ -49,16 +49,6 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     }
 
 
-    protected void setWorkDir(File workDir) throws IOException {
-        this.workDir=workDir;
-        if (! workDir.exists()){
-            workDir.mkdirs();
-        }
-        if (!workDir.exists() || ! workDir.isDirectory()){
-            throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
-        }
-    }
-
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         File found=findLocalFile(name);
@@ -85,7 +75,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
                URLEncoder.encode(name,"utf-8");
     }
 
-    private JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
+    protected JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
         JSONObject el=new JSONObject();
         el.put("name",localFile.getName());
         el.put("size",localFile.length());

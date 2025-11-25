@@ -31,6 +31,7 @@ public class UploadData{
     Thread copyThread;
     boolean noResults=false;
     long size;
+    private boolean overwrite=false;
     public UploadData(MainActivity mainActivity, INavRequestHandler targetHandler, long id, boolean doRead){
         this.id=id;
         this.doRead=doRead;
@@ -38,13 +39,19 @@ public class UploadData{
         this.targetHandler=targetHandler;
     }
 
+    public void setOverwrite(boolean v){
+        overwrite=v;
+    }
+
     public boolean isReady(long id){
         if (id != this.id) return false;
         if (name == null || (fileData == null && doRead)) return false;
         return true;
     }
-
-    public void saveFile(Uri uri) {
+    public void saveFile(Uri uri){
+        saveFile(uri,null);
+    }
+    public void saveFile(Uri uri,String targetName) {
         if (noResults ) return;
         try {
             AvnLog.i("importing file: " + uri);
@@ -72,7 +79,12 @@ public class UploadData{
             else{
                 pfd.close();
             }
-            name = df.getName();
+            if (targetName != null){
+                name=targetName;
+            }
+            else {
+                name = df.getName();
+            }
             mainActivity.sendEventToJs(doRead?
                             Constants.JS_UPLOAD_AVAILABLE:
                             Constants.JS_FILE_COPY_READY
@@ -87,8 +99,8 @@ public class UploadData{
 
     public boolean copyFile(String newName) {
         if (doRead) return false;
-        if (name == null || fileUri == null || targetHandler==null) return false;
         if (newName != null) name=newName;
+        if (name == null || fileUri == null || targetHandler==null) return false;
         try {
             final DocumentFile df = DocumentFile.fromSingleUri(mainActivity, fileUri);
             final ParcelFileDescriptor pfd = mainActivity.getContentResolver().openFileDescriptor(fileUri, "r");
@@ -126,7 +138,7 @@ public class UploadData{
                                 return numRead;
                             }
                         };
-                        targetHandler.handleUpload(new PostVars(is,size),name,false);
+                        targetHandler.handleUpload(new PostVars(is,size),name,overwrite);
                         if (! noResults) mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

@@ -71,6 +71,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
     public static class RouteInfo implements AvnUtil.IJsonObect {
         public String name;
         long mtime;
+        long size;
         public int numpoints;
         public double length; //in NM
         public boolean canDelete=true;
@@ -86,11 +87,13 @@ public class RouteHandler extends DirectoryRequestHandler  {
         @Override
         public JSONObject toJson() throws JSONException{
             JSONObject e=new JSONObject();
-            e.put("name",name+".gpx");
+            e.put("name",name);
             e.put("time",mtime/1000);
+            e.put("size",size);
             e.put("numpoints",numpoints);
             e.put("length",length);
             e.put("canDelete",canDelete);
+            e.put("extension",SUFFIX);
             return e;
         }
 
@@ -349,6 +352,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         }
     }
 
+    final static String SUFFIX=".gpx";
 
     @Override
     public void run(int startSequence) {
@@ -374,9 +378,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
             if (routedir.isDirectory()) {
                 for (File f : routedir.listFiles()) {
                     if (!f.isFile()) continue;
-                    if (!f.getName().endsWith(".gpx")) continue;
+                    if (!f.getName().endsWith(SUFFIX)) continue;
                     boolean mustParse = false;
-                    String name = f.getName().replaceAll("\\.gpx$", "");
+                    String name = f.getName();
+                    name=name.substring(0,name.length()-SUFFIX.length());
                     if (routeInfos.containsKey(name)) {
                         RouteInfo old = routeInfos.get(name);
                         long currmtime = f.lastModified();
@@ -397,6 +402,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                                 throw new Exception("name in route " + rt.name + " does not match route file name");
                             }
                             info.mtime = f.lastModified();
+                            info.size=f.length();
                             localList.put(name, info);
                             mustUpdate = true;
                             AvnLog.ifs("parsed route: %s" ,info);
