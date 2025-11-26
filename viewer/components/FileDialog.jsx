@@ -1489,7 +1489,7 @@ const AddRemoveOverlayDialog = (props) => {
         listItems('chart')
             .then((data) => {
                 setChartList(
-                    chartList.concat(data.items)
+                    chartList.concat(data)
                 )
             })
             .catch((error) => Toast("unable to read chart list: " + error));
