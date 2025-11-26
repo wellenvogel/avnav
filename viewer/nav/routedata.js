@@ -694,6 +694,7 @@ RouteData.prototype.fetchRoutePromise=async function(name,localOnly,opt_returnra
  * @param localOnly - force local only access even if we are connected
  * @param okcallback
  * @param opt_errorcallback
+ * @param opt_returnraw
  */
 RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback,opt_returnraw){
     let route;
@@ -712,14 +713,16 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
     }
     if (! localOnly){
         this._downloadRoute(name,(route)=>{
-            route.server=true;
-            this._saveRouteLocal(route,true);
+            if (route instanceof routeobjects.Route) {
+                route.server = true;
+                this._saveRouteLocal(route, true);
+            }
             if (okcallback){
                 okcallback(route);
             }
         },(error)=>{
             loadLocal("unable to fetch from server and locally");
-        });
+        },opt_returnraw);
     }
     else{
         loadLocal("unable to fetch locally");
@@ -1059,14 +1062,14 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef,opt_returnraw){
             //fallback to load the old default route
             raw=LocalStorage.getItem(this.FALLBACKROUTENAME);
         }
-        if (opt_returnraw){
-            return raw;
-        }
         if (raw) {
             base.log("route "+name+" successfully loaded");
             rt.fromJsonString(raw);
             if (this.readOnlyServer) rt.server=false;
             return rt;
+        }
+        if (opt_returnraw){
+            return rt.toXml();
         }
         if (opt_returnUndef){
             return undefined;
