@@ -21,8 +21,7 @@
 */
 
 import navobjects from "../nav/navobjects";
-import point from "ol/geom/Point";
-import {server} from "typescript";
+
 
 
 export class FeatureAction{

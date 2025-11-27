@@ -508,7 +508,10 @@ class  RouteData {
                         assign(ri, data.items[i]);
                         ri.server = true;
                         if (ri.canDelete !== false) ri.canDelete = canDelete;
-                        if (editingRoute.isHandling(ri)) ri.canDelete = false;
+                        if (editingRoute.isHandling(ri)) {
+                            ri.canDelete = false;
+                            ri.isEditing = true;
+                        }
                         if (this.isActiveRoute(ri)) ri.active = true;
                         list.push(ri);
                     }
@@ -550,7 +553,10 @@ class  RouteData {
             rtinfo.time = route.time;
             if (rtinfo.name.endsWith('.gpx')) { rtinfo.name=rtinfo.name.substring(0,rtinfo.name.length-4); }
             if (this.isActiveRoute(rtinfo)) rtinfo.active = true;
-            if (editingRoute.isHandling(rtinfo)) rtinfo.canDelete = false;
+            if (editingRoute.isHandling(rtinfo)) {
+                rtinfo.canDelete = false;
+                rtinfo.isEditing = true;
+            }
             return rtinfo;
         } catch (e) {
         }

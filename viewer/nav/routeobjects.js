@@ -810,7 +810,12 @@ export class RouteInfo {
         this.extension='.gpx'
         this.downloadName=this.name+this.extension;
         this.canDownload=true;
-        this.checkPrefix=undefined;
+        this.canDelete=true;
+        this.isEditing=false;
+    }
+    isSameRoute(other){
+        if (! other) return false;
+        return other.name === this.name && other.server === this.server;
     }
 }
 routeobjects.RouteInfo=RouteInfo;
@@ -833,6 +838,10 @@ export class RoutePoint extends navobjects.WayPoint {
 }
 routeobjects.RoutePoint=RoutePoint;
 
-
+routeobjects.isSameRoute=(route,other)=>{
+    if (!!route !== !!other) return false;
+    if (!route) return false;
+    return (route.name === other.name && route.server === other.server);
+}
 
 export default routeobjects;

@@ -28,7 +28,11 @@ import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
-import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY, KNOWN_OVERLAY_EXTENSIONS} from "./EditOverlaysDialog";
+import EditOverlaysDialog, {
+    DEFAULT_OVERLAY_CHARTENTRY as item,
+    DEFAULT_OVERLAY_CHARTENTRY,
+    KNOWN_OVERLAY_EXTENSIONS
+} from "./EditOverlaysDialog";
 import {
     DBCancel,
     DBOk,
@@ -903,6 +907,24 @@ class RouteItemActions extends ItemActions{
         this.fixedExtension='gpx';
     }
 
+    getInfoRows(item) {
+        return super.getInfoRows(item).concat([
+            {label:'Server',value:'server',formatter:(v)=> {
+                    if (v === undefined) return undefined;
+                    return v+'';
+                }},
+            {label:'Active',value:'active',formatter:(v)=> {
+                if (v === undefined) return undefined;
+                return v+'';
+                }},
+            {label:'Editing',value:'isEditing',formatter:(v)=> {
+                    if (v === undefined) return undefined;
+                    return v+'';
+                }}
+
+        ]);
+    }
+
     showUpload() {
         return super.showUpload();
     }
@@ -969,7 +991,7 @@ class RouteItemActions extends ItemActions{
             }
         }))
         actions.push(standardActions.edit.copy({
-            visible:canModify && mapholder.getCurrentChartEntry() !== undefined,
+            visible:(canModify || item.active) && mapholder.getCurrentChartEntry() !== undefined,
             action: async (action,item, dialogContext,history) => {
                 const route = await RouteHandler.fetchRoute(item.name, !item.server);
                 let editor = new RouteEdit(RouteEdit.MODES.EDIT);

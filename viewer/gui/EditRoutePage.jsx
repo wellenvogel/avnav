@@ -225,7 +225,7 @@ EditPointsDialog.propTypes={
 const isRouteInList=(routeList,route)=>{
     if (! routeList || ! route) return false;
     for (let rt of routeList) {
-        if (rt.isSameRoute(route)){return true;}
+        if (routeobjects.isSameRoute(rt,route)){return true;}
     }
     return false;
 }
@@ -244,7 +244,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
                 routeList.forEach((aroute)=>{
                    let name = aroute.name;
                     //mark the route we had been editing on the page before
-                    let selected = selectedRoute && aroute.isSameRoute(selectedRoute);
+                    let selected = selectedRoute && routeobjects.isSameRoute(aroute,selectedRoute);
                     //check with and without gpx extension
                     const hidden=isRouteInList(blacklist,aroute);
                     finalList.push({
