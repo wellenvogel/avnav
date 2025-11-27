@@ -188,7 +188,9 @@ const TrackPointFields=[
         convert: (v) => parseFloat(v)
     }
 ]
-export const getTrackInfo = (trackName,opt_point) => {
+export const getTrackInfo = (trackItem,opt_point) => {
+    if (! trackItem || ! trackItem.name) return Promise.reject("no track name");
+    const trackName=trackItem.name;
     if (trackName === 'current'){
         let trackPoints=globalstore.getData(keys.nav.track.currentTrack,[]);
         return getInfoForList(trackPoints,opt_point);

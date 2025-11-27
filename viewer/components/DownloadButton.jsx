@@ -42,12 +42,15 @@ const toBase64=(val)=>{
 const DownloadButton=(props)=>{
     const hiddenA=useRef();
     const downloadFrame=useRef();
-    const saveLocal=(fileName)=>{
+    const saveLocal=async (fileName)=>{
         if (! hiddenA.current) return;
         if (!props.localData) return false;
         let data=props.localData;
         if (typeof data === 'function'){
             data=data();
+        }
+        if (data instanceof Promise){
+            data=await data;
         }
         let dataUrl="data:application/octet-stream;base64,"+toBase64(data);
         if (window.avnav.android && window.avnav.android.dataDownload){
@@ -91,7 +94,9 @@ const DownloadButton=(props)=>{
                     onClick={(ev) => {
                         ev.stopPropagation();
                         if (localData) {
-                            saveLocal(fileName);
+                            saveLocal(fileName).then(()=>{},(err)=>{
+                                Toast(err);
+                            });
                         }
                         else {
                             if (downloadFrame.current) {

@@ -21,6 +21,8 @@
 */
 
 import navobjects from "../nav/navobjects";
+import point from "ol/geom/Point";
+import {server} from "typescript";
 
 
 export class FeatureAction{
@@ -132,6 +134,20 @@ export class FeatureInfo{
     getKey(){
         return this.typeString()+this.urlOrKey;
     }
+
+    /**
+     * get an item info for download items
+     * @return undefined if no download item
+     */
+    getItemInfo(){
+        const type=this.getItemType();
+        if (type){
+            return {
+                type:type,
+                name: this.urlOrKey,
+            }
+        }
+    }
 }
 
 export class BaseFeatureInfo extends FeatureInfo{
@@ -155,12 +171,20 @@ export class OverlayFeatureInfo extends FeatureInfo{
 }
 
 export class RouteFeatureInfo extends FeatureInfo{
-    constructor({point,isOverlay,routeName,title}) {
+    constructor({point,isOverlay,routeName,title,server}) {
         super({point,isOverlay,name:routeName||point.routeName});
         this.title=title||`Route: ${this.urlOrKey}`
+        this.server=server||point.server;
     }
     getType(){
         return FeatureInfo.TYPE.route;
+    }
+
+    getItemInfo() {
+        const rt=super.getItemInfo();
+        if (! rt) return;
+        rt.server=this.server;
+        return rt;
     }
 }
 export class AisFeatureInfo extends FeatureInfo{

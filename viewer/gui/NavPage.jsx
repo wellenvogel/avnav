@@ -55,7 +55,6 @@ import {ConfirmDialog} from "../components/BasicDialogs";
 import navdata from "../nav/navdata.js";
 import base from "../base";
 import {checkName, ItemNameDialog, nameProposal} from "../components/ItemNameDialog";
-import {createItemActions, ItemActions} from "../components/FileDialog";
 import {showErrorList} from "../components/ErrorListDialog";
 import {useHistory} from "../components/HistoryProvider";
 
@@ -637,8 +636,8 @@ const NavPage=(props)=>{
                 onClick: (featureInfo) => {
                     let nextTarget = featureInfo.point;
                     if (!nextTarget) return;
-                    RouteHandler.fetchRoute(featureInfo.urlOrKey, false,
-                        (route) => {
+                    RouteHandler.fetchRoute(featureInfo.urlOrKey, false)
+                        .then((route) => {
                             let idx = route.findBestMatchingIdx(nextTarget);
                             editorRoute.setNewRoute(route, idx >= 0 ? idx : undefined);
                             history.push("editroutepage",{center:true});

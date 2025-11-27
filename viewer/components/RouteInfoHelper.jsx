@@ -45,9 +45,9 @@ export const INFO_ROWS=[
         }},
     {label:'next point',value:'nextTarget',formatter:(v)=>v.name}
     ];
-export const getRouteInfo = async (routeName, opt_point) => {
-    if (!routeName) throw new Error("missing route name");
-    const route = await RouteHandler.fetchRoutePromise(routeName, false);
+export const getRouteInfo = async (routeItem, opt_point) => {
+    if (!routeItem || ! routeItem.name) throw new Error("missing route name");
+    const route = await RouteHandler.fetchRoute(routeItem.name, !routeItem.server);
     let info = RouteHandler.getInfoFromRoute(route);
     let rt = {
         length: info.length,

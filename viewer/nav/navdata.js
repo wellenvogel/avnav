@@ -16,7 +16,7 @@ import Average, {CourseAverage} from "../util/average.mjs";
 import navcompute from "./navcompute";
 import AisData from './aisdata';
 
-const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
 class Callback{
     constructor(callback){

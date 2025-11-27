@@ -908,7 +908,7 @@ class RouteItemActions extends ItemActions{
     }
 
     async buildExtendedInfo(item) {
-        return getRouteInfo(item.name);
+        return getRouteInfo(item);
     }
 
     getExtendedInfoRows(item) {
@@ -918,7 +918,7 @@ class RouteItemActions extends ItemActions{
     canModify(item) {
         return !item.active && item.canDelete !== false &&
             (!item.server || this.isConnected()) &&
-            ! RouteHandler.isActiveRoute(item.name)
+            ! RouteHandler.isActiveRoute(item)
     }
 
     canView(item) {
@@ -935,10 +935,10 @@ class RouteItemActions extends ItemActions{
             visible: canModify,
             action: async (action,item, dialogContext) => {
                 if (!await deleteItemQuery(item, dialogContext)) return;
-                if (RouteHandler.isActiveRoute(item.name)) {
+                if (RouteHandler.isActiveRoute(item)) {
                     throw new Error("unable to delete active route")
                 }
-                await RouteHandler.deleteRoutePromise(item.name,
+                await RouteHandler.deleteRoute(item.name,
                     !item.server //if we think this is a local route - just delete it local only
                 );
                 await removeItemsFromOverlays(item);
@@ -947,23 +947,17 @@ class RouteItemActions extends ItemActions{
         }));
         actions.push(standardActions.rename.copy({
             visible:canModify,
-            action: async (action,item, dialogContext) => {
-                const newName=await renameDialog({
-                    item,
-                    dialogContext,
-                    keepExtension:false});
-                if (!newName)return;
-                if (RouteHandler.isActiveRoute(item.name)) {
+            execute: async (item,newName) => {
+                if (RouteHandler.isActiveRoute(item)) {
                     throw new Error("unable to rename active route")
                 }
-                const rs= await RouteHandler.renameRoute(item.name,newName);
-                await renameItemInOverlays(undefined,item,newName);
+                const rs= await RouteHandler.renameRoute(item,newName);
                 return rs;
             }
         }))
         actions.push(standardActions.view.copy({
             action: async (action,item, dialogContext,history) => {
-                const route = await RouteHandler.fetchRoutePromise(item.name, !item.server)
+                const route = await RouteHandler.fetchRoute(item.name, !item.server)
                 history.push('viewpage', {
                     type: item.type,
                     name: item.name,
@@ -977,7 +971,7 @@ class RouteItemActions extends ItemActions{
         actions.push(standardActions.edit.copy({
             visible:canModify && mapholder.getCurrentChartEntry() !== undefined,
             action: async (action,item, dialogContext,history) => {
-                const route = await RouteHandler.fetchRoutePromise(item.name, !item.server);
+                const route = await RouteHandler.fetchRoute(item.name, !item.server);
                 let editor = new RouteEdit(RouteEdit.MODES.EDIT);
                 editor.setNewRoute(route, 0);
                 history.push('editroutepage', {center: true});
@@ -986,7 +980,7 @@ class RouteItemActions extends ItemActions{
         }))
         actions.push(standardActions.download.copy({
             localData: item.server?undefined:
-                ()=>RouteHandler.getLocalRouteXml(item.name),
+                ()=>RouteHandler.fetchRoute(item.name,true,true),
             downloadName: this.nameForDownload(item)
         }))
         actions.push(standardActions.overlays.copy({
@@ -1031,7 +1025,7 @@ class TrackItemActions extends ItemActions{
     }
 
     async buildExtendedInfo(item) {
-        return getTrackInfo(item.name)
+        return getTrackInfo(item)
     }
 
     getExtendedInfoRows(item) {

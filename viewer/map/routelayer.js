@@ -8,17 +8,8 @@ import RouteEdit from '../nav/routeeditor.js';
 import orangeMarker from '../images/MarkerOrange.png';
 import NavCompute from "../nav/navcompute";
 
-const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
-const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT);
-
-class Callback{
-    constructor(callback){
-        this.callback=callback;
-    }
-    dataChanged(keys){
-        this.callback(keys);
-    }
-}
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
+const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT,true);
 class RouteDisplay{
     constructor(mapholder) {
         this.mapholder=mapholder;
@@ -240,7 +231,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.wpPixel=[];
     if (!this.visible) return;
     let currentEditor=this._displayEditing?editingRoute:activeRoute;
-    let showingActive= ! this._displayEditing || currentEditor.getRouteName() === activeRoute.getRouteName();
+    let showingActive= ! this._displayEditing || currentEditor.isActiveRoute();
     let gpsPosition=globalStore.getData(keys.nav.gps.position);
     let gpsValid=globalStore.getData(keys.nav.gps.valid);
     let toPoint=showingActive?activeRoute.getCurrentTarget():undefined;

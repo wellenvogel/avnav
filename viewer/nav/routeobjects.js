@@ -133,6 +133,7 @@ export class Leg {
             this.currentRoute.fromJson(raw.currentRoute);
         }
         if (this.currentRoute) {
+            this.currentRoute.setServer(this.server);
             this.to.routeName = this.currentRoute.name;
             if (raw.currentTarget !== undefined) {
                 let rp = this.currentRoute.getPointAtIndex(raw.currentTarget);
@@ -211,7 +212,10 @@ export class Leg {
     isRouting() {
         return this.active && !this.anchorDistance;
     }
-
+    getRoute(){
+        if (! this.isRouting()) return;
+        return this.currentRoute;
+    }
     hasRoute() {
         if (!this.isRouting()) return false;
         return this.currentRoute !== undefined;
@@ -253,6 +257,12 @@ export class Leg {
 
     isApproaching() {
         return this.active && this.approach;
+    }
+    setServer(server) {
+        this.server = server;
+        if (this.currentRoute) {
+            this.currentRoute.setServer(server);
+        }
     }
 }
 
@@ -335,6 +345,7 @@ export class Route {
                     wp.name = this.findFreeName();
                 }
                 wp.routeName = this.name.slice(0);
+                wp.server=this.server;
                 this.points.push(wp);
             }
         }
@@ -618,6 +629,7 @@ export class Route {
             rp.name = this.findFreeName();
         }
         rp.routeName = this.name.slice(0);
+        rp.server=this.server;
         let rt = opt_before ? idx : idx + 1;
         if (rt < 0 || rt >= this.points.length) {
             this.points.push(rp);
@@ -633,6 +645,16 @@ export class Route {
         this.points.forEach(function (p) {
             p.routeName = name.slice(0)
         })
+    }
+    setServer(server) {
+        this.server = server;
+        this.points.forEach(function (p) {
+            p.server=server;
+        })
+    }
+    isSameRoute(other){
+        if (! other) return false;
+        return other.name === this.name && other.server === this.server;
     }
 
     /**
@@ -788,6 +810,7 @@ export class RouteInfo {
         this.extension='.gpx'
         this.downloadName=this.name+this.extension;
         this.canDownload=true;
+        this.checkPrefix=undefined;
     }
 }
 routeobjects.RouteInfo=RouteInfo;
@@ -799,6 +822,7 @@ export class RoutePoint extends navobjects.WayPoint {
         this.idx = 0;
         this.course = undefined;
         this.distance = undefined;
+        this.server=undefined;
         if (waypoint) {
             this.idx = waypoint.idx || 0;
             this.course = waypoint.course;

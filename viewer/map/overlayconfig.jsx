@@ -109,6 +109,11 @@ export const overlayExpandsValue=(opt_value)=>{
     for (let k in rt) rt[k]=opt_value;
     return rt;
 }
+const identical=(item1,item2)=>{
+    if (! item1 && item2) return false;
+    if (! item2 && item1) return false;
+    return (item1.type === item2.type && item1.name === item2.name && item1.server === item2.server);
+}
 export default class OverlayConfig{
     constructor(overlayConfig,opt_mutable,opt_defaults) {
         this.config=overlayConfig||{};
@@ -468,7 +473,7 @@ export default class OverlayConfig{
         for (let container of containers) {
             const newOverlays=[];
             (this.config[container]||[]).forEach((overlay) => {
-                if (item.name !== overlay.name || item.type !== overlay.type) {
+                if (! identical(item,overlay)) {
                     newOverlays.push(overlay);
                 } else {
                     changed = true;
@@ -487,7 +492,7 @@ export default class OverlayConfig{
         if (! this.config || ! this.config.overlays) return false;
         let changed=0;
         this.config.overlays.forEach((overlay)=>{
-            if (item.name !== overlay.name || item.type !== overlay.type) {
+            if (!identical(item,overlay)) {
                 return;
             }
             changed++;

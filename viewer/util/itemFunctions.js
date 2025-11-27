@@ -55,7 +55,7 @@ export const fetchItem = async (item) => {
     let data;
     const type = item.type;
     if (type === 'route') {
-        data = await RouteHandler.fetchRoutePromise(item.name, false, true);
+        data = await RouteHandler.fetchRoute(item.name, false, true);
     } else if (type === 'layout') {
         data = await layoutLoader.loadLayout(item.name);
         //the layout is loaded as json...

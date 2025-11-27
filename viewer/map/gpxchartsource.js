@@ -386,7 +386,7 @@ class GpxChartSource extends ChartSourceBase{
             rt=new TrackFeatureInfo({title:oname,isOverlay:true,name:this.getChartKey()});
         }
         else if (ot === 'route'){
-            rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})
+            rt=new RouteFeatureInfo({isOverlay:true,routeName:this.getChartKey(),server:this.chartEntry.server,title:oname})
         }
         else{
             rt=new OverlayFeatureInfo({title: oname,name:this.getChartKey()});

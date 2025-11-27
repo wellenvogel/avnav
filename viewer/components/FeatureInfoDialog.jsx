@@ -261,8 +261,9 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
         if (! featureInfo) return;
         let infoFunction = INFO_FUNCTIONS[featureInfo.getType()]
         let infoCoordinates = featureInfo.point;
-        if (infoFunction && infoCoordinates) {
-            infoFunction(featureInfo.urlOrKey,
+        let itemInfo=featureInfo.getItemInfo();
+        if (infoFunction && infoCoordinates && itemInfo) {
+            infoFunction(itemInfo,
                 infoCoordinates
             )
                 .then((info) => {

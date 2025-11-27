@@ -51,7 +51,17 @@ const load=(storeKeys,clone)=>{
     };
     return rt;
 };
-
+//helper for storeing the active route name together with the server info
+const SERVER_PREFIX="server:"
+const LOCAL_PREFIX="local:"
+const buildActiveName=(route)=>{
+    if (!route) return;
+    return route.server?SERVER_PREFIX+route.name:LOCAL_PREFIX+route.name;
+}
+const isActive=(route,activeName)=>{
+    if (!route || ! activeName) return false;
+    return ((route.server?SERVER_PREFIX:LOCAL_PREFIX+route.name) === activeName);
+}
 const write=(storeKeys,data,opt_omitCallbacks)=>{
     let writeKeys=assign({},storeKeys);
     delete writeKeys.useRhumbLine;
@@ -71,7 +81,7 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
         }
     }
     if (storeKeys.activeName && data.leg){
-        let newName=data.leg.getRouteName();
+        let newName=buildActiveName(data.leg.getRoute());
         if (newName != data.activeName){
             data.activeName=newName;
         }
@@ -386,11 +396,15 @@ class RouteEdit{
         if (!data.route) return [];
         return data.route.getRoutePoints(selectedIndex,data.useRhumbLine);
     }
-    getRouteName(){
+
+    isActiveRoute(){
         let data=load(this.storeKeys);
-        let [route]=StateHelper.getRouteIndexFlag(data);
-        if (!route) return;
-        return data.route.name;
+        return StateHelper.isActiveRoute(data);
+    }
+    isHandling(route){
+        if (! route)return false;
+        let data=load(this.storeKeys);
+        return StateHelper.isSameRoute(data,route);
     }
     getIndexFromPoint(point,opt_bestMatching){
         let data=load(this.storeKeys);
@@ -402,13 +416,14 @@ class RouteEdit{
     }
     getRoute(){
         let data=load(this.storeKeys);
-        return data.route;
+        return StateHelper.route(data);
     }
     isRouteWritable(){
         if (! this.writable) return;
         let data=load(this.storeKeys);
-        if (!data.route) return false;
-        if (data.route.server && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
+        const route=StateHelper.route(data);
+        if (! route) return false;
+        if (route.server && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
         return true;
     }
     hasRoute(){
@@ -488,13 +503,13 @@ export class StateHelper{
     static getRouteIndexFlag(state){
         if (state.leg) {
             if (state.leg.isRouting()) {
-                return [state.leg.currentRoute, state.index!==undefined?state.index:-1, state.leg.getRouteName() === state.activeName];
+                return [state.leg.currentRoute, state.index!==undefined?state.index:-1, isActive(state.leg.getRoute(),state.activeName)];
             }
             return [undefined,-1,false];
         }
         else{
             if (state.route){
-                return [state.route,state.index!==undefined?state.index:-1,state.route.name == state.activeName]
+                return [state.route,state.index!==undefined?state.index:-1,isActive(state.route,state.activeName)]
             }
         }
         return [undefined,-1,false];
@@ -554,11 +569,8 @@ export class StateHelper{
         if (! state.leg) return;
         return state.leg.anchorWatch();
     }
-    static routeName(state){
-        if (state.route ) return state.route.name;
-        if (state.leg){
-            return state.leg.getRouteName()
-        }
+    static route(state){
+        return state.route||(state.leg||{}).route;
     }
     static isServerRoute(state){
         const route=state.route||(state.leg||{}).route;
@@ -568,6 +580,13 @@ export class StateHelper{
     static isServerLeg(state){
         if (! state.leg) return false;
         return state.leg.server;
+    }
+    static isSameRoute(state,route){
+        const sroute=state.route||(state.leg||{}).route;
+        if (!!sroute !== !!route) return false;
+        if (! sroute) return false;
+        return sroute.server === route.server && sroute.name === route.name;
+
     }
 
 }
