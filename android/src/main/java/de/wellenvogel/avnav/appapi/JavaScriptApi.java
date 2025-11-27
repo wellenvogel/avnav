@@ -239,35 +239,7 @@ public class JavaScriptApi {
         if (uploadData==null || ! uploadData.isReady(id)) return false;
         return uploadData.interruptCopy(false);
     }
-
-
-    @JavascriptInterface
-    public String setLeg(String legData){
-        if (detached) return null;
-        if (getRequestHandler().getRouteHandler() == null) return returnStatus("not initialized");
-        try {
-            getRequestHandler().getRouteHandler().setLeg(legData);
-            getRequestHandler().getGpsService().timerAction();
-            return returnStatus("OK");
-        } catch (Exception e) {
-            AvnLog.i("unable to save leg "+e.getLocalizedMessage());
-            return returnStatus(e.getMessage());
-        }
-    }
-
-    @JavascriptInterface
-    public String unsetLeg(){
-        if (detached) return null;
-        if (getRequestHandler().getRouteHandler() == null) return returnStatus("not initialized");
-        try {
-            getRequestHandler().getRouteHandler().unsetLeg();
-            getRequestHandler().getGpsService().timerAction();
-            return returnStatus("OK");
-        } catch (Exception e) {
-            AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
-            return returnStatus(e.getMessage());
-        }
-    }
+    
 
     @JavascriptInterface
     public void goBack() {
