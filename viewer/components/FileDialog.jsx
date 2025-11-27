@@ -467,7 +467,7 @@ const standardActions={
         label: 'Rename',
         name: 'Rename',
         action: async (action, item, dialogContext) => {
-            const newName = await renameDialog({
+            let newName = await renameDialog({
                 item,
                 dialogContext,
                 hasScope: action.hasScope,
@@ -476,6 +476,15 @@ const standardActions={
             });
             if (!newName) return;
             const rs=await action.execute(item, newName);
+            if (action.hasScope && item.checkPrefix){
+                //the overlay rename handling will just take the newName as is
+                //and for scoped items the names will contain the prefix
+                //fortunately we only can rename items that have the checkPrefix set
+                //this way we can safely construct the new name from checkPrefix and name
+                //in general currently scoped items (layouts,settings) cannot be part of overlays
+                //but to be prepared for the future we should be clean here
+                newName=item.checkPrefix+newName;
+            }
             await renameItemInOverlays(undefined,item,newName)
             return rs;
         }

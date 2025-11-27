@@ -132,6 +132,7 @@ const OverlayItemDialog = (props) => {
         };
         newState[OVERLAY_ID]=current[OVERLAY_ID];
         updateCurrent(newState, true);
+        setItemInfo({});
     }
     const analyseOverlay = async (item, initial) => {
         setItemInfo({});
