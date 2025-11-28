@@ -403,7 +403,9 @@ class  RouteData {
                     if (mode == routeobjects.RoutingMode.WP || mode == routeobjects.RoutingMode.WPINACTIVE) {
                         keep_from = KeepFromMode.NONE;
                     } else {
-                        if (newWp && newWp.routeName != data.leg.getRouteName()) {
+                        if (newWp &&
+                            (newWp.routeName != data.leg.getRouteName()
+                             || newWp.server !== data.leg.server   )) {
                             //we switched to a new route
                             keep_from = KeepFromMode.NONE;
                         }
@@ -451,6 +453,7 @@ class  RouteData {
                 data.leg.to = newWp;
                 data.leg.active = true;
                 data.leg.anchorDistance = undefined;
+                data.leg.setServer(newWp.server);
                 return true;
             }
             return false;
