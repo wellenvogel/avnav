@@ -47,7 +47,7 @@ export const INFO_ROWS=[
     ];
 export const getRouteInfo = async (routeItem, opt_point) => {
     if (!routeItem || ! routeItem.name) throw new Error("missing route name");
-    const route = await RouteHandler.fetchRoute(routeItem.name, !routeItem.server);
+    const route = await RouteHandler.fetchRoute(routeItem.name);
     let info = RouteHandler.getInfoFromRoute(route);
     let rt = {
         length: info.length,

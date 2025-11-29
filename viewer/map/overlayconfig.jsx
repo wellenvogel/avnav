@@ -112,7 +112,7 @@ export const overlayExpandsValue=(opt_value)=>{
 const identical=(item1,item2)=>{
     if (! item1 && item2) return false;
     if (! item2 && item1) return false;
-    return (item1.type === item2.type && item1.name === item2.name && item1.server === item2.server);
+    return (item1.type === item2.type && item1.name === item2.name);
 }
 export default class OverlayConfig{
     constructor(overlayConfig,opt_mutable,opt_defaults) {

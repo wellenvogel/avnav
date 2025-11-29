@@ -248,7 +248,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
                     //check with and without gpx extension
                     const hidden=isRouteInList(blacklist,aroute);
                     finalList.push({
-                        label: name,
+                        label: aroute.displayName,
                         value: name,
                         key: name,
                         name:name,
@@ -261,7 +261,9 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
                 })
                 setList(finalList);
             })
-            .catch(()=>{})
+            .catch((e)=>{
+                if (e) Toast("unable to fetch routes: "+e);
+            })
     }, []);
     let displayList=[];
     if (list) {
@@ -283,17 +285,17 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
             list={displayList}
             onClick={async (entry) => {
                 try {
-                    const nroute = await RouteHandler.fetchRoute(entry.originalName, !(entry.server && connectedMode));
+                    const nroute = await RouteHandler.fetchRoute(entry.originalName);
                     if (!nroute) {
                         Toast("unable to load route " + entry.originalName);
                         return;
                     }
-                    if (nroute.server != entry.server) {
+                    if (nroute.isServer() !== entry.server) {
                         //strange situation:
                         //we have a local route that originally was a server route - but it is no longer
                         //available at the server - or we have a local route that is also available on the server
                         //so we try to correct
-                        nroute.server = entry.server;
+                        throw new Error("wrong server flag in route");
                     }
                     if (resolveFunction) resolveFunction(nroute.clone());
                     dialogContext.closeDialog();
@@ -345,6 +347,7 @@ const RouteSaveModes={
 }
 
 const EditRouteDialog = (props) => {
+    const itemActions=createItemActions('route');
     const activeRouteState=useStore({storeKeys: activeRoute.getStoreKeys()})
     const [saveMode,setSaveMode]=useState(RouteSaveModes.UPDATE);
     const dialogContext = useDialogContext();
@@ -376,7 +379,6 @@ const EditRouteDialog = (props) => {
     }
     const save = (cloned,rtSaveMode) => {
         let oldName = props.route.name;
-        let oldServer = props.route.server;
         if (rtSaveMode === RouteSaveModes.NONE) return false;
         if (rtSaveMode === RouteSaveModes.UPDATE){
             const isActive= StateHelper.isSameRoute(activeRouteState,props.route);
@@ -389,7 +391,7 @@ const EditRouteDialog = (props) => {
             //the page must also know that we are now editing a different route
             editor.setNewRoute(cloned,undefined,true);
             if (nameChanged) {
-                RouteHandler.deleteRoute(oldName,!oldServer)
+                RouteHandler.deleteRoute(oldName)
                     .then(() => {
                     },
                     (error) => {
@@ -413,25 +415,6 @@ const EditRouteDialog = (props) => {
         }
         return false;
     }
-    const deleteRoute = () => {
-        if (isActiveRoute()) return;
-        showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={"Really delete route " + route.name}/>)
-            .then(() => {
-                RouteHandler.deleteRoute(route.name,!route.server)
-                    .then(() => {
-                        if (editor.isHandling(route)) {
-                            editor.removeRoute();
-                        }
-                        dialogContext.closeDialog();
-                    },
-                    (error) => {
-                        Toast(error)
-                    })
-
-            })
-            .catch(() => {
-            })
-    }
     const loadNewRoute = () => {
         showPromiseDialog(dialogContext,(props)=><LoadRouteDialog
             {...props}
@@ -447,25 +430,17 @@ const EditRouteDialog = (props) => {
                     () => {}
             )
     }
-    const nameDialog=(title)=>{
-        const checkExisting=(name)=>{
-            return checkName(name,availableRoutes,(item)=>item.name);
-        }
-        return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-            {...dprops}
-            iname={route.name}
-            fixedExt={'gpx'}
-            checkName={checkExisting}
-            mandatory={true}
-            title={title}
-        />)
-            .then((res)=>{
-                return res.name;
-            })
-    }
-    const writable= ! route.server || connectedMode;
+    const writable= ! route.isServer() || connectedMode;
     let canDelete = !isActiveRoute() && existsRoute(route.name,availableRoutes) && route.name !== DEFAULT_ROUTE && writable;
     let info = RouteHandler.getInfoFromRoute(route);
+    const createAction=itemActions.getCreateAction().copy({title:'Choose name for new route'});
+    const actions=itemActions.getActions(info,['rename','delete']);
+    const renameAction=actions.rename?actions.rename.copy({
+        execute: (item,newName)=>{
+            changeRoute((nr)=>{nr.setName(newName)})
+        }
+    }):undefined;
+    const deleteAction=actions.delete;
     return <DialogFrame className={Helper.concatsp("EditRouteDialog",isActiveRoute()?"activeRoute":undefined)} title={"Edit Route"}>
         <InputReadOnly
             dialogRow={true}
@@ -480,16 +455,13 @@ const EditRouteDialog = (props) => {
             label=""
             value="inverted"
         />}
-        <InfoItem label={'server'} value={""+!!route.server}/>
+        <InfoItem label={'server'} value={""+!!route.isServer()}/>
         <InfoItem label={'writable'} value={""+writable}/>
         <DialogButtons>
             <DB name="new"
                 onClick={() => {
-                    nameDialog("Choose Route Name")
-                        .then((newName)=>{
-                            let newRoute=new routeobjects.Route();
-                            newRoute.setName(newName);
-                            newRoute.setServer(connectedMode);
+                    createAction.action(dialogContext)
+                        .then((newRoute)=>{
                             setRoute(newRoute);
                             setInverted(false);
                             setSaveMode(RouteSaveModes.REPLACE_NEW);
@@ -509,13 +481,12 @@ const EditRouteDialog = (props) => {
             >Download</DownloadButton>
             <DB name="edit"
                 onClick={() => {
-                    nameDialog("Choose New Name")
-                        .then((newName)=>{
-                            changeRoute((nr)=>{nr.setName(newName)})
-                        },()=>{})
+                    renameAction.runAction(info,dialogContext)
+                    .then(() => {},(e)=>{if (e) Toast(e)});
                 }}
                 close={false}
                 disabled={! writable || (props.route.name === DEFAULT_ROUTE && saveMode === RouteSaveModes.UPDATE) || isActiveRoute()}
+                visible={!!renameAction}
             >
                 Rename
             </DB>
@@ -546,21 +517,26 @@ const EditRouteDialog = (props) => {
         </DialogButtons>
         <DialogButtons>
             <DB name="delete"
-                onClick={() => {
-                    deleteRoute();
+                onClick={async () => {
+                    if (await deleteAction.runAction(info,dialogContext)) {
+                        dialogContext.closeDialog();
+                    }
                 }}
                 close={false}
                 disabled={!canDelete}
+                visible={!!deleteAction}
             >Delete</DB>
             <DB name="copy"
                 onClick={() => {
-                    nameDialog("Save As")
-                        .then((newName)=>{
-                            let changedRoute=changeRoute((nr)=>{nr.setName(newName)})
-                            if (! connectedMode) changedRoute.server=false;
+                    renameAction.copy({
+                        execute: (item,newName)=>{
+                            const prefix=connectedMode?routeobjects.SERVER_PREFIX:routeobjects.LOCAL_PREFIX;
+                            let changedRoute=changeRoute((nr)=>{nr.setName(prefix+newName)})
                             setSaveMode(RouteSaveModes.REPLACE_NEW); //just if something goes wrong during save and we do not close
                             if(save(changedRoute,RouteSaveModes.REPLACE_NEW)) dialogContext.closeDialog()
-                        },()=>{})
+                        },
+                        title:'Save As'
+                    }).runAction(info,dialogContext);
                 }}
                 close={false}
             >
@@ -590,7 +566,7 @@ const getPanelList = (panel) => {
 
 const checkEmptyRoute = () => {
     if (!editor.hasRoute()) {
-        RouteHandler.fetchRoute(DEFAULT_ROUTE, true)
+        RouteHandler.fetchRoute(DEFAULT_ROUTE)
             .then((route) => {
                 editor.setRouteAndIndex(route, 0);
             },
@@ -605,11 +581,12 @@ const checkEmptyRoute = () => {
 const startRouting=(dialogCtxRef,optIdx,opt_history)=>{
     //if (!checkRouteWritable()) return;
     stopAnchorWithConfirm(true,dialogCtxRef)
-        .then(() => {
-            RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
+        .then(async () => {
+            await RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
             if (opt_history) opt_history.pop();
         })
-        .catch(() => {
+        .catch((e) => {
+            if (e) Toast(e);
         });
 }
 
@@ -784,7 +761,7 @@ const EditRoutePage = (props) => {
         let current = editor.getPointAt(idx);
         if (!otherStart) return;
         const runInsert = () => {
-            RouteHandler.fetchRoute(name, false)
+            RouteHandler.fetchRoute(name)
                 .then((route) => {
                     if (!route.points) return;
                     let insertPoints = [];

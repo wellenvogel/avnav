@@ -85,11 +85,36 @@ const scopedNameForCheck=(item)=>{
     if (! item.checkPrefix) return;
     return item.name.substring(item.checkPrefix.length);
 }
+class CopyAware{
+    constructor() {
+    }
+
+    copy(updates){
+        const rt=new this.constructor({});
+        for (let k of Object.keys(this)){
+            rt[k]=this[k];
+        }
+        if (updates && updates instanceof Object){
+            for (let k in updates){
+                rt[k]=updates[k];
+            }
+        }
+        return rt;
+    }
+    _fhelper(name,item){
+        const target=this[name];
+        if (typeof target === 'function'){
+            return target(this,item);
+        }
+        return !!target;
+    }
+}
 /**
  * handler for uploads based on file type
  */
-class UploadAction{
+class UploadAction extends CopyAware{
     constructor({type,accessor}){
+        super();
         this.type=type;
         this.checkAccessor=accessor||((item)=>item.name);
         this.preCheck=undefined; //a function that returns an object with name and potentially error, final
@@ -102,15 +127,7 @@ class UploadAction{
         this.fixedPrefix=false;
     }
     copy(updates){
-        const rt=new this.constructor(this);
-        for (let k of Object.keys(this)){
-            rt[k]=this[k];
-        }
-        if (updates && updates instanceof Object){
-            for (let k in updates){
-                rt[k]=updates[k];
-            }
-        }
+        const rt=super.copy(updates);
         rt.userData=undefined;
         return rt;
     }
@@ -200,8 +217,41 @@ class UploadAction{
         return false;
     }
 }
-class Action{
+
+class CreateAction extends CopyAware{
+    constructor({type,accessor,fixedExtension}) {
+        super();
+        this.type=type;
+        this.accessor=accessor;
+        this.title="Create new "+this.type;
+        this.proposal=undefined;
+        this.createAction=undefined;
+        this.keepExtension=true;
+        this.fixedExtension=fixedExtension;
+        this.checkName=undefined;
+    }
+    async action(dialogContext){
+        const accessor=this.accessor?(item)=>this.accessor(item):(item)=>item.name;
+        const itemList=await listItems(this.type);
+        const fixedExtension=this._fhelper('fixedExtension');
+        const lcheckName=this.checkName?(name)=>this.checkName(name,accessor,itemList):checkName(name,itemList,accessor);
+        const res=await showPromiseDialog(dialogContext,(dp)=><ItemNameDialog
+            {...dp}
+            iname={this._fhelper('proposal')||''}
+            keepExtension={(!!this._fhelper('keepExtension') && ! this.fixedExtension)}
+            checkName={lcheckName}
+            fixedExt={fixedExtension}
+            title={this._fhelper('title')}
+            />
+        )
+        if (! res || ! res.name) return;
+        if (! this.createAction) return res.name;
+        return await this.createAction(this,res.name,dialogContext);
+    }
+}
+class Action extends CopyAware{
     constructor({label,name,action,visible,close,disabled,fixedExtension,hasScope}) {
+        super();
         this.label=label;
         this.action=action;
         this.visible=visible;
@@ -211,18 +261,6 @@ class Action{
         this.fixedExtension=fixedExtension;
         this.hasScope=hasScope||false;
         this.runAction=this.runAction.bind(this);
-    }
-    copy(updates){
-        const rt=new this.constructor({});
-        for (let k of Object.keys(this)){
-            rt[k]=this[k];
-        }
-        if (updates && updates instanceof Object){
-            for (let k in updates){
-                rt[k]=updates[k];
-            }
-        }
-        return rt;
     }
 
     /**
@@ -242,13 +280,6 @@ class Action{
                 dialogContext.closeDialog();
             }
         }
-    }
-    _fhelper(name,item){
-        const target=this[name];
-        if (typeof target === 'function'){
-            return target(this,item);
-        }
-        return !!target;
     }
     async runAction(item,dialogContext,history){
         return this._ahelper({},item,dialogContext,history);
@@ -421,12 +452,12 @@ export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtensio
     }
 }
 
-const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension,list})=>{
+const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension,list,title})=>{
     let fixedPrefix=undefined;
     let dname=item.name;
     if (hasScope){
         fixedPrefix=item.checkPrefix;
-        if (! fixedPrefix) throw new Error("can only rename user items");
+        if (fixedPrefix===undefined) throw new Error("can only rename user items");
         dname=dname.substr(fixedPrefix.length);
     }
     let itemList=list;
@@ -436,7 +467,7 @@ const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension
     if (! nameForCheck) nameForCheck=hasScope?scopedNameForCheck:plainNameForCheck;
     try{
         const res=await showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-            title={`Rename ${item.displayName||item.name}`}
+            title={title||`Rename ${item.displayName||item.name}`}
             {...dprops}
             iname={dname}
             fixedPrefix={fixedPrefix}
@@ -476,7 +507,8 @@ const standardActions={
                 dialogContext,
                 hasScope: action.hasScope,
                 keepExtension: action.keepExtension,
-                nameForCheck: action.nameForCheck
+                nameForCheck: action.nameForCheck,
+                title:action.title
             });
             if (!newName) return;
             const rs=await action.execute(item, newName);
@@ -661,6 +693,13 @@ export class ItemActions{
     fillActions(item,actions){
 
     }
+    getCreateAction(){
+        return new CreateAction({
+            type: this.type,
+            accessor: (item)=>this.nameForCheck(item),
+            fixedExtension: this.fixedExtension
+        })
+    }
     getUploadAction(){
         let rt=new UploadAction({type:this.type,accessor:(data)=>this.nameForCheck(data)});
         if (! this.fixedExtension && (! this.allowedExtensions || this.allowedExtensions.length < 1)){
@@ -692,29 +731,26 @@ export class ItemActions{
         return rt;
     }
     getActions(item,filter){
-        class ActionList extends Array{
+        class ActionList{
             constructor(filter) {
-                super();
                 this.filter=filter;
                 if (this.filter && ! (this.filter instanceof Array)){
                     this.filter = [this.filter]
                 }
+                this.items={}
             }
 
             push(...items) {
-                let l=this.length;
                 for (let item of items) {
                     if (! this.filter || this.filter.indexOf(item.name) >= 0){
-                        l=super.push(item);
+                        this.items[item.name]=item;
                     }
                 }
-                return l;
             }
         }
         const actions=new ActionList(filter);
         this.fillActions(item,actions);
-        actions.filter=undefined;
-        return actions;
+        return actions.items;
     }
 
     /**
@@ -905,6 +941,7 @@ class RouteItemActions extends ItemActions{
     build(){
         this.headline = 'Routes';
         this.fixedExtension='gpx';
+        this.hasScope=true;
     }
 
     getInfoRows(item) {
@@ -926,7 +963,7 @@ class RouteItemActions extends ItemActions{
     }
 
     showUpload() {
-        return super.showUpload();
+        return true;
     }
 
     async buildExtendedInfo(item) {
@@ -960,9 +997,7 @@ class RouteItemActions extends ItemActions{
                 if (RouteHandler.isActiveRoute(item)) {
                     throw new Error("unable to delete active route")
                 }
-                await RouteHandler.deleteRoute(item.name,
-                    !item.server //if we think this is a local route - just delete it local only
-                );
+                await RouteHandler.deleteRoute(item.name);
                 await removeItemsFromOverlays(item);
                 return true;
             }
@@ -979,7 +1014,7 @@ class RouteItemActions extends ItemActions{
         }))
         actions.push(standardActions.view.copy({
             action: async (action,item, dialogContext,history) => {
-                const route = await RouteHandler.fetchRoute(item.name, !item.server)
+                const route = await RouteHandler.fetchRoute(item.name)
                 history.push('viewpage', {
                     type: item.type,
                     name: item.name,
@@ -993,17 +1028,24 @@ class RouteItemActions extends ItemActions{
         actions.push(standardActions.edit.copy({
             visible:(canModify || item.active) && mapholder.getCurrentChartEntry() !== undefined,
             action: async (action,item, dialogContext,history) => {
-                const route = await RouteHandler.fetchRoute(item.name, !item.server);
+                const route = await RouteHandler.fetchRoute(item.name);
                 let editor = new RouteEdit(RouteEdit.MODES.EDIT);
                 editor.setNewRoute(route, 0);
                 history.push('editroutepage', {center: true});
                 return true;
             }
         }))
+        //for the download action we currently rely on the server routes
+        //being without any name prefix - so we can provide them "as is"
         actions.push(standardActions.download.copy({
             localData: item.server?undefined:
-                ()=>RouteHandler.fetchRoute(item.name,true,true),
-            downloadName: this.nameForDownload(item)
+                async ()=>{
+                    const route=await RouteHandler.fetchRoute(item.name)
+                    if (! route) throw new Error("unable to get route")
+                    route.setName(this.nameToBaseName(route.name));
+                    return route.toXml();
+                },
+            downloadName: this.nameToBaseName(item.name)+'.'+this.fixedExtension,
         }))
         actions.push(standardActions.overlays.copy({
             visible: this.canEditOverlays()
@@ -1029,10 +1071,44 @@ class RouteItemActions extends ItemActions{
             withDialog: true,
             localAction: async (userData,name,file)=>{
                 if (!userData.nroute) throw new Error("no route after upload");
-                userData.nroute.name=name;
+                //when we are in disconnected mode we store the route locally
+                userData.nroute.setName(this.isConnected()?name:routeobjects.LOCAL_PREFIX+name);
                 await RouteHandler.saveRoute(userData.nroute);
             }
         })
+    }
+
+    nameToBaseName(name) {
+        if (this.fixedExtension && Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
+            name=name.substring(0,name.length-this.fixedExtension.length-1);
+        }
+        return routeobjects.nameToBaseName(name);
+    }
+
+    getCreateAction() {
+        return super.getCreateAction().copy({
+            createAction:(action,name)=>{
+                const routeName=this.isConnected()?name:routeobjects.LOCAL_PREFIX+name;
+                return new routeobjects.Route(routeName);
+            },
+            checkName:(name,accessor,itemList)=>{
+                if (! name) {
+                    const d=new Date();
+                    const proposal=`route${d.getFullYear()}${d.getMonth()}${d.getDate()}`;
+                    return {
+                        error:'must not be empty',
+                        proposal: proposal
+                    }
+                }
+                if (name.startsWith(routeobjects.LOCAL_PREFIX)){
+                    return {
+                        error: 'must not start with '+routeobjects.LOCAL_PREFIX,
+                        proposal: name.substr(routeobjects.LOCAL_PREFIX.length)
+                    }
+                }
+                return checkName(name,itemList,accessor);
+            }
+        });
     }
 }
 

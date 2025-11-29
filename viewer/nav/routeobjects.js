@@ -19,6 +19,24 @@ export const RoutingMode={
 };
 routeobjects.RoutingMode=RoutingMode;
 
+const LOCAL_PREFIX="local@";
+const SERVER_PREFIX="";
+routeobjects.LOCAL_PREFIX=LOCAL_PREFIX;
+routeobjects.SERVER_PREFIX=SERVER_PREFIX;
+
+const nameToBaseName=(name)=>{
+    if (!name) return;
+    if (LOCAL_PREFIX && helper.startsWith(name,LOCAL_PREFIX)) return name.substr(LOCAL_PREFIX.length);
+    if (SERVER_PREFIX && helper.startsWith(name,SERVER_PREFIX)) return name.substring(SERVER_PREFIX.length);
+    return name;
+}
+routeobjects.nameToBaseName=nameToBaseName;
+
+const isServerName=(name)=>{
+    if (!name) return false;
+    return (!name.startsWith(LOCAL_PREFIX) && name.startsWith(SERVER_PREFIX));
+}
+routeobjects.isServerName=isServerName;
 export class Leg {
     constructor(from, to, active) {
         /**
@@ -133,7 +151,6 @@ export class Leg {
             this.currentRoute.fromJson(raw.currentRoute);
         }
         if (this.currentRoute) {
-            this.currentRoute.setServer(this.server);
             this.to.routeName = this.currentRoute.name;
             if (raw.currentTarget !== undefined) {
                 let rp = this.currentRoute.getPointAtIndex(raw.currentTarget);
@@ -258,12 +275,6 @@ export class Leg {
     isApproaching() {
         return this.active && this.approach;
     }
-    setServer(server) {
-        this.server = server;
-        if (this.currentRoute) {
-            this.currentRoute.setServer(server);
-        }
-    }
 }
 
 routeobjects.Leg=Leg;
@@ -302,11 +313,6 @@ export class Route {
          * @type {number}
          */
         this.time = new Date().getTime();
-        /**
-         * if set this is a server route
-         * @type {boolean}
-         */
-        this.server = false;
 
     }
 
@@ -331,7 +337,6 @@ export class Route {
     fromJson(parsed) {
         this.name = parsed.name || "default";
         this.time = parsed.time || 0;
-        this.server = parsed.server || false;
         this.points = [];
         let i;
         let wp;
@@ -345,7 +350,6 @@ export class Route {
                     wp.name = this.findFreeName();
                 }
                 wp.routeName = this.name.slice(0);
-                wp.server=this.server;
                 this.points.push(wp);
             }
         }
@@ -356,7 +360,6 @@ export class Route {
         let rt = {};
         rt.name = this.name;
         rt.time = this.time;
-        rt.server = this.server;
         rt.points = [];
         let i;
         for (i = 0; i < this.points.length; i++) {
@@ -379,7 +382,6 @@ export class Route {
     differsTo(route2) {
         if (!route2) return true;
         if (this.name != route2.name) return true;
-        if (this.server != route2.server) return true;
         if (this.points.length != route2.points.length) return true;
         let i;
         for (i = 0; i < this.points.length; i++) {
@@ -398,7 +400,6 @@ export class Route {
         let str = this.toJsonString();
         let rt = new routeobjects.Route();
         rt.fromJsonString(str);
-        rt.server = this.server;
         return rt;
     }
 
@@ -629,7 +630,6 @@ export class Route {
             rp.name = this.findFreeName();
         }
         rp.routeName = this.name.slice(0);
-        rp.server=this.server;
         let rt = opt_before ? idx : idx + 1;
         if (rt < 0 || rt >= this.points.length) {
             this.points.push(rp);
@@ -646,15 +646,15 @@ export class Route {
             p.routeName = name.slice(0)
         })
     }
-    setServer(server) {
-        this.server = server;
-        this.points.forEach(function (p) {
-            p.server=server;
-        })
-    }
     isSameRoute(other){
         if (! other) return false;
-        return other.name === this.name && other.server === this.server;
+        return other.name === this.name;
+    }
+    displayName(){
+        return nameToBaseName(this.name);
+    }
+    isServer(){
+        return isServerName(this.name);
     }
 
     /**
@@ -669,23 +669,6 @@ export class Route {
         }
         return this;
     }
-
-    /**
-     * replace a route in place by another route
-     * @param {routeobjects.Route} other
-     * @returns {boolean}
-     */
-    assignFrom(other) {
-        if (!other) return false;
-        this.name = other.name;
-        this.server = other.server;
-        this.points = [];
-        for (let i = 0; i < other.points.length; i++) {
-            this.points.push(other.points[i].clone());
-        }
-        return true;
-    }
-
     /**
      *
      * @param {navobjects.Point} newPoint
@@ -781,7 +764,7 @@ export class RouteInfo {
          * the name of the route
          * @type {string}
          */
-        this.name = name || "default";
+        this.name = name;
         /**
          * is this a route from the server
          * @type {boolean}
@@ -808,14 +791,15 @@ export class RouteInfo {
          */
         this.active = false;
         this.extension='.gpx'
-        this.downloadName=this.name+this.extension;
+        this.displayName=undefined;
+        this.downloadName=undefined;
         this.canDownload=true;
         this.canDelete=true;
         this.isEditing=false;
     }
-    isSameRoute(other){
-        if (! other) return false;
-        return other.name === this.name && other.server === this.server;
+    compute(){
+        if (! this.displayName) this.displayName=nameToBaseName(this.name);
+        if (! this.downloadName) this.downloadName=nameToBaseName(this.name)+this.extension;
     }
 }
 routeobjects.RouteInfo=RouteInfo;
@@ -827,7 +811,6 @@ export class RoutePoint extends navobjects.WayPoint {
         this.idx = 0;
         this.course = undefined;
         this.distance = undefined;
-        this.server=undefined;
         if (waypoint) {
             this.idx = waypoint.idx || 0;
             this.course = waypoint.course;
@@ -841,7 +824,7 @@ routeobjects.RoutePoint=RoutePoint;
 routeobjects.isSameRoute=(route,other)=>{
     if (!!route !== !!other) return false;
     if (!route) return false;
-    return (route.name === other.name && route.server === other.server);
+    return (route.name === other.name);
 }
 
 export default routeobjects;

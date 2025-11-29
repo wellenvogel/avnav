@@ -170,10 +170,9 @@ export class OverlayFeatureInfo extends FeatureInfo{
 }
 
 export class RouteFeatureInfo extends FeatureInfo{
-    constructor({point,isOverlay,routeName,title,server}) {
+    constructor({point,isOverlay,routeName,title}) {
         super({point,isOverlay,name:routeName||point.routeName});
         this.title=title||`Route: ${this.urlOrKey}`
-        this.server=server||point.server;
     }
     getType(){
         return FeatureInfo.TYPE.route;
@@ -182,7 +181,6 @@ export class RouteFeatureInfo extends FeatureInfo{
     getItemInfo() {
         const rt=super.getItemInfo();
         if (! rt) return;
-        rt.server=this.server;
         return rt;
     }
 }

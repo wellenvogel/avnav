@@ -8,6 +8,7 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
+import routeobjects from "../nav/routeobjects";
 
 const ActiveRouteWidget =(props)=>{
         if (!props.routeName && ! props.isEditing) return null;
@@ -21,9 +22,10 @@ const ActiveRouteWidget =(props)=>{
         if (props.isAproaching){
             display.next=Formatter.formatDirection(props.nextCourse);
         }
+        const isServer=routeobjects.isServerName(props.routeName);
         const resizeSequence=useStringsChanged(display,props);
         return (
-            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={props.server === false}>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={!isServer}>
                 <div className="widgetData">
                     <div className="routeName">{display.name}</div>
                     <div>
@@ -61,7 +63,6 @@ ActiveRouteWidget.storeKeys={
     remain: keys.nav.route.remain,
     nextCourse: keys.nav.route.nextCourse,
     isEditing: keys.gui.global.layoutEditing,
-    server: keys.nav.wp.server
 };
 
 export default ActiveRouteWidget;

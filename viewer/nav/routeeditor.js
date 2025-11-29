@@ -51,16 +51,9 @@ const load=(storeKeys,clone)=>{
     };
     return rt;
 };
-//helper for storeing the active route name together with the server info
-const SERVER_PREFIX="server:"
-const LOCAL_PREFIX="local:"
-const buildActiveName=(route)=>{
-    if (!route) return;
-    return route.server?SERVER_PREFIX+route.name:LOCAL_PREFIX+route.name;
-}
 const isActive=(route,activeName)=>{
     if (!route || ! activeName) return false;
-    return ((route.server?SERVER_PREFIX:LOCAL_PREFIX+route.name) === activeName);
+    return (route.name === activeName);
 }
 const write=(storeKeys,data,opt_omitCallbacks)=>{
     let writeKeys=assign({},storeKeys);
@@ -81,7 +74,7 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
         }
     }
     if (storeKeys.activeName && data.leg){
-        let newName=buildActiveName(data.leg.getRoute());
+        let newName=data.leg.getRouteName();
         if (newName != data.activeName){
             data.activeName=newName;
         }
@@ -423,7 +416,7 @@ class RouteEdit{
         let data=load(this.storeKeys);
         const route=StateHelper.route(data);
         if (! route) return false;
-        if (route.server && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
+        if (route.isServer() && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
         return true;
     }
     hasRoute(){
@@ -575,7 +568,7 @@ export class StateHelper{
     static isServerRoute(state){
         const route=state.route||(state.leg||{}).route;
         if (!route) return false;
-        return route.server;
+        return route.isServer();
     }
     static isServerLeg(state){
         if (! state.leg) return false;
@@ -585,7 +578,7 @@ export class StateHelper{
         const sroute=state.route||(state.leg||{}).route;
         if (!!sroute !== !!route) return false;
         if (! sroute) return false;
-        return sroute.server === route.server && sroute.name === route.name;
+        return sroute.name === route.name;
 
     }
 
