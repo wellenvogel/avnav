@@ -15,7 +15,7 @@ const ActiveRouteWidget =(props)=>{
         let classes = "activeRouteWidget";
         if (props.isApproaching) classes += " approach ";
         let display={
-            name:props.routeName,
+            name:routeobjects.nameToBaseName(props.routeName),
             remain: Formatter.formatDistance(props.remain),
             eta: Formatter.formatTime(props.eta)
         };
