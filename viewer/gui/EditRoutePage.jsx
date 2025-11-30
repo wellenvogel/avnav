@@ -19,7 +19,7 @@ import {
     showPromiseDialog,
     useDialogContext
 } from '../components/OverlayDialog.jsx';
-import Helper, {injectav, setav} from '../util/helper.js';
+import Helper, {avitem, injectav, setav} from '../util/helper.js';
 import {useTimer} from '../util/GuiHelpers.js';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';
@@ -39,16 +39,14 @@ import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 import Page from "../components/Page";
 import PropTypes from "prop-types";
 import {useStore, useStoreState} from "../hoc/Dynamic";
-import {ConfirmDialog, InfoItem, SelectList} from "../components/BasicDialogs";
+import {ConfirmDialog, InfoItem} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
-import plugimage from '../images/icons-new/plug.svg';
-import {createItemActions, ItemActions} from "../components/FileDialog";
+import {createItemActions} from "../components/FileDialog";
 import UploadHandler from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
-import {existsRoute, loadRoutes} from "../components/RouteInfoHelper";
-import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import DownloadButton from "../components/DownloadButton";
 import {useHistory} from "../components/HistoryProvider";
+import {DownloadItemInfoMode, DownloadItemList} from "../components/DownloadItemList";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -104,7 +102,7 @@ export const INFO_ROWS = [
     {label: 'length', value: 'length', formatter: (v) => {
             return Formatter.formatDistance(v) + " nm";
         }
-    },
+    }
 ];
 
 const EditPointsDialog=(props)=>{
@@ -233,69 +231,25 @@ const isRouteInList=(routeList,route)=>{
 const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUpload})=>{
     const dialogContext=useDialogContext();
     const [connectedMode]=useStoreState(keys.properties.connectedMode);
-    const [list,setList]=useState(undefined);
+    const connectedModeRef=useRef(null);
+    connectedModeRef.current=connectedMode;
+    const itemActions=createItemActions('route').copy({
+        canModify:(item)=>item.server == connectedModeRef.current
+    })
     const [wrOnly,setWrOnly]=useState(true);
+    const wrOnlyRef=useRef(wrOnly);
+    wrOnlyRef.current=wrOnly;
     const [uploadSequence,setUploadSequence]=useState(0);
-    const currentList=useRef([]);
-    useEffect(() => {
-        loadRoutes()
-            .then((routeList)=>{
-                let finalList=[];
-                routeList.forEach((aroute)=>{
-                   let name = aroute.name;
-                    //mark the route we had been editing on the page before
-                    let selected = selectedRoute && routeobjects.isSameRoute(aroute,selectedRoute);
-                    //check with and without gpx extension
-                    const hidden=isRouteInList(blacklist,aroute);
-                    finalList.push({
-                        label: aroute.displayName,
-                        value: name,
-                        key: name,
-                        name:name,
-                        originalName: aroute.name,
-                        selected: selected,
-                        server: aroute.server,
-                        icon: aroute.server?plugimage:undefined,
-                        hidden: hidden
-                    });
-                })
-                setList(finalList);
-            })
-            .catch((e)=>{
-                if (e) Toast("unable to fetch routes: "+e);
-            })
-    }, []);
-    let displayList=[];
-    if (list) {
-        list.forEach((item) => {
-            if (item.hidden) return;
-            let cl = "";
-            if (item.server && !connectedMode) {
-                if (wrOnly) return;
-                cl = "readonly";
-            }
-            displayList.push({...item, className: cl})
-        })
-    }
-    currentList.current=list;
     return <DialogFrame className={'LoadRoutesDialog'} title={title}>
         <Checkbox dialogRow={true} label={"writableOnly"} value={wrOnly} onChange={(nv)=>setWrOnly(nv)}/>
-        {! list && <div className="loading">Loading...</div>}
-        <SelectList
-            list={displayList}
-            onClick={async (entry) => {
+        <DownloadItemList
+            type={'route'}
+            selectCallback={async (ev)=>{
+                const entry=avitem(ev);
                 try {
-                    const nroute = await RouteHandler.fetchRoute(entry.originalName);
+                    const nroute = await RouteHandler.fetchRoute(entry.name);
                     if (!nroute) {
-                        Toast("unable to load route " + entry.originalName);
-                        return;
-                    }
-                    if (nroute.isServer() !== entry.server) {
-                        //strange situation:
-                        //we have a local route that originally was a server route - but it is no longer
-                        //available at the server - or we have a local route that is also available on the server
-                        //so we try to correct
-                        throw new Error("wrong server flag in route");
+                        throw new Error("unable to load route " + entry.name);
                     }
                     if (resolveFunction) resolveFunction(nroute.clone());
                     dialogContext.closeDialog();
@@ -303,6 +257,16 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
                     Toast("unable to load route: " + err)
                 }
             }}
+            noExtra={true}
+            infoMode={DownloadItemInfoMode.ICONS}
+            showUpload={false}
+            filter={(item)=>{
+                if (selectedRoute && selectedRoute.name === item.name) return "selected";
+                if (isRouteInList(blacklist,item)) return "blacklisted";
+                if (! wrOnlyRef.current) return;
+                if (item.server !== connectedMode) return "con/not con";
+            }}
+            itemActions={itemActions}
         />
         <UploadHandler
             local={true}
@@ -353,15 +317,7 @@ const EditRouteDialog = (props) => {
     const dialogContext = useDialogContext();
     const [route, setRoute] = useState(props.route);
     const [inverted, setInverted] = useState(false);
-    const [availableRoutes, setAvailableRoutes] = useState();
     const [connectedMode]=useStoreState(keys.properties.connectedMode)
-    useEffect(() => {
-        if (!props.route) return;
-        loadRoutes()
-            .then((routes) => {
-                setAvailableRoutes(routes)
-            });
-    }, []);
     const isActiveRoute = useCallback(() => {
         return  StateHelper.isSameRoute(activeRouteState,route);
     }, [activeRouteState]);
@@ -431,7 +387,7 @@ const EditRouteDialog = (props) => {
             )
     }
     const writable= ! route.isServer() || connectedMode;
-    let canDelete = !isActiveRoute() && existsRoute(route.name,availableRoutes) && route.name !== DEFAULT_ROUTE && writable;
+    let canDelete = !isActiveRoute()  && route.name !== DEFAULT_ROUTE && writable;
     let info = RouteHandler.getInfoFromRoute(route);
     const createAction=itemActions.getCreateAction().copy({title:'Choose name for new route'});
     const actions=itemActions.getActions(info,['rename','delete']);
@@ -445,17 +401,16 @@ const EditRouteDialog = (props) => {
         <InputReadOnly
             dialogRow={true}
             label="name"
-            value={route.name}
+            value={route.displayName()}
         >
         </InputReadOnly>
-        {INFO_ROWS.map((description) => {
+        {INFO_ROWS.concat(itemActions.getInfoRows(info)).map((description) => {
             return InfoItem.show(info, description);
         })}
         {inverted && <InfoItem
             label=""
             value="inverted"
         />}
-        <InfoItem label={'server'} value={""+!!route.isServer()}/>
         <InfoItem label={'writable'} value={""+writable}/>
         <DialogButtons>
             <DB name="new"

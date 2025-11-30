@@ -227,7 +227,7 @@ class CreateAction extends CopyAware{
         this.accessor=accessor;
         this.title="Create new "+this.type;
         this.proposal=undefined;
-        this.createAction=undefined;
+        this.doneAction=undefined;
         this.keepExtension=true;
         this.fixedExtension=fixedExtension;
         this.checkName=undefined;
@@ -247,8 +247,8 @@ class CreateAction extends CopyAware{
             />
         )
         if (! res || ! res.name) return;
-        if (! this.createAction) return res.name;
-        return await this.createAction(this,res.name,dialogContext);
+        if (! this.doneAction) return res.name;
+        return await this.doneAction(this,res.name,dialogContext);
     }
 }
 class Action extends CopyAware{
@@ -612,8 +612,9 @@ const standardActions={
     })
 
 }
-export class ItemActions{
+export class ItemActions extends CopyAware{
     constructor(type) {
+        super();
         this.type=type;
         this.headline=type
         this.fixedExtension=undefined; //if set we always remove this from names before sending to the server and expect files to have this
@@ -1022,6 +1023,12 @@ class RouteItemActions extends ItemActions{
                 proposal: proposal
             }
         }
+        if (name.endsWith('.'+this.fixedExtension)){
+            return {
+                error:'must not end with .'+this.fixedExtension,
+                proposal: name.substring(0,name.length-this.fixedExtension.length-1),
+            }
+        }
         if (name.startsWith(routeobjects.LOCAL_PREFIX)){
             return {
                 error: 'must not start with '+routeobjects.LOCAL_PREFIX,
@@ -1135,7 +1142,7 @@ class RouteItemActions extends ItemActions{
 
     getCreateAction() {
         return super.getCreateAction().copy({
-            createAction:(action,name)=>{
+            doneAction:(action,name)=>{
                 const routeName=this.isConnected()?name:routeobjects.LOCAL_PREFIX+name;
                 return new routeobjects.Route(routeName);
             },

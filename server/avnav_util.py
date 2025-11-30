@@ -704,8 +704,14 @@ class AVNDownload(object):
     self.lastBytes=lastBytes
     self.dlname=dlname
     self.noattach=noattach
+    self.mtime=None
     if self.lastBytes is not None:
       self.lastBytes=int(self.lastBytes)
+    if self.filename is not None:
+        try:
+            self.mtime = os.path.getmtime(self.filename)
+        except:
+            pass
 
   def getSize(self):
     if self.size is None:

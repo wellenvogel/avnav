@@ -244,7 +244,12 @@ let RequestHandler={
                           return;
                       }
                   }
-                 resolve(text,finalResponse);
+                  if (options && options.resolveObject){
+                      resolve({data:text,response:finalResponse});
+                  }
+                  else {
+                      resolve(text);
+                  }
               },(error)=>{
                   reject(error);
               });

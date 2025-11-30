@@ -23,7 +23,7 @@
  ###############################################################################
  */
 
-import {createItemActions, FileDialog} from "./FileDialog";
+import {createItemActions, FileDialog, ItemActions} from "./FileDialog";
 import Helper, {avitem, setav} from "../util/helper";
 import React, {useCallback, useEffect, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
@@ -47,9 +47,16 @@ const itemSort = (a, b) => {
     if (a.name < b.name) return -1;
     return 0;
 };
-const DownloadItem = (props) => {
+export const DownloadItemInfoMode={
+    NO_INFO:1,
+    ICONS:1,
+    ALL:2
+}
 
-    let actions = createItemActions(props);
+const DownloadItem = (props) => {
+    let infoMode=props.infoMode;
+    if (infoMode === undefined) infoMode=DownloadItemInfoMode.ALL;
+    let actions = props.itemActions;
     let cls = Helper.concatsp("listEntry", actions.getClassName(props));
     let dataClass = "downloadItemData";
     return (
@@ -63,10 +70,11 @@ const DownloadItem = (props) => {
             }
             <div className="itemMain">
                 <div className={dataClass}>
-                    { ! props.noInfo && <div className="date">{actions.getTimeText(props)}</div>}
+                    { (infoMode === DownloadItemInfoMode.ALL) && <div className="date">{actions.getTimeText(props)}</div>}
                     <div className="info">{actions.getInfoText(props)}</div>
                 </div>
-                {! props.noInfo &&
+                {(infoMode === DownloadItemInfoMode.ALL ||
+                        infoMode === DownloadItemInfoMode.ICONS) &&
                 <div className="infoImages">
                     {actions.canModify(props) && <span className="icon edit"></span>}
                     {actions.showIsServer(props) && <span className="icon server"></span>}
@@ -77,7 +85,7 @@ const DownloadItem = (props) => {
         </div>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadSequence,noInfo,noExtra,showUpload,filter}) => {
+export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,filter,itemActions}) => {
     const [items, setItems] = useState([]);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
@@ -90,7 +98,7 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,noInfo,no
         if (filter) {
             const filtered = [];
             items.forEach(item => {
-                const ferr = filter(item.name);
+                const ferr = filter(item);
                 if (!ferr) filtered.push(item);
             })
             setItems(filtered);
@@ -101,61 +109,55 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,noInfo,no
     useEffect(() => {
         readItems().then(() => {
         }, (err) => Toast(err));
-    }, [type])
+    }, [type,filter])
     const dialogContext = useDialogContext();
-    const itemActions = createItemActions(type);
-    const createItem = useCallback(async () => {
-        const actions = itemActions;
-        const accessor = (data) => actions.nameForCheck(data);
-        const checker = (name) => {
+    if (!itemActions) itemActions = createItemActions(type);
+    const createAction=itemActions.getCreateAction().copy({
+        checkName:(name,itemList,accessor)=>{
             if (filter){
-                const ferr=filter(name);
+                const ferr=filter({name:name,type:type});
                 if (ferr){
                     return {
                         error:ferr
                     }
                 }
             }
-            checkName(name, items, accessor);
-        }
-        const res = await showPromiseDialog(undefined, (dprops) => <ItemNameDialog
-            {...dprops}
-            title={'enter filename'}
-            checkName={checker}
-            mandatory={true}
-        />);
-        const name = (res || {}).name;
-        if (!name) return;
-        const template = getTemplate(name);
-        if (template) {
-            await showPromiseDialog(undefined, (dprops) => <EditDialogWithSave
-                {...dprops}
-                type={'user'}
-                fileName={name}
-                data={template}
-            />)
-            return readItems();
-        } else {
-            let data = "";
-            try {
-                await Requests.postPlain({
-                    command: 'upload',
-                    type: type,
-                    name: name
-                }, data);
+            return checkName(name, items, accessor);
+        },
+        doneAction:async (action,name,dialogContext)=>{
+            const template = getTemplate(name);
+            if (template) {
+                await showPromiseDialog(dialogContext, (dprops) => <EditDialogWithSave
+                    {...dprops}
+                    type={type}
+                    fileName={name}
+                    data={template}
+                />)
                 return readItems();
-            } catch (e) {
-                Toast(e + "");
-                return readItems()
+            } else {
+                let data = "";
+                try {
+                    await Requests.postPlain({
+                        command: 'upload',
+                        type: type,
+                        name: name
+                    }, data);
+                    return readItems();
+                } catch (e) {
+                    Toast(e + "");
+                    return readItems()
+                }
             }
         }
-    }, [type, items])
+    })
     const uploadAction = itemActions.getUploadAction();
     return <React.Fragment>
         <ItemList
+            className={'DownloadItemList'}
             itemClass={(ip)=><DownloadItem
                 {...ip}
-                noInfo={noInfo}
+                infoMode={infoMode}
+                itemActions={itemActions}
             />}
             scrollable={true}
             itemList={items}
@@ -193,7 +195,7 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,noInfo,no
                 className="fab"
                 name="DownloadPageCreate"
                 onClick={() => {
-                    createItem();
+                    createAction.action(dialogContext);
                 }}
                 storeKeys={{visible: keys.properties.connectedMode}}
             />
@@ -206,14 +208,15 @@ DownloadItemList.propTypes = {
     type: PropTypes.string,
     selectCallback: PropTypes.func,
     uploadSequence: PropTypes.number,
-    noInfo: PropTypes.bool,
+    infoMode: PropTypes.number,
     noExtra: PropTypes.bool,
     showUpload: PropTypes.bool,
-    filter: PropTypes.func,
+    filter: PropTypes.func, //get the item, return undefined to use it, error text otherwise
+    itemActions: PropTypes.instanceOf(ItemActions),
 }
 
-export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,filter})=>{
-    const actions=createItemActions(type);
+export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,filter,itemActions})=>{
+    const actions=itemActions||createItemActions(type);
     const [uploadSequence, setUploadSequence] = useState(0);
     const buttons=[];
     if (showUpload && actions.showUpload()) {
@@ -247,5 +250,6 @@ DownloadItemListDialog.propTypes = {
     showUpload: PropTypes.bool,
     noInfo: PropTypes.bool,
     noExtra: PropTypes.bool,
-    filter:PropTypes.func
+    filter:PropTypes.func,
+    itemActions: PropTypes.instanceOf(ItemActions),
 }

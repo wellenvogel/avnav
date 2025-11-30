@@ -577,17 +577,25 @@ class  RouteData {
             })
     };
     async _downloadRoute(name, opt_returnraw) {
-        const xml = await Requests.getHtmlOrText({
+        const response = await Requests.getHtmlOrText({
             request: 'api',
             type: 'route',
             command: 'download',
             name: name
-        });
+        },{resolveObject:true});
         if (opt_returnraw) {
-            return xml;
+            return response.data;
         }
         let newRoute = new routeobjects.Route();
-        newRoute.fromXml(xml);
+        newRoute.fromXml(response.data);
+        try{
+            const lm=response.response.headers.get('last-modified');
+            if (lm){
+                newRoute.time=Date.parse(lm)/1000;
+            }
+        }catch (e){
+            base.log("cannot parse route last modified");
+        }
         let routeName = name;
         if (newRoute.name !== routeName) {
             let error = "downloaded route has invalid name expected=" + routeName + ", current=" + newRoute.name;

@@ -442,7 +442,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.send_header("Content-Length", size)
     else:
       self.send_header('Transfer-Encoding', 'chunked')
-    self.send_header("Last-Modified", self.date_time_string())
+    self.send_header("Last-Modified", self.date_time_string(download.mtime))
     self.end_headers()
     if size is not None:
       self.writeStream(size, stream)

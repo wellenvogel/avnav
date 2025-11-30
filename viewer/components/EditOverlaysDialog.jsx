@@ -48,11 +48,11 @@ const filterOverlayItem=(item)=>{
 export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml','kmz','geojson'];
 
 const SELECT_FILTERS={
-    track: (name)=>{
-        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(name)) < 0) return "no overlay";
+    track: (item)=>{
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name)) < 0) return "no overlay";
     },
-    overlay:(name)=>{
-        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(name)) < 0) return "no overlay";
+    overlay:(item)=>{
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name)) < 0) return "no overlay";
     }
 }
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];

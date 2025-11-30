@@ -309,10 +309,10 @@ export class Route {
          */
         this.points = opt_points || [];
         /**
-         * the timestamp of last modification
+         * the timestamp of last modification in seconds
          * @type {number}
          */
-        this.time = new Date().getTime();
+        this.time = new Date().getTime()/1000;
 
     }
 
@@ -781,7 +781,7 @@ export class RouteInfo {
          */
         this.numpoints = 0;
         /**
-         * UTC timestamp
+         * UTC timestamp in seconds
          * @type {number}
          */
         this.time = 0;
