@@ -292,7 +292,7 @@ class  RouteData {
             //check if this is our current active/editing one - if yes, start routing mode
             stwp.routeName = wp.routeName;
             if (routeobjects.isServerName(stwp.routeName) !== stwp.server) {
-                if (this.connectMode) throw new Error("can only start routing with a server route in connected mode");
+                if (!stwp.server) throw new Error("can only start routing with a server route in connected mode");
                 throw new Error("can only start routing with a local route in disconnected mode");
             }
             route = await this.fetchRoute(wp.routeName);
@@ -548,6 +548,7 @@ class  RouteData {
                 })
                 info.server=true;
                 info.type='route';
+                info.checkprefix='';
             } catch (e) {
             }
             return info;
@@ -622,13 +623,14 @@ class  RouteData {
         if (activeRoute.isHandling(routeItem)) throw new Error("cannot rename active route");
         if (editingRoute.isHandling(routeItem)) throw new Error("cannot rename editing route");
         if (routeobjects.isServerName(routeItem.name)) {
-            if (! this.connectMode || this.readOnlyServer) throw new Error("cannot delete server route while disconnected");
-            return await requests.getJson({
+            if (! this.connectMode || this.readOnlyServer) throw new Error("cannot rename server route while disconnected");
+            await requests.getJson({
                 type:'route',
                 command:'rename',
                 name: routeItem.name,
                 newName: newName
             })
+            return true;
         }
         const route=this._loadRoute(routeItem.name,true);
         if (! route) throw new Error(`local route ${routeItem.name} not found`);
@@ -636,8 +638,9 @@ class  RouteData {
             LocalStorage.removeItem(STORAGE_NAMES.ROUTE, routeobjects.nameToBaseName(routeItem.name));
         } catch (e) {
         }
-        route.setName(routeobjects.LOCAL_PREFIX+newName);
+        route.setName(newName);
         this._saveRouteLocal(route,true);
+        return true;
     }
 
     /*---------------------------------------------------------

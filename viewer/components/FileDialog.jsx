@@ -125,6 +125,7 @@ class UploadAction extends CopyAware{
         this.doneAction=undefined; //called when the upload is finished
         this.userData=undefined;
         this.fixedPrefix=false;
+        this.checkName=undefined;
     }
     copy(updates){
         const rt=super.copy(updates);
@@ -168,7 +169,8 @@ class UploadAction extends CopyAware{
                 nameForCheck: accessor,
                 itemList:existing,
                 checkFirst:true,
-                fixedPrefix: this.fixedPrefix
+                fixedPrefix: this.fixedPrefix,
+                nameCheckFunction:this.checkName?(...args)=>this.checkName(...args):checkName
             }),rs)) return rs;
         }
         else {
@@ -408,7 +410,7 @@ export const deleteItem=async (item,dialogContext)=> {
     return true;
 };
 
-export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtension,nameForCheck,itemList,checkFirst,fixedPrefix})=>{
+export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtension,nameForCheck,itemList,checkFirst,fixedPrefix, nameCheckFunction})=>{
     if (! itemList){
         if (type) {
             itemList = await listItems(type);
@@ -418,12 +420,13 @@ export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtensio
         }
     }
     if (! nameForCheck) nameForCheck=(item)=>item.name;
+    if (!nameCheckFunction) nameCheckFunction=checkName;
     if (checkFirst){
-        let rf=checkName(name); //check for allowed name
+        let rf=nameCheckFunction(name); //check for allowed name
         if (rf.error){
             return Promise.reject(rf.error);
         }
-        rf=checkName(name,itemList,nameForCheck);
+        rf=nameCheckFunction(name,itemList,nameForCheck);
         if (! rf.error){
             return {name:name};
         }
@@ -451,8 +454,23 @@ export const uploadCheckNameDialog=async ({dialogContext, type,name,keepExtensio
         return;
     }
 }
+/**
+ * run a rename dialog
+ * @param item
+ * @param dialogContext
+ * @param hasScope when set it will expect "checkPrefix" being set on the item (throws an error otherwise)
+ *                 it will run the dialog only for the part after the checkPrefix and will resolve to
+ *                 the new name prepended with checkPrefix
+ * @param nameForCheck accessor function for the item list (see checkName)
+ *                     if unset scopedNameForCheck/plainNameForCheck will be used
+ * @param keepExtension if set an existing extension will be kept (not part of the dialog)
+ * @param list the item list for checkName. If unset listItems(item.type) will be used to fill it
+ * @param title dialog title
+ * @param preCheck if set run this additional name check before the nromal checks. Same return like nameCheck.
+ * @return {Promise<*>} resolves to the new name
+ */
 
-const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension,list,title})=>{
+const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension,list,title,preCheck})=>{
     let fixedPrefix=undefined;
     let dname=item.name;
     if (hasScope){
@@ -473,6 +491,10 @@ const renameDialog=async({item,dialogContext,hasScope,nameForCheck,keepExtension
             fixedPrefix={fixedPrefix}
             keepExtension={keepExtension}
             checkName={(name)=>{
+                if (preCheck){
+                    const rs=preCheck(name);
+                    if (rs && rs.error) return rs;
+                }
                 const [fn,ext]=Helper.getNameAndExt(name);
                 if (! name || (keepExtension && ! fn)){
                     return {
@@ -498,9 +520,19 @@ const standardActions={
                 return await deleteItem(item,dialogContext)
             }
         }),
+    /**
+     * rename action
+     * normally you should override the (async) execute method that will receive
+     * (item,newName).
+     * The execute method should return true on success.
+     * For scoped items the "hasScope" must be set at the action.
+     * newName will include the scope in this case.
+     * The default execute is to run a serverRequest for rename.
+     * You can add a preCheck to the action to do some additional name checks before the normal ones.
+     */
     rename: new Action({
         label: 'Rename',
-        name: 'Rename',
+        name: 'rename',
         action: async (action, item, dialogContext) => {
             let newName = await renameDialog({
                 item,
@@ -508,20 +540,14 @@ const standardActions={
                 hasScope: action.hasScope,
                 keepExtension: action.keepExtension,
                 nameForCheck: action.nameForCheck,
-                title:action.title
+                title:action.title,
+                preCheck: action.preCheck
             });
             if (!newName) return;
             const rs=await action.execute(item, newName);
-            if (action.hasScope && item.checkPrefix){
-                //the overlay rename handling will just take the newName as is
-                //and for scoped items the names will contain the prefix
-                //fortunately we only can rename items that have the checkPrefix set
-                //this way we can safely construct the new name from checkPrefix and name
-                //in general currently scoped items (layouts,settings) cannot be part of overlays
-                //but to be prepared for the future we should be clean here
-                newName=item.checkPrefix+newName;
+            if (rs) {
+                await renameItemInOverlays(undefined, item, newName)
             }
-            await renameItemInOverlays(undefined,item,newName)
             return rs;
         }
     }).copy({
@@ -987,7 +1013,22 @@ class RouteItemActions extends ItemActions{
     showIsServer(item) {
         return item.server;
     }
-
+    namePreCheck(name){
+        if (! name) {
+            const d=new Date();
+            const proposal=`route${d.getFullYear()}${d.getMonth()}${d.getDate()}`;
+            return {
+                error:'must not be empty',
+                proposal: proposal
+            }
+        }
+        if (name.startsWith(routeobjects.LOCAL_PREFIX)){
+            return {
+                error: 'must not start with '+routeobjects.LOCAL_PREFIX,
+                proposal: name.substr(routeobjects.LOCAL_PREFIX.length)
+            }
+        }
+    }
     fillActions(item, actions) {
         const canModify = this.canModify(item);
         actions.push(standardActions.delete.copy({
@@ -1003,6 +1044,7 @@ class RouteItemActions extends ItemActions{
             }
         }));
         actions.push(standardActions.rename.copy({
+            hasScope: this.hasScope,
             visible:canModify,
             execute: async (item,newName) => {
                 if (RouteHandler.isActiveRoute(item)) {
@@ -1010,7 +1052,8 @@ class RouteItemActions extends ItemActions{
                 }
                 const rs= await RouteHandler.renameRoute(item,newName);
                 return rs;
-            }
+            },
+            preCheck:(name)=>this.namePreCheck(name),
         }))
         actions.push(standardActions.view.copy({
             action: async (action,item, dialogContext,history) => {
@@ -1074,6 +1117,11 @@ class RouteItemActions extends ItemActions{
                 //when we are in disconnected mode we store the route locally
                 userData.nroute.setName(this.isConnected()?name:routeobjects.LOCAL_PREFIX+name);
                 await RouteHandler.saveRoute(userData.nroute);
+            },
+            checkName:(name,itemList,accessor)=>{
+                const pr=this.preCheck(name);
+                if (pr && pr.error) return pr;
+                return checkName(name,itemList,accessor);
             }
         })
     }
@@ -1092,20 +1140,8 @@ class RouteItemActions extends ItemActions{
                 return new routeobjects.Route(routeName);
             },
             checkName:(name,accessor,itemList)=>{
-                if (! name) {
-                    const d=new Date();
-                    const proposal=`route${d.getFullYear()}${d.getMonth()}${d.getDate()}`;
-                    return {
-                        error:'must not be empty',
-                        proposal: proposal
-                    }
-                }
-                if (name.startsWith(routeobjects.LOCAL_PREFIX)){
-                    return {
-                        error: 'must not start with '+routeobjects.LOCAL_PREFIX,
-                        proposal: name.substr(routeobjects.LOCAL_PREFIX.length)
-                    }
-                }
+                const pr=this.namePreCheck(name);
+                if (pr && pr.error) return pr;
                 return checkName(name,itemList,accessor);
             }
         });

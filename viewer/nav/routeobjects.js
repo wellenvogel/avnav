@@ -796,10 +796,12 @@ export class RouteInfo {
         this.canDownload=true;
         this.canDelete=true;
         this.isEditing=false;
+        this.checkPrefix='';
     }
     compute(){
         if (! this.displayName) this.displayName=nameToBaseName(this.name);
         if (! this.downloadName) this.downloadName=nameToBaseName(this.name)+this.extension;
+        this.checkPrefix=isServerName(this.name)?SERVER_PREFIX:LOCAL_PREFIX;
     }
 }
 routeobjects.RouteInfo=RouteInfo;

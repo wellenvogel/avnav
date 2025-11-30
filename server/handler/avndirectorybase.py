@@ -457,6 +457,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
       os.rename(src, dst)
       return AVNUtil.getReturnData()
   def handleRename(self,name,newName,requestparam):
+    '''
+      rename an item
+      :param name: the original name (must contain the scope for scoped items)
+      :param newName: the new name (must contain the scope for scoped items)
+      :param requestparam:
+      :return:
+    '''
     name=self.checkName(name)
     newName=self.checkName(newName)
     return self._rename(name,newName)
