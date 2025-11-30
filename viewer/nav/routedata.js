@@ -124,7 +124,7 @@ class  RouteData {
          * @private
          * @type {boolean}
          */
-        this.connectMode = globalStore.getData(keys.properties.connectedMode);
+        this.connectMode = !!globalStore.getData(keys.properties.connectedMode);
 
         /**
          * if set all routes are not from the server....
@@ -132,7 +132,7 @@ class  RouteData {
          * @type {boolean}
          */
 
-        this.readOnlyServer = globalStore.getData(keys.properties.readOnlyServer);
+        this.readOnlyServer = !!globalStore.getData(keys.properties.readOnlyServer);
 
 
         /**legChanged
@@ -169,8 +169,8 @@ class  RouteData {
         this.formatter = Formatter;
 
         globalStore.register(() => {
-            let oldcon = this.connectMode;
-            this.connectMode = globalStore.getData(keys.properties.connectedMode);
+            let oldcon = !!this.connectMode;
+            this.connectMode = !!globalStore.getData(keys.properties.connectedMode);
             this.readOnlyServer = globalStore.getData(keys.properties.readOnlyServer);
             if (oldcon !== this.connectMode) {
                 //prevent sending anything to the server
