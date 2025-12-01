@@ -1,6 +1,6 @@
 //avnav (C) wellenvogel 2019
 
-import React, {Component, createRef, useEffect} from 'react';
+import React, {Component, createRef, useCallback, useContext, useEffect, useRef} from 'react';
 import History from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
@@ -23,7 +23,7 @@ import ImporterPage from "./gui/ImporterPage";
 import {
     DialogContext,
     setGlobalContext, showPromiseDialog,
-    useDialog
+    useDialog, useDialogContext
 } from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
@@ -55,6 +55,7 @@ import {ConfirmDialog} from "./components/BasicDialogs";
 import PropTypes from "prop-types";
 import Helper from "./util/helper";
 import {HistoryContext, useHistory} from "./components/HistoryProvider";
+import {RouteSyncDialog} from "./components/RouteInfoHelper";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -114,6 +115,26 @@ const pages={
 };
 const Router = (props) => {
     const history = useHistory();
+    const dialogContext = useDialogContext();
+    const connectedMode=useRef(false);
+    const checkRoutes=useCallback(()=>{
+        const current=globalStore.getData(keys.properties.connectedMode);
+        if (current != connectedMode.current){
+            if (current){
+                dialogContext.showDialog(()=><RouteSyncDialog
+                    deleteLocal={false}
+                />)
+            }
+            connectedMode.current=current;
+        }
+    })
+    useEffect(()=>{
+        globalStore.register(checkRoutes,keys.properties.connectedMode);
+        return ()=>globalStore.deregister(checkRoutes);
+    })
+    useEffect(()=>{
+        checkRoutes();
+    })
     let Page = pages[props.location];
     if (Page === undefined) {
         Page = Other;

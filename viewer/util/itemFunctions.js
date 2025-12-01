@@ -30,7 +30,7 @@ const RouteHandler=NavHandler.getRoutingHandler();
 export const listItems = async (type) => {
     let items;
     if (type === 'route') {
-        items = await RouteHandler.listRoutes(true);
+        items = await RouteHandler.listRoutes();
     } else if (type === 'layout') {
         items = await layoutLoader.listLayouts()
     } else if (type === 'settings') {

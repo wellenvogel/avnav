@@ -13,7 +13,6 @@ export const UNPREFIXED_NAMES={
     EULAS:'avnav.eulas',
     SETTINGS: 'avnav.settings',
     LICENSE: 'avnav.licenseAccepted',
-    DEFAULTROUTE: 'avnav.defaultRoute',
     SPLITMODE: 'avnav.splitmode'
 }
 

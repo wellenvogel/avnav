@@ -486,6 +486,14 @@ body{
     }
   }
 }
+.RouteSyncDialog{
+  .dialogRow .radioLabel{
+    width: 10em;
+  }
+  .allowServer .inputLabel{
+    width: 10em
+  }
+}
 
 .overlayElement{
   &.sortableHelper {
@@ -856,7 +864,9 @@ span.valuePrefix{
     }
     vertical-align: middle;
   }
-  display: inline-block;
+  .flex-display(inline);
+  .flex-direction(row);
+  .flex-align-items(center);
 }
 
 //--ColorSelector

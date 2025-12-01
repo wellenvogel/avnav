@@ -16,6 +16,7 @@ import base from '../base.js';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import LatLon from 'geodesy/latlon-spherical';
 import requests from "../util/requests.js";
+import r from "nlf/lib/module";
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -112,12 +113,6 @@ class  RouteData {
             data.route = data.leg.currentRoute;
             return changed;
         });
-        /**
-         * name of the default route
-         * @type {string}
-         */
-        this.DEFAULTROUTE = "default";
-        this.FALLBACKROUTENAME = STORAGE_NAMES.DEFAULTROUTE; //a fallback name for the default route
 
 
         /**
@@ -212,9 +207,7 @@ class  RouteData {
                 if (!this.lastReceivedRoute || this.lastReceivedRoute.name != route.name) {
                     overwrite = false;
                 }
-                this._sendRoute(route, () => {
-                    return false
-                }, overwrite); //ignore any errors
+                this._sendRoute(route, overwrite).then(()=>{},()=>{}); //ignore any errors
             }
         }, editingRoute.getStoreKeys());
         this.lastLegSequence = globalStore.getData(keys.nav.gps.updateleg);
@@ -249,14 +242,7 @@ class  RouteData {
             return Promise.resolve(true);
         }
         if (! this.connectMode) throw new Error("cannot save server route while disconnected");
-        return new Promise((resolve,reject)=>{
-            this._sendRoute(rte, (error) => {
-                if (error) reject(error);
-                resolve(0);
-            }, opt_overwrite);
-        });
-
-
+        return this._sendRoute(rte, opt_overwrite);
     };
     /**
      * check if the current route is active
@@ -316,6 +302,7 @@ class  RouteData {
      */
 
     anchorOn(wp, distance, opt_useCurrent) {
+        if (! this.connectMode) throw new Error("can only start anchor watch when connected");
         if (!wp && opt_useCurrent) {
             if (!globalStore.getData(keys.nav.gps.valid)) return;
             wp = globalStore.getData(keys.nav.gps.position);
@@ -462,11 +449,10 @@ class  RouteData {
     /**
      * list functions for routes
      * works async
-     * @param includeServer if set also fetch routes from server
      */
-    async listRoutes(includeServer) {
+    async listRoutes() {
         let list = this._listRoutesLocal();
-        if (!includeServer || !globalStore.getData(keys.gui.capabilities.uploadRoute, false)) {
+        if (!globalStore.getData(keys.gui.capabilities.uploadRoute, false)) {
             return list;
         }
         let canDelete = globalStore.getData(keys.properties.connectedMode, false);
@@ -569,12 +555,13 @@ class  RouteData {
             return true;
         }
         if (!this.connectMode || this.readOnlyServer) throw new Error("cannot delete server route "+name+" - not connected");
-        return await Requests.getJson({
+        await Requests.getJson({
                 request: 'api',
                 type: 'route',
                 command: 'delete',
                 name: name
             })
+        return true;
     };
     async _downloadRoute(name, opt_returnraw) {
         const response = await Requests.getHtmlOrText({
@@ -606,7 +593,6 @@ class  RouteData {
     /**
      *
      * @param name
-     * @param local - force local only access even if we are connected
      * @param opt_returnraw
      */
     async fetchRoute(name, opt_returnraw) {
@@ -681,7 +667,7 @@ class  RouteData {
     _checkNextWp() {
         activeRoute.modify((data) => {
             if (!data.leg) return;
-            if (data.leg.server && this.connectMode) return;
+            if (data.leg.server ) return;
             if (!data.leg.isRouting()) return;
             let lastApproach = data.leg.approach;
             if (data.leg.to && data.leg.to.name == navobjects.WayPoint.MOB) {
@@ -973,10 +959,6 @@ class  RouteData {
         const loadName=routeobjects.nameToBaseName(name);
         try {
             let raw = LocalStorage.getItem(STORAGE_NAMES.ROUTE, loadName);
-            if (!raw && name == this.DEFAULTROUTE) {
-                //fallback to load the old default route
-                raw = LocalStorage.getItem(this.FALLBACKROUTENAME);
-            }
             if (raw) {
                 base.log("route " + name + " successfully loaded");
                 rt.fromJsonString(raw);
@@ -1000,27 +982,19 @@ class  RouteData {
      * send the route
      * @private
      * @param {routeobjects.Route} route
-     * @param {function} opt_callback -. will be called on result, param: true on success
      * @param opt_overwrite
      */
-    _sendRoute(route, opt_callback, opt_overwrite) {
+    _sendRoute(route, opt_overwrite) {
+        if (!route) throw new Error("no route")
+        if (! route.isServer()) throw new Error("trying to send a non server route "+route.name);
         //send route to server
-        Requests.postPlain({
+        return Requests.postPlain({
             request: 'api',
             command: 'upload',
             type: 'route',
             name: route.name,
             overwrite: opt_overwrite
         }, route.toXml())
-            .then((res) => {
-                base.log("route sent to server");
-                if (opt_callback) opt_callback();
-            })
-            .catch((error) => {
-                let showError = true;
-                if (opt_callback) showError = opt_callback(error);
-                if (showError && globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + error);
-            })
     };
 
 
@@ -1057,7 +1031,7 @@ class  RouteData {
                 if (! leg.currentRoute.isServer()){
                     throw new Error("trying to send a leg with a local route");
                 }
-                this._sendRoute(leg.currentRoute, undefined, true);
+                this._sendRoute(leg.currentRoute,  true);
             }
             this.lastSentLeg = leg.clone();
             Requests.postJson({
@@ -1086,6 +1060,45 @@ class  RouteData {
         if (this.currentRoutePage !== page) return;
         this.currentRoutePage = undefined;
     };
+
+    /**
+     * create a list of all local routes by comparing them to the server routes
+     * for each route inlude the name and a status ('noserver','equal','different')
+     * @return {Promise<void>}
+     */
+    async checkLocalRoutes(deleteEqual){
+        const routes=await this.listRoutes();
+        const rt=[];
+        for (let route of routes){
+            if (routeobjects.isServerName(route.name)) continue;
+            const serverName=routeobjects.SERVER_PREFIX+routeobjects.nameToBaseName(route.name);
+            const status={...route,status:'noserver',serverName:serverName};
+            for (let other of routes){
+                if (other.name === serverName) {
+                    try{
+                        const localRoute=this._loadRoute(route.name);
+                        const serverRoute=await this._downloadRoute(serverName);
+                        if (localRoute.differsTo(serverRoute,true)){
+                            status.status='different';
+                        }
+                        else{
+                            status.status='equal';
+                        }
+                    }catch(err){
+                        base.log("error comparing route "+route.name+": "+err);
+                    }
+                    break;
+                }
+            }
+            if (status.status === 'equal' && deleteEqual){
+                await this.deleteRoute(status.name);
+            }
+            else {
+                rt.push(status);
+            }
+        }
+        return rt;
+    }
 
 }
 

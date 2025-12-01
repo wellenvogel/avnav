@@ -379,9 +379,9 @@ export class Route {
      * @param {routeobjects.Route} route2
      * @returns {boolean} true if differs
      */
-    differsTo(route2) {
+    differsTo(route2,opt_ignoreName) {
         if (!route2) return true;
-        if (this.name != route2.name) return true;
+        if (! opt_ignoreName && this.name != route2.name) return true;
         if (this.points.length != route2.points.length) return true;
         let i;
         for (i = 0; i < this.points.length; i++) {

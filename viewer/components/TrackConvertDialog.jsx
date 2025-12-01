@@ -345,7 +345,7 @@ export const TrackConvertDialog=(props)=> {
             .catch((error) => Toast(error));
     }, []);
     useEffect(() => {
-        RouteHandler.listRoutes(true)
+        RouteHandler.listRoutes()
             .then((routes)=>{
                 setCurrentRoutes(routes);
             })

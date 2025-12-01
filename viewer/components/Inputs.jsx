@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import ColorDialog from './ColorDialog.jsx';
-import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
+import {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
@@ -114,13 +114,15 @@ export const Radio=(props)=>{
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
     return <div className={frameClass} >
-        {props.label&& <span className="inputLabel">{props.label}</span>}
+        {props.label&& <span className="inputLabel radioLabel">{props.label}</span>}
         {props.itemList.map((el)=>{
             let displayClass=className;
             if (props.value == el.value) displayClass+=" checked";
+            if (el.disabled) displayClass+=" disabled";
             return(
                 <div className="radioInner" onClick={(ev)=>{
                         ev.stopPropagation();
+                        if (el.disabled) return;
                         props.onChange(el.value);
                         }}
                      key={el.label}
