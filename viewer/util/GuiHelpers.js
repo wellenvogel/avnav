@@ -559,6 +559,18 @@ const getServerCommand=(name)=>{
         })
         .catch((e)=>base.log("unable to query server command "+name));
 }
+/**
+ * helper for the react callback issue
+ * you can use the stateRef in callbacks to obtain the current value of the state
+ * @param initial
+ * @return {[unknown,(value: unknown) => void,React.MutableRefObject<unknown>]}
+ */
+export const useStateRef=(initial)=>{
+    const [state,setState]=useState(initial);
+    const stateRef=useRef(initial);
+    stateRef.current=state;
+    return [state,setState,stateRef];
+}
 
 export default {
     resizeElementFont,
@@ -572,5 +584,6 @@ export default {
     storeHelper,
     storeHelperState,
     stateHelper,
-    getServerCommand
+    getServerCommand,
+    useStateRef
 };

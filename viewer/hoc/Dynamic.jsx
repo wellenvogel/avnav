@@ -10,6 +10,7 @@
 import globalStore from "../util/globalstore.jsx";
 import React, {Children, cloneElement, useEffect, useRef, useState} from 'react';
 import {KeyHelper} from "../util/keys";
+import {useStateRef} from "../util/GuiHelpers";
 
 const getStoreAndKeys=(props,options)=>{
     if (! options) options={};
@@ -114,7 +115,7 @@ export default  function(Component,opt_options,opt_store){
  * @param forceInitial - always set this initial value if not undefine
  */
 export const useStoreState = (storeKey, defaultInitialValue, forceInitial) => {
-    const [value, setValue] = useState(() => {
+    const [value, setValue,valueRef] = useStateRef(() => {
         let iv = globalStore.getData(storeKey);
         if (iv === undefined || forceInitial) {
             iv = (typeof defaultInitialValue === 'function') ? defaultInitialValue(iv) : defaultInitialValue;
@@ -137,6 +138,7 @@ export const useStoreState = (storeKey, defaultInitialValue, forceInitial) => {
         value,
         (nv) => {
             globalStore.storeData(storeKey, nv);
-        }
+        },
+        valueRef
     ]
 }

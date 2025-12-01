@@ -85,41 +85,29 @@ const DownloadItem = (props) => {
         </div>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,filter,itemActions}) => {
+export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,itemActions}) => {
     const [items, setItems] = useState([]);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
-        if (type === 'chart' && !noExtra) {
-            items.push(DEFAULT_OVERLAY_CHARTENTRY)
-        }
-        if (type !== 'plugins') {
-            items.sort(itemSort);
-        }
-        if (filter) {
-            const filtered = [];
-            items.forEach(item => {
-                const ferr = filter(item);
-                if (!ferr) filtered.push(item);
-            })
-            setItems(filtered);
-        } else {
-            setItems(items);
-        }
+        setItems(items);
     }, [type])
     useEffect(() => {
         readItems().then(() => {
         }, (err) => Toast(err));
-    }, [type,filter])
+    }, [type])
     const dialogContext = useDialogContext();
     if (!itemActions) itemActions = createItemActions(type);
     const createAction=itemActions.getCreateAction().copy({
         checkName:(name,itemList,accessor)=>{
-            if (filter){
-                const ferr=filter({name:name,type:type});
-                if (ferr){
+            const rs=itemActions.show({name:name,type:type});
+            if (rs !== true){
+                if (typeof(rs) === 'string'){
                     return {
-                        error:ferr
+                        error:rs
                     }
+                }
+                return {
+                    error: 'invalid name for '+type
                 }
             }
             return checkName(name, items, accessor);
@@ -151,6 +139,18 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,
         }
     })
     const uploadAction = itemActions.getUploadAction();
+    let displayList=[];
+    (items||[]).forEach((item) => {
+        if (itemActions.show(item) === true){
+            displayList.push(item);
+        }
+    });
+    if (type === 'chart' && !noExtra) {
+        displayList.push(DEFAULT_OVERLAY_CHARTENTRY)
+    }
+    if (type !== 'plugins') {
+        displayList.sort(itemSort);
+    }
     return <React.Fragment>
         <ItemList
             className={'DownloadItemList'}
@@ -160,7 +160,7 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,
                 itemActions={itemActions}
             />}
             scrollable={true}
-            itemList={items}
+            itemList={displayList}
             onItemClick={async (ev) => {
                 const item = avitem(ev);
                 setav(ev,{dialogContext:dialogContext});
@@ -211,11 +211,10 @@ DownloadItemList.propTypes = {
     infoMode: PropTypes.number,
     noExtra: PropTypes.bool,
     showUpload: PropTypes.bool,
-    filter: PropTypes.func, //get the item, return undefined to use it, error text otherwise
     itemActions: PropTypes.instanceOf(ItemActions),
 }
 
-export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,filter,itemActions})=>{
+export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,itemActions})=>{
     const actions=itemActions||createItemActions(type);
     const [uploadSequence, setUploadSequence] = useState(0);
     const buttons=[];
@@ -236,7 +235,6 @@ export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noEx
             showUpload={showUpload}
             noInfo={noInfo}
             noExtra={noExtra}
-            filter={filter}
         />
         <DialogButtons buttonList={
             buttons
@@ -250,6 +248,5 @@ DownloadItemListDialog.propTypes = {
     showUpload: PropTypes.bool,
     noInfo: PropTypes.bool,
     noExtra: PropTypes.bool,
-    filter:PropTypes.func,
     itemActions: PropTypes.instanceOf(ItemActions),
 }

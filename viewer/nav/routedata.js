@@ -200,7 +200,7 @@ class  RouteData {
         globalStore.register(()=>{
             let route = editingRoute.getRoute();
             if (!route) return;
-            if (!route.server) {
+            if (!route.isServer()) {
                 this._saveRouteLocal(route);
                 return;
             }

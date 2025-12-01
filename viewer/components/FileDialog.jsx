@@ -106,7 +106,7 @@ class CopyAware{
         if (typeof target === 'function'){
             return target(this,item);
         }
-        return !!target;
+        return target;
     }
 }
 /**
@@ -262,7 +262,6 @@ class Action extends CopyAware{
         this.disabled=disabled;
         this.fixedExtension=fixedExtension;
         this.hasScope=hasScope||false;
-        this.runAction=this.runAction.bind(this);
     }
 
     /**
@@ -281,6 +280,7 @@ class Action extends CopyAware{
             if (rs && dialogContext && Helper.unsetorTrue(this.close)) {
                 dialogContext.closeDialog();
             }
+            return rs;
         }
     }
     async runAction(item,dialogContext,history){
@@ -821,6 +821,16 @@ export class ItemActions extends CopyAware{
         return item.isActive?"activeEntry":undefined;
     }
     build(){
+    }
+
+    /**
+     * used in DownloadItemList to decide if the item should be shown
+     * intended to be overwritten
+     * @param item
+     * @return {boolean|string} - to hide return false or an error string
+     */
+    show(item){
+        return true;
     }
 }
 

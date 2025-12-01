@@ -20,7 +20,7 @@ import {
     useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.js';
-import {useTimer} from '../util/GuiHelpers.js';
+import {useStateRef, useTimer} from '../util/GuiHelpers.js';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
@@ -230,15 +230,18 @@ const isRouteInList=(routeList,route)=>{
 
 const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUpload})=>{
     const dialogContext=useDialogContext();
-    const [connectedMode]=useStoreState(keys.properties.connectedMode);
-    const connectedModeRef=useRef(null);
-    connectedModeRef.current=connectedMode;
+    const [,,connectedModeRef]=useStoreState(keys.properties.connectedMode);
+    const [wrOnly,setWrOnly,wrOnlyRef]=useStateRef(true);
     const itemActions=createItemActions('route').copy({
-        canModify:(item)=>item.server == connectedModeRef.current
+        canModify:(item)=>(!item.server || connectedModeRef.current),
+        show:(item)=>{
+            if (selectedRoute && selectedRoute.name === item.name) return "selected";
+            if (isRouteInList(blacklist,item)) return "blacklisted";
+            if (! wrOnlyRef.current) return true;
+            if (item.server && ! connectedModeRef.current) return "not con";
+            return true;
+        }
     })
-    const [wrOnly,setWrOnly]=useState(true);
-    const wrOnlyRef=useRef(wrOnly);
-    wrOnlyRef.current=wrOnly;
     const [uploadSequence,setUploadSequence]=useState(0);
     return <DialogFrame className={'LoadRoutesDialog'} title={title}>
         <Checkbox dialogRow={true} label={"writableOnly"} value={wrOnly} onChange={(nv)=>setWrOnly(nv)}/>
@@ -260,12 +263,6 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
             noExtra={true}
             infoMode={DownloadItemInfoMode.ICONS}
             showUpload={false}
-            filter={(item)=>{
-                if (selectedRoute && selectedRoute.name === item.name) return "selected";
-                if (isRouteInList(blacklist,item)) return "blacklisted";
-                if (! wrOnlyRef.current) return;
-                if (item.server !== connectedMode) return "con/not con";
-            }}
             itemActions={itemActions}
         />
         <UploadHandler
@@ -274,8 +271,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
             type={'route'}
             checkNameCallback={async (file)=>{
                 try {
-                    const actions=createItemActions({type:'route'})
-                    const uploadAction=actions.getUploadAction().copy({
+                    const uploadAction=itemActions.getUploadAction().copy({
                         localAction: async (userData,name,file)=>{
                             if (! userData.nroute) throw new Error("no route loaded");
                             userData.nroute.name=name;
@@ -396,7 +392,9 @@ const EditRouteDialog = (props) => {
             changeRoute((nr)=>{nr.setName(newName)})
         }
     }):undefined;
-    const deleteAction=actions.delete;
+    const deleteAction=actions.delete.copy({
+        close:false
+    });
     return <DialogFrame className={Helper.concatsp("EditRouteDialog",isActiveRoute()?"activeRoute":undefined)} title={"Edit Route"}>
         <InputReadOnly
             dialogRow={true}
@@ -473,20 +471,26 @@ const EditRouteDialog = (props) => {
         <DialogButtons>
             <DB name="delete"
                 onClick={async () => {
-                    if (await deleteAction.runAction(info,dialogContext)) {
-                        dialogContext.closeDialog();
+                    try {
+                        if (await deleteAction.runAction(info, dialogContext)) {
+                            if (editor.isHandling(info)) {
+                                editor.removeRoute();
+                            }
+                            dialogContext.closeDialog();
+                        }
+                    }catch (e) {
+                        if (e) Toast(e);
                     }
                 }}
                 close={false}
-                disabled={!canDelete}
-                visible={!!deleteAction}
+                disabled={!canDelete || saveMode === RouteSaveModes.REPLACE_NEW}
+                visible={!!deleteAction }
             >Delete</DB>
             <DB name="copy"
                 onClick={() => {
                     renameAction.copy({
                         execute: (item,newName)=>{
-                            const prefix=connectedMode?routeobjects.SERVER_PREFIX:routeobjects.LOCAL_PREFIX;
-                            let changedRoute=changeRoute((nr)=>{nr.setName(prefix+newName)})
+                            let changedRoute=changeRoute((nr)=>{nr.setName(newName)})
                             setSaveMode(RouteSaveModes.REPLACE_NEW); //just if something goes wrong during save and we do not close
                             if(save(changedRoute,RouteSaveModes.REPLACE_NEW)) dialogContext.closeDialog()
                         },

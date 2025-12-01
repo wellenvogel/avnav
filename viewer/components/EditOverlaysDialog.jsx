@@ -31,6 +31,7 @@ import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
 import {fetchItem, fetchItemInfo, listItems} from "../util/itemFunctions";
 import {DownloadItemListDialog} from "./DownloadItemList";
+import {createItemActions} from "./FileDialog";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};
@@ -69,6 +70,14 @@ const OverlayItemDialog = (props) => {
     const [changed, setChanged] = useState(false);
     const [current, setCurrent] = useState(props.current || {});
     let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
+    let currentType = current.type;
+    const itemActions=createItemActions(currentType).copy({
+        show:(item)=>{
+            const cf=SELECT_FILTERS[currentType];
+            if (!cf) return true;
+            return cf(item)||true;
+        }
+    });
     const parameters=useMemo(()=>{
         const rt=[];
         if (itemInfo.settings){
@@ -169,7 +178,6 @@ const OverlayItemDialog = (props) => {
             updateCurrent({name: undefined});
         }
     }
-    let currentType = current.type;
 
     let dataValid=true;
     parameters.forEach((parameter)=>{
@@ -217,7 +225,7 @@ const OverlayItemDialog = (props) => {
                                     showUpload={false}
                                     noInfo={true}
                                     noExtra={true}
-                                    filter={SELECT_FILTERS[currentType]}
+                                    itemActions={itemActions}
                                     selectCallback={async (ev)=>{
                                         const item = avitem(ev);
                                         let newState = {
