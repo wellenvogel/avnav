@@ -47,6 +47,7 @@ import {FeatureAction, FeatureInfo} from "../map/featureInfo";
 import DownloadButton from "../components/DownloadButton";
 import {useHistory} from "../components/HistoryProvider";
 import {DownloadItemInfoMode, DownloadItemList} from "../components/DownloadItemList";
+import {RouteSyncDialog} from "../components/RouteInfoHelper";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -976,6 +977,25 @@ const EditRoutePage = (props) => {
             }
         },
         CenterActionButton,
+        {
+            name: 'SyncRoutes',
+            overflow: true,
+            editDisable: true,
+            storeKeys: {
+                enabled: keys.properties.connectedMode
+            },
+            updateFunction:(state)=>{
+                return {
+                    disabled: !state.enabled
+                }
+            },
+            onClick:()=>{
+                showDialog(dialogCtxRef, ()=><RouteSyncDialog
+                    deleteLocal={true}
+                    showEmpty={true}
+                />)
+            }
+        },
         Mob.mobDefinition(history),
         EditPageDialog.getButtonDef(PAGENAME,
             MapPage.PANELS, [LayoutHandler.OPTIONS.SMALL], dialogCtxRef),
