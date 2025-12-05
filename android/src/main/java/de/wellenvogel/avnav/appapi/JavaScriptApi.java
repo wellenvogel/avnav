@@ -239,7 +239,7 @@ public class JavaScriptApi {
         if (uploadData==null || ! uploadData.isReady(id)) return false;
         return uploadData.interruptCopy(false);
     }
-    
+
 
     @JavascriptInterface
     public void goBack() {

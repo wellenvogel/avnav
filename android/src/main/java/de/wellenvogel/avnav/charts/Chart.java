@@ -18,6 +18,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
@@ -113,15 +114,20 @@ public class Chart implements IChartWithConfig {
         }
     }
 
-    ParcelFileDescriptor getDownloadFd(Context ctx) throws FileNotFoundException {
+    ExtendedWebResourceResponse getDownload(Context ctx) throws IOException {
         if (documentFile != null){
-            return ctx.getContentResolver().openFileDescriptor(documentFile.getUri(),"r");
+            ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(documentFile.length(),
+                    "application/octet-stream",
+                    "",
+                    ctx.getContentResolver().openInputStream(documentFile.getUri()));
+            rt.setDateHeader("Last-Modified",new Date(documentFile.lastModified()));
+            return rt;
         }
         if (realFile != null){
             if (! realFile.exists() || ! realFile.canRead()){
                 throw new FileNotFoundException("unable to read "+realFile.getName());
             }
-            return ParcelFileDescriptor.open(realFile,ParcelFileDescriptor.MODE_READ_ONLY);
+            return new ExtendedWebResourceResponse(realFile,"application/octet-stream","");
         }
         throw new FileNotFoundException("no file found for "+name);
     }

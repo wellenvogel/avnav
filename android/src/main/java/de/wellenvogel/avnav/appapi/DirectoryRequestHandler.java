@@ -54,10 +54,9 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         File found=findLocalFile(name);
         if (found == null) return null;
         return new ExtendedWebResourceResponse(
-            found.length(),
+                found,
             "application/octet-stream",
-            "",
-            new FileInputStream(found)
+            ""
         );
     }
 

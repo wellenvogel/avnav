@@ -495,14 +495,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         if (chart == null){
             throw new IOException("chart "+name+" not found for download");
         }
-        ParcelFileDescriptor fd=chart.getDownloadFd(context);
-        if (fd == null) return null;
-        ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(fd.getStatSize(),
-                "application/octet-stream",
-                "",
-                new FileInputStream(fd.getFileDescriptor()));
-        rt.userData=fd;
-        return rt;
+        return chart.getDownload(context);
     }
 
     @Override

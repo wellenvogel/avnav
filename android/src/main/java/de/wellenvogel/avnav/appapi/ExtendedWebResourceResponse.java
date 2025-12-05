@@ -4,8 +4,13 @@ import android.os.Build;
 import android.webkit.WebResourceResponse;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -30,12 +35,21 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
             setResponseHeaders(headers);
         }
     }
+    public ExtendedWebResourceResponse(File f,String mime, String encoding) throws IOException {
+        super(mime,encoding, Files.newInputStream(f.toPath()));
+        this.length=f.length();
+        this.setDateHeader("Last-Modified",new Date(f.lastModified()));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setResponseHeaders(headers);
+        }
+    }
     public ExtendedWebResourceResponse(int statusCode,String error){
         super("text/html",StandardCharsets.UTF_8.toString(),new ByteArrayInputStream(new byte[]{}));
         this.length=0;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setResponseHeaders(headers);
         }
+        setHeader("Cache-Control","no-store");
         this.statusCode=statusCode;
         reason=error;
     }
