@@ -20,6 +20,7 @@ import {Input, InputReadOnly} from "./Inputs";
 import {shallowEqualArrays} from "shallow-equal";
 import Helper from "../util/helper";
 import {SortableProps} from "../hoc/Sortable";
+import UndefinedWidget from "./UndefinedWidget";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -241,9 +242,17 @@ class WidgetFactory{
      * @returns {*}
      */
     findWidget(widget,opt_fallback,opt_mergeEditables){
-        let i=this.findWidgetIndex(widget,opt_fallback);
-        if (i < 0) return undefined;
-        let e=this.widgetDefinitions[i];
+        let e=this.findWidgetDefinition(widget);
+        if ( !e ){
+            if (! opt_fallback) return;
+            e= {wclass: UndefinedWidget};
+            if (typeof(widget)!=='object'){
+                e.name=widget;
+            }
+            else {
+                e.name = widget.name;
+            }
+        }
         let RenderWidget = e.wclass || DirectWidget;
         let widgetPredefines=RenderWidget.predefined;
         if (! (widgetPredefines instanceof Object)) widgetPredefines= {};
@@ -364,22 +373,26 @@ class WidgetFactory{
     /**
      * find the index for a widget
      * @param widget - either a name or a widget description with a name field
-     * @returns {number} - -1 omn error
+     * @returns undefined if not found
      */
-    findWidgetIndex(widget,opt_useFallback){
+    findWidgetDefinition(widget,replace){
         if (widget === undefined) return -1;
         let search=widget;
         if (typeof(widget) !== "string"){
             search=widget.name;
         }
+        else{
+            if (replace) throw new Error("findWidgetdefinition needs object for replace");
+        }
         for (let i=0;i<this.widgetDefinitions.length;i++) {
             let e = this.widgetDefinitions[i];
             if ((e.name !== undefined && e.name == search ) || (e.caption == search)) {
-                return i;
+                if (replace){
+                    this.widgetDefinitions[i]=widget;
+                }
+                return e;
             }
         }
-        if (! opt_useFallback) return -1;
-        return this.findWidgetIndex("Undefined");
     }
 
     createWidget(props, opt_properties) {
@@ -488,12 +501,13 @@ class WidgetFactory{
     addWidget(definition,ignoreExisting){
         if (! definition) throw new Error("missing parameter definition");
         if (! definition.name) throw new Error("missing parameter name");
-        let existing=this.findWidgetIndex(definition);
-        if (existing >= 0 ) {
+        let existing=this.findWidgetDefinition(definition,ignoreExisting);
+        if (existing ) {
             if (! ignoreExisting) throw new Error("widget " + definition.name + " already exists");
-            this.widgetDefinitions[existing]=definition;
         }
-        this.widgetDefinitions.push(definition);
+        else {
+            this.widgetDefinitions.push(definition);
+        }
     }
     getWidgetFromTypeName(typeName){
         switch(typeName){
