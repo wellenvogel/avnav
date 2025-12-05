@@ -438,6 +438,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     if filename is not None and filename != "" and not noattach:
       self.send_header("Content-Disposition", "attachment; %s"%AVNDownload.fileToAttach(filename))
     self.send_header("Content-type", download.getMimeType(self))
+    self.send_header("Cache-Control", "no-store")
     if size is not None:
       self.send_header("Content-Length", size)
     else:
