@@ -82,7 +82,7 @@ const plainNameForCheck=(item)=>{
 }
 const scopedNameForCheck=(item)=>{
     if (! item || ! item.name) return;
-    if (! item.checkPrefix) return;
+    if (item.checkPrefix === undefined) return;
     return item.name.substring(item.checkPrefix.length);
 }
 class CopyAware{

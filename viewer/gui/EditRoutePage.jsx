@@ -490,6 +490,8 @@ const EditRouteDialog = (props) => {
                 onClick={() => {
                     renameAction.copy({
                         execute: (item,newName)=>{
+                            const baseName=routeobjects.nameToBaseName(newName);
+                            newName=(itemActions.isConnected()?routeobjects.SERVER_PREFIX:routeobjects.LOCAL_PREFIX)+baseName;
                             let changedRoute=changeRoute((nr)=>{nr.setName(newName)})
                             setSaveMode(RouteSaveModes.REPLACE_NEW); //just if something goes wrong during save and we do not close
                             if(save(changedRoute,RouteSaveModes.REPLACE_NEW)) dialogContext.closeDialog()
@@ -553,7 +555,7 @@ const checkRouteWritable = (dialogCtxRef) => {
     let currentEditor = getCurrentEditor();
     if (currentEditor.isRouteWritable()) return true;
     if (!dialogCtxRef) return false;
-    showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
+    showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to save as new local route."}/>)
         .then(() => {
             showDialog(dialogCtxRef,(props)=><EditRouteDialog
                 {...props}

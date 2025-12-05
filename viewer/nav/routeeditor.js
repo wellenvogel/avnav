@@ -399,6 +399,13 @@ class RouteEdit{
         let data=load(this.storeKeys);
         return StateHelper.isSameRoute(data,route);
     }
+    isHandlingName(name){
+        if (! name) return false;
+        let data=load(this.storeKeys);
+        let [route,,]=StateHelper.getRouteIndexFlag(data);
+        if (route && route.name === name) return true;
+        return false;
+    }
     getIndexFromPoint(point,opt_bestMatching){
         let data=load(this.storeKeys);
         if (!data.route) return -1;

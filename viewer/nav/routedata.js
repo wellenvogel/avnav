@@ -467,7 +467,6 @@ class  RouteData {
             ri.server = true;
             if (ri.canDelete !== false) ri.canDelete = canDelete;
             if (editingRoute.isHandling(ri)) {
-                ri.canDelete = false;
                 ri.isEditing = true;
             }
             if (this.isActiveRoute(ri)) ri.active = true;
@@ -492,7 +491,6 @@ class  RouteData {
             rtinfo.server=route.isServer();
             if (this.isActiveRoute(rtinfo)) rtinfo.active = true;
             if (editingRoute.isHandling(rtinfo)) {
-                rtinfo.canDelete = false;
                 rtinfo.isEditing = true;
             }
             rtinfo.compute();
@@ -552,6 +550,7 @@ class  RouteData {
                 LocalStorage.removeItem(STORAGE_NAMES.ROUTE, routeobjects.nameToBaseName(name));
             } catch (e) {
             }
+            if (editingRoute.isHandlingName(name)) editingRoute.removeRoute();
             return true;
         }
         if (!this.connectMode || this.readOnlyServer) throw new Error("cannot delete server route "+name+" - not connected");
@@ -561,6 +560,7 @@ class  RouteData {
                 command: 'delete',
                 name: name
             })
+        if (editingRoute.isHandlingName(name)) editingRoute.removeRoute();
         return true;
     };
     async _downloadRoute(name, opt_returnraw) {
