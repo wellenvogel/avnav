@@ -1060,6 +1060,36 @@ class RouteItemActions extends ItemActions{
                 return true;
             }
         }));
+        if (!routeobjects.isServerName(item.name)){
+            actions.push(new Action({
+                label:'Upload',
+                name:'upload',
+                action: async (action,item,dialogContext,history)=>{
+                    const items = await listItems('route');
+                    let found=false;
+                    const serverName=routeobjects.SERVER_PREFIX+routeobjects.nameToBaseName(item.name);
+                    for (let item of items) {
+                        if (item.name === serverName){
+                            found=true;
+                            break;
+                        }
+                    }
+                    let txt=found?
+                        "Replace existing server route and delete local?"
+                        :
+                        "Upload to server and delete local?";
+                    const rs=await showPromiseDialog(dialogContext,(dp)=><ConfirmDialog {...dp} text={txt}/>)
+                    if (rs) {
+                        const route=await RouteHandler.fetchRoute(item.name);
+                        route.setName(serverName);
+                        await RouteHandler.saveRoute(route,true);
+                        await RouteHandler.deleteRoute(item.name);
+                        dialogContext.closeDialog();
+                    }
+                },
+                visible: ()=>this.isConnected(),
+            }))
+        }
         actions.push(standardActions.rename.copy({
             hasScope: this.hasScope,
             visible:canModify,
