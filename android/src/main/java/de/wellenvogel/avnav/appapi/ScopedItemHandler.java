@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,8 +84,21 @@ public class ScopedItemHandler implements INavRequestHandler{
     }
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
-        InputStream item= getItemForReading(name);
-        return new ExtendedWebResourceResponse(-1,"application/json","",item);
+        if (name.startsWith(ItemInfo.SYSTEMPREFIX)){
+            ItemInfo info=systemItems.get(name);
+            if (info == null) throw new IOException("system item "+name+" not found");
+            ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(-1,"application/json","",context.getAssets().open(systemDir+"/"+info.fileName));
+            rt.setDateHeader("Last-Modified",new Date(BuildConfig.TIMESTAMP));
+            return rt;
+        }
+        if (name.startsWith(ItemInfo.USERPREFIX)){
+            name=name.substring(ItemInfo.USERPREFIX.length());
+            name=DirectoryRequestHandler.safeName(name,true);
+            File ifile=new File(userDir,name+SUFFIX);
+            if (! ifile.canRead()) throw new IOException("unable to read file: "+ifile.getAbsolutePath());
+            return new ExtendedWebResourceResponse(ifile,"application/json","");
+        }
+        throw new IOException("neither system nor user item: "+name);
     }
 
     String nameToUserFileName(String fileName, boolean hardCheck) throws Exception{
