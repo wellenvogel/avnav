@@ -234,15 +234,15 @@ class  RouteData {
      * @param {routeobjects.Route} rte
      * @param opt_overwrite if true - overwrite route
      */
-    saveRoute(rte, opt_overwrite) {
+    async saveRoute(rte, opt_overwrite) {
         if (!rte) throw new Error("no route for save");
         if (!rte.isServer()) {
             if (!opt_overwrite && this._localRouteExists(rte)) throw new Error("local route already exists");
             this._saveRouteLocal(rte);
-            return Promise.resolve(true);
+            return true;
         }
         if (! this.connectMode) throw new Error("cannot save server route while disconnected");
-        return this._sendRoute(rte, opt_overwrite);
+        return await this._sendRoute(rte, opt_overwrite);
     };
     /**
      * check if the current route is active
@@ -984,11 +984,11 @@ class  RouteData {
      * @param {routeobjects.Route} route
      * @param opt_overwrite
      */
-    _sendRoute(route, opt_overwrite) {
+    async _sendRoute(route, opt_overwrite) {
         if (!route) throw new Error("no route")
         if (! route.isServer()) throw new Error("trying to send a non server route "+route.name);
         //send route to server
-        return Requests.postPlain({
+        return await Requests.postPlain({
             request: 'api',
             command: 'upload',
             type: 'route',
