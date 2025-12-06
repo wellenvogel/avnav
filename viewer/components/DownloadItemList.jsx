@@ -235,6 +235,7 @@ export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noEx
             showUpload={showUpload}
             noInfo={noInfo}
             noExtra={noExtra}
+            itemActions={itemActions}
         />
         <DialogButtons buttonList={
             buttons
