@@ -84,6 +84,7 @@ const DownloadPage=(props)=>{
                     <DownloadItemList
                         type={type}
                         uploadSequence={uploadSequence}
+                        showUpload={true}
                     />
                 </PageLeft>
                 <ButtonList
