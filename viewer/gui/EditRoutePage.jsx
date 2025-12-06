@@ -518,7 +518,7 @@ const EditRouteDialog = (props) => {
 }
 
 EditRouteDialog.propTypes = {
-    route: PropTypes.objectOf(routeobjects.Route).isRequired
+    route: PropTypes.instanceOf(routeobjects.Route).isRequired
 }
 
 
