@@ -54,6 +54,9 @@ const SELECT_FILTERS={
     },
     overlay:(item)=>{
         if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name)) < 0) return "no overlay";
+    },
+    route:(item)=>{
+      if (! item.server) return "only server routes";
     }
 }
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
@@ -151,13 +154,12 @@ const OverlayItemDialog = (props) => {
         if (!item.name) return;
         setLoading(true);
         try {
-            const overlayData = await fetchItem(item);
-            if (!overlayData) throw new Error("no overlay data loaded");
+            const OverlayClass = Mapholder.findChartSourceForItem(item);
+            if (!OverlayClass) throw new Error("unknown overlay "+item.name);
             let featureInfo = {};
-                const OverlayClass = Mapholder.findChartSourceForItem(item);
-                if (typeof (OverlayClass.analyzeOverlay) === 'function') {
-                    featureInfo = OverlayClass.analyzeOverlay(overlayData);
-                }
+            if (typeof (OverlayClass.analyzeOverlay) === 'function') {
+                featureInfo = await OverlayClass.analyzeOverlay(item);
+            }
             if (!featureInfo.hasAny) {
                 Toast(" no valid overlay file");
                 setLoading(false);

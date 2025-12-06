@@ -42,6 +42,8 @@ import {getClosestRoutePoint} from "../nav/routeeditor";
 import Mapholder from "./mapholder";
 import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
 import {getRouteStyles} from "./routelayer";
+import {fetchItem} from "../util/itemFunctions";
+import base from "../base";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -315,7 +317,7 @@ class GpxChartSource extends ChartSourceBase{
             this.source = new olVectorSource({
                 format: new OwnGpx(this.mapholder),
                 loader: (extent, resolution, projection) => {
-                    Requests.getHtmlOrText(url, {}, {'_': (new Date()).getTime()})
+                    fetchItem(this.chartEntry)
                         .then((gpx) => {
                             gpx = stripExtensions(gpx);
                             let features = this.source.getFormat().readFeatures(gpx, {
@@ -356,8 +358,9 @@ class GpxChartSource extends ChartSourceBase{
                             );
                             this.buildStyles();
                         })
-                        .catch((error) => {
-                            //vectorSource.removeLoadedExtent(extent);
+                        .catch((err) => {
+                            base.log(`unable to load geojson ${this.chartEntry.name}: ${err}`);
+                            this.source.removeLoadedExtent(extent);
                         })
                 },
                 wrapX: false
@@ -424,7 +427,8 @@ class GpxChartSource extends ChartSourceBase{
         return rt;
     }
 
-    static analyzeOverlay(overlay){
+    static async analyzeOverlay(item){
+        const overlay=await fetchItem(item);
         return readFeatureInfoFromGpx(overlay)
     }
 }

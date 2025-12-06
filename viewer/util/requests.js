@@ -60,6 +60,9 @@ export const prepareUrl=(url, options)=>{
         else {
             rurl = addParameters(rurl, url);
         }
+        //always add a _ parameter with the current date to API requests
+        //to avoid any caching
+        rurl=addParameters(rurl,{'_':(new Date()).getTime()});
     }
     return rurl;
 

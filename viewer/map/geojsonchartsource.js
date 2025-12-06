@@ -35,6 +35,8 @@ import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
 import {GeoJSON as olGeoJSON} from 'ol/format';
 import {FeatureInfo, OverlayFeatureInfo} from "./featureInfo";
+import {fetchItem} from "../util/itemFunctions";
+import base from "../base";
 
 const supportedStyleParameters= {
     lineWidth:editableOverlayParameters.lineWidth,
@@ -61,7 +63,7 @@ class GeoJsonChartSource extends ChartSourceBase{
      *
      * @param mapholer
      * @param chartEntry
-     *        properties: url - the url of the gpx
+     *        properties: name - the name of the geojson
      *                    icons - the base url for icons (if points have a sym)
      *                    defaultIcon - the url for an icon if sym not found (opt)
      *                    minZoom - minimal zoom (opt)
@@ -207,13 +209,22 @@ class GeoJsonChartSource extends ChartSourceBase{
     }
 
     async prepareInternal() {
-        let url = this.chartEntry.url;
-        if (!url) {
-            throw new Error("no url for " + this.chartEntry.name);
-        }
         this.source = new olVectorSource({
             format: new olGeoJSON(),
-            url: url,
+            loader: (extent,resolution,projection)=> {
+                fetchItem(this.chartEntry)
+                    .then((data)=>{
+                        let features=this.source.getFormat().readFeatures(data,{
+                            extent: extent,
+                            featureProjection: projection,
+                        });
+                        this.source.addFeatures(features);
+                    })
+                    .catch((err)=>{
+                        base.log(`unable to load geojson ${this.chartEntry.name}: ${err}`);
+                        this.source.removeLoadedExtent(extent);
+                    })
+            },
             wrapX: false
         });
         let layerOptions = {
@@ -258,7 +269,8 @@ class GeoJsonChartSource extends ChartSourceBase{
         rt.userInfo=userInfo;
         return rt;
     }
-    static analyzeOverlay(overlay){
+    static async analyzeOverlay(item){
+        const overlay=await fetchItem(item);
         return readFeatureInfoFromGeoJson(overlay);
     }
 }
