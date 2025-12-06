@@ -66,8 +66,7 @@ import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
-import {listItems} from "../util/itemFunctions";
-
+import {fetchItem, listItems} from "../util/itemFunctions";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -1276,7 +1275,29 @@ class LayoutItemActions extends ItemActions{
     canView(item) {
         return true;
     }
-
+    namePreCheck(name){
+        if (! name) {
+            const d=new Date();
+            const proposal=`layout${d.getFullYear()}${d.getMonth()}${d.getDate()}`;
+            return {
+                error:'must not be empty',
+                proposal: proposal
+            }
+        }
+        if (name.endsWith('.'+this.fixedExtension)){
+            return {
+                error:'must not end with .'+this.fixedExtension,
+                proposal: name.substring(0,name.length-this.fixedExtension.length-1),
+            }
+        }
+        const up=layoutLoader.getUserPrefix();
+        if (name.startsWith(up)){
+            return {
+                error: 'must not start with '+up,
+                proposal: name.substr(up.length)
+            }
+        }
+    }
     fillActions(item, actions) {
         actions.push(standardActions.delete.copy({
             visible: this.canModify(item) ,
@@ -1286,6 +1307,17 @@ class LayoutItemActions extends ItemActions{
                 await removeItemsFromOverlays(item);
                 return true;
             }
+        }))
+        actions.push(standardActions.rename.copy({
+            visible:this.canModify(item),
+            keepExtension:false,
+            hasScope: true,
+            execute: async (item,newName)=>{
+                await layoutLoader.renameLayout(item.name,newName);
+                return true;
+            },
+            preCheck:(name)=>this.namePreCheck(name)
+
         }))
         actions.push(standardActions.view.copy({
             action: async (action,item,dialogContext,history) => {
@@ -1304,7 +1336,7 @@ class LayoutItemActions extends ItemActions{
             visible: this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE && item.canDelete
         }))
         actions.push(standardActions.download.copy({
-            localData: ()=>layoutLoader.getLocalDownload(item.name)
+            localData: ()=>fetchItem(item)
         }))
     }
 
@@ -1315,6 +1347,15 @@ class LayoutItemActions extends ItemActions{
     }
     showUpload() {
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadLayout,false);
+    }
+
+    getUploadAction() {
+        return super.getUploadAction().copy({
+            localAction: async (userData,name,file)=>{
+                const data=await readTextFile(file);
+                await layoutLoader.uploadLayout(name,data);
+            }
+        });
     }
 }
 

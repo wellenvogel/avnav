@@ -57,9 +57,7 @@ export const fetchItem = async (item) => {
     if (type === 'route') {
         data = await RouteHandler.fetchRoute(item.name,  true);
     } else if (type === 'layout') {
-        data = await layoutLoader.loadLayout(item.name);
-        //the layout is loaded as json...
-        data = JSON.stringify(data, undefined, 2);
+        data = await layoutLoader.loadLayout(item.name,true);
     } else {
         data = (await Requests.getHtmlOrText({
             type: type,

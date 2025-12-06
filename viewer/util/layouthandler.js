@@ -155,13 +155,17 @@ class LayoutLoader{
     /**
      * loads a layout but still does not activate it
      * @param name
+     * @param opt_raw
      */
-    loadLayout(name) {
+    loadLayout(name,opt_raw) {
         if (this.storeLocally) {
             if (!this.temporaryLayouts[name]) {
                 return Promise.reject("layout " + name + " not found");
             } else {
                 let layout = this.temporaryLayouts[name];
+                if (opt_raw){
+                    return Promise.resolve(JSON.stringify(layout,undefined, 2));
+                }
                 return Promise.resolve(layout);
             }
         }
@@ -176,6 +180,9 @@ class LayoutLoader{
                 let error = this.checkLayout(json);
                 if (error !== undefined) {
                     throw new Error("layout error: " + error);
+                }
+                if (opt_raw){
+                    return JSON.stringify(json,undefined, 2);
                 }
                 return json;
             },
@@ -300,6 +307,31 @@ class LayoutLoader{
             command: 'delete',
             type: 'layout',
             name: name
+        })
+    }
+    renameLayout(name,newName){
+        if (! name) throw new Error("no name for deleteLayout");
+        if (! name.startsWith(USER_PREFIX)){
+            throw new Error("can only rename user layouts");
+        }
+        if (! newName.startsWith(USER_PREFIX)){
+            throw new Error("the new layout name must also start with "+USER_PREFIX);
+        }
+        if (this.storeLocally){
+            if (this.temporaryLayouts[newName]) {
+                throw new Error("layout " + newName + " already exists");
+            }
+            const layout=this.temporaryLayouts[name];
+            if (! layout) throw new Error("layout "+name+" not found");
+            delete this.temporaryLayouts[name];
+            this.temporaryLayouts[newName] = layout;
+            return Promise.resolve(true);
+        }
+        return Requests.getJson({
+            command:'rename',
+            type:'layout',
+            name: name,
+            newName: newName
         })
     }
     /**
