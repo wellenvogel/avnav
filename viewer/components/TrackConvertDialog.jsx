@@ -328,7 +328,7 @@ export const TrackConvertDialog=(props)=> {
     const dialogContext=useDialogContext();
     const history=useHistory();
     useEffect(() => {
-        getTrackInfo(props.name)
+        getTrackInfo({name:props.name})
             .then((info) => {
                 setPoints(info.points||[])
                 setLoaded(true);
