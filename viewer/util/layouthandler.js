@@ -212,7 +212,7 @@ class LayoutLoader{
      * @param opt_overwrite
      * @returns {Promise<never>|Promise<Awaited<{status: string}>>|Promise<unknown>}
      */
-    uploadLayout(name, layout, opt_overwrite) {
+    uploadLayout(name, layout, opt_overwrite,opt_completeName) {
         if (!name || !layout) {
             return Promise.reject("missing parameter name or layout");
         }
@@ -230,7 +230,8 @@ class LayoutLoader{
             return Promise.reject(e);
         }
         if (this.storeLocally) {
-            this.temporaryLayouts[USER_PREFIX+name] = layout;
+            const localName=opt_completeName?name:USER_PREFIX+name;
+            this.temporaryLayouts[localName] = layout;
             return Promise.resolve({status: 'OK'});
         }
         return Requests.postPlain({
@@ -238,7 +239,8 @@ class LayoutLoader{
             command: 'upload',
             type: 'layout',
             name: name,
-            overwrite: !!opt_overwrite
+            overwrite: !!opt_overwrite,
+            completeName:!!opt_completeName,
         }, JSON.stringify(layout, undefined, 2))
     }
     /**

@@ -67,7 +67,8 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
                     ok: ()=>{
                         setChanged(false);
                     },
-                    err: () => {
+                    err: (e) => {
+                        if (e) Toast(e);
                         setChanged(true)
                     }
                 }, saveFunction, flask.current.getCode())

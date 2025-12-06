@@ -67,6 +67,7 @@ import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {fetchItem, listItems} from "../util/itemFunctions";
+import {EditDialog} from "./EditDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -1333,7 +1334,23 @@ class LayoutItemActions extends ItemActions{
             }
         }))
         actions.push(standardActions.edit.copy({
-            visible: this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE && item.canDelete
+            visible: this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE && item.canDelete,
+            action: async (action,item, dialogContext,history) => {
+                const save=async (data)=>{
+                    return  await layoutLoader.uploadLayout(item.name, data, true, true)
+                }
+                const data=await fetchItem(item);
+                const res=await showPromiseDialog(dialogContext,(dp)=><EditDialog
+                    {...dp}
+                    data={data}
+                    title={item.displayName||item.name}
+                    language={'json'}
+                    saveFunction={save}
+                    fileName={item.downloadName}
+                />);
+                if (res) await save(res);
+                dialogContext.closeDialog();
+            }
         }))
         actions.push(standardActions.download.copy({
             localData: ()=>fetchItem(item)
@@ -1384,7 +1401,30 @@ class SettingsItemActions extends ItemActions{
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
-            visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE
+            visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
+            action: async (action,item, dialogContext,history) => {
+                const save=async (data)=>{
+                    await PropertyHandler.verifySettingsData(data, true,true)
+                    await Requests.postPlain({
+                        command:'upload',
+                        type:'settings',
+                        overwrite:true,
+                        completeName:true,
+                        name:item.name
+                    },data)
+                }
+                const data=await fetchItem(item);
+                const res=await showPromiseDialog(dialogContext,(dp)=><EditDialog
+                    {...dp}
+                    data={data}
+                    title={"Settings: "+(item.displayName||item.name)}
+                    language={'json'}
+                    saveFunction={save}
+                    fileName={item.downloadName}
+                />);
+                if (res) await save(res);
+                dialogContext.closeDialog();
+            }
         }))
         actions.push(standardActions.download.copy({}))
     }
