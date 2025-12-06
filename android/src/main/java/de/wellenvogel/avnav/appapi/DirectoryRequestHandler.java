@@ -61,7 +61,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         String safeName=safeName(name,true);
         if (postData == null) throw new Exception("no data");
         writeAtomic(new File(workDir,safeName),postData.getStream(),ignoreExisting,postData.getContentLength());

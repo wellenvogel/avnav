@@ -181,7 +181,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         return false;
     }
 

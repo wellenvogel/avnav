@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -13,7 +12,6 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -499,7 +497,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         String safeName= DirectoryRequestHandler.safeName(name,true);
         if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION)
                 && ! safeName.endsWith(XMLEXTENSION) && ! safeName.endsWith(CFG_EXTENSION))

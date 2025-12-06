@@ -529,9 +529,9 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         name+=SUFFIX;
-        boolean rt=super.handleUpload(postData, name, ignoreExisting);
+        boolean rt=super.handleUpload(postData, name, ignoreExisting, completeName);
         if (rt) triggerParser();
         return rt;
     }

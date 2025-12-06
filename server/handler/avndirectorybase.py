@@ -648,7 +648,8 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     return self._rename(name,newName)
 
   def handleUpload(self, name, handler, requestparam):
-    fname=self.checkName(name,scope=None)
+    completeName=AVNUtil.getHttpRequestFlag(requestparam,'completeName')
+    fname=self.checkName(name,scope=self.SCOPE_USER if completeName else None)
     return self._upload(fname,handler,requestparam)
 
   def findSystemOrPluginItem(self,name):

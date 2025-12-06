@@ -61,7 +61,7 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         throw new IOException("upload not allowed");
     }
 

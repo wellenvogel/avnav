@@ -1,8 +1,6 @@
 package de.wellenvogel.avnav.appapi;
 
-import android.app.sdksandbox.RequestSurfacePackageException;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
@@ -28,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.wellenvogel.avnav.charts.ChartHandler;
-import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -435,11 +432,12 @@ public class RequestHandler {
     }
 
     JSONObject handleUploadRequest(String type,Uri uri,PostVars postData) throws Exception{
-        String overwrite=uri.getQueryParameter("overwrite");
+        boolean  overwrite=AvnUtil.getFlagParameter(uri,"overwrite",false);
         String name=uri.getQueryParameter("name");
+        boolean completeName=AvnUtil.getFlagParameter(uri,"completeName",false);
         INavRequestHandler handler=getHandler(type);
         if (handler != null){
-            boolean success=handler.handleUpload(postData,name,overwrite != null && overwrite.equals("true"));
+            boolean success=handler.handleUpload(postData,name,overwrite , completeName);
             JSONObject rt=new JSONObject();
             if (success) {
 

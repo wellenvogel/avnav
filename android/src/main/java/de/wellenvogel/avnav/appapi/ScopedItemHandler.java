@@ -8,15 +8,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.main.BuildConfig;
@@ -111,10 +106,10 @@ public class ScopedItemHandler implements INavRequestHandler{
         return fileNameFromName(fileName);
     }
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         if (postData == null) throw new Exception("no data");
         if (!userDir.isDirectory()) throw new IOException("user dir is no directory");
-        String fileName =nameToUserFileName(DirectoryRequestHandler.safeName(name,true),false);
+        String fileName =nameToUserFileName(DirectoryRequestHandler.safeName(name,true),completeName);
         File of = new File(userDir, fileName);
         if (!userDir.canWrite()) throw new IOException("unable to write " + fileName);
         DirectoryRequestHandler.writeAtomic(of,postData.getStream(),ignoreExisting,postData.getContentLength());
@@ -230,23 +225,6 @@ public class ScopedItemHandler implements INavRequestHandler{
         if (name.endsWith(SUFFIX)) return name;
         return name+SUFFIX;
     }
-    public InputStream getItemForReading(String name) throws Exception {
-        if (name.startsWith(ItemInfo.SYSTEMPREFIX)){
-            ItemInfo info=systemItems.get(name);
-            if (info == null) throw new IOException("system item "+name+" not found");
-            return context.getAssets().open(systemDir+"/"+info.fileName);
-        }
-        if (name.startsWith(ItemInfo.USERPREFIX)){
-            name=name.substring(ItemInfo.USERPREFIX.length());
-            name=DirectoryRequestHandler.safeName(name,true);
-            File ifile=new File(userDir,name+SUFFIX);
-            if (! ifile.canRead()) throw new IOException("unable to read file: "+ifile.getAbsolutePath());
-            return new FileInputStream(ifile);
-        }
-        throw new IOException("neither system nor user item: "+name);
-    }
-
-
 
 
 }

@@ -124,7 +124,7 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         return false;
     }
 

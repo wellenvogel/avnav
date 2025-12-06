@@ -18,7 +18,7 @@ import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import {createItemActions, ItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
-import {languageMap} from "../components/EditDialog";
+import {languageMap, uploadFromEdit} from "../components/EditDialog";
 
 const MAXEDITSIZE=50000;
 
@@ -26,7 +26,6 @@ const MAXEDITSIZE=50000;
 class ViewPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         let state={
             data:'',
             changed:false,
@@ -117,13 +116,7 @@ class ViewPage extends React.Component{
                     }
                     else{
                         uploadFunction=(name,data,overwrite)=>{
-                            return Requests.postPlain({
-                                request:'api',
-                                command:'upload',
-                                type:self.type,
-                                overwrite: overwrite,
-                                name: name
-                            },data)
+                            return uploadFromEdit(name,data,overwrite,this.type);
                         }
                     }
                     uploadFunction(self.name,data,true)

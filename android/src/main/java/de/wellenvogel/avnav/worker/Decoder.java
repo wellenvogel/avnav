@@ -4,12 +4,10 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
-import android.util.Pair;
 
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.parser.SentenceParser;
-import net.sf.marineapi.nmea.sentence.DBTSentence;
 import net.sf.marineapi.nmea.sentence.DPTSentence;
 import net.sf.marineapi.nmea.sentence.DateSentence;
 import net.sf.marineapi.nmea.sentence.DepthSentence;
@@ -30,7 +28,6 @@ import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
 import net.sf.marineapi.nmea.sentence.VDRSentence;
 import net.sf.marineapi.nmea.sentence.VHWSentence;
-import net.sf.marineapi.nmea.sentence.VTGSentence;
 import net.sf.marineapi.nmea.sentence.VWRSentence;
 import net.sf.marineapi.nmea.sentence.XDRSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
@@ -45,7 +42,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -121,7 +117,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         throw new InvalidCommandException("upload not suppoerted for decoder");
     }
 

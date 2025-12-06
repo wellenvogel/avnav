@@ -128,7 +128,8 @@ export const uploadFromEdit = async (name, data, overwrite,type) => {
             command: 'upload',
             type: type,
             name: name,
-            overwrite: overwrite
+            overwrite: overwrite,
+            completeName: true
         }, data);
     } catch (e) {
         Toast(e);

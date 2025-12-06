@@ -19,13 +19,15 @@ public interface INavRequestHandler {
 
     /**
      * upload json data
-     * @param postData the json string
-     * @param name the name (optional, can be null)
+     *
+     * @param postData       the json string
+     * @param name           the name (optional, can be null)
      * @param ignoreExisting do not overwrite an existing file, return false
+     * @param completeName
      * @return true if the file has been stored
      * @throws Exception
      */
-    boolean handleUpload(PostVars postData, String name,boolean ignoreExisting) throws Exception;
+    boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception;
 
     /**
      * list the items

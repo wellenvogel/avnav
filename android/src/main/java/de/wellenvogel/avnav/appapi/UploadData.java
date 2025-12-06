@@ -28,6 +28,7 @@ public class UploadData{
     boolean noResults=false;
     long size;
     private boolean overwrite=false;
+    private boolean completeName=false;
     public UploadData(MainActivity mainActivity, INavRequestHandler targetHandler, long id){
         this.id=id;
         this.mainActivity = mainActivity;
@@ -37,6 +38,7 @@ public class UploadData{
     public void setOverwrite(boolean v){
         overwrite=v;
     }
+    public void setCompleteName(boolean v){completeName=v;}
 
     public boolean isReady(long id){
         if (id != this.id) return false;
@@ -109,7 +111,7 @@ public class UploadData{
                                 return numRead;
                             }
                         };
-                        targetHandler.handleUpload(new PostVars(is,size),name,overwrite);
+                        targetHandler.handleUpload(new PostVars(is,size),name,overwrite, completeName);
                         if (! noResults) mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
