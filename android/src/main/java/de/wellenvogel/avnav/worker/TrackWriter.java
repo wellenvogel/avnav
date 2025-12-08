@@ -74,13 +74,22 @@ public class TrackWriter extends DirectoryRequestHandler {
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         boolean rt=super.handleDelete(name,uri);
-        if (name.replace(".gpx","").equals(getCurrentTrackname(new Date()))) {
+        if (rt && name.replace(".gpx","").equals(getCurrentTrackname(new Date()))) {
             AvnLog.i("deleting current trackfile");
             trackpoints.clear();
         }
         return rt;
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        boolean rt=super.handleRename(oldName, newName);
+        if (rt  && oldName.replace(".gpx","").equals(getCurrentTrackname(new Date()))){
+            AvnLog.i("renaming current trackfile");
+            trackpoints.clear();
+        }
+        return rt;
+    }
 
     public static class TrackInfo implements AvnUtil.IJsonObect {
         public String name;

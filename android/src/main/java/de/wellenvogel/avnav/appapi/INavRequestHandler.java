@@ -48,6 +48,15 @@ public interface INavRequestHandler {
      */
     boolean handleDelete(String name, Uri uri) throws Exception;
 
+    /**
+     *
+     * @param oldName current name
+     * @param newName new name
+     * @return true on success
+     * @throws Exception on errors
+     */
+    public boolean handleRename(String oldName,String newName) throws Exception;
+
     JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception;
 
     /**

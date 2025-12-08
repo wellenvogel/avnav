@@ -91,6 +91,11 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     }
 
     @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
+    @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("list")){
             return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));

@@ -600,6 +600,11 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         }
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
     private static void merge(JSONObject target, JSONObject source, List<String> blacklist) throws JSONException {
         for (Iterator<String> it = source.keys(); it.hasNext(); ) {
             String sk = it.next();

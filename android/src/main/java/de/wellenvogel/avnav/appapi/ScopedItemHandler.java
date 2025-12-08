@@ -156,18 +156,26 @@ public class ScopedItemHandler implements INavRequestHandler{
         }
         return userFile.delete();
     }
-
-    public JSONObject handleRename(String oldName,String newName) throws Exception {
-        return RequestHandler.getErrorReturn("rename not available");
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        oldName=nameToUserFileName( DirectoryRequestHandler.safeName(oldName,true),true);
+        newName=nameToUserFileName(DirectoryRequestHandler.safeName(newName,true),true);
+        File old=new File(userDir,oldName);
+        if (! old.exists() || ! old.isFile()){
+            throw new Exception(oldName+" not found");
+        }
+        File newFile=new File(userDir,newName);
+        if (newFile.exists()){
+            throw new Exception(newName+" already exists");
+        }
+        if (! old.renameTo(newFile)){
+            throw new Exception("rename failed");
+        }
+        return true;
     }
 
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        if (command.equals("rename")){
-            String name=DirectoryRequestHandler.safeName(AvnUtil.getMandatoryParameter(uri,"name"),true);
-            String newName=DirectoryRequestHandler.safeName(AvnUtil.getMandatoryParameter(uri,"newName"),true);
-            return handleRename(name,newName);
-        }
         return null;
     }
 

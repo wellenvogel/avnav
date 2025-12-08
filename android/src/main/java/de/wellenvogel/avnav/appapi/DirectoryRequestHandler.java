@@ -121,34 +121,24 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     }
 
     @Override
-    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        if (command.equals("list")){
-            return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        File found=findLocalFile(oldName);
+        if (found == null){
+            throw new Exception("file "+oldName+" not found");
         }
-        if (command.equals("delete")){
-            String name=AvnUtil.getMandatoryParameter(uri,"name");
-            boolean ok=handleDelete(name,uri);
-            if (ok)  return RequestHandler.getReturn();
-            return RequestHandler.getErrorReturn("delete failed");
+        String safeNewName=safeName(newName,true);
+        File newFile=new File(workDir,safeNewName);
+        if (newFile.exists()){
+            throw new Exception("file "+safeNewName+" already exists");
         }
-        if (command.equals("rename")){
-            String name=AvnUtil.getMandatoryParameter(uri,"name");
-            String newName=AvnUtil.getMandatoryParameter(uri,"newName");
-            File found=findLocalFile(name);
-            if (found == null){
-                return RequestHandler.getErrorReturn("file "+name+" not found");
-            }
-            String safeNewName=safeName(newName,true);
-            File newFile=new File(workDir,safeNewName);
-            if (newFile.exists()){
-                return RequestHandler.getErrorReturn("file "+safeNewName+" already exists");
-            }
-            if (found.renameTo(newFile)){
-                return RequestHandler.getReturn();
-            }
-            return RequestHandler.getErrorReturn("rename failed");
+        if (found.renameTo(newFile)){
+            return true;
+        }
+        return false;
+    }
 
-        }
+    @Override
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         return handleSpecialApiRequest(command,uri,postData,serverInfo);
     }
 

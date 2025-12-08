@@ -144,6 +144,11 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     }
 
     @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
+    @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("enabled")){
             return RequestHandler.getReturn( new AvnUtil.KeyValue("enabled",ENABLED_PARAMETER.fromJson(parameters)));

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
@@ -541,6 +542,16 @@ public class RouteHandler extends DirectoryRequestHandler  {
         boolean rt=super.handleDelete(name+SUFFIX, uri);
         if (rt) deleteRouteInfo(name);
         return rt;
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        return super.handleDownload(name+SUFFIX, uri);
+    }
+
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("cannot rename route on server");
     }
 
     @Override

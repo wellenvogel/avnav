@@ -233,6 +233,11 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         }
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
     private String computeName(String url, String icon, String title) throws NoSuchAlgorithmException {
         MessageDigest digest=java.security.MessageDigest.getInstance("MD5");
         if (url != null) digest.update(url.getBytes());

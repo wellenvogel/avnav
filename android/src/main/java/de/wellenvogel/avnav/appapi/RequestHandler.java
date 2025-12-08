@@ -678,7 +678,6 @@ public class RequestHandler {
                 return new NavResponse(resp);
             }
             else if ("delete".equals(typeAndCommand.command)) {
-                JSONObject o=new JSONObject();
                 String name = uri.getQueryParameter("name");
                 INavRequestHandler handler=getHandler(typeAndCommand.type);
                 if (handler != null){
@@ -686,15 +685,29 @@ public class RequestHandler {
                     try {
                         boolean deleteOk = handler.handleDelete(name, uri);
                         if (deleteOk) {
-                            o.put("status", "OK");
+                            fout=getReturn();
                         } else {
-                            o.put("status", "unable to delete");
+                            fout=getErrorReturn("unable to delete");
                         }
                     }catch (Exception e){
-                        o.put("status","error deleting "+name+": "+e.getLocalizedMessage());
+                        fout=getErrorReturn("error deleting "+name+": "+e.getLocalizedMessage());
                     }
                 }
-                fout=o;
+            }
+            else if ("rename".equals(typeAndCommand.command)){
+                String name = AvnUtil.getMandatoryParameter(uri,"name");
+                String newName= AvnUtil.getMandatoryParameter(uri,"newName");
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
+                if (handler != null) {
+                    handled = true;
+                    try {
+                        boolean rok = handler.handleRename(name, newName);
+                        if (rok) fout = getReturn();
+                        else fout = getErrorReturn("unable to rename");
+                    } catch (Throwable t) {
+                        fout = getErrorReturn(t.getMessage());
+                    }
+                }
             }
             else if ("alarm".equals(typeAndCommand.type)){
                 handled=true;

@@ -200,6 +200,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return false;
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
     public void updateConfigSequence(){
         synchronized (configSequenceLock){
             configSequence++;

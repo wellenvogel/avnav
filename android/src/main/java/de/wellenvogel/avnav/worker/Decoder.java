@@ -136,6 +136,11 @@ public class Decoder extends Worker  implements INavRequestHandler {
         throw new InvalidCommandException("delete not suppoerted for decoder");
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
     /**
      * get the status for NMEA and AIS
      * @return
