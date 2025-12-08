@@ -156,7 +156,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return RequestHandler.getErrorReturn("unknonw api request "+command);
     }
 
-    private File findLocalFile(String name) throws IOException {
+    protected File findLocalFile(String name) throws IOException {
         if (workDir == null) throw new IOException("workdir for "+type+" not set");
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()

@@ -38,7 +38,7 @@ import {
     DBOk,
     DialogButtons,
     DialogFrame,
-    DialogRow,
+    DialogRow, showDialog,
     showPromiseDialog,
     useDialogContext
 } from "./OverlayDialog";
@@ -580,7 +580,7 @@ const standardActions={
                type:item.type,
                command:'download',
                name:item.name,
-               filename: action.downloadName||item.downloadName
+               filename: action.downloadName||item.downloadName||item.name
            })
        }
 
@@ -1235,9 +1235,33 @@ class TrackItemActions extends ItemActions{
         actions.push(standardActions.rename.copy({
             visible:this.isConnected(),
         }))
-        actions.push(standardActions.view.copy({
-            visible:Helper.getExt(item.name)==='gpx'
-        }))
+        if (item.name) {
+            const ext=Helper.getExt(item.name);
+            if ( ext === 'gpx') {
+                actions.push(standardActions.view.copy({
+                    visible: true,
+                }))
+            }
+            else if (item.name.toLowerCase().endsWith('.nmea') || item.name.toLowerCase().endsWith('.nmea.gz')) {
+                actions.push(standardActions.view.copy({
+                    visible: true,
+                    action: async (action, item, dialogContext, history) => {
+                        dialogContext.replaceDialog(() => <LogDialog
+                            baseUrl={
+                                prepareUrl({
+                                    type: 'track',
+                                    command: 'download',
+                                    name: item.name
+                                })
+                            }
+                            title={item.name}
+                            dlname={item.downloadName||item.name}
+                            autoreload={ext === 'nmea'}
+                        />);
+                    }
+                }))
+            }
+        }
         actions.push(standardActions.download.copy({}))
         actions.push(standardActions.overlays.copy({
             visible:this.canEditOverlays() && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0,

@@ -712,9 +712,12 @@ class AVNDownload(object):
             self.mtime = os.path.getmtime(self.filename)
         except:
             pass
+    self.hasStream=self.stream is not None
 
   def getSize(self):
     if self.size is None:
+      if self.hasStream:
+          return None
       self.size=os.path.getsize(self.filename)
       self.originalSize=self.size
       if self.lastBytes is not None and self.lastBytes < self.size:

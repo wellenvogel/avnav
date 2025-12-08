@@ -26,6 +26,9 @@
 ###############################################################################
 
 import glob
+import gzip
+import io
+import os
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
@@ -505,6 +508,28 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       except:
         pass
     return rt
+
+  def handleDownload(self, name, handler, requestparam):
+      if name is None:
+          raise Exception("missing name")
+      name = self.checkName(name)
+      filename = os.path.join(self.baseDir, name)
+      if not os.path.exists(filename):
+          raise Exception("file %s not found" % filename)
+      if name.endswith(".nmea") or name.endswith(".nmea.gz"):
+          lastBytes = AVNUtil.getHttpRequestParam(requestparam, 'maxBytes')
+          if lastBytes is None:
+              return AVNDownload(filename,dlname=name)
+          # if maxBytes is set we should send the data decompressed
+          if not name.endswith(".gz"):
+              return AVNDownload(filename, lastBytes=lastBytes,mimeType='text/plain')
+          stream=gzip.open(filename, "rb")
+          stream.seek(-int(lastBytes),io.SEEK_END)
+          return AVNDownload(filename,stream=stream,mimeType='text/plain',size=None)
+      else:
+          return AVNDownload(filename,dlname=name)
+
+      return super().handleDownload(name, handler, requestparam)
 
   def handleRename(self, name, newName, requestparam):
       name = self.checkName(name)
