@@ -763,14 +763,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return rt
 
   def handleRename(self, name, newName, requestparam):
-      leg = self.getCurrentLeg()
-      routeName=leg.getRouteName(True) if leg is not None else None
-      if routeName is not None:
-          if name == routeName:
-              return AVNUtil.getReturnData(error="unable to rename active route");
-          if newName == routeName:
-              return AVNUtil.getReturnData(error="unable to rename to active route");
-      return super().handleRename(name, newName, requestparam)
+      raise Exception("not implemented")
 
   def handleSpecialApiRequest(self,command,requestparam,handler):
     if (command == 'getleg'):

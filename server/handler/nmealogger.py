@@ -118,6 +118,8 @@ class AVNNmeaLogger(AVNWorker):
         newFile=False
         if not os.path.isdir(self.trackdir):
           os.makedirs(self.trackdir, 0o775)
+        if fname is not None and not os.path.exists(fname):
+            fname=None #maybe the file has been removed or renamed - trigger reopen
         curfname=os.path.join(self.trackdir,self.createFileName(currentUTC))
         #we have to consider time shift backward
         if lastcleanup is None or (currentM > (lastcleanup+60)):

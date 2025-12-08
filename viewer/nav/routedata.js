@@ -615,15 +615,12 @@ class  RouteData {
 
     async renameRoute(routeItem, newName) {
         if (activeRoute.isHandling(routeItem)) throw new Error("cannot rename active route");
-        if (editingRoute.isHandling(routeItem)) throw new Error("cannot rename editing route");
         if (routeobjects.isServerName(routeItem.name)) {
             if (! this.connectMode || this.readOnlyServer) throw new Error("cannot rename server route while disconnected");
-            await requests.getJson({
-                type:'route',
-                command:'rename',
-                name: routeItem.name,
-                newName: newName
-            })
+            const route=await this._downloadRoute(routeItem.name);
+            route.setName(newName);
+            await this._sendRoute(route);
+            await this.deleteRoute(routeItem.name);
             return true;
         }
         const route=this._loadRoute(routeItem.name,true);
@@ -634,6 +631,7 @@ class  RouteData {
         }
         route.setName(newName);
         this._saveRouteLocal(route,true);
+        if (editingRoute.isHandlingName(routeItem.name)) {editingRoute.removeRoute();}
         return true;
     }
 

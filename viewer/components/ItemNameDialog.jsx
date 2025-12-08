@@ -135,7 +135,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     ];
     if (proposal){
         buttonList.splice(0,0,{
-            name: 'Propose',
+            name: 'propose',
             label: 'Propose',
             onClick: ()=>{
                 let pname=proposal;
