@@ -141,7 +141,10 @@ class UploadAction extends CopyAware{
      */
     async _check(file,dialogContext){
         const checkRes=(res,completeResult)=>{
-            if (! res) return true;
+            if (! res) {
+                delete completeResult.name;
+                return true;
+            }
             if (res.error){
                 throw new Error(rs.error)
             }
@@ -157,7 +160,7 @@ class UploadAction extends CopyAware{
         let rs={name:file.name};
         this.userData={};
         if (this.preCheck){
-            if (checkRes(await Helper.awaitHelper(this.preCheck(this.userData,file.name,file,dialogContext)),rs)) return rs;
+            if (checkRes(await this.preCheck(this.userData,file.name,file,dialogContext),rs)) return rs;
         }
         const existing = await listItems(rs.type||this.type);
         const accessor=(data)=>this.checkAccessor(data);
@@ -182,10 +185,10 @@ class UploadAction extends CopyAware{
                 if (checkRes(crs,rs)) return rs;
         }
         if (this.postCheck) {
-            if (checkRes(await Helper.awaitHelper(this.postCheck(this.userData, rs.name, file, dialogContext,existing, accessor)),rs)) return rs;
+            if (checkRes(await this.postCheck(this.userData, rs.name, file, dialogContext,existing, accessor),rs)) return rs;
         }
         if (this.localAction){
-            return await Helper.awaitHelper(this.localAction(this.userData,rs.name,file))
+            return await this.localAction(this.userData,rs.name,file)
         }
         return rs;
     }
@@ -214,7 +217,7 @@ class UploadAction extends CopyAware{
     }
     async afterUpload(){
         if (this.doneAction){
-            return await Helper.awaitHelper(this.doneAction(this.userData));
+            return await this.doneAction(this.userData);
         }
         return false;
     }

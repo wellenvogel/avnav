@@ -317,12 +317,7 @@ export const loadOrUpdateCss=(url,id)=>{
     document.head.appendChild(fileref);
     return true;
 }
-export const awaitHelper= async (res)=>{
-    if (res instanceof Promise){
-        return await res;
-    }
-    return res;
-}
+
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
@@ -335,7 +330,6 @@ Helper.injectav=injectav;
 Helper.avitem=avitem;
 Helper.setav=setav;
 Helper.isset=isset;
-Helper.awaitHelper=awaitHelper;
 
 export default Helper;
 

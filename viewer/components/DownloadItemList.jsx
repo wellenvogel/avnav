@@ -165,7 +165,7 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,
                 const item = avitem(ev);
                 setav(ev,{dialogContext:dialogContext});
                 if (selectCallback) {
-                    if (await Helper.awaitHelper(selectCallback(ev))) return;
+                    if (await selectCallback(ev)) return;
                 }
                 showDialog(dialogContext, () =>
                     <FileDialog

@@ -79,7 +79,7 @@ const UploadHandler = (props) => {
                 file: file
             }
         }
-        const rt=await Helper.awaitHelper(props.checkNameCallback(file,dialogContext));
+        const rt=await props.checkNameCallback(file,dialogContext);
         if (rt && rt.error) return Promise.reject(rt.error);
         return rt;
     }
