@@ -558,22 +558,21 @@ export class StateHelper{
         if (! StateHelper.hasActiveTarget(state)) return false;
         return state.leg.getCurrentTargetIdx() == state.index;
     }
-
+    static route(state){
+        const [route]=StateHelper.getRouteIndexFlag(state);
+        return route;
+    }
     static hasRoute(state){
-        if (state.route) return true;
-        if (! state.leg) return false;
-        return state.leg.hasRoute();
+        return !!StateHelper.route(state);
     }
 
     static anchorWatchDistance(state){
         if (! state.leg) return;
         return state.leg.anchorWatch();
     }
-    static route(state){
-        return state.route||(state.leg||{}).route;
-    }
+
     static isServerRoute(state){
-        const route=state.route||(state.leg||{}).route;
+        const route=StateHelper.route(state);
         if (!route) return false;
         return route.isServer();
     }
@@ -582,7 +581,7 @@ export class StateHelper{
         return state.leg.server;
     }
     static isSameRoute(state,route){
-        const sroute=state.route||(state.leg||{}).route;
+        const sroute=StateHelper.route(state);
         if (!!sroute !== !!route) return false;
         if (! sroute) return false;
         return sroute.name === route.name;

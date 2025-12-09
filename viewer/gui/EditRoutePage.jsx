@@ -317,7 +317,7 @@ const EditRouteDialog = (props) => {
     const [connectedMode]=useStoreState(keys.properties.connectedMode)
     const isActiveRoute = useCallback(() => {
         return  StateHelper.isSameRoute(activeRouteState,route);
-    }, [activeRouteState]);
+    }, [activeRouteState,route]);
     const getCurrentEditor = useCallback(() => {
         return isActiveRoute() ? activeRoute : editor;
     }, []);
@@ -463,6 +463,7 @@ const EditRouteDialog = (props) => {
                     if (! isActiveRoute()) return;
                     RouteHandler.routeOff();
                     MapHolder.triggerRender();
+                    dialogContext.closeDialog();
                 }}
                 visible={isActiveRoute()}
                 disabled={!writable}
