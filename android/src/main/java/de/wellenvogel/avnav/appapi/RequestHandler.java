@@ -118,10 +118,15 @@ public class RequestHandler {
             if (address == null) return url;
             try {
                 URI uri=new URI(url);
-                uri = new URI(uri.getScheme(), uri.getUserInfo(),
-                    address.getHostAddress(), uri.getPort(), uri.getPath(),
-                    uri.getQuery(), uri.getFragment());
-                return uri.toString();
+                if (uri.getScheme() != null && uri.getHost() != null) {
+                    uri = new URI(uri.getScheme(), uri.getUserInfo(),
+                            address.getHostAddress(), uri.getPort(), uri.getPath(),
+                            uri.getQuery(), uri.getFragment());
+                    return uri.toString();
+                }
+                else{
+                    return url;
+                }
             } catch (Exception e) {
                 AvnLog.e("cannot replace invalid url "+url+": ",e);
             }

@@ -67,7 +67,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 this.chart.put(Chart.CKEY, Constants.EXTERNALCHARTS + ":" + chartKey);
                 this.chart.remove(Chart.EXT_CKEY);
             }
-            this.chart.put("info",sourceName);
             this.allowColon=allowColon;
             this.sourceName=sourceName;
         }
