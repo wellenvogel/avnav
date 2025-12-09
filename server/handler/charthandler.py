@@ -247,6 +247,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                     if add:
                         rt[f.name]=f
                 else:
+                    oldItem.hasOverlay=f.hasOverlay #overlay config could be new - but do not consider this as real change
                     rt[oldItem.name]=oldItem
             else:
                 add=onItem(f,"add")
