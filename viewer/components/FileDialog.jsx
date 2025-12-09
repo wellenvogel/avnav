@@ -1148,7 +1148,7 @@ class RouteItemActions extends ItemActions{
             preCheck: async (userData, name, file)=>{
                 const [fn, ext] = Helper.getNameAndExt(name);
                 if (ext !== this.fixedExtension) throw new Error(`only ${this.fixedExtension} for routes`);
-                const data=readTextFile(file);
+                const data=await readTextFile(file);
                 userData.nroute=new routeobjects.Route();
                 userData.nroute.fromXml(data);
                 if (!userData.nroute.name) {
@@ -1166,7 +1166,7 @@ class RouteItemActions extends ItemActions{
                 await RouteHandler.saveRoute(userData.nroute);
             },
             checkName:(name,itemList,accessor)=>{
-                const pr=this.preCheck(name);
+                const pr=this.namePreCheck(name);
                 if (pr && pr.error) return pr;
                 return checkName(name,itemList,accessor);
             }
