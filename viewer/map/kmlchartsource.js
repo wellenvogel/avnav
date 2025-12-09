@@ -121,9 +121,11 @@ class KmlChartSource extends ChartSourceBase{
             if (currentUrl.startsWith("http")){
                 if (this.styleParameters[supportedStyleParameters.allowOnline]){
                     imageStyle.setScale(this.getScale());
-                    return style;
+                    url=currentUrl;
                 }
-                url=this.styleParameters[supportedStyleParameters.defaultIcon];
+                else {
+                    url = this.styleParameters[supportedStyleParameters.defaultIcon];
+                }
             }
             else{
                 if (this.styleParameters[supportedStyleParameters.icon]){
