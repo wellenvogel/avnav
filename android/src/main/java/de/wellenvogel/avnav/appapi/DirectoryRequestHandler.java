@@ -256,6 +256,9 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         String name = URLDecoder.decode(parts[parts.length - 1], "UTF-8");
         File foundFile = findLocalFile(name);
         if (foundFile != null) {
+            if (foundFile.isDirectory()){
+                throw new Exception(name+" is a directory");
+            }
             ExtendedWebResourceResponse rt = new ExtendedWebResourceResponse(
                     foundFile.length(),
                     RequestHandler.mimeType(foundFile.getName()),

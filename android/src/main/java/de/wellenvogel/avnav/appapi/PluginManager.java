@@ -36,6 +36,8 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -233,9 +235,31 @@ public class PluginManager extends DirectoryRequestHandler {
         return super.handleRename(oldName, newName);
     }
 
+    static final AvnUtil.KeyValue<String>[] PLUGINFILES=new AvnUtil.KeyValue[]
+    {
+            new AvnUtil.KeyValue<String>("css","plugin.css"),
+            new AvnUtil.KeyValue<String>("js","plugin.js")
+    };
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        return super.handleSpecialApiRequest(command, uri, postData, serverInfo);
+        if ("listFiles".equals(command)){
+            JSONArray rt=new JSONArray();
+            for (File localFile: workDir.listFiles()) {
+                if (localFile.isDirectory()) {
+                    JSONObject po=new JSONObject();
+                    po.put("name",localFile.getName());
+                    for (AvnUtil.KeyValue<String> item:PLUGINFILES) {
+                        File pf = new File(localFile, item.value);
+                        if (pf.exists()) {
+                            po.put(item.key, getUrlFromName(localFile.getName() + "/" + pf.getName()));
+                        }
+                    }
+                    rt.put(po);
+                }
+            }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",rt));
+        }
+        return RequestHandler.getErrorReturn("command "+command+" not available");
     }
 
     @Override
@@ -258,6 +282,25 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
-        return super.handleDirectRequest(uri, handler, method);
+        String path = uri.getPath();
+        if (path == null) return null;
+        if (path.startsWith("/")) path = path.substring(1);
+        if (!path.startsWith(urlPrefix)) return null;
+        path = path.substring((urlPrefix.length() + 1));
+        String[] parts = path.split("/");
+        if (parts.length < 2) return null;
+        String name = URLDecoder.decode(parts[0], "UTF-8");
+        File finalFile=findLocalFile(name);
+        int idx=1;
+        while (finalFile != null && finalFile.exists() ){
+            if (idx >= parts.length){
+                if (finalFile.isDirectory()) throw new Error(finalFile.getPath()+" is a directory");
+                return new ExtendedWebResourceResponse(finalFile,RequestHandler.mimeType(finalFile.getName()),"");
+            }
+            String sub = URLDecoder.decode(parts[idx], "UTF-8");
+            finalFile=new File(finalFile,sub);
+            idx++;
+        }
+        return null;
     }
 }
