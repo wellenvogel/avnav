@@ -36,7 +36,7 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
         }
     }
     public ExtendedWebResourceResponse(File f,String mime, String encoding) throws IOException {
-        super(mime,encoding, Files.newInputStream(f.toPath()));
+        super(mime,encoding, new FileInputStream(f));
         this.length=f.length();
         this.setDateHeader("Last-Modified",new Date(f.lastModified()));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

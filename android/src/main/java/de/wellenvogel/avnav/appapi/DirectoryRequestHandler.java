@@ -90,7 +90,10 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()){
-                rt.put(fileToItem(localFile));
+                JSONObject jo=fileToItem(localFile);
+                if (jo != null) {
+                    rt.put(jo);
+                }
             }
         }
         return rt;

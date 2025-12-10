@@ -59,6 +59,7 @@ public class RequestHandler {
     private LayoutHandler layoutHandler;
     private SettingsHandler settingsHandler;
     private AddonHandler addonHandler;
+    private PluginManager pluginManager;
 
     //file types from the js side
     public static String TYPE_ROUTE="route";
@@ -74,6 +75,7 @@ public class RequestHandler {
     public static String TYPE_CONFIG="config";
     public static String TYPE_REMOTE="remotechannels";
     public static String TYPE_DECODER="decoder";
+    public static final String TYPE_PLUGINS="plugins";
 
 
     static final String LOGPRFX="AvNav:requestHandler";
@@ -106,7 +108,8 @@ public class RequestHandler {
             new AvnUtil.KeyValue<File>(TYPE_SETTINGS,new File("settings")),
             new AvnUtil.KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
             new AvnUtil.KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
-            new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
+            new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays")),
+            new AvnUtil.KeyValue<File>(TYPE_PLUGINS,new File("plugins"))
 
     );
 
@@ -206,6 +209,13 @@ public class RequestHandler {
         this.service = service;
         this.chartHandler =new ChartHandler(service,this);
         this.addonHandler= new AddonHandler(service,this);
+        try {
+            pluginManager=null;
+            pluginManager = new PluginManager(TYPE_PLUGINS, service, new File(getWorkDir(),
+                    typeDirs.get(TYPE_PLUGINS).value.getPath()), "plugins", addonHandler);
+        }catch (Exception e){
+            AvnLog.e("unable to create plugin handler",e);
+        }
         layoutHandler=new LayoutHandler(service,  "viewer/layout",
                 new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
         handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
@@ -316,6 +326,7 @@ public class RequestHandler {
                 return null;
             }
         });
+        handlerMap.put(TYPE_PLUGINS, () -> pluginManager);
         AvnLog.i(LOGPRFX,"Construct done");
     }
 
@@ -650,7 +661,6 @@ public class RequestHandler {
                         resp = handler.handleDownload(name, uri);
                     }catch (Exception e){
                         AvnLog.e("error in download request "+uri.getPath(),e);
-                        return null;
                     }
                 }
                 if (!handled && typeAndCommand.type != null && typeAndCommand.type.equals("alarm") && name != null) {
@@ -671,13 +681,15 @@ public class RequestHandler {
                 if (resp == null) {
                     resp = new ExtendedWebResourceResponse(404,"file " + ((name != null) ? name : "<null>") + " not found");
                 }
-                if (setAttachment) {
-                    String value = "attachment";
-                    String fn = uri.getQueryParameter("filename");
-                    if (fn != null) {
-                        value += "; filename=\"" + DirectoryRequestHandler.safeName(fn, false) + "\"";
+                else {
+                    if (setAttachment) {
+                        String value = "attachment";
+                        String fn = uri.getQueryParameter("filename");
+                        if (fn != null) {
+                            value += "; filename=\"" + DirectoryRequestHandler.safeName(fn, false) + "\"";
+                        }
+                        resp.setHeader("Content-Disposition", value);
                     }
-                    resp.setHeader("Content-Disposition", value);
                 }
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return new NavResponse(resp);
@@ -841,7 +853,12 @@ public class RequestHandler {
 
 
     public void stop(){
-        if (chartHandler != null) chartHandler.stop();
+        ChartHandler ch=chartHandler;
+        if (ch != null) ch.stop();
+        chartHandler=null;
+        PluginManager pm=pluginManager;
+        if (pm != null) pm.stop();
+        pluginManager=null;
     }
 
 

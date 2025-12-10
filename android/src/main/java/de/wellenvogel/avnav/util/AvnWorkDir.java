@@ -228,7 +228,7 @@ public class AvnWorkDir {
             File sdir=new File(base,s);
             if (sdir.exists()){
                 if (! sdir.isDirectory()){
-                    if (sdir.delete()){
+                    if (!sdir.delete()){
                         throw new IOException(" sub dir "+sdir.getAbsolutePath()+" exists as file, cannot delete");
                     }
                 }

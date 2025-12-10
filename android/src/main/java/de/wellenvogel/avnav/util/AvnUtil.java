@@ -455,4 +455,14 @@ public class AvnUtil {
             return ctx.registerReceiver(receiver,filter);
         }
     }
+    public static boolean deleteRecursive(File fileOrFolder) {
+        boolean result = true;
+        if(fileOrFolder.isDirectory()) {
+            for (File file : fileOrFolder.listFiles()) {
+                result = result && deleteRecursive(file);
+            }
+        }
+        result = result && fileOrFolder.delete();
+        return result;
+    }
 }

@@ -242,6 +242,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             o.put("uploadOverlays",true);
             o.put("uploadTracks",true);
             o.put("remoteChannel",true);
+            o.put("uploadPlugins",true);
             o.put("fetchHead",Constants.HAS_HEAD_SUPPORT|| serverInfo != null);
             if (serverInfo == null) {
                 //we can only handle the config stuff internally
