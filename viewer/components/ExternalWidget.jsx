@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import Helper from "../util/helper";
 
 const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
     ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
@@ -107,7 +108,7 @@ export const ExternalWidget =(props)=>{
         let userHtml=(innerHtml!=null)?ReactHtmlParser(innerHtml,
             {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
         return (
-        <WidgetFrame {...convertedProps} addClass="externalWidget" onClick={props.onClick} resizeSequence={resizeSequence.current}>
+        <WidgetFrame {...convertedProps} addClass={Helper.concatsp("externalWidget",props.name)} onClick={props.onClick} resizeSequence={resizeSequence.current}>
             {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
                 {userHtml}
         </WidgetFrame>
