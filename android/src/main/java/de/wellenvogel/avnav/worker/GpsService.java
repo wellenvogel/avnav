@@ -235,7 +235,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             JSONObject o=new JSONObject();
             o.put("addons",true);
             o.put("uploadCharts",true);
-            o.put("plugins",false);
+            o.put("plugins",true);
             o.put("uploadRoute",true);
             o.put("uploadLayout",true);
             o.put("uploadSettings",true);
