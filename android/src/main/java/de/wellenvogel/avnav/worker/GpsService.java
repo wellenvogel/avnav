@@ -523,7 +523,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new RemoteChannel(typeName,ctx);
         }
     };
-    private static final WorkerConfig WOCHARTS=new WorkerConfig(PluginWorker.TYPENAME,10,PluginWorker.TYPENAME+".ocharts") {
+    private static final WorkerConfig WOCHARTS=new WorkerConfig(ExternalPluginWorker.TYPENAME,10, ExternalPluginWorker.TYPENAME+".ocharts") {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             String suffix=BuildConfig.BUILD_TYPE;
@@ -533,10 +533,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             else{
                 suffix="."+suffix;
             }
-            return new PluginWorker(ctx,"ocharts","de.wellenvogel.ochartsprovider"+ suffix,"de.wellenvogel.ochartsprovider.OchartsService");
+            return new ExternalPluginWorker(ctx,"ocharts","de.wellenvogel.ochartsprovider"+ suffix,"de.wellenvogel.ochartsprovider.OchartsService");
         }
     };
-    private static final WorkerConfig WPLUGINS=new WorkerConfig("PluginManager",9,PluginWorker.TYPENAME+".ocharts") {
+    private static final WorkerConfig WPLUGINS=new WorkerConfig("PluginManager",9, ExternalPluginWorker.TYPENAME+".ocharts") {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             return new PluginManager(TYPE_PLUGINS,ctx,getWorkDirByType(ctx,TYPE_PLUGINS),"plugins");
@@ -562,6 +562,17 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }
         return null;
+    }
+
+    public synchronized List<IWorker> findWorkersByType(String type){
+        ArrayList<IWorker> rt=new ArrayList<>();
+        for (IWorker w:workers){
+            if (type.equals(w.getTypeName())) rt.add(w);
+        }
+        for (IWorker w:internalWorkers){
+            if (type.equals(w.getTypeName())) rt.add(w);
+        }
+        return rt;
     }
     public static JSONArray getWorkerConfig(Context ctx) throws JSONException {
         SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
@@ -839,7 +850,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker newWorker = WorkerFactory.getInstance().createWorker(typeName, this, queue);
         return addWorker(newWorker,newConfig);
     }
-    private synchronized int addWorker(IWorker newWorker, JSONObject newConfig) throws IOException, JSONException {
+    public synchronized int addWorker(IWorker newWorker, JSONObject newConfig) throws IOException, JSONException {
         newWorker.setId(getNextWorkerId());
         String typeName=newWorker.getTypeName();
         newWorker.setParameters(newConfig, true,true);
@@ -860,7 +871,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         saveWorkerConfig(newWorker);
         return newWorker.getId();
     }
-    private synchronized void deleteWorker(IWorker worker) throws JSONException {
+    public synchronized void deleteWorker(IWorker worker) throws JSONException {
         worker.stopAndWait();
         int workerId=-1;
         for (int i=0;i<workers.size();i++){
@@ -990,6 +1001,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         AvnLog.i(LOGPRFX,"Service handleStartup done");
         isRunning=true;
+        if (! isWatchdog) {
+            PluginManager pm = getPluginManager();
+            if (pm != null) {
+                pm.onStartupDone();
+            }
+        }
     }
 
     @Override
@@ -1675,10 +1692,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     public synchronized JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         for (IWorker w: internalWorkers){
-            rt.put(w.getJsonStatus());
+            JSONObject hs=w.getJsonStatus();
+            if (hs != null) {
+                rt.put(hs);
+            }
         }
         for (IWorker w : workers){
-            rt.put(w.getJsonStatus());
+            JSONObject hs=w.getJsonStatus();
+            if (hs != null) {
+                rt.put(hs);
+            }
         }
         return rt;
     }
@@ -1689,13 +1712,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return rt;
     }
     private void handlePluginMessage(String name, Intent intent){
-        PluginWorker existing=null;
+        ExternalPluginWorker existing=null;
         synchronized (this) {
             if (! isRunning) return; //prevent duplicates...
             for (List<IWorker> wlist : getAllWorkers()) {
                 for (IWorker w : wlist) {
-                    if (w.getTypeName().equals(PluginWorker.TYPENAME)) {
-                        PluginWorker pw = (PluginWorker) w;
+                    if (w.getTypeName().equals(ExternalPluginWorker.TYPENAME)) {
+                        ExternalPluginWorker pw = (ExternalPluginWorker) w;
                         if (pw.getPluginName().equals(name)) {
                             //found existing
                             existing = pw;
@@ -1713,7 +1736,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! allowAllPlugins) {
             return;
         }
-        PluginWorker pw=new PluginWorker(this,name);
+        ExternalPluginWorker pw=new ExternalPluginWorker(this,name);
         try {
             addWorker(pw,new JSONObject());
         } catch (Exception e) {

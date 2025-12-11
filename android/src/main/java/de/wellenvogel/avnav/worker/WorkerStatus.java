@@ -17,7 +17,6 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         canEdit=other.canEdit;
         canDelete=other.canDelete;
         id=other.id;
-        typeName =other.typeName;
         status=other.status;
         info=other.info;
         disabled=other.disabled;

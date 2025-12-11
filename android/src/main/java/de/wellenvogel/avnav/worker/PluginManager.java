@@ -35,7 +35,11 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -52,6 +56,14 @@ public class PluginManager extends DirectoryRequestHandler {
 
     static final String UPLOAD_BASE ="__upload";
     static final String USER_PREFIX="user-";
+
+    private final Object createLock=new Object();
+    /**
+     * the list of plugins
+     * key is the directory name
+     * will be recreated on startup and updated on upload/delete
+     */
+    HashMap<String, PluginWorker> currentPlugins = new HashMap<>();
     public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix) throws IOException {
         super(type, ctx, workDir, urlPrefrix, null);
     }
@@ -80,6 +92,63 @@ public class PluginManager extends DirectoryRequestHandler {
     protected void run(int startSequence) throws JSONException, IOException {
         while (! shouldStop(startSequence)){
             sleep(1000);
+        }
+    }
+    private void updatePlugins(List<String> names,boolean updateList){
+        synchronized (createLock) {
+            if (updateList) {
+                List<IWorker> configuredPlugins = gpsService.findWorkersByType(PluginWorker.TYPENAME);
+                for (IWorker w : configuredPlugins) {
+                    try {
+                        PluginWorker pw = (PluginWorker) w;
+                        currentPlugins.put(pw.getPluginName(), pw);
+                    } catch (Exception e) {
+                        AvnLog.e("exception in plugin startup", e);
+                    }
+                }
+            }
+            for (String name : names) {
+                PluginWorker pw = currentPlugins.get(name);
+                try {
+                    JSONObject param = new JSONObject();
+                    param.put(PluginWorker.PLUGIN_NAME.name, name);
+                    param.put(SOURCENAME_PARAMETER.name, USER_PREFIX + name);
+                    if (pw == null) {
+                        pw = new PluginWorker(gpsService);
+                        AvnLog.i("creating plugin worker for " + name);
+                        gpsService.addWorker(pw, param);
+                        currentPlugins.put(name, pw);
+
+                    } else {
+                        pw.setParameters(param, false, false);
+                        pw.start(null); //start and check
+                    }
+                } catch (Exception e) {
+                    AvnLog.e("unable to create/update plugin worker " + name, e);
+                }
+            }
+        }
+    }
+    public void onStartupDone(){
+        ArrayList<String> plugins=new ArrayList<>();
+        for (File pd:workDir.listFiles()){
+            if (! pd.isDirectory()) continue;
+            plugins.add(pd.getName());
+        }
+        updatePlugins(plugins,true);
+    }
+    private void removePlugin(String name){
+        synchronized (createLock){
+            PluginWorker pw=currentPlugins.get(name);
+            if (pw != null){
+                pw.stop();
+                try {
+                    gpsService.deleteWorker(pw);
+                } catch (JSONException e) {
+                    AvnLog.e("error deleting plugin "+name,e);
+                }
+                currentPlugins.remove(name);
+            }
         }
     }
     private void zip(File file, ZipOutputStream zos) throws IOException
@@ -289,6 +358,9 @@ public class PluginManager extends DirectoryRequestHandler {
             AvnLog.e("exception in plugin upload for "+name,t);
             throw t;
         }
+        ArrayList<String> names=new ArrayList<>();
+        names.add(name);
+        updatePlugins(names,false);
         return true;
     }
     String pluginFileToName(File plugin){
@@ -323,12 +395,14 @@ public class PluginManager extends DirectoryRequestHandler {
     public boolean handleDelete(String name, Uri uri) throws Exception {
         File pdir=findLocalFile(name);
         if (pdir == null) throw new Exception("plugin "+name+" not found");
-        return AvnUtil.deleteRecursive(pdir);
+        boolean rt= AvnUtil.deleteRecursive(pdir);
+        if (rt) removePlugin(pdir.getName());
+        return rt;
     }
 
     @Override
     public boolean handleRename(String oldName, String newName) throws Exception {
-        throw new Exception("cannpot rename plugins");
+        throw new Exception("cannot rename plugins");
     }
 
     static final AvnUtil.KeyValue<String>[] PLUGINFILES=new AvnUtil.KeyValue[]
@@ -344,6 +418,7 @@ public class PluginManager extends DirectoryRequestHandler {
                 if (localFile.isDirectory()) {
                     JSONObject po=new JSONObject();
                     po.put("name",pluginFileToName(localFile));
+                    po.put("dir",localFile.getName());
                     for (AvnUtil.KeyValue<String> item:PLUGINFILES) {
                         File pf = new File(localFile, item.value);
                         if (pf.exists()) {
@@ -353,7 +428,18 @@ public class PluginManager extends DirectoryRequestHandler {
                     rt.put(po);
                 }
             }
-            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",rt));
+            JSONArray finalList=new JSONArray();
+            synchronized (createLock){
+                for (int i=0;i<rt.length();i++){
+                    JSONObject po=rt.getJSONObject(i);
+                    String pname=po.getString("dir");
+                    PluginWorker pw=currentPlugins.get(pname);
+                    if (pw == null || pw.isActive()){
+                        finalList.put(po);
+                    }
+                }
+            }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",finalList));
         }
         return RequestHandler.getErrorReturn("command "+command+" not available");
     }

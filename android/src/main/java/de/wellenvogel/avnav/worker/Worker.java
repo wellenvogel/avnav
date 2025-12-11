@@ -31,7 +31,7 @@ public abstract class Worker implements IWorker {
             new EditableParameter.StringParameter("ipaddress",R.string.labelSettingsIpAddress,null);
     static final EditableParameter.IntegerParameter IPPORT_PARAMETER=
             new EditableParameter.IntegerParameter("port",R.string.labelSettingsIpPort,null);
-    static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
+    protected static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
             new EditableParameter.StringParameter("name",R.string.labelSettingsSource,"");
     static final EditableParameter.StringParameter TYPENAME_PARAMETER=
             new EditableParameter.StringParameter("typeName"); //not intended to be edited
