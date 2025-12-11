@@ -9,7 +9,12 @@ import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 
 const DirectWidget=(wprops)=>{
-    const props=wprops.translateFunction?{...wprops,...wprops.translateFunction({...wprops})}:wprops;
+    let props;
+    try {
+        props = wprops.translateFunction ? {...wprops, ...wprops.translateFunction({...wprops})} : wprops;
+    }catch (e){
+        props={...wprops,value:'Error: '+e}
+    }
     let val;
     let vdef=props.default||'0';
     if (props.value !== undefined) {
