@@ -48,21 +48,31 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
     private static class Child{
         Status status;
         String info;
+        boolean canEdit=false;
         Child(Child other){
             status=other.status;
             info=other.info;
         }
+        Child(Status status,String info,boolean canEdit){
+            this.status=status;
+            this.info=info;
+            this.canEdit=canEdit;
+        }
         Child(){}
     }
     private final HashMap<String,Child> children=new HashMap<>();
-    public  synchronized void setChildStatus(String name,Status status,String info){
+    public  void setChildStatus(String name,Status status,String info){
+        setChildStatus(name,status,info,false);
+    }
+    public  synchronized void setChildStatus(String name,Status status,String info,boolean canEdit){
         Child child=children.get(name);
         if (child == null){
-            child=new Child();
+            child=new Child(status,info,canEdit);
             children.put(name,child);
         }
         child.status=status;
         child.info=info;
+        child.canEdit=canEdit;
     }
     public synchronized void unsetChildStatus(String name){
         children.remove(name);
@@ -91,9 +101,11 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         for (String k :children.keySet()){
             JSONObject cho=new JSONObject();
             cho.put("name",k);
+            cho.put("id",k);
             Child ch=children.get(k);
             cho.put("info",ch.info);
             cho.put("status",ch.status.toString());
+            cho.put("canEdit",ch.canEdit);
             cha.put(cho);
         }
         sto.put("items",cha);

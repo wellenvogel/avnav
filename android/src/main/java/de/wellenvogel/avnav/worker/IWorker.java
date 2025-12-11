@@ -22,12 +22,13 @@ public interface IWorker {
 
     void setId(int id);
     int getId();
-    JSONObject getEditableParameters(boolean includeCurrent,Context context) throws JSONException;
+    JSONObject getEditableParameters(String child, boolean includeCurrent, Context context) throws JSONException;
     JSONObject getConfig();
 
     JSONArray getParameterDescriptions(Context context) throws JSONException;
 
-    void setParameters(JSONObject newParam, boolean replace,boolean check) throws JSONException, IOException;
+    void setParameters(String child, JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException;
+    void deleteChild(String child) throws Exception;
     void stop();
 
     void stopAndWait();

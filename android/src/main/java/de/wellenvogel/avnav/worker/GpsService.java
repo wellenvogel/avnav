@@ -287,19 +287,25 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return RequestHandler.getReturn(new AvnUtil.KeyValue<Boolean>("canRestart",false));
         }
         int id=Integer.parseInt(AvnUtil.getMandatoryParameter(uri,"handlerId"));
+        String child=uri.getQueryParameter("child");
         IWorker worker=findWorkerById(id);
         if (worker == null){
             return RequestHandler.getErrorReturn("worker with id "+id+" not found");
         }
         if ("getEditables".equals(command)){
-            JSONObject rt=worker.getEditableParameters(true,this);
+            JSONObject rt=worker.getEditableParameters(child, true,this);
             rt.put("status","OK");
             return rt;
         }
         if ("setConfig".equals(command)) {
             String config = postData.getAsString();
-            updateWorkerConfig(worker, new JSONObject(config));
+            updateWorkerConfig(worker, child,new JSONObject(config));
             updateConfigSequence();
+            return RequestHandler.getReturn();
+        }
+        if ("deleteChild".equals(command)){
+            if (child == null) throw new Exception("missing parameter child");
+            worker.deleteChild(child);
             return RequestHandler.getReturn();
         }
         if ("deleteHandler".equals(command)){
@@ -808,9 +814,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }
     }
-    private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
+    private synchronized void updateWorkerConfig(IWorker worker, String child,JSONObject newConfig) throws JSONException, IOException {
         JSONObject oldConfig=worker.getConfig();
-        worker.setParameters(newConfig, false,true);
+        worker.setParameters(child, newConfig, false,true);
         EditableParameter.IntegerParameter prioParam=(EditableParameter.IntegerParameter)worker.getParameter(Worker.SOURCE_PRIORITY_PARAMETER,true);
         int oldPrio=prioParam.fromJson(oldConfig);
         int newPrio=prioParam.fromJson(worker.getConfig());
@@ -853,7 +859,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     public synchronized int addWorker(IWorker newWorker, JSONObject newConfig) throws IOException, JSONException {
         newWorker.setId(getNextWorkerId());
         String typeName=newWorker.getTypeName();
-        newWorker.setParameters(newConfig, true,true);
+        newWorker.setParameters(null, newConfig, true,true);
         newWorker.start(null);
         String currentType=null;
         boolean inserted=false;
@@ -959,7 +965,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                     if (parameters != null){
                         try{
                             JSONObject po=new JSONObject(parameters);
-                            worker.setParameters(po,true,false);
+                            worker.setParameters(null, po,true,false);
                         }catch (JSONException e){
                             //all internal workers must be able to run with empty parameters
                             AvnLog.e("error parsing decoder parameters",e);
@@ -985,7 +991,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                                 Worker.TYPENAME_PARAMETER.fromJson(config), this, queue);
                         worker.setId(getNextWorkerId());
                         try {
-                            worker.setParameters(config, true,false);
+                            worker.setParameters(null, config, true,false);
                             worker.start(null);
                         }catch (Throwable t){
                             worker.setStatus(WorkerStatus.Status.ERROR,"unable to set parameters: "+t.getMessage());
@@ -1001,12 +1007,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         AvnLog.i(LOGPRFX,"Service handleStartup done");
         isRunning=true;
-        if (! isWatchdog) {
-            PluginManager pm = getPluginManager();
-            if (pm != null) {
-                pm.onStartupDone();
-            }
-        }
     }
 
     @Override

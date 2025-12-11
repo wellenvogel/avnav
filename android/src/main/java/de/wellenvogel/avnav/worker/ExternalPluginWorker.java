@@ -83,8 +83,8 @@ public class ExternalPluginWorker extends Worker{
     }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
-        super.setParameters(newParam, replace, check);
+    public synchronized void setParameters(String child, JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
+        super.setParameters(child, newParam, replace, check);
         if (pluginName.isEmpty()){
             if (newParam.has(NAME_PARAM)){
                 pluginName=newParam.getString(NAME_PARAM);

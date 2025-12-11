@@ -990,18 +990,18 @@ public class Decoder extends Worker  implements INavRequestHandler {
     }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
+    public synchronized void setParameters(String child, JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
         if (replace){
             try{
-                super.setParameters(newParam,true,check);
+                super.setParameters(child, newParam,true,check);
             }catch (JSONException | IOException e){
                 AvnLog.e(getTypeName()+": config error",e);
                 //we fall back to save settings
-                super.setParameters(new JSONObject(),true,check);
+                super.setParameters(child, new JSONObject(),true,check);
             }
             return;
         }
-        super.setParameters(newParam, replace,check);
+        super.setParameters(child, newParam, replace,check);
     }
 
     SatStatus getSatStatus() {

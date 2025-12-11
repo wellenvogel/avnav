@@ -22,6 +22,7 @@ package de.wellenvogel.avnav.worker;
 */
 
 
+import android.content.Context;
 import android.net.Uri;
 
 import org.json.JSONArray;
@@ -35,10 +36,10 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -46,7 +47,6 @@ import java.util.zip.ZipOutputStream;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
-import de.wellenvogel.avnav.appapi.IDeleteByUrl;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -56,14 +56,10 @@ public class PluginManager extends DirectoryRequestHandler {
 
     static final String UPLOAD_BASE ="__upload";
     static final String USER_PREFIX="user-";
+    EditableParameter.ParameterList childParameters=new EditableParameter.ParameterList(ENABLED_PARAMETER);
 
+    JSONObject childParameterValues=new JSONObject();
     private final Object createLock=new Object();
-    /**
-     * the list of plugins
-     * key is the directory name
-     * will be recreated on startup and updated on upload/delete
-     */
-    HashMap<String, PluginWorker> currentPlugins = new HashMap<>();
     public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix) throws IOException {
         super(type, ctx, workDir, urlPrefrix, null);
     }
@@ -71,7 +67,6 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     public void start(PermissionCallback permissionCallback) {
-        super.start(permissionCallback);
         try{
             for (File f:workDir.listFiles()){
                 if (f.isFile() && f.getName().startsWith(UPLOAD_BASE)){
@@ -80,6 +75,11 @@ public class PluginManager extends DirectoryRequestHandler {
             }
         }catch (Throwable t){
             AvnLog.e("error cleaning up plugin dir",t);
+        }
+        setStatus(WorkerStatus.Status.NMEA,"running");
+        for (File f:workDir.listFiles()){
+            if (!f.isDirectory()) continue;
+            setChildStatus(USER_PREFIX+f.getName());
         }
     }
 
@@ -90,65 +90,21 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
-        while (! shouldStop(startSequence)){
-            sleep(1000);
-        }
     }
-    private void updatePlugins(List<String> names,boolean updateList){
-        synchronized (createLock) {
-            if (updateList) {
-                List<IWorker> configuredPlugins = gpsService.findWorkersByType(PluginWorker.TYPENAME);
-                for (IWorker w : configuredPlugins) {
-                    try {
-                        PluginWorker pw = (PluginWorker) w;
-                        currentPlugins.put(pw.getPluginName(), pw);
-                    } catch (Exception e) {
-                        AvnLog.e("exception in plugin startup", e);
-                    }
-                }
-            }
-            for (String name : names) {
-                PluginWorker pw = currentPlugins.get(name);
-                try {
-                    JSONObject param = new JSONObject();
-                    param.put(PluginWorker.PLUGIN_NAME.name, name);
-                    param.put(SOURCENAME_PARAMETER.name, USER_PREFIX + name);
-                    if (pw == null) {
-                        pw = new PluginWorker(gpsService);
-                        AvnLog.i("creating plugin worker for " + name);
-                        gpsService.addWorker(pw, param);
-                        currentPlugins.put(name, pw);
 
-                    } else {
-                        pw.setParameters(param, false, false);
-                        pw.start(null); //start and check
-                    }
-                } catch (Exception e) {
-                    AvnLog.e("unable to create/update plugin worker " + name, e);
-                }
-            }
-        }
-    }
-    public void onStartupDone(){
-        ArrayList<String> plugins=new ArrayList<>();
-        for (File pd:workDir.listFiles()){
-            if (! pd.isDirectory()) continue;
-            plugins.add(pd.getName());
-        }
-        updatePlugins(plugins,true);
-    }
-    private void removePlugin(String name){
+    private void setChildStatus(String name){
+        boolean enabled=true;
         synchronized (createLock){
-            PluginWorker pw=currentPlugins.get(name);
-            if (pw != null){
-                pw.stop();
-                try {
-                    gpsService.deleteWorker(pw);
-                } catch (JSONException e) {
-                    AvnLog.e("error deleting plugin "+name,e);
-                }
-                currentPlugins.remove(name);
-            }
+            try{
+                JSONObject jo=childParameterValues.getJSONObject(name);
+                enabled=ENABLED_PARAMETER.fromJson(jo);
+            }catch (Throwable t){}
+        }
+        if (enabled){
+            status.setChildStatus(name, WorkerStatus.Status.NMEA,"running",true);
+        }
+        else{
+            status.setChildStatus(name, WorkerStatus.Status.INACTIVE,"disabled",true);
         }
     }
     private void zip(File file, ZipOutputStream zos) throws IOException
@@ -358,9 +314,7 @@ public class PluginManager extends DirectoryRequestHandler {
             AvnLog.e("exception in plugin upload for "+name,t);
             throw t;
         }
-        ArrayList<String> names=new ArrayList<>();
-        names.add(name);
-        updatePlugins(names,false);
+        setChildStatus(USER_PREFIX+name);
         return true;
     }
     String pluginFileToName(File plugin){
@@ -396,7 +350,7 @@ public class PluginManager extends DirectoryRequestHandler {
         File pdir=findLocalFile(name);
         if (pdir == null) throw new Exception("plugin "+name+" not found");
         boolean rt= AvnUtil.deleteRecursive(pdir);
-        if (rt) removePlugin(pdir.getName());
+        if (rt) status.unsetChildStatus(name);
         return rt;
     }
 
@@ -432,11 +386,12 @@ public class PluginManager extends DirectoryRequestHandler {
             synchronized (createLock){
                 for (int i=0;i<rt.length();i++){
                     JSONObject po=rt.getJSONObject(i);
-                    String pname=po.getString("dir");
-                    PluginWorker pw=currentPlugins.get(pname);
-                    if (pw == null || pw.isActive()){
-                        finalList.put(po);
-                    }
+                    String pname=po.getString("name");
+                    try{
+                        JSONObject cfg=childParameterValues.getJSONObject(pname);
+                        if (!ENABLED_PARAMETER.fromJson(cfg)) continue;
+                    }catch (Exception e){}
+                    finalList.put(po);
                 }
             }
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",finalList));
@@ -476,5 +431,57 @@ public class PluginManager extends DirectoryRequestHandler {
         if (finalFile.isDirectory()) throw new Error(finalFile.getPath()+" is a directory");
         if (!finalFile.exists()) return null;
         return new ExtendedWebResourceResponse(finalFile,RequestHandler.mimeType(finalFile.getName()),"");
+    }
+
+    @Override
+    public synchronized JSONObject getEditableParameters(String child, boolean includeCurrent, Context context) throws JSONException {
+        if (child != null){
+            JSONObject rt=super.getEditableParameters(null,false,context);
+            rt.put("data",childParameters.toJson(context));
+            if (includeCurrent) {
+                synchronized (createLock) {
+                    JSONObject cv=new JSONObject();
+                    try{
+                        cv=childParameterValues.getJSONObject(child);
+                    }catch (Throwable t){}
+                    rt.put("values", cv);
+                }
+            }
+            return rt;
+        }
+        return super.getEditableParameters(child, includeCurrent, context);
+    }
+    private final static String CHILD_PARAM_NAME="children";
+    @Override
+    public synchronized void setParameters(String child, JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
+        if (newParam == null) return;
+        if (child != null){
+            JSONObject nv=new JSONObject();
+            synchronized (createLock){
+                if (!childParameterValues.has(child)){
+                    childParameterValues.put(child,new JSONObject());
+                }
+                JSONObject cv=childParameterValues.getJSONObject(child);
+                for (EditableParameter.EditableParameterInterface p:childParameters){
+                    if (newParam.has(p.getName())){
+                        cv.put(p.getName(),newParam.get(p.getName()));
+                    }
+                }
+                nv.put(CHILD_PARAM_NAME,childParameterValues);
+            }
+            super.setParameters(null,nv,false,false);
+            return;
+        }
+        synchronized (createLock){
+            if (newParam.has(CHILD_PARAM_NAME)){
+                childParameterValues=newParam.getJSONObject(CHILD_PARAM_NAME);
+            }
+        }
+        super.setParameters(null, newParam, replace, check);
+    }
+
+    @Override
+    public synchronized JSONObject getJsonStatus() throws JSONException {
+        return super.getJsonStatus();
     }
 }
