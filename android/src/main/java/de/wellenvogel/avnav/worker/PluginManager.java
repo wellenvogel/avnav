@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.appapi;
+package de.wellenvogel.avnav.worker;
 /*
 # Copyright (c) 2022,2025 Andreas Vogel andreas@wellenvogel.net
 
@@ -32,25 +32,34 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.IDeleteByUrl;
+import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
-import de.wellenvogel.avnav.worker.GpsService;
 
 public class PluginManager extends DirectoryRequestHandler {
 
     static final String UPLOAD_BASE ="__upload";
-    public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
-        super(type, ctx, workDir, urlPrefrix, deleter);
+    static final String USER_PREFIX="user-";
+    public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix) throws IOException {
+        super(type, ctx, workDir, urlPrefrix, null);
+    }
+
+
+    @Override
+    public void start(PermissionCallback permissionCallback) {
+        super.start(permissionCallback);
         try{
             for (File f:workDir.listFiles()){
                 if (f.isFile() && f.getName().startsWith(UPLOAD_BASE)){
@@ -59,6 +68,18 @@ public class PluginManager extends DirectoryRequestHandler {
             }
         }catch (Throwable t){
             AvnLog.e("error cleaning up plugin dir",t);
+        }
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+    }
+
+    @Override
+    protected void run(int startSequence) throws JSONException, IOException {
+        while (! shouldStop(startSequence)){
+            sleep(1000);
         }
     }
     private void zip(File file, ZipOutputStream zos) throws IOException
@@ -141,27 +162,91 @@ public class PluginManager extends DirectoryRequestHandler {
         );
     }
 
-    private void checkEntryPath(ZipEntry entry,String pname) throws Exception{
+    private String checkPathParts(String [] parts,boolean decode) throws Exception{
+        return checkPathParts(parts,decode,0);
+    }
+    private String checkPathParts(String [] parts,boolean decode,int start) throws Exception{
+        StringBuilder rt=new StringBuilder();
+        try {
+            for (int i=start;i<parts.length;i++) {
+                String part=parts[i];
+                if (decode) part = URLDecoder.decode(part, "UTF-8");
+                safeName(part, true);
+                if (part.indexOf(':') >= 0)
+                    throw new Exception("no : allowed");
+                if (part.indexOf(File.separatorChar) >= 0){
+                    throw new Exception("no "+File.separatorChar+" allowed in name parts");
+                }
+                if (rt.length() == 0) rt.append(part);
+                else rt.append(File.separatorChar).append(part);
+            }
+        }
+        catch (Throwable t){
+            throw new Exception("error in "+String.join("/",parts)+" : "+t.getMessage());
+            }
+        return rt.toString();
+    }
+    private String checkEntryPath(ZipEntry entry,String pname) throws Exception{
         String [] parts=entry.getName().split("/");
         if (parts.length < 1) throw new Exception("0 name parts in zip entry "+entry.getName());
         if (! pname.equals(parts[0])) throw new Exception("zip entry "+entry.getName()+" not below "+pname);
         if (!entry.isDirectory()){
             if (parts.length < 2) throw new Exception("file "+entry.getName()+" must be in subdir below "+pname);
         }
-        for (String part:parts){
-            safeName(part,true);
-            if (part.indexOf(':')>=0) throw new Exception("no : allowed in names "+entry.getName());
+        return checkPathParts(parts,false);
+    }
+    static class NoCloseWrapper extends InputStream {
+        InputStream stream;
+        public NoCloseWrapper(InputStream is){
+            stream=is;
+        }
+        @Override
+        public int read() throws IOException {
+            return stream.read();
+        }
+
+        @Override
+        public int available() throws IOException {
+            return stream.available();
+        }
+
+        @Override
+        public void close() throws IOException {
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return stream.read(b, off, len);
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return stream.read(b);
+        }
+
+
+
+        @Override
+        public long skip(long n) throws IOException {
+            return stream.skip(n);
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            stream.reset();
         }
     }
-
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
-        File existing=super.findLocalFile(name); //also include normal files
-        if (existing != null && ! ignoreExisting){
-            throw new Exception("plugin "+name+" already exists");
-        }
         name=safeName(name,true);
         if (name.startsWith(UPLOAD_BASE)) throw new Exception("plugin names must not start with "+UPLOAD_BASE);
+        File existing=new File(workDir,name);
+        if (existing.exists() && ! ignoreExisting){
+            throw new Exception("plugin "+name+" already exists");
+        }
+        if (existing.isFile()){
+            throw new Exception("a file with name "+name+" exists in plugins directory");
+        }
         //we first upload everything before we unpack
         //the chance that something goes wrong during upload is bigger then during unpacking
         //so we try to keep the plugin intact if it already exists but the upload gets interrupted
@@ -171,43 +256,52 @@ public class PluginManager extends DirectoryRequestHandler {
             throw new Error("unable to upload to "+uploadName);
         }
         File uploaded=new File(workDir,uploadName);
-        ZipInputStream zis=new ZipInputStream(new FileInputStream(uploaded));
-        //do some analysis of the zip
-        ZipEntry e=zis.getNextEntry();
-        while (e != null){
-            checkEntryPath(e,name);
-            e=zis.getNextEntry();
+        try {
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(uploaded));
+            //do some analysis of the zip
+            ZipEntry e = zis.getNextEntry();
+            while (e != null) {
+                checkEntryPath(e, name);
+                e = zis.getNextEntry();
+            }
+            zis.close();
+            zis = new ZipInputStream(new FileInputStream(uploaded));
+            e = zis.getNextEntry();
+            while (e != null) {
+                File of = new File(workDir, checkEntryPath(e, name));
+                File dir = e.isDirectory() ? of : of.getParentFile();
+                if (dir.exists() && !dir.isDirectory()) {
+                    AvnUtil.deleteRecursive(dir);
+                }
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                if (!dir.isDirectory()) {
+                    throw new Exception("unable to create directory " + dir.getAbsolutePath());
+                }
+                if (!e.isDirectory()) {
+                    writeAtomic(of, new NoCloseWrapper(zis), true, e.getSize());
+                }
+                e = zis.getNextEntry();
+            }
+            zis.close();
+        }catch (Throwable t){
+            AvnLog.e("exception in plugin upload for "+name,t);
+            throw t;
         }
-        zis.close();
-        zis=new ZipInputStream(new FileInputStream(uploaded));
-        e=zis.getNextEntry();
-        while (e != null) {
-            File of = new File(workDir, e.getName());
-            File dir = of.isDirectory() ? of : of.getParentFile();
-            if (dir.exists() && !dir.isDirectory()) {
-                AvnUtil.deleteRecursive(dir);
-            }
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            if (! dir.isDirectory()){
-                throw new Exception("unable to create directory "+dir.getAbsolutePath());
-            }
-            if (! e.isDirectory()){
-                writeAtomic(of,zis,true,e.getSize());
-            }
-            e=zis.getNextEntry();
-        }
-        zis.close();
         return true;
     }
-
+    String pluginFileToName(File plugin){
+        return USER_PREFIX+plugin.getName();
+    }
     @Override
     protected JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
         if (!localFile.isDirectory()) return null;
         JSONObject jo= super.fileToItem(localFile);
+        jo.put("name",pluginFileToName(localFile));
         jo.put("canDownload",true);
         jo.put("downloadName",localFile.getName()+".zip");
+        jo.put("checkPrefix",USER_PREFIX);
         return jo;
     }
 
@@ -227,12 +321,14 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        return super.handleDelete(name, uri);
+        File pdir=findLocalFile(name);
+        if (pdir == null) throw new Exception("plugin "+name+" not found");
+        return AvnUtil.deleteRecursive(pdir);
     }
 
     @Override
     public boolean handleRename(String oldName, String newName) throws Exception {
-        return super.handleRename(oldName, newName);
+        throw new Exception("cannpot rename plugins");
     }
 
     static final AvnUtil.KeyValue<String>[] PLUGINFILES=new AvnUtil.KeyValue[]
@@ -247,11 +343,11 @@ public class PluginManager extends DirectoryRequestHandler {
             for (File localFile: workDir.listFiles()) {
                 if (localFile.isDirectory()) {
                     JSONObject po=new JSONObject();
-                    po.put("name",localFile.getName());
+                    po.put("name",pluginFileToName(localFile));
                     for (AvnUtil.KeyValue<String> item:PLUGINFILES) {
                         File pf = new File(localFile, item.value);
                         if (pf.exists()) {
-                            po.put(item.key, getUrlFromName(localFile.getName() + "/" + pf.getName()));
+                            po.put(item.key, getUrlFromName(pluginFileToName(localFile) + "/" + pf.getName()));
                         }
                     }
                     rt.put(po);
@@ -265,6 +361,8 @@ public class PluginManager extends DirectoryRequestHandler {
     @Override
     protected File findLocalFile(String name) throws IOException {
         if (workDir == null) throw new IOException("workdir for "+type+" not set");
+        if (! name.startsWith(USER_PREFIX)) throw new IOException("names must start with "+USER_PREFIX);
+        name=name.substring(USER_PREFIX.length());
         for (File localFile: workDir.listFiles()) {
             if (localFile.isDirectory()
                     &&localFile.canRead()
@@ -275,10 +373,6 @@ public class PluginManager extends DirectoryRequestHandler {
         return null;
     }
 
-    @Override
-    protected void run(int startSequence) throws JSONException, IOException {
-        super.run(startSequence);
-    }
 
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
@@ -289,18 +383,12 @@ public class PluginManager extends DirectoryRequestHandler {
         path = path.substring((urlPrefix.length() + 1));
         String[] parts = path.split("/");
         if (parts.length < 2) return null;
-        String name = URLDecoder.decode(parts[0], "UTF-8");
-        File finalFile=findLocalFile(name);
-        int idx=1;
-        while (finalFile != null && finalFile.exists() ){
-            if (idx >= parts.length){
-                if (finalFile.isDirectory()) throw new Error(finalFile.getPath()+" is a directory");
-                return new ExtendedWebResourceResponse(finalFile,RequestHandler.mimeType(finalFile.getName()),"");
-            }
-            String sub = URLDecoder.decode(parts[idx], "UTF-8");
-            finalFile=new File(finalFile,sub);
-            idx++;
-        }
-        return null;
+        File base=findLocalFile(URLDecoder.decode(parts[0], "UTF-8"));
+        if (! base.isDirectory()) return null;
+        String fpath=checkPathParts(parts,true,1);
+        File finalFile=new File(base,fpath);
+        if (finalFile.isDirectory()) throw new Error(finalFile.getPath()+" is a directory");
+        if (!finalFile.exists()) return null;
+        return new ExtendedWebResourceResponse(finalFile,RequestHandler.mimeType(finalFile.getName()),"");
     }
 }

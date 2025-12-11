@@ -32,6 +32,7 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.Alarm;
 import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.PluginManager;
 import de.wellenvogel.avnav.worker.RouteHandler;
 
 /**
@@ -59,7 +60,6 @@ public class RequestHandler {
     private LayoutHandler layoutHandler;
     private SettingsHandler settingsHandler;
     private AddonHandler addonHandler;
-    private PluginManager pluginManager;
 
     //file types from the js side
     public static String TYPE_ROUTE="route";
@@ -209,13 +209,6 @@ public class RequestHandler {
         this.service = service;
         this.chartHandler =new ChartHandler(service,this);
         this.addonHandler= new AddonHandler(service,this);
-        try {
-            pluginManager=null;
-            pluginManager = new PluginManager(TYPE_PLUGINS, service, new File(getWorkDir(),
-                    typeDirs.get(TYPE_PLUGINS).value.getPath()), "plugins", addonHandler);
-        }catch (Exception e){
-            AvnLog.e("unable to create plugin handler",e);
-        }
         layoutHandler=new LayoutHandler(service,  "viewer/layout",
                 new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
         handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
@@ -326,7 +319,14 @@ public class RequestHandler {
                 return null;
             }
         });
-        handlerMap.put(TYPE_PLUGINS, () -> pluginManager);
+        handlerMap.put(TYPE_PLUGINS, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                GpsService s=getGpsService();
+                if (s != null) return s.getPluginManager();
+                return null;
+            }
+        });
         AvnLog.i(LOGPRFX,"Construct done");
     }
 
@@ -856,9 +856,6 @@ public class RequestHandler {
         ChartHandler ch=chartHandler;
         if (ch != null) ch.stop();
         chartHandler=null;
-        PluginManager pm=pluginManager;
-        if (pm != null) pm.stop();
-        pluginManager=null;
     }
 
 

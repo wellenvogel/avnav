@@ -63,6 +63,9 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
+import static de.wellenvogel.avnav.appapi.RequestHandler.TYPE_PLUGINS;
+import static de.wellenvogel.avnav.appapi.RequestHandler.TYPE_ROUTE;
+import static de.wellenvogel.avnav.appapi.RequestHandler.TYPE_TRACK;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsEnabled;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 
@@ -106,8 +109,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private long alarmSequence=System.currentTimeMillis();
     private final ArrayList<IWorker> workers =new ArrayList<>();
     private final ArrayList<IWorker> internalWorkers=new ArrayList<>();
-    private static final int MIN_WORKER_ID=10;
-    private int workerId=MIN_WORKER_ID; //1-9 reserverd for fixed workers like decoder,...
+    private static final int MIN_WORKER_ID=100;
+    private int workerId=MIN_WORKER_ID; //1-99 reserverd for fixed workers like decoder,...
     private final HashMap<String, Resolver> mdnsResolvers=new HashMap<>();
     private final ArrayList<InetAddress> interfaceAddresses=new ArrayList<>();
     private HashSet<NsdManager.DiscoveryListener> discoveryListeners=new HashSet<>();
@@ -463,6 +466,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         abstract IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException;
     }
 
+    private static File getWorkDirByType(Context ctx,String type) throws IOException{
+        AvnUtil.KeyValue<File> sub=RequestHandler.typeDirs.get(type);
+        if (sub == null) throw new IOException("no workdir for type "+type);
+        SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        return new File(AvnUtil.getWorkDir(prefs,ctx),sub.value.getName());
+    }
     private static final WorkerConfig WDECODER= new WorkerConfig("Decoder", 1) {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) {
@@ -472,9 +481,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private static final WorkerConfig WROUTER=new WorkerConfig("Router",2){
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
-            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-            File routeDir=new File(AvnUtil.getWorkDir(prefs,ctx),"routes");
-            RouteHandler rt=new RouteHandler(routeDir,ctx,queue);
+            RouteHandler rt=new RouteHandler(getWorkDirByType(ctx,TYPE_ROUTE),ctx,queue);
             rt.setMediaUpdater(ctx.getMediaUpdater());
             return rt;
         }
@@ -482,18 +489,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private static final WorkerConfig WTRACK=new WorkerConfig("Track",3){
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
-            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
-            TrackWriter rt=new TrackWriter(newTrackDir,ctx);
+            TrackWriter rt=new TrackWriter(getWorkDirByType(ctx,TYPE_TRACK),ctx);
             return rt;
         }
     };
     private static final WorkerConfig WLOGGER= new WorkerConfig("Logger", 4) {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
-            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
-            return new NmeaLogger(newTrackDir,ctx,queue,null);
+            return new NmeaLogger(getWorkDirByType(ctx,TYPE_TRACK),ctx,queue,null);
         }
     };
     private static final WorkerConfig WSERVER= new WorkerConfig("WebServer",5) {
@@ -520,7 +523,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new RemoteChannel(typeName,ctx);
         }
     };
-    private static final WorkerConfig WOCHARTS=new WorkerConfig(PluginWorker.TYPENAME,9,PluginWorker.TYPENAME+".ocharts") {
+    private static final WorkerConfig WOCHARTS=new WorkerConfig(PluginWorker.TYPENAME,10,PluginWorker.TYPENAME+".ocharts") {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             String suffix=BuildConfig.BUILD_TYPE;
@@ -533,8 +536,15 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new PluginWorker(ctx,"ocharts","de.wellenvogel.ochartsprovider"+ suffix,"de.wellenvogel.ochartsprovider.OchartsService");
         }
     };
+    private static final WorkerConfig WPLUGINS=new WorkerConfig("PluginManager",9,PluginWorker.TYPENAME+".ocharts") {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new PluginManager(TYPE_PLUGINS,ctx,getWorkDirByType(ctx,TYPE_PLUGINS),"plugins");
+        }
+    };
 
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE ,WOCHARTS};
+
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE ,WPLUGINS,WOCHARTS};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -720,6 +730,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         RequestHandler r=getRequestHandler();
         if (r == null) return null;
         return r.getAddonHandler();
+    }
+    public PluginManager getPluginManager(){
+        IWorker rc=findWorkerById(WPLUGINS.id);
+        return (PluginManager) rc;
     }
 
     /**
