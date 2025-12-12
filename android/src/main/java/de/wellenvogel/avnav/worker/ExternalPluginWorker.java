@@ -30,9 +30,13 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         JSONObject piJson=pluginJson;
         //for now only plugin.json
         JSONObject rt=new JSONObject();
+        rt.put(K_NAME, getKey());
         if (piJson != null && ENABLED_PARAMETER.fromJson(parameters)) {
-            rt.put(K_NAME, getKey());
             rt.put(FT_CFG,PLUGINFILES.get(FT_CFG).value);
+            rt.put(K_ACTIVE,true);
+        }
+        else{
+            rt.put(K_ACTIVE,false);
         }
         return rt;
     }

@@ -408,15 +408,20 @@ public class PluginManager extends DirectoryRequestHandler {
             JSONArray rt=new JSONArray();
             for (File localFile: workDir.listFiles()) {
                 if (localFile.isDirectory()) {
+                    String name=pluginFileToName(localFile);
                     JSONObject po=new JSONObject();
-                    po.put("name",pluginFileToName(localFile));
-                    po.put("dir",localFile.getName());
-                    for (AvnUtil.KeyValue<String> item:PLUGINFILES) {
-                        File pf = new File(localFile, item.value);
-                        if (pf.exists()) {
-                            po.put(item.key, getUrlFromName(pluginFileToName(localFile) + "/" + pf.getName()));
+                    po.put(IPluginHandler.K_NAME,name);
+                    boolean active=isActive(name);
+                    po.put(IPluginHandler.K_ACTIVE,active);
+                    if (active) {
+                        for (AvnUtil.KeyValue<String> item : PLUGINFILES) {
+                            File pf = new File(localFile, item.value);
+                            if (pf.exists()) {
+                                po.put(item.key, getUrlFromName(name + "/" + pf.getName()));
+                            }
                         }
                     }
+                    po.put(IPluginHandler.K_BASE,getUrlFromName(name));
                     rt.put(po);
                 }
             }
@@ -442,6 +447,7 @@ public class PluginManager extends DirectoryRequestHandler {
                             po.put(k,getUrlFromName(ph.getName()+"/"+relativePath));
                         }
                     }
+                    po.put(IPluginHandler.K_BASE,getUrlFromName(ph.getName()));
                     finalList.put(po);
                 }
             }

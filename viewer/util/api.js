@@ -11,8 +11,9 @@ import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
 import LatLon from "geodesy/latlon-spherical";
 import Dms from "geodesy/dms";
+import AvNavVersion from '../version';
 
-class Api{
+export class Api{
     constructor(){
         this.formatter=Formatter;
     }
@@ -110,7 +111,7 @@ class Api{
      * @returns {number}
      */
     getAvNavVersion(){
-        let version=window.avnav.version;
+        let version=AvNavVersion;
         if (version.match(/dev-/)){
             version=version.replace(/dev-/,'').replace(/[-].*/,'');
         }
@@ -137,6 +138,30 @@ class Api{
      */
     dms(){
         return Dms;
+    }
+}
+
+export class ApiV2 extends Api{
+    constructor() {
+        super();
+    }
+
+    registerWidget(description, opt_editableParameters) {
+        super.registerWidget(description, opt_editableParameters);
+    }
+
+    registerFormatter(name, formatterFunction) {
+        super.registerFormatter(name, formatterFunction);
+    }
+
+    registerFeatureFormatter(name, formatterFunction) {
+        super.registerFeatureFormatter(name, formatterFunction);
+    }
+    getBaseUrl(){
+        throw new Error("not implemented")
+    }
+    getPluginName(){
+        throw new Error("not implemented");
     }
 }
 

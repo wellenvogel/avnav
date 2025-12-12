@@ -49,7 +49,8 @@ public interface IPluginHandler {
             new AvnUtil.KeyValue<String>(FT_PYTHON, "plugin.py")
             );
     public static final String K_NAME="name";
-    public static final String K_DIR="dir";
+    public static String K_ACTIVE="active";
+    public static final String K_BASE="base"; //url base for plugin files
 
     /**
      * return an json object with the keys K_NAME,K_DIR and for each existing file
@@ -59,12 +60,12 @@ public interface IPluginHandler {
      */
     JSONObject getFiles() throws JSONException;
 
-    public static String IK_NAME="name";
+    public static String IK_NAME=K_NAME;
     public static String IK_ID="handlerId";
     public static String IK_CHILD="child";
     public static String IK_EDIT="canEdit";
     public static String IK_DOWNLOAD="canDownload";
-    public static String IK_ACTIVE="active";
+    public static String IK_ACTIVE=K_ACTIVE;
 
     /**
      * get the info item for this plugin for list and info requests

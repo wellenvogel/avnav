@@ -914,13 +914,15 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
           data = []
           with self.configLock:
               for k, api in self.createdApis.items():
+                  active=True
                   if api is None or not api.isActive():
-                      continue
-                  dir = api.directory
-                  element = {'name': k, 'dir': dir}
-                  for k,v in self.PLUGINFILES.items():
-                    if os.path.exists(os.path.join(dir, v)):
-                      element[k] = self.PREFIX + "/" + k + "/"+v
+                      active=False
+                  element = {'name': k, 'base':self.PREFIX + "/" + k,'active':active}
+                  if active:
+                    dir=api.directory
+                    for p,v in self.PLUGINFILES.items():
+                        if os.path.exists(os.path.join(dir, v)):
+                            element[p] = self.PREFIX + "/" + k + "/"+v
                   data.append(element)
           return AVNUtil.getReturnData(data=data)
       return AVNUtil.getReturnData(error=f"plugins: command {command} not found")

@@ -119,7 +119,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
                               '.png': 'image/png',
                               '.js': 'text/javascript; charset=utf-8',
                               '.avt': 'text/plain',
-                              '.log': 'text/plain'
+                              '.log': 'text/plain',
+                              '.mjs': 'text/javascript; charset=utf-8',
                               })
     mtypes=cfgparam.get('MimeType')
     if mtypes is not None:

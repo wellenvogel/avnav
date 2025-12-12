@@ -51,6 +51,7 @@ import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
 import {createRoot} from "react-dom/client";
 import {loadJs, loadOrUpdateCss} from "./util/helper";
 import csswatch, {USERCSSID} from "./util/csswatch";
+import pluginmanager from "./util/pluginmanager";
 
 
 if (! window.avnav){
@@ -166,41 +167,19 @@ export default function() {
         loadScripts(addList);
     }
 
-    const doLateLoads=(loadPlugins)=>{
+    const doLateLoads = async () => {
         createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...
-        setTimeout(function(){
+        setTimeout(function () {
             propertyHandler.incrementSequence();
-        },1000);
+        }, 1000);
 
-        let scriptsLoaded=false;
-        //load the user and plugin stuff
-        if (loadPlugins) {
-            Requests.getJson({
-                request:'api',
-                type:'plugins',
-                command:"listFiles"
-            }).then(
-                (json)=> {
-                    if (json.data) {
-                        json.data.forEach((plugin)=> {
-                            if (plugin.js) lateLoads.push(plugin.js);
-                            if (plugin.css) lateLoads.push(plugin.css);
-                        })
-                    }
-                    if (! scriptsLoaded)loadScripts(lateLoads);
-                    scriptsLoaded=true;
-                }
-            ).catch(
-                (error)=> {
-                    Toast("unable to load plugin data: " + error);
-                    if (! scriptsLoaded) loadScripts(lateLoads);
-                }
-            );
+        try {
+            await pluginmanager.start();
+        } catch (error) {
+            Toast("unable to load plugin data: " + error);
         }
-        else{
-            loadScripts(lateLoads);
-        }
+        loadScripts(lateLoads);
     };
     //register some widget definitions
     registerRadial();
@@ -216,13 +195,13 @@ export default function() {
         request:'api',
         type:'config',
         command:'capabilities'
-    }).then((json)=>{
+    }).then(async (json)=>{
         let capabilities=assign({},falseCapabilities,json.data);
         globalStore.storeMultiple(capabilities,keys.gui.capabilities);
-        doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
-    }).catch((error)=>{
+        await doLateLoads();
+    }).catch(async (error)=>{
         globalStore.storeMultiple(falseCapabilities,keys.gui.capabilities);
-        doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
+        await doLateLoads();
     });
     base.log("avnav loaded");
 };
