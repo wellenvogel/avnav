@@ -255,6 +255,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
         }
         if ("status".equals(command)){
+            String handler=uri.getQueryParameter("handlerId");
+            if (handler != null) {
+                int id = Integer.parseInt(handler);
+                IWorker worker = findWorkerById(id);
+                if (worker == null) throw new Exception("handler "+id+" not found");
+                return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("handler",worker.getJsonStatus()));
+            }
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("handler",getStatus()));
         }
         if (serverInfo != null){
@@ -300,7 +307,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("setConfig".equals(command)) {
             String config = postData.getAsString();
             updateWorkerConfig(worker, child,new JSONObject(config));
-            updateConfigSequence();
             return RequestHandler.getReturn();
         }
         if ("deleteChild".equals(command)){
@@ -814,7 +820,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }
     }
-    private synchronized void updateWorkerConfig(IWorker worker, String child,JSONObject newConfig) throws JSONException, IOException {
+    synchronized void updateWorkerConfig(IWorker worker, String child,JSONObject newConfig) throws JSONException, IOException {
         JSONObject oldConfig=worker.getConfig();
         worker.setParameters(child, newConfig, false,true);
         EditableParameter.IntegerParameter prioParam=(EditableParameter.IntegerParameter)worker.getParameter(Worker.SOURCE_PRIORITY_PARAMETER,true);
@@ -851,6 +857,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }); //will restart
         saveWorkerConfig(worker);
+        updateConfigSequence();
     }
     private synchronized int addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
         IWorker newWorker = WorkerFactory.getInstance().createWorker(typeName, this, queue);

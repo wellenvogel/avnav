@@ -561,32 +561,6 @@ class AVNHandlerManager(object):
         raise Exception("AvNav cannot restart")
       self.shouldStop=True
       return rt
-    if command == 'status':
-        rt = []
-        allHandlers = AVNWorker.getAllHandlers(True)
-        # find for each type the first id
-        typIds = {}
-        for h in allHandlers:
-            type = h.getConfigName()
-            if typIds.get(type) is None:
-                typIds[type] = h.getId()
-        # get the sorted list of typeIds
-        typeList = sorted(typIds.keys(), key=lambda k: typIds[k])
-        for type in typeList:
-            for handler in AVNWorker.getAllHandlers(True):
-                if handler.getConfigName() != type: continue
-                entry = {'configname': handler.getConfigName(),
-                         'config': handler.getParam(),
-                         'name': handler.getStatusName(),
-                         'info': handler.getInfo(),
-                         'disabled': handler.isDisabled(),
-                         'properties': handler.getStatusProperties() if not handler.isDisabled() else {},
-                         'canDelete': handler.canDeleteHandler(),
-                         'canEdit': handler.canEdit(),
-                         'id': handler.getId()
-                         }
-                rt.append(entry)
-        return AVNUtil.getReturnData(handler=rt)
     if command == 'loglevel':
         level=AVNUtil.getHttpRequestParam(requestParam, 'level',True)
         timeout=AVNUtil.getHttpRequestParam(requestParam, 'timeout',False)
@@ -628,6 +602,38 @@ class AVNHandlerManager(object):
     id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=False)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
     configName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=False)
+    if command == 'status':
+        def handlerToStatus(handler):
+            return {'configname': handler.getConfigName(),
+                     'config': handler.getParam(),
+                     'name': handler.getStatusName(),
+                     'info': handler.getInfo(),
+                     'disabled': handler.isDisabled(),
+                     'properties': handler.getStatusProperties() if not handler.isDisabled() else {},
+                     'canDelete': handler.canDeleteHandler(),
+                     'canEdit': handler.canEdit(),
+                     'id': handler.getId()
+                     }
+        if id is not None:
+            handler = AVNWorker.findHandlerById(int(id))
+            if handler is None:
+                return AVNUtil.getReturnData(error="unable to find handler for %s" % str(id))
+            return AVNUtil.getReturnData(handler=handlerToStatus(handler))
+        rt = []
+        allHandlers = AVNWorker.getAllHandlers(True)
+        # find for each type the first id
+        typIds = {}
+        for h in allHandlers:
+            type = h.getConfigName()
+            if typIds.get(type) is None:
+                typIds[type] = h.getId()
+        # get the sorted list of typeIds
+        typeList = sorted(typIds.keys(), key=lambda k: typIds[k])
+        for type in typeList:
+            for handler in AVNWorker.getAllHandlers(True):
+                if handler.getConfigName() != type: continue
+                rt.append(handlerToStatus(handler))
+        return AVNUtil.getReturnData(handler=rt)
     if command == 'getEditables':
       if id is None and configName is None:
         return AVNUtil.getReturnData(error="either id or handlerName must be provided")

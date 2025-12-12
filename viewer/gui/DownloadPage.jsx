@@ -85,6 +85,7 @@ const DownloadPage=(props)=>{
                         type={type}
                         uploadSequence={uploadSequence}
                         showUpload={true}
+                        autoreload={5000}
                     />
                 </PageLeft>
                 <ButtonList

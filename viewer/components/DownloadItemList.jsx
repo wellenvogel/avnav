@@ -38,6 +38,7 @@ import {DynamicButton} from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
 import {listItems} from "../util/itemFunctions";
+import {useTimer} from "../util/GuiHelpers";
 
 const itemSort = (a, b) => {
     if (a.time !== undefined && b.time !== undefined) {
@@ -85,18 +86,27 @@ const DownloadItem = (props) => {
         </div>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,itemActions}) => {
+export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,itemActions,autoreload}) => {
     const [items, setItems] = useState([]);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
         setItems(items);
     }, [type])
+    const timer=useTimer((seq)=>{
+       readItems().then(() => {
+           timer.startTimer(seq);
+        }, () => {})
+    },autoreload,!!autoreload);
     useEffect(() => {
         readItems().then(() => {
         }, (err) => Toast(err));
-    }, [type])
+    }, [type,autoreload])
     const dialogContext = useDialogContext();
     if (!itemActions) itemActions = createItemActions(type);
+    const item=useCallback((props)=>{
+        return <DownloadItem {...props} infoMode={infoMode}
+                             itemActions={itemActions}/>
+    },[itemActions,infoMode]);
     const createAction=itemActions.getCreateAction().copy({
         checkName:(name,itemList,accessor)=>{
             const rs=itemActions.show({name:name,type:type});
@@ -154,11 +164,7 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,
     return <React.Fragment>
         <ItemList
             className={'DownloadItemList'}
-            itemClass={(ip)=><DownloadItem
-                {...ip}
-                infoMode={infoMode}
-                itemActions={itemActions}
-            />}
+            itemClass={item}
             scrollable={true}
             itemList={displayList}
             onItemClick={async (ev) => {
@@ -212,6 +218,7 @@ DownloadItemList.propTypes = {
     noExtra: PropTypes.bool,
     showUpload: PropTypes.bool,
     itemActions: PropTypes.instanceOf(ItemActions),
+    autoreload: PropTypes.number
 }
 
 export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,itemActions})=>{

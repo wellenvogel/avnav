@@ -10,16 +10,60 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import de.wellenvogel.avnav.appapi.AddonHandler;
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
-public class ExternalPluginWorker extends Worker{
+public class ExternalPluginWorker extends Worker implements IPluginHandler{
+
+    private JSONObject pluginJson;
+    @Override
+    public JSONObject getFiles() throws JSONException {
+        JSONObject piJson=pluginJson;
+        //for now only plugin.json
+        JSONObject rt=new JSONObject();
+        if (piJson != null && ENABLED_PARAMETER.fromJson(parameters)) {
+            rt.put(K_NAME, getKey());
+            rt.put(FT_CFG,PLUGINFILES.get(FT_CFG).value);
+        }
+        return rt;
+    }
+
+    @Override
+    public JSONObject getInfo() throws JSONException {
+        JSONObject piJson=pluginJson;
+        JSONObject rt=new JSONObject();
+        rt.put(IK_NAME,getKey());
+        rt.put(IK_ID,getId());
+        rt.put(IK_EDIT,true);
+        rt.put(IK_ACTIVE,(piJson != null) && ENABLED_PARAMETER.fromJson(parameters));
+        return rt;
+    }
+
+    @Override
+    public ExtendedWebResourceResponse openFile(String relativePath) throws Exception {
+        String cfgName=PLUGINFILES.get(FT_CFG).value;
+        if (relativePath == null) throw new Exception("empty path");
+        JSONObject piJson=pluginJson;
+        if (!relativePath.equals(cfgName) || piJson == null) throw new Exception("file "+relativePath+" not found");
+        ByteArrayInputStream is=new ByteArrayInputStream(piJson.toString().getBytes(StandardCharsets.UTF_8));
+        return new ExtendedWebResourceResponse(is.available(),"application/json","UTF-8",is);
+    }
+
+    @Override
+    public String getName() {
+        return getKey();
+    }
+
+
     static class Creator extends WorkerFactory.Creator{
         @Override
         IWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException, IOException {
@@ -101,7 +145,7 @@ public class ExternalPluginWorker extends Worker{
     }
 
     private String getKey(){
-        return TYPENAME+":"+pluginName;
+        return TYPENAME+"-"+pluginName;
     }
     private void unregisterCharts(boolean reset) {
         ChartHandler chartHandler = gpsService.getChartHandler();
@@ -190,6 +234,7 @@ public class ExternalPluginWorker extends Worker{
                 setStatus(WorkerStatus.Status.INACTIVE,"timeout");
                 unregisterCharts(true);
                 unregisterAddons(true);
+                pluginJson=null;
             }
             else{
                 setStatus(WorkerStatus.Status.NMEA,"plugin available");
@@ -197,6 +242,7 @@ public class ExternalPluginWorker extends Worker{
         }
         unregisterAddons(false);
         unregisterCharts(false);
+        pluginJson=null;
     }
 
     @Override
@@ -204,6 +250,7 @@ public class ExternalPluginWorker extends Worker{
         super.stop();
         unregisterAddons(false);
         unregisterCharts(false);
+        pluginJson=null;
     }
 
     public void update(Intent intent){
@@ -220,20 +267,24 @@ public class ExternalPluginWorker extends Worker{
             String pluginString = intent.getStringExtra("plugin.json");
             if (pluginString != null) {
                 try {
-                    JSONObject pluginJson = new JSONObject(pluginString);
-                    if (pluginJson.has("charts")) {
-                        JSONArray charts = pluginJson.getJSONArray("charts");
+                    JSONObject piJson = new JSONObject(pluginString);
+                    pluginJson=piJson;
+                    if (piJson.has("charts")) {
+                        JSONArray charts = piJson.getJSONArray("charts");
                         registerCharts(charts);
                         updatedCharts = true;
                     }
-                    if (pluginJson.has("userApps")) {
-                        JSONArray userApps = pluginJson.getJSONArray("userApps");
+                    if (piJson.has("userApps")) {
+                        JSONArray userApps = piJson.getJSONArray("userApps");
                         registerAddons(userApps);
                         updatedAddons = true;
                     }
                 } catch (Throwable t) {
                     Log.d(Constants.LOGPRFX, "unable to handle plugin.json", t);
                 }
+            }
+            else{
+                pluginJson=null;
             }
             if (! updatedCharts){
                 unregisterCharts(true);

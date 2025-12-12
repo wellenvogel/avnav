@@ -38,8 +38,7 @@ import {
     DBOk,
     DialogButtons,
     DialogFrame,
-    DialogRow, showDialog,
-    showPromiseDialog,
+    DialogRow, showPromiseDialog,
     useDialogContext
 } from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
@@ -68,6 +67,8 @@ import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {fetchItem, listItems} from "../util/itemFunctions";
 import {EditDialog} from "./EditDialog";
+import EditHandlerDialog from "./EditHandlerDialog";
+import {statusTextToImageUrl} from "./StatusItems";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -587,6 +588,25 @@ const standardActions={
            })
        }
 
+    }),
+    config: new Action({
+        label:'Config',
+        name: 'config',
+        action: async (action,item,dialogContext)   =>{
+            dialogContext.replaceDialog((props)=> {
+                return <EditHandlerDialog
+                    {...props}
+                    title="Edit Handler"
+                    handlerId={item.handlerId}
+                    child={item.child}
+                />
+            },()=>{
+                if (action.doneCallback) action.doneCallback(item);
+            });
+        },
+        visible: (action,item)=>{
+            return !!item.handlerId && item.canEdit !== false
+        }
     }),
     edit: new Action({
         label: 'Edit',
@@ -1615,6 +1635,7 @@ class PluginItemActions extends ItemActions{
             visible: this.canModify(item),
         }))
         actions.push(standardActions.download.copy({}))
+        actions.push(standardActions.config.copy({}))
     }
 
     build() {
@@ -1727,6 +1748,57 @@ class PluginItemActions extends ItemActions{
                 return check(foundName);
             }
         })
+    }
+
+    async buildExtendedInfo(item) {
+        const fileList=await Requests.getJson({
+            type:'plugins',
+            command:'listFiles'
+        }).then((json)=>json.data)
+        const rt={
+            active: item.active
+        };
+        let status;
+        if (item.handlerId) {
+            status = await Requests.getJson({
+                type: 'config',
+                command: 'status',
+                handlerId: item.handlerId
+            }).then((json) => json.handler);
+        }
+        for (let pi of fileList) {
+            if (pi.name === item.name){
+                let files;
+                const flist=["js","mjs","css","cfg","python"];
+                for (let ft of flist){
+                    if (pi[ft] !== undefined) {
+                        if (files) files+=", "+ft;
+                        else files=ft;
+                    }
+                }
+                rt.files=files;
+            }
+        }
+        if (status && status.info && (status.info.items instanceof Array)){
+            for (let sti of status.info.items) {
+                if (sti.name === item.name){
+                    rt.status=sti.status;
+                    rt.info=sti.info;
+                }
+            }
+        }
+        return rt;
+    }
+
+    getExtendedInfoRows(item) {
+        return [
+            {label:'active',value:'active',formatter:(v)=>v?"true":"false"},
+            {label:'parts',value:'files'},
+            {label:'status',value:'status',formatter:(v)=>{
+                    return <img className="status_image" src={statusTextToImageUrl(v)}/>
+                }},
+            {label:'info',value:'info'},
+        ]
     }
 }
 const ITEM_TYPE_ACTIONS={

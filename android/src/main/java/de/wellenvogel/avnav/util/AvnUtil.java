@@ -431,6 +431,13 @@ public class AvnUtil {
             this.value=v;
         }
     }
+    public static class ItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
+        public ItemMap(AvnUtil.KeyValue<VT>...list){
+            for (AvnUtil.KeyValue<VT> i : list){
+                put(i.key,i);
+            }
+        }
+    }
 
     public static int buildPiFlags(int flags, boolean immutable){
         int rt=flags;

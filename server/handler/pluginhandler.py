@@ -40,7 +40,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
-from avndirectorybase import AVNDirectoryHandlerBase
+from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
@@ -111,7 +111,10 @@ class ApiImpl(AVNApi):
   def setJsCssOnly(self):
     self.jsCssOnly=True
     self.phandler.setChildEditable(self.prefix,True)
-
+  def isActive(self):
+      if not self.isEnabled():
+          return False
+      return self.plugin is not None or self.jsCssOnly
   def stop(self,force=False):
     if self.jsCssOnly:
       return
@@ -561,6 +564,19 @@ class PluginApiProxy():
         self.__check=None
         self.__impl=None
 
+class PluginEntry(AVNDirectoryListEntry):
+    def __init__(self,type,name,handlerId=None,active=True,canEdit=False,**kwargs):
+        super().__init__(type,name,**kwargs)
+        self.handlerId=handlerId
+        self.active=active
+        self.canEdit=canEdit
+
+    def serialize(self):
+        rt=super().serialize()
+        rt['child']=self.name
+        return rt
+
+
 class AVNPluginHandler(AVNDirectoryHandlerBase):
   ENABLE_PARAMETER=WorkerParameter('enabled',
                                    type=WorkerParameter.T_BOOLEAN,
@@ -575,12 +591,18 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
   SCOPE_USER = D_USER + "-"
   EXT = '.zip'
 
+
   @classmethod
   def getPrefix(cls):
       return cls.PREFIX
 
 
   """a handler for plugins"""
+
+  @classmethod
+  def getListEntryClass(cls):
+      return PluginEntry
+
   def __init__(self,param):
     super().__init__(param,"plugins")
     self.queue=None
@@ -780,6 +802,12 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
       if enable:
         self.setInfo(child,'created',WorkerStatus.INACTIVE,childId=child)
 
+  def isChildEditable(self,child):
+      existing=self.status.get(child)
+      if existing and existing.id is not None:
+          return True
+      return False
+
   def getEditableChildParameters(self, child):
     api=self.getApi(child)
     if api is None:
@@ -880,20 +908,19 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
           addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
           return handler.sendJsFile(fname, url, addCode)
       return os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
-
+  PLUGINFILES={'js':'plugin.js','css':'plugin.css','mjs':'plugin.mjs','cfg':'plugin.json','python':'plugin.py'}
   def handleSpecialApiRequest(self, command, requestparam, handler):
       if command == 'listFiles':
           data = []
           with self.configLock:
               for k, api in self.createdApis.items():
-                  if api is None or not api.isEnabled():
+                  if api is None or not api.isActive():
                       continue
                   dir = api.directory
                   element = {'name': k, 'dir': dir}
-                  if os.path.exists(os.path.join(dir, "plugin.js")):
-                      element['js'] = self.PREFIX + "/" + k + "/plugin.js"
-                  if os.path.exists(os.path.join(dir, "plugin.css")):
-                      element['css'] = self.PREFIX + "/" + k + "/plugin.css"
+                  for k,v in self.PLUGINFILES.items():
+                    if os.path.exists(os.path.join(dir, v)):
+                      element[k] = self.PREFIX + "/" + k + "/"+v
                   data.append(element)
           return AVNUtil.getReturnData(data=data)
       return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
@@ -902,8 +929,23 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
       def noDownload(entry):
           entry.canDownload = False
           entry.downloadName=None
+          entry.size=None
+          entry.handlerId=self.getId()
+          entry.canEdit=self.isChildEditable(entry.name)
+          api=self.getApi(entry.name)
+          entry.active=False if api is None or not api.isActive() else True
           return True
-      dlist = [entry for entry in super().listDirectory(True, baseDir,scope=self.SCOPE_USER) if entry.isDirectory]
+      def noSize(entry):
+          entry.size=None
+          entry.handlerId = self.getId()
+          entry.canEdit = self.isChildEditable(entry.name)
+          api = self.getApi(entry.name)
+          entry.active = False if api is None or not api.isActive() else True
+          return True
+      dlist = [entry for entry in super().listDirectory(True,
+                                                        baseDir,
+                                                        scope=self.SCOPE_USER,
+                                                        entryCallback=noSize) if entry.isDirectory]
       blist = [entry for entry in
                super().listDirectory(True,
                                      self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN),

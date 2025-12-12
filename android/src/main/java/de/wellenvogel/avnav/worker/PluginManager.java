@@ -92,6 +92,18 @@ public class PluginManager extends DirectoryRequestHandler {
     protected void run(int startSequence) throws JSONException, IOException {
     }
 
+    private List<IPluginHandler> getExternalPlugins(){
+        List<IWorker> handler=gpsService.findWorkersByType(ExternalPluginWorker.TYPENAME);
+        ArrayList<IPluginHandler> rt=new ArrayList<>();
+        for (IWorker w:handler){
+            try{
+                IPluginHandler ph=(IPluginHandler) w;
+                rt.add(ph);
+            }catch (Exception e){}
+        }
+        return rt;
+    }
+
     private void setChildStatus(String name){
         boolean enabled=true;
         synchronized (createLock){
@@ -323,11 +335,15 @@ public class PluginManager extends DirectoryRequestHandler {
     @Override
     protected JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
         if (!localFile.isDirectory()) return null;
+        String name=pluginFileToName(localFile);
         JSONObject jo= super.fileToItem(localFile);
-        jo.put("name",pluginFileToName(localFile));
+        jo.put("name",name);
         jo.put("canDownload",true);
         jo.put("downloadName",localFile.getName()+".zip");
         jo.put("checkPrefix",USER_PREFIX);
+        jo.put(IPluginHandler.IK_CHILD,name);
+        jo.put(IPluginHandler.IK_ID,getId());
+        jo.put(IPluginHandler.IK_ACTIVE,isActive(name));
         return jo;
     }
 
@@ -338,11 +354,33 @@ public class PluginManager extends DirectoryRequestHandler {
             if (localFile.isDirectory()){
                 JSONObject jo=fileToItem(localFile);
                 if (jo != null) {
+                    jo.put(IPluginHandler.IK_EDIT,serverInfo==null);
                     rt.put(jo);
                 }
             }
         }
+        List<IPluginHandler> externals=getExternalPlugins();
+        for (IPluginHandler ph:externals){
+            JSONObject hi=ph.getInfo();
+            if (hi != null && hi.has(IPluginHandler.IK_NAME)){
+                hi.put(IPluginHandler.IK_EDIT,serverInfo == null);
+                rt.put(hi);
+            }
+        }
         return rt;
+    }
+    private void removeChild(String name){
+       status.unsetChildStatus(name);
+       synchronized (createLock){
+           if (childParameterValues.has(name)){
+               childParameterValues.remove(name);
+           }
+       }
+        try {
+            gpsService.updateWorkerConfig(this,null,null);
+        } catch (Exception e) {
+            AvnLog.e("unable to update plugin config",e);
+        }
     }
 
     @Override
@@ -350,7 +388,7 @@ public class PluginManager extends DirectoryRequestHandler {
         File pdir=findLocalFile(name);
         if (pdir == null) throw new Exception("plugin "+name+" not found");
         boolean rt= AvnUtil.deleteRecursive(pdir);
-        if (rt) status.unsetChildStatus(name);
+        if (rt) removeChild(name);
         return rt;
     }
 
@@ -394,6 +432,19 @@ public class PluginManager extends DirectoryRequestHandler {
                     finalList.put(po);
                 }
             }
+            List<IPluginHandler> externals=getExternalPlugins();
+            for (IPluginHandler ph:externals){
+                JSONObject po=ph.getFiles();
+                if (po != null && po.has(IPluginHandler.K_NAME)){
+                    for (String k:IPluginHandler.PLUGINFILES.keySet()){
+                        if (po.has(k)){
+                            String relativePath=po.getString(k);
+                            po.put(k,getUrlFromName(ph.getName()+"/"+relativePath));
+                        }
+                    }
+                    finalList.put(po);
+                }
+            }
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",finalList));
         }
         return RequestHandler.getErrorReturn("command "+command+" not available");
@@ -424,13 +475,37 @@ public class PluginManager extends DirectoryRequestHandler {
         path = path.substring((urlPrefix.length() + 1));
         String[] parts = path.split("/");
         if (parts.length < 2) return null;
-        File base=findLocalFile(URLDecoder.decode(parts[0], "UTF-8"));
-        if (! base.isDirectory()) return null;
-        String fpath=checkPathParts(parts,true,1);
-        File finalFile=new File(base,fpath);
-        if (finalFile.isDirectory()) throw new Error(finalFile.getPath()+" is a directory");
-        if (!finalFile.exists()) return null;
-        return new ExtendedWebResourceResponse(finalFile,RequestHandler.mimeType(finalFile.getName()),"");
+        String baseName=URLDecoder.decode(parts[0], "UTF-8");
+        if (baseName.startsWith(USER_PREFIX)) {
+            File base = findLocalFile(baseName);
+            if (!base.isDirectory()) return null;
+            String fpath = checkPathParts(parts, true, 1);
+            File finalFile = new File(base, fpath);
+            if (finalFile.isDirectory()) throw new Error(finalFile.getPath() + " is a directory");
+            if (!finalFile.exists()) return null;
+            return new ExtendedWebResourceResponse(finalFile, RequestHandler.mimeType(finalFile.getName()), "");
+        }
+        else{
+            List<IPluginHandler> externals=getExternalPlugins();
+            for (IPluginHandler ep:externals){
+                if (ep.getName().equals(baseName)){
+                    return ep.openFile(checkPathParts(parts,true,1));
+                }
+            }
+        }
+        throw new Exception("no plugin "+baseName+" found");
+    }
+
+    private boolean isActive(String name){
+        synchronized (createLock){
+            if (! childParameterValues.has(name)) return true;
+            try {
+                JSONObject co=childParameterValues.getJSONObject(name);
+                return ENABLED_PARAMETER.fromJson(co);
+            } catch (JSONException e) {
+                return true;
+            }
+        }
     }
 
     @Override
@@ -480,8 +555,4 @@ public class PluginManager extends DirectoryRequestHandler {
         super.setParameters(null, newParam, replace, check);
     }
 
-    @Override
-    public synchronized JSONObject getJsonStatus() throws JSONException {
-        return super.getJsonStatus();
-    }
 }

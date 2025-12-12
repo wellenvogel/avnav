@@ -195,7 +195,6 @@ EditHandlerDialog.propTypes={
     handlerId: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
     childId: PropTypes.string,
     handlerName: PropTypes.string,
-    closeCallback: PropTypes.func.isRequired,
     initialValues: PropTypes.object,
     createdCallback: PropTypes.func,
     addHandler: PropTypes.bool

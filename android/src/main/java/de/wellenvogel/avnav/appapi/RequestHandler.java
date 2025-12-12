@@ -80,15 +80,8 @@ public class RequestHandler {
 
     static final String LOGPRFX="AvNav:requestHandler";
 
-    public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
-        public TypeItemMap(AvnUtil.KeyValue<VT>...list){
-            for (AvnUtil.KeyValue<VT> i : list){
-                put(i.key,i);
-            }
-        }
-    }
 
-    public static TypeItemMap<Integer> typeHeadings=new TypeItemMap<Integer>(
+    public static AvnUtil.ItemMap<Integer> typeHeadings= new AvnUtil.ItemMap<>(
             new AvnUtil.KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
             new AvnUtil.KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
             new AvnUtil.KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
@@ -100,7 +93,7 @@ public class RequestHandler {
     );
 
     //directories below workdir
-    public static TypeItemMap<File> typeDirs=new TypeItemMap<File>(
+    public static AvnUtil.ItemMap<File> typeDirs= new AvnUtil.ItemMap<>(
             new AvnUtil.KeyValue<File>(TYPE_ROUTE,new File("routes")),
             new AvnUtil.KeyValue<File>(TYPE_CHART,new File("charts")),
             new AvnUtil.KeyValue<File>(TYPE_TRACK,new File("tracks")),
@@ -719,7 +712,9 @@ public class RequestHandler {
                     handled = true;
                     try {
                         boolean rok = handler.handleRename(name, newName);
-                        if (rok) fout = getReturn();
+                        if (rok) {
+                            fout = getReturn();
+                        }
                         else fout = getErrorReturn("unable to rename");
                     } catch (Throwable t) {
                         fout = getErrorReturn(t.getMessage());
@@ -766,7 +761,9 @@ public class RequestHandler {
             else if ("upload".equals(typeAndCommand.command)){
                 try {
                     fout = handleUploadRequest(typeAndCommand.type, uri, postData);
-                    if (fout != null) handled = true;
+                    if (fout != null) {
+                        handled = true;
+                    }
                 }catch (Throwable t){
                     throw new RequestException(t.getMessage(),409);
                 }
