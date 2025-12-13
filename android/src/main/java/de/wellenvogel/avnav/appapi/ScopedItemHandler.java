@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.appapi;
 
+import android.content.ClipData;
 import android.content.Context;
 import android.net.Uri;
 
@@ -33,6 +34,7 @@ public class ScopedItemHandler implements INavRequestHandler{
     static class ItemInfo implements AvnUtil.IJsonObect {
         public static final String USERPREFIX="user.";
         public static final String SYSTEMPREFIX="system.";
+        public static final String PLUGINPREFIX="plugin.";
         public String name;
         public long mtime;
         public long size=-1;
@@ -176,6 +178,13 @@ public class ScopedItemHandler implements INavRequestHandler{
 
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if ("prefixes".equals(command)){
+            JSONObject rt=new JSONObject();
+            rt.put("user",ItemInfo.USERPREFIX);
+            rt.put("system", ItemInfo.SYSTEMPREFIX);
+            rt.put("plugin", ItemInfo.PLUGINPREFIX);
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data",rt));
+        }
         return null;
     }
 

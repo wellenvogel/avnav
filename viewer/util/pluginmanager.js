@@ -30,6 +30,7 @@ import {injectDateIntoUrl, loadJs, loadOrUpdateCss} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
 import FeatureFormatter from "./featureFormatter";
+import {layoutLoader} from "./layouthandler";
 
 class PluginApi extends ApiV2 {
     #impl=undefined;
@@ -57,7 +58,22 @@ class PluginApi extends ApiV2 {
     registerFeatureFormatter(name, formatterFunction) {
         this.#impl.registerFeatureFormatter(name, formatterFunction);
     }
+
+    registerLayoutData(name, layoutJson) {
+        this.#impl.registerLayoutData(name, layoutJson);
+    }
+
+    registerLayout(name, url) {
+        this.#impl.registerLayout(name, url);
+    }
 }
+
+/**
+ * the api implementation for a plugin
+ * in general there is no real need for it to extend ApiV2 directly as
+ * all requests are handled by PluginApi above.
+ * But with this dependency the IDE makes it easier to implement new methods
+ */
 export class Plugin extends ApiV2{
     constructor(baseUrl,name) {
         super();
@@ -70,6 +86,7 @@ export class Plugin extends ApiV2{
         this.registeredFormatters=[];
         this.widgets=[];
         this.featureFormatter=[];
+        this.layouts=[];
         this.moduleTs=undefined;
     }
     getApi(){
@@ -111,6 +128,7 @@ export class Plugin extends ApiV2{
                 console.error("error in deregister featureFormatter",featureFormatter,e);
             }
         })
+        layoutLoader.removePluginLayouts(this.name);
     }
     async loadModule(url,timestamp){
         try {
@@ -163,12 +181,32 @@ export class Plugin extends ApiV2{
 
     getBaseUrl() {
         if (this.disabled) throw new Error("disabled");
-        return this.baseUrl;
+        let rt=(new URL(this.baseUrl,window.location.href)).toString();
+        if (! rt.endsWith("/")) rt+="/";
+        return rt;
     }
 
     getPluginName() {
         if (this.disabled) throw new Error("disabled");
         return this.name===USERNAME?"":this.name;
+    }
+
+    _registerLayout(name,data,url){
+        if (this.disabled) throw new Error("disabled");
+        if (this.name === USERNAME) throw new Error("regsiterLayout only for plugins");
+        const layoutname=layoutLoader.addPluginLayout(name,this.name,data,url);
+        if (layoutname){
+            base.log(`registered layout ${name} for ${this.name}`);
+            this.layouts.push(layoutname);
+        }
+    }
+
+    registerLayoutData(name, layoutJson) {
+        this._registerLayout(name, layoutJson);
+    }
+
+    registerLayout(name, url) {
+        this._registerLayout(name, undefined,url);
     }
 }
 const USERFILES={

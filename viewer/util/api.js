@@ -164,6 +164,29 @@ export class ApiV2 extends Api{
     getPluginName(){
         throw new Error("not implemented");
     }
+
+    /**
+     * register a layout that already is available as a JSON object
+     * this function can only be used by plugins (not by user.mjs)
+     * @param name
+     * @param layoutJson
+     */
+    registerLayoutData(name,layoutJson){
+        throw new Error("not implemented");
+    }
+
+    /**
+     * register a layout file that can be accessed by an url
+     * this function can only be used by plugins (not by user.mjs)
+     * @param name
+     * @param url the url - either a string or an URL object
+     *            for a layout file in the plugin dir (or user dir)
+     *            you can register like this
+     *            registerLayout("myLayout",new URL("testLayout.json",api.getBaseUrl()))
+     */
+    registerLayout(name,url){
+        throw new Error("not implemented");
+    }
 }
 
 export default  new Api();

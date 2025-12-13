@@ -40,6 +40,9 @@ export const prepareUrl=(url, options)=>{
         return undefined;
     }
     let rurl="";
+    if (url instanceof URL){
+        url=url.toString();
+    }
     if (typeof(url) === 'string') {
         rurl=url;
         if ( options && options.useNavUrl !== false ) {

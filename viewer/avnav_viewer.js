@@ -51,6 +51,7 @@ import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
 import {createRoot} from "react-dom/client";
 import {loadJs, loadOrUpdateCss} from "./util/helper";
 import pluginmanager from "./util/pluginmanager";
+import {layoutLoader} from "./util/layouthandler";
 
 
 if (! window.avnav){
@@ -130,6 +131,8 @@ export default function() {
     if (getParam('splitMode') === 'true'){
         globalStore.storeData(keys.gui.global.splitMode,true);
     }
+
+    layoutLoader.init();
 
     const loadScripts=(loadList)=>{
         for (let i in  loadList) {

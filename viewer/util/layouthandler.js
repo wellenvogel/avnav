@@ -27,6 +27,15 @@ const getPagename=(page)=>{
     return page.layoutPage || page.location;
 }
 
+class PluginLayout{
+    constructor(name,pluginName,url,data) {
+        this.name=name;
+        this.url=url;
+        this.data=data;
+        this.pluginName=pluginName;
+    }
+}
+
 class LayoutAction{
     constructor(action,page,panel,options){
         this.action=action;
@@ -93,6 +102,17 @@ class LayoutLoader{
         globalStore.register(()=>{
             this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         },keys.gui.capabilities.uploadLayout);
+        this.pluginLayouts={};
+        this.prefixes={};
+    }
+
+    init(){
+        Requests.getJson({
+            type:'layout',
+            command:'prefixes'
+        }).then((json)=>{
+            this.prefixes=json.data
+        },()=>{})
     }
     /**
      * load a layout from local storage
@@ -157,7 +177,7 @@ class LayoutLoader{
      * @param name
      * @param opt_raw
      */
-    loadLayout(name,opt_raw) {
+    async loadLayout(name,opt_raw) {
         if (this.storeLocally) {
             if (!this.temporaryLayouts[name]) {
                 return Promise.reject("layout " + name + " not found");
@@ -169,24 +189,42 @@ class LayoutLoader{
                 return Promise.resolve(layout);
             }
         }
-        return Requests.getJson({
-            request:'api',
-            type:'layout',
-            command:'download',
-            noattach:true,
-            name:name
-        }, {checkOk: false}).then(
-            (json) => {
-                let error = this.checkLayout(json);
-                if (error !== undefined) {
-                    throw new Error("layout error: " + error);
+        try {
+            let layoutJson;
+            const pluginLayout = this.pluginLayouts[name];
+            if (pluginLayout) {
+                if (pluginLayout.data){
+                    layoutJson = pluginLayout.data;
                 }
-                if (opt_raw){
-                    return JSON.stringify(json,undefined, 2);
+                if (pluginLayout.url){
+                    const layout=await Requests.getHtmlOrText(pluginLayout.url);
+                    if (layout){
+                        layoutJson=JSON.parse(layout);
+                    }
                 }
-                return json;
-            },
-            (error) => {
+            }
+            else {
+                layoutJson = await Requests.getJson({
+                    request: 'api',
+                    type: 'layout',
+                    command: 'download',
+                    noattach: true,
+                    name: name
+                }, {checkOk: false});
+            }
+            if (!layoutJson) {
+                throw Error("unable to load layout "+name);
+            }
+            let error = this.checkLayout(layoutJson);
+            if (error !== undefined) {
+                throw new Error("layout error: " + error);
+            }
+            if (opt_raw) {
+                return JSON.stringify(layoutJson, undefined, 2);
+            }
+            return layoutJson;
+        }catch (error)
+            {
                 try {
                     let raw = LocalStorage.getItem(
                         STORAGE_NAMES.LAYOUT
@@ -200,9 +238,9 @@ class LayoutLoader{
                 } catch (e) {
                     base.log("error when trying to read layout locally: " + e);
                 }
-                throw new Error("" + error);
+                throw error;
             }
-        );
+
     }
 
     /**
@@ -254,7 +292,7 @@ class LayoutLoader{
         return;
     }
 
-    listLayouts() {
+    async listLayouts() {
         let activeLayout = globalStore.getData(keys.properties.layoutName);
         if (this.storeLocally) {
             let rt = [];
@@ -270,9 +308,9 @@ class LayoutLoader{
                 };
                 rt.push(item);
             }
-            return Promise.resolve(rt);
+            return rt;
         }
-        return Requests.getJson({
+        const layouts=await Requests.getJson({
             request:'api',
             type:'layout',
             command:'list'
@@ -291,6 +329,17 @@ class LayoutLoader{
             }
             return list;
         });
+        for (let k in this.pluginLayouts){
+            layouts.push({
+                name:k,
+                server: false,
+                canDelete: false,
+                canDownload: false,
+                active: k == activeLayout,
+                type:'layout',
+            })
+        }
+        return layouts;
     }
 
     /**
@@ -336,20 +385,30 @@ class LayoutLoader{
             newName: newName
         })
     }
-    /**
-     * get a layout fetch function for downloads we handle this locally
-     * @param name
-     */
-    getLocalDownload() {
-        if (!this.storeLocally) return;
-        return (name) => {
-            let layout = this.temporaryLayouts[name];
-            if (!layout) return;
-            return JSON.stringify(layout, null, 2);
-        };
-    }
     getUserPrefix(){
         return USER_PREFIX;
+    }
+    addPluginLayout(name,pluginName,data,url){
+        if (! this.prefixes || ! this.prefixes.plugin) throw Error("no support for plugin layouts");
+        if (! name || ! pluginName) throw new Error("name and pluginName must be set");
+        if (! data && ! url) throw new Error("either url or data must be set for a plugin layout");
+        if (data){
+            this.checkLayout(data);
+        }
+        const completeName=this.prefixes.plugin+pluginName+"."+name;
+        if (this.pluginLayouts[completeName])throw new Error(`layout ${completeName} already exists`);
+        this.pluginLayouts[completeName]=new PluginLayout(completeName,pluginName,url,data);
+        return completeName;
+    }
+    removePluginLayouts(pluginName){
+        if (! pluginName) throw new Error("no support for plugin layouts");
+        const deletes=[];
+        for (let k in this.pluginLayouts){
+            if (this.pluginLayouts[k].pluginName === pluginName) deletes.push(k);
+        }
+        deletes.forEach((del)=>{
+            delete this.pluginLayouts[del];
+        })
     }
 }
 

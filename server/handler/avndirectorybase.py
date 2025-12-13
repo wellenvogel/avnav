@@ -704,4 +704,10 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
       self.pluginItems.remove(existing)
     return True
 
+  def handleSpecialApiRequest(self, command, requestparam, handler):
+      if "prefixes" == command:
+          return AVNUtil.getReturnData(data={'plugin':self.SCOPE_PLUGIN,'system':self.SCOPE_SYSTEM,'user':self.SCOPE_USER})
+      return super().handleSpecialApiRequest(command, requestparam, handler)
+
+
 
