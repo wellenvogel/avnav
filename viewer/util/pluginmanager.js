@@ -28,6 +28,7 @@ import keys from "./keys";
 import {ApiV2} from "./api";
 import {injectDateIntoUrl, loadJs, loadOrUpdateCss} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
+import {listItems} from "./itemFunctions";
 
 class PluginApi extends ApiV2 {
     #impl=undefined;
@@ -139,9 +140,15 @@ export class Plugin extends ApiV2{
 
     getPluginName() {
         if (this.disabled) throw new Error("disabled");
-        return this.name;
+        return this.name===USERNAME?"":this.name;
     }
 }
+const USERFILES={
+    js:'user.js',
+    css:'user.css',
+    mjs:'user.mjs'
+};
+const USERNAME='__avnavuser'; //must be disjunct from all plugin names
 class Pluginmanager{
     constructor(){
         this.createdApis={}
@@ -162,6 +169,39 @@ class Pluginmanager{
             base.log(`error querying plugins ${e}`)
         }
     }
+    async queryUser(){
+        const rt={
+            name:USERNAME,
+            active:true,
+        }
+        try{
+            const userList=await listItems('user');
+            let urlBase;
+            for (let item of userList) {
+                for (let k in USERFILES) {
+                    if (item.name === USERFILES[k] && item.url){
+                        base.log("detected userfile "+item.name);
+                        let timestamp=item.time;
+                        if (k === 'css' && ! globalstore.getData(keys.properties.autoUpdateUserCss)){
+                            timestamp=0; //no auto update
+                        }
+                        rt[k]={
+                            url:item.url,
+                            timestamp:timestamp
+                        }
+                        if (! urlBase ) {
+                            urlBase=item.url.substring(0,item.url.lastIndexOf("/"));
+                        }
+                    }
+                }
+            }
+            rt.base=urlBase;
+        }catch (e){
+            console.error("unable to query user files ",e);
+        }
+        return rt;
+    }
+
     async start(){
         globalstore.register(()=>{
             this.update().then(()=>{},()=>{});
@@ -190,6 +230,8 @@ class Pluginmanager{
             if (!plugin.active) continue;
             foundPlugins[name] = plugin;
         }
+        const userFiles=await this.queryUser();
+        foundPlugins[userFiles.name] = userFiles;
         for (let pluginName in foundPlugins) {
             const plugin = foundPlugins[pluginName];
             let api = this.createdApis[pluginName];
@@ -210,7 +252,7 @@ class Pluginmanager{
                 if (plugin.js && plugin.js.url) {
                     if (!this.legacyJs[pluginName]) {
                         this.legacyJs[pluginName] = true;
-                        base.log("load legacy js for plugin " + pluginName);
+                        base.log("load legacy js for " + pluginName);
                         loadJs(plugin.js.url);
                     }
                 }

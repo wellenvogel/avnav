@@ -131,9 +131,6 @@ export default function() {
     if (getParam('splitMode') === 'true'){
         globalStore.storeData(keys.gui.global.splitMode,true);
     }
-    const usercss={id:USERCSSID,url:"/user/viewer/user.css"};
-    let lateLoads=[usercss, "/user/viewer/user.js"];
-    csswatch.addWatch(usercss.url,usercss.id,keys.properties.autoUpdateUserCss);
 
     const loadScripts=(loadList)=>{
         for (let i in  loadList) {
@@ -177,9 +174,8 @@ export default function() {
         try {
             await pluginmanager.start();
         } catch (error) {
-            Toast("unable to load plugin data: " + error);
+            Toast("unable to load plugin/user data: " + error);
         }
-        loadScripts(lateLoads);
     };
     //register some widget definitions
     registerRadial();
