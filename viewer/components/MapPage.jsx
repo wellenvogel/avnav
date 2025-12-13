@@ -116,7 +116,8 @@ const Map=({mapClass,mapOpacity})=>{
 const MapPage =(iprops)=>{
     const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
             widgetFontSize:keys.properties.widgetFontSize,
-            mapFloat: keys.properties.mapFloat
+            mapFloat: keys.properties.mapFloat,
+            reloadSequence:keys.gui.global.reloadSequence
         })});
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
@@ -203,7 +204,7 @@ const MapPage =(iprops)=>{
                               LayoutHandler.withTransaction(layoutPage,(handler)=>handler.moveItem(layoutPage.id, frameId, oldIndex, newIndex,targetFrameId))
                           }}
         />
-        },[props.onItemClick]);
+        },[props.onItemClick,props.reloadSequence]);
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
         let mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?

@@ -27,6 +27,7 @@ import globalstore from "./globalstore";
 import keys from "./keys";
 import {ApiV2} from "./api";
 import {loadJs, loadOrUpdateCss} from "./helper";
+import widgetFactory from "../components/WidgetFactory";
 
 class PluginApi extends ApiV2 {
     #impl=undefined;
@@ -81,6 +82,13 @@ export class Plugin extends ApiV2{
                 console.error("error in shutdown of "+this.name,e);
             }
         }
+        this.widgets.forEach(widget => {
+            try {
+                widgetFactory.deregisterWidget(widget);
+            }catch (e){
+                console.error("error in deregisterWidget",widget,e);
+            }
+        })
     }
     async loadModule(url,timestamp){
         try {
@@ -107,7 +115,10 @@ export class Plugin extends ApiV2{
 
     registerWidget(description, opt_editableParameters) {
         if (this.disabled) throw new Error("disabled");
-        super.registerWidget(description, opt_editableParameters);
+        const name=widgetFactory.registerWidget(description, opt_editableParameters);
+        if (name) {
+            this.widgets.push(name);
+        }
     }
 
     registerFormatter(name, formatterFunction) {
@@ -157,10 +168,11 @@ class Pluginmanager{
         await this.update();
     }
     deleteApi(api){
-        if (!api) return;
+        if (!api) return false;
         base.log(`deleteApi ${api.name}`);
         api.disable();
         delete this.createdApis[api.name];
+        return true;
     }
     async update(){
         if (! globalstore.getData(keys.gui.capabilities.plugins)) return;
@@ -169,6 +181,7 @@ class Pluginmanager{
             Toast("unable to query plugins");
             return;
         }
+        let hasUpdates=false;
         const foundPlugins={};
         for (let plugin of plugins) {
             const name = plugin.name;
@@ -181,17 +194,17 @@ class Pluginmanager{
             let api = this.createdApis[pluginName];
             if (plugin.mjs) {
                 if (!plugin.mjs.url || plugin.mjs.timestamp === undefined) {
-                    this.deleteApi(api);
+                    hasUpdates = hasUpdates || this.deleteApi(api);
                 } else {
                     if (!api || api.mustUpdate(plugin.mjs.timestamp)) {
-                        this.deleteApi(api);
+                        hasUpdates = true;
+                        api = new Plugin(plugin.base, pluginName);
+                        this.createdApis[pluginName] = api;
+                        await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp);
                     }
-                    api = new Plugin(plugin.base, pluginName);
-                    this.createdApis[pluginName] = api;
-                    await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp);
                 }
             } else {
-                this.deleteApi(api);
+                hasUpdates=hasUpdates || this.deleteApi(api);
                 if (plugin.js && plugin.js.url) {
                     if (!this.legacyJs[pluginName]) {
                         this.legacyJs[pluginName] = true;
@@ -212,7 +225,7 @@ class Pluginmanager{
         }
         for (let pname in this.createdApis){
             if (!foundPlugins[pname]) {
-                this.deleteApi(this.createdApis[pname]);
+                hasUpdates=hasUpdates || this.deleteApi(this.createdApis[pname]);
             }
         }
         for (let pname in this.css){
@@ -221,6 +234,9 @@ class Pluginmanager{
                 loadOrUpdateCss(undefined, pname);
                 delete this.css[pname];
             }
+        }
+        if (hasUpdates){
+            globalstore.storeData(keys.gui.global.reloadSequence,globalstore.getData(keys.gui.global.reloadSequence,0)+1);
         }
     }
 }

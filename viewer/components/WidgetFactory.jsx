@@ -507,7 +507,24 @@ class WidgetFactory{
         }
         else {
             this.widgetDefinitions.push(definition);
+            return definition.name;
         }
+    }
+    deregisterWidget(name){
+        let idx=-1;
+        for (let i=0;i<this.widgetDefinitions.length;i++) {
+            let e = this.widgetDefinitions[i];
+            if ((e.name !== undefined && e.name == name ) || (e.caption == name)) {
+                idx=i;
+                break;
+            }
+        }
+        if (idx >= 0){
+            this.widgetDefinitions.splice(idx, 1);
+            delete this.editableParametersCache[name];
+            return true;
+        }
+        return false;
     }
     getWidgetFromTypeName(typeName){
         switch(typeName){
@@ -580,7 +597,7 @@ class WidgetFactory{
             internalDescription.editableParameters=opt_editableParameters;
         }
 
-        this.addWidget(internalDescription);
+        return this.addWidget(internalDescription);
     }
     registerFormatter(name,formatterFunction){
         if (! name) throw new Error("registerFormatter: missing parameter name");

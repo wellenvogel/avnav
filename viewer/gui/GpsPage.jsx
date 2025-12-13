@@ -6,7 +6,7 @@ import {useStoreState} from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React, {useCallback, useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import MapHolder from '../map/mapholder.js';
@@ -111,6 +111,7 @@ const layoutBaseParam={
 
 const GpsPage = (props) => {
     const history=useHistory();
+    const reloadSequence=useStoreState(keys.gui.global.reloadSequence);
     const [pageNumber, setPageNumberImpl] = useStoreState(keys.gui.gpspage.pageNumber, (currentNumber) => {
         if (props.options && props.options.widget && !props.options.returning) {
             let pagenNum = findPageWithWidget(props.options.widget);
