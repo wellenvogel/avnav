@@ -26,7 +26,7 @@ import Toast from "../components/Toast";
 import globalstore from "./globalstore";
 import keys from "./keys";
 import {ApiV2} from "./api";
-import {loadJs, loadOrUpdateCss} from "./helper";
+import {injectDateIntoUrl, loadJs, loadOrUpdateCss} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 
 class PluginApi extends ApiV2 {
@@ -93,6 +93,7 @@ export class Plugin extends ApiV2{
     async loadModule(url,timestamp){
         try {
             base.log("importing plugin.mjs for "+this.name);
+            url= injectDateIntoUrl(new URL(url,window.location.href));
             const module = await import(/* webpackIgnore: true */ url);
             let shutdown = undefined;
             if (module && module.default) {
@@ -197,6 +198,7 @@ class Pluginmanager{
                     hasUpdates = hasUpdates || this.deleteApi(api);
                 } else {
                     if (!api || api.mustUpdate(plugin.mjs.timestamp)) {
+                        this.deleteApi(api);
                         hasUpdates = true;
                         api = new Plugin(plugin.base, pluginName);
                         this.createdApis[pluginName] = api;

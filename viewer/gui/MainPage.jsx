@@ -353,7 +353,7 @@ class MainPage extends React.Component {
                     items.push(chartEntry);
                     i++;
                 }
-                let newState={chartList:items};
+                let newState={chartList:items,loading:isLoading};
                 if (selectedChart === undefined && items.length > 0){
                     selectedChart=0;
                     current=undefined; //it seems that the last chart from the mapholder is not available any more

@@ -237,7 +237,7 @@ export const getNameAndExt=(fn)=>{
     }
     return [fn,''];
 }
-const injectDateIntoUrl=(oldurl)=>{
+export const injectDateIntoUrl=(oldurl)=>{
     let url=oldurl.protocol+"//"+oldurl.host+oldurl.pathname;
     const newTag='_='+encodeURIComponent((new Date).getTime());
     if (oldurl.search){
