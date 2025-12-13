@@ -67,7 +67,7 @@ export class Plugin extends ApiV2{
         this.disabled=false;
         this.mjs=undefined;
         this.shutdown=undefined;
-        this.formatter=[];
+        this.registeredFormatters=[];
         this.widgets=[];
         this.featureFormatter=[];
         this.moduleTs=undefined;
@@ -93,7 +93,7 @@ export class Plugin extends ApiV2{
                 console.error("error in deregisterWidget",widget,e);
             }
         })
-        this.formatter.forEach(formatter => {
+        this.registeredFormatters.forEach(formatter => {
             if (! formatter) return;
             try{
                 base.log(`deregister formatter ${formatter} for ${this.name}`);
@@ -149,7 +149,7 @@ export class Plugin extends ApiV2{
         if (this.disabled) throw new Error("disabled");
         const fname=widgetFactory.registerFormatter(name,formatterFunction);
         if (fname) {
-            this.formatter.push(fname);
+            this.registeredFormatters.push(fname);
             base.log(`registered formatter ${name} for ${this.name}`);
         }
     }
@@ -270,9 +270,16 @@ class Pluginmanager{
                     if (!api || api.mustUpdate(plugin.mjs.timestamp)) {
                         this.deleteApi(api);
                         hasUpdates = true;
-                        api = new Plugin(plugin.base, pluginName);
-                        this.createdApis[pluginName] = api;
-                        await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp);
+                        try {
+                            api = new Plugin(plugin.base, pluginName);
+                            await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp);
+                            this.createdApis[pluginName] = api;
+                        }catch (e){
+                            console.error("unable to create api and load module",plugin,e);
+                            try{
+                                api.disable();
+                            }catch(e){}
+                        }
                     }
                 }
             } else {

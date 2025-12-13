@@ -185,6 +185,7 @@ export const getTemplate=(name)=>{
 //if set to undefined we will edit them but without highlighting
 export const languageMap = {
     js: 'js',
+    mjs:'js',
     json: 'json',
     html: 'markup',
     css: 'css',

@@ -1537,7 +1537,7 @@ class UserItemActions extends ItemActions{
     }
 
     getIconClass(item) {
-        const specialNames=['user.js','user.css','keys.json','splitkeys.json','images.json'];
+        const specialNames=['user.js','user.mjs','user.css','keys.json','splitkeys.json','images.json'];
         if (specialNames.indexOf(item.name) >= 0){
             return 'user special';
         }

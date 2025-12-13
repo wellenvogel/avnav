@@ -2,8 +2,6 @@
  * Created by andreas on 02.05.14.
  */
 
-import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
 import helper from '../util/helper.js';
 import Helper from '../util/helper.js';
 import React from 'react';
@@ -12,11 +10,10 @@ import Requests, {prepareUrl} from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import Toast, {hideToast} from '../components/Toast.jsx';
 import {showPromiseDialog} from '../components/OverlayDialog.jsx';
-import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {createItemActions, ItemActions} from "../components/FileDialog";
+import {createItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {languageMap, uploadFromEdit} from "../components/EditDialog";
 
