@@ -42,7 +42,7 @@ from httpserver import AVNHttpServer
 
 class AVNUserHandler(AVNDirectoryHandlerBase):
   PREFIX = "/user/viewer"
-  FLIST=['user.css',"user.js","splitkeys.json","images.json"]
+  FLIST=['user.css',"user.js","splitkeys.json","images.json","user.mjs"]
   EMPTY_JSONS=['keys.json']
   @classmethod
   def getPrefix(cls):
@@ -77,8 +77,16 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
         with open(dest,"w",encoding='utf-8') as fh:
           fh.write("{\n}\n")
 
+  def handleRename(self, name, newName, requestparam):
+      rt=super().handleRename(name, newName, requestparam)
+      if name in self.FLIST or newName in self.FLIST:
+          self.navdata.updateChangeCounter('config')
+      return rt
+
   def handleDelete(self,name):
     super(AVNUserHandler, self).handleDelete(name)
+    if name in self.FLIST:
+        self.navdata.updateChangeCounter('config')
     if self.addonHandler is not None:
       try:
         self.addonHandler.deleteByUrl(self.buildUrl(name))

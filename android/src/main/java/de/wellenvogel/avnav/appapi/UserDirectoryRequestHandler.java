@@ -20,7 +20,7 @@ import de.wellenvogel.avnav.worker.GpsService;
 public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
     private static final byte[] PREFIX="try{(\nfunction(){\n".getBytes(StandardCharsets.UTF_8);
     private static final byte[] SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n".getBytes(StandardCharsets.UTF_8);
-    private static String templateFiles[]=new String[]{"user.css","user.js","splitkeys.json","images.json"};
+    private static String templateFiles[]=new String[]{"user.css","user.js","splitkeys.json","images.json","user.mjs"};
     private static String emptyJsonFiles[]=new String[]{"keys.json"};
     //input stream for a js file wrapped by prefix and suffix
     static class JsStream extends InputStream {
@@ -129,12 +129,36 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
 
     }
 
+    private boolean updateSequence(String name){
+        if (Arrays.asList(templateFiles).contains(name) || Arrays.asList(emptyJsonFiles).contains(name)){
+            this.gpsService.updateConfigSequence();
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         boolean rt=super.handleUpload(postData, name, ignoreExisting, completeName);
         if (rt){
-            if (Arrays.asList(templateFiles).contains(name) || Arrays.asList(emptyJsonFiles).contains(name)){
-                this.gpsService.updateConfigSequence();
+            updateSequence(name);
+        }
+        return rt;
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        boolean rt=super.handleDelete(name, uri);
+        if (rt) updateSequence(name);
+        return rt;
+    }
+
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        boolean rt=super.handleRename(oldName, newName);
+        if (rt){
+            if (!updateSequence(oldName)) {
+                updateSequence(newName);
             }
         }
         return rt;

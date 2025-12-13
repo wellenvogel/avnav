@@ -29,6 +29,7 @@ import {ApiV2} from "./api";
 import {injectDateIntoUrl, loadJs, loadOrUpdateCss} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
+import FeatureFormatter from "./featureFormatter";
 
 class PluginApi extends ApiV2 {
     #impl=undefined;
@@ -42,7 +43,7 @@ class PluginApi extends ApiV2 {
     }
 
     getPluginName() {
-        return this.#impl.getBaseUrl();
+        return this.#impl.getPluginName();
     }
 
     registerWidget(description, opt_editableParameters) {
@@ -84,10 +85,30 @@ export class Plugin extends ApiV2{
             }
         }
         this.widgets.forEach(widget => {
+            if (! widget) return;
             try {
+                base.log(`deregister widget ${widget} for ${this.name}`);
                 widgetFactory.deregisterWidget(widget);
             }catch (e){
                 console.error("error in deregisterWidget",widget,e);
+            }
+        })
+        this.formatter.forEach(formatter => {
+            if (! formatter) return;
+            try{
+                base.log(`deregister formatter ${formatter} for ${this.name}`);
+                widgetFactory.deregisterFormatter(formatter);
+            }catch(e){
+                console.error("error in deregister formatter",formatter,e);
+            }
+        })
+        this.featureFormatter.forEach(featureFormatter => {
+            if (!featureFormatter) return;
+            try{
+                base.log(`deregister featureFormatter ${featureFormatter} for ${this.name}`);
+                delete FeatureFormatter[featureFormatter];
+            }catch(e){
+                console.error("error in deregister featureFormatter",featureFormatter,e);
             }
         })
     }
@@ -119,18 +140,25 @@ export class Plugin extends ApiV2{
         if (this.disabled) throw new Error("disabled");
         const name=widgetFactory.registerWidget(description, opt_editableParameters);
         if (name) {
+            base.log(`registered Widget ${name} for ${this.name}`);
             this.widgets.push(name);
         }
     }
 
     registerFormatter(name, formatterFunction) {
         if (this.disabled) throw new Error("disabled");
-        super.registerFormatter(name, formatterFunction);
+        const fname=widgetFactory.registerFormatter(name,formatterFunction);
+        if (fname) {
+            this.formatter.push(fname);
+            base.log(`registered formatter ${name} for ${this.name}`);
+        }
     }
 
     registerFeatureFormatter(name, formatterFunction) {
         if (this.disabled) throw new Error("disabled");
         super.registerFeatureFormatter(name, formatterFunction);
+        base.log(`registered featureformatter ${name} for ${this.name}`);
+        this.featureFormatter.push(name);
     }
 
     getBaseUrl() {

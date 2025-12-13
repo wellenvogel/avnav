@@ -608,6 +608,10 @@ class WidgetFactory{
             throw new Error("registerFormatter("+name+"): formatter already exists");
         }
         Formatter[name]=formatterFunction;
+        return name;
+    }
+    deregisterFormatter(name){
+        delete Formatter[name];
     }
 
 }

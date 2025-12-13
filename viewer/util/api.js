@@ -15,7 +15,6 @@ import AvNavVersion from '../version';
 
 export class Api{
     constructor(){
-        this.formatter=Formatter;
     }
 
     log(text){
@@ -24,14 +23,14 @@ export class Api{
     registerWidget(description,opt_editableParameters){
         WidgetFactory.registerWidget(description,opt_editableParameters);
     }
-    formatter(){
-        return Formatter;
+    get formatter(){
+        return {...Formatter};
     }
     /**
      * replace any ${name} with the values of the replacement object
      * e.g. templateReplace("test${a} test${zzz}",{a:"Hello",zzz:"World"})
      * will return: "testHello testWorld"
-     * @param tstring
+     * @param template
      * @param replacements
      * @returns {string}
      */
@@ -123,8 +122,6 @@ export class Api{
      * use it like:
      * let LatLon=avnav.api.LatLon();
      * let point=new LatLon(54,13);
-     * @param lat
-     * @param lon
      * @return {LatLonSpherical}
      */
     LatLon(){
@@ -141,25 +138,29 @@ export class Api{
     }
 }
 
+/**
+ * the new API as it is provided as the first parameter
+ * to the default export function for plugin.mjs / user.mjs
+ * many functions are identical to the V1 Api but some are new here
+ */
 export class ApiV2 extends Api{
     constructor() {
         super();
     }
 
-    registerWidget(description, opt_editableParameters) {
-        super.registerWidget(description, opt_editableParameters);
-    }
-
-    registerFormatter(name, formatterFunction) {
-        super.registerFormatter(name, formatterFunction);
-    }
-
-    registerFeatureFormatter(name, formatterFunction) {
-        super.registerFeatureFormatter(name, formatterFunction);
-    }
+    /**
+     * get the base url to access files that have been installed with the plugin
+     * this URL points to the plugin base dir
+     * for the user.mjs it points to the directory where the user.css is located
+     */
     getBaseUrl(){
         throw new Error("not implemented")
     }
+
+    /**
+     * return the name of the plugin
+     * returns an empty string for the user.mjs
+     */
     getPluginName(){
         throw new Error("not implemented");
     }
