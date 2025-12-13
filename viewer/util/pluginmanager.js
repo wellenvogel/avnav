@@ -99,7 +99,7 @@ export class Plugin extends ApiV2{
             let shutdown = undefined;
             if (module && module.default) {
                 try {
-                    shutdown = module.default(this.getApi());
+                    shutdown = await module.default(this.getApi());
                 }catch(e){
                     console.log("error calling default export for "+url,e);
                 }
@@ -156,7 +156,7 @@ class Pluginmanager{
         this.css={};
     }
     cssId(pluginName) {
-        return '___'+pluginName+"_css"
+        return '_'+pluginName+"_css"
     }
     async query(){
         try {
@@ -274,8 +274,9 @@ class Pluginmanager{
         }
         for (let pname in this.css){
             if (!foundPlugins[pname]) {
+                const cssid = this.cssId(pname);
                 base.log("deleting css for " + pname);
-                loadOrUpdateCss(undefined, pname);
+                loadOrUpdateCss(undefined, cssid);
                 delete this.css[pname];
             }
         }
