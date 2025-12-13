@@ -24,15 +24,40 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 
 public class ExternalPluginWorker extends Worker implements IPluginHandler{
 
+    private final Object pijLock=new Object();
     private JSONObject pluginJson;
+    private long lastModified=0;
+
+    private void setPluginJson(JSONObject no){
+        boolean hasChanged=false;
+        synchronized (pijLock) {
+            lastModified = SystemClock.uptimeMillis();
+            if (no != null) {
+                if (pluginJson != null) {
+                    hasChanged = !no.toString().equals(pluginJson.toString());
+                } else hasChanged = true;
+            }
+            else {
+                if (pluginJson != null) hasChanged = true;
+            }
+            pluginJson = no;
+        }
+        if (hasChanged){
+            gpsService.updateConfigSequence();
+        }
+    }
     @Override
     public JSONObject getFiles() throws JSONException {
+        long lm=lastModified;
         JSONObject piJson=pluginJson;
         //for now only plugin.json
         JSONObject rt=new JSONObject();
         rt.put(K_NAME, getKey());
         if (piJson != null && ENABLED_PARAMETER.fromJson(parameters)) {
-            rt.put(FT_CFG,PLUGINFILES.get(FT_CFG).value);
+            JSONObject finfo=new JSONObject();
+            finfo.put(IK_FURL,PLUGINFILES.get(FT_CFG).value);
+            finfo.put(IK_FTS,lm);
+            rt.put(FT_CFG,finfo);
             rt.put(K_ACTIVE,true);
         }
         else{
@@ -238,7 +263,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                 setStatus(WorkerStatus.Status.INACTIVE,"timeout");
                 unregisterCharts(true);
                 unregisterAddons(true);
-                pluginJson=null;
+                setPluginJson(null);
             }
             else{
                 setStatus(WorkerStatus.Status.NMEA,"plugin available");
@@ -246,7 +271,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         }
         unregisterAddons(false);
         unregisterCharts(false);
-        pluginJson=null;
+        setPluginJson(null);
     }
 
     @Override
@@ -254,7 +279,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         super.stop();
         unregisterAddons(false);
         unregisterCharts(false);
-        pluginJson=null;
+        setPluginJson(null);
     }
 
     public void update(Intent intent){
@@ -272,7 +297,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             if (pluginString != null) {
                 try {
                     JSONObject piJson = new JSONObject(pluginString);
-                    pluginJson=piJson;
+                    setPluginJson(piJson);
                     if (piJson.has("charts")) {
                         JSONArray charts = piJson.getJSONArray("charts");
                         registerCharts(charts);
@@ -288,7 +313,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                 }
             }
             else{
-                pluginJson=null;
+                setPluginJson(null);
             }
             if (! updatedCharts){
                 unregisterCharts(true);

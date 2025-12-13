@@ -591,6 +591,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
   SCOPE_USER = D_USER + "-"
   EXT = '.zip'
 
+  CHANGE_COUNTER_NAME='config'
 
   @classmethod
   def getPrefix(cls):
@@ -849,10 +850,12 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
     api = self.getApi(child)
     if api is None:
       raise Exception("plugin %s not found"%child)
+    enabledChanged=False
     if self.ENABLE_PARAMETER.name in param:
       newEnabled=self.ENABLE_PARAMETER.fromDict(param)
       current=api.isEnabled()
       if newEnabled != current:
+        enabledChanged=True
         self.changeChildConfigDict(child, {self.ENABLE_PARAMETER.name: newEnabled})
         if not newEnabled:
           if api.stopHandler is None and not api.jsCssOnly:
@@ -864,6 +867,8 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
     if len(list(param.keys())) < 1:
       #startPluginThread is intelligent enough to know if we must start
       api.startPluginThread()
+      if enabledChanged:
+          self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
       return
     checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
     if api.paramChange is None:
@@ -873,6 +878,8 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
     api.registerKeys()
     #startPluginThread is intelligent enough to know if we must start
     api.startPluginThread()
+    if enabledChanged:
+        self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
 
   def getStatusProperties(self):
     rt={}
@@ -921,8 +928,10 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                   if active:
                     dir=api.directory
                     for p,v in self.PLUGINFILES.items():
-                        if os.path.exists(os.path.join(dir, v)):
-                            element[p] = self.PREFIX + "/" + k + "/"+v
+                        fname=os.path.join(dir, v)
+                        if os.path.exists(fname):
+                            finfo={'url':self.PREFIX + "/" + k + "/"+v,'timestamp':os.path.getmtime(fname)}
+                            element[p] = finfo
                   data.append(element)
           return AVNUtil.getReturnData(data=data)
       return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
@@ -1073,6 +1082,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
       api.startPluginThread()
       with self.configLock:
           self.createdApis[moduleName] = api
+      self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
       return True
 
   def deletePlugin(self,name,type=D_USER):
@@ -1091,6 +1101,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         except:
             pass
       self.deleteInfo(name)
+      self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
 
 
 avnav_handlerList.registerHandler(AVNPluginHandler)

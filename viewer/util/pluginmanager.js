@@ -28,8 +28,6 @@ import keys from "./keys";
 import {ApiV2} from "./api";
 import {loadJs, loadOrUpdateCss} from "./helper";
 
-const PREFIX="plugin";
-
 class PluginApi extends ApiV2 {
     #impl=undefined;
     constructor(impl) {
@@ -57,7 +55,7 @@ class PluginApi extends ApiV2 {
         this.#impl.registerFeatureFormatter(name, formatterFunction);
     }
 }
-class Plugin extends ApiV2{
+export class Plugin extends ApiV2{
     constructor(baseUrl,name) {
         super();
         this.name=name;
@@ -69,13 +67,7 @@ class Plugin extends ApiV2{
         this.formatter=[];
         this.widgets=[];
         this.featureFormatter=[];
-    }
-    getCssId(){
-        return PREFIX+this.name;
-    }
-    setModule(module,shutdown){
-        this.mjs=module;
-        this.shutdown=shutdown;
+        this.moduleTs=undefined;
     }
     getApi(){
         return this.api;
@@ -90,8 +82,27 @@ class Plugin extends ApiV2{
             }
         }
     }
-    enable(){
-        this.disabled=false;
+    async loadModule(url,timestamp){
+        try {
+            base.log("importing plugin.mjs for "+this.name);
+            const module = await import(/* webpackIgnore: true */ url);
+            let shutdown = undefined;
+            if (module && module.default) {
+                try {
+                    shutdown = module.default(this.getApi());
+                }catch(e){
+                    console.log("error calling default export for "+url,e);
+                }
+            }
+            this.module=module;
+            this.moduleTs=timestamp;
+            this.shutdown=shutdown;
+        }catch (e){
+            console.log("unable to load module (plugin.mjs) "+this.name,e);
+        }
+    }
+    mustUpdate(timestamp){
+        return timestamp !== this.moduleTs;
     }
 
     registerWidget(description, opt_editableParameters) {
@@ -122,14 +133,11 @@ class Plugin extends ApiV2{
 class Pluginmanager{
     constructor(){
         this.createdApis={}
+        this.legacyJs={};
+        this.css={};
     }
-    getOrCreateApi(baseUrl,name){
-        let rt=this.createdApis[name];
-        if (rt) return rt;
-        rt=new Plugin(baseUrl,name);
-        this.createdApis[name]=rt;
-        rt.enable();
-        return rt;
+    cssId(pluginName) {
+        return '___'+pluginName+"_css"
     }
     async query(){
         try {
@@ -143,6 +151,18 @@ class Pluginmanager{
         }
     }
     async start(){
+        globalstore.register(()=>{
+            this.update().then(()=>{},()=>{});
+        },keys.nav.gps.updateconfig);
+        await this.update();
+    }
+    deleteApi(api){
+        if (!api) return;
+        base.log(`deleteApi ${api.name}`);
+        api.disable();
+        delete this.createdApis[api.name];
+    }
+    async update(){
         if (! globalstore.getData(keys.gui.capabilities.plugins)) return;
         const plugins=await this.query();
         if (!plugins || !(plugins instanceof Array)) {
@@ -150,39 +170,56 @@ class Pluginmanager{
             return;
         }
         const foundPlugins={};
-        for (let plugin of plugins){
-            const name=plugin.name;
-            if (! name) continue;
-            foundPlugins[name]=plugin.active;
+        for (let plugin of plugins) {
+            const name = plugin.name;
+            if (!name || !plugin.base) continue;
             if (!plugin.active) continue;
-            const api=this.getOrCreateApi(plugin.base,name);
-            if (plugin.js){
-                loadJs(plugin.js);
-            }
-            if (plugin.css){
-                loadOrUpdateCss(plugin.css,api.getCssId());
-            }
-            if (plugin.mjs){
-                try {
-                    base.log("importing plugin.mjs for "+name);
-                    const module = await import(/* webpackIgnore: true */ plugin.mjs);
-                    let shutdown = undefined;
-                    if (module && module.default) {
-                        try {
-                            shutdown = module.default(api.getApi());
-                        }catch(e){
-                            console.log("error calling default export for "+plugin.mjs,e);
-                        }
+            foundPlugins[name] = plugin;
+        }
+        for (let pluginName in foundPlugins) {
+            const plugin = foundPlugins[pluginName];
+            let api = this.createdApis[pluginName];
+            if (plugin.mjs) {
+                if (!plugin.mjs.url || plugin.mjs.timestamp === undefined) {
+                    this.deleteApi(api);
+                } else {
+                    if (!api || api.mustUpdate(plugin.mjs.timestamp)) {
+                        this.deleteApi(api);
                     }
-                    api.setModule(module, shutdown);
-                }catch (e){
-                    console.log("unable to load module (plugin.mjs) "+name,e);
+                    api = new Plugin(plugin.base, pluginName);
+                    this.createdApis[pluginName] = api;
+                    await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp);
+                }
+            } else {
+                this.deleteApi(api);
+                if (plugin.js && plugin.js.url) {
+                    if (!this.legacyJs[pluginName]) {
+                        this.legacyJs[pluginName] = true;
+                        base.log("load legacy js for plugin " + pluginName);
+                        loadJs(plugin.js.url);
+                    }
+                }
+            }
+            if (plugin.css && plugin.css.url && plugin.css.timestamp) {
+                const cssid = this.cssId(pluginName);
+                const exixstingCss = this.css[pluginName];
+                if (exixstingCss !== plugin.css.timestamp){
+                    base.log("loading/updating css for " + pluginName);
+                    loadOrUpdateCss(plugin.css.url, cssid);
+                    this.css[pluginName]=plugin.css.timestamp;
                 }
             }
         }
         for (let pname in this.createdApis){
             if (!foundPlugins[pname]) {
-                this.createdApis[pname].disable();
+                this.deleteApi(this.createdApis[pname]);
+            }
+        }
+        for (let pname in this.css){
+            if (!foundPlugins[pname]) {
+                base.log("deleting css for " + pname);
+                loadOrUpdateCss(undefined, pname);
+                delete this.css[pname];
             }
         }
     }

@@ -38,8 +38,6 @@ import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -67,6 +65,7 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     public void start(PermissionCallback permissionCallback) {
+        gpsService.updateConfigSequence(); //TODO: could be more granular
         try{
             for (File f:workDir.listFiles()){
                 if (f.isFile() && f.getName().startsWith(UPLOAD_BASE)){
@@ -327,6 +326,7 @@ public class PluginManager extends DirectoryRequestHandler {
             throw t;
         }
         setChildStatus(USER_PREFIX+name);
+        gpsService.updateConfigSequence();
         return true;
     }
     String pluginFileToName(File plugin){
@@ -388,7 +388,10 @@ public class PluginManager extends DirectoryRequestHandler {
         File pdir=findLocalFile(name);
         if (pdir == null) throw new Exception("plugin "+name+" not found");
         boolean rt= AvnUtil.deleteRecursive(pdir);
-        if (rt) removeChild(name);
+        if (rt) {
+            removeChild(name);
+            gpsService.updateConfigSequence();
+        }
         return rt;
     }
 
@@ -417,7 +420,10 @@ public class PluginManager extends DirectoryRequestHandler {
                         for (AvnUtil.KeyValue<String> item : PLUGINFILES) {
                             File pf = new File(localFile, item.value);
                             if (pf.exists()) {
-                                po.put(item.key, getUrlFromName(name + "/" + pf.getName()));
+                                JSONObject info=new JSONObject();
+                                info.put(IPluginHandler.IK_FURL,getUrlFromName(name + "/" + pf.getName()));
+                                info.put(IPluginHandler.IK_FTS,pf.lastModified());
+                                po.put(item.key, info);
                             }
                         }
                     }
@@ -442,9 +448,14 @@ public class PluginManager extends DirectoryRequestHandler {
                 JSONObject po=ph.getFiles();
                 if (po != null && po.has(IPluginHandler.K_NAME)){
                     for (String k:IPluginHandler.PLUGINFILES.keySet()){
-                        if (po.has(k)){
-                            String relativePath=po.getString(k);
-                            po.put(k,getUrlFromName(ph.getName()+"/"+relativePath));
+                        try {
+                            if (po.has(k)) {
+                                JSONObject finfo=po.getJSONObject(k);
+                                String relativePath = finfo.getString(IPluginHandler.IK_FURL);
+                                finfo.put(IPluginHandler.IK_FURL, getUrlFromName(ph.getName() + "/" + relativePath));
+                            }
+                        }catch (Exception e){
+                            AvnLog.e("invalid structure of getFiles from "+ph.getName(),e);
                         }
                     }
                     po.put(IPluginHandler.K_BASE,getUrlFromName(ph.getName()));

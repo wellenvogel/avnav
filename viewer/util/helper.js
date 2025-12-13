@@ -302,8 +302,13 @@ export const loadOrUpdateCss=(url,id)=>{
     if (id){
         let existing=document.head.querySelector('#'+id);
         if (existing && existing.href){
-            let nUrl=injectDateIntoUrl(new URL(url?url:existing.href,window.location.href));
+            if (! url){
+                existing.disabled=true;
+                return;
+            }
+            let nUrl=injectDateIntoUrl(new URL(url,window.location.href));
             existing.href=nUrl;
+            existing.disabled=false;
             return true;
         }
     }

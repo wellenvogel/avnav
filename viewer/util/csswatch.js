@@ -47,7 +47,7 @@ export class CssWatcher{
                 Requests.getLastModified(entry.url)
                     .then((lastModified)=>{
                         if (lastModified !== entry.lastModified){
-                            loadOrUpdateCss(undefined,entry.id);
+                            loadOrUpdateCss(entry.url,entry.id);
                             entry.lastModified=lastModified;
                         }
                     })

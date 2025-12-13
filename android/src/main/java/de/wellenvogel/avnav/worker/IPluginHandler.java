@@ -22,11 +22,8 @@ package de.wellenvogel.avnav.worker;
 #  DEALINGS IN THE SOFTWARE.
 */
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.HashMap;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -66,6 +63,10 @@ public interface IPluginHandler {
     public static String IK_EDIT="canEdit";
     public static String IK_DOWNLOAD="canDownload";
     public static String IK_ACTIVE=K_ACTIVE;
+
+    //keys for the fileinfo object returned in getFiles
+    public static String IK_FURL="url";
+    public static String IK_FTS ="timestamp";
 
     /**
      * get the info item for this plugin for list and info requests
