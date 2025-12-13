@@ -50,7 +50,6 @@ import isIosSafari from '@braintree/browser-detection/is-ios-safari';
 import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
 import {createRoot} from "react-dom/client";
 import {loadJs, loadOrUpdateCss} from "./util/helper";
-import csswatch, {USERCSSID} from "./util/csswatch";
 import pluginmanager from "./util/pluginmanager";
 
 
