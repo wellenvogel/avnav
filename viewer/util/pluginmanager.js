@@ -223,7 +223,7 @@ export class Plugin extends ApiV2{
     }
 }
 const USERFILES={
-    js:'user.mjs',
+    js:'user.js',
     css:'user.css',
     mjs:'user.mjs'
 };

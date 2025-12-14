@@ -33,6 +33,7 @@ import globalStore from "../util/globalstore";
 import {ConfirmDialog} from "./BasicDialogs";
 import PropTypes from "prop-types";
 import {reloadPage} from "../util/helper";
+import LeaveHandler from "../util/leavehandler"
 
 export const DynamicTitleIcons=({rightOffset})=>{
     const dialogContext=useDialogContext();
@@ -69,6 +70,7 @@ export const DynamicTitleIcons=({rightOffset})=>{
                 text={rltext}
                 />)
                 .then(()=>{
+                    LeaveHandler.stop();
                     reloadPage();
                 },
                     ()=>{})
