@@ -12,6 +12,7 @@ import Addons from '../components/Addons.js';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import alarmhandler from "../nav/alarmhandler";
 import Keyhandler from "../util/keyhandler";
+import GuiHelpers from "../util/GuiHelpers";
 
 
 class AddOnPage extends React.Component{
@@ -26,7 +27,7 @@ class AddOnPage extends React.Component{
             },
             {
                 name: 'Cancel',
-                onClick: ()=>{self.props.history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.state={
@@ -49,6 +50,9 @@ class AddOnPage extends React.Component{
         })
         this.blockIds={};
         this.keyHandlers=[];
+        GuiHelpers.storeHelper(this,()=>{
+            this.readAddOns();
+        },keys.gui.global.reloadSequence)
     }
     componentWillUnmount() {
         remotechannel.unsubscribe(this.remoteToken);
@@ -74,14 +78,13 @@ class AddOnPage extends React.Component{
             }
         }
     }
-    componentDidMount(){
-        let self=this;
+    readAddOns(){
         Addons.readAddOns(true)
             .then((items)=>{
                 let currenIndex = globalStore.getData(keys.gui.addonpage.activeAddOn);
                 for (let i = 0; i < items.length; i++) {
-                    if (self.props.options && self.props.options.addonName) {
-                        if (items[i].name == self.props.options.addonName) {
+                    if (this.props.options && this.props.options.addonName) {
+                        if (items[i].name == this.props.options.addonName) {
                             if (i != currenIndex) {
                                 currenIndex = i;
                                 globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
@@ -98,9 +101,12 @@ class AddOnPage extends React.Component{
                 if (currenIndex === undefined || currenIndex < 0 || currenIndex >= items.length){
                     globalStore.storeData(keys.gui.addonpage.activeAddOn,0);
                 }
-                self.setState({addOns:items})
+                this.setState({addOns:items})
             })
-            .catch(()=>{});
+            .catch(()=>{});    
+    }
+    componentDidMount(){
+        this.readAddOns();
         globalStore.storeData(keys.gui.global.preventSizeChange,true);
     }
     setAddon(addOn,i){
@@ -139,8 +145,8 @@ class AddOnPage extends React.Component{
         let self=this;
         let Rt=Dynamic((props)=> {
                 let currentAddOn={};
-                if (self.state.addOns) {
-                    currentAddOn = self.state.addOns[props.activeAddOn || 0] || {};
+                if (this.state.addOns) {
+                    currentAddOn = this.state.addOns[props.activeAddOn || 0] || {};
                 }
                 let url=currentAddOn.url;
                 if (url && ! currentAddOn.keepUrl){
@@ -161,13 +167,13 @@ class AddOnPage extends React.Component{
                     </div>;
                 return (
                     <Page
-                        {...self.props}
+                        {...this.props}
                         id="addonpage"
                         title={showInWindow?'':currentAddOn.title}
                         mainContent={
                             <MainContent/>
                         }
-                        buttonList={self.buildButtonList(self.state.addOns,props.activeAddOn||0)}/>
+                        buttonList={this.buildButtonList(this.state.addOns,props.activeAddOn||0)}/>
                 );
             },{
             storeKeys:{

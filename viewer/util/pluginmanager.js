@@ -31,6 +31,7 @@ import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
 import FeatureFormatter from "./featureFormatter";
 import {layoutLoader} from "./layouthandler";
+import Addons from "../components/Addons";
 
 class PluginApi extends ApiV2 {
     #impl=undefined;
@@ -65,6 +66,10 @@ class PluginApi extends ApiV2 {
 
     registerLayout(name, url) {
         this.#impl.registerLayout(name, url);
+    }
+
+    registerUserApp(name, url, icon, title, newWindow) {
+        this.#impl.registerUserApp(name, url, icon, title, newWindow);
     }
 }
 
@@ -129,6 +134,7 @@ export class Plugin extends ApiV2{
             }
         })
         layoutLoader.removePluginLayouts(this.name);
+        Addons.removePluginAddOns(this.name);
     }
     async loadModule(url,timestamp,first){
         try {
@@ -210,6 +216,10 @@ export class Plugin extends ApiV2{
 
     registerLayout(name, url) {
         this._registerLayout(name, undefined,url);
+    }
+
+    registerUserApp(name, url, icon, title, newWindow) {
+        Addons.addPluginAddOn({name,pluginName:this.name, url, icon, title, newWindow});
     }
 }
 const USERFILES={

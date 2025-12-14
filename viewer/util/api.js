@@ -187,6 +187,22 @@ export class ApiV2 extends Api{
     registerLayout(name,url){
         throw new Error("not implemented");
     }
+
+    /**
+     * register a user app (i.e. a web page that should be shown as user app)
+     * @param name (namdatory) a name that should uniquely identify this userapp in your plugin/user.mjs
+     * @param url (mandatory) either an internal or external url
+     *            to use an HTML file in your plugin directory build the URL like
+     *            new URL('ExampleUserApp.html',api.getBaseUrl())
+     *            If you have an external URL just use it as is
+     * @param icon (mandatory) an icon URL
+     *            build it the same way like the url parameter
+     * @param title (optional) a title to be shown
+     * @param newWindow (optional) if set open the page in a new window
+     */
+    registerUserApp(name,url,icon,title,newWindow){
+        throw new Error("not implemented");
+    }
 }
 
 export default  new Api();

@@ -259,6 +259,13 @@ export const injectDateIntoUrl=(oldurl,opt_date)=>{
     }
     return url;
 }
+export const urlToString=(url)=>{
+    if (! (url instanceof URL)){return url;}
+    if (url.origin === window.location.origin){
+        return url.pathname;
+    }
+    return url.toString();
+}
 export const reloadPage=()=>{
     let url=injectDateIntoUrl(window.location);
     window.location.replace(url);
@@ -335,6 +342,7 @@ Helper.injectav=injectav;
 Helper.avitem=avitem;
 Helper.setav=setav;
 Helper.isset=isset;
+Helper.urlToString=urlToString;
 
 export default Helper;
 

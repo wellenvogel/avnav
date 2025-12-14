@@ -369,7 +369,8 @@ class App extends React.Component {
                     action().then((data)=>{resolve(data)});
                 }
                 else{
-                        globalStore.register(()=>{
+                        const callback=globalStore.register(()=>{
+                            globalStore.deregister(callback);
                             action().then((rs)=>resolve(rs));
                         },keys.gui.global.pluginLoadingDone);
                     }

@@ -497,6 +497,7 @@ public class PluginManager extends DirectoryRequestHandler {
         if (baseName.startsWith(USER_PREFIX)) {
             File base = findLocalFile(baseName);
             if (!base.isDirectory()) return null;
+            if (!isActive(baseName)) return null;
             String fpath = checkPathParts(parts, true, 1);
             File finalFile = new File(base, fpath);
             if (finalFile.isDirectory()) throw new Error(finalFile.getPath() + " is a directory");

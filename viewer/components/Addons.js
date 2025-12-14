@@ -2,10 +2,51 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
+import {Icon} from "ol/style";
+import {urlToString} from "../util/helper";
 
-const readAddOns = function (opt_showToast,opt_includeInvalid) {
-    return new Promise((resolve, reject)=> {
-        if (!globalStore.getData(keys.gui.capabilities.addons)) resolve([]);
+class PluginAddOn{
+    constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost}){
+        this.name=name;
+        this.pluginName=pluginName;
+        this.url=urlToString(url);
+        this.icon=urlToString(icon);
+        this.title=title;
+        this.newWindow=newWindow;
+        this.source="plugin-"+pluginName;
+        this.canDelete=false;
+        this.newWindow=newWindow;
+        this.preventConnectionLost=preventConnectionLost;
+        this.key=pluginName+'.'+name;
+    }
+}
+const pluginAddOns={};
+
+const addPluginAddOn=({name,pluginName,url,icon,...other})=>{
+    if (!name) throw new Error("name is required");
+    if (!pluginName) throw new Error("pluginName is required");
+    if (!url) throw new Error("url is required");
+    if (!icon) throw new Error("icon is required");
+    const completeName=pluginName+"."+name;
+    const existing=pluginAddOns[completeName];
+    if (existing && existing.pluginName!==pluginName) {
+        throw new Error(`AddOn "${name}" already exists from "${existing.pluginName}"`);
+    }
+    pluginAddOns[completeName]=new PluginAddOn({name,pluginName,url,icon,...other});
+    return completeName;
+}
+const removePluginAddOns=(pluginName)=>{
+    const todel=[];
+    for (let k in pluginAddOns) {
+        if (pluginAddOns[k].pluginName===pluginName) todel.push(k);
+    }
+    for (let td of todel) {
+        delete pluginAddOns[td];
+    }
+}
+
+const readAddOns = async (opt_showToast,opt_includeInvalid)=> {
+        if (!globalStore.getData(keys.gui.capabilities.addons)) return [];
         let req={
             request:'api',
             command:'list',
@@ -14,22 +55,26 @@ const readAddOns = function (opt_showToast,opt_includeInvalid) {
         if (opt_includeInvalid){
             req.invalid=true;
         }
-        Requests.getJson(req).then((json)=> {
+        try {
+            const addons = await Requests.getJson(req).then((json) => {
                 let items = [];
                 for (let e in json.items) {
                     let item = json.items[e];
-                    if (!item.key) item.key=item.name;
+                    if (!item.key) item.key = item.name;
                     if (item.name) {
                         items.push(item);
                     }
                 }
-                resolve(items);
-            },
-            (error)=> {
-                if (opt_showToast)Toast("reading addons failed: " + error);
-                reject(error+"");
+                return items;
             });
-    });
+            for (let k in pluginAddOns){
+                addons.push(pluginAddOns[k]);
+            }
+            return addons;
+        }catch (error){
+            if (opt_showToast)Toast("reading addons failed: " + error);
+            throw error;
+        }
 };
 
 const findAddonByUrl=(addons,url,opt_all)=>{
@@ -80,5 +125,7 @@ export default  {
     readAddOns:readAddOns,
     findAddonByUrl:findAddonByUrl,
     updateAddon:updateAddon,
-    removeAddon:removeAddon
+    removeAddon:removeAddon,
+    addPluginAddOn:addPluginAddOn,
+    removePluginAddOns:removePluginAddOns
 }
