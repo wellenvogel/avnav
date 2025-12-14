@@ -42,20 +42,20 @@
         assist you by displaying errors - and you can even debug your code.</li>
     </ul>
     <p>Using the workflow you can implement changes rather fast.</p>
-    <p>The current file template you can also find on <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">github</a>.</p>
+    <p>The current file template you can also find on <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js">github</a>.</p>
     <h2><a name="widgets" id="widgets"></a>Widgets</h2>
     <p>You can add the following types of widgets:</p>
     <ul>
       <li>widgets with an own formatter (and potentially fixed values retrieved
-        from the store) based on the default widget (example 1-&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        from the store) based on the default widget (example 1-&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js">user.js</a>:
         rpmWidget, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">testPlugin</a>:
         testPluing_simpleWidget)</li>
       <li>adaptations and extensions of the graphics widgets (<a href="https://canvas-gauges.com/">canvas
-          gauges)</a> (example 2 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+          gauges)</a> (example 2 - <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js">user.js</a>:
         rpmGauge)<br>
         This way you can access canvas widget parameters that are currently not
         directly accessible.</li>
-      <li>widgets with own HTML code (example 3 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+      <li>widgets with own HTML code (example 3 - <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js">user.js</a>:
         userSpecialRpm, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
         testPlugin_courseWidget)</li>
       <li>widgets with canvas graphics (example within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
@@ -75,10 +75,10 @@
     <p>For <a href="https://canvas-gauges.com/">canvas gauge</a> widgets you
       can set some parameters (see <a href="https://canvas-gauges.com/documentation/user-guide/configuration">canvas
         gauges description</a>) either to fixed values (in this case they must
-      become part of the widget definition - see the values in the&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L134">example
+      become part of the widget definition - see the values in the&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js#L134">example
         starting from line 134</a>) or you can make them settable by the user
       within the layout editor (put them into the <a href="#widgetparameter">editable
-        widget parameters</a>&nbsp; -&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L156">example
+        widget parameters</a>&nbsp; -&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js#L156">example
         starting from line 156</a>).</p>
     <p>Additionally you can define an <a href="#formatter">own formatter</a>
       and set it as default for the widget.</p>
@@ -99,7 +99,7 @@
       gauges is ignored!</p>
     <p>Beside the parameters you can also define a translateFunction. This
       function receives an object with all the current values and can modify
-      this before it is set at canvas gauges(<a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L104">example
+      this before it is set at canvas gauges(<a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js#L104">example
         from line 104</a>). This function needs to be "stateless". That means
       the output must only depend form the input or any other fixed values.
       Otherwise some changes potentially will not been drawn.</p>
@@ -213,7 +213,7 @@
           <td>This function is called with the current values as parameters and
             must return an object containing the derived values.<br>
             This may be used to transform values before rendering if no own
-            renderXXX is implemented - see <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">example</a>.</td>
+            renderXXX is implemented - see <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js">example</a>.</td>
         </tr>
         <tr>
           <td>initFunction</td>
@@ -381,7 +381,7 @@
     <h2>Widget Parameters</h2>
     <p>When you register a widget you can provide a second parameter - an object
       containing parameters to be displayed in the layout editor.</p>
-    <p>Examples can be found in the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
+    <p>Examples can be found in the <a href="https://github.com/wellenvogel/avnav/blob/release-20250822/viewer/static/user.js">user.js
         template</a>. Values selected by the user in the Layout editor will
       become part of the properties provided to the renderHtml and renderCanvas
       functions (except for parameters of type KEY: the values read from the
