@@ -403,7 +403,8 @@ public class PluginManager extends DirectoryRequestHandler {
     static final AvnUtil.KeyValue<String>[] PLUGINFILES=new AvnUtil.KeyValue[]
     {
             new AvnUtil.KeyValue<String>("css","plugin.css"),
-            new AvnUtil.KeyValue<String>("js","plugin.js")
+            new AvnUtil.KeyValue<String>("js","plugin.js"),
+            new AvnUtil.KeyValue<String>("mjs","plugin.mjs")
     };
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
