@@ -1378,7 +1378,8 @@ class LayoutItemActions extends ItemActions{
                     data:JSON.stringify(layout,undefined,"  ")
                 });
                 return true;
-            }
+            },
+            fixedExtension:this.fixedExtension
         }))
         actions.push(standardActions.edit.copy({
             visible: this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE && item.canDelete,
