@@ -135,7 +135,7 @@ export class Plugin extends ApiV2{
             base.log("importing plugin.mjs for "+this.name);
             if (! first)
             {
-                url = injectDateIntoUrl(new URL(url, window.location.href));
+                url = injectDateIntoUrl(new URL(url, window.location.href),timestamp);
             }
             const module = await import(/* webpackIgnore: true */ url);
             let shutdown = undefined;

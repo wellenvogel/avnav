@@ -237,9 +237,9 @@ export const getNameAndExt=(fn)=>{
     }
     return [fn,''];
 }
-export const injectDateIntoUrl=(oldurl)=>{
+export const injectDateIntoUrl=(oldurl,opt_date)=>{
     let url=oldurl.protocol+"//"+oldurl.host+oldurl.pathname;
-    const newTag='_='+encodeURIComponent((new Date).getTime());
+    const newTag='_='+encodeURIComponent(opt_date||(new Date).getTime());
     if (oldurl.search){
         let hasReplaced=false;
         let add=oldurl.search.replace(/[?&]_=[^&#]*/,(m)=>{
