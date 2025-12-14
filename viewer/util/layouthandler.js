@@ -335,10 +335,11 @@ class LayoutLoader{
                 name:k,
                 server: false,
                 canDelete: false,
-                canDownload: false,
+                canDownload: true,
                 active: k == activeLayout,
                 type:'layout',
                 time: this.pluginLayouts[k].timestamp,
+                downloadName: this.pluginLayouts[k].name+".json"
             })
         }
         return layouts;
@@ -403,7 +404,7 @@ class LayoutLoader{
                 throw new Error(`layout ${completeName} already exists from ${this.pluginLayouts[completeName].pluginName}`);
             }
         }
-        this.pluginLayouts[completeName]=new PluginLayout(completeName,pluginName,timestamp,url,data);
+        this.pluginLayouts[completeName]=new PluginLayout(name,pluginName,timestamp,url,data);
         return completeName;
     }
     removePluginLayouts(pluginName){
