@@ -130,10 +130,13 @@ export class Plugin extends ApiV2{
         })
         layoutLoader.removePluginLayouts(this.name);
     }
-    async loadModule(url,timestamp){
+    async loadModule(url,timestamp,first){
         try {
             base.log("importing plugin.mjs for "+this.name);
-            url= injectDateIntoUrl(new URL(url,window.location.href));
+            if (! first)
+            {
+                url = injectDateIntoUrl(new URL(url, window.location.href));
+            }
             const module = await import(/* webpackIgnore: true */ url);
             let shutdown = undefined;
             if (module && module.default) {
@@ -220,6 +223,7 @@ class Pluginmanager{
         this.createdApis={}
         this.legacyJs={};
         this.css={};
+        this.mjs={}
     }
     cssId(pluginName) {
         return '_'+pluginName+"_css"
@@ -288,6 +292,8 @@ class Pluginmanager{
             Toast("unable to query plugins");
             return;
         }
+        let unloadedJsChanges=false;
+        let updatedMjs=false;
         let hasUpdates=false;
         const foundPlugins={};
         for (let plugin of plugins) {
@@ -310,7 +316,16 @@ class Pluginmanager{
                         hasUpdates = true;
                         try {
                             api = new Plugin(plugin.base, pluginName);
-                            await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp);
+                            //if the mjs has never been loaded or if the timestamp is still the same like on the first load
+                            //there is no need to load the module again
+                            const first=this.mjs[pluginName]===undefined || this.mjs[pluginName] === plugin.mjs.timestamp;
+                            if (first){
+                                this.mjs[pluginName]=plugin.mjs.timestamp;
+                            }
+                            else{
+                                updatedMjs=true;
+                            }
+                            await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp,first);
                             this.createdApis[pluginName] = api;
                         }catch (e){
                             console.error("unable to create api and load module",plugin,e);
@@ -323,8 +338,8 @@ class Pluginmanager{
             } else {
                 hasUpdates=hasUpdates || this.deleteApi(api);
                 if (plugin.js && plugin.js.url) {
-                    if (!this.legacyJs[pluginName]) {
-                        this.legacyJs[pluginName] = true;
+                    if (this.legacyJs[pluginName] === undefined) {
+                        this.legacyJs[pluginName] = plugin.js.timestamp||0;
                         base.log("load legacy js for " + pluginName);
                         loadJs(plugin.js.url);
                     }
@@ -353,8 +368,31 @@ class Pluginmanager{
                 delete this.css[pname];
             }
         }
+        //for the legacy JS we know that all js entries have been now created
+        //but maybe some of them have changed (other timestamp) or
+        //there had been created ones that are not available any more
+        //so when disabling a legacy plugin we need to inform the user that
+        //there was a js change
+        //but if later on enabling it again with unchanged code
+        //there is no change any more
+        for (let lname in this.legacyJs){
+            if (!foundPlugins[lname] || ! foundPlugins[lname].js) {
+                unloadedJsChanges = true;
+                break;
+            }
+            else{
+                if (foundPlugins[lname].js.timestamp !== this.legacyJs[lname]){
+                    unloadedJsChanges = true;
+                    break;
+                }
+            }
+        }
         if (hasUpdates){
             globalstore.storeData(keys.gui.global.reloadSequence,globalstore.getData(keys.gui.global.reloadSequence,0)+1);
+        }
+        globalstore.storeData(keys.gui.global.unloadedJsChanges,unloadedJsChanges);
+        if (updatedMjs){
+            globalstore.storeData(keys.gui.global.updatedJsModules,true);
         }
     }
 }

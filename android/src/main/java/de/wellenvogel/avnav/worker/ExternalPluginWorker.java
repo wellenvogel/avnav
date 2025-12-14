@@ -31,7 +31,6 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     private void setPluginJson(JSONObject no){
         boolean hasChanged=false;
         synchronized (pijLock) {
-            lastModified = SystemClock.uptimeMillis();
             if (no != null) {
                 if (pluginJson != null) {
                     hasChanged = !no.toString().equals(pluginJson.toString());
@@ -41,10 +40,11 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                 if (pluginJson != null) hasChanged = true;
             }
             pluginJson = no;
+            if (hasChanged || lastModified == 0){
+                lastModified = SystemClock.uptimeMillis();
+            }
         }
-        if (hasChanged){
-            gpsService.updateConfigSequence();
-        }
+
     }
     @Override
     public JSONObject getFiles() throws JSONException {

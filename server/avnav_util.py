@@ -640,7 +640,10 @@ class AVNUtil(object):
     replace=re.compile(r'[\u0000-\u001f\u007f"*/:<>?\\\|]')
     if filename is None:
       return None
-    return replace.sub('',filename)
+    rt=replace.sub('',filename)
+    if rt == '.' or rt == '..':
+      return ''
+    return rt
 
   @classmethod
   def getBool(cls,v,default=False):

@@ -32,14 +32,22 @@ import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import {ConfirmDialog} from "./BasicDialogs";
 import PropTypes from "prop-types";
+import {reloadPage} from "../util/helper";
 
 export const DynamicTitleIcons=({rightOffset})=>{
     const dialogContext=useDialogContext();
-    const props=useStore({rightOffset},{storeKeys: {...AnchorWatchKeys,show:keys.properties.titleIcons,measure: keys.map.activeMeasure }})
+    const props=useStore({rightOffset},{storeKeys:
+            {...AnchorWatchKeys,
+                show:keys.properties.titleIcons,
+                measure: keys.map.activeMeasure,
+                mjsUpdates:keys.gui.global.updatedJsModules,
+                unloadedJs:keys.gui.global.unloadedJsChanges,
+            }})
     if (! props.show) return null;
     let cl="iconContainer ";
     if (props.className) cl+=props.className;
     let anchorWatch=props.watchDistance !== undefined;
+    const jsChange=props.mjsUpdates|| props.unloadedJs;
     const style={};
     if (rightOffset){
         style.paddingRight=rightOffset+"px";
@@ -49,6 +57,22 @@ export const DynamicTitleIcons=({rightOffset})=>{
             globalStore.storeData(keys.map.activeMeasure,undefined);
         }}/> }
         {anchorWatch && <span className="anchorWatchIcon" onClick={() => anchorWatchDialog(dialogContext)}/>}
+        {jsChange && <span className="jsChangeIcon" onClick={()=>{
+            let rltext=props.unloadedJs?
+                "There are changes in plugin java script or user.js that are still not loaded.\n"
+                :
+                "Plugin or user.mjs changes have been loaded. To avoid memory leaks you should reload AvNav soon.\n";
+            rltext+="Reload AvNav now?";
+            showPromiseDialog(dialogContext,(dp)=><ConfirmDialog
+                {...dp}
+                title={"Reload?"}
+                text={rltext}
+                />)
+                .then(()=>{
+                    reloadPage();
+                },
+                    ()=>{})
+        }}/>}
         {!props.connected && <span className="disconnectedIcon" onClick={()=>{
             if (globalstore.getData(keys.gui.global.onAndroid) ||  !globalStore.getData(keys.gui.capabilities.canConnect)) return;
             showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={"End disconnected mode?"}/>)

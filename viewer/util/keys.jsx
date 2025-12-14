@@ -268,6 +268,8 @@ let keys={
             ignoreAndroidBack: K,
             remoteChannelActive: K,
             navUrl: K,
+            unloadedJsChanges:K,
+            updatedJsModules:K
         },
         gpspage:{
             pageNumber:K,

@@ -285,6 +285,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         //but as we do not run on a FAT32 SD card any way (and have never been able to do so)
         //we just allow the :
         String safeName=name.replaceAll("[\u0000-\u001f\u007f\"*/<>?\\\\|]","");
+        if (".".equals(safeName) || "..".equals(safeName)) throw new Exception("illegal filename "+name);
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }
