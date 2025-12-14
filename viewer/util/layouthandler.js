@@ -28,9 +28,10 @@ const getPagename=(page)=>{
 }
 
 class PluginLayout{
-    constructor(name,pluginName,url,data) {
+    constructor(name,pluginName,timestamp,url,data) {
         this.name=name;
         this.url=url;
+        this.timestamp=timestamp;
         this.data=data;
         this.pluginName=pluginName;
     }
@@ -337,6 +338,7 @@ class LayoutLoader{
                 canDownload: false,
                 active: k == activeLayout,
                 type:'layout',
+                time: this.pluginLayouts[k].timestamp,
             })
         }
         return layouts;
@@ -388,7 +390,7 @@ class LayoutLoader{
     getUserPrefix(){
         return USER_PREFIX;
     }
-    addPluginLayout(name,pluginName,data,url){
+    addPluginLayout(name,pluginName,timestamp,data,url){
         if (! this.prefixes || ! this.prefixes.plugin) throw Error("no support for plugin layouts");
         if (! name || ! pluginName) throw new Error("name and pluginName must be set");
         if (! data && ! url) throw new Error("either url or data must be set for a plugin layout");
@@ -396,8 +398,12 @@ class LayoutLoader{
             this.checkLayout(data);
         }
         const completeName=this.prefixes.plugin+pluginName+"."+name;
-        if (this.pluginLayouts[completeName])throw new Error(`layout ${completeName} already exists`);
-        this.pluginLayouts[completeName]=new PluginLayout(completeName,pluginName,url,data);
+        if (this.pluginLayouts[completeName]){
+            if (this.pluginLayouts[completeName].pluginName !== pluginName) {
+                throw new Error(`layout ${completeName} already exists from ${this.pluginLayouts[completeName].pluginName}`);
+            }
+        }
+        this.pluginLayouts[completeName]=new PluginLayout(completeName,pluginName,timestamp,url,data);
         return completeName;
     }
     removePluginLayouts(pluginName){

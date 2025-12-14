@@ -358,10 +358,22 @@ class App extends React.Component {
                 console.log("splitkeys.json: "+error);
             }
         ));
-        this.pendingActions.push(LayoutHandler.loadStoredLayout(true)
-            .then((layout)=>{
-            })
-            .catch((error)=>{Toast(error)})
+        this.pendingActions.push(
+            new Promise(resolve => {
+                const action=()=>LayoutHandler.loadStoredLayout(true)
+                    .then((layout)=>{
+                        return(layout);
+                    })
+                    .catch((error)=>{Toast(error);})
+                if (globalStore.getData(keys.gui.global.pluginLoadingDone) ){
+                    action().then((data)=>{resolve(data)});
+                }
+                else{
+                        globalStore.register(()=>{
+                            action().then((rs)=>resolve(rs));
+                        },keys.gui.global.pluginLoadingDone);
+                    }
+                })
         );
         let lastChart=mapholder.getLastChartKey();
         if (startpage === 'mainpage' && globalStore.getData(keys.properties.startNavPage) && lastChart){

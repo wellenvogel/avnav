@@ -269,7 +269,8 @@ let keys={
             remoteChannelActive: K,
             navUrl: K,
             unloadedJsChanges:K,
-            updatedJsModules:K
+            updatedJsModules:K,
+            pluginLoadingDone:K
         },
         gpspage:{
             pageNumber:K,

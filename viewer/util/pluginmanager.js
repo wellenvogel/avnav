@@ -139,6 +139,8 @@ export class Plugin extends ApiV2{
             }
             const module = await import(/* webpackIgnore: true */ url);
             let shutdown = undefined;
+            this.module=module;
+            this.moduleTs=timestamp;
             if (module && module.default) {
                 try {
                     shutdown = await module.default(this.getApi());
@@ -146,8 +148,6 @@ export class Plugin extends ApiV2{
                     console.log("error calling default export for "+url,e);
                 }
             }
-            this.module=module;
-            this.moduleTs=timestamp;
             this.shutdown=shutdown;
         }catch (e){
             console.log("unable to load module (plugin.mjs) "+this.name,e);
@@ -197,7 +197,7 @@ export class Plugin extends ApiV2{
     _registerLayout(name,data,url){
         if (this.disabled) throw new Error("disabled");
         if (this.name === USERNAME) throw new Error("regsiterLayout only for plugins");
-        const layoutname=layoutLoader.addPluginLayout(name,this.name,data,url);
+        const layoutname=layoutLoader.addPluginLayout(name,this.name,this.moduleTs,data,url);
         if (layoutname){
             base.log(`registered layout ${name} for ${this.name}`);
             this.layouts.push(layoutname);
@@ -277,6 +277,7 @@ class Pluginmanager{
             this.update().then(()=>{},()=>{});
         },keys.nav.gps.updateconfig);
         await this.update();
+        globalstore.storeData(keys.gui.global.pluginLoadingDone,true);
     }
     deleteApi(api){
         if (!api) return false;
