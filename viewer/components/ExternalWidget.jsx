@@ -108,7 +108,7 @@ export const ExternalWidget =(props)=>{
         let userHtml=(innerHtml!=null)?ReactHtmlParser(innerHtml,
             {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
         return (
-        <WidgetFrame {...convertedProps} addClass={Helper.concatsp("externalWidget",props.name)} onClick={props.onClick} resizeSequence={resizeSequence.current}>
+        <WidgetFrame {...convertedProps} addClass={Helper.concatsp("externalWidget",props.className)} onClick={props.onClick} resizeSequence={resizeSequence.current}>
             {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
                 {userHtml}
         </WidgetFrame>
