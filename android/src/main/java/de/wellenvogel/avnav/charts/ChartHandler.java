@@ -54,8 +54,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         String chartKey;
         JSONObject chart;
         boolean allowColon;
-        String sourceName;
-        public ExternalChart(String key,String sourceName,JSONObject chart,boolean allowColon) throws Exception {
+        public ExternalChart(String key,JSONObject chart,boolean allowColon) throws Exception {
             this.key=key;
             this.chart=new JSONObject(chart.toString());
             chartKey=keyFromExternalChart();
@@ -68,7 +67,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 this.chart.remove(Chart.EXT_CKEY);
             }
             this.allowColon=allowColon;
-            this.sourceName=sourceName;
         }
         private String keyFromExternalChart() throws Exception {
             String original=null;
@@ -211,11 +209,11 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             externalCharts.remove(key);
         }
     }
-    public void addExternalCharts(String key, JSONArray charts,String name){
+    public void addExternalCharts(String key, JSONArray charts){
         ArrayList<ExternalChart> extCharts=new ArrayList<>();
         for (int i=0;i<charts.length();i++){
             try{
-                ExternalChart echart=new ExternalChart(key,name,charts.getJSONObject(i),allowColon);
+                ExternalChart echart=new ExternalChart(key,charts.getJSONObject(i),allowColon);
                 extCharts.add(echart);
             } catch (Exception e) {
                 AvnLog.e("unable to add external chart ",e);

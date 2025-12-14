@@ -174,7 +174,10 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     }
 
     private String getKey(){
-        return TYPENAME+"-"+pluginName;
+        return "Plugin-"+pluginName; //we don't use TYPENAME here as we want to be compatible
+                                     //with older versions that had TYPENAME Plugin
+                                     //and as the key goes into overlay definitions
+                                     //we would otherwise break them
     }
     private void unregisterCharts(boolean reset) {
         ChartHandler chartHandler = gpsService.getChartHandler();
@@ -198,7 +201,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             status.unsetChildStatus(C_CHARTS);
             return;
         }
-        chartHandler.addExternalCharts(getKey(),charts,"plugin: "+getPluginName());
+        chartHandler.addExternalCharts(getKey(),charts);
         this.charts=charts;
         status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA,charts.length()+" registered");
     }
