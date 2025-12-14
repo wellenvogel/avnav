@@ -257,14 +257,15 @@ class AVNUserAppHandler(AVNWorker):
     return True
 
 
-  def registerAddOn(self,name,url,iconPath,title=None,preventConnectionLost=False):
+  def registerAddOn(self,name,url,iconPath,title=None,preventConnectionLost=False,pluginName=None):
+    source='plugin' if pluginName is None else 'plugin-'+pluginName
     newAddon = {
       'name': name,
       'url': url,
       'icon': iconPath,
       'title': title,
       'canDelete': False,
-      'source':'plugin',
+      'source':source,
       'preventConnectionLost': preventConnectionLost
     }
     self.additionalAddOns.append(newAddon)

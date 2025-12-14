@@ -325,7 +325,7 @@ class ApiImpl(AVNApi):
       return
     self.userApps.append(userApp)
     addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
-                               title=title,preventConnectionLost=preventConnectionLost)
+                               title=title,preventConnectionLost=preventConnectionLost,pluginName=self.prefix)
     self.addonIndex+=1
     return id
 
