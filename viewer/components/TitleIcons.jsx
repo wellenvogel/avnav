@@ -59,7 +59,7 @@ export const DynamicTitleIcons=({rightOffset})=>{
         {anchorWatch && <span className="anchorWatchIcon" onClick={() => anchorWatchDialog(dialogContext)}/>}
         {jsChange && <span className="jsChangeIcon" onClick={()=>{
             let rltext=props.unloadedJs?
-                "There are changes in plugin java script or user.js that are still not loaded.\n"
+                "There are changes in plugin java script or user.mjs that are still not loaded.\n"
                 :
                 "Plugin or user.mjs changes have been loaded. To avoid memory leaks you should reload AvNav soon.\n";
             rltext+="Reload AvNav now?";

@@ -109,7 +109,7 @@ module.exports = (env, argv) => {
             },
             minimize: minify,
             minimizer: [new TerserPlugin({
-                exclude: /user.js/
+                exclude: [/user.mjs/,/user.mjs/]
             })]
         },
         output: {
