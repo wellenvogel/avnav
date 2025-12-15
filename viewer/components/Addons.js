@@ -2,15 +2,13 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
-import {Icon} from "ol/style";
-import {urlToString} from "../util/helper";
 
 class PluginAddOn{
     constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost}){
         this.name=name;
         this.pluginName=pluginName;
-        this.url=urlToString(url);
-        this.icon=urlToString(icon);
+        this.url=url;
+        this.icon=icon;
         this.title=title;
         this.newWindow=newWindow;
         this.source="plugin-"+pluginName;

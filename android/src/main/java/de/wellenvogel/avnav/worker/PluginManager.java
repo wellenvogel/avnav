@@ -502,7 +502,9 @@ public class PluginManager extends DirectoryRequestHandler {
             File finalFile = new File(base, fpath);
             if (finalFile.isDirectory()) throw new Error(finalFile.getPath() + " is a directory");
             if (!finalFile.exists()) return null;
-            return new ExtendedWebResourceResponse(finalFile, RequestHandler.mimeType(finalFile.getName()), "");
+            ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(finalFile, RequestHandler.mimeType(finalFile.getName()), "");
+            rt.setHeader("Cache-Control","no-store");
+            return rt;
         }
         else{
             List<IPluginHandler> externals=getExternalPlugins();

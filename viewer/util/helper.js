@@ -259,10 +259,13 @@ export const injectDateIntoUrl=(oldurl,opt_date)=>{
     }
     return url;
 }
-export const urlToString=(url)=>{
+export const urlToString=(url,opt_base)=>{
+    if (typeof(url)==='string'){
+        url= new URL(url,opt_base);
+    }
     if (! (url instanceof URL)){return url;}
     if (url.origin === window.location.origin){
-        return url.pathname;
+        return url.pathname+url.search;
     }
     return url.toString();
 }

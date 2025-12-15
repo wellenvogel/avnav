@@ -26,7 +26,7 @@ import Toast from "../components/Toast";
 import globalstore from "./globalstore";
 import keys from "./keys";
 import {ApiV2} from "./api";
-import {injectDateIntoUrl, loadJs, loadOrUpdateCss} from "./helper";
+import {injectDateIntoUrl, loadJs, loadOrUpdateCss, urlToString} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
 import FeatureFormatter from "./featureFormatter";
@@ -215,10 +215,16 @@ export class Plugin extends ApiV2{
     }
 
     registerLayout(name, url) {
+        if (! url) throw Error("url must not be empty");
+        url=urlToString(url,this.getBaseUrl());
         this._registerLayout(name, undefined,url);
     }
 
     registerUserApp(name, url, icon, title, newWindow) {
+        if (! url) throw Error("url must not be empty");
+        url=urlToString(url,this.getBaseUrl());
+        if (! icon) throw Error("icon must not be empty");
+        icon=urlToString(icon,this.getBaseUrl());
         Addons.addPluginAddOn({name,pluginName:this.name, url, icon, title, newWindow});
     }
 }

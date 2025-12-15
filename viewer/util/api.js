@@ -180,9 +180,9 @@ export class ApiV2 extends Api{
      * this function can only be used by plugins (not by user.mjs)
      * @param name
      * @param url the url - either a string or an URL object
-     *            for a layout file in the plugin dir (or user dir)
-     *            you can register like this
-     *            registerLayout("myLayout",new URL("testLayout.json",api.getBaseUrl()))
+     *            for a layout file in the plugin dir (or user dir) or below
+     *            you can use the relative path as url (getBaseUrl will be added at the beginning)
+     *            registerLayout("testlayout","testlayout.json")
      */
     registerLayout(name,url){
         throw new Error("not implemented");
@@ -191,9 +191,8 @@ export class ApiV2 extends Api{
     /**
      * register a user app (i.e. a web page that should be shown as user app)
      * @param name (namdatory) a name that should uniquely identify this userapp in your plugin/user.mjs
-     * @param url (mandatory) either an internal or external url
-     *            to use an HTML file in your plugin directory build the URL like
-     *            new URL('ExampleUserApp.html',api.getBaseUrl())
+     * @param url (mandatory) either an internal or external url as string or URL object
+     *            to use an HTML file in your plugin directory just use the file name
      *            If you have an external URL just use it as is
      * @param icon (mandatory) an icon URL
      *            build it the same way like the url parameter

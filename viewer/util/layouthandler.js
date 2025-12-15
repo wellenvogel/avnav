@@ -134,7 +134,7 @@ class LayoutLoader{
 
     }
 
-    loadStoredLayout(opt_remoteFirst) {
+    async loadStoredLayout(opt_remoteFirst) {
         let layoutName = globalStore.getData(keys.properties.layoutName);
         //if we selected the default layout we will always use our buildin (if store locally)
         //or load from the server
@@ -142,36 +142,35 @@ class LayoutLoader{
             let storedLayout = this._loadFromStorage();
             if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                 this.temporaryLayouts[storedLayout.name] = storedLayout;
-                return Promise.resolve(new LayoutAndName(storedLayout.name,storedLayout.data));
+                return Promise.resolve(new LayoutAndName(storedLayout.name, storedLayout.data));
             }
         }
-        return this.loadLayout(layoutName)
-            .then((layout) => {
-                    return new LayoutAndName(layoutName,layout);
-                },
-                (error) => {
-                    if (opt_remoteFirst) {
-                        let storedLayout = this._loadFromStorage();
-                        if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
-                            this.temporaryLayouts[storedLayout.name] = storedLayout.data;
-                            return new LayoutAndName(storedLayout.name,storedLayout.data);
-                        }
+        try {
+            const layout = await this.loadLayout(layoutName);
+            return new LayoutAndName(layoutName, layout);
+        } catch (error) {
+            if (opt_remoteFirst) {
+                let storedLayout = this._loadFromStorage();
+                if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
+                    this.temporaryLayouts[storedLayout.name] = storedLayout.data;
+                    return new LayoutAndName(storedLayout.name, storedLayout.data);
+                }
+            }
+            let description = KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
+            if (description && description.defaultv) {
+                if (layoutName != description.defaultv) {
+                    globalStore.storeData(keys.properties.layoutName, description.defaultv);
+                    try {
+                        const dlayout = await this.loadLayout(description.defaultv);
+                        return new LayoutAndName(description.defaultv, dlayout);
+                    } catch (error) {
+                        throw new Error("unable to load default layout: " + error);
                     }
-                    let description = KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
-                    if (description && description.defaultv) {
-                        if (layoutName != description.defaultv) {
-                            globalStore.storeData(keys.properties.layoutName, description.defaultv);
-                            return this.loadLayout(description.defaultv).then((layout) => {
-                                    return new LayoutAndName(description.defaultv,layout);
-                                },
-                                (error) => {
-                                    throw new Error("unable to load default layout: " + error);
-                                })
-                        }
-                    } else {
-                        throw new Error("unable to load application layout " + layoutName + ": " + error);
-                    }
-                });
+                } else {
+                    throw new Error("unable to load application layout " + layoutName + ": " + error);
+                }
+            }
+        }
     }
     /**
      * loads a layout but still does not activate it
@@ -202,6 +201,9 @@ class LayoutLoader{
                     if (layout){
                         layoutJson=JSON.parse(layout);
                     }
+                    else{
+                        throw new Error("unable to load plugin layout "+pluginLayout.url);
+                    }
                 }
             }
             else {
@@ -214,7 +216,7 @@ class LayoutLoader{
                 }, {checkOk: false});
             }
             if (!layoutJson) {
-                throw Error("unable to load layout "+name);
+                throw new Error("unable to load layout "+name);
             }
             let error = this.checkLayout(layoutJson);
             if (error !== undefined) {
@@ -493,13 +495,13 @@ class LayoutHandler{
         return this.editing;
     }
 
-    loadStoredLayout(opt_remoteFirst){
-        return layoutLoader.loadStoredLayout(opt_remoteFirst)
+    async loadStoredLayout(opt_remoteFirst){
+        const layout=await layoutLoader.loadStoredLayout(opt_remoteFirst)
             .then((layoutAndName)=>{
                 this.setLayoutAndName(layoutAndName.layout,layoutAndName.name,true);
-                return true;
-            })
-
+                return layoutAndName.layout;
+            },(err)=>base.log("error while loading stored layout "+err));
+        return layout;
     }
     _setEditing(on){
         this.editing=on;

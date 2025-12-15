@@ -271,6 +271,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       dlen+=len(addCode)
     self.send_header("Content-type", "text/javascript")
     self.send_header("Content-Length", str(dlen))
+    self.send_header("Cache-Control", "no-store")
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
     self.wfile.write(PREFIX)

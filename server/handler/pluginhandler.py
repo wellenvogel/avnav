@@ -44,6 +44,7 @@ from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
+from httphandler import RequestException
 from importer import AVNImporter
 from layouthandler import AVNScopedDirectoryHandler, AVNLayoutHandler
 from charthandler import AVNChartHandler
@@ -73,7 +74,7 @@ def normalizedName(name):
     return name
 
 class ApiImpl(AVNApi):
-  def __init__(self,parent,store,queue,prefix,moduleFile,internal=False,directory=None):
+  def __init__(self,parent,store,queue,prefix,moduleFile,internal=False,directory=None,dirtype=None):
     """
 
     @param parent: the pluginhandler instance to access cfg data
@@ -105,6 +106,7 @@ class ApiImpl(AVNApi):
     self.plugin=None
     self.proxy=None
     self.stopped=False
+    self.dirtype=dirtype
 
   def isEnabled(self):
     return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
@@ -663,7 +665,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
           AVNLog.error("error loading plugin from %s:%s", dir, traceback.format_exc())
       api = ApiImpl(self, self.navdata, self.queue, moduleName,
                     inspect.getfile(module) if module is not None else module, internal=(dirtype == self.D_BUILTIN),
-                    directory=dir)
+                    directory=dir,dirtype=dirtype)
       if module is not None:
           self.instantiateHandlersFromModule(moduleName, module, api)
       else:
@@ -888,7 +890,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
       localPath = path[len(self.PREFIX) + 1:].split("/", 1)
       if len(localPath) < 2:
-          raise Exception(404, "missing plugin path")
+          raise RequestException("missing plugin path",404)
       api = self.getApi(localPath[0])
       if api is None:
           raise Exception("plugin %s not found" % localPath[0])
@@ -914,7 +916,14 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
           url = self.PREFIX + "/" + name
           addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
           return handler.sendJsFile(fname, url, addCode)
-      return os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
+      fname=os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
+      if api.dirtype != self.D_USER:
+        return fname
+      if not os.path.isfile(fname):
+          raise RequestException(f"{fname} not found",404)
+      #use AVNDownload as return to prevent caching
+      return AVNDownload(fname)
+
   PLUGINFILES={'js':'plugin.js','css':'plugin.css','mjs':'plugin.mjs','cfg':'plugin.json','python':'plugin.py'}
   def handleSpecialApiRequest(self, command, requestparam, handler):
       if command == 'listFiles':
