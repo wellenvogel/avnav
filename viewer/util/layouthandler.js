@@ -406,7 +406,14 @@ class LayoutLoader{
                 throw new Error(`layout ${completeName} already exists from ${this.pluginLayouts[completeName].pluginName}`);
             }
         }
-        this.pluginLayouts[completeName]=new PluginLayout(name,pluginName,timestamp,url,data);
+        const pluginLayout=new PluginLayout(name,pluginName,timestamp,url,data);
+        this.pluginLayouts[completeName]=pluginLayout;
+        if (url && ! timestamp){
+            Requests.getLastModified(url).then((lm)=>{
+                const ts=(new Date(lm)).getTime()/1000;
+                pluginLayout.timestamp=ts;
+            },()=>{});
+        }
         return completeName;
     }
     removePluginLayouts(pluginName){

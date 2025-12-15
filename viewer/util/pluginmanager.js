@@ -203,7 +203,8 @@ export class Plugin extends ApiV2{
     _registerLayout(name,data,url){
         if (this.disabled) throw new Error("disabled");
         if (this.name === USERNAME) throw new Error("regsiterLayout only for plugins");
-        const layoutname=layoutLoader.addPluginLayout(name,this.name,this.moduleTs,data,url);
+        const ts=data?this.moduleTs:undefined;
+        const layoutname=layoutLoader.addPluginLayout(name,this.name,ts,data,url);
         if (layoutname){
             base.log(`registered layout ${name} for ${this.name}`);
             this.layouts.push(layoutname);
