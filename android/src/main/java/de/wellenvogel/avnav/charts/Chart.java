@@ -26,6 +26,7 @@ import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.MeasureTimer;
 
 public class Chart implements IChartWithConfig {
     public static final String INDEX_INTERNAL = "1";
@@ -49,6 +50,7 @@ public class Chart implements IChartWithConfig {
     private long lastTouched;
     private int type;
     private boolean isInternal=false;
+    String fileName;
 
     static String typeToStr(int type){
         switch (type){
@@ -66,6 +68,7 @@ public class Chart implements IChartWithConfig {
         realFile=f;
         this.keyPrefix=Constants.REALCHARTS + "/" + index + "/"+ typeToStr(type) +"/";
         this.name=f.getName();
+        this.fileName=f.getName();
         this.lastModified=last;
         this.lastTouched=System.currentTimeMillis();
         this.type=type;
@@ -76,6 +79,7 @@ public class Chart implements IChartWithConfig {
     public Chart(int type, Context context, DocumentFile f, String index, long last) throws Exception {
         this.context = context;
         documentFile =f;
+        this.fileName=documentFile.getName();
         this.keyPrefix=Constants.REALCHARTS + "/" + index + "/"+ typeToStr(type) +"/";
         this.name=DirectoryRequestHandler.safeName(f.getName(),false);
         this.lastModified=last;
@@ -196,6 +200,7 @@ public class Chart implements IChartWithConfig {
     }
 
     public JSONObject toJson() throws JSONException, UnsupportedEncodingException {
+        MeasureTimer timer=new MeasureTimer();
         JSONObject e = new JSONObject();
         int numFiles=0;
         long sequence=0;
@@ -214,12 +219,14 @@ public class Chart implements IChartWithConfig {
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
         }
-        String displayName=(realFile!=null)?realFile.getName():documentFile.getName();
+        boolean canDelete=canDelete();
+        String displayName=fileName;
+        timer.add("values");
         e.put("displayName", isInternal?displayName:(displayName+" [ext]"));
-        e.put("downloadName", (realFile!=null)?realFile.getName():documentFile.getName());
+        e.put("downloadName", displayName);
         e.put("time", getLastModified() / 1000);
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+keyPrefix+URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20"));
-        e.put("canDelete",canDelete());
+        e.put("canDelete",canDelete);
         e.put("info",numFiles+" files");
         e.put("canDownload",isXml() || (numFiles == 1));
         e.put("sequence",sequence);
@@ -231,6 +238,8 @@ public class Chart implements IChartWithConfig {
         if (isInternal){
             e.put("checkPrefix",keyPrefix);
         }
+        timer.add("json");
+        AvnLog.d("Chart::toJson "+this.name+" "+timer);
         return e;
     }
 

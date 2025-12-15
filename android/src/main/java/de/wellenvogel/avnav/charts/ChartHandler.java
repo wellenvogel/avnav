@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -31,6 +32,7 @@ import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.MeasureTimer;
 
 import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
@@ -527,6 +529,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
 
     @Override
     public JSONObject handleListExtended(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        MeasureTimer timer=new MeasureTimer();
         //here we will have more dirs in the future...
         AvnLog.i(Constants.LOGPRFX,"start chartlist request "+Thread.currentThread().getId());
         JSONArray rt=new JSONArray();
@@ -542,6 +545,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "exception reading chartlist:", e);
         }
+        timer.add("internal");
         try{
             synchronized (externalCharts){
                 for (String key:externalCharts.keySet()){
@@ -564,7 +568,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         }catch (Exception e){
             Log.e(Constants.LOGPRFX,"exception adding external charts:",e);
         }
-        AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId());
+        timer.add("external");
+        AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId()+" "+timer);
         return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("items",rt), new AvnUtil.KeyValue<Boolean>("loading",loading));
     }
 
