@@ -28,1092 +28,1223 @@ import importlib.util
 import inspect
 import json
 import shutil
-import signal
-from typing import Dict, Any
+from typing import Dict
+from urllib.parse import urljoin
 from zipfile import ZipFile
 
+from sympy import catalan
+
+import avnav_handlerList
 from alarmhandler import AVNAlarmHandler
 from avnav_api import AVNApi, ConverterApi
-from avnav_store import AVNStore
-
 from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
-import avnav_handlerList
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 from avnremotechannel import AVNRemoteChannelHandler
-from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
+from avnuserapps import AVNUserAppHandler
+from charthandler import AVNChartHandler
+from commandhandler import AVNCommandHandler
 from httphandler import RequestException
 from importer import AVNImporter
 from layouthandler import AVNScopedDirectoryHandler, AVNLayoutHandler
-from charthandler import AVNChartHandler
 from settingshandler import AVNSettingsHandler
-from commandhandler import AVNCommandHandler
 
-URL_PREFIX="/plugins"
+URL_PREFIX = "/plugins"
 
 '''
 hide plugins if an environment variable with this prefix 
 and the "normalized" plugin name is set
 '''
-ENV_PREFIX="AVNAV_HIDE_"
+ENV_PREFIX = "AVNAV_HIDE_"
+
 
 class UserApp(object):
-  def __init__(self,url,icon,title):
-    self.url=url
-    self.title=title
-    self.icon=icon
-  def __eq__(self, other):
-    return self.__dict__ == other.__dict__
+    def __init__(self, url, icon, title):
+        self.url = url
+        self.title = title
+        self.icon = icon
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
 
 def normalizedName(name):
-  try:
-    return re.sub("[^0-9a-zA-Z]","",name).upper()
-  except:
-    return name
+    try:
+        return re.sub("[^0-9a-zA-Z]", "", name).upper()
+    except:
+        return name
+
 
 class ApiImpl(AVNApi):
-  def __init__(self,parent,store,queue,prefix,moduleFile,internal=False,directory=None,dirtype=None):
-    """
+    CFGTYPE = 'cfg'
+    CLIENTFILES = {'js': 'plugin.js', 'css': 'plugin.css', 'mjs': 'plugin.mjs', CFGTYPE: 'plugin.json'}
+    SERVERFILES = {'python': 'plugin.py'}
+    PLUGINFILES = {**CLIENTFILES, **SERVERFILES}
 
-    @param parent: the pluginhandler instance to access cfg data
-    @param store: the data store
-    @param queue: the feeder
-    @param prefix: a prefix for this plugin
-    """
-    self.phandler=parent # type: AVNPluginHandler
-    self.store=store # type: AVNStore
-    self.queue=queue
-    self.prefix=prefix
-    self.patterns=[]
-    self.wildcardPatterns=[]
-    self.addonIndex=1
-    self.fileName=moduleFile
-    self.requestHandler=None
-    self.paramChange=None
-    self.editables=None
-    self.stopHandler=None
-    self.storeKeys=[]
-    self.userApps=[]
-    self.layouts=[]
-    self.converters=set()
-    self.settingsFiles=[]
-    self.jsCssOnly=False
-    self.internal=internal
-    self.directory=directory
-    self.thread=None
-    self.plugin=None
-    self.proxy=None
-    self.stopped=False
-    self.dirtype=dirtype
+    def __init__(self, parent, store, queue, prefix, moduleFile, internal=False, directory=None, dirtype=None):
+        """
 
-  def isEnabled(self):
-    return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
-  def setJsCssOnly(self):
-    self.jsCssOnly=True
-    self.phandler.setChildEditable(self.prefix,True)
-  def isActive(self):
-      if not self.isEnabled():
-          return False
-      return self.plugin is not None or self.jsCssOnly
-  def stop(self,force=False):
-    if self.jsCssOnly:
-      return
-    if self.stopHandler is None and not force:
-      raise Exception("plugin %s cannot be stopped during runtime"%self.prefix)
-    try:
-        if self.stopHandler is not None:
-            self.thread = None
-            self.stopHandler()
+        @param parent: the pluginhandler instance to access cfg data
+        @param store: the data store
+        @param queue: the feeder
+        @param prefix: a prefix for this plugin
+        """
+        self.phandler = parent  # type: AVNPluginHandler
+        self.store = store  # type: AVNStore
+        self.queue = queue
+        self.prefix = prefix
+        self.patterns = []
+        self.wildcardPatterns = []
+        self.addonIndex = 1
+        self.fileName = moduleFile
+        self.requestHandler = None
+        self.paramChange = None
+        self.editables = None
+        self.stopHandler = None
+        self.storeKeys = []
+        self.userApps = []
+        self.layouts = []
+        self.converters = set()
+        self.settingsFiles = []
+        self.jsCssOnly = False
+        self.internal = internal
+        self.directory = directory
+        self.thread = None
+        self.plugin = None
+        self.proxy = None
+        self.stopped = False
+        self.dirtype = dirtype
+        self.version = None
+
+    def isEnabled(self):
+        return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name), True)
+
+    def setJsCssOnly(self):
+        self.jsCssOnly = True
+        self.phandler.setChildEditable(self.prefix, True)
+
+    def isActive(self):
+        if not self.isEnabled():
+            return False
+        return self.plugin is not None or self.jsCssOnly
+
+    def deregister(self):
+        try:
+            charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
+            charthandler.registerExternalProvider(self.prefix, None)
+        except:
+            pass
+        try:
+            usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+            usbhandler.deregisterExternalHandlers(self.prefix)
+        except:
+            pass
+        self.requestHandler = None
+        try:
+            self.userApps = []
+            addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+            for id in range(0, self.addonIndex + 1):
+                addonhandler.unregisterAddOn("%s%i" % (self.prefix, id))
+        except:
+            pass
+        try:
+            layouthandler = AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName())
+            if layouthandler:
+                for layout in self.layouts:
+                    layouthandler.deregisterPluginItem(self.getPrefixForItems(), layout)
+            self.layouts = []
+        except:
+            pass
+        try:
+            settingshandler = AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName())
+            if settingshandler:
+                for setting in self.settingsFiles:
+                    settingshandler.deregisterPluginItem(self.getPrefixForItems(), setting)
+            self.settingsFiles = []
+        except:
+            pass
+        try:
+            cmdHandler = AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName())  # type: AVNCommandHandler
+            if cmdHandler:
+                cmdHandler.removePluginCommands(self.prefix)
+        except:
+            pass
+        try:
+            importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName())  # type: AVNImporter
+            if importer:
+                for name in self.converters:
+                    importer.deregisterConverter(name)
+        except:
+            pass
+        self.converters.clear()
+
+    def stop(self, force=False):
+        if self.jsCssOnly:
+            self.deregister()
+            self.stopped = True
+            return
+        if self.stopHandler is None and not force:
+            raise Exception("plugin %s cannot be stopped during runtime" % self.prefix)
+        try:
+            if self.stopHandler is not None:
+                self.thread = None
+                self.stopHandler()
+            else:
+                running = self.thread
+                try:
+                    # if the plugin is using shouldStopMainThread
+                    self.thread = None
+                except:
+                    pass
+                if running is not None and running.is_alive():
+                    AVNLog.info("plugin %s main thread %s without stop handler", self.prefix, running.ident)
+        except Exception as e:
+            AVNLog.error("error stopping plugin main thread %s:%s", self.prefix, str(e))
+        if force and self.proxy is not None:
+            # disconnect the plugin code
+            # even if we cannot stop
+            self.proxy.disable()
+        if force:
+            self.stopped = True
+        self.deregister()
+
+    def getPrefixForItems(self):
+        return re.sub(r".*\.", "", self.prefix)
+
+    def log(self, str, *args):
+        AVNLog.info("%s", str % args)
+
+    def error(self, str, *args):
+        AVNLog.error("%s", str % args)
+
+    def debug(self, str, *args):
+        AVNLog.debug("%s", str % args)
+
+    def fetchFromQueue(self, sequence, number=10, includeSource=False, waitTime=0.5, filter=None):
+        if filter is not None:
+            if not (isinstance(filter, list)):
+                filter = filter.split(',')
+        return self.queue.fetchFromHistory(sequence, number, includeSource=includeSource, waitTime=waitTime,
+                                           nmeafilter=filter)
+
+    def addNMEA(self, nmea, addCheckSum=False, omitDecode=True, source=None,
+                sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
+        if source is None:
+            source = self.prefix
+        return self.queue.addNMEA(nmea, source=source, addCheckSum=addCheckSum, omitDecode=omitDecode,
+                                  sourcePriority=sourcePriority)
+
+    def registerKeys(self):
+        if self.storeKeys is None:
+            return
+        for keydata in self.storeKeys:
+            self.addKey(keydata)
+
+    def addKey(self, data):
+        keySource = "Plugin: %s" % self.prefix
+        key = data.get('path')
+        if key is None:
+            raise Exception("%s: missing path in data entry: %s" % (self.prefix, data))
+        AVNLog.info("%s: register key %s" % (self.prefix, key))
+        if self.store.isKeyRegistered(key, keySource):
+            allowOverwrite = self.getConfigValue(AVNApi.ALLOW_KEY_OVERWRITE)
+            if allowOverwrite is None:
+                # let internal plugins default to true for keyOverride
+                allowOverwrite = 'true' if self.internal else 'false'
+            if allowOverwrite.lower() != "true":
+                self.error("key %s already registered, skipping it" % key)
+                if key.find('*') >= 0:
+                    if key in self.wildcardPatterns:
+                        self.wildcardPatterns.remove(key)
+                else:
+                    if key in self.patterns:
+                        self.patterns.remove(key)
+                return
+            else:
+                self.store.registerKey(key, data, keySource, allowOverwrite=True)
         else:
-            running = self.thread
-            try:
-                #if the plugin is using shouldStopMainThread
-                self.thread=None
-            except:
-                pass
-            if running is not None and running.is_alive():
-                AVNLog.info("plugin %s main thread %s without stop handler",self.prefix,running.ident)
-    except Exception as e:
-        AVNLog.error("error stopping plugin main thread %s:%s",self.prefix,str(e))
-    if force and self.proxy is not None:
-        #disconnect the plugin code
-        #even if we cannot stop
-        self.proxy.disable()
-    if force:
-        self.stopped=True
-    try:
-      charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
-      charthandler.registerExternalProvider(self.prefix, None)
-    except:
-      pass
-    try:
-      usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
-      usbhandler.deregisterExternalHandlers(self.prefix)
-    except:
-      pass
-    self.requestHandler=None
-    try:
-      self.userApps=[]
-      addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
-      for id in range(0,self.addonIndex+1):
-        addonhandler.unregisterAddOn("%s%i"%(self.prefix,id))
-    except:
-      pass
-    try:
-      layouthandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName())
-      if layouthandler:
-        for layout in self.layouts:
-          layouthandler.deregisterPluginItem(self.getPrefixForItems(),layout)
-      self.layouts=[]
-    except:
-      pass
-    try:
-      settingshandler=AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName())
-      if settingshandler:
-        for setting in self.settingsFiles:
-          settingshandler.deregisterPluginItem(self.getPrefixForItems(),setting)
-      self.settingsFiles=[]
-    except:
-      pass
-    try:
-      cmdHandler=AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName()) #type: AVNCommandHandler
-      if cmdHandler:
-        cmdHandler.removePluginCommands(self.prefix)
-    except:
-      pass
-    try:
-      importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter
-      if importer:
-        for name in self.converters:
-          importer.deregisterConverter(name)
-    except:
-      pass
-    self.converters.clear()
-
-
-
-  def getPrefixForItems(self):
-    return re.sub(r".*\.","",self.prefix)
-
-  def log(self, str, *args):
-    AVNLog.info("%s",str % args)
-
-  def error(self, str, *args):
-    AVNLog.error("%s",str % args)
-
-  def debug(self, str, *args):
-    AVNLog.debug("%s",str % args)
-
-  def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
-    if filter is not None:
-      if not (isinstance(filter,list)):
-        filter=filter.split(',')
-    return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
-
-  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None,sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
-    if source is None:
-      source=self.prefix
-    return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode,sourcePriority=sourcePriority)
-
-  def registerKeys(self):
-    if self.storeKeys is None:
-      return
-    for keydata in self.storeKeys:
-      self.addKey(keydata)
-
-  def addKey(self,data):
-    keySource="Plugin: %s"%self.prefix
-    key=data.get('path')
-    if key is None:
-      raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
-    AVNLog.info("%s: register key %s"%(self.prefix,key))
-    if self.store.isKeyRegistered(key,keySource):
-      allowOverwrite=self.getConfigValue(AVNApi.ALLOW_KEY_OVERWRITE)
-      if allowOverwrite is None:
-        #let internal plugins default to true for keyOverride
-        allowOverwrite='true' if self.internal else 'false'
-      if allowOverwrite.lower() != "true":
-        self.error("key %s already registered, skipping it"%key)
+            self.store.registerKey(key, data, keySource)
         if key.find('*') >= 0:
-          if key in self.wildcardPatterns:
-            self.wildcardPatterns.remove(key)
+            if not key in self.wildcardPatterns:
+                self.wildcardPatterns.append(key)
         else:
-          if key in self.patterns:
-            self.patterns.remove(key)
-        return
-      else:
-        self.store.registerKey(key,data,keySource,allowOverwrite=True)
-    else:
-      self.store.registerKey(key,data,keySource)
-    if key.find('*') >= 0:
-      if not key in self.wildcardPatterns:
-        self.wildcardPatterns.append(key)
-    else:
-      if not key in self.patterns:
-        self.patterns.append(key)
-  def addData(self,path,value,source=None,record=None,sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
-    if source is None:
-      source="plugin-"+self.prefix
-    matches=False
-    for p in self.patterns:
-      if p == path:
-        matches=True
-        break
-    if not matches:
-      for p in self.wildcardPatterns:
-        if AVNStore.wildCardMatch(path,p):
-          matches=True
-          break
-    if not matches:
-      AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
-      return False
-    self.store.setValue(path,value,source,sourcePriority*10,record=record)
-    return True
-  def getDataByPrefix(self, prefix):
-    return self.store.getDataByPrefix(prefix)
+            if not key in self.patterns:
+                self.patterns.append(key)
 
-  def getSingleValue(self, key,includeInfo=False):
-    return self.store.getSingleValue(key,includeInfo=includeInfo)
+    def addData(self, path, value, source=None, record=None, sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
+        if source is None:
+            source = "plugin-" + self.prefix
+        matches = False
+        for p in self.patterns:
+            if p == path:
+                matches = True
+                break
+        if not matches:
+            for p in self.wildcardPatterns:
+                if AVNStore.wildCardMatch(path, p):
+                    matches = True
+                    break
+        if not matches:
+            AVNLog.error("%s:setting invalid path %s" % (self.prefix, path))
+            return False
+        self.store.setValue(path, value, source, sourcePriority * 10, record=record)
+        return True
 
-  def getExpiryPeriod(self):
-    return self.store.getExpiryPeriod()
+    def getDataByPrefix(self, prefix):
+        return self.store.getDataByPrefix(prefix)
 
-  def __getConfigFromEnv(self,key):
-    key=re.sub("[^0-9a-zA-Z_]","",key)
-    name="AVNAV_PLUGIN_"+normalizedName(self.prefix)+"_"+key
-    ev=os.getenv(name)
-    if ev is not None:
-      return ev
-    return ev
+    def getSingleValue(self, key, includeInfo=False):
+        return self.store.getSingleValue(key, includeInfo=includeInfo)
 
-  def getConfigValue(self, key, default=None):
-    childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name
-    ev=self.__getConfigFromEnv(key)
-    if childcfg is None:
-      if ev is not None:
+    def getExpiryPeriod(self):
+        return self.store.getExpiryPeriod()
+
+    def __getConfigFromEnv(self, key):
+        key = re.sub("[^0-9a-zA-Z_]", "", key)
+        name = "AVNAV_PLUGIN_" + normalizedName(self.prefix) + "_" + key
+        ev = os.getenv(name)
+        if ev is not None:
+            return ev
         return ev
-      return default
-    if len(childcfg) < 1:
-      if ev is not None:
-        return ev
-      return default
-    rt=childcfg[0].get(key)
-    if rt is None:
-      if ev is not None:
-        return ev
-      return default
-    return rt
 
-  def setStatus(self,value,info):
-    if self.stopped:
-      return
-    self.phandler.setInfo(self.prefix,info,value)
+    def getConfigValue(self, key, default=None):
+        childcfg = self.phandler.getParamValue(self.prefix)  # for now we use the prefix as cfg name
+        ev = self.__getConfigFromEnv(key)
+        if childcfg is None:
+            if ev is not None:
+                return ev
+            return default
+        if len(childcfg) < 1:
+            if ev is not None:
+                return ev
+            return default
+        rt = childcfg[0].get(key)
+        if rt is None:
+            if ev is not None:
+                return ev
+            return default
+        return rt
 
-  def registerUserApp(self, url, iconFile, title=None,preventConnectionLost=False):
-    addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
-    if addonhandler is None:
-      raise Exception("no http server")
-    if os.path.isabs(iconFile):
-      raise Exception("only relative pathes for icon files")
-    iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
-    if not os.path.exists(iconFilePath):
-      raise Exception("icon file %s not found"%iconFilePath)
-    id = "%s%i"%(self.prefix,self.addonIndex)
-    userApp=UserApp(url,iconFile,title)
-    if userApp in self.userApps:
-      self.log("trying to re-register user app url=%s, ignore",url)
-      return
-    self.userApps.append(userApp)
-    addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
-                               title=title,preventConnectionLost=preventConnectionLost,pluginName=self.prefix)
-    self.addonIndex+=1
-    return id
+    def setStatus(self, value, info):
+        if self.stopped:
+            return
+        self.phandler.setInfo(self.prefix, info, value)
 
-  def registerCommand(self, name, command, parameters=None,iconFile=None,client=None):
-    cmdhandler=AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName()) #type: AVNCommandHandler
-    if cmdhandler is None:
-      raise Exception("no command handler")
-    iconUrl=None
-    if iconFile is not None:
-      if os.path.isabs(iconFile):
-        raise Exception("only relative pathes for icon files")
-      iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
-      if not os.path.exists(iconFilePath):
-        raise Exception("icon file %s not found"%iconFilePath)
-      iconUrl=self.getBaseUrl()+"/"+iconFile
-    if os.path.isabs(command):
-      raise Exception("only relative pathes for commands")
-    cmdFile=os.path.join(os.path.dirname(self.fileName),command)
-    if not os.path.exists(cmdFile):
-      raise Exception("command %s not found"%cmdFile)
-    commandString=cmdFile
-    if parameters is not None:
-      commandString+=" "+" ".join(parameters)
-    cmdhandler.addPluginCommand(self.prefix,name,commandString,iconUrl,client)
-    return id
+    def registerUserApp(self, url, iconFile, title=None, preventConnectionLost=False):
+        addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+        if addonhandler is None:
+            raise Exception("no http server")
+        if os.path.isabs(iconFile):
+            raise Exception("only relative pathes for icon files")
+        iconFilePath = os.path.join(os.path.dirname(self.fileName), iconFile)
+        if not os.path.exists(iconFilePath):
+            raise Exception("icon file %s not found" % iconFilePath)
+        id = "%s%i" % (self.prefix, self.addonIndex)
+        userApp = UserApp(url, iconFile, title)
+        if userApp in self.userApps:
+            self.log("trying to re-register user app url=%s, ignore", url)
+            return
+        self.userApps.append(userApp)
+        addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, iconFile),
+                                   title=title, preventConnectionLost=preventConnectionLost, pluginName=self.prefix)
+        self.addonIndex += 1
+        return id
 
-  def unregisterUserApp(self, id):
-    addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
-    if addonhandler is None:
-      raise Exception("no http server")
-    return addonhandler.unregisterAddOn(id)
+    def registerCommand(self, name, command, parameters=None, iconFile=None, client=None):
+        cmdhandler = AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName())  # type: AVNCommandHandler
+        if cmdhandler is None:
+            raise Exception("no command handler")
+        iconUrl = None
+        if iconFile is not None:
+            if os.path.isabs(iconFile):
+                raise Exception("only relative pathes for icon files")
+            iconFilePath = os.path.join(os.path.dirname(self.fileName), iconFile)
+            if not os.path.exists(iconFilePath):
+                raise Exception("icon file %s not found" % iconFilePath)
+            iconUrl = self.getBaseUrl() + "/" + iconFile
+        if os.path.isabs(command):
+            raise Exception("only relative pathes for commands")
+        cmdFile = os.path.join(os.path.dirname(self.fileName), command)
+        if not os.path.exists(cmdFile):
+            raise Exception("command %s not found" % cmdFile)
+        commandString = cmdFile
+        if parameters is not None:
+            commandString += " " + " ".join(parameters)
+        cmdhandler.addPluginCommand(self.prefix, name, commandString, iconUrl, client)
+        return id
 
-  def registerLayout(self, name, layoutFile):
-    if not os.path.isabs(layoutFile):
-      layoutFile=os.path.join(os.path.dirname(self.fileName),layoutFile)
-    if not os.path.exists(layoutFile):
-      raise Exception("layout file %s not found",layoutFile)
-    layoutHandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName()) #type: AVNScopedDirectoryHandler
-    if layoutHandler is None:
-      raise Exception("no layout handler")
-    if name in self.layouts:
-      self.log("re-registering layout %s",name)
-      layoutHandler.deregisterPluginItem(self.getPrefixForItems(),name)
-    layoutHandler.registerPluginItem(self.getPrefixForItems(),name,layoutFile)
-    self.layouts.append(name)
+    def unregisterUserApp(self, id):
+        addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+        if addonhandler is None:
+            raise Exception("no http server")
+        return addonhandler.unregisterAddOn(id)
 
-  def registerSettingsFile(self, name, settingsFile):
-    if not os.path.isabs(settingsFile):
-      settingsFile=os.path.join(os.path.dirname(self.fileName), settingsFile)
-    if not os.path.exists(settingsFile):
-      raise Exception("settings file %s not found", settingsFile)
-    settingsHandler=AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName()) #type: AVNScopedDirectoryHandler
-    if settingsHandler is None:
-      raise Exception("no settings handler")
-    if name in self.settingsFiles:
-      self.log("re-registering settings %s",name)
-      settingsHandler.deregisterPluginItem(self.getPrefixForItems(),name)
-    settingsHandler.registerPluginItem(self.getPrefixForItems(), name, settingsFile)
-    self.settingsFiles.append(name)
+    def registerLayout(self, name, layoutFile):
+        if not os.path.isabs(layoutFile):
+            layoutFile = os.path.join(os.path.dirname(self.fileName), layoutFile)
+        if not os.path.exists(layoutFile):
+            raise Exception("layout file %s not found", layoutFile)
+        layoutHandler = AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName())  # type: AVNScopedDirectoryHandler
+        if layoutHandler is None:
+            raise Exception("no layout handler")
+        if name in self.layouts:
+            self.log("re-registering layout %s", name)
+            layoutHandler.deregisterPluginItem(self.getPrefixForItems(), name)
+        layoutHandler.registerPluginItem(self.getPrefixForItems(), name, layoutFile)
+        self.layouts.append(name)
 
-  def timestampFromDateTime(self, dt=None):
-    if dt is None:
-      dt=datetime.datetime.utcnow()
-    return AVNUtil.datetimeToTsUTC(dt)
+    def registerSettingsFile(self, name, settingsFile):
+        if not os.path.isabs(settingsFile):
+            settingsFile = os.path.join(os.path.dirname(self.fileName), settingsFile)
+        if not os.path.exists(settingsFile):
+            raise Exception("settings file %s not found", settingsFile)
+        settingsHandler = AVNWorker.findHandlerByName(
+            AVNSettingsHandler.getConfigName())  # type: AVNScopedDirectoryHandler
+        if settingsHandler is None:
+            raise Exception("no settings handler")
+        if name in self.settingsFiles:
+            self.log("re-registering settings %s", name)
+            settingsHandler.deregisterPluginItem(self.getPrefixForItems(), name)
+        settingsHandler.registerPluginItem(self.getPrefixForItems(), name, settingsFile)
+        self.settingsFiles.append(name)
 
-  def getDataDir(self):
-    return self.phandler.getParamValue(AVNHandlerManager.BASEPARAM.DATADIR)
+    def timestampFromDateTime(self, dt=None):
+        if dt is None:
+            dt = datetime.datetime.utcnow()
+        return AVNUtil.datetimeToTsUTC(dt)
 
-  def registerChartProvider(self,callback):
-    charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
-    charthandler.registerExternalProvider(self.prefix,callback)
-    pass
+    def getDataDir(self):
+        return self.phandler.getParamValue(AVNHandlerManager.BASEPARAM.DATADIR)
 
-  def registerRequestHandler(self, callback):
-    self.requestHandler=callback
+    def registerChartProvider(self, callback):
+        charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
+        charthandler.registerExternalProvider(self.prefix, callback)
+        pass
 
-  def getBaseUrl(self):
-    return URL_PREFIX+"/"+self.prefix
+    def registerRequestHandler(self, callback):
+        self.requestHandler = callback
 
-  def registerUsbHandler(self, usbid, callback):
-    usbhandler=AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
-    if usbhandler is None:
-      raise Exception("no usb handler configured, cannot register %s"%usbid)
-    usbhandler.registerExternalHandler(usbid,self.prefix,callback)
+    def getBaseUrl(self, ensureSlash=False):
+        rt = URL_PREFIX + "/" + self.prefix
+        if not ensureSlash:
+            return rt
+        if not rt.endswith("/"):
+            return rt+"/"
 
-  def deregisterUsbHandler(self, usbid=None):
-    usbhandler=AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
-    if usbhandler is None:
-      raise Exception("no usb handler configured, cannot register %s"%usbid)
-    usbhandler.deregisterExternalHandler(self.prefix,usbid)
+    def registerUsbHandler(self, usbid, callback):
+        usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+        if usbhandler is None:
+            raise Exception("no usb handler configured, cannot register %s" % usbid)
+        usbhandler.registerExternalHandler(usbid, self.prefix, callback)
 
-  def getAvNavVersion(self):
-    baseConfig=AVNWorker.findHandlerByName("AVNConfig")
-    if baseConfig is None:
-      raise Exception("internal error: no base config")
-    return int(baseConfig.getVersion())
+    def deregisterUsbHandler(self, usbid=None):
+        usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+        if usbhandler is None:
+            raise Exception("no usb handler configured, cannot register %s" % usbid)
+        usbhandler.deregisterExternalHandler(self.prefix, usbid)
 
-  def saveConfigValues(self, configDict):
-    self.log("saving config %s",str(configDict))
-    return self.phandler.changeChildConfigDict(self.prefix,configDict)
+    def getAvNavVersion(self):
+        baseConfig = AVNWorker.findHandlerByName("AVNConfig")
+        if baseConfig is None:
+            raise Exception("internal error: no base config")
+        return int(baseConfig.getVersion())
 
-  def registerEditableParameters(self, paramList, changeCallback):
-    if type(paramList) is not list:
-      raise Exception("paramList must be a list")
-    editables=[]
-    for p in paramList:
-      if type(p) is not dict:
-        raise Exception("items of paramList must be dictionaries")
-      if p.get('name') is None:
-        raise Exception("missing key name in %s"%str(p))
-      evDef=self.__getConfigFromEnv(p.get('name'))
-      description=WorkerParameter(p['name'],
-                                  default=p.get('default') if evDef is None else evDef,
-                                  type=p.get('type'),
-                                  rangeOrList=p.get('rangeOrList'),
-                                  description=p.get('description'),
-                                  condition=p.get('condition'))
-      editables.append(description)
-    self.editables=editables
-    self.paramChange=changeCallback
-    self.phandler.setChildEditable(self.prefix,
-                                   self.stopHandler is not None
-                                   or (self.paramChange is not None
-                                   and len(self.editables) > 0)
-                                   )
+    def saveConfigValues(self, configDict):
+        self.log("saving config %s", str(configDict))
+        return self.phandler.changeChildConfigDict(self.prefix, configDict)
 
-  def registerRestart(self, stopCallback):
-    self.stopHandler=stopCallback
-    self.phandler.setChildEditable(self.prefix,
-                                   self.stopHandler is not None
-                                   or (self.paramChange is not None
-                                       and len(self.editables) > 0)
-                                   )
+    def registerEditableParameters(self, paramList, changeCallback):
+        if type(paramList) is not list:
+            raise Exception("paramList must be a list")
+        editables = []
+        for p in paramList:
+            if type(p) is not dict:
+                raise Exception("items of paramList must be dictionaries")
+            if p.get('name') is None:
+                raise Exception("missing key name in %s" % str(p))
+            evDef = self.__getConfigFromEnv(p.get('name'))
+            description = WorkerParameter(p['name'],
+                                          default=p.get('default') if evDef is None else evDef,
+                                          type=p.get('type'),
+                                          rangeOrList=p.get('rangeOrList'),
+                                          description=p.get('description'),
+                                          condition=p.get('condition'))
+            editables.append(description)
+        self.editables = editables
+        self.paramChange = changeCallback
+        self.phandler.setChildEditable(self.prefix,
+                                       self.stopHandler is not None
+                                       or (self.paramChange is not None
+                                           and len(self.editables) > 0)
+                                       )
 
-  def shouldStopMainThread(self):
-    current=threading.get_ident()
-    running=self.thread
-    if running is None:
-      return True
-    return running.ident != current
+    def registerRestart(self, stopCallback):
+        self.stopHandler = stopCallback
+        self.phandler.setChildEditable(self.prefix,
+                                       self.stopHandler is not None
+                                       or (self.paramChange is not None
+                                           and len(self.editables) > 0)
+                                       )
 
-  def sendRemoteCommand(self, command, param, channel=0):
-    channelhandler=AVNWorker.findHandlerByName(AVNRemoteChannelHandler.getConfigName())
-    if channelhandler is None:
-      raise Exception("no remote channel handler configured")
-    channelhandler.sendMessage(command+" "+param,channel=channel)
+    def shouldStopMainThread(self):
+        current = threading.get_ident()
+        running = self.thread
+        if running is None:
+            return True
+        return running.ident != current
 
-  def registerConverter(self, converter: ConverterApi, name=None):
-    importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter
-    if importer is None:
-      raise Exception("no importer available")
-    name=self.prefix if name is None else self.prefix+":"+name
-    self.converters.add(name)
-    importer.registerConverter(name,converter)
+    def sendRemoteCommand(self, command, param, channel=0):
+        channelhandler = AVNWorker.findHandlerByName(AVNRemoteChannelHandler.getConfigName())
+        if channelhandler is None:
+            raise Exception("no remote channel handler configured")
+        channelhandler.sendMessage(command + " " + param, channel=channel)
 
-  def deregisterConverter(self, name=None):
-    importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter
-    if importer is None:
-      raise Exception("no importer available")
-    name=self.prefix if name is None else self.prefix+":"+name
-    self.converters.remove(name)
-    importer.deregisterConverter(name)
+    def registerConverter(self, converter: ConverterApi, name=None):
+        importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName())  # type: AVNImporter
+        if importer is None:
+            raise Exception("no importer available")
+        name = self.prefix if name is None else self.prefix + ":" + name
+        self.converters.add(name)
+        importer.registerConverter(name, converter)
 
-  def clearAlarms(self):
-    alarmhandler=AVNWorker.findHandlerByName(AVNAlarmHandler.getConfigName()) # type: AVNAlarmHandler
-    if alarmhandler is None:
-      raise Exception("cannot find alarm handler")
-    self.log("clearing all alarms")
-    alarmhandler.stopAll()
+    def deregisterConverter(self, name=None):
+        importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName())  # type: AVNImporter
+        if importer is None:
+            raise Exception("no importer available")
+        name = self.prefix if name is None else self.prefix + ":" + name
+        self.converters.remove(name)
+        importer.deregisterConverter(name)
 
-  def startPluginThread(self):
-      current = self.thread
-      if current is not None:
-          if current.is_alive():
-              return
-          self.thread = None
-      enabled = self.isEnabled()
-      if not enabled:
-          AVNLog.info("plugin %s is disabled by config", self.prefix)
-          self.setStatus( WorkerStatus.INACTIVE,"disabled by config")
-          return
-      if self.jsCssOnly:
-          self.setStatus( WorkerStatus.NMEA,"javascript/css only")
-          return
-      if self.plugin is None:
-          self.setStatus( WorkerStatus.ERROR, 'no plugin could be created')
-          return
-      AVNLog.info("starting plugin %s", self.prefix)
-      thread = threading.Thread(target=self.runPlugin, args=[])
-      thread.setDaemon(True)
-      thread.setName("Plugin: %s" % (self.prefix))
-      thread.start()
-      self.thread = thread
+    def clearAlarms(self):
+        alarmhandler = AVNWorker.findHandlerByName(AVNAlarmHandler.getConfigName())  # type: AVNAlarmHandler
+        if alarmhandler is None:
+            raise Exception("cannot find alarm handler")
+        self.log("clearing all alarms")
+        alarmhandler.stopAll()
 
-  def runPlugin(self):
-      self.log("run started")
-      self.setStatus(WorkerStatus.INACTIVE, "plugin started")
-      try:
-          self.registerKeys()
-          self.plugin.run()
-          self.log("plugin run finshed")
-          if self.isEnabled():
-              self.setStatus(WorkerStatus.INACTIVE, "plugin run finished")
-          else:
-              self.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
-      except Exception as e:
-          self.error("plugin run exception: %s", traceback.format_exc())
-          self.setStatus(WorkerStatus.ERROR, "plugin exception %s" % str(e))
-      except StoppedException as e:
-          self.log("plugin run stopped by StopException")
-          self.setStatus(WorkerStatus.INACTIVE, "plugin stopped")
+    def getCfgJsonName(self):
+        cfgName = self.CLIENTFILES.get(self.CFGTYPE)
+        if cfgName is None:
+            return
+        fn = os.path.join(self.directory, cfgName)
+        if os.path.isfile(fn):
+            return fn
+
+    def handlePluginJson(self, versionOnly=False):
+        fn = self.getCfgJsonName()
+        if fn is None:
+            return
+        try:
+            with open(fn, 'r') as f:
+                cfg = json.load(f)
+                if cfg is None:
+                    return
+                AVNLog.debug("reading plugin cfg for %s", self.prefix)
+                if 'version' in cfg:
+                    self.version = cfg['version']
+                if versionOnly:
+                    return
+                if 'charts' in cfg:
+                    charts = cfg['charts']
+                    if not isinstance(charts, list):
+                        AVNLog.error("plugin %s: charts must be a list: %s", self.prefix, repr(charts))
+                    else:
+                        try:
+                            convertedCharts = []
+                            KEYS_TO_ADAPT=['url','chartUrl','icon']
+                            for chart in charts:
+                                try:
+                                    nchart=chart.copy()
+                                    for k in KEYS_TO_ADAPT:
+                                        if k in chart:
+                                            nv=urljoin(self.getBaseUrl(True),chart[k])
+                                            nchart[k]=nv
+                                    convertedCharts.append(nchart)
+                                except Exception as x:
+                                    AVNLog.error("unable to adapt chart %s for %s: %s",repr(chart),self.prefix,repr(x))
+                                    convertedCharts.append(chart)
+                            def getcharts(*args):
+                                return convertedCharts
+                            AVNLog.debug("registering charts for %s:%s", self.prefix, repr(charts))
+                            self.registerChartProvider(getcharts)
+                        except Exception as e:
+                            AVNLog.error("failed to register charts %s for %s:%s",repr(charts), self.prefix, repr(e))
+                if 'userApps' in cfg:
+                    userApps = cfg['userApps']
+                    if not isinstance(userApps, list):
+                        AVNLog.error("plugin %s: userApps must be a list: %s", self.prefix, repr(userApps))
+                    else:
+                        for app in userApps:
+                            try:
+                                url = app.get('url')
+                                iconFile = app.get('iconFile')
+                                title = app.get('title')
+                                preventCL = app.get('preventConnectionLost')
+                                if url is None:
+                                    raise Exception("plugin %s: user app url cannot be None: %s", self.prefix,
+                                                    repr(app))
+                                if iconFile is None:
+                                    raise Exception("plugin %s: user app icon file cannot be None: %s", self.prefix,
+                                                    repr(app))
+                                self.registerUserApp(url, iconFile, title=title, preventConnectionLost=preventCL)
+                            except Exception as e:
+                                AVNLog.error("unable to register user app %s for %s: %s",
+                                             repr(app), self.prefix, str(e))
+                if 'editableParameters' in cfg:
+                    editableParameters = cfg['editableParameters']
+                    AVNLog.debug("registering editable parameters for %s:%s", self.prefix, repr(editableParameters))
+                    try:
+                        self.registerEditableParameters(editableParameters, self.saveConfigValues)
+                    except Exception as e:
+                        AVNLog.error("unable to register editable parameters %s for %s: %s",
+                                     repr(app), self.prefix, str(e))
+        except Exception as e:
+            AVNLog.error("error reading config file for %s: %s", self.prefix, str(e))
+
+    def readVersion(self):
+        self.handlePluginJson(versionOnly=True)
+
+    def startPluginThread(self):
+        current = self.thread
+        if current is not None:
+            if current.is_alive():
+                return
+            self.thread = None
+        enabled = self.isEnabled()
+        if not enabled:
+            AVNLog.info("plugin %s is disabled by config", self.prefix)
+            self.setStatus(WorkerStatus.INACTIVE, "disabled by config")
+            return
+        self.handlePluginJson()
+        if self.jsCssOnly:
+            self.setStatus(WorkerStatus.NMEA, "javascript/css only")
+            return
+        if self.plugin is None:
+            self.setStatus(WorkerStatus.ERROR, 'no plugin could be created')
+            return
+        AVNLog.info("starting plugin %s", self.prefix)
+        thread = threading.Thread(target=self.runPlugin, args=[])
+        thread.setDaemon(True)
+        thread.setName("Plugin: %s" % (self.prefix))
+        thread.start()
+        self.thread = thread
+
+    def runPlugin(self):
+        self.log("run started")
+        self.setStatus(WorkerStatus.INACTIVE, "plugin started")
+        try:
+            self.registerKeys()
+            self.plugin.run()
+            self.log("plugin run finshed")
+            if self.isEnabled():
+                self.setStatus(WorkerStatus.INACTIVE, "plugin run finished")
+            else:
+                self.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
+        except Exception as e:
+            self.error("plugin run exception: %s", traceback.format_exc())
+            self.setStatus(WorkerStatus.ERROR, "plugin exception %s" % str(e))
+        except StoppedException as e:
+            self.log("plugin run stopped by StopException")
+            self.setStatus(WorkerStatus.INACTIVE, "plugin stopped")
+
+
 class StoppedException(BaseException):
     def __init__(self):
         BaseException.__init__(self)
+
+
 class PluginApiProxy():
     '''
     proxy class that restricts the plugin access for
     ApiImpl to the methods defined in AVNApi
     '''
-    def __init__(self,impl,name):
-        self.__impl=impl
-        self.__check=AVNApi()
-        self.__name=name
+
+    def __init__(self, impl, name):
+        self.__impl = impl
+        self.__check = AVNApi()
+        self.__name = name
+
     def shouldStopMainThread(self):
         if self.__impl is not None:
             return self.__impl.shouldStopMainThread()
         return True
+
     def __getattr__(self, item):
         if self.__check is None:
             raise StoppedException()
         if hasattr(self.__check, item):
             return getattr(self.__impl, item)
-        AVNLog.debug("plugin %s:trying to acccess invalid api method %s",self.__name,item)
+        AVNLog.debug("plugin %s:trying to acccess invalid api method %s", self.__name, item)
         raise NotImplemented()
+
     def disable(self):
-        self.__check=None
-        self.__impl=None
+        self.__check = None
+        self.__impl = None
+
 
 class PluginEntry(AVNDirectoryListEntry):
-    def __init__(self,type,name,handlerId=None,active=True,canEdit=False,**kwargs):
-        super().__init__(type,name,**kwargs)
-        self.handlerId=handlerId
-        self.active=active
-        self.canEdit=canEdit
+    def __init__(self, type, name, handlerId=None, active=True, canEdit=False, version=None, **kwargs):
+        super().__init__(type, name, **kwargs)
+        self.handlerId = handlerId
+        self.active = active
+        self.canEdit = canEdit
+        self.version = version
 
     def serialize(self):
-        rt=super().serialize()
-        rt['child']=self.name
+        rt = super().serialize()
+        rt['child'] = self.name
         return rt
 
 
 class AVNPluginHandler(AVNDirectoryHandlerBase):
-  ENABLE_PARAMETER=WorkerParameter('enabled',
-                                   type=WorkerParameter.T_BOOLEAN,
-                                   default=True,
-                                   description="enable this plugin")
-  PREFIX = URL_PREFIX
-  UPLOAD_NAME = "upload"
-  D_BUILTIN = 'builtin'
-  D_SYSTEM = 'system'
-  D_USER = 'user'
-  ALL_DIRS = [D_BUILTIN, D_SYSTEM, D_USER]
-  SCOPE_USER = D_USER + "-"
-  EXT = '.zip'
+    ENABLE_PARAMETER = WorkerParameter('enabled',
+                                       type=WorkerParameter.T_BOOLEAN,
+                                       default=True,
+                                       description="enable this plugin")
+    PREFIX = URL_PREFIX
+    UPLOAD_NAME = "upload"
+    D_BUILTIN = 'builtin'
+    D_SYSTEM = 'system'
+    D_USER = 'user'
+    ALL_DIRS = [D_BUILTIN, D_SYSTEM, D_USER]
+    SCOPE_USER = D_USER + "-"
+    EXT = '.zip'
 
-  CHANGE_COUNTER_NAME='config'
+    CHANGE_COUNTER_NAME = 'config'
 
-  @classmethod
-  def getPrefix(cls):
-      return cls.PREFIX
+    @classmethod
+    def getPrefix(cls):
+        return cls.PREFIX
 
+    """a handler for plugins"""
 
-  """a handler for plugins"""
+    @classmethod
+    def getListEntryClass(cls):
+        return PluginEntry
 
-  @classmethod
-  def getListEntryClass(cls):
-      return PluginEntry
+    def __init__(self, param):
+        super().__init__(param, "plugins")
+        self.queue = None
+        self.createdApis = {}  # type: Dict[str, ApiImpl]
+        self.configLock = threading.Lock()
+        self.baseDir = self.getPluginBaseDir(self.D_USER)
 
-  def __init__(self,param):
-    super().__init__(param,"plugins")
-    self.queue=None
-    self.createdApis={} #type: Dict[str, ApiImpl]
-    self.configLock=threading.Lock()
-    self.baseDir=self.getPluginBaseDir(self.D_USER)
+    @classmethod
+    def getConfigParam(cls, child=None):
+        if child is None:
+            return {
+                'builtinDir': os.path.join(os.path.dirname(__file__), '..', 'plugins'),
+                'systemDir': '',
+                'userDir': '',
+                'feederName': ''
+            }
+        # accept all parameters for children
+        return {}
 
+    @classmethod
+    def preventMultiInstance(cls):
+        return True
 
-  @classmethod
-  def getConfigParam(cls, child=None):
-    if child is None:
-      return {
-        'builtinDir':os.path.join(os.path.dirname(__file__),'..','plugins'),
-        'systemDir':'',
-        'userDir':'',
-        'feederName':''
-      }
-    #accept all parameters for children
-    return {}
-  @classmethod
-  def preventMultiInstance(cls):
-    return True
+    @classmethod
+    def autoInstantiate(cls):
+        return True
 
-  @classmethod
-  def autoInstantiate(cls):
-    return True
-
-  def onPreRun(self):
-      super().onPreRun()
-      try:
-          for file in os.listdir(self.baseDir):
-              if file.startswith(self.UPLOAD_NAME) and file.endswith(self.EXT):
-                  os.unlink(os.path.join(self.baseDir,file))
-      except Exception as e:
-          AVNLog.error("unable to cleanup upload files: %s",str(e))
-
-
-  def isHidden(self,name):
-    ev=os.getenv(ENV_PREFIX+normalizedName(name))
-    if ev == '1':
-      return True
-    return False
-  def createModuleName(self,name,type=D_USER):
-      return type+'-'+name
-  def getApi(self,name):
-      with self.configLock:
-          return self.createdApis.get(name)
-
-  def loadAndPreparePlugin(self, dir, moduleName,dirtype):
-      if self.isHidden(moduleName):
-          AVNLog.info("module %s is hidden by environment")
-          return
-      module = None
-      try:
-          module = self.loadPluginFromDir(dir, moduleName)
-      except:
-          AVNLog.error("error loading plugin from %s:%s", dir, traceback.format_exc())
-      api = ApiImpl(self, self.navdata, self.queue, moduleName,
-                    inspect.getfile(module) if module is not None else module, internal=(dirtype == self.D_BUILTIN),
-                    directory=dir,dirtype=dirtype)
-      if module is not None:
-          self.instantiateHandlersFromModule(moduleName, module, api)
-      else:
-          if os.path.exists(os.path.join(dir, "plugin.js")) or os.path.exists(os.path.join(dir, "plugin.css")):
-              self.setInfo(moduleName, "java script/css only", WorkerStatus.STARTED)
-              api.setJsCssOnly()
-      return api
-  def run(self):
-    newApis={}
-    directories={}
-    for dtype in self.ALL_DIRS:
-        directories[dtype]=self.getPluginBaseDir(dtype)
-    for dirtype in self.ALL_DIRS:
-      modulesDir=directories[dirtype]
-      if not os.path.isdir(modulesDir):
-        continue
-      for dirname in os.listdir(modulesDir):
-        dir=os.path.join(modulesDir,dirname)
-        if not os.path.isdir(dir):
-          continue
-        moduleName=self.createModuleName(dirname,dirtype)
-        api=self.loadAndPreparePlugin(dir,moduleName,dirtype)
-        newApis[moduleName] = api
-    for api in list(newApis.values()):
-      api.startPluginThread()
-    self.createdApis=newApis
-    AVNLog.info("pluginhandler finished")
-
-  def stop(self):
-    super().stop()
-    #TODO: cleanup APIs
-    with self.configLock:
-        for api in self.createdApis.values():
-          try:
-            AVNLog.info("stopping plugin %s",api.prefix)
-            api.stop(True)
-          except:
-            pass
-        self.createdApis={}
-
-  def startPluginThread(self,api: ApiImpl):
-      return api.startPluginThread()
-
-  def instantiateHandlersFromModule(self,modulename, module,api):
-    MANDATORY_METHODS = ['run']
-    MANDATORY_CLASSMETHODS=['pluginInfo']
-
-    obj = getattr(module, "Plugin",None)
-    if obj is None:
-      return
-    ic = inspect.isclass(obj)
-    if ic:
-      if obj.__module__ != (modulename):
-        return
-      AVNLog.debug("checking module: %s <=> %s" % (obj.__module__, module))
-      hasMethods = True
-      for m in MANDATORY_METHODS:
-        if not hasattr(obj, m):
-          hasMethods=False
-          break
-        mObj = getattr(obj, m)
-        if not callable(mObj):
-          hasMethods = False
-          break
-      for clm in MANDATORY_CLASSMETHODS:
-        if not hasattr(obj, clm):
-          hasMethods=False
-          break
-        mObj = getattr(obj,clm)
-        #see https://stackoverflow.com/questions/19227724/check-if-a-function-uses-classmethod
-        if not ( inspect.ismethod(mObj) and mObj.__self__ is obj):
-          hasMethods=False
-          break
-      if hasMethods:
-        #TODO: handle multiple instances from config
-        AVNLog.info("creating %s" % (modulename))
+    def onPreRun(self):
+        super().onPreRun()
         try:
-          description=obj.pluginInfo()
-          if description is None or not isinstance(description,dict):
-            raise Exception("invalid return from pluginInfo")
-          mData = description.get('data')
-          if mData is not None:
-            for entry in mData:
-              path = entry.get('path')
-              if path is None:
-                raise Exception("missing path in entry %s" % (str(entry)))
-          api.storeKeys=mData
-          api.proxy=PluginApiProxy(api,api.prefix)
-          pluginInstance = obj(api.proxy)
-          AVNLog.info("created plugin %s",modulename)
-          api.plugin=pluginInstance
-          self.setInfo(modulename,"created",WorkerStatus.STARTED)
+            for file in os.listdir(self.baseDir):
+                if file.startswith(self.UPLOAD_NAME) and file.endswith(self.EXT):
+                    os.unlink(os.path.join(self.baseDir, file))
         except Exception as e:
-          self.setInfo(modulename,"unable to create plugin: %s"%str(e), WorkerStatus.ERROR)
-          AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
+            AVNLog.error("unable to cleanup upload files: %s", str(e))
 
-  def loadPluginFromDir(self, dir, name):
-    """
-    load aplugin module from a directory
-    @param dir: the dir to be loaded from
-    @param name: the module name
-    @return: the module (if nay)
-    """
-    moduleFile=os.path.join(dir,"plugin.py")
-    if not os.path.exists(moduleFile):
-      return None
-    try:
-      spec = importlib.util.spec_from_file_location(name, moduleFile)
-      module = importlib.util.module_from_spec(spec)
-      spec.loader.exec_module(module)
-      AVNLog.info("loaded %s as %s", moduleFile, name)
-      return module
-    except:
-      AVNLog.error("unable to load %s:%s", moduleFile, traceback.format_exc())
-    return None
+    def isHidden(self, name):
+        ev = os.getenv(ENV_PREFIX + normalizedName(name))
+        if ev == '1':
+            return True
+        return False
 
-  def changeChildConfigDict(self, childName, configDict):
-    with self.configLock:
-        hasChanges = False
-        childIdx=0
-        currentList=self.param.get(childName)
-        if currentList is None:
-          childIdx=-1
-        for k,v in configDict.items():
-          if currentList is None or len(currentList) < 1 or \
-              currentList[0].get(k) != str(v):
-            hasChanges=True
-            childIdx=self.changeChildConfig(childName, childIdx, k, str(v),delayWriteOut=True)
-        if hasChanges:
-          self.writeConfigChanges()
+    def createModuleName(self, name, type=D_USER):
+        return type + '-' + name
 
-  def setChildEditable(self,child,enable=True):
-    existing=self.status.get(child)
-    if existing:
-      existing.id=child if enable else None
-    else:
-      if enable:
-        self.setInfo(child,'created',WorkerStatus.INACTIVE,childId=child)
+    def getApi(self, name):
+        with self.configLock:
+            return self.createdApis.get(name)
 
-  def isChildEditable(self,child):
-      existing=self.status.get(child)
-      if existing and existing.id is not None:
-          return True
-      return False
+    def loadAndPreparePlugin(self, dir, moduleName, dirtype):
+        if self.isHidden(moduleName):
+            AVNLog.info("module %s is hidden by environment")
+            return
+        module = None
+        try:
+            module = self.loadPluginFromDir(dir, moduleName)
+        except:
+            AVNLog.error("error loading plugin from %s:%s", dir, traceback.format_exc())
+        api = ApiImpl(self, self.navdata, self.queue, moduleName,
+                      inspect.getfile(module) if module is not None else module, internal=(dirtype == self.D_BUILTIN),
+                      directory=dir, dirtype=dirtype)
+        api.readVersion()
+        if module is not None:
+            self.instantiateHandlersFromModule(moduleName, module, api)
+        else:
+            hasClientFiles = False
+            for cf in ApiImpl.CLIENTFILES.values():
+                if os.path.exists(os.path.join(self.baseDir, cf)):
+                    hasClientFiles = True
+                    break
+            if hasClientFiles:
+                self.setInfo(moduleName, "java script/css only", WorkerStatus.STARTED)
+                api.setJsCssOnly()
+        return api
 
-  def getEditableChildParameters(self, child):
-    api=self.getApi(child)
-    if api is None:
-      return []
-    editables=api.editables
-    if editables is None:
-      editables=[]
-    if api.stopHandler or api.jsCssOnly:
-      editables= editables + [self.ENABLE_PARAMETER]
-    rt=[]
-    for e in editables:
-      if callable(e.rangeOrList):
-        ne=e.copy()
-        ne.rangeOrList=e.rangeOrList()
-        rt.append(ne)
-      else:
-        rt.append(e)
-    return rt
+    def run(self):
+        newApis = {}
+        directories = {}
+        for dtype in self.ALL_DIRS:
+            directories[dtype] = self.getPluginBaseDir(dtype)
+        for dirtype in self.ALL_DIRS:
+            modulesDir = directories[dirtype]
+            if not os.path.isdir(modulesDir):
+                continue
+            for dirname in os.listdir(modulesDir):
+                dir = os.path.join(modulesDir, dirname)
+                if not os.path.isdir(dir):
+                    continue
+                moduleName = self.createModuleName(dirname, dirtype)
+                api = self.loadAndPreparePlugin(dir, moduleName, dirtype)
+                newApis[moduleName] = api
+        for api in list(newApis.values()):
+            api.startPluginThread()
+        self.createdApis = newApis
+        AVNLog.info("pluginhandler finished")
 
-  def getParam(self, child=None, filtered=False):
-    if child is None:
-      return super().getParam(child, filtered)
-    param=self.getParamValue(child)
-    if param is None or len(param) < 1:
-      param={}
-    else:
-      param=param[0]
-    if filtered:
-      return WorkerParameter.filterByList(
-        self.getEditableChildParameters(child),
-        param
-      )
-    return param
+    def stop(self):
+        super().stop()
+        # TODO: cleanup APIs
+        with self.configLock:
+            for api in self.createdApis.values():
+                try:
+                    AVNLog.info("stopping plugin %s", api.prefix)
+                    api.stop(True)
+                except:
+                    pass
+            self.createdApis = {}
 
+    def startPluginThread(self, api: ApiImpl):
+        return api.startPluginThread()
 
-  def updateConfig(self, param, child=None):
-    if child is None:
-      return super().updateConfig(param, child)
-    api = self.getApi(child)
-    if api is None:
-      raise Exception("plugin %s not found"%child)
-    enabledChanged=False
-    if self.ENABLE_PARAMETER.name in param:
-      newEnabled=self.ENABLE_PARAMETER.fromDict(param)
-      current=api.isEnabled()
-      if newEnabled != current:
-        enabledChanged=True
-        self.changeChildConfigDict(child, {self.ENABLE_PARAMETER.name: newEnabled})
-        if not newEnabled:
-          if api.stopHandler is None and not api.jsCssOnly:
-            raise Exception("plugin %s cannot stop during runtime")
-          api.stop()
-          if api.jsCssOnly:
-            self.setInfo(child,"disabled by config",WorkerStatus.INACTIVE)
-      del param['enabled']
-    if len(list(param.keys())) < 1:
-      #startPluginThread is intelligent enough to know if we must start
-      api.startPluginThread()
-      if enabledChanged:
-          self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
-      return
-    checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
-    if api.paramChange is None:
-      raise Exception("unable to change parameters")
-    api.paramChange(checked)
-    #maybe allowKeyOverrides has changed...
-    api.registerKeys()
-    #startPluginThread is intelligent enough to know if we must start
-    api.startPluginThread()
-    if enabledChanged:
-        self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
+    def instantiateHandlersFromModule(self, modulename, module, api):
+        MANDATORY_METHODS = ['run']
+        MANDATORY_CLASSMETHODS = ['pluginInfo']
 
-  def getStatusProperties(self):
-    rt={}
-    return rt
+        obj = getattr(module, "Plugin", None)
+        if obj is None:
+            return
+        ic = inspect.isclass(obj)
+        if ic:
+            if obj.__module__ != (modulename):
+                return
+            AVNLog.debug("checking module: %s <=> %s" % (obj.__module__, module))
+            hasMethods = True
+            for m in MANDATORY_METHODS:
+                if not hasattr(obj, m):
+                    hasMethods = False
+                    break
+                mObj = getattr(obj, m)
+                if not callable(mObj):
+                    hasMethods = False
+                    break
+            for clm in MANDATORY_CLASSMETHODS:
+                if not hasattr(obj, clm):
+                    hasMethods = False
+                    break
+                mObj = getattr(obj, clm)
+                # see https://stackoverflow.com/questions/19227724/check-if-a-function-uses-classmethod
+                if not (inspect.ismethod(mObj) and mObj.__self__ is obj):
+                    hasMethods = False
+                    break
+            if hasMethods:
+                # TODO: handle multiple instances from config
+                AVNLog.info("creating %s" % (modulename))
+                try:
+                    description = obj.pluginInfo()
+                    if description is None or not isinstance(description, dict):
+                        raise Exception("invalid return from pluginInfo")
+                    mData = description.get('data')
+                    if mData is not None:
+                        for entry in mData:
+                            path = entry.get('path')
+                            if path is None:
+                                raise Exception("missing path in entry %s" % (str(entry)))
+                    api.storeKeys = mData
+                    api.proxy = PluginApiProxy(api, api.prefix)
+                    pluginInstance = obj(api.proxy)
+                    AVNLog.info("created plugin %s", modulename)
+                    api.plugin = pluginInstance
+                    self.setInfo(modulename, "created", WorkerStatus.STARTED)
+                except Exception as e:
+                    self.setInfo(modulename, "unable to create plugin: %s" % str(e), WorkerStatus.ERROR)
+                    AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 
-  def handlePathRequest(self, path, requestparam, server=None, handler=None):
-      localPath = path[len(self.PREFIX) + 1:].split("/", 1)
-      if len(localPath) < 2:
-          raise RequestException("missing plugin path",404)
-      api = self.getApi(localPath[0])
-      if api is None:
-          raise Exception("plugin %s not found" % localPath[0])
-      if not api.isEnabled():
-          raise Exception("plugin %s disabled" % localPath[0])
-      if localPath[1][0:3] == 'api':
-          # plugin api request
-          if api.requestHandler is None:
-              raise Exception("plugin %s does not handle requests " % localPath[0])
-          if handler is None:
-              raise Exception("no handler for plugin %s request" % localPath[0])
-          rt = api.requestHandler(localPath[1][4:], handler, requestparam)
-          if type(rt) is dict:
-              handler.sendJsonResponse(json.dumps(rt))
-              return True
-          return rt
-      if localPath[1] == 'plugin.js':
-          if handler is None:
-              AVNLog.error("plugin.js request without handler")
-              return None
-          fname = os.path.join(api.directory, 'plugin.js')
-          name = localPath[0]
-          url = self.PREFIX + "/" + name
-          addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
-          return handler.sendJsFile(fname, url, addCode)
-      fname=os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
-      if api.dirtype != self.D_USER:
-        return fname
-      if not os.path.isfile(fname):
-          raise RequestException(f"{fname} not found",404)
-      #use AVNDownload as return to prevent caching
-      return AVNDownload(fname)
+    def loadPluginFromDir(self, dir, name):
+        """
+        load aplugin module from a directory
+        @param dir: the dir to be loaded from
+        @param name: the module name
+        @return: the module (if nay)
+        """
+        moduleFile = os.path.join(dir, "plugin.py")
+        if not os.path.exists(moduleFile):
+            return None
+        try:
+            spec = importlib.util.spec_from_file_location(name, moduleFile)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            AVNLog.info("loaded %s as %s", moduleFile, name)
+            return module
+        except:
+            AVNLog.error("unable to load %s:%s", moduleFile, traceback.format_exc())
+        return None
 
-  PLUGINFILES={'js':'plugin.js','css':'plugin.css','mjs':'plugin.mjs','cfg':'plugin.json','python':'plugin.py'}
-  def handleSpecialApiRequest(self, command, requestparam, handler):
-      if command == 'listFiles':
-          data = []
-          with self.configLock:
-              for k, api in self.createdApis.items():
-                  active=True
-                  if api is None or not api.isActive():
-                      active=False
-                  element = {'name': k, 'base':self.PREFIX + "/" + k,'active':active}
-                  if active:
-                    dir=api.directory
-                    for p,v in self.PLUGINFILES.items():
-                        fname=os.path.join(dir, v)
-                        if os.path.exists(fname):
-                            finfo={'url':self.PREFIX + "/" + k + "/"+v,'timestamp':os.path.getmtime(fname)}
-                            element[p] = finfo
-                  data.append(element)
-          return AVNUtil.getReturnData(data=data)
-      return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
+    def changeChildConfigDict(self, childName, configDict):
+        with self.configLock:
+            hasChanges = False
+            childIdx = 0
+            currentList = self.param.get(childName)
+            if currentList is None:
+                childIdx = -1
+            for k, v in configDict.items():
+                if currentList is None or len(currentList) < 1 or \
+                        currentList[0].get(k) != str(v):
+                    hasChanges = True
+                    childIdx = self.changeChildConfig(childName, childIdx, k, str(v), delayWriteOut=True)
+            if hasChanges:
+                self.writeConfigChanges()
 
-  def listDirectory(self, includeDirs=False,baseDir=None,extension=None,scope=None):
-      def noDownload(entry):
-          entry.canDownload = False
-          entry.downloadName=None
-          entry.size=None
-          entry.handlerId=self.getId()
-          entry.canEdit=self.isChildEditable(entry.name)
-          api=self.getApi(entry.name)
-          entry.active=False if api is None or not api.isActive() else True
-          return True
-      def noSize(entry):
-          entry.size=None
-          entry.handlerId = self.getId()
-          entry.canEdit = self.isChildEditable(entry.name)
-          api = self.getApi(entry.name)
-          entry.active = False if api is None or not api.isActive() else True
-          return True
-      dlist = [entry for entry in super().listDirectory(True,
-                                                        baseDir,
-                                                        scope=self.SCOPE_USER,
-                                                        entryCallback=noSize) if entry.isDirectory]
-      blist = [entry for entry in
-               super().listDirectory(True,
-                                     self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN),
-                                     scope=AVNPluginHandler.D_BUILTIN+"-",
-                                     entryCallback=noDownload
-                                     ) if
-               entry.isDirectory]
-      slist = [entry for entry in
-               super().listDirectory(True,
-                                     self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),
-                                     scope=AVNPluginHandler.D_SYSTEM+"-",
-                                     entryCallback=noDownload) if
-               entry.isDirectory]
-      dlist.extend(blist)
-      dlist.extend(slist)
-      return dlist
+    def setChildEditable(self, child, enable=True):
+        existing = self.status.get(child)
+        if existing:
+            existing.id = child if enable else None
+        else:
+            if enable:
+                self.setInfo(child, 'created', WorkerStatus.INACTIVE, childId=child)
 
-  def handleDownload(self, name, handler, requestparam):
-      if name is None:
-          raise Exception("missing name")
-      name = AVNUtil.clean_filename(name)
-      if not name.startswith(self.SCOPE_USER):
-          raise Exception(f"plugin {name} is no user plugin")
-      name=name[len(self.SCOPE_USER):]
-      (filename, baseDir) = self.convertLocalPath(name)
-      if filename is None:
-          return None
-      if baseDir is not None:
-          filename = os.path.join(baseDir, filename)
-      if not os.path.exists(filename) or not os.path.isdir(filename):
-          raise Exception("plugin %s not found" % filename)
-      def filter(fn):
-          if fn is None:
-              return True
-          if fn.find('__pycache__') >= 0:
-              return False
-          return True
-      return AVNZipDownload(name+".zip",filename,prefix=name,filter=filter)
+    def isChildEditable(self, child):
+        existing = self.status.get(child)
+        if existing and existing.id is not None:
+            return True
+        return False
 
-  def handleDelete(self, name):
-      if not self.canDelete():
-          raise Exception("delete not possible")
-      if name is None:
-          raise Exception("missing name")
-      name = AVNUtil.clean_filename(name)
-      if not name.startswith(self.SCOPE_USER):
-          raise Exception(f"plugin {name} is no user plugin")
-      name=name[len(self.SCOPE_USER):]
-      filename = os.path.join(self.baseDir, name)
-      if not os.path.exists(filename) or not os.path.isdir(filename):
-          raise Exception("plugin %s not found" % filename)
-      self.deletePlugin(name)
-      shutil.rmtree(filename)
-  def checkPath(self,path,base,isdir=False):
-      parts=path.split('/')
-      if len(parts) < 1:
-          raise Exception(f"invalid path [{path}]")
-      if not isdir and len(parts) < 2:
-          raise Exception(f"plugin: [{path}] files must be in a sub directory")
-      if parts[0] != base:
-          raise Exception(f"plugin: [{path}] all files must be below {base}")
-      for fn in parts[1:]:
-          clean=AVNUtil.clean_filename(fn)
-          if clean != fn:
-              raise Exception(f"plugin: [{path}] invalid part in path {fn}")
-  def handleUpload(self, name, handler, requestparam):
-      self.checkName(name)
-      if name.lower().endswith(self.EXT):
-          name=name[0:-len(self.EXT)]
-      overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
-      plugindir=os.path.join(self.baseDir,name)
-      if os.path.exists(plugindir) and not overwrite:
-          raise Exception(f"plugin {plugindir} already exists")
-      uploadName=f"{self.UPLOAD_NAME}-{threading.get_ident()}{self.EXT}"
-      filename = os.path.join(self.baseDir, uploadName)
-      if os.path.exists(filename):
-          os.unlink(filename)
-      try:
-        rt= super().handleUpload(uploadName, handler, requestparam)
-        if not os.path.exists(filename):
-          raise Exception(f"file {filename} not found after upload")
-        zip = ZipFile(filename)
-        hasEntries=False
-        for entry in zip.infolist():
-            AVNLog.debug(f"zip entry {entry}")
-            self.checkPath(entry.filename,name,isdir=entry.is_dir())
-            if not entry.is_dir():
-                hasEntries=True
-        if not hasEntries:
-            raise Exception(f"no files in zip {name}")
-        zip.extractall(self.baseDir)
-        now=time.time()
-        os.utime(plugindir,(now,now))
-        self.updatePlugin(name)
-      finally:
-        os.unlink(filename)
-      return rt
-
-
-  def getPluginBaseDir(self, type=D_USER):
-      if type == self.D_USER:
-        return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
-      if type == self.D_BUILTIN:
-        return self.getStringParam('builtinDir')
-      if type == self.D_SYSTEM:
-        return AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'),
-                                                      belowData=False)
-
-  def updatePlugin(self,name,type=D_USER):
-      moduleName = self.createModuleName(name, type)
-      if type != self.D_USER:
-          return False
-      AVNLog.info("update plugin %s",moduleName)
-      self.deletePlugin(name, type)
-      dir=os.path.join(self.getPluginBaseDir(), name)
-      if not os.path.isdir(dir):
-          AVNLog.error("plugin dir %s is not a directory",dir)
-          return False
-      api=self.loadAndPreparePlugin(dir,moduleName,type)
-      if api is None:
-          AVNLog.error("unable to load plugin %s",name)
-          return False
-      api.startPluginThread()
-      with self.configLock:
-          self.createdApis[moduleName] = api
-      self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
-      return True
-
-  def deletePlugin(self,name,type=D_USER):
-      name=self.createModuleName(name,type)
-      with self.configLock:
-        api=self.createdApis.get(name)
+    def getEditableChildParameters(self, child):
+        api = self.getApi(child)
         if api is None:
+            return []
+        editables = api.editables
+        if editables is None:
+            editables = []
+        if api.stopHandler or api.jsCssOnly:
+            editables = editables + [self.ENABLE_PARAMETER]
+        rt = []
+        for e in editables:
+            if callable(e.rangeOrList):
+                ne = e.copy()
+                ne.rangeOrList = e.rangeOrList()
+                rt.append(ne)
+            else:
+                rt.append(e)
+        return rt
+
+    def getParam(self, child=None, filtered=False):
+        if child is None:
+            return super().getParam(child, filtered)
+        param = self.getParamValue(child)
+        if param is None or len(param) < 1:
+            param = {}
+        else:
+            param = param[0]
+        if filtered:
+            return WorkerParameter.filterByList(
+                self.getEditableChildParameters(child),
+                param
+            )
+        return param
+
+    def updateConfig(self, param, child=None):
+        if child is None:
+            return super().updateConfig(param, child)
+        api = self.getApi(child)
+        if api is None:
+            raise Exception("plugin %s not found" % child)
+        enabledChanged = False
+        if self.ENABLE_PARAMETER.name in param:
+            newEnabled = self.ENABLE_PARAMETER.fromDict(param)
+            current = api.isEnabled()
+            if newEnabled != current:
+                enabledChanged = True
+                self.changeChildConfigDict(child, {self.ENABLE_PARAMETER.name: newEnabled})
+                if not newEnabled:
+                    api.stop()
+                    if api.jsCssOnly:
+                        self.setInfo(child, "disabled by config", WorkerStatus.INACTIVE)
+            del param['enabled']
+        if len(list(param.keys())) < 1:
+            # startPluginThread is intelligent enough to know if we must start
+            api.startPluginThread()
+            if enabledChanged:
+                self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
+            return
+        checked = WorkerParameter.checkValuesFor(self.getEditableChildParameters(child), param, self.param.get(child))
+        if api.paramChange is None:
+            raise Exception("unable to change parameters")
+        api.paramChange(checked)
+        # maybe allowKeyOverrides has changed...
+        api.registerKeys()
+        # startPluginThread is intelligent enough to know if we must start
+        api.startPluginThread()
+        if enabledChanged:
+            self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
+
+    def getStatusProperties(self):
+        rt = {}
+        return rt
+
+    def handlePathRequest(self, path, requestparam, server=None, handler=None):
+        localPath = path[len(self.PREFIX) + 1:].split("/", 1)
+        if len(localPath) < 2:
+            raise RequestException("missing plugin path", 404)
+        api = self.getApi(localPath[0])
+        if api is None:
+            raise Exception("plugin %s not found" % localPath[0])
+        if not api.isEnabled():
+            raise Exception("plugin %s disabled" % localPath[0])
+        if localPath[1][0:3] == 'api':
+            # plugin api request
+            if api.requestHandler is None:
+                raise Exception("plugin %s does not handle requests " % localPath[0])
+            if handler is None:
+                raise Exception("no handler for plugin %s request" % localPath[0])
+            rt = api.requestHandler(localPath[1][4:], handler, requestparam)
+            if type(rt) is dict:
+                handler.sendJsonResponse(json.dumps(rt))
+                return True
+            return rt
+        if localPath[1] == 'plugin.js':
+            if handler is None:
+                AVNLog.error("plugin.js request without handler")
+                return None
+            fname = os.path.join(api.directory, 'plugin.js')
+            name = localPath[0]
+            url = self.PREFIX + "/" + name
+            addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
+            return handler.sendJsFile(fname, url, addCode)
+        fname = os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
+        if api.dirtype != self.D_USER:
+            return fname
+        if not os.path.isfile(fname):
+            raise RequestException(f"{fname} not found", 404)
+        # use AVNDownload as return to prevent caching
+        return AVNDownload(fname)
+
+    def handleSpecialApiRequest(self, command, requestparam, handler):
+        if command == 'listFiles':
+            data = []
+            with self.configLock:
+                for k, api in self.createdApis.items():
+                    active = True
+                    if api is None or not api.isActive():
+                        active = False
+                    element = {'name': k, 'base': self.PREFIX + "/" + k, 'active': active}
+                    if active:
+                        dir = api.directory
+                        for p, v in ApiImpl.PLUGINFILES.items():
+                            fname = os.path.join(dir, v)
+                            if os.path.exists(fname):
+                                finfo = {'url': self.PREFIX + "/" + k + "/" + v, 'timestamp': os.path.getmtime(fname)}
+                                element[p] = finfo
+                    data.append(element)
+            return AVNUtil.getReturnData(data=data)
+        return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
+
+    def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None):
+        def noDownload(entry):
+            entry.canDownload = False
+            entry.downloadName = None
+            entry.size = None
+            entry.handlerId = self.getId()
+            entry.canEdit = self.isChildEditable(entry.name)
+            api = self.getApi(entry.name)
+            if api is None:
+                return False
+            entry.active = False if api is None or not api.isActive() else True
+            entry.version = api.version
+            return True
+
+        def noSize(entry):
+            entry.size = None
+            entry.handlerId = self.getId()
+            entry.canEdit = self.isChildEditable(entry.name)
+            api = self.getApi(entry.name)
+            if api is None:
+                return False
+            entry.active = False if api is None or not api.isActive() else True
+            entry.version = api.version
+            return True
+
+        dlist = [entry for entry in super().listDirectory(True,
+                                                          baseDir,
+                                                          scope=self.SCOPE_USER,
+                                                          entryCallback=noSize) if entry.isDirectory]
+        blist = [entry for entry in
+                 super().listDirectory(True,
+                                       self.getPluginBaseDir(AVNPluginHandler.D_BUILTIN),
+                                       scope=AVNPluginHandler.D_BUILTIN + "-",
+                                       entryCallback=noDownload
+                                       ) if
+                 entry.isDirectory]
+        slist = [entry for entry in
+                 super().listDirectory(True,
+                                       self.getPluginBaseDir(AVNPluginHandler.D_SYSTEM),
+                                       scope=AVNPluginHandler.D_SYSTEM + "-",
+                                       entryCallback=noDownload) if
+                 entry.isDirectory]
+        dlist.extend(blist)
+        dlist.extend(slist)
+        return dlist
+
+    def handleDownload(self, name, handler, requestparam):
+        if name is None:
+            raise Exception("missing name")
+        name = AVNUtil.clean_filename(name)
+        if not name.startswith(self.SCOPE_USER):
+            raise Exception(f"plugin {name} is no user plugin")
+        name = name[len(self.SCOPE_USER):]
+        (filename, baseDir) = self.convertLocalPath(name)
+        if filename is None:
+            return None
+        if baseDir is not None:
+            filename = os.path.join(baseDir, filename)
+        if not os.path.exists(filename) or not os.path.isdir(filename):
+            raise Exception("plugin %s not found" % filename)
+
+        def filter(fn):
+            if fn is None:
+                return True
+            if fn.find('__pycache__') >= 0:
+                return False
+            return True
+
+        return AVNZipDownload(name + ".zip", filename, prefix=name, filter=filter)
+
+    def handleDelete(self, name):
+        if not self.canDelete():
+            raise Exception("delete not possible")
+        if name is None:
+            raise Exception("missing name")
+        name = AVNUtil.clean_filename(name)
+        if not name.startswith(self.SCOPE_USER):
+            raise Exception(f"plugin {name} is no user plugin")
+        name = name[len(self.SCOPE_USER):]
+        filename = os.path.join(self.baseDir, name)
+        if not os.path.exists(filename) or not os.path.isdir(filename):
+            raise Exception("plugin %s not found" % filename)
+        self.deletePlugin(name)
+        shutil.rmtree(filename)
+
+    def checkPath(self, path, base, isdir=False):
+        parts = path.split('/')
+        if len(parts) < 1:
+            raise Exception(f"invalid path [{path}]")
+        if not isdir and len(parts) < 2:
+            raise Exception(f"plugin: [{path}] files must be in a sub directory")
+        if parts[0] != base:
+            raise Exception(f"plugin: [{path}] all files must be below {base}")
+        for fn in parts[1:]:
+            clean = AVNUtil.clean_filename(fn)
+            if clean != fn:
+                raise Exception(f"plugin: [{path}] invalid part in path {fn}")
+
+    def handleUpload(self, name, handler, requestparam):
+        self.checkName(name)
+        if name.lower().endswith(self.EXT):
+            name = name[0:-len(self.EXT)]
+        overwrite = AVNUtil.getHttpRequestFlag(requestparam, 'overwrite')
+        plugindir = os.path.join(self.baseDir, name)
+        if os.path.exists(plugindir) and not overwrite:
+            raise Exception(f"plugin {plugindir} already exists")
+        uploadName = f"{self.UPLOAD_NAME}-{threading.get_ident()}{self.EXT}"
+        filename = os.path.join(self.baseDir, uploadName)
+        if os.path.exists(filename):
+            os.unlink(filename)
+        try:
+            rt = super().handleUpload(uploadName, handler, requestparam)
+            if not os.path.exists(filename):
+                raise Exception(f"file {filename} not found after upload")
+            zip = ZipFile(filename)
+            hasEntries = False
+            for entry in zip.infolist():
+                AVNLog.debug(f"zip entry {entry}")
+                self.checkPath(entry.filename, name, isdir=entry.is_dir())
+                if not entry.is_dir():
+                    hasEntries = True
+            if not hasEntries:
+                raise Exception(f"no files in zip {name}")
+            zip.extractall(self.baseDir)
+            now = time.time()
+            os.utime(plugindir, (now, now))
+            self.updatePlugin(name)
+        finally:
+            os.unlink(filename)
+        return rt
+
+    def getPluginBaseDir(self, type=D_USER):
+        if type == self.D_USER:
+            return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
+        if type == self.D_BUILTIN:
+            return self.getStringParam('builtinDir')
+        if type == self.D_SYSTEM:
+            return AVNHandlerManager.getDirWithDefault(self.param, 'systemDir',
+                                                       defaultSub=os.path.join('..', 'plugins'),
+                                                       belowData=False)
+
+    def updatePlugin(self, name, type=D_USER):
+        moduleName = self.createModuleName(name, type)
+        if type != self.D_USER:
             return False
-        try:
-            AVNLog.info("deleting plugin %s" % name)
-            api.stop(True)
-        except:
-            pass
-        try:
-            del self.createdApis[name]
-        except:
-            pass
-      self.deleteInfo(name)
-      self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
+        AVNLog.info("update plugin %s", moduleName)
+        self.deletePlugin(name, type)
+        dir = os.path.join(self.getPluginBaseDir(), name)
+        if not os.path.isdir(dir):
+            AVNLog.error("plugin dir %s is not a directory", dir)
+            return False
+        api = self.loadAndPreparePlugin(dir, moduleName, type)
+        if api is None:
+            AVNLog.error("unable to load plugin %s", name)
+            return False
+        api.startPluginThread()
+        with self.configLock:
+            self.createdApis[moduleName] = api
+        self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
+        return True
+
+    def deletePlugin(self, name, type=D_USER):
+        name = self.createModuleName(name, type)
+        with self.configLock:
+            api = self.createdApis.get(name)
+            if api is None:
+                return False
+            try:
+                AVNLog.info("deleting plugin %s" % name)
+                api.stop(True)
+            except:
+                pass
+            try:
+                del self.createdApis[name]
+            except:
+                pass
+        self.deleteInfo(name)
+        self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
 
 
 avnav_handlerList.registerHandler(AVNPluginHandler)
-
-
-
