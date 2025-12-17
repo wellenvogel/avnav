@@ -1048,10 +1048,13 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         return AVNDownload(fname)
 
     def handleSpecialApiRequest(self, command, requestparam, handler):
-        if command == 'listFiles':
+        if command == 'pluginInfo':
+            name=AVNUtil.getHttpRequestParam(requestparam,"name",mantadory=False)
             data = []
             with self.configLock:
                 for k, api in self.createdApis.items():
+                    if name is not None and k != name:
+                        continue
                     active = True
                     if api is None or not api.isActive():
                         active = False

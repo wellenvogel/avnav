@@ -249,7 +249,7 @@ class Pluginmanager{
         try {
             const json= await Requests.getJson({
                 type: 'plugins',
-                command: 'listFiles'
+                command: 'pluginInfo'
             });
             return json.data;
         }catch (e){

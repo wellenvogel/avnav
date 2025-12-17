@@ -1754,7 +1754,8 @@ class PluginItemActions extends ItemActions{
     async buildExtendedInfo(item) {
         const fileList=await Requests.getJson({
             type:'plugins',
-            command:'listFiles'
+            command:'pluginInfo',
+            name:item.name
         }).then((json)=>json.data)
         const rt={
             active: item.active
@@ -1788,11 +1789,13 @@ class PluginItemActions extends ItemActions{
                 }
             }
         }
+        rt.version=item.version;
         return rt;
     }
 
     getExtendedInfoRows(item) {
         return [
+            {label:'version',value:'version'},
             {label:'active',value:'active',formatter:(v)=>v?"true":"false"},
             {label:'parts',value:'files'},
             {label:'status',value:'status',formatter:(v)=>{

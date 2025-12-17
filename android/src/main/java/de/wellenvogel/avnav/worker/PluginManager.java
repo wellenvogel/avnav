@@ -408,11 +408,13 @@ public class PluginManager extends DirectoryRequestHandler {
     };
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        if ("listFiles".equals(command)){
+        if ("pluginInfo".equals(command)){
+            String rname=uri.getQueryParameter("name");
             JSONArray rt=new JSONArray();
             for (File localFile: workDir.listFiles()) {
                 if (localFile.isDirectory()) {
                     String name=pluginFileToName(localFile);
+                    if (rname != null && ! rname.equals(name)) continue;
                     JSONObject po=new JSONObject();
                     po.put(IPluginHandler.K_NAME,name);
                     boolean active=isActive(name);
@@ -448,6 +450,9 @@ public class PluginManager extends DirectoryRequestHandler {
             for (IPluginHandler ph:externals){
                 JSONObject po=ph.getFiles();
                 if (po != null && po.has(IPluginHandler.K_NAME)){
+                    if (rname != null) {
+                        if (! rname.equals(po.getString(IPluginHandler.K_NAME))) continue;
+                    }
                     for (String k:IPluginHandler.PLUGINFILES.keySet()){
                         try {
                             if (po.has(k)) {
