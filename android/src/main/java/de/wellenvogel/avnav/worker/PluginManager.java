@@ -122,6 +122,9 @@ public class PluginManager extends DirectoryRequestHandler {
             if (config != null) {
                 //todo register
             }
+            setStatus();
+        }
+        void setStatus(){
             if (enabled()) {
                 status.setChildStatus(name, WorkerStatus.Status.NMEA, "running", true);
             } else {
@@ -242,6 +245,9 @@ public class PluginManager extends DirectoryRequestHandler {
                     }
                     plugins.put(newPlugin.name,newPlugin);
                 }
+                else{
+                    oldPlugin.setStatus();
+                }
             }
             if (removeOther){
                 for (Plugin plugin:plugins.values()){
@@ -278,12 +284,6 @@ public class PluginManager extends DirectoryRequestHandler {
             AvnLog.e("error cleaning up plugin dir",t);
         }
         setStatus(WorkerStatus.Status.NMEA,"running");
-        try {
-            HashMap<String, Plugin> current = readPlugins();
-            updatePlugins(current, true);
-        }catch (Exception e){
-            setStatus(WorkerStatus.Status.ERROR,"unable to read plugins "+e.getMessage());
-        }
         super.start(permissionCallback);
     }
 
@@ -295,7 +295,6 @@ public class PluginManager extends DirectoryRequestHandler {
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
         while(! shouldStop(startSequence)){
-            sleep(60000);
             try{
                 HashMap<String, Plugin> current = readPlugins();
                 updatePlugins(current, true);
@@ -303,6 +302,7 @@ public class PluginManager extends DirectoryRequestHandler {
             }catch (Exception e){
                 setStatus(WorkerStatus.Status.ERROR,"unable to read plugins "+e.getMessage());
             }
+            sleep(60000);
         }
     }
 
