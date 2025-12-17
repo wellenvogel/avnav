@@ -174,7 +174,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     }
 
     private String getKey(){
-        return "Plugin-"+pluginName; //we don't use TYPENAME here as we want to be compatible
+        return "Plugin:"+pluginName; //we don't use TYPENAME here as we want to be compatible
                                      //with older versions that had TYPENAME Plugin
                                      //and as the key goes into overlay definitions
                                      //we would otherwise break them

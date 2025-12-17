@@ -48,6 +48,7 @@ public interface IPluginHandler {
     public static final String K_NAME="name";
     public static String K_ACTIVE="active";
     public static final String K_BASE="base"; //url base for plugin files
+    public static final String K_CHARTPREFIX="chartPrefix";
 
     /**
      * return an json object with the keys K_NAME,K_DIR and for each existing file

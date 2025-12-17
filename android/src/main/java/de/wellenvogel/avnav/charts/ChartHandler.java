@@ -56,6 +56,19 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         String chartKey;
         JSONObject chart;
         boolean allowColon;
+
+        public static String getChartPrefix(String key){
+            return Constants.EXTERNALCHARTS + ":"+key+"@";
+        }
+        public static String configFromChartName(String name,boolean allowColon) throws Exception {
+            if (name == null) return name;
+            if (name.startsWith(Constants.EXTERNALCHARTS+":")){
+                name=name.substring(Constants.EXTERNALCHARTS.length()+1);
+            }
+            String rt=DirectoryRequestHandler.safeName(name,false)+CFG_EXTENSION;
+            if (!allowColon) rt=rt.replace(':','.');
+            return rt;
+        }
         public ExternalChart(String key,JSONObject chart,boolean allowColon) throws Exception {
             this.key=key;
             this.chart=new JSONObject(chart.toString());
@@ -65,7 +78,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 this.chart.remove(Chart.CKEY);
             }
             if (this.chart.has(Chart.EXT_CKEY)) {
-                this.chart.put(Chart.CKEY, Constants.EXTERNALCHARTS + ":" + chartKey);
+                this.chart.put(Chart.CKEY,  chartKey);
                 this.chart.remove(Chart.EXT_CKEY);
             }
             this.allowColon=allowColon;
@@ -79,15 +92,13 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 original = chart.getString(Chart.CKEY);
             }
             if (original == null) throw new JSONException("external chart without key"+ chart);
-            String configName=key + "@" + DirectoryRequestHandler.safeName(original, false);
-            return configName;
+            return getChartPrefix(key)+DirectoryRequestHandler.safeName(original, false);
         }
         @Override
         public List<String> getChartCfgs() {
             ArrayList<String> rt=new ArrayList<>();
             try {
-                String first=DirectoryRequestHandler.safeName(chartKey,false)+CFG_EXTENSION;
-                if (!allowColon) first=first.replace(':','.');
+                String first=configFromChartName(chartKey,allowColon);
                 rt.add(first);
             } catch (Exception e) {
                 //should never occur as safeName only throws when required
@@ -206,6 +217,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         triggerUpdate(false);
     }
 
+    public String getExternalChartsPrefix(String key){
+        return ExternalChart.getChartPrefix(key);
+    }
     public void removeExternalCharts(String key){
         synchronized (externalCharts){
             externalCharts.remove(key);
@@ -369,10 +383,10 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
         if (key.startsWith(Constants.EXTERNALCHARTS)){
             int el=Constants.EXTERNALCHARTS.length();
             if (key.length() < (el+2)) return null;
-            key=key.substring(el+1);
-            int sidx=key.indexOf('@');
+            String mapKey=key.substring(el+1);
+            int sidx=mapKey.indexOf('@');
             if (sidx < 0 || sidx >= (key.length()-1)) return null;
-            String mapKey=key.substring(0,sidx);
+            mapKey=mapKey.substring(0,sidx);
             synchronized (externalCharts) {
                 List<ExternalChart> charts =externalCharts.get(mapKey);
                 if (charts == null) return null;
@@ -643,9 +657,10 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             }
             return config;
     }
-    private static String CGETCONFIG="getConfig";
-    private static String CSAVECONFIG="saveConfig";
-    private static String CDELCONFIG="deleteConfig";
+    private static final String CGETCONFIG="getConfig";
+    private static final String CSAVECONFIG="saveConfig";
+    private static final String CDELCONFIG="deleteConfig";
+    private static final String CLISTCONFIG="listConfig";
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("scheme")){
@@ -663,18 +678,31 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             File cfgFile=null;
             String configName=null;
             List<String> cfgNames= Collections.emptyList();
+            boolean onlyConfigName=false;
             if (name == null){
-                //default
-                configName=DEFAULT_CFG;
-                cfgFile=new File(baseDir,configName);
+                //either config name directly given - or default
+                configName=uri.getQueryParameter("configName");
+                if (configName != null) {
+                    configName = DirectoryRequestHandler.safeName(configName, true);
+                    onlyConfigName=true;
+                }
+                if (configName == null) configName=DEFAULT_CFG;
                 cfgNames=Collections.singletonList(configName);
             }
             else{
                 IChartWithConfig description=getChartDescriptionByChartKey(name);
                 if (description == null) {
-                    return RequestHandler.getErrorReturn("chart "+name+" not found");
+                    if (name.startsWith(Constants.EXTERNALCHARTS)){
+                        //could be a non existing plugin chart
+                        cfgNames=Collections.singletonList(ExternalChart.configFromChartName(name,allowColon));
+                    }
+                    else {
+                        return RequestHandler.getErrorReturn("chart " + name + " not found");
+                    }
                 }
-                cfgNames=description.getChartCfgs();
+                else {
+                    cfgNames = description.getChartCfgs();
+                }
                 if (cfgNames.isEmpty())return RequestHandler.getErrorReturn("no config name for "+name);
                 if (command.equals(CGETCONFIG)) {
                     if (cfgNames.size() > 0){
@@ -708,6 +736,14 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             }
             if (command.equals(CSAVECONFIG)){
                 if (postData == null) throw new Exception("no data in file");
+                //for save we allow a direct configName via parameter
+                //only for existing files
+                //as the client does not know how to create a valid config name
+                if (onlyConfigName){
+                    if (overlays.get(configName) == null){
+                        throw new Exception("overlay config "+configName+" does not exist");
+                    }
+                }
                 DirectoryRequestHandler.writeAtomic(cfgFile,postData.getStream(),true,postData.getContentLength());
                 postData.closeInput();
                 if (cfgNames.size() > 1){
@@ -728,13 +764,21 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                         AvnLog.e("unable to read chart config " + cfgFile.getAbsolutePath(), e);
                     }
                 }
+                else{
+                    if (onlyConfigName){
+                        return RequestHandler.getErrorReturn("overlay "+configName+" not found");
+                    }
+                }
                 migrateConfig(configName,localConfig);
                 return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", localConfig));
             }
         }
-        if (command.equals("listOverlays")){
+        if (command.equals(CLISTCONFIG)){
            JSONArray rt=new JSONArray();
-            return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
+           for (String cfgname: overlays.keySet()){
+               rt.put(cfgname);
+           }
+           return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
 
         }
         return RequestHandler.getErrorReturn("unknown request");

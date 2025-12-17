@@ -1058,7 +1058,10 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                     active = True
                     if api is None or not api.isActive():
                         active = False
-                    element = {'name': k, 'base': self.PREFIX + "/" + k, 'active': active}
+                    element = {'name': k,
+                               'base': self.PREFIX + "/" + k,
+                               'active': active,
+                               'chartPrefix':AVNChartHandler.getExternalChartPrefix(api.prefix),}
                     if active:
                         dir = api.directory
                         for p, v in ApiImpl.PLUGINFILES.items():

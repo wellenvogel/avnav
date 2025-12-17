@@ -25,16 +25,14 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 import json
-import os
 import shutil
 
 import avnav_handlerList
 import gemf_reader
 import mbtiles_reader
 from avnav_util import *
-from avnav_worker import WorkerStatus, AVNWorker
+from avnav_worker import WorkerStatus
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
-from httphandler import RequestException
 
 
 class ChartEntry(AVNDirectoryListEntry):
@@ -78,9 +76,11 @@ class XmlChartFile(ChartFile):
   def __str__(self):
     return "xml %s"%self.filename
 
+SCOPE_EXT = "ext@"
+def _getExternalChartPrefix(extPrefix):
+    return SCOPE_EXT + extPrefix + '@'
 
 class ExternalChart(ChartFile):
-    SCOPE_EXT = "ext@"
     def __init__(self, ext,prefix):
         super().__init__()
         self.ext=ext
@@ -93,7 +93,7 @@ class ExternalChart(ChartFile):
                 item[k]=v
     def buildKey(self):
         key = self.ext.get('chartKey') or self.ext.get('name')
-        return self.SCOPE_EXT+self._prefix+'@'+key
+        return _getExternalChartPrefix(self._prefix)+key
     def buildAltKey(self):
         key = self.ext.get('name')
         if key is None:
@@ -494,7 +494,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       #internal chart
       with self.lock:
           item=self.itemList.get(chartKey)
-    elif chartKey.startswith(ExternalChart.SCOPE_EXT):
+    elif chartKey.startswith(SCOPE_EXT):
         ckp=chartKey.split("@")
         if len(ckp) < 3:
             return None
@@ -536,7 +536,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                       except KeyError:
                           pass
                       if chartKey is not None:
-                          if not chartKey.startswith(self.SCOPE_USER) and not chartKey.startswith(ExternalChart.SCOPE_EXT):
+                          if not chartKey.startswith(self.SCOPE_USER) and not chartKey.startswith(SCOPE_EXT):
                               #old external config
                               #migrate name->displayName, chartkey->mappingTable[chartKey]->name
                               newName=self.nameToKey.get(chartKey)
@@ -564,6 +564,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   CGETCONFIG="getConfig"
   CSAVECONFIG="saveConfig"
   CDELCONFIG="deleteConfig"
+  CLISTCONFIG="listConfig"
   def handleSpecialApiRequest(self, command, requestparam, handler):
     hostip=self.getRequestIp(handler)
     name=AVNUtil.getHttpRequestParam(requestparam, "name")
@@ -579,9 +580,15 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         return AVNUtil.getReturnData()
       if command == self.CGETCONFIG:
         overlay=None
+        allowEmpty=True
         if name is None or name == "":
-            #get default
-            ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
+            ovlname=AVNUtil.getHttpRequestParam(requestparam, "configName")
+            if ovlname is not None:
+                self.checkName(ovlname)
+                allowEmpty=False
+            if ovlname is None:
+                #get default
+                ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
             overlay=self.ovlConfigs.get(ovlname)
         else:
             chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
@@ -598,6 +605,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                         break
         rt = {}
         if overlay is None:
+          if not allowEmpty:
+              return AVNUtil.getReturnData(error="overlay %s not found"%ovlname)
           rt={'name': ovlname}
         else:
           with open(overlay.getFileName(), "r", encoding='utf-8') as f:
@@ -608,8 +617,15 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         return AVNUtil.getReturnData(data=rt)
       if command == self.CSAVECONFIG or command == self.CDELCONFIG:
           names=[]
+          onlyConfigName=False
           if name is None:
-              ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
+              ovlname = AVNUtil.getHttpRequestParam(requestparam, "configName")
+              if ovlname is not None:
+                  self.checkName(ovlname)
+                  onlyConfigName=True
+                  names=[ovlname] #also allow delete
+              if ovlname is None:
+                ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
           else:
             chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
             if chartEntry is None:
@@ -621,6 +637,13 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           delstart=0
           rt=AVNUtil.getReturnData()
           if command == self.CSAVECONFIG:
+            if onlyConfigName:
+                #for save we allow only existing configs when we received a configName
+                #but not a chart name
+                #the client will not know how to construct a valid config name
+                with self.lock:
+                    if self.ovlConfigs.get(ovlname) is None:
+                        return AVNUtil.getReturnData(error="overlay %s not found"%ovlname)
             delstart=1
             filename = os.path.join(self.baseDir, ovlname)
             rt = super()._upload(filename, handler, requestparam,overwrite=True)
@@ -635,10 +658,22 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                     os.unlink(old.getFileName())
           self.wakeUp()
           return rt
+      if command == self.CLISTCONFIG:
+          return AVNUtil.getReturnData(data=list(self.ovlConfigs.keys()))
     except Exception as e:
       return AVNUtil.getReturnData(error=str(e))
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)
 
+  @classmethod
+  def getExternalChartPrefix(cls,name):
+      '''
+      allow the pluginmanager to query the prefix we use
+      for the charts of a particular plugin
+      This way the js side can create charts with the same prefix
+      :param name:
+      :return:
+      '''
+      return _getExternalChartPrefix(name)
   def registerExternalProvider(self,name,callback):
     if callback is not None:
       AVNLog.info("ChartHandler: registering external chart provider %s", name)

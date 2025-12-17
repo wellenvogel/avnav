@@ -47,6 +47,7 @@ import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -400,15 +401,10 @@ public class PluginManager extends DirectoryRequestHandler {
         throw new Exception("cannot rename plugins");
     }
 
-    static final AvnUtil.KeyValue<String>[] PLUGINFILES=new AvnUtil.KeyValue[]
-    {
-            new AvnUtil.KeyValue<String>("css","plugin.css"),
-            new AvnUtil.KeyValue<String>("js","plugin.js"),
-            new AvnUtil.KeyValue<String>("mjs","plugin.mjs")
-    };
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if ("pluginInfo".equals(command)){
+            ChartHandler chartHandler = gpsService.getChartHandler();
             String rname=uri.getQueryParameter("name");
             JSONArray rt=new JSONArray();
             for (File localFile: workDir.listFiles()) {
@@ -419,8 +415,11 @@ public class PluginManager extends DirectoryRequestHandler {
                     po.put(IPluginHandler.K_NAME,name);
                     boolean active=isActive(name);
                     po.put(IPluginHandler.K_ACTIVE,active);
+                    if (chartHandler != null) {
+                        po.put(IPluginHandler.K_CHARTPREFIX, chartHandler.getExternalChartsPrefix(name));
+                    }
                     if (active) {
-                        for (AvnUtil.KeyValue<String> item : PLUGINFILES) {
+                        for (AvnUtil.KeyValue<String> item : IPluginHandler.PLUGINFILES.values()) {
                             File pf = new File(localFile, item.value);
                             if (pf.exists()) {
                                 JSONObject info=new JSONObject();
@@ -465,6 +464,9 @@ public class PluginManager extends DirectoryRequestHandler {
                         }
                     }
                     po.put(IPluginHandler.K_BASE,getUrlFromName(ph.getName()));
+                    if (chartHandler != null) {
+                        po.put(IPluginHandler.K_CHARTPREFIX, chartHandler.getExternalChartsPrefix(ph.getName()));
+                    }
                     finalList.put(po);
                 }
             }
