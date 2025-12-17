@@ -1017,7 +1017,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         api = self.getApi(localPath[0])
         if api is None:
             raise Exception("plugin %s not found" % localPath[0])
-        if not api.isEnabled():
+        if not api.isEnabled() and localPath[1] != ApiImpl.CLIENTFILES[ApiImpl.CFGTYPE]:
             raise Exception("plugin %s disabled" % localPath[0])
         if localPath[1][0:3] == 'api':
             # plugin api request
@@ -1062,13 +1062,12 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                                'base': self.PREFIX + "/" + k,
                                'active': active,
                                'chartPrefix':AVNChartHandler.getExternalChartPrefix(api.prefix),}
-                    if active:
-                        dir = api.directory
-                        for p, v in ApiImpl.PLUGINFILES.items():
-                            fname = os.path.join(dir, v)
-                            if os.path.exists(fname):
-                                finfo = {'url': self.PREFIX + "/" + k + "/" + v, 'timestamp': os.path.getmtime(fname)}
-                                element[p] = finfo
+                    dir = api.directory
+                    for p, v in ApiImpl.PLUGINFILES.items():
+                        fname = os.path.join(dir, v)
+                        if os.path.exists(fname):
+                            finfo = {'url': self.PREFIX + "/" + k + "/" + v, 'timestamp': os.path.getmtime(fname)}
+                            element[p] = finfo
                     data.append(element)
             return AVNUtil.getReturnData(data=data)
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")

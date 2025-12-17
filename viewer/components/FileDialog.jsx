@@ -1768,17 +1768,28 @@ class PluginItemActions extends ItemActions{
                 handlerId: item.handlerId
             }).then((json) => json.handler);
         }
+        let cfgUrl;
         for (let pi of fileList) {
             if (pi.name === item.name){
-                let files;
+                let files="";
                 const flist=["js","mjs","css","cfg","python"];
                 for (let ft of flist){
                     if (pi[ft] !== undefined) {
                         if (files) files+=", "+ft;
                         else files=ft;
+                        if (ft === 'cfg'){
+                            cfgUrl=pi[ft].url;
+                        }
                     }
                 }
                 rt.files=files;
+            }
+        }
+        if (cfgUrl){
+            const config=await Requests.getJson(cfgUrl,{useNavUrl:false,checkOk:false,noCache:false});
+            if (config){
+                rt.version=config.version;
+                rt.description=config.description;
             }
         }
         if (status && status.info && (status.info.items instanceof Array)){
@@ -1789,7 +1800,6 @@ class PluginItemActions extends ItemActions{
                 }
             }
         }
-        rt.version=item.version;
         return rt;
     }
 
@@ -1802,6 +1812,7 @@ class PluginItemActions extends ItemActions{
                     return <img className="status_image" src={statusTextToImageUrl(v)}/>
                 }},
             {label:'info',value:'info'},
+            {label:'description',value:'description'},
         ]
     }
 }

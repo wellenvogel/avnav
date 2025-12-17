@@ -37,12 +37,16 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import de.wellenvogel.avnav.appapi.AddonHandler;
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
@@ -53,19 +57,216 @@ import de.wellenvogel.avnav.util.AvnUtil;
 
 public class PluginManager extends DirectoryRequestHandler {
 
+    static class Plugin{
+        static final long MAX_CFG=100000;
+        public String name;
+        long lastModified;
+        File dir;
+        JSONObject config=null;
+        JSONObject currentValues=new JSONObject();
+        EditableParameter.ParameterList parameters=new EditableParameter.ParameterList(ENABLED_PARAMETER);
+        boolean ready=false;
+        boolean prepared=false;
+        GpsService gpsService;
+        WorkerStatus status;
+        JSONObject infoActive=new JSONObject();
+        JSONObject infoInactive=new JSONObject();
+        String pluginUrlBase;
+        public Plugin(String name,File dir,WorkerStatus status,String urlPrefix){
+            this.name=name;
+            this.dir=dir;
+            this.lastModified=dir.lastModified();
+            this.status=status;
+            this.pluginUrlBase=urlPrefix;
+        }
+        void prepare() throws Exception {
+            for (JSONObject jo: new JSONObject[]{infoActive,infoInactive}){
+                jo.put(IPluginHandler.K_NAME,name);
+                jo.put(IPluginHandler.K_BASE,pluginUrlBase);
+                for (AvnUtil.KeyValue<String> item : IPluginHandler.PLUGINFILES.values()) {
+                    File pf = new File(dir, item.value);
+                    if (pf.exists()) {
+                        JSONObject info=new JSONObject();
+                        info.put(IPluginHandler.IK_FURL,pluginUrlBase+ "/" + URLEncoder.encode(pf.getName(),"utf-8"));
+                        info.put(IPluginHandler.IK_FTS,pf.lastModified());
+                        jo.put(item.key, info);
+                    }
+                }
+            }
+            infoActive.put(IPluginHandler.IK_ACTIVE,true);
+            infoInactive.put(IPluginHandler.IK_ACTIVE,false);
+            String cfgName=IPluginHandler.PLUGINFILES.get(IPluginHandler.FT_CFG).value;
+            File cfgFile=new File(dir,cfgName);
+            if (cfgFile.exists() && cfgFile.canRead()){
+                config=AvnUtil.readJsonFile(cfgFile,MAX_CFG);
+            }
+            prepared=true;
+        }
+
+        boolean mustUpdate(Plugin other){
+            if (other == null) return true;
+            return lastModified != other.lastModified;
+        }
+
+        void start(GpsService gpsService){
+            this.gpsService = gpsService;
+            if (!prepared) {
+                try {
+                    prepare();
+                } catch (Exception e) {
+                    status.setChildStatus(name, WorkerStatus.Status.ERROR, e.getMessage());
+                }
+                prepared = true;
+                return;
+            }
+            if (config != null) {
+                //todo register
+            }
+            if (enabled()) {
+                status.setChildStatus(name, WorkerStatus.Status.NMEA, "running", true);
+            } else {
+                status.setChildStatus(name, WorkerStatus.Status.INACTIVE, "disabled", true);
+            }
+        }
+        boolean enabled(){
+            try {
+                return ENABLED_PARAMETER.fromJson(currentValues);
+            } catch (JSONException e) {
+                return true;
+            }
+        }
+        void stop(boolean fin){
+            ready=false;
+            if (fin){
+                status.unsetChildStatus(name);
+            }
+            if (gpsService == null) return;
+            ChartHandler ch=gpsService.getChartHandler();
+            if (ch != null) ch.removeExternalCharts(name);
+            AddonHandler ah=gpsService.getAddonHandler();
+            if (ah != null) ah.removeExternalAddons(name);
+        }
+
+        JSONObject toJson() throws JSONException {
+            JSONObject rt=new JSONObject();
+            rt.put(IPluginHandler.IK_NAME,name);
+            rt.put(IPluginHandler.IK_DOWNLOAD,true);
+            rt.put("time",lastModified/1000);
+            rt.put("downloadName",dir.getName()+".zip");
+            rt.put("checkPrefix",USER_PREFIX);
+            rt.put(IPluginHandler.IK_CHILD,name);
+            rt.put(IPluginHandler.IK_ID,status.id);
+            rt.put(IPluginHandler.IK_ACTIVE,enabled());
+            rt.put("type",RequestHandler.TYPE_PLUGINS);
+            return rt;
+        }
+
+        JSONObject toInfo() throws JSONException {
+            JSONObject rt;
+            if (enabled()) rt=infoActive;
+            else rt=infoInactive;
+            ChartHandler ch=gpsService.getChartHandler();
+            if (ch != null){
+                rt.put(IPluginHandler.K_CHARTPREFIX,ch.getExternalChartsPrefix(name));
+            }
+            return rt;
+        }
+
+        void updateParameters(JSONObject newParam,boolean handleEnable) throws JSONException {
+            if (newParam == null) return;
+            boolean enabled=enabled();
+            for (EditableParameter.EditableParameterInterface p:parameters){
+                if (newParam.has(p.getName())){
+                    currentValues.put(p.getName(),newParam.get(p.getName()));
+                }
+            }
+            if (handleEnable){
+                if (enabled != enabled()){
+                    if (enabled()){
+                        if (gpsService != null) start(gpsService);
+                    }
+                    else{
+                        stop(false);
+                    }
+                }
+            }
+        }
+
+    }
+
     static final String UPLOAD_BASE ="__upload";
     static final String USER_PREFIX="user-";
-    EditableParameter.ParameterList childParameters=new EditableParameter.ParameterList(ENABLED_PARAMETER);
 
+    HashMap<String,Plugin> plugins=new HashMap<>();
     JSONObject childParameterValues=new JSONObject();
     private final Object createLock=new Object();
     public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix) throws IOException {
         super(type, ctx, workDir, urlPrefrix, null);
     }
 
+    private Plugin createPlugin(File pdir) throws UnsupportedEncodingException {
+        String name=USER_PREFIX+pdir.getName();
+        Plugin plugin=new Plugin(name,pdir,status,getUrlFromName(name));
+        try {
+            plugin.prepare();
+            synchronized (createLock){
+                plugin.updateParameters(childParameterValues.optJSONObject(plugin.name),false);
+            }
+        } catch (Exception e) {
+            AvnLog.e("error preparing plugin "+name,e);
+        }
+        return plugin;
+    }
+    private HashMap<String,Plugin> readPlugins() throws UnsupportedEncodingException {
+        HashMap<String,Plugin> rt=new HashMap<>();
+        for (File f : workDir.listFiles()) {
+            if (!f.isDirectory()) continue;
+            Plugin plugin=createPlugin(f);
+            rt.put(plugin.name,plugin);
+        }
+        return rt;
+    }
+
+    private void updatePlugins(HashMap<String,Plugin> newPlugins,boolean removeOther){
+        ArrayList<Plugin> cleanups=new ArrayList<>();
+        synchronized (createLock){
+            for (String name:newPlugins.keySet()){
+                Plugin newPlugin=newPlugins.get(name);
+                Plugin oldPlugin=plugins.get(name);
+                if (oldPlugin == null || oldPlugin.mustUpdate(newPlugin)){
+                    if (oldPlugin != null) oldPlugin.stop(true);
+                    try {
+                        newPlugin.start(gpsService);
+                    } catch (Exception e) {
+                        AvnLog.e("unable to prepare plugin "+newPlugin.name,e);
+                    }
+                    plugins.put(newPlugin.name,newPlugin);
+                }
+            }
+            if (removeOther){
+                for (Plugin plugin:plugins.values()){
+                    if (newPlugins.get(plugin.name) == null){
+                        cleanups.add(plugin);
+                    }
+                }
+                for (Plugin plugin:cleanups){
+                    plugins.remove(plugin.name);
+                }
+            }
+        }
+    }
+    private void updatePlugin(Plugin plugin){
+        HashMap<String,Plugin> plugins=new HashMap<>();
+        plugins.put(plugin.name,plugin);
+        updatePlugins(plugins,false);
+    }
+
 
     @Override
     public void start(PermissionCallback permissionCallback) {
+        if (mainThread != null){
+            stopAndWait();
+        }
         gpsService.updateConfigSequence(); //TODO: could be more granular
         try{
             for (File f:workDir.listFiles()){
@@ -77,10 +278,13 @@ public class PluginManager extends DirectoryRequestHandler {
             AvnLog.e("error cleaning up plugin dir",t);
         }
         setStatus(WorkerStatus.Status.NMEA,"running");
-        for (File f:workDir.listFiles()){
-            if (!f.isDirectory()) continue;
-            setChildStatus(USER_PREFIX+f.getName());
+        try {
+            HashMap<String, Plugin> current = readPlugins();
+            updatePlugins(current, true);
+        }catch (Exception e){
+            setStatus(WorkerStatus.Status.ERROR,"unable to read plugins "+e.getMessage());
         }
+        super.start(permissionCallback);
     }
 
     @Override
@@ -90,6 +294,16 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
+        while(! shouldStop(startSequence)){
+            sleep(60000);
+            try{
+                HashMap<String, Plugin> current = readPlugins();
+                updatePlugins(current, true);
+                setStatus(WorkerStatus.Status.NMEA,"running");
+            }catch (Exception e){
+                setStatus(WorkerStatus.Status.ERROR,"unable to read plugins "+e.getMessage());
+            }
+        }
     }
 
     private List<IPluginHandler> getExternalPlugins(){
@@ -104,21 +318,7 @@ public class PluginManager extends DirectoryRequestHandler {
         return rt;
     }
 
-    private void setChildStatus(String name){
-        boolean enabled=true;
-        synchronized (createLock){
-            try{
-                JSONObject jo=childParameterValues.getJSONObject(name);
-                enabled=ENABLED_PARAMETER.fromJson(jo);
-            }catch (Throwable t){}
-        }
-        if (enabled){
-            status.setChildStatus(name, WorkerStatus.Status.NMEA,"running",true);
-        }
-        else{
-            status.setChildStatus(name, WorkerStatus.Status.INACTIVE,"disabled",true);
-        }
-    }
+
     private void zip(File file, ZipOutputStream zos) throws IOException
     {
         zip(file, file.getName(), zos);
@@ -167,8 +367,12 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
-        File found=findLocalFile(name);
-        if (found == null) return null;
+        Plugin plugin=null;
+        synchronized (createLock){
+            plugin=plugins.get(name);
+            if (plugin == null) return null;
+        }
+        final File found=plugin.dir;
         PipedInputStream is=new PipedInputStream();
         ZipOutputStream zos=new ZipOutputStream(new PipedOutputStream(is));
         Thread writer=new Thread(new Runnable() {
@@ -322,42 +526,25 @@ public class PluginManager extends DirectoryRequestHandler {
                 e = zis.getNextEntry();
             }
             zis.close();
+            existing.setLastModified(System.currentTimeMillis()); //ensure the plugin is considered to be new
         }catch (Throwable t){
             AvnLog.e("exception in plugin upload for "+name,t);
             throw t;
         }
-        setChildStatus(USER_PREFIX+name);
+        Plugin newPlugin=createPlugin(existing);
+        updatePlugin(newPlugin);
         gpsService.updateConfigSequence();
         return true;
-    }
-    String pluginFileToName(File plugin){
-        return USER_PREFIX+plugin.getName();
-    }
-    @Override
-    protected JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
-        if (!localFile.isDirectory()) return null;
-        String name=pluginFileToName(localFile);
-        JSONObject jo= super.fileToItem(localFile);
-        jo.put("name",name);
-        jo.put("canDownload",true);
-        jo.put("downloadName",localFile.getName()+".zip");
-        jo.put("checkPrefix",USER_PREFIX);
-        jo.put(IPluginHandler.IK_CHILD,name);
-        jo.put(IPluginHandler.IK_ID,getId());
-        jo.put(IPluginHandler.IK_ACTIVE,isActive(name));
-        return jo;
     }
 
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
-        for (File localFile: workDir.listFiles()) {
-            if (localFile.isDirectory()){
-                JSONObject jo=fileToItem(localFile);
-                if (jo != null) {
-                    jo.put(IPluginHandler.IK_EDIT,serverInfo==null);
-                    rt.put(jo);
-                }
+        synchronized (createLock){
+            for (Plugin plugin:plugins.values()){
+                JSONObject jo=plugin.toJson();
+                jo.put(IPluginHandler.IK_EDIT,serverInfo==null);
+                rt.put(jo);
             }
         }
         List<IPluginHandler> externals=getExternalPlugins();
@@ -370,27 +557,24 @@ public class PluginManager extends DirectoryRequestHandler {
         }
         return rt;
     }
-    private void removeChild(String name){
-       status.unsetChildStatus(name);
-       synchronized (createLock){
-           if (childParameterValues.has(name)){
-               childParameterValues.remove(name);
-           }
-       }
-        try {
-            gpsService.updateWorkerConfig(this,null,null);
-        } catch (Exception e) {
-            AvnLog.e("unable to update plugin config",e);
-        }
-    }
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        File pdir=findLocalFile(name);
-        if (pdir == null) throw new Exception("plugin "+name+" not found");
+        File pdir;
+        synchronized (createLock){
+            Plugin plugin=plugins.get(name);
+            if (plugin == null) throw new Exception("plugin "+name+" not found");
+            plugin.stop(true);
+            plugins.remove(name);
+            pdir=plugin.dir;
+        }
         boolean rt= AvnUtil.deleteRecursive(pdir);
         if (rt) {
-            removeChild(name);
+            try {
+                gpsService.updateWorkerConfig(this,null,null);
+            } catch (Exception e) {
+                AvnLog.e("unable to update plugin config",e);
+            }
             gpsService.updateConfigSequence();
         }
         return rt;
@@ -407,42 +591,11 @@ public class PluginManager extends DirectoryRequestHandler {
             ChartHandler chartHandler = gpsService.getChartHandler();
             String rname=uri.getQueryParameter("name");
             JSONArray rt=new JSONArray();
-            for (File localFile: workDir.listFiles()) {
-                if (localFile.isDirectory()) {
-                    String name=pluginFileToName(localFile);
-                    if (rname != null && ! rname.equals(name)) continue;
-                    JSONObject po=new JSONObject();
-                    po.put(IPluginHandler.K_NAME,name);
-                    boolean active=isActive(name);
-                    po.put(IPluginHandler.K_ACTIVE,active);
-                    if (chartHandler != null) {
-                        po.put(IPluginHandler.K_CHARTPREFIX, chartHandler.getExternalChartsPrefix(name));
-                    }
-                    if (active) {
-                        for (AvnUtil.KeyValue<String> item : IPluginHandler.PLUGINFILES.values()) {
-                            File pf = new File(localFile, item.value);
-                            if (pf.exists()) {
-                                JSONObject info=new JSONObject();
-                                info.put(IPluginHandler.IK_FURL,getUrlFromName(name + "/" + pf.getName()));
-                                info.put(IPluginHandler.IK_FTS,pf.lastModified());
-                                po.put(item.key, info);
-                            }
-                        }
-                    }
-                    po.put(IPluginHandler.K_BASE,getUrlFromName(name));
-                    rt.put(po);
-                }
-            }
-            JSONArray finalList=new JSONArray();
             synchronized (createLock){
-                for (int i=0;i<rt.length();i++){
-                    JSONObject po=rt.getJSONObject(i);
-                    String pname=po.getString("name");
-                    try{
-                        JSONObject cfg=childParameterValues.getJSONObject(pname);
-                        if (!ENABLED_PARAMETER.fromJson(cfg)) continue;
-                    }catch (Exception e){}
-                    finalList.put(po);
+                for (Plugin plugin:plugins.values()){
+                     if (rname != null && ! rname.equals(plugin.name)) continue;
+                     JSONObject po=plugin.toInfo();
+                     rt.put(po);
                 }
             }
             List<IPluginHandler> externals=getExternalPlugins();
@@ -467,27 +620,12 @@ public class PluginManager extends DirectoryRequestHandler {
                     if (chartHandler != null) {
                         po.put(IPluginHandler.K_CHARTPREFIX, chartHandler.getExternalChartsPrefix(ph.getName()));
                     }
-                    finalList.put(po);
+                    rt.put(po);
                 }
             }
-            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",finalList));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",rt));
         }
         return RequestHandler.getErrorReturn("command "+command+" not available");
-    }
-
-    @Override
-    protected File findLocalFile(String name) throws IOException {
-        if (workDir == null) throw new IOException("workdir for "+type+" not set");
-        if (! name.startsWith(USER_PREFIX)) throw new IOException("names must start with "+USER_PREFIX);
-        name=name.substring(USER_PREFIX.length());
-        for (File localFile: workDir.listFiles()) {
-            if (localFile.isDirectory()
-                    &&localFile.canRead()
-                    && localFile.getName().equals(name)) {
-                return localFile;
-            }
-        }
-        return null;
     }
 
 
@@ -502,9 +640,14 @@ public class PluginManager extends DirectoryRequestHandler {
         if (parts.length < 2) return null;
         String baseName=URLDecoder.decode(parts[0], "UTF-8");
         if (baseName.startsWith(USER_PREFIX)) {
-            File base = findLocalFile(baseName);
-            if (!base.isDirectory()) return null;
-            if (!isActive(baseName)) return null;
+            File base = null;
+            synchronized (createLock) {
+                Plugin plugin = plugins.get(baseName);
+                if (plugin == null) return null;
+                //allow to access plugin.json even if disabled
+                if (!plugin.enabled() && !parts[1].equals(IPluginHandler.PLUGINFILES.get(IPluginHandler.FT_CFG).value)) return null;
+                base = plugin.dir;
+            }
             String fpath = checkPathParts(parts, true, 1);
             File finalFile = new File(base, fpath);
             if (finalFile.isDirectory()) throw new Error(finalFile.getPath() + " is a directory");
@@ -524,30 +667,16 @@ public class PluginManager extends DirectoryRequestHandler {
         throw new Exception("no plugin "+baseName+" found");
     }
 
-    private boolean isActive(String name){
-        synchronized (createLock){
-            if (! childParameterValues.has(name)) return true;
-            try {
-                JSONObject co=childParameterValues.getJSONObject(name);
-                return ENABLED_PARAMETER.fromJson(co);
-            } catch (JSONException e) {
-                return true;
-            }
-        }
-    }
-
     @Override
     public synchronized JSONObject getEditableParameters(String child, boolean includeCurrent, Context context) throws JSONException {
-        if (child != null){
-            JSONObject rt=super.getEditableParameters(null,false,context);
-            rt.put("data",childParameters.toJson(context));
-            if (includeCurrent) {
-                synchronized (createLock) {
-                    JSONObject cv=new JSONObject();
-                    try{
-                        cv=childParameterValues.getJSONObject(child);
-                    }catch (Throwable t){}
-                    rt.put("values", cv);
+        if (child != null) {
+            JSONObject rt = super.getEditableParameters(null, false, context);
+            synchronized (createLock) {
+                Plugin plugin=plugins.get(child);
+                if (plugin == null) throw new JSONException("plugin "+child+" not found");
+                rt.put("data", plugin.parameters.toJson(context));
+                if (includeCurrent) {
+                    rt.put("values", plugin.currentValues);
                 }
             }
             return rt;
@@ -560,17 +689,12 @@ public class PluginManager extends DirectoryRequestHandler {
         if (newParam == null) return;
         if (child != null){
             JSONObject nv=new JSONObject();
-            synchronized (createLock){
-                if (!childParameterValues.has(child)){
-                    childParameterValues.put(child,new JSONObject());
-                }
-                JSONObject cv=childParameterValues.getJSONObject(child);
-                for (EditableParameter.EditableParameterInterface p:childParameters){
-                    if (newParam.has(p.getName())){
-                        cv.put(p.getName(),newParam.get(p.getName()));
-                    }
-                }
-                nv.put(CHILD_PARAM_NAME,childParameterValues);
+            synchronized (createLock) {
+                Plugin plugin = plugins.get(child);
+                if (plugin == null) throw new IOException("plugin " + child + " not found");
+                plugin.updateParameters(newParam, true);
+                childParameterValues.put(plugin.name, plugin.currentValues);
+                nv.put(CHILD_PARAM_NAME, childParameterValues);
             }
             super.setParameters(null,nv,false,false);
             return;
@@ -578,6 +702,17 @@ public class PluginManager extends DirectoryRequestHandler {
         synchronized (createLock){
             if (newParam.has(CHILD_PARAM_NAME)){
                 childParameterValues=newParam.getJSONObject(CHILD_PARAM_NAME);
+                for (Iterator<String> it = childParameterValues.keys(); it.hasNext(); ) {
+                    String k = it.next();
+                    Plugin plugin=plugins.get(k);
+                    if (plugin != null){
+                        try {
+                            plugin.updateParameters(childParameterValues.getJSONObject(k),true);
+                        }catch (Exception e){
+                            AvnLog.e("unable to update plugin "+k,e);
+                        }
+                    }
+                }
             }
         }
         super.setParameters(null, newParam, replace, check);
