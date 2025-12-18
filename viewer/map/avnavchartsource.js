@@ -41,7 +41,7 @@ import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
-import {fetchSequence, getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
+import { getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -281,6 +281,7 @@ class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
 export const CHARTAV= {
     ...CHARTBASE,
     OVERVIEW: "overviewUrl",
+    SEQUENCEURL: "sequenceUrl",
 }
 
 class AvnavChartSource extends ChartSourceBase{
@@ -530,7 +531,24 @@ class AvnavChartSource extends ChartSourceBase{
         if ((!this.isReady() &&! force)|| destroySequence !== this.destroySequence) return false;
         let newSequence;
         try {
-            newSequence = await fetchSequence(this.chartEntry);
+            let sequenceUrl=getUrlWithBase(this.chartEntry,CHARTAV.SEQUENCEURL);
+            if (! sequenceUrl) {
+                const chartUrl=getUrlWithBase(this.chartEntry,CHARTAV.URL);
+                if (chartUrl) {
+                    sequenceUrl=chartUrl+"/sequence?_="+encodeURIComponent((new Date()).getTime());
+                }
+            }
+            if (sequenceUrl) {
+                newSequence = await Requests.getJson(sequenceUrl,{useNavUrl:false,checkOK:false,noCache:false})
+                    .then((json)=>json.sequence);
+            }
+            else if (this.getOverviewUrl()){
+                //fall through to last modified of overview
+                throw {code:404};
+            }
+            else{
+                newSequence = 0; //no sequence handling
+            }
         }catch (e){
             if (e && e.code === 404){
                 newSequence = await Requests.getLastModified(this.getOverviewUrl());

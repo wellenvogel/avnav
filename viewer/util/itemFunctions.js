@@ -88,23 +88,6 @@ export const fetchItemInfo = async (item) => {
     }
 }
 
-export const fetchSequence = async (item) => {
-    if (!item) return;
-    const itemUrl=getUrlWithBase(item,'url');
-    if (item.type === 'chart') {
-        if (!itemUrl) return undefined;
-        const url = itemUrl + "/sequence?_=" + (new Date()).getTime();
-        //set noCache to false to avoid pragma in header (CORS...)
-        const data = await Requests.getJson(url, {useNavUrl: false, noCache: false});
-        return data.sequence || 0;
-    }
-    if (itemUrl) {
-        return await Requests.getLastModified(itemUrl);
-    }
-    const info = await fetchItemInfo(item);
-    return info.time;
-}
-
 export const injectBaseUrl=(url,baseUrlIn)=>{
     if (! url) return;
     try {

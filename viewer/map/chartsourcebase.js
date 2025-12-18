@@ -39,7 +39,8 @@ import {
     EditableNumberParameter,
     EditableSelectParameter
 } from "../util/EditableParameter";
-import {fetchItemInfo, fetchSequence} from "../util/itemFunctions";
+import {fetchItemInfo, getUrlWithBase} from "../util/itemFunctions";
+import Requests from "../util/requests";
 
 /**
  *
@@ -163,7 +164,18 @@ class ChartSourceBase {
         }catch (e){}
         return 1;
     }
-
+    async fetchSequence(){
+        if (!this.chartEntry) return;
+        if (this.chartEntry.type === 'chart') {
+            throw new Error("getSequence must be overloaded for charts");
+        }
+        const itemUrl=getUrlWithBase(this.chartEntry,'url');
+        if (itemUrl) {
+            return await Requests.getLastModified(itemUrl);
+        }
+        const info = await fetchItemInfo(this.chartEntry);
+        return info.time;
+    }
     /**
      * returns a promise that resolves to true for changed
      */
@@ -176,7 +188,7 @@ class ChartSourceBase {
             return false;
         }
         try {
-            const newSequence = await fetchSequence(this.chartEntry)
+            const newSequence = await this.fetchSequence(this.chartEntry)
             if (this.removeSequence !== lastRemoveSequence || (!this.isReady() && !force)) {
                 return false;
             }
