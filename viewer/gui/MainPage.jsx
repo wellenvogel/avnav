@@ -27,6 +27,7 @@ import LayoutHandler from "../util/layouthandler";
 import {avitem} from "../util/helper";
 import {shallowEqual} from "shallow-equal";
 import {RecursiveCompare} from "../util/compare";
+import {getUrlWithBase} from "../util/itemFunctions";
 
 
 const getImgSrc=function(color){
@@ -284,7 +285,7 @@ class MainPage extends React.Component {
         let isConnected=globalStore.getData(keys.properties.connectedMode,false);
         return (
             <div className={cls} onClick={props.onClick}>
-                <img src={props.icon||chartImage}/>
+                <img src={getUrlWithBase(props,'icon')||chartImage}/>
                 <span className="chartName">{props.displayName||props.name}</span>
                 {isConnected && <Button
                     className="smallButton"

@@ -552,21 +552,13 @@ class ApiImpl(AVNApi):
                         AVNLog.error("plugin %s: charts must be a list: %s", self.prefix, repr(charts))
                     else:
                         try:
-                            convertedCharts = []
-                            KEYS_TO_ADAPT=['url','chartUrl','icon']
                             for chart in charts:
                                 try:
-                                    nchart=chart.copy()
-                                    for k in KEYS_TO_ADAPT:
-                                        if k in chart:
-                                            nv=urljoin(self.getBaseUrl(True),chart[k])
-                                            nchart[k]=nv
-                                    convertedCharts.append(nchart)
+                                    chart['baseUrl']=self.getBaseUrl(True)
                                 except Exception as x:
                                     AVNLog.error("unable to adapt chart %s for %s: %s",repr(chart),self.prefix,repr(x))
-                                    convertedCharts.append(chart)
                             def getcharts(*args):
-                                return convertedCharts
+                                return charts
                             AVNLog.debug("registering charts for %s:%s", self.prefix, repr(charts))
                             self.registerChartProvider(getcharts)
                         except Exception as e:

@@ -26,6 +26,8 @@ import Requests from "./requests";
 import {layoutLoader} from "./layouthandler";
 import PropertyHandler from "./propertyhandler";
 import NavHandler from "../nav/navdata";
+import {urlToString} from "./helper";
+import base from "../base";
 const RouteHandler=NavHandler.getRoutingHandler();
 export const listItems = async (type) => {
     let items;
@@ -88,16 +90,34 @@ export const fetchItemInfo = async (item) => {
 
 export const fetchSequence = async (item) => {
     if (!item) return;
+    const itemUrl=getUrlWithBase(item,'url');
     if (item.type === 'chart') {
-        if (!item.url) return undefined;
-        const url = item.url + "/sequence?_=" + (new Date()).getTime();
+        if (!itemUrl) return undefined;
+        const url = itemUrl + "/sequence?_=" + (new Date()).getTime();
         //set noCache to false to avoid pragma in header (CORS...)
         const data = await Requests.getJson(url, {useNavUrl: false, noCache: false});
         return data.sequence || 0;
     }
-    if (item.url) {
-        return await Requests.getLastModified(item.url);
+    if (itemUrl) {
+        return await Requests.getLastModified(itemUrl);
     }
     const info = await fetchItemInfo(item);
     return info.time;
+}
+
+export const injectBaseUrl=(url,baseUrlIn)=>{
+    if (! url) return;
+    try {
+        const baseUrl = baseUrlIn ? (new URL(baseUrlIn, window.location.href)) : window.location.href;
+        return urlToString(url, baseUrl);
+    }catch (e){
+        base.log(`error converting url ${url}, base ${baseUrlIn}: ${e}`);
+    }
+    return url;
+
+}
+export const getUrlWithBase=(item,element='url')=>{
+    if (!item) return;
+    const url=item[element];
+    return injectBaseUrl(url,item.baseUrl);
 }

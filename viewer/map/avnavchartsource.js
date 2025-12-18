@@ -41,7 +41,7 @@ import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
-import {fetchSequence} from "../util/itemFunctions";
+import {fetchSequence, getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -288,6 +288,11 @@ class AvnavChartSource extends ChartSourceBase{
         return true;
     }
 
+    getOverviewUrl(){
+        const url=getUrlWithBase(this.chartEntry,'url');
+        if (!url) return;
+        return url + "/avnav.xml";
+    }
     async prepareInternal() {
         let url = this.chartEntry.url;
         let upZoom = 0;
@@ -302,7 +307,8 @@ class AvnavChartSource extends ChartSourceBase{
         if (!url) {
             throw new Error("no map url for " + (this.chartEntry.name));
         }
-        let xmlUrl = url + "/avnav.xml";
+        url=getUrlWithBase(this.chartEntry,'url');
+        let xmlUrl = this.getOverviewUrl();
         const data = await Requests.getHtmlOrText(xmlUrl, {
             useNavUrl: false,
             timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
@@ -430,10 +436,7 @@ class AvnavChartSource extends ChartSourceBase{
             if (rt.url === undefined) {
                 throw new Error("missing href in layer");//scale: 3
             }
-            if (!rt.url.match(/^https*:/)) {
-                layerurl = baseurl + "/" + rt.url;
-            }
-            else layerurl = rt.url;
+            layerurl=injectBaseUrl(rt.url,baseurl);
             rt.layerurl=layerurl;
             rt.replaceInUrl = false;
             if (layerurl.indexOf("{x}") >= 0 && layerurl.indexOf("{y}") >= 0 && layerurl.indexOf("{z}") >= 0) {
@@ -511,11 +514,21 @@ class AvnavChartSource extends ChartSourceBase{
     }
 
 
-    async checkSequence() {
+    async checkSequence(force) {
         //prevent from triggering a reload if we already have been destroyed
         let destroySequence = this.destroySequence;
-        if (!this.isReady() || destroySequence !== this.destroySequence) return false;
-        const newSequence = await fetchSequence(this.chartEntry);
+        if ((!this.isReady() &&! force)|| destroySequence !== this.destroySequence) return false;
+        let newSequence;
+        try {
+            newSequence = await fetchSequence(this.chartEntry);
+        }catch (e){
+            if (e && e.code === 404){
+                newSequence = await Requests.getLastModified(this.getOverviewUrl());
+            }
+            else{
+                newSequence=0;
+            }
+        }
         if (this.destroySequence !== destroySequence) {
             return false;
         }

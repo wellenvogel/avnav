@@ -24,7 +24,7 @@
  */
 
 import {createItemActions, FileDialog, ItemActions} from "./FileDialog";
-import Helper, {avitem, setav} from "../util/helper";
+import Helper, {avitem, setav, urlToString} from "../util/helper";
 import React, {useCallback, useEffect, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
@@ -37,7 +37,7 @@ import UploadHandler from "./UploadHandler";
 import {DynamicButton} from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
-import {listItems} from "../util/itemFunctions";
+import {getUrlWithBase, listItems} from "../util/itemFunctions";
 import {useTimer} from "../util/GuiHelpers";
 
 const itemSort = (a, b) => {
@@ -60,12 +60,13 @@ const DownloadItem = (props) => {
     let actions = props.itemActions;
     let cls = Helper.concatsp("listEntry", actions.getClassName(props));
     let dataClass = "downloadItemData";
+    let icon=getUrlWithBase(props,'icon');
     return (
         <div className={cls} onClick={function (ev) {
             props.onClick(setav(ev, {action: 'select'}));
         }}>
-            {(props.icon) ?
-                <span className="icon" style={{backgroundImage: "url('" + (props.icon) + "')"}}/>
+            {(icon) ?
+                <span className="icon" style={{backgroundImage: "url('" + (icon) + "')"}}/>
                 :
                 <span className={Helper.concatsp('icon', actions.getIconClass(props))}/>
             }

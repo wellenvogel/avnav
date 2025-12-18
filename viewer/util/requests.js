@@ -27,6 +27,16 @@ import 'whatwg-fetch-timeout';
 import globalstore from "./globalstore";
 import base from "../base";
 
+class ResponseError extends Error {
+    constructor(response) {
+        super();
+        this.code=response.status;
+        this.txt=response.statusText;
+    }
+    toString() {
+        return this.txt;
+    }
+}
 /**
  *
  * @param url either a string or a dict with request parameters
@@ -90,6 +100,7 @@ const prepareInternal=(url, options, defaults)=>{
     return [rurl,requestOptions];
 }
 
+
 const handleJson=(rurl,requestOptions,options)=>{
     return new Promise((resolve,reject)=>{
         if (!rurl) {
@@ -101,14 +112,14 @@ const handleJson=(rurl,requestOptions,options)=>{
         fetch(rurl,requestOptions).then(
             (response)=>{
                 if (response.status < 200 || response.status >= 300){
-                    reject(response.statusText);
+                    reject(new ResponseError(response));
                     return;
                 }
                 if (response.ok){
                     return response.json();
                 }
                 else{
-                    reject(response.statusText);
+                    reject(new ResponseError(response));
                 }
             },
             (error)=>{
@@ -231,14 +242,14 @@ let RequestHandler={
           fetch(rurl,requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
-                      reject(response.statusText);
+                      reject(new ResponseError(response));
                   }
                   if (response.ok){
                       finalResponse=response;
                       return response.text();
                   }
                   else{
-                      reject(response.statusText);
+                      reject(new ResponseError(response));
                   }
               },
               (error)=>{
