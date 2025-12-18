@@ -699,8 +699,7 @@ class MapHolder extends DrawingPositionConverter {
             if (!chartSource) {
                 reject("chart not set");
             }
-            let url = chartSource.getConfig().url;
-            if (!url) {
+            if (! chartSource.hasValidUrl()) {
                 reject("no map selected");
                 return;
             }

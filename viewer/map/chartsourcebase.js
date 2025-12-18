@@ -39,8 +39,26 @@ import {
     EditableNumberParameter,
     EditableSelectParameter
 } from "../util/EditableParameter";
-import Requests from "../util/requests";
 import {fetchItemInfo, fetchSequence} from "../util/itemFunctions";
+
+/**
+ *
+ * @enum {string}
+ */
+export const CHARTBASE={
+    NAME: "name",
+    URL: "url",
+    UPZOOM:"upzoom",
+    OPACITY: "opacity",
+    SEQ: "sequence",
+    MINSCALE: "minScale",
+    MAXSCALE: "maxScale",
+    ENABLED: "enabled",
+    TOKENURL: "tokenUrl",
+    TOKENFUNCTION: "tokenFunction",
+    HASFEATUREINFO:"hasFeatureInfo",
+}
+
 class ChartSourceBase {
 
     COLOR_INVISIBLE='rgba(0,0,0,0)';
@@ -58,6 +76,7 @@ class ChartSourceBase {
         this.mapholder = mapholder;
         /**
          * @protected
+         * @type {Object.<CHARTBASE,any>}
          */
         this.chartEntry = assign({},chartEntry);
         for (let k in this.chartEntry){
@@ -132,8 +151,8 @@ class ChartSourceBase {
             let view = this.mapholder.olmap.getView();
             let scale = 1;
             let currentZoom = view.getZoom();
-            let cmin=parseFloat(this.chartEntry.minScale);
-            let cmax=parseFloat(this.chartEntry.maxScale);
+            let cmin=parseFloat(this.chartEntry[CHARTBASE.MINSCALE]);
+            let cmax=parseFloat(this.chartEntry[CHARTBASE.MAXSCALE]);
             if (cmin && currentZoom < cmin) {
                 scale = 1 / Math.pow(2, cmin - currentZoom);
             }
@@ -176,37 +195,37 @@ class ChartSourceBase {
         if (this.mapholder !== other.mapholder) return false;
         return shallowcompare(this.chartEntry,other.chartEntry);
     }
-    getUrl(){
-        return (this.chartEntry||{}).url;
-    }
+
 
     getChartKey() {
-        let chartBase = this.chartEntry.name;
+        let chartBase = this.chartEntry[CHARTBASE.NAME];
         return chartBase;
     }
 
     async prepareInternal(){
         throw new Error("prepareInternal not implemented in base class");
     }
-
+    hasValidUrl(){
+        return !! this.chartEntry[CHARTBASE.URL]
+    }
     async prepare() {
         const fullConfig = await fetchItemInfo(this.chartEntry);
         //TODO: only merge allowed parts
         Object.assign(this.chartEntry, fullConfig);
-        if (! this.chartEntry.url){
-            base.log("no url retrieved for "+this.chartEntry.name);
+        if (! this.hasValidUrl()){
+            base.log("no url retrieved for "+this.chartEntry[CHARTBASE.NAME]);
             if (this.isBaseChart()){
-                throw new Error("unable to get an url for the base chart "+this.chartEntry.name);
+                throw new Error("unable to get an url for the base chart "+this.chartEntry[CHARTBASE.NAME]);
             }
-            this.error="unable to get url for "+this.chartEntry.name;
+            this.error="unable to get url for "+this.chartEntry[CHARTBASE.NAME];
             this.visible=false;
             this.layers=[];
             this.isReadyFlag = true;
-            this.chartEntry.enabled=false;
+            this.chartEntry[CHARTBASE.ENABLED]=false;
             return;
         }
-        if (this.chartEntry.tokenUrl) {
-            const result = await CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
+        if (this.chartEntry[CHARTBASE.TOKENURL]) {
+            const result = await CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry[CHARTBASE.TOKENURL], this.chartEntry[CHARTBASE.TOKENFUNCTION]);
             this.encryptFunction = result.encryptFunction;
         }
         await this.checkSequence(true);
@@ -216,7 +235,7 @@ class ChartSourceBase {
             layer.avnavOptions.chartSource = this;
         });
         this.layers = layers;
-        if (!this.chartEntry.enabled) {
+        if (!this.chartEntry[CHARTBASE.ENABLED]) {
             this.visible = false;
             this.layers.forEach((layer) => layer.setVisible(false));
         }
@@ -234,15 +253,15 @@ class ChartSourceBase {
     }
 
     setVisible(visible){
-        if (! this.getUrl()) return;
+        if (! this.hasValidUrl()) return;
         this.visible=visible;
         if (! this.isReady()) return;
         this.layers.forEach((layer)=>layer.setVisible(visible));
     }
     resetVisible(){
         if (! this.isReady()) return;
-        this.visible=this.chartEntry.enabled;
-        this.layers.forEach((layer)=>layer.setVisible(this.chartEntry.enabled));
+        this.visible=this.chartEntry[CHARTBASE.ENABLED];
+        this.layers.forEach((layer)=>layer.setVisible(this.chartEntry[CHARTBASE.ENABLED]));
     }
 
     featureToInfo(feature,pixel,layer){
@@ -316,7 +335,7 @@ class ChartSourceBase {
     }
 
     setEnabled(enabled,opt_update){
-        if (! this.getUrl()) return;
+        if (! this.hasValidUrl()) return;
         this.mapholder.setEnabled(this,enabled,opt_update);
     }
 
@@ -333,7 +352,7 @@ class ChartSourceBase {
 
     hasFeatureInfo(){
         if (! this.isReady()) return false;
-        return this.chartEntry.hasFeatureInfo||false;
+        return this.chartEntry[CHARTBASE.HASFEATUREINFO]||false;
     }
     /**
      *

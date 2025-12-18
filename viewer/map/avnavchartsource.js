@@ -27,8 +27,8 @@ import base from '../base.js';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import Helper from '../util/helper.js';
-import ChartSourceBase from './chartsourcebase.js';
+import Helper, {Enum} from '../util/helper.js';
+import ChartSourceBase, {CHARTBASE} from './chartsourcebase.js';
 import * as olExtent from 'ol/extent';
 import {XYZ as olXYZSource} from 'ol/source';
 import * as olTransforms  from 'ol/proj/transforms';
@@ -278,6 +278,11 @@ class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
     }
 }
 
+export const CHARTAV= {
+    ...CHARTBASE,
+    OVERVIEW: "overviewUrl",
+}
+
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
@@ -289,14 +294,19 @@ class AvnavChartSource extends ChartSourceBase{
     }
 
     getOverviewUrl(){
-        const url=getUrlWithBase(this.chartEntry,'url');
+        const overview=getUrlWithBase(this.chartEntry,CHARTAV.OVERVIEW);
+        if (overview)return overview;
+        const url=getUrlWithBase(this.chartEntry,CHARTAV.URL);
         if (!url) return;
         return url + "/avnav.xml";
     }
+    hasValidUrl(){
+        return !!this.chartEntry[CHARTAV.URL] || !!this.chartEntry[CHARTAV.OVERVIEW];
+    }
     async prepareInternal() {
-        let url = this.chartEntry.url;
+        let url = this.chartEntry[CHARTAV.URL]||this.chartEntry[CHARTAV.OVERVIEW];
         let upZoom = 0;
-        if (this.chartEntry.upzoom !== undefined && this.chartEntry.upzoom !== null && !this.chartEntry.upzoom) {
+        if (this.chartEntry[CHARTAV.UPZOOM] !== undefined && this.chartEntry[CHARTAV.UPZOOM] !== null && !this.chartEntry[CHARTAV.UPZOOM]) {
         } else {
             if (url.match(/^https*[:]/)) {
                 upZoom = globalStore.getData(keys.properties.mapOnlineUpZoom);
@@ -305,9 +315,9 @@ class AvnavChartSource extends ChartSourceBase{
             }
         }
         if (!url) {
-            throw new Error("no map url for " + (this.chartEntry.name));
+            throw new Error("no map url for " + (this.chartEntry[CHARTAV.NAME]));
         }
-        url=getUrlWithBase(this.chartEntry,'url');
+        url=getUrlWithBase(this.chartEntry,CHARTAV.URL)||getUrlWithBase(this.chartEntry,CHARTAV.OVERVIEW);
         let xmlUrl = this.getOverviewUrl();
         const data = await Requests.getHtmlOrText(xmlUrl, {
             useNavUrl: false,
@@ -499,7 +509,7 @@ class AvnavChartSource extends ChartSourceBase{
             let layerOptions={
                 source: source
             };
-            if (self.chartEntry.opacity !== undefined) layerOptions.opacity=parseFloat(self.chartEntry.opacity);
+            if (self.chartEntry[CHARTAV.OPACITY] !== undefined) layerOptions.opacity=parseFloat(self.chartEntry[CHARTAV.OPACITY]);
             let layer = new olTileLayer(layerOptions);
             if (upZoom > 0) {
                 layer.createRenderer = () => new AvNavLayerRenderer(layer);
@@ -532,9 +542,9 @@ class AvnavChartSource extends ChartSourceBase{
         if (this.destroySequence !== destroySequence) {
             return false;
         }
-        if (newSequence !== this.chartEntry.sequence) {
-            base.log("Sequence changed from " + this.chartEntry.sequence + " to " + newSequence + " reload map");
-            this.chartEntry.sequence = newSequence;
+        if (newSequence !== this.chartEntry[CHARTAV.SEQ]) {
+            base.log("Sequence changed from " + this.chartEntry[CHARTAV.SEQ] + " to " + newSequence + " reload map");
+            this.chartEntry[CHARTAV.SEQ] = newSequence;
             return true;
         }
         return false;
