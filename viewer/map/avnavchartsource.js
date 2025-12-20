@@ -42,6 +42,8 @@ import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
+import mapholder from "./mapholder";
+import {bbox} from "ol/format/filter";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -283,6 +285,58 @@ export const CHARTAV= {
     OVERVIEW: "overviewUrl",
     SEQUENCEURL: "sequenceUrl",
 }
+const mp=(obj,name,text,f)=>{
+    if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
+    const v=obj[name];
+    if (! f) return v;
+    return f(v);
+}
+class LayerConfig{
+    constructor() {
+    }
+    getLayerTypes(){
+        throw new Error("getLayerType not implemented in base class");
+    }
+    createOL(options){
+        throw new Error("createOL not implemented in base class");
+    }
+
+    bboxToOlExtent(bbox){
+        if (! bbox) return;
+        const ext=[];
+        ['minlon','minlat','maxlat','maxlon'].forEach((p)=>{
+            ext.push(mp(bbox,p,"BoundingBox",parseFloat));
+        })
+        return olExtent.applyTransform(ext,olTransforms.get("EPSG:4326", "EPSG:3857"))
+    }
+
+}
+class LayerConfigXYZ extends LayerConfig{
+    constructor() {
+        super();
+    }
+    getLayerTypes(){
+        return [undefined,'zxy-mercator','zxy']
+    }
+    createOL(options,{encryptUrl}){
+        if (! options) throw new Error("missing options for XYZ layer");
+        const layerOptions={
+            zoomLayerBoundings: undefined, //TODO
+        }
+        const source= new olXYZSource({
+                tileUrlFunction: (coord) => {
+                    return layerUrlFunction(layerOptions, coord);
+                },
+                extent: this.bboxToOlExtent(options.boundingbox),
+                tileLoadFunction: function (imageTile, src) {
+                    imageTile.getImage().src = encryptUrl(src);
+                },
+                tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
+            })
+        return undefined;
+    }
+
+}
 
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
@@ -318,13 +372,12 @@ class AvnavChartSource extends ChartSourceBase{
         if (!url) {
             throw new Error("no map url for " + (this.chartEntry[CHARTAV.NAME]));
         }
-        url=getUrlWithBase(this.chartEntry,CHARTAV.URL)||getUrlWithBase(this.chartEntry,CHARTAV.OVERVIEW);
         let xmlUrl = this.getOverviewUrl();
         const data = await Requests.getHtmlOrText(xmlUrl, {
             useNavUrl: false,
             timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
         })
-        let layers = this.parseLayerlist(data, url, upZoom);
+        let layers = this.parseLayerlist(data, xmlUrl, upZoom);
         return layers;
     }
 
@@ -351,10 +404,62 @@ class AvnavChartSource extends ChartSourceBase{
             return finalSrc;
         }
     }
+
+    parseXmlNode(node){
+        let rt = {};
+        if (! node.tagName) return;
+        for (let i=0;i<node.attributes.length;i++) {
+            const attr=node.attributes.item(i);
+            rt[attr.name.toLowerCase()] = attr.value;
+        }
+        const children={}
+        Array.from(node.childNodes).forEach((child)=>{
+            let name=child.tagName;
+            if (! name) return;
+            name=name.toLowerCase();
+            const childConfig=this.parseXmlNode(child);
+            if (!children[name]) children[name]=childConfig;
+            else{
+                if (!Array.isArray(children[name])){
+                    children[name]=[children[name]];
+                }
+                children[name].push(childConfig);
+            }
+        })
+        for (let cn in children){
+            if (rt[cn] !== undefined){
+                throw new Error(`attribute and child with same name ${cn} in ${node.tagName} `);
+            }
+            rt[cn] = children[cn];
+        }
+        return rt;
+    }
+    parseOverviewXml(layerdata){
+        const layers=[];
+        let xmlDoc = Helper.parseXml(layerdata);
+        Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach((tm)=> {
+            const layerconfig = this.parseXmlNode(tm);
+            layers.push(layerconfig);
+        });
+        return layers;
+    }
 ;
-    parseLayerlist(layerdata, baseurl,upZoom) {
-        let self = this;
+    parseLayerlist(layerdata,ovurl,upZoom) {
         let ll = [];
+        const newConfig=this.parseOverviewXml(layerdata);
+        if (! Array.isArray(newConfig) || newConfig.length < 1) {
+            throw new Error("unable to parse a valid chart config - no layers")
+        }
+        let lnum=1;
+        newConfig.forEach((layerConfig)=>{
+            const url=layerConfig.url||layerConfig.href;
+            if (!url) throw new Error("no href or url in layer "+lnum);
+            const avopt={};
+            avopt.layerurl=injectBaseUrl(url,ovurl);
+            avopt.encryptFunction=this.encryptFunction;
+
+        })
+        const self=this;
         let xmlDoc = Helper.parseXml(layerdata);
         Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function (tm) {
             let rt = {};
@@ -447,7 +552,7 @@ class AvnavChartSource extends ChartSourceBase{
             if (rt.url === undefined) {
                 throw new Error("missing href in layer");//scale: 3
             }
-            layerurl=injectBaseUrl(rt.url,baseurl);
+            layerurl=injectBaseUrl(rt.url,ovurl);
             rt.layerurl=layerurl;
             rt.replaceInUrl = false;
             if (layerurl.indexOf("{x}") >= 0 && layerurl.indexOf("{y}") >= 0 && layerurl.indexOf("{z}") >= 0) {
