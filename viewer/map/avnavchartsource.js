@@ -51,81 +51,6 @@ const NORMAL_TILE_SIZE=256;
 //the more forward way would be to return undefined - but in this case
 //ol will NOT show the lower zoom tiles...
 const invalidUrl = 'data:image/png;base64,i';
-/**
- * compute the tile url
- * @param layerOptions the avnavOptions from the layer
- * @param coord
- * @returns {string|undefined|*}
- */
-const layerUrlFunction=function (layerOptions,coord) {
-    if (!coord) return undefined;
-    let zxy = coord;
-    let z = zxy[0];
-    let x = zxy[1];
-    let y = zxy[2];
-    //y = -y - 1; //revert change back for ol6...change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
-
-    if (layerOptions.zoomLayerBoundings) {
-        let found = false;
-        if (!layerOptions.zoomLayerBoundings[z]) return invalidUrl;
-        for (let bindex in layerOptions.zoomLayerBoundings[z]) {
-            let zbounds = layerOptions.zoomLayerBoundings[z][bindex];
-            if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            return invalidUrl;
-        }
-    }
-    if (layerOptions.wms) {
-        //construct the WMS url
-        let grid = layerOptions.source.getTileGrid();
-        //taken from tilegrid.js:
-        //let origin = grid.getOrigin(z);
-        //the xyz source seems to have a very strange origin - x at -... but y at +...
-        //but we rely on the origin being ll
-        //not sure if this is correct for all projections...
-        let origin = [-20037508.342789244, -20037508.342789244]; //unfortunately the ol3 stuff does not export this...
-        let resolution = grid.getResolution(z);
-        let tileSize = grid.getTileSize(z);
-        y = (1 << z) - y - 1;
-        let minX = origin[0] + x * tileSize * resolution;
-        let minY = origin[1] + y * tileSize * resolution;
-        let maxX = minX + tileSize * resolution;
-        let maxY = minY + tileSize * resolution;
-        //now compute the bounding box
-        let converter = olTransforms.get("EPSG:3857", layerOptions.projection || "EPSG:4326");
-        let bbox = converter([minX, minY, maxX, maxY]);
-        let rturl = layerOptions.layerurl + "SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH=" + tileSize + "&HEIGHT=" + tileSize + "&SRS=" + encodeURI(layerOptions.projection);
-        let k;
-        let layers;
-        if (layerOptions.wmslayermap[z]) layers = layerOptions.wmslayermap[z];
-        for (k in layerOptions.wmsparam) {
-            let v = layerOptions.wmsparam[k];
-            if (layers && (k == "LAYERS" || k == "layers")) {
-                v = layers;
-            }
-            rturl += "&" + k + "=" + v;
-        }
-        rturl += "&BBOX=" + bbox[0] + "," + bbox[1] + "," + bbox[2] + "," + bbox[3];
-        return rturl;
-    }
-    if (layerOptions.inversy) {
-        y = (1 << z) - y - 1
-    }
-    if (!layerOptions.replaceInUrl) {
-        let tileUrl = z + '/' + x + '/' + y + ".png";
-        if (layerOptions.encryptFunction) {
-            tileUrl = "##encrypt##" + tileUrl;
-        }
-        return Helper.endsWith(layerOptions.layerurl,"/")?(layerOptions.layerurl+tileUrl):(layerOptions.layerurl + '/' + tileUrl);
-    }
-    else {
-        return layerOptions.layerurl.replace("{x}", x).replace("{y}", y).replace("{z}", z);
-    }
-}
 const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
 {
     class AvNavTile extends olImageTile {
@@ -352,6 +277,8 @@ class LayerConfigXYZ extends LayerConfig{
         this.overviewUrl = overviewUrl;
         this.upZoom = upZoom;
         this.inversy=false;
+        this.source=undefined;
+        this.layer=undefined;
     }
     getLayerTypes(){
         return [undefined,'zxy-mercator','zxy']
@@ -417,7 +344,7 @@ class LayerConfigXYZ extends LayerConfig{
         const layerOptions=this.buildLayerOptions(options);
         const extent=this.bboxToOlExtent(options.boundingbox);
         const tileUrlFunction=this.createTileUrlFunction(options);
-        const source= new olXYZSource({
+        this.source= new olXYZSource({
                 tileUrlFunction: (coord) => {
                     return tileUrlFunction(coord);
                 },
@@ -428,29 +355,115 @@ class LayerConfigXYZ extends LayerConfig{
                 tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
             })
         if (this.upZoom > 0) {
-            source.tileClass = tileClassCreator((coord) => {
+            this.source.tileClass = tileClassCreator((coord) => {
                     return tileUrlFunction(coord);
                 },
                 this.upZoom,
                 this.inversy
             )
         }
-        let layer = new olTileLayer({
-            source: source,
+        this.layer = new olTileLayer({
+            source: this.source,
         });
         if (this.upZoom > 0) {
-            layer.createRenderer = () => new AvNavLayerRenderer(layer);
+            this.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
         }
-        setav(layer,{
+        setav(this.layer,{
             isTileLayer: true,
             minZoom: parseInt(options.minzoom||1),
             maxZoom: parseInt(options.maxzoom||23),
             extent:extent,
             zoomLayerBoundings: layerOptions.zoomLayerBoundings,
         });
-        return layer;
+        return this.layer;
     }
 
+}
+class LayerConfigTMS extends LayerConfigXYZ{
+    constructor(options) {
+        super(options);
+        this.inversy = true;
+    }
+
+    getLayerTypes() {
+        return ['global-mercator','tms'];
+    }
+}
+class LayerConfigWMS extends LayerConfigXYZ{
+    constructor(props) {
+        super(props);
+    }
+
+    getLayerTypes() {
+        return ['wms'];
+    }
+
+    createTileUrlFunction(options) {
+        const layerOptions=this.buildLayerOptions(options);
+        //use the URL object to easily create the URLs
+        const baseUrl=new URL(layerOptions.layerUrl,window.location.href);
+        const search=baseUrl.searchParams;
+        search.set("SERVICE","WMS");
+        search.set("REQUEST","GetMap");
+        search.set("FORMAT","image/png");
+        search.set("SRS",options.projection||"EPSG:4326");
+        let wmsparameter=options.wmsparameter;
+        if (wmsparameter){
+            wmsparameter=Array.isArray(wmsparameter) ? wmsparameter : [wmsparameter];
+            for (let p of wmsparameter){
+                const n=mp(p,'name','wmsparameter');
+                const v=mp(p,'value','wmsparameter');
+                search.set(n,v);
+            }
+        }
+        const layermap={};
+        let layermappings=options.wmslayermapping;
+        if (layermappings){
+            layermappings=Array.isArray(layermappings) ? layermappings : [layermappings];
+            for (let lm of layermappings){
+                const zooms=mp(lm,'zooms','wmslayermappings');
+                const layers=mp(lm,'layers','wmslayermappings');
+                const zarr=zooms.split(/,/);
+                for (let zoom of zarr){
+                    layermap[zoom]=layers;
+                }
+            }
+        }
+        return (coord)=> {
+            if (! checkZoomBounds(coord,layerOptions.zoomLayerBoundings)){
+                return invalidUrl;
+            }
+            let z=coord[0];
+            let x=coord[1];
+            let y=coord[2];
+            let grid = this.source.getTileGrid();
+            //taken from tilegrid.js:
+            //let origin = grid.getOrigin(z);
+            //the xyz source seems to have a very strange origin - x at -... but y at +...
+            //but we rely on the origin being ll
+            //not sure if this is correct for all projections...
+            let origin = [-20037508.342789244, -20037508.342789244]; //unfortunately the ol3 stuff does not export this...
+            let resolution = grid.getResolution(z);
+            let tileSize = grid.getTileSize(z);
+            y = (1 << z) - y - 1;
+            let minX = origin[0] + x * tileSize * resolution;
+            let minY = origin[1] + y * tileSize * resolution;
+            let maxX = minX + tileSize * resolution;
+            let maxY = minY + tileSize * resolution;
+            //now compute the bounding box
+            let converter = olTransforms.get("EPSG:3857", options.projection || "EPSG:4326");
+            let bbox = converter([minX, minY, maxX, maxY]);
+            let rturl = new URL(baseUrl);
+            rturl.searchParams.set("WIDTH",tileSize);
+            rturl.searchParams.set("HEIGHT",tileSize);
+            rturl.searchParams.set("BBOX",bbox[0] + "," + bbox[1] + "," + bbox[2] + "," + bbox[3]);
+            const mlayers=layermap[z];
+            if (mlayers){
+                rturl.searchParams.set('LAYERS',mlayers);
+            }
+            return rturl.toString();
+        }
+    }
 }
 
 class LayerFactory {
@@ -473,6 +486,8 @@ class LayerFactory {
 
 export const layerFactory=new LayerFactory();
 layerFactory.register(new LayerConfigXYZ({}));
+layerFactory.register(new LayerConfigTMS({}));
+layerFactory.register(new LayerConfigWMS({}));
 
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
@@ -516,19 +531,6 @@ class AvnavChartSource extends ChartSourceBase{
         let layers = this.parseLayerlist(data, xmlUrl, upZoom);
         return layers;
     }
-
-
-
-    /**
-     * parse a float attribute value
-     * @param elem
-     * @param {String} attr
-     * @private
-     */
-    e2f(elem, attr) {
-        return parseFloat(elem.getAttribute(attr));
-    }
-
     encryptUrl(url){
         if (!this.encryptFunction) {
             return url;
@@ -579,8 +581,7 @@ class AvnavChartSource extends ChartSourceBase{
         });
         return layers;
     }
-;
-    parseLayerlist(layerdata,ovurl,upZoom) {
+    parseLayerlist(layerdata,ovurl) {
         let ll = [];
         const newConfig=this.parseOverviewXml(layerdata);
         if (! Array.isArray(newConfig) || newConfig.length < 1) {
@@ -604,175 +605,6 @@ class AvnavChartSource extends ChartSourceBase{
             })
             ll.push(olLayer);
         })
-        return ll.reverse();
-
-        const self=this;
-        let xmlDoc = Helper.parseXml(layerdata);
-        Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function (tm) {
-            let rt = {};
-            rt.encryptFunction=self.encryptFunction;
-            //complete tile map entry here
-            rt.inversy = false;
-            rt.wms = false;
-            let layer_profile = tm.getAttribute('profile');
-            if (layer_profile) {
-                if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
-                    throw new Error('unsupported profile in tilemap.xml ' + layer_profile);
-                }
-                if (layer_profile == 'global-mercator') {
-                    //our very old style stuff where we had y=0 at lower left
-                    rt.inversy = true;
-                }
-                if (layer_profile == 'wms') {
-                    rt.wms = true;
-                }
-            }
-            rt.url = tm.getAttribute('href');
-            rt.title = tm.getAttribute('title');
-            rt.minZoom = parseInt(tm.getAttribute('minzoom'));
-            rt.maxZoom = parseInt(tm.getAttribute('maxzoom'));
-            rt.projection = tm.getAttribute('projection'); //currently only for WMS
-            //we store the layer region in EPSG:4326
-            Array.from(tm.childNodes).forEach(function (bb) {
-                if (bb.tagName != 'BoundingBox') return;
-                rt.layerExtent = [self.e2f(bb, 'minlon'), self.e2f(bb, 'minlat'),
-                    self.e2f(bb, 'maxlon'), self.e2f(bb, 'maxlat')];
-            });
-            //TODO: do wen need the origin stuff?
-            /*
-             $(tm).find(">Origin").each(function(nr,or){
-             rt.tile_origin = new OpenLayers.LonLat(e2f(or,'x'),e2f(or,'y'));
-             });
-             if (! rt.tile_origin){
-             rt.tile_origin=new OpenLayers.LonLat(-20037508.343,-20037508.343);
-             }
-             */
-            //TODO: any non standard form tiles? - not for now
-            /*
-             $(tm).find(">TileFormat").each(function(nr,tf){
-             rt.tile_size= new OpenLayers.Size(
-             parseInt($(tf).attr('width')),
-             parseInt($(tf).attr('height')));
-             rt.tile_ext=$(tf).attr('extension');
-             rt.zOffset=parseInt($(tf).attr('zOffset'));
-             });
-             if (!rt.tile_size) rt.tile_size=new OpenLayers.Size(256,256);
-             if (!rt.tile_ext)rt.tile_ext="png";
-             */
-            //although we currently do not need the boundings
-            //we just parse them...
-            let boundings = [];
-            Array.from(tm.getElementsByTagName("LayerBoundings")).forEach((lb)=> {
-                Array.from(lb.getElementsByTagName("BoundingBox")).forEach((bb)=> {
-                    let bounds = [self.e2f(bb, 'minlon'), self.e2f(bb, 'maxlat'),
-                        self.e2f(bb, 'maxlon'), self.e2f(bb, 'minlat')];
-                    boundings.push(bounds);
-                });
-            });
-            rt.boundings = boundings;
-
-            let zoomLayerBoundings = [];
-            Array.from(tm.getElementsByTagName("LayerZoomBoundings")).forEach((lzb)=> {
-                Array.from(lzb.getElementsByTagName("ZoomBoundings")).forEach((zb)=> {
-                    let zoom = parseInt(zb.getAttribute('zoom'));
-                    let zoomBoundings = [];
-                    Array.from(zb.getElementsByTagName("BoundingBox")).forEach((bb)=> {
-                        let bounds = {
-                            minx: parseInt(bb.getAttribute('minx')),
-                            miny: parseInt(bb.getAttribute('miny')),
-                            maxx: parseInt(bb.getAttribute('maxx')),
-                            maxy: parseInt(bb.getAttribute('maxy'))
-                        };
-                        zoomBoundings.push(bounds);
-                    });
-                    if (zoomBoundings.length) {
-                        zoomLayerBoundings[zoom] = zoomBoundings;
-                    }
-                });
-            });
-            if (zoomLayerBoundings.length) {
-                rt.zoomLayerBoundings = zoomLayerBoundings;
-            }
-
-            //now we have all our options - just create the layer from them
-            let layerurl = "";
-            if (rt.url === undefined) {
-                throw new Error("missing href in layer");//scale: 3
-            }
-            layerurl=injectBaseUrl(rt.url,ovurl);
-            rt.layerurl=layerurl;
-            rt.replaceInUrl = false;
-            if (layerurl.indexOf("{x}") >= 0 && layerurl.indexOf("{y}") >= 0 && layerurl.indexOf("{z}") >= 0) {
-                rt.replaceInUrl = true;
-            }
-            rt.extent = olExtent.applyTransform(rt.layerExtent, self.mapholder.transformToMap);
-            if (rt.wms) {
-                let param = {};
-                Array.from(tm.getElementsByTagName("WMSParameter")).forEach((wp)=> {
-                    let n = wp.getAttribute('name');
-                    let v = wp.getAttribute('value');
-                    if (n !== undefined && v !== undefined) {
-                        param[n] = v;
-                    }
-                });
-                rt.wmsparam = param;
-                let layermap = {};
-                Array.from(tm.getElementsByTagName("WMSLayerMapping")).forEach((mapping)=> {
-                    let zooms = mapping.getAttribute('zooms');
-                    let layers = mapping.getAttribute('layers');
-                    let zarr = zooms.split(/,/);
-                    let i;
-                    for (i in zarr) {
-                        try {
-                            let zlevel = parseInt(zarr[i]);
-                            layermap[zlevel] = layers;
-                        } catch (ex) {
-                        }
-                    }
-                });
-                rt.wmslayermap = layermap;
-
-            }
-            let source = undefined;
-            //as WMS support is broken in OL3 (as always ol3 tries to be more intelligent than everybody...)
-            //we always use an XYZ layer but directly construct the WMS tiles...
-            source = new olXYZSource({
-                tileUrlFunction:(coord)=>{
-                    return layerUrlFunction(rt,coord);
-                } ,
-                extent: rt.extent,
-                tileLoadFunction: function (imageTile, src) {
-                    imageTile.getImage().src=self.encryptUrl(src);
-                },
-                tileSize: NORMAL_TILE_SIZE*globalStore.getData(keys.properties.mapScale,1),
-
-                /*
-                 url:layerurl+'/{z}/{x}/{y}.png'
-                 */
-            });
-            if (upZoom > 0) {
-                source.tileClass = tileClassCreator((coord) => {
-                    return layerUrlFunction(rt, coord);
-                },
-                    upZoom,
-                    rt.inversy
-                )
-            }
-            rt.source = source;
-            let layerOptions={
-                source: source
-            };
-            if (self.chartEntry[CHARTAV.OPACITY] !== undefined) layerOptions.opacity=parseFloat(self.chartEntry[CHARTAV.OPACITY]);
-            let layer = new olTileLayer(layerOptions);
-            if (upZoom > 0) {
-                layer.createRenderer = () => new AvNavLayerRenderer(layer);
-            }
-            rt.isTileLayer=true;
-            layer.avnavOptions = rt;
-            ll.push(layer);
-        });
-        //our avnav.xml has the layers in inverse order
-        //maybe we should better sort based on zoomlevelboundings
         return ll.reverse();
     }
 
