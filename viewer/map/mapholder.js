@@ -17,7 +17,7 @@ import base from '../base.js';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';
-import AvNavChartSource from './avnavchartsource.js';
+import AvNavChartSource, {checkZoomBounds} from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';
 import CryptHandler from './crypthandler.js';
 import {
@@ -53,6 +53,7 @@ import {
 } from "./featureInfo";
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
+import {avitem, setav} from "../util/helper";
 
 
 export const EventTypes = {
@@ -591,7 +592,7 @@ class MapHolder extends DrawingPositionConverter {
             }
             let baseVisible = globalStore.getData(keys.properties.layers.base, false);
             this.olmap.getLayers().forEach((layer) => {
-                if (layer.avnavOptions && layer.avnavOptions.isBase) {
+                if (avitem(layer,'isBase')) {
                     layer.setVisible(baseVisible);
                 }
             })
@@ -858,7 +859,7 @@ class MapHolder extends DrawingPositionConverter {
             style: styleFunction,
             visible: visible
         });
-        vectorLayer.avnavOptions = {isBase: true};
+        setav(vectorLayer,{isBase: true});
         return vectorLayer;
     }
 
@@ -876,8 +877,8 @@ class MapHolder extends DrawingPositionConverter {
         if (layers && layers.length > 0) {
             let extent = olExtent.createEmpty();
             layers.forEach((layer) => {
-                if (layer.avnavOptions && layer.avnavOptions.extent) {
-                    let e = layer.avnavOptions.extent;
+                const e=avitem(layer,'extent');
+                if (e){
                     extent = olExtent.extend(extent, e);
                 }
             });
@@ -897,7 +898,7 @@ class MapHolder extends DrawingPositionConverter {
             source: source,
             visible: visible
         });
-        vectorLayer.avnavOptions = {isBase: true};
+        setav(vectorLayer,{isBase: true});
         return vectorLayer;
     }
 
@@ -935,12 +936,14 @@ class MapHolder extends DrawingPositionConverter {
         for (let i = 0; i < this.sources.length; i++) {
             let sourceLayers = this.sources[i].getLayers();
             sourceLayers.forEach((layer) => {
-                if (this.sources[i].getConfig().baseChart && layer.avnavOptions) {
-                    if (layer.avnavOptions.minZoom < this.minzoom) {
-                        this.minzoom = layer.avnavOptions.minZoom;
+                if (this.sources[i].isBaseChart()) {
+                    const avminz=avitem(layer,'minZoom',1);
+                    const avmaxz=avitem(layer,'maxZoom',26);
+                    if ( avminz< this.minzoom) {
+                        this.minzoom = avminz;
                     }
-                    if (layer.avnavOptions.maxZoom > this.maxzoom) {
-                        this.maxzoom = layer.avnavOptions.maxZoom;
+                    if (avmaxz > this.maxzoom) {
+                        this.maxzoom = avmaxz;
                     }
                     baseLayers.push(layer);
                 }
@@ -1079,18 +1082,13 @@ class MapHolder extends DrawingPositionConverter {
             recenter = false;
             let lext = undefined;
             if (baseLayers.length > 0) {
-                lext = baseLayers[0].avnavOptions.extent;
+                lext = avitem(baseLayers[0],'extent');
                 if (lext !== undefined && !olExtent.containsCoordinate(lext, this.pointToMap(this.referencePoint))) {
-                    if (baseLayers.length > 0) {
-                        let view = this.getView();
-                        lext = baseLayers[0].avnavOptions.extent;
-                        if (lext !== undefined) view.fit(lext, this.olmap.getSize());
-                        this.setMapZoom(this.minzoom);
-                        this.center = this.pointFromMap(view.getCenter());
-                        this.zoom = view.getZoom();
-
-
-                    }
+                    let view = this.getView();
+                    view.fit(lext, this.olmap.getSize());
+                    this.setMapZoom(this.minzoom);
+                    this.center = this.pointFromMap(view.getCenter());
+                    this.zoom = view.getZoom();
                     this.saveCenter();
                 }
             }
@@ -1098,7 +1096,7 @@ class MapHolder extends DrawingPositionConverter {
         if (recenter) {
             if (baseLayers.length > 0) {
                 view = this.getView();
-                let lextx = baseLayers[0].avnavOptions.extent;
+                let lextx = avitem(baseLayers[0],'extent');
                 if (lextx !== undefined) view.fit(lextx, this.olmap.getSize());
                 this.setMapZoom(this.minzoom);
                 this.referencePoint = this.pointFromMap(view.getCenter());
@@ -1420,24 +1418,15 @@ class MapHolder extends DrawingPositionConverter {
             let layers = this.olmap.getLayers().getArray();
             for (let i = 0; i < layers.length && !zoomOk; i++) {
                 let layer = layers[i];
-                if (!layer.avnavOptions || !layer.avnavOptions.zoomLayerBoundings) continue;
+                let boundings = avitem(layer,'zoomLayerBoundings');
+                if (! boundings) continue;
                 let source = layer.get('source');
                 if (!source || !(source instanceof olXYZSource)) continue;
                 hasZoomInfo = true;
-                let boundings = layer.avnavOptions.zoomLayerBoundings;
                 let centerTile = source.getTileGrid().getTileCoordForCoordAndZ(centerCoord, tzoom);
-                let z = centerTile[0];
-                let x = centerTile[1];
-                let y = centerTile[2];
-                y = -y - 1; //we still have the old counting...
-                //TODO: have a common function for this and the tileUrlFunction
-                if (!boundings[z]) continue; //nothing at this zoom level
-                for (let bindex in boundings[z]) {
-                    let zbounds = boundings[z][bindex];
-                    if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
-                        zoomOk = true;
-                        break;
-                    }
+                if (checkZoomBounds(centerTile, boundings)) {
+                    zoomOk = true;
+                    break;
                 }
             }
             if (zoomOk) {
@@ -1705,8 +1694,9 @@ class MapHolder extends DrawingPositionConverter {
         }
         const detectedFeatures = [];
         this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
-                if (!layer.avnavOptions || !layer.avnavOptions.chartSource) return;
-                detectedFeatures.push({feature: feature, layer: layer, source: layer.avnavOptions.chartSource});
+                const chartSource=avitem(layer,'chartSource');
+                if (!chartSource) return;
+                detectedFeatures.push({feature: feature, layer: layer, source: chartSource});
             },
             {
                 hitTolerance: globalStore.getData(keys.properties.clickTolerance) / 2

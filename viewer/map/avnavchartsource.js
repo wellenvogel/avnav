@@ -27,7 +27,7 @@ import base from '../base.js';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import Helper, {Enum} from '../util/helper.js';
+import Helper, {avitem, injectav, setav} from '../util/helper.js';
 import ChartSourceBase, {CHARTBASE} from './chartsourcebase.js';
 import * as olExtent from 'ol/extent';
 import {XYZ as olXYZSource} from 'ol/source';
@@ -42,8 +42,6 @@ import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
-import mapholder from "./mapholder";
-import {bbox} from "ol/format/filter";
 
 const NORMAL_TILE_SIZE=256;
 
@@ -300,43 +298,181 @@ class LayerConfig{
     createOL(options){
         throw new Error("createOL not implemented in base class");
     }
+    createTileUrlFunction(options){
+        throw new Error("createTileUrlFunction not implemented in base class");
+    }
 
     bboxToOlExtent(bbox){
         if (! bbox) return;
         const ext=[];
-        ['minlon','minlat','maxlat','maxlon'].forEach((p)=>{
+        ['minlon','minlat','maxlon','maxlat'].forEach((p)=>{
             ext.push(mp(bbox,p,"BoundingBox",parseFloat));
         })
         return olExtent.applyTransform(ext,olTransforms.get("EPSG:4326", "EPSG:3857"))
     }
 
 }
+
+/**
+ *
+ * @param coord {Array[number]} [z,x,y]
+ * @param zoomLayerBoundings {Object||undefined}
+ * @return {boolean}
+ */
+export const checkZoomBounds=(coord,zoomLayerBoundings)=>{
+    if (! zoomLayerBoundings) return true;
+    //return true;
+    if (!zoomLayerBoundings[coord[0]]) return false;
+    for (let zbounds of zoomLayerBoundings[coord [0]]) {
+        if (zbounds.minx <= coord[1] && zbounds.maxx >= coord[1] &&
+            zbounds.miny <= coord[2] && zbounds.maxy >= coord[2]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+const convertBoundsForZoom=(boundsForZoom)=>{
+    if (! boundsForZoom || boundsForZoom.zoom === undefined || ! boundsForZoom.boundingbox) return;
+    const boxesOut=[];
+    const boxesIn=Array.isArray(boundsForZoom.boundingbox)?boundsForZoom.boundingbox:[boundsForZoom.boundingbox];
+    for (let bb of boxesIn){
+        const bout={};
+        for (let p of ['minx','miny','maxx','maxy']) {
+            bout[p]=mp(bb,p,"zoomlayerboundingbox",parseInt);
+        }
+        boxesOut.push(bout);
+    }
+    return {[boundsForZoom.zoom]:boxesOut};
+}
 class LayerConfigXYZ extends LayerConfig{
-    constructor() {
+    constructor({encryptUrlFunction,overviewUrl,upZoom}) {
         super();
+        this.encryptUrlFunction = encryptUrlFunction;
+        this.overviewUrl = overviewUrl;
+        this.upZoom = upZoom;
+        this.inversy=false;
     }
     getLayerTypes(){
         return [undefined,'zxy-mercator','zxy']
     }
-    createOL(options,{encryptUrl}){
-        if (! options) throw new Error("missing options for XYZ layer");
+    buildLayerOptions(options){
+        if (! options) throw new Error("missing layer properties");
         const layerOptions={
-            zoomLayerBoundings: undefined, //TODO
+            zoomLayerBoundings: undefined,
+            replaceInUrl:false,
+            layerUrl:undefined
         }
+        const url=options.url||options.href;
+        if (! url) throw new Error("missing layer url");
+        layerOptions.layerUrl=injectBaseUrl(url,this.overviewUrl);
+        if (url.indexOf("{x}") >= 0 && url.indexOf("{y}") >= 0 && url.indexOf("{z}") >= 0) {
+            layerOptions.replaceInUrl = true;
+        }
+        if (options.layerzoomboundings){
+            const boundsIn=options.layerzoomboundings.zoomboundings||options.layerzoomboundings;
+            if (! Array.isArray(boundsIn)){
+                layerOptions.zoomLayerBoundings=convertBoundsForZoom(boundsIn);
+            }
+            else{
+                const zoomLayerBoundings={};
+                for (let bb of boundsIn){
+                    Object.assign(zoomLayerBoundings,convertBoundsForZoom(bb));
+                }
+                if (Object.keys(zoomLayerBoundings).length > 0){
+                    layerOptions.zoomLayerBoundings=zoomLayerBoundings;
+                }
+            }
+        }
+        return layerOptions;
+    }
+    createTileUrlFunction(options) {
+        const layerOptions=this.buildLayerOptions(options);
+        return (coord)=>{
+            if (!coord) return undefined;
+            if (! checkZoomBounds(coord,layerOptions.zoomLayerBoundings)) return invalidUrl;
+            let z = coord[0];
+            let x = coord[1];
+            let y = coord[2];
+
+            if (this.inversy) {
+                y = (1 << z) - y - 1
+            }
+            if (!layerOptions.replaceInUrl) {
+                let tileUrl = z + '/' + x + '/' + y + ".png";
+                if (this.encryptUrlFunction) {
+                    tileUrl = "##encrypt##" + tileUrl;
+                }
+                return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl);
+            }
+            else {
+                return layerOptions.layerUrl.replace("{x}", x).replace("{y}", y).replace("{z}", z);
+            }
+
+        }
+    }
+
+    createOL(options){
+        if (! options) throw new Error("missing options for XYZ layer");
+        const layerOptions=this.buildLayerOptions(options);
+        const extent=this.bboxToOlExtent(options.boundingbox);
+        const tileUrlFunction=this.createTileUrlFunction(options);
         const source= new olXYZSource({
                 tileUrlFunction: (coord) => {
-                    return layerUrlFunction(layerOptions, coord);
+                    return tileUrlFunction(coord);
                 },
-                extent: this.bboxToOlExtent(options.boundingbox),
+                extent: extent,
                 tileLoadFunction: function (imageTile, src) {
-                    imageTile.getImage().src = encryptUrl(src);
+                    imageTile.getImage().src = this.encryptUrlFunction?this.encryptUrlFunction(src):src;
                 },
                 tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
             })
-        return undefined;
+        if (this.upZoom > 0) {
+            source.tileClass = tileClassCreator((coord) => {
+                    return tileUrlFunction(coord);
+                },
+                this.upZoom,
+                this.inversy
+            )
+        }
+        let layer = new olTileLayer({
+            source: source,
+        });
+        if (this.upZoom > 0) {
+            layer.createRenderer = () => new AvNavLayerRenderer(layer);
+        }
+        setav(layer,{
+            isTileLayer: true,
+            minZoom: parseInt(options.minzoom||1),
+            maxZoom: parseInt(options.maxzoom||23),
+            extent:extent,
+            zoomLayerBoundings: layerOptions.zoomLayerBoundings,
+        });
+        return layer;
     }
 
 }
+
+class LayerFactory {
+    constructor() {
+        this.layerClasses={};
+    }
+    register(layerClass) {
+        const keys=layerClass.getLayerTypes();
+        for (let k of keys){
+            if (this.layerClasses[k]) throw new Error("layer key "+k+" already exists");
+            this.layerClasses[k]=(props)=> new layerClass.constructor(props);
+        }
+    }
+    layerClass(type,props){
+        const creator=this.layerClasses[type];
+        if (! creator) return;
+        return creator(props);
+    }
+}
+
+export const layerFactory=new LayerFactory();
+layerFactory.register(new LayerConfigXYZ({}));
 
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
@@ -452,13 +588,24 @@ class AvnavChartSource extends ChartSourceBase{
         }
         let lnum=1;
         newConfig.forEach((layerConfig)=>{
-            const url=layerConfig.url||layerConfig.href;
-            if (!url) throw new Error("no href or url in layer "+lnum);
-            const avopt={};
-            avopt.layerurl=injectBaseUrl(url,ovurl);
-            avopt.encryptFunction=this.encryptFunction;
-
+            const type=layerConfig.profile;
+            const layerCreator=layerFactory.layerClass(type,{
+                encryptFunction:this.encryptFunction,
+                upZoom: this.chartEntry[CHARTAV.UPZOOM],
+                overviewUrl:ovurl
+            });
+            if (! layerCreator){
+                throw new Error(`unable to create layer ${lnum} for profile ${type}`);
+            }
+            const olLayer=layerCreator.createOL(layerConfig);
+            setav(olLayer,{
+                chartSource: this,
+                isBase: this.isBaseChart()
+            })
+            ll.push(olLayer);
         })
+        return ll.reverse();
+
         const self=this;
         let xmlDoc = Helper.parseXml(layerdata);
         Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function (tm) {
@@ -692,13 +839,11 @@ class AvnavChartSource extends ChartSourceBase{
             for (let i=this.layers.length-1;i>=0;i--){
                 let layer=this.layers[i];
                 if (! layer.getVisible()) continue;
-                if (! layer.avnavOptions) continue;
-                if (! layer.avnavOptions.isTileLayer) continue;
+                if (! avitem(layer,'isTileLayer')) continue;
                 let res=this.mapholder.getView().getResolution();
-                let zoom=Math.round(this.mapholder.getView().getZoom());
                 let tile=layer.getSource().getTileGrid()
                     .getTileCoordForCoordAndResolution(mapcoordinates,res);
-                let url=layerUrlFunction(layer.avnavOptions,tile);
+                let url=layer.getSource().getTileUrlFunction()(tile);
                 let action=new Promise((aresolve,areject)=>{
                     let finalUrl=this.encryptUrl(url);
                     Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
