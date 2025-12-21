@@ -26,7 +26,6 @@
 import base from '../base.js';
 import assign from 'object-assign';
 import Helper from '../util/helper.js';
-import CryptHandler from './crypthandler.js';
 import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
@@ -55,8 +54,6 @@ export const CHARTBASE={
     MINSCALE: "minScale",
     MAXSCALE: "maxScale",
     ENABLED: "enabled",
-    TOKENURL: "tokenUrl",
-    TOKENFUNCTION: "tokenFunction",
     HASFEATUREINFO:"hasFeatureInfo",
 }
 
@@ -86,11 +83,6 @@ class ChartSourceBase {
             }
         }
 
-        /**
-         * @protected
-         * @type {undefined}
-         */
-        this.encryptFunction = undefined;
         /**
          * @protected
          * @type {boolean}
@@ -236,10 +228,6 @@ class ChartSourceBase {
             this.chartEntry[CHARTBASE.ENABLED]=false;
             return;
         }
-        if (this.chartEntry[CHARTBASE.TOKENURL]) {
-            const result = await CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry[CHARTBASE.TOKENURL], this.chartEntry[CHARTBASE.TOKENFUNCTION]);
-            this.encryptFunction = result.encryptFunction;
-        }
         await this.checkSequence(true);
         const layers = await this.prepareInternal()
         layers.forEach((layer) => {
@@ -258,7 +246,6 @@ class ChartSourceBase {
 
 
     destroy(){
-        CryptHandler.removeChartEntry(this.getChartKey());
         this.isReadyFlag=false;
         this.layers=[];
         this.removeSequence++;

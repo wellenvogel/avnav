@@ -42,6 +42,7 @@ import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
+import CryptHandler from './crypthandler.js';
 
 const NORMAL_TILE_SIZE=256;
 
@@ -207,6 +208,8 @@ export const CHARTAV= {
     ...CHARTBASE,
     OVERVIEW: "overviewUrl",
     SEQUENCEURL: "sequenceUrl",
+    TOKENURL: "tokenUrl",
+    TOKENFUNCTION: "tokenFunction",
 }
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -219,6 +222,9 @@ class LayerConfig{
     }
     getLayerTypes(){
         throw new Error("getLayerType not implemented in base class");
+    }
+    async prepare(options){
+        return true;
     }
     createOL(options){
         throw new Error("createOL not implemented in base class");
@@ -338,6 +344,9 @@ class LayerConfigXYZ extends LayerConfig{
 
         }
     }
+    finalUrl(url) {
+        return url;
+    }
 
     createOL(options){
         if (! options) throw new Error("missing options for XYZ layer");
@@ -349,8 +358,8 @@ class LayerConfigXYZ extends LayerConfig{
                     return tileUrlFunction(coord);
                 },
                 extent: extent,
-                tileLoadFunction: function (imageTile, src) {
-                    imageTile.getImage().src = this.encryptUrlFunction?this.encryptUrlFunction(src):src;
+                tileLoadFunction: (imageTile,src) => {
+                    imageTile.getImage().src=this.finalUrl(src);
                 },
                 tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
             })
@@ -466,6 +475,58 @@ class LayerConfigWMS extends LayerConfigXYZ{
     }
 }
 
+class LayerConfigEncrypt extends LayerConfigXYZ{
+    constructor(props) {
+        super(props);
+        this.props=props;
+        this.encryptFunction=undefined
+    }
+    getLayerTypes() {
+        return ['encrypted-zxy','encrypted-zxy-mercator'];
+    }
+    async prepare(options) {
+        if (this.props[CHARTAV.TOKENURL]) {
+            const result = await CryptHandler.createOrActivateEncrypt(this.props[CHARTAV.NAME],
+                this.props[CHARTAV.TOKENURL], this.props[CHARTAV.TOKENFUNCTION]);
+            this.encryptFunction = result.encryptFunction;
+        }
+        return super.prepare(options);
+    }
+
+    createTileUrlFunction(options) {
+        const layerOptions=this.buildLayerOptions(options);
+        return (coord)=>{
+            if (!coord) return undefined;
+            if (! checkZoomBounds(coord,layerOptions.zoomLayerBoundings)) return invalidUrl;
+            let z = coord[0];
+            let x = coord[1];
+            let y = coord[2];
+
+            if (this.inversy) {
+                y = (1 << z) - y - 1
+            }
+            let tileUrl = "##encrypt##"+ z + '/' + x + '/' + y + ".png";
+            return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl)
+        }
+    }
+    finalUrl(url) {
+        let encryptPart = url.replace(/.*##encrypt##/, "");
+        let basePart = url.replace(/##encrypt##.*/, "");
+        if (! this.encryptFunction) {
+            return basePart+encryptPart;
+        }
+        return basePart + this.encryptFunction(encryptPart);
+    }
+
+    createOL(options) {
+        const rt=super.createOL(options);
+        setav(rt,{
+            finalUr:(url)=>this.finalUrl(url)
+        })
+        return rt;
+    }
+}
+
 class LayerFactory {
     constructor() {
         this.layerClasses={};
@@ -488,11 +549,17 @@ export const layerFactory=new LayerFactory();
 layerFactory.register(new LayerConfigXYZ({}));
 layerFactory.register(new LayerConfigTMS({}));
 layerFactory.register(new LayerConfigWMS({}));
+layerFactory.register(new LayerConfigEncrypt({}));
 
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
         this.destroySequence=0;
+        /**
+         * @protected
+         * @type {undefined}
+         */
+        this.encryptFunction = undefined;
     }
 
     isChart() {
@@ -528,7 +595,7 @@ class AvnavChartSource extends ChartSourceBase{
             useNavUrl: false,
             timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
         })
-        let layers = this.parseLayerlist(data, xmlUrl, upZoom);
+        let layers = await this.parseLayerlist(data, xmlUrl, upZoom);
         return layers;
     }
     encryptUrl(url){
@@ -581,30 +648,30 @@ class AvnavChartSource extends ChartSourceBase{
         });
         return layers;
     }
-    parseLayerlist(layerdata,ovurl) {
+    async parseLayerlist(layerdata,ovurl) {
         let ll = [];
         const newConfig=this.parseOverviewXml(layerdata);
         if (! Array.isArray(newConfig) || newConfig.length < 1) {
             throw new Error("unable to parse a valid chart config - no layers")
         }
         let lnum=1;
-        newConfig.forEach((layerConfig)=>{
-            const type=layerConfig.profile;
+        for (let layerConfig of newConfig){
+            let type=layerConfig.profile;
+            if (this.chartEntry[CHARTAV.TOKENURL]) type='encrypted-'+(type||'zxy');
             const layerCreator=layerFactory.layerClass(type,{
-                encryptFunction:this.encryptFunction,
-                upZoom: this.chartEntry[CHARTAV.UPZOOM],
-                overviewUrl:ovurl
-            });
+                ...this.chartEntry,
+                overviewUrl:ovurl});
             if (! layerCreator){
                 throw new Error(`unable to create layer ${lnum} for profile ${type}`);
             }
+            await layerCreator.prepare(layerConfig);
             const olLayer=layerCreator.createOL(layerConfig);
             setav(olLayer,{
                 chartSource: this,
                 isBase: this.isBaseChart()
             })
             ll.push(olLayer);
-        })
+        }
         return ll.reverse();
     }
 
@@ -654,6 +721,7 @@ class AvnavChartSource extends ChartSourceBase{
 
     destroy() {
         super.destroy();
+        CryptHandler.removeChartEntry(this.getChartKey());
         this.destroySequence++;
     }
 
@@ -677,7 +745,8 @@ class AvnavChartSource extends ChartSourceBase{
                     .getTileCoordForCoordAndResolution(mapcoordinates,res);
                 let url=layer.getSource().getTileUrlFunction()(tile);
                 let action=new Promise((aresolve,areject)=>{
-                    let finalUrl=this.encryptUrl(url);
+                    const computeUrl=avitem(layer,'finalUrl');
+                    let finalUrl=computeUrl?computeUrl(url):url;
                     Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
                         featureInfo:1,
                         lat:lonlat[1],
