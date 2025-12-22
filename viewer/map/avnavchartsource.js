@@ -210,6 +210,7 @@ export const CHARTAV= {
     SEQUENCEURL: "sequenceUrl",
     TOKENURL: "tokenUrl",
     TOKENFUNCTION: "tokenFunction",
+    BASEURL:'baseUrl'
 }
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -521,7 +522,7 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
     createOL(options) {
         const rt=super.createOL(options);
         setav(rt,{
-            finalUr:(url)=>this.finalUrl(url)
+            finalUrl:(url)=>this.finalUrl(url)
         })
         return rt;
     }
@@ -581,21 +582,31 @@ class AvnavChartSource extends ChartSourceBase{
         let upZoom = 0;
         if (this.chartEntry[CHARTAV.UPZOOM] !== undefined && this.chartEntry[CHARTAV.UPZOOM] !== null && !this.chartEntry[CHARTAV.UPZOOM]) {
         } else {
-            if (url.match(/^https*[:]/)) {
+            if (url && url.match(/^https*[:]/)) {
                 upZoom = globalStore.getData(keys.properties.mapOnlineUpZoom);
             } else {
                 upZoom = globalStore.getData(keys.properties.mapUpZoom);
             }
         }
-        if (!url) {
-            throw new Error("no map url for " + (this.chartEntry[CHARTAV.NAME]));
+        let layerConfig;
+        let ovUrl;
+        if (this.chartEntry.layers) {
+            if (url) throw new Error("either provide an url or a layers config for a chart");
+            layerConfig=this.chartEntry.layers;
+            ovUrl=this.chartEntry[CHARTAV.BASEURL]||window.location.href;
         }
-        let xmlUrl = this.getOverviewUrl();
-        const data = await Requests.getHtmlOrText(xmlUrl, {
-            useNavUrl: false,
-            timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
-        })
-        let layers = await this.parseLayerlist(data, xmlUrl, upZoom);
+        else {
+            if (!url) {
+                throw new Error("no map url for " + (this.chartEntry[CHARTAV.NAME]));
+            }
+            ovUrl = this.getOverviewUrl();
+            const data = await Requests.getHtmlOrText(ovUrl, {
+                useNavUrl: false,
+                timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
+            })
+            layerConfig=this.parseOverviewXml(data);
+        }
+        let layers = await this.parseLayerlist(layerConfig, ovUrl,upZoom);
         return layers;
     }
     encryptUrl(url){
@@ -648,19 +659,20 @@ class AvnavChartSource extends ChartSourceBase{
         });
         return layers;
     }
-    async parseLayerlist(layerdata,ovurl) {
+    async parseLayerlist(newConfig,ovurl,upZoom) {
         let ll = [];
-        const newConfig=this.parseOverviewXml(layerdata);
         if (! Array.isArray(newConfig) || newConfig.length < 1) {
             throw new Error("unable to parse a valid chart config - no layers")
         }
         let lnum=1;
         for (let layerConfig of newConfig){
             let type=layerConfig.profile;
-            if (this.chartEntry[CHARTAV.TOKENURL]) type='encrypted-'+(type||'zxy');
+            if (this.chartEntry[CHARTAV.TOKENURL] && (! type || ! type.startsWith('encrypted-'))) type='encrypted-'+(type||'zxy');
             const layerCreator=layerFactory.layerClass(type,{
                 ...this.chartEntry,
-                overviewUrl:ovurl});
+                overviewUrl:ovurl,
+                upZoom: upZoom,
+            });
             if (! layerCreator){
                 throw new Error(`unable to create layer ${lnum} for profile ${type}`);
             }
@@ -745,7 +757,7 @@ class AvnavChartSource extends ChartSourceBase{
                     .getTileCoordForCoordAndResolution(mapcoordinates,res);
                 let url=layer.getSource().getTileUrlFunction()(tile);
                 let action=new Promise((aresolve,areject)=>{
-                    const computeUrl=avitem(layer,'finalUrl');
+                    const computeUrl=avitem(layer,'finalUrl',undefined);
                     let finalUrl=computeUrl?computeUrl(url):url;
                     Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
                         featureInfo:1,
