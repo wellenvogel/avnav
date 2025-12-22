@@ -53,7 +53,7 @@ import {
 } from "./featureInfo";
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
-import {avitem, setav} from "../util/helper";
+import {avitem, getav, setav} from "../util/helper";
 
 
 export const EventTypes = {
@@ -592,7 +592,7 @@ class MapHolder extends DrawingPositionConverter {
             }
             let baseVisible = globalStore.getData(keys.properties.layers.base, false);
             this.olmap.getLayers().forEach((layer) => {
-                if (avitem(layer,'isBase')) {
+                if (getav(layer).isBase) {
                     layer.setVisible(baseVisible);
                 }
             })
@@ -700,7 +700,7 @@ class MapHolder extends DrawingPositionConverter {
             if (!chartSource) {
                 reject("chart not set");
             }
-            if (! chartSource.hasValidUrl()) {
+            if (! chartSource.hasValidConfig()) {
                 reject("no map selected");
                 return;
             }
@@ -874,25 +874,29 @@ class MapHolder extends DrawingPositionConverter {
         let source = new olVectorSource({
             wrapX: false
         });
+        let hasExtent = false;
         if (layers && layers.length > 0) {
             let extent = olExtent.createEmpty();
             layers.forEach((layer) => {
-                const e=avitem(layer,'extent');
+                const e=getav(layer).extent;
                 if (e){
+                    hasExtent = true;
                     extent = olExtent.extend(extent, e);
                 }
             });
-            let feature = new olFeature(new olPolygonGemotery([
-                [
-                    olExtent.getBottomLeft(extent),
-                    olExtent.getBottomRight(extent),
-                    olExtent.getTopRight(extent),
-                    olExtent.getTopLeft(extent)
+            if (hasExtent) {
+                let feature = new olFeature(new olPolygonGemotery([
+                    [
+                        olExtent.getBottomLeft(extent),
+                        olExtent.getBottomRight(extent),
+                        olExtent.getTopRight(extent),
+                        olExtent.getTopLeft(extent)
 
-                ]
-            ]));
-            feature.setStyle(style);
-            source.addFeature(feature);
+                    ]
+                ]));
+                feature.setStyle(style);
+                source.addFeature(feature);
+            }
         }
         let vectorLayer = new olVectorLayer({
             source: source,
@@ -1082,7 +1086,7 @@ class MapHolder extends DrawingPositionConverter {
             recenter = false;
             let lext = undefined;
             if (baseLayers.length > 0) {
-                lext = avitem(baseLayers[0],'extent');
+                lext = getav(baseLayers[0]).extent;
                 if (lext !== undefined && !olExtent.containsCoordinate(lext, this.pointToMap(this.referencePoint))) {
                     let view = this.getView();
                     view.fit(lext, this.olmap.getSize());
@@ -1096,7 +1100,7 @@ class MapHolder extends DrawingPositionConverter {
         if (recenter) {
             if (baseLayers.length > 0) {
                 view = this.getView();
-                let lextx = avitem(baseLayers[0],'extent');
+                let lextx = getav(baseLayers[0]).extent;
                 if (lextx !== undefined) view.fit(lextx, this.olmap.getSize());
                 this.setMapZoom(this.minzoom);
                 this.referencePoint = this.pointFromMap(view.getCenter());
@@ -1418,7 +1422,7 @@ class MapHolder extends DrawingPositionConverter {
             let layers = this.olmap.getLayers().getArray();
             for (let i = 0; i < layers.length && !zoomOk; i++) {
                 let layer = layers[i];
-                let boundings = avitem(layer,'zoomLayerBoundings');
+                let boundings = getav(layer).zoomLayerBoundings;
                 if (! boundings) continue;
                 let source = layer.get('source');
                 if (!source || !(source instanceof olXYZSource)) continue;
@@ -1694,7 +1698,7 @@ class MapHolder extends DrawingPositionConverter {
         }
         const detectedFeatures = [];
         this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
-                const chartSource=avitem(layer,'chartSource');
+                const chartSource=getav(layer).chartSource;
                 if (!chartSource) return;
                 detectedFeatures.push({feature: feature, layer: layer, source: chartSource});
             },

@@ -209,14 +209,14 @@ class ChartSourceBase {
     async prepareInternal(){
         throw new Error("prepareInternal not implemented in base class");
     }
-    hasValidUrl(){
+    hasValidConfig(){
         return !! this.chartEntry[CHARTBASE.URL]
     }
     async prepare() {
         const fullConfig = await fetchItemInfo(this.chartEntry);
         //TODO: only merge allowed parts
         Object.assign(this.chartEntry, fullConfig);
-        if (! this.hasValidUrl()){
+        if (! this.hasValidConfig()){
             base.log("no url retrieved for "+this.chartEntry[CHARTBASE.NAME]);
             if (this.isBaseChart()){
                 throw new Error("unable to get an url for the base chart "+this.chartEntry[CHARTBASE.NAME]);
@@ -252,7 +252,7 @@ class ChartSourceBase {
     }
 
     setVisible(visible){
-        if (! this.hasValidUrl()) return;
+        if (! this.hasValidConfig()) return;
         this.visible=visible;
         if (! this.isReady()) return;
         this.layers.forEach((layer)=>layer.setVisible(visible));
@@ -334,7 +334,7 @@ class ChartSourceBase {
     }
 
     setEnabled(enabled,opt_update){
-        if (! this.hasValidUrl()) return;
+        if (! this.hasValidConfig()) return;
         this.mapholder.setEnabled(this,enabled,opt_update);
     }
 

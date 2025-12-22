@@ -27,7 +27,7 @@ import base from '../base.js';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import Helper, {avitem, injectav, setav} from '../util/helper.js';
+import Helper, {getav, setav} from '../util/helper.js';
 import ChartSourceBase, {CHARTBASE} from './chartsourcebase.js';
 import * as olExtent from 'ol/extent';
 import {XYZ as olXYZSource} from 'ol/source';
@@ -210,7 +210,8 @@ export const CHARTAV= {
     SEQUENCEURL: "sequenceUrl",
     TOKENURL: "tokenUrl",
     TOKENFUNCTION: "tokenFunction",
-    BASEURL:'baseUrl'
+    BASEURL:'baseUrl',
+    LAYERS:"layers",
 }
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -278,11 +279,10 @@ const convertBoundsForZoom=(boundsForZoom)=>{
     return {[boundsForZoom.zoom]:boxesOut};
 }
 class LayerConfigXYZ extends LayerConfig{
-    constructor({encryptUrlFunction,overviewUrl,upZoom}) {
+    constructor({overviewUrl,upzoom}) {
         super();
-        this.encryptUrlFunction = encryptUrlFunction;
         this.overviewUrl = overviewUrl;
-        this.upZoom = upZoom;
+        this.upzoom = upzoom; //coming from chartEntry if set there
         this.inversy=false;
         this.source=undefined;
         this.layer=undefined;
@@ -295,13 +295,21 @@ class LayerConfigXYZ extends LayerConfig{
         const layerOptions={
             zoomLayerBoundings: undefined,
             replaceInUrl:false,
-            layerUrl:undefined
+            layerUrl:undefined,
+            upzoom:this.upzoom
         }
         const url=options.url||options.href;
         if (! url) throw new Error("missing layer url");
         layerOptions.layerUrl=injectBaseUrl(url,this.overviewUrl);
         if (url.indexOf("{x}") >= 0 && url.indexOf("{y}") >= 0 && url.indexOf("{z}") >= 0) {
             layerOptions.replaceInUrl = true;
+        }
+        if (layerOptions.upzoom == undefined) {
+            if (url.match(/^https*[:]/)) {
+                layerOptions.upzoom = globalStore.getData(keys.properties.mapOnlineUpZoom);
+            } else {
+                layerOptions.upzoom = globalStore.getData(keys.properties.mapUpZoom);
+            }
         }
         if (options.layerzoomboundings){
             const boundsIn=options.layerzoomboundings.zoomboundings||options.layerzoomboundings;
@@ -324,6 +332,8 @@ class LayerConfigXYZ extends LayerConfig{
         const layerOptions=this.buildLayerOptions(options);
         return (coord)=>{
             if (!coord) return undefined;
+            if (options.minzoom != undefined && coord[0] < options.minzoom) return invalidUrl;
+            if (options.maxzoom != undefined && coord[0] > options.maxzoom) return invalidUrl;
             if (! checkZoomBounds(coord,layerOptions.zoomLayerBoundings)) return invalidUrl;
             let z = coord[0];
             let x = coord[1];
@@ -334,9 +344,6 @@ class LayerConfigXYZ extends LayerConfig{
             }
             if (!layerOptions.replaceInUrl) {
                 let tileUrl = z + '/' + x + '/' + y + ".png";
-                if (this.encryptUrlFunction) {
-                    tileUrl = "##encrypt##" + tileUrl;
-                }
                 return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl);
             }
             else {
@@ -358,24 +365,23 @@ class LayerConfigXYZ extends LayerConfig{
                 tileUrlFunction: (coord) => {
                     return tileUrlFunction(coord);
                 },
-                extent: extent,
                 tileLoadFunction: (imageTile,src) => {
                     imageTile.getImage().src=this.finalUrl(src);
                 },
                 tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
             })
-        if (this.upZoom > 0) {
+        if (layerOptions.upzoom > 0) {
             this.source.tileClass = tileClassCreator((coord) => {
                     return tileUrlFunction(coord);
                 },
-                this.upZoom,
+                layerOptions.upzoom,
                 this.inversy
             )
         }
         this.layer = new olTileLayer({
             source: this.source,
         });
-        if (this.upZoom > 0) {
+        if (layerOptions.upzoom > 0) {
             this.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
         }
         setav(this.layer,{
@@ -574,25 +580,18 @@ class AvnavChartSource extends ChartSourceBase{
         if (!url) return;
         return url + "/avnav.xml";
     }
-    hasValidUrl(){
-        return !!this.chartEntry[CHARTAV.URL] || !!this.chartEntry[CHARTAV.OVERVIEW];
+    hasValidConfig(){
+        return !!this.chartEntry[CHARTAV.URL] ||
+            !!this.chartEntry[CHARTAV.OVERVIEW] ||
+            !!this.chartEntry[CHARTAV.LAYERS] ;
     }
     async prepareInternal() {
         let url = this.chartEntry[CHARTAV.URL]||this.chartEntry[CHARTAV.OVERVIEW];
-        let upZoom = 0;
-        if (this.chartEntry[CHARTAV.UPZOOM] !== undefined && this.chartEntry[CHARTAV.UPZOOM] !== null && !this.chartEntry[CHARTAV.UPZOOM]) {
-        } else {
-            if (url && url.match(/^https*[:]/)) {
-                upZoom = globalStore.getData(keys.properties.mapOnlineUpZoom);
-            } else {
-                upZoom = globalStore.getData(keys.properties.mapUpZoom);
-            }
-        }
         let layerConfig;
         let ovUrl;
-        if (this.chartEntry.layers) {
+        if (this.chartEntry[CHARTAV.LAYERS]) {
             if (url) throw new Error("either provide an url or a layers config for a chart");
-            layerConfig=this.chartEntry.layers;
+            layerConfig=this.chartEntry[CHARTAV.LAYERS];
             ovUrl=this.chartEntry[CHARTAV.BASEURL]||window.location.href;
         }
         else {
@@ -606,7 +605,7 @@ class AvnavChartSource extends ChartSourceBase{
             })
             layerConfig=this.parseOverviewXml(data);
         }
-        let layers = await this.parseLayerlist(layerConfig, ovUrl,upZoom);
+        let layers = await this.parseLayerlist(layerConfig, ovUrl);
         return layers;
     }
     encryptUrl(url){
@@ -659,7 +658,7 @@ class AvnavChartSource extends ChartSourceBase{
         });
         return layers;
     }
-    async parseLayerlist(newConfig,ovurl,upZoom) {
+    async parseLayerlist(newConfig,ovurl) {
         let ll = [];
         if (! Array.isArray(newConfig) || newConfig.length < 1) {
             throw new Error("unable to parse a valid chart config - no layers")
@@ -670,8 +669,7 @@ class AvnavChartSource extends ChartSourceBase{
             if (this.chartEntry[CHARTAV.TOKENURL] && (! type || ! type.startsWith('encrypted-'))) type='encrypted-'+(type||'zxy');
             const layerCreator=layerFactory.layerClass(type,{
                 ...this.chartEntry,
-                overviewUrl:ovurl,
-                upZoom: upZoom,
+                overviewUrl:ovurl
             });
             if (! layerCreator){
                 throw new Error(`unable to create layer ${lnum} for profile ${type}`);
@@ -751,13 +749,13 @@ class AvnavChartSource extends ChartSourceBase{
             for (let i=this.layers.length-1;i>=0;i--){
                 let layer=this.layers[i];
                 if (! layer.getVisible()) continue;
-                if (! avitem(layer,'isTileLayer')) continue;
+                if (! getav(layer).isTileLayer) continue;
                 let res=this.mapholder.getView().getResolution();
                 let tile=layer.getSource().getTileGrid()
                     .getTileCoordForCoordAndResolution(mapcoordinates,res);
                 let url=layer.getSource().getTileUrlFunction()(tile);
                 let action=new Promise((aresolve,areject)=>{
-                    const computeUrl=avitem(layer,'finalUrl',undefined);
+                    const computeUrl=getav(layer).finalUrl;
                     let finalUrl=computeUrl?computeUrl(url):url;
                     Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
                         featureInfo:1,

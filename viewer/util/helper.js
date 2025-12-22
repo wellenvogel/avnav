@@ -289,8 +289,12 @@ export const injectav=(obj)=>{
     if (! isObject(obj.avnav)){ throw new Error("injectav: avnav exists, no object: "+typeof(obj.avnav)) ;}
     return obj;
 }
+export const getav=(obj)=>{
+    const av=injectav(obj);
+    return av.avnav;
+}
 export const avitem=(obj,itemName='item',defaultv={})=>{
-    const rt=injectav(obj).avnav[itemName];
+    const rt=getav(obj)[itemName];
     if (rt === undefined){ return defaultv;}
     return rt
 }
