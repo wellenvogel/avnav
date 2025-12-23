@@ -78,9 +78,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 this.chart.remove(Chart.CKEY);
             }
             if (this.chart.has(Chart.EXT_CKEY)) {
-                this.chart.put(Chart.CKEY,  chartKey);
                 this.chart.remove(Chart.EXT_CKEY);
             }
+            this.chart.put(Chart.CKEY,  chartKey);
             this.allowColon=allowColon;
         }
         private String keyFromExternalChart() throws Exception {
@@ -108,12 +108,16 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 if (! chart.has(ckey)) continue;
                 String name= null;
                 try {
-                    name = key+"@"+ DirectoryRequestHandler.safeName(chart.getString(ckey),false);
+                    name = key+"@"+ DirectoryRequestHandler.safeName(chart.getString(ckey)+CFG_EXTENSION,false);
                 } catch (Exception e) {
                     continue;
                 }
                 if (!allowColon) name=name.replace(':','.');
-                rt.add(name+CFG_EXTENSION);
+                if (rt.size() < 1 || ! name.equals(rt.get(0)) ) {
+                    //we only add if the name differs from the first name
+                    //otherwise we always delete the new config when writing
+                    rt.add(name);
+                }
             }
             return rt;
         }

@@ -13,11 +13,8 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 
-import de.wellenvogel.avnav.appapi.AddonHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
-import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -106,17 +103,14 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     }
     static final String NAME_PARAM="_name";
     public static final String TYPENAME="ExternalPlugin";
-    private static final String C_CHARTS="charts";
-    private static final String C_ADDONS="addons";
     static final EditableParameter.IntegerParameter TIMEOUT_PARAMETER=
             new EditableParameter.IntegerParameter("timeout", R.string.labelSettingsPluginTimeout,30);
     long lastUpdate=0;
     String pluginName=new String();
     String startPackage;
     String startAction;
-    private JSONArray charts=null;
-    private JSONArray addons=null;
 
+    PluginHandlerBase phBase;
     private void setParameters(){
         parameterDescriptions.add(ENABLED_PARAMETER);
         parameterDescriptions.add(TIMEOUT_PARAMETER);
@@ -126,6 +120,12 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         this.status.canEdit=true;
         this.status.canDelete=true;
         setParameters();
+        phBase=new PluginHandlerBase(ctx,this.status,null) {
+            @Override
+            protected String getKey() {
+                return ExternalPluginWorker.this.getKey();
+            }
+        };
     }
     public ExternalPluginWorker(GpsService ctx, String pluginName){
         super(TYPENAME,ctx);
@@ -173,64 +173,13 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         return pluginName;
     }
 
-    private String getKey(){
+    protected String getKey(){
         return "Plugin:"+pluginName; //we don't use TYPENAME here as we want to be compatible
                                      //with older versions that had TYPENAME Plugin
                                      //and as the key goes into overlay definitions
                                      //we would otherwise break them
     }
-    private void unregisterCharts(boolean reset) {
-        ChartHandler chartHandler = gpsService.getChartHandler();
-        if (chartHandler != null) {
-            chartHandler.removeExternalCharts(getKey());
-        }
-        if (reset) charts=null;
-        status.unsetChildStatus(C_CHARTS);
-    }
-    private void unregisterAddons(boolean reset){
-        AddonHandler addonHandler=gpsService.getAddonHandler();
-        if (addonHandler != null){
-            addonHandler.removeExternalAddons(getKey());
-        }
-        if (reset) addons=null;
-        status.unsetChildStatus(C_ADDONS);
-    }
-    private void registerCharts(JSONArray charts){
-        ChartHandler chartHandler=gpsService.getChartHandler();
-        if (chartHandler == null) {
-            status.unsetChildStatus(C_CHARTS);
-            return;
-        }
-        chartHandler.addExternalCharts(getKey(),charts);
-        this.charts=charts;
-        status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA,charts.length()+" registered");
-    }
 
-    private void registerAddons(JSONArray addonsJson) {
-        AddonHandler addonHandler = gpsService.getAddonHandler();
-        if (addonHandler != null) {
-            ArrayList<AddonHandler.AddonInfo> addons = new ArrayList<>();
-            for (int i = 0; i < addonsJson.length(); i++) {
-                try {
-                    JSONObject addon = addonsJson.getJSONObject(i);
-                    AddonHandler.AddonInfo info = new AddonHandler.AddonInfo(addon.getString("name"));
-                    info.icon = addon.getString("icon");
-                    info.url = addon.getString("url");
-                    if (addon.optBoolean("keepUrl", false)) {
-                        info.adaptHttpUrls = true;
-                    }
-                    if (addon.has("title")) info.title = addon.getString("title");
-                    info.newWindow = addon.optBoolean("newWindow", false) ? "true" : "false";
-                    addons.add(info);
-                } catch (Exception e) {
-                    Log.e(Constants.LOGPRFX, "unable to handle addons for " + pluginName, e);
-                }
-            }
-            addonHandler.addExternalAddons(getKey(), addons);
-            status.setChildStatus(C_ADDONS, WorkerStatus.Status.NMEA,addons.size()+" registered");
-            this.addons=addonsJson;
-        }
-    }
     private void tryAutoStart(){
         if (startPackage != null && startAction != null) {
             Intent si = new Intent();
@@ -251,12 +200,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     protected void run(int startSequence) throws JSONException, IOException {
         setStatus(WorkerStatus.Status.INACTIVE,"started");
         boolean active=false;
-        JSONArray charts;
-        JSONArray addons;
-        charts=this.charts;
-        addons=this.addons;
-        if (charts != null) registerCharts(charts);
-        if (addons != null) registerAddons(addons);
+        phBase.onStart();
         tryAutoStart();
         while (! shouldStop(startSequence)){
             sleep(1000);
@@ -264,24 +208,21 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             if (shouldStop(startSequence)) break;
             if ( (last + 1000 *TIMEOUT_PARAMETER.fromJson(parameters)) < SystemClock.uptimeMillis()){
                 setStatus(WorkerStatus.Status.INACTIVE,"timeout");
-                unregisterCharts(true);
-                unregisterAddons(true);
+                phBase.onStop(true);
                 setPluginJson(null);
             }
             else{
                 setStatus(WorkerStatus.Status.NMEA,"plugin available");
             }
         }
-        unregisterAddons(false);
-        unregisterCharts(false);
+        phBase.onStop(false);
         setPluginJson(null);
     }
 
     @Override
     public void stop() {
         super.stop();
-        unregisterAddons(false);
-        unregisterCharts(false);
+        phBase.onStop(false);
         setPluginJson(null);
     }
 
@@ -303,12 +244,12 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                     setPluginJson(piJson);
                     if (piJson.has("charts")) {
                         JSONArray charts = piJson.getJSONArray("charts");
-                        registerCharts(charts);
+                        phBase.registerCharts(charts);
                         updatedCharts = true;
                     }
                     if (piJson.has("userApps")) {
                         JSONArray userApps = piJson.getJSONArray("userApps");
-                        registerAddons(userApps);
+                        phBase.registerAddons(userApps);
                         updatedAddons = true;
                     }
                 } catch (Throwable t) {
@@ -319,15 +260,14 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                 setPluginJson(null);
             }
             if (! updatedCharts){
-                unregisterCharts(true);
+                phBase.unregisterCharts(true);
             }
             if (! updatedAddons){
-                unregisterAddons(true);
+                phBase.unregisterAddons(true);
             }
         }
         else{
-            unregisterCharts(true);
-            unregisterAddons(true);
+            phBase.onStop(true);
         }
         if (enabled) {
             String heartBeat = intent.getStringExtra("heartbeat");

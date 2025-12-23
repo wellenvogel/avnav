@@ -72,6 +72,7 @@ public class PluginManager extends DirectoryRequestHandler {
         JSONObject infoActive=new JSONObject();
         JSONObject infoInactive=new JSONObject();
         String pluginUrlBase;
+        PluginHandlerBase phBase=null;
         public Plugin(String name,File dir,WorkerStatus status,String urlPrefix){
             this.name=name;
             this.dir=dir;
@@ -110,6 +111,12 @@ public class PluginManager extends DirectoryRequestHandler {
 
         void start(GpsService gpsService){
             this.gpsService = gpsService;
+            phBase=new PluginHandlerBase(gpsService,null,this.pluginUrlBase) {
+                @Override
+                protected String getKey() {
+                    return "IPlugin:"+name;
+                }
+            };
             if (!prepared) {
                 try {
                     prepare();
@@ -120,7 +127,19 @@ public class PluginManager extends DirectoryRequestHandler {
                 return;
             }
             if (config != null) {
-                //todo register
+                try {
+                    if (config.has("charts")) {
+                        JSONArray charts=config.getJSONArray("charts");
+                        phBase.registerCharts(charts);
+                    }
+                    if (config.has("userApps")){
+                        JSONArray apps=config.getJSONArray("userApps");
+                        phBase.registerAddons(apps);
+                    }
+                }catch (Exception e){
+                    AvnLog.e("unable to read plugin.json",e);
+                    status.setChildStatus(name, WorkerStatus.Status.ERROR,e.getMessage());
+                }
             }
             setStatus();
         }
@@ -143,11 +162,8 @@ public class PluginManager extends DirectoryRequestHandler {
             if (fin){
                 status.unsetChildStatus(name);
             }
-            if (gpsService == null) return;
-            ChartHandler ch=gpsService.getChartHandler();
-            if (ch != null) ch.removeExternalCharts(name);
-            AddonHandler ah=gpsService.getAddonHandler();
-            if (ah != null) ah.removeExternalAddons(name);
+            if (gpsService == null|| phBase == null) return;
+            phBase.onStop(true);
         }
 
         JSONObject toJson() throws JSONException {
