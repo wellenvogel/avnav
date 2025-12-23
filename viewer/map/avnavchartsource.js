@@ -53,7 +53,7 @@ const NORMAL_TILE_SIZE=256;
 //the more forward way would be to return undefined - but in this case
 //ol will NOT show the lower zoom tiles...
 const invalidUrl = 'data:image/png;base64,i';
-const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
+const tileClassCreator=(tileUrlFunction,maxUpZoom,minZoom,inversy)=>
 {
     class AvNavTile extends olTile {
         constructor(tileCoord,
@@ -71,6 +71,7 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
             this.tileUrlFunction=tileUrlFunction;
             this.downZoom=0;
             this.crossOrigin=crossOrigin;
+            this.minZoom=minZoom;
             if (this.crossOrigin !== null) this.ownImage.crossOrigin = this.crossOrigin;
         }
 
@@ -80,6 +81,10 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
             while (this.downZoom <= maxUpZoom) {
                 for (; dz < this.downZoom; dz++) {
                     coord[0] = coord[0] - 1;
+                    if (coord[0] < this.minZoom){
+                        this.downZoom =maxUpZoom +1;
+                        return invalidUrl;
+                    }
                     coord[1] = Math.floor(coord[1] / 2);
                     coord[2] = Math.floor(coord[2] / 2);
                 }
@@ -385,6 +390,7 @@ class LayerConfigXYZ extends LayerConfig{
                 return tileUrlFunction(coord);
             },
             layerOptions.upzoom,
+            options.minzoom||1,
             this.inversy
         )
         this.layer = new olTileLayer({
