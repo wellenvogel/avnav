@@ -335,8 +335,8 @@ class MainPage extends React.Component {
                 let selectedChart;
                 let isLoading= json.loading;
                 json.items.sort((a,b)=>{
-                    let nameA = (a.name).toUpperCase();
-                    let nameB = (b.name).toUpperCase();
+                    let nameA = (a.name||"<unknown>").toUpperCase();
+                    let nameB = (b.name||"<unknown>").toUpperCase();
                     if (nameA < nameB) {
                         return -1;
                     }
