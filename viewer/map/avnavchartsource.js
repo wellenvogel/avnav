@@ -36,6 +36,7 @@ import {Tile as olTileLayer} from 'ol/layer';
 import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';
 import olImageTile from 'ol/src/ImageTile';
+import olTile from 'ol/src/Tile';
 import olTileState from 'ol/src/TileState';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
@@ -54,30 +55,39 @@ const NORMAL_TILE_SIZE=256;
 const invalidUrl = 'data:image/png;base64,i';
 const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
 {
-    class AvNavTile extends olImageTile {
+    class AvNavTile extends olTile {
         constructor(tileCoord,
                     state,
                     src,
                     crossOrigin,
                     tileLoadFunction,
                     opt_options) {
-            super(...arguments);
+            super(tileCoord,state,opt_options);
             this.ownImage = new Image();
             this.ownTileLoadFunction = tileLoadFunction;
             this.ownSrc = src;
+            this.key=src;
             this.listenerKeys = [];
             this.tileUrlFunction=tileUrlFunction;
             this.downZoom=0;
+            this.crossOrigin=crossOrigin;
+            if (this.crossOrigin !== null) this.ownImage.crossOrigin = this.crossOrigin;
         }
 
         getModifiedUrl(){
             let coord=this.tileCoord.slice(0);
-            for (let dz=0;dz < this.downZoom;dz++){
-                coord[0]=coord[0]-1;
-                coord[1]=Math.floor(coord[1]/2);
-                coord[2]=Math.floor(coord[2]/2);
+            let dz=0;
+            while (this.downZoom <= maxUpZoom) {
+                for (; dz < this.downZoom; dz++) {
+                    coord[0] = coord[0] - 1;
+                    coord[1] = Math.floor(coord[1] / 2);
+                    coord[2] = Math.floor(coord[2] / 2);
+                }
+                const url=this.tileUrlFunction(coord);
+                if (url !== invalidUrl) return url;
+                this.downZoom++;
             }
-            return this.tileUrlFunction(coord);
+            return invalidUrl;
         }
         computeImageProps(){
             let x=this.tileCoord[1];
@@ -109,6 +119,7 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
             if (this.state === olTileState.ERROR) {
                 this.state = olTileState.IDLE;
                 this.ownImage = new Image();
+                if (this.crossOrigin !== null) this.ownImage.crossOrigin = this.crossOrigin;
             }
             if (this.state === olTileState.IDLE || this.downZoom > 0) {
                 this.state = olTileState.LOADING;
@@ -118,7 +129,7 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
                     listenOnce(this.ownImage, olEventType.LOAD, (ev) => {
                         if (this.ownImage.naturalWidth && this.ownImage.naturalHeight) {
                             if (this.downZoom > 0){
-                                base.log("downzoom loaded, dz="+this.downZoom+" for "+this.ownSrc+
+                                base.log("downzoom loaded, dz="+this.downZoom+" for "+this.tileCoord.join(',')+
                                 ", "+this.getModifiedUrl());
                             }
                             this.state = olTileState.LOADED;
@@ -356,39 +367,35 @@ class LayerConfigXYZ extends LayerConfig{
         return url;
     }
 
-    createOL(options){
-        if (! options) throw new Error("missing options for XYZ layer");
-        const layerOptions=this.buildLayerOptions(options);
-        const extent=this.bboxToOlExtent(options.boundingbox);
-        const tileUrlFunction=this.createTileUrlFunction(options);
-        this.source= new olXYZSource({
-                tileUrlFunction: (coord) => {
-                    return tileUrlFunction(coord);
-                },
-                tileLoadFunction: (imageTile,src) => {
-                    imageTile.getImage().src=this.finalUrl(src);
-                },
-                tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
-            })
-        if (layerOptions.upzoom > 0) {
-            this.source.tileClass = tileClassCreator((coord) => {
-                    return tileUrlFunction(coord);
-                },
-                layerOptions.upzoom,
-                this.inversy
-            )
-        }
+    createOL(options) {
+        if (!options) throw new Error("missing options for XYZ layer");
+        const layerOptions = this.buildLayerOptions(options);
+        const extent = this.bboxToOlExtent(options.boundingbox);
+        const tileUrlFunction = this.createTileUrlFunction(options);
+        this.source = new olXYZSource({
+            tileUrlFunction: (coord) => {
+                return tileUrlFunction(coord);
+            },
+            tileLoadFunction: (imageTile, src) => {
+                imageTile.getImage().src = this.finalUrl(src);
+            },
+            tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
+        })
+        this.source.tileClass = tileClassCreator((coord) => {
+                return tileUrlFunction(coord);
+            },
+            layerOptions.upzoom,
+            this.inversy
+        )
         this.layer = new olTileLayer({
             source: this.source,
         });
-        if (layerOptions.upzoom > 0) {
-            this.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
-        }
-        setav(this.layer,{
+        this.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
+        setav(this.layer, {
             isTileLayer: true,
-            minZoom: parseInt(options.minzoom||1),
-            maxZoom: parseInt(options.maxzoom||23)+layerOptions.upzoom,
-            extent:extent,
+            minZoom: parseInt(options.minzoom || 1),
+            maxZoom: parseInt(options.maxzoom || 23) + layerOptions.upzoom,
+            extent: extent,
             zoomLayerBoundings: layerOptions.zoomLayerBoundings,
         });
         return this.layer;
