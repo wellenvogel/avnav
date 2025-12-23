@@ -311,9 +311,6 @@ let keys={
         connectedMode: new SplitProperty(true, "connected", PropertyType.CHECKBOX),
         readOnlyServer: new Property(false),
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
-        slideTime: new Property(300), //time in ms for upzoom
-        slideLevels: new Property(3), //start with that many lower zoom levels
-        maxUpscale: new Property(2), //2 levels upscale (otherwise we need too much mem)
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
         courseAverageLength: new Property(10,"average interval for map course up",PropertyType.RANGE,[1,30],"how many values will be used to compute a moving average for course up"), //moving average for course up
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30],"for course changes below this value the map rotation will be delayed"), //tolerance for slow rotation
@@ -442,9 +439,9 @@ let keys={
         featureInfo: new Property(true,"Feature Info on Click",PropertyType.CHECKBOX,undefined,"bring up the feature list when clicking on the map"),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
         measureRhumbLine: new Property(true,"Measure rhumb line (false: great circle)",PropertyType.CHECKBOX,undefined,"if set the measure function will use the rhumb line mode"),
-        mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6],"If a tile fails to load (typically the server does not have one) AvNav will try lower zoom levels and scale up the tiles."+
+        mapUpZoom: new Property(6,"zoom up lower layers",PropertyType.RANGE,[0,8],"If a tile fails to load (typically the server does not have one) AvNav will try lower zoom levels and scale up the tiles."+
             "This can impact performance as more network request are made and the scaling will need computation power in the browser."),
-        mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6],"If a tile fails to load for an online map (typically the server does not have one) AvNav will try lower zoom levels and scale up the tiles."+
+        mapOnlineUpZoom: new Property(4,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6],"If a tile fails to load for an online map (typically the server does not have one) AvNav will try lower zoom levels and scale up the tiles."+
             "This can impact performance as more network request are made and the scaling will need computation power in the browser."),
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5],"scale the map display."),
         mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX,undefined,"Normally buttons are outside of the map area. If you set this flag the map will float behind buttons."),

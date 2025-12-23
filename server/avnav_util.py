@@ -656,7 +656,6 @@ class AVNUtil(object):
 
 class ChartFile(object):
   def __init__(self):
-      self._upzoom=None
       self._hasImporterLog=False
   def wakeUp(self):
     pass
@@ -678,17 +677,12 @@ class ChartFile(object):
     return None
   def getAvnavXml(self):
     return None
-  def setUpzoom(self,upzoom):
-      self._upzoom=upzoom
-  def getUpzoom(self):
-    return self._upzoom
   def setHasImporterLog(self,flag):
     self._hasImporterLog=flag
   def deleteFiles(self):
       pass
   def mergeAdditions(self,item:dict[str,Any]):
       item['hasImporterLog']=self._hasImporterLog
-      item['upzoom']=self._upzoom
       item['sequence']=self.getChangeCount()
       item['scheme']=self.getScheme()
       item['originalScheme']=self.getOriginalScheme()

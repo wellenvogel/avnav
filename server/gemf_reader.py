@@ -251,7 +251,6 @@ class GemfFile(ChartFile):
     try:
       data = self.getSources()
       options = {}
-      options['upzoom'] = self._upzoom
       rt = create_overview.getGemfInfo(data, options)
       AVNLog.info("created GEMF overview for %s", self.filename)
       AVNLog.debug("overview for %s:%s", self.filename, rt)

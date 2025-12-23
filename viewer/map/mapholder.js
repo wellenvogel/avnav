@@ -172,7 +172,6 @@ class MapHolder extends DrawingPositionConverter {
         } catch (e) {
         }
 
-        this.slideIn = 0; //when set we step by step zoom in
         /**
          * @private
          * @type {Drawing}
@@ -926,6 +925,12 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
+    clampZoom(zoom){
+        if (zoom < this.minzoom) return this.minzoom;
+        if (zoom > this.maxzoom) return this.maxzoom;
+        return zoom;
+    }
+
     /**
      * init the map (deinit an old one...)
      */
@@ -1066,21 +1071,7 @@ class MapHolder extends DrawingPositionConverter {
         if (this.referencePoint && this.zoom > 0) {
             //if we load a new map - try to restore old center and zoom
             this._centerToReference();
-            if (this.zoom < this.minzoom) this.zoom = this.minzoom;
-            if (this.zoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale)))
-                this.zoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
-            let slideLevels = 0;
-            if (globalStore.getData(keys.properties.mapUpZoom) < globalStore.getData(keys.properties.slideLevels)) {
-                //TODO: pick the right maxUpZoom depending on the chart
-                //but should be good enough as online maps should have all levels
-                slideLevels = globalStore.getData(keys.properties.slideLevels) - globalStore.getData(keys.properties.mapUpZoom);
-            }
-            if (slideLevels > 0) {
-                if (this.zoom >= (this.minzoom + slideLevels)) {
-                    this.zoom -= slideLevels;
-                    this.doSlide(slideLevels);
-                }
-            }
+            this.zoom=this.clampZoom(this.zoom);
             this.requiredZoom = this.zoom;
             this.setMapZoom(this.zoom);
             recenter = false;
@@ -1211,10 +1202,7 @@ class MapHolder extends DrawingPositionConverter {
         this.setZoom(curzoom,opt_force);
     }
     setZoom(curzoom,opt_force){
-        if (curzoom < this.minzoom) curzoom = this.minzoom;
-        if (curzoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale))) {
-            curzoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
-        }
+        curzoom=this.clampZoom(curzoom);
         this.requiredZoom = curzoom;
         this.forceZoom = opt_force || false;
         this.setMapZoom(curzoom);
@@ -1406,9 +1394,6 @@ class MapHolder extends DrawingPositionConverter {
             if (this.olmap.getView().getZoom() != this.requiredZoom) {
                 this.setMapZoom(this.requiredZoom);
             }
-            return;
-        }
-        if (this.slideIn) {
             return;
         }
         //check if we have tiles available for this zoom
@@ -1766,10 +1751,7 @@ class MapHolder extends DrawingPositionConverter {
         if (this.mapZoom >= 0) {
             let vZoom = this.getView().getZoom();
             if (vZoom != this.mapZoom) {
-                if (vZoom < this.minzoom) vZoom = this.minzoom;
-                if (vZoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale))) {
-                    vZoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
-                }
+                vZoom=this.clampZoom(vZoom);
                 base.log("zoom required from map: " + vZoom);
                 this.requiredZoom = vZoom;
                 if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
@@ -1844,30 +1826,6 @@ class MapHolder extends DrawingPositionConverter {
         evt.context.drawImage(this.userLayerContext.context.canvas, 0, 0, this.userLayerContext.width, this.userLayerContext.height);
 
     }
-
-    /**
-     * this function is some "dirty workaround"
-     * ol3 nicely zoomes up lower res tiles if there are no tiles
-     * BUT: not when we never loaded them.
-     * so we do some guess when we load a map and should go to a higher zoom level:
-     * we start at a lower level and then zoom up in several steps...
-     * @param start - when set, do not zoom up but start timeout
-     */
-    doSlide(start) {
-        if (!start) {
-            if (!this.slideIn) return;
-            this.changeZoom(1, false, true);
-            this.slideIn--;
-            if (!this.slideIn) return;
-        } else {
-            this.slideIn = start;
-        }
-        let to = globalStore.getData(keys.properties.slideTime);
-        window.setTimeout(() => {
-            this.doSlide();
-        }, to);
-    }
-
     /**
      * tell the map that it's size has changed
      */

@@ -168,7 +168,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       return None
     return {
             'period': 5, #how long to sleep between 2 checks
-            'upzoom': 2 #zoom up in charts
     }
 
 
@@ -319,7 +318,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       if chart is None:
           return False
       else:
-        chart.setUpzoom(self.getIntParam('upzoom'))
         chart.open()
         itemDescription.setUserData(chart)
         itemDescription.displayName=itemDescription.name[len(self.SCOPE_USER):]

@@ -387,7 +387,7 @@ class LayerConfigXYZ extends LayerConfig{
         setav(this.layer,{
             isTileLayer: true,
             minZoom: parseInt(options.minzoom||1),
-            maxZoom: parseInt(options.maxzoom||23),
+            maxZoom: parseInt(options.maxzoom||23)+layerOptions.upzoom,
             extent:extent,
             zoomLayerBoundings: layerOptions.zoomLayerBoundings,
         });
