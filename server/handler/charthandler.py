@@ -262,6 +262,16 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                 onItem(old,"remove")
     return rt
 
+  def onPreRun(self):
+      super().onPreRun()
+      if self.baseDir is not None:
+          oldDefault=os.path.join(self.baseDir,self.DEFAULT_CHART_CFG)
+          if os.path.exists(oldDefault):
+              newDefault=os.path.join(self.baseDir,self.SCOPE_USER+self.DEFAULT_CHART_CFG)
+              if not os.path.exists(newDefault):
+                AVNLog.info("migrate old default chart config from %s to %s", oldDefault,newDefault)
+                os.rename(oldDefault,newDefault)
+
   def periodicRun(self):
     if self.baseDir is None or not os.path.isdir(self.baseDir):
       self.setInfo("main", "directory %s not found" % self.baseDir, WorkerStatus.ERROR)
