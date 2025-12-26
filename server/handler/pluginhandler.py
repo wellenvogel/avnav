@@ -29,10 +29,7 @@ import inspect
 import json
 import shutil
 from typing import Dict
-from urllib.parse import urljoin
 from zipfile import ZipFile
-
-from sympy import catalan
 
 import avnav_handlerList
 from alarmhandler import AVNAlarmHandler
@@ -743,14 +740,6 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
     def autoInstantiate(cls):
         return True
 
-    def onPreRun(self):
-        super().onPreRun()
-        try:
-            for file in os.listdir(self.baseDir):
-                if file.startswith(self.UPLOAD_NAME) and file.endswith(self.EXT):
-                    os.unlink(os.path.join(self.baseDir, file))
-        except Exception as e:
-            AVNLog.error("unable to cleanup upload files: %s", str(e))
 
     def isHidden(self, name):
         ev = os.getenv(ENV_PREFIX + normalizedName(name))
@@ -792,6 +781,14 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         return api
 
     def run(self):
+        if not os.path.isdir(self.baseDir):
+            os.makedirs(self.baseDir)
+        try:
+            for file in os.listdir(self.baseDir):
+                if file.startswith(self.UPLOAD_NAME) and file.endswith(self.EXT):
+                    os.unlink(os.path.join(self.baseDir, file))
+        except Exception as e:
+            AVNLog.error("unable to cleanup upload files: %s", str(e))
         newApis = {}
         directories = {}
         for dtype in self.ALL_DIRS:
@@ -806,6 +803,8 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                     continue
                 moduleName = self.createModuleName(dirname, dirtype)
                 api = self.loadAndPreparePlugin(dir, moduleName, dirtype)
+                if api is None:
+                    continue
                 newApis[moduleName] = api
         chartkeys=[]
         for api in newApis.values():

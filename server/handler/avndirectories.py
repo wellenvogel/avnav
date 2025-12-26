@@ -28,14 +28,9 @@
 #
 ###############################################################################
 import os.path
-import shutil
-from zipfile import ZipFile
-
-from typing_extensions import override
 
 from avnav_manager import *
 from avnav_worker import *
-import avnav_handlerList
 from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHttpServer
 
