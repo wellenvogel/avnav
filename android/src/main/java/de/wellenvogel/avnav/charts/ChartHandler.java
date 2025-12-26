@@ -677,89 +677,77 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             chart.setScheme(scheme);
             return RequestHandler.getReturn();
         }
-        if (command.equals(CGETCONFIG) || command.equals(CSAVECONFIG) || command.equals(CDELCONFIG)){
-            String name=uri.getQueryParameter("name");
-            File cfgFile=null;
-            String configName=null;
-            List<String> cfgNames= Collections.emptyList();
-            boolean onlyConfigName=false;
-            if (name == null){
+        if (command.equals(CGETCONFIG) || command.equals(CSAVECONFIG) || command.equals(CDELCONFIG)) {
+            String name = uri.getQueryParameter("name");
+            File cfgFile = null;
+            String configName = null;
+            List<String> cfgNames = Collections.emptyList();
+            if (name == null) {
                 //either config name directly given - or default
-                configName=uri.getQueryParameter("configName");
+                //if a configName is given (retrieved by listConfig) we allow only existing overlays
+                //as the JS part does not know how to construct overlay names
+                configName = uri.getQueryParameter("configName");
                 if (configName != null) {
-                    configName = DirectoryRequestHandler.safeName(configName, true);
-                    onlyConfigName=true;
-                }
-                if (configName == null) configName=DEFAULT_CFG;
-                cfgNames=Collections.singletonList(configName);
-            }
-            else{
-                IChartWithConfig description=getChartDescriptionByChartKey(name);
-                if (description == null) {
-                    if (name.startsWith(Constants.EXTERNALCHARTS)){
-                        //could be a non existing plugin chart
-                        cfgNames=Collections.singletonList(ExternalChart.configFromChartName(name,allowColon));
+                    if (overlays.get(configName) == null) {
+                        return RequestHandler.getErrorReturn("overlay " + configName + " not found");
                     }
-                    else {
+                }
+                if (configName == null) configName = DEFAULT_CFG;
+                cfgNames = Collections.singletonList(configName);
+            } else {
+                IChartWithConfig description = getChartDescriptionByChartKey(name);
+                if (description == null) {
+                    if (name.startsWith(Constants.EXTERNALCHARTS)) {
+                        //could be a non existing plugin chart
+                        cfgNames = Collections.singletonList(ExternalChart.configFromChartName(name, allowColon));
+                    } else {
                         return RequestHandler.getErrorReturn("chart " + name + " not found");
                     }
-                }
-                else {
+                } else {
                     cfgNames = description.getChartCfgs();
                 }
-                if (cfgNames.isEmpty())return RequestHandler.getErrorReturn("no config name for "+name);
-                if (command.equals(CGETCONFIG)) {
-                    if (cfgNames.size() > 0){
-                        configName=cfgNames.get(0);
-                    }
-                    for (String n : cfgNames) {
-                        OverlayConfig cfg = overlays.get(n);
-                        if (cfg != null) {
-                            cfgFile = cfg.file;
-                            break;
-                        }
-                    }
-                }
-                else{
-                    configName=cfgNames.get(0);
-                    cfgFile=new File(baseDir,configName);
-                }
             }
-            if (command.equals(CDELCONFIG)){
-                for (String oname:cfgNames){
-                    OverlayConfig ovl=overlays.get(oname);
-                    if (ovl != null){
+            if (cfgNames.isEmpty())
+                return RequestHandler.getErrorReturn("no config name for " + name);
+            if (command.equals(CGETCONFIG)) {
+                configName = cfgNames.get(0);
+                for (String n : cfgNames) {
+                    OverlayConfig cfg = overlays.get(n);
+                    if (cfg != null) {
+                        cfgFile = cfg.file;
+                        break;
+                    }
+                }
+            } else {
+                configName = cfgNames.get(0);
+                cfgFile = new File(baseDir, configName);
+            }
+            if (command.equals(CDELCONFIG)) {
+                for (String oname : cfgNames) {
+                    OverlayConfig ovl = overlays.get(oname);
+                    if (ovl != null) {
                         ovl.file.delete();
                     }
                 }
                 triggerUpdate(true);
                 return RequestHandler.getReturn();
             }
-            if (configName == null){
-                return RequestHandler.getErrorReturn("no config for chart "+name);
+            if (configName == null) {
+                return RequestHandler.getErrorReturn("no config for chart " + name);
             }
-            if (command.equals(CSAVECONFIG)){
+            if (command.equals(CSAVECONFIG)) {
                 if (postData == null) throw new Exception("no data in file");
-                //for save we allow a direct configName via parameter
-                //only for existing files
-                //as the client does not know how to create a valid config name
-                if (onlyConfigName){
-                    if (overlays.get(configName) == null){
-                        throw new Exception("overlay config "+configName+" does not exist");
-                    }
-                }
-                DirectoryRequestHandler.writeAtomic(cfgFile,postData.getStream(),true,postData.getContentLength());
+                DirectoryRequestHandler.writeAtomic(cfgFile, postData.getStream(), true, postData.getContentLength());
                 postData.closeInput();
-                if (cfgNames.size() > 1){
-                    for (int i=1;i<cfgNames.size();i++){
-                        File old=new File(baseDir,cfgNames.get(i));
+                if (cfgNames.size() > 1) {
+                    for (int i = 1; i < cfgNames.size(); i++) {
+                        File old = new File(baseDir, cfgNames.get(i));
                         if (old.exists()) old.delete();
                     }
                 }
                 triggerUpdate(true);
                 return RequestHandler.getReturn();
-            }
-            else {
+            } else {
                 JSONObject localConfig = new JSONObject();
                 if (cfgFile != null && cfgFile.exists()) {
                     try {
@@ -768,12 +756,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                         AvnLog.e("unable to read chart config " + cfgFile.getAbsolutePath(), e);
                     }
                 }
-                else{
-                    if (onlyConfigName){
-                        return RequestHandler.getErrorReturn("overlay "+configName+" not found");
-                    }
-                }
-                migrateConfig(configName,localConfig);
+                migrateConfig(configName, localConfig);
                 return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", localConfig));
             }
         }
@@ -782,7 +765,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
            for (String cfgname: overlays.keySet()){
                rt.put(cfgname);
            }
-           return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
+           return RequestHandler.getReturn(new AvnUtil.KeyValue("items",rt));
 
         }
         return RequestHandler.getErrorReturn("unknown request");

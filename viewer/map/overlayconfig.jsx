@@ -606,16 +606,14 @@ export const renameItemInOverlays=async (chartlist,item,newName)=>{
  * @returns {Promise<Awaited<*[]>|*>}
  */
 export const handleOverlays = async (chartList, callback) => {
+    let paramName="name";
     if (! chartList) {
+        paramName="configName";
         const data=await Requests.getJson({
             type:"chart",
-            command:"list"
+            command:"listConfig"
         });
         chartList=data.items||[];
-        chartList.push({
-            name:DEFAULT_OVERLAY_CONFIG
-        })
-
     }
     const results = [];
     const actions = [];
@@ -628,13 +626,13 @@ export const handleOverlays = async (chartList, callback) => {
             }
         })
     }
-    const writeBack=async (overlay,requestName )=>{
+    const writeBack=async (overlay,requestName)=>{
         if (! overlay) return false;
         if (overlay.isEmpty()){
             await Requests.getJson({
                 type:'chart',
                 command: 'deleteConfig',
-                name: requestName
+                [paramName]: requestName
             })
             return;
         }
@@ -642,16 +640,16 @@ export const handleOverlays = async (chartList, callback) => {
             request: 'api',
             command: 'saveConfig',
             type: 'chart',
-            name: requestName,
+            [paramName]: requestName,
             overwrite: true
         };
         await Requests.postPlain(postParam, JSON.stringify(overlay.getWriteBackData(), undefined, 2))
     }
-    const handleOneChart=async (requestName,chart,idx)=>{
+    const handleOneOverlay=async (requestName, chart, idx)=>{
         const data = await Requests.getJson({
             type: 'chart',
             command: 'getConfig',
-            name: requestName,
+            [paramName]: requestName,
         });
         if (!data || ! data.data) throw new Error(" no overlay for " + chart);
         const overlay=new OverlayConfig(data.data);
@@ -685,9 +683,9 @@ export const handleOverlays = async (chartList, callback) => {
             status: 'FAIL',
             index: idx
         }
-        const requestName=chart === DEFAULT_OVERLAY_CONFIG?undefined:chart;
+        const requestName=(chart === DEFAULT_OVERLAY_CONFIG && paramName === 'name')?undefined:chart;
 
-        actions.push(handleOneChart(requestName,chart,listIdx));
+        actions.push(handleOneOverlay(requestName,chart,listIdx));
         resEntry.info = "started";
         results.push(resEntry);
     })

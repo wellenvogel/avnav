@@ -1248,8 +1248,7 @@ class TrackItemActions extends ItemActions{
         actions.push(standardActions.delete.copy({
             visible:this.isConnected(),
             action: async (action,info,dialogContext)=> {
-                if (await deleteItemQuery(info,dialogContext)){
-                    await deleteRequest(info);
+                if (await deleteItem(info,dialogContext)){
                     NavHandler.resetTrack();
                     return true;
                 }

@@ -576,18 +576,24 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           return AVNUtil.getReturnData(error="chart %s not found"%name)
         changed = chartEntry.getUserData().changeScheme(scheme)
         return AVNUtil.getReturnData()
+      '''
+      for the config (overlays) requests we will receive either a chart name
+      to get/set/delete a config for an existing chart
+      or we receive a configName (as retrieved from listConfig) to get/set/delete 
+      an __existing__ config (independent of existing charts) 
+      '''
       if command == self.CGETCONFIG:
         overlay=None
         allowEmpty=True
         if name is None or name == "":
             ovlname=AVNUtil.getHttpRequestParam(requestparam, "configName")
             if ovlname is not None:
-                self.checkName(ovlname)
                 allowEmpty=False
             if ovlname is None:
                 #get default
                 ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
-            overlay=self.ovlConfigs.get(ovlname)
+            with self.lock:
+                overlay=self.ovlConfigs.get(ovlname)
         else:
             chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
             if chartEntry is None:
@@ -615,12 +621,13 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         return AVNUtil.getReturnData(data=rt)
       if command == self.CSAVECONFIG or command == self.CDELCONFIG:
           names=[]
-          onlyConfigName=False
           if name is None:
               ovlname = AVNUtil.getHttpRequestParam(requestparam, "configName")
               if ovlname is not None:
-                  self.checkName(ovlname)
-                  onlyConfigName=True
+                  with self.lock:
+                      overlay=self.ovlConfigs.get(ovlname)
+                      if overlay is None:
+                          return AVNUtil.getReturnData(error="overlay %s not found"%ovlname)
                   names=[ovlname] #also allow delete
               if ovlname is None:
                 ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
@@ -635,13 +642,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           delstart=0
           rt=AVNUtil.getReturnData()
           if command == self.CSAVECONFIG:
-            if onlyConfigName:
-                #for save we allow only existing configs when we received a configName
-                #but not a chart name
-                #the client will not know how to construct a valid config name
-                with self.lock:
-                    if self.ovlConfigs.get(ovlname) is None:
-                        return AVNUtil.getReturnData(error="overlay %s not found"%ovlname)
             delstart=1
             filename = os.path.join(self.baseDir, ovlname)
             rt = super()._upload(filename, handler, requestparam,overwrite=True)
@@ -657,7 +657,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           self.wakeUp()
           return rt
       if command == self.CLISTCONFIG:
-          return AVNUtil.getReturnData(data=list(self.ovlConfigs.keys()))
+          return AVNUtil.getReturnData(items=list(self.ovlConfigs.keys()))
     except Exception as e:
       return AVNUtil.getReturnData(error=str(e))
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)
