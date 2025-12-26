@@ -24,6 +24,7 @@ package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.SystemClock;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,12 +47,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import de.wellenvogel.avnav.appapi.AddonHandler;
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.charts.ChartHandler;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -79,6 +80,9 @@ public class PluginManager extends DirectoryRequestHandler {
             this.lastModified=dir.lastModified();
             this.status=status;
             this.pluginUrlBase=urlPrefix;
+        }
+        public String getKey(){
+            return Constants.INTERNALPLUGIN_PREFIX+name;
         }
         void prepare() throws Exception {
             for (JSONObject jo: new JSONObject[]{infoActive,infoInactive}){
@@ -114,7 +118,7 @@ public class PluginManager extends DirectoryRequestHandler {
             phBase=new PluginHandlerBase(gpsService,null,this.pluginUrlBase) {
                 @Override
                 protected String getKey() {
-                    return "IPlugin:"+name;
+                    return Plugin.this.getKey();
                 }
             };
             if (!prepared) {
@@ -126,7 +130,7 @@ public class PluginManager extends DirectoryRequestHandler {
                 prepared = true;
                 return;
             }
-            if (config != null) {
+            if (config != null && enabled()) {
                 try {
                     if (config.has("charts")) {
                         JSONArray charts=config.getJSONArray("charts");
@@ -166,6 +170,11 @@ public class PluginManager extends DirectoryRequestHandler {
             phBase.onStop(true);
         }
 
+        void onDelete(){
+            stop(true);
+            if (phBase != null) phBase.onDelete();;
+        }
+
         JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
             rt.put(IPluginHandler.IK_NAME,name);
@@ -173,6 +182,7 @@ public class PluginManager extends DirectoryRequestHandler {
             rt.put("time",lastModified/1000);
             rt.put("downloadName",dir.getName()+".zip");
             rt.put("checkPrefix",USER_PREFIX);
+            rt.put("canDelete",true);
             rt.put(IPluginHandler.IK_CHILD,name);
             rt.put(IPluginHandler.IK_ID,status.id);
             rt.put(IPluginHandler.IK_ACTIVE,enabled());
@@ -310,11 +320,31 @@ public class PluginManager extends DirectoryRequestHandler {
 
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
+        long start= SystemClock.uptimeMillis();
+        boolean cleanupDone=false;
         while(! shouldStop(startSequence)){
             try{
                 HashMap<String, Plugin> current = readPlugins();
                 updatePlugins(current, true);
                 setStatus(WorkerStatus.Status.NMEA,"running");
+                if (! cleanupDone && (SystemClock.uptimeMillis() >= (start + 30000))){
+                    ChartHandler ch=gpsService.getChartHandler();
+                    if (ch != null && ! ch.isLoading()) {
+                        cleanupDone=true;
+                        AvnLog.i("trying chart overlay cleanup");
+                        ArrayList<String> existingPrefixes = new ArrayList<>();
+                        synchronized (createLock){
+                            for (Plugin p:plugins.values()){
+                                existingPrefixes.add(p.getKey());
+                            }
+                        }
+                        for (IPluginHandler pb:getExternalPlugins()){
+                            existingPrefixes.add(pb.getKey());
+                        }
+                        ch.cleanupExternalOverlays(existingPrefixes);
+                    }
+
+                }
             }catch (Exception e){
                 setStatus(WorkerStatus.Status.ERROR,"unable to read plugins "+e.getMessage());
             }
@@ -580,7 +610,7 @@ public class PluginManager extends DirectoryRequestHandler {
         synchronized (createLock){
             Plugin plugin=plugins.get(name);
             if (plugin == null) throw new Exception("plugin "+name+" not found");
-            plugin.stop(true);
+            plugin.onDelete();
             plugins.remove(name);
             pdir=plugin.dir;
         }

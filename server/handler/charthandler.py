@@ -295,6 +295,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         self.onItemAdd(item)
     for item in removeditems:
         self.onItemRemove(item)
+    self.cleanupInternalOverlays()
     for extProvider in list(self.externalProviders.keys()):
       self.externalProviders[extProvider].queryProvider(self.externalItemAdded)
   def onItemAdd(self, itemDescription):
@@ -628,9 +629,9 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                       overlay=self.ovlConfigs.get(ovlname)
                       if overlay is None:
                           return AVNUtil.getReturnData(error="overlay %s not found"%ovlname)
-                  names=[ovlname] #also allow delete
               if ovlname is None:
                 ovlname=self.SCOPE_USER+self.DEFAULT_CHART_CFG
+              names = [ovlname]  # also allow delete
           else:
             chartEntry = self.getChartDescriptionByKey(name,returnItem=True)
             if chartEntry is None:
@@ -672,8 +673,18 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       :return:
       '''
       return _getExternalChartPrefix(name)
-  def registerExternalProvider(self,name,callback):
+  @classmethod
+  def checkExternalProviderName(cls,name,doThrow=True):
+      suser = cls.SCOPE_USER.replace('@', '')
+      if name == suser:
+          if doThrow:
+            raise Exception("external chart providers must not be named " + suser)
+          return False
+      return True
+
+  def registerExternalProvider(self,name,callback,removeOverlays=False):
     if callback is not None:
+      self.checkExternalProviderName(name)
       AVNLog.info("ChartHandler: registering external chart provider %s", name)
       with self.lock:
         self.externalProviders[name]=ExternalProvider(
@@ -681,11 +692,71 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       self.wakeUp()
     else:
       AVNLog.info("ChartHandler: deregistering external chart provider %s", name)
+      toDelete=[]
       with self.lock:
         if self.externalProviders.get(name):
             try:
                 del self.externalProviders[name]
             except:
                 pass
+        if removeOverlays:
+            prefixes=[_getExternalChartPrefix(name),name+"@"]
+            for ovl in self.ovlConfigs.values():
+                if ovl.name.startswith(self.SCOPE_USER):
+                    continue
+                for p in prefixes:
+                    if ovl.name.startswith(p):
+                        toDelete.append(ovl.getFileName())
+      for ov in toDelete:
+          AVNLog.info("ChartHandler: removing overlay %s", ov)
+          os.unlink(ov)
+
+  def cleanupInternalOverlays(self):
+      activeOverlays = set()
+      toDelete = []
+      with self.lock:
+          for chart in self.itemList.values():
+              for on in self.getOverlayConfigNames(chart):
+                  activeOverlays.add(on)
+          for ovl in self.ovlConfigs.values():
+              if not ovl.name.startswith(self.SCOPE_USER):
+                  continue
+              if ovl.name == self.SCOPE_USER+self.DEFAULT_CHART_CFG:
+                  continue
+              if ovl.name in activeOverlays:
+                  continue
+              toDelete.append(ovl.getFileName())
+      for ovl in toDelete:
+          AVNLog.info("ChartHandler: removing overlay %s", ovl)
+          os.unlink(ovl)
+
+  def cleanupExternalOverlays(self,keysToKeep):
+      activeOverlays=set()
+      prefixes=[]
+      for k in keysToKeep:
+        prefixes.append(_getExternalChartPrefix(k))
+        prefixes.append(k+"@") #old style config
+      toDelete=[]
+      with self.lock:
+          #in any case keep overlays for active charts
+          for provider in list(self.externalProviders.values()):
+            for item in provider.getList():
+                for on in self.getOverlayConfigNames(item):
+                    activeOverlays.add(on)
+          for ovl in self.ovlConfigs.values():
+              if ovl.name.startswith(self.SCOPE_USER):
+                  continue
+              if ovl.name in activeOverlays:
+                  continue
+              existing=False
+              for p in prefixes:
+                  if ovl.name.startswith(p):
+                      existing=True
+                      break
+              if not existing:
+                  toDelete.append(ovl.getFileName())
+      for ov in toDelete:
+          AVNLog.info("ChartHandler: deleting overlay config %s", ov)
+          os.unlink(ov)
 
 avnav_handlerList.registerHandler(AVNChartHandler)

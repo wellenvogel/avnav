@@ -62,10 +62,17 @@ public abstract class PluginHandlerBase {
         unregisterCharts(reset);
         unregisterAddons(reset);
     }
+    void onDelete(){
+        onStop(true);
+        ChartHandler chartHandler = gpsService.getChartHandler();
+        if (chartHandler != null) {
+            chartHandler.removeExternalCharts(getKey(),true);
+        }
+    }
     void unregisterCharts(boolean reset) {
         ChartHandler chartHandler = gpsService.getChartHandler();
         if (chartHandler != null) {
-            chartHandler.removeExternalCharts(getKey());
+            chartHandler.removeExternalCharts(getKey(),false);
         }
         if (reset) charts=null;
         if (status != null) status.unsetChildStatus(C_CHARTS);
@@ -94,9 +101,16 @@ public abstract class PluginHandlerBase {
                 AvnLog.d("error inserting baseUrl in charts "+e);
             }
         }
-        chartHandler.addExternalCharts(getKey(),charts);
-        this.charts=charts;
-        if (status != null)status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA,charts.length()+" registered");
+        try {
+            chartHandler.addExternalCharts(getKey(), charts);
+            this.charts = charts;
+            if (status != null)
+                status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA, charts.length() + " registered");
+        }catch (Exception e){
+            if (status != null){
+                status.setChildStatus(C_CHARTS, WorkerStatus.Status.ERROR,e.getMessage());
+            }
+        }
     }
 
     void registerAddons(JSONArray addonsJson) {

@@ -130,10 +130,10 @@ class ApiImpl(AVNApi):
             return False
         return self.plugin is not None or self.jsCssOnly
 
-    def deregister(self):
+    def deregister(self,forDelete=False):
         try:
             charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
-            charthandler.registerExternalProvider(self.prefix, None)
+            charthandler.registerExternalProvider(self.prefix, None,removeOverlays=forDelete)
         except:
             pass
         try:
@@ -180,7 +180,7 @@ class ApiImpl(AVNApi):
             pass
         self.converters.clear()
 
-    def stop(self, force=False):
+    def stop(self, force=False,forDelete=False):
         if self.jsCssOnly:
             self.deregister()
             self.stopped = True
@@ -208,7 +208,7 @@ class ApiImpl(AVNApi):
             self.proxy.disable()
         if force:
             self.stopped = True
-        self.deregister()
+        self.deregister(forDelete=forDelete)
 
     def getPrefixForItems(self):
         return re.sub(r".*\.", "", self.prefix)
@@ -807,8 +807,13 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                 moduleName = self.createModuleName(dirname, dirtype)
                 api = self.loadAndPreparePlugin(dir, moduleName, dirtype)
                 newApis[moduleName] = api
-        for api in list(newApis.values()):
+        chartkeys=[]
+        for api in newApis.values():
             api.startPluginThread()
+            chartkeys.append(api.prefix)
+        charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
+        if charthandler is not None:
+            charthandler.cleanupExternalOverlays(chartkeys)
         self.createdApis = newApis
         AVNLog.info("pluginhandler finished")
 
@@ -1210,7 +1215,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         if type != self.D_USER:
             return False
         AVNLog.info("update plugin %s", moduleName)
-        self.deletePlugin(name, type)
+        self.deletePlugin(name, type,forUpdate=True)
         dir = os.path.join(self.getPluginBaseDir(), name)
         if not os.path.isdir(dir):
             AVNLog.error("plugin dir %s is not a directory", dir)
@@ -1225,7 +1230,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
         return True
 
-    def deletePlugin(self, name, type=D_USER):
+    def deletePlugin(self, name, type=D_USER,forUpdate=False):
         name = self.createModuleName(name, type)
         with self.configLock:
             api = self.createdApis.get(name)
@@ -1233,7 +1238,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                 return False
             try:
                 AVNLog.info("deleting plugin %s" % name)
-                api.stop(True)
+                api.stop(True,forDelete=not forUpdate)
             except:
                 pass
             try:

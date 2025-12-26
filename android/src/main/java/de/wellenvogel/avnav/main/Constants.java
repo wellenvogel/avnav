@@ -46,6 +46,10 @@ public class Constants {
     public static final String CHARTOVERVIEW="avnav.xml";
     public static final String USB_DEVICE_EXTRA = "usbDevice" ;
     public static final String SERVICE_TYPE = "foregroundType";
+    //the prefixes for external charts must not interfere with the internal prefixes
+    //like REALCHARTS or DEMOCHARTS as otherwise the overlay config names would clash
+    public static final String EXTERNALPLUGIN_PREFIX="Plugin:";
+    public static final String INTERNALPLUGIN_PREFIX="IPlugin:";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{

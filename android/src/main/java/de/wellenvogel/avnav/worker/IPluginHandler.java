@@ -91,4 +91,6 @@ public interface IPluginHandler {
     int getId();
 
     String getName();
+
+    String getKey();
 }

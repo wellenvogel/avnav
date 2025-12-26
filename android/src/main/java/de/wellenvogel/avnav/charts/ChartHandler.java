@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
-import android.os.SystemClock;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -18,8 +17,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +45,8 @@ import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
 
+    static final List<String> ALLOWED_EXT_PREFIXES =Arrays.asList(Constants.EXTERNALPLUGIN_PREFIX, Constants.INTERNALPLUGIN_PREFIX);
+
     static class OverlayConfig{
         File file;
         public OverlayConfig(File f){
@@ -59,6 +62,11 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
 
         public static String getChartPrefix(String key){
             return Constants.EXTERNALCHARTS + ":"+key+"@";
+        }
+        public static String configPrefixFromKey(String key, boolean allowColon){
+            String rt=key+"@";
+            if (! allowColon) rt=rt.replace(':','.');
+            return rt;
         }
         public static String configFromChartName(String name,boolean allowColon) throws Exception {
             if (name == null) return name;
@@ -200,6 +208,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 AvnLog.i("RequestHandler: chartHandler thread is starting");
                 while (!isStopped) {
                     updateChartList();
+                    cleanupInternalOverlays();
                     try {
                         synchronized (chartHandlerMonitor){
                             updateSequence++;
@@ -224,12 +233,29 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
     public String getExternalChartsPrefix(String key){
         return ExternalChart.getChartPrefix(key);
     }
-    public void removeExternalCharts(String key){
+    public void removeExternalCharts(String key, boolean removeOverlays){
         synchronized (externalCharts){
             externalCharts.remove(key);
         }
+        if (removeOverlays){
+            boolean hasRemoved=false;
+            HashMap<String,OverlayConfig> current=overlays;
+            String prefix=ExternalChart.configPrefixFromKey(key,allowColon);
+            for (String name:current.keySet() ){
+                if (name.startsWith(prefix)){
+                    try {
+                        hasRemoved=true;
+                        current.get(name).file.delete();
+                    }catch (Throwable e){
+                        AvnLog.e("unable to remove overlay "+name,e);
+                    }
+                }
+            }
+            if (hasRemoved) triggerUpdate(false);
+        }
     }
-    public void addExternalCharts(String key, JSONArray charts){
+    public void addExternalCharts(String key, JSONArray charts) throws Exception {
+        if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(key::startsWith))throw new Exception("invalid external chart key");
         ArrayList<ExternalChart> extCharts=new ArrayList<>();
         for (int i=0;i<charts.length();i++){
             try{
@@ -885,5 +911,80 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
             Log.e(Constants.LOGPRFX, "chart file " + fname + " not found: " + e.getLocalizedMessage());
         }
         return null;
+    }
+
+    public boolean isLoading(){
+        return loading;
+    }
+    private void cleanupInternalOverlays(){
+        HashMap<String,OverlayConfig> current=overlays; //atomic
+        HashMap<String,Chart> currentCharts=chartList;
+        HashSet<String> activeOverlays=new HashSet<>();
+        for (Chart c:currentCharts.values()){
+            activeOverlays.addAll(c.getChartCfgs());
+        }
+        ArrayList<File> toDelete=new ArrayList<>();
+        for (String ovlname:current.keySet()){
+            if (activeOverlays.contains(ovlname)) continue;
+            if (ovlname.equals(DEFAULT_CFG)) continue;
+            if (ALLOWED_EXT_PREFIXES.stream().anyMatch(ovlname::startsWith)) continue;
+            toDelete.add(current.get(ovlname).file);
+        }
+        for (File f:toDelete){
+            AvnLog.i("deleting unused overlay "+f.getName());
+            f.delete();
+        }
+    }
+    /**
+     * cleanup overlay files
+     * we only keep overlays from existing charts
+     * and overlays that belong to one of the existing prefixes (keys from addExternalCharts)
+     * @param existingPrefixes the list of existing external chart prefixes
+     */
+    public void cleanupExternalOverlays(List<String> existingPrefixes){
+        ArrayList<File> toDelete=new ArrayList<>();
+        HashMap<String,OverlayConfig> current=overlays; //atomic
+        HashSet<String> activeOverlays=new HashSet<>();
+        ArrayList<String> prefixes=new ArrayList<>();
+        for (String ep:existingPrefixes){
+            if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(ep::startsWith)) continue;
+            prefixes.add(ExternalChart.configPrefixFromKey(ep,allowColon));
+        }
+        //to be sure just build a list of all currently active
+        //external charts
+        synchronized (externalCharts){
+            for (String key:externalCharts.keySet()){
+                try {
+                    List<ExternalChart> charts = externalCharts.get(key);
+                    if (charts == null) continue;
+                    for (ExternalChart chartDescription:charts) {
+                        activeOverlays.addAll(chartDescription.getChartCfgs());
+                    }
+                }catch (Exception x){
+                    Log.e(Constants.LOGPRFX,"error in external charts for "+key,x);
+                }
+            }
+        }
+
+        for (String ovlname:current.keySet()){
+            if (activeOverlays.contains(ovlname)) continue;
+            if (ovlname.equals(DEFAULT_CFG)) continue;
+            if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(ovlname::startsWith)) continue;
+            boolean existing=false;
+            for (String p:prefixes){
+                if (ovlname.startsWith(p)) {
+                    existing=true;
+                    break;
+                }
+            }
+            if (! existing){
+                toDelete.add(current.get(ovlname).file);
+            }
+        }
+        for (File f:toDelete){
+            AvnLog.i("deleting unused overlay "+f.getName());
+            f.delete();
+        }
+        triggerUpdate(false);
     }
 }

@@ -114,18 +114,18 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     private void setParameters(){
         parameterDescriptions.add(ENABLED_PARAMETER);
         parameterDescriptions.add(TIMEOUT_PARAMETER);
+        phBase=new PluginHandlerBase(gpsService,this.status,null) {
+            @Override
+            protected String getKey() {
+                return ExternalPluginWorker.this.getKey();
+            }
+        };
     }
     public ExternalPluginWorker(GpsService ctx){
         super(TYPENAME,ctx);
         this.status.canEdit=true;
         this.status.canDelete=true;
         setParameters();
-        phBase=new PluginHandlerBase(ctx,this.status,null) {
-            @Override
-            protected String getKey() {
-                return ExternalPluginWorker.this.getKey();
-            }
-        };
     }
     public ExternalPluginWorker(GpsService ctx, String pluginName){
         super(TYPENAME,ctx);
@@ -173,8 +173,9 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         return pluginName;
     }
 
-    protected String getKey(){
-        return "Plugin:"+pluginName; //we don't use TYPENAME here as we want to be compatible
+    @Override
+    public String getKey(){
+        return Constants.EXTERNALPLUGIN_PREFIX +pluginName; //we don't use TYPENAME here as we want to be compatible
                                      //with older versions that had TYPENAME Plugin
                                      //and as the key goes into overlay definitions
                                      //we would otherwise break them
