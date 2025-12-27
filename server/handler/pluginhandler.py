@@ -380,7 +380,7 @@ class ApiImpl(AVNApi):
 
     def registerLayout(self, name, layoutFile):
         if not os.path.isabs(layoutFile):
-            layoutFile = os.path.join(os.path.dirname(self.fileName), layoutFile)
+            layoutFile = os.path.join(self.directory, layoutFile)
         if not os.path.exists(layoutFile):
             raise Exception("layout file %s not found", layoutFile)
         layoutHandler = AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName())  # type: AVNScopedDirectoryHandler
@@ -546,7 +546,7 @@ class ApiImpl(AVNApi):
                 if 'charts' in cfg:
                     charts = cfg['charts']
                     if not isinstance(charts, list):
-                        AVNLog.error("plugin %s: charts must be a list: %s", self.prefix, repr(charts))
+                        raise Exception("plugin %s: charts must be a list: %s", self.prefix, repr(charts))
                     else:
                         try:
                             for chart in charts:
@@ -560,10 +560,11 @@ class ApiImpl(AVNApi):
                             self.registerChartProvider(getcharts)
                         except Exception as e:
                             AVNLog.error("failed to register charts %s for %s:%s",repr(charts), self.prefix, repr(e))
+                            raise e
                 if 'userApps' in cfg:
                     userApps = cfg['userApps']
                     if not isinstance(userApps, list):
-                        AVNLog.error("plugin %s: userApps must be a list: %s", self.prefix, repr(userApps))
+                        raise Exception("plugin %s: userApps must be a list: %s", self.prefix, repr(userApps))
                     else:
                         for app in userApps:
                             try:
@@ -581,6 +582,20 @@ class ApiImpl(AVNApi):
                             except Exception as e:
                                 AVNLog.error("unable to register user app %s for %s: %s",
                                              repr(app), self.prefix, str(e))
+                                raise e
+                if 'layouts' in cfg:
+                    layouts = cfg['layouts']
+                    if not isinstance(layouts, list):
+                        raise Exception("layouts must be a list: %s"%repr(layouts))
+                    for layout in layouts:
+                        name=layout.get('name')
+                        if name is None:
+                            raise Exception("layout name cannot be None: %s"%repr(layout))
+                        file=layout.get('file')
+                        if file is None:
+                            raise Exception("layout file cannot be None: %s"%repr(layout))
+                        self.registerLayout(name, file)
+
                 if 'editableParameters' in cfg:
                     editableParameters = cfg['editableParameters']
                     AVNLog.debug("registering editable parameters for %s:%s", self.prefix, repr(editableParameters))
@@ -593,7 +608,10 @@ class ApiImpl(AVNApi):
             AVNLog.error("error reading config file for %s: %s", self.prefix, str(e))
 
     def readVersion(self):
-        self.handlePluginJson(versionOnly=True)
+        try:
+            self.handlePluginJson(versionOnly=True)
+        except:
+            pass
 
     def startPluginThread(self):
         current = self.thread
@@ -606,7 +624,12 @@ class ApiImpl(AVNApi):
             AVNLog.info("plugin %s is disabled by config", self.prefix)
             self.setStatus(WorkerStatus.INACTIVE, "disabled by config")
             return
-        self.handlePluginJson()
+        try:
+            self.handlePluginJson()
+        except Exception as e:
+            self.setStatus(WorkerStatus.ERROR, "plugin.json: %s"%str(e))
+            if self.plugin is None:
+                return
         if self.jsCssOnly:
             self.setStatus(WorkerStatus.NMEA, "javascript/css only")
             return
