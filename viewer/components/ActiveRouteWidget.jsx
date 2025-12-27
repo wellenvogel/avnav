@@ -17,7 +17,8 @@ const ActiveRouteWidget =(props)=>{
         let display={
             name:routeobjects.nameToBaseName(props.routeName),
             remain: Formatter.formatDistance(props.remain),
-            eta: Formatter.formatTime(props.eta)
+            eta: Formatter.formatTime(props.eta),
+            next: Formatter.formatDirection(props.nextCourse),
         };
         if (props.isAproaching){
             display.next=Formatter.formatDirection(props.nextCourse);
