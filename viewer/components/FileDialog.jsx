@@ -70,6 +70,7 @@ import {EditDialog} from "./EditDialog";
 import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
 
+
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const getExtensionForView=(item)=>{
@@ -1630,12 +1631,19 @@ class PluginItemActions extends ItemActions{
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadPlugins, false);
     }
 
+
+    canModify(item) {
+        return item.canDelete &&  this.isConnected();
+    }
+
     fillActions(item, actions) {
         actions.push(standardActions.delete.copy({
             visible: this.canModify(item),
         }))
         actions.push(standardActions.download.copy({}))
-        actions.push(standardActions.config.copy({}))
+        if (this.canModify(item)) {
+            actions.push(standardActions.config.copy({}))
+        }
     }
 
     build() {
