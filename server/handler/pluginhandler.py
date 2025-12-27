@@ -468,6 +468,7 @@ class ApiImpl(AVNApi):
                                           rangeOrList=p.get('rangeOrList'),
                                           description=p.get('description'),
                                           condition=p.get('condition'))
+            AVNLog.info("registering editable parameter %s for %s" % (repr(description),self.prefix))
             editables.append(description)
         self.editables = editables
         self.paramChange = changeCallback
@@ -1089,6 +1090,13 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                             element[p] = finfo
                     data.append(element)
             return AVNUtil.getReturnData(data=data)
+        if command == 'pluginConfig':
+            name=AVNUtil.getHttpRequestParam(requestparam,"name",mantadory=True)
+            with self.configLock:
+                api=self.createdApis[name]
+                if api is None:
+                    return AVNUtil.getReturnData(error=f"plugin {name} not found")
+                return AVNUtil.getReturnData(data=self.getParam(child=name))
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 
     def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None):

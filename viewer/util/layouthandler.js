@@ -107,8 +107,8 @@ class LayoutLoader{
         this.prefixes={};
     }
 
-    init(){
-        Requests.getJson({
+    async init(){
+        await Requests.getJson({
             type:'layout',
             command:'prefixes'
         }).then((json)=>{

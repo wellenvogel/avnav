@@ -132,8 +132,6 @@ export default function() {
         globalStore.storeData(keys.gui.global.splitMode,true);
     }
 
-    layoutLoader.init();
-
     const loadScripts=(loadList)=>{
         for (let i in  loadList) {
             let script=loadList[i];
@@ -172,7 +170,7 @@ export default function() {
         setTimeout(function () {
             propertyHandler.incrementSequence();
         }, 1000);
-
+        await layoutLoader.init();
         try {
             await pluginmanager.start();
         } catch (error) {

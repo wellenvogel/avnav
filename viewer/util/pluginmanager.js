@@ -71,6 +71,10 @@ class PluginApi extends ApiV2 {
     registerUserApp(name, url, icon, title, newWindow) {
         this.#impl.registerUserApp(name, url, icon, title, newWindow);
     }
+
+    async getConfig() {
+        return await this.#impl.getConfig();
+    }
 }
 
 /**
@@ -228,6 +232,15 @@ export class Plugin extends ApiV2{
         icon=urlToString(icon,this.getBaseUrl());
         Addons.addPluginAddOn({name,pluginName:this.name, url, icon, title, newWindow});
     }
+
+    async getConfig() {
+        const res=await Requests.getJson({
+            type:'plugins',
+            command:'pluginConfig',
+            name:this.name,
+        })
+        return res.data;
+    }
 }
 const USERFILES={
     js:'user.js',
@@ -241,6 +254,7 @@ class Pluginmanager{
         this.legacyJs={};
         this.css={};
         this.mjs={}
+        this.updateRequests=0;
     }
     cssId(pluginName) {
         return '_'+pluginName+"_css"
@@ -289,11 +303,59 @@ class Pluginmanager{
         return rt;
     }
 
+    /**
+     * for the update handling we need to prevent multiple updates from running
+     * in parallel
+     * As we cannot await the result (the store does not have an async API for that)
+     * we construct a queue of update requests (max 2 entries)
+     * Every callback from the store will enqueue an update request (simply be incrementing this.updateRequests)
+     * nextUpdate: called when an update is done or on enqueue (triggerUpdate) if there is currently no update running
+     * will decrement the counter (i.e. pick an update request from the queue) and start it with calling nextUpdate again
+     * when finished
+     */
+    nextUpdate (){
+        base.log("check next plugin updates, count="+this.updateRequests);
+        if (this.updateRequests > 0){
+            this.updateRequests--;
+        }
+        if (this.updateRequests < 1){
+            //no more request in the queue
+            return;
+        }
+        base.log("starting plugin update");
+        this.update().then(() => {
+            this.nextUpdate();
+        }, () => {
+            this.nextUpdate();
+        })
+    }
+
+    /**
+     * set the requestCount to 2
+     * if there was no request running (old count == 0) nextUpdate is called
+     * and this will start the update and set updateRequests to 1
+     * if there is already a request running (old count > 0) we only set updateRequests to 2
+     * if the update is finished it will call nextUpdate and start a new one
+     */
+    triggerUpdate() {
+        const running=this.updateRequests>0;
+        this.updateRequests = 2;
+        if (!running) {
+            this.nextUpdate();
+        }
+        else{
+            base.log("delaying plugin update, count="+this.updateRequests);
+        }
+    }
+
     async start(){
         globalstore.register(()=>{
-            this.update().then(()=>{},()=>{});
+                this.triggerUpdate();
         },keys.nav.gps.updateconfig);
+        this.updateRequests=1; //we are running a request right now
+        //on startup we really want to wait until the update is finished once
         await this.update();
+        this.nextUpdate(); //maybe in the mean time new update requests have arrived
         globalstore.storeData(keys.gui.global.pluginLoadingDone,true);
     }
     deleteApi(api){
@@ -330,6 +392,7 @@ class Pluginmanager{
                     hasUpdates = hasUpdates || this.deleteApi(api);
                 } else {
                     if (!api || api.mustUpdate(plugin.mjs.timestamp)) {
+                        base.log("update plugin "+plugin.name+" old api: "+api);
                         this.deleteApi(api);
                         hasUpdates = true;
                         try {

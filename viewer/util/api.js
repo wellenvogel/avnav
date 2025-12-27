@@ -202,6 +202,14 @@ export class ApiV2 extends Api{
     registerUserApp(name,url,icon,title,newWindow){
         throw new Error("not implemented");
     }
+
+    /**
+     * get the config values for the plugin
+     * @return {Promise<void>}
+     */
+    async getConfig(){
+        throw new Error("not implemented");
+    }
 }
 
 export default  new Api();
