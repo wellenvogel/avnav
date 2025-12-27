@@ -683,7 +683,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     AVNLog.debug("register plugin item %s",name)
     info=AVNDirectoryListEntry(self.type, scope+ name, time=os.path.getmtime(fileName),
                                  baseDir=os.path.dirname(fileName),
-                                 fileName=fileName,
+                                 filename=fileName,
                                  scope=scope,
                                  extension=self.getFixedExtension())
     if self.findSystemOrPluginItem(info.name) is not None:
