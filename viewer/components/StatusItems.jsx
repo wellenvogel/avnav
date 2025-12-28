@@ -39,7 +39,7 @@ export const EditIcon=(props)=>{
 
 }
 export const ChildStatus=(props)=>{
-    let canEdit=props.canEdit && props.connected;
+    let canEdit=props.canEdit && props.connected && props.allowEdit;
     let sub=props.sub || (props.name && (typeof(props.name.match) === 'function') && props.name.match(/:#:/));
     let name=sub?props.name.replace(/^.*:#:/,''):props.name;
     let clName="childStatus";
@@ -90,6 +90,7 @@ export const StatusItem=(props)=>{
                     handlerId={props.id}
                     finishCallback={props.finishCallback}
                     showEditDialog={props.showEditDialog}
+                    allowEdit={props.allowEdit}
                 />
             })}
         </div>
