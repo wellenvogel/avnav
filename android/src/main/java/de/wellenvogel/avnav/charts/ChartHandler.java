@@ -28,6 +28,7 @@ import java.util.Objects;
 import androidx.documentfile.provider.DocumentFile;
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.IPluginAware;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
@@ -43,9 +44,10 @@ import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 
-public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
+public class ChartHandler extends RequestHandler.NavRequestHandlerBase implements IPluginAware {
 
     static final List<String> ALLOWED_EXT_PREFIXES =Arrays.asList(Constants.EXTERNALPLUGIN_PREFIX, Constants.INTERNALPLUGIN_PREFIX);
+
 
     static class OverlayConfig{
         File file;
@@ -252,6 +254,45 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase {
                 }
             }
             if (hasRemoved) triggerUpdate(false);
+        }
+    }
+    @Override
+    public void removePluginItems(String pluginName,boolean removeOverlays) {
+        synchronized (externalCharts){
+            externalCharts.remove(pluginName);
+        }
+        if (removeOverlays){
+            boolean hasRemoved=false;
+            HashMap<String,OverlayConfig> current=overlays;
+            String prefix=ExternalChart.configPrefixFromKey(pluginName,allowColon);
+            for (String name:current.keySet() ){
+                if (name.startsWith(prefix)){
+                    try {
+                        hasRemoved=true;
+                        current.get(name).file.delete();
+                    }catch (Throwable e){
+                        AvnLog.e("unable to remove overlay "+name,e);
+                    }
+                }
+            }
+            if (hasRemoved) triggerUpdate(false);
+        }
+    }
+
+    @Override
+    public void setPluginItems(String pluginName, List<PluginItem> items) throws Exception {
+        if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(pluginName::startsWith))throw new Exception("invalid external chart key");
+        ArrayList<ExternalChart> extCharts=new ArrayList<>();
+        for (PluginItem item:items){
+            try{
+                ExternalChart echart=new ExternalChart(pluginName,item.toJson(),allowColon);
+                extCharts.add(echart);
+            } catch (Exception e) {
+                AvnLog.e("unable to add external chart ",e);
+            }
+        }
+        synchronized (externalCharts){
+            externalCharts.put(pluginName,extCharts);
         }
     }
     public void addExternalCharts(String key, JSONArray charts) throws Exception {

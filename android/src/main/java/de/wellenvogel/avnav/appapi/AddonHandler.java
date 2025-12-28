@@ -20,7 +20,8 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
-public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
+public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAware{
+
 
     public static class AddonInfo implements AvnUtil.IJsonObect {
         public String name;
@@ -46,6 +47,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         public AddonInfo(String name){
             this.name=name;
         }
+
         static AddonInfo fromJson(JSONObject o) throws JSONException {
             AddonInfo rt=new AddonInfo(o.getString("name"));
             rt.title=o.optString("title",null);
@@ -68,14 +70,21 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         this.handler=handler;
     }
 
-    public void addExternalAddons(String name,List<AddonInfo> addons){
+    @Override
+    public void removePluginItems(String pluginName, boolean finalCleanup) {
         synchronized (externalAddons){
-            externalAddons.put(name,addons);
+            externalAddons.remove(pluginName);
         }
     }
-    public void removeExternalAddons(String name){
+
+    @Override
+    public void setPluginItems(String pluginName, List<PluginItem> items) throws Exception {
+        ArrayList<AddonInfo> addons=new ArrayList<>();
+        for (PluginItem pi:items){
+            addons.add(AddonInfo.fromJson(pi.toJson()));
+        }
         synchronized (externalAddons){
-            externalAddons.remove(name);
+            externalAddons.put(pluginName,addons);
         }
     }
 

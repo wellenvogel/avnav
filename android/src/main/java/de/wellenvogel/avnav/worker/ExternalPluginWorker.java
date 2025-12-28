@@ -201,7 +201,11 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     protected void run(int startSequence) throws JSONException, IOException {
         setStatus(WorkerStatus.Status.INACTIVE,"started");
         boolean active=false;
-        phBase.onStart();
+        try {
+            phBase.onStart();
+        }catch (Exception e){
+            throw new JSONException(e.getMessage());
+        }
         tryAutoStart();
         while (! shouldStop(startSequence)){
             sleep(1000);

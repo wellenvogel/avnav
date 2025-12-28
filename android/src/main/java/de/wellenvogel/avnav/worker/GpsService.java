@@ -42,9 +42,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import de.wellenvogel.avnav.appapi.AddonHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
+import de.wellenvogel.avnav.appapi.IPluginAware;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
@@ -748,12 +748,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (r == null) return null;
         return r.getChartHandler();
     }
-
-    public AddonHandler getAddonHandler(){
+    public IPluginAware getPluginAwareHandler(String type){
         RequestHandler r=getRequestHandler();
         if (r == null) return null;
-        return r.getAddonHandler();
+        return r.getPluginAwareHandler(type);
     }
+
     public PluginManager getPluginManager(){
         IWorker rc=findWorkerById(WPLUGINS.id);
         return (PluginManager) rc;

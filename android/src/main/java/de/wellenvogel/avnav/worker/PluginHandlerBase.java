@@ -3,12 +3,16 @@ package de.wellenvogel.avnav.worker;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import de.wellenvogel.avnav.appapi.AddonHandler;
-import de.wellenvogel.avnav.charts.ChartHandler;
+import de.wellenvogel.avnav.appapi.IPluginAware;
+import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.charts.Chart;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 
@@ -36,6 +40,7 @@ import de.wellenvogel.avnav.util.AvnLog;
 public abstract class PluginHandlerBase {
     private static final String C_CHARTS="charts";
     private static final String C_ADDONS="addons";
+    private static final String C_LAYOUTS="layouts";
     private GpsService gpsService;
     private String baseUrl;
     private WorkerStatus status;
@@ -49,60 +54,91 @@ public abstract class PluginHandlerBase {
     }
     protected JSONArray charts=null;
     protected JSONArray addons=null;
+    protected List<IPluginAware.PluginItem> layouts=null;
 
-    void onStart(){
+    void onStart() throws Exception {
         JSONArray charts;
         JSONArray addons;
         charts=this.charts;
         addons=this.addons;
-        if (charts != null) registerCharts(charts);
-        if (addons != null) registerAddons(addons);
+        registerCharts(charts);
+        registerAddons(addons);
+        List<IPluginAware.PluginItem> layouts=this.layouts;
+        registerLayouts(layouts);
     }
     void onStop(boolean reset){
         unregisterCharts(reset);
         unregisterAddons(reset);
+        unregisterLayouts(reset);
     }
     void onDelete(){
         onStop(true);
-        ChartHandler chartHandler = gpsService.getChartHandler();
+        IPluginAware chartHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_CHART);
         if (chartHandler != null) {
-            chartHandler.removeExternalCharts(getKey(),true);
+            chartHandler.removePluginItems(getKey(),true);
         }
     }
     void unregisterCharts(boolean reset) {
-        ChartHandler chartHandler = gpsService.getChartHandler();
+        IPluginAware chartHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_CHART);
         if (chartHandler != null) {
-            chartHandler.removeExternalCharts(getKey(),false);
+            chartHandler.removePluginItems(getKey(),false);
         }
         if (reset) charts=null;
         if (status != null) status.unsetChildStatus(C_CHARTS);
     }
     void unregisterAddons(boolean reset){
-        AddonHandler addonHandler=gpsService.getAddonHandler();
+        IPluginAware addonHandler=gpsService.getPluginAwareHandler(RequestHandler.TYPE_ADDON);
         if (addonHandler != null){
-            addonHandler.removeExternalAddons(getKey());
+            addonHandler.removePluginItems(getKey(),false);
         }
         if (reset) addons=null;
         if (status != null)status.unsetChildStatus(C_ADDONS);
     }
+    void unregisterLayouts(boolean reset){
+        if (reset) this.layouts=null;
+        IPluginAware layoutHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_LAYOUT);
+        if (layoutHandler != null) {
+            try {
+                layoutHandler.removePluginItems(getKey(), false);
+            } catch (Exception e) {
+               AvnLog.e("unable to deregister layouts",e);
+            }
+            if (status != null) status.unsetChildStatus(C_LAYOUTS);
+        }
+    }
     void registerCharts(JSONArray charts){
-        ChartHandler chartHandler=gpsService.getChartHandler();
+        if (charts == null){
+            unregisterCharts(true);
+            return;
+        }
+        IPluginAware chartHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_CHART);
         if (chartHandler == null) {
             if (status != null)status.unsetChildStatus(C_CHARTS);
             return;
         }
-        if (baseUrl != null){
+        ArrayList<IPluginAware.PluginItem> pluginCharts=new ArrayList<>();
             try{
                 for (int i=0;i<charts.length();i++){
                     JSONObject chart=charts.getJSONObject(i);
                     chart.put("baseUrl",baseUrl);
+                    String name=null;
+                    if (chart.has(Chart.CKEY)) {
+                        name=chart.getString(Chart.CKEY);
+                    }
+                    else if (chart.has(Chart.EXT_CKEY)) {
+                        name=chart.getString(Chart.EXT_CKEY);
+                    }
+                    if (name == null) {
+                        AvnLog.e("chart without name");
+                        continue;
+                    }
+                    pluginCharts.add(new IPluginAware.PluginItem(name,chart));
                 }
             }catch (Exception e){
-                AvnLog.d("error inserting baseUrl in charts "+e);
+                AvnLog.d("error adding charts "+e);
             }
-        }
         try {
-            chartHandler.addExternalCharts(getKey(), charts);
+            chartHandler.setPluginItems (getKey(), pluginCharts);
             this.charts = charts;
             if (status != null)
                 status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA, charts.length() + " registered");
@@ -113,29 +149,53 @@ public abstract class PluginHandlerBase {
         }
     }
 
-    void registerAddons(JSONArray addonsJson) {
-        AddonHandler addonHandler = gpsService.getAddonHandler();
+    void registerAddons(JSONArray addonsJson) throws Exception {
+        if (addonsJson == null){
+            unregisterAddons(true);
+            return;
+        }
+        IPluginAware addonHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_ADDON);
         if (addonHandler != null) {
-            ArrayList<AddonHandler.AddonInfo> addons = new ArrayList<>();
+            ArrayList<IPluginAware.PluginItem> addons = new ArrayList<>();
             for (int i = 0; i < addonsJson.length(); i++) {
                 try {
                     JSONObject addon = addonsJson.getJSONObject(i);
-                    AddonHandler.AddonInfo info = new AddonHandler.AddonInfo(addon.getString("name"));
-                    info.icon = addon.getString("icon");
-                    info.url = addon.getString("url");
-                    if (addon.optBoolean("keepUrl", false)) {
-                        info.adaptHttpUrls = true;
-                    }
-                    if (addon.has("title")) info.title = addon.getString("title");
-                    info.newWindow = addon.optBoolean("newWindow", false) ? "true" : "false";
-                    addons.add(info);
+                    String name="addon"+i;
+                    if (addon.has("name")) name=addon.getString("name");
+                    IPluginAware.PluginItem pi=new IPluginAware.PluginItem(name,addon);
+                    addons.add(pi);
                 } catch (Exception e) {
                     Log.e(Constants.LOGPRFX, "unable to handle addons for " + getKey(), e);
+                    throw e;
                 }
             }
-            addonHandler.addExternalAddons(getKey(), addons);
+            try {
+                addonHandler.setPluginItems(getKey(), addons);
+            }catch (Exception e){
+                AvnLog.e("error adding addons for "+getKey(),e);
+            }
             if (status != null)status.setChildStatus(C_ADDONS, WorkerStatus.Status.NMEA,addons.size()+" registered");
             this.addons=addonsJson;
+        }
+    }
+
+    public void registerLayouts(List<IPluginAware.PluginItem> layouts){
+        this.layouts=null;
+        if (layouts == null) {
+            unregisterLayouts(false);
+            return;
+        }
+        IPluginAware layoutHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_LAYOUT);
+        if (layoutHandler != null){
+            try {
+                layoutHandler.setPluginItems(getKey(),layouts);
+                if (status != null) status.setChildStatus(C_LAYOUTS, WorkerStatus.Status.NMEA,layouts.size()+" registered");
+                this.layouts=layouts;
+            } catch (Exception e) {
+                AvnLog.e("unable to register layouts",e);
+                if (status != null) status.setChildStatus(C_LAYOUTS, WorkerStatus.Status.ERROR,e.getMessage());
+
+            }
         }
     }
 

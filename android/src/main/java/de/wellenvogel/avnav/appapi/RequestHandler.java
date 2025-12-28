@@ -335,6 +335,13 @@ public class RequestHandler {
         if (access == null) return null;
         return access.getHandler();
     }
+    public IPluginAware getPluginAwareHandler(String type){
+        try{
+            INavRequestHandler h=getHandler(type);
+            return (IPluginAware) h;
+        }catch (Exception ignored){}
+        return null;
+    }
 
     RouteHandler getRouteHandler(){
         GpsService service=getGpsService();

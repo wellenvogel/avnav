@@ -32,11 +32,13 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -49,8 +51,10 @@ import java.util.zip.ZipOutputStream;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.IPluginAware;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.ScopedItemHandler;
 import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -74,6 +78,7 @@ public class PluginManager extends DirectoryRequestHandler {
         JSONObject infoInactive=new JSONObject();
         String pluginUrlBase;
         PluginHandlerBase phBase=null;
+        String error=null;
         public Plugin(String name,File dir,WorkerStatus status,String urlPrefix){
             this.name=name;
             this.dir=dir;
@@ -114,6 +119,7 @@ public class PluginManager extends DirectoryRequestHandler {
         }
 
         void start(GpsService gpsService){
+            error=null;
             this.gpsService = gpsService;
             phBase=new PluginHandlerBase(gpsService,null,this.pluginUrlBase) {
                 @Override
@@ -125,29 +131,51 @@ public class PluginManager extends DirectoryRequestHandler {
                 try {
                     prepare();
                 } catch (Exception e) {
-                    status.setChildStatus(name, WorkerStatus.Status.ERROR, e.getMessage());
+                    error="prepare: "+ e.getMessage();
                 }
                 prepared = true;
                 return;
             }
             if (config != null && enabled()) {
+                String step="config:charts ";
                 try {
                     if (config.has("charts")) {
                         JSONArray charts=config.getJSONArray("charts");
                         phBase.registerCharts(charts);
                     }
+                    step="config:userApps ";
                     if (config.has("userApps")){
                         JSONArray apps=config.getJSONArray("userApps");
                         phBase.registerAddons(apps);
                     }
+                    step="config:layouts ";
+                    if (config.has("layouts")){
+                        JSONArray layouts=config.getJSONArray("layouts");
+                        ArrayList<IPluginAware.PluginItem> layoutItems=new ArrayList<>();
+                        for (int i=0;i<layouts.length();i++){
+                            JSONObject layout=new JSONObject(layouts.getJSONObject(i).toString());
+                            if (! layout.has("name")) throw new Exception("missing name for layout");
+                            String name=layout.getString("name");
+                            if (! layout.has("file"))throw new Exception("missing file for layout "+name);
+                            String file=layout.getString("file");
+                            File lf=new File(this.dir,file);
+                            if (! lf.exists() || ! lf.isFile() || ! lf.canRead()) throw new Exception("cannot read layout file "+lf);
+                            layoutItems.add(new IPluginAware.PluginItem(name,layout, new IPluginAware.FileStreamProvider(lf,name+".json")));
+                        }
+                        phBase.registerLayouts(layoutItems);
+                    }
                 }catch (Exception e){
                     AvnLog.e("unable to read plugin.json",e);
-                    status.setChildStatus(name, WorkerStatus.Status.ERROR,e.getMessage());
+                    error=step+e.getMessage();
                 }
             }
             setStatus();
         }
         void setStatus(){
+            if (error != null){
+                status.setChildStatus(name, WorkerStatus.Status.ERROR,error,true);
+                return;
+            }
             if (enabled()) {
                 status.setChildStatus(name, WorkerStatus.Status.NMEA, "running", true);
             } else {
@@ -166,6 +194,7 @@ public class PluginManager extends DirectoryRequestHandler {
             if (fin){
                 status.unsetChildStatus(name);
             }
+            error=null;
             if (gpsService == null|| phBase == null) return;
             phBase.onStop(true);
         }
