@@ -28,6 +28,7 @@ import importlib.util
 import inspect
 import json
 import shutil
+import urllib.parse
 from typing import Dict
 from zipfile import ZipFile
 
@@ -344,7 +345,18 @@ class ApiImpl(AVNApi):
             self.log("trying to re-register user app url=%s, ignore", url)
             return
         self.userApps.append(userApp)
-        addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, iconFile),
+        #try to build a valid url
+        parsed=urllib.parse.urlparse(url)
+        if not parsed.scheme:
+            if not parsed.path:
+                raise Exception("invalid url %s" % url)
+            if not parsed.path.startswith("/"):
+                #local file relative to plugin base
+                fn=os.path.join(self.directory,url)
+                if not os.path.exists(fn):
+                    raise Exception("file %s not found" % fn)
+                url = f"{URL_PREFIX}/{self.prefix}/{urllib.parse.quote(url)}"
+        addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile)),
                                    title=title, preventConnectionLost=preventConnectionLost, pluginName=self.prefix)
         self.addonIndex += 1
         return id

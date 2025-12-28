@@ -39,6 +39,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -146,7 +147,25 @@ public class PluginManager extends DirectoryRequestHandler {
                     step="config:userApps ";
                     if (config.has("userApps")){
                         JSONArray apps=config.getJSONArray("userApps");
-                        phBase.registerAddons(apps);
+                        JSONArray modified=new JSONArray();
+                        for (int i=0;i<apps.length();i++){
+                            JSONObject addon=new JSONObject(apps.getJSONObject(i).toString());
+                            for (String key: new String[]{"url","iconFile"}) {
+                                String path = addon.getString(key);
+                                if (!path.toLowerCase().matches("^http[s]:") && ! path.startsWith("/")){
+                                    //assume a local file
+                                    File f=new File(this.dir,path);
+                                    if (! f.isFile() || ! f.canRead()){
+                                        throw new Exception("file "+f+" not found");
+                                    }
+                                    if ("iconFile".equals(key)) key="icon";
+                                    addon.put(key,this.pluginUrlBase+"/"+URLEncoder.encode(path,"UTF-8"));
+                                }
+                            }
+                            modified.put(addon);
+
+                        }
+                        phBase.registerAddons(modified);
                     }
                     step="config:layouts ";
                     if (config.has("layouts")){

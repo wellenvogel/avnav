@@ -171,11 +171,13 @@ public abstract class PluginHandlerBase {
             }
             try {
                 addonHandler.setPluginItems(getKey(), addons);
+                if (status != null)status.setChildStatus(C_ADDONS, WorkerStatus.Status.NMEA,addons.size()+" registered");
+                this.addons=addonsJson;
             }catch (Exception e){
                 AvnLog.e("error adding addons for "+getKey(),e);
+                if (status != null) status.setChildStatus(C_ADDONS, WorkerStatus.Status.ERROR,e.getMessage());
+                throw e;
             }
-            if (status != null)status.setChildStatus(C_ADDONS, WorkerStatus.Status.NMEA,addons.size()+" registered");
-            this.addons=addonsJson;
         }
     }
 
