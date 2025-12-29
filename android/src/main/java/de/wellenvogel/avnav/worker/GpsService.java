@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.IPluginAware;
@@ -1721,17 +1722,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private void handlePluginMessage(String name, Intent intent){
         ExternalPluginWorker existing=null;
         synchronized (this) {
-            if (! isRunning) return; //prevent duplicates...
-            for (List<IWorker> wlist : getAllWorkers()) {
-                for (IWorker w : wlist) {
-                    if (w.getTypeName().equals(ExternalPluginWorker.TYPENAME)) {
-                        ExternalPluginWorker pw = (ExternalPluginWorker) w;
-                        if (pw.getPluginName().equals(name)) {
-                            //found existing
-                            existing = pw;
-                            break;
-                        }
-                    }
+            if (!isRunning) return; //prevent duplicates...
+            List<IWorker> wlist = findWorkersByType(ExternalPluginWorker.TYPENAME);
+            for (IWorker w : wlist) {
+                ExternalPluginWorker pw = (ExternalPluginWorker) w;
+                if (pw.getPluginName(true).equals(name)) {
+                    //found existing
+                    existing = pw;
+                    break;
                 }
             }
         }
@@ -1743,8 +1741,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! allowAllPlugins) {
             return;
         }
-        ExternalPluginWorker pw=new ExternalPluginWorker(this,name);
         try {
+            DirectoryRequestHandler.safeName(name,true); //only allow safe names
+            ExternalPluginWorker pw=new ExternalPluginWorker(this,name);
             addWorker(pw,new JSONObject());
         } catch (Exception e) {
             AvnLog.e("unable to add new plugin worker "+name,e);

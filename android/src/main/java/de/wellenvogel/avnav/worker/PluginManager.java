@@ -32,14 +32,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -55,7 +52,6 @@ import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.IPluginAware;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
-import de.wellenvogel.avnav.appapi.ScopedItemHandler;
 import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -88,7 +84,7 @@ public class PluginManager extends DirectoryRequestHandler {
             this.pluginUrlBase=urlPrefix;
         }
         public String getKey(){
-            return Constants.INTERNALPLUGIN_PREFIX+name;
+            return name;
         }
         void prepare() throws Exception {
             for (JSONObject jo: new JSONObject[]{infoActive,infoInactive}){
@@ -229,7 +225,7 @@ public class PluginManager extends DirectoryRequestHandler {
             rt.put(IPluginHandler.IK_DOWNLOAD,true);
             rt.put("time",lastModified/1000);
             rt.put("downloadName",dir.getName()+".zip");
-            rt.put("checkPrefix",USER_PREFIX);
+            rt.put("checkPrefix", IPluginHandler.USER_PREFIX);
             rt.put("canDelete",true);
             rt.put(IPluginHandler.IK_CHILD,name);
             rt.put(IPluginHandler.IK_ID,status.id);
@@ -272,7 +268,6 @@ public class PluginManager extends DirectoryRequestHandler {
     }
 
     static final String UPLOAD_BASE ="__upload";
-    static final String USER_PREFIX="user-";
 
     HashMap<String,Plugin> plugins=new HashMap<>();
     JSONObject childParameterValues=new JSONObject();
@@ -282,7 +277,7 @@ public class PluginManager extends DirectoryRequestHandler {
     }
 
     private Plugin createPlugin(File pdir) throws UnsupportedEncodingException {
-        String name=USER_PREFIX+pdir.getName();
+        String name= IPluginHandler.USER_PREFIX+pdir.getName();
         Plugin plugin=new Plugin(name,pdir,status,getUrlFromName(name));
         try {
             plugin.prepare();
@@ -733,7 +728,7 @@ public class PluginManager extends DirectoryRequestHandler {
         String[] parts = path.split("/");
         if (parts.length < 2) return null;
         String baseName=URLDecoder.decode(parts[0], "UTF-8");
-        if (baseName.startsWith(USER_PREFIX)) {
+        if (baseName.startsWith(IPluginHandler.USER_PREFIX)) {
             File base = null;
             synchronized (createLock) {
                 Plugin plugin = plugins.get(baseName);

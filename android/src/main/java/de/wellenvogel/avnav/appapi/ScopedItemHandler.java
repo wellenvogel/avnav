@@ -35,9 +35,6 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
 
 
     public static class ItemInfo implements AvnUtil.IJsonObect {
-        public static final String USERPREFIX="user.";
-        public static final String SYSTEMPREFIX="system.";
-        public static final String PLUGINPREFIX="plugin.";
         public String name;
         public long mtime;
         public long size=-1;
@@ -51,23 +48,18 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
             JSONObject rt=new JSONObject();
             rt.put("name",name);
             rt.put("url",prefix+"/"+name+SUFFIX);
-            rt.put("canDelete",USERPREFIX.equals(scope));
+            rt.put("canDelete", Constants.USERPREFIX.equals(scope));
             rt.put("canDownload",provider != null);
             rt.put("time",mtime/1000);
             rt.put("isServer",true);
             rt.put("downloadName",(provider != null && provider.downloadName() != null)?provider.downloadName():fileName);
             rt.put("extension",SUFFIX);
-            if (USERPREFIX.equals(scope)){
+            if (Constants.USERPREFIX.equals(scope)){
                 //only items with this prefix are checkd for upload
-                rt.put("checkPrefix",USERPREFIX);
+                rt.put("checkPrefix", Constants.USERPREFIX);
             }
             if (size != -1) rt.put("size",size);
             rt.put("type",type);
-            for (String s: new String[]{PLUGINPREFIX+ Constants.EXTERNALPLUGIN_PREFIX,PLUGINPREFIX+Constants.INTERNALPLUGIN_PREFIX}){
-                if (name.startsWith(s)){
-                    rt.put("displayName",PLUGINPREFIX+name.substring(s.length()));
-                }
-            }
             return rt;
         }
         public ItemInfo(String type, String prefix, String name, String scope, IPluginAware.StreamProvider provider){
@@ -98,13 +90,13 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
     }
 
     private boolean isSystemOrPluginItem(String name){
-        return Arrays.asList(new String[]{ItemInfo.SYSTEMPREFIX,ItemInfo.PLUGINPREFIX}).stream().anyMatch(name::startsWith);
+        return Arrays.asList(new String[]{Constants.SYSTEMPREFIX, Constants.PLUGINPREFIX}).stream().anyMatch(name::startsWith);
     }
     private ItemInfo getSystemOrPluginItem(String name){
-        if (name.startsWith(ItemInfo.SYSTEMPREFIX)){
+        if (name.startsWith(Constants.SYSTEMPREFIX)){
             return systemItems.get(name);
         }
-        if (name.startsWith(ItemInfo.PLUGINPREFIX)){
+        if (name.startsWith(Constants.PLUGINPREFIX)){
             synchronized (pluginItems) {
                 return pluginItems.get(name);
             }
@@ -117,7 +109,7 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
         if (isSystemOrPluginItem(name)){
             info=getSystemOrPluginItem(name);
         }
-        if (name.startsWith(ItemInfo.USERPREFIX)) {
+        if (name.startsWith(Constants.USERPREFIX)) {
             Map<String, ItemInfo> items = readDir(userDir);
             info = items.get(name);
         }
@@ -128,11 +120,11 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
     }
 
     String nameToUserFileName(String fileName, boolean hardCheck) throws Exception{
-        if (fileName.startsWith(ItemInfo.USERPREFIX)){
-            fileName=fileName.substring(ItemInfo.USERPREFIX.length());
+        if (fileName.startsWith(Constants.USERPREFIX)){
+            fileName=fileName.substring(Constants.USERPREFIX.length());
         }
         else{
-            if (hardCheck) throw new Exception("invalid name "+fileName+" must start with "+ItemInfo.USERPREFIX);
+            if (hardCheck) throw new Exception("invalid name "+fileName+" must start with "+ Constants.USERPREFIX);
         }
         return fileNameFromName(fileName);
     }
@@ -212,9 +204,9 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if ("prefixes".equals(command)){
             JSONObject rt=new JSONObject();
-            rt.put("user",ItemInfo.USERPREFIX);
-            rt.put("system", ItemInfo.SYSTEMPREFIX);
-            rt.put("plugin", ItemInfo.PLUGINPREFIX);
+            rt.put("user", Constants.USERPREFIX);
+            rt.put("system", Constants.SYSTEMPREFIX);
+            rt.put("plugin", Constants.PLUGINPREFIX);
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data",rt));
         }
         return null;
@@ -236,7 +228,7 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
         for (File f: dir.listFiles()){
             if (!f.getName().endsWith(SUFFIX)) continue;
             if (! f.isFile()) continue;
-            ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName(), ItemInfo.USERPREFIX,
+            ItemInfo li=new ItemInfo(getType(), getPrefix(), f.getName(), Constants.USERPREFIX,
                     new FileStreamProvider(f));
             li.size=f.length();
             rt.put(li.name,li);
@@ -264,7 +256,7 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
                     ItemInfo li = new ItemInfo(getType(),
                             getPrefix(),
                             name,
-                            ItemInfo.SYSTEMPREFIX,
+                            Constants.SYSTEMPREFIX,
                             new IPluginAware.StreamProvider() {
                                 @Override
                                 public InputStream getStream() throws IOException {
@@ -322,7 +314,7 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
                     getType(),
                     getPrefix(),
                     key+pi.name,
-                    ItemInfo.PLUGINPREFIX,
+                    Constants.PLUGINPREFIX,
                     pi.provider
                     );
             newItems.put(info.name,info);

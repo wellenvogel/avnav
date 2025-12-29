@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.charts.Chart;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -151,8 +152,9 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         return lastUpdate;
     }
 
-    public String getPluginName(){
-        return pluginName;
+    public String getPluginName(boolean noPrefix){
+        if (noPrefix) return pluginName;
+        return EXTERNAL_PREFIX+pluginName;
     }
 
     @Override
@@ -170,15 +172,12 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
 
     @Override
     protected String getSourceName() {
-        return pluginName;
+        return Constants.PLUGINPREFIX+ EXTERNAL_PREFIX+pluginName;
     }
 
     @Override
     public String getKey(){
-        return Constants.EXTERNALPLUGIN_PREFIX +pluginName; //we don't use TYPENAME here as we want to be compatible
-                                     //with older versions that had TYPENAME Plugin
-                                     //and as the key goes into overlay definitions
-                                     //we would otherwise break them
+        return getPluginName(false);
     }
 
     private void tryAutoStart(){
@@ -193,7 +192,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                     gpsService.startService(si);
                 }
             }catch(Throwable t){
-                Log.e(Constants.LOGPRFX,"unable to start plugin "+pluginName,t);
+                Log.e(Constants.LOGPRFX,"unable to start plugin "+getPluginName(false),t);
             }
         }
     }
@@ -237,7 +236,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         try {
             enabled=ENABLED_PARAMETER.fromJson(parameters);
         } catch (JSONException e) {
-            Log.d(Constants.LOGPRFX,"cannot read enabled state for "+pluginName);
+            Log.d(Constants.LOGPRFX,"cannot read enabled state for "+getPluginName(false));
         }
         if (enabled) {
             boolean updatedCharts = false;
@@ -249,6 +248,21 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                     setPluginJson(piJson);
                     if (piJson.has("charts")) {
                         JSONArray charts = piJson.getJSONArray("charts");
+                        for (int i=0;i<charts.length();i++){
+                            JSONObject chart=charts.getJSONObject(i);
+                            //migrate old style config if the chart has chartKey
+                            //chartKey -> name, name->displayName
+                            if (chart.has(Chart.EXT_CKEY)){
+                                String name=chart.getString(Chart.EXT_CKEY);
+                                if (!chart.has(Chart.DPNAME_KEY)){
+                                    if (chart.has(Chart.CKEY)){
+                                        chart.put(Chart.DPNAME_KEY,chart.getString(Chart.CKEY));
+                                    }
+                                }
+                                chart.put(Chart.CKEY,name);
+                                chart.remove(Chart.EXT_CKEY);
+                            }
+                        }
                         phBase.registerCharts(charts);
                         updatedCharts = true;
                     }

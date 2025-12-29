@@ -33,22 +33,24 @@ import de.wellenvogel.avnav.util.AvnUtil;
  * will be used by the plugin manager to access the information
  */
 public interface IPluginHandler {
-    public static final String FT_JS="js";
-    public static final String FT_MJS="mjs";
-    public static final String FT_CSS="css";
-    public static final String FT_PYTHON="python";
-    public static final String FT_CFG="cfg";
-    static final AvnUtil.ItemMap<String> PLUGINFILES= new AvnUtil.ItemMap<>(
+    String USER_PREFIX="user-";
+    String EXTERNAL_PREFIX="ext-";
+    String FT_JS="js";
+    String FT_MJS="mjs";
+    String FT_CSS="css";
+    String FT_PYTHON="python";
+    String FT_CFG="cfg";
+    AvnUtil.ItemMap<String> PLUGINFILES= new AvnUtil.ItemMap<>(
             new AvnUtil.KeyValue<String>(FT_CSS, "plugin.css"),
             new AvnUtil.KeyValue<String>(FT_JS, "plugin.js"),
             new AvnUtil.KeyValue<String>(FT_MJS, "plugin.mjs"),
             new AvnUtil.KeyValue<String>(FT_CFG, "plugin.json"),
             new AvnUtil.KeyValue<String>(FT_PYTHON, "plugin.py")
             );
-    public static final String K_NAME="name";
-    public static String K_ACTIVE="active";
-    public static final String K_BASE="base"; //url base for plugin files
-    public static final String K_CHARTPREFIX="chartPrefix";
+    String K_NAME="name";
+    String K_ACTIVE="active";
+    String K_BASE="base"; //url base for plugin files
+    String K_CHARTPREFIX="chartPrefix";
 
     /**
      * return an json object with the keys K_NAME,K_DIR and for each existing file
@@ -58,16 +60,16 @@ public interface IPluginHandler {
      */
     JSONObject getFiles() throws JSONException;
 
-    public static String IK_NAME=K_NAME;
-    public static String IK_ID="handlerId";
-    public static String IK_CHILD="child";
-    public static String IK_EDIT="canEdit";
-    public static String IK_DOWNLOAD="canDownload";
-    public static String IK_ACTIVE=K_ACTIVE;
+     String IK_NAME=K_NAME;
+     String IK_ID="handlerId";
+     String IK_CHILD="child";
+     String IK_EDIT="canEdit";
+     String IK_DOWNLOAD="canDownload";
+     String IK_ACTIVE=K_ACTIVE;
 
     //keys for the fileinfo object returned in getFiles
-    public static String IK_FURL="url";
-    public static String IK_FTS ="timestamp";
+     String IK_FURL="url";
+     String IK_FTS ="timestamp";
 
     /**
      * get the info item for this plugin for list and info requests

@@ -35,6 +35,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.MeasureTimer;
+import de.wellenvogel.avnav.worker.IPluginHandler;
 
 import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
@@ -46,9 +47,6 @@ import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 public class ChartHandler extends RequestHandler.NavRequestHandlerBase implements IPluginAware {
 
-    static final List<String> ALLOWED_EXT_PREFIXES =Arrays.asList(Constants.EXTERNALPLUGIN_PREFIX, Constants.INTERNALPLUGIN_PREFIX);
-
-
     static class OverlayConfig{
         File file;
         public OverlayConfig(File f){
@@ -57,23 +55,32 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
     }
 
     static class ExternalChart implements IChartWithConfig{
-        String key;
+        String key; //the plugin
         String chartKey;
         JSONObject chart;
         boolean allowColon;
+        static final String OLDPREFIX="Plugin:";
 
+        public static String oldChartNameToNew(String oldName){
+            //old: external:Plugin:ocharts@name
+            //new: external:ext-ocharts@name
+            String op=Constants.EXTERNALCHARTS+":"+OLDPREFIX;
+            if (oldName == null || ! oldName.startsWith(op)) return null;
+            String name=Constants.EXTERNALCHARTS+":"+IPluginHandler.EXTERNAL_PREFIX+oldName.substring(op.length());
+            return name;
+        }
         public static String getChartPrefix(String key){
             return Constants.EXTERNALCHARTS + ":"+key+"@";
         }
         public static String configPrefixFromKey(String key, boolean allowColon){
-            String rt=key+"@";
+            String rt=getChartPrefix(key);
             if (! allowColon) rt=rt.replace(':','.');
             return rt;
         }
         public static String configFromChartName(String name,boolean allowColon) throws Exception {
             if (name == null) return name;
-            if (name.startsWith(Constants.EXTERNALCHARTS+":")){
-                name=name.substring(Constants.EXTERNALCHARTS.length()+1);
+            if (!name.startsWith(Constants.EXTERNALCHARTS+":")){
+                return null;
             }
             String rt=DirectoryRequestHandler.safeName(name,false)+CFG_EXTENSION;
             if (!allowColon) rt=rt.replace(':','.');
@@ -82,28 +89,18 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         public ExternalChart(String key,JSONObject chart,boolean allowColon) throws Exception {
             this.key=key;
             this.chart=new JSONObject(chart.toString());
-            chartKey=keyFromExternalChart();
-            if (this.chart.has(Chart.CKEY)){
-                this.chart.put(Chart.DPNAME_KEY,this.chart.getString(Chart.CKEY));
-                this.chart.remove(Chart.CKEY);
+            if (! chart.has(Chart.CKEY)){
+                throw new JSONException("external chart without key" + chart);
             }
-            if (this.chart.has(Chart.EXT_CKEY)) {
-                this.chart.remove(Chart.EXT_CKEY);
+            String name=chart.getString(Chart.CKEY);
+            chartKey=getChartPrefix(key)+DirectoryRequestHandler.safeName(name, false);
+            if (!this.chart.has(Chart.DPNAME_KEY)){
+                this.chart.put(Chart.DPNAME_KEY, name);
             }
             this.chart.put(Chart.CKEY,  chartKey);
             this.allowColon=allowColon;
         }
-        private String keyFromExternalChart() throws Exception {
-            String original=null;
-            if (chart.has(Chart.EXT_CKEY)) {
-                original = chart.getString(Chart.EXT_CKEY);
-            }
-            else if(chart.has(Chart.CKEY)) {
-                original = chart.getString(Chart.CKEY);
-            }
-            if (original == null) throw new JSONException("external chart without key"+ chart);
-            return getChartPrefix(key)+DirectoryRequestHandler.safeName(original, false);
-        }
+
         @Override
         public List<String> getChartCfgs() {
             ArrayList<String> rt=new ArrayList<>();
@@ -113,20 +110,23 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
             } catch (Exception e) {
                 //should never occur as safeName only throws when required
             }
-
-            for (String ckey: new String[]{Chart.DPNAME_KEY}){
-                if (! chart.has(ckey)) continue;
-                String name= null;
-                try {
-                    name = key+"@"+ DirectoryRequestHandler.safeName(chart.getString(ckey)+CFG_EXTENSION,false);
-                } catch (Exception e) {
-                    continue;
-                }
-                if (!allowColon) name=name.replace(':','.');
-                if (rt.size() < 1 || ! name.equals(rt.get(0)) ) {
-                    //we only add if the name differs from the first name
-                    //otherwise we always delete the new config when writing
-                    rt.add(name);
+            //we need a migration for the old ocharts plugin charts
+            //they where named Plugin:ocharts@<name>.cfg
+            //now they are named external:ext-ocharts@<ck>.cfg
+            //and we only need to migrate if the config is on internal storage with colons
+            //as otherwise the config has not worked any way
+            if (key.startsWith(IPluginHandler.EXTERNAL_PREFIX) && allowColon) {
+                String piname=key.substring(IPluginHandler.EXTERNAL_PREFIX.length());
+                if (chart.has(Chart.DPNAME_KEY)) {
+                    try {
+                        String name = OLDPREFIX+ piname + "@" + DirectoryRequestHandler.safeName(chart.getString(Chart.DPNAME_KEY) + CFG_EXTENSION, false);
+                        if (rt.size() < 1 || !name.equals(rt.get(0))) {
+                            //we only add if the name differs from the first name
+                            //otherwise we always delete the new config when writing
+                            rt.add(name);
+                        }
+                    } catch (Exception e) {
+                    }
                 }
             }
             return rt;
@@ -235,27 +235,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
     public String getExternalChartsPrefix(String key){
         return ExternalChart.getChartPrefix(key);
     }
-    public void removeExternalCharts(String key, boolean removeOverlays){
-        synchronized (externalCharts){
-            externalCharts.remove(key);
-        }
-        if (removeOverlays){
-            boolean hasRemoved=false;
-            HashMap<String,OverlayConfig> current=overlays;
-            String prefix=ExternalChart.configPrefixFromKey(key,allowColon);
-            for (String name:current.keySet() ){
-                if (name.startsWith(prefix)){
-                    try {
-                        hasRemoved=true;
-                        current.get(name).file.delete();
-                    }catch (Throwable e){
-                        AvnLog.e("unable to remove overlay "+name,e);
-                    }
-                }
-            }
-            if (hasRemoved) triggerUpdate(false);
-        }
-    }
+
     @Override
     public void removePluginItems(String pluginName,boolean removeOverlays) {
         synchronized (externalCharts){
@@ -281,7 +261,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
 
     @Override
     public void setPluginItems(String pluginName, List<PluginItem> items) throws Exception {
-        if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(pluginName::startsWith))throw new Exception("invalid external chart key");
         ArrayList<ExternalChart> extCharts=new ArrayList<>();
         for (PluginItem item:items){
             try{
@@ -293,21 +272,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         }
         synchronized (externalCharts){
             externalCharts.put(pluginName,extCharts);
-        }
-    }
-    public void addExternalCharts(String key, JSONArray charts) throws Exception {
-        if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(key::startsWith))throw new Exception("invalid external chart key");
-        ArrayList<ExternalChart> extCharts=new ArrayList<>();
-        for (int i=0;i<charts.length();i++){
-            try{
-                ExternalChart echart=new ExternalChart(key,charts.getJSONObject(i),allowColon);
-                extCharts.add(echart);
-            } catch (Exception e) {
-                AvnLog.e("unable to add external chart ",e);
-            }
-        }
-        synchronized (externalCharts){
-            externalCharts.put(key,extCharts);
         }
     }
 
@@ -692,14 +656,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         throw new Exception("not available");
     }
 
-    private static void merge(JSONObject target, JSONObject source, List<String> blacklist) throws JSONException {
-        for (Iterator<String> it = source.keys(); it.hasNext(); ) {
-            String sk = it.next();
-            if (blacklist.contains(sk)) continue;
-            target.put(sk,source.get(sk));
-        }
-    }
-
     /**
      * will migrate the naming and tries to replace chart names
      * no copy
@@ -721,7 +677,14 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
                             if (cname != null && ! overlay.has("displayName")){
                                 overlay.put("displayName",cname);
                             }
+                            cname=chartKey;
                             overlay.put("name",chartKey);
+                        }
+                        if (cname != null){
+                            String newName=ExternalChart.oldChartNameToNew(name);
+                            if (newName != null){
+                                overlay.put("name",newName);
+                            }
                         }
                     }
                 }
@@ -968,7 +931,8 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         for (String ovlname:current.keySet()){
             if (activeOverlays.contains(ovlname)) continue;
             if (ovlname.equals(DEFAULT_CFG)) continue;
-            if (ALLOWED_EXT_PREFIXES.stream().anyMatch(ovlname::startsWith)) continue;
+            if (ovlname.startsWith(Constants.EXTERNALCHARTS)) continue;
+            if (ovlname.startsWith(ExternalChart.OLDPREFIX)) continue;
             toDelete.add(current.get(ovlname).file);
         }
         for (File f:toDelete){
@@ -988,7 +952,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         HashSet<String> activeOverlays=new HashSet<>();
         ArrayList<String> prefixes=new ArrayList<>();
         for (String ep:existingPrefixes){
-            if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(ep::startsWith)) continue;
             prefixes.add(ExternalChart.configPrefixFromKey(ep,allowColon));
         }
         //to be sure just build a list of all currently active
@@ -1010,7 +973,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         for (String ovlname:current.keySet()){
             if (activeOverlays.contains(ovlname)) continue;
             if (ovlname.equals(DEFAULT_CFG)) continue;
-            if (! ALLOWED_EXT_PREFIXES.stream().anyMatch(ovlname::startsWith)) continue;
+            if (!Arrays.asList(new String[]{Constants.EXTERNALCHARTS, ExternalChart.OLDPREFIX}).stream().anyMatch(ovlname::startsWith)) continue;
             boolean existing=false;
             for (String p:prefixes){
                 if (ovlname.startsWith(p)) {

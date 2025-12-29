@@ -3,13 +3,11 @@ package de.wellenvogel.avnav.worker;
 import android.util.Log;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import de.wellenvogel.avnav.appapi.AddonHandler;
 import de.wellenvogel.avnav.appapi.IPluginAware;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.charts.Chart;
@@ -120,18 +118,14 @@ public abstract class PluginHandlerBase {
             try{
                 for (int i=0;i<charts.length();i++){
                     JSONObject chart=charts.getJSONObject(i);
-                    chart.put("baseUrl",baseUrl);
-                    String name=null;
-                    if (chart.has(Chart.CKEY)) {
-                        name=chart.getString(Chart.CKEY);
+                    if (baseUrl != null) {
+                        chart.put("baseUrl", baseUrl);
                     }
-                    else if (chart.has(Chart.EXT_CKEY)) {
-                        name=chart.getString(Chart.EXT_CKEY);
-                    }
-                    if (name == null) {
+                    if (!chart.has(Chart.CKEY)) {
                         AvnLog.e("chart without name");
                         continue;
                     }
+                    String name=chart.getString(Chart.CKEY);
                     pluginCharts.add(new IPluginAware.PluginItem(name,chart));
                 }
             }catch (Exception e){

@@ -38,18 +38,19 @@ public class Constants {
     //new handler config
     public static final String HANDLER_CONFIG="internal.handler";
 
-
+    //the chart prefixes
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
     public static final String DEMOCHARTS="demo";
     public static final String EXTERNALCHARTS="external";
+
+
     public static final String CHARTOVERVIEW="avnav.xml";
     public static final String USB_DEVICE_EXTRA = "usbDevice" ;
     public static final String SERVICE_TYPE = "foregroundType";
-    //the prefixes for external charts must not interfere with the internal prefixes
-    //like REALCHARTS or DEMOCHARTS as otherwise the overlay config names would clash
-    public static final String EXTERNALPLUGIN_PREFIX="Plugin:";
-    public static final String INTERNALPLUGIN_PREFIX="IPlugin:";
+    public static final String USERPREFIX="user.";
+    public static final String SYSTEMPREFIX="system.";
+    public static final String PLUGINPREFIX="plugin.";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{
