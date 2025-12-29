@@ -27,7 +27,8 @@ public class DemoChart extends Chart{
 
     @Override
     public String getConfigName() {
-        return Constants.DEMOCHARTS+CFG_DELIM+fileName+CFG_EXTENSION;
+        //the old code constructed this really strange config name - so we just keep it
+        return CFG_DELIM+Constants.CHARTPREFIX+CFG_DELIM+Constants.DEMOCHARTS+CFG_DELIM+fileName+CFG_EXTENSION;
     }
 
     @Override

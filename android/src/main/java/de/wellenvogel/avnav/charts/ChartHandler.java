@@ -57,6 +57,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
     static class ExternalChart implements IChartWithConfig{
         String key; //the plugin
         String chartKey;
+        String name;
         JSONObject chart;
         boolean allowColon;
         static final String OLDPREFIX="Plugin:";
@@ -92,7 +93,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
             if (! chart.has(Chart.CKEY)){
                 throw new JSONException("external chart without key" + chart);
             }
-            String name=chart.getString(Chart.CKEY);
+            name=chart.getString(Chart.CKEY);
             chartKey=getChartPrefix(key)+DirectoryRequestHandler.safeName(name, false);
             if (!this.chart.has(Chart.DPNAME_KEY)){
                 this.chart.put(Chart.DPNAME_KEY, name);
@@ -111,21 +112,23 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
                 //should never occur as safeName only throws when required
             }
             //we need a migration for the old ocharts plugin charts
-            //they where named Plugin:ocharts@<name>.cfg
+            //they where named Plugin:ocharts@<name>.cfg name is the old chartKey as directly provided externally
             //now they are named external:ext-ocharts@<ck>.cfg
             //and we only need to migrate if the config is on internal storage with colons
             //as otherwise the config has not worked any way
             if (key.startsWith(IPluginHandler.EXTERNAL_PREFIX) && allowColon) {
                 String piname=key.substring(IPluginHandler.EXTERNAL_PREFIX.length());
-                if (chart.has(Chart.DPNAME_KEY)) {
-                    try {
-                        String name = OLDPREFIX+ piname + "@" + DirectoryRequestHandler.safeName(chart.getString(Chart.DPNAME_KEY) + CFG_EXTENSION, false);
-                        if (rt.size() < 1 || !name.equals(rt.get(0))) {
-                            //we only add if the name differs from the first name
-                            //otherwise we always delete the new config when writing
-                            rt.add(name);
+                for (String n: new String[]{name,chart.optString(Chart.DPNAME_KEY)}){
+                    if (!n.isEmpty()) {
+                        try {
+                            String cfgname = OLDPREFIX + piname + "@" + DirectoryRequestHandler.safeName(n + CFG_EXTENSION, false);
+                            if (rt.size() < 1 || !name.equals(rt.get(0))) {
+                                //we only add if the name differs from the first name
+                                //otherwise we always delete the new config when writing
+                                rt.add(cfgname);
+                            }
+                        } catch (Exception e) {
                         }
-                    } catch (Exception e) {
                     }
                 }
             }
@@ -681,7 +684,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
                             overlay.put("name",chartKey);
                         }
                         if (cname != null){
-                            String newName=ExternalChart.oldChartNameToNew(name);
+                            String newName=ExternalChart.oldChartNameToNew(cname);
                             if (newName != null){
                                 overlay.put("name",newName);
                             }
@@ -973,7 +976,14 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         for (String ovlname:current.keySet()){
             if (activeOverlays.contains(ovlname)) continue;
             if (ovlname.equals(DEFAULT_CFG)) continue;
-            if (!Arrays.asList(new String[]{Constants.EXTERNALCHARTS, ExternalChart.OLDPREFIX}).stream().anyMatch(ovlname::startsWith)) continue;
+            if (ovlname.startsWith(ExternalChart.OLDPREFIX)){
+                //no problem with ; vs. . as old names can only occur if the system can handle :
+                ovlname=ExternalChart.oldChartNameToNew(Constants.EXTERNALCHARTS+":"+ovlname);
+                if (ovlname == null) continue;
+            }
+            else{
+                if (! ovlname.startsWith(Constants.EXTERNALCHARTS)) continue;
+            }
             boolean existing=false;
             for (String p:prefixes){
                 if (ovlname.startsWith(p)) {
