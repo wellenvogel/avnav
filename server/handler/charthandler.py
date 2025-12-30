@@ -156,8 +156,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     #we maintain maps to convert to and from the new keys
     #especially for external providers we use the chart key now to address in the map
     #and to build the overlay name
-    self.ovlKeyToName={} #new ovl name to old ovl name
-    self.ovlNameToKey={}
     self.nameToKey={} #old external chart name to new external chart name
   @classmethod
   def getConfigName(cls):
@@ -208,7 +206,13 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           chart.wakeUp()
         except:
           pass
-  def externalItemAdded(self,item):
+  def externalItemAdded(self,item:ChartEntry):
+      try:
+        echart=item.getUserData()
+        if isinstance(echart,ExternalChart):
+            self.nameToKey[echart.buildAltKey()] = echart.buildKey()
+      except:
+        pass
       ovl=self.getOverlayConfig(item)
       if ovl is not None:
           item.hasOverlay=True
@@ -555,7 +559,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                                   continue
                               newEntry['displayName']=newEntry.get('name')
                               newEntry['name']=newName
-                              newOverlays.append(newEntry)
                           elif chartKey.startswith(self.SCOPE_USER):
                               #old user config - migrate name->displayName chartkey->name
                               if newEntry.get('displayName') is None:
@@ -564,7 +567,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
                           #else would be a new config that still contained a chartKey - no need to migrate
                       else:
                           #no chartkey - so it seems to be a new entry
-                          newOverlays.append(newEntry)
+                          pass
+                      newOverlays.append(newEntry)
                   else:
                       newOverlays.append(overlay)
               rt[ovlname] = newOverlays
