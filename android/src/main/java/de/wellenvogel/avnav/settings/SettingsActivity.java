@@ -483,15 +483,7 @@ public class SettingsActivity extends PreferenceActivity {
         File workDir= wdentry.getFile();
         if (workDir == null) return false;
         try{
-            boolean nocolon=parser.createDirs(ctx,wdentry);
-            boolean currentNoColon=false;
-            try{
-                currentNoColon=prefs.getBoolean(Constants.WORKDIR_NOCOLON,false);
-            }catch (Throwable t){}
-            if (nocolon != currentNoColon){
-                AvnLog.i("setting nocolon for workdir to "+nocolon);
-                prefs.edit().putBoolean(Constants.WORKDIR_NOCOLON,nocolon).commit();
-            }
+            parser.createDirs(ctx,wdentry);
         } catch (Exception e) {
             return false;
         }
