@@ -620,6 +620,7 @@ public class PluginManager extends DirectoryRequestHandler {
             AvnLog.e("exception in plugin upload for "+name,t);
             throw t;
         }
+        uploaded.delete();
         Plugin newPlugin=createPlugin(existing);
         updatePlugin(newPlugin);
         gpsService.updateConfigSequence();
