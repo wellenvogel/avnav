@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import {
     DialogButtons,
@@ -435,7 +435,10 @@ const isSameItem=(item,compare)=>{
 const EditOverlaysDialog = (props) => {
     const dialogContext = useDialogContext();
     const [selectedIndex, setSelectedIndex] = useState(-1);
-    const currentConfig = props.current.copy();
+    const currentConfig = useRef(undefined);
+    if (currentConfig.current === undefined) {
+        currentConfig.current = props.current.copy();
+    }
     const [list, setList] = useState(displayListFromOverlays(props.current.getOverlayList(true)));
     const [addEntry, setAddEntry] = useState(props.addEntry);
     const [useDefault, setUseDefault] = useState(props.current.getUseDefault());
@@ -484,7 +487,7 @@ const EditOverlaysDialog = (props) => {
             //we can only have this for after - so we always add on top
             idx = list.length;
         }
-        let newItem = currentConfig.createNewOverlay(opt_item || {type: 'overlay', opacity: 1});
+        let newItem = currentConfig.current.createNewOverlay(opt_item || {type: 'overlay', opacity: 1});
         showItemDialog(newItem, opt_item !== undefined)
             .then((overlay) => {
                 let overlays = list.slice();
@@ -604,11 +607,11 @@ const EditOverlaysDialog = (props) => {
             props.resetCallback();
             return;
         }
-        currentConfig.reset();
-        setUseDefault(currentConfig.getUseDefault());
+        currentConfig.current.reset();
+        setUseDefault(currentConfig.current.getUseDefault());
         setSelectedIndex(0);
         setIsChanged(isChanged+1);
-        updateList(displayListFromOverlays(currentConfig.getOverlayList()))
+        updateList(displayListFromOverlays(currentConfig.current.getOverlayList()))
     }
     const editItem = (item) => {
         if (props.preventEdit) return;
@@ -623,9 +626,9 @@ const EditOverlaysDialog = (props) => {
     }
 
     const enableDisableAll = (enabled) => {
-        currentConfig.setAllEnabled(enabled);
+        currentConfig.current.setAllEnabled(enabled);
         setIsChanged(isChanged+1);
-        updateList(displayListFromOverlays(currentConfig.getOverlayList()))
+        updateList(displayListFromOverlays(currentConfig.current.getOverlayList()))
     }
     if (!props.current) {
         dialogContext.closeDialog();
@@ -751,7 +754,7 @@ const EditOverlaysDialog = (props) => {
                     <DB
                         name="ok"
                         onClick={() => {
-                            let updatedOverlays = currentConfig;
+                            let updatedOverlays = currentConfig.current;
                             updatedOverlays.writeBack(displayListToOverlays(list));
                             updatedOverlays.setUseDefault(useDefault);
                             props.updateCallback(updatedOverlays);
