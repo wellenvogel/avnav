@@ -25,7 +25,7 @@
 
 import base from '../base.js';
 import assign from 'object-assign';
-import Helper from '../util/helper.js';
+import Helper, {injectav, setav} from '../util/helper.js';
 import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
@@ -231,8 +231,7 @@ class ChartSourceBase {
         await this.checkSequence(true);
         const layers = await this.prepareInternal()
         layers.forEach((layer) => {
-            if (!layer.avnavOptions) layer.avnavOptions = {};
-            layer.avnavOptions.chartSource = this;
+            setav(layer,{chartSource: this});
         });
         this.layers = layers;
         if (!this.chartEntry[CHARTBASE.ENABLED]) {
