@@ -42,7 +42,7 @@ import {
     useDialogContext
 } from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
-import {layoutLoader} from "../util/layouthandler";
+import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
@@ -1461,6 +1461,39 @@ class LayoutItemActions extends ItemActions{
         }))
         actions.push(standardActions.download.copy({
             localData: ()=>fetchItem(item)
+        }))
+        const loadAndActivate=async (item)=>{
+            const layout=await layoutLoader.loadLayout(item.name);
+            layouthandler.setLayoutAndName(layout,item.name,true);
+        }
+        actions.push(new Action({
+            label: 'Activate',
+            name:'open',
+            visible:true,
+            action:async (action,item,dialogContext)=>{
+                const res=await showPromiseDialog(dialogContext,(dp)=><ConfirmDialog
+                    {...dp}
+                    text={"activate layout "+item.name+"?"}
+                />);
+                if (! res) return;
+                await loadAndActivate(item);
+                dialogContext.closeDialog();
+            }
+        }))
+        actions.push(new Action({
+            label: 'Editor',
+            name:'layout',
+            visible:this.isConnected() && item.name && item.name.startsWith(layoutLoader.getUserPrefix()),
+            action:async (action,item,dialogContext)=>{
+                const res=await showPromiseDialog(dialogContext,(dp)=><ConfirmDialog
+                    {...dp}
+                    text={"start layout editor for "+item.name+"?"}
+                />);
+                if (! res) return;
+                await loadAndActivate(item);
+                layouthandler.startEditing(item.name);
+                dialogContext.closeDialog();
+            }
         }))
     }
 
