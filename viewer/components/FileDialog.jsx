@@ -561,6 +561,46 @@ const standardActions={
             return true;
         }
     }),
+    copy: new Action({
+        label: 'Copy',
+        name: 'copy',
+        action: async (action, item, dialogContext) => {
+            let dname=item.name;
+            if (action.nameToBaseName){
+                dname=action.nameToBaseName(dname);
+            }
+            const itemList=await listItems(item.type);
+            const accessor=action.hasScope?scopedNameForCheck:plainNameForCheck;
+            let res= await showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
+                {...dprops}
+                iname={dname}
+                fixedExtension={action.fixedExtension}
+                fixedPrefix={action.fixedPrefix}
+                title={"Copy to..."}
+                mandatory={true}
+                checkName={(name)=>{
+                    return checkName(name,itemList,accessor);
+                }}
+            />);
+            if (!res || ! res.name) return;
+            const rs=await action.execute(item, res.name);
+            return rs;
+        }
+    }).copy({
+        execute: async (item, newName) => {
+            const data=await Requests.getHtmlOrText({
+                type: item.type,
+                command: 'download',
+                name: item.name
+            });
+            await Requests.postPlain({
+                type: item.type,
+                command: 'upload',
+                name: newName,
+            },data);
+            return true;
+        }
+    }),
     view: new Action({
         label: 'View',
         name: 'view',
@@ -707,17 +747,6 @@ export class ItemActions extends CopyAware{
      */
     prefixForDisplay(){
         return this.hasScope?'user.':undefined;
-    }
-    /**
-     * convert an entity name as received from the server to a name we offer when downloading
-     * @returns {*}
-     */
-    nameForDownload(item){
-        if (item.downloadName) return item.downloadName;
-        let name=item.name||item.type||"download";
-        if (item.checkPrefix) name=name.substring(item.checkPrefix.length);
-        if (this.fixedExtension) name=name+"."+this.fixedExtension;
-        return name;
     }
     canModify(item) {
         return item.canDelete && (! item.server || this.isConnected());
@@ -1126,6 +1155,20 @@ class RouteItemActions extends ItemActions{
             },
             preCheck:(name)=>this.namePreCheck(name),
         }))
+        const prfx=this.isConnected()?routeobjects.SERVER_PREFIX:routeobjects.LOCAL_PREFIX;
+        actions.push(standardActions.copy.copy({
+            visible:true,
+            keepExtension:false,
+            fixedPrefix: prfx,
+            hasScope: true,
+            nameToBaseName:(name)=>this.nameToBaseName(name),
+            execute: async (item,newName) => {
+                const route = await RouteHandler.fetchRoute(item.name)
+                route.setName(prfx+newName);
+                await RouteHandler.saveRoute(route);
+                return true;
+            }
+        }))
         actions.push(standardActions.view.copy({
             action: async (action,item, dialogContext,history) => {
                 const route = await RouteHandler.fetchRoute(item.name)
@@ -1258,6 +1301,10 @@ class TrackItemActions extends ItemActions{
         actions.push(standardActions.rename.copy({
             visible:this.isConnected(),
         }))
+        actions.push(standardActions.copy.copy({
+            visible:this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
+            keepExtension:true,
+        }))
         if (item.name) {
             const ext=Helper.getExt(item.name);
             if ( ext === 'gpx') {
@@ -1367,6 +1414,18 @@ class LayoutItemActions extends ItemActions{
             preCheck:(name)=>this.namePreCheck(name)
 
         }))
+        actions.push(standardActions.copy.copy({
+            visible:this.isConnected(),
+            keepExtension:false,
+            hasScope: true,
+            fixedPrefix: layoutLoader.getUserPrefix(),
+            execute: async (item,newName)=>{
+                const layout=await layoutLoader.loadLayout(item.name);
+                await layoutLoader.uploadLayout(newName,layout);
+                return true;
+            },
+            nameToBaseName:(name)=>this.nameToBaseName(name)
+        }))
         actions.push(standardActions.view.copy({
             action: async (action,item,dialogContext,history) => {
                 const layout = await layoutLoader.loadLayout(item.name);
@@ -1447,6 +1506,13 @@ class SettingsItemActions extends ItemActions{
             keepExtension:false,
             hasScope: true
         }))
+        actions.push(standardActions.copy.copy({
+            visible:this.isConnected(),
+            keepExtension:false,
+            fixedPrefix: 'user.',
+            hasScope: true,
+            nameToBaseName:(name)=>this.nameToBaseName(name)
+        }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
             visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
@@ -1514,6 +1580,10 @@ class UserItemActions extends ItemActions{
         }))
         actions.push(standardActions.rename.copy({
             visible:canModify,
+        }))
+        actions.push(standardActions.copy.copy({
+            visible:this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
+            keepExtension:true,
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({

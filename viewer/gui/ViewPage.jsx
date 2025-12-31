@@ -17,7 +17,7 @@ import {createItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {languageMap, uploadFromEdit} from "../components/EditDialog";
 
-const MAXEDITSIZE=50000;
+const MAXEDITSIZE=1000000;
 
 
 class ViewPage extends React.Component{
