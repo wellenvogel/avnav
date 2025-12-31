@@ -218,6 +218,7 @@ const OverlayItemDialog = (props) => {
                     />
                     <React.Fragment>
                         <InputReadOnly
+                            dialogRow={true}
                             label={'name'}
                             value={current.displayName||current.name}
                             onClick={(ev)=>{

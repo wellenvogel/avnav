@@ -575,6 +575,9 @@ body{
   .inputLabel{
     width: 10em;
   }
+  .radioFrame .radioInner .inputLabel{
+    width: 4em;
+  }
 }
 .FeatureInfoDialog{
   max-width: 50em;
@@ -852,26 +855,35 @@ span.valuePrefix{
 }
 
 //--Radio button
-.radioInner {
-  .inputLabel{
-    width: auto;
-    margin-left: 1em;
-  }
-  .radio {
-    display: inline-block;
-    width: 1.8em;
-    height: 1.8em;
-    .iconImage('radio_button_unchecked.svg');
-    background-repeat: no-repeat;
-    background-size: cover;
-    &.checked {
-      .iconImage('radio_button_checked.svg');
-    }
-    vertical-align: middle;
-  }
-  .flex-display(inline);
+.radioFrame {
+  .flex-display();
   .flex-direction(row);
-  .flex-align-items(center);
+  .flex-wrap(wrap);
+  .radioInner {
+    .inputLabel {
+      width: auto;
+      margin-left: 1em;
+    }
+
+    .radio {
+      display: inline-block;
+      width: 1.8em;
+      height: 1.8em;
+      .iconImage('radio_button_unchecked.svg');
+      background-repeat: no-repeat;
+      background-size: cover;
+
+      &.checked {
+        .iconImage('radio_button_checked.svg');
+      }
+
+      vertical-align: middle;
+    }
+
+    .flex-display(inline);
+    .flex-direction(row);
+    .flex-align-items(center);
+  }
 }
 
 //--ColorSelector
