@@ -214,8 +214,7 @@ class ChartSourceBase {
     }
     async prepare() {
         const fullConfig = await fetchItemInfo(this.chartEntry);
-        //TODO: only merge allowed parts
-        Object.assign(this.chartEntry, fullConfig);
+        this.chartEntry={...fullConfig,...this.chartEntry}; //we prefer values from chartEntry (i.e. from overlay config)
         if (! this.hasValidConfig()){
             base.log("no url retrieved for "+this.chartEntry[CHARTBASE.NAME]);
             if (this.isBaseChart()){
