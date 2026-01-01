@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "@braintree/browser-detection": "^2.0.0",
+    "@geoblocks/ol-maplibre-layer": "^1.0.3",
     "@openlayers/pepjs": "^0.5.4",
     "@zip.js/zip.js": "^2.8.8",
     "canvas-gauges": "git+https://github.com/wellenvogel/canvas-gauges#av20220223",

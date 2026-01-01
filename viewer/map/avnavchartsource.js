@@ -35,7 +35,6 @@ import * as olTransforms  from 'ol/proj/transforms';
 import {Tile as olTileLayer} from 'ol/layer';
 import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';
-import olImageTile from 'ol/src/ImageTile';
 import olTile from 'ol/src/Tile';
 import olTileState from 'ol/src/TileState';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
@@ -175,14 +174,15 @@ class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
     constructor() {
         super(...arguments);
     }
-    drawTileImage(tile, frameState, x, y, w, h, gutter, transition, opacity) {
+    drawTileImage(tile, frameState, x, y, w, h, gutter, transition) {
         const image = this.getTileImage(tile);
         if (!image) {
             return;
         }
         const uid = getUid(this);
+        const layerState = frameState.layerStatesArray[frameState.layerIndex];
         const tileAlpha = transition ? tile.getAlpha(uid, frameState.time) : 1;
-        const alpha = opacity * tileAlpha;
+        const alpha = layerState.opacity * tileAlpha;
         const alphaChanged = alpha !== this.context.globalAlpha;
         if (alphaChanged) {
             this.context.save();
@@ -547,6 +547,16 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
     }
 }
 
+class LayerConfigMapLibreVector extends LayerConfigXYZ{
+    constructor(props) {
+        super(props);
+    }
+
+    createOL(options) {
+        return super.createOL(options);
+    }
+}
+
 class LayerFactory {
     constructor() {
         this.layerClasses={};
@@ -689,6 +699,10 @@ class AvnavChartSource extends ChartSourceBase{
             }
             await layerCreator.prepare(layerConfig);
             const olLayer=layerCreator.createOL(layerConfig);
+            if (this.chartEntry[CHARTAV.OPACITY] && olLayer && olLayer.setOpacity){
+                const opacity=parseFloat(this.chartEntry[CHARTAV.OPACITY]);
+                olLayer.setOpacity(opacity);
+            }
             setav(olLayer,{
                 chartSource: this,
                 isBase: this.isBaseChart()
