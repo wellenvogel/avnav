@@ -1,6 +1,6 @@
 //avnav (C) wellenvogel 2019
 
-import React, {Component, createRef, useCallback, useContext, useEffect, useRef} from 'react';
+import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
@@ -30,7 +30,7 @@ import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
-import LayoutHandler, {layoutLoader} from './util/layouthandler.js';
+import LayoutHandler from './util/layouthandler.js';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
@@ -53,10 +53,9 @@ import mapholder from "./map/mapholder";
 import 'drag-drop-touch';
 import {ConfirmDialog} from "./components/BasicDialogs";
 import PropTypes from "prop-types";
-import Helper from "./util/helper";
+import Helper, {avNavVersion} from "./util/helper";
 import {HistoryContext, useHistory} from "./components/HistoryProvider";
 import {RouteSyncDialog} from "./components/RouteInfoHelper";
-
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -247,26 +246,23 @@ class App extends React.Component {
         this.buttonSizer=null;
         this.serverVersion=globalStore.getData(keys.nav.gps.version); //maybe we should start with the compiled version
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
-        //make the android API available as avnav.android
         if (window.avnavAndroid) {
             base.log("android integration enabled");
             globalStore.storeData(keys.gui.global.onAndroid, true, true);
-            avnav.android = window.avnavAndroid;
             globalStore.storeData(keys.properties.routingServerError, false, true);
             globalStore.storeData(keys.properties.connectedMode, true, true);
-            avnav.version = avnav.android.getVersion();
-            avnav.android.applicationStarted();
+            window.avnavAndroid.applicationStarted();
             const receiveAndroidEvent = (key, id) => {
                 try {
                     //inform the android part that we noticed the event
-                    avnav.android.acceptEvent(key, id);
+                    window.avnavAndroid.acceptEvent(key, id);
                 } catch (e) {
                 }
                 if (key == 'backPressed') {
                     if (! globalStore.getData(keys.gui.global.ignoreAndroidBack)) {
                         let currentPage = this.history.currentLocation()
                         if (currentPage == "mainpage") {
-                            avnav.android.goBack();
+                            window.avnavAndroid.goBack();
                             return;
                         }
                         this.history.pop();
@@ -282,7 +278,7 @@ class App extends React.Component {
                 }
                 AndroidEventHandler.handleEvent(key, id);
             };
-            avnav.android.receiveEvent = receiveAndroidEvent;
+            window.avnavAndroid.receiveEvent = receiveAndroidEvent;
             splitsupport.subscribe('android', (ev) => {
                 receiveAndroidEvent(ev.key, ev.param);
             })
@@ -459,7 +455,7 @@ class App extends React.Component {
     }
     newDeviceHandler(){
         try{
-            let devData=avnav.android.getAttachedDevice();
+            let devData=window.avnavAndroid.getAttachedDevice();
             if (! devData) return;
             let config=JSON.parse(devData);
             if (config.typeName && config.initialParameters){
@@ -542,7 +538,7 @@ class App extends React.Component {
     render(){
         if (this.state.error){
             LeaveHandler.stop();
-            let version=(window.avnav||{}).version;
+            let version=avNavVersion();
             let etext=`VERSION:${version}\nERROR:${lastError.error}\n${lastError.stack}\n${lastError.componentStack}`;
             let etextData='data:text/plain;charset=utf-8,'+encodeURIComponent(etext);
             return <div className="errorDisplay">
@@ -591,7 +587,7 @@ class App extends React.Component {
                 history={this.history}
                 nightMode={this.props.nightMode}
                 />
-            { ! (avnav.android || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
+            { ! (window.avnavAndroid || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
                 />:

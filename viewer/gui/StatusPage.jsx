@@ -317,12 +317,12 @@ class StatusPage extends React.Component{
                 {
                     name:'StatusAndroid',
                     visible: props.android,
-                    onClick:()=>{avnav.android.showSettings();}
+                    onClick:()=>{window.avnavAndroid.showSettings();}
                 },
                 {
                     name:'AndroidBrowser',
                     visible: props.android && this.state.addresses,
-                    onClick:()=>{avnav.android.launchBrowser();}
+                    onClick:()=>{window.avnavAndroid.launchBrowser();}
                 },
 
                 {

@@ -715,6 +715,14 @@ public class PluginManager extends DirectoryRequestHandler {
             }
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",rt));
         }
+        if ("pluginConfig".equals(command)){
+            String name=AvnUtil.getMandatoryParameter(uri,"name");
+            synchronized (createLock){
+                Plugin plugin=plugins.get(name);
+                if (plugin == null) throw new Exception("plugin "+name+ "not found");
+                return RequestHandler.getReturn(new AvnUtil.KeyValue("data",plugin.currentValues));
+            }
+        }
         return RequestHandler.getErrorReturn("command "+command+" not available");
     }
 

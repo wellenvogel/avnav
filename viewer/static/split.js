@@ -148,19 +148,12 @@
         }
     })
     if (window.avnavAndroid) {
-        if (!window.avnav) {
-            window.avnav = {};
-        }
-        if (! window.avnav.android){
-            window.avnav.android={
-                receiveEvent: (key,param)=>{
-                    msgAll( {
-                        type: 'android',
-                        key: key,
-                        param: param
-                    })
-                }
-            }
+        window.avnavAndroid.receiveEvent = (key, param) => {
+            msgAll({
+                type: 'android',
+                key: key,
+                param: param
+            })
         }
     }
     let finalTitle='AVNav-Web';

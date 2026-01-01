@@ -1,6 +1,6 @@
 /**
  * the api definition the can be used by user code
- * will be visible at window.avnav.api
+ * will be provided as the first parameter to the initializer function
  */
 
 import WidgetFactory from '../components/WidgetFactory.jsx';

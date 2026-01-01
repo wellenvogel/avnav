@@ -43,7 +43,6 @@ import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
 import Api from './util/api.js';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
-import AvNavVersion from './version.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
@@ -57,9 +56,7 @@ import {layoutLoader} from "./util/layouthandler";
 if (! window.avnav){
     window.avnav={};
 }
-
-window.avnav.api=Api;
-window.avnav.version=AvNavVersion;
+window.avnavLegacy=Api;
 
 
 function getParam(key)

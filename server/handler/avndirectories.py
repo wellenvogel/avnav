@@ -64,6 +64,9 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
       src=os.path.join(srcDir,fn)
       dest=os.path.join(self.baseDir,fn)
       if not os.path.exists(dest) and os.path.exists(src):
+        if fn == 'user.mjs' and os.path.exists(os.path.join(self.baseDir,'user.js')):
+            #only create a user.mjs if no user.js exists
+            continue
         AVNLog.info("copying template from %s to %s"%(src,dest))
         shutil.copyfile(src,dest)
     for jf in self.EMPTY_JSONS:

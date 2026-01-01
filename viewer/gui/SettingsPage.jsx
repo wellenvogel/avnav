@@ -409,7 +409,7 @@ const SettingsPage = (props) => {
                 onClick: () => {
                     confirmAbortOrDo(true).then(() => {
                         history.pop();
-                        avnav.android.showSettings();
+                        window.avnavAndroid.showSettings();
                     });
                 }
             },

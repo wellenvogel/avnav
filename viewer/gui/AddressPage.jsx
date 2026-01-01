@@ -33,7 +33,7 @@ class AddressPage extends React.Component{
             {
                 name:'AndroidBrowser',
                 visible: globalStore.getData(keys.gui.global.onAndroid),
-                onClick:()=>{avnav.android.launchBrowser();}
+                onClick:()=>{window.avnavAndroid.launchBrowser();}
             },
             Mob.mobDefinition(this.props.history),
             {

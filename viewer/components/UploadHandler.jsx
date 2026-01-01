@@ -177,20 +177,20 @@ const UploadHandler = (props) => {
             .then((res) => {
                 if (res) {
                     if (!props.local) {
-                        if (avnav.android){
+                        if (window.avnavAndroid) {
                             androidSequence.current = (new Date()).getTime();
                             const overwrite=(res.options||{}).overwrite;
-                            if (avnav.android.startFileUpload(res.type || props.type,res.name,!!overwrite,androidSequence.current)){
+                            if (window.avnavAndroid.startFileUpload(res.type || props.type,res.name,!!overwrite,androidSequence.current)){
                                 xhdrRef.current = {
                                     abort: () => {
-                                        avnav.android.interruptCopy(androidSequence.current);
+                                        window.avnavAndroid.interruptCopy(androidSequence.current);
                                     }
                                 };
                                 androidCopyParam.current = {
                                     name: res.name
                                 }
                                 let copyInfo = {
-                                    total: avnav.android.getFileSize(androidSequence.current),
+                                    total: window.avnavAndroid.getFileSize(androidSequence.current),
                                     loaded: 0,
                                     loadedPercent: true
                                 };

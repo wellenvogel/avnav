@@ -72,7 +72,6 @@ class DimmHandler{
             }
             if (!this.actionFunction) {
                 try {
-                    //we must use the original injection point here as window.avnav.android will be set later only
                     if (window.avnavAndroid && window.avnavAndroid.dimScreen) {
                         this.actionFunction = window.avnavAndroid.dimScreen.bind(window.avnavAndroid);
                     }

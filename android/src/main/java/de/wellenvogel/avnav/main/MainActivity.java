@@ -1093,7 +1093,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     public void sendEventToJs(String key, long id){
         AvnLog.i("js event key="+key+", id="+id);
         if (webView != null) {
-            webView.loadUrl("javascript:if (avnav && avnav.android) avnav.android.receiveEvent('" + key + "'," + id + ")");
+            webView.loadUrl("javascript:window.avnavAndroid.receiveEvent('" + key + "'," + id + ")");
         }
     }
 

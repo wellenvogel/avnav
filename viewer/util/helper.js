@@ -4,6 +4,7 @@
  */
 
 import compare from './compare';
+import Version from '../version';
 
 /**
  *
@@ -336,6 +337,11 @@ export const loadOrUpdateCss=(url,id)=>{
     document.head.appendChild(fileref);
     return true;
 }
+export const avNavVersion=()=>{
+    let version=Version;
+    if (window.avnavAndroid) version=window.avnavAndroid.getVersion();
+    return version;
+}
 
 
 Helper.concat=concat;
@@ -351,6 +357,7 @@ Helper.avitem=avitem;
 Helper.setav=setav;
 Helper.isset=isset;
 Helper.urlToString=urlToString;
+Helper.avNavVersion=avNavVersion;
 
 export default Helper;
 

@@ -165,7 +165,7 @@ const handleAndroidPost=(url,body)=>{
         //we need to build the full url here
         //as the navUrl could just be relative
         const fullUrl=new URL(url,window.location.href);
-        let res=JSON.parse(avnav.android.handleUpload(fullUrl.toString(), body));
+        let res=JSON.parse(window.avnavAndroid.handleUpload(fullUrl.toString(), body));
         if (res.status === 'OK'){
             resolve(res);
             return;
@@ -201,7 +201,7 @@ let RequestHandler={
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/json';
         let encodedBody=JSON.stringify(body);
-        if (avnav.android){
+        if (window.avnavAndroid){
             return handleAndroidPost(rurl,encodedBody)
         }
         requestOptions.body=encodedBody;
@@ -214,7 +214,7 @@ let RequestHandler={
         requestOptions.method='POST';
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/octet-string';
-        if (avnav.android){
+        if (window.avnavAndroid){
             return handleAndroidPost(rurl,body);
         }
         requestOptions.body=body;

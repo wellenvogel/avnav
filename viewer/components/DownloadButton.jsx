@@ -53,8 +53,8 @@ const DownloadButton=(props)=>{
             data=await data;
         }
         let dataUrl="data:application/octet-stream;base64,"+toBase64(data);
-        if (window.avnav.android && window.avnav.android.dataDownload){
-           window.avnav.android.dataDownload(dataUrl,fileName,"application/octet-stream");
+        if (window.avnavAndroid && window.avnavAndroid.dataDownload){
+           window.avnavAndroid.dataDownload(dataUrl,fileName,"application/octet-stream");
         }
         else {
             hiddenA.current.href = dataUrl;

@@ -258,8 +258,28 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     @param filename:
     @return:
     '''
-    PREFIX=("try{(\nfunction(){\nvar AVNAV_BASE_URL=\"%s\";\n"%urllib.parse.quote(baseUrl)).encode('utf-8')
-    SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n".encode('utf-8')
+    base=urllib.parse.quote(baseUrl)
+    PREFIX=(f'''
+    try{{
+    let handler = {{
+        get(target, key, descriptor) {{
+          if (key != 'avnav') return target[key];
+          return {{
+            api:target.avnavLegacy
+          }}
+        }}
+    }};
+    let proxyWindow = new Proxy(window, handler);
+    (function(window,avnav){{
+     let AVNAV_BASE_URL="{base}";
+    ''').encode('utf-8')
+
+    SUFFIX=(f'''
+    }}.bind(proxyWindow,proxyWindow).call(proxyWindow,{{api:window.avnavLegacy}}));
+    }}catch(e){{
+     window.avnavLegacy.showToast(e.message+"\\n"+(e.stack||e));
+     }}
+     ''').encode('utf-8')
     if not os.path.exists(filename):
       self.send_error(404,"File not found")
       return
