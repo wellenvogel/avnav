@@ -29,7 +29,6 @@ import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {
-    DEFAULT_OVERLAY_CHARTENTRY as item,
     DEFAULT_OVERLAY_CHARTENTRY,
     KNOWN_OVERLAY_EXTENSIONS
 } from "./EditOverlaysDialog";

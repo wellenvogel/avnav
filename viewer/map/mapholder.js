@@ -564,7 +564,9 @@ class MapHolder extends DrawingPositionConverter {
         if (!this.olmap) return;
         this._callHandlers({type: div ? EventTypes.SHOWMAP : EventTypes.HIDEMAP});
         let mapDiv = div || this.defaultDiv;
-        this.olmap.setTarget(mapDiv);
+        if (this.olmap.getTarget() !== mapDiv) {
+            this.olmap.setTarget(mapDiv);
+        }
         if (!this.timer && div) {
             this.timer = window.setInterval(() => {
                 this.timerFunction()
@@ -987,7 +989,15 @@ class MapHolder extends DrawingPositionConverter {
                 let olarray_in = oldlayers.getArray();
                 olarray = olarray_in.slice(0);
                 for (let i = 0; i < olarray.length; i++) {
-                    this.olmap.removeLayer(olarray[i]);
+                    const layer=olarray[i];
+                    if (layer && layer.dispose){
+                        try{
+                            layer.dispose();
+                        }catch (e){
+                            const debug=1;
+                        }
+                    }
+                    this.olmap.removeLayer(layer);
                 }
             }
             this.olmap.addLayer(this.getBaseLayer(hasBaseLayers));

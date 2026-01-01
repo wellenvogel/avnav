@@ -37,13 +37,14 @@ import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';
 import olTile from 'ol/src/Tile';
 import olTileState from 'ol/src/TileState';
+import {Source as olSource} from 'ol/source';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
 import CryptHandler from './crypthandler.js';
-
+import {MapLibreLayer} from "@geoblocks/ol-maplibre-layer";
 const NORMAL_TILE_SIZE=256;
 
 //we use a bit a dirty hack here:
@@ -552,8 +553,31 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ{
         super(props);
     }
 
+    getLayerTypes() {
+        return ["maplibreVector","maplibre"];
+    }
+
     createOL(options) {
-        return super.createOL(options);
+        const layerOptions=this.buildLayerOptions({url:options.styleUrl,...options});
+        const extent = this.bboxToOlExtent(options.boundingbox);
+        this.layer=new MapLibreLayer({
+            source: new olSource({
+                attributions: () => {
+                    return "dummy MapLibre";
+                },
+            }),
+            mapLibreOptions:{
+                style:layerOptions.layerUrl
+            }
+        })
+        setav(this.layer, {
+            isTileLayer: true,
+            minZoom: parseInt(options.minzoom || 1),
+            maxZoom: parseInt(options.maxzoom || 23) + layerOptions.upzoom,
+            //extent: extent,
+            zoomLayerBoundings: layerOptions.zoomLayerBoundings,
+        });
+        return this.layer;
     }
 }
 
@@ -580,6 +604,7 @@ layerFactory.register(new LayerConfigXYZ({}));
 layerFactory.register(new LayerConfigTMS({}));
 layerFactory.register(new LayerConfigWMS({}));
 layerFactory.register(new LayerConfigEncrypt({}));
+layerFactory.register(new LayerConfigMapLibreVector({}));
 
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {

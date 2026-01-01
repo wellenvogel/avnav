@@ -137,7 +137,7 @@ module.exports = (env, argv) => {
 
                 {
                     test: /.jsx$|.js$/,
-                    exclude: /version\.js$/,
+                    exclude: [/version\.js$/, /node_modules\/maplibre-gl/],
                     use: {
                         loader: 'babel-loader',
                         options:
