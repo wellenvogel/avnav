@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@braintree/browser-detection": "^2.0.0",
-    "@geoblocks/ol-maplibre-layer": "^1.0.3",
+    "@geoblocks/ol-maplibre-layer": "git+https://github.com/wellenvogel/ol-maplibre-layer.git#import103",
     "@openlayers/pepjs": "^0.5.4",
     "@zip.js/zip.js": "^2.8.8",
     "canvas-gauges": "git+https://github.com/wellenvogel/canvas-gauges#av20220223",
@@ -70,7 +70,7 @@
     "fullscreen-polyfill": "^1.0.4",
     "geodesy": "^2.4.0",
     "object-assign": "^4.1.1",
-    "ol": "6.15.1",
+    "ol": "10.7.0",
     "prismjs": "^1.29.0",
     "PubSub": "^4.0.0",
     "react": "^18.3.1",

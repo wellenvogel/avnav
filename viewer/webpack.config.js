@@ -160,7 +160,9 @@ module.exports = (env, argv) => {
                     }
 
                 },
-                { test: /\.tsx?$|\.ts$/, loader: 'ts-loader' },
+                {   test: /\.tsx?$|\.ts$/,
+                    exclude: /node_modules.*/,
+                    loader: 'ts-loader' },
 
                 {
                     test: /\.css$/,

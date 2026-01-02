@@ -35,8 +35,8 @@ import * as olTransforms  from 'ol/proj/transforms';
 import {Tile as olTileLayer} from 'ol/layer';
 import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';
-import olTile from 'ol/src/Tile';
-import olTileState from 'ol/src/TileState';
+import olTile from 'ol/Tile';
+import olTileState from 'ol/TileState';
 import {Source as olSource} from 'ol/source';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
@@ -175,7 +175,7 @@ class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
     constructor() {
         super(...arguments);
     }
-    drawTileImage(tile, frameState, x, y, w, h, gutter, transition) {
+    drawTile(tile, frameState, x, y, w, h, gutter, transition) {
         const image = this.getTileImage(tile);
         if (!image) {
             return;
