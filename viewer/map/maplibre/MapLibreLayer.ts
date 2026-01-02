@@ -31,9 +31,10 @@ export type MapLibreLayerOptions = LayerOptions & {
 export default class MapLibreLayer extends Layer {
   mapLibreMap?: MapLibreMap;
 
-  loaded: boolean = false;
 
   private olListenersKeys: EventsKey[] = [];
+  private visibleChange: EventsKey=undefined;
+  private sizeChange: EventsKey=undefined;
 
   constructor(options: MapLibreLayerOptions) {
     super({
@@ -47,50 +48,31 @@ export default class MapLibreLayer extends Layer {
   }
 
   override disposeInternal() {
-    unByKey(this.olListenersKeys);
-    this.loaded = false;
+      unByKey(this.visibleChange);
+      unByKey(this.sizeChange);
+      unByKey(this.olListenersKeys);
     if (this.mapLibreMap) {
       // Some asynchronous repaints are triggered even if the MapLibreMap has been removed,
       // to avoid display of errors we set an empty function.
       this.mapLibreMap.triggerRepaint = () => {};
       this.mapLibreMap.remove();
+      this.mapLibreMap = undefined;
     }
     super.disposeInternal();
   }
 
   override setMapInternal(map: Map) {
     super.setMapInternal(map);
-    if (map) {
-      this.loadMapLibreMap();
+    if (map && ! this.mapLibreMap) {
+      this.loadMapLibreMap(map);
     } else {
       // TODO: I'm not sure if it's the right call
       this.dispose();
     }
   }
 
-  private loadMapLibreMap() {
-    this.disposeInternal(); //xyz
+  private loadMapLibreMap(map:Map) {
     console.log("loading maplibre");
-    this.loaded = false;
-    const map = this.getMapInternal();
-    if (map) {
-      this.olListenersKeys.push(
-        map.on('change:target', this.loadMapLibreMap.bind(this)),
-      );
-    }
-
-    if (!map?.getTargetElement()) {
-      return;
-    }
-
-    if (!this.getVisible()) {
-      // On next change of visibility we load the map
-      this.olListenersKeys.push(
-        this.once('change:visible', this.loadMapLibreMap.bind(this)),
-      );
-      return;
-    }
-
     const container = document.createElement('div');
     container.setAttribute('id', 'mapLibreMapXXX');
     container.style.position = 'absolute';
@@ -113,8 +95,11 @@ export default class MapLibreLayer extends Layer {
     });
 
     this.mapLibreMap.once('load', () => {
-      this.loaded = true;
       this.dispatchEvent(new BaseEvent('load'));
+    });
+    this.sizeChange=map.on('change:size', () => {
+        console.log("maplibre layer resize");
+        this.mapLibreMap.resize();
     });
   }
 
