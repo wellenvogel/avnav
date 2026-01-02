@@ -3,7 +3,7 @@
  * 2d context drawing functions
  * as all the ol3 stuff is hard to use or broken...
  */
-
+import {apply as olapply} from "ol/transform";
 
 
 /**
@@ -82,6 +82,8 @@ export const Drawing=function(converter,opt_useHdpi){
      * @type {*|boolean}
      */
     this.useHdpi=opt_useHdpi||false;
+
+    this.pixelTransform=undefined;
 
 };
 
@@ -163,7 +165,7 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     if (opt_options.rotation) {
         angle = opt_options.rotation;
     }
-    if (opt_options.rotateWithView) angle+=this.rotation;
+    if (!opt_options.rotateWithView) angle-=this.rotation;
     if (angle) context.rotate(angle);
     if (opt_options.background || opt_options.backgroundCircle){
         context.beginPath();
@@ -384,16 +386,15 @@ Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
         if (opt_styles.fixY !== undefined) {
             dp[1]=opt_styles.fixY*this.devPixelRatio;
         }
-        if (opt_styles.offsetX) offset[0]=opt_styles.offsetX;
-        if (opt_styles.offsetY) offset[1]=opt_styles.offsetY;
+        if (opt_styles.offsetX) offset[0]=opt_styles.offsetX *this.devPixelRatio;
+        if (opt_styles.offsetY) offset[1]=opt_styles.offsetY *this.devPixelRatio;
     }
-    offset=this.pixelToDevice(offset);
     this.context.textAlign = opt_styles.align || 'center';
     this.context.textBaseline = opt_styles.baseline || 'middle';
     if (this.rotation && noRotate){
         this.context.save();
         this.context.translate(dp[0],dp[1]);
-        this.context.rotate(0);
+        this.context.rotate(-this.rotation);
         if (doStroke) this.context.strokeText(text,offset[0],offset[1]);
         if (doFill) this.context.fillText(text,offset[0],offset[1]);
         this.context.restore();
@@ -445,6 +446,9 @@ Drawing.prototype.pointToCssPixel=function(coord) {
  * @returns {olCoordinate}
  */
 Drawing.prototype.pixelToDevice=function(pixel) {
+    if (this.pixelTransform){
+        return olapply(this.pixelTransform,pixel.slice());
+    }
     let rt=[];
     rt[0]=pixel[0]*this.devPixelRatio;
     rt[1]=pixel[1]*this.devPixelRatio;
@@ -459,6 +463,10 @@ Drawing.prototype.pixelToDevice=function(pixel) {
 Drawing.prototype.setDevPixelRatio=function(ratio){
     this.devPixelRatio=ratio;
 };
+
+Drawing.prototype.setPixelTransform=function(pixelTransform) {
+    this.pixelTransform=pixelTransform;
+}
 
 /**
  * set the context

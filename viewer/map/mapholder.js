@@ -54,6 +54,7 @@ import {
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
 import {avitem, getav, setav} from "../util/helper";
+import {apply as olapply} from "ol/transform";
 
 
 export const EventTypes = {
@@ -1555,8 +1556,10 @@ class MapHolder extends DrawingPositionConverter {
         let rot = rotation == 0 ? 0 : (360 - rotation) * Math.PI / 180;
         let maprot = view.getRotation();
         let delta = rot - maprot;
-        //console.log("rot",rot,"maprot",maprot,"delta",delta);
-        view.adjustRotation(delta, this.transformToMap(opt_anchor !== undefined ? opt_anchor : this.referencePoint));
+        if (delta !== 0) {
+            //console.log("rot",rot,"maprot",maprot,"delta",delta);
+            view.adjustRotation(delta, this.transformToMap(opt_anchor !== undefined ? opt_anchor : this.referencePoint));
+        }
     }
 
     moveCenterPercentKey(deltax, deltay) {
@@ -1820,6 +1823,7 @@ class MapHolder extends DrawingPositionConverter {
         this.lastRender = (new Date()).getTime();
         this.drawing.setContext(evt.context);
         this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
+        this.drawing.setPixelTransform(evt.inversePixelTransform);
         this.drawing.setRotation(evt.frameState.viewState.rotation);
         let rt = new navobjects.Point();
         rt.fromCoord(this.pointFromMap(evt.frameState.viewState.center));
@@ -1834,7 +1838,6 @@ class MapHolder extends DrawingPositionConverter {
         this.drawing.setContext(this.userLayerContext.context);
         this.userLayer.onPostCompose(evt.frameState.viewState.center, this.drawing);
         evt.context.drawImage(this.userLayerContext.context.canvas, 0, 0, this.userLayerContext.width, this.userLayerContext.height);
-
     }
     /**
      * tell the map that it's size has changed
