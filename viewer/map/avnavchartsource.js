@@ -44,7 +44,7 @@ import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase, injectBaseUrl} from "../util/itemFunctions";
 import CryptHandler from './crypthandler.js';
-import {MapLibreLayer} from "@geoblocks/ol-maplibre-layer";
+import MapLibreLayer from "./maplibre/MapLibreLayer";
 const NORMAL_TILE_SIZE=256;
 
 //we use a bit a dirty hack here:

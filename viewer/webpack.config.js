@@ -93,6 +93,22 @@ module.exports = (env, argv) => {
         })
     ];
 
+    var babelOptions={
+        presets: ['@babel/preset-react', ["@babel/preset-env",
+            {
+                useBuiltIns: false,
+                //debug: true
+            },
+        ]],
+        plugins: [
+            ["prismjs", {
+                "languages": ["javascript", "css", "markup", "json"],
+                "plugins": ["line-numbers"],
+                "theme": "default",
+                "css": false
+            }]
+        ]
+    };
 //console.log(process.env);
 
     var config = {
@@ -140,29 +156,22 @@ module.exports = (env, argv) => {
                     exclude: [/version\.js$/, /node_modules\/maplibre-gl/],
                     use: {
                         loader: 'babel-loader',
-                        options:
-                            {
-                                presets: ['@babel/preset-react', ["@babel/preset-env",
-                                    {
-                                        useBuiltIns: false,
-                                        //debug: true
-                                    },
-                                ]],
-                                plugins: [
-                                    ["prismjs", {
-                                        "languages": ["javascript", "css", "markup", "json"],
-                                        "plugins": ["line-numbers"],
-                                        "theme": "default",
-                                        "css": false
-                                    }]
-                                ]
-                            }
+                        options: babelOptions,
+
                     }
 
                 },
                 {   test: /\.tsx?$|\.ts$/,
-                    exclude: /node_modules.*/,
-                    loader: 'ts-loader' },
+                    //include: path.resolve(__dirname + "/map/maplibre"),
+                    exclude: /node_modules/,
+                    use: [
+                        {
+                            loader: 'babel-loader',
+                            options: babelOptions
+                        },
+                        'ts-loader'
+                        ]
+                },
 
                 {
                     test: /\.css$/,
