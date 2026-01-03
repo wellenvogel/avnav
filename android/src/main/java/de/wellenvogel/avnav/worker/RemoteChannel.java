@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_REMOTE;
+
 import android.net.Uri;
 
 import org.json.JSONArray;
@@ -15,6 +17,7 @@ import de.wellenvogel.avnav.appapi.IWebSocket;
 import de.wellenvogel.avnav.appapi.IWebSocketHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -28,8 +31,8 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
 
     private static String channelFromWs(IWebSocket socket){
         String url=socket.getUrl();
-        if (! url.startsWith("/"+ RequestHandler.TYPE_REMOTE)) return null;
-        url=url.substring(RequestHandler.TYPE_REMOTE.length()+2);
+        if (! url.startsWith("/"+ TYPE_REMOTE)) return null;
+        url=url.substring(TYPE_REMOTE.length()+2);
         url=url.replaceAll("[^0-9]*","");
         if (url.isEmpty()) return null;
         return url;
@@ -164,5 +167,10 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     @Override
     public String getPrefix() {
         return null;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_REMOTE;
     }
 }

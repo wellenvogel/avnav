@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.appapi;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_ADDON;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -308,6 +310,11 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
     @Override
     public String getPrefix() {
         return PREFIX;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_ADDON;
     }
 
 

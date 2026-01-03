@@ -64,9 +64,11 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
-import static de.wellenvogel.avnav.appapi.RequestHandler.TYPE_PLUGINS;
-import static de.wellenvogel.avnav.appapi.RequestHandler.TYPE_ROUTE;
-import static de.wellenvogel.avnav.appapi.RequestHandler.TYPE_TRACK;
+import static de.wellenvogel.avnav.main.Constants.TYPE_CONFIG;
+import static de.wellenvogel.avnav.main.Constants.TYPE_PLUGINS;
+import static de.wellenvogel.avnav.main.Constants.TYPE_PROXY;
+import static de.wellenvogel.avnav.main.Constants.TYPE_ROUTE;
+import static de.wellenvogel.avnav.main.Constants.TYPE_TRACK;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsEnabled;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkGpsPermission;
 
@@ -336,6 +338,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return null;
     }
 
+    @Override
+    public String getType() {
+        return TYPE_CONFIG;
+    }
+
     public RequestHandler getRequestHandler() {
         return requestHandler;
     }
@@ -556,8 +563,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
     };
 
+    private static final WorkerConfig WPROXY=new WorkerConfig("Proxy",10) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new Proxy(TYPE_PROXY,ctx);
+        }
+    };
 
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE ,WPLUGINS,WOCHARTS};
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE ,WPLUGINS,WOCHARTS,WPROXY};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -753,11 +766,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         RequestHandler r=getRequestHandler();
         if (r == null) return null;
         return r.getPluginAwareHandler(type);
-    }
-
-    public PluginManager getPluginManager(){
-        IWorker rc=findWorkerById(WPLUGINS.id);
-        return (PluginManager) rc;
     }
 
     /**
@@ -960,10 +968,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         AvnLog.i(LOGPRFX,"service handleStartup, watchdog="+isWatchdog);
         avnavVersion=prefs.getInt(Constants.VERSION,0);
         allowAllPlugins=prefs.getBoolean(Constants.ALLOW_PLUGINS,true);
-        if (! isWatchdog || requestHandler == null){
-            if (requestHandler != null) requestHandler.stop();
-            requestHandler=new RequestHandler(this);
-        }
         if (! isWatchdog || internalWorkers.size() == 0) {
             for (WorkerConfig cfg : INTERNAL_WORKERS){
                 try {
@@ -979,7 +983,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                             AvnLog.e("error parsing decoder parameters",e);
                         }
                     }
-                    worker.start(null);
                     internalWorkers.add(worker);
                 } catch (Throwable t) {
                     AvnLog.e("unable to create worker "+cfg.typeName,t);
@@ -1000,7 +1003,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                         worker.setId(getNextWorkerId());
                         try {
                             worker.setParameters(null, config, true,false);
-                            worker.start(null);
                         }catch (Throwable t){
                             worker.setStatus(WorkerStatus.Status.ERROR,"unable to set parameters: "+t.getMessage());
                         }
@@ -1011,6 +1013,26 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 }
             } catch (Throwable t) {
                 AvnLog.e("unable to create channels", t);
+            }
+        }
+        if (! isWatchdog || requestHandler == null){
+            if (requestHandler != null) requestHandler.stop();
+            requestHandler=new RequestHandler(this);
+        }
+        for (IWorker w: internalWorkers){
+            try {
+                w.start(null);
+            }catch (Throwable t){
+                AvnLog.e("unable to start handler "+w.getTypeName(),t);
+                w.setStatus(WorkerStatus.Status.ERROR,t.getMessage());
+            }
+        }
+        for (IWorker w: workers){
+            try {
+                w.start(null);
+            }catch (Throwable t){
+                AvnLog.e("unable to start handler "+w.getTypeName(),t);
+                w.setStatus(WorkerStatus.Status.ERROR,t.getMessage());
             }
         }
         AvnLog.i(LOGPRFX,"Service handleStartup done");
@@ -1713,10 +1735,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         return rt;
     }
-    private List<List<IWorker>> getAllWorkers(){
-        List<List<IWorker>> rt=new ArrayList<List<IWorker>>();
-        rt.add(workers);
-        rt.add(internalWorkers);
+    public synchronized List<IWorker> getAllWorkers(){
+        List<IWorker> rt=new ArrayList<IWorker>();
+        rt.addAll(workers);
+        rt.addAll(internalWorkers);
         return rt;
     }
     private void handlePluginMessage(String name, Intent intent){

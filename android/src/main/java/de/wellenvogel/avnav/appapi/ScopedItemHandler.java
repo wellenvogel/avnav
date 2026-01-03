@@ -85,7 +85,7 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
         }
     }
 
-    String getType(){
+    public String getType(){
         return type;
     }
 

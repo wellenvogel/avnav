@@ -50,6 +50,8 @@ public class Constants {
     public static final String USERPREFIX="user.";
     public static final String SYSTEMPREFIX="system.";
     public static final String PLUGINPREFIX="plugin.";
+    public static final String TYPE_PLUGINS="plugins";
+    public static final String TYPE_PROXY="proxy";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{
@@ -101,4 +103,18 @@ public class Constants {
     public static final String JS_REMOTE_MESSAGE="remoteMessage";
     public static final String JS_REMOTE_CLOSE="channelClose";
 
+    //file types from the js side
+    public static String TYPE_ROUTE="route";
+    public static String TYPE_LAYOUT="layout";
+    public static String TYPE_SETTINGS="settings";
+    public static String TYPE_CHART="chart";
+    public static String TYPE_TRACK="track";
+    public static String TYPE_USER="user";
+    public static String TYPE_IMAGE="images";
+    public static String TYPE_OVERLAY="overlay";
+    public static String TYPE_ICONS="icons";
+    public static String TYPE_ADDON="addon";
+    public static String TYPE_CONFIG="config";
+    public static String TYPE_REMOTE="remotechannels";
+    public static String TYPE_DECODER="decoder";
 }

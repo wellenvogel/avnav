@@ -44,6 +44,7 @@ import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
+import static de.wellenvogel.avnav.main.Constants.TYPE_CHART;
 
 
 public class ChartHandler extends RequestHandler.NavRequestHandlerBase implements IPluginAware {
@@ -809,6 +810,11 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
     @Override
     public String getPrefix() {
         return CHARTPREFIX;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_CHART;
     }
 
     public static File getInternalChartsDir(Context ctx){

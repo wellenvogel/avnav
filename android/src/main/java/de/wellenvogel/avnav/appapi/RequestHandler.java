@@ -23,17 +23,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.charts.ChartHandler;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.Alarm;
 import de.wellenvogel.avnav.worker.GpsService;
-import de.wellenvogel.avnav.worker.PluginManager;
-import de.wellenvogel.avnav.worker.RouteHandler;
+import de.wellenvogel.avnav.worker.IWorker;
 
 /**
  * Created by andreas on 22.11.15.
@@ -61,48 +62,32 @@ public class RequestHandler {
     private SettingsHandler settingsHandler;
     private AddonHandler addonHandler;
 
-    //file types from the js side
-    public static String TYPE_ROUTE="route";
-    public static String TYPE_LAYOUT="layout";
-    public static String TYPE_SETTINGS="settings";
-    public static String TYPE_CHART="chart";
-    public static String TYPE_TRACK="track";
-    public static String TYPE_USER="user";
-    public static String TYPE_IMAGE="images";
-    public static String TYPE_OVERLAY="overlay";
-    public static String TYPE_ICONS="icons";
-    public static String TYPE_ADDON="addon";
-    public static String TYPE_CONFIG="config";
-    public static String TYPE_REMOTE="remotechannels";
-    public static String TYPE_DECODER="decoder";
-    public static final String TYPE_PLUGINS="plugins";
-
 
     static final String LOGPRFX="AvNav:requestHandler";
 
 
     public static AvnUtil.ItemMap<Integer> typeHeadings= new AvnUtil.ItemMap<>(
-            new AvnUtil.KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
-            new AvnUtil.KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
-            new AvnUtil.KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
-            new AvnUtil.KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
-            new AvnUtil.KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
-            new AvnUtil.KeyValue<Integer>(TYPE_SETTINGS,R.string.uploadSettings),
-            new AvnUtil.KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
-            new AvnUtil.KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_ROUTE, R.string.uploadRoute),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_CHART,R.string.uploadChart),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_IMAGE,R.string.uploadImage),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_USER,R.string.uploadUser),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_LAYOUT,R.string.uploadLayout),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_SETTINGS,R.string.uploadSettings),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_OVERLAY,R.string.uploadOverlay),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_TRACK,R.string.uploadTrack)
     );
 
     //directories below workdir
     public static AvnUtil.ItemMap<File> typeDirs= new AvnUtil.ItemMap<>(
-            new AvnUtil.KeyValue<File>(TYPE_ROUTE,new File("routes")),
-            new AvnUtil.KeyValue<File>(TYPE_CHART,new File("charts")),
-            new AvnUtil.KeyValue<File>(TYPE_TRACK,new File("tracks")),
-            new AvnUtil.KeyValue<File>(TYPE_LAYOUT,new File("layout")),
-            new AvnUtil.KeyValue<File>(TYPE_SETTINGS,new File("settings")),
-            new AvnUtil.KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
-            new AvnUtil.KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
-            new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays")),
-            new AvnUtil.KeyValue<File>(TYPE_PLUGINS,new File("plugins"))
+            new AvnUtil.KeyValue<File>(Constants.TYPE_ROUTE,new File("routes")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_CHART,new File("charts")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_TRACK,new File("tracks")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_LAYOUT,new File("layout")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_SETTINGS,new File("settings")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_USER,new File(new File("user"),"viewer")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_IMAGE,new File(new File("user"),"images")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_OVERLAY,new File("overlays")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_PLUGINS,new File("plugins"))
 
     );
 
@@ -197,136 +182,70 @@ public class RequestHandler {
         return chartHandler;
     }
 
+    private void addHandler(INavRequestHandler handler){
+        handlerMap.put(handler.getType(), new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return handler;
+            }
+        });
+    }
+
     public RequestHandler(GpsService service){
         AvnLog.i(LOGPRFX,"Construct");
         this.service = service;
+        addHandler(this.service);
         this.chartHandler =new ChartHandler(service,this);
+        addHandler(chartHandler);
         this.addonHandler= new AddonHandler(service,this);
+        addHandler(addonHandler);
         layoutHandler=new LayoutHandler(service,  "viewer/layout",
-                new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
-        handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return layoutHandler;
-            }
-        });
+                new File(getWorkDir(),typeDirs.get(Constants.TYPE_LAYOUT).value.getPath()));
+        addHandler(layoutHandler);
         settingsHandler=new SettingsHandler(service,  "viewer/settings",
-                new File(getWorkDir(),typeDirs.get(TYPE_SETTINGS).value.getPath()));
-        handlerMap.put(TYPE_SETTINGS, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return settingsHandler;
-            }
-        });
-        handlerMap.put(TYPE_ROUTE, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return getRouteHandler();
-            }
-        });
-        handlerMap.put(TYPE_TRACK, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return getTrackWriter();
-            }
-        });
-        handlerMap.put(TYPE_CHART, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return chartHandler;
-            }
-        });
+                new File(getWorkDir(),typeDirs.get(Constants.TYPE_SETTINGS).value.getPath()));
+        addHandler(settingsHandler);
         try{
             final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,service,
                     addonHandler);
-            handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return userHandler;
-                }
-            });
+            addHandler(userHandler);
         }catch (Exception e){
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,service,
-                    getWorkDirFromType(TYPE_IMAGE), "user/images",null);
-            handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return imageHandler;
-                }
-            });
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(Constants.TYPE_IMAGE,service,
+                    getWorkDirFromType(Constants.TYPE_IMAGE), "user/images",null);
+            addHandler(imageHandler);
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,service,
-                    getWorkDirFromType(TYPE_OVERLAY), "user/overlays",null);
-            handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return overlayHandler;
-                }
-            });
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(Constants.TYPE_OVERLAY,service,
+                    getWorkDirFromType(Constants.TYPE_OVERLAY), "user/overlays",null);
+            addHandler(overlayHandler);
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final IconRequestHandler iconHandler=new IconRequestHandler(TYPE_ICONS,service,
+            final IconRequestHandler iconHandler=new IconRequestHandler(Constants.TYPE_ICONS,service,
                      "viewer/icons");
-            handlerMap.put(TYPE_ICONS, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return iconHandler;
-                }
-            });
+            addHandler(iconHandler);
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
-        handlerMap.put(TYPE_ADDON, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return addonHandler;
+        List<IWorker> workers=service.getAllWorkers();
+        for (IWorker w:workers){
+            if (w instanceof INavRequestHandler){
+                INavRequestHandler handler=(INavRequestHandler)w;
+                handlerMap.put(handler.getType(), new LazyHandlerAccess() {
+                    @Override
+                    public INavRequestHandler getHandler() {
+                        return handler;
+                    }
+                });
             }
-        });
-        handlerMap.put(TYPE_CONFIG, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return getGpsService();
-            }
-        });
-        handlerMap.put(TYPE_REMOTE, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                GpsService s=getGpsService();
-                if (s != null) return s.getRemoteChannel();
-                return null;
-            }
-        });
-        handlerMap.put(TYPE_DECODER, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                GpsService s=getGpsService();
-                if (s != null) return s.getDecoder();
-                return null;
-            }
-        });
-        handlerMap.put(TYPE_PLUGINS, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                GpsService s=getGpsService();
-                if (s != null) return s.getPluginManager();
-                return null;
-            }
-        });
+        }
         AvnLog.i(LOGPRFX,"Construct done");
-    }
-
-    private INavRequestHandler getTrackWriter() {
-        GpsService gps=getGpsService();
-        if (gps == null) return null;
-        return gps.getTrackWriter();
     }
 
     INavRequestHandler getHandler(String type){
@@ -341,12 +260,6 @@ public class RequestHandler {
             return (IPluginAware) h;
         }catch (Exception ignored){}
         return null;
-    }
-
-    RouteHandler getRouteHandler(){
-        GpsService service=getGpsService();
-        if (service == null) return null;
-        return service.getRouteHandler();
     }
 
     protected File getWorkDir(){
@@ -470,7 +383,7 @@ public class RequestHandler {
     IWebSocketHandler getWebSocketHandler(String path){
         //for now limited to one handler
         //can be extended with the same pattern like for normal handlers
-        if (path.startsWith("/"+TYPE_REMOTE)){
+        if (path.startsWith("/"+ Constants.TYPE_REMOTE)){
             GpsService service=getGpsService();
             if (service != null) return service.getRemoteChannel();
             return null;
@@ -564,17 +477,17 @@ public class RequestHandler {
         RType rt=new RType(tc.type,tc.command);
         if (! "api".equals(request)) {
             if (Arrays.asList(new String[]{null, "gps", "self"}).contains(request)) {
-                rt.type = TYPE_DECODER;
+                rt.type = Constants.TYPE_DECODER;
                 rt.command = "gps";
                 return rt;
             }
             if (Arrays.asList(new String[]{"ais", "nmeaStatus"}).contains(request)) {
-                rt.type = TYPE_DECODER;
+                rt.type = Constants.TYPE_DECODER;
                 rt.command = request;
                 return rt;
             }
             if (Arrays.asList(new String[]{"status", "loglevel", "currentLogLevel"}).contains(request)) {
-                rt.type = TYPE_CONFIG;
+                rt.type = Constants.TYPE_CONFIG;
                 rt.command = request;
                 return rt;
             }

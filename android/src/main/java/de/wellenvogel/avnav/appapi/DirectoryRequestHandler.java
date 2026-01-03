@@ -274,6 +274,11 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return urlPrefix;
     }
 
+    @Override
+    public String getType() {
+        return type;
+    }
+
     public static String TMP_PRFX="__avn.";
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");

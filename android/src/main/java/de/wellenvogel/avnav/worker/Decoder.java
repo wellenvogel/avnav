@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_DECODER;
+
 import android.location.Location;
 import android.net.Uri;
 import android.os.SystemClock;
@@ -240,6 +242,11 @@ public class Decoder extends Worker  implements INavRequestHandler {
     @Override
     public String getPrefix() {
         return null;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_DECODER;
     }
 
     private static class NmeaEntry {

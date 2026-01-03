@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.appapi;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_ICONS;
+
 import android.content.Context;
 import android.net.Uri;
 
@@ -127,6 +129,11 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     @Override
     public String getPrefix() {
         return urlPrefix;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_ICONS;
     }
 
 

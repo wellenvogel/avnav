@@ -10,12 +10,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.worker.GpsService;
 
@@ -72,7 +72,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         }
     };
     public UserDirectoryRequestHandler(RequestHandler handler, GpsService ctx,IDeleteByUrl deleter) throws Exception {
-        super(RequestHandler.TYPE_USER, ctx,handler.getWorkDirFromType(RequestHandler.TYPE_USER), "user/viewer", deleter);
+        super(Constants.TYPE_USER, ctx,handler.getWorkDirFromType(Constants.TYPE_USER), "user/viewer", deleter);
         AssetManager assets=handler.service.getAssets();
         for (String filename : templateFiles){
             File file=new File(workDir,filename);

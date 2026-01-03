@@ -9,6 +9,7 @@ import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
 import de.wellenvogel.avnav.main.R;
@@ -257,7 +258,7 @@ public class TrackWriter extends DirectoryRequestHandler {
     }
 
     TrackWriter(File trackdir,GpsService ctx) throws IOException {
-        super(RequestHandler.TYPE_TRACK,ctx,trackdir,"track",null);
+        super(Constants.TYPE_TRACK,ctx,trackdir,"track",null);
         this.trackdir=trackdir;
         this.updater=ctx.getMediaUpdater();
         parameterDescriptions.addParams(ENABLED_PARAMETER,PARAM_INTERVAL,PARAM_DISTANCE,PARAM_MINTIME,PARAM_LENGTH);

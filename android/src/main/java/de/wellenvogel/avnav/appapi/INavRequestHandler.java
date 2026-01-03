@@ -74,4 +74,10 @@ public interface INavRequestHandler {
      * @return
      */
     String getPrefix();
+
+    /**
+     * get the type for API requests
+     * @return
+     */
+    String getType();
 }

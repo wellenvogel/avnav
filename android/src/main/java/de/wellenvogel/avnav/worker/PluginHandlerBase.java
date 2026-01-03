@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.wellenvogel.avnav.appapi.IPluginAware;
-import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.charts.Chart;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -71,13 +70,13 @@ public abstract class PluginHandlerBase {
     }
     void onDelete(){
         onStop(true);
-        IPluginAware chartHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_CHART);
+        IPluginAware chartHandler = gpsService.getPluginAwareHandler(Constants.TYPE_CHART);
         if (chartHandler != null) {
             chartHandler.removePluginItems(getKey(),true);
         }
     }
     void unregisterCharts(boolean reset) {
-        IPluginAware chartHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_CHART);
+        IPluginAware chartHandler = gpsService.getPluginAwareHandler(Constants.TYPE_CHART);
         if (chartHandler != null) {
             chartHandler.removePluginItems(getKey(),false);
         }
@@ -85,7 +84,7 @@ public abstract class PluginHandlerBase {
         if (status != null) status.unsetChildStatus(C_CHARTS);
     }
     void unregisterAddons(boolean reset){
-        IPluginAware addonHandler=gpsService.getPluginAwareHandler(RequestHandler.TYPE_ADDON);
+        IPluginAware addonHandler=gpsService.getPluginAwareHandler(Constants.TYPE_ADDON);
         if (addonHandler != null){
             addonHandler.removePluginItems(getKey(),false);
         }
@@ -94,7 +93,7 @@ public abstract class PluginHandlerBase {
     }
     void unregisterLayouts(boolean reset){
         if (reset) this.layouts=null;
-        IPluginAware layoutHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_LAYOUT);
+        IPluginAware layoutHandler = gpsService.getPluginAwareHandler(Constants.TYPE_LAYOUT);
         if (layoutHandler != null) {
             try {
                 layoutHandler.removePluginItems(getKey(), false);
@@ -109,7 +108,7 @@ public abstract class PluginHandlerBase {
             unregisterCharts(true);
             return;
         }
-        IPluginAware chartHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_CHART);
+        IPluginAware chartHandler = gpsService.getPluginAwareHandler(Constants.TYPE_CHART);
         if (chartHandler == null) {
             if (status != null)status.unsetChildStatus(C_CHARTS);
             return;
@@ -148,7 +147,7 @@ public abstract class PluginHandlerBase {
             unregisterAddons(true);
             return;
         }
-        IPluginAware addonHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_ADDON);
+        IPluginAware addonHandler = gpsService.getPluginAwareHandler(Constants.TYPE_ADDON);
         if (addonHandler != null) {
             ArrayList<IPluginAware.PluginItem> addons = new ArrayList<>();
             for (int i = 0; i < addonsJson.length(); i++) {
@@ -181,7 +180,7 @@ public abstract class PluginHandlerBase {
             unregisterLayouts(false);
             return;
         }
-        IPluginAware layoutHandler = gpsService.getPluginAwareHandler(RequestHandler.TYPE_LAYOUT);
+        IPluginAware layoutHandler = gpsService.getPluginAwareHandler(Constants.TYPE_LAYOUT);
         if (layoutHandler != null){
             try {
                 layoutHandler.setPluginItems(getKey(),layouts);

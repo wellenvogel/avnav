@@ -230,7 +230,7 @@ public class PluginManager extends DirectoryRequestHandler {
             rt.put(IPluginHandler.IK_CHILD,name);
             rt.put(IPluginHandler.IK_ID,status.id);
             rt.put(IPluginHandler.IK_ACTIVE,enabled());
-            rt.put("type",RequestHandler.TYPE_PLUGINS);
+            rt.put("type", Constants.TYPE_PLUGINS);
             return rt;
         }
 
