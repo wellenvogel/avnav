@@ -560,21 +560,36 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ{
     createOL(options) {
         const layerOptions=this.buildLayerOptions({url:options.styleUrl,...options});
         const extent = this.bboxToOlExtent(options.boundingbox);
+        const mapLibreOptions={
+            style:layerOptions.layerUrl
+        }
+        if (options.useproxy){
+            mapLibreOptions.transformRequest=(url,resourceType)=>{
+                const completeUrl=new URL(url,window.location.href);
+                if (completeUrl.origin === window.location.origin){
+                    //unchanged
+                    return {
+                        url:url
+                    }
+                }
+                return {
+                    url: (new URL("/proxy/"+encodeURIComponent(url),window.location.href)).toString()
+                }
+            }
+        }
         this.layer=new MapLibreLayer({
             source: new olSource({
                 attributions: () => {
                     return "dummy MapLibre";
                 },
             }),
-            mapLibreOptions:{
-                style:layerOptions.layerUrl
-            }
+            mapLibreOptions:mapLibreOptions
         })
         setav(this.layer, {
             isTileLayer: true,
             minZoom: parseInt(options.minzoom || 1),
             maxZoom: parseInt(options.maxzoom || 23) + layerOptions.upzoom,
-            //extent: extent,
+            extent: extent,
             zoomLayerBoundings: layerOptions.zoomLayerBoundings,
         });
         return this.layer;
@@ -673,7 +688,12 @@ class AvnavChartSource extends ChartSourceBase{
         if (! node.tagName) return;
         for (let i=0;i<node.attributes.length;i++) {
             const attr=node.attributes.item(i);
-            rt[attr.name.toLowerCase()] = attr.value;
+            let v = attr.value;
+            if (v instanceof String) {
+                if (v.toLowerCase() === 'true') v=true;
+                else if (v.toLowerCase() === 'false') v=false;
+            }
+            rt[attr.name.toLowerCase()] = v;
         }
         const children={}
         Array.from(node.childNodes).forEach((child)=>{

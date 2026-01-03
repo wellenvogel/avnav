@@ -504,6 +504,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def handlePathRequest(self, path, requestparam, server=None,handler=None):
       if self.getPrefix() is None:
         raise Exception("Internal error: no handler prefix for %s"%path)
+      path=posixpath.normpath(path)
       if not path.startswith(self.getPrefix()+"/"):
         raise Exception("Internal routing error: handler prefix %s for %s" % (self.getPrefix(),path))
       path = path[len(self.getPrefix()) + 1:]

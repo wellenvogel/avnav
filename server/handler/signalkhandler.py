@@ -82,6 +82,7 @@ import hashlib
 import hmac
 import json
 import os
+import posixpath
 import re
 import sys
 import threading
@@ -1755,6 +1756,7 @@ class AVNSignalKHandler(AVNWorker):
       return self.PREFIX + "/" + self.CHARTPREFIX
 
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
+      path=posixpath.normpath(path)
       prefix = self.PREFIX + "/" + self.CHARTPREFIX
       if not path.startswith(prefix + "/"):
           raise Exception("unknown path %s" % path)

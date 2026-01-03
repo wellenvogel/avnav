@@ -254,12 +254,6 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     #pathmappings expect to have absolute pathes!
     return self.handlePathmapping(path)
 
-  @classmethod
-  def pathQueryFromUrl(cls,url):
-    (path, sep, query) = url.partition('?')
-    path = path.split('#', 1)[0]
-    path = posixpath.normpath(urllib.parse.unquote(path))
-    return (path,query)
 
   def tryExternalMappings(self,path,query,handler=None):
     requestParam=urllib.parse.parse_qs(query,True)
@@ -286,6 +280,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
 
   def getWebSocketsHandler(self,path,query,handler):
     requestParam=urllib.parse.parse_qs(query,True)
+    path=posixpath.normpath(path)
     for prefix in list(self.webSocketHandlers.keys()):
       if path.startswith(prefix) and not self.webSocketHandlers[prefix].isDisabled():
         # the external handler can either return a mapped path (already

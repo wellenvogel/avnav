@@ -71,7 +71,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     AVNLog.debug(format,*args)
 
   def allow_ws(self):
-    (path,query) = self.server.pathQueryFromUrl(self.path)
+    (path,query) = AVNUtil.pathQueryFromUrl(self.path)
     try:
       #handlers will either return
       #True if already done
@@ -204,7 +204,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
 
       """
       # abandon query parameters
-      (path,query) = self.server.pathQueryFromUrl(path)
+      (path,query) = AVNUtil.pathQueryFromUrl(path)
       try:
         #handlers will either return
         #True if already done
@@ -221,6 +221,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         return None
       if extPath is not None:
         return extPath
+      path=posixpath.normpath(path)
       trailing=self.server.isNavUrl(path)
       if trailing is not None:
         requestParam=urllib.parse.parse_qs(query,True)

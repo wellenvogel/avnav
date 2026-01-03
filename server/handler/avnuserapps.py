@@ -186,7 +186,7 @@ class AVNUserAppHandler(AVNWorker):
       return None
     if url.startswith("http"):
       return None
-    (path,query)=self.httpServer.pathQueryFromUrl(url)
+    (path,query)=AVNUtil.pathQueryFromUrl(url)
     filePath=self.httpServer.tryExternalMappings(path,query)
     if filePath is None or not os.path.exists(filePath):
       return None

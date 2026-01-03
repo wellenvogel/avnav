@@ -27,6 +27,7 @@
 import glob
 import io
 import itertools
+import posixpath
 import urllib.parse
 
 import ctypes
@@ -644,6 +645,13 @@ class AVNUtil(object):
     if rt == '.' or rt == '..':
       return ''
     return rt
+
+  @classmethod
+  def pathQueryFromUrl(cls, url):
+      (path, sep, query) = url.partition('?')
+      path = path.split('#', 1)[0]
+      path = urllib.parse.unquote(path)
+      return (path, query)
 
   @classmethod
   def getBool(cls,v,default=False):
