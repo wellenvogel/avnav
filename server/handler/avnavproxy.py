@@ -30,7 +30,7 @@ import urllib.parse
 
 import avnav_handlerList
 from avnav_util import AVNUtil, AVNLog
-from avnav_worker import AVNWorker
+from avnav_worker import AVNWorker, WorkerStatus
 from httphandler import AVNHTTPHandler
 
 
@@ -49,7 +49,20 @@ class AVNProxy(AVNWorker):
 
     @classmethod
     def getConfigParam(cls, child=None):
-        return [cls.ENABLE_PARAM_DESCRIPTION]
+        return []
+
+    @classmethod
+    def canEdit(cls):
+        return True
+
+    @classmethod
+    def canDisable(cls):
+        return True
+
+    def run(self):
+        self.setInfo('main','running',WorkerStatus.RUNNING)
+        while not self.shouldStop():
+            self.wait(30000)
 
     def getApiType(self):
         return self.ATYPE
