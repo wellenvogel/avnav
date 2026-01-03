@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -179,7 +180,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                             else url="viewer/"+url;
                             INavRequestHandler nrh = handler.getPrefixHandler(url);
                             try {
-                                ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler, "GET");
+                                ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler, "GET",new HashMap<>() );
                                 if (resp == null) {
                                     throw new Exception("not found");
                                 }
@@ -302,7 +303,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws FileNotFoundException {
         return null;
     }
 

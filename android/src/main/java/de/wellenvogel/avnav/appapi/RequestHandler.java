@@ -286,7 +286,7 @@ public class RequestHandler {
     }
 
     public ExtendedWebResourceResponse handleRequest(View view, String url) throws Exception {
-        return handleRequest(view,url,"GET");
+        return handleRequest(view,url,"GET", new HashMap<>());
     }
 
     /**
@@ -296,7 +296,7 @@ public class RequestHandler {
      * @return
      * @throws Exception
      */
-    public ExtendedWebResourceResponse handleRequest(View view, String url,String method) throws Exception {
+    public ExtendedWebResourceResponse handleRequest(View view, String url,String method,Map<String,String> headers) throws Exception {
         Uri uri=null;
         try {
             uri = Uri.parse(url);
@@ -310,7 +310,7 @@ public class RequestHandler {
                 if (path.startsWith(NAVURL) || path.startsWith(NAVURL_COMPAT)) {
                     return handleNavRequest(uri, null);
                 }
-                ExtendedWebResourceResponse rt = tryDirectRequest(uri, method);
+                ExtendedWebResourceResponse rt = tryDirectRequest(uri, method,headers);
                 if (rt != null) return rt;
                 if (path.startsWith("/")) path = path.substring(1);
                 InputStream is = (view != null) ? view.getContext().getAssets().open(path) : service.getAssets().open(path);
@@ -330,13 +330,13 @@ public class RequestHandler {
         }
     }
 
-    public ExtendedWebResourceResponse tryDirectRequest(Uri uri,String method) throws Exception {
+    public ExtendedWebResourceResponse tryDirectRequest(Uri uri,String method,Map<String,String>headers) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
         INavRequestHandler handler=getPrefixHandler(path);
         if (handler != null){
-            return handler.handleDirectRequest(uri,this, method);
+            return handler.handleDirectRequest(uri,this, method,headers );
         }
         return null;
     }

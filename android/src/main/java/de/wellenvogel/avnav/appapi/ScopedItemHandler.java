@@ -213,7 +213,7 @@ public class ScopedItemHandler implements INavRequestHandler,IPluginAware{
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws FileNotFoundException {
         return null;
     }
 

@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.util.Map;
 
 public interface INavRequestHandler {
 
@@ -61,13 +62,15 @@ public interface INavRequestHandler {
 
     /**
      * handle a direct request if our prefix matches
+     *
      * @param uri
      * @param handler
      * @param method
+     * @param headers
      * @return
      * @throws FileNotFoundException
      */
-    ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception;
+    ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception;
 
     /**
      * get the prefix string we handle

@@ -27,6 +27,16 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     long length;
     int statusCode=200;
     String reason="OK";
+
+    public boolean isProxy() {
+        return isProxy;
+    }
+
+    public void setProxy(boolean proxy) {
+        isProxy = proxy;
+    }
+
+    boolean isProxy=false;
     private HashMap<String,String> headers=new HashMap<String, String>();
     public ExtendedWebResourceResponse(long length, String mime, String encoding, InputStream is){
         super(mime,encoding,is);

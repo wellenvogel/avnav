@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -59,8 +60,10 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -73,7 +76,7 @@ import de.wellenvogel.avnav.worker.Worker;
 import de.wellenvogel.avnav.worker.WorkerStatus;
 
 public class WebServer extends Worker {
-
+    private static final String CATTR_PROXY="avnav.proxy";
     static final String NAME="AvNavWebServer";
     private final EditableParameter.StringParameter mdnsNameParameter;
     private final EditableParameter.BooleanParameter mdnsEnabledParameter;
@@ -306,6 +309,9 @@ public class WebServer extends Worker {
                     httpResponse.setHeader(k,resp.getHeaders().get(k));
                 }
                 httpResponse.setEntity(new FdKeepingEntity(resp));
+                if (resp.isProxy()){
+                    httpContext.setAttribute(CATTR_PROXY, Boolean.TRUE);
+                }
             }
             else {
                 AvnLog.d(NAME,"no data for "+url);
@@ -326,6 +332,13 @@ public class WebServer extends Worker {
             this.handler=handler;
             this.prefix=prefix;
         }
+        private Map<String,String> convertHeaders(Header[]headers){
+            HashMap<String,String> rt=new HashMap<>();
+            for (Header h:headers){
+                rt.put(h.getName(),h.getValue());
+            }
+            return rt;
+        }
         @Override
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
             AvnLog.d(NAME,"prefix request for "+prefix+request.getRequestLine());
@@ -339,7 +352,8 @@ public class WebServer extends Worker {
                 }
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
                 if (method.equals("GET") || method.equals("HEAD")) {
-                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri,method);
+                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri,method,
+                            convertHeaders(request.getAllHeaders()));
                     if (resp != null) {
                         for (String n : resp.getHeaders().keySet()){
                             response.setHeader(n,resp.getHeaders().get(n));
@@ -347,11 +361,10 @@ public class WebServer extends Worker {
                         response.setHeader("content-type", resp.getMimeType());
                         InputStream ris=resp.getData();
                         if (ris != null) {
-                            if (resp.getLength() < 0) {
-                                response.setEntity(streamToEntity(resp.getData()));
-                            } else {
-                                response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
-                            }
+                            response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
+                        }
+                        if (resp.isProxy()){
+                            context.setAttribute(CATTR_PROXY,Boolean.TRUE);
                         }
                     } else {
                         AvnLog.d(NAME, "no data for " + url);
@@ -502,7 +515,14 @@ public class WebServer extends Worker {
             httpContext = new BasicHttpContext();
             httpproc.addInterceptor(new ResponseDate());
             httpproc.addInterceptor(new ResponseServer());
-            httpproc.addInterceptor(new ResponseContent());
+            httpproc.addInterceptor(new ResponseContent(){
+                @Override
+                public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
+                    if (context.getAttribute(CATTR_PROXY) == null) {
+                        super.process(response, context);
+                    }
+                }
+            });
             httpproc.addInterceptor(new ResponseConnControl());
 
             httpService = new HttpService(httpproc,

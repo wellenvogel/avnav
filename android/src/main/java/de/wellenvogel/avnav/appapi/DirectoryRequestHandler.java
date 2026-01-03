@@ -21,11 +21,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
 
@@ -205,7 +205,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return handler.handleRequest(null,fallback);
     }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         String path = uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path = path.substring(1);

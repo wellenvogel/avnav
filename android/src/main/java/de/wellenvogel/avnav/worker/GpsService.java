@@ -329,7 +329,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         return null;
     }
 

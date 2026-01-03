@@ -14,6 +14,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -128,7 +129,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
                     "}"
     ).getBytes(StandardCharsets.UTF_8);
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
@@ -136,11 +137,11 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         path = path.substring((urlPrefix.length()+1));
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
-        if (parts.length > 1) return super.handleDirectRequest(uri, handler, method);
+        if (parts.length > 1) return super.handleDirectRequest(uri, handler, method, headers);
         String name= URLDecoder.decode(parts[0],"UTF-8");
-        if (!name.equals("user.js")) return super.handleDirectRequest(uri, handler, method);
+        if (!name.equals("user.js")) return super.handleDirectRequest(uri, handler, method, headers);
         File foundFile=new File(workDir,name);
-        if (! foundFile.exists()) return super.handleDirectRequest(uri, handler, method);
+        if (! foundFile.exists()) return super.handleDirectRequest(uri, handler, method, headers);
         String base="/"+urlPrefix;
         byte[] baseUrl=("var AVNAV_BASE_URL=\""+base+"\";\n").getBytes(StandardCharsets.UTF_8);
         JsStream out=new JsStream(foundFile,baseUrl);

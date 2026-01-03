@@ -61,6 +61,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
@@ -532,12 +533,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         nextDownload.fileName=fileName;
         startNextDownload(nextDownload,mimeType);
     }
-    private WebResourceResponse handleRequest(WebView view, String url, String method){
+    private WebResourceResponse handleRequest(WebView view, String url,String method, Map<String,String> headers){
         RequestHandler handler= getRequestHandler();
         WebResourceResponse rt=null;
         if (handler != null) {
             try {
-                rt = handler.handleRequest(view, url, method);
+                rt = handler.handleRequest(view, url, method,headers);
             }catch (RequestHandler.RequestException r){
                 AvnLog.e("web request for "+url+" failed",r);
                 if (Build.VERSION.SDK_INT >= 21){
@@ -597,7 +598,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 @Override
                 public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
                     AvnLog.i(LOGPRFX,"service worker load "+request.getUrl().toString());
-                    WebResourceResponse rt=handleRequest(null,request.getUrl().toString(),request.getMethod());
+                    WebResourceResponse rt=handleRequest(null,request.getUrl().toString(),request.getMethod(),request.getRequestHeaders());
                     if (rt != null) return rt;
                     return super.shouldInterceptRequest(request);
                 }
@@ -612,7 +613,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && (! "POST".equals(request.getMethod()))) {
-                    WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
+                    WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod(),request.getRequestHeaders());
                     if (rt != null) return rt;
                 }
                 return super.shouldInterceptRequest(view, request);
@@ -623,7 +624,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    WebResourceResponse rt = handleRequest(view, url, "GET");
+                    WebResourceResponse rt = handleRequest(view, url, "GET",new HashMap<>());
                     if (rt == null) return super.shouldInterceptRequest(view, url);
                     return rt;
                 }
@@ -692,7 +693,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         if (handler == null){
                             throw new Exception("no handler");
                         }
-                        ExtendedWebResourceResponse r=handler.handleRequest(null,url,"get");
+                        ExtendedWebResourceResponse r=handler.handleRequest(null,url,"get",new HashMap<>());
                         //TODO: separate dl handler
                         if (r == null){
                             throw new Exception("cannot handle "+url);
