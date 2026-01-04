@@ -35,6 +35,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.SocketFactory;
@@ -124,11 +125,10 @@ public class Proxy extends Worker implements INavRequestHandler {
 
     @Override
     public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        if (!isEnabled()) throw new Exception("proxy disabled");
-        return null;
+        throw new Exception("no api requests for proxy");
     }
 
-    ExtendedWebResourceResponse handleProxy(String url,String method,RequestHandler handler,Map<String,String> headers) throws IOException, HttpException, NoSuchAlgorithmException {
+    ExtendedWebResourceResponse handleProxy(String url,String method,Map<String,String> headers) throws IOException, HttpException, NoSuchAlgorithmException {
         HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
 
         HttpContext context = new BasicHttpContext(null);
@@ -208,7 +208,7 @@ public class Proxy extends Worker implements INavRequestHandler {
         if (!path.startsWith(getPrefix())) return null;
         path = path.substring((getPrefix().length() + 1));
         path= URLDecoder.decode(path, "UTF-8");
-        return handleProxy(path,method,handler,headers);
+        return handleProxy(path,method,headers);
     }
 
     @Override
@@ -223,6 +223,8 @@ public class Proxy extends Worker implements INavRequestHandler {
 
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
-
+        while (! shouldStop(startSequence)){
+            sleep(30000);
+        }
     }
 }
