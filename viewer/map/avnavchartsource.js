@@ -34,8 +34,6 @@ import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase} from "../util/itemFunctions";
 import CryptHandler from './crypthandler.js';
-import avlayer from "nlf/lib/module";
-
 
 
 class AvnavChartSource extends ChartSourceBase{
@@ -168,13 +166,43 @@ class AvnavChartSource extends ChartSourceBase{
             setav(olLayer,{
                 chartSource: this,
                 isBase: this.isBaseChart(),
-                creator:layerCreator
+                creator:layerCreator,
+                name:layerConfig.name||layerConfig.title||"layer"+lnum,
             })
             ll.push(olLayer);
+            lnum++;
         }
         return ll.reverse();
     }
 
+
+    featureListToInfo(allFeatures, pixel) {
+        const layerList={};
+        for (let featureConfig of allFeatures){
+            const layerName=avitem(featureConfig.layer,'name');
+            if (! layerName)continue;
+            if (! layerList[layerName]) layerList[layerName]=[];
+            layerList[layerName].push(featureConfig);
+        }
+        const collectedInfos=[];
+        for (let layerName in layerList){
+            const entries=layerList[layerName];
+            if (entries.length < 1) continue;
+            const creator=avitem(entries[0].layer,'creator');
+            if (! creator)continue;
+            const layerInfos=creator.featureListToInfo(entries,pixel,entries[0].layer,this)
+            if (! layerInfos) continue;
+            if (!Array.isArray(layerInfos)){
+                collectedInfos.push(layerInfos);
+            }
+            else{
+                layerInfos.forEach(layerInfo=>{
+                    collectedInfos.push(layerInfo);
+                })
+            }
+        }
+        return collectedInfos;
+    }
 
     featureToInfo(feature, pixel, layer,allFeatures) {
         const creator=avitem(layer,'creator');
@@ -259,7 +287,7 @@ class AvnavChartSource extends ChartSourceBase{
                 let url=layer.getSource().getTileUrlFunction()(tile);
                 let action=new Promise((aresolve,areject)=>{
                     const computeUrl=avLayerOptions.finalUrl;
-                    const layerName=(this.layers.length>1)?": "+(avLayerOptions.title||avlayer.name||'layer'+i):'';
+                    const layerName=(this.layers.length>1)?": "+(avLayerOptions.name):'';
                     let finalUrl=computeUrl?computeUrl(url):url;
                     Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
                         featureInfo:1,

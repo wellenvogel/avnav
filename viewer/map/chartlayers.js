@@ -257,7 +257,7 @@ class LayerConfig{
         })
         return olExtent.applyTransform(ext,olTransforms.get("EPSG:4326", "EPSG:3857"))
     }
-    featureToInfo(feature,pixel,layer,allFeatures,source){
+    featureListToInfo(allFeatures,pixel,layer,source){
     }
 
 }
@@ -669,13 +669,14 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ{
 
     //really very basic right now and focused on freenautricalcharts
     //most probably this needs to go to a separate formatter
-    featureToInfo(feature,pixel,layer,allFeatures,source) {
+    featureListToInfo(allFeatures,pixel,layer,source) {
         let rt = new ChartFeatureInfo({
             title: source.getName(),
             name: source.getChartKey(),
             overlaySource: source,
             isOverlay: !source.isBaseChart()
         });
+        let feature;
         if (allFeatures) {
             const point = source.mapholder.pixelToCoord(pixel);
             computeDistance(allFeatures, point);
