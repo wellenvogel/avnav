@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -471,5 +472,20 @@ public class AvnUtil {
         }
         result = result && fileOrFolder.delete();
         return result;
+    }
+
+    public static String encodeUrlPath(String path) throws UnsupportedEncodingException {
+        String [] segments=path.split("/");
+        StringBuilder res=new StringBuilder();
+        boolean first=true;
+        for (String segment:segments){
+            String encoded= URLEncoder.encode(segment,"UTF-8");
+            if (first) {
+                first=false;
+                res.append(encoded);
+            }
+            else res.append('/').append(encoded);
+        }
+        return res.toString();
     }
 }

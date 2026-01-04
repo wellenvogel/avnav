@@ -46,6 +46,7 @@ import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /*
 # Copyright (c) 2022,2026 Andreas Vogel andreas@wellenvogel.net
@@ -156,7 +157,9 @@ public class Proxy extends Worker implements INavRequestHandler {
             }
             context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, host);
         }
-        BasicHttpRequest request = new BasicHttpRequest(method, parsed.getPath());
+        BasicHttpRequest request = new BasicHttpRequest(method,
+                AvnUtil.encodeUrlPath(parsed.getPath())+
+                        "?"+parsed.getQuery());
         request.setParams(params);
         for (String k:headers.keySet()) {
             if (k.toLowerCase().equals("host")) continue;
