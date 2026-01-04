@@ -621,7 +621,7 @@ const buildHtmlInfo=(allFeatures)=>{
     rt+='</div>\n';
     return rt;
 }
-const TFORMATTER='freeNautical'
+const TFORMATTER='freeNauticalxx'
 featureListFormatter[TFORMATTER]=(features,point)=>{
         computeDistance(features, point);
         features.sort(allFeaturesSort);

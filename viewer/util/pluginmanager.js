@@ -202,7 +202,7 @@ export class Plugin extends ApiV2{
 
     registerFeatureListFormatter(name, formatterFunction) {
         if (! name) throw new Error("name must not be empty");
-        if (typeof formatterFunction === "function") throw new Error("formatterFunction is no function");
+        if (typeof formatterFunction !== "function") throw new Error("formatterFunction is no function");
         if (featureListFormatter[name]) throw new Error("featureListFormatter "+name+" already exists");
         featureListFormatter[name] = formatterFunction;
         this.featureListFormatter.push(name);

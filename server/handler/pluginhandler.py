@@ -808,7 +808,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         else:
             hasClientFiles = False
             for cf in ApiImpl.CLIENTFILES.values():
-                if os.path.exists(os.path.join(self.baseDir, cf)):
+                if os.path.exists(os.path.join(api.directory, cf)):
                     hasClientFiles = True
                     break
             if hasClientFiles:
