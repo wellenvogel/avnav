@@ -42,7 +42,6 @@ public interface IPluginHandler {
     String FT_CFG="cfg";
     AvnUtil.ItemMap<String> PLUGINFILES= new AvnUtil.ItemMap<>(
             new AvnUtil.KeyValue<String>(FT_CSS, "plugin.css"),
-            new AvnUtil.KeyValue<String>(FT_JS, "plugin.js"),
             new AvnUtil.KeyValue<String>(FT_MJS, "plugin.mjs"),
             new AvnUtil.KeyValue<String>(FT_CFG, "plugin.json"),
             new AvnUtil.KeyValue<String>(FT_PYTHON, "plugin.py")

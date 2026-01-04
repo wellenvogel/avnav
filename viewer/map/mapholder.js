@@ -12,12 +12,11 @@ import {Drawing, DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import Requests from '../util/requests.js';
 import base from '../base.js';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';
-import AvNavChartSource, {checkZoomBounds} from './avnavchartsource.js';
+import AvNavChartSource from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';
 import CryptHandler from './crypthandler.js';
 import {
@@ -54,7 +53,7 @@ import {
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
 import {avitem, getav, setav} from "../util/helper";
-import {apply as olapply} from "ol/transform";
+import {checkZoomBounds} from "./chartlayers";
 
 
 export const EventTypes = {
@@ -1694,22 +1693,28 @@ class MapHolder extends DrawingPositionConverter {
         if (currentTrackPoint) {
             featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',name:'current'}));
         }
-        const detectedFeatures = [];
+        const detectedFeatures = {};
         this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
                 const chartSource=getav(layer).chartSource;
                 if (!chartSource) return;
-                detectedFeatures.push({feature: feature, layer: layer, source: chartSource});
+                const key=chartSource.getChartKey();
+                if (! detectedFeatures[key]){
+                    detectedFeatures[key] = [];
+                }
+                detectedFeatures[key].push({feature: feature, layer: layer, source: chartSource});
             },
             {
                 hitTolerance: globalStore.getData(keys.properties.clickTolerance) / 2
             });
         //sort the detected features by the order of our sources
         for (let i = this.sources.length - 1; i >= 0; i--) {
-            for (let fidx = 0; fidx < detectedFeatures.length; fidx++) {
-                const df = detectedFeatures[fidx];
-                if (df.source === this.sources[i]) {
-                    const fi=df.source.featureToInfo(df.feature, pixel);
-                    if (fi) featureInfos.push(fi);
+            const sourceFeatures=detectedFeatures[this.sources[i].getChartKey()];
+            if (!sourceFeatures) continue;
+            for (let fidx = 0; fidx < sourceFeatures.length; fidx++) {
+                const df = sourceFeatures[fidx];
+                const fi=df.source.featureToInfo(df.feature, pixel,df.layer,sourceFeatures);
+                if (fi) {
+                    featureInfos.push(fi);
                     break;
                 }
             }
@@ -1717,6 +1722,7 @@ class MapHolder extends DrawingPositionConverter {
         let promises = [];
         //just get chart features on top of the currently detected feature
         for (let i = this.sources.length - 1; i >= 0; i--) {
+            if (detectedFeatures[this.sources[i].getChartKey()])continue;
             if (this.sources[i].hasFeatureInfo()) {
                 promises.push(this.sources[i].getChartFeaturesAtPixel(pixel));
             }
