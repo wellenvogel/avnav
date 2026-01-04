@@ -556,7 +556,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new ExternalPluginWorker(ctx,"ocharts","de.wellenvogel.ochartsprovider"+ suffix,"de.wellenvogel.ochartsprovider.OchartsService");
         }
     };
-    private static final WorkerConfig WPLUGINS=new WorkerConfig("PluginManager",9, ExternalPluginWorker.TYPENAME+".ocharts") {
+    private static final WorkerConfig WPLUGINS=new WorkerConfig("PluginManager",9, "PluginManager") {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             return new PluginManager(TYPE_PLUGINS,ctx,getWorkDirByType(ctx,TYPE_PLUGINS),"plugins");
