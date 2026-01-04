@@ -42,6 +42,8 @@ import {CHARTBASE, editableOverlayParameters as supportedStyleParameters} from "
 import CryptHandler from './crypthandler';
 import {ChartFeatureInfo, OverlayFeatureInfo} from "./featureInfo";
 import {featureListFormatter} from "../util/featureFormatter";
+import {ApiV2} from "../util/api";
+import navobjects from "../nav/navobjects";
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -549,24 +551,26 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
 
 const computeDistance=(allFeatures,point)=>{
     allFeatures.forEach(feature=>{
-        if (! feature.feature) return;
-        const geo=feature.feature.getGeometry();
-        if (! (geo instanceof olPoint)) return;
-        const coord=geo.getCoordinates();
         let dst=0;
-        for (let i of [0,1]){
-            dst+=(coord[i]-point[i])*(coord[i]-point[i]);
+        for (let k of ['lat','lon']){
+            const fk='_'+k;
+            if (! (fk in feature) || ! (k in point)) return;
+            dst+=(feature[fk]-point[k])*(feature[fk]-point[k]);
         }
-        feature.distance=dst;
+        feature._distance=dst;
     })
 }
 const allFeaturesSort=(a,b)=>{
-    if (!a.feature || a.distance == undefined) return 1;
-    if (!b.feature || b.distance == undefined) return -1;
-    if (a.distance > b.distance) return 1;
-    if (a.distance < b.distance) return -1;
-    const al=(a.feature.get('layer')||'').toLowerCase() === 'lights';
-    const bl=(b.feature.get('layer')||'').toLowerCase() === 'lights';
+    if (a._gtype != b._gtype){
+        if (a._gtype === 'point') return -1;
+        if (b._gtype === 'point') return  1;
+    }
+    if (a._distance == undefined) return 1;
+    if (b._distance == undefined) return -1;
+    if (a._distance > b._distance) return 1;
+    if (a._distance < b._distance) return -1;
+    const al=(a.layer||'').toLowerCase() === 'lights';
+    const bl=(b.layer||'').toLowerCase() === 'lights';
     if (al===bl) return 0;
     if (al) return -1;
     return 1;
@@ -578,17 +582,22 @@ const collectFeatures=(allFeatures,startIndex)=>{
         _index:startIndex,
     };
     if (startIndex < 0 || startIndex>= allFeatures.length) return rt;
-    const dst=allFeatures[startIndex].distance;
+    const dst=allFeatures[startIndex]._distance;
     if (dst == undefined) return rt;
-    while (dst === allFeatures[startIndex].distance){
-        const feature=allFeatures[startIndex].feature;
+    while (dst === allFeatures[startIndex]._distance){
+        const feature=allFeatures[startIndex];
         if (! feature) continue;
-        let layer=feature.get('layer');
+        if (feature._lat != undefined && feature._lon != undefined){
+            rt._lon=feature._lon;
+            rt._lat=feature._lat;
+        }
+        let layer=feature.layer;
         if (! layer) layer="<none>";
         const data={};
-        for (let vk of feature.getKeys()){
+        for (let vk in feature){
+            if (vk.startsWith('_')) continue;
             if (vk === vk.toUpperCase() || FVWHITELIST.indexOf(vk) >= 0){
-                data[vk]=feature.get(vk);
+                data[vk]=feature[vk];
             }
         }
         rt[layer]={...rt[layer],...data};
@@ -601,61 +610,89 @@ const collectFeatures=(allFeatures,startIndex)=>{
 const buildHtmlInfo=(allFeatures)=>{
     let rt='<div class="featureInfoListHtml">\n';
     allFeatures.forEach(feature=>{
-        const oFeature=feature.feature;
-        if (! oFeature)return;
-        const props=oFeature.getProperties();
-        if (Object.keys(props).length > 0){
+        if (! feature)return;
             rt+='<div class="featureInfoHtml">\n';
-            for (let k in props){
-                rt+=`<div class="featureAttr">${k}:${props[k]}</div>\n`;
+            for (let k in feature){
+                if (k.startsWith('_')) continue;
+                rt+=`<div class="featureAttr">${k}:${feature[k]}</div>\n`;
             }
             rt+='</div>\n';
-        }
     })
     rt+='</div>\n';
     return rt;
 }
+const TFORMATTER='freeNautical'
+featureListFormatter[TFORMATTER]=(features,point)=>{
+        computeDistance(features, point);
+        features.sort(allFeaturesSort);
 
-featureListFormatter['freeNautical']=(features,point)=>{
-
-}
-
-class LayerConfigMapLibreVector extends LayerConfigXYZ{
-    constructor(props) {
-        super(props);
-    }
-
-    getLayerTypes() {
-        return ["maplibreVector","maplibre"];
-    }
-
-    createOL(options) {
-        const layerOptions=this.buildLayerOptions({url:options.styleUrl,...options});
-        const extent = this.bboxToOlExtent(options.boundingbox);
-        const mapLibreOptions={
-            style:layerOptions.layerUrl
-        }
-        if (options.useproxy){
-            mapLibreOptions.transformRequest=(url,resourceType)=>{
-                const completeUrl=new URL(url,window.location.href);
-                if (completeUrl.origin === window.location.origin){
-                    //unchanged
-                    return {
-                        url:url
-                    }
+    const overview = collectFeatures(features, 0);
+    if (overview._index > 0) {
+        const userInfo={};
+        for (let k in overview){
+            if (k.toLowerCase().startsWith("boy")){
+                if (userInfo.buoy) continue;
+                const n=overview[k].OBJNAM||'';
+                const c=overview[k].color||'';
+                if (n || c){
+                    userInfo.buoy=`${n} ${c}`
                 }
-                return {
-                    url: (new URL("/proxy/"+encodeURIComponent(url),window.location.href)).toString()
+            }
+            else if (k.toLowerCase()==='lights'){
+                if (userInfo.light) continue;
+                const c=overview[k].color||'';
+                const g=overview[k].SIGGRP||'';
+                if (c || g){
+                    userInfo.light=`${c} ${g}`
                 }
             }
         }
-        this.layer=new MapLibreLayer({
+        userInfo.htmlInfo=buildHtmlInfo(features);
+        if (overview._lat != undefined && overview._lon != undefined){
+            userInfo.position={lat:overview._lat,lon:overview._lon};
+        }
+        return userInfo;
+    }
+}
+
+class LayerConfigMapLibreVector extends LayerConfigXYZ {
+    constructor(props) {
+        super(props);
+        this.featureListFormatter = undefined;
+    }
+
+    getLayerTypes() {
+        return ["maplibreVector", "maplibre"];
+    }
+
+    createOL(options) {
+        this.featureListFormatter = featureListFormatter[options.featurelistformatter||TFORMATTER];
+        const layerOptions = this.buildLayerOptions({url: options.styleUrl, ...options});
+        const extent = this.bboxToOlExtent(options.boundingbox);
+        const mapLibreOptions = {
+            style: layerOptions.layerUrl
+        }
+        if (options.useproxy) {
+            mapLibreOptions.transformRequest = (url, resourceType) => {
+                const completeUrl = new URL(url, window.location.href);
+                if (completeUrl.origin === window.location.origin) {
+                    //unchanged
+                    return {
+                        url: url
+                    }
+                }
+                return {
+                    url: (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
+                }
+            }
+        }
+        this.layer = new MapLibreLayer({
             source: new olSource({
                 attributions: () => {
                     return "dummy MapLibre";
                 },
             }),
-            mapLibreOptions:mapLibreOptions
+            mapLibreOptions: mapLibreOptions
         })
         setav(this.layer, {
             isTileLayer: true,
@@ -669,61 +706,71 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ{
 
     //really very basic right now and focused on freenautricalcharts
     //most probably this needs to go to a separate formatter
-    featureListToInfo(allFeatures,pixel,layer,source) {
-        let rt = new ChartFeatureInfo({
-            title: source.getName(),
-            name: source.getChartKey(),
-            overlaySource: source,
-            isOverlay: !source.isBaseChart()
-        });
-        let feature;
-        if (allFeatures) {
-            const point = source.mapholder.pixelToCoord(pixel);
-            computeDistance(allFeatures, point);
-            allFeatures.sort(allFeaturesSort);
-            if (allFeatures.length > 0 && allFeatures[0].feature) {
-                feature = allFeatures[0].feature;
-            }
-        }
-        if (!feature) {
-            return rt;
-        }
-
-        let geometry = feature.getGeometry();
-        if (geometry instanceof olPoint) {
-            rt.point = source.mapholder.fromMapToPoint(geometry.getCoordinates());
-        } else {
-            if (geometry) {
-                rt.point = source.mapholder.fromMapToPoint(geometry.getClosestPoint(source.mapholder.pixelToCoord(pixel)));
-            } else {
-                rt.point = source.mapholder.fromMapToPoint(source.mapholder.pixelToCoord(pixel));
-            }
-        }
-        const overview = collectFeatures(allFeatures, 0);
-        if (overview._index > 0) {
-            const userInfo={};
-            for (let k in overview){
-                if (k.toLowerCase().startsWith("boy")){
-                    if (userInfo.buoy) continue;
-                    const n=overview[k].OBJNAM||'';
-                    const c=overview[k].color||'';
-                    if (n || c){
-                        userInfo.buoy=`${n} ${c}`
+    featureListToInfo(allFeatures, pixel, layer, source) {
+        if (!this.featureListFormatter) return;
+        const featureList = []; //the list for an external formatter
+        const clickCoord = source.mapholder.pixelToCoord(pixel);
+        const result = [];
+        allFeatures.forEach(featureConfig => {
+            const feature = featureConfig.feature;
+            if (!feature) return;
+            try {
+                const fc = {...feature.getProperties()};
+                for (let k in fc) {
+                    if (typeof fc[k] !== 'string' && typeof fc[k] !== 'number') {
+                        delete fc[k];
                     }
                 }
-                else if (k.toLowerCase()==='lights'){
-                    if (userInfo.light) continue;
-                    const c=overview[k].color||'';
-                    const g=overview[k].SIGGRP||'';
-                    if (c || g){
-                        userInfo.light=`${c} ${g}`
+                const geo = feature.getGeometry();
+                const type = geo.getType().toLowerCase();
+                fc._gtype = type;
+                let point;
+                if (geo instanceof olPoint) {
+                    point = source.mapholder.fromMapToPoint(geo.getCoordinates());
+                } else {
+                    if (geo) {
+                        point = source.mapholder.fromMapToPoint(geo.getClosestPoint(clickCoord));
                     }
                 }
+                if (point) {
+                    fc._lat = point.lat;
+                    fc._lon = point.lon;
+                }
+                featureList.push(fc);
+            } catch (e) {
+                base.log("unable to translate feature: " + e);
             }
-            userInfo.htmlInfo=buildHtmlInfo(allFeatures);
+        })
+        let formattedFeatures = this.featureListFormatter(featureList,
+            source.mapholder.fromMapToPoint(source.mapholder.pixelToCoord(pixel)));
+        if (!formattedFeatures) return;
+        if (!Array.isArray(formattedFeatures)) formattedFeatures = [formattedFeatures];
+        if (formattedFeatures.length < 1) return;
+        formattedFeatures.forEach(formatted => {
+            let rt = new ChartFeatureInfo({
+                title: source.getName(),
+                name: source.getChartKey(),
+                overlaySource: source,
+                isOverlay: !source.isBaseChart()
+            });
+            const userInfo = {};
+            for (let k of ApiV2.FEATUREINFO_KEYS) {
+                const v = formatted[k];
+                if (v != undefined) {
+                    userInfo[k] = v;
+                }
+            }
             rt.userInfo = userInfo;
-        }
-        return rt;
+            if (userInfo.position){
+                rt.point=new navobjects.Point();
+                rt.point.fromPlain(userInfo.position);
+            }
+            else{
+                rt.point=source.mapholder.fromMapToPoint(clickCoord);
+            }
+            result.push(rt);
+        });
+        return result;
     }
 }
 
