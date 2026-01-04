@@ -261,6 +261,21 @@ class ChartSourceBase {
         this.layers.forEach((layer)=>layer.setVisible(this.chartEntry[CHARTBASE.ENABLED]));
     }
 
+    /**
+     * get the list of all detected features for this source
+     * and build a list of featureInfo objects to be shown in the featureInfoList
+     * the default is just to return the first feature that can be translated
+     * @param allFeatures a list of detected features
+     *                    each entry: {feature,layer,chartSource}
+     * @param pixel the pixel coordinates of the click
+     */
+    featureListToInfo(allFeatures,pixel){
+        for (let featureConfig of allFeatures){
+            const info=this.featureToInfo(featureConfig.feature,pixel,featureConfig.layer);
+            if (info) return info;
+        }
+        return undefined;
+    }
     featureToInfo(feature,pixel,layer){
         return ;
     }

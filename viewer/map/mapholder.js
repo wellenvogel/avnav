@@ -1710,13 +1710,10 @@ class MapHolder extends DrawingPositionConverter {
         for (let i = this.sources.length - 1; i >= 0; i--) {
             const sourceFeatures=detectedFeatures[this.sources[i].getChartKey()];
             if (!sourceFeatures) continue;
-            for (let fidx = 0; fidx < sourceFeatures.length; fidx++) {
-                const df = sourceFeatures[fidx];
-                const fi=df.source.featureToInfo(df.feature, pixel,df.layer,sourceFeatures);
-                if (fi) {
-                    featureInfos.push(fi);
-                    break;
-                }
+            let fi=this.sources[i].featureListToInfo(sourceFeatures,pixel);
+            if (fi){
+                if (!Array.isArray(fi)) fi=[fi];
+                fi.forEach((featureInfo)=>featureInfos.push(featureInfo));
             }
         }
         let promises = [];
@@ -1746,11 +1743,11 @@ class MapHolder extends DrawingPositionConverter {
         Promise.all(promises)
             .then((promiseFeatures) => {
                 for (let pi = 0; pi < promiseFeatures.length; pi++) {
-                    if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
-                    let feature = promiseFeatures[pi][0];
-                    //TODO: handle multiple chart features here
-                    if (feature) {
-                        featureInfos.push(feature);
+                    if (! Array.isArray(promiseFeatures[pi])|| promiseFeatures[pi].length < 1) continue;
+                    for (let feature of promiseFeatures[pi]) {
+                        if (feature) {
+                            featureInfos.push(feature);
+                        }
                     }
                 }
                 this._callGuards('click'); //do this again as some time could have passed

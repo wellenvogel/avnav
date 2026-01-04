@@ -34,6 +34,7 @@ import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
 import { getUrlWithBase} from "../util/itemFunctions";
 import CryptHandler from './crypthandler.js';
+import avlayer from "nlf/lib/module";
 
 
 
@@ -230,11 +231,17 @@ class AvnavChartSource extends ChartSourceBase{
         this.destroySequence++;
     }
 
-
+    /**
+     * build a list of featureInfoObjects
+     * by external queries
+     * @param pixel
+     * @return {Promise<unknown>}
+     */
     getChartFeaturesAtPixel(pixel) {
         return new Promise((resolve,reject)=>{
             //if (! this.chartEntry.hasFeatureInfo) resolve([]);
             if (! this.isReady()) resolve([]);
+            const finalFeatureInfos=[];
             let mapcoordinates=this.mapholder.pixelToCoord(pixel);
             let lonlat=this.mapholder.transformFromMap(mapcoordinates);
             let offsetPoint=this.mapholder.pixelToCoord([pixel[0]+globalStore.getData(keys.properties.clickTolerance)/2,pixel[1]])
@@ -244,13 +251,15 @@ class AvnavChartSource extends ChartSourceBase{
             for (let i=this.layers.length-1;i>=0;i--){
                 let layer=this.layers[i];
                 if (! layer.getVisible()) continue;
-                if (! getav(layer).isTileLayer) continue;
+                const avLayerOptions=getav(layer);
+                if (! avLayerOptions.isTileLayer) continue;
                 let res=this.mapholder.getView().getResolution();
                 let tile=layer.getSource().getTileGrid()
                     .getTileCoordForCoordAndResolution(mapcoordinates,res);
                 let url=layer.getSource().getTileUrlFunction()(tile);
                 let action=new Promise((aresolve,areject)=>{
-                    const computeUrl=getav(layer).finalUrl;
+                    const computeUrl=avLayerOptions.finalUrl;
+                    const layerName=(this.layers.length>1)?": "+(avLayerOptions.title||avlayer.name||'layer'+i):'';
                     let finalUrl=computeUrl?computeUrl(url):url;
                     Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
                         featureInfo:1,
@@ -260,54 +269,59 @@ class AvnavChartSource extends ChartSourceBase{
                     })
                         .then((result)=>{
                             if (result.data) {
-                                aresolve([result.data])
+                                let topInfo;
+                                if (Array.isArray(result.data)){
+                                    if(result.data.length>0) {
+                                        topInfo = result.data[0];
+                                    }
+                                }
+                                else{
+                                    topInfo = result.data;
+                                }
+                                if (!topInfo) aresolve();
+                                let info=new ChartFeatureInfo({
+                                    name: this.getChartKey(),
+                                    title:this.getName()+layerName,
+                                    isOverlay: ! this.isBaseChart()
+                                });
+                                info.userInfo=topInfo;
+                                info.overlaySource=this;
+                                delete info.userInfo.name;
+                                if (topInfo.nextTarget){
+                                    let nextTarget;
+                                    if (topInfo.nextTarget instanceof Array){
+                                        //old style coordinate lon,lat
+                                        nextTarget=new navobjects.Point();
+                                        nextTarget.fromCoord(topInfo.nextTarget);
+                                    }
+                                    else if (topInfo.nextTarget instanceof Object){
+                                        nextTarget=new navobjects.Point();
+                                        nextTarget.fromPlain(topInfo.nextTarget);
+                                    }
+                                    info.point=nextTarget;
+                                }
+                                if (! info.validPoint()){
+                                    info.point=new navobjects.Point(lonlat[0],lonlat[1])
+                                }
+                                aresolve(info)
                             }
                             else{
-                                aresolve([]);
+                                aresolve();
                             }
                         })
-                        .catch((error)=>aresolve([])); //TODO
+                        .catch((error)=>aresolve()); //TODO
                 });
                 layerActions.push(action);
             }
             if (layerActions.length < 1) resolve([]);
             Promise.all(layerActions)
                 .then((results)=>{
-                    let topInfo;
                     for (let i=0;i<results.length;i++){
-                        if (results[i].length > 0){
-                            topInfo=results[i][0];
-                            break;
-                        }
+                        const info=results[i];
+                        if (! info) continue;
+                        finalFeatureInfos.push(info)
                     }
-                    if (topInfo) {
-                        let info=new ChartFeatureInfo({
-                            name: this.getChartKey(),
-                            title:this.getName(),
-                            isOverlay: ! this.isBaseChart()
-                            });
-                        info.userInfo=topInfo;
-                        info.overlaySource=this;
-                        delete info.userInfo.name;
-                        if (topInfo.nextTarget){
-                            let nextTarget;
-                            if (topInfo.nextTarget instanceof Array){
-                                //old style coordinate lon,lat
-                                nextTarget=new navobjects.Point();
-                                nextTarget.fromCoord(topInfo.nextTarget);
-                            }
-                            else if (topInfo.nextTarget instanceof Object){
-                                 nextTarget=new navobjects.Point();
-                                 nextTarget.fromPlain(topInfo.nextTarget);
-                            }
-                            info.point=nextTarget;
-                        }
-                        if (! info.validPoint()){
-                            info.point=new navobjects.Point(lonlat[0],lonlat[1])
-                        }
-                        resolve([info]);
-                    }
-                    else resolve([]);
+                    resolve(finalFeatureInfos);
                 })
                 .catch((error)=>reject(error));
 

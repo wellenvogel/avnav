@@ -41,6 +41,7 @@ import Helper, {setav} from "../util/helper";
 import {CHARTBASE, editableOverlayParameters as supportedStyleParameters} from "./chartsourcebase";
 import CryptHandler from './crypthandler';
 import {ChartFeatureInfo, OverlayFeatureInfo} from "./featureInfo";
+import {featureListFormatter} from "../util/featureFormatter";
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -597,6 +598,28 @@ const collectFeatures=(allFeatures,startIndex)=>{
     return rt;
 }
 
+const buildHtmlInfo=(allFeatures)=>{
+    let rt='<div class="featureInfoListHtml">\n';
+    allFeatures.forEach(feature=>{
+        const oFeature=feature.feature;
+        if (! oFeature)return;
+        const props=oFeature.getProperties();
+        if (Object.keys(props).length > 0){
+            rt+='<div class="featureInfoHtml">\n';
+            for (let k in props){
+                rt+=`<div class="featureAttr">${k}:${props[k]}</div>\n`;
+            }
+            rt+='</div>\n';
+        }
+    })
+    rt+='</div>\n';
+    return rt;
+}
+
+featureListFormatter['freeNautical']=(features,point)=>{
+
+}
+
 class LayerConfigMapLibreVector extends LayerConfigXYZ{
     constructor(props) {
         super(props);
@@ -696,6 +719,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ{
                     }
                 }
             }
+            userInfo.htmlInfo=buildHtmlInfo(allFeatures);
             rt.userInfo = userInfo;
         }
         return rt;

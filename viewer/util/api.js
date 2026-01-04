@@ -203,6 +203,44 @@ export class ApiV2 extends Api{
         throw new Error("not implemented");
     }
 
+    static FEATUREINFO_KEYS=[
+        'icon',       //an icon url
+        'position',   //object wit lat/lon
+        'name',
+        'description',//short description
+        'time',       //time (ms)
+        'symbol',     //symbol name
+        'buoy',       //a buoy description
+        'light',      //a light description
+        'top',        //a topmark description
+        'link',       //a url to be called for extended info
+        'htmlInfo'    //a html text to be shown as extended info - typically the list of other features
+    ]
+    /**
+     * register a formatter function for charts that implement
+     * getFeatureAt...
+     * @param name - the name
+     *               this must be provided as the parameter featurelistformatter in the charts
+     *               layerconfig
+     * @param formatterFunction a function to format a list of features
+     *                          it will get a list of feature objects as first parameter
+     *                          each of them has all the properties of an openlayers feature
+     *                          additionally it will contain:
+     *                          _gtype: the type of geometry ('point','polygon'...)
+     *                          _lat: lat if type is point
+     *                          _lon: lon if type is point
+     *
+     *                          second parameter will be the click coordinate (Object with lat/lon)
+     *
+     *                          it must return an object (or a list) with the
+     *                          topmost features - they will be shown in the feature list
+     *                          the allowed keys: FEATUREINFO_KEYS
+     *
+     */
+    registerFeatureListFormatter(name,formatterFunction){
+        throw new Error("not implemented");
+    }
+
     /**
      * get the config values for the plugin
      * @return {Promise<void>}

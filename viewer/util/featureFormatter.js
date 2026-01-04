@@ -42,3 +42,5 @@ export default {
     formatNone,
     genericHtmlInfo
 };
+
+export const featureListFormatter={};

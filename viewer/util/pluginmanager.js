@@ -29,7 +29,7 @@ import {ApiV2} from "./api";
 import {injectDateIntoUrl, loadJs, loadOrUpdateCss, urlToString} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
-import FeatureFormatter from "./featureFormatter";
+import FeatureFormatter, {featureListFormatter} from "./featureFormatter";
 import {layoutLoader} from "./layouthandler";
 import Addons from "../components/Addons";
 
@@ -72,6 +72,10 @@ class PluginApi extends ApiV2 {
         this.#impl.registerUserApp(name, url, icon, title, newWindow);
     }
 
+    registerFeatureListFormatter(name, formatterFunction) {
+        this.#impl.registerFeatureListFormatter(name, formatterFunction);
+    }
+
     async getConfig() {
         return await this.#impl.getConfig();
     }
@@ -96,6 +100,7 @@ export class Plugin extends ApiV2{
         this.widgets=[];
         this.featureFormatter=[];
         this.layouts=[];
+        this.featureListFormatter=[];
         this.moduleTs=undefined;
     }
     getApi(){
@@ -139,6 +144,9 @@ export class Plugin extends ApiV2{
         })
         layoutLoader.removePluginLayouts(this.name);
         Addons.removePluginAddOns(this.name);
+        this.featureListFormatter.forEach(fmt => {
+            delete featureListFormatter[fmt];
+        })
     }
     async loadModule(url,timestamp,first){
         try {
@@ -190,6 +198,14 @@ export class Plugin extends ApiV2{
         super.registerFeatureFormatter(name, formatterFunction);
         base.log(`registered featureformatter ${name} for ${this.name}`);
         this.featureFormatter.push(name);
+    }
+
+    registerFeatureListFormatter(name, formatterFunction) {
+        if (! name) throw new Error("name must not be empty");
+        if (typeof formatterFunction === "function") throw new Error("formatterFunction is no function");
+        if (featureListFormatter[name]) throw new Error("featureListFormatter "+name+" already exists");
+        featureListFormatter[name] = formatterFunction;
+        this.featureListFormatter.push(name);
     }
 
     getBaseUrl() {
