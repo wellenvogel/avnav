@@ -580,6 +580,10 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     constructor(props) {
         super(props);
         this.featureListFormatter = undefined;
+        this.baseUrl=undefined;
+        if (props.baseUrl) {
+            this.baseUrl=new URL(props.baseUrl,window.location.href);
+        }
     }
 
     getLayerTypes() {
@@ -594,16 +598,17 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             style: layerOptions.layerUrl
         }
         if (options.useproxy) {
+            const base=this.baseUrl||window.location;
             mapLibreOptions.transformRequest = (url, resourceType) => {
-                const completeUrl = new URL(url, window.location.href);
-                if (completeUrl.origin === window.location.origin) {
+                const completeUrl = new URL(url, base);
+                if (completeUrl.origin === base.origin) {
                     //unchanged
                     return {
-                        url: url
+                        url: completeUrl.toString(),
                     }
                 }
                 return {
-                    url: (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
+                    url: (new URL("/proxy/" + encodeURIComponent(url), base)).toString()
                 }
             }
         }
