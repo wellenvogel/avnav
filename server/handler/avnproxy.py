@@ -67,7 +67,7 @@ class AVNProxy(AVNWorker):
     def getApiType(self):
         return self.ATYPE
     HDR_BLACKLIST=['host']
-    OK_STATS=[200,301]
+    OK_STATS=[200,301,304]
     def handleProxyRequest(self,url,handler:AVNHTTPHandler):
         status=500
         try:

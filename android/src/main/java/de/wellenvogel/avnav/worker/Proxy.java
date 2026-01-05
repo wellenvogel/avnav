@@ -171,7 +171,7 @@ public class Proxy extends Worker implements INavRequestHandler {
         response.setParams(params);
         httpexecutor.postProcess(response, httpproc, context);
         int status=response.getStatusLine().getStatusCode();
-        if ( status != 200){
+        if ( status != 200 && status != 304){
             return new ExtendedWebResourceResponse(status,response.getStatusLine().getReasonPhrase());
         }
         HttpEntity entity=response.getEntity();
