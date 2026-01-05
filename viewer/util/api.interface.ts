@@ -8,11 +8,16 @@ import Dms from 'geodesy/dms';
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
 export type FeatureFormatterFunction=(data:object,extended:boolean)=>object;
-interface LatLon{
+export interface LatLon{
     lat:number;
     lon:number;
 }
-class UserFeatureInfo{
+
+/**
+ * the allowed keys for the feature info elements
+ * being returned from featureFormatter or featureListFormatter
+ */
+export interface FeatureInfoType{
     icon?:string;       //an icon url
     position?:LatLon;   //object wit lat/lon
     name?:string;
@@ -25,9 +30,7 @@ class UserFeatureInfo{
     link?:string;       //a url to be called for extended info
     htmlInfo?:string;    //a html text to be shown as extended info - typically the list of other features
 }
-type FeatureInfoType = typeof UserFeatureInfo;
 export type FeatureInfoKeys = (keyof FeatureInfoType)[];
-export const getFeatureInfoKeys=():FeatureInfoKeys => Object.keys(UserFeatureInfo) as FeatureInfoKeys;
 
 export interface FeatureListItem extends Record<string,string|number> {
     _lat?:number;
@@ -124,7 +127,7 @@ export interface Api{
 /**
  * the new API as it is provided as the first parameter
  * to the default export function for plugin.mjs / user.mjs
- * many functions are identical to the V1 Api but some are new here
+ * many functions are identical to the V1 ApiImpl but some are new here
  */
 export interface ApiV2 extends Api{
     /**

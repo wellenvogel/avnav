@@ -41,7 +41,7 @@ import globalStore from './util/globalstore.jsx';
 import base from './base.js';
 import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
-import Api from './util/api.ts';
+import Api from './util/api.impl.ts';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';

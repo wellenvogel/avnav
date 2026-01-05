@@ -25,7 +25,7 @@ import base from "../base";
 import Toast from "../components/Toast";
 import globalstore from "./globalstore";
 import keys from "./keys";
-import {ApiV2} from "./api";
+import {ApiV2} from "./api.impl";
 import {injectDateIntoUrl, loadJs, loadOrUpdateCss, urlToString} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";

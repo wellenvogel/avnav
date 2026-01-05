@@ -42,7 +42,7 @@ import {CHARTBASE} from "./chartsourcebase";
 import CryptHandler from './crypthandler';
 import {ChartFeatureInfo} from "./featureInfo";
 import {featureListFormatter} from "../util/featureFormatter";
-import {ApiV2} from "../util/api";
+import {ApiV2, getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
@@ -680,7 +680,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
                 isOverlay: !source.isBaseChart()
             });
             const userInfo = {};
-            for (let k of ApiV2.FEATUREINFO_KEYS) {
+            for (let k of getFeatureInfoKeys()) {
                 const v = formatted[k];
                 if (v != undefined) {
                     userInfo[k] = v;

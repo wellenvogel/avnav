@@ -20,11 +20,16 @@ import Dms from "geodesy/dms";
 // @ts-ignore
 import AvNavVersion from '../version';
 import {
-    Api as ApiIntf, ApiV2 as ApiV2Intf, FeatureFormatterFunction, FeatureInfoKeys, FeatureListFormatter,
-    FormatterFunction, getFeatureInfoKeys
+    Api as ApiIntf,
+    ApiV2 as ApiV2Intf,
+    FeatureFormatterFunction,
+    FeatureInfoKeys,
+    FeatureInfoType,
+    FeatureListFormatter,
+    FormatterFunction
 } from './api.interface';
 
-export class Api implements ApiIntf {
+export class ApiImpl implements ApiIntf {
     constructor() {
     }
 
@@ -152,7 +157,25 @@ export class Api implements ApiIntf {
     }
 }
 
-export class ApiV2 extends Api implements ApiV2Intf {
+//update this whenever the FeatureInfoType changes
+//otherwise compilation will fail - so it should be easy
+const KeyHelper: Required<FeatureInfoType>= {
+    buoy: "",
+    description: "",
+    htmlInfo: "",
+    icon: "",
+    light: "",
+    link: "",
+    name: "",
+    position: undefined,
+    symbol: "",
+    time: 0,
+    top: ""
+}
+
+export const getFeatureInfoKeys=():FeatureInfoKeys => Object.keys(KeyHelper) as FeatureInfoKeys;
+
+export class ApiV2 extends ApiImpl implements ApiV2Intf {
     getBaseUrl(): string {
         throw new Error("Method not implemented.");
     }
@@ -185,5 +208,5 @@ export class ApiV2 extends Api implements ApiV2Intf {
 
 }
 
-export default  new Api();
+export default  new ApiImpl();
 
