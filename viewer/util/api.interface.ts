@@ -7,6 +7,26 @@ import Dms from 'geodesy/dms';
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
+export type PredefinedFormatters=
+    'formatDateTime'|
+    'formatClock' |
+    'formatTime'|
+    'formatDecimalOpt'|
+    'formatDecimal'|
+    'formatFloat'|
+    'formatLonLats'|
+    'formatLonLatsDecimal'|
+    'formatDistance' |
+    'formatDirection' |
+    'formatDirection360' |
+    'formatSpeed' |
+    'formatString' |
+    'formatDate' |
+    'formatPressure' |
+    'formatTemperature' |
+    'skTemperature' |
+    'skPressure';
+
 export type FeatureFormatterFunction=(data:object,extended:boolean)=>object;
 export interface LatLon{
     lat:number;
@@ -39,9 +59,166 @@ export interface FeatureListItem extends Record<string,string|number> {
 }
 export type FeatureListFormatter=(featureList: [FeatureListItem],point:LatLon)=>[FeatureInfoType]|FeatureInfoType;
 
+export type WidgetType ='radialGauge'| 'linearGauge'| 'map'
+
+/**
+ * an object provided functions of user widgets
+ * as "this" or as an explicit parameter
+ * The widget code is allowed to store own data inside.
+ * It is specific for every widget instance and remains the same
+ * during it's life time
+ */
+export interface WidgetContext extends Record<string,any> {
+    /**
+     * a dictionary to register your event handlers for your html code
+     */
+    eventHandler: object;
+    /**
+     * trigger a redraw of the widget
+     */
+    triggerRedraw: () => void;
+}
+
+/**
+ * the widget context for map widgets
+ */
+export interface MapWidgetContext extends Record<string, any> {
+    /**
+     * convert a position to a map pixel that can be used to draw on the map
+     * only in widgets with type map during renderCanvas
+     * @param lon
+     * @param lat
+     * @returns x,y
+     */
+    lonLatToPixel: (lon:number,lat:number) => [x:number,y:number];
+    /**
+     * convert from a pixel coordinate of the map canvas
+     * to lon/lat
+     * only in widgets with type map during renderCanvas
+     * @param x
+     * @param y
+     */
+    pixelToLonLat:(x:number,y:number)=>[lon:number,lat:number]
+    /**
+     * returns the devicePixelRatio for the display
+     * only in widgets with type map during renderCanvas
+     */
+    getScale: ()=>number;
+    /**
+     * returns the map rotation in radians
+     * Remark: starting from AvNav 20260104 the complete map canvas
+     * is already rotated. The functions to convert from lon/lat to pixel coordinates
+     * already consider this.
+     * But if you draw text you must rotate it invers (i.e. by - getRotation())
+     * You should potentially check getAvNavVersion
+     * only in widgets with type map during renderCanvas
+     * @returns rotation in radian
+     */
+    getRotation: ()=>number;
+    /**
+     * returns the canvas context you should render to
+     * only in widgets with type map during renderCanvas
+     */
+    getContext:()=>CanvasRenderingContext2D;
+    /**
+     * get the width and height of the render context
+     * only in widgets with type map during renderCanvas
+     */
+    getDimensions: ()=>[width:number,height:number];
+    /**
+     * trigger a rerender
+     * only in widgets with type map
+     */
+    triggerRender:()=>void;
+}
+
+/**
+ * the widget definition as you have to provide it at registerWidget
+ */
+export interface WidgetDefinition{
+    name:string;                        //the name of the widget
+    type?:WidgetType;                   //the widget type, empty for default
+    /**
+     * called during render
+     * must return the HTML code as string
+     * @param props properties and values from the store
+     * @param context the widget context (also as "this" parameter)
+     */
+    renderHtml?:(props:object,context:WidgetContext)=>string;
+    /**
+     * render to the widget canvase
+     * @param canvas
+     * @param props properties and values from the store
+     * @param context the widget context
+     */
+    renderCanvas?:(canvas:CanvasRenderingContext2D,
+                   props:object,
+                   context:WidgetContext)=>void;
+    /**
+     * the keys to be fetched from the store
+     * the key values of this object will be the keys of the
+     * property objects during renderXXX, the values are the
+     * keys in the store (e.g. "nav.gps.position") - they
+     * will be replaced by the values in the store
+     */
+    storeKeys?:Record<string,string>;
+    /**
+     * default caption for the widget
+     */
+    caption?:string;
+    /**
+     * default unit for the widget
+     */
+    unit?:string;
+    /**
+     * formatter to convert the value being fetched with the
+     * storeKey "value" to a string
+     * must be provided for radialGauge,linearGauge or if no
+     * renderHtml or renderCanvas is provided
+     */
+    formatter?:FormatterFunction|PredefinedFormatters|string;
+    /**
+     * if provided this function will ba called before every render
+     * and can be used to translate values
+     * This can in many cases prevent the need for an own renderXXX function.
+     * not for map widgets
+     * @param props
+     */
+    translateFunction?:(props:object)=>object;
+    /**
+     * will be called when a widget is instantiated
+     * only type map or with renderHtml or RenderCanvas
+     * @param context
+     * @param props
+     */
+    initFunction?:(context:WidgetContext|MapWidgetContext,props:object)=>void;
+    /**
+     * will be called when a widget is going to be destroyed
+     * @param context
+     * @param props
+     */
+    finalizeFunction?:(context:WidgetContext|MapWidgetContext,props:object)=>void;
+
+}
+export type WidgetParameterType='STRING'| 'NUMBER'|'FLOAT'|'KEY'| 'SELECT'| 'ARRAY'| 'BOOLEAN'| 'COLOR';
+
+export interface WidgetParameter{
+    type: WidgetParameterType;
+    default?:string|number|boolean;
+    list?:[string|number|boolean|object]
+        | (() => [string|number|boolean|object]); //mandatory for type list
+}
+
+
 export interface Api{
     log(text:string):void;
-    registerWidget(description:object,editableParameters?:object):void;
+
+    /**
+     * regsiter a new widget
+     * @param description the widget description
+     * @param editableParameters editable parameters
+     */
+    registerWidget(description:WidgetDefinition,editableParameters?:Record<string,WidgetParameter|boolean>):void;
     get formatter():object;
     /**
      * replace any ${name} with the values of the replacement object
@@ -51,7 +228,7 @@ export interface Api{
      * @param replacements
      * @returns {string}
      */
-    templateReplace(template:string,replacements:object):string
+    templateReplace(template:string,replacements:Record<string,string|number>):string
 
     /**
      * escape special characters in a string

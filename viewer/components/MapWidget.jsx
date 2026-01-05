@@ -100,7 +100,7 @@ const MapWidget=(props)=>{
             props.registerMap((currentDrawing,center)=>{
                 drawing.current=currentDrawing;
                 try{
-                    props.renderCanvas.call(userContext.current,drawing.current.getContext().canvas,getProps());
+                    props.renderCanvas.call(userContext.current,drawing.current.getContext().canvas,getProps(),userContext.current);
                 }catch(e){
                     base.log("error in user renderCanvas function for "+props.name+": "+e);
                 }

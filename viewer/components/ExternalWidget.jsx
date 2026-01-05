@@ -88,7 +88,7 @@ export const ExternalWidget =(props)=>{
     //called after every render
     useEffect(()=>{
         if (canvasRef.current && props.renderCanvas){
-            props.renderCanvas.apply(userData.current,[canvasRef.current,getProps()]);
+            props.renderCanvas.apply(userData.current,[canvasRef.current,getProps(),userData.current]);
         }
     })
     
@@ -96,7 +96,7 @@ export const ExternalWidget =(props)=>{
         let innerHtml=null;
         if (props.renderHtml){
             try {
-                innerHtml = props.renderHtml.apply(userData.current,[convertedProps]);
+                innerHtml = props.renderHtml.apply(userData.current,[convertedProps,userData.current]);
             }catch (e){
                 base.log("External Widget: render error "+e);
                 innerHtml="<p>render error </p>";
