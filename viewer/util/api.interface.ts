@@ -2,30 +2,44 @@
  * the api definition the can be used by user code
  * will be provided as the first parameter to the initializer function
  */
+import LatLonSpherical from 'geodesy/latlon-spherical';
+import Dms from 'geodesy/dms';
 
-import WidgetFactory from '../components/WidgetFactory.jsx';
-import base from '../base.js';
-import Formatter from './formatter.js';
-import Helper from './helper.js';
-import Toast from '../components/Toast.jsx';
-import featureFormatter from "./featureFormatter";
-import LatLon from "geodesy/latlon-spherical";
-import Dms from "geodesy/dms";
-import AvNavVersion from '../version';
 
-export class Api{
-    constructor(){
-    }
+export type FormatterFunction=(value:any,...args: any[])=>string;
+export type FeatureFormatterFunction=(data:object,extended:boolean)=>object;
+interface LatLon{
+    lat:number;
+    lon:number;
+}
+class UserFeatureInfo{
+    icon?:string;       //an icon url
+    position?:LatLon;   //object wit lat/lon
+    name?:string;
+    description?:string;//short description
+    time?:number;       //time (ms)
+    symbol?:string;     //symbol name
+    buoy?:string;       //a buoy description
+    light?:string;      //a light description
+    top?:string;        //a topmark description
+    link?:string;       //a url to be called for extended info
+    htmlInfo?:string;    //a html text to be shown as extended info - typically the list of other features
+}
+type FeatureInfoType = typeof UserFeatureInfo;
+export type FeatureInfoKeys = (keyof FeatureInfoType)[];
+export const getFeatureInfoKeys=():FeatureInfoKeys => Object.keys(UserFeatureInfo) as FeatureInfoKeys;
 
-    log(text){
-        base.log("API: "+text);
-    }
-    registerWidget(description,opt_editableParameters){
-        WidgetFactory.registerWidget(description,opt_editableParameters);
-    }
-    get formatter(){
-        return {...Formatter};
-    }
+export interface FeatureListItem extends Record<string,string|number> {
+    _lat?:number;
+    _lon?:number;
+    _gtype?: string;
+}
+export type FeatureListFormatter=(featureList: [FeatureListItem],point:LatLon)=>[FeatureInfoType]|FeatureInfoType;
+
+export interface Api{
+    log(text:string):void;
+    registerWidget(description:object,editableParameters?:object):void;
+    get formatter():object;
     /**
      * replace any ${name} with the values of the replacement object
      * e.g. templateReplace("test${a} test${zzz}",{a:"Hello",zzz:"World"})
@@ -34,27 +48,21 @@ export class Api{
      * @param replacements
      * @returns {string}
      */
-    templateReplace(template,replacements){
-        return Helper.templateReplace(template,replacements)
-    }
+    templateReplace(template:string,replacements:object):string
 
     /**
      * escape special characters in a string
      * so it can be afterwards safely added to some HTML
      * @param string
      */
-    escapeHtml(string){
-        return Helper.escapeHtml(string);
-    }
+    escapeHtml(string:string):string;
 
     /**
      * show a toast containing a message
      * @param string the message
-     * @param opt_time a timeout in ms (optional)
+     * @param time a timeout in ms (optional)
      */
-    showToast(string,opt_time){
-        Toast(string,opt_time);
-    }
+    showToast(string:string,time?:number):void;
 
     /**
      * register a formatter function
@@ -64,9 +72,8 @@ export class Api{
      * @param name the name of the formatter
      * @param formatterFunction the function
      */
-    registerFormatter(name,formatterFunction){
-        WidgetFactory.registerFormatter(name,formatterFunction);
-    }
+
+    registerFormatter(name:string,formatterFunction:FormatterFunction):void
 
     /**
      * you can register a function that can be used to get values
@@ -89,53 +96,29 @@ export class Api{
      *                          htmlInfo - a html text to be shown when clicking the info button
      *                          time - a time value or text string
      */
-    registerFeatureFormatter(name,formatterFunction){
-        if (! name){
-            throw new Error("missing name in registerFeatureFormatter");
-        }
-        if (! formatterFunction){
-            throw new Error("missing name in registerFeatureFormatter");
-        }
-        if (typeof(formatterFunction) !== 'function'){
-            throw new Error("formatterFunction is no function in registerFeatureFormatter");
-        }
-        if (featureFormatter[name]){
-            throw new Error("name "+name+" already exists in registerFeatureFormatter");
-        }
-        featureFormatter[name]=formatterFunction;
-    }
+    registerFeatureFormatter(name:string,formatterFunction:FeatureFormatterFunction):void;
 
     /**
      * get the version of AvNav as an int
      * @returns {number}
      */
-    getAvNavVersion(){
-        let version=AvNavVersion;
-        if (version.match(/dev-/)){
-            version=version.replace(/dev-/,'').replace(/[-].*/,'');
-        }
-        return parseInt(version);
-    }
+    getAvNavVersion():number;
 
     /**
      * get the {@link https://www.movable-type.co.uk/scripts/geodesy-library.html LatLonSpherical} module
      * use it like:
      * let LatLon=avnav.api.LatLon();
      * let point=new LatLon(54,13);
-     * @return {LatLonSpherical}
+     * @return {typeof LatLonSpherical}
      */
-    LatLon(){
-        return LatLon;
-    }
+    LatLon():typeof LatLonSpherical;
 
     /**
      * get an instance of {@link https://www.movable-type.co.uk/scripts/geodesy-library.html Dms} to parse
      * lat/lon data
-     * @return {Dms}
+     * @return {typeof Dms}
      */
-    dms(){
-        return Dms;
-    }
+    dms():typeof Dms;
 }
 
 /**
@@ -143,27 +126,19 @@ export class Api{
  * to the default export function for plugin.mjs / user.mjs
  * many functions are identical to the V1 Api but some are new here
  */
-export class ApiV2 extends Api{
-    constructor() {
-        super();
-    }
-
+export interface ApiV2 extends Api{
     /**
      * get the base url to access files that have been installed with the plugin
      * this URL points to the plugin base dir
      * for the user.mjs it points to the directory where the user.css is located
      */
-    getBaseUrl(){
-        throw new Error("not implemented")
-    }
+    getBaseUrl():string;
 
     /**
      * return the name of the plugin
      * returns an empty string for the user.mjs
      */
-    getPluginName(){
-        throw new Error("not implemented");
-    }
+    getPluginName():string;
 
     /**
      * register a layout that already is available as a JSON object
@@ -171,9 +146,7 @@ export class ApiV2 extends Api{
      * @param name
      * @param layoutJson
      */
-    registerLayoutData(name,layoutJson){
-        throw new Error("not implemented");
-    }
+    registerLayoutData(name:string,layoutJson:object):void;
 
     /**
      * register a layout file that can be accessed by an url
@@ -184,9 +157,7 @@ export class ApiV2 extends Api{
      *            you can use the relative path as url (getBaseUrl will be added at the beginning)
      *            registerLayout("testlayout","testlayout.json")
      */
-    registerLayout(name,url){
-        throw new Error("not implemented");
-    }
+    registerLayout(name:string,url:string|URL):void;
 
     /**
      * register a user app (i.e. a web page that should be shown as user app)
@@ -199,23 +170,9 @@ export class ApiV2 extends Api{
      * @param title (optional) a title to be shown
      * @param newWindow (optional) if set open the page in a new window
      */
-    registerUserApp(name,url,icon,title,newWindow){
-        throw new Error("not implemented");
-    }
+    registerUserApp(name:string,url:string|URL,icon:string|URL,title?:string,newWindow?:boolean):void;
 
-    static FEATUREINFO_KEYS=[
-        'icon',       //an icon url
-        'position',   //object wit lat/lon
-        'name',
-        'description',//short description
-        'time',       //time (ms)
-        'symbol',     //symbol name
-        'buoy',       //a buoy description
-        'light',      //a light description
-        'top',        //a topmark description
-        'link',       //a url to be called for extended info
-        'htmlInfo'    //a html text to be shown as extended info - typically the list of other features
-    ]
+    get FEATUREINFO_KEYS():FeatureInfoKeys;
     /**
      * register a formatter function for charts that implement
      * getFeatureAt...
@@ -237,18 +194,13 @@ export class ApiV2 extends Api{
      *                          the allowed keys: FEATUREINFO_KEYS
      *
      */
-    registerFeatureListFormatter(name,formatterFunction){
-        throw new Error("not implemented");
-    }
+    registerFeatureListFormatter(name:string,formatterFunction:FeatureListFormatter):void;
 
     /**
      * get the config values for the plugin
      * @return {Promise<void>}
      */
-    async getConfig(){
-        throw new Error("not implemented");
-    }
+    getConfig():Promise<object>;
 }
 
-export default  new Api();
 

@@ -79,6 +79,7 @@ class PluginApi extends ApiV2 {
     async getConfig() {
         return await this.#impl.getConfig();
     }
+
 }
 
 /**
