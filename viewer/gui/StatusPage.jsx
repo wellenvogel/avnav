@@ -63,7 +63,7 @@ class DebugDialog extends React.Component{
         Requests.getJson({
             request:'api',
             type:'config',
-            command:'currentloglevel'
+            command:'currentLogLevel'
         })
             .then((data)=>{
                 let ns={};
