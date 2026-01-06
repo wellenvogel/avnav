@@ -57,14 +57,17 @@ export default class MapLibreLayer extends Layer {
       this.mapLibreMap.triggerRepaint = () => {};
       this.mapLibreMap.remove();
       this.mapLibreMap = undefined;
+      console.log("destroyed map libre map");
     }
     super.disposeInternal();
   }
 
   override setMapInternal(map: Map) {
     super.setMapInternal(map);
-    if (map && ! this.mapLibreMap) {
-      this.loadMapLibreMap(map);
+    if (map){
+        if (! this.mapLibreMap) {
+            this.loadMapLibreMap(map);
+        }
     } else {
       // TODO: I'm not sure if it's the right call
       this.dispose();
