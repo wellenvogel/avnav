@@ -86,6 +86,7 @@ class FormatterParameterUI extends EditableParameter {
         const definedParameter=getFormatterParameters(currentValues);
         if (! definedParameter) {
             if (common.value instanceof Array) common.value=common.value.join(',');
+            else if (common.value == undefined) common.value="";
             if (this.readonly) {
                 return <InputReadOnly {...common}/>
             }
@@ -351,7 +352,14 @@ class WidgetFactory{
                 overrides.default = defaultv;
             }
             if (pname === 'formatter'){
-                if (widgetData.formatter) overrides.readOnly=true;
+                if (widgetData.formatter) {
+                    overrides.readOnly=true;
+                }
+                if (typeof defaultv === 'function') {
+                    //if this is a function
+                    //it is intentionally predefined and should not be changed
+                    continue;
+                }
             }
             if (typeof foundEditableParameter.render === 'function'){
                 rt.push(foundEditableParameter.clone(overrides));
