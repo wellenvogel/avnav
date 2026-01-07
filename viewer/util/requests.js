@@ -23,7 +23,6 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import assign from 'object-assign';
-import 'whatwg-fetch-timeout';
 import globalstore from "./globalstore";
 import base from "../base";
 
@@ -100,6 +99,34 @@ const prepareInternal=(url, options, defaults)=>{
     return [rurl,requestOptions];
 }
 
+const handleTimeout=(requestOptions)=>{
+    if (!requestOptions)return;
+    const controller= requestOptions.timeout?new AbortController():undefined;
+    if (controller){
+        requestOptions.signal=controller.signal;
+        const rt=window.setTimeout(()=>{
+            controller.abort();
+        },requestOptions.timeout);
+        delete requestOptions.timeout;
+        return rt;
+    }
+}
+
+const fetchWithTimeout=(url,options)=>{
+    const timer=handleTimeout(options);
+    if (timer === undefined){
+        return fetch(url,options);
+    }
+    return fetch(url,options)
+        .then((response)=>{
+        window.clearTimeout(timer);
+        return response;
+        },(error)=>{
+            window.clearTimeout(timer);
+            return Promise.reject(error);
+        })
+}
+
 
 const handleJson=(rurl,requestOptions,options)=>{
     return new Promise((resolve,reject)=>{
@@ -109,7 +136,7 @@ const handleJson=(rurl,requestOptions,options)=>{
         }
         let sequence=undefined;
         if (options && options.sequenceFunction) sequence=options.sequenceFunction();
-        fetch(rurl,requestOptions).then(
+        fetchWithTimeout(rurl,requestOptions).then(
             (response)=>{
                 if (response.status < 200 || response.status >= 300){
                     reject(new ResponseError(response));
@@ -239,7 +266,8 @@ let RequestHandler={
           let sequence=undefined;
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
           let finalResponse;
-          fetch(rurl,requestOptions).then(
+          handleTimeout(requestOptions);
+          fetchWithTimeout(rurl,requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
                       reject(new ResponseError(response));
@@ -329,7 +357,8 @@ let RequestHandler={
             timeout: parseInt(globalStore.getData(keys.properties.networkTimeout)),
             method:'HEAD'
         }
-        return fetch(url,options)
+        handleTimeout(options);
+        return fetchWithTimeout(url,options)
             .then((response)=>{
                     return response.headers.get('last-modified')
                 }
