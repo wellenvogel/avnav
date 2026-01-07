@@ -42,8 +42,9 @@ import {CHARTBASE} from "./chartsourcebase";
 import CryptHandler from './crypthandler';
 import {ChartFeatureInfo} from "./featureInfo";
 import {featureListFormatter} from "../util/featureFormatter";
-import {ApiV2, getFeatureInfoKeys} from "../util/api.impl";
+import {getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
+import { PMTilesRasterSource } from "ol-pmtiles";
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -580,10 +581,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     constructor(props) {
         super(props);
         this.featureListFormatter = undefined;
-        this.baseUrl=undefined;
-        if (props.baseUrl) {
-            this.baseUrl=new URL(props.baseUrl,window.location.href);
-        }
+        this.baseUrl=props.overviewUrl; //base URL already absolute
     }
 
     getLayerTypes() {
@@ -598,17 +596,19 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             style: layerOptions.layerUrl
         }
         if (options.useproxy) {
-            const base=this.baseUrl||window.location;
+            //our computed style URL has already included any baseUrl
+            //but still is just an absolute URL without scheme/host/port
+            const base=new URL(layerOptions.layerUrl,window.location.href);
             mapLibreOptions.transformRequest = (url, resourceType) => {
                 const completeUrl = new URL(url, base);
-                if (completeUrl.origin === base.origin) {
+                if (completeUrl.origin === window.location.origin) {
                     //unchanged
                     return {
                         url: completeUrl.toString(),
                     }
                 }
                 return {
-                    url: (new URL("/proxy/" + encodeURIComponent(url), base)).toString()
+                    url: (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
                 }
             }
         }
@@ -700,6 +700,54 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     }
 }
 
+class LayerConfigPMTilesRaster extends LayerConfigXYZ {
+    constructor(props) {
+        super(props);
+    }
+
+    getLayerTypes() {
+        return ["PMTiles"];
+    }
+
+    createOL(options) {
+        if (!options) throw new Error("missing options for PMTiles layer");
+        const layerOptions = this.buildLayerOptions(options);
+        const extent = this.bboxToOlExtent(options.boundingbox);
+        //const tileUrlFunction = this.createTileUrlFunction(options);
+        this.source = new PMTilesRasterSource({
+            url: layerOptions.layerUrl,
+            /*tileUrlFunction: (coord) => {
+                return tileUrlFunction(coord);
+            },
+            tileLoadFunction: (imageTile, src) => {
+                imageTile.getImage().src = this.finalUrl(src);
+            },
+             */
+            tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
+        })
+        /*
+        this.source.tileClass = tileClassCreator((coord) => {
+                return tileUrlFunction(coord);
+            },
+            layerOptions.upzoom,
+            options.minzoom||1,
+            this.inversy
+        )*/
+        this.layer = new olTileLayer({
+            source: this.source,
+        });
+        //his.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
+        setav(this.layer, {
+            isTileLayer: true,
+            minZoom: parseInt(options.minzoom || 1),
+            maxZoom: parseInt(options.maxzoom || 23) + layerOptions.upzoom,
+            extent: extent,
+            zoomLayerBoundings: layerOptions.zoomLayerBoundings,
+        });
+        return this.layer;
+    }
+}
+
 class LayerFactory {
     constructor() {
         this.layerClasses={};
@@ -724,3 +772,4 @@ layerFactory.register(new LayerConfigTMS({}));
 layerFactory.register(new LayerConfigWMS({}));
 layerFactory.register(new LayerConfigEncrypt({}));
 layerFactory.register(new LayerConfigMapLibreVector({}));
+layerFactory.register(new LayerConfigPMTilesRaster({}));

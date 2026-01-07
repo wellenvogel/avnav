@@ -73,6 +73,7 @@ module.exports = (env, argv) => {
     }
     else{
         resolveAlias['debugSupport.js']=__dirname+"/util/debugSupport.js"
+        //resolveAlias['pmtiles']=__dirname+"/node_modules/pmtiles/src";
     }
 
     var plugins = [

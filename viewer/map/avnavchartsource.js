@@ -70,7 +70,13 @@ class AvnavChartSource extends ChartSourceBase{
         if (this.chartEntry[CHARTAV.LAYERS]) {
             if (url) throw new Error("either provide an url or a layers config for a chart");
             layerConfig=this.chartEntry[CHARTAV.LAYERS];
-            ovUrl=this.chartEntry[CHARTAV.BASEURL]||window.location.href;
+            const baseUrl=this.chartEntry[CHARTAV.BASEURL];
+            if (baseUrl){
+                ovUrl=(new URL(baseUrl,window.location)).toString();
+            }
+            else {
+                ovUrl = window.location.href;
+            }
         }
         else {
             if (!url) {
