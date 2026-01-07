@@ -45,6 +45,7 @@ import {featureListFormatter} from "../util/featureFormatter";
 import {getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
 import { PMTilesRasterSource } from "ol-pmtiles";
+import olDataTile,{asImageLike} from "ol/DataTile";
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -182,7 +183,15 @@ class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
         super(...arguments);
     }
     drawTile(tile, frameState, x, y, w, h, gutter, transition) {
-        const image = this.getTileImage(tile);
+        let image;
+        if (tile instanceof olDataTile) {
+            image = asImageLike(tile.getData());
+            if (!image) {
+                throw new Error('Rendering array data is not yet supported');
+            }
+        } else {
+            image = this.getTileImage(tile);
+        }
         if (!image) {
             return;
         }
@@ -736,7 +745,7 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
         this.layer = new olTileLayer({
             source: this.source,
         });
-        //his.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
+        this.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
         setav(this.layer, {
             isTileLayer: true,
             minZoom: parseInt(options.minzoom || 1),
