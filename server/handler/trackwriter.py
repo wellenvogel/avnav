@@ -519,15 +519,15 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       if name.endswith(".nmea") or name.endswith(".nmea.gz"):
           lastBytes = AVNUtil.getHttpRequestParam(requestparam, 'maxBytes')
           if lastBytes is None:
-              return AVNDownload(filename,dlname=name)
+              return AVNFileDownload(filename)
           # if maxBytes is set we should send the data decompressed
           if not name.endswith(".gz"):
-              return AVNDownload(filename, lastBytes=lastBytes,mimeType='text/plain')
+              return AVNFileDownloadLB(filename, lastBytes=lastBytes,mimeType='text/plain')
           stream=gzip.open(filename, "rb")
           stream.seek(-int(lastBytes),io.SEEK_END)
-          return AVNDownload(filename,stream=stream,mimeType='text/plain',size=None)
+          return AVNStreamDownload(stream,mimeType='text/plain',size=None)
       else:
-          return AVNDownload(filename,dlname=name)
+          return AVNFileDownload(filename)
 
       return super().handleDownload(name, handler, requestparam)
 

@@ -347,7 +347,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
         raise Exception("no handler")
       baseUrl=handler.getPageRoot()
       url=baseUrl+"/"+url
-    rt=handler.translate_path(re.sub(r"\?.*","",url))
+    rt=handler.translate_path_internal(re.sub(r"\?.*","",url))
     if rt is None:
       raise Exception(error)
     return rt
@@ -494,7 +494,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       filename = os.path.join(self.baseDir, fname)
       if not os.path.exists(filename):
           raise Exception("file %s not found" % filename)
-      return AVNDownload(filename)
+      return AVNFileDownload(filename)
   def handleDownload(self,name,handler,requestparam):
     if name is None:
       raise Exception("missing name")
@@ -669,7 +669,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
             sfile=item.getFileName()
             if not os.path.isfile(sfile):
                 raise Exception("%s: %s not found"%(self.type,sfile))
-            return AVNDownload(sfile)
+            return AVNFileDownload(sfile)
       fname=self.checkName(name,scope=self.SCOPE_USER)
       return self._download(fname)
 

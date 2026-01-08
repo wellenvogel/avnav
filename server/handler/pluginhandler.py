@@ -720,6 +720,8 @@ class PluginEntry(AVNDirectoryListEntry):
     def serialize(self):
         rt = super().serialize()
         rt['child'] = self.name
+        if self._filename is not None:
+            rt['downloadName']=os.path.basename(self._filename)+".zip"
         return rt
 
 
@@ -1077,7 +1079,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         if not os.path.isfile(fname):
             raise RequestException(f"{fname} not found", 404)
         # use AVNDownload as return to prevent caching
-        return AVNDownload(fname)
+        return AVNFileDownload(fname)
 
     def handleSpecialApiRequest(self, command, requestparam, handler):
         if command == 'pluginInfo':
@@ -1179,7 +1181,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                 return False
             return True
 
-        return AVNZipDownload(name + ".zip", filename, prefix=name, filter=filter)
+        return AVNZipDownload(filename, prefix=name, filter=filter)
 
     def handleDelete(self, name):
         if not self.canDelete():

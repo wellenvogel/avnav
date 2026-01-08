@@ -523,7 +523,7 @@ class AVNHandlerManager(object):
         raise Exception("unable to get log file")
       if not os.path.exists(fname):
         raise Exception("log %s not found"%fname)
-      rt=AVNDownload(fname,lastBytes=maxBytes)
+      rt=AVNFileDownloadLB(fname,lastBytes=maxBytes)
       return rt
     rt={'status':'OK'}
     if command == 'createHandler':

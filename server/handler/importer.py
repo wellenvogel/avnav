@@ -816,12 +816,17 @@ class AVNImporter(AVNWorker):
       candidates=self.candidates
       for can in candidates: # type: ConversionCandidate
         canDownload=False
+        downloadName=None
         st=can.getState()
         if st == ConversionCandidate.State.DONE or st == ConversionCandidate.State.DONENC:
           if can.converter is not None:
             downloadFile=can.converter.getOutFileOrDir(can.name)
             if downloadFile is not None and os.path.exists(downloadFile):
               canDownload=True
+              if os.path.isfile(downloadFile):
+                  downloadName=os.path.basename(downloadFile)
+              else:
+                  downloadName=can.name+".zip"
         hasLog=self.getLogFileName(can.name,True) is not None
         path,ext=os.path.splitext(can.filename)
         basename=os.path.basename(path)+ext
@@ -836,6 +841,8 @@ class AVNImporter(AVNWorker):
           'converter':can.getConverterName(),
           'canDownload': canDownload,
           'hasLog': hasLog}
+        if downloadName is not None:
+            canst['downloadName']=downloadName
         if can.getFileOrDir() != can.filename:
           canst['realname']=can.getFileOrDir()
         items.append(canst)
@@ -867,9 +874,8 @@ class AVNImporter(AVNWorker):
         subDir=candidate.name
         if hasattr(candidate.converter,'getZipSubDir'):
           subDir=candidate.converter.getZipSubDir(candidate.name)
-        return AVNZipDownload(candidate.name+".zip",dlfile,subDir)
-      filename=os.path.basename(dlfile)
-      return AVNDownload(dlfile,dlname=filename)
+        return AVNZipDownload(dlfile,subDir)
+      return AVNFileDownload(dlfile)
 
     if command == "upload":
       if handler is None:
@@ -912,7 +918,7 @@ class AVNImporter(AVNWorker):
       if name == '_current':
         running=self.runningConversion
         if running is not None and running.running:
-          candidate=self.runningConversion.candidate
+          candidate=running.candidate
         if candidate is None:
           rt=AVNDownloadError("no conversion running")
       else:
@@ -926,8 +932,8 @@ class AVNImporter(AVNWorker):
           rt=AVNDownloadError("log for %s not found"%name)
         if rt is None:
           filename=os.path.basename(logName)
-          rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
-      handler.writeFromDownload(rt)
+          rt=AVNFileDownloadLB(logName,lastBytes=lastBytes,dlname=filename)
+          return rt
       return None
     if command == 'cancel':
       running=self.runningConversion

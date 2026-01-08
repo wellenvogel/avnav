@@ -483,8 +483,7 @@ class AVNAlarmHandler(AVNWorker):
       file=self.getSoundFile(alarmInfo.sound)
       if file is None:
         return None
-      fsize=os.path.getsize(file)
-      return AVNDownload(file,size=fsize,mimeType="audio/mpeg")
+      return AVNFileDownload(file, mimeType="audio/mpeg")
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')

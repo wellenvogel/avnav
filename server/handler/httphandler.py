@@ -122,7 +122,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         postvars = {}
       requestParam=urllib.parse.parse_qs(query,True)
       requestParam.update(postvars)
-      self.handleNavRequest(trailing,requestParam)
+      self.handleNavRequest(trailing,requestParam,method="POST")
     except Exception as e:
       txt=traceback.format_exc()
       AVNLog.ld("unable to process request for ",path,query,txt)
@@ -138,9 +138,23 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       ctype = self.guess_type(path)
     return ctype
 
-  #overwrite this from SimpleHTTPRequestHandler
-  def send_head(self):
-    path=self.translate_path(self.path)
+  def do_GET(self):
+      """Serve a GET request."""
+      f = self.send_head_internal("GET")
+      if f:
+          try:
+              self.copyfile(f, self.wfile)
+          finally:
+              f.close()
+
+  def do_HEAD(self):
+      """Serve a HEAD request."""
+      f = self.send_head_internal("HEAD")
+      if f:
+          f.close()
+
+  def send_head_internal(self,method=None):
+    path=self.translate_path_internal(self.path,method)
     if path is None:
       return
     """Common code for GET and HEAD commands.
@@ -194,8 +208,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     path = self.server.getStringParam('index')
     return re.sub("/[^/]*$", "", path)
 
-  #overwrite this from SimpleHTTPRequestHandler
-  def translate_path(self, path):
+
+  def translate_path_internal(self, path,method=None):
       """Translate a /-separated PATH to the local filename syntax.
 
       Components that mean special things to the local file system
@@ -215,7 +229,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         self.send_error(404,str(e))
         return None
       if isinstance(extPath, AVNDownload):
-        self.writeFromDownload(extPath)
+        self.writeFromDownload(extPath,method=method)
         return None
       if extPath == True:
         return None
@@ -225,7 +239,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       trailing=self.server.isNavUrl(path)
       if trailing is not None:
         requestParam=urllib.parse.parse_qs(query,True)
-        self.handleNavRequest(trailing,requestParam)
+        self.handleNavRequest(trailing,requestParam,method=method)
         return None
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
@@ -321,7 +335,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       if requestType == 'listDir':
           return (type,'list')
 
-  def handleNavRequest(self,trailing,requestParam):
+  def handleNavRequest(self,trailing,requestParam,method="GET"):
     ''' handle an api query
       request parameters:
       request=api&type=decoder&command=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
@@ -368,8 +382,9 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       if isinstance(rtj, AVNDownload):
           try:
             self.writeFromDownload(rtj,
-              filename=self.getRequestParam(requestParam, "filename")
-              ,noattach=self.getRequestParam(requestParam, 'noattach') is not None)
+              filename=self.getRequestParam(requestParam, "filename"),
+              noattach=self.getRequestParam(requestParam, 'noattach') is not None,
+              method=method)
           except Exception as e:
             AVNLog.debug("error when downloading %s: %s",rtj.filename,traceback.format_exc())
             raise e
@@ -420,18 +435,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.wfile.write(buf)
       bToSend -= len(buf)
     fh.close()
-  def writeChunkedStream(self,fh):
-    maxread = 1000000
-    while True:
-      buf = fh.read(maxread)
-      if buf is None or len(buf) == 0:
-        self.wfile.write(b'0\r\n\r\n')
-        fh.close()
-        return
-      l = len(buf)
-      self.wfile.write('{:X}\r\n'.format(l).encode('utf-8'))
-      self.wfile.write(buf)
-      self.wfile.write(b'\r\n')
 
   def writeData(self,data,mimeType):
     self.send_response(200)
@@ -446,29 +449,5 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     self.end_headers()
     self.wfile.write(wbytes)
 
-  def writeFromDownload(self,download: AVNDownload,filename:str=None,noattach:bool=False):
-    size = download.getSize()
-    stream = None
-    stream = download.getStream()
-    if download.dlname is not None:
-      filename=download.dlname
-    if download.noattach is not None:
-      noattach=download.noattach
-    #after we have sent the content type headers or and_headers we cannot really handle errors
-    #so wey try to do "dangerous" things before this line
-    self.send_response(200)
-    if filename is not None and filename != "" and not noattach:
-      self.send_header("Content-Disposition", "attachment; %s"%AVNDownload.fileToAttach(filename))
-    self.send_header("Content-type", download.getMimeType(self))
-    self.send_header("Cache-Control", "no-store")
-    if size is not None:
-      self.send_header("Content-Length", size)
-    else:
-      self.send_header('Transfer-Encoding', 'chunked')
-    self.send_header("Last-Modified", self.date_time_string(download.mtime))
-    self.end_headers()
-    if size is not None:
-      self.writeStream(size, stream)
-    else:
-      self.writeChunkedStream(stream)
-
+  def writeFromDownload(self,download: AVNDownload,filename:str=None,noattach:bool=False,method=None):
+    download.writeOut(self,filename,noattach=noattach,sendbody=method != "HEAD")
