@@ -27,20 +27,17 @@
 
 import socketserver
 import http.server
-import posixpath
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
-from typing import Dict, Any
-
-import gemf_reader
+from typing import Dict
 
 from httphandler import AVNHTTPHandler, WebSocketHandler
+from avnav_util import plainUrlToPath
 
 try:
   import create_overview
 except:
   pass
-from wpahandler import *
 from avnav_manager import *
 hasIfaces=False
 try:
@@ -51,12 +48,34 @@ except:
 import threading
 
 
+class StaticPathHandler:
+    def __init__(self,basePath,baseDir):
+        self.basePath = basePath
+        self.baseDir = baseDir
+    def isDisabled(self)->bool:
+        return False
+    def getPrefix(self)->str:
+        return self.basePath
+    def handlePathRequest(self,path, requestParam, server=None,handler=None):
+        path= plainUrlToPath(path)
+        file=os.path.join(self.baseDir,path)
+        if os.path.isfile(file):
+            return AVNFileDownload(file)
+        else:
+            return AVNDownloadError(404,f"{file} is not a file")
+
 
 #a HTTP server with threads for each request
 class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
   webSocketHandlers: Dict[str, WebSocketHandler]
   navxml=AVNUtil.NAVXML
   PORT_CONFIG="httpPort"
+  PATH_USER='user'
+  PATH_VIEWER='viewer'
+  PATH_CHARTS='charts'
+  CFG_CHARTBASE='chartbase' #the name of a config value to change the chart mapping name
+                            #in reality this does not change the chart base URL
+                            #but we keep this for compatibilty if someone used this in the past
 
   @classmethod
   def autoInstantiate(cls):
@@ -92,28 +111,36 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
                      "navurl":"/api", #those must be absolute with /
                      "navurlCompat":"/viewer/avnav_navi.php",
                      "index":"/viewer/avnav_viewer.html",
-                     "chartbase": "maps", #this is the URL without leading /!
+                     cls.CFG_CHARTBASE: "maps", #just to be able to use very old configs
+                                          #the chart base now is always /charts
+                                          #but potentially someone defined
+                                          #an url mapping with maps
+                                          #or even worse: changed this value and defined
+                                          #a mapping with teh changed value
                      cls.PORT_CONFIG:"8080",
                      "numThreads":"5",
                      "httpHost":"",
         }
     return rt
-  
   def __init__(self,cfgparam,RequestHandlerClass):
+    ALLOWED_PREFIXES=[self.PATH_USER,self.PATH_VIEWER,str(cfgparam.get(self.CFG_CHARTBASE) or "maps")]
     replace=AVNHandlerManager.filterBaseParam(cfgparam)
     if cfgparam.get('basedir')== '.':
       #some migration of the older setting - we want to use our global dir function, so consider . to be empty
       cfgparam['basedir']=''
     self.basedir=AVNHandlerManager.getDirWithDefault(cfgparam, 'basedir', defaultSub='', belowData=False)
-    datadir=cfgparam[AVNHandlerManager.BASEPARAM.DATADIR]
+    self.datadir=cfgparam[AVNHandlerManager.BASEPARAM.DATADIR]
     pathmappings={}
     marray=cfgparam.get("Directory")
     if marray is not None:
       pathmappings={}
       for mapping in marray:
-        pathmappings[mapping['urlpath']]=AVNUtil.prependBase(AVNUtil.replaceParam(os.path.expanduser(mapping['path']),replace),self.basedir)
-    if pathmappings.get('user') is None:
-      pathmappings['user']=os.path.join(datadir,'user')
+        prefix=mapping['urlpath']
+        if not prefix in ALLOWED_PREFIXES:
+            continue
+        if prefix == self.getConfigString(self.CFG_CHARTBASE):
+            prefix=self.PATH_CHARTS
+        pathmappings[prefix]=AVNUtil.prependBase(AVNUtil.replaceParam(os.path.expanduser(mapping['path']),replace),self.basedir)
     self.pathmappings=pathmappings
     self.overwrite_map=({
                               '.png': 'image/png',
@@ -128,27 +155,42 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         self.overwrite_map[mtype['extension']]=mtype['type']
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER
-    self.handlers={}
     self.interfaceReader=None
     self.addresslist=[]
     self.handlerMap={}
-    self.externalHandlers={} #type: dict[str,AVNWorker] #prefixes that will be handled externally
+    self.externalHandlers={} #type: dict[str,AVNWorker | StaticPathHandler] #prefixes that will be handled externally
     self.webSocketHandlers={} #type: dict[str,AVNWorker]
     self.requestHandler=RequestHandlerClass
-  
+
+  def updatePathMappings(self,mappings:dict):
+      '''
+      will be called by main before all handlers are started
+      to overwrite mappings with config parameters
+      :param mappings:
+      :return:
+      '''
+      for k,v in mappings.items():
+          self.pathmappings[k]=v
+      self._setDefaultMappings()
+
+  def _setDefaultMappings(self):
+      if self.pathmappings.get(self.PATH_VIEWER) is None:
+          self.pathmappings[self.PATH_VIEWER] = os.path.join(self.basedir, self.PATH_VIEWER)
+      for dd in [self.PATH_USER, self.PATH_CHARTS]:
+          if self.pathmappings.get(dd) is None:
+              self.pathmappings[dd] = os.path.join(self.datadir, dd)
+
   def run(self):
     self.freeAllUsedResources()
+    self.externalHandlers["/" + self.PATH_VIEWER] = StaticPathHandler(self.PATH_VIEWER, self.pathmappings[self.PATH_VIEWER])
+    self.externalHandlers["/" + self.PATH_USER + "/icons"] = StaticPathHandler(self.PATH_USER + "/icons", os.path.join(
+        self.pathmappings[self.PATH_USER], "icons"))
     server_address=(self.param['httpHost'],int(self.param[self.PORT_CONFIG]))
     http.server.HTTPServer.__init__(self, server_address, self.requestHandler)
     self.claimUsedResource(UsedResource.T_TCP,self.server_port,force=True)
     self.setNameIfEmpty("%s-%d"%(self.getName(),self.server_port))
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),WorkerStatus.RUNNING)
-    charturl=self.getStringParam('chartbase')
-    if charturl is not None:
-      #set a default chart dir if not set via config url mappings
-      if self.pathmappings.get(charturl) is None:
-        self.pathmappings[charturl]=os.path.join(self.getStringParam(AVNHandlerManager.BASEPARAM.DATADIR), "charts")
     if hasIfaces:
       self.interfaceReader=threading.Thread(target=self.readInterfaces)
       self.interfaceReader.daemon=True
@@ -184,17 +226,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       return path
 
   def getChartBaseDir(self):
-    chartbaseurl=self.getStringParam('chartbase')
-    return self.handlePathmapping(chartbaseurl)
+    return self.handlePathmapping(self.PATH_CHARTS)
 
-
-  def getHandler(self,name):
-    if self.handlers.get(name) is not None:
-      return self.handlers.get(name)
-    rt=self.findHandlerByName(name)
-    if rt is not None:
-      self.handlers[name]=rt
-    return rt
 
   #read out all IP addresses
   def readInterfaces(self):
@@ -233,50 +266,30 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       return None
     return handler
 
-  def plainUrlToPath(self,path,usePathMapping=True):
-    '''
 
-    @param path: the URL as received
-    @param usePathMapping: if true use the mapping table
-    @return: an OS path
-    '''
-    words = path.split('/')
-    words = [_f for _f in words if _f]
-    path = ""
-    for word in words:
-          drive, word = os.path.splitdrive(word)
-          head, word = os.path.split(word)
-          if word in (".",".."): continue
-          path = os.path.join(path, word)
-    AVNLog.ld("request path",path)
-    if not usePathMapping:
-      return path
-    #pathmappings expect to have absolute pathes!
-    return self.handlePathmapping(path)
-
-
-  def tryExternalMappings(self,path,query,handler=None):
+  def doExternalMappings(self,path,query,handler=None):
     requestParam=urllib.parse.parse_qs(query,True)
-    for prefix in list(self.externalHandlers.keys()):
-      if path.startswith(prefix) and not self.externalHandlers[prefix].isDisabled():
-        # the external handler can either return a mapped path (already
-        # converted in an OS path - e.g. using plainUrlToPath)
-        # or just do the handling by its own and return None
+    for prefix,phandler in self.externalHandlers.items():
+      if path.startswith(prefix) and not phandler.isDisabled():
+        path=path[len(prefix):]
+        path=re.sub('^/*','',path)
         try:
-          return self.externalHandlers[prefix].handlePathRequest(path, requestParam, server=self,handler=handler)
+          return phandler.handlePathRequest(path, requestParam, server=self,handler=handler)
         except:
           AVNLog.error("external mapping failed for %s: %s",path,traceback.format_exc())
-        return None
-    #legacy fallback:
-    #if we have images at /user/images or /user/icons we can fallback to viewer
-    #new pathes should be /user/viewer/images
-    for prefix in ['icons','images']:
-      cp="/user/"+prefix
-      if path.startswith(cp):
-        osPath = self.plainUrlToPath(path, True)
-        if os.path.exists(osPath):
-          return osPath
-        return self.plainUrlToPath("/viewer/images/"+path[len(cp)+1:],True)
+          raise
+  def tryExternalMappings(self,path,query,handler=None):
+    rt=self.doExternalMappings(path,query,handler)
+    if isinstance(rt,AVNDownloadError) and rt.responseCode == 404:
+        #legacy fallback:
+        #new pathes are /user/viewer and /user/images - they are handled
+        #by the new directory handlers - and they should habe been found
+        #we try to fallback from /user/icons to /user/images
+        FBPATH="/user/icons"
+        if path.startswith(FBPATH):
+            path="/"+self.PATH_USER+"/images/"+path[len(FBPATH):]
+            return self.doExternalMappings(path,query,handler)
+    return rt
 
   def getWebSocketsHandler(self,path,query,handler):
     requestParam=urllib.parse.parse_qs(query,True)

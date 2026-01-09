@@ -47,6 +47,7 @@ import threading
 from http.server import SimpleHTTPRequestHandler
 from math import copysign
 import zipfile
+from os import path
 from typing import Any
 
 
@@ -717,10 +718,20 @@ class ChartFile(object):
         item['scheme'] = self.getScheme()
         item['originalScheme'] = self.getOriginalScheme()
 
+def plainUrlToPath(path:str)->str:
+    path = re.sub('//*', '/', path)
+    path = re.sub('^/*', '', path)
+    parts = path.split('/')
+    for part in parts:
+        if AVNUtil.clean_filename(part) != part:
+            raise Exception("invalid characters in path " + part)
+    return posixpath.normpath(path)
 
 class AVNDownload(object):
     HEADERS = {
         'Cache-Control': 'no-store',
+    }
+    HEADERS_RANGE={
         'Accept-Ranges': 'bytes',
     }
 
@@ -737,6 +748,11 @@ class AVNDownload(object):
         error = error.encode(encoding='utf-8', errors="ignore")
         self.responseCode=code
         self.size=len(error)
+        if self.stream:
+            try:
+                self.stream.close()
+            except:
+                pass
         self.stream = io.BytesIO(error)
         self.stream.seek(0)
         self.dlname=None
@@ -744,42 +760,14 @@ class AVNDownload(object):
 
     def getSize(self):
         return self.size
-        '''
-        if self.size is None:
-          if self.hasStream:
-              return None
-          self.size=os.path.getsize(self.filename)
-          self.originalSize=self.size
-          if self.lastBytes is not None and self.lastBytes < self.size:
-            self.size=self.lastBytes
-        return self.size
-        '''
+
 
     def getStream(self, noopen=False):
         return self.stream
-        '''
-        if self.stream is None:
-          if noopen:
-              return None
-          self.stream=open(self.filename, 'rb')
-          if self.lastBytes is not None:
-            if self.originalSize is None:
-              self.getSize()
-            seekv=self.originalSize-self.lastBytes
-            if seekv > 0:
-              self.stream.seek(seekv)
-        return self.stream
-        '''
+
 
     def getMimeType(self, handler=None):
         return self.mimeType
-        '''
-        if self.mimeType is not None:
-          return self.mimeType
-        if handler is None:
-          return "application/octet-stream"
-        return handler.guess_type(self.filename)
-        '''
 
     def getResponseCode(self):
         return self.responseCode
@@ -787,7 +775,11 @@ class AVNDownload(object):
     def getLastModified(self):
         return self.mtime
     def getHeaders(self):
+        if self.canSeek():
+            return dict(self.HEADERS,**self.HEADERS_RANGE)
         return self.HEADERS
+    def canSeek(self):
+        return False
     def writeChunkedStream(self, fh, outfile):
         maxread = 1000000
         while True:
@@ -867,6 +859,10 @@ class AVNFileDownload(AVNDownload):
         self.stream=self._openStream()
         return self.stream
 
+    def canSeek(self):
+        return True
+
+
 class AVNFileDownloadLB(AVNFileDownload):
     def __init__(self,filename,lastBytes,dlname=None,mimeType=None):
         super().__init__(filename,mimeType=mimeType,dlname=dlname)
@@ -919,6 +915,18 @@ class AVNDownloadError(AVNDownload):
     def __init__(self, code,error: str):
         super().__init__(None)
         self.setError(code,error)
+
+class AVNDataDownload(AVNDownload):
+    def __init__(self,data,mimeType:str):
+        super().__init__(None,mimeType=mimeType)
+        self.size=len(data)
+        self.stream=io.BytesIO(data)
+        self.stream.seek(0)
+
+class AVNStringDownload(AVNDataDownload):
+    def __init__(self,string:str):
+        encoded = string.encode(encoding='utf-8', errors="ignore")
+        super().__init__(encoded,"text/plain")
 
 
 class AVNZipDownload(AVNDownload):
@@ -1201,3 +1209,5 @@ if __name__ == '__main__':
             xte = AVNUtil.calcXTE(tp, p1, p2)
             xteRl = AVNUtil.calcXTERumbLine(tp, p1, p2)
             print("latlon=%f,%f xte=%f, xteRl=%f" % (tp[0], tp[1], xte, xteRl))
+
+

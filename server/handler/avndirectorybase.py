@@ -35,6 +35,7 @@ from fileinput import filename
 from zipfile import ZipFile
 from typing import List
 
+import avnav_util
 from avnav_manager import AVNHandlerManager
 from avnav_nmea import *
 from avnav_worker import *
@@ -370,15 +371,10 @@ class AVNDirectoryHandlerBase(AVNWorker):
             break    
     if entry is None:
       return self.tryFallbackOrFail(requestParam, handler, "no entry %s in %s" % (entryName, zipname))
-    handler.send_response(200)
-    handler.send_header("Content-type", handler.getMimeType(entry.filename))
-    handler.send_header("Content-Length", entry.file_size)
-    fs = os.stat(zipname)
-    handler.send_header("Last-Modified", handler.date_time_string(fs.st_mtime))
-    handler.end_headers()
-    if handler.command.lower() != 'head':
-      handler.wfile.write(zip.read(entry))
-    return True
+    return AVNStreamDownload(zip.open(entry,'r'),
+                             size=entry.file_size,
+                             mimeType=handler.getMimeType(entry.filename),
+                             mtime=os.path.getmtime(zipname))
 
   def convertLocalPath(self,path) -> (str,str or None):
     '''
@@ -398,7 +394,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     """
     #TODO: should we limit this to only one level?
     #we could use checkName and this way ensure that we only have one level
-    subPath=self.httpServer.plainUrlToPath(path, False)
+    subPath= avnav_util.plainUrlToPath(path)
     (subPath,baseDir)=self.convertLocalPath(subPath)
     if subPath is None:
       return #not found
@@ -424,8 +420,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
       if (part.lower().endswith(".zip") or part.lower().endswith('.kmz')) and k < (len(pathParts)-1):
         return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
     if baseDir is not None:
-      return os.path.join(baseDir,subPath)
-    return subPath
+      return AVNFileDownload(os.path.join(baseDir,subPath))
+    return AVNFileDownload(subPath)
 
   def handleSpecialApiRequest(self,command,requestparam,handler):
     raise Exception("unknown command for %s api request: %s" % (self.type, command))
@@ -504,10 +500,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def handlePathRequest(self, path, requestparam, server=None,handler=None):
       if self.getPrefix() is None:
         raise Exception("Internal error: no handler prefix for %s"%path)
-      path=posixpath.normpath(path)
-      if not path.startswith(self.getPrefix()+"/"):
-        raise Exception("Internal routing error: handler prefix %s for %s" % (self.getPrefix(),path))
-      path = path[len(self.getPrefix()) + 1:]
       return self.getPathFromUrl(path,handler=handler,requestParam=requestparam)
 
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):

@@ -105,7 +105,7 @@ except:
   pass
 
 
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog, AVNUtil, AVNStringDownload, AVNDataDownload
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 from avnuserapps import AVNUserAppHandler
 from charthandler import AVNChartHandler
@@ -1756,8 +1756,7 @@ class AVNSignalKHandler(AVNWorker):
       return self.PREFIX + "/" + self.CHARTPREFIX
 
   def handlePathRequest(self, path, requestparam, server=None, handler=None):
-      path=posixpath.normpath(path)
-      prefix = self.PREFIX + "/" + self.CHARTPREFIX
+      prefix = self.CHARTPREFIX
       if not path.startswith(prefix + "/"):
           raise Exception("unknown path %s" % path)
       path = path[len(prefix) + 1:]
@@ -1822,13 +1821,7 @@ class AVNSignalKHandler(AVNWorker):
         'url':url,
       })
       data=self.AVNAV_XML%param
-      handler.send_response(200)
-      handler.send_header("Content-type", "text/xml")
-      handler.send_header("Content-Length", len(data))
-      handler.send_header("Last-Modified", handler.date_time_string())
-      handler.end_headers()
-      handler.wfile.write(data.encode('utf-8'))
-      return True
+      return AVNStringDownload(data)
     if parr[1] == "sequence":
       return {'status':'OK','sequence':0}
     if len(parr) < 5:
@@ -1847,13 +1840,8 @@ class AVNSignalKHandler(AVNWorker):
     except:
       AVNLog.debug("unable to read tile from sk %s:%s"%(url,traceback.format_exc()))
       return
-    handler.send_response(200)
-    handler.send_header("Content-type", "image/%s"%chart['internal']['format'])
-    handler.send_header("Content-Length", len(tileData))
-    handler.send_header("Last-Modified", handler.date_time_string())
-    handler.end_headers()
-    handler.wfile.write(tileData)
-    return True
+    return AVNDataDownload(tileData,"image/%s"%chart['internal']['format'])
+
 
 avnav_handlerList.registerHandler(AVNSignalKHandler)
 

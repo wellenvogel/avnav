@@ -12,7 +12,7 @@ import urllib.parse
 
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
-from avnav_util import AVNUtil, AVNLog, AVNDownload
+from avnav_util import AVNUtil, AVNLog, AVNDownload, plainUrlToPath
 from avnav_websocket import HTTPWebSocketsHandler
 from avnav_worker import AVNWorker
 
@@ -97,38 +97,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       raise Exception("no websocket handler")
     self.wsHandler.on_ws_closed()
 
-  def do_POST(self):
-    maxlen=5000000
-    (path,sep,query) = self.path.partition('?')
-    trailing=self.server.isNavUrl(path)
-    if trailing is None:
-      self.send_error(404, "unsupported post url")
-      return
-    try:
-      ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
-      if ctype == 'multipart/form-data':
-        postvars = cgi.parse_multipart(self.rfile, pdict)
-      elif ctype == 'application/x-www-form-urlencoded':
-        length = int(self.headers.get('content-length'))
-        if length > maxlen:
-          raise Exception("too much data"+str(length))
-        postvars = cgi.parse_qs(self.rfile.read(length).decode('utf-8'), keep_blank_values=1)
-      elif ctype == 'application/json':
-        length = int(self.headers.get('content-length'))
-        if length > maxlen:
-          raise Exception("too much data"+str(length))
-        postvars = { '_json':self.rfile.read(length).decode('utf-8')}
-      else:
-        postvars = {}
-      requestParam=urllib.parse.parse_qs(query,True)
-      requestParam.update(postvars)
-      self.handleNavRequest(trailing,requestParam,method="POST")
-    except Exception as e:
-      txt=traceback.format_exc()
-      AVNLog.ld("unable to process request for ",path,query,txt)
-      self.send_response(500,txt)
-      self.end_headers()
-      return
 
   def getMimeType(self,path):
     base, ext = posixpath.splitext(path)
@@ -138,7 +106,30 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       ctype = self.guess_type(path)
     return ctype
 
+  def tryNavRequest(self,method,readVars=None):
+      (path, sep, query) = self.path.partition('?')
+      trailing = self.server.isNavUrl(path)
+      if not trailing:
+          return False
+      requestParam = urllib.parse.parse_qs(query, True)
+      if readVars:
+          updates=readVars()
+          if updates:
+              requestParam.update(updates)
+      try:
+          self.handleNavRequest(trailing, requestParam, method="POST")
+      except Exception as e:
+          txt = traceback.format_exc()
+          AVNLog.ld("unable to process request for ", path, query, txt)
+          self.send_response(500, txt)
+          self.end_headers()
+      return True
+
   def do_GET(self):
+      if super().do_GET():
+          return
+      if self.tryNavRequest("GET"):
+          return
       """Serve a GET request."""
       f = self.send_head_internal("GET")
       if f:
@@ -148,10 +139,35 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
               f.close()
 
   def do_HEAD(self):
+      if self.tryNavRequest("HEAD"):
+          return
       """Serve a HEAD request."""
       f = self.send_head_internal("HEAD")
       if f:
           f.close()
+
+  def _getPostParam(self):
+      maxlen = 5000000
+      ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
+      if ctype == 'multipart/form-data':
+          postvars = cgi.parse_multipart(self.rfile, pdict)
+      elif ctype == 'application/x-www-form-urlencoded':
+          length = int(self.headers.get('content-length'))
+          if length > maxlen:
+              raise Exception("too much data" + str(length))
+          postvars = cgi.parse_qs(self.rfile.read(length).decode('utf-8'), keep_blank_values=1)
+      elif ctype == 'application/json':
+          length = int(self.headers.get('content-length'))
+          if length > maxlen:
+              raise Exception("too much data" + str(length))
+          postvars = {'_json': self.rfile.read(length).decode('utf-8')}
+      else:
+          postvars = {}
+      return postvars
+  def do_POST(self):
+      if self.tryNavRequest("POST",self._getPostParam):
+          return
+      self.send_error(404, "unsupported post url")
 
   def send_head_internal(self,method=None):
     path=self.translate_path_internal(self.path,method)
@@ -249,7 +265,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         self.close_connection=True
         return None
 
-      return self.server.plainUrlToPath(path)
+      return plainUrlToPath(path)
 
 
   #send a json encoded response

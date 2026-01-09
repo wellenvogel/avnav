@@ -33,6 +33,7 @@ from typing import Dict
 from zipfile import ZipFile
 
 import avnav_handlerList
+import avnav_util
 from alarmhandler import AVNAlarmHandler
 from avnav_api import AVNApi, ConverterApi
 from avnav_manager import AVNHandlerManager
@@ -1045,7 +1046,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
         return rt
 
     def handlePathRequest(self, path, requestparam, server=None, handler=None):
-        localPath = path[len(self.PREFIX) + 1:].split("/", 1)
+        localPath = path.split("/", 1)
         if len(localPath) < 2:
             raise RequestException("missing plugin path", 404)
         api = self.getApi(localPath[0])
@@ -1073,7 +1074,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             url = self.PREFIX + "/" + name
             addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
             return handler.sendJsFile(fname, url, addCode)
-        fname = os.path.join(api.directory, server.plainUrlToPath(localPath[1], False))
+        fname = os.path.join(api.directory, avnav_util.plainUrlToPath(localPath[1]))
         if api.dirtype != self.D_USER:
             return fname
         if not os.path.isfile(fname):

@@ -55,7 +55,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
     if not httpserver:
       return
-    srcDir=httpserver.handlePathmapping('viewer')
+    srcDir=httpserver.handlePathmapping(AVNHttpServer.PATH_VIEWER)
     if not os.path.isdir(srcDir):
       return
     if not os.path.isdir(self.baseDir):

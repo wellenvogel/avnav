@@ -107,7 +107,6 @@ class AVNProxy(AVNWorker):
         raise Exception(f"invalid proxy command: {command}")
 
     def handlePathRequest(self, path, requestparam, server=None, handler=None):
-        path=path[len(self.getHandledPath())+1:]
         self.handleProxyRequest(path, handler)
         return True
 
