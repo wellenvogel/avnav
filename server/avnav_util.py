@@ -592,6 +592,8 @@ class AVNUtil(object):
 
     @classmethod
     def getHttpRequestParam(cls, requestparam, name, mantadory=False):
+        if not requestparam:
+            return None
         rt = requestparam.get(name)
         if rt is None:
             if mantadory:
@@ -924,9 +926,9 @@ class AVNDataDownload(AVNDownload):
         self.stream.seek(0)
 
 class AVNStringDownload(AVNDataDownload):
-    def __init__(self,string:str):
+    def __init__(self,string:str,mimeType=None):
         encoded = string.encode(encoding='utf-8', errors="ignore")
-        super().__init__(encoded,"text/plain")
+        super().__init__(encoded,mimeType or "text/plain")
 
 
 

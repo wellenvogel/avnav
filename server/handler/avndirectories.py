@@ -149,7 +149,7 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
 
   def startInstance(self, navdata):
     super().startInstance(navdata)
-    self.baseDir=os.path.join(self.httpServer.handlePathmapping('viewer'),'images')
+    self.baseDir=os.path.join(self.httpServer.handlePathmapping(AVNHttpServer.PATH_VIEWER),'images')
 
 
 

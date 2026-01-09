@@ -12,7 +12,7 @@ import urllib.parse
 
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
-from avnav_util import AVNUtil, AVNLog, AVNDownload, plainUrlToPath
+from avnav_util import AVNUtil, AVNLog, AVNDownload, plainUrlToPath, AVNStringDownload
 from avnav_websocket import HTTPWebSocketsHandler
 from avnav_worker import AVNWorker
 
@@ -106,38 +106,16 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       ctype = self.guess_type(path)
     return ctype
 
-  def tryNavRequest(self,method,readVars=None):
-      (path, sep, query) = self.path.partition('?')
-      trailing = self.server.isNavUrl(path)
-      if not trailing:
-          return False
-      requestParam = urllib.parse.parse_qs(query, True)
-      if readVars:
-          updates=readVars()
-          if updates:
-              requestParam.update(updates)
-      try:
-          self.handleNavRequest(trailing, requestParam, method="POST")
-      except Exception as e:
-          txt = traceback.format_exc()
-          AVNLog.ld("unable to process request for ", path, query, txt)
-          self.send_response(500, txt)
-          self.end_headers()
-      return True
 
   def do_GET(self):
       if super().do_GET():
           #ws request
           return
       m="GET"
-      if self.tryNavRequest(m):
-          return
       self.handleRequest(m)
 
   def do_HEAD(self):
       m="HEAD"
-      if self.tryNavRequest(m):
-          return
       self.handleRequest(m)
   def _getPostParam(self):
       maxlen = 5000000
@@ -158,10 +136,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           postvars = {}
       return postvars
   def do_POST(self):
-      if self.tryNavRequest("POST",self._getPostParam):
-          return
-      self.send_error(404, "unsupported post url")
-
+      self.handleRequest("POST")
 
   def getPageRoot(self):
     path = self.server.getStringParam('index')
@@ -171,21 +146,46 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       (path, query) = AVNUtil.pathQueryFromUrl(self.path)
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
-      try:
-          # handlers will either return
-          # True if already done
-          # None if no mapping found (404)
-          # a path to be sent
-          extPath = self.server.tryExternalMappings(path, query, handler=self)
-          if isinstance(extPath, AVNDownload):
-            self.writeFromDownload(extPath,method=method)
-          else:
-              if not extPath:
+      trailing = self.server.isNavUrl(path)
+      response=None
+      requestParam=None
+      if trailing:
+          #navRequest
+          requestParam = urllib.parse.parse_qs(query, True)
+          if method == "POST":
+              updates = self._getPostParam()
+              if updates:
+                  requestParam.update(updates)
+          try:
+              response=self.handleNavRequest(trailing, requestParam)
+          except Exception as e:
+              txt = traceback.format_exc()
+              AVNLog.ld("unable to process request for ", path, query, txt)
+              self.send_response(500, txt)
+              self.end_headers()
+              self.close_connection=True
+              return
+      else:
+          if method == "POST":
+              self.send_error(404, "unsupported post url")
+              return
+          try:
+              # handlers will either return
+              # True if already done
+              # None if no mapping found (404)
+              # a path to be sent
+              response = self.server.tryExternalMappings(path, query, handler=self)
+          except Exception as e:
+              self.send_error(404, str(e))
+              return
+      if isinstance(response, AVNDownload):
+          self.writeFromDownload(response,filename=self.getRequestParam(requestParam, "filename"),
+              noattach=self.getRequestParam(requestParam, 'noattach') is not None,
+              method=method)
+      else:
+          if not response:
                 self.send_error(404, path+ "not found")
-          return
-      except Exception as e:
-          self.send_error(404, str(e))
-          return
+      return
 
 
 
@@ -272,7 +272,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       if requestType == 'listDir':
           return (type,'list')
 
-  def handleNavRequest(self,trailing,requestParam,method="GET"):
+  def handleNavRequest(self,trailing,requestParam):
     ''' handle an api query
       request parameters:
       request=api&type=decoder&command=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
@@ -295,42 +295,29 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     if requestTypeP is not None:
         requestType=requestTypeP
     AVNLog.ld('navrequest ',requestParam)
-    try:
-      rtj=None
-      typeP=AVNUtil.getHttpRequestParam(requestParam,'type',False)
-      if typeP is not None:
-          type=typeP
-      converted=self.mapOldStyleRequest(requestType,type)
-      if converted is None:
-          commandP=AVNUtil.getHttpRequestParam(requestParam,'command',False)
-          if commandP is not None:
-              command=commandP
-          if command is None:
-              raise Exception(f"missing parameter command for api request {type}")
-      else:
-          type=converted[0]
-          command=converted[1]
-      rtj=self.handleApiRequest(type,command,requestParam)
+    rtj=None
+    typeP=AVNUtil.getHttpRequestParam(requestParam,'type',False)
+    if typeP is not None:
+        type=typeP
+    converted=self.mapOldStyleRequest(requestType,type)
+    if converted is None:
+        commandP=AVNUtil.getHttpRequestParam(requestParam,'command',False)
+        if commandP is not None:
+            command=commandP
+        if command is None:
+            raise Exception(f"missing parameter command for api request {type}")
+    else:
+        type=converted[0]
+        command=converted[1]
+    rtj=self.handleApiRequest(type,command,requestParam)
 
-      if isinstance(rtj, dict) or isinstance(rtj, list):
-        rtj = json.dumps(rtj, cls=Encoder)
-        self.sendJsonResponse(rtj)
-        return
-      if isinstance(rtj, AVNDownload):
-          try:
-            self.writeFromDownload(rtj,
-              filename=self.getRequestParam(requestParam, "filename"),
-              noattach=self.getRequestParam(requestParam, 'noattach') is not None,
-              method=method)
-          except Exception as e:
-            AVNLog.debug("error when downloading %s: %s",rtj.filename,traceback.format_exc())
-            raise e
-          return
-      if rtj is None:
-          raise Exception(f"empty response for {requestType} {type}")
-    except Exception as e:
-        self.close_connection=True
-        self.send_error(404, message=str(e), explain=traceback.format_exc(1))
+    if isinstance(rtj, dict) or isinstance(rtj, list):
+      return AVNStringDownload(json.dumps(rtj, cls=Encoder),mimeType="application/json")
+    if isinstance(rtj, AVNDownload):
+        return rtj
+    if rtj is None:
+        raise Exception(f"empty response for {requestType} {type}")
+    return rtj
 
   def handleApiRequest(self,type,command,requestParam):
     """

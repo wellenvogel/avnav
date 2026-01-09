@@ -1062,8 +1062,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                 raise Exception("no handler for plugin %s request" % localPath[0])
             rt = api.requestHandler(localPath[1][4:], handler, requestparam)
             if type(rt) is dict:
-                handler.sendJsonResponse(json.dumps(rt))
-                return True
+                return AVNStringDownload(json.dumps(rt),mimeType="application/json")
             return rt
         if localPath[1] == 'plugin.js':
             if handler is None:
@@ -1076,7 +1075,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             return handler.sendJsFile(fname, url, addCode)
         fname = os.path.join(api.directory, avnav_util.plainUrlToPath(localPath[1]))
         if api.dirtype != self.D_USER:
-            return fname
+            return AVNFileDownload(fname)
         if not os.path.isfile(fname):
             raise RequestException(f"{fname} not found", 404)
         # use AVNDownload as return to prevent caching

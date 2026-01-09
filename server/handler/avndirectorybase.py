@@ -391,9 +391,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
         break
     if not hasZip:
       if baseDir is not None:
-        return os.path.join(baseDir, subPath)
+        return AVNFileDownload(os.path.join(baseDir, subPath))
       else:
-        return subPath
+        return AVNFileDownload(subPath)
     currentPath=baseDir
     for k in range(0,len(pathParts)):
       part=pathParts[k]
