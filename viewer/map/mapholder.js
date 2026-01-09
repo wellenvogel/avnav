@@ -33,6 +33,7 @@ import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle, Circle as olCircle, Stroke as olStroke, Fill as olFill} from 'ol/style';
 import * as olTransforms from 'ol/proj/transforms';
 import {ScaleLine as olScaleLine} from 'ol/control';
+import {shared as IconImageCache} from 'ol/style/IconImageCache';
 import OverlayConfig, {fetchOverlayConfig} from "./overlayconfig";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
@@ -54,7 +55,6 @@ import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
 import {avitem, getav, setav} from "../util/helper";
 import {checkZoomBounds} from "./chartlayers";
-
 
 export const EventTypes = {
     SELECTWP: 2,
@@ -944,6 +944,7 @@ class MapHolder extends DrawingPositionConverter {
         this.minzoom = 32;
         this.mapMinZoom = this.minzoom;
         this.maxzoom = 0;
+        IconImageCache.clear();
         for (let i = 0; i < this.sources.length; i++) {
             let sourceLayers = this.sources[i].getLayers();
             sourceLayers.forEach((layer) => {

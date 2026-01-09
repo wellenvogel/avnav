@@ -67,7 +67,7 @@ const TYPE_LIST=[
     {label: 'track', value: 'track'},
     ]
 const OverlayItemDialog = (props) => {
-    const [iconFiles, setIconFiles] = useState(0);
+    const [iconFiles, setIconFiles] = useState([]);
     const [itemInfo, setItemInfo] = useState({});
     const [loading, setLoading] = useState(false);
     const [changed, setChanged] = useState(false);

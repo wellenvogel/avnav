@@ -44,6 +44,7 @@ import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureI
 import {getRouteStyles} from "./routelayer";
 import {fetchItem} from "../util/itemFunctions";
 import base from "../base";
+import {getav, setav} from "../util/helper";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -206,7 +207,7 @@ class GpxChartSource extends ChartSourceBase{
         };
     }
     styleFunction(feature,resolution) {
-
+        const fallbackUrl=this.styleParameters[editableOverlayParameters.defaultIcon];
         let type=feature.getGeometry().getType();
         if (type === 'Point'){
             let rt=this.styles[type];
@@ -218,10 +219,12 @@ class GpxChartSource extends ChartSourceBase{
                 if (sym) {
                     if (!this.styleMap[sym]) {
                         rt = rt.clone();
+                        const icon=this.createIconWithFallback(
+                            this.getSymbolUrl(sym, '.png'),
+                            fallbackUrl
+                        )
                         rt.setImage(
-                                new olIcon({
-                                    src: this.getSymbolUrl(sym, '.png')
-                                })
+                          icon
                         );
                         this.styleMap[sym] = rt;
                     }

@@ -25,13 +25,19 @@
 
 import base from '../base.js';
 import assign from 'object-assign';
-import Helper, {injectav, setav} from '../util/helper.js';
+import Helper, {getav, injectav, setav} from '../util/helper.js';
 import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
-import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
-import {Stroke as olStroke, Fill as olFill} from 'ol/style';
+import {LineString as olLineString,
+    MultiLineString as olMultiLineString,
+    Point as olPoint} from 'ol/geom';
+import {Stroke as olStroke,
+    Fill as olFill,
+    Icon as olIcon,
+} from 'ol/style';
+import olImageState from 'ol/ImageState';
 import {
     EditableBooleanParameter, EditableColorParameter,
     EditableIconParameter,
@@ -287,12 +293,31 @@ class ChartSourceBase {
         if (sym.match(/^\//)) return sym;
         if (this.chartEntry[editableOverlayParameters.icon]){
             url=this.chartEntry[editableOverlayParameters.icon] + "/" + sym;
-            if (this.chartEntry[editableOverlayParameters.defaultIcon]) url+="?fallback="+encodeURIComponent(this.chartEntry[editableOverlayParameters.defaultIcon]);
+            //if (this.chartEntry[editableOverlayParameters.defaultIcon]) url+="?fallback="+encodeURIComponent(this.chartEntry[editableOverlayParameters.defaultIcon]);
         }
         else{
             return this.chartEntry[editableOverlayParameters.defaultIcon];
         }
         return url;
+    }
+    createIconWithFallback(url,fallbackUrl){
+        const icon=new olIcon({
+            src: url
+        })
+        if (fallbackUrl) {
+            setav(icon, {fallbackUrl: fallbackUrl})
+            icon.listenImageChange((event) => {
+                if (event.target.getImageState() === olImageState.ERROR) {
+                    const fallback = getav(icon).fallbackUrl;
+                    if (fallback) {
+                        base.log("image error, using fallback",url,fallbackUrl);
+                        setav(icon, {fallbackUrl: undefined});
+                        icon.setSrc(fallback);
+                    }
+                }
+            })
+        }
+        return icon;
     }
     getLinkUrl(link){
         if (! link) return;

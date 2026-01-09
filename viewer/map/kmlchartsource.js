@@ -118,6 +118,7 @@ class KmlChartSource extends ChartSourceBase{
                 currentUrl=currentUrl.substr(ourBase.length);
                 if (currentUrl.startsWith("/")) currentUrl=currentUrl.substr(1);
             }
+            let fallbackUrl;
             if (currentUrl.startsWith("http")){
                 if (this.styleParameters[supportedStyleParameters.allowOnline]){
                     imageStyle.setScale(this.getScale());
@@ -129,7 +130,8 @@ class KmlChartSource extends ChartSourceBase{
             }
             else{
                 if (this.styleParameters[supportedStyleParameters.icon]){
-                    url=this.styleParameters[supportedStyleParameters.icon]+"/"+currentUrl+"?fallback="+encodeURIComponent(this.styleParameters[supportedStyleParameters.defaultIcon]);
+                    url=this.styleParameters[supportedStyleParameters.icon];
+                    fallbackUrl=this.styleParameters[supportedStyleParameters.defaultIcon];
                 }
                 else{
                     url=this.styleParameters[supportedStyleParameters.defaultIcon];
@@ -137,10 +139,7 @@ class KmlChartSource extends ChartSourceBase{
             }
             if (url) {
                 style.setImage(
-                    new olIcon({
-                            src: url
-                        }
-                    )
+                    this.createIconWithFallback(url,fallbackUrl)
                 )
             }
             else{
