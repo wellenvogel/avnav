@@ -482,8 +482,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       return True
     if parts[1] == "sequence":
       rsp={'status':'OK','sequence':chart.getChangeCount()}
-      handler.sendJsonResponse(json.dumps(rsp))
-      return True
+      return AVNJsonDownload(rsp)
     if len(parts) != 5:
       raise Exception("invalid request to chart file %s: %s" %(chartDescription.name,path))
     data=chart.getTileData((int(parts[2]),int(parts[3]),int(parts[4].replace(".png",""))),parts[1])

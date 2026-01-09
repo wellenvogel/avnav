@@ -105,7 +105,7 @@ except:
   pass
 
 
-from avnav_util import AVNLog, AVNUtil, AVNStringDownload, AVNDataDownload
+from avnav_util import AVNLog, AVNUtil, AVNStringDownload, AVNDataDownload, AVNJsonDownload
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 from avnuserapps import AVNUserAppHandler
 from charthandler import AVNChartHandler
@@ -1803,8 +1803,7 @@ class AVNSignalKHandler(AVNWorker):
       raise Exception("chart %s not found"%chartName)
     if parr[1] == "sequence":
       sData={'status':'OK','sequence':self.configSequence}
-      handler.sendJsonResponse(json.dumps(sData))
-      return
+      return AVNJsonDownload(sData)
     if parr[1] == "avnav.xml":
       requestHost = handler.headers.get('host')
       requestHostAddr = requestHost.split(':')[0]

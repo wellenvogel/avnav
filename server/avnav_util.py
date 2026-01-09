@@ -27,6 +27,7 @@
 import glob
 import io
 import itertools
+import json
 import posixpath
 import shutil
 import urllib.parse
@@ -930,7 +931,19 @@ class AVNStringDownload(AVNDataDownload):
         encoded = string.encode(encoding='utf-8', errors="ignore")
         super().__init__(encoded,mimeType or "text/plain")
 
+class Encoder(json.JSONEncoder):
+  '''
+  allow our objects to have a "serialize" method
+  to make them json encodable in a generic manner
+  '''
+  def default(self, o):
+    if hasattr(o,'serialize'):
+      return o.serialize()
+    return super(Encoder, self).default(o)
 
+class AVNJsonDownload(AVNStringDownload):
+    def __init__(self,data):
+        super().__init__(json.dumps(data,cls=Encoder),mimeType="application/json")
 
 class AVNZipDownload(AVNDownload):
     '''

@@ -1,5 +1,4 @@
 import http.server
-import io
 import cgi
 import json
 import os
@@ -10,11 +9,9 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 
-from avnav_nmea import NMEAParser
-from avnav_store import AVNStore
-from avnav_util import AVNUtil, AVNLog, AVNDownload, plainUrlToPath, AVNStringDownload
+from avnav_util import AVNUtil, AVNLog, AVNDownload, AVNStringDownload, Encoder, AVNJsonDownload
 from avnav_websocket import HTTPWebSocketsHandler
-from avnav_worker import AVNWorker
+
 
 class WebSocketHandler(object):
   def __init__(self,handler):
@@ -35,16 +32,6 @@ class WebSocketHandler(object):
   def on_ws_closed(self):
     self.connected=False
 
-
-class Encoder(json.JSONEncoder):
-  '''
-  allow our objects to have a "serialize" method
-  to make them json encodable in a generic manner
-  '''
-  def default(self, o):
-    if hasattr(o,'serialize'):
-      return o.serialize()
-    return super(Encoder, self).default(o)
 
 class RequestException(Exception):
     def __init__(self,str,code=500):
@@ -188,22 +175,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       return
 
 
-
-  #send a json encoded response
-  def sendJsonResponse(self, rtj):
-    if not rtj is None:
-      self.send_response(200)
-      self.send_header("Content-type", "application/json")
-      wbytes=rtj.encode('utf-8')
-      self.send_header("Content-Length", str(len(wbytes)))
-      self.send_header("Last-Modified", self.date_time_string())
-      self.send_header("Cache-Control", "no-store")
-      self.end_headers()
-      self.wfile.write(wbytes)
-      AVNLog.ld("json response",rtj)
-    else:
-      AVNLog.ld("empty response")
-
   def sendJsFile(self,filename,baseUrl,addCode=None):
     '''
     send a js file that we encapsulate into an anonymus function
@@ -312,7 +283,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rtj=self.handleApiRequest(type,command,requestParam)
 
     if isinstance(rtj, dict) or isinstance(rtj, list):
-      return AVNStringDownload(json.dumps(rtj, cls=Encoder),mimeType="application/json")
+      return AVNJsonDownload(rtj)
     if isinstance(rtj, AVNDownload):
         return rtj
     if rtj is None:
