@@ -166,9 +166,19 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
               self.send_error(404, str(e))
               return
       if isinstance(response, AVNDownload):
-          self.writeFromDownload(response,filename=self.getRequestParam(requestParam, "filename"),
-              noattach=self.getRequestParam(requestParam, 'noattach') is not None,
-              method=method)
+          start=None
+          end=None
+          range=self.headers.get('range')
+          if range is not None:
+              if range.lower().startswith('bytes='):
+                  range=range[len('bytes='):]
+                  [start,end]=range.split('-')
+          response.writeOut(self,
+                        filename=self.getRequestParam(requestParam, "filename"),
+                        noattach=self.getRequestParam(requestParam, 'noattach') is not None,
+                        sendbody=method != "HEAD",
+                        start=start,
+                        end=end )
       else:
           if not response:
                 self.send_error(404, path+ "not found")
@@ -330,19 +340,3 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.wfile.write(buf)
       bToSend -= len(buf)
     fh.close()
-
-  def writeData(self,data,mimeType):
-    self.send_response(200)
-    self.send_header("Content-type", mimeType)
-    wbytes=None
-    if type(data) == bytes:
-      wbytes=data
-    else:
-      wbytes=data.encode('utf-8')
-    self.send_header("Content-Length", str(len(wbytes)))
-    self.send_header("Last-Modified", self.date_time_string())
-    self.end_headers()
-    self.wfile.write(wbytes)
-
-  def writeFromDownload(self,download: AVNDownload,filename:str=None,noattach:bool=False,method=None):
-    download.writeOut(self,filename,noattach=noattach,sendbody=method != "HEAD")

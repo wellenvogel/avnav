@@ -798,10 +798,38 @@ class AVNDownload(object):
     def writeOut(self, handler: SimpleHTTPRequestHandler,
                  filename=None,
                  noattach: bool = False,
-                 sendbody=True):
+                 sendbody=True,
+                 start=None,
+                 end=None):
         stream=self.getStream(noopen=not sendbody)
         if sendbody and stream is None:
             self.setError(500,"no data in response")
+        headers=self.getHeaders()
+        if start is not None or end is not None:
+            try:
+                if not self.canSeek() or self.size is None:
+                    raise Exception("stream cannot seek")
+                else:
+                    starti=0
+                    endi=self.size-1
+                    if start is not None:
+                        starti=int(start)
+                        if starti < 0 or starti >= self.size:
+                            raise Exception("invalid start")
+                    if end is not None:
+                        endi=int(end)
+                        if endi < 0 or endi >= self.size or endi < starti:
+                            raise Exception("invalid end")
+                    reached=self.stream.seek(starti)
+                    if reached != starti:
+                        raise Exception("could not seek start")
+                    self.size=endi-starti+1
+                    self.responseCode=206
+                    headers=headers.copy()
+                    headers.update({"Content-Range":f"bytes {starti}-{endi}/{self.size}"})
+            except Exception as e:
+                self.setError(416,str(e))
+                stream=self.stream
         code=self.getResponseCode()
         handler.send_response(code)
         handler.send_header("Content-type", self.getMimeType(handler))
@@ -817,7 +845,7 @@ class AVNDownload(object):
             handler.send_header("Content-Length", size)
         else:
             handler.send_header('Transfer-Encoding', 'chunked')
-        for k, v in self.getHeaders().items():
+        for k, v in headers.items():
             handler.send_header(k, v)
         handler.end_headers()
         if sendbody:
@@ -882,33 +910,9 @@ class AVNFileDownloadLB(AVNFileDownload):
                 self.size=self.size-seekv
         return stream
 
-class AVNFileDownloadRange(AVNFileDownload):
-    def __init__(self,filename,start,end,mimeType=None):
-        super().__init__(filename,mimeType=mimeType)
-        self.start=int(start)
-        self.end=int(end)
-        self.responseCode=206
+    def canSeek(self):
+        return False
 
-    def _openStream(self):
-        if (self.start < 0 or self.start >= self.size or self.end < 0 or self.end >= self.size or self.start > self.end):
-            self.setError(416,"invalid range")
-            return self.stream
-        stream=super()._openStream()
-        if not stream:
-            return stream
-        seeks=stream.seek(self.start)
-        if seeks != self.start:
-            stream.close()
-            self.setError(416,"unable to seek to start")
-            return self.stream
-        self.size=self.end-self.start+1
-        return stream
-
-
-    def getHeaders(self):
-        headers=super().getHeaders().copy()
-        headers["Content-Range"]=f"bytes {self.start}-{self.end}/{self.size}"
-        return headers
 
 class AVNStreamDownload(AVNDownload):
     def __init__(self,stream,size=None,dlname=None,mimeType=None,mtime=None):

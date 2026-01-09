@@ -478,8 +478,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if parts[1] == AVNUtil.NAVXML:
       AVNLog.debug("avnav request for chart %s",chartDescription.name)
       data=chart.getAvnavXml()
-      handler.writeData(data, "text/xml", )
-      return True
+      return AVNStringDownload(data,mimeType="text/xml")
     if parts[1] == "sequence":
       rsp={'status':'OK','sequence':chart.getChangeCount()}
       return AVNJsonDownload(rsp)
@@ -489,8 +488,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if data is None:
       handler.send_error(404,"File %s not found"%(path))
       return True
-    handler.writeData(data, "image/png", )
-    return True
+    return AVNDataDownload(data, "image/png", )
 
   def getChartDescriptionByKey(self, chartKey, requestIp="localhost",returnItem=False):
     '''
