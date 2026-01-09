@@ -337,25 +337,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
         return name
     return name+extension
 
-  def tryFallbackOrFail(self,requestParam,handler,error):
-    if requestParam is None:
-      raise Exception(error)
-    url=AVNUtil.getHttpRequestParam(requestParam,"fallback")
-    if url is None:
-      raise Exception(error)
-    if url[0] != '/':
-      if handler is None:
-        raise Exception("no handler")
-      baseUrl=handler.getPageRoot()
-      url=baseUrl+"/"+url
-    rt=handler.translate_path_internal(re.sub(r"\?.*","",url))
-    if rt is None:
-      raise Exception(error)
-    return rt
-
   def getZipEntry(self,zipname,entryName,handler,requestParam=None):
     if not os.path.exists(zipname):
-      return self.tryFallbackOrFail(requestParam, handler, "zip file %s not found" % zipname)
+        raise Exception("zip file %s not found" % zipname)
     zip = ZipFile(zipname)
     entry = None
     try:
@@ -370,7 +354,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
             entry = mbr
             break    
     if entry is None:
-      return self.tryFallbackOrFail(requestParam, handler, "no entry %s in %s" % (entryName, zipname))
+      raise Exception("no entry %s in %s" % (entryName, zipname))
     return AVNStreamDownload(zip.open(entry,'r'),
                              size=entry.file_size,
                              mimeType=handler.getMimeType(entry.filename),

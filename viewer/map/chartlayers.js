@@ -326,8 +326,15 @@ class LayerConfigXYZ extends LayerConfig{
             layerUrl:undefined,
             upzoom:this.upzoom
         }
-        const url=options.url||options.href;
-        if (! url) throw new Error("missing layer url");
+        let url=options.url||options.href;
+        if (! url) {
+            if (this.overviewUrl) {
+                url=this.overviewUrl.replace(/\/[^/]*$/,'');
+            }
+            if (! url) {
+                throw new Error("missing layer url");
+            }
+        }
         layerOptions.layerUrl=injectBaseUrl(url,this.overviewUrl);
         if (url.indexOf("{x}") >= 0 && url.indexOf("{y}") >= 0 && url.indexOf("{z}") >= 0) {
             layerOptions.replaceInUrl = true;

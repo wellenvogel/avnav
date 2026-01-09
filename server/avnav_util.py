@@ -929,6 +929,7 @@ class AVNStringDownload(AVNDataDownload):
         super().__init__(encoded,"text/plain")
 
 
+
 class AVNZipDownload(AVNDownload):
     '''
     see https://github.com/pR0Ps/zipstream-ng

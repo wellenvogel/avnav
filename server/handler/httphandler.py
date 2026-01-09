@@ -127,25 +127,18 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
 
   def do_GET(self):
       if super().do_GET():
+          #ws request
           return
-      if self.tryNavRequest("GET"):
+      m="GET"
+      if self.tryNavRequest(m):
           return
-      """Serve a GET request."""
-      f = self.send_head_internal("GET")
-      if f:
-          try:
-              self.copyfile(f, self.wfile)
-          finally:
-              f.close()
+      self.handleRequest(m)
 
   def do_HEAD(self):
-      if self.tryNavRequest("HEAD"):
+      m="HEAD"
+      if self.tryNavRequest(m):
           return
-      """Serve a HEAD request."""
-      f = self.send_head_internal("HEAD")
-      if f:
-          f.close()
-
+      self.handleRequest(m)
   def _getPostParam(self):
       maxlen = 5000000
       ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
@@ -169,103 +162,31 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           return
       self.send_error(404, "unsupported post url")
 
-  def send_head_internal(self,method=None):
-    path=self.translate_path_internal(self.path,method)
-    if path is None:
-      return
-    """Common code for GET and HEAD commands.
-
-    This sends the response code and MIME headers.
-
-    Return value is either a file object (which has to be copied
-    to the outputfile by the caller unless the command was HEAD,
-    and must be closed by the caller under all circumstances), or
-    None, in which case the caller has nothing further to do.
-
-    """
-
-    f = None
-    if os.path.isdir(path):
-        if not self.path.endswith('/'):
-            # redirect browser - doing basically what apache does
-            self.send_response(301)
-            self.send_header("Location", self.path + "/")
-            self.end_headers()
-            self.close_connection=True
-            return None
-        for index in "index.html", "index.htm":
-            index = os.path.join(path, index)
-            if os.path.exists(index):
-                path = index
-                break
-        else:
-            return self.list_directory(path)
-
-    ctype = self.getMimeType(path)
-    try:
-        # Always read in binary mode. Opening files in text mode may cause
-        # newline translations, making the actual size of the content
-        # transmitted *less* than the content-length!
-        f = open(path, 'rb')
-    except IOError:
-        self.send_error(404, "File not found")
-        return None
-    self.send_response(200)
-    self.send_header("Content-type", ctype)
-    fs = os.fstat(f.fileno())
-    self.send_header("Content-Length", str(fs[6]))
-    if path.endswith(".js") or path.endswith(".css"):
-      self.send_header("cache-control","private, max-age=0, no-cache")
-    self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
-    self.end_headers()
-    return f
 
   def getPageRoot(self):
     path = self.server.getStringParam('index')
     return re.sub("/[^/]*$", "", path)
 
-
-  def translate_path_internal(self, path,method=None):
-      """Translate a /-separated PATH to the local filename syntax.
-
-      Components that mean special things to the local file system
-      (e.g. drive or directory names) are ignored.  (XXX They should
-      probably be diagnosed.)
-
-      """
-      # abandon query parameters
-      (path,query) = AVNUtil.pathQueryFromUrl(path)
-      try:
-        #handlers will either return
-        #True if already done
-        #None if no mapping found (404)
-        #a path to be sent
-        extPath=self.server.tryExternalMappings(path,query,handler=self)
-      except Exception as e:
-        self.send_error(404,str(e))
-        return None
-      if isinstance(extPath, AVNDownload):
-        self.writeFromDownload(extPath,method=method)
-        return None
-      if extPath == True:
-        return None
-      if extPath is not None:
-        return extPath
-      path=posixpath.normpath(path)
-      trailing=self.server.isNavUrl(path)
-      if trailing is not None:
-        requestParam=urllib.parse.parse_qs(query,True)
-        self.handleNavRequest(trailing,requestParam,method=method)
-        return None
+  def handleRequest(self,method=None):
+      (path, query) = AVNUtil.pathQueryFromUrl(self.path)
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
-        self.send_response(301)
-        self.send_header("Location", path)
-        self.end_headers()
-        self.close_connection=True
-        return None
+      try:
+          # handlers will either return
+          # True if already done
+          # None if no mapping found (404)
+          # a path to be sent
+          extPath = self.server.tryExternalMappings(path, query, handler=self)
+          if isinstance(extPath, AVNDownload):
+            self.writeFromDownload(extPath,method=method)
+          else:
+              if not extPath:
+                self.send_error(404, path+ "not found")
+          return
+      except Exception as e:
+          self.send_error(404, str(e))
+          return
 
-      return plainUrlToPath(path)
 
 
   #send a json encoded response
