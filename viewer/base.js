@@ -34,6 +34,7 @@
 let base={};
 
 base.log=function(txt){
+    const avnav=window.avnav;
     if (! avnav || ! avnav.debugMode) return;
     try{
         console.log(txt);

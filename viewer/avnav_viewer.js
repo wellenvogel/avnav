@@ -30,9 +30,6 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 */
 
 import splitsupport from "./util/splitsupport";
-
-if (getParam('dimm')) avnav.testDim=true;
-
 import React from 'react';
 import propertyHandler from './util/propertyhandler';
 import App from './App.jsx';
@@ -101,7 +98,7 @@ export default function() {
         document.querySelector('html').style.height="100vh";
     }
 
-    if (getParam('log')) avnav.debugMode=true;
+    if (getParam('log')) window.avnav.debugMode=true;
     let navurl=getParam('navurl');
     if (navurl){
         globalStore.storeData(keys.gui.global.navUrl,navurl,true);

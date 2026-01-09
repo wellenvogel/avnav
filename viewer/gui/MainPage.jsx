@@ -24,7 +24,7 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
 import LayoutHandler from "../util/layouthandler";
-import {avitem} from "../util/helper";
+import Helper, {avitem} from "../util/helper";
 import {shallowEqual} from "shallow-equal";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase} from "../util/itemFunctions";
@@ -101,7 +101,7 @@ class BottomLine extends React.Component {
                             }
                         </div>
                         <div className="link">
-                            <div > AVNav Version <span >{avnav.version}</span></div>
+                            <div > AVNav Version <span >{Helper.avNavVersion()}</span></div>
                             <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="extLink">www.wellenvogel.de/software/avnav/index.php</a>
                             </div>
                         </div>
