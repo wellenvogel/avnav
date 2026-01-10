@@ -44,8 +44,11 @@ import {ChartFeatureInfo} from "./featureInfo";
 import {featureListFormatter} from "../util/featureFormatter";
 import {getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
-import { PMTilesRasterSource } from "ol-pmtiles";
 import olDataTile,{asImageLike} from "ol/DataTile";
+import olDataTileSource from "ol/source/DataTile";
+import {PMTiles,Header} from 'pmtiles';
+import {createXYZ, extentFromProjection} from "ol/tilegrid";
+import {PMTilesRasterSource} from "ol-pmtiles";
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
     if (! (name in obj)) throw new Error(`${text} missing parameter ${name}`)
@@ -187,7 +190,8 @@ class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
         if (tile instanceof olDataTile) {
             image = asImageLike(tile.getData());
             if (!image) {
-                throw new Error('Rendering array data is not yet supported');
+                return;
+                //throw new Error('Rendering array data is not yet supported');
             }
         } else {
             image = this.getTileImage(tile);
@@ -716,6 +720,59 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     }
 }
 
+class AVPMTilesRasterSource extends olDataTileSource {
+    loadImage = (src) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.addEventListener("load", () => resolve(img));
+            img.addEventListener("error", () => reject(new Error("load failed")));
+            img.src = src;
+        });
+    };
+
+    constructor(options) {
+        super({
+            ...options,
+            ...{
+                state: "loading",
+            },
+        });
+
+        const p = new PMTiles(options.url);
+        p.getHeader().then((h /* @type Header*/) => {
+            const projection =
+                options.projection === undefined ? "EPSG:3857" : options.projection;
+            const llextent = [h.minLon, h.minLat, h.maxLon, h.maxLat];
+            let validExtent = true;
+            for (let v of llextent) {
+                if (v == undefined) validExtent = false;
+            }
+            const extent = validExtent ?
+                olExtent.applyTransform(llextent, olTransforms.get("EPSG:4326", projection)) :
+                undefined;
+            this.tileGrid =
+                options.tileGrid ||
+                createXYZ({
+                    maxResolution: options.maxResolution,
+                    minZoom: h.minZoom,
+                    maxZoom: h.maxZoom,
+                    tileSize: options.tileSize,
+                });
+            this.setLoader(async (z, x, y) => {
+                const response = await p.getZxy(z, x, y);
+                if (!response) {
+                    return new Uint8Array();
+                }
+                const src = URL.createObjectURL(new Blob([response.data]));
+                const image = await this.loadImage(src);
+                URL.revokeObjectURL(src);
+                return image;
+            });
+            this.setState("ready");
+        });
+    }
+}
+
 class LayerConfigPMTilesRaster extends LayerConfigXYZ {
     constructor(props) {
         super(props);
@@ -728,9 +785,9 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
     createOL(options) {
         if (!options) throw new Error("missing options for PMTiles layer");
         const layerOptions = this.buildLayerOptions(options);
-        const extent = this.bboxToOlExtent(options.boundingbox);
+        let extent = this.bboxToOlExtent(options.boundingbox);
         //const tileUrlFunction = this.createTileUrlFunction(options);
-        this.source = new PMTilesRasterSource({
+        this.source = new AVPMTilesRasterSource({
             url: layerOptions.layerUrl,
             /*tileUrlFunction: (coord) => {
                 return tileUrlFunction(coord);
@@ -741,6 +798,10 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
              */
             tileSize: NORMAL_TILE_SIZE * globalStore.getData(keys.properties.mapScale, 1),
         })
+        const grid=this.source.getTileGrid();
+        if (! extent ) extent=grid.getExtent()
+        const minZoom=(options.minzoom != undefined) ? options.minzoom : (grid.getMinZoom()||2);
+        const maxZoom =(options.maxzoom != undefined)?options.maxzoom : (grid.getMaxZoom()||23)+layerOptions.upzoom;
         /*
         this.source.tileClass = tileClassCreator((coord) => {
                 return tileUrlFunction(coord);
@@ -755,8 +816,8 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
         this.layer.createRenderer = () => new AvNavLayerRenderer(this.layer);
         setav(this.layer, {
             isTileLayer: true,
-            minZoom: parseInt(options.minzoom || 1),
-            maxZoom: parseInt(options.maxzoom || 23) + layerOptions.upzoom,
+            minZoom: minZoom,
+            maxZoom: maxZoom,
             extent: extent,
             zoomLayerBoundings: layerOptions.zoomLayerBoundings,
         });

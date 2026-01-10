@@ -72,6 +72,7 @@
     "object-assign": "^4.1.1",
     "ol": "10.7.0",
     "ol-pmtiles": "^2.0.2",
+    "pmtiles": "^4.3.2",
     "prismjs": "^1.29.0",
     "PubSub": "^4.0.0",
     "react": "^18.3.1",
