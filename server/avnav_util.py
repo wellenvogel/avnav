@@ -783,18 +783,29 @@ class AVNDownload(object):
         return self.HEADERS
     def canSeek(self):
         return False
-    def writeChunkedStream(self, fh, outfile):
+
+    def writeStream(self,fh,outfile,chunked=False):
         maxread = 1000000
+        numread = 0
+        maxlen=self.size if not chunked else None
         while True:
-            buf = fh.read(maxread)
+            toread = maxread
+            if maxlen is not None:
+                if (maxlen - numread) > maxread:
+                    toread = maxlen - numread
+            buf = fh.read(toread) if toread else None
             if buf is None or len(buf) == 0:
-                outfile.write(b'0\r\n\r\n')
+                if chunked:
+                    outfile.write(b'0\r\n\r\n')
                 return
             l = len(buf)
-            outfile.write('{:X}\r\n'.format(l).encode('utf-8'))
-            outfile.write(buf)
-            outfile.write(b'\r\n')
-
+            numread += l
+            if chunked:
+                outfile.write('{:X}\r\n'.format(l).encode('utf-8'))
+                outfile.write(buf)
+                outfile.write(b'\r\n')
+            else:
+                outfile.write(buf)
     def writeOut(self, handler: SimpleHTTPRequestHandler,
                  filename=None,
                  noattach: bool = False,
@@ -850,9 +861,9 @@ class AVNDownload(object):
         handler.end_headers()
         if sendbody:
             if size is None:
-                self.writeChunkedStream(stream, handler.wfile)
+                self.writeStream(stream, handler.wfile,chunked=True)
             else:
-                shutil.copyfileobj(stream, handler.wfile)
+                self.writeStream(stream,handler.wfile)
             stream.close()
         else:
             if stream:
