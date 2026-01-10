@@ -369,6 +369,7 @@ class Pluginmanager{
         globalstore.register(()=>{
                 this.triggerUpdate();
         },keys.nav.gps.updateconfig);
+        base.log("initializing plugins");
         this.updateRequests=1; //we are running a request right now
         //on startup we really want to wait until the update is finished once
         await this.update();
@@ -384,23 +385,29 @@ class Pluginmanager{
     }
     async update(){
         if (! globalstore.getData(keys.gui.capabilities.plugins)) return;
-        const plugins=await this.query();
-        if (!plugins || !(plugins instanceof Array)) {
-            Toast("unable to query plugins");
-            return;
-        }
+        const queries=[];
+        const foundPlugins={};
+        queries.push(this.query().then((plugins)=>{
+            if (!plugins || !(plugins instanceof Array)) {
+                Toast("unable to query plugins");
+                return;
+            }
+            for (let plugin of plugins) {
+                const name = plugin.name;
+                if (!name || !plugin.base) continue;
+                if (!plugin.active) continue;
+                foundPlugins[name] = plugin;
+            }
+        }));
+        queries.push(this.queryUser().then((userFiles)=>{
+            foundPlugins[userFiles.name] = userFiles;
+        }));
+        await Promise.all(queries);
+        base.log("got plugin/user info");
         let unloadedJsChanges=false;
         let updatedMjs=false;
         let hasUpdates=false;
-        const foundPlugins={};
-        for (let plugin of plugins) {
-            const name = plugin.name;
-            if (!name || !plugin.base) continue;
-            if (!plugin.active) continue;
-            foundPlugins[name] = plugin;
-        }
-        const userFiles=await this.queryUser();
-        foundPlugins[userFiles.name] = userFiles;
+        const asyncActions=[];
         for (let pluginName in foundPlugins) {
             const plugin = foundPlugins[pluginName];
             let api = this.createdApis[pluginName];
@@ -412,25 +419,28 @@ class Pluginmanager{
                         base.log("update plugin "+plugin.name+" old api: "+api);
                         this.deleteApi(api);
                         hasUpdates = true;
-                        try {
-                            api = new Plugin(plugin.base, pluginName);
-                            //if the mjs has never been loaded or if the timestamp is still the same like on the first load
-                            //there is no need to load the module again
-                            const first=this.mjs[pluginName]===undefined || this.mjs[pluginName] === plugin.mjs.timestamp;
-                            if (first){
-                                this.mjs[pluginName]=plugin.mjs.timestamp;
+                        const createPlugin=async()=> {
+                            try {
+                                api = new Plugin(plugin.base, pluginName);
+                                //if the mjs has never been loaded or if the timestamp is still the same like on the first load
+                                //there is no need to load the module again
+                                const first = this.mjs[pluginName] === undefined || this.mjs[pluginName] === plugin.mjs.timestamp;
+                                if (first) {
+                                    this.mjs[pluginName] = plugin.mjs.timestamp;
+                                } else {
+                                    updatedMjs = true;
+                                }
+                                await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp, first);
+                                this.createdApis[pluginName] = api;
+                            } catch (e) {
+                                console.error("unable to create api and load module", plugin, e);
+                                try {
+                                    api.disable();
+                                } catch (e) {
+                                }
                             }
-                            else{
-                                updatedMjs=true;
-                            }
-                            await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp,first);
-                            this.createdApis[pluginName] = api;
-                        }catch (e){
-                            console.error("unable to create api and load module",plugin,e);
-                            try{
-                                api.disable();
-                            }catch(e){}
                         }
+                        asyncActions.push(createPlugin());
                     }
                 }
             } else {
@@ -453,6 +463,7 @@ class Pluginmanager{
                 }
             }
         }
+        await Promise.all(asyncActions);
         for (let pname in this.createdApis){
             if (!foundPlugins[pname]) {
                 hasUpdates=hasUpdates || this.deleteApi(this.createdApis[pname]);
