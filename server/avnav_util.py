@@ -731,6 +731,12 @@ def plainUrlToPath(path:str)->str:
     return posixpath.normpath(path)
 
 class AVNDownload(object):
+    '''
+    generic response class for our HTTP request handling
+    all HTTP requests will return instances of this class
+    depending on the type of object they will adapt headers,
+    encoding, seeking
+    '''
     HEADERS = {
         'Cache-Control': 'no-store',
     }
