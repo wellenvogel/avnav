@@ -68,6 +68,7 @@ import {fetchItem, listItems} from "../util/itemFunctions";
 import {EditDialog} from "./EditDialog";
 import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
+import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -893,7 +894,7 @@ class ChartItemActions extends ItemActions{
     }
     build(){
         this.headline='Charts';
-        this.allowedExtensions=['gemf','mbtiles','xml']; //import extensions separately
+        this.allowedExtensions=['gemf','mbtiles','xml','pmtiles']; //import extensions separately
         this.hasScope=true;
 
     }
@@ -983,6 +984,19 @@ class ChartItemActions extends ItemActions{
                 const [fn, ext] = Helper.getNameAndExt(name);
                 const err=this.checkExtension(ext);
                 if (! err){
+                    if (ext === 'pmtiles'){
+                        const pm=new PMTiles(new FileSource(file));
+                        const header=await pm.getHeader();
+                        const allowedTypes=[
+                            TileType.Unknown,
+                            TileType.Png,
+                            TileType.Webp,
+                            TileType.Jpeg
+                        ]
+                        if (allowedTypes.indexOf(header.tileType) < 0){
+                            throw new Error(`TileType ${tileTypeExt(header.tileType)} is no known raster tile type`);
+                        }
+                    }
                     return {name:name}
                 }
                 const importExtensions=(await readImportExtensions())||[];
