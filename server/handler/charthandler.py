@@ -25,6 +25,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 import json
+import os.path
 import shutil
 
 import avnav_handlerList
@@ -45,6 +46,10 @@ class XmlChartFile(ChartFile):
     super().__init__()
     self.filename=filename
     self.isDir=isDir
+    self.mtime = os.path.getmtime(filename)
+
+  def getChangeCount(self):
+        return self.mtime
 
   def getTileData(self,tile,soure):
     raise Exception("no tile data for xml files")
@@ -75,6 +80,45 @@ class XmlChartFile(ChartFile):
 
   def __str__(self):
     return "xml %s"%self.filename
+
+class PmTilesChartFile(ChartFile):
+  def __init__(self,filename,isDir=False):
+    super().__init__()
+    self.filename=filename
+    self.isDir=isDir
+    self.mtime=os.path.getmtime(filename)
+
+  def getChangeCount(self):
+      return self.mtime
+
+  def getTileData(self,tile,soure):
+    raise Exception("no tile data for pmtiles files")
+
+  def getAvnavXml(self):
+      name=os.path.basename(self.filename)
+      return f'''<?xml version="1.0" encoding="UTF-8" ?>
+          <TileMapService version="1.0.0" >
+          <Title>PMTiles</Title>
+          <TileMaps>
+          <TileMap
+            title="{name}"
+      	    projection="EPSG:4326"
+      	    profile="PMTiles"
+      	    >
+          </TileMap>
+       </TileMaps>
+      </TileMapService>
+      '''
+
+  def deleteFiles(self):
+    if os.path.isfile(self.filename):
+      return os.unlink(self.filename)
+
+  def getDownloadFile(self):
+      return self.filename
+
+  def __str__(self):
+    return "pmtiles %s"%self.filename
 
 SCOPE_EXT = "ext@"
 def _getExternalChartPrefix(extPrefix):
@@ -145,7 +189,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   PATH_PREFIX="/chart"
   DEFAULT_CHART_CFG="default.cfg"
   OVL_EXT = ".cfg"
-  ALLOWED_EXTENSIONS=[".gemf",".mbtiles",".xml",OVL_EXT]
+  ALLOWED_EXTENSIONS=[".gemf",".mbtiles",".xml",'.pmtiles',OVL_EXT]
   TYPE="chart"
   def __init__(self,param):
     super().__init__(param,self.TYPE)
@@ -330,6 +374,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           chart = mbtiles_reader.MBTilesFile(fullname)
         elif fullname.endswith(".xml"):
           chart = XmlChartFile(fullname)
+        elif fullname.endswith(".pmtiles"):
+          chart= PmTilesChartFile(fullname)
       if chart is None:
           return False
       else:
@@ -467,7 +513,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if chartDescription is None or not isinstance(chartDescription.getUserData(),ChartFile):
       raise Exception("chart %s not found"%name)
     if len(parts) < 2:
-      return chartDescription.getFileName() #direct chart download
+      return AVNFileDownload(chartDescription.getFileName()) #direct chart download
     AVNLog.debug("chart file %s, request %s, lend=%d",chartDescription.name,
                  path,len(parts))
     chart=chartDescription.getUserData()
