@@ -847,11 +847,11 @@ class AVNDownload(object):
                 else:
                     starti=0
                     endi=self.size-1
-                    if start is not None:
+                    if start is not None and start != '':
                         starti=int(start)
                         if starti < 0 or starti >= self.size:
                             raise Exception("invalid start")
-                    if end is not None:
+                    if end is not None and end != '':
                         endi=int(end)
                         if endi < 0 or endi >= self.size or endi < starti:
                             raise Exception("invalid end")
