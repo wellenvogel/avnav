@@ -99,32 +99,13 @@ const prepareInternal=(url, options, defaults)=>{
     return [rurl,requestOptions];
 }
 
-const handleTimeout=(requestOptions)=>{
-    if (!requestOptions)return;
-    const controller= requestOptions.timeout?new AbortController():undefined;
-    if (controller){
-        requestOptions.signal=controller.signal;
-        const rt=window.setTimeout(()=>{
-            controller.abort();
-        },requestOptions.timeout);
-        delete requestOptions.timeout;
-        return rt;
-    }
-}
 
 const fetchWithTimeout=(url,options)=>{
-    const timer=handleTimeout(options);
-    if (timer === undefined){
+    const timeout=(options||{}).timeout;
+    if (timeout === undefined){
         return fetch(url,options);
     }
-    return fetch(url,options)
-        .then((response)=>{
-        window.clearTimeout(timer);
-        return response;
-        },(error)=>{
-            window.clearTimeout(timer);
-            return Promise.reject(error);
-        })
+    return fetch(url,{...options,signal:AbortSignal.timeout(timeout)});
 }
 
 
@@ -266,7 +247,6 @@ let RequestHandler={
           let sequence=undefined;
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
           let finalResponse;
-          handleTimeout(requestOptions);
           fetchWithTimeout(rurl,requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
@@ -357,7 +337,6 @@ let RequestHandler={
             timeout: parseInt(globalStore.getData(keys.properties.networkTimeout)),
             method:'HEAD'
         }
-        handleTimeout(options);
         return fetchWithTimeout(url,options)
             .then((response)=>{
                     return response.headers.get('last-modified')
