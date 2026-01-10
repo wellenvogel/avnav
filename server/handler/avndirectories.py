@@ -102,7 +102,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     if path == 'user.js':
       fname=os.path.join(self.baseDir,path)
       if os.path.exists(fname) and handler is not None:
-        return handler.sendJsFile(fname,self.PREFIX)
+        return AVNJsDownload(fname,self.PREFIX)
     return super(AVNUserHandler, self).getPathFromUrl(path, handler,requestParam)
 
 

@@ -53,6 +53,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     AVNLog.ld("receiver thread started",client_address)
     http.server.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
     self.wsHandler=None
+    self.requestDone=False
 
   def log_message(self, format, *args):
     AVNLog.debug(format,*args)
@@ -130,6 +131,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     return re.sub("/[^/]*$", "", path)
 
   def handleRequest(self,method=None):
+      self.requestDone=False
       (path, query) = AVNUtil.pathQueryFromUrl(self.path)
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
@@ -151,10 +153,12 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
               self.send_response(500, txt)
               self.end_headers()
               self.close_connection=True
+              self.requestDone=True
               return
       else:
           if method == "POST":
               self.send_error(404, "unsupported post url")
+              self.requestDone=True
               return
           try:
               # handlers will either return
@@ -164,76 +168,34 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
               response = self.server.tryExternalMappings(path, query, handler=self)
           except Exception as e:
               self.send_error(404, str(e))
+              self.requestDone=True
               return
       if isinstance(response, AVNDownload):
-          start=None
-          end=None
-          range=self.headers.get('range')
-          if range is not None:
-              if range.lower().startswith('bytes='):
-                  range=range[len('bytes='):]
-                  [start,end]=range.split('-')
-          response.writeOut(self,
-                        filename=self.getRequestParam(requestParam, "filename"),
-                        noattach=self.getRequestParam(requestParam, 'noattach') is not None,
-                        sendbody=method != "HEAD",
-                        start=start,
-                        end=end )
+          try:
+              start=None
+              end=None
+              range=self.headers.get('range')
+              if range is not None:
+                  if range.lower().startswith('bytes='):
+                      range=range[len('bytes='):]
+                      [start,end]=range.split('-')
+              response.writeOut(self,
+                            filename=self.getRequestParam(requestParam, "filename"),
+                            noattach=self.getRequestParam(requestParam, 'noattach') is not None,
+                            sendbody=method != "HEAD",
+                            start=start,
+                            end=end )
+              self.requestDone=True
+          except Exception as e:
+              txt = traceback.format_exc()
+              self.send_error(500, str(e), txt)
+              self.requestDone=True
       else:
-          if not response:
-                self.send_error(404, path+ "not found")
+          if not self.requestDone:
+              self.send_error(404, path+ ": no response")
+              self.requestDone=True
       return
 
-
-  def sendJsFile(self,filename,baseUrl,addCode=None):
-    '''
-    send a js file that we encapsulate into an anonymus function
-    @param filename:
-    @return:
-    '''
-    base=urllib.parse.quote(baseUrl)
-    PREFIX=(f'''
-    try{{
-    let handler = {{
-        get(target, key, descriptor) {{
-          if (key != 'avnav') return target[key];
-          return {{
-            api:target.avnavLegacy
-          }}
-        }}
-    }};
-    let proxyWindow = new Proxy(window, handler);
-    (function(window,avnav){{
-     let AVNAV_BASE_URL="{base}";
-    ''').encode('utf-8')
-
-    SUFFIX=(f'''
-    }}.bind(proxyWindow,proxyWindow).call(proxyWindow,{{api:window.avnavLegacy}}));
-    }}catch(e){{
-     window.avnavLegacy.showToast(e.message+"\\n"+(e.stack||e));
-     }}
-     ''').encode('utf-8')
-    if not os.path.exists(filename):
-      self.send_error(404,"File not found")
-      return
-    self.send_response(200)
-    flen=os.path.getsize(filename)
-    dlen=flen+len(PREFIX)+len(SUFFIX)
-    if addCode is not None:
-      addCode=addCode.encode('utf-8')
-      dlen+=len(addCode)
-    self.send_header("Content-type", "text/javascript")
-    self.send_header("Content-Length", str(dlen))
-    self.send_header("Cache-Control", "no-store")
-    self.send_header("Last-Modified", self.date_time_string())
-    self.end_headers()
-    self.wfile.write(PREFIX)
-    if addCode is not None:
-      self.wfile.write(addCode)
-    fh=open(filename,"rb")
-    self.writeStream(flen,fh)
-    self.wfile.write(SUFFIX)
-    return True
 
   DIRECT_RMAP=['download','upload','list','delete','upload']
   def mapOldStyleRequest(self,requestType,type):

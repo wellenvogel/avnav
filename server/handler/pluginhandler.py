@@ -1072,7 +1072,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             name = localPath[0]
             url = self.PREFIX + "/" + name
             addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
-            return handler.sendJsFile(fname, url, addCode)
+            return AVNJsDownload(fname, url, addCode)
         fname = os.path.join(api.directory, avnav_util.plainUrlToPath(localPath[1]))
         if api.dirtype != self.D_USER:
             return AVNFileDownload(fname)

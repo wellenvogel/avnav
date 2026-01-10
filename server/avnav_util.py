@@ -783,11 +783,12 @@ class AVNDownload(object):
         return self.HEADERS
     def canSeek(self):
         return False
-
+    def passThru(self):
+        return False
     def writeStream(self,fh,outfile,chunked=False):
         maxread = 1000000
         numread = 0
-        maxlen=self.size if not chunked else None
+        maxlen=self.getSize() if not chunked else None
         while True:
             toread = maxread
             if maxlen is not None:
@@ -806,6 +807,23 @@ class AVNDownload(object):
                 outfile.write(b'\r\n')
             else:
                 outfile.write(buf)
+    def buildFinalHeaders(self,handler,filename=None,noattach:bool=False):
+        rs=self.getHeaders().copy()
+        code = self.getResponseCode()
+        rs["Content-type"]=self.getMimeType(handler)
+        if filename is None:
+            filename = self.dlname
+        if not noattach and filename is not None and 200 <= code < 300:
+            rs["Content-Disposition"]= "attachment; %s" % self.fileToAttach(filename)
+        mtime = self.getLastModified()
+        if mtime is not None:
+            rs["Last-Modified"]=handler.date_time_string(mtime)
+        size = self.getSize()
+        if size is not None:
+            rs["Content-Length"]= size
+        else:
+            rs['Transfer-Encoding']='chunked'
+        return rs
     def writeOut(self, handler: SimpleHTTPRequestHandler,
                  filename=None,
                  noattach: bool = False,
@@ -815,7 +833,7 @@ class AVNDownload(object):
         stream=self.getStream(noopen=not sendbody)
         if sendbody and stream is None:
             self.setError(500,"no data in response")
-        headers=self.getHeaders()
+        addHeaders = None
         if start is not None or end is not None:
             try:
                 if not self.canSeek() or self.size is None:
@@ -836,31 +854,21 @@ class AVNDownload(object):
                         raise Exception("could not seek start")
                     self.size=endi-starti+1
                     self.responseCode=206
-                    headers=headers.copy()
-                    headers.update({"Content-Range":f"bytes {starti}-{endi}/{self.size}"})
+                    addHeaders={"Content-Range":f"bytes {starti}-{endi}/{self.size}"}
             except Exception as e:
                 self.setError(416,str(e))
                 stream=self.stream
         code=self.getResponseCode()
         handler.send_response(code)
-        handler.send_header("Content-type", self.getMimeType(handler))
-        if filename is None:
-            filename = self.dlname
-        if not noattach and filename is not None and 200 <= code < 300:
-            handler.send_header("Content-Disposition", "attachment; %s" % self.fileToAttach(filename))
-        mtime = self.getLastModified()
-        if mtime is not None:
-            handler.send_header("Last-Modified", handler.date_time_string(mtime))
+        headers = self.buildFinalHeaders(handler, filename, noattach=noattach)
+        if addHeaders:
+            headers.update(addHeaders)
         size = self.getSize()
-        if size is not None:
-            handler.send_header("Content-Length", size)
-        else:
-            handler.send_header('Transfer-Encoding', 'chunked')
         for k, v in headers.items():
             handler.send_header(k, v)
         handler.end_headers()
         if sendbody:
-            if size is None:
+            if (size is None) and not self.passThru():
                 self.writeStream(stream, handler.wfile,chunked=True)
             else:
                 self.writeStream(stream,handler.wfile)
@@ -929,6 +937,23 @@ class AVNStreamDownload(AVNDownload):
     def __init__(self,stream,size=None,dlname=None,mimeType=None,mtime=None):
         super().__init__(size=size,stream=stream,dlname=dlname,mimeType=mimeType,mtime=mtime)
 
+class AVNProxyDownload(AVNDownload):
+    def __init__(self, code, headers, stream,userData=None):
+        super().__init__(stream=stream)
+        self.headers=headers
+        self.responseCode=code
+        self.userData=userData
+
+    def canSeek(self):
+        return False
+
+    def passThru(self):
+        return True
+
+    def buildFinalHeaders(self, handler, filename=None, noattach: bool = False):
+        return self.headers
+
+
 class AVNDownloadError(AVNDownload):
     def __init__(self, code,error: str):
         super().__init__(None)
@@ -945,6 +970,70 @@ class AVNStringDownload(AVNDataDownload):
     def __init__(self,string:str,mimeType=None):
         encoded = string.encode(encoding='utf-8', errors="ignore")
         super().__init__(encoded,mimeType or "text/plain")
+
+class MultiReadStream:
+    def __init__(self,prefix,stream,suffix):
+        self.streams=[]
+        ps=io.BytesIO(prefix)
+        ps.seek(0)
+        self.streams.append(ps)
+        self.streams.append(stream)
+        st=io.BytesIO(suffix)
+        st.seek(0)
+        self.streams.append(st)
+        self.index=0
+    def close(self):
+        self.index=len(self.streams)+1
+    def read(self,rlen=None):
+        while self.index < len(self.streams):
+            rt=self.streams[self.index].read(rlen)
+            if rt is None or len(rt)==0:
+                self.index+=1
+            else:
+                return rt
+        return None
+
+
+class AVNJsDownload(AVNFileDownload):
+    def __init__(self, filename, baseUrl, addCode=None):
+        super().__init__(filename)
+        self.mimeType="text/javascript"
+        base = urllib.parse.quote(baseUrl)
+        self.PREFIX = (f'''
+            try{{
+            let handler = {{
+                get(target, key, descriptor) {{
+                  if (key != 'avnav') return target[key];
+                  return {{
+                    api:target.avnavLegacy
+                  }}
+                }}
+            }};
+            let proxyWindow = new Proxy(window, handler);
+            (function(window,avnav){{
+             let AVNAV_BASE_URL="{base}";
+            ''').encode('utf-8')
+        self.SUFFIX=(f'''
+            }}.bind(proxyWindow,proxyWindow).call(proxyWindow,{{api:window.avnavLegacy}}));
+            }}catch(e){{
+            window.avnavLegacy.showToast(e.message+"\\n"+(e.stack||e));
+            }}
+            ''').encode('utf-8')
+        self.addCode=b''
+        if addCode is not None:
+            self.addCode=addCode.encode('utf-8')
+
+    def canSeek(self):
+        return False
+
+    def getSize(self):
+        return super().getSize()+len(self.PREFIX)+len(self.SUFFIX)+len(self.addCode)
+
+    def _openStream(self):
+        fs= super()._openStream()
+        return MultiReadStream(self.PREFIX+self.addCode,fs,self.SUFFIX)
+
+
 
 class Encoder(json.JSONEncoder):
   '''

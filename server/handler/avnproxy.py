@@ -29,9 +29,9 @@ import urllib.request
 import urllib.parse
 
 import avnav_handlerList
-from avnav_util import AVNUtil, AVNLog
+from avnav_util import AVNUtil, AVNLog, AVNProxyDownload, AVNDownloadError
 from avnav_worker import AVNWorker, WorkerStatus
-from httphandler import AVNHTTPHandler
+from httphandler import AVNHTTPHandler, RequestException
 
 
 class AVNProxy(AVNWorker):
@@ -67,9 +67,10 @@ class AVNProxy(AVNWorker):
     def getApiType(self):
         return self.ATYPE
     HDR_BLACKLIST=['host']
-    OK_STATS=[200,301,304]
+    OK_STATS=[200,206,301,304]
     def handleProxyRequest(self,url,handler:AVNHTTPHandler):
         status=500
+        constructed=url
         try:
             parsed=urllib.parse.urlparse(url)
             parsed=parsed._replace(path=urllib.parse.quote_plus(parsed.path,safe='/'))
@@ -84,31 +85,27 @@ class AVNProxy(AVNWorker):
             response = urllib.request.urlopen(request)
             status=response.status
             if status not in self.OK_STATS:
-                raise Exception(f"request error:{response.reason}")
-            handler.send_response_only(status)
+                return AVNDownloadError(status,f"request error:{response.reason}")
+            headers={}
             for k, v in response.getheaders():
                 if k.lower() == 'location' and status == 301:
                     v="http://"+self.getRequestIp(handler)+":"+handler.server.server_address[1]+self.getHandledPath()+"/"+urllib.parse.quote(v)
-                handler.send_header(k, v)
-            handler.end_headers()
-            shutil.copyfileobj(response.fp, handler.wfile)
-            return
+                headers[k]=v
+            return AVNProxyDownload(status,headers,response.fp,userData=response)
         except Exception as e:
             AVNLog.debug("proxy request for %s failed: %s", constructed,str(e))
-            handler.send_error(status,str(e))
+            return AVNDownloadError(status,str(e))
 
     def handleApiRequest(self, command, requestparam, handler:AVNHTTPHandler=None, **kwargs):
         if handler is None:
             raise Exception("proxy needs handler")
         if command == 'request':
             url=AVNUtil.getHttpRequestParam(requestparam,'url',mantadory=True)
-            self.handleProxyRequest(url,handler)
-            return
+            return self.handleProxyRequest(url,handler)
         raise Exception(f"invalid proxy command: {command}")
 
     def handlePathRequest(self, path, requestparam, server=None, handler=None):
-        self.handleProxyRequest(path, handler)
-        return True
+        return self.handleProxyRequest(path, handler)
 
     def getHandledPath(self):
         return "/"+self.ATYPE
