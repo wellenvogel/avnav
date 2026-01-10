@@ -206,12 +206,12 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       :return:
       '''
       if url is None:
-          return None
+          return False
       cfg=self.getConfigParam()
       for navurl in [cfg.get('navurl'),cfg.get('navurlCompat')]:
         if navurl is not None and url.startswith(navurl):
             return url[len(navurl)+1:]
-      return None
+      return False
 
   def handlePathmapping(self,path):
     if not self.pathmappings is None:

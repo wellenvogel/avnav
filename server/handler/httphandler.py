@@ -136,7 +136,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       trailing = self.server.isNavUrl(path)
       response=None
       requestParam=None
-      if trailing:
+      if trailing != False:
           #navRequest
           requestParam = urllib.parse.parse_qs(query, True)
           if method == "POST":
