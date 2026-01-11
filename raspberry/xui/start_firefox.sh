@@ -25,7 +25,8 @@ do
    panelPid=""
  fi 
  #we assume that we maybe have a nice dimm command available on the server
- MOZ_USE_XINPUT2=1 firefox --profile $PROFILE --class=AvNavFirefox 'http://localhost:8080/viewer/avnav_viewer.html?fullscreen=server:desk2&dimm=server:dimm&defaultSettings=.*localFirefox' &
+ #MOZ_USE_XINPUT2=1 firefox --profile $PROFILE --class=AvNavFirefox 'http://localhost:8080/viewer/avnav_viewer.html?fullscreen=server:desk2&dimm=server:dimm&defaultSettings=.*localFirefox' &
+ MOZ_USE_XINPUT2=1 firefox --profile $PROFILE --class=AvNavFirefox 'http://localhost:8080/viewer/avnav_viewer.html?fullscreen=server:desk2&defaultSettings=.*localFirefox' &
  ffpid=$!
  echo "ffpid=$ffpid"
  panelSize=""
