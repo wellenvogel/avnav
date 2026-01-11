@@ -54,7 +54,9 @@ import {
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
 import {avitem, getav, setav} from "../util/helper";
-import {checkZoomBounds} from "./chartlayers";
+import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
+import {addProtocol} from "maplibre-gl";
+import {Protocol} from "pmtiles";
 
 export const EventTypes = {
     SELECTWP: 2,
@@ -945,6 +947,8 @@ class MapHolder extends DrawingPositionConverter {
         this.mapMinZoom = this.minzoom;
         this.maxzoom = 0;
         IconImageCache.clear();
+        //we need to reset the protocol as it has caches for the PMTiles - but they could have changed
+        addProtocol(PMTILESPROTO,()=>{throw new Error("no map active")});
         for (let i = 0; i < this.sources.length; i++) {
             let sourceLayers = this.sources[i].getLayers();
             sourceLayers.forEach((layer) => {
@@ -1001,6 +1005,7 @@ class MapHolder extends DrawingPositionConverter {
                     this.olmap.removeLayer(layer);
                 }
             }
+            addProtocol(PMTILESPROTO,(new Protocol()).tile)
             this.olmap.addLayer(this.getBaseLayer(hasBaseLayers));
             if (baseLayers.length > 0) {
                 this.olmap.addLayer(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
@@ -1010,6 +1015,7 @@ class MapHolder extends DrawingPositionConverter {
             }
             this.renderTo(div);
         } else {
+            addProtocol(PMTILESPROTO,(new Protocol()).tile)
             let base = [];
             base.push(this.getBaseLayer(hasBaseLayers));
             if (baseLayers.length > 0) {

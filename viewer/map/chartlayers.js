@@ -47,17 +47,9 @@ import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
 import {PMTiles,Header,Protocol} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
-import {addProtocol} from "maplibre-gl";
 
-const PMTILESPROTO='pmtiles';
+export const PMTILESPROTO='pmtiles';
 const PMTILESPROTOPRFX=PMTILESPROTO+"://";
-/*
-globally activate the pmtiles protocol for maplibre
-see https://docs.protomaps.com/pmtiles/maplibre
- */
-let protocol=new Protocol();
-addProtocol(PMTILESPROTO,protocol.tile);
-
 
 const NORMAL_TILE_SIZE=256;
 const mp=(obj,name,text,f)=>{
