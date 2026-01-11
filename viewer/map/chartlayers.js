@@ -45,9 +45,18 @@ import {featureListFormatter} from "../util/featureFormatter";
 import {getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
-import {PMTiles,Header} from 'pmtiles';
+import {PMTiles,Header,Protocol} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
+import {addProtocol} from "maplibre-gl";
 
+const PMTILESPROTO='pmtiles';
+const PMTILESPROTOPRFX=PMTILESPROTO+"://";
+/*
+globally activate the pmtiles protocol for maplibre
+see https://docs.protomaps.com/pmtiles/maplibre
+ */
+let protocol=new Protocol();
+addProtocol(PMTILESPROTO,protocol.tile);
 
 
 const NORMAL_TILE_SIZE=256;
@@ -624,15 +633,20 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             //but still is just an absolute URL without scheme/host/port
             const base=new URL(layerOptions.layerUrl,window.location.href);
             mapLibreOptions.transformRequest = (url, resourceType) => {
+                let prfx='';
+                if (url.startsWith(PMTILESPROTOPRFX)) {
+                    prfx=PMTILESPROTOPRFX;
+                    url=url.substring(PMTILESPROTOPRFX.length);
+                }
                 const completeUrl = new URL(url, base);
                 if (completeUrl.origin === window.location.origin) {
                     //unchanged
                     return {
-                        url: completeUrl.toString(),
+                        url: prfx+completeUrl.toString(),
                     }
                 }
                 return {
-                    url: (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
+                    url: prfx+(new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
                 }
             }
         }
