@@ -1,5 +1,10 @@
 #! /bin/sh
-CFG=/boot/avnav.conf
+if [ -d /boot/firmware ]
+then
+  CFG=/boot/firmware/avnav.conf
+else
+  CFG=/boot/avnav.conf
+fi
 [ -f $CFG ] && . $CFG
 HOME=/home/pi
 X=/usr/lib/xorg/Xorg
