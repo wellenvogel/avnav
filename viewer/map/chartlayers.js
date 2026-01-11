@@ -614,32 +614,30 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     }
 
     createOL(options) {
-        this.featureListFormatter = featureListFormatter[options.featurelistformatter]||defaulMLFeatureListFormatter;
+        this.featureListFormatter = featureListFormatter[options.featurelistformatter] || defaulMLFeatureListFormatter;
         const layerOptions = this.buildLayerOptions({url: options.styleUrl, ...options});
         const extent = this.bboxToOlExtent(options.boundingbox);
         const mapLibreOptions = {
             style: layerOptions.layerUrl
         }
-        if (options.useproxy) {
-            //our computed style URL has already included any baseUrl
-            //but still is just an absolute URL without scheme/host/port
-            const base=new URL(layerOptions.layerUrl,window.location.href);
-            mapLibreOptions.transformRequest = (url, resourceType) => {
-                let prfx='';
-                if (url.startsWith(PMTILESPROTOPRFX)) {
-                    prfx=PMTILESPROTOPRFX;
-                    url=url.substring(PMTILESPROTOPRFX.length);
-                }
-                const completeUrl = new URL(url, base);
-                if (completeUrl.origin === window.location.origin) {
-                    //unchanged
-                    return {
-                        url: prfx+completeUrl.toString(),
-                    }
-                }
+        //our computed style URL has already included any baseUrl
+        //but still is just an absolute URL without scheme/host/port
+        const base = new URL(layerOptions.layerUrl, window.location.href);
+        mapLibreOptions.transformRequest = (url, resourceType) => {
+            let prfx = '';
+            if (url.startsWith(PMTILESPROTOPRFX)) {
+                prfx = PMTILESPROTOPRFX;
+                url = url.substring(PMTILESPROTOPRFX.length);
+            }
+            const completeUrl = new URL(url, base);
+            if (!options.useproxy || (completeUrl.origin === window.location.origin)) {
+                //unchanged
                 return {
-                    url: prfx+(new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
+                    url: prfx + completeUrl.toString(),
                 }
+            }
+            return {
+                url: prfx + (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
             }
         }
         this.layer = new MapLibreLayer({
