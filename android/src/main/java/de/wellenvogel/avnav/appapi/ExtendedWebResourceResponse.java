@@ -3,6 +3,8 @@ package de.wellenvogel.avnav.appapi;
 import android.os.Build;
 import android.webkit.WebResourceResponse;
 
+import org.apache.http.Header;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,11 +38,53 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
         isProxy = proxy;
     }
 
+    static final String BYTES="bytes=";
+    public static final String RANGE_HDR="range";
+    public void applyRangeHeader(Header hdr){
+        if (hdr == null) return;
+        applyRangeHeader(hdr.getValue());
+    }
+    public void applyRangeHeader(String header){
+        if (isProxy() || header == null) return;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return;
+        if (this.statusCode == 206) return; //already applied
+        try {
+            if (this.getLength() < 0) throw new Exception("cannot seek, no length");
+            if (header.toLowerCase().startsWith(BYTES)) header = header.substring(BYTES.length());
+            String[] startEnd = header.split("-");
+            long start = 0;
+            long end=this.getLength()-1;
+            if (startEnd.length >0 ){
+                start=Long.parseLong(startEnd[0]);
+            }
+            if (startEnd.length > 1){
+                end=Long.parseLong(startEnd[1]);
+            }
+            if (start < 0 || start >= this.getLength()) throw new Exception("invalid start");
+            if (end < 0 || end < start || end >= this.getLength()) throw new Exception("invalid end");
+            if (start > 0 || end < (this.getLength()-1)) {
+                long res = this.getData().skip(start);
+                if (res != start) throw new Exception("unable to seek to start");
+                this.length=end-start+1;
+                this.statusCode=206;
+                setHeader("Content-Range",String.format("bytes %d-%d/%d",start,end,this.length));
+            }
+        }catch (Exception e){
+            this.setStatusCodeAndReasonPhrase(416,e.getMessage());
+        }
+    }
+    private void setAccepHeader(){
+        if (this.length >= 0){
+            setHeader("Accept-Ranges", "bytes");
+        }
+    }
+
     boolean isProxy=false;
     private HashMap<String,String> headers=new HashMap<String, String>();
     public ExtendedWebResourceResponse(long length, String mime, String encoding, InputStream is){
         super(mime,encoding,is);
         this.length=length;
+        setAccepHeader();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setResponseHeaders(headers);
         }
@@ -48,6 +92,7 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     public ExtendedWebResourceResponse(File f,String mime, String encoding) throws IOException {
         super(mime,encoding, new FileInputStream(f));
         this.length=f.length();
+        setAccepHeader();
         this.setDateHeader("Last-Modified",new Date(f.lastModified()));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setResponseHeaders(headers);

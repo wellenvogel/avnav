@@ -307,11 +307,17 @@ public class RequestHandler {
         if (path == null) return null;
         if (url.startsWith(INTERNAL_URL_PREFIX)){
             try {
+                ExtendedWebResourceResponse rt=null;
                 if (path.startsWith(NAVURL) || path.startsWith(NAVURL_COMPAT)) {
-                    return handleNavRequest(uri, null);
+                    rt= handleNavRequest(uri, null);
                 }
-                ExtendedWebResourceResponse rt = tryDirectRequest(uri, method,headers);
-                if (rt != null) return rt;
+                else {
+                    rt = tryDirectRequest(uri, method, headers);
+                }
+                if (rt != null) {
+                    rt.applyRangeHeader(headers.get(ExtendedWebResourceResponse.RANGE_HDR));
+                    return rt;
+                }
                 if (path.startsWith("/")) path = path.substring(1);
                 InputStream is = (view != null) ? view.getContext().getAssets().open(path) : service.getAssets().open(path);
                 Log.i(LOGPRFX, String.format("loading asset %s from %s (%d avail)", path, Thread.currentThread().getId(), is.available()));

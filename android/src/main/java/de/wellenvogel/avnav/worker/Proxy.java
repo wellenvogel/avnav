@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
 import android.net.Uri;
+import android.os.Build;
 
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
@@ -30,6 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
@@ -171,27 +173,29 @@ public class Proxy extends Worker implements INavRequestHandler {
         response.setParams(params);
         httpexecutor.postProcess(response, httpproc, context);
         int status=response.getStatusLine().getStatusCode();
-        if ( status != 200 && status != 304){
+        if ( status < 200 || status > 399){
             return new ExtendedWebResourceResponse(status,response.getStatusLine().getReasonPhrase());
         }
         HttpEntity entity=response.getEntity();
-        if (entity == null){
-            return new ExtendedWebResourceResponse(500,"empty response");
-        }
-        Header ct=entity.getContentType();
-        Header ce=entity.getContentEncoding();
-        long l=entity.getContentLength();
-        if (l == 0) {
-            l=-1;
+        Header ct=null;
+        Header ce=null;
+        long l=-1;
+        if (entity != null){
+            ct = entity.getContentType();
+            ce = entity.getContentEncoding();
+            l = entity.getContentLength();
+            if (l == 0) {
+                l = -1;
+            }
         }
         ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(l,
                 (ct != null)?ct.getValue():"application/octet-string",
                 (ce != null)?ce.getValue():"",
-                entity.getContent());
+                (entity != null)?entity.getContent():new ByteArrayInputStream(new byte[0]));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            rt.setStatusCodeAndReasonPhrase(status,response.getStatusLine().getReasonPhrase());
+        }
         for (Header h: response.getAllHeaders()){
-            String n=h.getName().toLowerCase();
-            //if (n.equals("content-length")) continue;
-            //if (n.equals("content-type")) continue;
             rt.setHeader(h.getName(),h.getValue());
         }
         rt.setProxy(true);

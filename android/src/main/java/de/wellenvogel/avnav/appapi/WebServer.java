@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -304,6 +305,9 @@ public class WebServer extends Worker {
                 throw new HttpException("error handling "+url,t);
             }
             if (resp != null){
+                resp.applyRangeHeader(httpRequest.getFirstHeader(ExtendedWebResourceResponse.RANGE_HDR));
+                httpResponse.setStatusCode(resp.getStatusCode());
+                httpResponse.setReasonPhrase(resp.getReasonPhrase());
                 httpResponse.setHeader("content-type",resp.getMimeType());
                 for (String k:resp.getHeaders().keySet()){
                     httpResponse.setHeader(k,resp.getHeaders().get(k));
@@ -355,6 +359,9 @@ public class WebServer extends Worker {
                     ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri,method,
                             convertHeaders(request.getAllHeaders()));
                     if (resp != null) {
+                        resp.applyRangeHeader(request.getFirstHeader(ExtendedWebResourceResponse.RANGE_HDR));
+                        response.setStatusCode(resp.getStatusCode());
+                        response.setReasonPhrase(resp.getReasonPhrase());
                         for (String n : resp.getHeaders().keySet()){
                             response.setHeader(n,resp.getHeaders().get(n));
                         }
