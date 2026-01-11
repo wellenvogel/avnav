@@ -39,6 +39,8 @@ import de.wellenvogel.avnav.worker.IPluginHandler;
 
 import static de.wellenvogel.avnav.charts.Chart.CFG_DELIM;
 import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
+import static de.wellenvogel.avnav.charts.Chart.STYPE_MBTILES;
+import static de.wellenvogel.avnav.charts.Chart.TYPE_PMTILES;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
 import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
@@ -147,9 +149,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
             return new JSONObject(chart.toString());
         }
     }
-    private static final String GEMFEXTENSION =".gemf";
-    private static final String MBTILESEXTENSION =".mbtiles";
-    private static final String XMLEXTENSION=".xml";
+
     private static final String DEFAULT_CFG="default.cfg";
     private static final long MAX_CONFIG_SIZE=100000;
     private Context context;
@@ -459,6 +459,31 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         }
     }
 
+    private Chart createChartInfo(DocumentFile f,String index) throws Exception {
+        String fn=f.getName();
+        if (fn == null) return null;
+        if (fn.startsWith(DirectoryRequestHandler.TMP_PRFX)) return null;
+        for (String type: Chart.ALLOWED_TYPES.keySet()){
+            //types and extensions are identical...
+            if (type.equals(STYPE_MBTILES)) continue; //cannot handle mbtiles from external directory
+            if (fn.endsWith("."+type)){
+                return new Chart(Chart.ALLOWED_TYPES.get(type),context,f,index,f.lastModified());
+            }
+        }
+        return null;
+    }
+    private Chart createChartInfo(File f,String index) throws Exception {
+        String fn=f.getName();
+        if (fn.startsWith(DirectoryRequestHandler.TMP_PRFX)) return null;
+        for (String type: Chart.ALLOWED_TYPES.keySet()){
+            //types and extensions are identical...
+            if (fn.endsWith("."+type)){
+                return new Chart(Chart.ALLOWED_TYPES.get(type),context,f,index,f.lastModified());
+            }
+        }
+        return null;
+    }
+
     private void readChartDir(String chartDirStr,String index,HashMap<String, Chart> arr) {
         if (chartDirStr == null) return;
         if (Build.VERSION.SDK_INT >= 21) {
@@ -470,19 +495,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
                 if (dirFile != null) {
                     for (DocumentFile f : dirFile.listFiles()) {
                         try {
-                            Chart newChart=null;
-                            if (f.getName() == null) continue;
-                            if (f.getName().startsWith(DirectoryRequestHandler.TMP_PRFX)) continue;
-                            if (f.getName().endsWith(GEMFEXTENSION)) {
-                                newChart = new Chart(Chart.TYPE_GEMF, context, f, index, f.lastModified());
-                            }
-                            if (f.getName().endsWith(MBTILESEXTENSION)) {
-                                //we cannot handle this!
-                                AvnLog.e("unable to read mbtiles from external dir: " + f.getName());
-                            }
-                            if (f.getName().endsWith(XMLEXTENSION)) {
-                                newChart = new Chart(Chart.TYPE_XML, context, f, index, f.lastModified());
-                            }
+                            Chart newChart=createChartInfo(f,index);
                             if (newChart != null){
                                 arr.put(newChart.getChartKey(), newChart);
                                 AvnLog.d(Constants.LOGPRFX, "readCharts: adding chart" + newChart);
@@ -502,17 +515,7 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         for (File f : files) {
             if (f.getName().startsWith(DirectoryRequestHandler.TMP_PRFX)) continue;
             try {
-                Chart newChart=null;
-                if (f.getName().endsWith(GEMFEXTENSION)){
-                    newChart=new Chart(Chart.TYPE_GEMF, context, f,index,f.lastModified());
-                }
-                if (f.getName().endsWith(MBTILESEXTENSION)){
-                    newChart=new Chart(Chart.TYPE_MBTILES, context, f,index,f.lastModified());
-
-                }
-                if (f.getName().endsWith(XMLEXTENSION)){
-                    newChart=new Chart(Chart.TYPE_XML, context, f,index,f.lastModified());
-                }
+                Chart newChart=createChartInfo(f,index);
                 if (newChart != null){
                     arr.put(newChart.getChartKey(),newChart);
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding chart"+newChart.toString()+" for "+f.getAbsolutePath());
@@ -544,9 +547,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         String safeName= DirectoryRequestHandler.safeName(name,true);
-        if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION)
-                && ! safeName.endsWith(XMLEXTENSION) && ! safeName.endsWith(CFG_EXTENSION))
-            throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" or "+CFG_EXTENSION+" files allowed");
+        String ext=safeName.replaceAll(".*\\.", "");
+        if (!Chart.ALLOWED_TYPES.keySet().stream().anyMatch(ext::equals))
+            throw new Exception("invalid extension "+ext+" only "+String.join(",", Chart.ALLOWED_TYPES.keySet() ));
         File outFile=new File(baseDir,safeName);
         if (postData == null) throw new Exception("no data in file");
         DirectoryRequestHandler.writeAtomic(outFile,postData.getStream(),ignoreExisting,postData.getContentLength());
@@ -824,7 +827,6 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
 
     // charts/charts/index/type/name/avnav.xml|/src/z/x/y
 
-
     static class KeyAndParts{
         String key;
         String parts[];
@@ -873,8 +875,9 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
         if (!parts[1].equals(REALCHARTS)){
             throw new Exception("no chart url");
         }
-        if (!parts[3].equals(Chart.STYPE_MBTILES) && ! parts[3].equals(Chart.STYPE_GEMF) && ! parts[3].equals(Chart.STYPE_XML))
-            throw new Exception("invalid chart type "+parts[3]);
+        if (! Chart.ALLOWED_TYPES.keySet().stream().anyMatch(parts[3]::equals)) {
+            throw new Exception("invalid chart type " + parts[3]);
+        }
         if (!parts[2].equals(Chart.INDEX_EXTERNAL) && ! parts[2].equals(Chart.INDEX_INTERNAL))
             throw new Exception("invalid chart index "+parts[2]);
         if (parts.length < 5) throw new Exception("invalid chart request " + url);
@@ -906,13 +909,17 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
             }
             else{
                 if (chart.isXml()) throw new Exception("only overview for xml charts");
-                if (kp.parts.length < 4) {
-                    throw new Exception("invalid parameter for chart call " + fname);
+                int z=0;
+                int x=0;
+                int y=0;
+                int src=0;
+                if (kp.parts.length >= 4) {
+                    z = Integer.parseInt(kp.parts[1]);
+                    x = Integer.parseInt(kp.parts[2]);
+                    y = Integer.parseInt(kp.parts[3].replaceAll("\\.png", ""));
+                    src = Integer.parseInt(kp.parts[0]);
                 }
-                int z = Integer.parseInt(kp.parts[1]);
-                int x = Integer.parseInt(kp.parts[2]);
-                int y = Integer.parseInt(kp.parts[3].replaceAll("\\.png", ""));
-                return chart.getChartData(x, y, z, Integer.parseInt(kp.parts[0]));
+                return chart.getChartData(x, y, z, src);
             }
 
             Log.e(Constants.LOGPRFX, "unknown chart path " + fname);

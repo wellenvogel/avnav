@@ -9,6 +9,7 @@ import androidx.documentfile.provider.DocumentFile;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,10 +17,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
@@ -34,12 +37,20 @@ public class Chart implements IChartWithConfig {
     static final int TYPE_GEMF=1;
     static final int TYPE_MBTILES=2;
     static final int TYPE_XML=3;
+    public static final Integer TYPE_PMTILES = 4;
     static final String CFG_EXTENSION=".cfg";
     static final Character CFG_DELIM='@';
     private static final long INACTIVE_CLOSE=100000; //100s
     static final String STYPE_GEMF ="gemf";
     static final String STYPE_MBTILES ="mbtiles";
     static final String STYPE_XML ="xml";
+    public static final String STYPE_PMTILES = "pmtiles" ;
+    static final AvnUtil.KeyValueMap<Integer> ALLOWED_TYPES=new AvnUtil.KeyValueMap<>(
+            new AvnUtil.KeyValue<Integer>(Chart.STYPE_MBTILES, TYPE_MBTILES),
+            new AvnUtil.KeyValue<Integer>(STYPE_GEMF, TYPE_GEMF),
+            new AvnUtil.KeyValue<Integer>(STYPE_XML, TYPE_XML),
+            new AvnUtil.KeyValue<Integer>(STYPE_PMTILES, TYPE_PMTILES)
+    );
     private String keyPrefix;
     private String name;
     protected Context context;
@@ -52,15 +63,75 @@ public class Chart implements IChartWithConfig {
     private boolean isInternal=false;
     String fileName;
 
-    static String typeToStr(int type){
-        switch (type){
-            case TYPE_GEMF:
-                return STYPE_GEMF;
-            case TYPE_MBTILES:
-                return STYPE_MBTILES;
-            case TYPE_XML:
-                return STYPE_XML;
+    static class PMTilesReader extends ChartFileReader{
+        File chartFile;
+        long mtime=0;
+        public PMTilesReader(File file) {
+            super(null, "");
+            chartFile=file;
+            if (file != null) mtime=file.lastModified();
         }
+
+        @Override
+        public InputStream chartOverview() throws UnsupportedEncodingException {
+            String rs=replaceTemplate(SERVICETEMPLATE,new AvnUtil.KeyValueMap<>(
+                new AvnUtil.KeyValue<>("MAPSOURCES",
+                        "<TileMap\n"
+                        +  "profile=\"PMTiles\"\n"
+                        +  "name=\"main\"\n"
+                        +  "/>\n"
+                        )
+            ));
+            return new ByteArrayInputStream(rs.getBytes(StandardCharsets.UTF_8));
+        }
+
+        @Override
+        public void close() {
+        }
+
+        @Override
+        public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) throws IOException {
+            return new ExtendedWebResourceResponse(chartFile,"application/octet-stream","");
+        }
+
+        @Override
+        public long getSequence() {
+            return mtime;
+        }
+    }
+    static class PMTilesDfReader extends PMTilesReader{
+        DocumentFile df;
+        ParcelFileDescriptor fdi;
+        boolean closed=false;
+        public PMTilesDfReader(DocumentFile file,Context context) throws FileNotFoundException {
+            super(null);
+            df=file;
+            mtime=df.lastModified();
+            fdi=context.getContentResolver().openFileDescriptor(file.getUri(),"r");
+
+        }
+
+        @Override
+        public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) throws IOException {
+            if (closed) throw new IOException("closed");
+            FileInputStream fi=new FileInputStream(fdi.getFileDescriptor());
+            return new ExtendedWebResourceResponse(fdi.getStatSize(),
+                    "application/octet-stream","",fi);
+        }
+
+        @Override
+        public void close() {
+            closed=true;
+            try {
+                fdi.close();
+            } catch (IOException e) {
+                AvnLog.e("error closing external PMTiles "+df.getName());
+            }
+        }
+    }
+    static String typeToStr(int type){
+        Optional<Map.Entry<String, Integer>> rs=ALLOWED_TYPES.entrySet().stream().filter(e->e.getValue()==type).findAny();
+        if (rs.isPresent()) return rs.get().getKey();
         return "UNKNOWN";
     }
     public Chart(int type, Context context, File f, String index, long last) throws UnsupportedEncodingException {
@@ -89,6 +160,9 @@ public class Chart implements IChartWithConfig {
             isInternal=true;
         }
     }
+    public int getType(){
+        return type;
+    }
 
     protected Chart(Context ctx) {
         this.context=ctx;
@@ -98,6 +172,11 @@ public class Chart implements IChartWithConfig {
         if (isXml())
             throw new IOException("unable to get chart file from xml");
         if (chartReader == null){
+            if (type == TYPE_PMTILES){
+                chartReader=(documentFile!=null)?
+                        new PMTilesDfReader(documentFile,context)
+                        : new PMTilesReader(realFile);
+            }
             AvnLog.i("RequestHandler","open chart file "+getChartKey());
             if (documentFile != null){
                 ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(documentFile, context);
@@ -179,6 +258,9 @@ public class Chart implements IChartWithConfig {
     public boolean isXml(){
         return (type == TYPE_XML);
     }
+    public boolean isPM(){
+        return type == TYPE_PMTILES;
+    }
     public ExtendedWebResourceResponse getOverview() throws Exception {
         if (isXml()){
             if (realFile != null){
@@ -259,7 +341,7 @@ public class Chart implements IChartWithConfig {
         getChartFileReader().getOverview();
     }
     public long getSequence() throws Exception {
-        if (isXml()) return 0;
+        if (isXml()) return lastModified;
         return getChartFileReader().getSequence();
     }
 

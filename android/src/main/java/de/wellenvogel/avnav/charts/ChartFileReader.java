@@ -17,7 +17,18 @@ import de.wellenvogel.avnav.util.AvnLog;
 /**
  * Created by andreas on 06.12.14.
  */
-public class ChartFileReader {
+public class ChartFileReader  {
+    public static final String SERVICETEMPLATE ="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
+            " <TileMapService version=\"1.0.0\" >\n" +
+            "   <Title>avnav tile map service</Title>\n" +
+            "   <TileMaps>\n" +
+            "   \n" +
+            "   %MAPSOURCES% \n"+
+            "       \n" +
+            "\n" +
+            "   </TileMaps>\n" +
+            " </TileMapService>\n" +
+            " ";
     private String urlName;
     private static final String MAPSRCTEMPLATE="    <TileMap \n" +
             "       title=\"%TITLE%\" \n" +
@@ -35,17 +46,6 @@ public class ChartFileReader {
             "       </LayerZoomBoundings>\n"+
             "       \n" +
             "    </TileMap>\n";
-    private static final String SERVICETEMPLATE ="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-            " <TileMapService version=\"1.0.0\" >\n" +
-            "   <Title>avnav tile map service</Title>\n" +
-            "   <TileMaps>\n" +
-            "   \n" +
-            "   %MAPSOURCES% \n"+
-            "       \n" +
-            "\n" +
-            "   </TileMaps>\n" +
-            " </TileMapService>\n" +
-            " ";
     private static final String ZOOMBOUNDINGFRAME="<ZoomBoundings zoom=\"%ZOOM%\">\n" +
             "%BOUNDINGS%\n" +
             "</ZoomBoundings>\n";
@@ -59,20 +59,18 @@ public class ChartFileReader {
     }
 
     public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) throws IOException {
-        ChartFile.ChartInputStream str=getInputStream(x,y,z,sourceIndex);
+        ChartInputStream str=getInputStream(x,y,z,sourceIndex);
         if (str == null)
             return null;
         return new ExtendedWebResourceResponse(str.getLength(),"image/png","",str);
     }
 
-    public ChartFile.ChartInputStream getInputStream(int x,int y, int z,int sourceIndex) throws IOException {
-        ChartFile.ChartInputStream rt = chart.getInputStream(x, y, z,sourceIndex);
+    public ChartInputStream getInputStream(int x, int y, int z, int sourceIndex) throws IOException {
+        ChartInputStream rt = chart.getInputStream(x, y, z,sourceIndex);
         AvnLog.d(Constants.LOGPRFX, "loaded chart z=" + z + ", x=" + x + ", y=" + y + ",src=" + sourceIndex + ", rt=" + ((rt != null) ? "OK" : "<null>"));
         return rt;
     }
-    public String getUrlName(){
-        return urlName;
-    }
+
     public int numFiles(){
         return chart.numFiles();
     }
@@ -83,7 +81,7 @@ public class ChartFileReader {
             AvnLog.d(Constants.LOGPRFX,"exception while closing chart file "+urlName);
         }
     }
-    private String replaceTemplate(String template,HashMap<String,String> values){
+    protected String replaceTemplate(String template,HashMap<String,String> values){
         String rt=template;
         for (String k: values.keySet()){
             rt=rt.replaceAll("%"+k+"%",values.get(k));
