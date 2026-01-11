@@ -73,7 +73,7 @@ class AVNProxy(AVNWorker):
         constructed=url
         try:
             parsed=urllib.parse.urlparse(url)
-            parsed=parsed._replace(path=urllib.parse.quote_plus(parsed.path,safe='/'))
+            parsed=parsed._replace(path=urllib.parse.quote_plus(parsed.path,safe='/').replace('+','%20'))
             constructed=urllib.parse.urlunparse(parsed)
             request = urllib.request.Request(constructed)
             headers = handler.headers

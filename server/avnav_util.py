@@ -840,7 +840,7 @@ class AVNDownload(object):
         if sendbody and stream is None:
             self.setError(500,"no data in response")
         addHeaders = None
-        if start is not None or end is not None:
+        if (start is not None or end is not None) and not self.passThru():
             try:
                 if not self.canSeek() or self.size is None:
                     raise Exception("stream cannot seek")
