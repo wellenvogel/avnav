@@ -77,7 +77,6 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
 
         @Override
         public long skip(long n) throws IOException {
-            AvnLog.e("range skip"+n);
             long res=impl.skip(n);
             length-=n;
             return res;

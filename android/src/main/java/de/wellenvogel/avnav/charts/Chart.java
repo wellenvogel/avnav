@@ -56,25 +56,25 @@ public class Chart implements IChartWithConfig {
     protected Context context;
     private File realFile;
     private DocumentFile documentFile; //alternative to realFile
-    private ChartFileReader chartReader;
+    private ChartFileReaderBase chartReader;
     private long lastModified;
     private long lastTouched;
     private int type;
     private boolean isInternal=false;
     String fileName;
 
-    static class PMTilesReader extends ChartFileReader{
+    static class PMTilesReader extends ChartFileReaderBase{
         File chartFile;
         long mtime=0;
         public PMTilesReader(File file) {
-            super(null, "");
+            super();
             chartFile=file;
             if (file != null) mtime=file.lastModified();
         }
 
         @Override
-        public InputStream chartOverview() throws UnsupportedEncodingException {
-            String rs=replaceTemplate(SERVICETEMPLATE,new AvnUtil.KeyValueMap<>(
+        public String getOverview() {
+            return replaceTemplate(SERVICETEMPLATE,new AvnUtil.KeyValueMap<>(
                 new AvnUtil.KeyValue<>("MAPSOURCES",
                         "<TileMap\n"
                         +  "profile=\"PMTiles\"\n"
@@ -82,7 +82,6 @@ public class Chart implements IChartWithConfig {
                         +  "/>\n"
                         )
             ));
-            return new ByteArrayInputStream(rs.getBytes(StandardCharsets.UTF_8));
         }
 
         @Override
@@ -97,6 +96,11 @@ public class Chart implements IChartWithConfig {
         @Override
         public long getSequence() {
             return mtime;
+        }
+
+        @Override
+        public int numFiles() {
+            return 1;
         }
     }
     static class PMTilesDfReader extends PMTilesReader{
@@ -168,7 +172,7 @@ public class Chart implements IChartWithConfig {
         this.context=ctx;
     }
 
-    synchronized ChartFileReader getChartFileReader() throws Exception {
+    synchronized ChartFileReaderBase getChartFileReader() throws Exception {
         if (isXml())
             throw new IOException("unable to get chart file from xml");
         if (chartReader == null){
@@ -177,14 +181,15 @@ public class Chart implements IChartWithConfig {
                         new PMTilesDfReader(documentFile,context)
                         : new PMTilesReader(realFile);
             }
-            AvnLog.i("RequestHandler","open chart file "+getChartKey());
-            if (documentFile != null){
-                ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(documentFile, context);
-                chartReader =new ChartFileReader(cf,getChartKey());
-            }
             else {
-                ChartFile cf=(type == TYPE_MBTILES)?new MbTilesFile(realFile):new GEMFFile(realFile);
-                chartReader = new ChartFileReader(cf, getChartKey());
+                AvnLog.i("ChartHandler", "open chart file " + getChartKey());
+                if (documentFile != null) {
+                    ChartFile cf = (type == TYPE_MBTILES) ? null : new GEMFFile(documentFile, context);
+                    chartReader = new ChartFileReader(cf, getChartKey());
+                } else {
+                    ChartFile cf = (type == TYPE_MBTILES) ? new MbTilesFile(realFile) : new GEMFFile(realFile);
+                    chartReader = new ChartFileReader(cf, getChartKey());
+                }
             }
         }
         this.lastTouched=System.currentTimeMillis();
@@ -272,7 +277,7 @@ public class Chart implements IChartWithConfig {
             }
         }
         else{
-            ChartFileReader f = getChartFileReader();
+            ChartFileReaderBase f = getChartFileReader();
             InputStream rt=f.chartOverview();
             return new ExtendedWebResourceResponse(-1,"text/xml","",rt);
         }

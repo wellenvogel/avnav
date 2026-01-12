@@ -896,13 +896,13 @@ public class ChartHandler extends RequestHandler.NavRequestHandlerBase implement
             if (chart == null) {
                 throw new Exception("request a file that is not in the list: " + fname);
             }
-            if (kp.parts[0].equals(CHARTOVERVIEW)) {
+            if (kp.parts.length > 0 && kp.parts[0].equals(CHARTOVERVIEW)) {
                 try {
                     return chart.getOverview();
                 } catch (Exception e) {
                     Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
                 }
-            } else if (kp.parts[0].equals("sequence")){
+            } else if (kp.parts.length > 0 && kp.parts[0].equals("sequence")){
                 JSONObject sq= RequestHandler.getReturn(new AvnUtil.KeyValue("sequence",chart.getSequence()));
                 byte o[]=sq.toString().getBytes("UTF-8");
                 return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
