@@ -26,6 +26,7 @@
     "@babel/preset-react": "^7.24.7",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^8.57.0",
+    "@types/geodesy": "^2.2.8",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "babel-loader": "^9.1.3",
