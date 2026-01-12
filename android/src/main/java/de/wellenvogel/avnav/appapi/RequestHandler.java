@@ -315,7 +315,7 @@ public class RequestHandler {
                     rt = tryDirectRequest(uri, method, headers);
                 }
                 if (rt != null) {
-                    rt.applyRangeHeader(headers.get(ExtendedWebResourceResponse.RANGE_HDR));
+                    rt.applyRangeHeader(headers.get(ExtendedWebResourceResponse.RANGE_HDR),true);
                     return rt;
                 }
                 if (path.startsWith("/")) path = path.substring(1);

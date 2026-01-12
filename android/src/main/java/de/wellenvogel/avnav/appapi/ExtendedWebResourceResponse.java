@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.DateFormat;
@@ -19,6 +20,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import de.wellenvogel.avnav.util.AvnLog;
 
 public class ExtendedWebResourceResponse extends WebResourceResponse {
     public static final String HTTP_RESPONSE_DATE_HEADER =
@@ -29,6 +32,63 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     long length;
     int statusCode=200;
     String reason="OK";
+
+    static class LengthLimitedStream extends InputStream {
+        InputStream impl;
+        long length=0;
+        public LengthLimitedStream(InputStream impl, long length){
+            this.impl=impl;
+            this.length=length;
+        }
+        @Override
+        public int read() throws IOException {
+            if (length <0) return -1;
+            length--;
+            return impl.read();
+        }
+
+        @Override
+        public int available() throws IOException {
+            //if we have really large files (not unlikely with pmtiles)
+            //we use 0 here (this will be translated to content-length by the webview)
+            //and content-length 0 seems to be no problem at least for the pmtiles
+            if (length > Integer.MAX_VALUE) return 0;
+            return (int) length;
+        }
+
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if (len > length) len=(int)length;
+            if (len < 0 || length == 0) {
+                impl.close();
+                return -1;
+            }
+            int rt=impl.read(b, off, len);
+            if (rt > 0) length-=rt;
+            if (rt < 0) length=-1;
+            return rt;
+        }
+
+        @Override
+        public void close() throws IOException {
+            impl.close();
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            AvnLog.e("range skip"+n);
+            long res=impl.skip(n);
+            length-=n;
+            return res;
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            int dummy=1;
+        }
+
+    }
 
     public boolean isProxy() {
         return isProxy;
@@ -42,32 +102,52 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
     public static final String RANGE_HDR="range";
     public void applyRangeHeader(Header hdr){
         if (hdr == null) return;
-        applyRangeHeader(hdr.getValue());
+        applyRangeHeader(hdr.getValue(),false);
     }
-    public void applyRangeHeader(String header){
+
+    /**
+     * handle range requests
+     * for webview access refer to
+     * https://issues.chromium.org/issues/40739128
+     * @param header
+     */
+    public void applyRangeHeader(String header,boolean local){
         if (isProxy() || header == null) return;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return;
         if (this.statusCode == 206) return; //already applied
         try {
-            if (this.getLength() < 0) throw new Exception("cannot seek, no length");
+            long oriLength=this.getLength();
+            if (oriLength < 0) throw new Exception("cannot seek, no length");
             if (header.toLowerCase().startsWith(BYTES)) header = header.substring(BYTES.length());
             String[] startEnd = header.split("-");
             long start = 0;
-            long end=this.getLength()-1;
+            long end=oriLength-1;
             if (startEnd.length >0 ){
                 start=Long.parseLong(startEnd[0]);
             }
             if (startEnd.length > 1){
                 end=Long.parseLong(startEnd[1]);
             }
-            if (start < 0 || start >= this.getLength()) throw new Exception("invalid start");
-            if (end < 0 || end < start || end >= this.getLength()) throw new Exception("invalid end");
-            if (start > 0 || end < (this.getLength()-1)) {
-                long res = this.getData().skip(start);
-                if (res != start) throw new Exception("unable to seek to start");
-                this.length=end-start+1;
+            if (start < 0 || start >= oriLength) throw new Exception("invalid start");
+            if (end < 0 || end < start || end >= oriLength) throw new Exception("invalid end");
+            if (start > 0 || end < (oriLength-1)) {
+                long rangeLen=end+1;
+                if (! local) {
+                    long res = this.getData().skip(start);
+                    if (res != start) throw new Exception("unable to seek to start");
+                    this.length = end - start + 1;
+                }
+                else{
+                    //the android webview implementation is really strange - see the issue link above
+                    //it will skip to start by it's own but will read till the end of the stream
+                    //if we let this pass it will slow down things a lot as PMTiles files are typically
+                    //rather big
+                    //so we "clamp" the stream to the end of the range but do not skip by our own
+                    this.length=rangeLen;
+                }
                 this.statusCode=206;
-                setHeader("Content-Range",String.format("bytes %d-%d/%d",start,end,this.length));
+                setHeader("Content-Range",String.format("bytes %d-%d/%d",start,end,oriLength));
+                this.setData(new LengthLimitedStream(this.getData(),this.length));
             }
         }catch (Exception e){
             this.setStatusCodeAndReasonPhrase(416,e.getMessage());
