@@ -114,6 +114,10 @@ class BottomLine extends React.Component {
 const DEFAULT_QUERY_INTERVAL=3000;
 const EMPTY_QUERY_INTERVAL=500;
 
+const nameForSort=(item)=>{
+    const n=item?(item.displayName||item.name):undefined;
+    return (n||'ZZZ').toUpperCase();
+}
 class MainPage extends React.Component {
     constructor(props) {
         super(props);
@@ -335,8 +339,8 @@ class MainPage extends React.Component {
                 let selectedChart;
                 let isLoading= json.loading;
                 json.items.sort((a,b)=>{
-                    let nameA = (a.name||"<unknown>").toUpperCase();
-                    let nameB = (b.name||"<unknown>").toUpperCase();
+                    let nameA = nameForSort(a);
+                    let nameB = nameForSort(b);
                     if (nameA < nameB) {
                         return -1;
                     }
@@ -347,6 +351,7 @@ class MainPage extends React.Component {
                 })
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
+                    if (! chartEntry) continue;
                     chartEntry.key=chartEntry.name;
                     if (lastChartKey === chartEntry.name){
                         selectedChart=i;

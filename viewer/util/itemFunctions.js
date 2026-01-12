@@ -43,11 +43,15 @@ export const listItems = async (type) => {
             command: 'list'
         })).items || [];
         items.forEach(item => {
+            if (!item) return;
             item.server = true;
         })
     }
     if (items){
-        items.forEach(item => {item.type=type})
+        for (let i in items){
+            if (!items[i]) items[i]={};
+            items[i].type=type;
+        }
     }
     return items;
 }
