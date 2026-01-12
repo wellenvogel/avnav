@@ -479,7 +479,7 @@ public class AvnUtil {
         StringBuilder res=new StringBuilder();
         boolean first=true;
         for (String segment:segments){
-            String encoded= URLEncoder.encode(segment,"UTF-8");
+            String encoded= URLEncoder.encode(segment,"UTF-8").replace("+","%20");
             if (first) {
                 first=false;
                 res.append(encoded);

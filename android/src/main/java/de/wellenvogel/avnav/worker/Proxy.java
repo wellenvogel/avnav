@@ -159,8 +159,9 @@ public class Proxy extends Worker implements INavRequestHandler {
             }
             context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, host);
         }
+        String path=parsed.getPath();
         BasicHttpRequest request = new BasicHttpRequest(method,
-                AvnUtil.encodeUrlPath(parsed.getPath())+
+                AvnUtil.encodeUrlPath(path)+
                         "?"+parsed.getQuery());
         request.setParams(params);
         for (String k:headers.keySet()) {
