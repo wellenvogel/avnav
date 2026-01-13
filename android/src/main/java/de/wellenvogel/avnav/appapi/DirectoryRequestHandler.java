@@ -89,7 +89,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
-            if (localFile.isFile()){
+            if (localFile.isFile()  && ! localFile.getName().startsWith(TMP_PRFX)){
                 JSONObject jo=fileToItem(localFile);
                 if (jo != null) {
                     rt.put(jo);
