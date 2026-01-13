@@ -100,7 +100,7 @@ const prepareInternal=(url, options, defaults)=>{
 }
 
 
-const fetchWithTimeout=(url,options)=>{
+export const fetchWithTimeout=(url,options)=>{
     const timeout=(options||{}).timeout;
     if (timeout === undefined){
         return fetch(url,options);

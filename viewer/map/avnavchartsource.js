@@ -28,7 +28,7 @@ import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Helper, {avitem, getav, setav} from '../util/helper.js';
-import ChartSourceBase from './chartsourcebase.js';
+import ChartSourceBase, {CHARTBASE} from './chartsourcebase.js';
 import {CHARTAV, layerFactory} from './chartlayers';
 import navobjects from "../nav/navobjects";
 import {ChartFeatureInfo} from "./featureInfo";
@@ -59,9 +59,7 @@ class AvnavChartSource extends ChartSourceBase{
         return url + "/avnav.xml";
     }
     hasValidConfig(){
-        return !!this.chartEntry[CHARTAV.URL] ||
-            !!this.chartEntry[CHARTAV.OVERVIEW] ||
-            !!this.chartEntry[CHARTAV.LAYERS] ;
+        return !!this.chartEntry[CHARTBASE.NAME] ;
     }
     async prepareInternal() {
         let url = this.chartEntry[CHARTAV.URL]||this.chartEntry[CHARTAV.OVERVIEW];
@@ -163,8 +161,8 @@ class AvnavChartSource extends ChartSourceBase{
             if (! layerCreator){
                 throw new Error(`unable to create layer ${lnum} for profile ${type}`);
             }
-            await layerCreator.prepare(layerConfig);
-            const olLayer=layerCreator.createOL(layerConfig);
+            const adaptedConfig=await layerCreator.prepare(layerConfig,this);
+            const olLayer=layerCreator.createOL(adaptedConfig);
             if (this.chartEntry[CHARTAV.OPACITY] && olLayer && olLayer.setOpacity){
                 const opacity=parseFloat(this.chartEntry[CHARTAV.OPACITY]);
                 olLayer.setOpacity(opacity);

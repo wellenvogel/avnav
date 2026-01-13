@@ -216,25 +216,39 @@ class ChartSourceBase {
         throw new Error("prepareInternal not implemented in base class");
     }
     hasValidConfig(){
-        return !! this.chartEntry[CHARTBASE.URL]
+        return !! this.chartEntry[CHARTBASE.NAME] && !! this.chartEntry[CHARTBASE.URL]
     }
     async prepare() {
         const fullConfig = await fetchItemInfo(this.chartEntry);
         this.chartEntry={...fullConfig,...this.chartEntry}; //we prefer values from chartEntry (i.e. from overlay config)
-        if (! this.hasValidConfig()){
-            base.log("no url retrieved for "+this.chartEntry[CHARTBASE.NAME]);
+        const handleError=(error)=>{
+            const txt=error+" for "+this.chartEntry[CHARTBASE.NAME];
+            base.log(txt);
             if (this.isBaseChart()){
-                throw new Error("unable to get an url for the base chart "+this.chartEntry[CHARTBASE.NAME]);
+                throw new Error(txt);
             }
-            this.error="unable to get url for "+this.chartEntry[CHARTBASE.NAME];
+            this.error=txt;
             this.visible=false;
             this.layers=[];
             this.isReadyFlag = true;
             this.chartEntry[CHARTBASE.ENABLED]=false;
+        }
+        if (! this.hasValidConfig()){
+            handleError("unable to get a valid config");
             return;
         }
+        this.error=undefined;
         await this.checkSequence(true);
-        const layers = await this.prepareInternal()
+        let layers;
+        try {
+            layers = await this.prepareInternal()
+        } catch (e){
+            this.error=e+"";
+        }
+        if (!layers || layers.length <1 || !!this.error){
+            handleError(this.error||"no layers for");
+            return;
+        }
         layers.forEach((layer) => {
             setav(layer,{chartSource: this});
         });

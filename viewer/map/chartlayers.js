@@ -47,6 +47,8 @@ import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
 import {PMTiles,Header,Protocol} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
+import {fetchWithTimeout} from "../util/requests";
+import {load as yamlLoad} from 'js-yaml';
 
 export const PMTILESPROTO='pmtiles';
 const PMTILESPROTOPRFX=PMTILESPROTO+"://";
@@ -257,8 +259,8 @@ class LayerConfig{
     getLayerTypes(){
         throw new Error("getLayerType not implemented in base class");
     }
-    async prepare(options){
-        return true;
+    async prepare(options,source){
+        return options;
     }
     createOL(options){
         throw new Error("createOL not implemented in base class");
@@ -532,13 +534,13 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
     getLayerTypes() {
         return ['encrypted-zxy','encrypted-zxy-mercator'];
     }
-    async prepare(options) {
+    async prepare(options,source) {
         if (this.props[CHARTAV.TOKENURL]) {
             const result = await CryptHandler.createOrActivateEncrypt(this.props[CHARTAV.NAME],
                 this.props[CHARTAV.TOKENURL], this.props[CHARTAV.TOKENFUNCTION]);
             this.encryptFunction = result.encryptFunction;
         }
-        return super.prepare(options);
+        return super.prepare(options,source);
     }
 
     createTileUrlFunction(options) {
@@ -602,42 +604,71 @@ const defaulMLFeatureListFormatter=(features,point)=>{
         return userInfo;
 }
 
+
 class LayerConfigMapLibreVector extends LayerConfigXYZ {
     constructor(props) {
         super(props);
         this.featureListFormatter = undefined;
-        this.baseUrl=props.overviewUrl; //base URL already absolute
+        this.overviewUrl=props.overviewUrl;
+        this.baseUrl=undefined;
+        this.maplibreOptions={};
+        this.useProxy=false;
+    }
+
+    async prepare(options, source) {
+        this.useProxy=!!options.useproxy;
+        const maplibreCfg=options.maplibre||{};
+        const style=maplibreCfg.style||options.style||options.styleUrl||
+            options.url||options.href||(new URL("style.json",this.baseUrl)).getString();
+        if (! style) throw new Error("no style configured");
+        if (typeof(style)==='string' ) {
+            //we assume an URL
+            const styleUrl=new URL(style,this.overviewUrl||window.location.href);
+            this.baseUrl=styleUrl.toString();
+            const result=await fetchWithTimeout(styleUrl,
+                {timeout:parseInt(globalStore.getData(keys.properties.networkTimeout))})
+                .then((r)=>{
+                    if (!r.ok) throw new Error(`unable to fetch ${styleUrl}: ${r.statusText}`);
+                    return r.text();
+                })
+                maplibreCfg.style=yamlLoad(result);
+        }
+        else{
+            maplibreCfg.style=style;
+            this.baseUrl=this.overviewUrl||window.location.href;
+        }
+        this.maplibreOptions=maplibreCfg;
+        return {...options,maplibre: maplibreCfg};
     }
 
     getLayerTypes() {
         return ["maplibreVector", "maplibre"];
     }
+    _translateUrl(url) {
+        const base=this.styleUrl||this.baseUrl;
+        let prfx = '';
+        if (url.startsWith(PMTILESPROTOPRFX)) {
+            prfx = PMTILESPROTOPRFX;
+            url = url.substring(PMTILESPROTOPRFX.length);
+        }
+        const completeUrl = new URL(url, base);
+        if (!this.useProxy || (completeUrl.origin === window.location.origin)) {
+            //unchanged
+            return prfx + completeUrl.toString()
+        }
+        return prfx + (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
+
+    }
 
     createOL(options) {
         this.featureListFormatter = featureListFormatter[options.featurelistformatter] || defaulMLFeatureListFormatter;
-        const layerOptions = this.buildLayerOptions({url: options.styleUrl, ...options});
         const extent = this.bboxToOlExtent(options.boundingbox);
-        const mapLibreOptions = {
-            style: layerOptions.layerUrl
-        }
+        const mapLibreOptions = options.maplibre;
         //our computed style URL has already included any baseUrl
         //but still is just an absolute URL without scheme/host/port
-        const base = new URL(layerOptions.layerUrl, window.location.href);
         mapLibreOptions.transformRequest = (url, resourceType) => {
-            let prfx = '';
-            if (url.startsWith(PMTILESPROTOPRFX)) {
-                prfx = PMTILESPROTOPRFX;
-                url = url.substring(PMTILESPROTOPRFX.length);
-            }
-            const completeUrl = new URL(url, base);
-            if (!options.useproxy || (completeUrl.origin === window.location.origin)) {
-                //unchanged
-                return {
-                    url: prfx + completeUrl.toString(),
-                }
-            }
             return {
-                url: prfx + (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
+                url: this._translateUrl(url),
             }
         }
         this.layer = new MapLibreLayer({
@@ -651,9 +682,8 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
         setav(this.layer, {
             isTileLayer: true,
             minZoom: parseInt(options.minzoom || 1),
-            maxZoom: parseInt(options.maxzoom || 23) + layerOptions.upzoom,
+            maxZoom: parseInt(options.maxzoom || 23),
             extent: extent,
-            zoomLayerBoundings: layerOptions.zoomLayerBoundings,
         });
         return this.layer;
     }
@@ -742,11 +772,11 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
     }
 
 
-    async prepare(options) {
+    async prepare(options,source) {
         this.layerOptions=this.buildLayerOptions(options);
         this.pm = new PMTiles(this.layerOptions.layerUrl);
         this.header=await this.pm.getHeader()
-        return true;
+        return options;
     }
 
     createTileUrlFunction(options) {
