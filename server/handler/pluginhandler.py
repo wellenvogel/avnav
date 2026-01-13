@@ -428,9 +428,22 @@ class ApiImpl(AVNApi):
     def getDataDir(self):
         return self.phandler.getParamValue(AVNHandlerManager.BASEPARAM.DATADIR)
 
-    def registerChartProvider(self, callback):
+    def registerChartProvider(self, callback,local=False):
         charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
-        charthandler.registerExternalProvider(self.prefix, callback)
+        if local:
+            charthandler.registerExternalProvider(self.prefix, callback)
+        else:
+            mtime=os.path.getmtime(self.directory)
+            def finalCb(*args):
+                cl=callback(*args)
+                if isinstance(cl, list):
+                    for chart in cl:
+                        if isinstance(chart, dict):
+                            if chart.get('time') is None:
+                                chart['time']=mtime
+                return cl
+            charthandler.registerExternalProvider(self.prefix, finalCb)
+
         pass
 
     def registerRequestHandler(self, callback):
@@ -568,10 +581,11 @@ class ApiImpl(AVNApi):
                                     chart['baseUrl']=self.getBaseUrl(True)
                                 except Exception as x:
                                     AVNLog.error("unable to adapt chart %s for %s: %s",repr(chart),self.prefix,repr(x))
+                                chart['time']=os.path.getmtime(self.directory)
                             def getcharts(*args):
                                 return charts
                             AVNLog.debug("registering charts for %s:%s", self.prefix, repr(charts))
-                            self.registerChartProvider(getcharts)
+                            self.registerChartProvider(getcharts,local=True)
                         except Exception as e:
                             AVNLog.error("failed to register charts %s for %s:%s",repr(charts), self.prefix, repr(e))
                             raise e
@@ -1113,7 +1127,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                 return AVNUtil.getReturnData(data=self.getParam(child=name))
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 
-    def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None):
+    def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None, **kwargs):
         def noDownload(entry):
             entry.canDownload = False
             entry.downloadName = None

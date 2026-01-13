@@ -41,13 +41,15 @@ public abstract class PluginHandlerBase {
     private GpsService gpsService;
     private String baseUrl;
     private WorkerStatus status;
-    protected PluginHandlerBase(GpsService ctx,WorkerStatus status,String baseUrl) {
+    long mtime=0;
+    protected PluginHandlerBase(GpsService ctx,WorkerStatus status,String baseUrl,long mtime) {
         gpsService=ctx;
         this.status=status;
         this.baseUrl=baseUrl;
         if (this.baseUrl != null && ! this.baseUrl.endsWith("/")){
             this.baseUrl+="/";
         }
+        this.mtime=mtime;
     }
     protected JSONArray charts=null;
     protected JSONArray addons=null;
@@ -123,6 +125,9 @@ public abstract class PluginHandlerBase {
                     if (!chart.has(Chart.CKEY)) {
                         AvnLog.e("chart without name");
                         continue;
+                    }
+                    if (!chart.has(Chart.TIME_KEY)){
+                        chart.put(Chart.TIME_KEY,mtime/1000);
                     }
                     String name=chart.getString(Chart.CKEY);
                     pluginCharts.add(new IPluginAware.PluginItem(name,chart));

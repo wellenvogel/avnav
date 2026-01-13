@@ -119,7 +119,7 @@ public class PluginManager extends DirectoryRequestHandler {
         void start(GpsService gpsService){
             error=null;
             this.gpsService = gpsService;
-            phBase=new PluginHandlerBase(gpsService,null,this.pluginUrlBase) {
+            phBase=new PluginHandlerBase(gpsService,null,this.pluginUrlBase,lastModified) {
                 @Override
                 protected String getKey() {
                     return Plugin.this.getKey();
@@ -176,6 +176,7 @@ public class PluginManager extends DirectoryRequestHandler {
                             String file=layout.getString("file");
                             File lf=new File(this.dir,file);
                             if (! lf.exists() || ! lf.isFile() || ! lf.canRead()) throw new Exception("cannot read layout file "+lf);
+                            layout.put("time",lf.lastModified()/1000);
                             layoutItems.add(new IPluginAware.PluginItem(name,layout, new IPluginAware.FileStreamProvider(lf,name+".json")));
                         }
                         phBase.registerLayouts(layoutItems);

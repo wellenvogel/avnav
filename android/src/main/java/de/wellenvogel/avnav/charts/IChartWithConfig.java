@@ -9,6 +9,7 @@ public interface IChartWithConfig extends AvnUtil.IJsonObect {
     static final String EXT_CKEY="chartKey"; //chartkey for external charts
     static final String DPNAME_KEY="displayName";
     static final String HASOVL_KEY="hasOverlay";
+    static final String TIME_KEY="time";
     /**
      * get a list of (ovl) config names that belong to this chart
      * the first one being the current one

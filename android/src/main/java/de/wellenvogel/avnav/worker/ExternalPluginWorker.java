@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.charts.Chart;
@@ -115,7 +116,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     private void setParameters(){
         parameterDescriptions.add(ENABLED_PARAMETER);
         parameterDescriptions.add(TIMEOUT_PARAMETER);
-        phBase=new PluginHandlerBase(gpsService,this.status,null) {
+        phBase=new PluginHandlerBase(gpsService,this.status,null,0) {
             @Override
             protected String getKey() {
                 return ExternalPluginWorker.this.getKey();
@@ -239,6 +240,9 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             Log.d(Constants.LOGPRFX,"cannot read enabled state for "+getPluginName(false));
         }
         if (enabled) {
+            //use some heuristics to decide if the timestamp we see
+            //is in seconds or milliseconds
+            long maxSeconds=(new Date("3000/01/01")).getTime()/1000;
             boolean updatedCharts = false;
             boolean updatedAddons = false;
             String pluginString = intent.getStringExtra("plugin.json");
@@ -261,6 +265,13 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                                 }
                                 chart.put(Chart.CKEY,name);
                                 chart.remove(Chart.EXT_CKEY);
+                            }
+                            if (chart.has(Chart.TIME_KEY)){
+                                long ts=chart.getLong(Chart.TIME_KEY);
+                                if (ts > maxSeconds) {
+                                    ts=ts/1000;
+                                    chart.put(Chart.TIME_KEY,ts);
+                                }
                             }
                         }
                         phBase.registerCharts(charts);
