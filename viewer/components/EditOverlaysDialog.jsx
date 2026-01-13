@@ -524,7 +524,7 @@ const EditOverlaysDialog = (props) => {
             }
             requests.push(fetchItemInfo(item)
                 .then((info) => {
-                  if (! info || !info.url){
+                  if (! info || !info.name){
                       return {
                           nonexistent: true
                       }
