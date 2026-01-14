@@ -50,6 +50,7 @@ import {unByKey} from "ol/Observable.js";
 import {fetchWithTimeout} from "../util/requests";
 import {load as yamlLoad} from 'js-yaml';
 
+
 export const PMTILESPROTO='pmtiles';
 const PMTILESPROTOPRFX=PMTILESPROTO+"://";
 
@@ -254,12 +255,25 @@ export const CHARTAV= {
     LAYERS:"layers",
 }
 class LayerConfig{
-    constructor() {
+    constructor(props,userCallback) {
+        this.userCallback=userCallback;
+        this.props=props;
+        this.userCallbackData={
+            context:{}
+        };
     }
     getLayerTypes(){
         throw new Error("getLayerType not implemented in base class");
     }
     async prepare(options,source){
+        if (this.userCallback){
+            const userCbResult=await this.userCallback(options,this.userCallbackData.context);
+            if (userCbResult) this.userCallbackData={
+                ...userCbResult,
+                context: this.userCallbackData.context,
+            };
+            if (this.userCallbackData.options) return {...options,...this.userCallbackData.options};
+        }
         return options;
     }
     createOL(options){
@@ -278,6 +292,12 @@ class LayerConfig{
         return olExtent.applyTransform(ext,olTransforms.get("EPSG:4326", "EPSG:3857"))
     }
     featureListToInfo(allFeatures,pixel,layer,source){
+    }
+
+    async destroy(){
+        if (this.userCallbackData.finalizeFunction){
+            await this.userCallbackData.finalizeFunction(this.userCallbackData.context);
+        }
     }
 
 }
@@ -315,8 +335,8 @@ const convertBoundsForZoom=(boundsForZoom)=>{
     return {[boundsForZoom.zoom]:boxesOut};
 }
 class LayerConfigXYZ extends LayerConfig{
-    constructor({overviewUrl,upzoom}) {
-        super();
+    constructor({overviewUrl,upzoom},userCallback) {
+        super({},userCallback);
         this.overviewUrl = overviewUrl;
         this.upzoom = upzoom; //coming from chartEntry if set there
         this.inversy=false;
@@ -373,7 +393,7 @@ class LayerConfigXYZ extends LayerConfig{
     }
     createTileUrlFunction(options) {
         const layerOptions=this.buildLayerOptions(options);
-        return (coord)=>{
+        const f= (coord)=>{
             if (!coord) return undefined;
             if (options.minzoom != undefined && coord[0] < options.minzoom) return invalidUrl;
             if (options.maxzoom != undefined && coord[0] > options.maxzoom) return invalidUrl;
@@ -394,11 +414,20 @@ class LayerConfigXYZ extends LayerConfig{
             }
 
         }
+        if (this.userCallbackData.createTileUrlFunction){
+            return this.userCallbackData.createTileUrlFunction(options,f,this.userCallbackData.context);
+        }
+        else {
+            return f;
+        }
     }
     finalUrl(url) {
         return url;
     }
     tileLoadFunction(imageTile, src){
+        if (this.userCallbackData.tileLoadFunction){
+            return this.userCallbackData.tileLoadFunction(imageTile, src,this.userCallbackData.context);
+        }
         imageTile.getImage().src = this.finalUrl(src)
     }
 
@@ -439,8 +468,8 @@ class LayerConfigXYZ extends LayerConfig{
 
 }
 class LayerConfigTMS extends LayerConfigXYZ{
-    constructor(options) {
-        super(options);
+    constructor(options,userCallback) {
+        super(options,userCallback);
         this.inversy = true;
     }
 
@@ -449,8 +478,8 @@ class LayerConfigTMS extends LayerConfigXYZ{
     }
 }
 class LayerConfigWMS extends LayerConfigXYZ{
-    constructor(props) {
-        super(props);
+    constructor(props,userCallback) {
+        super(props,userCallback);
     }
 
     getLayerTypes() {
@@ -488,7 +517,7 @@ class LayerConfigWMS extends LayerConfigXYZ{
                 }
             }
         }
-        return (coord)=> {
+        const f= (coord)=> {
             if (! checkZoomBounds(coord,layerOptions.zoomLayerBoundings)){
                 return invalidUrl;
             }
@@ -522,12 +551,16 @@ class LayerConfigWMS extends LayerConfigXYZ{
             }
             return rturl.toString();
         }
+        if (this.userCallbackData.createTileUrlFunction){
+            return this.userCallbackData.createTileUrlFunction(options,f, this.userCallbackData.context);
+        }
+        return f;
     }
 }
 
 class LayerConfigEncrypt extends LayerConfigXYZ{
-    constructor(props) {
-        super(props);
+    constructor(props,userCallback) {
+        super(props,userCallback);
         this.props=props;
         this.encryptFunction=undefined
     }
@@ -540,12 +573,12 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
                 this.props[CHARTAV.TOKENURL], this.props[CHARTAV.TOKENFUNCTION]);
             this.encryptFunction = result.encryptFunction;
         }
-        return super.prepare(options,source);
+        return await super.prepare(options,source);
     }
 
     createTileUrlFunction(options) {
         const layerOptions=this.buildLayerOptions(options);
-        return (coord)=>{
+        const f= (coord)=>{
             if (!coord) return undefined;
             if (! checkZoomBounds(coord,layerOptions.zoomLayerBoundings)) return invalidUrl;
             let z = coord[0];
@@ -558,6 +591,10 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
             let tileUrl = "##encrypt##"+ z + '/' + x + '/' + y + ".png";
             return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl)
         }
+        if (this.userCallbackData.createTileUrlFunction){
+            return this.userCallbackData.createTileUrlFunction(options,f,this.userCallbackData.context);
+        }
+        return f;
     }
     finalUrl(url) {
         let encryptPart = url.replace(/.*##encrypt##/, "");
@@ -606,9 +643,8 @@ const defaulMLFeatureListFormatter=(features,point)=>{
 
 
 class LayerConfigMapLibreVector extends LayerConfigXYZ {
-    constructor(props) {
-        super(props);
-        this.featureListFormatter = undefined;
+    constructor(props,userCallback) {
+        super(props,userCallback);
         this.overviewUrl=props.overviewUrl;
         this.baseUrl=undefined;
         this.maplibreOptions={};
@@ -638,7 +674,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             this.baseUrl=this.overviewUrl||window.location.href;
         }
         this.maplibreOptions=maplibreCfg;
-        return {...options,maplibre: maplibreCfg};
+        return await super.prepare({...options,maplibre: maplibreCfg},source);
     }
 
     getLayerTypes() {
@@ -667,7 +703,6 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     }
 
     createOL(options) {
-        this.featureListFormatter = featureListFormatter[options.featurelistformatter] || defaulMLFeatureListFormatter;
         const extent = this.bboxToOlExtent(options.boundingbox);
         const mapLibreOptions = options.maplibre||{};
         if (mapLibreOptions.style instanceof Object) {
@@ -702,6 +737,13 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             }),
             mapLibreOptions: mapLibreOptions
         })
+        if (this.userCallbackData.loadCallback){
+            listenOnce(this.layer,'load-maplibre',(event)=>{
+               if (event.data){
+                   this.userCallbackData.loadCallback(event.data,this.userCallbackData.context);
+               }
+            });
+        }
         setav(this.layer, {
             isTileLayer: true,
             minZoom: parseInt(options.minzoom || 1),
@@ -714,7 +756,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     //really very basic right now and focused on freenautricalcharts
     //most probably this needs to go to a separate formatter
     featureListToInfo(allFeatures, pixel, layer, source) {
-        if (!this.featureListFormatter) return;
+        const featureListFormatter=this.userCallbackData.featureListFormatter||defaulMLFeatureListFormatter;
         const featureList = []; //the list for an external formatter
         const clickCoord = source.mapholder.pixelToCoord(pixel);
         const result = [];
@@ -748,7 +790,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
                 base.log("unable to translate feature: " + e);
             }
         })
-        let formattedFeatures = this.featureListFormatter(featureList,
+        let formattedFeatures = featureListFormatter(featureList,
             source.mapholder.fromMapToPoint(source.mapholder.pixelToCoord(pixel)));
         if (!formattedFeatures) return;
         if (!Array.isArray(formattedFeatures)) formattedFeatures = [formattedFeatures];
@@ -783,8 +825,8 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
 
 
 class LayerConfigPMTilesRaster extends LayerConfigXYZ {
-    constructor(props) {
-        super(props);
+    constructor(props,userCallback) {
+        super(props,userCallback);
         this.pm=undefined;
         this.header=undefined;
         this.layerOptions=undefined;
@@ -799,7 +841,7 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
         this.layerOptions=this.buildLayerOptions(options);
         this.pm = new PMTiles(this.layerOptions.layerUrl);
         this.header=await this.pm.getHeader()
-        return options;
+        return await super.prepare(options,source);
     }
 
     createTileUrlFunction(options) {
@@ -849,9 +891,18 @@ class LayerConfigPMTilesRaster extends LayerConfigXYZ {
     }
 }
 
+class UserChartLayer {
+    constructor(baseName,userName,initCallback) {
+        this.baseName = baseName;
+        this.userName = userName;
+        this.initCallback = initCallback;
+    }
+}
+
 class LayerFactory {
     constructor() {
         this.layerClasses={};
+        this.userChartLayers={}; //type: {string,UserChartLayer}
     }
     register(layerClass) {
         const keys=layerClass.getLayerTypes();
@@ -861,9 +912,23 @@ class LayerFactory {
         }
     }
     layerClass(type,props){
-        const creator=this.layerClasses[type];
+        let creator=this.layerClasses[type];
+        if (creator) {
+            return creator(props);
+        }
+        const userLayer=this.userChartLayers[type];
+        if (! userLayer) return;
+        creator=this.layerClasses[userLayer.baseName]
         if (! creator) return;
-        return creator(props);
+        return creator(props,userLayer.initCallback);
+    }
+    registerUserChartLayer=(baseName,userName,initCallback) => {
+        if (this.userChartLayers[userName]) throw new Error(`Layer ${userName} already exists`);
+        if (! this.layerClasses[baseName]) throw new Error(`base layer ${baseName} does not exist`);
+        this.userChartLayers[userName] = new UserChartLayer(baseName,userName,initCallback);
+    }
+    unregisterUserChartLayer=(userName) => {
+        delete this.userChartLayers[userName];
     }
 }
 
@@ -874,3 +939,11 @@ layerFactory.register(new LayerConfigWMS({}));
 layerFactory.register(new LayerConfigEncrypt({}));
 layerFactory.register(new LayerConfigMapLibreVector({}));
 layerFactory.register(new LayerConfigPMTilesRaster({}));
+
+
+export const registerUserChartLayer=(baseName,userName,initCallback) => {
+    layerFactory.registerUserChartLayer(baseName,userName,initCallback);
+}
+export const unregisterUserChartLayer=(userName) => {
+    layerFactory.unregisterUserChartLayer(userName);
+}

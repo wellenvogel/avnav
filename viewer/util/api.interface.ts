@@ -4,6 +4,9 @@
  */
 import LatLonSpherical from 'geodesy/latlon-spherical';
 import Dms from 'geodesy/dms';
+import {UrlFunction} from 'ol/Tile';
+import {Tile} from "ol";
+import {Map as MapLibreMap} from 'maplibre-gl';
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
@@ -210,6 +213,8 @@ export interface WidgetParameter{
 }
 
 
+
+
 export interface Api{
     log(text:string):void;
 
@@ -301,6 +306,80 @@ export interface Api{
     dms():typeof Dms;
 }
 
+export type UserMapLayerContext=object;
+export type LayerOptions=object;
+export interface UserMapLayerResultBase {
+    options?: LayerOptions; //the potentially modified layer options
+    //avnav will merge them with the original layer options
+    //if you do not modify any options this can be omitted
+    /**
+     * a function that will be called before the layer is destroyed
+     * @param context
+     */
+    finalizeFunction?:(context:UserMapLayerContext)=>Promise<void>;
+    /**
+     * create a tile url function
+     * you can use the provided originalTileUrlFunction
+     * @param options
+     * @param originalTileUrlFunction
+     * @param context
+     */
+}
+export interface UserMapLayerResultRaster extends UserMapLayerResultBase {
+
+    createTileUrlFunction?:(options:LayerOptions,
+                            originalTileUrlFunction:UrlFunction,
+                            context:UserMapLayerContext)=>UrlFunction;
+    /**
+     * set the loaded image at the tile
+     * the default is
+     *    tile.getImage().src=src
+     * @param tile an openlayers tile
+     * @param src the src (normally the tile url)
+     * @param context
+     */
+    tileLoadFunction?:(tile:Tile,src:string,context:UserMapLayerContext)=>Promise<void>;
+}
+
+export interface UserMapLayerResultVector extends UserMapLayerResultBase {
+    /**
+     * a callback that will give you access to the MapLibre map once it is loaded
+     * when using this callback you can store a reference to the map in the context for
+     * later access
+     * @param map
+     * @param context
+     */
+    loadCallback?:(map:MapLibreMap,context:UserMapLayerContext)=>void;
+    /**
+     * a function to format a list of features
+     *                          it will get a list of feature objects as first parameter
+     *                          each of them has all the properties of an openlayers feature
+     *                          additionally it will contain:
+     *                          _gtype: the type of geometry ('point','polygon'...)
+     *                          _lat: lat if type is point
+     *                          _lon: lon if type is point
+     *
+     *                          second parameter will be the click coordinate (Object with lat/lon)
+     *
+     *                          it must return an object (or a list) with the
+     *                          topmost features - they will be shown in the feature list
+     *                          the allowed keys: FEATUREINFO_KEYS
+     */
+    featureListFormatter?:FeatureListFormatter;
+
+}
+export type UserMapLayerResult=UserMapLayerResultRaster|UserMapLayerResultVector;
+/**
+ * the callback that is called when a user map layer is created
+ * @param options {object} the layer options as defined in the chart definition
+ * @param context {object} an object that can be used to store data
+ */
+export type UserMapLayerCallback=(options:LayerOptions,context:UserMapLayerContext)=>Promise<UserMapLayerResult>;
+export type MapLayerProfilesRaster="zxy"|"tms"|"wms"|"encrypted-zxy"|"PMTiles"
+export type MapLayerProfilesVector="maplibre"
+export type MapLayerProfiles=MapLayerProfilesRaster|MapLayerProfilesVector
+
+
 /**
  * the new API as it is provided as the first parameter
  * to the default export function for plugin.mjs / user.mjs
@@ -353,28 +432,20 @@ export interface ApiV2 extends Api{
     registerUserApp(name:string,url:string|URL,icon:string|URL,title?:string,newWindow?:boolean):void;
 
     get FEATUREINFO_KEYS():FeatureInfoKeys;
+
     /**
-     * register a formatter function for charts that implement
-     * getFeatureAt...
-     * @param name - the name
-     *               this must be provided as the parameter featurelistformatter in the charts
-     *               layerconfig
-     * @param formatterFunction a function to format a list of features
-     *                          it will get a list of feature objects as first parameter
-     *                          each of them has all the properties of an openlayers feature
-     *                          additionally it will contain:
-     *                          _gtype: the type of geometry ('point','polygon'...)
-     *                          _lat: lat if type is point
-     *                          _lon: lon if type is point
-     *
-     *                          second parameter will be the click coordinate (Object with lat/lon)
-     *
-     *                          it must return an object (or a list) with the
-     *                          topmost features - they will be shown in the feature list
-     *                          the allowed keys: FEATUREINFO_KEYS
-     *
+     * register a customized map layer that can be used as the "profile" name in map
+     * layer configurations
+     * @param baseName {MapLayerProfiles} the name of an internal layer profile
+     * @param name {string} the name of the layer. Internally plugin: or user: will be prepended
+     *                      so for a layer of myplugin you need to use the profile plugin:myplugin
+     * @param callback {UserMapLayerCallback} an callback that will be called with the layer options from
+     *                      the chart definition
+     *                      the result is an object with potentially modified layer options
+     *                      and a set of callback functions (depending on the base layer)
      */
-    registerFeatureListFormatter(name:string,formatterFunction:FeatureListFormatter):void;
+    registerUserMapLayer(baseName:MapLayerProfiles,name:string,callback:UserMapLayerCallback):void;
+
 
     /**
      * get the config values for the plugin

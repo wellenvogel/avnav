@@ -28,6 +28,15 @@ export type MapLibreLayerOptions = LayerOptions & {
   translateZoom?: MapLibreLayerTranslateZoomFunction
 };
 
+export class LoadEvent extends BaseEvent {
+    public data: MapLibreMap;
+    constructor(name:string,data:MapLibreMap) {
+        super(name);
+        this.data=data;
+    }
+
+}
+
 export default class MapLibreLayer extends Layer {
   mapLibreMap?: MapLibreMap;
 
@@ -99,6 +108,7 @@ export default class MapLibreLayer extends Layer {
 
     this.mapLibreMap.once('load', () => {
       this.dispatchEvent(new BaseEvent('load'));
+      this.dispatchEvent(new LoadEvent('load-maplibre',this.mapLibreMap));
     });
     this.sizeChange=map.on('change:size', () => {
         console.log("maplibre layer resize");

@@ -263,7 +263,7 @@ class ChartSourceBase {
 
 
 
-    destroy(){
+    async destroy(){
         this.isReadyFlag=false;
         this.layers=[];
         this.removeSequence++;
@@ -423,6 +423,7 @@ class ChartSourceBase {
         })
         return rt;
     }
+
 }
 
 /**

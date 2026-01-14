@@ -646,7 +646,7 @@ class MapHolder extends DrawingPositionConverter {
 
     async prepareSourcesAndCreate(newSources) {
         for (let k in this.sources) {
-            this.sources[k].destroy();
+            await this.sources[k].destroy();
         }
         if (newSources) {
             this.sources = newSources;

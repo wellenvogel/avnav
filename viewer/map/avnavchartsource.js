@@ -263,10 +263,14 @@ class AvnavChartSource extends ChartSourceBase{
         return false;
     }
 
-    destroy() {
-        super.destroy();
+    async destroy() {
+        await super.destroy();
         CryptHandler.removeChartEntry(this.getChartKey());
         this.destroySequence++;
+        for (let layer of this.layers) {
+            const creator=getav(layer).creator;
+            if (creator) await creator.destroy();
+        }
     }
 
     /**
@@ -365,6 +369,7 @@ class AvnavChartSource extends ChartSourceBase{
 
         });
     }
+
 }
 
 export default  AvnavChartSource;

@@ -29,9 +29,10 @@ import {ApiV2} from "./api.impl";
 import {injectDateIntoUrl, loadJs, loadOrUpdateCss, urlToString} from "./helper";
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
-import FeatureFormatter, {featureListFormatter} from "./featureFormatter";
+import FeatureFormatter from "./featureFormatter";
 import {layoutLoader} from "./layouthandler";
 import Addons from "../components/Addons";
+import {layerFactory} from "../map/chartlayers";
 
 class PluginApi extends ApiV2 {
     #impl=undefined;
@@ -72,8 +73,8 @@ class PluginApi extends ApiV2 {
         this.#impl.registerUserApp(name, url, icon, title, newWindow);
     }
 
-    registerFeatureListFormatter(name, formatterFunction) {
-        this.#impl.registerFeatureListFormatter(name, formatterFunction);
+    registerUserMapLayer(_baseName, _name, _callback) {
+        this.#impl.registerUserMapLayer(_baseName, _name, _callback);
     }
 
     async getConfig() {
@@ -102,6 +103,7 @@ export class Plugin extends ApiV2{
         this.featureFormatter=[];
         this.layouts=[];
         this.featureListFormatter=[];
+        this.mapLayers=[];
         this.moduleTs=undefined;
     }
     getApi(){
@@ -145,8 +147,8 @@ export class Plugin extends ApiV2{
         })
         layoutLoader.removePluginLayouts(this.name);
         Addons.removePluginAddOns(this.name);
-        this.featureListFormatter.forEach(fmt => {
-            delete featureListFormatter[fmt];
+        this.mapLayers.forEach(layer => {
+            layerFactory.unregisterUserChartLayer(layer);
         })
     }
     async loadModule(url,timestamp,first){
@@ -201,13 +203,6 @@ export class Plugin extends ApiV2{
         this.featureFormatter.push(name);
     }
 
-    registerFeatureListFormatter(name, formatterFunction) {
-        if (! name) throw new Error("name must not be empty");
-        if (typeof formatterFunction !== "function") throw new Error("formatterFunction is no function");
-        if (featureListFormatter[name]) throw new Error("featureListFormatter "+name+" already exists");
-        featureListFormatter[name] = formatterFunction;
-        this.featureListFormatter.push(name);
-    }
 
     getBaseUrl() {
         if (this.disabled) throw new Error("disabled");
@@ -248,6 +243,13 @@ export class Plugin extends ApiV2{
         if (! icon) throw Error("icon must not be empty");
         icon=urlToString(icon,this.getBaseUrl());
         Addons.addPluginAddOn({name,pluginName:this.name, url, icon, title, newWindow});
+    }
+
+
+    registerUserMapLayer(baseName, name, callback) {
+        name=(this.name === USERNAME)?"user:"+name:"plugin:"+name;
+        layerFactory.registerUserChartLayer(baseName, name, callback);
+        this.mapLayers.push(name);
     }
 
     async getConfig() {

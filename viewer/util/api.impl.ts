@@ -25,8 +25,9 @@ import {
     FeatureFormatterFunction,
     FeatureInfoKeys,
     FeatureInfoType,
-    FeatureListFormatter,
-    FormatterFunction
+    FormatterFunction,
+    MapLayerProfiles,
+    UserMapLayerCallback
 } from './api.interface';
 
 export class ApiImpl implements ApiIntf {
@@ -159,7 +160,7 @@ export class ApiImpl implements ApiIntf {
 
 //update this whenever the FeatureInfoType changes
 //otherwise compilation will fail - so it should be easy
-const KeyHelper: Required<FeatureInfoType>= {
+const KeyHelper: Required<FeatureInfoType> = {
     buoy: "",
     description: "",
     htmlInfo: "",
@@ -173,9 +174,13 @@ const KeyHelper: Required<FeatureInfoType>= {
     top: ""
 }
 
-export const getFeatureInfoKeys=():FeatureInfoKeys => Object.keys(KeyHelper) as FeatureInfoKeys;
+export const getFeatureInfoKeys = (): FeatureInfoKeys => Object.keys(KeyHelper) as FeatureInfoKeys;
 
 export class ApiV2 extends ApiImpl implements ApiV2Intf {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    registerUserMapLayer(_baseName: MapLayerProfiles, _name: string, _callback: UserMapLayerCallback): void {
+        throw new Error("Method not implemented.");
+    }
     getBaseUrl(): string {
         throw new Error("Method not implemented.");
     }
@@ -196,10 +201,6 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
     }
     get FEATUREINFO_KEYS():FeatureInfoKeys {
         return getFeatureInfoKeys();
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    registerFeatureListFormatter(_name: string, _formatterFunction: FeatureListFormatter): void {
-        throw new Error("Method not implemented.");
     }
     getConfig(): Promise<object> {
         throw new Error("Method not implemented.");
