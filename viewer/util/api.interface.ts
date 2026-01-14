@@ -60,7 +60,10 @@ export interface FeatureListItem extends Record<string,string|number> {
     _lon?:number;
     _gtype?: string;
 }
-export type FeatureListFormatter=(featureList: [FeatureListItem],point:LatLon)=>[FeatureInfoType]|FeatureInfoType;
+export type FeatureListFormatter=(featureList: [FeatureListItem],
+                                  point:LatLon,
+                                  context:UserMapLayerContext,
+                                  )=>[FeatureInfoType]|FeatureInfoType;
 
 export type WidgetType ='radialGauge'| 'linearGauge'| 'map'
 

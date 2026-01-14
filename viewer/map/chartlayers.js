@@ -791,7 +791,8 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             }
         })
         let formattedFeatures = featureListFormatter(featureList,
-            source.mapholder.fromMapToPoint(source.mapholder.pixelToCoord(pixel)));
+            source.mapholder.fromMapToPoint(source.mapholder.pixelToCoord(pixel)),
+            this.userCallbackData.context);
         if (!formattedFeatures) return;
         if (!Array.isArray(formattedFeatures)) formattedFeatures = [formattedFeatures];
         if (formattedFeatures.length < 1) return;
@@ -908,7 +909,7 @@ class LayerFactory {
         const keys=layerClass.getLayerTypes();
         for (let k of keys){
             if (this.layerClasses[k]) throw new Error("layer key "+k+" already exists");
-            this.layerClasses[k]=(props)=> new layerClass.constructor(props);
+            this.layerClasses[k]=(props,userCb)=> new layerClass.constructor(props,userCb);
         }
     }
     layerClass(type,props){
