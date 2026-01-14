@@ -440,7 +440,7 @@ export interface ApiV2 extends Api{
      * register a customized map layer that can be used as the "profile" name in map
      * layer configurations
      * @param baseName {MapLayerProfiles} the name of an internal layer profile
-     * @param name {string} the name of the layer. Internally plugin: or user: will be prepended
+     * @param name {string} the name of the layer. Internally plugin_ or user_ will be prepended
      *                      so for a layer of myplugin you need to use the profile plugin:myplugin
      * @param callback {UserMapLayerCallback} an callback that will be called with the layer options from
      *                      the chart definition

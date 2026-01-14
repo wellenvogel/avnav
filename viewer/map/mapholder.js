@@ -935,6 +935,21 @@ class MapHolder extends DrawingPositionConverter {
         return zoom;
     }
 
+    getMapLayerNames(){
+        let mapLayerNames = [];
+        for (let source of this.sources) {
+            if (! source)continue;
+            const layers=source.getLayers();
+            if (Array.isArray(layers)) {
+                layers.forEach((layer) => {
+                    const profile=getav(layer).layerProfile;
+                    if (profile) mapLayerNames.push(profile);
+                })
+            }
+        }
+        return mapLayerNames;
+    }
+
     /**
      * init the map (deinit an old one...)
      */

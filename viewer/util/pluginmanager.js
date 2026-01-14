@@ -247,7 +247,7 @@ export class Plugin extends ApiV2{
 
 
     registerUserMapLayer(baseName, name, callback) {
-        name=(this.name === USERNAME)?"user:"+name:"plugin:"+name;
+        name=(this.name === USERNAME)?"user_"+name:"plugin_"+name;
         layerFactory.registerUserChartLayer(baseName, name, callback);
         this.mapLayers.push(name);
     }

@@ -119,6 +119,7 @@ const MapPage =(iprops)=>{
             mapFloat: keys.properties.mapFloat,
             reloadSequence:keys.gui.global.reloadSequence
         })});
+    const [layerTypes,setLayerTypes]=useState([]);
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
     const dialogCtx=useRef();
@@ -148,6 +149,7 @@ const MapPage =(iprops)=>{
         MapHolder.loadMap().
         then((result)=>{
             computeScalePosition();
+            setLayerTypes(MapHolder.getMapLayerNames());
         }).
         catch((error)=>{Toast(error)});
     },[]);
@@ -209,7 +211,11 @@ const MapPage =(iprops)=>{
         let mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        let className=Helper.concatsp(props.className,"mapPage",props.mapFloat?"mapFloat":undefined);
+        let className=Helper.concatsp(
+            props.className,
+            "mapPage",
+            props.mapFloat?"mapFloat":undefined,
+            layerTypes.join(" "));
         let pageProperties=Helper.filteredAssign(Page.propTypes,props);
         let overlay=props.overlayContent || null;
         if (typeof(overlay) === 'function'){

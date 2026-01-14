@@ -178,6 +178,7 @@ class AvnavChartSource extends ChartSourceBase{
                 isBase: this.isBaseChart(),
                 creator:layerCreator,
                 name:layerConfig.name||layerConfig.title||"layer"+lnum,
+                layerProfile: type||"zxy"
             })
             ll.push(olLayer);
             lnum++;

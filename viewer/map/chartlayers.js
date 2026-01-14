@@ -941,10 +941,3 @@ layerFactory.register(new LayerConfigEncrypt({}));
 layerFactory.register(new LayerConfigMapLibreVector({}));
 layerFactory.register(new LayerConfigPMTilesRaster({}));
 
-
-export const registerUserChartLayer=(baseName,userName,initCallback) => {
-    layerFactory.registerUserChartLayer(baseName,userName,initCallback);
-}
-export const unregisterUserChartLayer=(userName) => {
-    layerFactory.unregisterUserChartLayer(userName);
-}
