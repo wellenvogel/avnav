@@ -51,12 +51,18 @@ class AvnavChartSource extends ChartSourceBase{
         return true;
     }
 
+    /**
+     * return a complete URL for the chart overview that also can be used as base URL
+     * @returns {string}
+     */
     getOverviewUrl(){
-        const overview=getUrlWithBase(this.chartEntry,CHARTAV.OVERVIEW);
-        if (overview)return overview;
-        const url=getUrlWithBase(this.chartEntry,CHARTAV.URL);
-        if (!url) return;
-        return url + "/avnav.xml";
+        let overview=getUrlWithBase(this.chartEntry,CHARTAV.OVERVIEW);
+        if (!overview) {
+            overview = getUrlWithBase(this.chartEntry, CHARTAV.URL);
+            if (!overview) return;
+            overview += "/avnav.xml";
+        }
+        return new URL(overview,window.location.href).toString();
     }
     hasValidConfig(){
         return !!this.chartEntry[CHARTBASE.NAME] ;

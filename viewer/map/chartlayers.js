@@ -644,7 +644,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     getLayerTypes() {
         return ["maplibreVector", "maplibre"];
     }
-    _translateUrl(url) {
+    _translateUrl(url,second) {
         const base=this.styleUrl||this.baseUrl;
         let prfx = '';
         if (url.startsWith(PMTILESPROTOPRFX)) {
@@ -652,8 +652,14 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
             url = url.substring(PMTILESPROTOPRFX.length);
         }
         const completeUrl = new URL(url, base);
-        if (!this.useProxy || (completeUrl.origin === window.location.origin)) {
+        if (!this.useProxy || ! second || (completeUrl.origin === window.location.origin)) {
             //unchanged
+            if (! second)
+                //for the first translation (when reading the style) we must ensure to have
+                //{fontstack} and {range} still included
+                return prfx+completeUrl.href.
+                    replace('%7Bfontstack%7D','{fontstack}').
+                    replace('%7Brange%7D','{range}');
             return prfx + completeUrl.toString()
         }
         return prfx + (new URL("/proxy/" + encodeURIComponent(url), window.location.href)).toString()
@@ -663,12 +669,29 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     createOL(options) {
         this.featureListFormatter = featureListFormatter[options.featurelistformatter] || defaulMLFeatureListFormatter;
         const extent = this.bboxToOlExtent(options.boundingbox);
-        const mapLibreOptions = options.maplibre;
+        const mapLibreOptions = options.maplibre||{};
+        if (mapLibreOptions.style instanceof Object) {
+            const style=mapLibreOptions.style;
+            //replace URLs
+            if (style.sprite) {
+                style.sprite=this._translateUrl(style.sprite);
+            }
+            if (style.glyphs) {
+                style.glyphs = this._translateUrl(style.glyphs);
+            }
+            if (Array.isArray(style.sources)) {
+                style.sources.forEach(source => {
+                    if (source.url){
+                        source.url=this._translateUrl(source.url);
+                    }
+                })
+            }
+        }
         //our computed style URL has already included any baseUrl
         //but still is just an absolute URL without scheme/host/port
         mapLibreOptions.transformRequest = (url, resourceType) => {
             return {
-                url: this._translateUrl(url),
+                url: this._translateUrl(url,true),
             }
         }
         this.layer = new MapLibreLayer({
