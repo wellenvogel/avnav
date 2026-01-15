@@ -268,7 +268,7 @@ const UserAppDialog = (props) => {
                 <Input
                     dialogRow={true}
                     label="title"
-                    value={currentAddon.title}
+                    value={currentAddon.title?currentAddon.title:""}
                     minSize={50}
                     maxSize={100}
                     onChange={(value) => {
@@ -374,6 +374,7 @@ const UserAppDialog = (props) => {
                 DBCancel(),
                 DBOk(() => {
                         const addon={...currentAddon, ...props.fixed};
+                        if (!addon.title) addon.title = undefined; //avoid empty/null title
                         Addons.updateAddon(addon.name, addon.url, addon.icon, addon.title, addon.newWindow)
                             .then((data) => {
                                 props.resolveFunction(data);
