@@ -48,6 +48,7 @@ import {createRoot} from "react-dom/client";
 import {loadJs, loadOrUpdateCss} from "./util/helper";
 import pluginmanager from "./util/pluginmanager";
 import {layoutLoader} from "./util/layouthandler";
+import {showParameterDialog} from "./components/ParameterDialog";
 
 
 if (! window.avnav){
@@ -170,6 +171,7 @@ export default function() {
         } catch (error) {
             Toast("unable to load plugin/user data: " + error);
         }
+        pluginmanager.setDialogStarter(showParameterDialog);
     };
     //register some widget definitions
     registerRadial();

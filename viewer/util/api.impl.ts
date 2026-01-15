@@ -21,14 +21,16 @@ import Dms from "geodesy/dms";
 import AvNavVersion from '../version';
 import {
     Api as ApiIntf,
-    ApiV2 as ApiV2Intf,
+    ApiV2 as ApiV2Intf, DialogConfig,
     FeatureFormatterFunction,
     FeatureInfoKeys,
     FeatureInfoType,
     FormatterFunction,
     MapLayerProfiles,
+    StoreData,
     UserMapLayerCallback
-} from './api.interface';
+} from '../api/api.interface';
+
 
 export class ApiImpl implements ApiIntf {
     constructor() {
@@ -203,6 +205,19 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
         return getFeatureInfoKeys();
     }
     getConfig(): Promise<object> {
+        throw new Error("Method not implemented.");
+    }
+    getStoreBaseKey(): string {
+        throw new Error("Method not implemented.");
+    }
+    setStoreData(_key: string, _data: StoreData): void {
+        throw new Error("Method not implemented.");
+    }
+    getStoreData(_key: string,_defaultv: StoreData): StoreData {
+        throw new Error("Method not implemented.");
+    }
+
+    showDialog(_dialog: DialogConfig, _context: object): void {
         throw new Error("Method not implemented.");
     }
 

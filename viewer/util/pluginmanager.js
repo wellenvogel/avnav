@@ -34,6 +34,7 @@ import {layoutLoader} from "./layouthandler";
 import Addons from "../components/Addons";
 import {layerFactory} from "../map/chartlayers";
 
+
 class PluginApi extends ApiV2 {
     #impl=undefined;
     constructor(impl) {
@@ -77,6 +78,23 @@ class PluginApi extends ApiV2 {
         this.#impl.registerUserMapLayer(_baseName, _name, _callback);
     }
 
+
+    getStoreBaseKey() {
+        return this.#impl.getStoreBaseKey();
+    }
+
+    setStoreData(_key, _data) {
+        this.#impl.setStoreData(_key, _data);
+    }
+
+    getStoreData(_key) {
+        return this.#impl.getStoreData(_key);
+    }
+
+    showDialog(_dialog, _context) {
+        this.#impl.showDialog(_dialog, _context);
+    }
+
     async getConfig() {
         return await this.#impl.getConfig();
     }
@@ -90,7 +108,7 @@ class PluginApi extends ApiV2 {
  * But with this dependency the IDE makes it easier to implement new methods
  */
 export class Plugin extends ApiV2{
-    constructor(baseUrl,name) {
+    constructor(manager,baseUrl,name) {
         super();
         this.name=name;
         this.baseUrl=baseUrl;
@@ -105,6 +123,7 @@ export class Plugin extends ApiV2{
         this.featureListFormatter=[];
         this.mapLayers=[];
         this.moduleTs=undefined;
+        this.manager=manager;
     }
     getApi(){
         return this.api;
@@ -150,6 +169,7 @@ export class Plugin extends ApiV2{
         this.mapLayers.forEach(layer => {
             layerFactory.unregisterUserChartLayer(layer);
         })
+        globalstore.deleteByPrefix(this.getStoreBaseKey());
     }
     async loadModule(url,timestamp,first){
         try {
@@ -260,6 +280,25 @@ export class Plugin extends ApiV2{
         })
         return res.data;
     }
+
+
+    getStoreBaseKey() {
+        return "ext."+this.name;
+    }
+
+    setStoreData(key, data) {
+        if (!key || ! key.startsWith(this.getStoreBaseKey())) throw new Error(`invalid store key ${key}`);
+        globalstore.storeData(key, data);
+    }
+
+    getStoreData(key,defaultv) {
+        return globalstore.getData(key,defaultv);
+    }
+
+    showDialog(dialog, context) {
+        if (! this.manager.dialogStarter) throw new Error("cannot start a dialog in this state");
+        this.manager.dialogStarter(context,dialog);
+    }
 }
 const USERFILES={
     js:'user.js',
@@ -274,6 +313,7 @@ class Pluginmanager{
         this.css={};
         this.mjs={}
         this.updateRequests=0;
+        this.dialogStarter=undefined;
     }
     cssId(pluginName) {
         return '_'+pluginName+"_css"
@@ -423,7 +463,7 @@ class Pluginmanager{
                         hasUpdates = true;
                         const createPlugin=async()=> {
                             try {
-                                api = new Plugin(plugin.base, pluginName);
+                                api = new Plugin(this,plugin.base, pluginName);
                                 //if the mjs has never been loaded or if the timestamp is still the same like on the first load
                                 //there is no need to load the module again
                                 const first = this.mjs[pluginName] === undefined || this.mjs[pluginName] === plugin.mjs.timestamp;
@@ -505,6 +545,9 @@ class Pluginmanager{
         if (updatedMjs){
             globalstore.storeData(keys.gui.global.updatedJsModules,true);
         }
+    }
+    setDialogStarter(starterFunction){
+        this.dialogStarter=starterFunction;
     }
 }
 

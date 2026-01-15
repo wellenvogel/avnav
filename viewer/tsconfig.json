@@ -18,5 +18,5 @@
     "sourceMap": true,
     "skipLibCheck": true
   },
-  "include": ["map/maplibre/*","util/*.ts"]
+  "include": ["map/maplibre/*","util/*.ts","components/*tsx"]
 }

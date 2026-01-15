@@ -101,7 +101,7 @@ export const ExternalWidget =(props)=>{
                 base.log("External Widget: render error "+e);
                 innerHtml="<p>render error </p>";
             }
-            if (innerHtml === null){
+            if (innerHtml == null){
                 return null;
             }
         }

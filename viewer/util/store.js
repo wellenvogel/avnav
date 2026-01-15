@@ -289,9 +289,8 @@ class Store {
     getKeysByPrefix(prefix, opt_simpleValuesOnly) {
         let rt = [];
         if (!prefix) return rt;
-        let len = prefix.length;
         for (let k in this.data) {
-            if (k.substr(0, len) === prefix) {
+            if (k.startsWith(prefix)) {
                 if (opt_simpleValuesOnly) {
                     if (typeof (this.data[k]) === 'object') continue;
                 }
@@ -300,6 +299,12 @@ class Store {
         }
         return rt;
     }
+    deleteByPrefix(prefix) {
+        for (let k of this.getKeysByPrefix(prefix)) {
+            delete this.data[k];
+        }
+    }
+
 };
 
 export default Store;

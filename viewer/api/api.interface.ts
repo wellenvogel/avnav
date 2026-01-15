@@ -7,6 +7,7 @@ import Dms from 'geodesy/dms';
 import {UrlFunction} from 'ol/Tile';
 import {Tile} from "ol";
 import {Map as MapLibreMap} from 'maplibre-gl';
+import {MapLibreOptions} from "../map/maplibre/MapLibreLayer";
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
@@ -30,12 +31,6 @@ export type PredefinedFormatters=
     'skTemperature' |
     'skPressure';
 
-export type FeatureFormatterFunction=(data:object,extended:boolean)=>object;
-export interface LatLon{
-    lat:number;
-    lon:number;
-}
-
 /**
  * the allowed keys for the feature info elements
  * being returned from featureFormatter or featureListFormatter
@@ -54,16 +49,14 @@ export interface FeatureInfoType{
     htmlInfo?:string;    //a html text to be shown as extended info - typically the list of other features
 }
 export type FeatureInfoKeys = (keyof FeatureInfoType)[];
-
-export interface FeatureListItem extends Record<string,string|number> {
-    _lat?:number;
-    _lon?:number;
-    _gtype?: string;
+export type FeatureFormatterFunction=(data:object,extended:boolean)=>FeatureInfoType;
+export interface LatLon{
+    lat:number;
+    lon:number;
 }
-export type FeatureListFormatter=(featureList: [FeatureListItem],
-                                  point:LatLon,
-                                  context:UserMapLayerContext,
-                                  )=>[FeatureInfoType]|FeatureInfoType;
+
+
+
 
 export type WidgetType ='radialGauge'| 'linearGauge'| 'map'
 
@@ -207,12 +200,34 @@ export interface WidgetDefinition{
 
 }
 export type WidgetParameterType='STRING'| 'NUMBER'|'FLOAT'|'KEY'| 'SELECT'| 'ARRAY'| 'BOOLEAN'| 'COLOR';
-
+export type WidgetParameterValue=string|number|boolean;
+export type WidgetParameterValues=Record<string, WidgetParameterValue>;
+/**
+ * a condition for the visibility of parameters
+ * the keys are the names of other parameters
+ * this is an "and" condition - i.e. all values have to match
+ */
+export type PConditionCheckFunction=(allValues:WidgetParameterValues,ownValue:WidgetParameterValue)=>boolean;
+export type PConditionValue=WidgetParameterValue|PConditionCheckFunction
+export interface PCondition extends Record<string,PConditionValue> {
+}
+export type PCheckFunction=(ownValue:WidgetParameterValue,allValues:WidgetParameterValues)=>boolean;
 export interface WidgetParameter{
     type: WidgetParameterType;
-    default?:string|number|boolean;
-    list?:[string|number|boolean|object]
-        | (() => [string|number|boolean|object]); //mandatory for type list
+    displayName?:string;                        //the label to be shown, defaults to the name
+    default?:WidgetParameterValue;
+    list?:[WidgetParameterValue|object]
+        | (() => [WidgetParameterValue|object]);//mandatory for type list
+    description?:string;                        //help to be shown
+    condition?: PCondition|[PCondition];        //a condition when to show,
+                                                //and array is an "or" of the elements
+
+    mandatory?:boolean;                         //default false
+    readOnly?:boolean;                          //default false
+    checker?:PCheckFunction;                    //optional check function
+}
+export interface ParametersWithName extends WidgetParameter{
+    name:string;
 }
 
 
@@ -309,12 +324,38 @@ export interface Api{
     dms():typeof Dms;
 }
 
+export interface FeatureListItem extends Record<string,string|number> {
+    _lat?:number;
+    _lon?:number;
+    _gtype?: string; //Geometry type
+}
+export type FeatureListFormatter=(featureList: [FeatureListItem],
+                                  point:LatLon,
+                                  context:UserMapLayerContext,
+)=>[FeatureInfoType]|FeatureInfoType;
+
 export type UserMapLayerContext=object;
-export type LayerOptions=object;
+export interface BoundingBox{
+    minlon:number;
+    minlat:number;
+    maxlon:number;
+    maxlat:number;
+}
+export interface LayerOptionsBase extends Record<string, any> {
+    url?:string;                //the layer URL
+    href?:string;               //synonym for URL
+    name?:string;               //layer name
+    minzoom?:number;            //the minimal zoom
+    maxzoom?:number;            //the maximal zoom
+    boundingbox?:BoundingBox;   //the covered bounding box (some layers like PMTiles will compute this)
+}
+export interface VectorLayerOptions extends LayerOptionsBase {
+    useproxy?:boolean;         //use a proxy to avoid cors issues
+    maplibre: MapLibreOptions; //the options as provided to the MapLibre map
+                               //must include a "style" property
+}
+export interface RasterLayerOptions extends LayerOptionsBase {}
 export interface UserMapLayerResultBase {
-    options?: LayerOptions; //the potentially modified layer options
-    //avnav will merge them with the original layer options
-    //if you do not modify any options this can be omitted
     /**
      * a function that will be called before the layer is destroyed
      * @param context
@@ -329,8 +370,13 @@ export interface UserMapLayerResultBase {
      */
 }
 export interface UserMapLayerResultRaster extends UserMapLayerResultBase {
-
-    createTileUrlFunction?:(options:LayerOptions,
+    /**
+     * the potentially modified layer options
+     * avnav will merge them with the original layer options
+     * if you do not modify any options this can be omitted
+     */
+    options?: RasterLayerOptions;
+    createTileUrlFunction?:(options:RasterLayerOptions,
                             originalTileUrlFunction:UrlFunction,
                             context:UserMapLayerContext)=>UrlFunction;
     /**
@@ -345,6 +391,12 @@ export interface UserMapLayerResultRaster extends UserMapLayerResultBase {
 }
 
 export interface UserMapLayerResultVector extends UserMapLayerResultBase {
+    /**
+     * the potentially modified layer options
+     * avnav will merge them with the original layer options
+     * if you do not modify any options this can be omitted
+     */
+    options?: VectorLayerOptions;
     /**
      * a callback that will give you access to the MapLibre map once it is loaded
      * when using this callback you can store a reference to the map in the context for
@@ -377,11 +429,43 @@ export type UserMapLayerResult=UserMapLayerResultRaster|UserMapLayerResultVector
  * @param options {object} the layer options as defined in the chart definition
  * @param context {object} an object that can be used to store data
  */
-export type UserMapLayerCallback=(options:LayerOptions,context:UserMapLayerContext)=>Promise<UserMapLayerResult>;
+export type UserMapLayerCallback=(options:VectorLayerOptions|RasterLayerOptions,context:UserMapLayerContext)=>Promise<UserMapLayerResult>;
 export type MapLayerProfilesRaster="zxy"|"tms"|"wms"|"encrypted-zxy"|"PMTiles"
 export type MapLayerProfilesVector="maplibre"
 export type MapLayerProfiles=MapLayerProfilesRaster|MapLayerProfilesVector
 
+export type StoreData=object|string|boolean|number;
+
+export interface DialogContext{
+    closeDialog:()=>void
+}
+
+export interface Button{
+    name:string;            //the button name and css class
+    label?:string;          //the label, fallback: name with 1st letter uppercase
+    visible?:boolean;       //just for convinience
+    close?:boolean;         //if not set or true close the dialog when clicked
+                            //otherwise you must implement onClick and call
+                            //context.closeDialog()
+    onClick?:(event:object,
+              currentValues:WidgetParameterValues,
+              context:DialogContext)=>void;
+}
+export interface DialogConfig{
+    className?:string;
+    title?:string;                      //the dialog title
+    text?:string;                       //some text to be shown in the dialog
+    html?:string;                       //some html to be shown after the text
+    parameters?: [ParametersWithName];  //the list of parameters to be shown
+    values?:      WidgetParameterValues; //the initial values
+    /**
+     * callback when a value changes
+     * @param event
+     * @param values only the changed values
+     */
+    onChange?:    (event:object,values:WidgetParameterValues)=>void;
+    buttons?:     [Button];               //if not provided Cancel is shown
+}
 
 /**
  * the new API as it is provided as the first parameter
@@ -449,7 +533,41 @@ export interface ApiV2 extends Api{
      */
     registerUserMapLayer(baseName:MapLayerProfiles,name:string,callback:UserMapLayerCallback):void;
 
+    /**
+     * get a unique base key to read or write entries in the internal store
+     * any keys being used for setStoreData must start with this key
+     * As a recommendation the keys should use this prefix and append a dot + a name for the key
+     */
+    getStoreBaseKey():string;
 
+    /**
+     * store data in AvNav's internal store
+     * This can be used to communicate with widgets. When storing a data item with a key that
+     * is part of the storeKeys of a widget, this widget will get updated and will receive the stored
+     * value
+     * @param key   the key for the data to be stored. Must start with the string that you
+     *              get from getStoreBaseKey
+     * @param data  the data to be stored
+     */
+    setStoreData(key:string,data:StoreData):void;
+
+    /**
+     * retrieve data from AvNavs internal store.
+     * When using the retrieved data to store it again bei careful to create a copy
+     * if the data is not a simple type like number|boolean|string
+     * @param key any store key. You can use keys that start with your own key but also and other key
+     *            like nav.gps....
+     * @param defaultv the default value to be returned if the item is not in the store
+     */
+    getStoreData(key:string,defaultv?:StoreData):StoreData;
+
+    /**
+     * show a simple dialog
+     * @param dialog
+     * @param context you can provide here the event object you got from events
+     *                that you registered
+     */
+    showDialog(dialog:DialogConfig,context:object):void
     /**
      * get the config values for the plugin
      * @return {Promise<void>}
