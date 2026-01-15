@@ -33,6 +33,7 @@ import FeatureFormatter from "./featureFormatter";
 import {layoutLoader} from "./layouthandler";
 import Addons from "../components/Addons";
 import {layerFactory} from "../map/chartlayers";
+import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
 
 
 class PluginApi extends ApiV2 {
@@ -93,6 +94,15 @@ class PluginApi extends ApiV2 {
 
     showDialog(_dialog, _context) {
         this.#impl.showDialog(_dialog, _context);
+    }
+
+
+    getLocalStorage(_key, _defaultv) {
+        return this.#impl.getLocalStorage(_key, _defaultv);
+    }
+
+    setLocalStorage(_key, _data) {
+        this.#impl.setLocalStorage(_key, _data);
     }
 
     async getConfig() {
@@ -298,6 +308,22 @@ export class Plugin extends ApiV2{
     showDialog(dialog, context) {
         if (! this.manager.dialogStarter) throw new Error("cannot start a dialog in this state");
         this.manager.dialogStarter(context,dialog);
+    }
+
+    getLocalStorage(key, defaultv) {
+        const name=this.name+"."+key;
+        const rt=LocalStorageManager.getItem(UNPREFIXED_NAMES.EXTERNAL,name);
+        if (! rt) return defaultv;
+        return JSON.parse(rt);
+    }
+
+    setLocalStorage(key, data) {
+        const name=this.name+"."+key;
+        if (! data) LocalStorageManager.removeItem(UNPREFIXED_NAMES.EXTERNAL,name);
+        else {
+            const raw=JSON.stringify(data);
+            LocalStorageManager.setItem(UNPREFIXED_NAMES.EXTERNAL,name,raw);
+        }
     }
 }
 const USERFILES={

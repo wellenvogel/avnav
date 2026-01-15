@@ -13,7 +13,8 @@ export const UNPREFIXED_NAMES={
     EULAS:'avnav.eulas',
     SETTINGS: 'avnav.settings',
     LICENSE: 'avnav.licenseAccepted',
-    SPLITMODE: 'avnav.splitmode'
+    SPLITMODE: 'avnav.splitmode',
+    EXTERNAL: 'avnav.external',  //user.mjs and plugins
 }
 
 export const STORAGE_NAMES=assign({},UNPREFIXED_NAMES,PREFIX_NAMES);
@@ -94,6 +95,12 @@ class LocalStorage{
             }
         }
         return rt;
+    }
+    deleteByPrefix(prefix){
+        const names=this.listByPrefix(prefix);
+        for (let name of names){
+            this.removeItem(name);
+        }
     }
 }
 

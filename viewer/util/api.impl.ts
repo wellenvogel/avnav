@@ -31,7 +31,6 @@ import {
     UserMapLayerCallback
 } from '../api/api.interface';
 
-
 export class ApiImpl implements ApiIntf {
     constructor() {
     }
@@ -218,6 +217,14 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
     }
 
     showDialog(_dialog: DialogConfig, _context: object): void {
+        throw new Error("Method not implemented.");
+    }
+
+    getLocalStorage(_key: string, _defaultv?: StoreData): StoreData {
+        throw new Error("Method not implemented.");
+    }
+
+    setLocalStorage(_key: string, _data: StoreData|undefined): void {
         throw new Error("Method not implemented.");
     }
 

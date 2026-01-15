@@ -265,13 +265,17 @@ class AvnavChartSource extends ChartSourceBase{
     }
 
     async destroy() {
+        for (let layer of this.layers) {
+            const creator=getav(layer).creator;
+            try {
+                if (creator) await creator.destroy();
+            }catch (e){
+                base.log(`error destroying creator "${layer}": ${e}`);
+            }
+        }
         await super.destroy();
         CryptHandler.removeChartEntry(this.getChartKey());
         this.destroySequence++;
-        for (let layer of this.layers) {
-            const creator=getav(layer).creator;
-            if (creator) await creator.destroy();
-        }
     }
 
     /**

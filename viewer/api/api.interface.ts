@@ -467,6 +467,7 @@ export interface DialogConfig{
     buttons?:     [Button];               //if not provided Cancel is shown
 }
 
+
 /**
  * the new API as it is provided as the first parameter
  * to the default export function for plugin.mjs / user.mjs
@@ -568,6 +569,20 @@ export interface ApiV2 extends Api{
      *                that you registered
      */
     showDialog(dialog:DialogConfig,context:object):void
+
+    /**
+     * write some data to the local storage
+     * @param key a name
+     * @param data {StoreData} undefined to remove the item
+     */
+    setLocalStorage(key:string,data:StoreData|undefined):void;
+
+    /**
+     * get some data from the local storage
+     * @param key
+     * @param defaultv
+     */
+    getLocalStorage(key:string,defaultv?:StoreData):StoreData;
     /**
      * get the config values for the plugin
      * @return {Promise<void>}
