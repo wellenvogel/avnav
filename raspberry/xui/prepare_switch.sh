@@ -4,7 +4,12 @@ err(){
     exit 1
 }
 pdir=`dirname $0`
-CFG=/boot/avnav.conf
+if [ -d /boot/firmware ]
+then
+  CFG=/boot/firmware/avnav.conf
+else
+  CFG=/boot/avnav.conf
+fi
 [ -f $CFG ] && . $CFG
 pluginDir="$pdir/../../server/plugins/switchDesk"    
 if [ "$AVNAV_STARTX" != "yes" ] ; then
