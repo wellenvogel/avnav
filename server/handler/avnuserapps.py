@@ -169,7 +169,7 @@ class AVNUserAppHandler(AVNWorker):
       addon['keepUrl'] = keepUrl
       icon = addon['icon']
       if not icon.startswith("http"):
-        if not icon.startswith("/user"):
+        if not icon.startswith("/"):
           icon="/user/"+icon
           addon['icon']=icon
         iconpath = self.findFileForUrl(icon)
@@ -188,7 +188,7 @@ class AVNUserAppHandler(AVNWorker):
       return None
     (path,query)=AVNUtil.pathQueryFromUrl(url)
     filePath=self.httpServer.tryExternalMappings(path,query)
-    if filePath is None or not os.path.exists(filePath):
+    if filePath is None or isinstance(filePath,AVNDownloadError):
       return None
     return filePath
 

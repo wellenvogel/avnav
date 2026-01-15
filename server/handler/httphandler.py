@@ -148,7 +148,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           try:
               response=self.handleNavRequest(trailing, requestParam)
           except Exception as e:
-              txt = traceback.format_exc()
+              txt = str(e)+": "+traceback.format_exc()
               AVNLog.ld("unable to process request for ", path, query, txt)
               self.send_response(500, txt)
               self.end_headers()

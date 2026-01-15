@@ -181,7 +181,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                             INavRequestHandler nrh = handler.getPrefixHandler(url);
                             try {
                                 ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler, "GET",new HashMap<>() );
-                                if (resp == null) {
+                                if (resp == null || resp.getStatusCode() != 200) {
                                     throw new Exception("not found");
                                 }
                                 resp.getData().close();
