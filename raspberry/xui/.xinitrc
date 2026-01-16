@@ -11,7 +11,7 @@ runIncludes(){
   done
 }
 
-CFG=/boot/avnav.conf
+CFG="$(cat /proc/mounts | grep boot | cut -d\  -f2)/avnav.conf"
 [ -f $CFG ] && . $CFG
 runIncludes early
 [ "$AVNAV_DPI" = "" ] && AVNAV_DPI=96

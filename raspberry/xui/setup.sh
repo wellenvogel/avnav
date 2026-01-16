@@ -51,12 +51,8 @@ apt-get install -y --no-install-recommends xserver-xorg-video-all \
   openbox lxterminal dconf-cli firefox-esr dbus-x11 python3-xlib \
   nemo xfce4-panel mousepad xdotool menu libglib2.0-bin || err "unable to install"
 
-if [ -d /boot/firmware ]
-then
-  copyNE /boot/firmware avnav.conf
-else
-  copyNE /boot avnav.conf
-fi
+BOOTDIR="$(cat /proc/mounts | grep boot | cut -d\  -f2)"
+copyNE $BOOTDIR avnav.conf
 
 cp $pdir/avnav-startx.service /etc/systemd/system || err
 systemctl daemon-reload
@@ -98,10 +94,6 @@ fi
 
 systemctl enable avnav-startx
 
-echo "setup done, use systemctl start avnav-startx after editing /boot/avnav.conf"
+echo "setup done, use systemctl start avnav-startx after editing $BOOTDIR/avnav.conf"
 echo "use sudo systemctl start avnav to start the avnav server if you don't reboot"
 
-
-
-
-  
