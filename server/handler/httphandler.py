@@ -134,7 +134,12 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.requestDone=False
       (path, query) = AVNUtil.pathQueryFromUrl(self.path)
       if path=="" or path=="/":
-        path=self.server.getStringParam('index')
+          path = self.server.getStringParam('index')
+          self.send_response(301)
+          self.send_header("Location", path)
+          self.end_headers()
+          self.close_connection = True
+          return
       trailing = self.server.isNavUrl(path)
       response=None
       requestParam=None
