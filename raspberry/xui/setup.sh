@@ -14,12 +14,6 @@ copyErr(){
     cp "$1" "$2" || err "unable to copy $1 to $2"
 }
 
-copyNE(){
-    if [ ! -f $1/$2 ] ; then
-        cp $pdir/$2 $1/$2
-    fi
-}
-
 pinFile=libgtk-3-0-pin
 reinstalls=""
 if [ -f "$pdir/$pinFile" ] ; then
@@ -50,9 +44,6 @@ apt-get install -y --no-install-recommends xserver-xorg-video-all \
   onboard  at-spi2-core onboard-data mousetweaks gir1.2-ayatanaappindicator3-0.1 gir1.2-atspi-2.0 \
   openbox lxterminal dconf-cli firefox-esr dbus-x11 python3-xlib \
   nemo xfce4-panel mousepad xdotool menu libglib2.0-bin || err "unable to install"
-
-BOOTDIR="$(cat /proc/mounts | grep boot | cut -d\  -f2)"
-copyNE $BOOTDIR avnav.conf
 
 cp $pdir/avnav-startx.service /etc/systemd/system || err
 systemctl daemon-reload
