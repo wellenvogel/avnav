@@ -1,7 +1,8 @@
 #! /bin/sh
 
-CFG="$(cat /proc/mounts | grep boot | cut -d\  -f2)/avnav.conf"
-[ -f $CFG ] && . $CFG
+CFG="$(cat /proc/mounts | grep boot | cut -d\  -f2)"
+[ "$CFG" != "" ] && CFG="$CFG/avnav.conf"
+[ "$CFG" != "" -a -f "$CFG" ] && . $CFG
 HOME=/home/pi
 X=/usr/lib/xorg/Xorg
 if [ "$1" = "prepare" ] ; then

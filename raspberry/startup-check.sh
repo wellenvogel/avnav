@@ -2,7 +2,8 @@
 #AvNav raspberry startup checks
 #set -x
 
-CONFIG="$(cat /proc/mounts | grep boot | cut -d\  -f2)/avnav.conf"
+CONFIG="$(cat /proc/mounts | grep boot | cut -d\  -f2)"
+[ "$CONFIG" != "" ] && CONFIG="$CONFIG/avnav.conf"
 LAST=/etc/avnav-startup-checks
 MCS_INSTALL=`dirname $0`/setup-mcs.sh
 pdir=`dirname $0`
@@ -19,7 +20,7 @@ log(){
     logger -t 'avnav-startup-check' "$*"
 }
 
-log "started"
+log "started, config=$CONFIG"
 LAST_DATA=()
 
 
@@ -28,7 +29,7 @@ if [ -f $LAST ] ; then
 fi    
 
 
-if [ ! -f $CONFIG ]; then
+if [ "$CONFIG" = "" -o ! -f $CONFIG ]; then
     log "no $CONFIG found"
     exit 0
 fi
