@@ -2,12 +2,7 @@
 #AvNav raspberry startup checks
 #set -x
 
-CONFIG=/boot/avnav.conf
-. /etc/os-release
-if [ $VERSION_ID -ge 12 ]
-then
-  CONFIG=/boot/firmware/avnav.conf
-fi
+CONFIG="$(cat /proc/mounts | grep boot | cut -d\  -f2)/avnav.conf"
 LAST=/etc/avnav-startup-checks
 MCS_INSTALL=`dirname $0`/setup-mcs.sh
 pdir=`dirname $0`

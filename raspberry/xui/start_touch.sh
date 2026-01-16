@@ -1,10 +1,6 @@
 #! /bin/sh
-if [ -d /boot/firmware ]
-then
-  CFG=/boot/firmware/avnav.conf
-else
-  CFG=/boot/avnav.conf
-fi
+
+CFG="$(cat /proc/mounts | grep boot | cut -d\  -f2)/avnav.conf"
 [ -f $CFG ] && . $CFG
 HOME=/home/pi
 X=/usr/lib/xorg/Xorg

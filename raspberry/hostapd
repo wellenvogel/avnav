@@ -3,8 +3,8 @@
 HOSTAPD=/usr/sbin/hostapd
 HOSTAPD_EDI=/usr/sbin/hostapd.edimax
 CONFIGBASE=/etc/hostapd/hostapd.conf
-CONFIGEXTRA=/boot/hostapd.conf
-CONFIGAVNAV=/boot/avnav.conf
+CONFIGEXTRA="$(cat /proc/mounts | grep boot | cut -d\  -f2)/hostapd.conf"
+CONFIGAVNAV="$(cat /proc/mounts | grep boot | cut -d\  -f2)/avnav.conf"
 prfx="avnav-hostapd"
 
 if [ "$1" = "-r" ] ; then
