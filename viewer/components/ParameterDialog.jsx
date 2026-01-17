@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React from "react";
+import React, {useCallback} from "react";
 import {showDialog, DialogFrame,DialogRow,useDialogContext,DialogButtons,DBCancel} from "./OverlayDialog";
 import Helper, {getav, setav} from "../util/helper";
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
@@ -29,6 +29,20 @@ export const ParameterDialog = (props) => {
     const [values, setValues] = React.useState(props.values||{});
     const dialogContext=useDialogContext();
     const className=Helper.concatsp("ParameterDialog",props.className)
+    const changeValues=useCallback((newValues)=>{
+        if (! (newValues instanceof Object) || ! props.parameters) return;
+        const changedValues={};
+        for (let parameter of props.parameters) {
+            const key=parameter.name;
+            if (! key) continue;
+            if (key in newValues){
+                changedValues[key]=newValues[key];
+            }
+        }
+        if (Object.keys(changedValues).length > 0) {
+            setValues({...values,changedValues});
+        }
+    },[props.values,props.parameters]);
     const buttons=[];
     if (!props.buttons) {
         buttons.push(DBCancel());
@@ -38,7 +52,8 @@ export const ParameterDialog = (props) => {
             buttons.push({
                 ...button,
                 onClick:(ev)=>{
-                    if (button.onClick) button.onClick(ev,values);
+                    setav(ev,{dialogContext:dialogContext});
+                    if (button.onClick) changeValues(button.onClick(ev,values,dialogContext));
                 }
             })
         })
@@ -50,7 +65,7 @@ export const ParameterDialog = (props) => {
             parameters={props.parameters}
             initialValues={props.values||{}}
             onChange={(nv)=>{
-                if (props.onChange) props.onChange(setav({},{dialogContext:dialogContext}),nv);
+                if (props.onChange) changeValues(props.onChange(setav({},{dialogContext:dialogContext}),nv));
                 setValues({...values,...nv});
             }}
             />
