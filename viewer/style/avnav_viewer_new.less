@@ -223,7 +223,7 @@ body{
   position: relative;
 }
 
-
+@dialogInputLabelWidth:7em;
 
 .dialog {
   & > div {
@@ -285,7 +285,7 @@ body{
 
   .inputLabel{
     .mdText2();
-    width: 7em;
+    width: @dialogInputLabelWidth;
     display: inline-block;
     margin-right: 0.5em;
     font-size: 0.8em;
@@ -1628,12 +1628,12 @@ span.valuePrefix{
       }
     }
     .settingsList{
-      input,.input{
+      input,.input,.inputFrame{
         border-bottom: none;
-        width: 10em;
-      }
-      .inputFrame{
-        width: 10em;
+        width: calc(100% - @dialogInputLabelWidth - 3em); //room for 2 buttons
+        max-width: 30em;
+        overflow: clip;
+        line-break: anywhere;
       }
       overflow: auto;
       .flex-grow(1);
