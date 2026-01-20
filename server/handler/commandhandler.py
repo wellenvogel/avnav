@@ -349,20 +349,21 @@ class AVNCommandHandler(AVNWorker):
       return baseUrl+"/"+icon
     return icon
 
-  def getClientCommands(self,isLocal,handler=None,addCmd=False):
+  def getClientCommands(self,isLocal,handler=None,all=False):
     rt=[]
     commands=self.getConfiguredCommands()
     for cmd in commands:
       clientMode=cmd.get('client')
-      if clientMode is None:
-        continue
+      if clientMode is None or clientMode == 'none':
+        if all:
+            clientMode='all'
+        else:
+            continue
       if clientMode == 'all' or (clientMode == 'local' and isLocal):
         el={
           'name':cmd.get('name'),
           'icon': self.getIconUrl(cmd,handler)
         }
-        if addCmd:
-          el['cmd']=cmd
         rt.append(el)
     return rt
 
@@ -381,7 +382,7 @@ class AVNCommandHandler(AVNWorker):
       if command == 'runCommand':
           name = AVNUtil.getHttpRequestParam(requestparam, 'name', mantadory=True)
           parameter = AVNUtil.getHttpRequestParam(requestparam, "parameter", mantadory=False)
-          allowedCommands = self.getClientCommands(isLocal, handler)
+          allowedCommands = self.getClientCommands(isLocal, handler,all=True)
           for cmd in allowedCommands:
               if cmd['name'] == name:
                   self.startCommand(name, parameters=parameter)
