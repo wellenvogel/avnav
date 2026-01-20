@@ -340,8 +340,8 @@ class StatusPage extends React.Component{
                             Requests.getJson({
                                 request:'api',
                                 type:'command',
-                                command:'manage',
-                                start:'shutdown'
+                                command:'runCommand',
+                                name:'shutdown'
                             }).then(
                                 (json)=>{
                                     Toast("shutdown started");

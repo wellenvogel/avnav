@@ -130,6 +130,14 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     path = self.server.getStringParam('index')
     return re.sub("/[^/]*$", "", path)
 
+  def _handleException(self,e,default=500):
+      code = default if not isinstance(e, RequestException) else e.code
+      txt = traceback.format_exc()
+      AVNLog.ld("unable to process request for ", self.path, code,str(e), txt)
+      self.send_error(code, str(e), txt)
+      self.close_connection=True
+      self.requestDone = True
+
   def handleRequest(self,method=None):
       self.requestDone=False
       (path, query) = AVNUtil.pathQueryFromUrl(self.path)
@@ -153,17 +161,13 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           try:
               response=self.handleNavRequest(trailing, requestParam)
           except Exception as e:
-              txt = str(e)+": "+traceback.format_exc()
-              AVNLog.ld("unable to process request for ", path, query, txt)
-              self.send_response(500, txt)
-              self.end_headers()
-              self.close_connection=True
-              self.requestDone=True
+              self._handleException(e)
               return
       else:
           if method == "POST":
               self.send_error(404, "unsupported post url")
               self.requestDone=True
+              self.close_connection=True
               return
           try:
               # handlers will either return
@@ -172,8 +176,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
               # a path to be sent
               response = self.server.tryExternalMappings(path, query, handler=self)
           except Exception as e:
-              self.send_error(404, str(e))
-              self.requestDone=True
+              self._handleException(e,404)
               return
       if isinstance(response, AVNDownload):
           try:
@@ -192,9 +195,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
                             end=end )
               self.requestDone=True
           except Exception as e:
-              txt = traceback.format_exc()
-              self.send_error(500, str(e), txt)
-              self.requestDone=True
+              self._handleException(e)
       else:
           if not self.requestDone:
               self.send_error(404, path+ ": no response")
@@ -284,19 +285,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         try:
             return handler.handleApiRequest(command, requestParam, handler=self)
         except Exception as e:
-            self.send_response(409, str(e))
-            self.end_headers()
-            self.close_connection=True
-            return None
-    try:
-        rtj = handler.handleApiRequest(command, requestParam, handler=self)
-    except RequestException as e:
-        self.send_response(e.code, str(e))
-        self.end_headers()
-        if e.code == 409:
-            self.close_connection = True
-        return None
-    return rtj
+            raise RequestException(str(e),409)
+    return handler.handleApiRequest(command, requestParam, handler=self)
 
   def writeStream(self,bToSend,fh):
     maxread = 1000000

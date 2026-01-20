@@ -42,7 +42,7 @@ class DimmHandler{
                                 RequestHandler.getJson({
                                     request: 'api',
                                     type: 'command',
-                                    action: 'runCommand',
+                                    command: 'runCommand',
                                     name: command,
                                     parameter: value+""
                                 })

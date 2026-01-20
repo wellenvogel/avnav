@@ -368,64 +368,26 @@ class AVNCommandHandler(AVNWorker):
 
   def getApiType(self):
     return "command"
+
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
-    if type == 'api':
-      command=AVNUtil.getHttpRequestParam(requestparam,"action",mantadory=False)
-      if command is not None:
-        isLocal=False
-        try:
-          remoteIp=handler.client_address[0]
-          isLocal=(remoteIp == '127.0.0.1' or remoteIp =='localhost')
-        except Exception as e:
+      isLocal = False
+      try:
+          remoteIp = handler.client_address[0]
+          isLocal = (remoteIp == '127.0.0.1' or remoteIp == 'localhost')
+      except Exception as e:
           pass
-        rt={'status':'unknown action %s'%command}
-        if command == 'getCommands': #get the commands we can trigger from remote
-          rt['status']='OK'
-          rt['data']=self.getClientCommands(isLocal,handler)
-          return rt
-        if command == 'runCommand':
-          name=AVNUtil.getHttpRequestParam(requestparam,'name',mantadory=True)
-          parameter=AVNUtil.getHttpRequestParam(requestparam,"parameter",mantadory=False)
-          allowedCommands=self.getClientCommands(isLocal,handler)
+      if command == 'list':  # get the commands we can trigger from remote
+          return AVNUtil.getReturnData(data=self.getClientCommands(isLocal, handler))
+      if command == 'runCommand':
+          name = AVNUtil.getHttpRequestParam(requestparam, 'name', mantadory=True)
+          parameter = AVNUtil.getHttpRequestParam(requestparam, "parameter", mantadory=False)
+          allowedCommands = self.getClientCommands(isLocal, handler)
           for cmd in allowedCommands:
-            if cmd['name'] == name:
-              self.startCommand(name,parameters=parameter)
-              return {'status':'OK'}
-          return {'status': 'command %s not found'%name}
-        return rt
-    status=AVNUtil.getHttpRequestParam(requestparam,"status")
-    if status is not None:
-      status=status.split(',')
-      rt={}
-      definedCommands = self.getConfiguredCommands()
-      for cmd in definedCommands:
-        name=cmd.get('name')
-        if name is None:
-          continue
-        if not name in status and not 'all' in status :
-          continue
-        running=self.findRunningCommandsByName(name)
-        rt[name]={'command':cmd.get('command'),'repeat':cmd.get('repeat'),'running':",".join([ x.getIdStr() for x in running])}
-      return rt
-    mode="start"
-    command=AVNUtil.getHttpRequestParam(requestparam,"start")
-    if command is None:
-      command = AVNUtil.getHttpRequestParam(requestparam, "stop")
-      mode="stop"
-      if command is None:
-        raise Exception("missing request parameter start or stop")
-
-    rt={'status':'ok'}
-    if mode == "start":
-      if not self.startCommand(command):
-        rt['status']='error'
-        rt['info']=str(self.status.get(command))
-      return rt
-    if not self.stopCommand(command):
-      rt['status'] = 'error'
-      rt['info'] = str(self.status.get(command))
-    return rt
-
+              if cmd['name'] == name:
+                  self.startCommand(name, parameters=parameter)
+                  return AVNUtil.getReturnData()
+          return AVNUtil.getReturnData(error='command %s not found' % name)
+      raise Exception(f"unknown command {command}")
 
 avnav_handlerList.registerHandler(AVNCommandHandler)
 

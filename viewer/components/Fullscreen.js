@@ -97,7 +97,7 @@ const init=()=>{
                     Requests.getJson({
                         request: 'api',
                         type: 'command',
-                        action: 'runCommand',
+                        command: 'runCommand',
                         name: command
                     })
                         .then(() => {

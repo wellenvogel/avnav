@@ -547,7 +547,7 @@ const getServerCommand=(name)=>{
     return Requests.getJson({
         request:'api',
         type:'command',
-        action:'getCommands'
+        command:'list'
     })
         .then((data)=> {
             if (!data.data) return;
