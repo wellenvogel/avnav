@@ -105,7 +105,7 @@ XteWidget.predefined={
         markerXte:  keys.nav.wp.xte,
     },
     editableParameters:{
-        xteMax:{type:'FLOAT',displayName:"XTE max",default:1,list:[0.1,10], description:'The end points of the XTE graph (1.0).\nAlways provide this in the unit you choose for the formatter'},
+        xteMax:{type:'FLOAT',displayName:"XTE max",default:1,list:[0.01,100], description:'The end points of the XTE graph (1.0).\nAlways provide this in the unit you choose for the formatter'},
         formatterParameters:true
     },
     formatter: 'formatDistance'
