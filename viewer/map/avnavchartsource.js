@@ -165,7 +165,7 @@ class AvnavChartSource extends ChartSourceBase{
                 overviewUrl:ovurl
             });
             if (! layerCreator){
-                throw new Error(`unable to create layer ${lnum} for profile ${type}`);
+                throw new Error(`unable to create layer ${lnum}, no layer profile ${type}`);
             }
             const adaptedConfig=await layerCreator.prepare(layerConfig,this);
             const olLayer=layerCreator.createOL(adaptedConfig);
