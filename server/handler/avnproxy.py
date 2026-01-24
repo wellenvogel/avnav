@@ -68,7 +68,8 @@ class AVNProxy(AVNWorker):
         return self.ATYPE
     HDR_BLACKLIST=['host']
     OK_STATS=[200,206,301,304]
-    def handleProxyRequest(self,url,handler:AVNHTTPHandler):
+    TRANSLATE_PARAM=['referer','origin']
+    def handleProxyRequest(self,url,handler:AVNHTTPHandler,requestparam=None):
         status=500
         constructed=url
         try:
@@ -81,6 +82,11 @@ class AVNProxy(AVNWorker):
                 if k.lower() in self.HDR_BLACKLIST:
                     continue
                 request.add_header(k, v)
+            if requestparam is not None:
+                for tp in self.TRANSLATE_PARAM:
+                    param=AVNUtil.getHttpRequestParam(requestparam,tp,mantadory=False)
+                    if param is not None:
+                        request.add_header(tp, param)
             request.method = handler.command
             response = urllib.request.urlopen(request)
             status=response.status
@@ -101,11 +107,11 @@ class AVNProxy(AVNWorker):
             raise Exception("proxy needs handler")
         if command == 'request':
             url=AVNUtil.getHttpRequestParam(requestparam,'url',mantadory=True)
-            return self.handleProxyRequest(url,handler)
+            return self.handleProxyRequest(url,handler,requestparam)
         raise Exception(f"invalid proxy command: {command}")
 
     def handlePathRequest(self, path, requestparam, server=None, handler=None):
-        return self.handleProxyRequest(path, handler)
+        return self.handleProxyRequest(path, handler,requestparam)
 
     def getHandledPath(self):
         return "/"+self.ATYPE

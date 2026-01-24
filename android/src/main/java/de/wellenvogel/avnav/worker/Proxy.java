@@ -194,7 +194,13 @@ public class Proxy extends Worker implements INavRequestHandler {
                 (ce != null)?ce.getValue():"",
                 (entity != null)?entity.getContent():new ByteArrayInputStream(new byte[0]));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            rt.setStatusCodeAndReasonPhrase(status,response.getStatusLine().getReasonPhrase());
+            String reason=response.getStatusLine().getReasonPhrase();
+            if (reason.trim().isEmpty()){
+                rt.setStatusCodeAndReasonPhrase(status,"OK");
+            }
+            else {
+                rt.setStatusCodeAndReasonPhrase(status, response.getStatusLine().getReasonPhrase());
+            }
         }
         for (Header h: response.getAllHeaders()){
             rt.setHeader(h.getName(),h.getValue());
@@ -203,6 +209,7 @@ public class Proxy extends Worker implements INavRequestHandler {
         return rt;
     }
 
+    static final String [] TRANSLATE_HDR=new String[]{"referer","origin"};
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         if (!isEnabled()) throw new Exception("proxy disabled");
@@ -213,6 +220,18 @@ public class Proxy extends Worker implements INavRequestHandler {
         if (!path.startsWith(getPrefix())) return null;
         path = path.substring((getPrefix().length() + 1));
         path= URLDecoder.decode(path, "UTF-8");
+        for (String s: TRANSLATE_HDR) {
+            String v=uri.getQueryParameter(s);
+            if (v != null){
+                String alt=s.substring(0,1).toUpperCase()+s.substring(1);
+                if (headers.get(alt) != null){
+                    headers.put(alt,v);
+                }
+                else {
+                    headers.put(s, v);
+                }
+            }
+        }
         return handleProxy(path,method,headers);
     }
 
