@@ -185,6 +185,11 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
     getBaseUrl(): string {
         throw new Error("Method not implemented.");
     }
+
+    buildProxyUrl(_url: string | URL): string {
+        throw new Error("Method not implemented.");
+    }
+
     getPluginName(): string {
         throw new Error("Method not implemented.");
     }

@@ -489,6 +489,16 @@ export interface ApiV2 extends Api{
     getBaseUrl():string;
 
     /**
+     * build a proxy URL to send requests via the AvNav server
+     * any header value will be forwareded
+     * as you cannot really change the origin and referer header
+     * you can add them to the returned URL like this:
+     * buildProxyUrl(oriUrl)+"?referer="+encodeURIComponent(referer)+"&origin="+encodeURIComponent(origin)
+     * @param url
+     */
+    buildProxyUrl(url:string|URL):string;
+
+    /**
      * return the name of the plugin
      * returns an empty string for the user.mjs
      */
