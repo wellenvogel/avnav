@@ -659,8 +659,11 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
         if (! style) throw new Error("no style configured");
         if (typeof(style)==='string' ) {
             //we assume an URL
-            const styleUrl=new URL(style,this.overviewUrl||window.location.href);
+            let styleUrl=new URL(style,this.overviewUrl||window.location.href);
             this.baseUrl=styleUrl.toString();
+            if (this.useProxy && styleUrl.origin !== window.location.origin) {
+                styleUrl=new URL("/proxy/"+encodeURIComponent(styleUrl.toString()),window.location.href);
+            }
             const result=await fetchWithTimeout(styleUrl,
                 {timeout:parseInt(globalStore.getData(keys.properties.networkTimeout))})
                 .then((r)=>{
