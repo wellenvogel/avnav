@@ -28,7 +28,7 @@ import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
-import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY, KNOWN_OVERLAY_EXTENSIONS} from "./EditOverlaysDialog";
+import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import {
     DBCancel,
     DBOk,
@@ -62,7 +62,7 @@ import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
-import {fetchItem, listItems} from "../util/itemFunctions";
+import {fetchItem, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
 import {EditDialog} from "./EditDialog";
 import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
@@ -807,10 +807,6 @@ export class ItemActions extends CopyAware{
     showIsServer(item){
         return false;
     }
-    getIconClass(item){
-        if (item.isDirectory) return 'directory';
-        return this.type;
-    }
     showUpload(){
         return this.isConnected();
     }
@@ -1430,11 +1426,6 @@ class TrackItemActions extends ItemActions{
         this.headline='Tracks';
     }
 
-    getIconClass(item) {
-        const [fn,ext]=Helper.getNameAndExt(item.name);
-        if (ext === 'gpx') return this.type;
-        return "user other";
-    }
 }
 class LayoutItemActions extends ItemActions{
     constructor() {
@@ -1719,23 +1710,6 @@ class UserItemActions extends ItemActions{
         this.headline='User';
     }
 
-    getIconClass(item) {
-        const specialNames=['user.mjs','user.mjs','user.css','keys.json','splitkeys.json','images.json'];
-        if (specialNames.indexOf(item.name) >= 0){
-            return 'user special';
-        }
-        const [fn,ext]=Helper.getNameAndExt(item.name);
-        if (GuiHelpers.IMAGES.indexOf(ext)>= 0){
-            return 'images';
-        }
-        if (ext === 'html'){
-            return 'user html'
-        }
-        if (ext === 'txt'){
-            return 'text';
-        }
-        return 'user other';
-    }
 }
 class ImageItemActions extends ItemActions{
     constructor() {
@@ -1798,11 +1772,6 @@ class OverlayItemActions extends ItemActions{
         return super.showUpload() && globalStore.getData(keys.gui.capabilities.uploadOverlays, false);
     }
 
-    getIconClass(item) {
-        const [fn,ext]=Helper.getNameAndExt(item.name);
-        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(ext) >= 0) return this.type;
-        return "user other"
-    }
 }
 class PluginItemActions extends ItemActions{
     constructor() {
@@ -1836,10 +1805,6 @@ class PluginItemActions extends ItemActions{
 
     prefixForDisplay() {
         return 'user-';
-    }
-
-    getIconClass(item) {
-        return this.type;
     }
 
     getUploadAction() {

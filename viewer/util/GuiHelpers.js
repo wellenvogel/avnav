@@ -6,6 +6,7 @@ import Requests from "./requests";
 import base from "../base";
 import {useEffect, useRef, useState} from "react";
 import cloneDeep from "clone-deep";
+import {IMAGES} from "./itemFunctions";
 
 
 const resizeElementFont=(el)=>{
@@ -387,8 +388,6 @@ const scrollInContainer=(parent, element)=> {
     if (elRect.right > parentRect.right) return 4;
     return 0;
 };
-
-const IMAGES=['png','jpg','jpeg','svg','bmp','tiff','gif'];
 
 /**
  * helper for maintaining an object inside a components state

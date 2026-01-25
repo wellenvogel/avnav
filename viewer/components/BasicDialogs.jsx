@@ -27,27 +27,29 @@ import DB from "./DialogButton";
 import React, {useEffect, useState} from "react";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
 import Helper from "../util/helper";
+import {getItemIconProperties} from "../util/itemFunctions";
 
 export const SelectList = ({list, onClick}) => {
     return <div className="selectList">
         {list.map(function (elem) {
             if (! (elem instanceof Object)) return null;
             let cl=Helper.concatsp('listEntry',elem.selected?'selectedItem':undefined,elem.className);
+            const iconProperties=getItemIconProperties(elem);
             return (
                 <div className={cl}
                      onClick={() => onClick(elem)}
                      key={elem.value + ":" + elem.label}
                 >
-                    {elem.icon && <span className="icon" style={{backgroundImage: "url('" + elem.icon + "')"}}/>}
+                    {iconProperties&& <span {...iconProperties}/>}
                     <span className="entryLabel">{elem.label}</span>
                 </div>);
         })}
     </div>
 }
-export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback}) => {
+export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback,className}) => {
     const dialogContext = useDialogContext();
     return (
-        <DialogFrame className="selectDialog" title={title || ''}>
+        <DialogFrame className={Helper.concatsp("selectDialog",className)} title={title || ''}>
             <SelectList list={list} onClick={(elem) => {
                 dialogContext.closeDialog();
                 if (resolveFunction) resolveFunction(elem);

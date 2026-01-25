@@ -21,7 +21,8 @@ import OverlayConfig, {
     DEFAULT_OVERLAY_CONFIG,
     fetchOverlayConfig,
     getKeyFromOverlay,
-    OVERLAY_ID, overlayExpandsValue
+    OVERLAY_ID,
+    overlayExpandsValue
 } from '../map/overlayconfig';
 import chartImage from '../images/Chart60.png';
 import editableParameterUI, {EditableParameterListUI} from "./EditableParameterUI";
@@ -29,8 +30,7 @@ import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
-import {fetchItemInfo, itemListToSelectList, listItems} from "../util/itemFunctions";
-import {createItemActions} from "./FileDialog";
+import {fetchItemInfo, itemListToSelectList, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
 import {SelectDialog} from "./BasicDialogs";
 
 const filterOverlayItem=(item)=>{
@@ -46,7 +46,6 @@ const filterOverlayItem=(item)=>{
     }
     return rt;
 };
-export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml','kmz','geojson'];
 
 const SELECT_FILTERS={
     track: (item)=>{
@@ -75,6 +74,7 @@ const ItemSelectDialog=({type,resolveFunction,filter}) => {
     }, [type]);
     const displayList=itemListToSelectList(items,undefined,filter);
     return <SelectDialog
+        className={'EditOverlaySelect'}
         resolveFunction={resolveFunction}
         list={displayList}/>
 

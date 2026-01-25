@@ -28,7 +28,7 @@ import Helper, {avitem, setav} from "../util/helper";
 import React, {useCallback, useEffect, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
-import {DBCancel, DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {showDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
 import {checkName} from "./ItemNameDialog";
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
@@ -37,7 +37,7 @@ import UploadHandler from "./UploadHandler";
 import {DynamicButton} from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
-import {getUrlWithBase, listItems} from "../util/itemFunctions";
+import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunctions";
 import {useTimer} from "../util/GuiHelpers";
 
 const itemSort = (a, b) => {
@@ -60,16 +60,12 @@ const DownloadItem = (props) => {
     let actions = props.itemActions;
     let cls = Helper.concatsp("listEntry", actions.getClassName(props));
     let dataClass = "downloadItemData";
-    let icon=getUrlWithBase(props,'icon');
+    const iconProperties=getItemIconProperties(props);
     return (
         <div className={cls} onClick={function (ev) {
             props.onClick(setav(ev, {action: 'select'}));
         }}>
-            {(icon) ?
-                <span className="icon" style={{backgroundImage: "url('" + (icon) + "')"}}/>
-                :
-                <span className={Helper.concatsp('icon', actions.getIconClass(props))}/>
-            }
+            {iconProperties && <span {...iconProperties}/>}
             <div className="itemMain">
                 <div className={dataClass}>
                     { (infoMode === DownloadItemInfoMode.ALL) && <div className="date">{actions.getTimeText(props)}</div>}
@@ -220,42 +216,4 @@ DownloadItemList.propTypes = {
     showUpload: PropTypes.bool,
     itemActions: PropTypes.instanceOf(ItemActions),
     autoreload: PropTypes.number
-}
-
-export const DownloadItemListDialog=({type,selectCallback,showUpload,noInfo,noExtra,itemActions})=>{
-    const actions=itemActions||createItemActions(type);
-    const [uploadSequence, setUploadSequence] = useState(0);
-    const buttons=[];
-    if (showUpload && actions.showUpload()) {
-        buttons.push({
-            name: 'upload',
-            label: 'Upload',
-            onClick: () => {()=>setUploadSequence(uploadSequence+1);},
-            close:false
-        })
-    }
-    buttons.push(DBCancel());
-    return <DialogFrame title={actions.headline} className={'DownloadItemListDialog'}>
-        <DownloadItemList
-            type={type}
-            selectCallback={selectCallback}
-            uploadSequence={uploadSequence}
-            showUpload={showUpload}
-            noInfo={noInfo}
-            noExtra={noExtra}
-            itemActions={itemActions}
-        />
-        <DialogButtons buttonList={
-            buttons
-        }/>
-    </DialogFrame>
-
-}
-DownloadItemListDialog.propTypes = {
-    type: PropTypes.string,
-    selectCallback: PropTypes.func,
-    showUpload: PropTypes.bool,
-    noInfo: PropTypes.bool,
-    noExtra: PropTypes.bool,
-    itemActions: PropTypes.instanceOf(ItemActions),
 }

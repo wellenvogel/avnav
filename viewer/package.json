@@ -16,7 +16,7 @@
   "browserslist": [
     "> 0.25%",
     "not dead",
-    "safari >= 6"
+    "safari >= 10"
   ],
   "author": "Andreas Vogel",
   "license": "MIT",

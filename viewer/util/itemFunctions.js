@@ -26,7 +26,7 @@ import Requests from "./requests";
 import {layoutLoader} from "./layouthandler";
 import PropertyHandler from "./propertyhandler";
 import NavHandler from "../nav/navdata";
-import {urlToString} from "./helper";
+import Helper, {urlToString} from "./helper";
 import base from "../base";
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -127,4 +127,48 @@ export const itemListToSelectList = (itemList, opt_selected,opt_filter) => {
         rt.push(sitem);
     });
     return rt;
+}
+
+export const KNOWN_OVERLAY_EXTENSIONS = ['gpx', 'kml', 'kmz', 'geojson'];
+export const IMAGES = ['png', 'jpg', 'jpeg', 'svg', 'bmp', 'tiff', 'gif'];
+export const getItemIconProperties=(item)=>{
+    let icon=getUrlWithBase(item,'icon');
+    if (icon){
+        return {
+            className:'icon',
+            style:{backgroundImage: "url('" + (icon) + "')"}
+        }
+    }
+    let typeClass=item.isDirectory?'directory':item.type;
+    if (item.type === 'overlay'){
+        const [fn,ext]=Helper.getNameAndExt(item.name);
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(ext) < 0) typeClass="user other"
+    }
+    else if (item.type === 'track'){
+        const [fn,ext]=Helper.getNameAndExt(item.name);
+        if (ext !== 'gpx') typeClass="user other"
+    }
+    else if (item.type === 'plugin'){
+        const specialNames=['user.mjs','user.mjs','user.css','keys.json','splitkeys.json','images.json'];
+        if (specialNames.indexOf(item.name) >= 0){
+            typeClass= 'user special';
+        }
+        else {
+            const [fn, ext] = Helper.getNameAndExt(item.name);
+            if (IMAGES.indexOf(ext) >= 0) {
+                typeClass= 'images';
+            }
+            else if (ext === 'html') {
+                typeClass= 'user html'
+            }
+            else if (ext === 'txt') {
+                typeClass= 'text';
+            }
+            typeClass= 'user other';
+        }
+    }
+    if (! typeClass) return;
+    return {
+        className: Helper.concatsp('icon',typeClass)
+    }
 }
