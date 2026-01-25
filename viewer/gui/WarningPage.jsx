@@ -16,7 +16,8 @@ import Toast from "../components/Toast";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import Helper from "../util/helper";
 import base from "../base";
-import {itemListToSelectList} from "../components/FileDialog";
+
+import {itemListToSelectList} from "../util/itemFunctions";
 
 class WarningPage extends React.Component{
     constructor(props){

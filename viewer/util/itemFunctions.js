@@ -28,6 +28,7 @@ import PropertyHandler from "./propertyhandler";
 import NavHandler from "../nav/navdata";
 import {urlToString} from "./helper";
 import base from "../base";
+
 const RouteHandler=NavHandler.getRoutingHandler();
 export const listItems = async (type) => {
     let items;
@@ -107,4 +108,23 @@ export const getUrlWithBase=(item,element='url')=>{
     if (!item) return;
     const url=item[element];
     return injectBaseUrl(url,item.baseUrl);
+}
+export const itemListToSelectList = (itemList, opt_selected,opt_filter) => {
+    const rt = [];
+    if (!itemList) return rt;
+    itemList.forEach(item => {
+        if (opt_filter) {
+            if (!opt_filter(item)) return;
+        }
+        const sitem = {...item,
+            value: item.name,
+            key: item.name,
+            label: item.displayName || item.name,
+        };
+        if (opt_selected && item.name === opt_selected) {
+            sitem.selected = true;
+        }
+        rt.push(sitem);
+    });
+    return rt;
 }

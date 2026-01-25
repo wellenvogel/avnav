@@ -29,9 +29,9 @@ import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
-import {fetchItem, fetchItemInfo, listItems} from "../util/itemFunctions";
-import {DownloadItemListDialog} from "./DownloadItemList";
+import {fetchItemInfo, itemListToSelectList, listItems} from "../util/itemFunctions";
 import {createItemActions} from "./FileDialog";
+import {SelectDialog} from "./BasicDialogs";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};
@@ -66,6 +66,19 @@ const TYPE_LIST=[
     {label: 'route', value: 'route'},
     {label: 'track', value: 'track'},
     ]
+const ItemSelectDialog=({type,resolveFunction,filter}) => {
+    const [items,setItems]=useState([]);
+    useEffect(() => {
+        listItems(type).then((fetched)=>{
+            setItems(fetched);
+        })
+    }, [type]);
+    const displayList=itemListToSelectList(items,undefined,filter);
+    return <SelectDialog
+        resolveFunction={resolveFunction}
+        list={displayList}/>
+
+};
 const OverlayItemDialog = (props) => {
     const [iconFiles, setIconFiles] = useState([]);
     const [itemInfo, setItemInfo] = useState({});
@@ -74,13 +87,13 @@ const OverlayItemDialog = (props) => {
     const [current, setCurrent] = useState(props.current || {});
     let iconsReadOnly = Helper.getExt(current.name) === 'kmz';
     let currentType = current.type;
-    const itemActions=createItemActions(currentType).copy({
-        show:(item)=>{
+    const filter=(item)=>{
             const cf=SELECT_FILTERS[currentType];
             if (!cf) return true;
-            return cf(item)||true;
-        }
-    });
+            const err=cf(item);
+            return !err;
+
+        };
     const parameters=useMemo(()=>{
         const rt=[];
         if (itemInfo.settings){
@@ -222,15 +235,11 @@ const OverlayItemDialog = (props) => {
                             label={'name'}
                             value={current.displayName||current.name}
                             onClick={(ev)=>{
-                                dialogContext.showDialog((dp)=><DownloadItemListDialog
+                                dialogContext.showDialog((dp)=><ItemSelectDialog
                                     {...dp}
                                     type={currentType}
-                                    showUpload={false}
-                                    noInfo={true}
-                                    noExtra={true}
-                                    itemActions={itemActions}
-                                    selectCallback={async (ev)=>{
-                                        const item = avitem(ev);
+                                    filter={filter}
+                                    resolveFunction={async (item)=>{
                                         let newState = {
                                             ...overlayExpandsValue(),
                                             url:undefined,
@@ -245,9 +254,7 @@ const OverlayItemDialog = (props) => {
                                         let initial = current.name === undefined;
                                         updateCurrent(newState);
                                         await analyseOverlay(newState, initial);
-                                        const dc=avitem(ev,'dialogContext');
-                                        if (dc) dc.closeDialog();
-                                       return true;
+                                        return true;
                                     }}
                                 />);
                             }}/>

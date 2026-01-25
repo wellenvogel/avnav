@@ -28,16 +28,14 @@ import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
-import EditOverlaysDialog, {
-    DEFAULT_OVERLAY_CHARTENTRY,
-    KNOWN_OVERLAY_EXTENSIONS
-} from "./EditOverlaysDialog";
+import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY, KNOWN_OVERLAY_EXTENSIONS} from "./EditOverlaysDialog";
 import {
     DBCancel,
     DBOk,
     DialogButtons,
     DialogFrame,
-    DialogRow, showPromiseDialog,
+    DialogRow,
+    showPromiseDialog,
     useDialogContext
 } from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
@@ -1983,22 +1981,6 @@ export const createItemActions=(type)=>{
     return new ItemActions(type||'dummy');
 }
 
-export const itemListToSelectList=(itemList,opt_selected)=>{
-    const rt=[];
-    if (! itemList) return rt;
-    itemList.forEach(item=>{
-        const sitem={
-            value:item.name,
-            key:item.name,
-            label:item.displayName||item.name,
-        };
-        if (opt_selected && item.name === opt_selected){
-            sitem.selected=true;
-        }
-        rt.push(sitem);
-    });
-    return rt;
-}
 const ALLCHARTS={label:'AllCharts',value: ''};
 const AddRemoveOverlayDialog = (props) => {
     const dialogContext=useDialogContext();

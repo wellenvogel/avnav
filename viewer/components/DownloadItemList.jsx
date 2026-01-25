@@ -24,12 +24,12 @@
  */
 
 import {createItemActions, FileDialog, ItemActions} from "./FileDialog";
-import Helper, {avitem, setav, urlToString} from "../util/helper";
+import Helper, {avitem, setav} from "../util/helper";
 import React, {useCallback, useEffect, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
 import {DBCancel, DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
-import {checkName, ItemNameDialog} from "./ItemNameDialog";
+import {checkName} from "./ItemNameDialog";
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
