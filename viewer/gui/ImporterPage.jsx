@@ -73,7 +73,7 @@ const ImporterItem=(props)=>{
     return <div className="status" >
         <ChildStatus
             {...props}
-            canEdit={canEdit}
+            forceEdit={canEdit}
             connected={true}
             id={props.name}
             name={props.name.replace(/^conv:/,'')}
@@ -100,12 +100,19 @@ const ImportStatusDialog=(props)=>{
     let isRunning=props.status === 'NMEA';
     return <DialogFrame className="importStatusDialog" title={props.name}>
         <div className="dialogRow">
+            <span className="inputLabel"></span>
             <span className="itemInfo">{props.info}</span>
         </div>
         <div className="dialogRow">
             <span className="inputLabel">file</span>
             <span className="itemInfo">{props.basename}</span>
         </div>
+        {props.converter &&
+            <div className="dialogRow">
+                <span className="inputLabel">converter:</span>
+                <span className="itemInfo">{props.converter}</span>
+            </div>
+        }
         <DialogButtons >
             <DB name="delete"
                 onClick={() => {
