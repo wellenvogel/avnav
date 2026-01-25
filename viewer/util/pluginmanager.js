@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import Requests, {prepareUrl} from "./requests";
+import Requests, {buildProxyUrl} from "./requests";
 import base from "../base";
 import Toast from "../components/Toast";
 import globalstore from "./globalstore";
@@ -48,8 +48,8 @@ class PluginApi extends ApiV2 {
     }
 
 
-    buildProxyUrl(_url) {
-        return this.#impl.buildProxyUrl(_url);
+    buildProxyUrl(url,headers,proxyOptions) {
+        return this.#impl.buildProxyUrl(url,headers,proxyOptions);
     }
 
     getPluginName() {
@@ -245,14 +245,8 @@ export class Plugin extends ApiV2{
         if (! rt.endsWith("/")) rt+="/";
         return rt;
     }
-    buildProxyUrl(url) {
-        if (! (url instanceof URL)){
-            url=new URL(url,this.getBaseUrl());
-        }
-        if (url.origin === window.location.origin){
-            return url.toString();
-        }
-        return new URL("/proxy/"+encodeURIComponent(url.toString()),window.location.href).toString();
+    buildProxyUrl(url,headers,proxyOptions) {
+        return buildProxyUrl(url,this.getBaseUrl(),headers,proxyOptions);
     }
 
     getPluginName() {

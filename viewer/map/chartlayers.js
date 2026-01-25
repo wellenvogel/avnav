@@ -267,7 +267,9 @@ class LayerConfig{
     }
     async prepare(options,source){
         if (this.userCallback){
-            const userCbResult=await this.userCallback(options,this.userCallbackData.context);
+            const userCbResult=await this.userCallback(options,this.userCallbackData.context,{
+                name: source.getChartKey()
+            });
             if (userCbResult) this.userCallbackData={
                 ...userCbResult,
                 context: this.userCallbackData.context,
@@ -654,30 +656,31 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
     async prepare(options, source) {
         this.useProxy=!!options.useproxy;
         const maplibreCfg=options.maplibre||{};
+        this.baseUrl = this.overviewUrl || window.location.href;
         const style=maplibreCfg.style||options.style||options.styleUrl||
             options.url||options.href||(new URL("style.json",this.baseUrl)).getString();
-        if (! style) throw new Error("no style configured");
-        if (typeof(style)==='string' ) {
-            //we assume an URL
-            let styleUrl=new URL(style,this.overviewUrl||window.location.href);
-            this.baseUrl=styleUrl.toString();
-            if (this.useProxy && styleUrl.origin !== window.location.origin) {
-                styleUrl=new URL("/proxy/"+encodeURIComponent(styleUrl.toString()),window.location.href);
+        if (style) {
+            if (typeof (style) === 'string') {
+                //we assume an URL
+                let styleUrl = new URL(style, this.overviewUrl || window.location.href);
+                this.baseUrl = styleUrl.toString();
+                if (this.useProxy && styleUrl.origin !== window.location.origin) {
+                    styleUrl = new URL("/proxy/" + encodeURIComponent(styleUrl.toString()), window.location.href);
+                }
+                const result = await fetchWithTimeout(styleUrl,
+                    {timeout: parseInt(globalStore.getData(keys.properties.networkTimeout))})
+                    .then((r) => {
+                        if (!r.ok) throw new Error(`unable to fetch ${styleUrl}: ${r.statusText}`);
+                        return r.text();
+                    })
+                maplibreCfg.style = yamlLoad(result);
+            } else {
+                maplibreCfg.style = style;
             }
-            const result=await fetchWithTimeout(styleUrl,
-                {timeout:parseInt(globalStore.getData(keys.properties.networkTimeout))})
-                .then((r)=>{
-                    if (!r.ok) throw new Error(`unable to fetch ${styleUrl}: ${r.statusText}`);
-                    return r.text();
-                })
-                maplibreCfg.style=yamlLoad(result);
         }
-        else{
-            maplibreCfg.style=style;
-            this.baseUrl=this.overviewUrl||window.location.href;
-        }
-        this.maplibreOptions=maplibreCfg;
-        return await super.prepare({...options,maplibre: maplibreCfg},source);
+        const newOptions=await super.prepare({...options,maplibre: maplibreCfg},source);
+        this.maplibreOptions=newOptions.maplibre;
+        return newOptions;
     }
 
     getLayerTypes() {

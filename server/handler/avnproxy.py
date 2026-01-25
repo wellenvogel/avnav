@@ -68,7 +68,6 @@ class AVNProxy(AVNWorker):
         return self.ATYPE
     HDR_BLACKLIST=['host']
     OK_STATS=[200,206,301,304]
-    TRANSLATE_PARAM=['referer','origin']
     def handleProxyRequest(self,url,handler:AVNHTTPHandler,requestparam=None):
         status=500
         constructed=url
@@ -78,15 +77,23 @@ class AVNProxy(AVNWorker):
             constructed=urllib.parse.urlunparse(parsed)
             request = urllib.request.Request(constructed)
             headers = handler.headers
+            lcmap = set() #keep the lower case header names to avoid later override
+            if requestparam is not None:
+                for k,v in requestparam.items():
+                    lk=k.lower()
+                    if not lk.startswith("h:"):
+                        continue
+                    lk=lk[2:]
+                    k=k[2:]
+                    lcmap.add(lk)
+                    if isinstance(v,list):
+                        v=v[0]
+                    request.add_header(k,v)
             for k, v in headers.items():
-                if k.lower() in self.HDR_BLACKLIST:
+                lk=k.lower()
+                if lk in self.HDR_BLACKLIST or lk in lcmap:
                     continue
                 request.add_header(k, v)
-            if requestparam is not None:
-                for tp in self.TRANSLATE_PARAM:
-                    param=AVNUtil.getHttpRequestParam(requestparam,tp,mantadory=False)
-                    if param is not None:
-                        request.add_header(tp, param)
             request.method = handler.command
             response = urllib.request.urlopen(request)
             status=response.status

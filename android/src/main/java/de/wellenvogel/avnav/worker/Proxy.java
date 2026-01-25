@@ -209,7 +209,6 @@ public class Proxy extends Worker implements INavRequestHandler {
         return rt;
     }
 
-    static final String [] TRANSLATE_HDR=new String[]{"referer","origin"};
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         if (!isEnabled()) throw new Exception("proxy disabled");
@@ -220,16 +219,20 @@ public class Proxy extends Worker implements INavRequestHandler {
         if (!path.startsWith(getPrefix())) return null;
         path = path.substring((getPrefix().length() + 1));
         path= URLDecoder.decode(path, "UTF-8");
-        for (String s: TRANSLATE_HDR) {
+        HashMap<String,String> existingHeaders=new HashMap<>();
+        for (String k:headers.keySet()){
+            existingHeaders.put(k.toLowerCase(),k);
+        }
+        for (String s: uri.getQueryParameterNames()) {
+            String sk=s.toLowerCase();
+            if (! sk.startsWith("h:")) continue;
+            sk=sk.substring(2);
             String v=uri.getQueryParameter(s);
             if (v != null){
-                String alt=s.substring(0,1).toUpperCase()+s.substring(1);
-                if (headers.get(alt) != null){
-                    headers.put(alt,v);
-                }
-                else {
-                    headers.put(s, v);
-                }
+                //ensure to overwrite existing headers
+                String key=existingHeaders.get(sk);
+                if (key == null) key=sk;
+                headers.put(key, v);
             }
         }
         return handleProxy(path,method,headers);

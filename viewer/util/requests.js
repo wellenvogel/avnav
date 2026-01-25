@@ -80,6 +80,27 @@ export const prepareUrl=(url, options)=>{
 
 };
 
+export const buildProxyUrl=(url, baseUrl,headers,parameters)=>{
+    if (! (url instanceof URL)){
+        url=new URL(url,baseUrl||window.location.href);
+    }
+    if (url.origin === window.location.origin){
+        return url.toString();
+    }
+    let proxyUrl=new URL("/proxy/"+encodeURIComponent(url.toString()),window.location.href);
+    if (headers){
+        for (let k in headers){
+            proxyUrl.searchParams.append("h:"+k, headers[k]);
+        }
+    }
+    if (parameters){
+        for (let k in parameters){
+            proxyUrl.searchParams.append(k, parameters[k]);
+        }
+    }
+    return proxyUrl.toString();
+}
+
 const prepareInternal=(url, options, defaults)=>{
     if (url === undefined) {
         return [undefined,undefined];

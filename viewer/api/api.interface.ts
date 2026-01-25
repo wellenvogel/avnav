@@ -424,12 +424,15 @@ export interface UserMapLayerResultVector extends UserMapLayerResultBase {
 
 }
 export type UserMapLayerResult=UserMapLayerResultRaster|UserMapLayerResultVector;
+export interface AdditionalLayerOptions{
+    name:string; //the chart Name
+}
 /**
  * the callback that is called when a user map layer is created
  * @param options {object} the layer options as defined in the chart definition
  * @param context {object} an object that can be used to store data
  */
-export type UserMapLayerCallback=(options:VectorLayerOptions|RasterLayerOptions,context:UserMapLayerContext)=>Promise<UserMapLayerResult>;
+export type UserMapLayerCallback=(options:VectorLayerOptions|RasterLayerOptions,context:UserMapLayerContext,chartOptions:AdditionalLayerOptions)=>Promise<UserMapLayerResult>;
 export type MapLayerProfilesRaster="zxy"|"tms"|"wms"|"encrypted-zxy"|"PMTiles"
 export type MapLayerProfilesVector="maplibre"
 export type MapLayerProfiles=MapLayerProfilesRaster|MapLayerProfilesVector
@@ -474,6 +477,17 @@ export interface DialogConfig{
     buttons?:     [Button];               //if not provided Cancel is shown
 }
 
+/**
+ * options that control caching for the proxy
+ * (intended for online chart access)
+ */
+export interface ProxyOptions{
+    maxage?:number; //max age of a cache entry in seconds
+    name: string;   //the name of the cache (typical: chartName#layer)
+    z:number;       //zoom
+    x:number;       //x
+    y:number;       //y
+}
 
 /**
  * the new API as it is provided as the first parameter
@@ -495,8 +509,10 @@ export interface ApiV2 extends Api{
      * you can add them to the returned URL like this:
      * buildProxyUrl(oriUrl)+"?referer="+encodeURIComponent(referer)+"&origin="+encodeURIComponent(origin)
      * @param url
+     * @param headers - a map of headers that will update the request headers
+     * @param proxyOptions - options to control the caching of the proxy
      */
-    buildProxyUrl(url:string|URL):string;
+    buildProxyUrl(url:string|URL,headers?:Record<string, string>,proxyOptions?:ProxyOptions):string;
 
     /**
      * return the name of the plugin

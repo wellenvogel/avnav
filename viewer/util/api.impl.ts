@@ -26,7 +26,7 @@ import {
     FeatureInfoKeys,
     FeatureInfoType,
     FormatterFunction,
-    MapLayerProfiles,
+    MapLayerProfiles, ProxyOptions,
     StoreData,
     UserMapLayerCallback
 } from '../api/api.interface';
@@ -186,7 +186,7 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
         throw new Error("Method not implemented.");
     }
 
-    buildProxyUrl(_url: string | URL): string {
+    buildProxyUrl(_url: string | URL,_headers?:Record<string, string>,_proxyOptions?:ProxyOptions): string {
         throw new Error("Method not implemented.");
     }
 
