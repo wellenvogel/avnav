@@ -131,6 +131,15 @@ export const itemListToSelectList = (itemList, opt_selected,opt_filter) => {
 
 export const KNOWN_OVERLAY_EXTENSIONS = ['gpx', 'kml', 'kmz', 'geojson'];
 export const IMAGES = ['png', 'jpg', 'jpeg', 'svg', 'bmp', 'tiff', 'gif'];
+const ICONCLASS_TYPES=['chart',
+    'route',
+    'track',
+    'layout',
+    'settings',
+    'user',
+    'images',
+    'overlay',
+    'plugins'];
 export const getItemIconProperties=(item)=>{
     let icon=getUrlWithBase(item,'icon');
     if (icon){
@@ -139,6 +148,7 @@ export const getItemIconProperties=(item)=>{
             style:{backgroundImage: "url('" + (icon) + "')"}
         }
     }
+    if (! item.type || ICONCLASS_TYPES.indexOf(item.type) <0) return;
     let typeClass=item.isDirectory?'directory':item.type;
     if (item.type === 'overlay'){
         const [fn,ext]=Helper.getNameAndExt(item.name);
@@ -148,7 +158,7 @@ export const getItemIconProperties=(item)=>{
         const [fn,ext]=Helper.getNameAndExt(item.name);
         if (ext !== 'gpx') typeClass="user other"
     }
-    else if (item.type === 'plugin'){
+    else if (item.type === 'plugins'){
         const specialNames=['user.mjs','user.mjs','user.css','keys.json','splitkeys.json','images.json'];
         if (specialNames.indexOf(item.name) >= 0){
             typeClass= 'user special';
