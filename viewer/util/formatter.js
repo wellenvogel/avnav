@@ -77,7 +77,7 @@ const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
     let sign="";
     number=parseFloat(number);
     if (isNaN(number)){
-        rt="";
+        let rt="";
         while (fix > 0) {
             rt+="-";
             fix--;
