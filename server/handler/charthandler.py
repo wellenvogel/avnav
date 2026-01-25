@@ -135,6 +135,8 @@ class ExternalChart(ChartFile):
         for k,v in self.ext.items():
             if k != 'name' and k != 'keyPrefix' and k != 'chartKey':
                 item[k]=v
+        if self.ext.get('canDownload') is None:
+            item['canDownload']=False
     def buildKey(self):
         key = self.ext.get('chartKey') or self.ext.get('name')
         return _getExternalChartPrefix(self._prefix)+key
@@ -418,7 +420,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def handleDownload(self, name, handler, requestparam):
     chartDescription=self.itemList.get(name)
     if chartDescription is None:
-      raise Exception("chart %s not found for download",name)
+      raise Exception(f"chart {name} not found for download")
     return super()._download(chartDescription.getFileName())
 
   def onItemRemove(self, itemDescription):
