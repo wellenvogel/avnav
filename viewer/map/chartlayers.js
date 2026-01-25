@@ -259,20 +259,19 @@ class LayerConfig{
         this.userCallback=userCallback;
         this.props=props;
         this.userCallbackData={
-            context:{}
         };
+        this.userContext={};
     }
     getLayerTypes(){
         throw new Error("getLayerType not implemented in base class");
     }
     async prepare(options,source){
         if (this.userCallback){
-            const userCbResult=await this.userCallback(options,this.userCallbackData.context,{
+            const userCbResult=await this.userCallback(options,this.userContext,{
                 name: source.getChartKey()
             });
             if (userCbResult) this.userCallbackData={
-                ...userCbResult,
-                context: this.userCallbackData.context,
+                ...userCbResult
             };
             if (this.userCallbackData.options) return {...options,...this.userCallbackData.options};
         }
@@ -298,8 +297,15 @@ class LayerConfig{
 
     async destroy(){
         if (this.userCallbackData.finalizeFunction){
-            await this.userCallbackData.finalizeFunction(this.userCallbackData.context);
+            await this.userCallbackData.finalizeFunction(this.userContext);
         }
+    }
+
+    /**
+     * return a sequence function for the layer if there is one
+     */
+    getSequenceFunction(){
+        return this.userCallbackData.sequenceFunction;
     }
 
 }
@@ -417,7 +423,7 @@ class LayerConfigXYZ extends LayerConfig{
 
         }
         if (this.userCallbackData.createTileUrlFunction){
-            return this.userCallbackData.createTileUrlFunction(options,f,this.userCallbackData.context);
+            return this.userCallbackData.createTileUrlFunction(options,f,this.userContext);
         }
         else {
             return f;
@@ -428,7 +434,7 @@ class LayerConfigXYZ extends LayerConfig{
     }
     tileLoadFunction(imageTile, src){
         if (this.userCallbackData.tileLoadFunction){
-            return this.userCallbackData.tileLoadFunction(imageTile, src,this.userCallbackData.context);
+            return this.userCallbackData.tileLoadFunction(imageTile, src,this.userContext);
         }
         imageTile.getImage().src = this.finalUrl(src)
     }
@@ -554,7 +560,7 @@ class LayerConfigWMS extends LayerConfigXYZ{
             return rturl.toString();
         }
         if (this.userCallbackData.createTileUrlFunction){
-            return this.userCallbackData.createTileUrlFunction(options,f, this.userCallbackData.context);
+            return this.userCallbackData.createTileUrlFunction(options,f, this.userContext);
         }
         return f;
     }
@@ -594,7 +600,7 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
             return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl)
         }
         if (this.userCallbackData.createTileUrlFunction){
-            return this.userCallbackData.createTileUrlFunction(options,f,this.userCallbackData.context);
+            return this.userCallbackData.createTileUrlFunction(options,f,this.userContext);
         }
         return f;
     }
@@ -746,7 +752,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
         if (this.userCallbackData.loadCallback){
             listenOnce(this.layer,'load-maplibre',(event)=>{
                if (event.data){
-                   this.userCallbackData.loadCallback(event.data,this.userCallbackData.context);
+                   this.userCallbackData.loadCallback(event.data,this.userContext);
                }
             });
         }
@@ -798,7 +804,7 @@ class LayerConfigMapLibreVector extends LayerConfigXYZ {
         })
         let formattedFeatures = featureListFormatter(featureList,
             source.mapholder.fromMapToPoint(source.mapholder.pixelToCoord(pixel)),
-            this.userCallbackData.context);
+            this.userContext);
         if (!formattedFeatures) return;
         if (!Array.isArray(formattedFeatures)) formattedFeatures = [formattedFeatures];
         if (formattedFeatures.length < 1) return;

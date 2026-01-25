@@ -94,6 +94,9 @@ class AvnavChartSource extends ChartSourceBase{
             layerConfig=this.parseOverviewXml(data);
         }
         let layers = await this.parseLayerlist(layerConfig, ovUrl);
+        //the sequence initially had been fetched before prepareInternal
+        //but this was without the layers
+        this.sequence = await this.addLayerSequences(this.sequence,layers);
         return layers;
     }
     encryptUrl(url){
@@ -220,11 +223,21 @@ class AvnavChartSource extends ChartSourceBase{
         if (!creator) return;
         return creator.featureToInfo(feature, pixel, layer,allFeatures,this);
     }
+    async addLayerSequences(sequence,layers){
+        if (! layers) return sequence;
+        if (sequence == undefined) sequence="";
+        for (let layer of layers){
+            const creator=getav(layer).creator;
+            if (creator && creator.getSequenceFunction()){
+                const add=await creator.getSequenceFunction()();
+                if (add == undefined) add="";
+                sequence+="#"+add;
+            }
+        }
+        return sequence;
+    }
 
-    async checkSequence(force) {
-        //prevent from triggering a reload if we already have been destroyed
-        let destroySequence = this.destroySequence;
-        if ((!this.isReady() &&! force)|| destroySequence !== this.destroySequence) return false;
+    async _fetchChartSequence(){
         let newSequence;
         try {
             let sequenceUrl=getUrlWithBase(this.chartEntry,CHARTAV.SEQUENCEURL);
@@ -253,12 +266,20 @@ class AvnavChartSource extends ChartSourceBase{
                 newSequence=0;
             }
         }
+        return newSequence;
+    }
+    async checkSequence(force) {
+        //prevent from triggering a reload if we already have been destroyed
+        let destroySequence = this.destroySequence;
+        if ((!this.isReady() &&! force)|| destroySequence !== this.destroySequence) return false;
+        let newSequence=await this._fetchChartSequence();
+        newSequence = await this.addLayerSequences(newSequence, this.layers);
         if (this.destroySequence !== destroySequence) {
             return false;
         }
-        if (newSequence !== this.chartEntry[CHARTAV.SEQ]) {
-            base.log("Sequence changed from " + this.chartEntry[CHARTAV.SEQ] + " to " + newSequence + " reload map");
-            this.chartEntry[CHARTAV.SEQ] = newSequence;
+        if (newSequence !== this.sequence) {
+            base.log("Sequence changed from " + this.sequence + " to " + newSequence + " reload map");
+            this.sequence = newSequence;
             return true;
         }
         return false;

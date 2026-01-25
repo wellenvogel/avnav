@@ -56,7 +56,6 @@ export const CHARTBASE={
     URL: "url",
     UPZOOM:"upzoom",
     OPACITY: "opacity",
-    SEQ: "sequence",
     MINSCALE: "minScale",
     MAXSCALE: "maxScale",
     ENABLED: "enabled",

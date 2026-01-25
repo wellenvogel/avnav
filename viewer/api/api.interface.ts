@@ -362,12 +362,10 @@ export interface UserMapLayerResultBase {
      */
     finalizeFunction?:(context:UserMapLayerContext)=>Promise<void>;
     /**
-     * create a tile url function
-     * you can use the provided originalTileUrlFunction
-     * @param options
-     * @param originalTileUrlFunction
-     * @param context
+     * if returned this function must return
+     * a sequence that is used to determine if the map should be reloaded
      */
+    sequenceFunction?:()=>Promise<string|number>;
 }
 export interface UserMapLayerResultRaster extends UserMapLayerResultBase {
     /**
@@ -376,6 +374,13 @@ export interface UserMapLayerResultRaster extends UserMapLayerResultBase {
      * if you do not modify any options this can be omitted
      */
     options?: RasterLayerOptions;
+    /**
+     * create a tile url function that translates the tile coordinates zxy to a URL
+     * you can use the provided originalTileUrlFunction
+     * @param options
+     * @param originalTileUrlFunction
+     * @param context
+     */
     createTileUrlFunction?:(options:RasterLayerOptions,
                             originalTileUrlFunction:UrlFunction,
                             context:UserMapLayerContext)=>UrlFunction;
@@ -384,7 +389,7 @@ export interface UserMapLayerResultRaster extends UserMapLayerResultBase {
      * the default is
      *    tile.getImage().src=src
      * @param tile an openlayers tile
-     * @param src the src (normally the tile url)
+     * @param src the src (normally the tile url as returned by the tileUrlFunction)
      * @param context
      */
     tileLoadFunction?:(tile:Tile,src:string,context:UserMapLayerContext)=>Promise<void>;
