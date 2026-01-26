@@ -16,14 +16,13 @@ repositories{
 	mavenCentral()
 }
 
-description="Raspberry specfic stuff for avnav (old)"
+description="Raspberry specfic stuff for avnav (new)"
 apply plugin: 'java'
-
 apply plugin: 'com.netflix.nebula.ospackage-base'
 
-
 def versionFileName="raspi.version"
-task build_raspi(type: Deb) {
+def BASE='raspberry'
+task build_raspi_base(type:Deb) {
     group taskgroup
     doFirst{
         assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
@@ -32,7 +31,7 @@ task build_raspi(type: Deb) {
         logger.info("vfile=${vFile}")
 	    if (! vFile.getParentFile().exists()) vFile.getParentFile().mkdirs()
         vFile.withWriter {wr->
-            wr.println "AVNAV_VERSION=\"$version\""
+                wr.println "AVNAV_VERSION=\"$version\""
         }
     }
     //release='3'
@@ -41,40 +40,25 @@ task build_raspi(type: Deb) {
     requires 'avnav'
     requires 'parted'
     requires 'bc'
-    requires 'hostapd'
-    requires 'dnsmasq'
     requires 'mpg123'
     requires('ntp').or('ntpsec')
-    requires 'avahi-autoipd'
     requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
     requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
     requires 'jq'
-    packageName='avnav-raspi'
-    ['common','wlan0','wlan1','wlan-ap','wlan-ap2'].each { String ext->
-        configurationFile("/etc/hostapd/hostapd.conf.$ext")
-    }
-    configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
+    packageName='avnav-raspi-base'
     user='root'
     into ('/usr/lib/avnav/raspberry') {
-        from('raspberry'){
+        from(BASE){
             fileMode 0755
-            include 'hostapd'
             include 'settime.sh'
-            include 'restore-iptables.sh'
             include 'sound.sh'
-            include 'iptables-ext.sh'
-            include 'wpa_supplicant.conf'
             include 'startup-check.sh'
             include 'setup-*.sh'
             include 'prestart.sh'
-            include 'wpa_action.sh'
-            include 'rename-interface.sh'
-            include 'checkLink.sh'
             include 'uart_control'
         }
-        from('raspberry') {
+        from(BASE) {
             include 'avnav_server.xml'
-            include 'hosts'
             include 'ntp.conf'
             include 'avnav.conf'
             fileMode 0644
@@ -85,7 +69,7 @@ task build_raspi(type: Deb) {
         }
     }
     into('/usr/lib/avnav/raspberry/xui'){
-        from('raspberry/xui')
+        from("${BASE}/xui")
     }
     into ('/usr/lib/avnav/raspberry') {
         from(project.buildDir){
@@ -93,34 +77,16 @@ task build_raspi(type: Deb) {
         }
     }
     into('/usr/lib/avnav/plugins/resetAlarm'){
-        from('raspberry/resetAlarm')
+        from("${BASE}/resetAlarm")
     }
     into('/usr/lib/systemd/system/avnav.service.d'){
-        from('raspberry'){
+        from(BASE){
             include "raspberry.conf"
         }
     }
     into('/usr/lib/systemd/system'){
-        from('raspberry'){
-            include('avnav-iptables.service')
+        from(BASE){
             include('avnav-startup.service')
-        }
-    }
-    into('/etc/network/interfaces.d'){
-        from('raspberry'){
-            include('lo')
-            include('eth0')
-            include('usb0')
-            include('wlan0')
-            include('wlan1')
-            include('wlan-av1')
-            include('wlan-ap')
-            include('wlan-ap2')
-        }
-    }
-    into('/etc/hostapd'){
-        from('raspberry'){
-            include('hostapd.conf*')
         }
     }
     into('/etc/sysctl.d'){
@@ -128,39 +94,11 @@ task build_raspi(type: Deb) {
             include('99-zzavnavsysctl.conf')
         }
     }
-    into('/etc'){
-        from('raspberry'){
-            include('iptables.ipv4.nat')
-        }
-    }
-    into('/etc/udev/rules.d'){
-        from('raspberry'){
-            include('010-avnav-net.rules')
-        }
-    }
-    into('/etc/dnsmasq.d'){
-        from('raspberry'){
-            include('avnav-dnsmasq.conf')
-        }
-    }
-    into('/etc'){
-        from('raspberry'){
-            include('dhcpcd.enter-hook')
-        }
-    }
-    into('/etc/modprobe.d'){
-        from('raspberry'){
-            include('8192cu.conf')
-        }
-    }
-    into('/etc/avahi/services'){
-        from('raspberry'){
-            include('avnav-ssh.service')
-        }
-    }
-    
-    postInstall file('raspberry/postinstall')
+        
+    postInstall file('raspberry/postinstall.base')
     preInstall file('raspberry/preinstall')
 
 }
+
+
 

@@ -1,0 +1,42 @@
+Steps for handling network manager
+==================================
+(1) remove interface files (except (eth0, lo))
+(2) systemctl disable dnsmasq && systemctl stop dnsmasqd
+(3) systemctl dsiable wpa_supplicant && systemctl stop wpa_supplicant
+(3) create rules file to allow full access for pi (as root)
+/etc/polkit-1/rules.d/00-nmall.rules
+---
+polkit.addRule(function(action, subject) {
+    if (action.id.match(/^org\.freedesktop\.NetworkManager/) &&
+        (subject.isInGroup ("sudo") || subject.isInGroup ("netdev"))) {
+        return polkit.Result.YES;
+    }
+});
+---
+systemctl restart polkit
+(4) check as pi:
+nmcli general permissions
+(5) create AP on wlan-ap:
+nmcli d wifi hotspot ifname wlan-ap ssid pi4canhat password pi4canhat-secret
+(6)set dhcp range
+nmcli con modify Hotspot ipv4.addresses 192.168.30.1/24
+nmcli con down Hotspot
+nmcli con up Hotspot
+
+(7)client connect
+nmcli d wifi list
+nmcli d wifi con Andreas password ...
+
+(8) install firewalld
+apt install firewalld
+sudo firewall-cmd --permanent --zone=trusted --change-interface=eth0
+sudo firewall-cmd --set-default-zone=trusted
+sudo firewall-cmd --get-active-zones
+
+(9) zones for interfaces
+nmcli con modify Andreas connection.zone trusted
+nmcli con modify Hotspot connection.zone trusted
+(10)
+set wifi client connection to block external traffic:
+nmcli con modify Andreas connection.zone block
+

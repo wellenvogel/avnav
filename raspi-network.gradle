@@ -1,0 +1,66 @@
+
+import java.text.SimpleDateFormat;
+import org.redline_rpm.header.*;
+def taskgroup="avnav"
+
+buildscript{
+	repositories{
+		mavenCentral()
+	}
+    dependencies{
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:12.1.0'
+    }
+}
+
+repositories{
+	mavenCentral()
+}
+
+description="Raspberry specfic stuff for avnav (new)"
+apply plugin: 'java'
+apply plugin: 'com.netflix.nebula.ospackage-base'
+
+def versionFileName="raspi.version"
+def BASE='raspberry'
+task build_raspi_network(type:Deb) {
+    group taskgroup
+    doFirst{
+        assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
+        version=project.avnavVersion
+    }
+    //release='3'
+    os = LINUX // only applied to RPM
+    packageGroup='misc'
+    requires 'avnav'
+    requires 'avnav-raspi-base'
+    requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
+    requires 'jq'
+    packageName='avnav-raspi-network'
+    configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
+    user='root'
+    into ('/usr/lib/avnav/raspberry') {
+        from(BASE){
+            fileMode 0755
+            include 'rename-interface.sh'
+        }
+        from(BASE) {
+            include 'hosts'
+            fileMode 0644
+        }
+        
+    }
+    into('/etc/udev/rules.d'){
+        from('raspberry'){
+            include('010-avnav-net.rules')
+        }
+    }
+    into('/etc/avahi/services'){
+        from('raspberry'){
+            include('avnav-ssh.service')
+        }
+    }
+    
+}
+
+
+
