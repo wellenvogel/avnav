@@ -177,17 +177,7 @@ task windowsBuild(type: org.gradle.api.tasks.GradleBuild){
 }
 
 def emptyBase=new File(project.buildDir,"empty")
-ospackage {
-    //release='3'
-    os = LINUX // only applied to RPM
-    packageGroup='misc'
-    packageName='avnav'
-    requires('python3-pip')
-    requires('python3-pyudev')
-    requires('python3-imaging').or('python3-pil')
-    requires('python3-netifaces')
-    requires('python3-legacy-cgi').or('python3','3.13',Flags.LESS)
-    user='root'
+def baseFiles={
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
             into 'viewer'
@@ -271,6 +261,19 @@ ospackage {
             rename('avnavuser.service','avnav.service')
         }
     }
+}
+def baseCfg= {
+    //release='3'
+    os = LINUX // only applied to RPM
+    packageGroup='misc'
+    packageName='avnav'
+    requires('python3-pip')
+    requires('python3-pyudev')
+    requires('python3-imaging').or('python3-pil')
+    requires('python3-netifaces')
+    requires('python3-legacy-cgi').or('python3','3.13',Flags.LESS)
+    user='root'
+    getDelegate().with baseFiles
     postInstall file('linux/postinstall')
 
     link('/usr/bin/avnav','/usr/lib/avnav/avnav')
@@ -284,7 +287,7 @@ task buildZip(type: Zip){
     dependsOn 'releaseViewer',pkgVersion, zipMarker
     group taskgroup
     includeEmptyDirs=false
-    with ospackage.delegateCopySpec
+    getDelegate().with baseFiles
     eachFile{ d->
         if (!d.getPath().matches("^usr/lib/avnav.*")) {
             d.exclude()
@@ -311,6 +314,7 @@ task buildZip(type: Zip){
 
 
 task releaseRpm(type: Rpm) {
+    getDelegate().with baseCfg
     group taskgroup
     arch = NOARCH
     dependsOn 'releaseViewer',pkgVersion
@@ -324,7 +328,8 @@ task releaseRpm(type: Rpm) {
     requires('python3-GDAL').or('python3-gdal')
 }
 
-task releaseDeb(type: Deb) {
+task releaseDeb(type: Deb){
+    getDelegate().with baseCfg
     group taskgroup
     dependsOn 'releaseViewer',pkgVersion
     requires('bluetooth')
