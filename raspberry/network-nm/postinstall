@@ -1,0 +1,19 @@
+#! /bin/bash
+
+CFG=/etc/firewalld/firewalld.conf
+if [ -e "$CFG" ] ; then
+  echo "setting default zone for firewalld to trusted"
+  sed -i 's/.*DefaultZone.*/DefaultZone=trusted/' $CFG
+else
+  echo "firewalld $CFG not found, unable to set"
+fi
+for f in 73-usb-net-by-mac.link 99-default.link
+do
+  fn=/etc/systemd/network/$f
+  if [ -e $fn ] ; then
+    echo "removing $fn"
+    rm -f "$fn"
+  else
+    echo "$fn already removed"
+  fi
+done

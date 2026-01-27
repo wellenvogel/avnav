@@ -29,8 +29,8 @@ nmcli d wifi con Andreas password ...
 
 (8) install firewalld
 apt install firewalld
-sudo firewall-cmd --permanent --zone=trusted --change-interface=eth0
-sudo firewall-cmd --set-default-zone=trusted
+#sudo firewall-cmd --permanent --zone=trusted --change-interface=eth0
+sudo firewall-cmd --set-default-zone=trusted #must be changed in /etc/firewalld/firewalld.conf (DefaultZone=trusted)
 sudo firewall-cmd --get-active-zones
 
 (9) zones for interfaces
@@ -39,4 +39,26 @@ nmcli con modify Hotspot connection.zone trusted
 (10)
 set wifi client connection to block external traffic:
 nmcli con modify Andreas connection.zone block
+
+(11) for predictable interface names:
+remove the 73....link and 99-default.link in /etc/systemd/network (can also be done by raspi-config)
+This will end up with end0 and wlan0 for the onboard if and mac based names for others
+see https://wiki.debian.org/NetworkInterfaceNames#THE_.22PREDICTABLE_NAMES.22_SCHEME,
+https://systemd.io/PREDICTABLE_INTERFACE_NAMES/
+
+(12) for easy resolution of local hostname use systemd-resolved
+sudo apt install systemd-resolved
+create file /etc/NetworkManager/conf.d/99-avnav.conf
+---
+[main]
+hostname-mode=none
+dns=systemd-resolved
+---
+sudo systemctl restart NetworkManager
+
+(13) avoid sending our hostname to DHCP server
+nmcli con modify Ethernet ipv4.dhcp-send-hostname false
+nmcli con modify Ethernet ipv6.dhcp-send-hostname false
+nmcli con down Ethernet && nmcli con up Ethernet
+
 
