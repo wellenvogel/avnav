@@ -61,4 +61,36 @@ nmcli con modify Ethernet ipv4.dhcp-send-hostname false
 nmcli con modify Ethernet ipv6.dhcp-send-hostname false
 nmcli con down Ethernet && nmcli con up Ethernet
 
+(14) better set up for multiple hotspots: bridge
+nmcli con add type bridge con-name Bridge ifname br0 ipv4.method shared
+nmcli con modify Bridge ipv4.addresses 192.168.30.1/24
+nmcli con modify Bridge connection.zone trusted
+nmcli con up Bridge
+#add hotspot
+nmcli connection add con-name 'Hotspot' ifname wlan0 type wifi slave-type bridge master 'Bridge' wifi.mode ap wifi.ssid pi4canhat
+nmcli con mod Hotspot wifi-sec.key-mgmt wpa-psk wifi-sec.psk pi4canhat-secret
+nmcli con mod Hotspot connection.zone trusted
+nmcli con up Hotspot
+
+(15) === concept ===
+* setup WITHOUT bridge (seems to create more trouble)
+* only set up ONE Hotspot
+* predictable interface names
+* avnav.conf with new flag AVNAV_WIFI_APIF - interface for hotspot, default to wlan0
+  change should be possible without additional reboot (only one reboot to pick up setting)
+  modify NetworkManager config  - OR - nmcli
+  explain to user how to determine interface name for stick
+* remove (i.e. ignore) AVNAV_WIFI_CLIENT
+* for WPA config: allow to select interface if multiple ones found (do not offer interface with hotspot)
+* move WPA config to plugin (raspi-network package) with DBUS interface to NetworkManager (functions like today)
+* maybe (step2?) show all network config in UI
+* hint to nmtui in the doc for configurations not being prepared
+
+(16)
+
+nmcli d wifi hotspot con-name Hotspot ifname wlan0 band bg ssid avnav password avnav-secret
+nmcli con modify Hotspot ipv4.addresses 192.168.30.10/24
+nmcli con modify Hotspot autoconnect true
+
+
 

@@ -1,19 +1,29 @@
 [connection]
 id=Hotspot
-uuid=d85d1e5a-8fcc-4f08-97af-995f9d33aa48
+uuid=67c4d23d-dd98-411e-91ac-1a7539ec04d0
 type=wifi
-controller=3d71587e-dfa2-441f-840c-09f77babfdf3
 interface-name=wlan0
-port-type=bridge
-timestamp=1769529587
+timestamp=1769798587
 zone=trusted
 
 [wifi]
+band=bg
 mode=ap
-ssid=pi4canhat
+ssid=avnav
 
 [wifi-security]
+group=ccmp;
 key-mgmt=wpa-psk
-psk=pi4canhat-secret
+pairwise=ccmp;
+proto=rsn;
+psk=avnav-secret
 
-[bridge-port]
+[ipv4]
+address1=192.168.30.10/24
+method=shared
+
+[ipv6]
+addr-gen-mode=default
+method=ignore
+
+[proxy]
