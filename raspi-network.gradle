@@ -62,9 +62,9 @@ task build_raspi_network(type:Deb) {
     configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
     user='root'
     into ('/usr/lib/avnav/raspberry') {
-        from(BASE){
+        from(BASENW){
             fileMode 0755
-            include 'notfound' //dummy
+            include 'set-hotspot.sh' 
         }
         
     }
@@ -89,6 +89,11 @@ task build_raspi_network(type:Deb) {
     into('/etc/avahi/services'){
         from('raspberry'){
             include('avnav-ssh.service')
+        }
+    }
+    into('/lib/systemd/system'){
+        from(BASENW){
+            include 'avnav-network.service'
         }
     }
     postInstall file("$BASENW/postinstall")

@@ -1,0 +1,13 @@
+[Unit]
+Description=handle avnav.conf
+After=syslog.target
+WantedBy=NetworkManager
+
+
+[Service]
+User=root
+Type=oneshot
+ExecStart=/usr/lib/avnav/raspberry/set-hotspot.sh
+
+[Install]
+WantedBy=multi-user.target
