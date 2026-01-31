@@ -1,26 +1,79 @@
 #!/usr/bin/env python3
 import os
 import subprocess
+import syslog
+import sys
+import shutil
+import re
+RT_ERR=2
+RT_REBOOT=1
+RT_OK=0
+syslog.openlog(ident='avnav-set-network')
 CFG='/boot/firmware/avnav.conf'
 LAST='/etc/avnav-network-checks'
+TEMPLATE_DIR=os.path.dirname(__file__)
+CFG_DIR='/etc/NetworkManager/system-connections'
+CON_FILE='Hotspot.nmconnection'
+COPY_FILES=['Ethernet.nmconnection']
 class ConfigEntry:
-    def __init__(self,key,defv):
+    def __init__(self,key,defv,check=None,action=None):
         self.key=key
         self.defv=defv
+        self.check=check
+        self.action=action
 
 PREFIX='AVNAV_'
+PLEN=len(PREFIX)
+def wifi_country_action(old,new):
+    if old == new:
+        return RT_OK
+    log(f"change wifi country to {new}")
+    cmd=['raspi-config','nonint','do_wifi_country',new]
+    try:
+        result=subprocess.run(cmd,shell=False,)
+        if result.returncode != 0:
+            log(f"setting wifi country with {' '.join(cmd)} failed",prio=syslog.LOG_ERR)
+            return RT_ERR
+        return RT_REBOOT
+    except Exception as e:
+        log(f"unable to execute {' '.join(cmd)}: {e}")
+        return RT_ERR
+
+def check_addr(v):
+    ET="must look like 192.168.30.10/24"
+    if not v:
+        return "must not be empty"
+    matches=re.match(r'(^[0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+)',v)
+    if not matches:
+        return ET
+    l=len(matches.groups())
+    if (l != 5):
+        return ET
+    try:
+        for idx in range(0,l):
+            ig=int(matches.groups()[idx])
+            if idx < 4:
+                if ig < 0 or ig > 255:
+                    return f"tuple {ig} out of range 0...255"
+            else:
+                if ig < 1 or ig > 31:
+                    return f"mask {ig} out of range 1...31"
+    except Exception as e:
+        return f"error parsing {v}: {e}"
 
 
 SETTINGS={
     'SSID':ConfigEntry('ssid','avnav'),
     'PSK':ConfigEntry('psk','avnav-secret'),
-    'WIFI_COUNTRY':ConfigEntry('','DE'),
+    'WIFI_COUNTRY':ConfigEntry('','DE',action=wifi_country_action),
     'WIFI_INTF':ConfigEntry('interface','wlan0'),
     'WIFI_BAND':ConfigEntry('band','bg'),
     'WIFI_CHANNEL':ConfigEntry('channel','7'),
-    'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24')
+    'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24',check=check_addr)
 }
 
+def log(msg,prio=syslog.LOG_INFO):
+    syslog.syslog(prio,msg)
 def get_settings_defaults():
     rt={}
     for k,v in SETTINGS.items():
@@ -41,8 +94,103 @@ def read_config(filename:str):
             rt[parts[0]]=v
     return rt
 
+log("started")
 current=read_config(CFG)
 last=read_config(LAST)
+changed=False
+actions=[]
+if last is None:
+    log(f"{LAST} not found, assuming fresh install")
+    changed=True
+    last={}
+if current is None:
+    log(f"{CFG} not found, using defaults")
+    current=get_settings_defaults()
+for k,v in current.items():
+    lv=last.get(k)
+    if lv != v:
+        changed=True
+if not changed:
+    log("no changes, exiting")
+    sys.exit(0)
+log("copying config from templates")
+rtc=RT_OK
+for cf in COPY_FILES:
+    src=os.path.join(TEMPLATE_DIR,cf)
+    target=os.path.join(CFG_DIR,cf)
+    if not os.path.exists(src):
+        continue
+    if os.path.exists(target):
+        os.unlink(target)
+    log(f"copying {src} to {target}")
+    if not shutil.copyfile(src,target):
+        log(f"error copying {src} to {target}",prio=syslog.LOG_ERR)
+        rtc=RT_ERR
+src=os.path.join(TEMPLATE_DIR,CON_FILE)
+target=os.path.join(CFG_DIR,CON_FILE)
+target_values={}
+for k,v in current.items():
+    cfg=SETTINGS.get(k[PLEN:])
+    if cfg is None or not cfg.key:
+        continue
+    if cfg.check:
+        err=cfg.check(v)
+        if err is not None:
+            log(f"invalid value {v} for {k}: {err}, falling back to default {cfg.defv}")
+            v=cfg.defv
+    target_values[cfg.key]=v
+if not os.path.exists(src):
+    log(f"{src} not found",prio=syslog.LOG_ERR)
+else:
+    try:
+        if os.path.exists(target):
+            log(f"removing existing {target}")
+            os.unlink(target)
+        log(f"writing config from {src} to {target}")
+        with open(src,"r") as rh:
+            with open(target,"w") as wh:
+                for line in rh:
+                    parts=line.split("=",1)
+                    if len(parts) == 2 and parts[0] in target_values.keys():
+                        v=target_values[parts[0]]
+                        log(f"setting {parts[0]} to {v}")
+                        wh.write(f"{parts[0]}={v}\n")
+                    else:
+                        wh.write(line)
+                wh.close()
+        os.chmod(target,0o600)        
+        
+    except Exception as e:
+        log(f"unable to write config to {target}: {e}",prio=syslog.LOG_ERR)           
+        rtc=RT_ERR
+#TODO: handle reload/restart of NetworkManager
+#special actions
+needs_reboot=False
+for k,v in current.items():
+    cfg=SETTINGS.get(k[PLEN:])
+    if not cfg or cfg.action is None:
+        continue
+    lv=last.get(k)
+    if lv == v:
+        continue
+    rt=cfg.action(lv,v)
+    if rt == RT_REBOOT:
+        needs_reboot=True
+    elif rt != RT_OK:
+        rtc=RT_ERR            
+#writing last used
+try:
+    log(f"writing used values to {LAST}")
+    with open(LAST,"w") as wh:
+        for k,v in current.items():
+            wh.write(f"{PREFIX}{k}={v}\n")
+except Exception as e:
+    log(f"unable to write last values to {LAST}:{e}",prio=syslog.LOG_ERR)
+    rtc=RT_ERR
+if needs_reboot:
+    rtc=RT_REBOOT
+log(f"finishing with rt={rtc}")
+sys.exit(rtc)
 pass
 
 

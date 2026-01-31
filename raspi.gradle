@@ -22,6 +22,8 @@ apply plugin: 'java'
 apply plugin: 'com.netflix.nebula.ospackage-base'
 
 
+def BASE='raspberry'
+def LEGACY="$BASE/raspberry"
 def versionFileName="raspi.version"
 task build_raspi(type: Deb) {
     group taskgroup
@@ -56,25 +58,30 @@ task build_raspi(type: Deb) {
     configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
     user='root'
     into ('/usr/lib/avnav/raspberry') {
-        from('raspberry'){
+        from(BASE){
+            fileMode 0755
+            include 'settime.sh'
+            include 'sound.sh'
+            include 'setup-*.sh'
+            include 'prestart.sh'
+            include 'uart_control'
+        }
+        from(LEGACY){
             fileMode 0755
             include 'hostapd'
-            include 'settime.sh'
             include 'restore-iptables.sh'
-            include 'sound.sh'
             include 'iptables-ext.sh'
             include 'wpa_supplicant.conf'
             include 'startup-check.sh'
-            include 'setup-*.sh'
-            include 'prestart.sh'
             include 'wpa_action.sh'
             include 'rename-interface.sh'
             include 'checkLink.sh'
-            include 'uart_control'
         }
-        from('raspberry') {
-            include 'avnav_server.xml'
+        from (LEGACY){
             include 'hosts'
+        }
+        from(BASE) {
+            include 'avnav_server.xml'
             include 'ntp.conf'
             include 'avnav.conf'
             fileMode 0644
@@ -96,18 +103,20 @@ task build_raspi(type: Deb) {
         from('raspberry/resetAlarm')
     }
     into('/usr/lib/systemd/system/avnav.service.d'){
-        from('raspberry'){
+        from(BASE){
             include "raspberry.conf"
         }
     }
     into('/usr/lib/systemd/system'){
-        from('raspberry'){
-            include('avnav-iptables.service')
+        from(BASE){
             include('avnav-startup.service')
+        }
+        from(LEGACY){
+            include('avnav-iptables.service')
         }
     }
     into('/etc/network/interfaces.d'){
-        from('raspberry'){
+        from(LEGACY){
             include('lo')
             include('eth0')
             include('usb0')
@@ -119,47 +128,47 @@ task build_raspi(type: Deb) {
         }
     }
     into('/etc/hostapd'){
-        from('raspberry'){
+        from(LEGACY){
             include('hostapd.conf*')
         }
     }
     into('/etc/sysctl.d'){
-        from('raspberry'){
+        from(BASE){
             include('99-zzavnavsysctl.conf')
         }
     }
     into('/etc'){
-        from('raspberry'){
+        from(LEGACY){
             include('iptables.ipv4.nat')
         }
     }
     into('/etc/udev/rules.d'){
-        from('raspberry'){
+        from(LEGACY){
             include('010-avnav-net.rules')
         }
     }
     into('/etc/dnsmasq.d'){
-        from('raspberry'){
+        from(LEGACY){
             include('avnav-dnsmasq.conf')
         }
     }
     into('/etc'){
-        from('raspberry'){
+        from(LEGACY){
             include('dhcpcd.enter-hook')
         }
     }
     into('/etc/modprobe.d'){
-        from('raspberry'){
+        from(LEGACY){
             include('8192cu.conf')
         }
     }
     into('/etc/avahi/services'){
-        from('raspberry'){
+        from(BASE){
             include('avnav-ssh.service')
         }
     }
     
-    postInstall file('raspberry/postinstall')
+    postInstall file("$LEGACY/postinstall")
     preInstall file('raspberry/preinstall')
 
 }

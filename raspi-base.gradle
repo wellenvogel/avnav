@@ -89,11 +89,6 @@ task build_raspi_base(type:Deb) {
             include('avnav-startup.service')
         }
     }
-    into('/etc/sysctl.d'){
-        from('raspberry'){
-            include('99-zzavnavsysctl.conf')
-        }
-    }
         
     postInstall file('raspberry/postinstall.base')
     preInstall file('raspberry/preinstall')
