@@ -235,13 +235,16 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       addresses=[]
       interfaces=netifaces.interfaces()
       for intf in interfaces:
-        intfaddr=netifaces.ifaddresses(intf)
-        if intfaddr is not None:
-          ips=intfaddr.get(netifaces.AF_INET)
-          if ips is not None:
-            for ip in ips:
-              if ip.get('addr') is not None:
-                addresses.append(ip.get('addr')+":"+str(self.server_port))
+        try:
+            intfaddr=netifaces.ifaddresses(intf)
+            if intfaddr is not None:
+                ips=intfaddr.get(netifaces.AF_INET)
+                if ips is not None:
+                    for ip in ips:
+                        if ip.get('addr') is not None:
+                            addresses.append(ip.get('addr')+":"+str(self.server_port))
+        except Exception as e:
+            AVNLog.error("error reading network interfaces:"+str(e))
       self.addresslist=addresses
       time.sleep(5)
 
