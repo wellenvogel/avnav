@@ -76,7 +76,7 @@ nmcli con up Hotspot
 * setup WITHOUT bridge (seems to create more trouble)
 * only set up ONE Hotspot
 * predictable interface names
-* avnav.conf with new flag AVNAV_WIFI_APIF - interface for hotspot, default to wlan0
+* avnav.conf with new flag AVNAV_WIFI_INTF - interface for hotspot, default to wlan0
   change should be possible without additional reboot (only one reboot to pick up setting)
   modify NetworkManager config  - OR - nmcli
   explain to user how to determine interface name for stick
@@ -91,6 +91,7 @@ nmcli con up Hotspot
 nmcli d wifi hotspot con-name Hotspot ifname wlan0 band bg ssid avnav password avnav-secret
 nmcli con modify Hotspot ipv4.addresses 192.168.30.10/24
 nmcli con modify Hotspot autoconnect true
+nmcli con modify Hotspot connection.zone trusted
 
 
 
