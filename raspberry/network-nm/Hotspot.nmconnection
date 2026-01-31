@@ -3,12 +3,14 @@ id=Hotspot
 uuid=67c4d23d-dd98-411e-91ac-1a7539ec04d0
 type=wifi
 interface-name=wlan0
-timestamp=1769798587
+timestamp=1769868930
 zone=trusted
 
 [wifi]
 band=bg
+channel=7
 mode=ap
+powersave=2
 ssid=avnav
 
 [wifi-security]
