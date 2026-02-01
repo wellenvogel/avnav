@@ -3,7 +3,7 @@ id=Hotspot
 uuid=67c4d23d-dd98-411e-91ac-1a7539ec04d0
 type=wifi
 interface-name=wlan0
-timestamp=1769868930
+timestamp=1769942358
 zone=trusted
 
 [wifi]
@@ -11,7 +11,7 @@ band=bg
 channel=7
 mode=ap
 powersave=2
-ssid=avnav
+ssid=avnav1
 
 [wifi-security]
 group=ccmp;
@@ -22,10 +22,14 @@ psk=avnav-secret
 
 [ipv4]
 address1=192.168.30.10/24
+dhcp-send-hostname-deprecated=false
+dhcp-send-hostname=0
 method=shared
 
 [ipv6]
 addr-gen-mode=default
+dhcp-send-hostname-deprecated=false
+dhcp-send-hostname=0
 method=ignore
 
 [proxy]
