@@ -72,33 +72,6 @@ else
 fi
 LAST_DATA+=("LAST_PASSWD='$LAST_PASSWD'")
 
-if [ "$AVNAV_WIFI_CLIENT" != "$LAST_WIFI_CLIENT" ] ; then
-    #no need to handle force here as the wifi handling will directly access the set data
-    log "AVNAV_WIFI_CLIENT=$AVNAV_WIFI_CLIENT"
-    hasChanges=1
-    needsReboot=1
-    LAST_WIFI_CLIENT="$AVNAV_WIFI_CLIENT"
-else
-    log "AVNAV_WIFI_CLIENT unchanged"
-fi
-LAST_DATA+=("LAST_WIFI_CLIENT=\"$LAST_WIFI_CLIENT\"")
-
-if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] || [ $force = 1 -a "$AVNAV_HOSTNAME" != "" ]; then
-    log "AVNAV_HOSTNAME is set to $AVNAV_HOSTNAME"
-    current=`cat /etc/hostname | tr -d " \t\n\r"`
-    if [ "$current" = "$AVNAV_HOSTNAME" ]; then
-        log "hostname already correctly set in /etc/hostname"
-    else
-        echo "$AVNAV_HOSTNAME" > /etc/hostname
-        sed -i "s/127.0.1.1.*$current/127.0.1.1\t$AVNAV_HOSTNAME/g" /etc/hosts
-        needsReboot=1
-    fi
-    hasChanges=1
-    LAST_HOSTNAME="$AVNAV_HOSTNAME"
-else
-    log "AVNAV_HOSTNAME unchanged"
-fi
-LAST_DATA+=("LAST_HOSTNAME='$LAST_HOSTNAME'")
 
 if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL" -o $force = 1 ] ; then
     if [ "$AVNAV_KBLAYOUT" != "" -a "$AVNAV_KBMODEL" != "" ]; then
@@ -146,28 +119,6 @@ else
 fi
 LAST_DATA+=("LAST_TIMEZONE='$LAST_TIMEZONE'")
 
-if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "" ] || [ "$AVNAV_WIFI_COUNTRY" != "" -a $force = 1 ]; then
-    log "AVNAV_WIFI_COUNTRY changed to $AVNAV_WIFI_COUNTRY"
-    cfgfile=/etc/wpa_supplicant/wpa_supplicant.conf
-    current=`sed -n 's/^ *country *= *//p' $cfgfile | sed 's/#.*//'| tr -d '" \n\r'`
-    if [ "$current" = "$AVNAV_WIFI_COUNTRY" ] ; then
-        log "AVNAV_WIFI_COUNTRY already correctly set for wpa_supplicant"
-    else
-        if [ "$current" != "" ] ; then
-            sed -i "s/^ *country *=.*/country=$AVNAV_WIFI_COUNTRY/" $cfgfile
-        else
-            echo "" >> $cfgfile
-            echo "country=$AVNAV_WIFI_COUNTRY" >> $cfgfile
-        fi
-        needsReboot=1
-    fi
-    (raspi-config nonint do_wifi_country "$AVNAV_WIFI_COUNTRY") || log "unable to set wifi country in config, ignore"
-    hasChanges=1
-    LAST_WIFI_COUNTRY="$AVNAV_WIFI_COUNTRY"
-else
-    log "AVNAV_WIFI_COUNTRY unchanged"
-fi
-LAST_DATA+=("LAST_WIFI_COUNTRY='$LAST_WIFI_COUNTRY'")
 
 #check if the enabled state has changed
 # $1: lastval
@@ -371,6 +322,12 @@ else
     log "$driverscript not found, do not handle modules"
 fi
 
+NETWORK_SCRIPT="$pdir/network-nm/set-network.py"
+if [ -x "$NETWORK_SCRIPT" ] ; then
+    log "calling networking check $NETWORK_SCRIPT"
+    $NETWORK_SCRIPT
+    [ $? = 1 ] && needsReboot=1
+fi
 
 log "startup check done"
 if [ "$hasChanges" = 1 ]; then

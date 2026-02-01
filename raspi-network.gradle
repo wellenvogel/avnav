@@ -52,8 +52,7 @@ task build_raspi_network(type:Deb) {
         configurationFile("$POLKIT/$AVNPOLKIT")
     }
     packageGroup='misc'
-    //requires 'avnav'
-    //requires 'avnav-raspi-base'
+    requires 'avnav-raspi-base'
     requires 'python3-smbus' 
     requires 'jq'
     requires('network-manager','1.52',Flags.GREATER|Flags.EQUAL)

@@ -79,10 +79,11 @@ task build_raspi(type: Deb) {
         }
         from (LEGACY){
             include 'hosts'
-        }
-        from(BASE) {
             include 'avnav_server.xml'
             include 'ntp.conf'
+            fileMode 0644
+        }
+        from(BASE) {
             include 'avnav.conf'
             fileMode 0644
         }

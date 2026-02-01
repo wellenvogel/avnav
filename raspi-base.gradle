@@ -24,6 +24,14 @@ def versionFileName="raspi.version"
 def BASE='raspberry'
 task build_raspi_base(type:Deb) {
     group taskgroup
+    outputs.upToDateWhen { t->
+        def f=t.determineArchivePath();
+        if (! f.exists()) {
+            println("outfile $f not found, must execute")
+            return false;
+        }
+        return true;
+    }
     doFirst{
         assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
         version=project.avnavVersion
@@ -41,9 +49,8 @@ task build_raspi_base(type:Deb) {
     requires 'parted'
     requires 'bc'
     requires 'mpg123'
-    requires('ntp').or('ntpsec')
     requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
-    requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
+    //requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
     requires 'jq'
     packageName='avnav-raspi-base'
     user='root'
@@ -90,7 +97,7 @@ task build_raspi_base(type:Deb) {
         }
     }
         
-    postInstall file('raspberry/postinstall.base')
+    postInstall file('raspberry/postinstall')
     preInstall file('raspberry/preinstall')
 
 }

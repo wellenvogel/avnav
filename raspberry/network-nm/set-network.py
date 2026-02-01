@@ -35,6 +35,11 @@ class ConfigEntry:
         self.action=action
         self.type=type
 
+class CurrentConfig:
+    def __init__(self,cfg:ConfigEntry,value=None):
+        self.cfg=cfg
+        self.value=value
+
 PREFIX='AVNAV_'
 PLEN=len(PREFIX)
 
@@ -130,7 +135,7 @@ SETTINGS={
 def get_settings_defaults():
     rt={}
     for k,v in SETTINGS.items():
-        rt[PREFIX+k]=v.defv
+        rt[PREFIX+k]=CurrentConfig(v,v.defv)
     return rt
 
 def read_config(filename:str):
@@ -144,7 +149,7 @@ def read_config(filename:str):
         parts=line.split("=",1)
         if len(parts) == 2 and parts[0] in rt.keys():
             v=parts[1][1:-1]
-            rt[parts[0]]=v
+            rt[parts[0]].value=v
     return rt
 
 log(f"started: {' '.join(sys.argv[1:])}",console=True)
@@ -173,11 +178,14 @@ if current is None:
     log(f"{CFG} not found, using defaults")
     current=get_settings_defaults()
 changes={}
-for k,v in current.items():
-    cfg=SETTINGS.get(k[PLEN:])
-    lv=last.get(k)
-    if lv != v:
-        log(f"changed {k} to {v}")
+for k,cv in current.items():
+    cfg=cv.cfg
+    lv=last.get(k) or CurrentConfig(cfg)
+    #for install we only handle config file
+    if mode == M_INSTALL and cfg.type != ChangeType.NWMANAGER:
+        cv.value=lv.value
+    if lv.value != cv.value:
+        log(f"changed {k} to {cv.value}")
         changed=True
         if cfg:
             changes[cfg.type]=True
@@ -203,9 +211,10 @@ if changes.get(ChangeType.NWMANAGER):
     src=os.path.join(TEMPLATE_DIR,CON_FILE)
     target=os.path.join(CFG_DIR,CON_FILE)
     target_values={}
-    for k,v in current.items():
-        cfg=SETTINGS.get(k[PLEN:])
-        if cfg is None or not cfg.key:
+    for k,cv in current.items():
+        cfg=cv.cfg
+        v=cv.value
+        if not cfg.key:
             continue
         if cfg.check:
             err=cfg.check(v)
@@ -243,22 +252,24 @@ if changes.get(ChangeType.NWMANAGER):
         if rt != 0:
             rtc=RT_ERR
 #special actions            
-for k,v in current.items():
-    cfg=SETTINGS.get(k[PLEN:])
-    if not cfg or cfg.action is None:
+for k,cv in current.items():
+    cfg=cv.cfg
+    if cfg.action is None:
         continue
-    lv=last.get(k)
-    if lv == v:
+    lv=last.get(k) or CurrentConfig(cfg)
+    if lv.value == cv.value:
         continue
-    rt=cfg.action(lv,v)
+    rt=cfg.action(lv.value,v.value)
     if rt != RT_OK:
         rtc=RT_ERR            
 #writing last used
 try:
     log(f"writing used values to {LAST}")
     with open(LAST,"w") as wh:
-        for k,v in current.items():
-            wh.write(f"{k}={v}\n")
+        for k,cv in current.items():
+            if cv.value is None:
+                continue
+            wh.write(f"{k}={cv.value}\n")
     os.chmod(LAST,0o600)
 except Exception as e:
     log(f"unable to write last values to {LAST}:{e}",prio=syslog.LOG_ERR)
