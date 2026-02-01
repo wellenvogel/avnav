@@ -24,20 +24,26 @@ class ConfigEntry:
 
 PREFIX='AVNAV_'
 PLEN=len(PREFIX)
+
+def run_cmd(cmd,shell=False):
+    try:
+        result=subprocess.run(cmd,shell=shell,)
+        if result.returncode != 0:
+            log(f"setting wifi country with {' '.join(cmd)} failed",prio=syslog.LOG_ERR)
+            return result.returncode
+        return 0
+    except Exception as e:
+        log(f"unable to execute {' '.join(cmd)}: {e}")
+        return -1
 def wifi_country_action(old,new):
     if old == new:
         return RT_OK
     log(f"change wifi country to {new}")
     cmd=['raspi-config','nonint','do_wifi_country',new]
-    try:
-        result=subprocess.run(cmd,shell=False,)
-        if result.returncode != 0:
-            log(f"setting wifi country with {' '.join(cmd)} failed",prio=syslog.LOG_ERR)
-            return RT_ERR
+    rt=run_cmd(cmd)
+    if rt == 0:
         return RT_REBOOT
-    except Exception as e:
-        log(f"unable to execute {' '.join(cmd)}: {e}")
-        return RT_ERR
+    return RT_ERR
 
 def check_addr(v):
     ET="must look like 192.168.30.10/24"
@@ -61,13 +67,36 @@ def check_addr(v):
     except Exception as e:
         return f"error parsing {v}: {e}"
 
+def check_band(v):
+    ALLOWED=['bg','a']
+    if not v in ALLOWED:
+        return f"is not one of {' '.join(ALLOWED)}"
+
+def check_ssid(v):
+    if not v:
+        return "must not be empty"
+    if len(v) > 32:
+        return "must be max. 31 characters"
+
+def check_psk(v):
+    if not v:
+        return "must not be empty"
+    if len(v) < 8 or len(v) > 64:
+        return "invalid len (8...63 or 64 hex)"
+    if len(v) == 64:
+        #must be hex
+        if not re.match('^[0-9A-Fa-f]*$',v):
+            return "invalid hex"
+    else:
+        if not re.match('^[\u0020-\u007e]*$',v):
+            return "invalid character"     
 
 SETTINGS={
-    'SSID':ConfigEntry('ssid','avnav'),
-    'PSK':ConfigEntry('psk','avnav-secret'),
+    'SSID':ConfigEntry('ssid','avnav',check=check_ssid),
+    'PSK':ConfigEntry('psk','avnav-secret',check=check_psk),
     'WIFI_COUNTRY':ConfigEntry('','DE',action=wifi_country_action),
     'WIFI_INTF':ConfigEntry('interface','wlan0'),
-    'WIFI_BAND':ConfigEntry('band','bg'),
+    'WIFI_BAND':ConfigEntry('band','bg',check=check_band),
     'WIFI_CHANNEL':ConfigEntry('channel','7'),
     'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24',check=check_addr)
 }
@@ -163,7 +192,11 @@ else:
     except Exception as e:
         log(f"unable to write config to {target}: {e}",prio=syslog.LOG_ERR)           
         rtc=RT_ERR
-#TODO: handle reload/restart of NetworkManager
+if run_cmd(['systemctl','--quiet','is-active','NetworkManager']) == 0:
+    log("restarting NetworkManager")
+    rt=run_cmd(['systemctl','restart','NetworkManager'])
+    if rt != 0:
+        rtc=RT_ERR
 #special actions
 needs_reboot=False
 for k,v in current.items():
