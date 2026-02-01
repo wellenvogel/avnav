@@ -5,10 +5,16 @@ import syslog
 import sys
 import shutil
 import re
+import getopt
+
+M_NORMAL=0
+M_INSTALL=1
+mode=M_NORMAL
 RT_ERR=2
 RT_REBOOT=1
 RT_OK=0
-syslog.openlog(ident='avnav-set-network')
+LOGPRFX='avnav-set-network'
+syslog.openlog(ident=LOGPRFX)
 CFG='/boot/firmware/avnav.conf'
 LAST='/etc/avnav-network-checks'
 TEMPLATE_DIR=os.path.dirname(__file__)
@@ -24,6 +30,15 @@ class ConfigEntry:
 
 PREFIX='AVNAV_'
 PLEN=len(PREFIX)
+
+def log(msg,prio=syslog.LOG_INFO,console=False):
+    syslog.syslog(prio,msg)
+    if mode == M_INSTALL or console:
+        if prio != syslog.LOG_ERR:
+            print(f"{LOGPRFX}:{msg}")
+        else:
+            print(f"{LOGPRFX}: ERROR {msg}")
+
 
 def run_cmd(cmd,shell=False):
     try:
@@ -101,8 +116,6 @@ SETTINGS={
     'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24',check=check_addr)
 }
 
-def log(msg,prio=syslog.LOG_INFO):
-    syslog.syslog(prio,msg)
 def get_settings_defaults():
     rt={}
     for k,v in SETTINGS.items():
@@ -123,7 +136,16 @@ def read_config(filename:str):
             rt[parts[0]]=v
     return rt
 
-log("started")
+log(f"started: {' '.join(sys.argv[1:])}",console=True)
+try:
+    optlist,args=getopt.getopt(sys.argv[1:],'i')
+    for o,a in optlist:
+        if o == '-i':
+            mode=M_INSTALL
+except Exception as e:
+    log(str(e),console=True)
+    sys.exit(RT_ERR)
+
 current=read_config(CFG)
 last=read_config(LAST)
 changed=False
@@ -132,6 +154,10 @@ if last is None:
     log(f"{LAST} not found, assuming fresh install")
     changed=True
     last={}
+else:
+    if mode == M_INSTALL:
+        log("config already installed, do nothing")
+        sys.exit(0)
 if current is None:
     log(f"{CFG} not found, using defaults")
     current=get_settings_defaults()
@@ -223,7 +249,7 @@ except Exception as e:
 if needs_reboot:
     rtc=RT_REBOOT
 log(f"finishing with rt={rtc}")
-sys.exit(rtc)
+sys.exit(rtc if mode == M_NORMAL else 0)
 pass
 
 

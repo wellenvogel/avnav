@@ -90,11 +90,6 @@ task build_raspi_network(type:Deb) {
             include('avnav-ssh.service')
         }
     }
-    into('/lib/systemd/system'){
-        from(BASENW){
-            include 'avnav-network.service'
-        }
-    }
     into('/etc/sysctl.d'){
         from('raspberry'){
             include('99-zzavnavsysctl.conf')

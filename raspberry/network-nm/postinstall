@@ -1,11 +1,17 @@
 #! /bin/bash
 
-CFG=/etc/firewalld/firewalld.conf
-if [ -e "$CFG" ] ; then
-  echo "setting default zone for firewalld to trusted"
-  sed -i 's/.*DefaultZone.*/DefaultZone=trusted/' $CFG
+BASE=/usr/lib/avnav/raspberry/network-nm
+cmd=firewall-offline-cmd
+if systemctl --quiet is-active firewalld ; then
+  cmd=firewall-cmd
+fi
+current="`$cmd --get-default-zone`"
+if [ "$current" != "trusted" ] ; then
+  echo "current default zone is $current"
+  echo "setting default zone for firewalld to trusted with $cmd"
+  $cmd --set-default-zone trusted
 else
-  echo "firewalld $CFG not found, unable to set"
+  echo "firewall default zone already trusted"
 fi
 for f in 73-usb-net-by-mac.link 99-default.link
 do
@@ -17,3 +23,5 @@ do
     echo "$fn already removed"
   fi
 done
+"$BASE/set-network.py" -i
+
