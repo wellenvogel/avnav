@@ -16,7 +16,7 @@ current="`$cmd --get-default-zone`"
 if [ "$current" != "$DEFZONE" ] ; then
   echo "current default zone is $current"
   echo "setting default zone for firewalld to $DEFZONE with $cmd"
-  $cmd $permanent --set-default-zone $DEFZONE
+  $cmd --set-default-zone $DEFZONE
 else
   echo "firewall default zone already $DEFZONE"
 fi
@@ -53,9 +53,11 @@ if [ "$cfw" != "" ] ; then
   else
     echo remove port forwarding from 80 to $cfw
     $cmd $permanent --zone=$DEFZONE --remove-forward-port=port=80:proto=tcp:toport=$cfw
+    [ "$permanent" != "" ] && $cmd  --zone=$DEFZONE --remove-forward-port=port=80:proto=tcp:toport=$cfw
   fi
 fi
 if [ "$mustSet" = 1 ] ; then
   echo "set up port forwarding for port 80 to $port"
   $cmd $permanent --zone=$DEFZONE --add-forward-port=port=80:proto=tcp:toport=$port
+  [ "$permanent" != "" ] && $cmd --zone=$DEFZONE --add-forward-port=port=80:proto=tcp:toport=$port
 fi

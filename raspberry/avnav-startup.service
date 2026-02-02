@@ -1,7 +1,7 @@
 [Unit]
 Description=handle avnav.conf
 After=syslog.target
-WantedBy=NetworkManager
+Before=NetworkManager.service
 
 [Service]
 User=root
@@ -10,3 +10,4 @@ ExecStart=/usr/lib/avnav/raspberry/startup-check.sh
 
 [Install]
 WantedBy=multi-user.target
+

@@ -52,11 +52,12 @@ def log(msg,prio=syslog.LOG_INFO,console=False):
             print(f"{LOGPRFX}: ERROR {msg}")
 
 
-def run_cmd(cmd,shell=False):
+def run_cmd(cmd,shell=False,logErr=True):
     try:
         result=subprocess.run(cmd,shell=shell,)
         if result.returncode != 0:
-            log(f"setting wifi country with {' '.join(cmd)} failed",prio=syslog.LOG_ERR)
+            if logErr:
+                log(f"running {' '.join(cmd)} failed",prio=syslog.LOG_ERR)
             return result.returncode
         return 0
     except Exception as e:
@@ -161,123 +162,125 @@ try:
 except Exception as e:
     log(str(e),console=True)
     sys.exit(RT_ERR)
-
-current=read_config(CFG)
-last=read_config(LAST)
-changed=False
-actions=[]
-if last is None:
-    log(f"{LAST} not found, assuming fresh install")
-    changed=True
-    last={}
-else:
-    if mode == M_INSTALL:
-        log("config already installed, do nothing")
-        sys.exit(0)
-if current is None:
-    log(f"{CFG} not found, using defaults")
-    current=get_settings_defaults()
-changes={}
-for k,cv in current.items():
-    cfg=cv.cfg
-    lv=last.get(k) or CurrentConfig(cfg)
-    #for install we only handle config file
-    if mode == M_INSTALL and cfg.type != ChangeType.NWMANAGER:
-        cv.value=lv.value
-    if lv.value != cv.value:
-        log(f"changed {k} to {cv.value}")
+try:
+    current=read_config(CFG)
+    last=read_config(LAST)
+    changed=False
+    actions=[]
+    if last is None:
+        log(f"{LAST} not found, assuming fresh install")
         changed=True
-        if cfg:
-            changes[cfg.type]=True
-if not changed:
-    log("no changes, exiting")
-    sys.exit(0)
-rtc=RT_OK
-if changes.get(ChangeType.NWMANAGER):
-    log("copying config from templates")
-    for cf in COPY_FILES:
-        src=os.path.join(TEMPLATE_DIR,cf)
-        target=os.path.join(CFG_DIR,cf)
-        if not os.path.exists(src):
-            continue
-        if os.path.exists(target):
-            os.unlink(target)
-        log(f"copying {src} to {target}")
-        if not shutil.copyfile(src,target):
-            log(f"error copying {src} to {target}",prio=syslog.LOG_ERR)
-            rtc=RT_ERR
-        else:
-            os.chmod(target,0o600)
-    src=os.path.join(TEMPLATE_DIR,CON_FILE)
-    target=os.path.join(CFG_DIR,CON_FILE)
-    target_values={}
+        last={}
+    else:
+        if mode == M_INSTALL:
+            log("config already installed, do nothing")
+            sys.exit(0)
+    if current is None:
+        log(f"{CFG} not found, using defaults")
+        current=get_settings_defaults()
+    changes={}
     for k,cv in current.items():
         cfg=cv.cfg
-        v=cv.value
-        if not cfg.key:
-            continue
-        if cfg.check:
-            err=cfg.check(v)
-            if err is not None:
-                log(f"invalid value {v} for {k}: {err}, falling back to default {cfg.defv}")
-                v=cfg.defv
-        target_values[cfg.key]=v
-    if not os.path.exists(src):
-        log(f"{src} not found",prio=syslog.LOG_ERR)
-    else:
-        try:
-            if os.path.exists(target):
-                log(f"removing existing {target}")
-                os.unlink(target)
-            log(f"writing config from {src} to {target}")
-            with open(src,"r") as rh:
-                with open(target,"w") as wh:
-                    for line in rh:
-                        parts=line.split("=",1)
-                        if len(parts) == 2 and parts[0] in target_values.keys():
-                            v=target_values[parts[0]]
-                            log(f"setting {parts[0]} to {v}")
-                            wh.write(f"{parts[0]}={v}\n")
-                        else:
-                            wh.write(line)
-                    wh.close()
-            os.chmod(target,0o600)        
-
-        except Exception as e:
-            log(f"unable to write config to {target}: {e}",prio=syslog.LOG_ERR)           
-            rtc=RT_ERR
-    if run_cmd(['systemctl','--quiet','is-active','NetworkManager']) == 0:
-        log("restarting NetworkManager")
-        rt=run_cmd(['systemctl','restart','NetworkManager'])
-        if rt != 0:
-            rtc=RT_ERR
-#special actions            
-for k,cv in current.items():
-    cfg=cv.cfg
-    if cfg.action is None:
-        continue
-    lv=last.get(k) or CurrentConfig(cfg)
-    if lv.value == cv.value:
-        continue
-    rt=cfg.action(lv.value,v.value)
-    if rt != RT_OK:
-        rtc=RT_ERR            
-#writing last used
-try:
-    log(f"writing used values to {LAST}")
-    with open(LAST,"w") as wh:
-        for k,cv in current.items():
-            if cv.value is None:
+        lv=last.get(k) or CurrentConfig(cfg)
+        #for install we only handle config file
+        if mode == M_INSTALL and cfg.type != ChangeType.NWMANAGER:
+            cv.value=lv.value
+        if lv.value != cv.value:
+            log(f"changed {k} to {cv.value}")
+            changed=True
+            if cfg:
+                changes[cfg.type]=True
+    if not changed:
+        log("no changes, exiting")
+        sys.exit(0)
+    rtc=RT_OK
+    if changes.get(ChangeType.NWMANAGER):
+        log("copying config from templates")
+        for cf in COPY_FILES:
+            src=os.path.join(TEMPLATE_DIR,cf)
+            target=os.path.join(CFG_DIR,cf)
+            if not os.path.exists(src):
                 continue
-            wh.write(f"{k}={cv.value}\n")
-    os.chmod(LAST,0o600)
+            if os.path.exists(target):
+                os.unlink(target)
+            log(f"copying {src} to {target}")
+            if not shutil.copyfile(src,target):
+                log(f"error copying {src} to {target}",prio=syslog.LOG_ERR)
+                rtc=RT_ERR
+            else:
+                os.chmod(target,0o600)
+        src=os.path.join(TEMPLATE_DIR,CON_FILE)
+        target=os.path.join(CFG_DIR,CON_FILE)
+        target_values={}
+        for k,cv in current.items():
+            cfg=cv.cfg
+            v=cv.value
+            if not cfg.key:
+                continue
+            if cfg.check:
+                err=cfg.check(v)
+                if err is not None:
+                    log(f"invalid value {v} for {k}: {err}, falling back to default {cfg.defv}")
+                    v=cfg.defv
+            target_values[cfg.key]=v
+        if not os.path.exists(src):
+            log(f"{src} not found",prio=syslog.LOG_ERR)
+        else:
+            try:
+                if os.path.exists(target):
+                    log(f"removing existing {target}")
+                    os.unlink(target)
+                log(f"writing config from {src} to {target}")
+                with open(src,"r") as rh:
+                    with open(target,"w") as wh:
+                        for line in rh:
+                            parts=line.split("=",1)
+                            if len(parts) == 2 and parts[0] in target_values.keys():
+                                v=target_values[parts[0]]
+                                log(f"setting {parts[0]} to {v}")
+                                wh.write(f"{parts[0]}={v}\n")
+                            else:
+                                wh.write(line)
+                        wh.close()
+                os.chmod(target,0o600)        
+
+            except Exception as e:
+                log(f"unable to write config to {target}: {e}",prio=syslog.LOG_ERR)           
+                rtc=RT_ERR
+        if run_cmd(['systemctl','--quiet','is-active','NetworkManager'],logErr=False) == 0:
+            log("restarting NetworkManager")
+            rt=run_cmd(['systemctl','restart','NetworkManager'])
+            if rt != 0:
+                rtc=RT_ERR
+    #special actions            
+    for k,cv in current.items():
+        cfg=cv.cfg
+        if cfg.action is None:
+            continue
+        lv=last.get(k) or CurrentConfig(cfg)
+        if lv.value == cv.value:
+            continue
+        rt=cfg.action(lv.value,cv.value)
+        if rt != RT_OK:
+            rtc=RT_ERR            
+    #writing last used
+    try:
+        log(f"writing used values to {LAST}")
+        with open(LAST,"w") as wh:
+            for k,cv in current.items():
+                if cv.value is None:
+                    continue
+                wh.write(f"{k}={cv.value}\n")
+        os.chmod(LAST,0o600)
+    except Exception as e:
+        log(f"unable to write last values to {LAST}:{e}",prio=syslog.LOG_ERR)
+        rtc=RT_ERR
+    if rtc == RT_OK and changes.get(ChangeType.REBOOT):
+        rtc=RT_REBOOT
+    log(f"finishing with rt={rtc}")
+    sys.exit(rtc if mode == M_NORMAL else 0)
 except Exception as e:
-    log(f"unable to write last values to {LAST}:{e}",prio=syslog.LOG_ERR)
-    rtc=RT_ERR
-if rtc == RT_OK and changes.get(ChangeType.REBOOT):
-    rtc=RT_REBOOT
-log(f"finishing with rt={rtc}")
-sys.exit(rtc if mode == M_NORMAL else 0)
-pass
+    log(e,prio=syslog.LOG_ERR)
+    sys.exit(RT_ERR if mode == M_NORMAL else 0)
 
 
