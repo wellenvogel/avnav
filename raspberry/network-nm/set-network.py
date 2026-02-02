@@ -133,16 +133,16 @@ SETTINGS={
     'HOSTNAME':ConfigEntry('','avnav',type=ChangeType.HOSTNAME,action=hostname_action)
 }
 
-def get_settings_defaults():
+def get_settings_defaults(values:bool=True):
     rt={}
     for k,v in SETTINGS.items():
-        rt[PREFIX+k]=CurrentConfig(v,v.defv)
+        rt[PREFIX+k]=CurrentConfig(v,v.defv if values else None)
     return rt
 
-def read_config(filename:str):
+def read_config(filename:str,omitDefault:bool=False):
     if not os.path.exists(filename):
         return
-    rt=get_settings_defaults()
+    rt=get_settings_defaults(not omitDefault)
     result=subprocess.run(f". \"{filename}\"; set",shell=True,capture_output=True,text=True,errors='ignore')
     if result.returncode != 0:
         return
@@ -164,7 +164,7 @@ except Exception as e:
     sys.exit(RT_ERR)
 try:
     current=read_config(CFG)
-    last=read_config(LAST)
+    last=read_config(LAST,omitDefault=True)
     changed=False
     actions=[]
     if last is None:

@@ -60,7 +60,6 @@ task build_raspi(type: Deb) {
     into ('/usr/lib/avnav/raspberry') {
         from(BASE){
             fileMode 0755
-            include 'settime.sh'
             include 'sound.sh'
             include 'setup-*.sh'
             include 'prestart.sh'
@@ -68,6 +67,7 @@ task build_raspi(type: Deb) {
         }
         from(LEGACY){
             fileMode 0755
+            include 'settime.sh'
             include 'hostapd'
             include 'restore-iptables.sh'
             include 'iptables-ext.sh'
