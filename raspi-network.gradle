@@ -65,7 +65,8 @@ task build_raspi_network(type:Deb) {
     into ("$TARGET/$NWSUB") {
         from(BASENW){
             fileMode 0755
-            include 'set-network.py' 
+            include 'set-network.py'
+            include 'set-firewall.sh' 
         }
         from(BASENW) {
             include CONNECTIONS

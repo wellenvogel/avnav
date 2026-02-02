@@ -1,7 +1,8 @@
 #! /bin/bash
 pdir=`dirname $0`
 mountdir="$pdir/raspi-mount"
-partdirs="p1 p2"
+partdirs="p2 p1"
+MP="/boot/firmware"
 loopdevice=""
 #set -x
 usage(){
@@ -9,12 +10,13 @@ usage(){
 }
 unmount_loop(){
     [ "$loopdevice" = "" ] && return 0
-    for pd in $partdirs
+    for pd in `echo $partdirs | tr ' ' '\n' | tac`
     do
         log umount $loopdevice$pd
         umount "$loopdevice$pd"
-        umount "$mountdir/$pd" 2> /dev/null
     done
+    umount "$mountdir/p2" 2> /dev/null
+    umount "$mountdir/p2$MP" 2> /dev/null
     log losetup -d $loopdevice
     losetup -d "$loopdevice"
 }
@@ -52,12 +54,23 @@ if [ "$mode" = "mount" ] ; then
     $0 umount $1 ignore
     loopdevice="`losetup -f --show -P $1`"
     [ "$loopdevice" = "" ] && err no loopdevice after mount
+    p2path=""
     for pd in $partdirs
     do
         fn="$loopdevice$pd"
         [ ! -e "$fn" ] && "partition $fn not found"
-        log mounting $fn to $mountdir/$pd
-        mount $fn "$mountdir/$pd"
+        if [ "$pd" = "p1" ] ; then
+            [ "$p2path" = "" ] && err "partition p2 not mounted before p1"
+            mpath="$p2path$MP"
+            if [ ! -d "$mpath" ] ; then
+                mkdir -p $mpath || err "unable to mkdir $mpath"
+            fi
+        else
+            mpath="$mountdir/$pd"
+            p2path=$mpath
+        fi
+        log mounting $fn to $mpath
+        mount $fn "$mpath" || err "unable to mount $fn to $mpath"
     done
     exit 0
 fi

@@ -1,24 +1,8 @@
 #! /bin/bash
 
 BASE=/usr/lib/avnav/raspberry/network-nm
-cmd=firewall-offline-cmd
-status=`systemctl is-system-running` || true
-echo "systemd status $status"
-if [ "$status" != "offline" ] ; then
-  if systemctl --quiet is-active firewalld ; then
-    cmd=firewall-cmd
-  else
-    echo "firewalld not running, setting up offline"  
-  fi
-fi
-current="`$cmd --get-default-zone`"
-if [ "$current" != "trusted" ] ; then
-  echo "current default zone is $current"
-  echo "setting default zone for firewalld to trusted with $cmd"
-  $cmd --set-default-zone trusted
-else
-  echo "firewall default zone already trusted"
-fi
+FWSCRIPT="$BASE/set-firewall.sh"
+$FWSCRIPT -i || true
 for f in 73-usb-net-by-mac.link 99-default.link
 do
   fn=/etc/systemd/network/$f

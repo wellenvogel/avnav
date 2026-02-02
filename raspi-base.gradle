@@ -24,6 +24,8 @@ def versionFileName="raspi.version"
 def BASE='raspberry'
 task build_raspi_base(type:Deb) {
     group taskgroup
+    assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
+    version=project.avnavVersion
     outputs.upToDateWhen { t->
         def f=t.determineArchivePath();
         if (! f.exists()) {
@@ -33,8 +35,6 @@ task build_raspi_base(type:Deb) {
         return true;
     }
     doFirst{
-        assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
-        version=project.avnavVersion
         def vFile=file("$buildDir/$versionFileName")
         logger.info("vfile=${vFile}")
 	    if (! vFile.getParentFile().exists()) vFile.getParentFile().mkdirs()
@@ -63,6 +63,7 @@ task build_raspi_base(type:Deb) {
             include 'setup-*.sh'
             include 'prestart.sh'
             include 'uart_control'
+            include 'setup-can.sh'
         }
         from(BASE) {
             include 'avnav_server.xml'
@@ -94,6 +95,7 @@ task build_raspi_base(type:Deb) {
     into('/usr/lib/systemd/system'){
         from(BASE){
             include('avnav-startup.service')
+            include('can-if@.service')
         }
     }
         
