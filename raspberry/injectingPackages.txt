@@ -8,11 +8,18 @@ img=.....img
 (4) commands:
 apt update
 apt install ./root/...
-(5) if size is to small:
-(5.1) raspi2.sh umount $img
-(5.1) dd bs=1M count=400 < /dev/zero >> $img
-(5.2) losetup -P --show -f $img
-(5.3) use gparted to enlarge partion
-(5.4) losetup -d xxx #from 5.2
-...mount
+(5) if size is to small: - extend by e.g. 1200M
+./raspi2.sh extend $img 1200
+#will bring up gparted - enlarge part2 in UI
+
+(6) enable ssh
+systemctl enable ssh
+(7) disable raspi-config on boot
+systemctl disable userconfig
+(7.1) default passwd for pi
+passwd pi
+(8) prepare xui
+/usr/lib/avnav/raspberry/xui/setup.sh
+
+
 

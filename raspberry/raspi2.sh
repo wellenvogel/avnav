@@ -40,6 +40,11 @@ ensure_mp(){
     done
 }
 
+do_losetup(){
+    loopdevice="`losetup -f --show -P $1`"
+    [ "$loopdevice" = "" ] && err no loopdevice after mount2yy
+}
+
 if [ "$*" = "" ] ; then
     usage
     err missing parameter
@@ -52,8 +57,7 @@ if [ "$mode" = "mount" ] ; then
     [ ! -e "$1" ] && err "$1 not found"
     ensure_mp
     $0 umount $1 ignore
-    loopdevice="`losetup -f --show -P $1`"
-    [ "$loopdevice" = "" ] && err no loopdevice after mount
+    do_losetup  $1
     p2path=""
     for pd in $partdirs
     do
@@ -79,8 +83,7 @@ if [ "$mode" = "losetup" ] ; then
     [ ! -e "$1" ] && err "$1 not found"
     ensure_mp
     $0 umount $1 ignore
-    loopdevice="`losetup -f --show -P $1`"
-    [ "$loopdevice" = "" ] && err no loopdevice after mount
+    do_losetup  $1
     echo loopdevice $loopdevice
     exit 0
 fi
@@ -95,6 +98,19 @@ if [ "$mode" = "umount" ] ; then
     do
         unmount_loop
     done
+    exit 0
+fi
+if [ "$mode" = "extend" ] ; then
+    [ "$1" = "" ] && err "missing filename"
+    [ ! -f "$1" ] && err "file $1 not found"
+    [ "$2" = "" ] && err "missing size (MB)"
+    ensure_mp
+    $0 umount $1 ignore
+    echo "adding $2 MB to $1"
+    dd bs=1M count=$2 < /dev/zero >> $1 || err "unable to enlarge $1"
+    do_losetup  $1
+    gparted $loopdevice
+    unmount_loop
     exit 0
 fi
 err invalid mode $mode
