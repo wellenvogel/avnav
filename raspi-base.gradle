@@ -49,6 +49,7 @@ task build_raspi_base(type:Deb) {
     requires 'parted'
     requires 'bc'
     requires 'mpg123'
+    requires 'ntpsec-ntpdate'
     requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
     //requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
     requires 'jq'
