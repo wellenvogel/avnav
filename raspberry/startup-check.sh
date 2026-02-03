@@ -89,6 +89,7 @@ if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL
             echo "XKBVARIANT=\"\"" >> $kbfile
             echo "XKBOPTIONS=\"\"" >> $kbfile
             dpkg-reconfigure -f noninteractive keyboard-configuration
+            setupcon || echo "setupcon failed"
         fi
         hasChanges=1
         LAST_KBLAYOUT="$AVNAV_KBLAYOUT"
