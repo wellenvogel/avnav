@@ -340,15 +340,28 @@ if [ "$hasChanges" = 1 ]; then
     done
     chmod 600 $LAST
 fi
+BOOTFLAG=/etc/avnav-reboot-flag
 if [ $needsReboot = 1 ] ; then
     if [ "$1" = "noreboot" ] ; then
         echo "***reboot needed***"
         exit 2
     fi
+    if [ -f "$BOOTFLAG" ] ; then
+        echo "***ERROR: reboot needed but bootflag $BOOTFLAG found"
+        echo "*** skip rebooting and allow reboot on next run"
+        rm -f "$BOOTFLAG"
+        exit 0
+    fi
+    #create a bootflag file
+    #to avoid reboot loops on errors
+    touch "$BOOTFLAG"
     echo "****rebooting now****"
     log "****rebooting now****"
     reboot
+    exit 0
 fi
+#allow reboot on next check
+rm -f "$BOOTFLAG"
 exit 0    
 
 
