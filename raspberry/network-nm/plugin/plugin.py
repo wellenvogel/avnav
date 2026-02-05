@@ -274,7 +274,7 @@ class Plugin(object):
         except Exception as e:
             self.api.error(f"Exception getting {intf} for {path}: {e}")
             return {}
-    def getInterfaceProps(self,path,includeIpConfig=True):
+    def getDeviceProps(self,path,includeIpConfig=True):
         translations = [
             PropsTranslation('Interface'),
             PropsTranslation('Driver'),
@@ -289,14 +289,14 @@ class Plugin(object):
         props = self.get_props(device, nm_base + ".Device")
         return self.translate_props(props, translations)
 
-    def getInterfaces(self,includeIpConfig=True):
+    def getDevices(self,includeIpConfig=True):
         '''
         see network manager examples
         '''
         nm=self.nmBase()
         rt=[]
         for d in nm.GetDevices():
-            converted=self.getInterfaceProps(d,includeIpConfig=includeIpConfig)
+            converted=self.getDeviceProps(d,includeIpConfig=includeIpConfig)
             rt.append(converted)
         return rt
 
@@ -312,9 +312,13 @@ class Plugin(object):
         except Exception as e:
             pass
 
-    def getConnectionInfo(self,path,includeSecrets=False):
+    def getConnectionInfo(self,path,includeSecrets=False,type=None):
         proxy = self.nm(path, nm_base + ".Settings.Connection")
         config = proxy.GetSettings()
+        if type is not None:
+            con=config.get('connection',{})
+            if con.get('type') != type:
+                return None
         if includeSecrets:
             self.mergeSecrets(proxy, config, "802-11-wireless")
             self.mergeSecrets(proxy, config, "802-11-wireless-security")
@@ -323,12 +327,13 @@ class Plugin(object):
             self.mergeSecrets(proxy, config, "cdma")
             self.mergeSecrets(proxy, config, "ppp")
         return config
-    def getConnections(self,includeSecrets=False):
+    def getConnections(self,includeSecrets=False,type=None):
         settings=self.nm("Settings",nm_base+".Settings")
         rt=[]
         for path in settings.ListConnections():
-            config=self.getConnectionInfo(path,includeSecrets)
-            rt.append(config)
+            config=self.getConnectionInfo(path,includeSecrets,type=type)
+            if config:
+                rt.append(config)
         return rt
     ACSTATE={
         0: "Unknown",
@@ -337,19 +342,19 @@ class Plugin(object):
         3: "Deactivating",
         4: "Deactivated",
     }
-    def getActiveConnections(self,includeSecrets=False,includeInterfaces=True,includeIPConfig=False):
+    def getActiveConnections(self,includeSecrets=False,includeDevices=True,includeIPConfig=False,type=None):
         rt=[]
         nm=self.nmBase()
         activeConnections=self.get_props(nm,nm_base,'ActiveConnections')
         if activeConnections is None:
             return rt
-        if includeInterfaces:
+        if includeDevices:
             def get_devices(dlist):
                 rt=[]
                 if not dlist:
                     return rt
                 for d in dlist:
-                    rt.append(self.getInterfaceProps(d,includeIpConfig=includeIPConfig))
+                    rt.append(self.getDeviceProps(d,includeIpConfig=includeIPConfig))
                 return rt
         else:
             def get_devices(dlist):
@@ -365,6 +370,8 @@ class Plugin(object):
         for ac in activeConnections:
             acproxy=self.nm(ac)
             props=self.get_props(acproxy,nm_base+".Connection.Active")
+            if type is not None and type != props.get('Type'):
+                continue
             connection=self.translate_props(props,translations)
             rt.append(connection)
         return rt
@@ -373,17 +380,17 @@ class Plugin(object):
         try:
             data = None
             includeSecrets = self.get_bool_arg(args, 'includeSecrets', True)
-            includeInterfaces = self.get_bool_arg(args, 'includeInterfaces', True)
+            includeDevices = self.get_bool_arg(args, 'includeDevices', True)
             includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', True)
+            type=self.get_arg(args, 'type')
             if url == 'test':
                 pass
-            elif url == 'interfaces':
-                data = self.getInterfaces(includeIpConfig=includeIpConfig)
+            elif url == 'devices':
+                data = self.getDevices(includeIpConfig=includeIpConfig)
             elif url == 'connections':
-                includeSecrets=self.get_arg(args,'includeSecrets',True)
-                data=self.getConnections(includeSecrets)
+                data=self.getConnections(includeSecrets,type=type)
             elif url == 'activeConnections':
-                data=self.getActiveConnections(includeSecrets,includeInterfaces,includeIpConfig)
+                data=self.getActiveConnections(includeSecrets,includeDevices,includeIpConfig,type=type)
             elif url.startswith('path/'):
                 path = url[5:]
                 interface = self.get_arg(args, 'interface')
