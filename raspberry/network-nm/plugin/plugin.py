@@ -276,8 +276,8 @@ class Plugin(object):
         translations=[
             PropsTranslation('Interface'),
             PropsTranslation('Driver'),
-            PropsTranslation('Ip4Config',translator=lambda x: self.getIpConfig(x,"org.freedesktop.NetworkManager.IP4Config")),
-            PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x,"org.freedesktop.NetworkManager.IP6Config")),
+            PropsTranslation('Ip4Config',translator=lambda x: self.getIpConfig(x,nm_base+".IP4Config")),
+            PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x,nm_base+".IP6Config")),
             PropsTranslation('DeviceType',enumValues=self.DeviceType),
             PropsTranslation('State',enumValues=self.State),
             PropsTranslation('HwAddress'),
@@ -287,9 +287,36 @@ class Plugin(object):
         rt=[]
         for d in nm.GetDevices():
             device=self.nm(path=d)
-            props=self.get_props(device, "org.freedesktop.NetworkManager.Device")
+            props=self.get_props(device, nm_base+".Device")
             converted=self.translate_props(props,translations)
             rt.append(converted)
+        return rt
+
+    def mergeSecrets(self,proxy, config, setting_name):
+        try:
+            # returns a dict of dicts mapping name::setting, where setting is a dict
+            # mapping key::value.  Each member of the 'setting' dict is a secret
+            secrets = proxy.GetSecrets(setting_name)
+            # Copy the secrets into our connection config
+            for setting in secrets:
+                for key in secrets[setting]:
+                    config[setting_name][key] = secrets[setting][key]
+        except Exception as e:
+            pass
+
+    def getConnections(self):
+        settings=self.nm("Settings",nm_base+".Settings")
+        rt=[]
+        for path in settings.ListConnections():
+            proxy=self.nm(path,nm_base+".Settings.Connection")
+            config=proxy.GetSettings()
+            self.mergeSecrets(proxy, config, "802-11-wireless")
+            self.mergeSecrets(proxy, config, "802-11-wireless-security")
+            self.mergeSecrets(proxy, config, "802-1x")
+            self.mergeSecrets(proxy, config, "gsm")
+            self.mergeSecrets(proxy, config, "cdma")
+            self.mergeSecrets(proxy, config, "ppp")
+            rt.append(config)
         return rt
 
     def handleApiRequest(self, url, handler, args):
@@ -299,6 +326,8 @@ class Plugin(object):
                 pass
             elif url == 'interfaces':
                 data = self.getInterfaces()
+            elif url == 'connections':
+                data=self.getConnections()
             elif url.startswith('path/'):
                 path = url[5:]
                 interface = self.get_arg(args, 'interface')
