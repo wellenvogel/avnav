@@ -199,11 +199,16 @@ class Plugin(object):
         d["path"] = path
         return d
 
-    def get_arg(self, args, key):
+    def get_arg(self, args, key,bool=False):
         v = args.get(key)
-        if v is None:
-            return
+        if v is None or len(v) < 1:
+            return None
         return v[0]
+    def get_bool_arg(self, args, key, default=False):
+        v = self.get_arg(args, key)
+        if v is None:
+            return default
+        return v[0].lower() == "true"
 
     def get_props(self, object, interface, prop=None):
         "get props from dbus obj as dict"
@@ -269,26 +274,29 @@ class Plugin(object):
         except Exception as e:
             self.api.error(f"Exception getting {intf} for {path}: {e}")
             return {}
-    def getInterfaces(self):
-        '''
-        see network manager examples
-        '''
-        translations=[
+    def getInterfaceProps(self,path,includeIpConfig=True):
+        translations = [
             PropsTranslation('Interface'),
             PropsTranslation('Driver'),
-            PropsTranslation('Ip4Config',translator=lambda x: self.getIpConfig(x,nm_base+".IP4Config")),
-            PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x,nm_base+".IP6Config")),
-            PropsTranslation('DeviceType',enumValues=self.DeviceType),
-            PropsTranslation('State',enumValues=self.State),
+            PropsTranslation('Ip4Config', translator=lambda x: self.getIpConfig(x, nm_base + ".IP4Config") if includeIpConfig else None),
+            PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x, nm_base + ".IP6Config") if includeIpConfig else None),
+            PropsTranslation('DeviceType', enumValues=self.DeviceType),
+            PropsTranslation('State', enumValues=self.State),
             PropsTranslation('HwAddress'),
             PropsTranslation('Managed')
         ]
+        device = self.nm(path=path)
+        props = self.get_props(device, nm_base + ".Device")
+        return self.translate_props(props, translations)
+
+    def getInterfaces(self,includeIpConfig=True):
+        '''
+        see network manager examples
+        '''
         nm=self.nmBase()
         rt=[]
         for d in nm.GetDevices():
-            device=self.nm(path=d)
-            props=self.get_props(device, nm_base+".Device")
-            converted=self.translate_props(props,translations)
+            converted=self.getInterfaceProps(d,includeIpConfig=includeIpConfig)
             rt.append(converted)
         return rt
 
@@ -304,30 +312,78 @@ class Plugin(object):
         except Exception as e:
             pass
 
-    def getConnections(self):
-        settings=self.nm("Settings",nm_base+".Settings")
-        rt=[]
-        for path in settings.ListConnections():
-            proxy=self.nm(path,nm_base+".Settings.Connection")
-            config=proxy.GetSettings()
+    def getConnectionInfo(self,path,includeSecrets=False):
+        proxy = self.nm(path, nm_base + ".Settings.Connection")
+        config = proxy.GetSettings()
+        if includeSecrets:
             self.mergeSecrets(proxy, config, "802-11-wireless")
             self.mergeSecrets(proxy, config, "802-11-wireless-security")
             self.mergeSecrets(proxy, config, "802-1x")
             self.mergeSecrets(proxy, config, "gsm")
             self.mergeSecrets(proxy, config, "cdma")
             self.mergeSecrets(proxy, config, "ppp")
+        return config
+    def getConnections(self,includeSecrets=False):
+        settings=self.nm("Settings",nm_base+".Settings")
+        rt=[]
+        for path in settings.ListConnections():
+            config=self.getConnectionInfo(path,includeSecrets)
             rt.append(config)
+        return rt
+    ACSTATE={
+        0: "Unknown",
+        1: "Activating",
+        2: "Activated",
+        3: "Deactivating",
+        4: "Deactivated",
+    }
+    def getActiveConnections(self,includeSecrets=False,includeInterfaces=True,includeIPConfig=False):
+        rt=[]
+        nm=self.nmBase()
+        activeConnections=self.get_props(nm,nm_base,'ActiveConnections')
+        if activeConnections is None:
+            return rt
+        if includeInterfaces:
+            def get_devices(dlist):
+                rt=[]
+                if not dlist:
+                    return rt
+                for d in dlist:
+                    rt.append(self.getInterfaceProps(d,includeIpConfig=includeIPConfig))
+                return rt
+        else:
+            def get_devices(dlist):
+                return None
+        translations=[
+            PropsTranslation('Connection',translator=lambda x: self.getConnectionInfo(x,includeSecrets=includeSecrets)),
+            PropsTranslation('Uuid'),
+            PropsTranslation('Type'),
+            PropsTranslation('State',enumValues=self.ACSTATE),
+            PropsTranslation('Id'),
+            PropsTranslation('Devices',translator=get_devices),
+        ]
+        for ac in activeConnections:
+            acproxy=self.nm(ac)
+            props=self.get_props(acproxy,nm_base+".Connection.Active")
+            connection=self.translate_props(props,translations)
+            rt.append(connection)
         return rt
 
     def handleApiRequest(self, url, handler, args):
         try:
             data = None
+            includeSecrets = self.get_bool_arg(args, 'includeSecrets', True)
+            includeInterfaces = self.get_bool_arg(args, 'includeInterfaces', True)
+            includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', True)
             if url == 'test':
                 pass
             elif url == 'interfaces':
-                data = self.getInterfaces()
+                data = self.getInterfaces(includeIpConfig=includeIpConfig)
             elif url == 'connections':
-                data=self.getConnections()
+                includeSecrets=self.get_arg(args,'includeSecrets',True)
+                data=self.getConnections(includeSecrets)
+            elif url == 'activeConnections':
+                data=self.getActiveConnections(includeSecrets,includeInterfaces,includeIpConfig)
             elif url.startswith('path/'):
                 path = url[5:]
                 interface = self.get_arg(args, 'interface')
