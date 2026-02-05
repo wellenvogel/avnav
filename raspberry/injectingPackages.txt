@@ -20,6 +20,3 @@ systemctl disable userconfig
 passwd pi
 (8) prepare xui
 /usr/lib/avnav/raspberry/xui/setup.sh
-
-
-
