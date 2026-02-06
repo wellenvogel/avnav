@@ -9,7 +9,6 @@ Glib = None
 try:
     import dbus.glib
     from dbus import DBusException
-
     hasDbus = True
     from gi.repository import GLib
 except:
@@ -136,7 +135,12 @@ class PropsTranslation:
         else:
             outprops[ok]=v
 
-
+class LocalBus(threading.local):
+    def __init__(self):
+        if hasDbus:
+            self.bus=dbus.SystemBus()
+        else:
+            self.bus=None
 class Plugin(object):
 
     @classmethod
@@ -150,8 +154,7 @@ class Plugin(object):
         # we register an handler for API requests
         self.api.registerRequestHandler(self.handleApiRequest)
         self.api.registerRestart(self.stop)
-        self.loop = None
-        self.bus = None
+        self.bus=LocalBus()
 
     def build_path(self,path):
         path = path if path.startswith("/") else nm_path + "/" + path if path else nm_path
@@ -174,10 +177,11 @@ class Plugin(object):
         return path
     def nm(self, path="", interface=None):
         "access NM on dbus"
-        if self.bus is None:
-            return
+        bus=self.bus.bus
+        if bus is None:
+            raise Exception(f"cannot access NM on dbus")
         path = self.build_path(path)
-        obj = self.bus.get_object(nm_base, path)
+        obj = bus.get_object(nm_base, path)
         if interface is not None:
             return dbus.Interface(obj, interface)
         else:
@@ -187,7 +191,7 @@ class Plugin(object):
         return self.nm(interface=nm_base)
 
     def stop(self):
-        self._stopLoop()
+        pass
 
     def run(self):
         """
@@ -199,32 +203,9 @@ class Plugin(object):
             raise Exception("no DBUS installed, cannot run")
         self.api.log("started")
         self.api.setStatus('STARTED', 'starting')
-        self.loop = None
-        self.loop = GLib.MainLoop()
-        loopThread = threading.Thread(target=self._dbusLoop, daemon=True, name="NWM handler DBUS loop")
-        # loopThread.start()
-        self.bus = dbus.SystemBus(mainloop=self.loop)
         self.api.setStatus('NMEA', 'running')
         while not self.api.shouldStopMainThread():
             time.sleep(1)
-        self._stopLoop()
-
-    def _stopLoop(self):
-        if self.loop is not None:
-            try:
-                self.loop.quit()
-            except Exception as x:
-                self.api.error("unable to stop dbus event loop %s" % str(x))
-            self.loop = None
-
-    def _dbusLoop(self):
-        if self.loop is None:
-            return
-        try:
-            self.loop.run()
-        except Exception as e:
-            self.api.error(f"Exception in DBUS loop {e}")
-        self.loop = None
 
     def short_path(self,path):
         if path.startswith(nm_path):
@@ -389,24 +370,25 @@ class Plugin(object):
         except Exception as e:
             pass
 
-    def getConnectionInfo(self,path,includeSecrets=False,type=None):
+    def getConnectionInfo(self,path,includeSecrets=False,type=None,noTranslations=False):
         proxy = self.nm(path, nm_base + ".Settings.Connection")
         config = proxy.GetSettings()
         if type is not None:
             con=config.get('connection',{})
             if con.get('type') != type:
                 return None
-        config['path']=self.short_path(path)
         self.mergeSecrets(proxy, config, "802-11-wireless")
         if includeSecrets:
             self.mergeSecrets(proxy, config, "802-11-wireless-security")
-        translations={
-            '802-11-wireless': [
-                PropsTranslation('ssid',translator=ssid_to_str),
-                PropsTranslation('mac-address',translator=mac_to_str)
-            ]
-        }
-        self.translate_props(config, translations,config)
+        if not noTranslations:
+            config['path'] = self.short_path(path)
+            translations={
+                '802-11-wireless': [
+                    PropsTranslation('ssid',translator=ssid_to_str),
+                    PropsTranslation('mac-address',translator=mac_to_str)
+                ]
+            }
+            self.translate_props(config, translations,config)
         return config
     def getConnections(self,includeSecrets=False,type=None):
         settings=self.nm("Settings",nm_base+".Settings")
@@ -552,6 +534,10 @@ class Plugin(object):
         return self.short_path(rt)
 
     def deactivateConnection(self,path):
+        '''
+        :param path: and active connection
+        :return:
+        '''
         if path is None:
             raise Exception("path cannot be None")
         path=self.build_path(path)
@@ -603,13 +589,31 @@ class Plugin(object):
         }
         rt=settings.AddConnection(config)
         return self.short_path(rt)
-    def removeConnection(self,path):
+    def check_connection(self,path):
         if path is None:
             raise Exception("path cannot be None")
-        cprops=self.getConnectionInfo(path)
+        cprops=self.getConnectionInfo(path,noTranslations=True,includeSecrets=True)
         mode=cprops.get('802-11-wireless',{}).get('mode')
         if mode != "infrastructure":
-            raise Exception(f"can only delete 802-11-wireless.infrastructure connections, current is {mode}")
+            raise Exception(f"can only handle 802-11-wireless.infrastructure connections, current is {mode}")
+        return cprops
+
+    def updateConnection(self,path,psk=None,zone=None):
+        zone=self.check_zone(zone)
+        props=self.check_connection(path)
+        con=self.nm(path,nm_base + ".Settings.Connection")
+        wsec = {
+            "key-mgmt": "wpa-psk",
+            "psk": psk,
+        } if psk is not None else {
+            "key-mgmt": "none",
+        }
+        props.update({"802-11-wireless-security":wsec})
+        props['connection'].update({"zone":zone})
+        con.Update(props)
+
+    def removeConnection(self,path):
+        self.check_connection(path)
         con=self.nm(path,nm_base + ".Settings.Connection")
         con.Delete()
 
@@ -656,6 +660,8 @@ class Plugin(object):
                 self.api.log(f"added connection {data} for {ssid}")
             elif url == 'removeConnection':
                 data=self.removeConnection(path)
+            elif url == 'updateConnection':
+                data=self.updateConnection(path,psk=self.get_arg(args,'psk'),zone=self.get_arg(args,'zone'))
             elif url == 'getItem':
                 if path is None:
                     raise Exception(f"path is required")
