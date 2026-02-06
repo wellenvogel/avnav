@@ -161,8 +161,8 @@ class Plugin(object):
         if sub == "":
             return path
         ALLOWED_PATTERN=[
-            "^/[a-zA-Z]+/[0-9]+$",
-            "^/[a-zA-Z]+$"
+            "^/[a-zA-Z0-9]+/[0-9]+$",
+            "^/[a-zA-Z0-9]+$"
         ]
         matched=False
         for p in ALLOWED_PATTERN:
@@ -326,7 +326,7 @@ class Plugin(object):
         except Exception as e:
             self.api.error(f"Exception getting {intf} for {path}: {e}")
             return {}
-    def getDeviceProps(self,path,includeIpConfig=True,deviceType=None,full=True):
+    def getDeviceProps(self,path,includeIpConfig=True,deviceType=None,full=True,includeConnection=False):
         '''
         device props
         :param path:
@@ -344,7 +344,8 @@ class Plugin(object):
                 PropsTranslation('State', enumValues=self.State),
                 PropsTranslation('HwAddress'),
                 PropsTranslation('Managed'),
-                PropsTranslation('ActiveConnection',translator=lambda x: self.short_path(x)),
+                PropsTranslation('ActiveConnection',
+                                 translator=lambda x: self.short_path(x) if not includeConnection else self.getActiveConnectionInfo(x,False,False,False)),
             ]
             device = self.nm(path=path)
             props = self.get_props(device, nm_base + ".Device")
@@ -356,7 +357,7 @@ class Plugin(object):
         config['path']=self.short_path(path)
         return config
 
-    def getDevices(self,includeIpConfig=True,deviceType=None,full=True):
+    def getDevices(self,includeIpConfig=True,deviceType=None,full=True,includeConnection=False):
         '''
         see network manager examples
         '''
@@ -548,7 +549,70 @@ class Plugin(object):
         conPath=self.build_path(conPath)
         devPath=self.build_path(devPath)
         rt=nm.ActivateConnection(conPath,devPath,apPath)
-        return rt
+        return self.short_path(rt)
+
+    def deactivateConnection(self,path):
+        if path is None:
+            raise Exception("path cannot be None")
+        path=self.build_path(path)
+        nm=self.nmBase()
+        return nm.DeactivateConnection(path)
+    ALLOWED_ZONES=['trusted','block']
+    def check_zone(self,zone):
+        if zone is None:
+            return 'trusted'
+        if zone not in self.ALLOWED_ZONES:
+            raise Exception(f"invalid zone: {zone}, not in {' '.join(self.ALLOWED_ZONES)}")
+        return zone
+    def addConnection(self,ssid,psk=None,zone=None,omitCheck=False):
+        if ssid is None:
+            raise Exception("ssid cannot be empty")
+        zone=self.check_zone(zone)
+        id=ssid
+        con={
+            "type":"802-11-wireless",
+            "id":id,
+            "zone":zone,
+        }
+        wifi={
+            "ssid":dbus.ByteArray(ssid.encode('utf-8')),
+            "mode":"infrastructure",
+        }
+        wsec={
+            "key-mgmt": "wpa-psk",
+            "psk":psk,
+        } if psk is not None else {
+            "key-mgmt": "none",
+        }
+        ip={
+            "method":"auto"
+        }
+        settings=self.nm("Settings",nm_base + ".Settings")
+        if not omitCheck:
+            for s in settings.ListConnections():
+                econ=self.nm(s,nm_base + ".Settings.Connection")
+                cprops=econ.GetSettings()
+                if cprops.get('connection',{}).get('id') == id:
+                    raise Exception(f"connection id {id} already exists as {s}")
+        config={
+            "connection":con,
+            "802-11-wireless":wifi,
+            "802-11-wireless-security":wsec,
+            "ipv4":ip,
+            "ipv6":ip
+        }
+        rt=settings.AddConnection(config)
+        return self.short_path(rt)
+    def removeConnection(self,path):
+        if path is None:
+            raise Exception("path cannot be None")
+        cprops=self.getConnectionInfo(path)
+        mode=cprops.get('802-11-wireless',{}).get('mode')
+        if mode != "infrastructure":
+            raise Exception(f"can only delete 802-11-wireless.infrastructure connections, current is {mode}")
+        con=self.nm(path,nm_base + ".Settings.Connection")
+        con.Delete()
+
 
     def get_path_arg(self,args,key='path',mandatory=False):
         rt=self.get_arg(args,key)
@@ -582,13 +646,23 @@ class Plugin(object):
                                              self.get_path_arg(args,'device',True),
                                              self.get_path_arg(args,'ap'))
                 self.api.log(f"activated connection {data} ")
+            elif url == 'deactivateConnection':
+                self.deactivateConnection(path)
+                self.api.log(f"deactivated connection {path}")
+            elif url == 'addConnection':
+                ssid=self.get_arg(args, 'ssid')
+                psk=self.get_arg(args, 'psk')
+                data=self.addConnection(ssid,psk)
+                self.api.log(f"added connection {data} for {ssid}")
+            elif url == 'removeConnection':
+                data=self.removeConnection(path)
             elif url == 'getItem':
                 if path is None:
                     raise Exception(f"path is required")
                 parts=path.split('/')
                 if len(parts) < 2:
                     raise Exception(f"invalid path: {path}")
-                if parts[0]=='Connection':
+                if parts[0]=='Settings':
                     data=self.getConnectionInfo(path,includeSecrets=includeSecrets)
                 elif parts[0]=='ActiveConnection':
                     data=self.getActiveConnectionInfo(path,includeSecrets=includeSecrets,includeDevices=includeDevices,includeIpConfig=includeIpConfig)
@@ -597,7 +671,10 @@ class Plugin(object):
                 elif parts[0]=='IP6Config':
                     data=self.getIpConfig(path,False,True)
                 elif parts[0]=='Devices':
-                    data=self.getDeviceProps(path,includeIpConfig=includeIpConfig,full=True)
+                    data=self.getDeviceProps(path,
+                                             includeIpConfig=includeIpConfig,
+                                             full=True,
+                                             includeConnection=self.get_bool_arg(args,'includeConnection'))
                 else:
                     raise Exception(f"invalid path: {path} for getItem")
             elif url == 'activeConnections':
