@@ -23,6 +23,26 @@ nm_path = "/org/freedesktop/NetworkManager"
 
 def int_to_ip(ip_int):
     return socket.inet_ntoa(struct.pack("=I", ip_int))
+
+def ssid_to_str(ssid):
+    try:
+        rt=""
+        for x in ssid:
+            rt+=chr(x)
+        return rt
+    except:
+        return str(ssid)
+def mac_to_str(mac):
+    try:
+        rt=""
+        for x in mac:
+            if rt:
+                rt+=":"
+            rt+=f"{x:02X}"
+        return rt
+    except:
+        return str(mac)
+
 STATE_FIELDS = [
     "State",
     "NetworkingEnabled",
@@ -108,7 +128,9 @@ class PropsTranslation:
             return
         ok=self.kout(self.key)
         if self.translator:
-            outprops[ok]=self.translator(v)
+            ov=self.translator(v)
+            if ov is not None:
+                outprops[ok] = ov
         elif self.enumValues:
             outprops[ok]=self.enumValues.get(v,str(v))
         else:
@@ -185,20 +207,14 @@ class Plugin(object):
             self.api.error(f"Exception in DBUS loop {e}")
         self.loop = None
 
-    def getfield(self, obj, field):
-        "get attr from obj or None"
-        try:
-            return getattr(obj, field)
-        except:
+    def short_path(self,path):
+        if path.startswith(nm_path):
+            path=path[len(nm_path):]
+            if path.startswith("/"):
+                path=path[1:]
+        elif path=='/':
             return None
-
-    def getobj(self, path, fields) -> Dict[str, Any]:
-        "get fields from dbus obj as dict"
-        o = self.nm(path)
-        d = {k: self.getfield(o, k) for k in fields}
-        d["path"] = path
-        return d
-
+        return path
     def get_arg(self, args, key,bool=False):
         v = args.get(key)
         if v is None or len(v) < 1:
@@ -208,7 +224,7 @@ class Plugin(object):
         v = self.get_arg(args, key)
         if v is None:
             return default
-        return v[0].lower() == "true"
+        return v.lower() == "true"
 
     def get_props(self, object, interface, prop=None):
         "get props from dbus obj as dict"
@@ -237,6 +253,7 @@ class Plugin(object):
         18: "MACVLAN",
         19: "VXLAN",
         20: "Veth",
+        30: 'Wi-Fi-P2P',
         32: "Local"
     }
     State={
@@ -255,49 +272,89 @@ class Plugin(object):
             120: "Failed",
         }
 
-    def translate_props(self,props:dict,translations:list[PropsTranslation],oprops:dict=None):
+    def translate_props(self,props:dict,translations,oprops:dict=None):
         if not oprops:
             oprops = {}
-        for t in translations:
-            t.translate(props,oprops)
+        if isinstance(translations,dict):
+            for k,tlist in translations.items():
+                kprops=props.get(k)
+                if kprops is None:
+                    continue
+                if oprops.get(k) is None:
+                    oprops[k]={}
+                for t in tlist:
+                    t.translate(kprops,oprops[k])
+        else:
+            for t in translations:
+                t.translate(props,oprops)
         return oprops
 
-    def getIpConfig(self,path,intf):
+    def getIpConfig(self,path,isV4=True,full=True):
+        intf=nm_base+".IP4Config" if isV4 else nm_base+".IP6Config"
         if not path or path == '/':
             return {}
         try:
-            proxy=self.nm(path)
-            translations=[
-                PropsTranslation('AddressData')
-            ]
-            return self.translate_props(self.get_props(proxy,intf),translations)
+            if full:
+                proxy=self.nm(path)
+                translations=[
+                    PropsTranslation('AddressData')
+                ]
+                rt=self.translate_props(self.get_props(proxy,intf),translations)
+            else:
+                rt={}
+            rt['path']=self.short_path(path)
+            return rt
         except Exception as e:
             self.api.error(f"Exception getting {intf} for {path}: {e}")
             return {}
-    def getDeviceProps(self,path,includeIpConfig=True):
-        translations = [
-            PropsTranslation('Interface'),
-            PropsTranslation('Driver'),
-            PropsTranslation('Ip4Config', translator=lambda x: self.getIpConfig(x, nm_base + ".IP4Config") if includeIpConfig else None),
-            PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x, nm_base + ".IP6Config") if includeIpConfig else None),
-            PropsTranslation('DeviceType', enumValues=self.DeviceType),
-            PropsTranslation('State', enumValues=self.State),
-            PropsTranslation('HwAddress'),
-            PropsTranslation('Managed')
-        ]
-        device = self.nm(path=path)
-        props = self.get_props(device, nm_base + ".Device")
-        return self.translate_props(props, translations)
+    def getDeviceProps(self,path,includeIpConfig=True,deviceType=None,full=True):
+        '''
+        device props
+        :param path:
+        :param includeIpConfig: True|False
+        :param deviceType: numeric device type
+        :return:
+        '''
+        if full:
+            translations = [
+                PropsTranslation('Interface'),
+                PropsTranslation('Driver'),
+                PropsTranslation('Ip4Config', translator=lambda x: self.getIpConfig(x, True,includeIpConfig)),
+                PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x, False,includeIpConfig)),
+                PropsTranslation('DeviceType', enumValues=self.DeviceType),
+                PropsTranslation('State', enumValues=self.State),
+                PropsTranslation('HwAddress'),
+                PropsTranslation('Managed'),
+                PropsTranslation('ActiveConnection',translator=lambda x: self.short_path(x)),
+            ]
+            device = self.nm(path=path)
+            props = self.get_props(device, nm_base + ".Device")
+            if deviceType is not None and props.get('DeviceType') != deviceType:
+                return None
+            config=self.translate_props(props, translations)
+        else:
+            config={}
+        config['path']=self.short_path(path)
+        return config
 
-    def getDevices(self,includeIpConfig=True):
+    def getDevices(self,includeIpConfig=True,deviceType=None,full=True):
         '''
         see network manager examples
         '''
         nm=self.nmBase()
         rt=[]
+        if deviceType is not None:
+            try:
+                deviceType=int(deviceType)
+            except:
+                for k,v in self.DeviceType.items():
+                    if v == deviceType:
+                        deviceType=k
+                        break
         for d in nm.GetDevices():
-            converted=self.getDeviceProps(d,includeIpConfig=includeIpConfig)
-            rt.append(converted)
+            converted=self.getDeviceProps(d,includeIpConfig=includeIpConfig,deviceType=deviceType,full=full)
+            if converted is not None:
+                rt.append(converted)
         return rt
 
     def mergeSecrets(self,proxy, config, setting_name):
@@ -319,13 +376,17 @@ class Plugin(object):
             con=config.get('connection',{})
             if con.get('type') != type:
                 return None
+        config['path']=self.short_path(path)
+        self.mergeSecrets(proxy, config, "802-11-wireless")
         if includeSecrets:
-            self.mergeSecrets(proxy, config, "802-11-wireless")
             self.mergeSecrets(proxy, config, "802-11-wireless-security")
-            self.mergeSecrets(proxy, config, "802-1x")
-            self.mergeSecrets(proxy, config, "gsm")
-            self.mergeSecrets(proxy, config, "cdma")
-            self.mergeSecrets(proxy, config, "ppp")
+        translations={
+            '802-11-wireless': [
+                PropsTranslation('ssid',translator=ssid_to_str),
+                PropsTranslation('mac-address',translator=mac_to_str)
+            ]
+        }
+        self.translate_props(config, translations,config)
         return config
     def getConnections(self,includeSecrets=False,type=None):
         settings=self.nm("Settings",nm_base+".Settings")
@@ -342,69 +403,155 @@ class Plugin(object):
         3: "Deactivating",
         4: "Deactivated",
     }
-    def getActiveConnections(self,includeSecrets=False,includeDevices=True,includeIPConfig=False,type=None):
+    def getActiveConnectionInfo(self,path,includeSecrets=False,includeDevices=True,includeIpConfig=False):
+        def get_devices(dlist):
+            rt = []
+            if not dlist:
+                return rt
+            for d in dlist:
+                rt.append(self.getDeviceProps(d, includeIpConfig=includeIpConfig, full=includeDevices))
+            return rt
+        translations = [
+            PropsTranslation('Connection',
+                             translator=lambda x: self.getConnectionInfo(x, includeSecrets=includeSecrets)),
+            PropsTranslation('Uuid'),
+            PropsTranslation('Type'),
+            PropsTranslation('State', enumValues=self.ACSTATE),
+            PropsTranslation('Id'),
+            PropsTranslation('Devices', translator=get_devices),
+            PropsTranslation('Ip4Config', translator=lambda x: self.getIpConfig(x, True,includeIpConfig)),
+            PropsTranslation('Ip6Config', translator=lambda x: self.getIpConfig(x, False,includeIpConfig)),
+        ]
+        acproxy = self.nm(path)
+        props = self.get_props(acproxy, nm_base + ".Connection.Active")
+        connection = self.translate_props(props, translations)
+        connection['path'] = self.short_path(path)
+        return connection
+
+    def getActiveConnections(self,includeSecrets=False,includeDevices=True,includeIpConfig=False,type=None):
         rt=[]
         nm=self.nmBase()
         activeConnections=self.get_props(nm,nm_base,'ActiveConnections')
         if activeConnections is None:
             return rt
-        if includeDevices:
-            def get_devices(dlist):
-                rt=[]
-                if not dlist:
-                    return rt
-                for d in dlist:
-                    rt.append(self.getDeviceProps(d,includeIpConfig=includeIPConfig))
-                return rt
-        else:
-            def get_devices(dlist):
-                return None
-        translations=[
-            PropsTranslation('Connection',translator=lambda x: self.getConnectionInfo(x,includeSecrets=includeSecrets)),
-            PropsTranslation('Uuid'),
-            PropsTranslation('Type'),
-            PropsTranslation('State',enumValues=self.ACSTATE),
-            PropsTranslation('Id'),
-            PropsTranslation('Devices',translator=get_devices),
-        ]
         for ac in activeConnections:
-            acproxy=self.nm(ac)
-            props=self.get_props(acproxy,nm_base+".Connection.Active")
-            if type is not None and type != props.get('Type'):
-                continue
-            connection=self.translate_props(props,translations)
+            connection=self.getActiveConnectionInfo(ac,includeSecrets=includeSecrets,includeDevices=includeDevices,includeIpConfig=includeIpConfig)
             rt.append(connection)
         return rt
+    AP_FLAGS={
+        "NONE":0x00000000,
+        "PRIVACY":0x00000001,
+        "WPS":0x00000002,
+        "WPS_PBC":0x00000004,
+        "WPS_PIN":0x00000008
+    }
+    WPA_FLAGS={
+        "PAIR_WEP40": 0x00000001,
+        "PAIR_WEP104": 0x00000002,
+        "PAIR_TKIP": 0x00000004,
+        "PAIR_CCMP": 0x00000008,
+        "GROUP_WEP40": 0x00000010,
+        "GROUP_WEP104": 0x00000020,
+        "GROUP_TKIP": 0x00000040,
+        "GROUP_CCMP": 0x00000080,
+        "KEY_MGMT_PSK": 0x00000100,
+        "KEY_MGMT_802_1X": 0x00000200,
+        "KEY_MGMT_SAE": 0x00000400,
+        "KEY_MGMT_OWE": 0x00000800,
+        "KEY_MGMT_OWE_TM": 0x00001000,
+        "KEY_MGMT_EAP_SUITE_B_192": 0x00002000
+    }
+    def get_flags(self,value,flag_type):
+        rt=""
+        if not isinstance(flag_type,dict):
+            return rt
+        for k,v in flag_type.items():
+            if value & v:
+                if not rt:
+                    rt=k
+                else:
+                    rt+=','+k
+        return rt
+    def scan(self):
+        nm=self.nmBase()
+        rt=[]
+        for dp in nm.GetDevices():
+            devinfo={}
+            intf=nm_base+".Device"
+            device=self.nm(path=dp)
+            props=self.get_props(device, intf)
+            if props.get('State',0) <= 20: #not available
+                continue
+            if props.get('DeviceType',0) != 2: #no Wifi device
+                continue
+            intf+=".Wireless"
+            wifi=dbus.Interface(device,intf)
+            connected=self.get_props(wifi,intf,'ActiveAccessPoint')
+            translations=[
+                PropsTranslation('Bandwidth'),
+                PropsTranslation('Frequency'),
+                PropsTranslation('HwAddress'),
+                PropsTranslation('Strength'),
+                PropsTranslation('Flags',translator=lambda x: self.get_flags(x,self.AP_FLAGS)),
+                PropsTranslation('WpaFlags',translator=lambda x: self.get_flags(x,self.WPA_FLAGS)),
+                PropsTranslation('Mode'),
+                PropsTranslation('Ssid',translator=ssid_to_str),
+            ]
+            for a in wifi.GetAccessPoints():
+                try:
+                    aproxy=self.nm(a)
+                    aprops=self.get_props(aproxy, nm_base+".AccessPoint")
+                    config=self.translate_props(aprops,translations)
+                    config['path']=self.short_path(a)
+                    config['device']=dp
+                    if connected == a:
+                        config['connected']=True
+                    rt.append(config)
+                except Exception as e:
+                    self.api.log(f"unable to read access point {a}: {e}")
+        return rt
+
 
     def handleApiRequest(self, url, handler, args):
         try:
             data = None
-            includeSecrets = self.get_bool_arg(args, 'includeSecrets', True)
-            includeDevices = self.get_bool_arg(args, 'includeDevices', True)
-            includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', True)
+            includeSecrets = self.get_bool_arg(args, 'includeSecrets', False)
+            includeDevices = self.get_bool_arg(args, 'includeDevices', False)
+            includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', False)
+            path = self.get_arg(args, 'path')
+            if path is not None and path.startswith('/'):
+                raise Exception(f"invalid path: {path}")
             type=self.get_arg(args, 'type')
             if url == 'test':
                 pass
             elif url == 'devices':
-                data = self.getDevices(includeIpConfig=includeIpConfig)
+                deviceType=self.get_arg(args, 'deviceType')
+                full=self.get_bool_arg(args, 'full', False)
+                data = self.getDevices(includeIpConfig=includeIpConfig,deviceType=deviceType,full=full or includeIpConfig)
             elif url == 'connections':
                 data=self.getConnections(includeSecrets,type=type)
+            elif url == 'getItem':
+                if path is None:
+                    raise Exception(f"path is required")
+                parts=path.split('/')
+                if len(parts) < 2:
+                    raise Exception(f"invalid path: {path}")
+                if parts[0]=='Connection':
+                    data=self.getConnectionInfo(path,includeSecrets=includeSecrets)
+                elif parts[0]=='ActiveConnection':
+                    data=self.getActiveConnectionInfo(path,includeSecrets=includeSecrets,includeDevices=includeDevices,includeIpConfig=includeIpConfig)
+                elif parts[0]=='IP4Config':
+                    data=self.getIpConfig(path,True,True)
+                elif parts[0]=='IP6Config':
+                    data=self.getIpConfig(path,False,True)
+                elif parts[0]=='Devices':
+                    data=self.getDeviceProps(path,includeIpConfig=includeIpConfig,full=True)
+                else:
+                    raise Exception(f"invalid path: {path} for getItem")
             elif url == 'activeConnections':
                 data=self.getActiveConnections(includeSecrets,includeDevices,includeIpConfig,type=type)
-            elif url.startswith('path/'):
-                path = url[5:]
-                interface = self.get_arg(args, 'interface')
-                nmpath = self.get_arg(args, 'path') or path
-                pname = self.get_arg(args, 'property')
-                if interface is not None:
-                    if interface != '':
-                        interface = nm_base + "." + interface
-                    else:
-                        interface = nm_base
-                data = self.nm(path=nmpath, interface=interface)
-                if data is not None:
-                    props = self.get_props(data, interface, prop=pname)
-                    return {'status': 'OK', 'data': props}
+            elif url == 'scan':
+                data=self.scan()
             else:
                 return {'status': f"request {url} not implemented"}
             return {'status': 'OK', 'data': data}
