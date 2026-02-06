@@ -1,8 +1,8 @@
 import time
 import threading
-from typing import Any, Dict
 import socket
 import struct
+import re
 
 hasDbus = False
 Glib = None
@@ -153,11 +153,30 @@ class Plugin(object):
         self.loop = None
         self.bus = None
 
+    def build_path(self,path):
+        path = path if path.startswith("/") else nm_path + "/" + path if path else nm_path
+        if not path.startswith(nm_path):
+            raise Exception(f"path {path} does not start with {nm_path}")
+        sub=path[len(nm_path):]
+        if sub == "":
+            return path
+        ALLOWED_PATTERN=[
+            "^/[a-zA-Z]+/[0-9]+$",
+            "^/[a-zA-Z]+$"
+        ]
+        matched=False
+        for p in ALLOWED_PATTERN:
+            if re.match(p, sub):
+                matched=True
+                break
+        if not matched:
+            raise Exception(f"path {path} contains invalid characters {sub}")
+        return path
     def nm(self, path="", interface=None):
         "access NM on dbus"
         if self.bus is None:
             return
-        path = path if path.startswith("/") else nm_path + "/" + path if path else nm_path
+        path = self.build_path(path)
         obj = self.bus.get_object(nm_base, path)
         if interface is not None:
             return dbus.Interface(obj, interface)
@@ -215,7 +234,7 @@ class Plugin(object):
         elif path=='/':
             return None
         return path
-    def get_arg(self, args, key,bool=False):
+    def get_arg(self, args, key):
         v = args.get(key)
         if v is None or len(v) < 1:
             return None
@@ -472,55 +491,81 @@ class Plugin(object):
                 else:
                     rt+=','+k
         return rt
-    def scan(self):
+    def scanDevice(self,path):
+        rt=[]
+        intf = nm_base + ".Device"
+        device = self.nm(path=path)
+        props = self.get_props(device, intf)
+        if props.get('State', 0) <= 20:  # not available
+            return None
+        if props.get('DeviceType', 0) != 2:  # no Wifi device
+            return None
+        intf += ".Wireless"
+        wifi = dbus.Interface(device, intf)
+        connected = self.get_props(wifi, intf, 'ActiveAccessPoint')
+        translations = [
+            PropsTranslation('Bandwidth'),
+            PropsTranslation('Frequency'),
+            PropsTranslation('HwAddress'),
+            PropsTranslation('Strength'),
+            PropsTranslation('Flags', translator=lambda x: self.get_flags(x, self.AP_FLAGS)),
+            PropsTranslation('WpaFlags', translator=lambda x: self.get_flags(x, self.WPA_FLAGS)),
+            PropsTranslation('Mode'),
+            PropsTranslation('Ssid', translator=ssid_to_str),
+        ]
+        for a in wifi.GetAccessPoints():
+            try:
+                aproxy = self.nm(a)
+                aprops = self.get_props(aproxy, nm_base + ".AccessPoint")
+                config = self.translate_props(aprops, translations)
+                config['path'] = self.short_path(a)
+                config['device'] = path
+                if connected == a:
+                    config['connected'] = True
+                rt.append(config)
+            except Exception as e:
+                self.api.log(f"unable to read access point {a}: {e}")
+        return rt
+
+    def scan(self,path=None):
+        if path is not None:
+            return self.scanDevice(path)
         nm=self.nmBase()
         rt=[]
         for dp in nm.GetDevices():
-            devinfo={}
-            intf=nm_base+".Device"
-            device=self.nm(path=dp)
-            props=self.get_props(device, intf)
-            if props.get('State',0) <= 20: #not available
-                continue
-            if props.get('DeviceType',0) != 2: #no Wifi device
-                continue
-            intf+=".Wireless"
-            wifi=dbus.Interface(device,intf)
-            connected=self.get_props(wifi,intf,'ActiveAccessPoint')
-            translations=[
-                PropsTranslation('Bandwidth'),
-                PropsTranslation('Frequency'),
-                PropsTranslation('HwAddress'),
-                PropsTranslation('Strength'),
-                PropsTranslation('Flags',translator=lambda x: self.get_flags(x,self.AP_FLAGS)),
-                PropsTranslation('WpaFlags',translator=lambda x: self.get_flags(x,self.WPA_FLAGS)),
-                PropsTranslation('Mode'),
-                PropsTranslation('Ssid',translator=ssid_to_str),
-            ]
-            for a in wifi.GetAccessPoints():
-                try:
-                    aproxy=self.nm(a)
-                    aprops=self.get_props(aproxy, nm_base+".AccessPoint")
-                    config=self.translate_props(aprops,translations)
-                    config['path']=self.short_path(a)
-                    config['device']=dp
-                    if connected == a:
-                        config['connected']=True
-                    rt.append(config)
-                except Exception as e:
-                    self.api.log(f"unable to read access point {a}: {e}")
+            devinfo=self.scanDevice(dp)
+            if devinfo is not None:
+                rt+=devinfo
         return rt
 
 
+    def activateConnection(self,conPath,devPath,apPath=None):
+        nm=self.nmBase()
+        if apPath is not None:
+            apPath=self.build_path(apPath)
+        else:
+            apPath='/'
+        conPath=self.build_path(conPath)
+        devPath=self.build_path(devPath)
+        rt=nm.ActivateConnection(conPath,devPath,apPath)
+        return rt
+
+    def get_path_arg(self,args,key='path',mandatory=False):
+        rt=self.get_arg(args,key)
+        if rt is None:
+            if mandatory:
+                raise Exception(f"missing parameter {key}")
+            return None
+        if rt.startswith('/'):
+            raise Exception(f"invalid path: {rt} for {key}")
+        return rt
     def handleApiRequest(self, url, handler, args):
         try:
             data = None
             includeSecrets = self.get_bool_arg(args, 'includeSecrets', False)
             includeDevices = self.get_bool_arg(args, 'includeDevices', False)
             includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', False)
-            path = self.get_arg(args, 'path')
-            if path is not None and path.startswith('/'):
-                raise Exception(f"invalid path: {path}")
+            path = self.get_path_arg(args)
             type=self.get_arg(args, 'type')
             if url == 'test':
                 pass
@@ -530,6 +575,13 @@ class Plugin(object):
                 data = self.getDevices(includeIpConfig=includeIpConfig,deviceType=deviceType,full=full or includeIpConfig)
             elif url == 'connections':
                 data=self.getConnections(includeSecrets,type=type)
+            elif url == 'activateConnection':
+                if path is None:
+                    raise Exception(f"missing parameter path")
+                data=self.activateConnection(path,
+                                             self.get_path_arg(args,'device',True),
+                                             self.get_path_arg(args,'ap'))
+                self.api.log(f"activated connection {data} ")
             elif url == 'getItem':
                 if path is None:
                     raise Exception(f"path is required")
@@ -551,7 +603,7 @@ class Plugin(object):
             elif url == 'activeConnections':
                 data=self.getActiveConnections(includeSecrets,includeDevices,includeIpConfig,type=type)
             elif url == 'scan':
-                data=self.scan()
+                data=self.scan(path=path)
             else:
                 return {'status': f"request {url} not implemented"}
             return {'status': 'OK', 'data': data}
