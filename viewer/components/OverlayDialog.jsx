@@ -30,7 +30,8 @@ import base from "../base";
 
 const Container=MapEventGuard(React.forwardRef((props,ref)=>{
     const dialogContext=useDialogContext();
-    const style={zIndex:dialogContext.zIndex};
+    const style={zIndex:dialogContext.zIndex,
+        left:dialogContext.left,right:dialogContext.right};
     return (
         <div className="overlay_cover_active" onClick={props.onClick} style={style} ref={ref}>
             {props.children}
@@ -47,13 +48,6 @@ export const OverlayDialog = ({className,closeCallback,replaceDialog,children}) 
     const ourZIndex=dialogContext.zIndex+10;
     useInputMonitor();
     return (
-        <DialogContext
-            closeDialog={close}
-            showDialog={setDialog}
-            zIndex={ourZIndex}
-            replaceDialog={replaceDialog}
-            id={getCtxId()}
-        >
         <Container onClick={close}>
             <div
                 className={classNameS}
@@ -66,10 +60,17 @@ export const OverlayDialog = ({className,closeCallback,replaceDialog,children}) 
                 style={{zIndex:ourZIndex+1}}
             >
                 <DialogDisplay/>
+                <DialogContext
+                    closeDialog={close}
+                    showDialog={setDialog}
+                    zIndex={ourZIndex}
+                    replaceDialog={replaceDialog}
+                    id={getCtxId()}
+                >
                 {Children.map(children,(child)=>cloneElement(child,{closeCallback:close}))}
+                </DialogContext>
             </div>
         </Container>
-        </DialogContext>
     );
 }
 
@@ -174,13 +175,20 @@ const getCtxId=()=>{
 }
 
 const buildContext=(closeDialog,showDialog,replaceDialog,zIndex,opt_id)=>{
-    return {
+    const rt={
         closeDialog: closeDialog?closeDialog:()=>{},
         showDialog: showDialog?showDialog:()=>{},
         zIndex: (zIndex!==undefined)?zIndex:DIALOG_Z,
         replaceDialog: replaceDialog?replaceDialog:()=>{},
-        id: (opt_id!==undefined)?opt_id:getCtxId()
+        id: (opt_id!==undefined)?opt_id:getCtxId(),
+        left:0,
+        right:0,
+        limit:(l,r)=>{
+            if (l !== undefined) { rt.left=l;}
+            if (r !== undefined) { rt.right=r;}
+        }
     };
+    return rt;
 }
 const DialogContextImpl=createContext(buildContext());
 export const useDialogContext=()=>useContext(DialogContextImpl);
@@ -191,7 +199,9 @@ export const DialogContext=({closeDialog,showDialog,replaceDialog,zIndex,childre
 }
 
 let globalContext=buildContext();
-
+export const setGlobalContextDirect=(ctx)=>{
+    globalContext=ctx;
+}
 export const setGlobalContext=(closeDialog,showDialog,zIndex)=>{
     globalContext=buildContext(closeDialog,showDialog,zIndex);
 }

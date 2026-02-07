@@ -12,7 +12,7 @@ import {useTimer} from "../util/GuiHelpers";
 import assign from 'object-assign';
 import Helper from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
-import {NestedDialogDisplay} from "./OverlayDialog";
+import {NestedDialogDisplay, useDialogContext} from "./OverlayDialog";
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -96,12 +96,40 @@ PageFrame.propTypes={
 
 export const PageLeft=({className,title,children,dialogCtxRef})=>{
     const Alarm=useCallback(WidgetFactory.createWidget({name:'Alarm'}),[])
-    return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}>
-            <NestedDialogDisplay dialogCtxRef={dialogCtxRef}>
+    const dialogContext=useDialogContext();
+    const initial=useRef(0);
+    if (! initial.current){
+        dialogContext.closeDialog();
+        initial.current=1;
+    }
+    const originalValues=useRef({
+        left:dialogContext.left,
+        right:dialogContext.right
+    })
+    useEffect(()=>{
+        return ()=>{
+            dialogContext.limit(
+                originalValues.current.left,
+                originalValues.current.right
+            );
+            dialogContext.closeDialog();
+        }
+    },[])
+    return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}
+                ref={(el)=>{
+                    if (!el) return;
+                    const rect=el.getBoundingClientRect();
+                    const parent=el.parentElement;
+                    if (parent) {
+                        dialogContext.limit(undefined, parent.clientWidth-rect.right);
+                    }
+                }}
+            >
+
             {title ? <Headline title={title} connectionLost={true}/> : null}
             {children}
             <Alarm onClick={alarmClick}/>
-            </NestedDialogDisplay>
+
         </div>
 }
 PageLeft.propTypes = {

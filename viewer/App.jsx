@@ -22,7 +22,7 @@ import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
 import {
     DialogContext,
-    setGlobalContext, showPromiseDialog,
+    setGlobalContext, setGlobalContextDirect, showPromiseDialog,
     useDialog, useDialogContext
 } from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -203,14 +203,22 @@ const GlobalDialog=()=>{
     return <DialogDisplay/>
 }
 
+const GlobalDialogHelper=(props)=>{
+    const dialogContext=useDialogContext();
+    setGlobalContextDirect(dialogContext);
+    return null;
+}
+
 const MainBody = ({ history, nightMode}) => {
     const location=history.currentLocation(true);
+    const [DialogDisplay, setDialog] = useDialog();
     return (
         <HistoryContext history={history}>
         <DialogContext
-            showDialog={mainShowDialog}
+            showDialog={setDialog}
         >
-            <GlobalDialog/>
+            <GlobalDialogHelper/>
+            <DialogDisplay/>
             <DynamicRouter
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,
