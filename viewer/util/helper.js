@@ -337,6 +337,20 @@ export const loadOrUpdateCss=(url,id)=>{
     document.head.appendChild(fileref);
     return true;
 }
+export const createOrUpdateStyleSheet=(txt,id)=>{
+    if (! id) return;
+    const existing=document.head.querySelector('#'+id);
+    if (existing){
+        existing.innerHTML=txt;
+    }
+    else{
+        const sheet=document.createElement('style');
+        sheet.setAttribute("id",id);
+        sheet.setAttribute("type","text/css");
+        sheet.innerHTML=txt;
+        document.head.appendChild(sheet);
+    }
+}
 export const avNavVersion=()=>{
     let version=Version;
     if (window.avnavAndroid) version=window.avnavAndroid.getVersion();

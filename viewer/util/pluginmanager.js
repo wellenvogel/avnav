@@ -363,7 +363,7 @@ class Pluginmanager{
         this.dialogStarter=undefined;
     }
     cssId(pluginName) {
-        return '_'+pluginName+"_css"
+        return '_PL_'+pluginName+"_css"
     }
     async query(){
         try {
