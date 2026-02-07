@@ -12,6 +12,7 @@ import {createItemActions} from '../components/FileDialog';
 import {useHistory} from "../components/HistoryProvider";
 import ButtonList from "../components/ButtonList";
 import {DownloadItemList} from "../components/DownloadItemList";
+import {PAGEIDS} from "../util/pageids";
 
 const DownloadPage=(props)=>{
     useStoreState(keys.gui.global.reloadSequence)
@@ -79,7 +80,7 @@ const DownloadPage=(props)=>{
         return rt;
     }
         return (
-            <PageFrame id={'downloadpage'}>
+            <PageFrame id={PAGEIDS.DOWNLOAD}>
                 <PageLeft title={actions.headline}>
                     <DownloadItemList
                         type={type}
@@ -89,6 +90,7 @@ const DownloadPage=(props)=>{
                     />
                 </PageLeft>
                 <ButtonList
+                    page={PAGEIDS.DOWNLOAD}
                     itemList={getButtons()}
                 />
             </PageFrame>

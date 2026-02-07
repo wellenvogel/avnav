@@ -1015,6 +1015,7 @@ const EditRoutePage = (props) => {
     ];
     let overlayContent = (props.small || wpButtonsVisible) ?
         <ButtonList
+            page={props.id}
             itemList={waypointButtons}
             className="overlayContainer"
         />

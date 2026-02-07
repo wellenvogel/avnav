@@ -128,6 +128,7 @@ const Page=forwardRef((props,ref)=>{
                 {props.bottomContent ? props.bottomContent : null}
             </PageLeft>
             <ButtonList
+                page={props.id}
                 itemList={props.buttonList}
                 widthChanged={props.buttonWidthChanged}
             />

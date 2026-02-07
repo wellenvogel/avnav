@@ -26,8 +26,9 @@ import {
     FeatureInfoKeys,
     FeatureInfoType,
     FormatterFunction,
-    MapLayerProfiles, ProxyOptions,
+    MapLayerProfiles, Page, ProxyOptions,
     StoreData,
+    UserButton,
     UserMapLayerCallback
 } from '../api/api.interface';
 
@@ -177,7 +178,24 @@ const KeyHelper: Required<FeatureInfoType> = {
 
 export const getFeatureInfoKeys = (): FeatureInfoKeys => Object.keys(KeyHelper) as FeatureInfoKeys;
 
+export const UserButtonProps: Required<UserButton>={
+    disabled: true,
+    icon: "",
+    name: "",
+    onClick(_event: object): void {
+    },
+    storeKeys: undefined,
+    toggle: false,
+    updateFunction(_values: object): object {
+        return undefined;
+    },
+    visible: false
+}
+
 export class ApiV2 extends ApiImpl implements ApiV2Intf {
+    registerUserButton(_button: UserButton, _page?: Page | [Page]): void {
+        throw new Error("Method not implemented.");
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     registerUserMapLayer(_baseName: MapLayerProfiles, _name: string, _callback: UserMapLayerCallback): void {
         throw new Error("Method not implemented.");

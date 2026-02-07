@@ -278,6 +278,7 @@ const MapPage =(iprops)=>{
                         </div>
                 </PageLeft>
                 <ButtonList
+                    page={pageProperties.id}
                     itemList={props.buttonList}
                     widthChanged={(width)=>{
                         setButtonWidth(width);

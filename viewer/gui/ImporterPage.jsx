@@ -46,7 +46,6 @@ import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 
 const HANDLER_NAME='AVNImporter';
-export const IMPORTERPAGE='importerpage';
 
 const MainStatus=(props)=>{
     let canEdit=globalstore.getData(keys.properties.connectedMode);
@@ -453,7 +452,7 @@ const ImporterPage = (props) => {
         );
 
     }, [])
-    return <PageFrame id={IMPORTERPAGE}>
+    return <PageFrame id={props.id}>
         <PageLeft title={"Chart Converter"} dialogCtxRef={dialogContext} >
             <PageContent
                 showEditDialog={showImportDialog}
@@ -477,7 +476,7 @@ const ImporterPage = (props) => {
                 checkNameCallback={(file)=>checkNameForUpload(file.name)}
             />
         </PageLeft>
-        <ButtonList itemList={isActive ? activeButtons.concat(buttons) : buttons}/>
+        <ButtonList page={props.id} itemList={isActive ? activeButtons.concat(buttons) : buttons}/>
     </PageFrame>
 }
 

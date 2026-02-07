@@ -24,6 +24,7 @@ import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
+import {PAGEIDS} from "../util/pageids";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -222,6 +223,7 @@ const scrollWarning=(ev)=>{
     let el=document.querySelector('.aisList .'+WARNING_CLASS);
     if (el) el.scrollIntoView();
 }
+const ID=PAGEIDS.AIS;
 const AisPage =(props)=>{
     const history=useHistory();
         const options=props.options||{};
@@ -318,7 +320,7 @@ const AisPage =(props)=>{
         return (
             <PageFrame
                 {...props}
-                id="aispage"
+                id={ID}
                 title="Ais">
                 <PageLeft dialogCtxRef={dialogContext}>
                     <Summary numTargets={0}
@@ -364,7 +366,7 @@ const AisPage =(props)=>{
                         }}
                     />
                 </PageLeft>
-                <ButtonList itemList={buttons}/>
+                <ButtonList page={ID} itemList={buttons}/>
             </PageFrame>
         );
 }

@@ -307,7 +307,7 @@ const GpsPage = (props) => {
     let titleIcons = globalStore.getData(keys.properties.titleIconsGps);
     return (
         <PageFrame
-            id={"gpspage"}
+            id={props.id}
             autoHideButtons={autohide}
         >
             <PageLeft dialogCtxRef={dialogCtxRef}>
@@ -320,7 +320,7 @@ const GpsPage = (props) => {
                     )
                 })}
             </PageLeft>
-            <ButtonList itemList={buttons} widthChanged={() => resizeFont()}/>
+            <ButtonList page={props.id} itemList={buttons} widthChanged={() => resizeFont()}/>
         </PageFrame>
     )
 }

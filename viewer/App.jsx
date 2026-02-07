@@ -56,6 +56,7 @@ import PropTypes from "prop-types";
 import Helper, {avNavVersion} from "./util/helper";
 import {HistoryContext, useHistory} from "./components/HistoryProvider";
 import {RouteSyncDialog} from "./components/RouteInfoHelper";
+import {PAGEIDS} from "./util/pageids";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -95,22 +96,22 @@ const MainWrapper=(props)=>{
 MainWrapper.propTypes=MainPage.propTypes;
 
 const pages={
-    mainpage: MainWrapper,
-    infopage: InfoPage,
-    gpspage: GpsPage,
-    aispage: AisPage,
-    addonpage:AddOnPage,
-    addresspage:AddressPage,
-    statuspage:StatusPage,
-    wpapage:WpaPage,
-    downloadpage:DownloadPage,
-    settingspage:SettingsPage,
-    navpage: NavPage,
-    editroutepage:EditRoutePage,
-    warningpage:WarningPage,
-    viewpage:ViewPage,
-    addonconfigpage: AddonConfigPage,
-    importerpage: ImporterPage
+    [PAGEIDS.MAIN]: MainWrapper,
+    [PAGEIDS.INFO]: InfoPage,
+    [PAGEIDS.GPS]: GpsPage,
+    [PAGEIDS.AIS]: AisPage,
+    [PAGEIDS.ADDON]:AddOnPage,
+    [PAGEIDS.ADDR]:AddressPage,
+    [PAGEIDS.STATUS]:StatusPage,
+    [PAGEIDS.WPA]:WpaPage,
+    [PAGEIDS.DOWNLOAD]:DownloadPage,
+    [PAGEIDS.SETTINGS]:SettingsPage,
+    [PAGEIDS.NAV]: NavPage,
+    [PAGEIDS.ROUTE]:EditRoutePage,
+    [PAGEIDS.WARNING]:WarningPage,
+    [PAGEIDS.VIEW]:ViewPage,
+    [PAGEIDS.ADDCFG]: AddonConfigPage,
+    [PAGEIDS.IMPORT]: ImporterPage
 };
 const Router = (props) => {
     const history = useHistory();
@@ -151,6 +152,7 @@ const Router = (props) => {
             />
             : null}
         <Page
+            id={props.location}
             history={history}
             style={style}
             options={props.options}

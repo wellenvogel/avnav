@@ -739,7 +739,6 @@ const SettingsPage = (props) => {
     const currentValues = {...values.getState(), ...layoutSettings.getState()};
     return <PageFrame
         {...props}
-        id={'settingspage'}
     >
         <PageLeft
             title={title + ((props.small && !leftPanelVisible) ? " " + section : "")}
@@ -780,6 +779,7 @@ const SettingsPage = (props) => {
             </div>
         </PageLeft>
         <ButtonList
+            page={props.id}
             itemList={buttons}
         />
     </PageFrame>

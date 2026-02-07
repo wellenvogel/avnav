@@ -4,6 +4,7 @@ import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic.jsx';
 import keys from '../util/keys.jsx';
 import ItemList from './ItemList.jsx';
 import PropTypes from "prop-types";
+import addons from "./Addons";
 
 
 const ButtonList = (iprops) => {
@@ -105,14 +106,15 @@ const ButtonList = (iprops) => {
     //if their visibility changes
     let invisibleItems = [];
     let allowedOverflowItems = 0;
-    for (let k in props.itemList) {
-        let stateKey = getStateKey(props.itemList[k]);
+    const userButtons=props.page?addons.getPageUserButtons(props.page):[];
+    for (let button of props.itemList.concat(userButtons)) {
+        let stateKey = getStateKey(button);
         if (!stateKey) continue;
         if (!props.buttonsHidden && (visibility[stateKey] === undefined || visibility[stateKey])) {
-            items.push(props.itemList[k]);
-            if (props.itemList[k].overflow) allowedOverflowItems++;
+            items.push(button);
+            if (button.overflow) allowedOverflowItems++;
         } else {
-            invisibleItems.push(props.itemList[k]);
+            invisibleItems.push(button);
         }
     }
     items = itemSort(items);
@@ -209,6 +211,7 @@ const ButtonList = (iprops) => {
 export default ButtonList;
 
 ButtonList.propTypes={
+    page: PropTypes.string,
     itemList: PropTypes.array.isRequired,
     widthChanged: PropTypes.func,
     className: PropTypes.string,

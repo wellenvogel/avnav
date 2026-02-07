@@ -493,6 +493,18 @@ export interface ProxyOptions{
     x:number;       //x
     y:number;       //y
 }
+export type Page="mainpage"|"navpage"|"gpspage"|"addonpage"|"wpapage"|"settingspage"|"editroutepage"|"downloadpage"|"statuspage"
+export interface UserButton{
+    name: string;                   //will set the CSS class, unique inside the plugin
+    icon?: string|URL;              //relative to plugin base
+    onClick:(event:object)=>void    //if set this function is called instead of invoking the url
+    visible?:boolean;
+    disabled?:boolean;
+    toggle?:boolean;
+    storeKeys?:Record<string, string>; //can control visible/disabled/toogle
+    updateFunction?:(values:object)=>object; //translate store values
+}
+
 
 /**
  * the new API as it is provided as the first parameter
@@ -556,6 +568,14 @@ export interface ApiV2 extends Api{
      * @param newWindow (optional) if set open the page in a new window
      */
     registerUserApp(name:string,url:string|URL,icon:string|URL,title?:string,newWindow?:boolean):void;
+
+    /**
+     * register
+     * @param button the button to be shown
+     * @param page the page (or list of pages) that should show the button
+     *             defaults to addonpage
+     */
+    registerUserButton(button: UserButton,page?:Page|[Page]):void;
 
     get FEATUREINFO_KEYS():FeatureInfoKeys;
 

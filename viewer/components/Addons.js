@@ -2,6 +2,9 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
+import base from "../base";
+import {UserButtonProps} from "../util/api.impl";
+import Helper from "../util/helper";
 
 class PluginAddOn{
     constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost}){
@@ -18,7 +21,20 @@ class PluginAddOn{
         this.key=pluginName+'.'+name;
     }
 }
+class PluginUserButton{
+    constructor(plugin,button,page){
+        if (! plugin) throw new Error("missing plugin")
+        if (! button) throw new Error("missing button")
+        if (! button.name) throw new Error("missing name in button def")
+        if ( typeof(button.onClick) !== "function") throw new Error("button.onClick is not a function")
+        this.key=plugin+'.'+button.name
+        this.page=page || 'addonpage';
+        this.button=Helper.filteredAssign(UserButtonProps,button);
+        this.pluginName=plugin;
+    }
+}
 const pluginAddOns={};
+const pluginUserButtons={};
 
 const addPluginAddOn=({name,pluginName,url,icon,...other})=>{
     if (!name) throw new Error("name is required");
@@ -33,13 +49,50 @@ const addPluginAddOn=({name,pluginName,url,icon,...other})=>{
     pluginAddOns[completeName]=new PluginAddOn({name,pluginName,url,icon,...other});
     return completeName;
 }
+const addUserButton=(plugin,button,page)=>{
+    const def=new PluginUserButton(plugin,button,page);
+    if (! def.key) throw new Error("invalid userButton def");
+    const existing=pluginUserButtons[def.key];
+    if (existing && existing.pluginName!==pluginName) {
+        throw new Error(`UserButton ${button.name} already exists from ${existing.pluginName}`)
+    }
+    pluginUserButtons[def.key]=def;
+    base.log(`added user button ${def.key}`);
+}
+const getPageUserButtons=(page)=>{
+    const rt=[];
+    for (let k in pluginUserButtons){
+        const buttonDef=pluginUserButtons[k];
+        if (page === buttonDef.page){
+            rt.push({...buttonDef.button,overflow:true});
+        }
+        else{
+            if (Array.isArray(buttonDef.page)){
+                for (let dp of buttonDef.page){
+                    if (dp === page){
+                        rt.push({...buttonDef.button,overflow:true});
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return rt;
+}
 const removePluginAddOns=(pluginName)=>{
-    const todel=[];
+    let todel=[];
     for (let k in pluginAddOns) {
         if (pluginAddOns[k].pluginName===pluginName) todel.push(k);
     }
     for (let td of todel) {
         delete pluginAddOns[td];
+    }
+    todel=[];
+    for (let k in pluginUserButtons) {
+        if (pluginUserButtons[k].pluginName===pluginName) todel.push(k);
+    }
+    for (let td of todel) {
+        delete pluginUserButtons[td];
     }
 }
 
@@ -125,5 +178,7 @@ export default  {
     updateAddon:updateAddon,
     removeAddon:removeAddon,
     addPluginAddOn:addPluginAddOn,
+    addUserButton: addUserButton,
+    getPageUserButtons:getPageUserButtons,
     removePluginAddOns:removePluginAddOns
 }

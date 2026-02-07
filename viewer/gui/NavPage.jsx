@@ -56,13 +56,14 @@ import base from "../base";
 import {showErrorList} from "../components/ErrorListDialog";
 import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
+import {PAGEIDS} from "../util/pageids";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editorRoute = new RouteEdit(RouteEdit.MODES.EDIT);
 
-const PAGENAME='navpage';
+const PAGENAME=PAGEIDS.NAV;
 
 
 
@@ -858,7 +859,7 @@ const NavPage=(props)=>{
             return (
                 <PageFrame
                     {...pageProperties}
-                    id={PAGENAME}>
+                    >
                     <PageLeft dialogCtxRef={dialogCtx}>
                         <OverlayDialog
                             closeCallback={() => history.pop()}>
@@ -868,7 +869,7 @@ const NavPage=(props)=>{
                             </DialogFrame>
                         </OverlayDialog>
                     </PageLeft>
-                    <ButtonList itemList={buttons}/>
+                    <ButtonList page={pageProperties.id} itemList={buttons}/>
                 </PageFrame>
             );
         }

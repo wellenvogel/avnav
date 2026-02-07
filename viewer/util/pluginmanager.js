@@ -80,6 +80,10 @@ class PluginApi extends ApiV2 {
         this.#impl.registerUserApp(name, url, icon, title, newWindow);
     }
 
+    registerUserButton(_button, _page) {
+        this.#impl.registerUserButton(_button, _page);
+    }
+
     registerUserMapLayer(_baseName, _name, _callback) {
         this.#impl.registerUserMapLayer(_baseName, _name, _callback);
     }
@@ -282,7 +286,15 @@ export class Plugin extends ApiV2{
         icon=urlToString(icon,this.getBaseUrl());
         Addons.addPluginAddOn({name,pluginName:this.name, url, icon, title, newWindow});
     }
-
+    registerUserButton(button, page) {
+        const buttonDef={...button};
+        for (let k of ['icon']){
+            if (k in buttonDef){
+                buttonDef[k] = urlToString(buttonDef[k],this.getBaseUrl());
+            }
+        }
+        Addons.addUserButton(this.name,buttonDef,page);
+    }
 
     registerUserMapLayer(baseName, name, callback) {
         name=(this.name === USERNAME)?"user_"+name:"plugin_"+name;
@@ -333,6 +345,7 @@ export class Plugin extends ApiV2{
             LocalStorageManager.setItem(UNPREFIXED_NAMES.EXTERNAL,name,raw);
         }
     }
+
 }
 const USERFILES={
     js:'user.js',
