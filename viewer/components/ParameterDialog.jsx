@@ -20,10 +20,11 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useCallback} from "react";
-import {showDialog, DialogFrame,DialogRow,useDialogContext,DialogButtons,DBCancel} from "./OverlayDialog";
+import React, {useCallback,} from "react";
+import {showDialog, DialogFrame,DialogRow,useDialogContext,DialogButtons} from "./OverlayDialog";
 import Helper, {getav, setav} from "../util/helper";
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
+import {ErrorBoundary} from "./ErrorBoundary";
 
 export const ParameterDialog = (props) => {
     const [values, setValues] = React.useState(props.values||{});
@@ -48,14 +49,15 @@ export const ParameterDialog = (props) => {
         props.buttons.forEach(button => {
             buttons.push({
                 ...button,
-                onClick:(ev)=>{
-                    setav(ev,{dialogContext:dialogContext});
-                    if (button.onClick) changeValues(button.onClick(ev,values,dialogContext));
+                onClick: (ev) => {
+                    setav(ev, {dialogContext: dialogContext});
+                    if (button.onClick) changeValues(button.onClick(ev, values, dialogContext));
                 }
             })
         })
     }
-    return <DialogFrame title={props.title||"Edit"} className={className}>
+    return<ErrorBoundary fallback={"render error in dialog"}>
+    <DialogFrame title={props.title} className={className}>
         {props.text && <DialogRow>{props.text}</DialogRow>}
         {props.parameters && <EditableParameterListUI
             values={values}
@@ -70,6 +72,7 @@ export const ParameterDialog = (props) => {
         <DialogButtons buttonList={buttons}/>
 
     </DialogFrame>
+    </ErrorBoundary>
 
 }
 /**

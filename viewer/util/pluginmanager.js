@@ -34,6 +34,7 @@ import {layoutLoader} from "./layouthandler";
 import Addons from "../components/Addons";
 import {layerFactory} from "../map/chartlayers";
 import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
+import React from 'react';
 
 
 class PluginApi extends ApiV2 {
@@ -327,6 +328,11 @@ export class Plugin extends ApiV2{
 
     showDialog(dialog, context) {
         if (! this.manager.dialogStarter) throw new Error("cannot start a dialog in this state");
+        for (let k of ['text','title']){
+            if (dialog[k] !== undefined) {
+                if ( typeof(dialog[k]) !== 'string' && ! React.isValidElement(dialog[k])) { throw new Error(`invalid dialog property ${k}: ${dialog[k]}`); }
+            }
+        }
         return this.manager.dialogStarter(context,dialog);
     }
 

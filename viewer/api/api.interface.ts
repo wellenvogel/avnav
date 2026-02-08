@@ -8,6 +8,9 @@ import {UrlFunction} from 'ol/Tile';
 import {Tile} from "ol";
 import {Map as MapLibreMap} from 'maplibre-gl';
 import {MapLibreOptions} from "../map/maplibre/MapLibreLayer";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Htm from "htm";
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
@@ -507,6 +510,35 @@ export interface UserButton{
     updateFunction?:(values:object)=>object; //translate store values
 }
 
+/**
+ * a couple of modules that are used inside AvNav
+ * but also can be used by plugins
+ * as they are not directly available as standalone modules
+ * you will have to write e.g.
+ *   const {useState,useRef}=api.modules().React;
+ * instead of
+ *   import {useState,useRef} from 'react';
+ *
+ */
+export interface Modules{
+    React: typeof React
+    ReactDOM: typeof ReactDOM
+    /**
+     * Htm is the htm function from
+     * https://github.com/developit/htm
+     * bound to React.createElement
+     * Using this function you can use htm's template
+     * language that is very similar to react's JSX
+     * The result can be used at several API methods that expect a string or HTML
+     * Example:
+     *  const HTM=api.modules().Htm;
+     *  const value=99;
+     *  const v=HTM`<div onClick=${(ev)=>console.log('click')}>${value}</div>`
+     *
+     * Refer to the documentation for usages.
+     */
+    Htm: typeof Htm
+}
 
 /**
  * the new API as it is provided as the first parameter
@@ -649,6 +681,8 @@ export interface ApiV2 extends Api{
      * @return {Promise<void>}
      */
     getConfig():Promise<object>;
+
+    modules():Modules;
 }
 
 

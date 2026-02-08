@@ -26,11 +26,14 @@ import {
     FeatureInfoKeys,
     FeatureInfoType,
     FormatterFunction,
-    MapLayerProfiles, Page, ProxyOptions,
+    MapLayerProfiles, Modules, Page, ProxyOptions,
     StoreData,
     UserButton,
     UserMapLayerCallback
 } from '../api/api.interface';
+import React from "react";
+import ReactDOM from "react-dom";
+import Htm from "htm";
 
 export class ApiImpl implements ApiIntf {
     constructor() {
@@ -192,6 +195,12 @@ export const UserButtonProps: Required<UserButton>={
     visible: false
 }
 
+const modules: Modules={
+    React: React,
+    ReactDOM: ReactDOM,
+    Htm: Htm.bind(React.createElement)
+}
+
 export class ApiV2 extends ApiImpl implements ApiV2Intf {
     registerUserButton(_button: UserButton, _page?: Page | [Page]): void {
         throw new Error("Method not implemented.");
@@ -251,6 +260,9 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
         throw new Error("Method not implemented.");
     }
 
+    modules(): Modules {
+        return modules;
+    }
 
 }
 

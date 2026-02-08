@@ -8,6 +8,7 @@ import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react
 import base from '../base.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import Helper from "../util/helper";
+import {ErrorBoundary} from "./ErrorBoundary";
 
 const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
     ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
@@ -105,14 +106,31 @@ export const ExternalWidget =(props)=>{
                 return null;
             }
         }
-        let userHtml=(innerHtml!=null)?ReactHtmlParser(innerHtml,
-            {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
-        return (
-        <WidgetFrame {...convertedProps} addClass={Helper.concatsp("externalWidget",props.className)} onClick={props.onClick} resizeSequence={resizeSequence.current}>
-            {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
+        let userHtml=null;
+        if (innerHtml!=null) {
+            if (typeof (innerHtml) !== 'string') {
+                userHtml = innerHtml;
+                if (! React.isValidElement(userHtml)){
+                    userHtml="invalid user html";
+                }
+            } else {
+                userHtml = ReactHtmlParser(innerHtml,
+                    {
+                        transform: (node, index) => {
+                            transform(userData.current, node, index);
+                        }
+                    });
+            }
+        }
+    return (
+        <ErrorBoundary fallback={"render error in widget"}>
+            <WidgetFrame {...convertedProps} addClass={Helper.concatsp("externalWidget", props.className)}
+                         onClick={props.onClick} resizeSequence={resizeSequence.current}>
+                {props.renderCanvas ? <canvas className='widgetData' ref={canvasRef}></canvas> : null}
                 {userHtml}
-        </WidgetFrame>
-        );
+            </WidgetFrame>
+        </ErrorBoundary>
+    );
 }
 
 ExternalWidget.propTypes={
