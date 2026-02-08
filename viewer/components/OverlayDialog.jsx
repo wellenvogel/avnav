@@ -106,7 +106,10 @@ class DialogContextImpl{
         return this._getTop().setDialog(content,opt_closeCb);
     }
     closeDialog(){
-        if (this.parent) return this.parent.closeDialog();
+        //only go up to first parent
+        //we cannot call closeDialog at the parent as this would potentially
+        //go up further
+        if (this.parent) return this.parent._getTop().setDialog();
         return this._getTop().setDialog();
     }
     replaceDialog(content,opt_closeCb){
@@ -115,11 +118,12 @@ class DialogContextImpl{
     }
     setDisplay(setDialogFunction){
         const current=this._getTop();
-        current.setDialog();
+        current.setDialog(); //cleanup any dialog if we change the display
         this.displayStack.push(new DialogDisplayEntry(setDialogFunction));
         return this._getTop().id;
     }
     removeDisplay(id){
+        //never remove the first entry from the stack
         for (let idx=1;idx<this.displayStack.length;idx++){
             if (this.displayStack[idx].id===id){
                 this.displayStack.splice(idx,1);
@@ -157,23 +161,18 @@ export const OverlayContainer=MapEventGuard(React.forwardRef((props,ref)=>{
 }));
 
 const OverlayDialog = ({className, children}) => {
-    let [DialogDisplay, setDialog] = useDialog(); //for nested dialogs
     const dialogContext = useDialogContext();
     const nestedDialogContext = useRef(new DialogContextImpl(dialogContext));
-    useEffect(() => {
-        const id = nestedDialogContext.current.setDisplay(setDialog);
-        return () => nestedDialogContext.current.removeDisplay(id);
-    }, []);
     useInputMonitor();
     return (
         <OverlayContainer
             onClick={() => dialogContext.closeDialog()}
             className={className}
         >
-            <DialogDisplay/>
             <DialogContext
                 context={nestedDialogContext.current}
             >
+                <DialogDisplay/>
                 {Children.map(children, (child) => cloneElement(child, {closeCallback: close}))}
             </DialogContext>
         </OverlayContainer>
