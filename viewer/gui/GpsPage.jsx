@@ -23,7 +23,7 @@ import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {DynamicTitleIcons} from "../components/TitleIcons";
-import {showDialog} from "../components/OverlayDialog";
+import {showDialog, useDialogContext} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
 import {injectav} from "../util/helper";
@@ -125,7 +125,7 @@ const GpsPage = (props) => {
         if (currentNumber >= MINPAGE && currentNumber <= MAXPAGE && hasPageEntries(currentNumber)) return currentNumber;
         return 1;
     }, true);
-    const dialogCtxRef = useRef();
+    const dialogContext = useDialogContext();
     const setPageNumber = useCallback((num, opt_noRemote) => {
         setPageNumberImpl(num);
         if (!opt_noRemote) {
@@ -179,15 +179,15 @@ const GpsPage = (props) => {
         }]
         .concat(createNumButtons(MINPAGE, MAXPAGE))
         .concat([
-            anchorWatch(false, dialogCtxRef),
-            RemoteChannelDialog({overflow: true}, dialogCtxRef),
+            anchorWatch(false, dialogContext),
+            RemoteChannelDialog({overflow: true}, dialogContext),
             Mob.mobDefinition(history),
             EditPageDialog.getButtonDef(
                 getLayoutPage(pageNumber).layoutPage,
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR],
-                dialogCtxRef),
-            LayoutFinishedDialog.getButtonDef(undefined, dialogCtxRef),
+                dialogContext),
+            LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
             LayoutHandler.revertButtonDef((pageWithOptions) => {
                 let current = getLayoutPage(pageNumber);
                 if (pageWithOptions.location !== current.location) {
@@ -214,7 +214,7 @@ const GpsPage = (props) => {
         const item=avev.avnav.item;
         if (! item) return;
         if (LayoutHandler.isEditing()) {
-            showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
+            showDialog(dialogContext, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
                 pageWithOptions={getLayoutPage(pageNumber)}
                 panelname={panelInfo.name}
@@ -229,7 +229,7 @@ const GpsPage = (props) => {
         if (item && item.name === "AisTarget") {
             let mmsi = avev.avnav.mmsi;
             if (mmsi === undefined) return;
-            showDialog(dialogCtxRef, () => {
+            showDialog(dialogContext, () => {
                 return <AisInfoWithFunctions
                     mmsi={mmsi}
                     actionCb={(action, m) => {
@@ -284,7 +284,7 @@ const GpsPage = (props) => {
             },
             onClick: () => {
                 if (LayoutHandler.isEditing()) {
-                    showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
+                    showDialog(dialogContext, () => <EditWidgetDialogWithFunc
                         pageWithOptions={getLayoutPage(pageNumber)}
                         panelname={panelData.name}
                         widgetItem={undefined}
@@ -310,7 +310,7 @@ const GpsPage = (props) => {
             id={props.id}
             autoHideButtons={autohide}
         >
-            <PageLeft dialogCtxRef={dialogCtxRef}>
+            <PageLeft>
                 {titleIcons && <DynamicTitleIcons/>}
                 {panelList.map((panelProps) => {
                     return (

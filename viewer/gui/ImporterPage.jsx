@@ -369,7 +369,7 @@ const ImporterPage = (props) => {
     const [isActive,setIsActive]=useState(false);
     const chartImportExtensions=useRef([]);
     const importSubDir=useRef((props.options && props.options.subdir)?props.options.subdir:undefined);
-    const dialogContext = useRef();
+    const dialogContext = useDialogContext();
     const activeButtons = [
         {
             name: 'DownloadPageUpload',
@@ -453,7 +453,7 @@ const ImporterPage = (props) => {
 
     }, [])
     return <PageFrame id={props.id}>
-        <PageLeft title={"Chart Converter"} dialogCtxRef={dialogContext} >
+        <PageLeft title={"Chart Converter"} >
             <PageContent
                 showEditDialog={showImportDialog}
                 showConverterDialog={showConverterDialog}

@@ -21,9 +21,9 @@ import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
 import {
-    DialogContext,
-    setGlobalContext, setGlobalContextDirect, showPromiseDialog,
-    useDialog, useDialogContext
+    DialogContext, DialogDisplay,
+    showPromiseDialog,
+    useDialogContext
 } from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
@@ -188,36 +188,12 @@ const ButtonSizer=(props)=>{
 let lastError={
 };
 
-let mainShowDialog=undefined;
-
-const GlobalDialog=()=>{
-    const [DialogDisplay, setDialog] = useDialog();
-    setGlobalContext(undefined,setDialog);
-    mainShowDialog=setDialog;
-    useEffect(() => {
-        return ()=>{
-            setGlobalContext();
-            mainShowDialog=undefined;
-        }
-    }, []);
-    return <DialogDisplay/>
-}
-
-const GlobalDialogHelper=(props)=>{
-    const dialogContext=useDialogContext();
-    setGlobalContextDirect(dialogContext);
-    return null;
-}
 
 const MainBody = ({ history, nightMode}) => {
     const location=history.currentLocation(true);
-    const [DialogDisplay, setDialog] = useDialog();
     return (
         <HistoryContext history={history}>
-        <DialogContext
-            showDialog={setDialog}
-        >
-            <GlobalDialogHelper/>
+        <DialogContext>
             <DialogDisplay/>
             <DynamicRouter
                 storeKeys={{

@@ -231,7 +231,7 @@ const AisPage =(props)=>{
         const [sortField,setSortField]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
         const [searchActive,setSearchActive]=useStoreState(keys.gui.aispage.searchActive,false);
         const [searchValue,setSearchValue]=useStoreState(keys.gui.aispage.searchValue,"");
-        const dialogContext=useRef();
+        const dialogContext=useDialogContext();
         const sortDialog=useCallback(()=> {
             for (let i in sortFields) {
                 sortFields[i].selected = sortFields[i].value === sortField;
@@ -268,7 +268,7 @@ const AisPage =(props)=>{
                         setSearchActive(false);
                     }
                     else{
-                        showPromiseDialog(dialogContext.current,(props)=><ValueDialog
+                        showPromiseDialog(dialogContext,(props)=><ValueDialog
                             {...props}
                             title={"filter"}
                             value={searchValue}
@@ -322,7 +322,7 @@ const AisPage =(props)=>{
                 {...props}
                 id={ID}
                 title="Ais">
-                <PageLeft dialogCtxRef={dialogContext}>
+                <PageLeft>
                     <Summary numTargets={0}
                              storeKeys={{
                                  updateCount:keys.nav.ais.updateCount,
@@ -339,7 +339,7 @@ const AisPage =(props)=>{
                         onItemClick={(ev)=> {
                             const item=avitem(ev);
                             let accessor=aisproxy(item);
-                            showDialog(dialogContext.current,()=>{
+                            showDialog(dialogContext,()=>{
                                 return <AisInfoWithFunctions
                                     mmsi={accessor.mmsi}
                                     actionCb={(action,m)=>{

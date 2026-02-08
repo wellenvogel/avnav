@@ -11,7 +11,7 @@ import NavHandler from '../nav/navdata.js';
 import {
     DBCancel,
     DialogButtons, DialogFrame, DialogRow,
-    DialogText, OverlayDialog, showDialog, showPromiseDialog, useDialogContext
+    DialogText, OverlayContainer, showDialog, showPromiseDialog, useDialogContext
 } from '../components/OverlayDialog.jsx';
 import Helper, {injectav} from '../util/helper.js';
 import {
@@ -250,9 +250,9 @@ const MapWidgetsDialog =()=> {
 }
 
 const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
-const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
+const OverlayContent=({showWpButtons,setShowWpButtons,dialogContext})=>{
     const waypointButtons=[
-        anchorWatch(false,dialogCtxRef),
+        anchorWatch(false,dialogContext),
         {
             name:'WpLocate',
             onClick:()=>{
@@ -268,10 +268,10 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
             name:'WpEdit',
             onClick:()=>{
                 if (activeRoute.hasRoute()){
-                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogCtxRef);
+                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogContext);
                 }
                 else {
-                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogCtxRef);
+                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogContext);
                 }
                 setShowWpButtons(false);
             },
@@ -429,7 +429,7 @@ const createRouteFeatureAction=(history,opt_fromMeasure)=>{
     })
 }
 const NavPage=(props)=>{
-    const dialogCtx=useRef();
+    const dialogCtx=useDialogContext();
     const [wpButtonsVisible,setWpButtonsVisible]=useState(false);
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
     const [sequence,setSequence]=useState(0);
@@ -835,7 +835,7 @@ const NavPage=(props)=>{
                 overflow: true,
                 onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
             },
-            LayoutFinishedDialog.getButtonDef(undefined,dialogCtx.current),
+            LayoutFinishedDialog.getButtonDef(undefined,dialogCtx),
             LayoutHandler.revertButtonDef((pageWithOptions)=>{
                 if (pageWithOptions.location !== props.location){
                     history.replace(pageWithOptions.location,pageWithOptions.options);
@@ -860,14 +860,16 @@ const NavPage=(props)=>{
                 <PageFrame
                     {...pageProperties}
                     >
-                    <PageLeft dialogCtxRef={dialogCtx}>
-                        <OverlayDialog
+                    <PageLeft >
+                        <OverlayContainer
                             closeCallback={() => history.pop()}>
                             <DialogFrame title={"Waiting for chart"}>
                                 <DialogText>{neededChart.name||neededChart.key}</DialogText>
-                                <DialogButtons buttonList={DBCancel()}/>
+                                <DialogButtons buttonList={DBCancel({
+                                    onClick:()=>history.pop()
+                                })}/>
                             </DialogFrame>
-                        </OverlayDialog>
+                        </OverlayContainer>
                     </PageLeft>
                     <ButtonList page={pageProperties.id} itemList={buttons}/>
                 </PageFrame>
@@ -887,11 +889,10 @@ const NavPage=(props)=>{
                         setShowWpButtons={(on)=>{
                             showWpButtons(on);
                         }}
-                        dialogCtxRef={dialogCtx}
+
                     />}
                 buttonList={buttons}
                 autoHideButtons={autohide}
-                dialogCtxRef={dialogCtx}
                 />
         );
 }

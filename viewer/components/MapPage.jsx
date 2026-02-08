@@ -13,7 +13,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
-import {handleCtxRef, showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
+import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
@@ -233,10 +233,7 @@ const MapPage =(iprops)=>{
             >
                 {props.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
                 {props.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} />:null}
-                <PageLeft dialogCtxRef={(ctx)=>{
-                    dialogCtx.current=ctx;
-                    handleCtxRef(ctx,props.dialogCtxRef);
-                }}>
+                <PageLeft>
                         <div className="leftSection">
                             <WidgetContainer
                                 fontSize={props.widgetFontSize + "px"}

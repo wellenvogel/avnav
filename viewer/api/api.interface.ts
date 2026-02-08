@@ -444,9 +444,6 @@ export type MapLayerProfiles=MapLayerProfilesRaster|MapLayerProfilesVector
 
 export type StoreData=object|string|boolean|number;
 
-export interface DialogContext{
-    closeDialog:()=>void
-}
 
 export interface Button{
     name:string;            //the button name and css class
@@ -459,12 +456,12 @@ export interface Button{
      * the click handler of the butoon
      * @param event the original event (pass this e.g. to showDialog as context)
      * @param currentValues the current values of the parameters
-     * @param context the dialog context (you can call closeDialog on it)
+     * @param closeFunction can be called to close the dialog
      * @returns {WidgetParameterValues|undefined} if you return a object it is interpreted as new values to be set in the dialog
      */
     onClick?:(event:object,
               currentValues:WidgetParameterValues,
-              context:DialogContext)=>WidgetParameterValues|undefined;
+              closeFunction:()=>void)=>WidgetParameterValues|undefined;
 }
 export interface DialogConfig{
     className?:string;
@@ -625,8 +622,9 @@ export interface ApiV2 extends Api{
      * @param dialog
      * @param context you can provide here the event object you got from events
      *                that you registered
+     * @returns a function that can be called to close the dialog
      */
-    showDialog(dialog:DialogConfig,context:object):void
+    showDialog(dialog:DialogConfig,context:object):(()=>void)
 
     /**
      * write some data to the local storage
