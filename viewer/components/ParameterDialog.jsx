@@ -44,10 +44,7 @@ export const ParameterDialog = (props) => {
         }
     },[props.values,props.parameters]);
     const buttons=[];
-    if (!props.buttons) {
-        buttons.push(DBCancel());
-    }
-    else{
+    if (props.buttons) {
         props.buttons.forEach(button => {
             buttons.push({
                 ...button,
@@ -105,7 +102,19 @@ export const showParameterDialog = (dialogContext,config,opt_cancelCb) => {
     if (config.buttons && ! Array.isArray(config.buttons)){
         throw new Error("config.buttons must be an array");
     }
-    return showDialog(dialogContext, (dp)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,opt_cancelCb);
+    let cancel=undefined;
+    if (opt_cancelCb || config.onClose){
+        cancel=()=>{
+            if (opt_cancelCb){opt_cancelCb()}
+            if (config.onClose){config.onClose()}
+        }
+    }
+    return showDialog(dialogContext,
+        (dp)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,
+        cancel,
+        {
+            dialogClassName:config.fullscreen?"fullscreen":undefined
+        });
 }
 //@type {DialogConfig}
 ParameterDialog.propTypes = {

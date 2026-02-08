@@ -463,22 +463,27 @@ export interface Button{
               currentValues:WidgetParameterValues,
               closeFunction:()=>void)=>WidgetParameterValues|undefined;
 }
-export interface DialogConfig{
-    className?:string;
-    title?:string;                      //the dialog title
-    text?:string;                       //some text to be shown in the dialog
-    html?:string;                       //some html to be shown after the text
+export interface DialogConfig {
+    className?: string;
+    title?: string;                      //the dialog title
+    text?: string;                       //some text to be shown in the dialog
+    html?: string;                       //some html to be shown after the text
     parameters?: [ParametersWithName];  //the list of parameters to be shown
-    values?:      WidgetParameterValues; //the initial values
+    values?: WidgetParameterValues; //the initial values
+    fullscreen?: boolean;                //fill the complete page
     /**
      * callback when a value changes
      * @param event
      * @param values only the changed values
      */
-    onChange?:    (event:object,values:WidgetParameterValues)=>WidgetParameterValues|undefined;
-    buttons?:     [Button];               //if not provided Cancel is shown
+    onChange?: (event: object, values: WidgetParameterValues) => WidgetParameterValues | undefined;
+    buttons?: [Button];               //if not provided Cancel is shown
+    /**
+     * if provided it will be called when the dialog closes
+     *
+     */
+    onClose?: () => void;
 }
-
 /**
  * options that control caching for the proxy
  * (intended for online chart access)
@@ -624,7 +629,7 @@ export interface ApiV2 extends Api{
      *                that you registered
      * @returns a function that can be called to close the dialog
      */
-    showDialog(dialog:DialogConfig,context:object):(()=>void)
+    showDialog(dialog:DialogConfig,context:object):Promise<(()=>void)>
 
     /**
      * write some data to the local storage

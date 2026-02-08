@@ -239,7 +239,7 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
         throw new Error("Method not implemented.");
     }
 
-    showDialog(_dialog: DialogConfig, _context: object): ()=>void {
+    showDialog(_dialog: DialogConfig, _context: object): Promise<()=>void> {
         throw new Error("Method not implemented.");
     }
 
