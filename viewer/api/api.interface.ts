@@ -11,6 +11,7 @@ import {MapLibreOptions} from "../map/maplibre/MapLibreLayer";
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Htm from "htm";
+import * as OpenLayers from 'ol/index';
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
@@ -537,7 +538,10 @@ export interface Modules{
      *
      * Refer to the documentation for usages.
      */
-    Htm: typeof Htm
+    Htm: typeof Htm,
+    LatLonSpherical: typeof LatLonSpherical,
+    Dms: typeof Dms,
+    ol: typeof OpenLayers
 }
 
 /**

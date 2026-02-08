@@ -34,6 +34,7 @@ import {
 import React from "react";
 import ReactDOM from "react-dom";
 import Htm from "htm";
+import * as OpenLayers from 'ol/index';
 
 export class ApiImpl implements ApiIntf {
     constructor() {
@@ -198,7 +199,10 @@ export const UserButtonProps: Required<UserButton>={
 const modules: Modules={
     React: React,
     ReactDOM: ReactDOM,
-    Htm: Htm.bind(React.createElement)
+    Htm: Htm.bind(React.createElement),
+    LatLonSpherical: LatLonSperical,
+    Dms:Dms,
+    ol: OpenLayers
 }
 
 export class ApiV2 extends ApiImpl implements ApiV2Intf {
