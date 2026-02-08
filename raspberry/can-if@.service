@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/lib/avnav/raspberry/setup-can.sh %i start
-ExecStop=/usr/lib/avnav/raspberry/setup-can.sh %i stop
+ExecStart=/usr/lib/avnav/raspberry/can-updown.sh %i start
+ExecStop=/usr/lib/avnav/raspberry/can-updown.sh %i stop
 RemainAfterExit=yes
 
 [Install]
