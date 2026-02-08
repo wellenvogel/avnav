@@ -105,7 +105,7 @@ export const showParameterDialog = (dialogContext,config,opt_cancelCb) => {
     if (config.buttons && ! Array.isArray(config.buttons)){
         throw new Error("config.buttons must be an array");
     }
-    showDialog(dialogContext, (dp)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,opt_cancelCb);
+    return showDialog(dialogContext, (dp)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,opt_cancelCb);
 }
 //@type {DialogConfig}
 ParameterDialog.propTypes = {

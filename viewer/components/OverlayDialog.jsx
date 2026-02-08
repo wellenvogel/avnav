@@ -254,7 +254,7 @@ export const useDialog=(closeCb)=>{
         }
         ,
         (content,opt_closeCb)=>{
-            setNewDialog(content,opt_closeCb);
+            return setNewDialog(content,opt_closeCb);
         }
     ]
 }

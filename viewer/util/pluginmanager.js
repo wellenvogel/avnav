@@ -102,7 +102,7 @@ class PluginApi extends ApiV2 {
     }
 
     showDialog(_dialog, _context) {
-        this.#impl.showDialog(_dialog, _context);
+        return this.#impl.showDialog(_dialog, _context);
     }
 
 
@@ -327,7 +327,7 @@ export class Plugin extends ApiV2{
 
     showDialog(dialog, context) {
         if (! this.manager.dialogStarter) throw new Error("cannot start a dialog in this state");
-        this.manager.dialogStarter(context,dialog);
+        return this.manager.dialogStarter(context,dialog);
     }
 
     getLocalStorage(key, defaultv) {
