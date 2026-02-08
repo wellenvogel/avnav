@@ -18,8 +18,8 @@
   margin: 0.1em;
   overflow: hidden;
   pointer-events: all;
-  background: white;
-  .nightColors();
+  background: var(--avnav-back-color);
+  color:var(--avnav-fore-color);
   .flex-shrink(0);
   .flex-grow(1);
   .flex-display();
@@ -49,7 +49,7 @@
     min-width: 0;
   }
   &.average .infoLeft{
-    .nightForeColor(red);
+    color:var(--avnav-red-color);
   }
 
   .label {
@@ -79,7 +79,7 @@
   .widgetHead {
     border-bottom: 1px solid;
     border-top: 1px solid;
-    .nightBackFade(#E2DFDF);
+    background-color: var(--avnav-head-color);
     height: unset;
   }
   width: unset;
@@ -102,8 +102,7 @@
     .flex-shrink(0);
   }
   overflow: hidden;
-  background-color: @colorMain;
-  .nightColors();
+  background-color: var(--avnav-main-color);
   .flex-shrink(0);
 }
 .widgetContainer.horizontal{
@@ -295,7 +294,7 @@
   }
   &.aisTargetWidget{
     .smallWidget(@size1);
-    .nightBackColor(@colorSecond);
+    background-color: var(--avnav-second-color);
     .aisFront{
       display: inline-block;
       font-size: 1.5em;
@@ -334,14 +333,14 @@
       font-size: 1.5em;
     }
     &.approach{
-      .nightBackFade(@routeApproachingColor);
+      background-color: var(--avnav-red-color);
     }
   }
   &.editRouteWidget{
     border: 3px solid;
-    .nightBorderFade(@colorGreen);
+    border-color: var(--avnav-green-border-color);
     &.activeRoute{
-      .nightBorderFade(@colorRed);
+      border-color: var(--avnav-red-border-color);
     }
     .smallWidget(@size1);
     .widgetData{
@@ -472,7 +471,7 @@
     bottom: 0;
     height: 3em;
     font-size: @timeFont;
-    .nightBackFade(@colorRed);
+    background-color: var(--avnav-error-color);
     padding: 1.5em;
     padding-top: 0.3em;
     margin: 0.5em;

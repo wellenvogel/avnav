@@ -11,8 +11,8 @@
   border-bottom-left-radius: 0.3em;
   border: 1px solid;
   text-decoration: none;
-  .nightBorderFade(#D3D3D3);
-  .nightBackColor(#E6E6E6,rgb(30 30 30 / 55%));
+  border-color: var(--avnav-button-color);
+  background-color: var(--avnav-button-color);
   //position: relative;
   cursor: pointer;
   outline: none;
@@ -46,8 +46,8 @@
   bottom: 0.5em;
   right: 0.5em;
   border-radius: 50%;
-  .nightBackFade(@colorMain);
-  .nightForeColor(white,@nightColor);
+  background-color: var(--avnav-main-color);
+  color: var(--avnav-fore-color-inv);
 }
 .smallButton{
   .buttonBase();
@@ -57,9 +57,9 @@
 }
 .button.active{
   border: 0.3em solid ;
-  .nightBorderColor(@colorGreen,@nightColor);
+  border-color: var(--avnav-button-active-color);
   &.MOB{
-    .nightBorderFade(@colorRed);
+    border-color: var(--avnav-red-border-color);
   }
 }
 
@@ -90,10 +90,10 @@
     font-size: @normalButtonFont;
     padding: 0.5em;
     width: inherit;
-    .nightBackColor(@dialogButtonBackground);
+    background-color: var(--avnav-button-color);
     border: none;
     position: relative;
-    .nightForeColor(@colorMain,@nightColor);
+    color: var(--avnav-fore-color)
     .flex-display();
     .flex-direction(row);
     .flex-align-items(center);
@@ -114,7 +114,7 @@
     }
     &.active {
       border: 0.3em solid;
-      .nightBorderFade(@colorGreen);
+      border-color: var(--avnav-button-active-color);
       padding: 0.2em;
     }
 
@@ -450,7 +450,7 @@ button{
   &.SettingsLayout{
     .iconButton('ballot.svg');
     &.button.active{
-      border-color: @editingColor;
+      border-color: var(--avnav-red-border-color);
     }
   }
   &.SettingsLayoutOff{
@@ -478,7 +478,7 @@ button{
   &.LayoutFinished{
     .iconButton('ballot.svg');
     &.button.active{
-      border-color: @editingColor;
+      border-color: var(--avnav-red-border-color);
     }
   }
   &.RevertLayout{

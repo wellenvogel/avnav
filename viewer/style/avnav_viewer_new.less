@@ -21,12 +21,8 @@
 //general page set up
 //----------------------------------------------------------------------------------------
 
-input {
-  border: 2px inset;
-  .nightBackColor(inherit,#646463)
-}
+
 html,body {
-  .nightColors();
   height: 100%;
   width: 100%;
   margin: 0;
@@ -46,11 +42,8 @@ body{
   position: relative;
 }
 .pageFrame{
-  background-color: white;
-  &.nightMode{
-    background-color: #000;
-    color: @nightColor;
-  }
+  background-color: var(--avnav-back-color);
+  color: var(--avnav-fore-color);
 }
 
 .dimm {
@@ -75,7 +68,7 @@ body{
   right: 0;
   &.editing{
     border: 4px solid;
-    .nightBorderFade(@editingColor);
+    border-color: var(--avnav-red-border-color);
   }
 }
 
@@ -83,7 +76,7 @@ body{
   .flex-display();
   .flex-direction(column);
   position: relative;
-  .nightBackFade(@colorMain);
+  background-color: var(--avnav-main-color);
   &.wrap{
     overflow: hidden;
     .flex-wrap(wrap-reverse)
@@ -117,7 +110,8 @@ body{
   bottom: 0;
   z-index: 101; //above widgets
   &.shade{
-    background-image: linear-gradient(to right,fade(@colorMain,10), fade(@colorMain,20));
+    background-color: var(--avnav-main-color);
+    opacity: 0.15;
   }
 }
 .iconContainer {
@@ -156,14 +150,14 @@ body{
 }
 
 .header{
-  height: @headlineHeight;
+  height: var(--avnav-headline-height);
   padding: 1em;
-  .nightBackFade(@colorMain);
-  .nightForeColor(white,@nightColor);
+  background-color: var(--avnav-main-color);
+  color:var(--avnav-fore-color-inv);
   font-weight: bold;
   .flex-shrink(0);
   &.connectionLost{
-    .nightBackFade(@colorRed);
+    background-color: var(--avnav-error-color);
   }
 }
 
@@ -172,8 +166,7 @@ body{
 }
 
 .footer{
-    background-color: @colorSecond;
-  .nightColors();
+  background-color: var(--avnav-second-color);
   .flex-shrink(0);
 }
 
@@ -238,10 +231,10 @@ body{
 
   z-index: 121;
   padding: 0.6em;
-  background-color: white;
+  background-color: var(--avnav-back-color);
+  color: var(--avnav-fore-color);
   border-radius: 3px;
   .flex-display();
-  .nightColors();
   .mdShadow2();
 
   &.nested {
@@ -273,7 +266,7 @@ body{
     font-family: inherit;
     border: none;
     border-bottom: 1px solid;
-    .nightBorderColorGR();
+    border-color: var(--avnav-border-color);
     vertical-align: middle;
     line-height: 2em;
     min-height: 2em;
@@ -327,7 +320,7 @@ body{
     }
 
     .selectedItem {
-      .nightBackFade(@colorSelection);
+      background-color: var(--avanv-select-color);
     }
   }
 
@@ -350,7 +343,7 @@ body{
   .insertButtons{
     .dialogRow();
     border-bottom: 1px solid;
-    .nightBorderColorGR(30);
+    border-color: var(--avnav-border-color);
     .flex-justify-content(flex-end);
     .flex-wrap(wrap)
   }
@@ -360,16 +353,16 @@ body{
   }
   .missing{
     input, .input {
-      .nightBorderFade(@colorRed);
+      border-color: var(--avnav-red-border-color);
     }
   }
   .error{
     input, .input {
-      .nightBackFade(fade(@colorRed,50%));
+      background-color: var(--avnav-faded-error-color);
     }
   }
   .errorText{
-    .nightForeFade(@colorRed)
+    color: var(--avnav-error-color)
   }
   .paramButtons {
     .flex-display();
@@ -430,7 +423,7 @@ body{
 .editPageDialog{
   .panelList{
     border-top: 1px solid;
-    .nightBorderColorGR(40);
+    border-color: var(--avnav-border-color);
     margin-top: 0.3em;
     padding-top: 0.3em;
   }
@@ -444,7 +437,7 @@ body{
   .editPanel {
     margin-top: 0.3em;
     border-bottom: 1px solid;
-    .nightBorderColorGR(20);
+    border-color: var(--avnav-border-color);
     & >div{
       display: inline-block;
     }
@@ -465,7 +458,7 @@ body{
   }
   .selectCurrent{
     border-top: 1px solid;
-    .nightBorderColorGR(40);
+    border-color: var(--avnav-border-color);
     margin-top: 0.5em;
     padding-top: 0.5em;
   }
@@ -484,7 +477,7 @@ body{
     .flex-align-items(center);
   }
   .selectedItem {
-    .nightBackFade(@colorSelection);
+    background-color: var(--avnav-select-color);
   }
 }
 .LoadRoutesDialog{
@@ -635,7 +628,7 @@ body{
   .featureInfoListHtml &{
     margin: 0.5em;
     border-bottom: 1px solid;
-    .nightBorderColor(grey,@nightColor);
+    border-color: var(--avnav-border-color);
     white-space: unset;
   }
 }
@@ -658,7 +651,7 @@ body{
     margin-left: 7.4em;
     max-width: 15em;
     font-size: 0.8em;
-    .nightForeColor(@colorRed)
+    color: var(--avnav-faded-error-color)
   }
 }
 
@@ -782,7 +775,7 @@ body{
   position: relative;
   border-bottom: 1px solid;
   padding: 1em;
-  .nightBorderColorGR(30);
+  border-color: var(--avnav-border-color);
   .flex-display();
   .flex-align-items(center);
   .icon{
@@ -790,7 +783,7 @@ body{
   }
 }
 .activeEntry{
-  .nightBackColor(@colorSelection);
+  background: var(--avnav-select-color);
 }
 
 //----------------------------------------------------------------------------------------
@@ -807,9 +800,8 @@ span.valuePrefix{
   position: fixed;
   left: 50px;
   bottom: 10px;
-  background-color: #383838;
-  color: #F0F0F0;
-  .nightColors();
+  background-color: var(--avnav-toast-color);
+  color: var(--avnav-fore-color-inv);
   font-size: 1.5em;
   padding: 1em;
   text-align: center;
@@ -832,7 +824,7 @@ span.valuePrefix{
 
 .routeInfoPoint{
   border-bottom: 1px solid;
-  .nightBorderColorGR();
+  border-color: var(--avnav-border-color);
   padding-left: 0.1em;
   padding-right: 0.3em;
   padding-top: 0.1em;
@@ -961,7 +953,7 @@ span.valuePrefix{
 
 // entry that needs action
 .userAction{
-  color: @colorRed
+  color: var(--avnav-red-color)
 }
 
 //--errorInfo
@@ -1016,15 +1008,10 @@ span.valuePrefix{
   height: 1.5em;
   border-radius: 50%;
   border: 2px solid;
-  border-color: #ffffff;
+  border-color: var(--avnav-fore-color);
   border-top-color: #00000000;
-
-  .nightMode & {
-      border-color: @nightColor;
-      border-top-color: #00000000;
-  }
   .dialog &{
-    .nightBorderColor(black,@nightColor);
+    border-color: var(--avnav-border-color);
     border-top-color: #00000000;
   }
   .nightMode .dialog &{
@@ -1153,7 +1140,7 @@ span.valuePrefix{
       width: 50%;
       height: 100%;
       border: 1px solid;
-      .nightBorderFade(grey);
+      border-color: var(--avnav-border-color);
       .widgetContainer{
         height: 100%;
         width: 100%;
@@ -1219,7 +1206,7 @@ span.valuePrefix{
     }
 
     .aisSummary{
-      .nightBackFade(@colorSecond);
+      background-color: var(--avnav-select-color);
       padding-top: 0.5em;
       padding-left: 1em;
       padding-bottom: 0.5em;
@@ -1279,7 +1266,7 @@ span.valuePrefix{
         font-weight: bold;
       }
       .aisWarning{
-        color: @colorRed; //should also be ok for night mode as normal night color is dimmed to 60%
+        color: var(--avnav-red-color); //should also be ok for night mode as normal night color is dimmed to 60%
       }
     }
     .dialogRow{
@@ -1368,7 +1355,7 @@ span.valuePrefix{
     }
     &.serverError{
       .header {
-        .nightBackFade(@colorRed);
+        background-color: var(--avnav-error-color);
       }
     }
   }
@@ -1539,10 +1526,9 @@ span.valuePrefix{
     right: 0;
     bottom: 0;
     padding: 1em 1em 1em 1em;
-    background-color: lightgrey;
+    background-color: var(--avnav-second-color);
     z-index: 10;
     .flex-display();
-    .nightColors();
     .progressContainer{
       .flex(1);
     }
@@ -1561,14 +1547,14 @@ span.valuePrefix{
     }
     .progressDone{
       height: 100%;
-      .nightBackColor(blue);
+      background-color: var(--avnav-slide-color);
     }
   }
 
   .fileDialog{
     .existing input{
       border-bottom: 1px solid;
-      .nightBorderFade(@colorRed)
+      border-color: var(--avnav-red-border-color);
     }
   }
   .userAppDialog{
@@ -1603,7 +1589,7 @@ span.valuePrefix{
       border-width: 3px;
       border-style: solid;
       padding: 5px;
-      .nightBorderFade(@colorRed);
+      border-color: var(--avnav-red-border-color);
     }
   }
   .EditRoutePoints{
@@ -1629,7 +1615,7 @@ span.valuePrefix{
     .sectionList{
       border-right: 1px solid ;
       margin-right: 2em;
-      .nightBorderColorGR();
+      border-color: var(--avnav-border-color);
       width: 10em;
       .flex-grow(0);
       &.expand{
@@ -1638,7 +1624,7 @@ span.valuePrefix{
         margin:0;
       }
       .layoutSetting{
-        .nightForeFade(@editingColor);
+        color:var(--avnav-faded-error-color);
       }
     }
     .settingsList{
@@ -1655,7 +1641,7 @@ span.valuePrefix{
         line-height: unset;
       }
       .layoutSetting{
-        .nightForeFade(@editingColor);
+        color: var(--avnav-faded-error-color);
       }
     }
     .sectionList,.settingsList{
@@ -1851,11 +1837,11 @@ span.valuePrefix{
     &.editing .bottomSection{
       .bottomLeft {
         border-right: 0.3em solid;
-        .nightBorderFade(@editingColor);
+        border-color: var(--avnav-red-border-color);
       }
       .bottomRight {
         border-left: 0.3em solid;
-        .nightBorderFade(@editingColor);
+        border-color: var(--avnav-red-border-color);
       }
     }
     .widgetContainer.left{
@@ -1864,7 +1850,7 @@ span.valuePrefix{
       left:0;
       max-height: 100%;
       z-index: 3;
-      width:  @navLeftWidgetWidth;
+      width:  var(--avnav-left-widgets-width);
     }
     .widgetContainer.top{
       z-index: 3;
