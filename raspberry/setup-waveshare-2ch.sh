@@ -15,35 +15,13 @@ dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=23
 dtoverlay=mcp2515-can1,oscillator=16000000,interrupt=25
 CFGPAR
 
-#/etc/network/interfaces.d/can0
-read -r -d '' CAN0 << 'CAN0'
-#physical can interfaces
-auto can0
-iface can0 can static
-bitrate 250000
-pre-up /sbin/ip link set $IFACE type can restart-ms 100
-down /sbin/ip link set $IFACE down
-up /sbin/ifconfig $IFACE txqueuelen 10000
-CAN0
-
-canif0="$BASE/etc/network/interfaces.d/can0"
-
-#/etc/network/interfaces.d/can1
-read -r -d '' CAN1 << 'CAN1'
-#physical can interfaces
-auto can1
-iface can1 can static
-bitrate 250000
-pre-up /sbin/ip link set $IFACE type can restart-ms 100
-down /sbin/ip link set $IFACE down
-up /sbin/ifconfig $IFACE txqueuelen 10000
-CAN1
-
-canif1="$BASE/etc/network/interfaces.d/can1"
-
 needsReboot=0
 if [ "$1" = $MODE_DIS ] ; then
     removeConfig $BOOTCONFIG "$WS_COMMENT" "$CFGPAR"
+    checkRes
+    /usr/bin/systemctl disable can-if@can0.service
+    checkRes
+    /usr/bin/systemctl disable can-if@can1.service
     checkRes
     exit $needsReboot
 fi
@@ -51,9 +29,9 @@ fi
 if [ "$1" = $MODE_EN ] ; then
     checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
     checkRes
-    replaceConfig "$canif0" "$CAN0"
+    /usr/bin/systemctl enable can-if@can0.service
     checkRes
-    replaceConfig "$canif1" "$CAN1"
+    /usr/bin/systemctl enable can-if@can1.service
     checkRes
     log "needReboot=$needsReboot"
     exit $needsReboot
