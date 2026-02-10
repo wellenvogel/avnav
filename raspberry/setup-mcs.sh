@@ -23,7 +23,7 @@ if [ -f "$pdir/$MCS_SERVICE_SCRIPT" ] ; then
     MCS_PACKAGE="$pdir"
 fi
 
-PACKAGES="python3 pigpio python3-pigpio python3-rpi.gpio"
+PACKAGES="python3 python3-lgpio python3-rpi-lgpio"
 
 read -r -d '' CFGPAR <<'CFGPAR'
 dtoverlay=sc16is752-i2c,int_pin=13,addr=0x4c,xtal=14745600
