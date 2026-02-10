@@ -9,7 +9,7 @@ import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
-import {setav} from "../util/helper";
+import {setav,concatsp} from "../util/helper";
 
 const AisFullDisplay=(display)=> {
     return <React.Fragment>
@@ -52,6 +52,7 @@ const AisFullDisplay=(display)=> {
         </div>
     }
     <div className="aisPart">
+        <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
         <div className="widgetData">
             <span className='aisFront aisData'>{display.front}</span>
         </div>
@@ -61,6 +62,7 @@ const AisFullDisplay=(display)=> {
 const AisSmallDisplay=(display)=> {
     return <div className="aisSmall">
         <div className="aisPart">
+            <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
             <div className="widgetData">
                 <span className='aisFront aisData'>{display.front.substring(0, 1)}</span>
             </div>
@@ -117,10 +119,11 @@ const AisTargetWidget = (props) => {
         display.headingTo = AisFormatter.format('headingTo', target);
     }
     display.distance=AisFormatter.format('distance', target);
+    display.iconColor=color;
     const dashMode = props.mode === "gps";
     const resizeSequence = useStringsChanged(display, dashMode);
     if (target.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
-        const style = {...props.style, backgroundColor: color};
+        const style = {...props.style, /*backgroundColor: color*/};
         return (
             <WidgetFrame {...props}
                          addClass="aisTargetWidget"

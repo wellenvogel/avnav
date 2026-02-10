@@ -24,13 +24,14 @@
   --avnav-slide-color: fade(blue,90%);
   --avnav-button-color: var(--avnav-second-color);
   --avnav-border-color: @_borderColor;
-  --avnav-button-active-color: @_colorGreen;
-  --avnav-green-border-color: @_colorGreen;
+  --avnav-active-color: @_colorGreen;
   --avnav-night-opacity: 1;
   --avnav-headline-height: 4em;
   //widgets
   --avnav-widget-head-color: @_widgetHeadColor;
   --avnav-left-widgets-width: 8.8em;
+  --avnav-widget-color: var(--avnav-back-color); //widget background
+  --avnav-widget-fore-color: var(--avnav-fore-color);
 }
 .nightMode{
   --avnav-fore-color: @_nightForeColor;
@@ -45,9 +46,10 @@
   --avnav-slide-color: fade(@_colorRed,@_nightFade);
   --avnav-button-color: black;
   --avnav-border-color: fade(@_nightForeColor,60%);
-  --avnav-button-active-color: @_nightForeColor;
-  --avnav-green-border-color: fade(@_colorGreen,@_nightFade);
+  --avnav-active-color: @_nightForeColor;
   --avnav-night-opacity: @_nightOpacity;
   //widgets
-  --avnav-widget-head-color: fade(@_widgetHeadColor,@_nightFade);
+  --avnav-widget-head-color: rgba(50,47,47,0.6);
+  --avnav-widget-color: var(--avnav-back-color); //widget background
+  --avnav-widget-fore-color: var(--avnav-fore-color);
 }

@@ -77,7 +77,6 @@
 //----- dashboard pages (gps page) ------
 .hfield .widgetContainer .widget{
   .widgetHead {
-    border-bottom: @normalBorder;
     border-top: @normalBorder;
     background-color: var(--avnav-widget-head-color);
     height: unset;
@@ -170,6 +169,8 @@
 @size15: 9em;
 @size2: 11em;
 .widget{
+  background-color: var(--avnav-widget-color);
+  color: var(--avnav-widget-fore-color);
   .bigWidget(@size){
     .widgetData{
       font-size: @bigFont;
@@ -294,7 +295,6 @@
   }
   &.aisTargetWidget{
     .smallWidget(@size1);
-    background-color: var(--avnav-second-color);
     .aisFront{
       display: inline-block;
       font-size: 1.5em;
@@ -310,11 +310,25 @@
       .flex-direction(column);
       .flex(1);
     }
+     .icon {
+      position: absolute;
+      width: 4em;
+      height: 1.5em;
+      display: block;
+      margin: 0;
+      bottom: 0.2em;
+    }
     .aisSmall {
       .flex-display();
       .flex-direction(row);
       .aisParts {
         flex-grow: 1;
+      }
+      .icon{
+        width: 100%;
+        height: 1em;
+        margin: 0;
+        bottom: 0;
       }
     }
 
@@ -337,9 +351,8 @@
     }
   }
   &.editRouteWidget{
-    border: @borderAttentionLarge;
-    border-color: var(--avnav-green-border-color);
     &.activeRoute{
+      border: @borderAttentionLarge;
       border-color: var(--avnav-attention-color);
     }
     .smallWidget(@size1);
@@ -491,7 +504,7 @@
       top: calc(50% - 1em);
       left: calc(50% - 1em);
       z-index: 101;
-      color: red;
+      color: var(--avnav-attention-color);
     }
     & > .listContainer {
       .flex-display();
@@ -581,9 +594,9 @@
     text-align: center;
   }
   .widgetData.critical{
-    color:red;
+    color:var(--avnav-attention-color);
   }
   &.critical .widgetData{
-    color: red;
+    color: var(--avnav-attention-color);
   }
 }
