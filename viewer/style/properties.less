@@ -1,55 +1,53 @@
 @_colorMain: #546E7A;
-@_colorSecond: #CFD8DC;
-@_colorError: #C62828;
+@_colorSecond: #E6E6E6;
+@_colorAttention: #C62828;
 @_colorRed: #FF8A80;
 @_colorGreen: #1DE9B6;
-@_colorSelection: #CECECE;
+@_colorSelection: #eae8e8;
 @_widgetHeadColor:#E2DFDF;
 @_nightForeColor: rgba(252, 11, 11, 0.6);
 @_nightFade: 60%;
 @_buttonColor: #E6E6E6;
-@_borderColor: fade(rgba(0, 0, 0,1),40);
+@_borderColor: #acacac;
 @_nightOpacity: 0.6;
 
 :root{
   --avnav-fore-color-inv: white;
-  --avnav-main-color:  @_colorMain; //600 right panel
-  --avnav-second-color: @_colorSecond;
-  --avnav-error-color: @_colorError;
-  --avnav-faded-error-color: fade(@_colorError,50%);
-  --avnav-select-color: @_colorSelection;
-  --avnav-head-color: @_widgetHeadColor;
-  --avnav-red-color: @_colorRed;
   --avnav-fore-color: black;
   --avnav-back-color: white;
+  --avnav-dialog-color: white;
   --avnav-toast-color: #383838;
+  --avnav-main-color:  @_colorMain;      //background for inverse text (header,side)
+  --avnav-second-color: @_colorSecond;   //background for normal foreground text
+  --avnav-attention-color: @_colorAttention;
+  --avnav-select-color: @_colorSelection;
   --avnav-slide-color: fade(blue,90%);
-  --avnav-button-color: @_buttonColor;
+  --avnav-button-color: var(--avnav-second-color);
   --avnav-border-color: @_borderColor;
   --avnav-button-active-color: @_colorGreen;
-  --avnav-red-border-color: @_colorError;
   --avnav-green-border-color: @_colorGreen;
   --avnav-night-opacity: 1;
   --avnav-headline-height: 4em;
+  //widgets
+  --avnav-widget-head-color: @_widgetHeadColor;
   --avnav-left-widgets-width: 8.8em;
 }
 .nightMode{
-  --avnav-main-color: fade(@_colorMain, @_nightFade);
-  --avnav-second-color: black;
-  --avnav-fore-color-inv: @_nightForeColor;
-  --avnav-error-color: fade(@_colorError, @_nightFade);
-  --avnav-select-color: fade(@_colorSelection,@_nightFade);
-  --avnav-faded-error-color: fade(fade(@_colorError,0.5),@_nightFade);
-  --avnav-head-color: fade(@_widgetHeadColor,@_nightFade);
-  --avnav-red-color: fade(@_colorRed,@_nightFade);
   --avnav-fore-color: @_nightForeColor;
+  --avnav-fore-color-inv: @_nightForeColor;
   --avnav-back-color: black;
+  --avnav-second-color: #5a5a5a;
+  --avnav-dialog-color: #282828;
+  --avnav-main-color: fade(@_colorMain, @_nightFade);
   --avnav-toast-color: fade(#383838,@_nightFade);
+  --avnav-attention-color: fade(@_colorAttention, @_nightFade);
+  --avnav-select-color: black;
   --avnav-slide-color: fade(@_colorRed,@_nightFade);
-  --avnav-button-color: rgb(30 30 30 / 55%);
+  --avnav-button-color: black;
   --avnav-border-color: fade(@_nightForeColor,60%);
   --avnav-button-active-color: @_nightForeColor;
-  --avnav-red-border-color: fade(@_colorError,@_nightFade);
   --avnav-green-border-color: fade(@_colorGreen,@_nightFade);
   --avnav-night-opacity: @_nightOpacity;
+  //widgets
+  --avnav-widget-head-color: fade(@_widgetHeadColor,@_nightFade);
 }

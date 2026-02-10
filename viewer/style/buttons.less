@@ -9,7 +9,7 @@
   border-top-left-radius: 0.3em;
   border-bottom-right-radius: 0.3em;
   border-bottom-left-radius: 0.3em;
-  border: 1px solid;
+  border: @normalBorder;
   text-decoration: none;
   border-color: var(--avnav-button-color);
   background-color: var(--avnav-button-color);
@@ -59,7 +59,7 @@
   border: 0.3em solid ;
   border-color: var(--avnav-button-active-color);
   &.MOB{
-    border-color: var(--avnav-red-border-color);
+    border-color: var(--avnav-attention-color);
   }
 }
 
@@ -450,7 +450,7 @@ button{
   &.SettingsLayout{
     .iconButton('ballot.svg');
     &.button.active{
-      border-color: var(--avnav-red-border-color);
+      border-color: var(--avnav-attention-color);
     }
   }
   &.SettingsLayoutOff{
@@ -478,7 +478,7 @@ button{
   &.LayoutFinished{
     .iconButton('ballot.svg');
     &.button.active{
-      border-color: var(--avnav-red-border-color);
+      border-color: var(--avnav-attention-color);
     }
   }
   &.RevertLayout{

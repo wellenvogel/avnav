@@ -67,8 +67,8 @@ body{
   bottom: 0;
   right: 0;
   &.editing{
-    border: 4px solid;
-    border-color: var(--avnav-red-border-color);
+    border: @borderAttentionLarge;
+    border-color: var(--avnav-attention-color);
   }
 }
 
@@ -157,7 +157,7 @@ body{
   font-weight: bold;
   .flex-shrink(0);
   &.connectionLost{
-    background-color: var(--avnav-error-color);
+    background-color: var(--avnav-attention-color);
   }
 }
 
@@ -190,7 +190,13 @@ body{
   white-space: pre;
 }
 
-
+.selectedItem {
+  background-color: var(--avnav-select-color);
+  font-weight: bold;
+}
+.activeEntry{
+  .selectedItem();
+}
 //----------------------------------------------------------------------------------------
 //dialogs
 //----------------------------------------------------------------------------------------
@@ -231,7 +237,7 @@ body{
 
   z-index: 121;
   padding: 0.6em;
-  background-color: var(--avnav-back-color);
+  background-color: var(--avnav-dialog-color);
   color: var(--avnav-fore-color);
   border-radius: 3px;
   .flex-display();
@@ -265,11 +271,25 @@ body{
     font-size: inherit;
     font-family: inherit;
     border: none;
-    border-bottom: 1px solid;
+    border-bottom: @normalBorder;
     border-color: var(--avnav-border-color);
     vertical-align: middle;
     line-height: 2em;
     min-height: 2em;
+    //margins to allow outline
+    margin-top: 2px;
+    margin-bottom: 2px;
+    outline: none;
+    color: var(--avnav-fore-color);
+    background-color: var(--avnav-back-color);
+    &:focus {
+      outline: @borderAttention;
+      outline-color: var(--avnav-border-color);
+    }
+  }
+  .error input, .error .input{
+    border: @borderAttention;
+    border-color: var(--avnav-attention-color);
   }
 
   .disabled .input{
@@ -319,9 +339,6 @@ body{
       .flex-basis(auto);
     }
 
-    .selectedItem {
-      background-color: var(--avanv-select-color);
-    }
   }
 
   .dialogRow{
@@ -342,7 +359,7 @@ body{
   }
   .insertButtons{
     .dialogRow();
-    border-bottom: 1px solid;
+    border-bottom: @normalBorder;
     border-color: var(--avnav-border-color);
     .flex-justify-content(flex-end);
     .flex-wrap(wrap)
@@ -353,16 +370,11 @@ body{
   }
   .missing{
     input, .input {
-      border-color: var(--avnav-red-border-color);
-    }
-  }
-  .error{
-    input, .input {
-      background-color: var(--avnav-faded-error-color);
+      border-color: var(--avnav-attention-color);
     }
   }
   .errorText{
-    color: var(--avnav-error-color)
+    color: var(--avnav-attention-color)
   }
   .paramButtons {
     .flex-display();
@@ -422,7 +434,7 @@ body{
 }
 .editPageDialog{
   .panelList{
-    border-top: 1px solid;
+    border-top: @normalBorder;
     border-color: var(--avnav-border-color);
     margin-top: 0.3em;
     padding-top: 0.3em;
@@ -436,7 +448,7 @@ body{
 
   .editPanel {
     margin-top: 0.3em;
-    border-bottom: 1px solid;
+    border-bottom: @normalBorder;
     border-color: var(--avnav-border-color);
     & >div{
       display: inline-block;
@@ -457,7 +469,7 @@ body{
     margin-bottom: 0.3em;
   }
   .selectCurrent{
-    border-top: 1px solid;
+    border-top: @normalBorder;
     border-color: var(--avnav-border-color);
     margin-top: 0.5em;
     padding-top: 0.5em;
@@ -627,7 +639,7 @@ body{
   margin-left: 1em;
   .featureInfoListHtml &{
     margin: 0.5em;
-    border-bottom: 1px solid;
+    border-bottom: @normalBorder;
     border-color: var(--avnav-border-color);
     white-space: unset;
   }
@@ -651,7 +663,7 @@ body{
     margin-left: 7.4em;
     max-width: 15em;
     font-size: 0.8em;
-    color: var(--avnav-faded-error-color)
+    color: var(--avnav-attention-color)
   }
 }
 
@@ -773,7 +785,7 @@ body{
 .listEntry{
   overflow: hidden;
   position: relative;
-  border-bottom: 1px solid;
+  border-bottom: @normalBorder;
   padding: 1em;
   border-color: var(--avnav-border-color);
   .flex-display();
@@ -781,9 +793,6 @@ body{
   .icon{
     margin-right: 0.5em;
   }
-}
-.activeEntry{
-  background: var(--avnav-select-color);
 }
 
 //----------------------------------------------------------------------------------------
@@ -823,7 +832,7 @@ span.valuePrefix{
 //-- WaypointItem
 
 .routeInfoPoint{
-  border-bottom: 1px solid;
+  border-bottom: @normalBorder;
   border-color: var(--avnav-border-color);
   padding-left: 0.1em;
   padding-right: 0.3em;
@@ -953,7 +962,7 @@ span.valuePrefix{
 
 // entry that needs action
 .userAction{
-  color: var(--avnav-red-color)
+  color: var(--avnav-attention-color)
 }
 
 //--errorInfo
@@ -1043,8 +1052,8 @@ span.valuePrefix{
       padding: 1em;
       padding-right: 0;
       line-height: 2em;
-      border-bottom: 1px solid;
-      border-color: rgba(0, 0, 0, 0.3);
+      border-bottom: @normalBorder;
+      border-color: var(--avnav-border-color);
       .more {
         display: inline-block;
         float: right;
@@ -1139,7 +1148,7 @@ span.valuePrefix{
     .hfield{
       width: 50%;
       height: 100%;
-      border: 1px solid;
+      border: @normalBorder;
       border-color: var(--avnav-border-color);
       .widgetContainer{
         height: 100%;
@@ -1266,7 +1275,7 @@ span.valuePrefix{
         font-weight: bold;
       }
       .aisWarning{
-        color: var(--avnav-red-color); //should also be ok for night mode as normal night color is dimmed to 60%
+        color: var(--avnav-attention-color); //should also be ok for night mode as normal night color is dimmed to 60%
       }
     }
     .dialogRow{
@@ -1355,7 +1364,7 @@ span.valuePrefix{
     }
     &.serverError{
       .header {
-        background-color: var(--avnav-error-color);
+        background-color: var(--avnav-attention-color);
       }
     }
   }
@@ -1536,7 +1545,7 @@ span.valuePrefix{
       margin: 0.5em 0.5em 0.5em 0.5em;
       height: 2em;
       display: block;
-      border: 1px solid;
+      border: @normalBorder;
       margin-left: 1em;
       margin-bottom: 1em;
       margin-right: 1em;
@@ -1553,8 +1562,8 @@ span.valuePrefix{
 
   .fileDialog{
     .existing input{
-      border-bottom: 1px solid;
-      border-color: var(--avnav-red-border-color);
+      border-bottom: @borderAttention;
+      border-color: var(--avnav-attention-color);
     }
   }
   .userAppDialog{
@@ -1586,10 +1595,9 @@ span.valuePrefix{
   }
   .EditRouteDialog{
     &.activeRoute{
-      border-width: 3px;
-      border-style: solid;
+      border: @borderAttentionLarge;
       padding: 5px;
-      border-color: var(--avnav-red-border-color);
+      border-color: var(--avnav-attention-color);
     }
   }
   .EditRoutePoints{
@@ -1613,7 +1621,7 @@ span.valuePrefix{
       min-height: 0;
     }
     .sectionList{
-      border-right: 1px solid ;
+      border-right: @normalBorder ;
       margin-right: 2em;
       border-color: var(--avnav-border-color);
       width: 10em;
@@ -1624,7 +1632,7 @@ span.valuePrefix{
         margin:0;
       }
       .layoutSetting{
-        color:var(--avnav-faded-error-color);
+        color:var(--avnav-attention-color);
       }
     }
     .settingsList{
@@ -1635,13 +1643,17 @@ span.valuePrefix{
         overflow: clip;
         line-break: anywhere;
       }
+      .error input,.error .input,.error .inputFrame{
+        border-bottom: @borderAttention;
+        border-bottom-color: var(--avnav-attention-color);
+      }
       overflow: auto;
       .flex-grow(1);
       & .dialogRow{
         line-height: unset;
       }
       .layoutSetting{
-        color: var(--avnav-faded-error-color);
+        color: var(--avnav-attention-color);
       }
     }
     .sectionList,.settingsList{
@@ -1837,11 +1849,11 @@ span.valuePrefix{
     &.editing .bottomSection{
       .bottomLeft {
         border-right: 0.3em solid;
-        border-color: var(--avnav-red-border-color);
+        border-color: var(--avnav-attention-color);
       }
       .bottomRight {
         border-left: 0.3em solid;
-        border-color: var(--avnav-red-border-color);
+        border-color: var(--avnav-attention-color);
       }
     }
     .widgetContainer.left{

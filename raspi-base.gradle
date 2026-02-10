@@ -64,7 +64,7 @@ task build_raspi_base(type:Deb) {
             include 'setup-*.sh'
             include 'prestart.sh'
             include 'uart_control'
-            include 'setup-can.sh'
+            include 'can-updown.sh'
         }
         from(BASE) {
             include 'avnav_server.xml'

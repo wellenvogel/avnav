@@ -49,7 +49,7 @@
     min-width: 0;
   }
   &.average .infoLeft{
-    color:var(--avnav-red-color);
+    color:var(--avnav-attention-color);
   }
 
   .label {
@@ -77,9 +77,9 @@
 //----- dashboard pages (gps page) ------
 .hfield .widgetContainer .widget{
   .widgetHead {
-    border-bottom: 1px solid;
-    border-top: 1px solid;
-    background-color: var(--avnav-head-color);
+    border-bottom: @normalBorder;
+    border-top: @normalBorder;
+    background-color: var(--avnav-widget-head-color);
     height: unset;
   }
   width: unset;
@@ -333,14 +333,14 @@
       font-size: 1.5em;
     }
     &.approach{
-      background-color: var(--avnav-red-color);
+      background-color: var(--avnav-attention-color);
     }
   }
   &.editRouteWidget{
-    border: 3px solid;
+    border: @borderAttentionLarge;
     border-color: var(--avnav-green-border-color);
     &.activeRoute{
-      border-color: var(--avnav-red-border-color);
+      border-color: var(--avnav-attention-color);
     }
     .smallWidget(@size1);
     .widgetData{
@@ -471,7 +471,7 @@
     bottom: 0;
     height: 3em;
     font-size: @timeFont;
-    background-color: var(--avnav-error-color);
+    background-color: var(--avnav-attention-color);
     padding: 1.5em;
     padding-top: 0.3em;
     margin: 0.5em;
@@ -505,7 +505,7 @@
         .flex-shrink(1);
         margin: 0;
         min-width: 0;
-        border-right: 1px solid
+        border-right: @normalBorder;
       }
 
       .widget:last-of-type {
