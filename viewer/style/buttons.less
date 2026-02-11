@@ -66,9 +66,7 @@
 .iconButton(@icon){
   span {
     .icon(@icon);
-    .nightMode &{
-      filter: brightness(0) saturate(50%) invert(16%) sepia(98%) saturate(2000%) hue-rotate(353deg) brightness(94%) contrast(111%)
-    }
+    filter: var(--avnav-button-filter);
   }
 }
 
