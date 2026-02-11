@@ -52,7 +52,10 @@ const AisFullDisplay=(display)=> {
         </div>
     }
     <div className="aisPart withIcon">
-        <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
+        {(display.iconColor !== undefined)
+            && <div className={concatsp("icon")}
+                    style={{backgroundColor:display.iconColor}}>
+            </div>}
         <div className="widgetData">
             <span className='aisFront aisData'>{display.front}</span>
         </div>
@@ -97,9 +100,10 @@ const AisSmallDisplay=(display)=> {
         }
         </div>
         </div>
-        <div className="aisPart withIcon">
+        {(display.iconColor !== undefined) &&<div className="aisPart withIcon">
             <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
         </div>
+        }
     </div>
 }
 const AisTargetWidget = (props) => {
@@ -123,11 +127,16 @@ const AisTargetWidget = (props) => {
         display.headingTo = AisFormatter.format('headingTo', target);
     }
     display.distance=AisFormatter.format('distance', target);
-    display.iconColor=color;
+    if (! props.legacy) {
+        display.iconColor = color;
+    }
     const dashMode = props.mode === "gps";
     const resizeSequence = useStringsChanged(display, dashMode);
     if (target.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
-        const style = {...props.style, /*backgroundColor: color*/};
+        const style = {...props.style};
+        if (props.legacy){
+            style.backgroundColor=color;
+        }
         return (
             <WidgetFrame {...props}
                          addClass="aisTargetWidget"
@@ -160,7 +169,14 @@ AisTargetWidget.propTypes = {
     ...WidgetProps,
     isEditing: PropTypes.bool,
     target: PropTypes.object,
-    trackedMmsi: PropTypes.string
+    trackedMmsi: PropTypes.string,
+    legacy: PropTypes.bool
 };
+AisTargetWidget.editableParameters={
+    'legacy':{type:'BOOLEAN',
+        displayName:'legacy',
+        default:false,
+        description:"color the complete widget depending on the target state instead of only a badge"}
+}
 
 export default AisTargetWidget;

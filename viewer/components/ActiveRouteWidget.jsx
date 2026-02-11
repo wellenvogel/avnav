@@ -25,7 +25,7 @@ const SecondRow=({remain,eta,approach})=>{
 const ActiveRouteWidget =(props)=>{
         if (!props.routeName && ! props.isEditing) return null;
         let classes = "activeRouteWidget";
-        if (props.isApproaching) classes += " approach ";
+        if (props.isApproaching && props.legacy) classes += " approach ";
         let display={
             name:routeobjects.nameToBaseName(props.routeName),
             remain: Formatter.formatDistance(props.remain),
@@ -44,7 +44,7 @@ const ActiveRouteWidget =(props)=>{
                         <span className="routeRemain">{display.remain}</span>
                         <span className='unit'>nm</span>
                     </div>}
-                    {!small && <SecondRow eta={display.eta} approach={props.isApproaching} />}
+                    {!small && <SecondRow eta={display.eta} approach={props.isApproaching && ! props.legacy} />}
                     { ! small && ( (props.isApproaching) ?
                         <div className="routeNext">
                             <span
@@ -54,7 +54,7 @@ const ActiveRouteWidget =(props)=>{
                         : <div></div>
                     )
                     }
-                    {(small  && props.isApproaching) && <div className="icon small"/>}
+                    {(small  && props.isApproaching && ! props.legacy) && <div className="icon small"/>}
                 </div>
             </WidgetFrame>
         );
@@ -68,7 +68,8 @@ ActiveRouteWidget.propTypes={
     eta: PropTypes.objectOf(Date),
     remain: PropTypes.number,
     nextCourse: PropTypes.number,
-    isEditing: PropTypes.bool
+    isEditing: PropTypes.bool,
+    legacy: PropTypes.bool,
 };
 ActiveRouteWidget.storeKeys={
     isApproaching: keys.nav.route.isApproaching,
@@ -78,5 +79,11 @@ ActiveRouteWidget.storeKeys={
     nextCourse: keys.nav.route.nextCourse,
     isEditing: keys.gui.global.layoutEditing,
 };
+ActiveRouteWidget.editableParameters={
+    'legacy':{type:'BOOLEAN',
+        displayName:'legacy',
+        default:false,
+        description:"color the complete widget depending on the target state instead of only a badge"}
+}
 
 export default ActiveRouteWidget;
