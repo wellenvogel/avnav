@@ -51,7 +51,7 @@ const AisFullDisplay=(display)=> {
             </div>
         </div>
     }
-    <div className="aisPart">
+    <div className="aisPart withIcon">
         <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
         <div className="widgetData">
             <span className='aisFront aisData'>{display.front}</span>
@@ -61,8 +61,8 @@ const AisFullDisplay=(display)=> {
 }
 const AisSmallDisplay=(display)=> {
     return <div className="aisSmall">
+        <div className={"upper"}>
         <div className="aisPart">
-            <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
             <div className="widgetData">
                 <span className='aisFront aisData'>{display.front.substring(0, 1)}</span>
             </div>
@@ -95,6 +95,10 @@ const AisSmallDisplay=(display)=> {
                 </div>
             </div>
         }
+        </div>
+        </div>
+        <div className="aisPart withIcon">
+            <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
         </div>
     </div>
 }

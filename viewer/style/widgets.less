@@ -3,9 +3,9 @@
 
 @x: rgba(255, 20, 7, 0.54);
 
-@horizontalContainerHeight: 4.2em;
-@horizontalContainerDoubleHeight: 7.9em;
-@horizontalWidgetHeight: 4em;
+@horizontalWidgetHeight: var(--avnav-horizontal-widgets-height);
+@horizontalContainerHeight: calc( @horizontalWidgetHeight + 0.2em );
+@horizontalContainerDoubleHeight: calc( 2 * @horizontalWidgetHeight - 0.1em );
 @infoFontSize: 0.71em;
 
 .widgetInfo(){
@@ -305,30 +305,42 @@
     .widgetData ~ .widgetData{
       padding-top: 0;
     }
+    .aisPart.withIcon{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        .icon{
+          flex-grow: 1;
+          border-radius: 0.2em;
+        }
+    }
     .hfield & .aisPart{
       .flex-display();
-      .flex-direction(column);
+      .flex-direction(row);
       .flex(1);
-    }
-     .icon {
-      position: absolute;
-      width: 4em;
-      height: 1.5em;
-      display: block;
-      margin: 0;
-      bottom: 0.2em;
+      .widgetData{
+        flex-basis: 50%;
+        text-align: left;
+        margin: 0;
+      }
     }
     .aisSmall {
       .flex-display();
-      .flex-direction(row);
-      .aisParts {
-        flex-grow: 1;
+      .flex-direction(column);
+      .upper {
+        .flex-display();
+        .flex-direction(row);
+        .aisParts {
+          flex-grow: 1;
+        }
       }
-      .icon{
-        width: 100%;
-        height: 1em;
-        margin: 0;
-        bottom: 0;
+      .aisPart.withIcon{
+        .icon{
+          width: 100%;
+          height: 1em;
+          border-radius: unset;
+          margin: 0;
+        }
       }
     }
 
@@ -337,7 +349,6 @@
   &.activeRouteWidget{
     .smallWidget(@size1);
     .routeName{
-      margin-top: 0.8em;
       margin-right: 0.2em;
       .mdText2();
       overflow: hidden;
@@ -346,257 +357,291 @@
     .routeRemain{
       font-size: 1.5em;
     }
-    &.approach{
-      background-color: var(--avnav-attention-color);
+    .small .routeRemain{
+      font-size: unset;
     }
-  }
-  &.editRouteWidget{
-    &.activeRoute{
-      border: @borderAttentionLarge;
-      border-color: var(--avnav-attention-color);
-    }
-    .smallWidget(@size1);
     .widgetData{
-      .routeInfo {
-        width: 4.5em;
-        display: inline-block;
-        .horizontal &{
-          width: auto;
-          margin-right: 0.3em;
-        }
-      }
-      &.routeName{
-        margin-top: 0.5em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      margin-left: 0.1em;
+      &.small{
+        margin: 0;
+        width: 100%;
         max-width: 100%;
-        .horizontal &{
-          text-align: left;
-          display: block;
-        }
       }
-      .horizontal &{
-        margin-top: 0;
-        padding-top: 0;
-        display: inline-block;
-      }
+    }
+    .icon{
+      background-color: var(--avnav-attention-color);
+      flex:1;
+    }
+    .icon.small{
+      width:100%;
+      height:1em;
+      margin:0;
+    }
+    .secondRow{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
 
     }
-    .vertical &{
-      min-height: 8em;
-    }
-  }
-
-  &.centerDisplayWidget{
-    .smallWidget(@size1);
-    .widgetData ~ .widgetData{
-      margin-top: 0;
-    }
-    .value{
-      display: inline-block;
-    }
-    .label {
-      display: inline-block;
-      background-size: 1em 1em;
-      background-repeat: no-repeat;
-      width: 1em;
-      height: 1em;
-      float: left;
-      &.boat {
-        background-image: url(../images/icons-new/boat.svg);
-      }
-      &.marker {
-        background-image: url(../images/icons-new/waypoint.svg);
-      }
-      &.measure{
-        background-image: url(../images/icons-new/outlined_flag.svg);
+    .small .secondRow{
+      justify-content: space-between;
+      .icon{
+        flex: unset;
       }
     }
-    .horizontal &{
-      min-width: 10em;
-    }
-  }
-  &.windWidget{
-    .smallWidget(@size15);
-    padding-top: 0;
-    padding-left: 0;
-    padding-right: 0;
-    .widgetData{
-      font-size: @timeFont;
-    }
-  }
-  &.DepthDisplay{
-    .bigWidget(@size2);
-  }
-  &.xteWidget{
-    .smallWidget(@size1);
-    canvas{
-      margin-right: auto;
-      margin-left: auto;
-    }
-  }
-  &.windGraphics{
-    .smallWidget(@size2);
-    .windSpeed {
-      text-align: right;
-      font-size: @timeFont;
-      position: absolute;
-      right: 0.2em;
-      bottom: 0.2em;
-    }
-    .windReference {
-      text-align: left;
-      font-size: @timeFont;
-      position: absolute;
-      left: 0.2em;
-      bottom: 0.2em;
-    }
-    .horizontal &{
-      .widgetData,.windSpeed{
-        display: inline-block;
-      }
-    }
-    canvas{
-      height: 90%;
-      width: 90%;
-    }
-    .vertical &{
-      height: 11em;
-    }
-  }
-  &.routePointsWidget {
-    .more {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 20%;
-    }
-    .activeEntry .more{
-      display: inline-block;
-    }
-    overflow: hidden;
-    .flex-shrink(1) !important;
-  }
-  &.alarmWidget{
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    height: 3em;
-    font-size: @timeFont;
-    background-color: var(--avnav-attention-color);
-    padding: 1.5em;
-    padding-top: 0.3em;
-    margin: 0.5em;
-    border-radius: 4px;
-    .mdShadow2();
-    .widgetContainer &{
-      position: inherit;
-      padding: inherit;
-      height: inherit;
-      width: 4em;
-      margin: inherit;
-    }
-  }
-  &.CombinedWidget {
-    .icon.locked {
-      position: absolute;
-      top: calc(50% - 1em);
-      left: calc(50% - 1em);
-      z-index: 101;
+    .routeNext{
       color: var(--avnav-attention-color);
     }
-    & > .listContainer {
-      .flex-display();
-      .flex-direction(row);
-      height: 100%;
-      width: 100%;
-
-      .widget {
-        height: 100%;
-        .flex-grow(1);
-        .flex-shrink(1);
-        margin: 0;
-        min-width: 0;
-        border-right: @normalBorder;
-      }
-
-      .widget:last-of-type {
-        border-right: unset;
-      }
-
-      padding: 0;
-      margin: 0;
-
-    }
-    &.vertical {
-      & > .listContainer {
-        .flex-direction(column);
-      }
-
-      .widget {
-        height: unset;
-        min-height: 0;
-        width: 100%;
-        .flex-grow(1);
-        .flex-shrink(1);
-        border-right: unset;
-      }
+}
+&.editRouteWidget{
+&.activeRoute{
+  border: @borderAttentionLarge;
+  border-color: var(--avnav-attention-color);
+}
+.smallWidget(@size1);
+.widgetData{
+  .routeInfo {
+    width: 4.5em;
+    display: inline-block;
+    .horizontal &{
+      width: auto;
+      margin-right: 0.3em;
     }
   }
-
-  &.canvasGauge {
-    canvas {
-      margin: auto;
-      position: relative;
+  &.routeName{
+    margin-top: 0.5em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    .horizontal &{
+      text-align: left;
+      display: block;
     }
-    .canvasFrame {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      .flex-display();
-      .flex-align-items(center);
-      .flex-justify-content(center);
-
-    }
-    .gaugeValue {
-      position: absolute;
-      top: 53%;
-      left: ~"calc(50% - 1em)";
-      z-index: 20;
-      white-space: pre;
-    }
-    &.radGauge_Speed{
-      .gaugeValue{
-        top: 70%;
-      }
-    }
-    &.radGauge_Temperature{
-      .gaugeValue{
-        top: 70%;
-      }
-    }
-    &.linear{
-      padding: 0;
-      .canvasFrame{
-        padding: 0;
-      }
-    }
+  }
+  .horizontal &{
+    margin-top: 0;
+    padding-top: 0;
+    display: inline-block;
   }
 
-  &.signalKPitch .widgetData{
-    font-size: 2em;
-    text-align: center;
+}
+.vertical &{
+  min-height: 8em;
+}
+}
+
+&.centerDisplayWidget{
+.smallWidget(@size1);
+.widgetData ~ .widgetData{
+  margin-top: 0;
+}
+.value{
+  display: inline-block;
+}
+.label {
+  display: inline-block;
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  width: 1em;
+  height: 1em;
+  float: left;
+  &.boat {
+    background-image: url(../images/icons-new/boat.svg);
+  }
+  &.marker {
+    background-image: url(../images/icons-new/waypoint.svg);
+  }
+  &.measure{
+    background-image: url(../images/icons-new/outlined_flag.svg);
+  }
+}
+.horizontal &{
+  min-width: 10em;
+}
+}
+&.windWidget{
+.smallWidget(@size15);
+padding-top: 0;
+padding-left: 0;
+padding-right: 0;
+.widgetData{
+  font-size: @timeFont;
+}
+}
+&.DepthDisplay{
+.bigWidget(@size2);
+}
+&.xteWidget{
+.smallWidget(@size1);
+canvas{
+  margin-right: auto;
+  margin-left: auto;
+}
+}
+&.windGraphics{
+.smallWidget(@size2);
+.windSpeed {
+  text-align: right;
+  font-size: @timeFont;
+  position: absolute;
+  right: 0.2em;
+  bottom: 0.2em;
+}
+.windReference {
+  text-align: left;
+  font-size: @timeFont;
+  position: absolute;
+  left: 0.2em;
+  bottom: 0.2em;
+}
+.horizontal &{
+  .widgetData,.windSpeed{
+    display: inline-block;
+  }
+}
+canvas{
+  height: 90%;
+  width: 90%;
+}
+.vertical &{
+  height: 11em;
+}
+}
+&.routePointsWidget {
+.more {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 20%;
+}
+.activeEntry .more{
+  display: inline-block;
+}
+overflow: hidden;
+.flex-shrink(1) !important;
+}
+&.alarmWidget{
+position: absolute;
+right: 0;
+bottom: 0;
+height: 3em;
+font-size: @timeFont;
+background-color: var(--avnav-attention-color);
+padding: 1.5em;
+padding-top: 0.3em;
+margin: 0.5em;
+border-radius: 4px;
+.mdShadow2();
+.widgetContainer &{
+  position: inherit;
+  padding: inherit;
+  height: inherit;
+  width: 4em;
+  margin: inherit;
+}
+}
+&.CombinedWidget {
+.icon.locked {
+  position: absolute;
+  top: calc(50% - 1em);
+  left: calc(50% - 1em);
+  z-index: 101;
+  color: var(--avnav-attention-color);
+}
+& > .listContainer {
+  .flex-display();
+  .flex-direction(row);
+  height: 100%;
+  width: 100%;
+
+  .widget {
+    height: 100%;
+    .flex-grow(1);
+    .flex-shrink(1);
+    margin: 0;
+    min-width: 0;
+    border-right: @normalBorder;
   }
 
-  &.signalKRoll .widgetData{
-    font-size: 2em;
-    text-align: center;
+  .widget:last-of-type {
+    border-right: unset;
   }
-  .widgetData.critical{
-    color:var(--avnav-attention-color);
+
+  padding: 0;
+  margin: 0;
+
+}
+&.vertical {
+  & > .listContainer {
+    .flex-direction(column);
   }
-  &.critical .widgetData{
-    color: var(--avnav-attention-color);
+
+  .widget {
+    height: unset;
+    min-height: 0;
+    width: 100%;
+    .flex-grow(1);
+    .flex-shrink(1);
+    border-right: unset;
   }
+}
+}
+
+&.canvasGauge {
+canvas {
+  margin: auto;
+  position: relative;
+}
+.canvasFrame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  .flex-display();
+  .flex-align-items(center);
+  .flex-justify-content(center);
+
+}
+.gaugeValue {
+  position: absolute;
+  top: 53%;
+  left: ~"calc(50% - 1em)";
+  z-index: 20;
+  white-space: pre;
+}
+&.radGauge_Speed{
+  .gaugeValue{
+    top: 70%;
+  }
+}
+&.radGauge_Temperature{
+  .gaugeValue{
+    top: 70%;
+  }
+}
+&.linear{
+  padding: 0;
+  .canvasFrame{
+    padding: 0;
+  }
+}
+}
+
+&.signalKPitch .widgetData{
+font-size: 2em;
+text-align: center;
+}
+
+&.signalKRoll .widgetData{
+font-size: 2em;
+text-align: center;
+}
+.widgetData.critical{
+color:var(--avnav-attention-color);
+}
+&.critical .widgetData{
+color: var(--avnav-attention-color);
+}
 }
