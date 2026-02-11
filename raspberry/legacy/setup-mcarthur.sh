@@ -14,6 +14,7 @@ is_pifive() {
 BASE=/
 if is_pifive; then
 WS_COMMENT="#MCARTHUR_DO_NOT_DELETE"
+#/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
 dtparam=i2c_arm=on
 dtparam=spi=on
@@ -24,6 +25,7 @@ dtoverlay=uart4-pi5
 CFGPAR
 else
 WS_COMMENT="#MCARTHUR_DO_NOT_DELETE"
+#/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
 dtparam=i2c_arm=on
 dtparam=spi=on
@@ -34,11 +36,21 @@ dtoverlay=uart5
 CFGPAR
 fi
 
+#/etc/network/interfaces.d/can0
+read -r -d '' CAN0 << 'CAN0'
+#physical can interfaces
+auto can0
+iface can0 can static
+bitrate 250000
+pre-up /sbin/ip link set $IFACE type can restart-ms 100
+down /sbin/ip link set $IFACE down
+up /sbin/ifconfig $IFACE txqueuelen 10000
+CAN0
+
+can="$BASE/etc/network/interfaces.d/can0"
 needsReboot=0
 if [ "$1" = $MODE_DIS ]; then
   removeConfig "$BOOTCONFIG" "$WS_COMMENT"
-  checkRes
-  /usr/bin/systemctl disable can-if@can0.service
   checkRes
   exit $needsReboot
 fi
@@ -46,7 +58,7 @@ fi
 if [ "$1" = $MODE_EN ] ; then
   checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
   checkRes
-  /usr/bin/systemctl enable can-if@can0.service
+  replaceConfig "$can" "$CAN0"
   checkRes
   cat /home/pi/.signalk/settings.json | jq '.pipedProviders += [{ "enabled": "true", "id": "MCARTHUR_SEATALK", "pipeElements": [{ "options" : { "logging" : false, "subOptions" : { "gpio": "GPIO20", "gpioInvert": false }, "type": "Seatalk" }, "type": "providers/simple"}] }]' > /tmp/settings.json
   mv /tmp/settings.json /home/pi/.signalk/settings.json

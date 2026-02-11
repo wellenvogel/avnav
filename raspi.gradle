@@ -61,7 +61,7 @@ task build_raspi(type: Deb) {
         from(BASE){
             fileMode 0755
             include 'sound.sh'
-            include 'setup-*.sh'
+            include 'setup-helper.sh'
             include 'prestart.sh'
             include 'uart_control'
         }
@@ -76,6 +76,7 @@ task build_raspi(type: Deb) {
             include 'wpa_action.sh'
             include 'rename-interface.sh'
             include 'checkLink.sh'
+            include 'setup-*.sh'
         }
         from (LEGACY){
             include 'hosts'
