@@ -48,8 +48,27 @@
     return obj;
  }
 
- const Interface=({intf})=>{
-    return htm`<div className="interface dialogRow">${intf.interface}<//>`;
+ const Interface=({intf,selected,onClick})=>{
+    let className="interface listEntry";
+    if (selected) className+=" activeEntry";
+    return htm`<div className=${className} onClick=${(ev)=>onClick(ev)}>${intf.interface}<//>`;
+ }
+
+ const InterfaceList=({selectedIdx,items,onChange})=>{
+    let idx=0;
+    return htm`
+    <div className="interfaceList">
+        <div className="heading">Interfaces<//>
+        <div className="itemList">
+        ${items.map((item)=>{
+            const ourIdx=idx;
+            const isSel=ourIdx === selectedIdx;
+            idx++;
+            return htm`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(ourIdx)}/>`
+            }
+        )}
+        </div>
+    </div>`
  }
  const Heading=htm`<h3>Wifi</h3>`
  const NetworkDialog=({api})=>{
@@ -58,6 +77,7 @@
     const [connections,setConnections]=useState([]);
     const [networks,setNetworks]=useState([]);
     const [fetchState,setFetchState]=useState(1);
+    const [selected,setSelected]=useState(0);
     const fetchItems=useCallback((url,setter,key)=>{
         setFetchState((old)=>old | key);
         fetchData(url)
@@ -99,16 +119,16 @@
                 if (nested(con,'connection.802-11-wireless.mode') !== 'infrastructure') return;
                 break;
             }
-            availableInterfaces.push(intf);
         }
+        availableInterfaces.push(intf);
     });
     if (availableInterfaces.length < 1){
         return htm`${Heading}
         <div className="dialogRow nointf">no free network interfaces</div>
         `
     }
-    return htm`<h3>Wifi</h3>
-    ${interfaces.map((intf)=>htm`<${Interface} intf=${intf}/>`)}
+    return htm`${Heading}
+    <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>setSelected(id)}/>
     `
  }
 
