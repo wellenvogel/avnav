@@ -21,7 +21,7 @@
  #
  */
 
- import htm from 'htm';
+ import html from 'htm';
  import {useState,useEffect,useCallback} from 'react';
  const fetchStates={
     0: undefined,
@@ -51,26 +51,33 @@
  const Interface=({intf,selected,onClick})=>{
     let className="interface listEntry";
     if (selected) className+=" activeEntry";
-    return htm`<div className=${className} onClick=${(ev)=>onClick(ev)}>${intf.interface}<//>`;
+    return html`
+    <div className=${className} onClick=${(ev)=>onClick(ev)}>
+        <span className="device">${intf.interface}</span>
+        <span className="deviceInfo">
+            <span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
+            <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>
+        </span>
+    </div> `;
  }
 
  const InterfaceList=({selectedIdx,items,onChange})=>{
     let idx=0;
-    return htm`
+    return html`
     <div className="interfaceList">
-        <div className="heading">Interfaces<//>
+        <div className="heading">Available Interfaces<//>
         <div className="itemList">
         ${items.map((item)=>{
             const ourIdx=idx;
             const isSel=ourIdx === selectedIdx;
             idx++;
-            return htm`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(ourIdx)}/>`
+            return html`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(ourIdx)}/>`
             }
         )}
         </div>
     </div>`
  }
- const Heading=htm`<h3>Wifi</h3>`
+ const Heading=html`<h3>Wifi</h3>`
  const NetworkDialog=({api})=>{
     const [interfaces,setInterfaces]=useState([]);
     const [activeConnections,setActiveConnections]=useState([]);
@@ -103,8 +110,8 @@
         fetchItems(nwUrl,setNetworks,8);
     },[]);
     if (fetchState != 0){
-        return htm`${Heading}
-        ${Object.keys(fetchStates).map((fs)=>(fetchState & fs)?htm`<div className="fetchState">${fetchStates[fs]}<//>`:null)}
+        return html`${Heading}
+        ${Object.keys(fetchStates).map((fs)=>(fetchState & fs)?html`<div className="fetchState">${fetchStates[fs]}<//>`:null)}
         `
     }
     //filter interfaces that we can use
@@ -117,17 +124,18 @@
             for (let con of activeConnections){
                 if (con.path !== intf.activeconnection) continue;
                 if (nested(con,'connection.802-11-wireless.mode') !== 'infrastructure') return;
+                intf.condata=con;
                 break;
             }
         }
         availableInterfaces.push(intf);
     });
     if (availableInterfaces.length < 1){
-        return htm`${Heading}
+        return html`${Heading}
         <div className="dialogRow nointf">no free network interfaces</div>
         `
     }
-    return htm`${Heading}
+    return html`${Heading}
     <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>setSelected(id)}/>
     `
  }
@@ -138,7 +146,7 @@
     let dialogHandle;
     const showNetworkDialog=async (ev)=>{
         const rt=await api.showDialog({
-            text: htm`<${NetworkDialog} api=${api}/>`,
+            text: html`<${NetworkDialog} api=${api}/>`,
             onClose:()=>{
                 api.setStoreData(KVISIBLE,false);
                 dialogHandle=undefined;

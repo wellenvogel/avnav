@@ -6,3 +6,20 @@
     align-items: flex-start;
 }
 
+.nwmplugin.WifiDialog .listEntry.interface{
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.nwmplugin.WifiDialog .listEntry.interface .device{
+    display: inline-block;
+    width: 8em;
+}
+.nwmplugin.WifiDialog .listEntry.interface .ipaddr{
+    display: inline-block;
+    width: 7em;
+    font-weight: initial;
+}
+.nwmplugin.WifiDialog .listEntry.interface .ssid{
+    display: inline-block;
+    font-weight: initial;
+}
