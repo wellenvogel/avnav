@@ -1,0 +1,8 @@
+/* reset the additional dialogRow that surrounds the dialogText */
+.nwmplugin.WifiDialog > .dialogRow{
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    align-items: flex-start;
+}
+
