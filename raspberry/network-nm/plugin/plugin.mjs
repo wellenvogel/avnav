@@ -60,7 +60,22 @@
         </span>
     </div> `;
  }
+ const Network=({net})=>{
+    return html`<div className="network listEntry">${net.ssid} [${net.strength}] ${net.condata?"configured":"unknown"} </div>`
+ }
 
+ const NetworkList=({items,onClick})=>{
+    return html`
+    <div className="networkList">
+        <div className="heading">Available Networks<//>
+        <div className="itemList">
+        ${items.map((item)=>{
+            return html`<${Network} net=${item} onClick=${(ev)=>onClick(ev,item)} key=${item.path}/>`
+            }
+        )}
+        </div>
+    </div>` 
+ }
  const InterfaceList=({selectedIdx,items,onChange})=>{
     let idx=0;
     return html`
@@ -71,7 +86,7 @@
             const ourIdx=idx;
             const isSel=ourIdx === selectedIdx;
             idx++;
-            return html`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(ourIdx)}/>`
+            return html`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(ourIdx)} key=${item.path}/>`
             }
         )}
         </div>
@@ -118,6 +133,7 @@
     //these need to have state "Activated" and either no active connection 
     //or an connection of type infrastructure
     const availableInterfaces=[];
+    const connectionsInUse={};
     (interfaces||[]).forEach((intf)=>{
         if (intf.activeconnection){
             //find the connection
@@ -125,6 +141,8 @@
                 if (con.path !== intf.activeconnection) continue;
                 if (nested(con,'connection.802-11-wireless.mode') !== 'infrastructure') return;
                 intf.condata=con;
+                const configured=nested(con,'connection.path');
+                if (configured) connectionsInUse[configured]=con;
                 break;
             }
         }
@@ -135,8 +153,33 @@
         <div className="dialogRow nointf">no free network interfaces</div>
         `
     }
+    const selectedInterface=interfaces[selected];
+    const seenNetworks=[];
+    const configuredConnections=[];
+    const networkConnectsions={}; //flag the connections we already have for seen networks
+    if (selectedInterface){
+        const path=nested(selectedInterface,"path");
+        if (path){
+            (networks||[]).forEach((network)=>{
+                network={...network};
+                if (network.device !== path) return;
+                const ssid=network.ssid;
+                if (! ssid) return;
+                for (let con of connections){
+                    if (ssid !== nested(con,"802-11-wireless.ssid") || 
+                    nested(con,'802-11-wireless.mode') !== 'infrastructure' ) continue;
+                    network.condata=con;
+                    if (connectionsInUse[con.path]){
+                        network.activecondata=connectionsInUse[con.path];
+                    }
+                }
+                seenNetworks.push(network);
+            })
+        }
+    }
     return html`${Heading}
     <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>setSelected(id)}/>
+    <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{}}/>
     `
  }
 

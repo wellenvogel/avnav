@@ -502,7 +502,7 @@ class Plugin(object):
                 aprops = self.get_props(aproxy, nm_base + ".AccessPoint")
                 config = self.translate_props(aprops, translations)
                 config['path'] = self.short_path(a)
-                config['device'] = path
+                config['device'] = self.short_path(path)
                 if connected == a:
                     config['connected'] = True
                 rt.append(config)
