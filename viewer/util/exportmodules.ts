@@ -21,8 +21,9 @@
  #
  */
 import {modules} from './api.impl';
-const avnav=Symbol("avnav");
-const avnmod=Symbol("modules");
+const ts=((new Date()).getTime()+"").replace(/[^0-9a-zA-Z]/g, '');
+const avnav="avnav"+ts;
+const avnmod="modules";
 // @ts-ignore
 if (! window[avnav]) {
     // @ts-ignore
@@ -36,22 +37,23 @@ if (! window[avnav][avnmod]) {
 // @ts-ignore
 window[avnav][avnmod]=modules;
 
+// @ts-ignore
+Object.freeze(window[avnav][avnmod]);
+
 const buildExport=(name:string):string=>{
     let rt:string='';
     // @ts-ignore
     const module=modules[name];
-    if (typeof(module) === 'function'){
-        return `export default window.${String(avnav)}.${String(avnmod)}.${name}`;
-    }
-    else {
+    if (typeof(module) === 'object'){
         for (const k of Object.keys(module)) {
             if (module[k] != null) {
                 rt += `
-                export const ${k}=window.${String(avnav)}.${String(avnmod)}.${name}.${k}\n
+                export const ${k}=window.${avnav}.${avnmod}.${name}.${k}\n
                 `
             }
         }
     }
+    rt+=`export default window.${avnav}.${avnmod}.${name}`;
     return rt;
 }
 
@@ -61,7 +63,10 @@ export default ()=>{
         }
     }
     for (const name of Object.keys(modules)){
-        importmap.imports[name] = `data:text/javascript,${buildExport(name)}`;
+        const mname=name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        const mexports=`data:text/javascript,${buildExport(name)}`
+        importmap.imports[name] = mexports;
+        importmap.imports[mname]=mexports
     }
     const m=document.createElement('script');
     m.setAttribute('type','importmap');
