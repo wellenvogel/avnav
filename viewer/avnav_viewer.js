@@ -49,7 +49,7 @@ import {loadJs, loadOrUpdateCss} from "./util/helper";
 import pluginmanager from "./util/pluginmanager";
 import {layoutLoader} from "./util/layouthandler";
 import {showParameterDialog} from "./components/ParameterDialog";
-
+import createExports from './util/exportmodules';
 
 if (! window.avnav){
     window.avnav={};
@@ -158,7 +158,7 @@ export default function() {
         })
         loadScripts(addList);
     }
-
+    createExports();
     const doLateLoads = async () => {
         createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...

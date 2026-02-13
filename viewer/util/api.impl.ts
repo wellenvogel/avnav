@@ -196,7 +196,7 @@ export const UserButtonProps: Required<UserButton>={
     visible: false
 }
 
-const modules: Modules={
+export const modules: Modules={
     React: React,
     ReactDOM: ReactDOM,
     Htm: Htm.bind(React.createElement),
