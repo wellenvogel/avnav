@@ -1068,17 +1068,23 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             raise Exception("plugin %s not found" % localPath[0])
         if not api.isEnabled() and localPath[1] != ApiImpl.CLIENTFILES[ApiImpl.CFGTYPE]:
             raise Exception("plugin %s disabled" % localPath[0])
-        if localPath[1][0:3] == 'api':
+        internalPath=localPath[1]
+        if internalPath.startswith('__'):
+            start=internalPath.find('/')
+            if start < 0 or len(internalPath) <= (start+2):
+                raise Exception("invalid path %s" % path)
+            internalPath=internalPath[start+1:]
+        if internalPath[0:3] == 'api':
             # plugin api request
             if api.requestHandler is None:
                 raise Exception("plugin %s does not handle requests " % localPath[0])
             if handler is None:
                 raise Exception("no handler for plugin %s request" % localPath[0])
-            rt = api.requestHandler(localPath[1][4:], handler, requestparam)
+            rt = api.requestHandler(internalPath[4:], handler, requestparam)
             if type(rt) is dict:
                 return AVNStringDownload(json.dumps(rt),mimeType="application/json")
             return rt
-        if localPath[1] == 'plugin.js':
+        if internalPath == 'plugin.js':
             if handler is None:
                 AVNLog.error("plugin.js request without handler")
                 return None
@@ -1087,7 +1093,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             url = self.PREFIX + "/" + name
             addCode = "var AVNAV_PLUGIN_NAME=\"%s\";\n" % (name)
             return AVNJsDownload(fname, url, addCode)
-        fname = os.path.join(api.directory, avnav_util.plainUrlToPath(localPath[1]))
+        fname = os.path.join(api.directory, avnav_util.plainUrlToPath(internalPath))
         if api.dirtype != self.D_USER:
             return AVNFileDownload(fname)
         if not os.path.isfile(fname):

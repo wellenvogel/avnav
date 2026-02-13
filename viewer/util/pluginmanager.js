@@ -191,13 +191,10 @@ export class Plugin extends ApiV2{
         })
         globalstore.deleteByPrefix(this.getStoreBaseKey());
     }
-    async loadModule(url,timestamp,first){
+    async loadModule(url,timestamp){
         try {
-            base.log("importing plugin.mjs for "+this.name);
-            if (! first)
-            {
-                url = injectDateIntoUrl(new URL(url, window.location.href),timestamp);
-            }
+            base.log(`importing ${url} for ${this.name}`);
+            url=this.baseUrl+url;
             const module = await import(/* webpackIgnore: true */ url);
             let shutdown = undefined;
             this.module=module;
@@ -246,9 +243,7 @@ export class Plugin extends ApiV2{
 
     getBaseUrl() {
         if (this.disabled) throw new Error("disabled");
-        let rt=(new URL(this.baseUrl,window.location.href)).toString();
-        if (! rt.endsWith("/")) rt+="/";
-        return rt;
+        return this.baseUrl;
     }
     buildProxyUrl(url,headers,proxyOptions) {
         return buildProxyUrl(url,this.getBaseUrl(),headers,proxyOptions);
@@ -516,16 +511,21 @@ class Pluginmanager{
                         hasUpdates = true;
                         const createPlugin=async()=> {
                             try {
-                                api = new Plugin(this,plugin.base, pluginName);
                                 //if the mjs has never been loaded or if the timestamp is still the same like on the first load
                                 //there is no need to load the module again
                                 const first = this.mjs[pluginName] === undefined || this.mjs[pluginName] === plugin.mjs.timestamp;
+                                let base=(new URL(plugin.base,window.location.href)).toString();
+                                if (! base.endsWith("/")) base+="/";
+                                if (! first){
+                                    base+="__"+plugin.mjs.timestamp+"/";
+                                }
+                                api = new Plugin(this,base, pluginName);
                                 if (first) {
                                     this.mjs[pluginName] = plugin.mjs.timestamp;
                                 } else {
                                     updatedMjs = true;
                                 }
-                                await api.loadModule(plugin.mjs.url, plugin.mjs.timestamp, first);
+                                await api.loadModule("plugin.mjs", plugin.mjs.timestamp);
                                 this.createdApis[pluginName] = api;
                             } catch (e) {
                                 console.error("unable to create api and load module", plugin, e);

@@ -620,7 +620,7 @@ public class PluginManager extends DirectoryRequestHandler {
             existing.setLastModified(System.currentTimeMillis()); //ensure the plugin is considered to be new
         }catch (Throwable t){
             AvnLog.e("exception in plugin upload for "+name,t);
-            throw t;
+            throw new Exception(t);
         }
         uploaded.delete();
         Plugin newPlugin=createPlugin(existing);
@@ -748,9 +748,14 @@ public class PluginManager extends DirectoryRequestHandler {
                 if (!plugin.enabled() && !parts[1].equals(IPluginHandler.PLUGINFILES.get(IPluginHandler.FT_CFG).value)) return null;
                 base = plugin.dir;
             }
-            String fpath = checkPathParts(parts, true, 1);
+            int start=1;
+            if (parts[start].startsWith("__")){
+                if (parts.length < 3) throw new Exception("invalid plugin path "+path);
+                start++;
+            }
+            String fpath = checkPathParts(parts, true, start);
             File finalFile = new File(base, fpath);
-            if (finalFile.isDirectory()) throw new Error(finalFile.getPath() + " is a directory");
+            if (finalFile.isDirectory()) throw new Exception(finalFile.getPath() + " is a directory");
             if (!finalFile.exists()) return null;
             ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(finalFile, RequestHandler.mimeType(finalFile.getName()), "");
             rt.setHeader("Cache-Control","no-store");
