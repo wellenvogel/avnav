@@ -23,6 +23,8 @@
 
  import html from 'htm';
  import {useState,useEffect,useCallback} from 'react';
+ import {useDialogContext,listElements} from 'avnav';
+ const {ListItem,ListSlot,ListMainSlot}=listElements;
  const fetchStates={
     0: undefined,
     1: "reading devices",
@@ -49,19 +51,21 @@
  }
 
  const Interface=({intf,selected,onClick})=>{
-    let className="interface listEntry";
-    if (selected) className+=" activeEntry";
+    let className="interface";
     return html`
-    <div className=${className} onClick=${(ev)=>onClick(ev)}>
-        <span className="device">${intf.interface}</span>
-        <span className="deviceInfo">
-            <span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
-            <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>
-        </span>
-    </div> `;
+    <${ListItem} className=${className} selected=${selected} onClick=${(ev)=>onClick(ev)}>
+        <${ListMainSlot}
+            primary=${intf.interface}
+            secondary=${html`<span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
+            <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>`}
+            />
+    <//> `;
  }
  const Network=({net})=>{
-    return html`<div className="network listEntry">${net.ssid} [${net.strength}] ${net.condata?"configured":"unknown"} </div>`
+    return html`<${ListItem} className="network">
+        <${ListMainSlot} primary=${net.ssid} secondary=${net.strength}/>
+        <${ListSlot}> ${net.condata?"configured":"unknown"}<//>
+        <//>`
  }
 
  const NetworkList=({items,onClick})=>{

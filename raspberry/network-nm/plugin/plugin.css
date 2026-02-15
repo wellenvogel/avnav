@@ -1,22 +1,23 @@
 /* reset the additional dialogRow that surrounds the dialogText */
+.nwmplugin.WifiDialog{
+    width: 100%;
+}
 .nwmplugin.WifiDialog > .dialogRow{
     display: flex;
     flex-direction: column;
     margin: 0;
     align-items: flex-start;
+    width: 100%;
 }
-
-.nwmplugin.WifiDialog .listEntry.interface{
-    flex-direction: row;
-    flex-wrap: wrap;
+.nwmplugin.WifiDialog .interfaceList{
+    width: 100%;
 }
-.nwmplugin.WifiDialog .listEntry.interface .device{
-    display: inline-block;
-    width: 8em;
+.nwmplugin.WifiDialog .networkList{
+    width: 100%;
 }
 .nwmplugin.WifiDialog .listEntry.interface .ipaddr{
     display: inline-block;
-    width: 7em;
+    width: 8em;
     font-weight: initial;
 }
 .nwmplugin.WifiDialog .listEntry.interface .ssid{
