@@ -145,7 +145,7 @@ export const getItemIconProperties=(item)=>{
     if (icon){
         return {
             className:'icon',
-            style:{backgroundImage: "url('" + (icon) + "')"}
+            icon:icon
         }
     }
     if (! item.type || ICONCLASS_TYPES.indexOf(item.type) <0) return;
@@ -158,7 +158,7 @@ export const getItemIconProperties=(item)=>{
         const [fn,ext]=Helper.getNameAndExt(item.name);
         if (ext !== 'gpx') typeClass="user other"
     }
-    else if (item.type === 'plugins'){
+    else if (item.type === 'user'){
         const specialNames=['user.mjs','user.mjs','user.css','keys.json','splitkeys.json','images.json'];
         if (specialNames.indexOf(item.name) >= 0){
             typeClass= 'user special';
@@ -174,7 +174,7 @@ export const getItemIconProperties=(item)=>{
             else if (ext === 'txt') {
                 typeClass= 'text';
             }
-            typeClass= 'user other';
+            else  typeClass= 'user other';
         }
     }
     if (! typeClass) return;

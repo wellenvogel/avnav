@@ -1,0 +1,57 @@
+/**
+ * # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
+ #
+ #  Permission is hereby granted, free of charge, to any person obtaining a
+ #  copy of this software and associated documentation files (the "Software"),
+ #  to deal in the Software without restriction, including without limitation
+ #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ #  and/or sell copies of the Software, and to permit persons to whom the
+ #  Software is furnished to do so, subject to the following conditions:
+ #
+ #  The above copyright notice and this permission notice shall be included
+ #  in all copies or substantial portions of the Software.
+ #
+ #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHERtime
+ #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ #  DEALINGS IN THE SOFTWARE.
+ #
+ */
+
+import React from 'react';
+import {concatsp} from "../util/helper";
+import {Icon} from "./Icons";
+
+export const ListItem = ({selected,className,children,onClick }) => {
+    return <div
+        className={concatsp(className,"listEntry",selected?"activeEntry":undefined)}
+        onClick={onClick}
+    >
+        {children}
+    </div>
+}
+export const ListSlot=({className,icon,text,children,onClick}) => {
+    if (! icon && (text == null) && !children) return null;
+    return <div
+        className={concatsp("listSlot",className)}
+        onClick={onClick}
+        >
+        {icon && <Icon {...icon}/>}
+        {(text !== undefined) && <span className="text">{text}</span>}
+        {children}
+    </div>
+}
+export const ListMainSlot=({className,primary,secondary,children,onClick}) => {
+    return <div
+        className={concatsp("listMain listSlot",className)}
+        onClick={onClick}
+        >
+        {primary && <div className={"primary"}>{primary}</div>}
+        {secondary && <div className={"secondary"}>{secondary}</div>}
+        {children}
+    </div>
+}
+ 

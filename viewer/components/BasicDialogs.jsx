@@ -28,21 +28,24 @@ import React, {useEffect, useState} from "react";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {getItemIconProperties} from "../util/itemFunctions";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {Icon} from "./Icons";
 
 export const SelectList = ({list, onClick}) => {
     return <div className="selectList">
         {list.map(function (elem) {
             if (! (elem instanceof Object)) return null;
-            let cl=Helper.concatsp('listEntry',elem.selected?'selectedItem':undefined,elem.className);
             const iconProperties=getItemIconProperties(elem);
             return (
-                <div className={cl}
-                     onClick={() => onClick(elem)}
-                     key={elem.value + ":" + elem.label}
-                >
-                    {iconProperties&& <span {...iconProperties}/>}
-                    <span className="entryLabel">{elem.label}</span>
-                </div>);
+                <ListItem
+                    className={elem.className}
+                    selected={elem.selected}
+                    onClick={()=>onClick(elem)}
+                    key={elem.value + ":" + elem.label}>
+                    <ListSlot icon={iconProperties}></ListSlot>
+                    <ListMainSlot>{elem.label}</ListMainSlot>
+                </ListItem>
+                )
         })}
     </div>
 }

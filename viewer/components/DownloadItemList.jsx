@@ -39,6 +39,8 @@ import keys from "../util/keys";
 import PropTypes from "prop-types";
 import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunctions";
 import {useTimer} from "../util/GuiHelpers";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {Icon} from "./Icons";
 
 const itemSort = (a, b) => {
     if (a.time !== undefined && b.time !== undefined) {
@@ -62,6 +64,31 @@ const DownloadItem = (props) => {
     let dataClass = "downloadItemData";
     const iconProperties=getItemIconProperties(props);
     return (
+        <ListItem
+            className={cls}
+            selected={props.selected}
+            onClick={(ev)=>props.onClick(setav(ev, {action: 'select'}))}
+            >
+            <ListSlot><Icon {...iconProperties}/></ListSlot>
+            <ListMainSlot
+                primary={actions.getInfoText(props)}
+                secondary={(infoMode === DownloadItemInfoMode.ALL)?
+                    actions.getTimeText(props):
+                    undefined
+                }
+            ></ListMainSlot>
+            <ListSlot>
+                {(infoMode === DownloadItemInfoMode.ALL ||
+                        infoMode === DownloadItemInfoMode.ICONS) &&
+                    <div className="infoImages">
+                        <Icon className={actions.showIsServer(props)?"server":"_none"}/>
+                        <Icon className={actions.canModify(props)?"edit":"_none"}/>
+                        <Icon className={actions.canView(props)?"view":"_none"}/>
+                    </div>
+                }
+            </ListSlot>
+        </ListItem>
+        /*
         <div className={cls} onClick={function (ev) {
             props.onClick(setav(ev, {action: 'select'}));
         }}>
@@ -81,6 +108,7 @@ const DownloadItem = (props) => {
                 }
             </div>
         </div>
+         */
     );
 };
 export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,itemActions,autoreload}) => {

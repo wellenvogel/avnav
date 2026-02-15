@@ -788,10 +788,35 @@ body{
   border-bottom: @normalBorder;
   padding: 1em;
   border-color: var(--avnav-border-color);
-  .flex-display();
-  .flex-align-items(center);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   .icon{
     margin-right: 0.5em;
+  }
+  min-height: 3.2em;
+}
+.listSlot{
+  margin-left: 12px;
+  &:first-of-type{
+    margin-left:0;
+  }
+  margin-right: 12px;
+  &:last-of-type{
+    margin-right: 0;
+  }
+  display: flex;
+  flex-direction: row;
+  &.listMain{
+    flex-direction: column;
+    flex: 1;
+    flex-basis: 8em;
+    .primary{
+
+    }
+    .secondary{
+      .mdText2();
+    }
   }
 }
 
@@ -1527,6 +1552,9 @@ span.valuePrefix{
   }
   .icon.text{
     .iconImage('ic_text_snippet.svg');
+  }
+  .icon.directory{
+    .iconImage('folder_shared.svg');
   }
 
   .downloadProgress{
