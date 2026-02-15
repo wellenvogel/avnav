@@ -42,6 +42,7 @@ import {EditableStringParameterBase} from "../util/EditableParameter";
 import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
+import {ListItem, ListMainSlot} from "../components/ListItems";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -112,10 +113,10 @@ sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteCha
 
 
 const SectionItem=(props)=>{
-    let className=(props.className||"")+" listEntry";
-    if (props.activeItem) className+=" activeEntry";
     return(
-        <div className={className} onClick={props.onClick}>{props.name}</div>
+        <ListItem className={props.className} selected={props.activeItem} onClick={props.onClick}>
+            <ListMainSlot primary={props.name}/>
+        </ListItem>
     );
 };
 
@@ -722,7 +723,7 @@ const SettingsPage = (props) => {
         }
     }
     sectionItems.forEach((sitem) => {
-        let className = "listEntry";
+        let className = "";
         if ((sectionChanges[sitem.name] || {}).isChanged) {
             className += " changed";
         }
@@ -762,7 +763,7 @@ const SettingsPage = (props) => {
                                 changeItem(k, nv[k]);
                             }
                         }}
-                        itemClassName={(param) => Helper.concatsp('listEntry', itemClasses[param.name])}
+                        itemClassName={(param) => itemClasses[param.name]}
                         itemchildren={(param) => {
                             if (!(param.name in layoutValues) || !layoutEditing) return null;
                             return <Button

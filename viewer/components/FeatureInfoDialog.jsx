@@ -45,6 +45,9 @@ import MapEventGuard from "../hoc/MapEventGuard";
 import globalStore from "../util/globalstore";
 import MapHolder from "../map/mapholder";
 import {useHistory} from "./HistoryProvider";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {Icon} from "./Icons";
+
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -144,10 +147,11 @@ const ImageIcon=({iconImage,className})=>{
 }
 
 const FeatureIcon=({feature,showOverlayIcon})=>{
+    const overlayIconClass=(feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay))?"overlay":"_none";
     return <React.Fragment>
         {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
-        {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
-        { showOverlayIcon && feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
+        {!feature.icon && <Icon className={feature.typeString()}/> }
+        { showOverlayIcon && <Icon className={overlayIconClass}/>}
     </React.Fragment>
 }
 
@@ -231,14 +235,17 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, l
         }
         {featureList.map((feature) => {
             if (feature instanceof BaseFeatureInfo) return null;
-            return <DialogRow key={feature.getKey()} className={'listEntry'} onClick={() => {
+            return <ListItem key={feature.getKey()} onClick={() => {
                 select(feature);
             }}>
-                <div className={'icons'}>
-               <FeatureIcon feature={feature} showOverlayIcon={true}/>
-                </div>
-                <span className={'title'}>{feature.title}</span>
-            </DialogRow>
+                <ListSlot>
+                    <FeatureIcon feature={feature} showOverlayIcon={true}/>
+                </ListSlot>
+                <ListMainSlot
+                    primary={feature.title}
+                >
+                </ListMainSlot>
+            </ListItem>
         })}
         <DialogButtons buttonList={buttonList}/>
     </DialogFrame>

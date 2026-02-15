@@ -222,6 +222,14 @@ body{
   position: relative;
 }
 
+.rowBase{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
 @dialogInputLabelWidth:7em;
 
 .dialog {
@@ -331,10 +339,7 @@ body{
 
 
   .dialogRow{
-    .flex-display();
-    .flex-direction(row);
-    .flex-align-items(center);
-    line-height: 1.5em;
+    .rowBase();
     &.infoText{
         white-space: pre-wrap;
     }
@@ -344,14 +349,12 @@ body{
     margin-top: 0.5em;
     .dialogRow();
     .flex-justify-content(flex-end);
-    .flex-wrap(wrap)
   }
   .insertButtons{
     .dialogRow();
     border-bottom: @normalBorder;
     border-color: var(--avnav-border-color);
     .flex-justify-content(flex-end);
-    .flex-wrap(wrap)
   }
   .smallButton{
     width: 1.5em;
@@ -473,24 +476,11 @@ body{
       margin-left: 1em;
     }
   }
-  .listEntry{
-    .flex-wrap(wrap);
-    .flex-align-items(center);
-  }
   .selectedItem {
     background-color: var(--avnav-select-color);
   }
 }
-.LoadRoutesDialog{
-  .listEntry{
-    .flex-align-items(center);
-    .icon{
-      margin-right: 0.8em;
-      width: 1em;
-      height: 1em;
-    }
-  }
-}
+
 .RouteSyncDialog{
   .dialogRow .radioLabel{
     width: 10em;
@@ -719,22 +709,20 @@ body{
 //----------------------------------------------------------------------------------------
 //lists
 //----------------------------------------------------------------------------------------
+
 .scrollable{
   overflow: auto;
 }
 .listEntry{
-  overflow: hidden;
+  .rowBase();
+  min-height: 3.2em;
   position: relative;
   border-bottom: @normalBorder;
   padding: 1em;
   border-color: var(--avnav-border-color);
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
   .icon{
     margin-right: 0.5em;
   }
-  min-height: 3.2em;
 }
 .listSlot{
   margin-left: 12px;
@@ -808,21 +796,6 @@ span.valuePrefix{
   position: relative;
 }
 
-//--WaypointListItem
-.waypointListItem{
-  .flex-display();
-  .flex-align-items(center);
-  .name{
-    width: 8em;
-    min-width: 8em;
-    margin-left: 1em;
-    white-space: pre-wrap;
-    margin-right: 1em;
-  }
-  .info{
-    .mdText2();
-  }
-}
 
 //--Checkbox
 
@@ -1141,7 +1114,6 @@ span.valuePrefix{
   #aispage{
     .aisListItem{
       .listEntry();
-      .flex-wrap(wrap);
       .aisItemFB{
         width:4em;
         min-width: 4em;
@@ -1248,6 +1220,7 @@ span.valuePrefix{
       min-height: 0;
       flex-shrink: 1;
       overflow: auto;
+      line-height: 1.5em;
       @media(max-width: @aisInfoSmall){
         .flex-direction(column-reverse)
       }
@@ -1498,6 +1471,10 @@ span.valuePrefix{
       width: auto;
       .flex(1);
       min-width: 10em;
+      line-break: anywhere;
+    }
+    .inputLabel{
+      width: 3.5em;
     }
   }
 
@@ -1692,23 +1669,12 @@ span.valuePrefix{
   }
 
   #addonconfigpage{
-    .appIcon{
-      width: 3em;
-      height: 3em;
-      margin-left: 0.5em;
-      margin-right: 1em;
+    .primary{
+      line-break: anywhere;
     }
-    .itemMain{
-      .flex(1);
-      .flex-display();
-      .flex-direction(column);
-      .itemTitle{
+     .sourceInfo {
         .mdText2();
-      }
-      overflow: hidden;
-      min-width: 0;
-      .sourceInfo {
-        .mdText2();
+       margin-top: 0.2em;
       }
       .sourceInfo:before{
         content:"(";
@@ -1716,10 +1682,6 @@ span.valuePrefix{
       .sourceInfo:after{
         content:")";
       }
-    }
-    .AddonConfigView{
-      .flex-shrink(0);
-    }
   }
 
   //-------------- pages with map and widgets ----------------------------
