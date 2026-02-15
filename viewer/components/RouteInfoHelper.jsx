@@ -32,9 +32,10 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {useStateRef} from "../util/GuiHelpers";
 import Toast from "./Toast";
-import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, DialogText, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, DialogText} from "./OverlayDialog";
 import {Checkbox, Radio} from "./Inputs";
 import ItemList from "./ItemList";
+import {useDialogContext} from "./DialogContext";
 
 let RouteHandler=navdata.getRoutingHandler();
 

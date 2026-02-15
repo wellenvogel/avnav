@@ -31,13 +31,13 @@ import {
     DialogButtons,
     DialogFrame,
     DialogRow,
-    promiseResolveHelper,
-    useDialogContext
+    promiseResolveHelper
 } from "./OverlayDialog";
 import {Input, valueMissing} from "./Inputs";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import formatter from "../util/formatter";
+import {useDialogContext} from "./DialogContext";
 
 export const nameProposal=(prefix)=>{
     const dt=new Date();

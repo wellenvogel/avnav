@@ -26,13 +26,14 @@
 
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import {DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import DB from './DialogButton.jsx';
 import RequestHandler from "../util/requests";
 import Toast from "./Toast";
 import editableParameterUIFactory, {EditableParameterListUI} from "./EditableParameterUI";
 import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
+import {useDialogContext} from "./DialogContext";
 
 const EditHandlerDialog=(props)=>{
     const [loaded,setLoaded]=useState(false);

@@ -27,8 +27,8 @@ import PropTypes from 'prop-types';
 import Button from "./Button";
 import Requests, {prepareUrl} from "../util/requests";
 import AndroidEventHandler from "../util/androidEventHandler";
-import {useDialogContext} from "./OverlayDialog";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const MAXUPLOADSIZE=100000;
 

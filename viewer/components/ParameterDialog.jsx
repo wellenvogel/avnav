@@ -21,10 +21,11 @@
  #
  */
 import React, {useCallback,} from "react";
-import {showDialog, DialogFrame,DialogRow,useDialogContext,DialogButtons} from "./OverlayDialog";
+import {showDialog, DialogFrame,DialogRow,DialogButtons} from "./OverlayDialog";
 import Helper, {getav, setav} from "../util/helper";
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
 import {ErrorBoundary} from "./ErrorBoundary";
+import {useDialogContext} from "./DialogContext";
 
 export const ParameterDialog = (props) => {
     const [values, setValues] = React.useState(props.values||{});

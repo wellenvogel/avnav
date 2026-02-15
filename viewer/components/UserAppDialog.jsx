@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import {showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
+import {showPromiseDialog} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
@@ -15,6 +15,7 @@ import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./Edi
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
 import {createItemActions} from "./FileDialog";
+import {useDialogContext} from "./DialogContext";
 
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{

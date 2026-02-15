@@ -12,7 +12,8 @@ import {useTimer} from "../util/GuiHelpers";
 import assign from 'object-assign';
 import Helper from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
-import {DialogDisplay, useDialogContext} from "./OverlayDialog";
+import {DialogDisplay} from "./OverlayDialog";
+import {useDialogContext} from "./DialogContext";
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");

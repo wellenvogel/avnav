@@ -35,8 +35,7 @@ import {
     DialogButtons,
     DialogFrame,
     DialogRow,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
 import layouthandler, {layoutLoader} from "../util/layouthandler";
@@ -68,6 +67,7 @@ import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
 import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
 import base from "../base";
+import {useDialogContext} from "./DialogContext";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();

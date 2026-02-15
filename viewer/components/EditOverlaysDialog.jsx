@@ -5,8 +5,7 @@ import {
     DialogFrame,
     DialogRow,
     showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.jsx';
@@ -33,6 +32,7 @@ import {EditableParameterTypes} from "../util/EditableParameter";
 import {fetchItemInfo, itemListToSelectList, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
 import {InfoItem, SelectDialog} from "./BasicDialogs";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {useDialogContext} from "./DialogContext";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};

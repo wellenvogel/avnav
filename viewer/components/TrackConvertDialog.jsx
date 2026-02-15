@@ -31,8 +31,7 @@ import {
     DBCancel,
     DialogButtons,
     DialogFrame,
-    DialogRow,
-    useDialogContext
+    DialogRow
 } from "./OverlayDialog";
 import Requests from '../util/requests';
 import Toast from "./Toast";
@@ -51,6 +50,7 @@ import mapholder from "../map/mapholder";
 import {InfoItem} from "./BasicDialogs";
 import {useHistory} from "./HistoryProvider";
 import {createItemActions} from "./FileDialog";
+import {useDialogContext} from "./DialogContext";
 
 const RouteHandler=navdata.getRoutingHandler();
 

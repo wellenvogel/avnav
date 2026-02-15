@@ -29,11 +29,12 @@ import React, {useState} from "react";
 import theFactory from "./WidgetFactory";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import {DialogButtons, useDialogContext} from "./OverlayDialog";
+import {DialogButtons} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 import {EditableParameter} from "../util/EditableParameter";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);

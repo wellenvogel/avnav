@@ -561,7 +561,8 @@ export interface Modules{
     Htm: typeof Htm,
     LatLonSpherical: typeof LatLonSpherical,
     Dms: typeof Dms,
-    ol: typeof OpenLayers
+    ol: typeof OpenLayers,
+    avnav: any
 }
 
 /**

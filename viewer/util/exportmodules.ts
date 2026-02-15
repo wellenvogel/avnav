@@ -22,23 +22,15 @@
  */
 import {modules} from './api.impl';
 const ts=((new Date()).getTime()+"").replace(/[^0-9a-zA-Z]/g, '');
-const avnav="avnav"+ts;
-const avnmod="modules";
+const avnav="avnav"+ts+"modules";
 // @ts-ignore
 if (! window[avnav]) {
     // @ts-ignore
-    window[avnav] = {};
+    window[avnav] = modules;
 }
-// @ts-ignore
-if (! window[avnav][avnmod]) {
-    // @ts-ignore
-    window[avnav][avnmod] = {};
-}
-// @ts-ignore
-window[avnav][avnmod]=modules;
 
 // @ts-ignore
-Object.freeze(window[avnav][avnmod]);
+Object.freeze(window[avnav]);
 
 const buildExport=(name:string):string=>{
     let rt:string='';
@@ -48,12 +40,12 @@ const buildExport=(name:string):string=>{
         for (const k of Object.keys(module)) {
             if (module[k] != null) {
                 rt += `
-                export const ${k}=window.${avnav}.${avnmod}.${name}.${k}\n
+                export const ${k}=window.${avnav}.${name}.${k}\n
                 `
             }
         }
     }
-    rt+=`export default window.${avnav}.${avnmod}.${name}`;
+    rt+=`export default window.${avnav}.${name}`;
     return rt;
 }
 

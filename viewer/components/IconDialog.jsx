@@ -23,7 +23,7 @@
  ###############################################################################
  * select an icon
  */
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import PropTypes from "prop-types";
 import {Checkbox} from "./Inputs";
 import React,{useEffect, useState} from "react";
@@ -36,6 +36,7 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {SelectList} from "./BasicDialogs";
 import {createItemActions} from "./FileDialog";
+import {useDialogContext} from "./DialogContext";
 
 const IMAGES_FLAG=1;
 const SOURCES=[

@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import {useStore} from "../hoc/Dynamic";
 import Store from "../util/store";
-import {useDialogContext} from "./OverlayDialog";
 import {injectav, setav} from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const Button = (props) => {
     useKeyEventHandlerPlain(props.name, "button", (component, action) => {

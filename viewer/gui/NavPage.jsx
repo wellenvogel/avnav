@@ -11,7 +11,7 @@ import NavHandler from '../nav/navdata.js';
 import {
     DBCancel,
     DialogButtons, DialogFrame, DialogRow,
-    DialogText, OverlayContainer, showDialog, showPromiseDialog, useDialogContext
+    DialogText, OverlayContainer, showDialog, showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import Helper, {injectav} from '../util/helper.js';
 import {
@@ -57,6 +57,7 @@ import {showErrorList} from "../components/ErrorListDialog";
 import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
 import {PAGEIDS} from "../util/pageids";
+import {useDialogContext} from "../components/DialogContext";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 

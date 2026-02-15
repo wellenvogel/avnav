@@ -5,8 +5,7 @@ import {
     DialogButtons,
     DialogFrame,
     promiseResolveHelper,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from "./OverlayDialog";
 import CodeFlask from 'codeflask';
 import Prism from "prismjs";
@@ -17,6 +16,7 @@ import PropTypes from "prop-types";
 import {ConfirmDialog} from "./BasicDialogs";
 import Requests from "../util/requests";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}) => {
     const flask = useRef();

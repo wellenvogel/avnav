@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import ColorDialog from './ColorDialog.jsx';
-import {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import Toast from "./Toast";
 import {SelectDialog} from "./BasicDialogs";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 /**
  * input elements

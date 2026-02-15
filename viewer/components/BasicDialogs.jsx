@@ -25,10 +25,11 @@
  */
 import DB from "./DialogButton";
 import React, {useEffect, useState} from "react";
-import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {getItemIconProperties} from "../util/itemFunctions";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {useDialogContext} from "./DialogContext";
 
 export const defaultSelectSort=(a,b)=>{
     if (typeof(a) !== 'object' || typeof (b) !== 'object') return 0;

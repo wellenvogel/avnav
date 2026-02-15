@@ -33,7 +33,7 @@ import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import DB from "../components/DialogButton";
-import {DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from "../components/OverlayDialog";
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "../components/OverlayDialog";
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
@@ -44,6 +44,7 @@ import EditHandlerDialog from "../components/EditHandlerDialog";
 import DownloadButton from "../components/DownloadButton";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
+import {useDialogContext} from "../components/DialogContext";
 
 const HANDLER_NAME='AVNImporter';
 

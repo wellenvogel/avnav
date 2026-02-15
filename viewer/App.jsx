@@ -22,8 +22,7 @@ import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
 import {
     DialogContext, DialogDisplay,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
@@ -57,6 +56,7 @@ import Helper, {avNavVersion} from "./util/helper";
 import {HistoryContext, useHistory} from "./components/HistoryProvider";
 import {RouteSyncDialog} from "./components/RouteInfoHelper";
 import {PAGEIDS} from "./util/pageids";
+import {useDialogContext} from "./components/DialogContext";
 
 const DynamicSound=Dynamic(SoundHandler);
 

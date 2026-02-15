@@ -25,7 +25,7 @@
  */
 
 import React, {useState} from "react";
-import {DBOk, DialogButtons, DialogFrame, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {DBOk, DialogButtons, DialogFrame, showPromiseDialog} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import {Checkbox, ColorSelector, Input, InputReadOnly, InputSelect} from "./Inputs";
 import editableParameterFactory, {
@@ -45,6 +45,7 @@ import {KeyHelper} from "../util/keys";
 import globalStore from "../util/globalstore";
 import Toast from "./Toast";
 import {Icon} from "./Icons";
+import {useDialogContext} from "./DialogContext";
 
 
 

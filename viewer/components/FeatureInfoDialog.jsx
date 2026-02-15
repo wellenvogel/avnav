@@ -28,7 +28,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
@@ -47,6 +47,7 @@ import MapHolder from "../map/mapholder";
 import {useHistory} from "./HistoryProvider";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
+import {useDialogContext} from "./DialogContext";
 
 NavHandler.getRoutingHandler();
 

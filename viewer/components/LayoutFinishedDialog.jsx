@@ -1,11 +1,12 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
-import {DialogButtons, DialogFrame, showDialog, useDialogContext} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 import {EditDialog} from "./EditDialog";
 import Toast from "./Toast";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const LayoutFinishedDialog=(props)=>{
     const dialogContext=useDialogContext();

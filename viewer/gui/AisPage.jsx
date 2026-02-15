@@ -12,8 +12,7 @@ import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
 import Dialogs, {
     showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
@@ -25,6 +24,7 @@ import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
 import {PAGEIDS} from "../util/pageids";
+import {useDialogContext} from "../components/DialogContext";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],

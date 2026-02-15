@@ -28,7 +28,7 @@ import Helper, {avitem, setav} from "../util/helper";
 import React, {useCallback, useEffect, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
-import {showDialog, showPromiseDialog, useDialogContext} from "./OverlayDialog";
+import {showDialog, showPromiseDialog} from "./OverlayDialog";
 import {checkName} from "./ItemNameDialog";
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
@@ -41,6 +41,7 @@ import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunc
 import {useTimer} from "../util/GuiHelpers";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
+import {useDialogContext} from "./DialogContext";
 
 const itemSort = (a, b) => {
     if (a.time !== undefined && b.time !== undefined) {

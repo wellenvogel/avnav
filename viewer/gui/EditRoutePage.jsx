@@ -16,8 +16,7 @@ import {
     DialogFrame,
     DialogRow,
     showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.js';
 import {useStateRef, useTimer} from '../util/GuiHelpers.js';
@@ -48,6 +47,7 @@ import DownloadButton from "../components/DownloadButton";
 import {useHistory} from "../components/HistoryProvider";
 import {DownloadItemInfoMode, DownloadItemList} from "../components/DownloadItemList";
 import {RouteSyncDialog} from "../components/RouteInfoHelper";
+import {useDialogContext} from "../components/DialogContext";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
