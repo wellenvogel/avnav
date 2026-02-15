@@ -33,7 +33,8 @@ import editableParameterFactory, {
     EditableBooleanParameter,
     EditableColorParameter,
     EditableFloatParameter,
-    EditableIconParameter, EditableKeyParameter,
+    EditableIconParameter,
+    EditableKeyParameter,
     EditableNumberParameter,
     EditableSelectParameter,
     EditableStringParameter
@@ -43,6 +44,7 @@ import Button from "./Button";
 import {KeyHelper} from "../util/keys";
 import globalStore from "../util/globalstore";
 import Toast from "./Toast";
+import {Icon} from "./Icons";
 
 
 
@@ -426,7 +428,7 @@ class EditableColorParameterUI extends EditableColorParameter{
 
 const RenderIcon=({url})=>{
     return <React.Fragment>
-        {url && <span className="icon" style={{backgroundImage: "url('" + url + "')"}}/>}
+        {url && <Icon icon={url}/>}
         {url&&<span className={"url"}>{url.replace(/.*\//,'')}</span>}
     </React.Fragment>
 }

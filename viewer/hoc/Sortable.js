@@ -158,7 +158,7 @@ export const useAvNavSortable=(id,opt_nodrag)=>{
             context.handler.ref(id,el);
         }
     }
-    if (opt_nodrag !== false){
+    if (opt_nodrag !== true){
         rt.draggable=true;
     }
     rt[ATTR]=id;

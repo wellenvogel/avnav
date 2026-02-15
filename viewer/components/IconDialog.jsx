@@ -132,7 +132,7 @@ export const IconDialog=(props)=>{
                     }}/>
             })}
         </DialogRow>
-        <SelectList list={iconList} onClick={(icon)=>{
+        <SelectList list={iconList} sort={true} onClick={(icon)=>{
             dialogContext.closeDialog();
             onChange(icon);
         }}/>

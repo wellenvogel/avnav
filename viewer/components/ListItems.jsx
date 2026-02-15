@@ -24,9 +24,12 @@
 import React from 'react';
 import {concatsp} from "../util/helper";
 import {Icon} from "./Icons";
+import {useAvNavSortable} from "../hoc/Sortable";
 
-export const ListItem = ({selected,className,children,onClick }) => {
+export const ListItem = ({selected,className,children,onClick,dragId,noDrag }) => {
+    const dd=useAvNavSortable(dragId,!!noDrag);
     return <div
+        {...dd}
         className={concatsp(className,"listEntry",selected?"activeEntry":undefined)}
         onClick={onClick}
     >
@@ -53,5 +56,24 @@ export const ListMainSlot=({className,primary,secondary,children,onClick}) => {
         {secondary && <div className={"secondary"}>{secondary}</div>}
         {children}
     </div>
+}
+
+export const ListFrame=({className,scrollable,onClick,children}) => {
+    if (scrollable) {
+        return <div
+            className={concatsp("scrollable","listFrame",className)}
+            onClick={onClick}
+            >
+            <div className={"scrollableInner"}>
+                {children}
+            </div>
+        </div>;
+    }
+    return <div
+            className={concatsp("listFrame",className)}
+            onClick={onClick}
+            >
+            {children}
+    </div>;
 }
  

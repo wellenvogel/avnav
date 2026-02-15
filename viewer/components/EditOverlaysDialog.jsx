@@ -31,7 +31,8 @@ import cloneDeep from "clone-deep";
 import Mapholder from "../map/mapholder";
 import {EditableParameterTypes} from "../util/EditableParameter";
 import {fetchItemInfo, itemListToSelectList, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
-import {SelectDialog} from "./BasicDialogs";
+import {InfoItem, SelectDialog} from "./BasicDialogs";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};
@@ -295,15 +296,16 @@ OverlayItemDialog.propTypes={
 }
 
 const BaseElement=(props)=>{
-    const dd=useAvNavSortable(props.dragId,false)
     return(
-    <div className={"listEntry overlayElement baseChart"} {...dd}>
-        <div className="itemInfo">
-            <div className="infoRow">
-                <span className="inputLabel"> </span><span className="valueText">---chart---</span>
-            </div>
-        </div>
-    </div>
+        <ListItem
+            className="baseChart"
+            dragId={props.dragId}
+            noDrag={true}
+        >
+            <ListMainSlot>
+                <InfoItem label={""} value={'---chart---'} />
+            </ListMainSlot>
+        </ListItem>
     );
 }
 const getItemError=(props)=>{
@@ -318,60 +320,61 @@ const ErrorRow=({item})=>{
     </div>
 }
 const OverlayElement=(props)=>{
-    const dd=useAvNavSortable(props.dragId);
     const onClick=(ev,action)=>{
         if (props.onClick){
             props.onClick(setav(ev,{item:props,action:action}));
         }
     }
     return (
-        <div className={Helper.concatsp("listEntry","overlayElement",
-                props.selected?"activeEntry":undefined,
-                props.enabled?undefined:" disabled",
-                props.isDefault?"defaultOverlay":undefined,
+        <ListItem
+            dragId={props.dragId}
+            selected={props.selected}
+            className={Helper.concatsp(
+                props.enabled?undefined:"disabled",
                 getItemError(props)?"withError":undefined
-        )}
-             onClick={(ev)=>onClick(ev,'select')} {...dd}>
-            <div className="itemInfo">
-                <div className="infoRow">
-                    <span className="inputLabel">Name</span><span className="valueText">{props.displayName||props.name}</span>
-                </div>
-                <div className="infoRow">
-                    <span className="inputLabel">Type</span><span className="valueText">{props.type+(props.isDefault?"   [default]":"")}</span>
-                </div>
+            )}
+            onClick={(ev)=>onClick(ev,'select')}
+            >
+            <ListMainSlot>
+                <InfoItem label={"Name"} value={props.displayName||props.name} />
+                <InfoItem label={"Type"} value={props.type+(props.isDefault?"   [default]":"")}/>
                 <ErrorRow item={props}/>
-            </div>
-            <div className="actions">
+            </ListMainSlot>
+            <ListSlot>
                 {props.type !== 'base' &&
-                <Checkbox
-                    className="overlayEnabled"
-                    value={props.enabled || false}
-                    onChange={(nv) => {
-                        onClick({},nv ? "enable" : "disable");
-                    }}
-                />
-                }
-                {props.type !== 'base' &&
-                <Button name="Edit"
-                        className={"smallButton " + ((props.isDefault || props.preventEdit) ? "disabled" : "")}
-                        onClick={(ev) => {
-                            ev.stopPropagation();
-                            onClick(ev,'edit');
+                    <Checkbox
+                        className="overlayEnabled"
+                        hideLabel={true}
+                        value={props.enabled || false}
+                        onChange={(nv) => {
+                            onClick({},nv ? "enable" : "disable");
                         }}
-                />
+                    />
                 }
-            </div>
-        </div>
+                {props.type !== 'base' &&
+                    <Button name="Edit"
+                            disabled={props.isDefault || props.preventEdit}
+                            className={"smallButton "}
+                            onClick={(ev) => {
+                                ev.stopPropagation();
+                                onClick(ev,'edit');
+                            }}
+                    />
+                }
+            </ListSlot>
+        </ListItem>
     );
 };
 
 const CombinedOverlayElement=(props)=> {
-    const dd=useAvNavSortable(props.dragId,false)
+    const dd=useAvNavSortable(props.dragId,true)
     return(
         <ItemList
             listRef={dd.ref}
             className="defaultOverlayItems"
-            itemClass={OverlayElement}
+            itemClass={(ep)=>{
+                return <OverlayElement {...ep} preventEdit={true}/>;
+            }}
             itemList={props.items}
             onItemClick={(ev)=>{
                 const avevent=injectav(ev);

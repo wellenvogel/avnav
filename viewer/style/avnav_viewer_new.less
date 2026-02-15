@@ -328,18 +328,7 @@ body{
     .dialogButton();
   }
 
-  .selectDialog {
-    .flex-display();
-    .flex-direction(column);
-    overflow: auto;
-    padding-bottom: 1em;
-    .selectList {
-      .flex(1);
-      .flex-shrink(0);
-      .flex-basis(auto);
-    }
 
-  }
 
   .dialogRow{
     .flex-display();
@@ -511,62 +500,13 @@ body{
   }
 }
 
-.overlayElement{
-  &.sortableHelper {
-    z-index: 130; //for dragdrop
-  }
-  .flex-display();
-  .flex-direction(row);
-  padding: 0.5em;
-  @media(max-width: 35em){
-    .flex-direction(column);
-    .flex-align-items(flex-start);
-    .itemInfo{
-      margin-right: 0!important;
-    }
-  }
-  .itemInfo{
-    .flex-grow(1);
-    margin-right: 1em;
-  }
-  .inputLabel{
-    .flex-shrink(0);
-    width: 6em;
-  }
-  .infoRow,.actions{
-    .flex-display();
-    .flex-direction(row);
-  }
-  .infoRow{
-    @media(max-width: 20em){
-      .flex-direction(column);
-      .flex-align-items(flex-start);
-
-    }
-    .valueText{
-      word-break: break-all;
-    }
-  }
-}
 .editOverlaysDialog{
-  .actions{
-    .flex-display();
-    .flex-direction(row);
-  }
-  button.smallButton.disabled {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .overlayEnabled {
-    .inputLabel {
-      display: none;
-    }
-  }
-  .overlayElement.disabled{
-    .valueText{
+  .overlayItems .disabled{
+    .itemInfo{
       .mdText2();
     }
   }
+
   &.preventEdit{
     .button.Edit {
       opacity: 0;
@@ -779,7 +719,7 @@ body{
 //----------------------------------------------------------------------------------------
 //lists
 //----------------------------------------------------------------------------------------
-.listContainer.scrollable{
+.scrollable{
   overflow: auto;
 }
 .listEntry{
@@ -816,6 +756,7 @@ body{
     }
     .secondary{
       .mdText2();
+      margin-top: 0.2em;
     }
   }
 }
@@ -1452,48 +1393,6 @@ span.valuePrefix{
 
   }
 
-  .DownloadItemList {
-    .itemMain {
-      .flex-display();
-      .flex-direction(row);
-      .flex(1);
-      .flex-wrap(wrap);
-      .flex-align-items(start);
-    }
-
-    .listEntry {
-      .flex-wrap(wrap);
-      .flex-align-items(center);
-    }
-  }
-    .downloadItemData {
-      .flex(1);
-      padding-left: 0.8em;
-      padding-right: 0.8em;
-      .flex-display();
-      .flex-direction(row);
-      .flex-align-items(center);
-      min-width: 10em;
-      @media (max-width: 35em) {
-        .flex-direction(column);
-        .flex-align-items(flex-start);
-      }
-
-      .date {
-        .mdText2();
-        width: 11.5em;
-      }
-
-      .info {
-        .flex(1);
-        word-break: break-all;
-      }
-
-      &.noDelete {
-        margin-left: 2.4em;
-      }
-
-    }
 .infoImages {
   padding-left: 0.8em;
 

@@ -28,11 +28,28 @@ import React, {useEffect, useState} from "react";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {getItemIconProperties} from "../util/itemFunctions";
-import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
-import {Icon} from "./Icons";
+import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
 
-export const SelectList = ({list, onClick}) => {
-    return <div className="selectList">
+export const defaultSelectSort=(a,b)=>{
+    if (typeof(a) !== 'object' || typeof (b) !== 'object') return 0;
+    const av=(a.label||"").toUpperCase();
+    const bv=(b.label||"").toUpperCase();
+    if (av < bv) return -1;
+    if (av > bv) return 1;
+    return 0;
+}
+
+export const SelectList = ({list, onClick,scrollable,className,sort}) => {
+    if (sort){
+        list=[...list];
+        if (typeof(sort)!=='function'){
+            list.sort(defaultSelectSort);
+        }
+        else{
+            list.sort(sort);
+        }
+    }
+    return <ListFrame scrollable={scrollable} className={className}>
         {list.map(function (elem) {
             if (! (elem instanceof Object)) return null;
             const iconProperties=getItemIconProperties(elem);
@@ -45,15 +62,15 @@ export const SelectList = ({list, onClick}) => {
                     <ListSlot icon={iconProperties}></ListSlot>
                     <ListMainSlot>{elem.label}</ListMainSlot>
                 </ListItem>
-                )
+            )
         })}
-    </div>
+    </ListFrame>
 }
-export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback,className}) => {
+export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback,className,sort}) => {
     const dialogContext = useDialogContext();
     return (
         <DialogFrame className={Helper.concatsp("selectDialog",className)} title={title || ''}>
-            <SelectList list={list} onClick={(elem) => {
+            <SelectList list={list} sort={sort} onClick={(elem) => {
                 dialogContext.closeDialog();
                 if (resolveFunction) resolveFunction(elem);
                 else if (okCallback) okCallback(elem);

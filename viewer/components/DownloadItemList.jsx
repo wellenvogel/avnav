@@ -39,7 +39,7 @@ import keys from "../util/keys";
 import PropTypes from "prop-types";
 import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunctions";
 import {useTimer} from "../util/GuiHelpers";
-import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 
 const itemSort = (a, b) => {
@@ -60,12 +60,10 @@ const DownloadItem = (props) => {
     let infoMode=props.infoMode;
     if (infoMode === undefined) infoMode=DownloadItemInfoMode.ALL;
     let actions = props.itemActions;
-    let cls = Helper.concatsp("listEntry", actions.getClassName(props));
-    let dataClass = "downloadItemData";
     const iconProperties=getItemIconProperties(props);
     return (
         <ListItem
-            className={cls}
+            className={actions.getClassName(props)}
             selected={props.selected}
             onClick={(ev)=>props.onClick(setav(ev, {action: 'select'}))}
             >
@@ -88,27 +86,6 @@ const DownloadItem = (props) => {
                 }
             </ListSlot>
         </ListItem>
-        /*
-        <div className={cls} onClick={function (ev) {
-            props.onClick(setav(ev, {action: 'select'}));
-        }}>
-            {iconProperties && <span {...iconProperties}/>}
-            <div className="itemMain">
-                <div className={dataClass}>
-                    { (infoMode === DownloadItemInfoMode.ALL) && <div className="date">{actions.getTimeText(props)}</div>}
-                    <div className="info">{actions.getInfoText(props)}</div>
-                </div>
-                {(infoMode === DownloadItemInfoMode.ALL ||
-                        infoMode === DownloadItemInfoMode.ICONS) &&
-                <div className="infoImages">
-                    {actions.canModify(props) && <span className="icon edit"></span>}
-                    {actions.showIsServer(props) && <span className="icon server"></span>}
-                    {actions.canView(props) && <span className="icon view"></span>}
-                </div>
-                }
-            </div>
-        </div>
-         */
     );
 };
 export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,itemActions,autoreload}) => {
