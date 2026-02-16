@@ -1,6 +1,9 @@
 /* reset the additional dialogRow that surrounds the dialogText */
 .nwmplugin.WifiDialog{
-    width: 100%;
+    max-width: 100%;
+    width: 30em;
+    margin-left: auto;
+    margin-right: auto;
 }
 .nwmplugin.WifiDialog > .dialogRow{
     display: flex;
@@ -8,6 +11,13 @@
     margin: 0;
     align-items: flex-start;
     width: 100%;
+    flex-wrap: nowrap;
+    overflow: auto;
+}
+.nwmplugin.WifiDialog .heading {
+    padding: 1em;
+    border-top: 3px solid;
+    border-color: var(--avnav-border-color);
 }
 .nwmplugin.WifiDialog .interfaceList{
     width: 100%;

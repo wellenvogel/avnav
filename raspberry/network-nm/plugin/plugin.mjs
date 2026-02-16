@@ -23,8 +23,8 @@
 
  import html from 'htm';
  import {useState,useEffect,useCallback} from 'react';
- import {useDialogContext,listElements} from 'avnav';
- const {ListItem,ListSlot,ListMainSlot}=listElements;
+ import {useDialogContext,ListItem,ListSlot,ListMainSlot} from 'avnav';
+ 
  const fetchStates={
     0: undefined,
     1: "reading devices",
