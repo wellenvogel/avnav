@@ -21,10 +21,16 @@
  #
  */
 import React from 'react';
+// @ts-ignore
 import {concatsp} from "../util/helper";
-export const Icon=({className,icon,color})=>{
+export interface IconProps{
+    className?: string;
+    icon?:string;
+    color?:string;
+}
+export const Icon=({className,icon,color}:IconProps)=>{
     if (! icon && ! className && ! color)return null;
-    const style={};
+    const style:Record<string, string> = {};
     if (color){style.backgroundColor=color}
     if (icon){style.backgroundImage=`url(${icon})`}
     return <div

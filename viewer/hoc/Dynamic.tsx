@@ -7,12 +7,26 @@
  * (possibly already translated if storeKeys was an object) and the list of keys and must return the new state
  */
 
+// @ts-ignore
 import globalStore from "../util/globalstore.jsx";
 import React, {Children, cloneElement, useEffect, useRef, useState} from 'react';
+// @ts-ignore
 import {KeyHelper} from "../util/keys";
+// @ts-ignore
 import {useStateRef} from "../util/GuiHelpers";
 
-const getStoreAndKeys=(props,options)=>{
+
+export type StoreKeys=Record<string, string>;
+export type Props=Record<string, any>;
+export type UpdateFunction=(props:Props,storeKeys:StoreKeys) => Props;
+interface Options{
+    storeKeys?:StoreKeys;
+    store?:any
+    updateFunction?:UpdateFunction;
+    changeCallback?:(value:any) => void;
+    minTime?: number; //minimal intervale between updates
+}
+const getStoreAndKeys=(props:Props,options:Options)=>{
     if (! options) options={};
     if (! props) props={};
     const usedStoreKeys=KeyHelper.removeNodeInfo({...options.storeKeys,...props.storeKeys});
@@ -23,17 +37,17 @@ const getStoreAndKeys=(props,options)=>{
     const usedUpdateFunction=options.updateFunction||props.updateFunction;
     return [store,usedStoreKeys,usedUpdateFunction];
 }
-const computeValues=(fw,storeKeys,data,usedUpdateFunction)=>{
+const computeValues=(fw:any,storeKeys:StoreKeys,data:Record<string,any>,usedUpdateFunction:UpdateFunction)=>{
     if (usedUpdateFunction) return {...fw,...usedUpdateFunction({...data},storeKeys)};
     return {...fw,...data};
 }
-const getStoreValues=(forwardData,store,storeKeys,updateFunction)=>{
+const getStoreValues=(forwardData:Props,store:any|undefined,storeKeys:StoreKeys|undefined,updateFunction:UpdateFunction)=>{
     if (! store || ! storeKeys) return forwardData;
-    let values=store.getMultiple(storeKeys);
+    const values:Props=store.getMultiple(storeKeys);
     return computeValues(forwardData,storeKeys,values,updateFunction);
 }
 
-export const useStore=(props,opt_options)=>{
+export const useStore=(props:Props,opt_options?:Options)=>{
     if (! props) return;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {storeKeys,updateFunction,minTime,changeCallback,...forward}=props;
@@ -65,7 +79,7 @@ export const useStore=(props,opt_options)=>{
             doSetValues(store.getMultiple(usedStoreKeys));
         },usedStoreKeys)
     }
-    const doSetValues=(data)=>{
+    const doSetValues=(data:Props)=>{
         setValues(data);
         lastUpdate.current=(new Date()).getTime();
         if (usedChangeCallback) usedChangeCallback(computeValues(forward,usedStoreKeys,data,usedUpdateFunction));
@@ -81,7 +95,7 @@ export const useStore=(props,opt_options)=>{
     return computeValues(forward,usedStoreKeys,values,usedUpdateFunction);
 }
 
-export const DynamicFrame=(props)=>{
+export const DynamicFrame=(props:Props)=>{
     const values=useStore(props);
     return <React.Fragment>
         {Children.map(props.children,(child)=>cloneElement(child,values))}
@@ -93,16 +107,16 @@ export const DynamicFrame=(props)=>{
  * @param options
  * @returns {*|(*)|(*)}
  */
-export const dynamicWrapper=(props,options)=>{
+export const dynamicWrapper=(props:Props,options:Options)=>{
     if (! props) return;
     const [store,storeKeys,updateFunctions]=getStoreAndKeys(props,options);
     if (! storeKeys) return props;
     return getStoreValues(props,store,storeKeys,updateFunctions);
 }
 
-export default  function(Component,opt_options,opt_store){
-    let store=opt_store||globalStore;
-     return (props)=>{
+export default  function(Component:any,opt_options?:Options,opt_store?:any){
+    const store=opt_store||globalStore;
+     return (props:Props)=>{
         const currentValues=useStore(props,{...opt_options,store:store});
         return <Component {...currentValues}/>
     }
@@ -114,7 +128,7 @@ export default  function(Component,opt_options,opt_store){
  *        can be a function
  * @param forceInitial - always set this initial value if not undefine
  */
-export const useStoreState = (storeKey, defaultInitialValue, forceInitial) => {
+export const useStoreState = (storeKey:string, defaultInitialValue?:any, forceInitial?:boolean) => {
     const [value, setValue,valueRef] = useStateRef(() => {
         let iv = globalStore.getData(storeKey);
         if (iv === undefined || forceInitial) {
@@ -136,7 +150,7 @@ export const useStoreState = (storeKey, defaultInitialValue, forceInitial) => {
     }, []);
     return [
         value,
-        (nv) => {
+        (nv:any) => {
             globalStore.storeData(storeKey, nv);
         },
         valueRef

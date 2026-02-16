@@ -2,7 +2,7 @@
 
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history.js';
-import Dynamic from './hoc/Dynamic.jsx';
+import Dynamic from './hoc/Dynamic.tsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';

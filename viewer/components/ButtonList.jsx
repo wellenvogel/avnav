@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Button from './Button.jsx';
-import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic.jsx';
+import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic.tsx';
 import keys from '../util/keys.jsx';
 import ItemList from './ItemList.jsx';
 import PropTypes from "prop-types";

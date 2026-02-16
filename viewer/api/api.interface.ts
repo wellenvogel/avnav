@@ -34,6 +34,7 @@ import Htm from "htm";
 import * as OpenLayers from 'ol/index';
 
 
+
 export type FormatterFunction=(value:any,...args: any[])=>string;
 export type PredefinedFormatters=
     'formatDateTime'|

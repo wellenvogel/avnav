@@ -35,12 +35,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import Htm from "htm";
 import * as OpenLayers from 'ol/index';
-// @ts-ignore
-import * as ListElements from '../components/ListItems';
-// @ts-ignore
-import {useDialogContext} from '../components/DialogContext'
-// @ts-ignore
-import {useStoreState} from "../hoc/Dynamic";
+import * as AvNavExports from '../components/exports';
 
 export class ApiImpl implements ApiIntf {
     constructor() {
@@ -209,11 +204,7 @@ export const modules: Modules={
     LatLonSpherical: LatLonSperical,
     Dms:Dms,
     ol: OpenLayers,
-    avnav: {
-        listElements: ListElements,
-        useDialogContext: useDialogContext,
-        useStoreState: useStoreState,
-    }
+    avnav: AvNavExports
 }
 
 export class ApiV2 extends ApiImpl implements ApiV2Intf {

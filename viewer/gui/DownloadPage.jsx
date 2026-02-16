@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import {useStoreState} from '../hoc/Dynamic.jsx';
+import {useStoreState} from '../hoc/Dynamic.tsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React, {useCallback, useState} from 'react';

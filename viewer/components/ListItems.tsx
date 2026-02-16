@@ -22,11 +22,21 @@
  */
 
 import React from 'react';
+// @ts-ignore
 import {concatsp} from "../util/helper";
-import {Icon} from "./Icons";
+import {Icon, IconProps} from "./Icons";
+// @ts-ignore
 import {useAvNavSortable} from "../hoc/Sortable";
 
-export const ListItem = ({selected,className,children,onClick,dragId,noDrag }) => {
+export interface ListItemProps {
+    selected?: boolean;
+    className?: string;
+    children?: React.ReactNode;
+    onClick?: (ev:any) => void;
+    dragId?: string|number;
+    noDrag?: boolean;
+}
+export const ListItem = ({selected,className,children,onClick,dragId,noDrag }: ListItemProps) => {
     const dd=useAvNavSortable(dragId,!!noDrag);
     return <div
         {...dd}
@@ -36,7 +46,14 @@ export const ListItem = ({selected,className,children,onClick,dragId,noDrag }) =
         {children}
     </div>
 }
-export const ListSlot=({className,icon,text,children,onClick}) => {
+export interface ListSlotProps{
+    className?: string;
+    icon?: IconProps;
+    text?: string|React.ReactNode;
+    children?: React.ReactNode;
+    onClick?: (ev:any) => void;
+}
+export const ListSlot=({className,icon,text,children,onClick}: ListSlotProps) => {
     if (! icon && (text == null) && !children) return null;
     return <div
         className={concatsp("listSlot",className)}
@@ -47,7 +64,14 @@ export const ListSlot=({className,icon,text,children,onClick}) => {
         {children}
     </div>
 }
-export const ListMainSlot=({className,primary,secondary,children,onClick}) => {
+export interface ListMainSlotProps{
+    className?: string;
+    primary?: string|React.ReactNode;
+    secondary?: string|React.ReactNode;
+    children?: React.ReactNode;
+    onClick?: (ev:any) => void;
+}
+export const ListMainSlot=({className,primary,secondary,children,onClick}:ListMainSlotProps) => {
     return <div
         className={concatsp("listMain listSlot",className)}
         onClick={onClick}
@@ -57,8 +81,13 @@ export const ListMainSlot=({className,primary,secondary,children,onClick}) => {
         {children}
     </div>
 }
-
-export const ListFrame=({className,scrollable,onClick,children}) => {
+export interface ListFrameProps{
+    className?: string;
+    scrollable?: boolean;
+    children?: React.ReactNode;
+    onClick?: (ev:any) => void;
+}
+export const ListFrame=({className,scrollable,onClick,children}:ListFrameProps) => {
     if (scrollable) {
         return <div
             className={concatsp("scrollable","listFrame",className)}

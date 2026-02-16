@@ -62,7 +62,7 @@
 
 
 
-import {createContext, useContext} from "react";
+import React, {createContext, useContext} from "react";
 
 /**
  * the basic overlay dialog elements
@@ -75,17 +75,27 @@ const getCtxId = () => {
     dialogCtxId++;
     return dialogCtxId;
 }
-
+export type DialogCallback=()=>void;
+export type SetDialogFunction=(dialog?:React.ReactNode,closeCallback?:DialogCallback,options?:any) => DialogCallback;
 class DialogDisplayEntry {
-    constructor(setDialog) {
+    setDialog:SetDialogFunction;
+    id:number;
+    constructor(setDialog:SetDialogFunction) {
         this.setDialog = setDialog;
         this.id = getCtxId();
     }
 
 }
-
-export class DialogContextImpl {
-    constructor(parent) {
+export interface IDialogContext {
+    showDialog: SetDialogFunction;
+    closeDialog: DialogCallback;
+    replaceDialog: SetDialogFunction;
+}
+export class DialogContextImpl implements IDialogContext {
+    displayStack:DialogDisplayEntry[];
+    zIndex:number;
+    parent:DialogContextImpl;
+    constructor(parent?:DialogContextImpl) {
         this.displayStack = [];
         if (!parent) {
             this.zIndex = DIALOG_Z;
@@ -94,6 +104,7 @@ export class DialogContextImpl {
             this.parent = parent;
         }
         this.displayStack.push(new DialogDisplayEntry(() => {
+            return ()=>{}
         }));
         this.closeDialog = this.closeDialog.bind(this);
         this.showDialog = this.showDialog.bind(this);
@@ -104,8 +115,8 @@ export class DialogContextImpl {
         return this.displayStack[this.displayStack.length - 1];
     }
 
-    showDialog(content, opt_closeCb, opt_options) {
-        return this._getTop().setDialog(content, opt_closeCb, opt_options);
+    showDialog(content:React.ReactNode, closeCallback?:DialogCallback, options?:any) {
+        return this._getTop().setDialog(content, closeCallback, options);
     }
 
     closeDialog() {
@@ -116,19 +127,19 @@ export class DialogContextImpl {
         return this._getTop().setDialog();
     }
 
-    replaceDialog(content, opt_closeCb, opt_options) {
-        if (this.parent) return this.parent.showDialog(content, opt_closeCb, opt_options);
-        return this.showDialog(content, opt_closeCb, opt_options);
+    replaceDialog(content:React.ReactNode, closeCallback?:DialogCallback, options?:any) {
+        if (this.parent) return this.parent.showDialog(content, closeCallback, options);
+        return this.showDialog(content, closeCallback, options);
     }
 
-    setDisplay(setDialogFunction) {
+    setDisplay(setDialogFunction:SetDialogFunction) {
         const current = this._getTop();
         current.setDialog(); //cleanup any dialog if we change the display
         this.displayStack.push(new DialogDisplayEntry(setDialogFunction));
         return this._getTop().id;
     }
 
-    removeDisplay(id) {
+    removeDisplay(id:number) {
         //never remove the first entry from the stack
         for (let idx = 1; idx < this.displayStack.length; idx++) {
             if (this.displayStack[idx].id === id) {
