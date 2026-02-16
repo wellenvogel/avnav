@@ -485,12 +485,14 @@ class Plugin(object):
             return None
         intf += ".Wireless"
         wifi = dbus.Interface(device, intf)
+        wifi.RequestScan({})
         connected = self.get_props(wifi, intf, 'ActiveAccessPoint')
         translations = [
             PropsTranslation('Bandwidth'),
             PropsTranslation('Frequency'),
             PropsTranslation('HwAddress'),
             PropsTranslation('Strength'),
+            PropsTranslation('MaxBitrate'),
             PropsTranslation('Flags', translator=lambda x: self.get_flags(x, self.AP_FLAGS)),
             PropsTranslation('WpaFlags', translator=lambda x: self.get_flags(x, self.WPA_FLAGS)),
             PropsTranslation('Mode'),

@@ -34,3 +34,14 @@
     display: inline-block;
     font-weight: initial;
 }
+
+.nwmplugin.WifiDialog .listEntry.network .secondary span {
+    margin-right: 0.5em;
+    display: inline-block;
+}
+.nwmplugin.WifiDialog .listEntry.network span.bitrate {
+    width: 4em;
+}
+.nwmplugin.WifiDialog .listEntry.network span.strength {
+    width: 2.5em;
+}

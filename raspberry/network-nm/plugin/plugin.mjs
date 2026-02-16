@@ -22,9 +22,10 @@
  */
 
  import html from 'htm';
- import {useState,useEffect,useCallback} from 'react';
+ import {useState,useEffect,useCallback,useRef} from 'react';
  import {useDialogContext,ListItem,ListSlot,ListMainSlot} from 'avnav';
- 
+
+
  const fetchStates={
     0: undefined,
     1: "reading devices",
@@ -62,8 +63,15 @@
     <//> `;
  }
  const Network=({net})=>{
+    const mbr=(net.maxbitrate||0)/1000;
+    const secondary=html`
+        <span className="bssid">${net.hwaddress}<//>
+        <span className="strength">${net.strength}%<//>
+        <span className="bitrate">${mbr.toFixed()}Mbit/s<//>
+        <span className="freq">${net.frequency}Mhz<//>
+    `;
     return html`<${ListItem} className="network">
-        <${ListMainSlot} primary=${net.ssid} secondary=${net.strength}/>
+        <${ListMainSlot} primary=${net.ssid} secondary=${secondary}/>
         <${ListSlot}> ${net.condata?"configured":"unknown"}<//>
         <//>`
  }
@@ -103,7 +111,9 @@
     const [connections,setConnections]=useState([]);
     const [networks,setNetworks]=useState([]);
     const [fetchState,setFetchState]=useState(1);
-    const [selected,setSelected]=useState(0);
+    const [scanState,setScanState]=useState(0)
+    const [selected,setSelected]=useState(-1);
+    const timer=useRef(undefined);
     const fetchItems=useCallback((url,setter,key)=>{
         setFetchState((old)=>old | key);
         fetchData(url)
@@ -118,15 +128,52 @@
             );
 
     },[api,setFetchState]);
+    const scan=useCallback((intf)=>{
+        const key=8;
+        setScanState(key);
+        const url=api.getBaseUrl()+"api/scan?path="+encodeURIComponent(intf);
+        fetchData(url)
+            .then ((response)=>{
+                setNetworks(response.data)
+                setFetchState((old)=>old & (0xff ^ key));
+            })
+            .catch((error)=>{
+                setNetworks([]);
+                api.showToast(error);
+                setFetchState((old)=>old & (0xff ^ key));
+            }
+            );
+
+    },[api,setScanState])
+    useEffect(()=>{
+        if (timer.current !== undefined) window.clearInterval(timer.current);
+        timer.current=undefined;
+        const device=nested(interfaces[selected],'path');
+        if (! device) return;
+        let current;
+        scan(device);
+        current=window.setInterval(()=>{
+            if (timer.current !== current) return;
+            scan(device);
+        },2000)
+        timer.current=current;
+        return ()=>{
+            if (timer.current !== undefined) window.clearTimeout(timer.current);
+        }
+    },[selected])
     useEffect(()=>{
         const intfUrl=api.getBaseUrl()+"api/devices?full=true&deviceType=Wi-Fi";
-        fetchItems(intfUrl,setInterfaces,1);
+        fetchItems(intfUrl,(intf)=>{
+            setInterfaces(intf);
+            if (intf.length > 0){
+                setSelected(0);
+            }
+            }
+            ,1);
         const acUrl=api.getBaseUrl()+"api/activeConnections?includeIpConfig=true&type=802-11-wireless";
         fetchItems(acUrl,setActiveConnections,4);
         const conUrl=api.getBaseUrl()+"api/connections?type=802-11-wireless";
         fetchItems(conUrl,setConnections,2);
-        const nwUrl=api.getBaseUrl()+"api/scan";
-        fetchItems(nwUrl,setNetworks,8);
     },[]);
     if (fetchState != 0){
         return html`${Heading}
