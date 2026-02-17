@@ -62,6 +62,9 @@
             />
     <//> `;
  }
+ const netNeedsPw=(net)=>{
+    return !!((net.flags||"").match(/PRIVACY/));
+ }
  const Network=({net})=>{
     const mbr=(net.maxbitrate||0)/1000;
     const secondary=html`
@@ -70,9 +73,10 @@
         <span className="bitrate">${mbr.toFixed()}Mbit/s<//>
         <span className="freq">${net.frequency}Mhz<//>
     `;
+    const needsPw=netNeedsPw(net);
     return html`<${ListItem} className="network">
         <${ListMainSlot} primary=${net.ssid} secondary=${secondary}/>
-        <${ListSlot}> ${net.condata?"configured":"unknown"}<//>
+        <${ListSlot}> ${net.condata?"configured":"unknown"},${needsPw?"encr":"open"}<//>
         <//>`
  }
 
@@ -90,6 +94,9 @@
  }
  const InterfaceList=({selectedIdx,items,onChange})=>{
     let idx=0;
+    if (items.length < 1){
+        return html`<div className="interfaceList nointf">no free network interfaces</div>`
+    }
     return html`
     <div className="interfaceList">
         <div className="heading">Available Interfaces<//>
@@ -104,6 +111,7 @@
         </div>
     </div>`
  }
+
  const Heading=html`<h3>Wifi</h3>`
  const NetworkDialog=({api})=>{
     const [interfaces,setInterfaces]=useState([]);
@@ -111,7 +119,6 @@
     const [connections,setConnections]=useState([]);
     const [networks,setNetworks]=useState([]);
     const [fetchState,setFetchState]=useState(1);
-    const [scanState,setScanState]=useState(0)
     const [selected,setSelected]=useState(-1);
     const timer=useRef(undefined);
     const fetchItems=useCallback((url,setter,key)=>{
@@ -128,9 +135,30 @@
             );
 
     },[api,setFetchState]);
+    const fetchAll=useCallback(()=>{
+        const intfUrl=api.getBaseUrl()+"api/devices?full=true&deviceType=Wi-Fi";
+        fetchItems(intfUrl,(intf)=>{
+            setInterfaces(intf);
+            if (intf.length > 0){
+                setSelected((old)=>(old<0)?0:(old>=intf.length)?old=intf.length-1:old);
+            }
+            }
+            ,1);
+        const acUrl=api.getBaseUrl()+"api/activeConnections?includeIpConfig=true&type=802-11-wireless";
+        fetchItems(acUrl,setActiveConnections,4);
+        const conUrl=api.getBaseUrl()+"api/connections?type=802-11-wireless";
+        fetchItems(conUrl,setConnections,2);
+    },[fetchItems]);
+    useEffect(()=>{
+        fetchAll();
+        const timer=window.setInterval(()=>{
+            fetchAll()
+        },10000);
+        return ()=>window.clearInterval(timer);
+    },[])
     const scan=useCallback((intf)=>{
         const key=8;
-        setScanState(key);
+        setFetchState(key);
         const url=api.getBaseUrl()+"api/scan?path="+encodeURIComponent(intf);
         fetchData(url)
             .then ((response)=>{
@@ -144,7 +172,7 @@
             }
             );
 
-    },[api,setScanState])
+    },[api,setFetchState])
     useEffect(()=>{
         if (timer.current !== undefined) window.clearInterval(timer.current);
         timer.current=undefined;
@@ -161,25 +189,6 @@
             if (timer.current !== undefined) window.clearTimeout(timer.current);
         }
     },[selected])
-    useEffect(()=>{
-        const intfUrl=api.getBaseUrl()+"api/devices?full=true&deviceType=Wi-Fi";
-        fetchItems(intfUrl,(intf)=>{
-            setInterfaces(intf);
-            if (intf.length > 0){
-                setSelected(0);
-            }
-            }
-            ,1);
-        const acUrl=api.getBaseUrl()+"api/activeConnections?includeIpConfig=true&type=802-11-wireless";
-        fetchItems(acUrl,setActiveConnections,4);
-        const conUrl=api.getBaseUrl()+"api/connections?type=802-11-wireless";
-        fetchItems(conUrl,setConnections,2);
-    },[]);
-    if (fetchState != 0){
-        return html`${Heading}
-        ${Object.keys(fetchStates).map((fs)=>(fetchState & fs)?html`<div className="fetchState">${fetchStates[fs]}<//>`:null)}
-        `
-    }
     //filter interfaces that we can use
     //these need to have state "Activated" and either no active connection 
     //or an connection of type infrastructure
@@ -199,11 +208,6 @@
         }
         availableInterfaces.push(intf);
     });
-    if (availableInterfaces.length < 1){
-        return html`${Heading}
-        <div className="dialogRow nointf">no free network interfaces</div>
-        `
-    }
     const selectedInterface=interfaces[selected];
     const seenNetworks=[];
     const configuredConnections=[];
@@ -228,7 +232,13 @@
             })
         }
     }
-    return html`${Heading}
+    return html`
+    <${ListItem} className="headline">
+        <${ListMainSlot} primary="Wifi"/>
+        <${ListSlot}>
+        ${fetchState && html`<span className="spinner"/>`}
+        <//>
+    <//>
     <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>setSelected(id)}/>
     <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{}}/>
     `

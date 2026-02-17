@@ -208,6 +208,8 @@ class Plugin(object):
             time.sleep(1)
 
     def short_path(self,path):
+        if path is None:
+            return None
         if path.startswith(nm_path):
             path=path[len(nm_path):]
             if path.startswith("/"):
@@ -418,6 +420,7 @@ class Plugin(object):
                              translator=lambda x: self.getConnectionInfo(x, includeSecrets=includeSecrets)),
             PropsTranslation('Uuid'),
             PropsTranslation('Type'),
+            PropsTranslation('SpecificObject',translator=lambda x: self.short_path(x)),
             PropsTranslation('State', enumValues=self.ACSTATE),
             PropsTranslation('Id'),
             PropsTranslation('Devices', translator=get_devices),
@@ -485,7 +488,7 @@ class Plugin(object):
             return None
         intf += ".Wireless"
         wifi = dbus.Interface(device, intf)
-        wifi.RequestScan({})
+        wifi.RequestScan({'dummy':'none'})
         connected = self.get_props(wifi, intf, 'ActiveAccessPoint')
         translations = [
             PropsTranslation('Bandwidth'),
