@@ -37,7 +37,7 @@
     const response=await fetch(url);
     if (! response.ok) throw new Error(`error fetching ${url}: ${response.status}`);
     const data=await response.json();
-    if (data.status != 'OK') throw new Error(`error fetching ${url}: ${data.status}`);
+    if (data.status != 'OK') throw new Error(`error fetching ${url}: ${data.status} ${data.error}`);
     return data;
  }
 
@@ -69,7 +69,7 @@
  const netNeedsPw=(net)=>{
     return !!((net.flags||"").match(/PRIVACY/));
  }
- const Network=({net})=>{
+ const Network=({net,onClick})=>{
     const mbr=(net.maxbitrate||0)/1000;
     const secondary=html`
         <span className="bssid">${net.hwaddress}<//>
@@ -78,7 +78,7 @@
         <span className="freq">${net.frequency}MHz<//>
     `;
     const needsPw=netNeedsPw(net);
-    return html`<${ListItem} className="network">
+    return html`<${ListItem} className="network" onClick=${(ev)=>onClick(ev)}>
         <${ListMainSlot} primary=${net.ssid} secondary=${secondary}/>
         <${ListSlot}> ${net.condata?"configured":"unknown"},${needsPw?"encr":"open"}<//>
         <//>`
@@ -115,8 +115,124 @@
         </div>
     </div>`
  }
+ const ConnectionMonitor=({api,intf,activeConnection})=>{
+    const [conState,setConState]=useState("Connecting");
+    const dialogContext=useDialogContext();
+    useEffect(()=>{
+        const url=api.getBaseUrl()+"api/getItem?path="+encodeURIComponent(activeConnection);
+        const timer=window.setInterval(()=>{
+            fetchData(url).then((res)=>{
+                const state=nested(res,"data.state");
+                if (state === 'Activated'){
+                    dialogContext.closeDialog();
+                }
+                setConState(state);
+            })
+            .catch((e)=>{
+                setConState(`Error: ${e} `);
+            });
+        },2000);
+        return ()=>{
+            window.clearInterval(timer);
+        }
+    })
+    return html`
+        <div className="conState">
+        <span className="intf">${intf.interface}<//>
+        <span className="state">${conState}<//>
+        <//>
+    `;
+ }
+ const showConnectionMonitor=({api,dialogContext,intf,activeConnection})=>{
+    api.showDialog({
+        className:"nwmplugin connectionMonitor",
+        title:'Connecting...',
+        text: html`<${ConnectionMonitor} api=${api} activeConnection=${activeConnection} intf=${intf}/>`,
+        buttons: [{name:'cancel'}]
+    },dialogContext);
+ }
+
+ const showConnectDialog=async ({api,dialogContext,network,intf})=>{
+    const connection=network.condata;
+    const needsPw=netNeedsPw(network);
+    const parameters=[
+        {name:'ext',displayName:'externalAccess',type:'BOOLEAN',default:false}
+    ]
+    if (needsPw){
+        parameters.splice(0,0,
+            {name:'psk',displayName:'password',type:'STRING',default:''}
+        )
+    }
+    const ssid=nested(network,'ssid');
+    const close=await api.showDialog({
+        className:'nwmplugin connectDialog',
+        parameters: parameters,
+        title: 'Connect',
+        text: `${ssid} via ${intf.interface}`,
+        values:{},
+        buttons: [
+            {name:'cancel'},
+            {name:'ok',
+                close:false,
+                onClick:async (ev,values)=>{
+                    try{
+                        let zone=values.ext?"trusted":"block";
+                        let conPath;
+                        if (! connection){
+                            if (needsPw && ! values.psk){
+                                api.showToast("network needs a password");
+                                return;
+                            }
+                            let url=api.getBaseUrl()+'api/addConnection?ssid='+encodeURIComponent(ssid);
+                            if (needsPw) url+="&psk="+encodeURIComponent(values.psk);
+                            const res=await fetchData(url);
+                            conPath=res.data;
+                        }
+                        else{
+                            conPath=connection.path;
+                            let mustUpdate=false;
+                            if (needsPw && values.psk){
+                                //must update connection
+                                //TODO: check if connection has a password
+                                mustUpdate=true;
+                            }
+                            if (nested(connection,'connection.zone') !== zone){
+                                mustUpdate=true;
+                            }
+                            if (mustUpdate){
+                                const url=api.getBaseUrl()+"api/updateConnection?path="+
+                                    encodeURIComponent(conPath)+
+                                    "&zone="+encodeURIComponent(zone);
+                                if (values.psk){
+                                    url+="&psk="+encodeURIComponent(values.psk);
+                                }   
+                                const res=await fetchData(url);
+                            }
+                        }
+                        const url=api.getBaseUrl()+"api/activateConnection?path="+
+                            encodeURIComponent(conPath)+
+                            "&ap="+encodeURIComponent(network.path)+
+                            "&device="+encodeURIComponent(intf.path);
+                        const res=await fetchData(url);
+                        if (! res.data){
+                            api.showToast("no connection created");
+                            return;
+                        }
+                        close();
+                        showConnectionMonitor({api,dialogContext,intf,activeConnection:res.data});
+                        
+                    }catch (e){
+                        api.showToast(e+"");
+                        return;
+                    }
+                }
+            }
+        ]
+    },dialogContext)
+ }
 
  const NetworkDialog=({api})=>{
+    const dialogContext=useDialogContext();
     const [interfaces,setInterfaces]=useState([]);
     const [activeConnections,setActiveConnections]=useState([]);
     const [connections,setConnections]=useState([]);
@@ -243,7 +359,9 @@
         <//>
     <//>
     <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>setSelected(id)}/>
-    <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{}}/>
+    <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{
+        showConnectDialog({api,dialogContext,network,intf:availableInterfaces[selected]})
+    }}/>
     `
  }
 

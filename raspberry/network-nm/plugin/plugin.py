@@ -675,7 +675,7 @@ class Plugin(object):
             elif url == 'addConnection':
                 ssid=self.get_arg(args, 'ssid')
                 psk=self.get_arg(args, 'psk')
-                data=self.addConnection(ssid,psk)
+                data=self.addConnection(ssid,psk,zone=self.get_arg(args, 'zone'))
                 self.api.log(f"added connection {data} for {ssid}")
             elif url == 'removeConnection':
                 data=self.removeConnection(path)
