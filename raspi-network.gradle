@@ -98,7 +98,7 @@ task build_raspi_network(type:Deb) {
     }
     into("$PLUGINTARGET/networkmanager"){
         from("$BASENW/plugin"){
-            exclue("**/*pycache*/**")
+            exclude("**/*pycache*/**")
         }
     }
     postInstall file("$BASENW/postinstall")
