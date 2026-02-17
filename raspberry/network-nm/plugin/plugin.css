@@ -67,3 +67,7 @@
 .nwmplugin.WifiDialog .listEntry.network span.strength {
     width: 2.5em;
 }
+.nwmplugin.WifiDialog .conState .intf {
+    display: inline-block;
+    width: 12em;
+}

@@ -129,7 +129,8 @@
                 setConState(state);
             })
             .catch((e)=>{
-                setConState(`Error: ${e} `);
+                api.log(`unable to connect: ${e}`)
+                setConState("Error");
             });
         },2000);
         return ()=>{
@@ -171,6 +172,17 @@
         text: `${ssid} via ${intf.interface}`,
         values:{},
         buttons: [
+            {name: 'delete',
+                visible: !!network.condata,
+                onClick: async (ev)=>{
+                    const path=nested(network,'condata.path');
+                    if (! path) return;
+                    const url=api.getBaseUrl()+'api/removeConnection?path='+encodeURIComponent(path);
+                    await fetchData(url);
+                    close();
+                },
+                close:false
+            },
             {name:'cancel'},
             {name:'ok',
                 close:false,
@@ -351,6 +363,29 @@
             })
         }
     }
+    const selectChange=(id)=>{
+        if (id === selected && selectedInterface){
+            api.showDialog({
+                title: 'Disconnect?',
+                text: selectedInterface.interface,
+                buttons:[
+                    {name:'cancel'},
+                    {name:'ok',
+                        onClick:async (ev)=>{
+                            const path=selectedInterface.activeconnection;
+                            if (! path) return;
+                            const url=api.getBaseUrl()+'api/deactivateConnection?path='+encodeURIComponent(path);
+                            await fetchData(url);
+                        }
+                    }
+                ]
+            },dialogContext)
+
+        }
+        else{
+            setSelected(id);
+        }
+    }
     return html`
     <${ListItem} className="headline">
         <${ListMainSlot} primary="Wifi"/>
@@ -358,7 +393,7 @@
         ${fetchState && html`<span className="spinner"/>`}
         <//>
     <//>
-    <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>setSelected(id)}/>
+    <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>selectChange(id)}/>
     <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{
         showConnectDialog({api,dialogContext,network,intf:availableInterfaces[selected]})
     }}/>
