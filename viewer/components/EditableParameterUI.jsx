@@ -137,7 +137,7 @@ export const EditableParameterListUI=({values,parameters,initialValues,onChange,
               currentValues={values}
               onChange={(nv)=>onChange(nv)}
               initialValues={initialValues}
-              className={Helper.concatsp(cl,'listEntry')}
+              className={cl}
           >{children}</param.render>
         })}
     </React.Fragment>
