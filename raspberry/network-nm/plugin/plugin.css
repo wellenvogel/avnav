@@ -37,6 +37,21 @@
     width: 8em;
     font-weight: initial;
 }
+.nwmplugin.WifiDialog .listEntry.interface .bssid{
+    display: inline-block;
+    width: 10em;
+    font-weight: initial;
+}
+.nwmplugin.WifiDialog .listEntry.interface .zone{
+    display: inline-block;
+    width: 5em;
+    font-weight: initial;
+}
+.nwmplugin.WifiDialog .listEntry.interface .freq{
+    display: inline-block;
+    width: 5em;
+    font-weight: initial;
+}
 .nwmplugin.WifiDialog .listEntry.interface .ssid{
     display: inline-block;
     font-weight: initial;

@@ -430,6 +430,20 @@ class Plugin(object):
         acproxy = self.nm(path)
         props = self.get_props(acproxy, nm_base + ".Connection.Active")
         connection = self.translate_props(props, translations)
+        ap = props.get('SpecificObject')
+        if ap is not None and re.match(".*/AccessPoint/.*", ap):
+            try:
+                approxy = self.nm(ap)
+                aprops = self.get_props(approxy, nm_base + ".AccessPoint")
+                translations = [
+                    PropsTranslation('Bandwidth'),
+                    PropsTranslation('Frequency'),
+                    PropsTranslation('HwAddress'),
+                    PropsTranslation('Strength')
+                    ]
+                self.translate_props(aprops, translations,connection)
+            except Exception as e:
+                self.api.log(f"unable to get AP {ap}: {e}")
         connection['path'] = self.short_path(path)
         return connection
 

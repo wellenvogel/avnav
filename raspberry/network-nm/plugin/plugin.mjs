@@ -58,7 +58,11 @@
         <${ListMainSlot}
             primary=${intf.interface}
             secondary=${html`<span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
-            <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>`}
+            <span className="bssid">${nested(intf,"condata.hwaddress")}</span>
+            <span className="zone">${nested(intf,'condata.connection.connection.zone')}</span>
+            <span className="freq">${nested(intf,'condata.frequency')}MHz</span>
+            <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>
+            `}
             />
     <//> `;
  }
@@ -71,7 +75,7 @@
         <span className="bssid">${net.hwaddress}<//>
         <span className="strength">${net.strength}%<//>
         <span className="bitrate">${mbr.toFixed()}Mbit/s<//>
-        <span className="freq">${net.frequency}Mhz<//>
+        <span className="freq">${net.frequency}MHz<//>
     `;
     const needsPw=netNeedsPw(net);
     return html`<${ListItem} className="network">
@@ -112,7 +116,6 @@
     </div>`
  }
 
- const Heading=html`<h3>Wifi</h3>`
  const NetworkDialog=({api})=>{
     const [interfaces,setInterfaces]=useState([]);
     const [activeConnections,setActiveConnections]=useState([]);
@@ -183,7 +186,7 @@
         current=window.setInterval(()=>{
             if (timer.current !== current) return;
             scan(device);
-        },2000)
+        },5000)
         timer.current=current;
         return ()=>{
             if (timer.current !== undefined) window.clearTimeout(timer.current);
@@ -194,6 +197,7 @@
     //or an connection of type infrastructure
     const availableInterfaces=[];
     const connectionsInUse={};
+    const connectedAps={}; 
     (interfaces||[]).forEach((intf)=>{
         if (intf.activeconnection){
             //find the connection
@@ -203,6 +207,8 @@
                 intf.condata=con;
                 const configured=nested(con,'connection.path');
                 if (configured) connectionsInUse[configured]=con;
+                const ap=nested(con,'hwaddress')
+                if (ap) connectedAps[ap]=con;
                 break;
             }
         }
@@ -211,11 +217,11 @@
     const selectedInterface=interfaces[selected];
     const seenNetworks=[];
     const configuredConnections=[];
-    const networkConnectsions={}; //flag the connections we already have for seen networks
     if (selectedInterface){
         const path=nested(selectedInterface,"path");
         if (path){
             (networks||[]).forEach((network)=>{
+                if (connectedAps[network.hwaddress]) return;
                 network={...network};
                 if (network.device !== path) return;
                 const ssid=network.ssid;
@@ -224,9 +230,6 @@
                     if (ssid !== nested(con,"802-11-wireless.ssid") || 
                     nested(con,'802-11-wireless.mode') !== 'infrastructure' ) continue;
                     network.condata=con;
-                    if (connectionsInUse[con.path]){
-                        network.activecondata=connectionsInUse[con.path];
-                    }
                 }
                 seenNetworks.push(network);
             })
