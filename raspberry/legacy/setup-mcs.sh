@@ -23,8 +23,8 @@ if [ -f "$pdir/$MCS_SERVICE_SCRIPT" ] ; then
     MCS_PACKAGE="$pdir"
 fi
 
-PACKAGES="python3 python3-lgpio python3-rpi-lgpio"
-
+PACKAGES="python3 pigpio python3-pigpio python3-rpi.gpio"
+#/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
 dtoverlay=sc16is752-i2c,int_pin=13,addr=0x4c,xtal=14745600
 dtoverlay=sc16is752-i2c,int_pin=12,addr=0x49,xtal=14745600
@@ -33,6 +33,18 @@ dtparam=spi=on
 dtparam=i2c_arm=on
 dtoverlay=mcp2515-can1,oscillator=16000000,interrupt=25
 CFGPAR
+
+#/etc/network/interfaces.d/can0
+CAN0CHECK='can0'
+read -r -d '' CAN0 << 'CAN0'
+#physical can interfaces
+auto can0
+iface can0 can static
+bitrate 250000
+pre-up /sbin/ip link set $IFACE type can restart-ms 100
+down /sbin/ip link set $IFACE down
+up /sbin/ifconfig $IFACE txqueuelen 10000'
+CAN0
 
 #/etc/modules
 read -r -d '' MODULES << 'MODULES'
@@ -109,7 +121,8 @@ checkConfig "$BOOTCONFIG" "$MCS_COMMENT" "$CFGPAR"
 checkRes
 checkConfig "$BASE/etc/modules" "$MCS_COMMENT" "$MODULES" 1
 checkRes
-/usr/bin/systemctl enable can-if@can0.service
+can="$BASE/etc/network/interfaces.d/can0"
+replaceConfig "$can" "$CAN0"
 checkRes
 scfg="$BASE$OWIRE_SERVICE"
 replaceConfig "$scfg" "$OWIRE"
@@ -146,7 +159,6 @@ if [ "$1" = $MODE_DIS ] ; then
     log mcs disable
     systemctl --no-ask-password disable mcsowire.service
     systemctl --no-ask-password disable mcsasd.service
-    /usr/bin/systemctl disable can-if@can0.service
     removeConfig "$BOOTCONFIG" "$MCS_COMMENT"
     removeConfig "$BASE/etc/modules" "$MCS_COMMENT"
     rm -f "$BASE$OWIRE_SERVICE"
