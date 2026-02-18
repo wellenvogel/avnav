@@ -592,16 +592,19 @@ class Plugin(object):
         if zone not in self.ALLOWED_ZONES:
             raise Exception(f"invalid zone: {zone}, not in {' '.join(self.ALLOWED_ZONES)}")
         return zone
-    def addConnection(self,ssid,psk=None,zone=None,omitCheck=False):
+    def addConnection(self,ssid,psk=None,zone=None,autoconnect=None,omitCheck=False):
         if ssid is None:
             raise Exception("ssid cannot be empty")
         zone=self.check_zone(zone)
         id=ssid
         con={
             "type":"802-11-wireless",
-            "id":id,
-            "zone":zone,
+            "id":id
         }
+        if zone is not None:
+            con['zone'] = zone
+        if autoconnect is not None:
+            con['autoconnect'] = autoconnect
         wifi={
             "ssid":dbus.ByteArray(ssid.encode('utf-8')),
             "mode":"infrastructure",
@@ -640,7 +643,7 @@ class Plugin(object):
             raise Exception(f"can only handle 802-11-wireless.infrastructure connections, current is {mode}")
         return cprops
 
-    def updateConnection(self,path,psk=None,zone=None):
+    def updateConnection(self,path,psk=None,zone=None,autoconnect=None):
         zone=self.check_zone(zone)
         props=self.check_connection(path)
         con=self.nm(path,nm_base + ".Settings.Connection")
@@ -653,8 +656,10 @@ class Plugin(object):
                 "psk": psk,
             }
             props.update({sec_key:wsec})
-
-        props['connection'].update({"zone":zone})
+        if zone is not None:
+            props['connection'].update({"zone":zone})
+        if autoconnect is not None:
+            props['connection'].update({"autoconnect":autoconnect})
         con.Update(props)
 
     def removeConnection(self,path):
@@ -701,12 +706,19 @@ class Plugin(object):
             elif url == 'addConnection':
                 ssid=self.get_arg(args, 'ssid')
                 psk=self.get_arg(args, 'psk')
-                data=self.addConnection(ssid,psk,zone=self.get_arg(args, 'zone'))
+                data=self.addConnection(ssid,
+                                        psk,
+                                        zone=self.get_arg(args, 'zone'),
+                                        autoconnect=self.get_bool_arg(args, 'autoconnect')
+                                        )
                 self.api.log(f"added connection {data} for {ssid}")
             elif url == 'removeConnection':
                 data=self.removeConnection(path)
             elif url == 'updateConnection':
-                data=self.updateConnection(path,psk=self.get_arg(args,'psk'),zone=self.get_arg(args,'zone'))
+                data=self.updateConnection(path,
+                                           psk=self.get_arg(args,'psk'),
+                                           zone=self.get_arg(args,'zone'),
+                                           autoconnect=self.get_bool_arg(args, 'autoconnect', False))
             elif url == 'getItem':
                 if path is None:
                     raise Exception(f"path is required")

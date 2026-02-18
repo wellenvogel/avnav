@@ -150,18 +150,33 @@
     },dialogContext);
  }
 
+ const undefOrTrue=(v)=>{
+    if (v === undefined) return true;
+    return !!v;
+ }
  const showConnectDialog=async ({api,dialogContext,network,intf})=>{
     const connection=network.condata;
     const needsPw=netNeedsPw(network);
     const hasPw=connection && connection.haspsk;
     const hasExternalAccess=connection && (nested(connection,'connection.zone') == ZONE_T);
+    const hasAutoconnect=! connection || undefOrTrue(nested(connection,'connection.autoconnect'))
+    const initialValues={
+            ext: hasExternalAccess,
+            autoconnect: hasAutoconnect
+        };
     const parameters=[
         {name:'ext',
             displayName:'externalAccess',
             type:'BOOLEAN',
-            default:hasExternalAccess,
+            default:false,
             description:'If not enabled all access from external systems to the AvNav server on this connection is blocked.'+
              ' Use this when you connect to an insecure Wifi network. If you enable this there is no protection on the AvNav server for this connection.'
+        },
+        {
+            name:'autoconnect',
+            type:'BOOLEAN',
+            default: true,
+            description:'Automatically connect to the network when it is available.'
         }
     ]
     if (needsPw){
@@ -195,7 +210,7 @@
         parameters: parameters,
         title: 'Connect',
         text: `${ssid} via ${intf.interface}`,
-        values:{},
+        values:initialValues,
         buttons: [
             {name: 'delete',
                 visible: !!network.condata,
@@ -224,7 +239,10 @@
                                 api.showToast("network needs a password");
                                 return;
                             }
-                            let url=api.getBaseUrl()+'api/addConnection?ssid='+encodeURIComponent(ssid);
+                            let url=api.getBaseUrl()+'api/addConnection?ssid='+
+                                encodeURIComponent(ssid)+
+                                "&zone="+encodeURIComponent(zone)+
+                                "&autoconnect="+encodeURIComponent(values.autoconnect);
                             if (needsPw && !! values.psk) url+="&psk="+encodeURIComponent(values.psk);
                             const d1= await api.showDialog({
                                 text:'Creating Connection'
@@ -244,10 +262,14 @@
                             if (nested(connection,'connection.zone') !== zone){
                                 mustUpdate=true;
                             }
+                            if (nested(connection,'connection.autoconnect') !== values.autoconnect){
+                                mustUpdate=true;
+                            }
                             if (mustUpdate){
                                 let url=api.getBaseUrl()+"api/updateConnection?path="+
                                     encodeURIComponent(conPath)+
-                                    "&zone="+encodeURIComponent(zone);
+                                    "&zone="+encodeURIComponent(zone)+
+                                    "&autoconnect="+encodeURIComponent(values.autoconnect);
                                 if (values.psk){
                                     url+="&psk="+encodeURIComponent(values.psk);
                                 }
