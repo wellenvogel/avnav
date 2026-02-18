@@ -57,6 +57,19 @@ export const ParameterDialog = (props) => {
             })
         })
     }
+    let dataValid=true;
+    if (props.parameters) {
+        props.parameters.forEach((parameter) => {
+            if (parameter.hasError(values || {})) dataValid = false;
+        })
+    }
+    if (! dataValid){
+        buttons.forEach(button => {
+            if (button.name === 'ok' && button.disabled === undefined){
+                button.disabled = true;
+            }
+        })
+    }
     return<ErrorBoundary fallback={"render error in dialog"}>
     <DialogFrame title={props.title} className={className}>
         {props.text && <DialogRow>{props.text}</DialogRow>}
