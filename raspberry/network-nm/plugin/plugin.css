@@ -16,6 +16,7 @@
 }
 .nwmplugin.WifiDialog .headline {
     width: 100%;
+    height: 3em;
 }
 .nwmplugin.WifiDialog .headline .primary{
     font-weight: bold;
@@ -67,7 +68,7 @@
 .nwmplugin.WifiDialog .listEntry.network span.strength {
     width: 2.5em;
 }
-.nwmplugin.WifiDialog .conState .intf {
+.nwmplugin .conState .intf {
     display: inline-block;
     width: 12em;
 }

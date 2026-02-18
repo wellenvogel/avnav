@@ -25,14 +25,9 @@
  import {useState,useEffect,useCallback,useRef} from 'react';
  import {useDialogContext,ListItem,ListSlot,ListMainSlot} from 'avnav';
 
+ const ZONE_T='trusted';
+ const ZONE_B='block';
 
- const fetchStates={
-    0: undefined,
-    1: "reading devices",
-    2: "reading connections configurations",
-    4: "reading active connections",
-    8: "scanning"
- };
  const fetchData=async (url)=>{
     const response=await fetch(url);
     if (! response.ok) throw new Error(`error fetching ${url}: ${response.status}`);
@@ -58,10 +53,12 @@
         <${ListMainSlot}
             primary=${intf.interface}
             secondary=${html`<span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
+            ${!!intf.condata && html` 
             <span className="bssid">${nested(intf,"condata.hwaddress")}</span>
             <span className="zone">${nested(intf,'condata.connection.connection.zone')}</span>
             <span className="freq">${nested(intf,'condata.frequency')}MHz</span>
             <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>
+            `}
             `}
             />
     <//> `;
@@ -156,13 +153,41 @@
  const showConnectDialog=async ({api,dialogContext,network,intf})=>{
     const connection=network.condata;
     const needsPw=netNeedsPw(network);
+    const hasPw=connection && connection.haspsk;
+    const hasExternalAccess=connection && (nested(connection,'connection.zone') == ZONE_T);
     const parameters=[
-        {name:'ext',displayName:'externalAccess',type:'BOOLEAN',default:false}
+        {name:'ext',
+            displayName:'externalAccess',
+            type:'BOOLEAN',
+            default:hasExternalAccess,
+            description:'If not enabled all access from external systems to the AvNav server on this connection is blocked.'+
+             ' Use this when you connect to an insecure Wifi network. If you enable this there is no protection on the AvNav server for this connection.'
+        }
     ]
     if (needsPw){
         parameters.splice(0,0,
-            {name:'psk',displayName:'password',type:'STRING',default:''}
-        )
+            {name:'psk',
+                displayName:'password',
+                type:'STRING',
+                default:'',
+                checker:(v)=>{
+                if (! v) {
+                    if(! hasPw) throw new Error("must not be empty");
+                    return true;
+                }
+                if (v.length < 8 || v.length > 64) throw new Error("invalid len (8...63 or 64 hex)")
+                if (v.length == 64){
+                    //must be hex
+                    if (!v.match(/^[0-9A-Fa-f]*$/)) throw new Error("invalid hex");
+                }
+                else{
+                    if (! v.match(/^[\u0020-\u007e]*$/)) throw new Error("invalid character");
+                }
+                return true;
+                },
+                description: 'The password for the Wifi network. 8...63 characters or 64 hex characters.'+
+                    (hasPw?' Leave it empty to use the already configured password.':' Required')
+        })
     }
     const ssid=nested(network,'ssid');
     const close=await api.showDialog({
@@ -177,8 +202,12 @@
                 onClick: async (ev)=>{
                     const path=nested(network,'condata.path');
                     if (! path) return;
+                    const d1=await api.showDialog({
+                        text:'Removing Connection'
+                    },ev)
                     const url=api.getBaseUrl()+'api/removeConnection?path='+encodeURIComponent(path);
                     await fetchData(url);
+                    d1();
                     close();
                 },
                 close:false
@@ -188,17 +217,21 @@
                 close:false,
                 onClick:async (ev,values)=>{
                     try{
-                        let zone=values.ext?"trusted":"block";
+                        let zone=values.ext?ZONE_T:ZONE_B;
                         let conPath;
                         if (! connection){
-                            if (needsPw && ! values.psk){
+                            if (needsPw && (! values.psk || hasPw)){
                                 api.showToast("network needs a password");
                                 return;
                             }
                             let url=api.getBaseUrl()+'api/addConnection?ssid='+encodeURIComponent(ssid);
-                            if (needsPw) url+="&psk="+encodeURIComponent(values.psk);
+                            if (needsPw && !! values.psk) url+="&psk="+encodeURIComponent(values.psk);
+                            const d1= await api.showDialog({
+                                text:'Creating Connection'
+                            },ev);
                             const res=await fetchData(url);
                             conPath=res.data;
+                            d1();
                         }
                         else{
                             conPath=connection.path;
@@ -212,20 +245,24 @@
                                 mustUpdate=true;
                             }
                             if (mustUpdate){
-                                const url=api.getBaseUrl()+"api/updateConnection?path="+
+                                let url=api.getBaseUrl()+"api/updateConnection?path="+
                                     encodeURIComponent(conPath)+
                                     "&zone="+encodeURIComponent(zone);
                                 if (values.psk){
                                     url+="&psk="+encodeURIComponent(values.psk);
-                                }   
+                                }
+                                const d2=await api.showDialog({text:'Updating Connection'},ev)
                                 const res=await fetchData(url);
+                                d2();
                             }
                         }
                         const url=api.getBaseUrl()+"api/activateConnection?path="+
                             encodeURIComponent(conPath)+
                             "&ap="+encodeURIComponent(network.path)+
                             "&device="+encodeURIComponent(intf.path);
+                        const d3=await api.showDialog({text:'Triggering Connection'},ev);
                         const res=await fetchData(url);
+                        d3();
                         if (! res.data){
                             api.showToast("no connection created");
                             return;
@@ -287,10 +324,11 @@
         },10000);
         return ()=>window.clearInterval(timer);
     },[])
-    const scan=useCallback((intf)=>{
+    const scan=useCallback((intf,rescan)=>{
         const key=8;
         setFetchState(key);
-        const url=api.getBaseUrl()+"api/scan?path="+encodeURIComponent(intf);
+        let url=api.getBaseUrl()+"api/scan?path="+encodeURIComponent(intf);
+        if (rescan) url+="&rescan=true";
         fetchData(url)
             .then ((response)=>{
                 setNetworks(response.data)
@@ -310,7 +348,7 @@
         const device=nested(interfaces[selected],'path');
         if (! device) return;
         let current;
-        scan(device);
+        scan(device,true);
         current=window.setInterval(()=>{
             if (timer.current !== current) return;
             scan(device);
@@ -344,7 +382,6 @@
     });
     const selectedInterface=interfaces[selected];
     const seenNetworks=[];
-    const configuredConnections=[];
     if (selectedInterface){
         const path=nested(selectedInterface,"path");
         if (path){
@@ -363,29 +400,36 @@
             })
         }
     }
-    const selectChange=(id)=>{
-        if (id === selected && selectedInterface){
-            api.showDialog({
-                title: 'Disconnect?',
-                text: selectedInterface.interface,
-                buttons:[
-                    {name:'cancel'},
-                    {name:'ok',
-                        onClick:async (ev)=>{
-                            const path=selectedInterface.activeconnection;
-                            if (! path) return;
-                            const url=api.getBaseUrl()+'api/deactivateConnection?path='+encodeURIComponent(path);
-                            await fetchData(url);
-                        }
-                    }
-                ]
-            },dialogContext)
+     const selectChange = (id) => {
+         if (id === selected && selectedInterface) {
+             if (selectedInterface.activeconnection) {
+                 const ssid = nested(selectedInterface, 'condata.connection.802-11-wireless.ssid')
+                 api.showDialog({
+                     title: 'Disconnect?',
+                     text: `${ssid} on ${selectedInterface.interface}`,
+                     buttons: [
+                         { name: 'cancel' },
+                         {
+                             name: 'ok',
+                             onClick: async (ev) => {
+                                 const path = selectedInterface.activeconnection;
+                                 if (!path) return;
+                                 const url = api.getBaseUrl() + 'api/deactivateConnection?path=' + encodeURIComponent(path);
+                                 await fetchData(url);
+                             }
+                         }
+                     ]
+                 }, dialogContext)
+             }
+             else{
+                setSelected(id);
+             }
 
-        }
-        else{
-            setSelected(id);
-        }
-    }
+         }
+         else {
+             setSelected(id);
+         }
+     }
     return html`
     <${ListItem} className="headline">
         <${ListMainSlot} primary="Wifi"/>

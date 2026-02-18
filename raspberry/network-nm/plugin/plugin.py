@@ -20,6 +20,17 @@ nm_base = "org.freedesktop.NetworkManager"
 nm_path = "/org/freedesktop/NetworkManager"
 
 
+def nested(obj,path):
+    parts=path.split(".")
+    for p in parts:
+        if not isinstance(obj,dict):
+            return None
+        next=obj.get(p)
+        if next is None:
+            return None
+        obj=next
+    return obj
+
 def int_to_ip(ip_int):
     return socket.inet_ntoa(struct.pack("=I", ip_int))
 
@@ -380,8 +391,16 @@ class Plugin(object):
             if con.get('type') != type:
                 return None
         self.mergeSecrets(proxy, config, "802-11-wireless")
+        sec_name="802-11-wireless-security"
         if includeSecrets:
-            self.mergeSecrets(proxy, config, "802-11-wireless-security")
+            self.mergeSecrets(proxy, config, sec_name)
+        else:
+            try:
+                security=proxy.GetSecrets(sec_name)
+                if nested(security,sec_name+".psk") is not None:
+                    config['haspsk']=True
+            except:
+                pass
         if not noTranslations:
             config['path'] = self.short_path(path)
             translations={
@@ -396,9 +415,12 @@ class Plugin(object):
         settings=self.nm("Settings",nm_base+".Settings")
         rt=[]
         for path in settings.ListConnections():
-            config=self.getConnectionInfo(path,includeSecrets,type=type)
-            if config:
-                rt.append(config)
+            try:
+                config=self.getConnectionInfo(path,includeSecrets,type=type)
+                if config:
+                    rt.append(config)
+            except Exception as e:
+                self.api.error(f"Exception getting {path}: {e}")
         return rt
     ACSTATE={
         0: "Unknown",
@@ -491,7 +513,7 @@ class Plugin(object):
                 else:
                     rt+=','+k
         return rt
-    def scanDevice(self,path):
+    def scanDevice(self,path,rescan=False):
         rt=[]
         intf = nm_base + ".Device"
         device = self.nm(path=path)
@@ -502,7 +524,8 @@ class Plugin(object):
             return None
         intf += ".Wireless"
         wifi = dbus.Interface(device, intf)
-        wifi.RequestScan({'dummy':'none'})
+        if rescan:
+            wifi.RequestScan({'dummy':'none'})
         connected = self.get_props(wifi, intf, 'ActiveAccessPoint')
         translations = [
             PropsTranslation('Bandwidth'),
@@ -529,9 +552,9 @@ class Plugin(object):
                 self.api.log(f"unable to read access point {a}: {e}")
         return rt
 
-    def scan(self,path=None):
+    def scan(self,path=None,rescan=False):
         if path is not None:
-            return self.scanDevice(path)
+            return self.scanDevice(path,rescan=rescan)
         nm=self.nmBase()
         rt=[]
         for dp in nm.GetDevices():
@@ -621,13 +644,16 @@ class Plugin(object):
         zone=self.check_zone(zone)
         props=self.check_connection(path)
         con=self.nm(path,nm_base + ".Settings.Connection")
-        wsec = {
-            "key-mgmt": "wpa-psk",
-            "psk": psk,
-        } if psk is not None else {
-            "key-mgmt": "none",
-        }
-        props.update({"802-11-wireless-security":wsec})
+        if psk is not None:
+            sec_key="802-11-wireless-security"
+            if nested(props,sec_key+"key-mgmt") != "wpa-psk":
+                raise Exception(f"can only set psk for key-mgmt wpa-psk on connection {path}")
+            wsec = {
+                "key-mgmt": "wpa-psk",
+                "psk": psk,
+            }
+            props.update({sec_key:wsec})
+
         props['connection'].update({"zone":zone})
         con.Update(props)
 
@@ -705,7 +731,7 @@ class Plugin(object):
             elif url == 'activeConnections':
                 data=self.getActiveConnections(includeSecrets,includeDevices,includeIpConfig,type=type)
             elif url == 'scan':
-                data=self.scan(path=path)
+                data=self.scan(path=path,rescan=self.get_bool_arg(args,'rescan'))
             else:
                 return {'status': f"request {url} not implemented"}
             return {'status': 'OK', 'data': data}
