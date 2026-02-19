@@ -138,7 +138,11 @@ const handleError=(error,sequence,inc)=>{
     if (inc) aisErrors++;
     self.postMessage({
         type: 'error',
-        error: error,
+        error: {
+            message:error.message,
+            filename: error.filename,
+            lineno: error.lineno,
+        },
         count: aisErrors
     })
 }
