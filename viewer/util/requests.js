@@ -130,6 +130,11 @@ export const fetchWithTimeout=(url,options)=>{
     if (typeof(AbortSignal.timeout) === 'function'){
         foptions.signal=AbortSignal.timeout(timeout);
     }
+    else{
+        const controller = new AbortController();
+        foptions.signal=controller.signal;
+        self.setTimeout(()=>controller.abort(),timeout);
+    }
     return fetch(url,foptions);
 }
 
