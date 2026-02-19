@@ -126,7 +126,11 @@ export const fetchWithTimeout=(url,options)=>{
     if (timeout === undefined){
         return fetch(url,options);
     }
-    return fetch(url,{...options,signal:AbortSignal.timeout(timeout)});
+    const foptions={...options};
+    if (typeof(AbortSignal.timeout) === 'function'){
+        foptions.signal=AbortSignal.timeout(timeout);
+    }
+    return fetch(url,foptions);
 }
 
 

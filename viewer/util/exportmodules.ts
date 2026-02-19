@@ -40,7 +40,7 @@ const buildExport=(name:string):string=>{
         for (const k of Object.keys(module)) {
             if (module[k] != null) {
                 rt += `
-                export const ${k}=window.${avnav}.${name}.${k}\n
+                export const ${k}=window.${avnav}.${name}.${k};\n
                 `
             }
         }

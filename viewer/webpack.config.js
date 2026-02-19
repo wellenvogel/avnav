@@ -98,7 +98,7 @@ module.exports = (env, argv) => {
         presets: ['@babel/preset-react', ["@babel/preset-env",
             {
                 useBuiltIns: false,
-                //debug: true
+                debug: true
             },
         ]],
         plugins: [
@@ -164,7 +164,7 @@ module.exports = (env, argv) => {
                 },
                 {   test: /\.tsx?$|\.ts$/,
                     //include: path.resolve(__dirname + "/map/maplibre"),
-                    exclude: /node_modules/,
+                    //exclude: /node_modules/,
                     use: [
                         {
                             loader: 'babel-loader',
