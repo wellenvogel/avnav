@@ -21,9 +21,10 @@
  #
  */
 
- import html from 'htm';
- import {useState,useEffect,useCallback,useRef} from 'react';
- import {useDialogContext,ListItem,ListSlot,ListMainSlot} from 'avnav';
+ import html from '/modules/htm.js';
+ import {useState,useEffect,useCallback,useRef} from '/modules/react.js';
+ import {useDialogContext,ListItem,ListSlot,ListMainSlot} from '/modules/avnavui.js';
+ import avnav from '/modules/avnavui.js'
 
  const ZONE_T='trusted';
  const ZONE_B='block';
@@ -467,6 +468,7 @@
  }
 
  export default async (api)=>{
+    console.log("avnav",avnav);
     const KVISIBLE=api.getStoreBaseKey()+".visible";
     api.setStoreData(KVISIBLE,false);
     let dialogHandle;

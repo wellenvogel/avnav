@@ -72,6 +72,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   PORT_CONFIG="httpPort"
   PATH_USER='user'
   PATH_VIEWER='viewer'
+  PATH_MODULES='modules'
   PATH_CHARTS='charts'
   CFG_CHARTBASE='chartbase' #the name of a config value to change the chart mapping name
                             #in reality this does not change the chart base URL
@@ -183,6 +184,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   def run(self):
     self.freeAllUsedResources()
     self.externalHandlers["/" + self.PATH_VIEWER] = StaticPathHandler(self.PATH_VIEWER, self.pathmappings[self.PATH_VIEWER])
+    self.externalHandlers["/" + self.PATH_MODULES] = StaticPathHandler(self.PATH_MODULES,
+                                                                      os.path.join(self.pathmappings[self.PATH_VIEWER],'modules'))
     self.externalHandlers["/" + self.PATH_USER + "/icons"] = StaticPathHandler(self.PATH_USER + "/icons", os.path.join(
         self.pathmappings[self.PATH_USER], "icons"))
     server_address=(self.param['httpHost'],int(self.param[self.PORT_CONFIG]))

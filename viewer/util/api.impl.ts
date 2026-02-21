@@ -199,12 +199,14 @@ export const UserButtonProps: Required<UserButton>={
 
 export const modules: Modules={
     React: React,
-    ReactDOM: ReactDOM,
+    ReactDom: ReactDOM,
     Htm: Htm.bind(React.createElement),
-    LatLonSpherical: LatLonSperical,
-    Dms:Dms,
+    LatLon: {
+        LatLonSpherical: LatLonSperical,
+        Dms: Dms
+    },
     ol: OpenLayers,
-    avnav: AvNavExports
+    avnavui: AvNavExports
 }
 
 export class ApiV2 extends ApiImpl implements ApiV2Intf {

@@ -542,9 +542,13 @@ export interface UserButton{
  *   import {useState,useRef} from 'react';
  *
  */
+export interface LatLonModule{
+    Dms: typeof Dms,
+    LatLonSpherical: typeof LatLonSpherical
+}
 export interface Modules{
     React: typeof React
-    ReactDOM: typeof ReactDOM
+    ReactDom: typeof ReactDOM
     /**
      * Htm is the htm function from
      * https://github.com/developit/htm
@@ -560,10 +564,9 @@ export interface Modules{
      * Refer to the documentation for usages.
      */
     Htm: typeof Htm,
-    LatLonSpherical: typeof LatLonSpherical,
-    Dms: typeof Dms,
+    LatLon: LatLonModule,
     ol: typeof OpenLayers,
-    avnav: any
+    avnavui: any
 }
 
 /**

@@ -23,7 +23,9 @@
 let module={};
 export const __init=(mvalue)=> {
     module = mvalue;
-    LatLonSpherical=mvalue;
+    LatLonSpherical=mvalue.LatLonSpherical;
+    Dms=mvalue.Dms
 }
+export let Dms;
 export let LatLonSpherical;
 export {module as default};
