@@ -5,7 +5,7 @@
 import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
 import {RadialGauge,LinearGauge} from 'canvas-gauges';
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 

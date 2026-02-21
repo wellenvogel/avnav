@@ -31,27 +31,41 @@
  * @type {{}}
  */
 
-let base={};
+const base:Record<string, any>={};
 
-base.log=function(txt){
+const logOn=()=>{
+    // @ts-ignore
     const avnav=window.avnav;
-    if (! avnav || ! avnav.debugMode) return;
+    if (! avnav || ! avnav.debugMode) return false;
+    return true;
+}
+base.log=(...param:any[])=>{
+    if (! logOn())return;
     try{
-        console.log(txt);
+        console.log(...param);
     }catch(e){}
 };
+base.warning=(...param:any[])=>{
+    console.warn(...param);
+}
+base.error=(...param:any[])=>{
+    console.error(...param);
+}
 
 /**
  * inherit (or better: proto delegation)
  * @param child
  * @param parent
  */
-base.inherits = function (child, parent) {
+base.inherits = function (child: typeof Object, parent:typeof Object) {
     if (parent === undefined) {
         throw ("parent is undefined for inherit to " + child);
     }
+    // @ts-ignore
     child.prototype = Object.create(parent.prototype);
+    // @ts-ignore
     child.prototype.super_ = parent.prototype;
+    // @ts-ignore
     child.prototype.base_ = parent;
 };
 

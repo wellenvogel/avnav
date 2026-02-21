@@ -23,7 +23,7 @@
  ###############################################################################
  */
 
-import base from '../base.js';
+import base from '../base.ts';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';

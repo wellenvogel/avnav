@@ -41,7 +41,8 @@ module.exports = (env, argv) => {
         {from: './settings', to: 'settings'},
         {context: './demo', from: '*.xml', to: 'demo/'},
         {context: './images', from: 'ais-default*png', to: 'images/'},
-        {context: './images', from: 'ais-aton*png', to: 'images/'}
+        {context: './images', from: 'ais-aton*png', to: 'images/'},
+        {context: './exportmodules', from: '*.js',to:'modules/'}
     ];
     var images = [
         'WebIcon-512.png',
@@ -91,7 +92,7 @@ module.exports = (env, argv) => {
             template: 'static/avnav_viewer.html',
             filename: 'avnav_viewer.html',
             hash: true
-        })
+        }),
     ];
 
     var babelOptions={
@@ -116,7 +117,6 @@ module.exports = (env, argv) => {
         target: ['web','browserslist'],  //this way use the same config as babel is using
                                          //find the browserslist in package.json
         entry: {
-
             main: {import: './webpack-main.js', filename: 'avnav_min.js'},
             style: {import: './style/avnav_viewer_new.less'}
         },

@@ -6,7 +6,7 @@
 // @ts-ignore
 import WidgetFactory from '../components/WidgetFactory.jsx';
 // @ts-ignore
-import base from '../base.js';
+import base from '../base';
 // @ts-ignore
 import Formatter from './formatter.js';
 // @ts-ignore

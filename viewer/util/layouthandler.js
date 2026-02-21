@@ -2,7 +2,7 @@ import Requests from './requests.js';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 

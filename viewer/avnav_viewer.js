@@ -35,7 +35,7 @@ import propertyHandler from './util/propertyhandler';
 import App from './App.jsx';
 import keys from './util/keys.jsx';
 import globalStore from './util/globalstore.jsx';
-import base from './base.js';
+import base from './base.ts';
 import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
 import Api from './util/api.impl.ts';
@@ -49,7 +49,7 @@ import {loadJs, loadOrUpdateCss} from "./util/helper";
 import pluginmanager from "./util/pluginmanager";
 import {layoutLoader} from "./util/layouthandler";
 import {showParameterDialog} from "./components/ParameterDialog";
-import createExports from './util/exportmodules';
+import createExports from './exportmodules/provider';
 
 if (! window.avnav){
     window.avnav={};
@@ -158,8 +158,8 @@ export default function() {
         })
         loadScripts(addList);
     }
-    createExports();
     const doLateLoads = async () => {
+        await createExports();
         createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...
         setTimeout(function () {

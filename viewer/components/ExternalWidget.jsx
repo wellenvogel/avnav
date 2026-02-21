@@ -5,7 +5,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import PropTypes from 'prop-types';
 import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
-import base from '../base.js';
+import base from '../base.ts';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import Helper from "../util/helper";
 import {ErrorBoundary} from "./ErrorBoundary";

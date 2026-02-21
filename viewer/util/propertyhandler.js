@@ -5,7 +5,7 @@
 import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
 import keys, {KeyHelper, PropertyType} from './keys.jsx';
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import LayoutHandler, {layoutLoader} from './layouthandler';
 import RequestHandler from "./requests";

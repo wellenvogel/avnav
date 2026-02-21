@@ -6,7 +6,7 @@ import navobjects from './navobjects' ;
 import NavCompute from './navcompute' ;
 import Formatter from '../util/formatter' ;
 import helper from '../util/helper.js';
-import base from '../base.js';
+import base from '../base.ts';
 import XmlWriter from "xml-writer";
 
 let routeobjects={};

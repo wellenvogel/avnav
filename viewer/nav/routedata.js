@@ -12,7 +12,7 @@ import keys from '../util/keys.jsx';
 import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
-import base from '../base.js';
+import base from '../base.ts';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import LatLon from 'geodesy/latlon-spherical';
 import requests from "../util/requests.js";

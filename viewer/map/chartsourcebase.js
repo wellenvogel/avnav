@@ -23,7 +23,7 @@
  ###############################################################################
  */
 
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import Helper, {getav, injectav, setav} from '../util/helper.js';
 import shallowcompare from '../util/compare.js';

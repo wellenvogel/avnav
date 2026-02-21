@@ -11,7 +11,7 @@ import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
-import base from '../base.js';
+import base from '../base.ts';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';

@@ -12,7 +12,7 @@ import {Drawing, DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import base from '../base.js';
+import base from '../base.ts';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';

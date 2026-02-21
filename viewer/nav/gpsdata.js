@@ -6,7 +6,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import assign from 'object-assign';
 import Requests from '../util/requests.js';
-import base from '../base.js';
+import base from '../base.ts';
 import Average, {CourseAverage} from "../util/average.mjs";
 
 

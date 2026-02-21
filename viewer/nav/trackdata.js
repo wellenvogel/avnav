@@ -3,7 +3,7 @@ import navobjects from './navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Requests from '../util/requests.js';
-import base from '../base.js';
+import base from '../base.ts';
 
 
 

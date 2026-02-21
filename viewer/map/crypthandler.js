@@ -23,7 +23,7 @@
  ###############################################################################
  */
 
-import base from '../base.js';
+import base from '../base.ts';
 
 const getTokenHandlerKey=(tokenUrl,opt_tokenFunction)=>{
     return (opt_tokenFunction||'none')+"-"+tokenUrl;

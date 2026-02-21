@@ -3,7 +3,7 @@ var reactCreateClass=require('create-react-class');
 var ReactDOM=require('react-dom');
 var assign=require('object-assign');
 var PropTypes=require('prop-types');
-require('../base.js');
+require('../base.ts');
 var NavCompute=require('../nav/navcompute');
 var Formatter=require('../util/formatter');
 var Store=require('../util/store');
