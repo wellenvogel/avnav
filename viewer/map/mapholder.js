@@ -1786,18 +1786,15 @@ class MapHolder extends DrawingPositionConverter {
     onZoomChange(evt) {
         evt.preventDefault();
         base.log("zoom changed");
-        if (this.mapZoom >= 0) {
             let vZoom = this.getView().getZoom();
             if (vZoom != this.mapZoom) {
                 vZoom=this.clampZoom(vZoom);
                 base.log("zoom required from map: " + vZoom);
                 this.requiredZoom = vZoom;
-                if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
             }
             if (this.isInUserActionGuard()) {
                 this.remoteChannel.sendMessage(COMMANDS.setZoom + " " + vZoom);
             }
-        }
     }
 
     /**

@@ -171,12 +171,12 @@ navobjects.Distance=function(){
      * the distance in meters
      * @type {number}
      */
-    this.dts=0;
+    this.dts=undefined;
     /**
      * the course
      * @type {number}
      */
-    this.course=0
+    this.course=undefined;
 };
 
 
