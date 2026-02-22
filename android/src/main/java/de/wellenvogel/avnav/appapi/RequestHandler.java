@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.appapi;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.SystemClock;
@@ -22,11 +23,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.charts.ChartHandler;
+import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
@@ -91,6 +94,83 @@ public class RequestHandler {
 
     );
 
+    static class AssetsRequestHandler implements INavRequestHandler{
+        Context context;
+        String prefix;
+        String assetPath;
+        private String pathPrefix;
+        private int plen;
+        AssetsRequestHandler(Context ctx,String prefix,String assetPath){
+            this.assetPath=assetPath;
+            this.prefix=prefix;
+            this.context=ctx;
+            this.pathPrefix=prefix+"/";
+            this.plen=this.pathPrefix.length();
+        }
+
+        @Override
+        public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
+            return false;
+        }
+
+        @Override
+        public JSONArray handleList(Uri uri, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public JSONObject handleInfo(String name, Uri uri, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean handleDelete(String name, Uri uri) throws Exception {
+            return false;
+        }
+
+        @Override
+        public boolean handleRename(String oldName, String newName) throws Exception {
+            return false;
+        }
+
+        @Override
+        public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
+            String path=uri.getPath();
+            if (path == null) return null;
+            if (path.startsWith("/")) path = path.substring(1);
+            if (! path.startsWith(pathPrefix)) return null;
+            path=path.substring(plen);
+            String[] parts=path.split("//*");
+            for (String part:parts){
+                DirectoryRequestHandler.safeName(part,true);
+            }
+            ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(-1,mimeType(path),null,
+                    context.getAssets().open(assetPath+"/"+path));
+            rt.setDateHeader("last-modified",new Date(BuildConfig.TIMESTAMP));
+            return rt;
+        }
+
+        @Override
+        public String getPrefix() {
+            return prefix;
+        }
+
+        @Override
+        public String getType() {
+            return null;
+        }
+    }
+
     public static class ServerInfo{
         public InetAddress address;
         public boolean listenAny=false;
@@ -137,6 +217,7 @@ public class RequestHandler {
     }
 
     private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
+    private ArrayList<LazyHandlerAccess> prefixHandlers=new ArrayList<>();
 
     public static JSONObject getReturn(AvnUtil.KeyValue...data) throws JSONException {
         JSONObject rt=new JSONObject();
@@ -183,18 +264,30 @@ public class RequestHandler {
     }
 
     private void addHandler(INavRequestHandler handler){
-        handlerMap.put(handler.getType(), new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return handler;
-            }
-        });
+        if (handler.getType() != null) {
+            handlerMap.put(handler.getType(), new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return handler;
+                }
+            });
+        }
+        if (handler.getPrefix() != null){
+            prefixHandlers.add(new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return handler;
+                }
+            });
+        }
     }
 
     public RequestHandler(GpsService service){
         AvnLog.i(LOGPRFX,"Construct");
         this.service = service;
         addHandler(this.service);
+        addHandler(new AssetsRequestHandler(service,"viewer","viewer"));
+        addHandler(new AssetsRequestHandler(service,"modules","viewer/modules"));
         this.chartHandler =new ChartHandler(service,this);
         addHandler(chartHandler);
         this.addonHandler= new AddonHandler(service,this);
@@ -237,12 +330,7 @@ public class RequestHandler {
         for (IWorker w:workers){
             if (w instanceof INavRequestHandler){
                 INavRequestHandler handler=(INavRequestHandler)w;
-                handlerMap.put(handler.getType(), new LazyHandlerAccess() {
-                    @Override
-                    public INavRequestHandler getHandler() {
-                        return handler;
-                    }
-                });
+                addHandler(handler);
             }
         }
         AvnLog.i(LOGPRFX,"Construct done");
@@ -289,6 +377,7 @@ public class RequestHandler {
         return handleRequest(view,url,"GET", new HashMap<>());
     }
 
+
     /**
      * used for the internal requests from our WebView
      * @param view
@@ -318,10 +407,7 @@ public class RequestHandler {
                     rt.applyRangeHeader(headers.get(ExtendedWebResourceResponse.RANGE_HDR),true);
                     return rt;
                 }
-                if (path.startsWith("/")) path = path.substring(1);
-                InputStream is = (view != null) ? view.getContext().getAssets().open(path) : service.getAssets().open(path);
-                Log.i(LOGPRFX, String.format("loading asset %s from %s (%d avail)", path, Thread.currentThread().getId(), is.available()));
-                return new ExtendedWebResourceResponse(-1, mimeType(path), "", is);
+                throw new Exception("invalid path "+path);
             } catch (RequestException r){
                 r.printStackTrace();
                 throw r;
@@ -756,16 +842,16 @@ public class RequestHandler {
 
     public INavRequestHandler getPrefixHandler(String url){
         if (url == null) return null;
-        for (LazyHandlerAccess handler : handlerMap.values()){
+        for (LazyHandlerAccess handler : prefixHandlers){
             if (handler.getHandler() == null || handler.getHandler().getPrefix() == null) continue;
             if (url.startsWith(handler.getHandler().getPrefix())) return handler.getHandler();
         }
         return null;
     }
 
-    public Collection<INavRequestHandler> getHandlers(){
+    public Collection<INavRequestHandler> getAllPrefixHandlers(){
         ArrayList<INavRequestHandler> rt=new ArrayList<INavRequestHandler>();
-        for (LazyHandlerAccess handler : handlerMap.values()){
+        for (LazyHandlerAccess handler : prefixHandlers){
             if (handler.getHandler() == null ) continue;
             rt.add(handler.getHandler());
         }

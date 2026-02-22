@@ -18,7 +18,6 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpServerConnection;
-import org.apache.http.HttpStatus;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -45,12 +44,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -64,7 +60,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -414,35 +409,14 @@ public class WebServer extends Worker {
                 return;
             }
             path=path.replaceAll("^/*","");
-            //TODO: restrict access
-            try {
-                InputStream is= gpsService.getAssets().open(path);
-                httpResponse.setStatusCode(HttpStatus.SC_OK);
-                httpResponse.setEntity(new InputStreamEntity(is,-1));
-                httpResponse.addHeader("content-type", RequestHandler.mimeType(path));
-
-            }catch (Exception e){
-                AvnLog.d(NAME,"file "+path+" not found: "+e);
-                httpResponse.setStatusCode(404);
-                httpResponse.setReasonPhrase("not found");
-            }
-
+            AvnLog.d(NAME,"file "+path+" not found");
+            httpResponse.setStatusCode(404);
+            httpResponse.setReasonPhrase("not found");
         }
     }
 
 
     private BaseRequestHandler baseRequestHandler=new BaseRequestHandler();
-
-    //we need to read completely as currently there is no streaming entity without the size
-    private static HttpEntity streamToEntity(InputStream is) throws IOException {
-        byte tmp[] = new byte[4096];
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int length;
-        //we need to read completely as currently there is no streaming entity without the size
-        while ((length = is.read(tmp)) != -1) buffer.write(tmp, 0, length);
-        AvnLog.d(NAME,"convert is: "+buffer.size());
-        return new InputStreamEntity(new ByteArrayInputStream(buffer.toByteArray()), buffer.size());
-    }
 
     private Listener listener;
 
@@ -573,7 +547,7 @@ public class WebServer extends Worker {
             registry = new HttpRequestHandlerRegistry();
             registry.register(RequestHandler.NAVURL+"*",navRequestHandler);
             registry.register(RequestHandler.NAVURL_COMPAT+"*",navRequestHandler);
-            for (INavRequestHandler h: gpsService.getRequestHandler().getHandlers()){
+            for (INavRequestHandler h: gpsService.getRequestHandler().getAllPrefixHandlers()){
                 String prefix=h.getPrefix();
                 if (prefix == null) continue;
                 DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix, gpsService.getRequestHandler());

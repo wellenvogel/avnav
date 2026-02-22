@@ -968,7 +968,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         AvnLog.i(LOGPRFX,"service handleStartup, watchdog="+isWatchdog);
         avnavVersion=prefs.getInt(Constants.VERSION,0);
         allowAllPlugins=prefs.getBoolean(Constants.ALLOW_PLUGINS,true);
+        boolean startInternal=false;
         if (! isWatchdog || internalWorkers.size() == 0) {
+            startInternal=true;
             for (WorkerConfig cfg : INTERNAL_WORKERS){
                 try {
                     IWorker worker=cfg.createWorker(this,queue);
@@ -991,7 +993,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
             }
         }
+        boolean startExternal=false;
         if (! isWatchdog || workers.size() == 0) {
+            startExternal=true;
             workerId=MIN_WORKER_ID;
             try {
                 JSONArray handlerConfig = getWorkerConfig(this);
@@ -1015,24 +1019,28 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 AvnLog.e("unable to create channels", t);
             }
         }
-        if (! isWatchdog || requestHandler == null){
+        if (! isWatchdog || requestHandler == null || startInternal){
             if (requestHandler != null) requestHandler.stop();
             requestHandler=new RequestHandler(this);
         }
-        for (IWorker w: internalWorkers){
-            try {
-                w.start(null);
-            }catch (Throwable t){
-                AvnLog.e("unable to start handler "+w.getTypeName(),t);
-                w.setStatus(WorkerStatus.Status.ERROR,t.getMessage());
+        if (startInternal) {
+            for (IWorker w : internalWorkers) {
+                try {
+                    w.start(null);
+                } catch (Throwable t) {
+                    AvnLog.e("unable to start handler " + w.getTypeName(), t);
+                    w.setStatus(WorkerStatus.Status.ERROR, t.getMessage());
+                }
             }
         }
-        for (IWorker w: workers){
-            try {
-                w.start(null);
-            }catch (Throwable t){
-                AvnLog.e("unable to start handler "+w.getTypeName(),t);
-                w.setStatus(WorkerStatus.Status.ERROR,t.getMessage());
+        if (startExternal) {
+            for (IWorker w : workers) {
+                try {
+                    w.start(null);
+                } catch (Throwable t) {
+                    AvnLog.e("unable to start handler " + w.getTypeName(), t);
+                    w.setStatus(WorkerStatus.Status.ERROR, t.getMessage());
+                }
             }
         }
         AvnLog.i(LOGPRFX,"Service handleStartup done");
