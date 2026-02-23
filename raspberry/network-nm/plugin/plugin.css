@@ -30,6 +30,9 @@
 .nwmplugin.WifiDialog .interfaceList{
     width: 100%;
 }
+.nwmplugin.WifiDialog .interfaceList.nointf {
+    padding: 1em;
+}
 .nwmplugin.WifiDialog .networkList{
     width: 100%;
 }

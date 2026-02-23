@@ -97,7 +97,7 @@
  const InterfaceList=({selectedIdx,items,onChange})=>{
     let idx=0;
     if (items.length < 1){
-        return html`<div className="interfaceList nointf">no free network interfaces</div>`
+        return html`<div className="interfaceList nointf">no available interfaces</div>`
     }
     return html`
     <div className="interfaceList">
