@@ -14,8 +14,8 @@
 }
 #navpage {
   .widgetContainer {
-    padding: @widgetBorderWidth;
-    gap: @widgetBorderWidth;
+    padding: var(--avnav-widget-border-width);
+    gap: var(--avnav-widget-border-width);
   }
   .widgetContainer:empty { display: none; }
   .widgetContainer.vertical   { padding-bottom: 0; }
@@ -195,7 +195,7 @@
   color: var(--avnav-widget-fore-color);
 
   .widgetHead {
-    .nightBackColor(#eee);
+    background: var(--avnav-widget-head-color);
   }
 
   .widgetData {
@@ -411,7 +411,7 @@
   border: @borderAttentionLarge;
   border-color: var(--avnav-attention-color);
 }
-    .smallWidget();
+.smallWidget();
 .widgetData{
   .routeInfo {
     width: 4.5em;
