@@ -310,6 +310,12 @@
     .label{
       width: 2em;
     }
+    .widgetData{
+      display: flex;
+      span{
+        flex: 1 0 1em;
+      }
+    }
     .widgetData ~ .widgetData{
       padding-top: 0;
     }
@@ -350,8 +356,10 @@
           margin: 0;
         }
       }
+      .widgetData{
+        display: block;
+      }
     }
-
   }
 
   &.activeRouteWidget{
