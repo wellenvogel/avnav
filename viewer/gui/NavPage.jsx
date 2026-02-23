@@ -11,7 +11,7 @@ import NavHandler from '../nav/navdata.js';
 import {
     DBCancel,
     DialogButtons, DialogFrame, DialogRow,
-    DialogText, OverlayDialog, showDialog, showPromiseDialog, useDialogContext
+    DialogText, OverlayContainer, showDialog, showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import Helper, {injectav} from '../util/helper.js';
 import {
@@ -48,22 +48,23 @@ import {
     FeatureAction,
     FeatureInfo, RouteFeatureInfo, WpFeatureInfo
 } from "../map/featureInfo";
-import {loadRoutes} from "../components/RouteInfoHelper";
-import routeobjects, {Measure} from "../nav/routeobjects";
+import {Measure} from "../nav/routeobjects";
 import {KeepFromMode} from "../nav/routedata";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import navdata from "../nav/navdata.js";
 import base from "../base";
-import {checkName, ItemNameDialog, nameProposal} from "../components/ItemNameDialog";
-import {ItemActions} from "../components/FileDialog";
 import {showErrorList} from "../components/ErrorListDialog";
+import {useHistory} from "../components/HistoryProvider";
+import {createItemActions} from "../components/FileDialog";
+import {PAGEIDS} from "../util/pageids";
+import {useDialogContext} from "../components/DialogContext";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editorRoute = new RouteEdit(RouteEdit.MODES.EDIT);
 
-const PAGENAME='navpage';
+const PAGENAME=PAGEIDS.NAV;
 
 
 
@@ -155,7 +156,7 @@ const setCenterToTarget=()=>{
 
 const navNext=()=>{
     if (!activeRoute.hasRoute() ) return;
-    RouteHandler.wpOn(activeRoute.getNextWaypoint(),KeepFromMode.OLDTO);
+    wpOn(activeRoute.getNextWaypoint(),KeepFromMode.OLDTO);
 };
 
 const navToWp=(on)=>{
@@ -173,12 +174,17 @@ const navToWp=(on)=>{
         }
         wp.routeName=undefined;
         center.assign(wp);
-        RouteHandler.wpOn(wp);
+        wpOn(wp);
         return;
     }
     RouteHandler.routeOff();
     MapHolder.triggerRender();
 };
+const wpOn=(...args)=>{
+    RouteHandler.wpOn(...args).then(
+        ()=>{},
+        (e)=>{if (e) Toast(e)})
+}
 const gotoFeature=(featureInfo,opt_noRoute)=>{
     let target = featureInfo.point;
     if (!target) return;
@@ -187,7 +193,7 @@ const gotoFeature=(featureInfo,opt_noRoute)=>{
         delete target.routeName;
     }
     if (! target.name) target.name=globalStore.getData(keys.properties.markerDefaultName);
-    RouteHandler.wpOn(target);
+    wpOn(target);
 }
 const OVERLAYPANEL="overlay";
 const getCurrentMapWidgets=() =>{
@@ -245,9 +251,9 @@ const MapWidgetsDialog =()=> {
 }
 
 const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
-const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
+const OverlayContent=({showWpButtons,setShowWpButtons,dialogContext})=>{
     const waypointButtons=[
-        anchorWatch(false,dialogCtxRef),
+        anchorWatch(false,dialogContext),
         {
             name:'WpLocate',
             onClick:()=>{
@@ -263,10 +269,10 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
             name:'WpEdit',
             onClick:()=>{
                 if (activeRoute.hasRoute()){
-                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogCtxRef);
+                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogContext);
                 }
                 else {
-                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogCtxRef);
+                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogContext);
                 }
                 setShowWpButtons(false);
             },
@@ -285,7 +291,7 @@ const OverlayContent=({showWpButtons,setShowWpButtons,dialogCtxRef})=>{
             onClick:()=>{
                 let selected=activeRoute.getPointAt();
                 setShowWpButtons(false);
-                if (selected) RouteHandler.wpOn(selected);
+                if (selected) wpOn(selected);
             },
 
 
@@ -395,38 +401,20 @@ const createRouteFeatureAction=(history,opt_fromMeasure)=>{
                 if (!measure) return;
                 if (measure.points.length < 1) return;
             }
-            loadRoutes()
-                .then( (routes)=> {
-                    const checkRouteName=(name)=>{
-                        return checkName(name,routes,(item)=>item.name);
-                    }
-                    showPromiseDialog(listCtx, (dprops) => <ItemNameDialog
-                        {...dprops}
-                        title={"Select Name for new Route"}
-                        checkName={checkRouteName}
-                        mandatory={true}
-                        fixedExt={'gpx'}
-                        iname={nameProposal('route')}
-                    />)
-                        .then((res) => {
-                            listCtx.closeDialog();
-                            const isConnected=globalStore.getData(keys.properties.connectedMode);
-                            let newRoute = measure ? measure.clone() : new routeobjects.Route();
-                            const action=ItemActions.create({type:'route'},isConnected);
-                            newRoute.setName(action.nameForUpload(res.name));
-                            newRoute.server = isConnected;
-                            if (!measure) {
-                                newRoute.addPoint(0, featureInfo.point);
-                                editorRoute.setRouteAndIndex(newRoute, 0);
-                            } else {
-                                editorRoute.setRouteAndIndex(newRoute, newRoute.getIndexFromPoint(featureInfo.point))
-                            }
-                            history.push("editroutepage", {center: true});
-                        }, () => {
-                        })
-                })
-                .catch(()=>{})
-
+            const routeActions=createItemActions('route');
+            const createAction=routeActions.getCreateAction();
+            createAction.action(listCtx).then((newRoute)=>{
+                listCtx.closeDialog();
+                if (!measure) {
+                    newRoute.addPoint(0, featureInfo.point);
+                    editorRoute.setRouteAndIndex(newRoute, 0);
+                } else {
+                    const mRoute=measure.clone();
+                    mRoute.setName(newRoute.name);
+                    editorRoute.setRouteAndIndex(mRoute, mRoute.getIndexFromPoint(featureInfo.point))
+                }
+                history.push("editroutepage", {center: true});
+            })
         },
         close:false,
         condition: (featureInfo)=>{
@@ -442,28 +430,33 @@ const createRouteFeatureAction=(history,opt_fromMeasure)=>{
     })
 }
 const NavPage=(props)=>{
-    const dialogCtx=useRef();
+    const dialogCtx=useDialogContext();
     const [wpButtonsVisible,setWpButtonsVisible]=useState(false);
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
     const [sequence,setSequence]=useState(0);
     const checkChartCount=useRef(30);
-    const history=props.history;
+    const history=useHistory();
     const loadTimer = useTimer((seq) => {
-        if (!needsChartLoad()) return;
+        const neededChart=needsChartLoad();
+        if (!neededChart) return;
         checkChartCount.current--;
         if (checkChartCount.current < 0) {
             history.pop();
+            return;
         }
-        Requests.getJson("?request=list&type=chart", {timeout: 3 * parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json) => {
+        Requests.getJson({
+            request:'api',
+            type:'chart',
+            command:'list'
+        }, {timeout: 3 * parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json) => {
             (json.items || []).forEach((chartEntry) => {
-                if (!chartEntry.key) chartEntry.key = chartEntry.chartKey || chartEntry.url;
-                if (chartEntry.key === neededChart) {
+                if (chartEntry.name === neededChart.key) {
                     MapHolder.setChartEntry(chartEntry);
                     setSequence(sequence + 1);
                     return;
                 }
-                loadTimer.startTimer(seq);
             })
+            loadTimer.startTimer(seq);
         })
             .catch(() => {
                 loadTimer.startTimer(seq)
@@ -576,7 +569,7 @@ const NavPage=(props)=>{
                 name:'StopNav',
                 label:'StopNav',
                 onClick:()=>{
-                    RouteHandler.wpOn();
+                    wpOn();
                 },
                 condition:(featureInfo)=>featureInfo instanceof WpFeatureInfo
             }))
@@ -632,8 +625,8 @@ const NavPage=(props)=>{
                 onClick: (featureInfo) => {
                     let nextTarget = featureInfo.point;
                     if (!nextTarget) return;
-                    RouteHandler.fetchRoute(featureInfo.urlOrKey, false,
-                        (route) => {
+                    RouteHandler.fetchRoute(featureInfo.urlOrKey)
+                        .then((route) => {
                             let idx = route.findBestMatchingIdx(nextTarget);
                             editorRoute.setNewRoute(route, idx >= 0 ? idx : undefined);
                             history.push("editroutepage",{center:true});
@@ -716,7 +709,6 @@ const NavPage=(props)=>{
                 {...dprops}
                 featureList={featureList}
                 additionalActions={additionalActions}
-                history={history}
                 listActions={listActions}
             />)
             return true;
@@ -844,7 +836,7 @@ const NavPage=(props)=>{
                 overflow: true,
                 onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
             },
-            LayoutFinishedDialog.getButtonDef(undefined,dialogCtx.current),
+            LayoutFinishedDialog.getButtonDef(undefined,dialogCtx),
             LayoutHandler.revertButtonDef((pageWithOptions)=>{
                 if (pageWithOptions.location !== props.location){
                     history.replace(pageWithOptions.location,pageWithOptions.options);
@@ -868,17 +860,19 @@ const NavPage=(props)=>{
             return (
                 <PageFrame
                     {...pageProperties}
-                    id={PAGENAME}>
-                    <PageLeft dialogCtxRef={dialogCtx}>
-                        <OverlayDialog
+                    >
+                    <PageLeft >
+                        <OverlayContainer
                             closeCallback={() => history.pop()}>
                             <DialogFrame title={"Waiting for chart"}>
-                                <DialogText>{neededChart}</DialogText>
-                                <DialogButtons buttonList={DBCancel()}/>
+                                <DialogText>{neededChart.name||neededChart.key}</DialogText>
+                                <DialogButtons buttonList={DBCancel({
+                                    onClick:()=>history.pop()
+                                })}/>
                             </DialogFrame>
-                        </OverlayDialog>
+                        </OverlayContainer>
                     </PageLeft>
-                    <ButtonList itemList={buttons}/>
+                    <ButtonList page={pageProperties.id} itemList={buttons}/>
                 </PageFrame>
             );
         }
@@ -896,11 +890,10 @@ const NavPage=(props)=>{
                         setShowWpButtons={(on)=>{
                             showWpButtons(on);
                         }}
-                        dialogCtxRef={dialogCtx}
+
                     />}
                 buttonList={buttons}
                 autoHideButtons={autohide}
-                dialogCtxRef={dialogCtx}
                 />
         );
 }

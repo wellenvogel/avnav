@@ -6,13 +6,16 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.RafInputStream;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,15 +57,40 @@ public class TrackWriter extends DirectoryRequestHandler {
     }
 
     @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        if (name == null) throw new Exception("missing name");
+        if (name.toLowerCase().endsWith(".nmea")){
+            String maxBytes=uri.getQueryParameter("maxBytes");
+            if (maxBytes == null) return super.handleDownload(name,uri);
+            File f=findLocalFile(name);
+            if (f == null) throw new Exception("file "+name+" not found");
+            RandomAccessFile rf= new RandomAccessFile(f,"r");
+            long offset=rf.length()-Integer.parseInt(maxBytes);
+            RafInputStream stream=new RafInputStream(rf,offset);
+            return new ExtendedWebResourceResponse(stream.available(),"text/plain","",stream);
+        }
+        return super.handleDownload(name, uri);
+    }
+
+    @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         boolean rt=super.handleDelete(name,uri);
-        if (name.replace(".gpx","").equals(getCurrentTrackname(new Date()))) {
+        if (rt && name.replace(".gpx","").equals(getCurrentTrackname(new Date()))) {
             AvnLog.i("deleting current trackfile");
             trackpoints.clear();
         }
         return rt;
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        boolean rt=super.handleRename(oldName, newName);
+        if (rt  && oldName.replace(".gpx","").equals(getCurrentTrackname(new Date()))){
+            AvnLog.i("renaming current trackfile");
+            trackpoints.clear();
+        }
+        return rt;
+    }
 
     public static class TrackInfo implements AvnUtil.IJsonObect {
         public String name;
@@ -73,6 +101,8 @@ public class TrackWriter extends DirectoryRequestHandler {
             o.put("name",name);
             o.put("time",mtime/1000);
             o.put("canDelete",true);
+            o.put("canDownload",true);
+            o.put("type","track");
             o.put("url",url);
             return o;
         }
@@ -228,7 +258,7 @@ public class TrackWriter extends DirectoryRequestHandler {
     }
 
     TrackWriter(File trackdir,GpsService ctx) throws IOException {
-        super(RequestHandler.TYPE_TRACK,ctx,trackdir,"track",null);
+        super(Constants.TYPE_TRACK,ctx,trackdir,"track",null);
         this.trackdir=trackdir;
         this.updater=ctx.getMediaUpdater();
         parameterDescriptions.addParams(ENABLED_PARAMETER,PARAM_INTERVAL,PARAM_DISTANCE,PARAM_MINTIME,PARAM_LENGTH);

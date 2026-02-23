@@ -42,23 +42,26 @@ const toBase64=(val)=>{
 const DownloadButton=(props)=>{
     const hiddenA=useRef();
     const downloadFrame=useRef();
-    const saveLocal=(fileName)=>{
+    const saveLocal=async (fileName)=>{
         if (! hiddenA.current) return;
         if (!props.localData) return false;
         let data=props.localData;
         if (typeof data === 'function'){
             data=data();
         }
+        if (data instanceof Promise){
+            data=await data;
+        }
         let dataUrl="data:application/octet-stream;base64,"+toBase64(data);
-        if (window.avnav.android && window.avnav.android.dataDownload){
-           window.avnav.android.dataDownload(dataUrl,fileName,"application/octet-stream");
+        if (window.avnavAndroid && window.avnavAndroid.dataDownload){
+           window.avnavAndroid.dataDownload(dataUrl,fileName,"application/octet-stream");
         }
         else {
             hiddenA.current.href = dataUrl;
             hiddenA.current.click();
         }
     }
-    let {useDialogButton,url,localData,fileName,type,...forward}=props;
+    let {useDialogButton,url,localData,fileName,...forward}=props;
     let Bt = useDialogButton ? DB : Button;
     if (!url && ! localData) return null;
         return (
@@ -74,8 +77,12 @@ const DownloadButton=(props)=>{
                 {!localData && <iframe
                     className="downloadFrame"
                     onLoad={(ev) => {
-                        let txt = ev.target.contentDocument.body.textContent;
-                        if (!txt) return;
+                        let txt;
+                        const doc= ev.target.contentDocument;
+                        if (doc.body) txt=doc.body.textContent;
+                        if (!txt) {
+                            return;
+                        }
                         Toast(txt);
                     }}
                     src={undefined}
@@ -86,8 +93,10 @@ const DownloadButton=(props)=>{
                     close={useDialogButton?false:undefined}
                     onClick={(ev) => {
                         ev.stopPropagation();
-                        if (!url) {
-                            saveLocal(fileName);
+                        if (localData) {
+                            saveLocal(fileName).then(()=>{},(err)=>{
+                                Toast(err);
+                            });
                         }
                         else {
                             if (downloadFrame.current) {
@@ -113,7 +122,6 @@ DownloadButton.propTypes={
     className: PropTypes.string,
     useDialogButton: PropTypes.bool,
     fileName:  PropTypes.string,
-    type: PropTypes.string,
     onClick: PropTypes.func
 }
 

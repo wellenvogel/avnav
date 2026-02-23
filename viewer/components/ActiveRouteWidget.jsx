@@ -8,37 +8,53 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
+import routeobjects from "../nav/routeobjects";
+import Helper from '../util/helper';
+
+const SecondRow=({remain,eta,approach})=>{
+    return <div className={"secondRow"}>
+        {approach && <div className="icon"/>}
+        {(eta !== undefined) && <div className="routeEta">{eta}</div>}
+        <div>
+            <span className="routeRemain">{remain}</span>
+            <span className='unit'>nm</span>
+        </div>
+    </div>
+}
 
 const ActiveRouteWidget =(props)=>{
         if (!props.routeName && ! props.isEditing) return null;
         let classes = "activeRouteWidget";
-        if (props.isApproaching) classes += " approach ";
+        if (props.isApproaching && props.legacy) classes += " approach ";
         let display={
-            name:props.routeName,
+            name:routeobjects.nameToBaseName(props.routeName),
             remain: Formatter.formatDistance(props.remain),
-            eta: Formatter.formatTime(props.eta)
+            eta: Formatter.formatTime(props.eta),
+            next: Formatter.formatDirection(props.nextCourse),
         };
-        if (props.isAproaching){
-            display.next=Formatter.formatDirection(props.nextCourse);
-        }
+        const isServer=routeobjects.isServerName(props.routeName);
         const resizeSequence=useStringsChanged(display,props);
+        const small = (props.mode === "horizontal");
         return (
-            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={props.server === false}>
-                <div className="widgetData">
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={!isServer}>
+                <div className={Helper.concatsp("widgetData",small?"small":undefined)}>
                     <div className="routeName">{display.name}</div>
-                    <div>
+                    {small && <SecondRow eta={display.eta} remain={display.remain} />}
+                    {!small && <div className="routeRemain">
                         <span className="routeRemain">{display.remain}</span>
                         <span className='unit'>nm</span>
-                    </div>
-                    <div className="routeEta">{display.eta}</div>
-                    { props.isApproaching ?
+                    </div>}
+                    {!small && <SecondRow eta={display.eta} approach={props.isApproaching && ! props.legacy} />}
+                    { ! small && ( (props.isApproaching) ?
                         <div className="routeNext">
                             <span
                                 className="routeNextCourse">{display.next}</span>
                             <span className='unit'>&#176;</span>
                         </div>
                         : <div></div>
+                    )
                     }
+                    {(small  && props.isApproaching && ! props.legacy) && <div className="icon small"/>}
                 </div>
             </WidgetFrame>
         );
@@ -52,7 +68,8 @@ ActiveRouteWidget.propTypes={
     eta: PropTypes.objectOf(Date),
     remain: PropTypes.number,
     nextCourse: PropTypes.number,
-    isEditing: PropTypes.bool
+    isEditing: PropTypes.bool,
+    legacy: PropTypes.bool,
 };
 ActiveRouteWidget.storeKeys={
     isApproaching: keys.nav.route.isApproaching,
@@ -61,7 +78,12 @@ ActiveRouteWidget.storeKeys={
     remain: keys.nav.route.remain,
     nextCourse: keys.nav.route.nextCourse,
     isEditing: keys.gui.global.layoutEditing,
-    server: keys.nav.wp.server
 };
+ActiveRouteWidget.editableParameters={
+    'legacy':{type:'BOOLEAN',
+        displayName:'legacy',
+        default:false,
+        description:"color the complete widget depending on the target state instead of only a badge"}
+}
 
 export default ActiveRouteWidget;

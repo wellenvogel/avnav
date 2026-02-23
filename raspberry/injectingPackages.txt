@@ -1,0 +1,22 @@
+Injecting packages into image:
+#prepare binfmt (use ochartsng/docker/prepareAsRoot.sh)
+#as root
+img=.....img
+(1) raspi.sh mount $img
+(2) copy packages to raspi-mount/p2/root
+(3) chroot raspi-mount/p2
+(4) commands:
+apt update
+apt install ./root/...
+(5) if size is to small: - extend by e.g. 1200M
+./raspi2.sh extend $img 1200
+#will bring up gparted - enlarge part2 in UI
+
+(6) enable ssh
+systemctl enable ssh
+(7) disable raspi-config on boot
+systemctl disable userconfig
+(7.1) default passwd for pi
+passwd pi
+(8) prepare xui
+/usr/lib/avnav/raspberry/xui/setup.sh

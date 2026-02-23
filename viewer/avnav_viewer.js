@@ -30,35 +30,31 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 */
 
 import splitsupport from "./util/splitsupport";
-
-if (getParam('dimm')) avnav.testDim=true;
-
 import React from 'react';
 import propertyHandler from './util/propertyhandler';
 import App from './App.jsx';
 import keys from './util/keys.jsx';
 import globalStore from './util/globalstore.jsx';
-import base from './base.js';
+import base from './base.ts';
 import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
-import Api from './util/api.js';
+import Api from './util/api.impl.ts';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
-import AvNavVersion from './version.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
 import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
 import {createRoot} from "react-dom/client";
 import {loadJs, loadOrUpdateCss} from "./util/helper";
-import csswatch, {USERCSSID} from "./util/csswatch";
-
+import pluginmanager from "./util/pluginmanager";
+import {layoutLoader} from "./util/layouthandler";
+import {showParameterDialog} from "./components/ParameterDialog";
+import createExports from './exportmodules/provider';
 
 if (! window.avnav){
     window.avnav={};
 }
-
-window.avnav.api=Api;
-window.avnav.version=AvNavVersion;
+window.avnavLegacy=Api;
 
 
 function getParam(key)
@@ -69,7 +65,7 @@ function getParam(key)
     // Return the unescaped value minus everything starting from the equals sign or an empty string
     return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
 }
-
+const DEFAULT_NAVURL='/api';
 /**
  * main function called when dom is loaded
  *
@@ -103,18 +99,20 @@ export default function() {
         document.querySelector('html').style.height="100vh";
     }
 
-    if (getParam('log')) avnav.debugMode=true;
+    if (getParam('log')) window.avnav.debugMode=true;
     let navurl=getParam('navurl');
     if (navurl){
-        globalStore.storeData(keys.properties.navUrl,navurl,true);
+        globalStore.storeData(keys.gui.global.navUrl,navurl,true);
         globalStore.storeData(keys.properties.routingServerError,false,true);
     }
     else {
         globalStore.storeData(keys.properties.routingServerError,true,true);
+        globalStore.storeData(keys.gui.global.navUrl,DEFAULT_NAVURL,true);
     }
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
         globalStore.storeData(keys.properties.connectedMode,false,true);
+        globalStore.storeData(keys.gui.capabilities.canConnect,false,true);
     }
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
@@ -128,9 +126,6 @@ export default function() {
     if (getParam('splitMode') === 'true'){
         globalStore.storeData(keys.gui.global.splitMode,true);
     }
-    const usercss={id:USERCSSID,url:"/user/viewer/user.css"};
-    let lateLoads=[usercss, "/user/viewer/user.js"];
-    csswatch.addWatch(usercss.url,usercss.id,keys.properties.autoUpdateUserCss);
 
     const loadScripts=(loadList)=>{
         for (let i in  loadList) {
@@ -163,38 +158,20 @@ export default function() {
         })
         loadScripts(addList);
     }
-
-    const doLateLoads=(loadPlugins)=>{
+    const doLateLoads = async () => {
+        await createExports();
         createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...
-        setTimeout(function(){
+        setTimeout(function () {
             propertyHandler.incrementSequence();
-        },1000);
-
-        let scriptsLoaded=false;
-        //load the user and plugin stuff
-        if (loadPlugins) {
-            Requests.getJson("?request=plugins&command=list").then(
-                (json)=> {
-                    if (json.data) {
-                        json.data.forEach((plugin)=> {
-                            if (plugin.js) lateLoads.push(plugin.js);
-                            if (plugin.css) lateLoads.push(plugin.css);
-                        })
-                    }
-                    if (! scriptsLoaded)loadScripts(lateLoads);
-                    scriptsLoaded=true;
-                }
-            ).catch(
-                (error)=> {
-                    Toast("unable to load plugin data: " + error);
-                    if (! scriptsLoaded) loadScripts(lateLoads);
-                }
-            );
+        }, 1000);
+        await layoutLoader.init();
+        try {
+            await pluginmanager.start();
+        } catch (error) {
+            Toast("unable to load plugin/user data: " + error);
         }
-        else{
-            loadScripts(lateLoads);
-        }
+        pluginmanager.setDialogStarter(showParameterDialog);
     };
     //register some widget definitions
     registerRadial();
@@ -206,13 +183,17 @@ export default function() {
     for (let k in keys.gui.capabilities){
         falseCapabilities[k]=false;
     }
-    Requests.getJson("?request=capabilities").then((json)=>{
+    Requests.getJson({
+        request:'api',
+        type:'config',
+        command:'capabilities'
+    }).then(async (json)=>{
         let capabilities=assign({},falseCapabilities,json.data);
         globalStore.storeMultiple(capabilities,keys.gui.capabilities);
-        doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
-    }).catch((error)=>{
+        await doLateLoads();
+    }).catch(async (error)=>{
         globalStore.storeMultiple(falseCapabilities,keys.gui.capabilities);
-        doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
+        await doLateLoads();
     });
     base.log("avnav loaded");
 };

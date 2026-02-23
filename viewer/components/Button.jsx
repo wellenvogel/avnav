@@ -3,11 +3,14 @@ import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import {useStore} from "../hoc/Dynamic";
 import Store from "../util/store";
+import {injectav, setav} from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const Button = (props) => {
     useKeyEventHandlerPlain(props.name, "button", (component, action) => {
         if (props.onClick && !props.disabled) props.onClick();
     });
+    const dialogContext=useDialogContext();
     const spanRef = useCallback((item) => {
         if (!item) return;
         /* very dirty workaround for button images not showing up
@@ -34,6 +37,12 @@ const Button = (props) => {
     let add = {};
     if (disabled) {
         add.disabled = "disabled";
+    }
+    if (forward.onClick){
+        const click=forward.onClick;
+        forward.onClick=(ev)=>{
+            click(setav(ev,{dialogContext:dialogContext}));
+        }
     }
     return (
         <button {...forward} {...add} className={className}>

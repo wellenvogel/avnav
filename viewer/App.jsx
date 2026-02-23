@@ -1,8 +1,8 @@
 //avnav (C) wellenvogel 2019
 
-import React, {Component, createRef, useEffect} from 'react';
+import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history.js';
-import Dynamic from './hoc/Dynamic.jsx';
+import Dynamic from './hoc/Dynamic.tsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
@@ -21,16 +21,15 @@ import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
 import {
-    DialogContext,
-    setGlobalContext, showPromiseDialog,
-    useDialog
+    DialogContext, DialogDisplay,
+    showPromiseDialog
 } from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
-import LayoutHandler, {layoutLoader} from './util/layouthandler.js';
+import LayoutHandler from './util/layouthandler.js';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
@@ -53,8 +52,11 @@ import mapholder from "./map/mapholder";
 import 'drag-drop-touch';
 import {ConfirmDialog} from "./components/BasicDialogs";
 import PropTypes from "prop-types";
-import Helper from "./util/helper";
-
+import Helper, {avNavVersion} from "./util/helper";
+import {HistoryContext, useHistory} from "./components/HistoryProvider";
+import {RouteSyncDialog} from "./components/RouteInfoHelper";
+import {PAGEIDS} from "./util/pageids";
+import {useDialogContext} from "./components/DialogContext";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -84,75 +86,87 @@ class Other extends React.Component{
 }
 
 
-class MainWrapper extends React.Component{
-    constructor(props){
-        super(props);
-    }
-    render(){
-        return <MainPage {...this.props}/>
-    }
-    componentDidMount(){
-        this.props.history.reset(); //reset history if we reach the mainpage
-    }
+const MainWrapper=(props)=>{
+    const history=useHistory();
+    useEffect(()=>{
+        history.reset();
+    },[]);
+    return <MainPage {...props}/>
 }
 MainWrapper.propTypes=MainPage.propTypes;
 
 const pages={
-    mainpage: MainWrapper,
-    infopage: InfoPage,
-    gpspage: GpsPage,
-    aispage: AisPage,
-    addonpage:AddOnPage,
-    addresspage:AddressPage,
-    statuspage:StatusPage,
-    wpapage:WpaPage,
-    downloadpage:DownloadPage,
-    settingspage:SettingsPage,
-    navpage: NavPage,
-    editroutepage:EditRoutePage,
-    warningpage:WarningPage,
-    viewpage:ViewPage,
-    addonconfigpage: AddonConfigPage,
-    importerpage: ImporterPage
+    [PAGEIDS.MAIN]: MainWrapper,
+    [PAGEIDS.INFO]: InfoPage,
+    [PAGEIDS.GPS]: GpsPage,
+    [PAGEIDS.AIS]: AisPage,
+    [PAGEIDS.ADDON]:AddOnPage,
+    [PAGEIDS.ADDR]:AddressPage,
+    [PAGEIDS.STATUS]:StatusPage,
+    [PAGEIDS.WPA]:WpaPage,
+    [PAGEIDS.DOWNLOAD]:DownloadPage,
+    [PAGEIDS.SETTINGS]:SettingsPage,
+    [PAGEIDS.NAV]: NavPage,
+    [PAGEIDS.ROUTE]:EditRoutePage,
+    [PAGEIDS.WARNING]:WarningPage,
+    [PAGEIDS.VIEW]:ViewPage,
+    [PAGEIDS.ADDCFG]: AddonConfigPage,
+    [PAGEIDS.IMPORT]: ImporterPage
 };
-class Router extends Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        let Page=pages[this.props.location];
-        if (Page === undefined){
-            Page=Other;
+const Router = (props) => {
+    const history = useHistory();
+    const dialogContext = useDialogContext();
+    const connectedMode=useRef(false);
+    const checkRoutes=useCallback(()=>{
+        const current=globalStore.getData(keys.properties.connectedMode);
+        if (current != connectedMode.current){
+            if (current){
+                dialogContext.showDialog(()=><RouteSyncDialog
+                    deleteLocal={false}
+                />)
+            }
+            connectedMode.current=current;
         }
-        let className="pageFrame "+ (this.props.nightMode?"nightMode":"");
-        let style={};
-        if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
-        let dimStyle={opacity: 0.5};
-        return <div className={className}>
-            {this.props.dim ?
-                <div
-                    className="dimm"
-                    style={dimStyle}
-                    onClick={()=>Dimmer.trigger()}
-                    />
-                :null}
-                <Page
-                    style={style}
-                    options={this.props.options}
-                    location={this.props.location}
-                    history={this.props.history}
-                    small={this.props.smallDisplay}
-                    isEditing={this.props.isEditing}
-                    windowDimensions={this.props.windowDimensions}
-                />
-            </div>
+    })
+    useEffect(()=>{
+        globalStore.register(checkRoutes,keys.properties.connectedMode);
+        return ()=>globalStore.deregister(checkRoutes);
+    })
+    useEffect(()=>{
+        checkRoutes();
+    })
+    let Page = pages[props.location];
+    if (Page === undefined) {
+        Page = Other;
     }
+    let className = "pageFrame " + (props.nightMode ? "nightMode" : "");
+    let style = {};
+    if (props.nightMode) style['opacity'] = globalStore.getData(keys.properties.nightFade) / 100;
+    let dimStyle = {opacity: 0.5};
+    return <div className={className}>
+        {props.dim ?
+            <div
+                className="dimm"
+                style={dimStyle}
+                onClick={() => Dimmer.trigger()}
+            />
+            : null}
+        <Page
+            id={props.location}
+            history={history}
+            style={style}
+            options={props.options}
+            location={props.location}
+            small={props.smallDisplay}
+            isEditing={props.isEditing}
+            windowDimensions={props.windowDimensions}
+        />
+    </div>
 }
-Router.propTypes={
+Router.propTypes = {
     location: PropTypes.string,
     isEditing: PropTypes.bool,
     windowDimensions: PropTypes.object,
-    history: PropTypes.instanceOf(History),
     options: PropTypes.object,
     dim: PropTypes.bool,
     nightMode: PropTypes.bool,
@@ -174,28 +188,13 @@ const ButtonSizer=(props)=>{
 let lastError={
 };
 
-let mainShowDialog=undefined;
 
-const GlobalDialog=()=>{
-    const [DialogDisplay, setDialog] = useDialog();
-    setGlobalContext(undefined,setDialog);
-    mainShowDialog=setDialog;
-    useEffect(() => {
-        return ()=>{
-            setGlobalContext();
-            mainShowDialog=undefined;
-        }
-    }, []);
-    return <DialogDisplay/>
-}
-
-const MainBody = ({location, options, history, nightMode}) => {
-
+const MainBody = ({ history, nightMode}) => {
+    const location=history.currentLocation(true);
     return (
-        <DialogContext
-            showDialog={mainShowDialog}
-        >
-            <GlobalDialog/>
+        <HistoryContext history={history}>
+        <DialogContext>
+            <DialogDisplay/>
             <DynamicRouter
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,
@@ -206,14 +205,19 @@ const MainBody = ({location, options, history, nightMode}) => {
                     smallDisplay: keys.gui.global.smallDisplay,
                     ...keys.gui.capabilities
                 }}
-                location={location}
-                options={options}
+                location={location.location}
+                options={location.options}
                 history={history}
                 nightMode={nightMode}
             />
         </DialogContext>
+        </HistoryContext>
     )
 };
+MainBody.propTypes = {
+    history: PropTypes.instanceOf(History),
+    nightMode: PropTypes.bool,
+}
 
 class App extends React.Component {
     appRef=createRef();
@@ -228,26 +232,23 @@ class App extends React.Component {
         this.buttonSizer=null;
         this.serverVersion=globalStore.getData(keys.nav.gps.version); //maybe we should start with the compiled version
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
-        //make the android API available as avnav.android
         if (window.avnavAndroid) {
             base.log("android integration enabled");
             globalStore.storeData(keys.gui.global.onAndroid, true, true);
-            avnav.android = window.avnavAndroid;
             globalStore.storeData(keys.properties.routingServerError, false, true);
             globalStore.storeData(keys.properties.connectedMode, true, true);
-            avnav.version = avnav.android.getVersion();
-            avnav.android.applicationStarted();
+            window.avnavAndroid.applicationStarted();
             const receiveAndroidEvent = (key, id) => {
                 try {
                     //inform the android part that we noticed the event
-                    avnav.android.acceptEvent(key, id);
+                    window.avnavAndroid.acceptEvent(key, id);
                 } catch (e) {
                 }
                 if (key == 'backPressed') {
                     if (! globalStore.getData(keys.gui.global.ignoreAndroidBack)) {
                         let currentPage = this.history.currentLocation()
                         if (currentPage == "mainpage") {
-                            avnav.android.goBack();
+                            window.avnavAndroid.goBack();
                             return;
                         }
                         this.history.pop();
@@ -263,7 +264,7 @@ class App extends React.Component {
                 }
                 AndroidEventHandler.handleEvent(key, id);
             };
-            avnav.android.receiveEvent = receiveAndroidEvent;
+            window.avnavAndroid.receiveEvent = receiveAndroidEvent;
             splitsupport.subscribe('android', (ev) => {
                 receiveAndroidEvent(ev.key, ev.param);
             })
@@ -301,7 +302,8 @@ class App extends React.Component {
                     MapHolder.setImageStyles(data);
                 })
                 .catch((error) => {
-                    Toast("unable to load user image definitions: " + error);
+                    const canConnect=globalStore.getData(keys.gui.capabilities.canConnect);
+                    if (canConnect !== false) Toast("unable to load user image definitions: " + error);
                 }))
         );
         this.pendingActions.push(Requests.getJson("keys.json", {useNavUrl: false, checkOk: false})
@@ -338,10 +340,23 @@ class App extends React.Component {
                 console.log("splitkeys.json: "+error);
             }
         ));
-        this.pendingActions.push(LayoutHandler.loadStoredLayout(true)
-            .then((layout)=>{
-            })
-            .catch((error)=>{Toast(error)})
+        this.pendingActions.push(
+            new Promise(resolve => {
+                const action=()=>LayoutHandler.loadStoredLayout(true)
+                    .then((layout)=>{
+                        return(layout);
+                    })
+                    .catch((error)=>{Toast(error);})
+                if (globalStore.getData(keys.gui.global.pluginLoadingDone) ){
+                    action().then((data)=>{resolve(data)});
+                }
+                else{
+                        const callback=globalStore.register(()=>{
+                            globalStore.deregister(callback);
+                            action().then((rs)=>resolve(rs));
+                        },keys.gui.global.pluginLoadingDone);
+                    }
+                })
         );
         let lastChart=mapholder.getLastChartKey();
         if (startpage === 'mainpage' && globalStore.getData(keys.properties.startNavPage) && lastChart){
@@ -426,7 +441,7 @@ class App extends React.Component {
     }
     newDeviceHandler(){
         try{
-            let devData=avnav.android.getAttachedDevice();
+            let devData=window.avnavAndroid.getAttachedDevice();
             if (! devData) return;
             let config=JSON.parse(devData);
             if (config.typeName && config.initialParameters){
@@ -509,7 +524,7 @@ class App extends React.Component {
     render(){
         if (this.state.error){
             LeaveHandler.stop();
-            let version=(window.avnav||{}).version;
+            let version=avNavVersion();
             let etext=`VERSION:${version}\nERROR:${lastError.error}\n${lastError.stack}\n${lastError.componentStack}`;
             let etextData='data:text/plain;charset=utf-8,'+encodeURIComponent(etext);
             return <div className="errorDisplay">
@@ -558,7 +573,7 @@ class App extends React.Component {
                 history={this.history}
                 nightMode={this.props.nightMode}
                 />
-            { ! (avnav.android || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
+            { ! (window.avnavAndroid || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
                 />:

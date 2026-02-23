@@ -1,10 +1,12 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
-import {DialogButtons, DialogFrame, showDialog, useDialogContext} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 import {EditDialog} from "./EditDialog";
 import Toast from "./Toast";
+import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const LayoutFinishedDialog=(props)=>{
     const dialogContext=useDialogContext();
@@ -13,7 +15,11 @@ const LayoutFinishedDialog=(props)=>{
             case 1: {
                 if (LayoutHandler.isEditing()) {
                     LayoutHandler.activateLayout();
-                    const name = LayoutHandler.getName();
+                    let name = LayoutHandler.getName();
+                    if (! Helper.startsWith(name,layoutLoader.getUserPrefix())){
+                        throw new Error("invalid layout name for editing "+name);
+                    }
+                    name=name.substring(layoutLoader.getUserPrefix().length);
                     const layout = LayoutHandler.getLayout();
                     layoutLoader.uploadLayout(name, layout, true)
                         .then(() => {

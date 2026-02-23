@@ -51,7 +51,10 @@ const load=(storeKeys,clone)=>{
     };
     return rt;
 };
-
+const isActive=(route,activeName)=>{
+    if (!route || ! activeName) return false;
+    return (route.name === activeName);
+}
 const write=(storeKeys,data,opt_omitCallbacks)=>{
     let writeKeys=assign({},storeKeys);
     delete writeKeys.useRhumbLine;
@@ -386,11 +389,22 @@ class RouteEdit{
         if (!data.route) return [];
         return data.route.getRoutePoints(selectedIndex,data.useRhumbLine);
     }
-    getRouteName(){
+
+    isActiveRoute(){
         let data=load(this.storeKeys);
-        let [route]=StateHelper.getRouteIndexFlag(data);
-        if (!route) return;
-        return data.route.name;
+        return StateHelper.isActiveRoute(data);
+    }
+    isHandling(route){
+        if (! route)return false;
+        let data=load(this.storeKeys);
+        return StateHelper.isSameRoute(data,route);
+    }
+    isHandlingName(name){
+        if (! name) return false;
+        let data=load(this.storeKeys);
+        let [route,,]=StateHelper.getRouteIndexFlag(data);
+        if (route && route.name === name) return true;
+        return false;
     }
     getIndexFromPoint(point,opt_bestMatching){
         let data=load(this.storeKeys);
@@ -402,13 +416,14 @@ class RouteEdit{
     }
     getRoute(){
         let data=load(this.storeKeys);
-        return data.route;
+        return StateHelper.route(data);
     }
     isRouteWritable(){
         if (! this.writable) return;
         let data=load(this.storeKeys);
-        if (!data.route) return false;
-        if (data.route.server && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
+        const route=StateHelper.route(data);
+        if (! route) return false;
+        if (route.isServer() && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
         return true;
     }
     hasRoute(){
@@ -488,13 +503,13 @@ export class StateHelper{
     static getRouteIndexFlag(state){
         if (state.leg) {
             if (state.leg.isRouting()) {
-                return [state.leg.currentRoute, state.index!==undefined?state.index:-1, state.leg.getRouteName() === state.activeName];
+                return [state.leg.currentRoute, state.index!==undefined?state.index:-1, isActive(state.leg.getRoute(),state.activeName)];
             }
             return [undefined,-1,false];
         }
         else{
             if (state.route){
-                return [state.route,state.index!==undefined?state.index:-1,state.route.name == state.activeName]
+                return [state.route,state.index!==undefined?state.index:-1,isActive(state.route,state.activeName)]
             }
         }
         return [undefined,-1,false];
@@ -543,31 +558,34 @@ export class StateHelper{
         if (! StateHelper.hasActiveTarget(state)) return false;
         return state.leg.getCurrentTargetIdx() == state.index;
     }
-
+    static route(state){
+        const [route]=StateHelper.getRouteIndexFlag(state);
+        return route;
+    }
     static hasRoute(state){
-        if (state.route) return true;
-        if (! state.leg) return false;
-        return state.leg.hasRoute();
+        return !!StateHelper.route(state);
     }
 
     static anchorWatchDistance(state){
         if (! state.leg) return;
         return state.leg.anchorWatch();
     }
-    static routeName(state){
-        if (state.route ) return state.route.name;
-        if (state.leg){
-            return state.leg.getRouteName()
-        }
-    }
+
     static isServerRoute(state){
-        const route=state.route||(state.leg||{}).route;
+        const route=StateHelper.route(state);
         if (!route) return false;
-        return route.server;
+        return route.isServer();
     }
     static isServerLeg(state){
         if (! state.leg) return false;
         return state.leg.server;
+    }
+    static isSameRoute(state,route){
+        const sroute=StateHelper.route(state);
+        if (!!sroute !== !!route) return false;
+        if (! sroute) return false;
+        return sroute.name === route.name;
+
     }
 
 }

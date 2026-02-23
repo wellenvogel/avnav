@@ -26,6 +26,9 @@
 ###############################################################################
 
 import glob
+import gzip
+import io
+import os
 
 import avnav_handlerList
 from avnav_manager import AVNHandlerManager
@@ -482,24 +485,69 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     except Exception as e:
       AVNLog.error("exception in Trackwriter: %s", traceback.format_exc())
 
+  def _checkAndCloseCurrent(self,name):
+      if name.endswith(self.GPXEXT):
+          if self.fname == name[:-4]:
+              AVNLog.info("deleting current track!")
+              with self.tracklock:
+                  self.track = []
+                  self.modifySequence = time.monotonic()
+              with self.filelock:
+                  if self.currentFile is not None:
+                      self.currentFile.close()
+                      self.currentFile = None
+              return True
+      return False
 
   def handleDelete(self, name):
     rt=super(AVNTrackWriter, self).handleDelete(name)
+    self._checkAndCloseCurrent(name)
     if name.endswith(self.GPXEXT):
-      if self.fname == name[:-4]:
-        AVNLog.info("deleting current track!")
-        with self.tracklock:
-          self.track=[]
-          self.modifySequence=time.monotonic()
-        with self.filelock:
-          if self.currentFile is not None:
-            self.currentFile.close()
-            self.currentFile=None
       try:
         super().handleDelete(re.sub(r"%s$"%self.GPXEXT,self.WEXT,name))
       except:
         pass
     return rt
+
+  def handleDownload(self, name, handler, requestparam):
+      if name is None:
+          raise Exception("missing name")
+      name = self.checkName(name)
+      filename = os.path.join(self.baseDir, name)
+      if not os.path.exists(filename):
+          raise Exception("file %s not found" % filename)
+      if name.endswith(".nmea") or name.endswith(".nmea.gz"):
+          lastBytes = AVNUtil.getHttpRequestParam(requestparam, 'maxBytes')
+          if lastBytes is None:
+              return AVNFileDownload(filename)
+          # if maxBytes is set we should send the data decompressed
+          if not name.endswith(".gz"):
+              return AVNFileDownloadLB(filename, lastBytes=lastBytes,mimeType='text/plain')
+          stream=gzip.open(filename, "rb")
+          stream.seek(-int(lastBytes),io.SEEK_END)
+          return AVNStreamDownload(stream,mimeType='text/plain',size=None)
+      else:
+          return AVNFileDownload(filename)
+
+      return super().handleDownload(name, handler, requestparam)
+
+  def handleRename(self, name, newName, requestparam):
+      name = self.checkName(name)
+      newName = self.checkName(newName)
+      rt=self._rename(name, newName)
+      self._checkAndCloseCurrent(name)
+      if name.endswith(self.GPXEXT):
+        wname= re.sub(r"%s$"%self.GPXEXT,self.WEXT,name)
+        wNewName=re.sub(r"%s$"%self.GPXEXT,self.WEXT,newName)
+        try:
+            self._rename(wname, wNewName,force=True)
+        except:
+            pass
+      return rt
+
+
+
+
 
   LISTED_EXTENSIONS=['.nmea','.nmea.gz','.gpx']
   def handleList(self, handler=None):

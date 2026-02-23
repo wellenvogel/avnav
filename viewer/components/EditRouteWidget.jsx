@@ -24,14 +24,13 @@ const EditRouteWidget = (props) => {
             </WidgetFrame>
         )
     }
-    let rname = route.name;
     let numPoints = route.points.length;
     let len = route.computeLength(0, props.useRhumbLine);
     let remain = isActive ? props.remain : undefined;
     let eta = isActive ? props.eta : undefined;
     return (
-        <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
-            <div className="routeName widgetData">{rname}</div>
+        <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} disconnect={!route.isServer()}>
+            <div className="routeName widgetData">{route.displayName()}</div>
             <div className="widgetData">
                 <span className="label">PTS:</span>
                 <span className="routeInfo">{Formatter.formatDecimal(numPoints, 3)}</span>

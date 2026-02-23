@@ -23,7 +23,7 @@
  ###############################################################################
  * select an icon
  */
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import PropTypes from "prop-types";
 import {Checkbox} from "./Inputs";
 import React,{useEffect, useState} from "react";
@@ -35,6 +35,8 @@ import Toast from "./Toast";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {SelectList} from "./BasicDialogs";
+import {createItemActions} from "./FileDialog";
+import {useDialogContext} from "./DialogContext";
 
 const IMAGES_FLAG=1;
 const SOURCES=[
@@ -77,8 +79,9 @@ export const IconDialog=(props)=>{
         SOURCES.forEach((src) => {
             const active=!!(sources & src.flag);
             if (! active) return;
-            Requests.getJson("", undefined, {
-                request: 'list',
+            Requests.getJson( {
+                request:'api',
+                command: 'list',
                 type: src.type
             })
                 .then((data) => {
@@ -130,7 +133,7 @@ export const IconDialog=(props)=>{
                     }}/>
             })}
         </DialogRow>
-        <SelectList list={iconList} onClick={(icon)=>{
+        <SelectList list={iconList} sort={true} onClick={(icon)=>{
             dialogContext.closeDialog();
             onChange(icon);
         }}/>
@@ -151,12 +154,13 @@ export const IconDialog=(props)=>{
         <UploadHandler
             local={false}
             type={'images'}
-            doneCallback={(param)=>loadIcons(param.param.name,'images')}
+            doneCallback={(param)=>loadIcons(param.name,'images')}
             errorCallback={(err) => {
                 if (err) Toast(err);
             }}
             uploadSequence={uploadSequence}
-            checkNameCallback={(name)=>{
+            checkNameCallback={(file)=>{
+                const name=file.name;
                 return new Promise((resolve,reject)=>{
                     if (contains(iconList, name, "name")) {
                         reject(name + " already exists");

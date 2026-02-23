@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.appapi;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_ADDON;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -10,18 +12,19 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
-public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
+public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAware{
+
 
     public static class AddonInfo implements AvnUtil.IJsonObect {
         public String name;
@@ -47,6 +50,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         public AddonInfo(String name){
             this.name=name;
         }
+
         static AddonInfo fromJson(JSONObject o) throws JSONException {
             AddonInfo rt=new AddonInfo(o.getString("name"));
             rt.title=o.optString("title",null);
@@ -69,14 +73,21 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         this.handler=handler;
     }
 
-    public void addExternalAddons(String name,List<AddonInfo> addons){
+    @Override
+    public void removePluginItems(String pluginName, boolean finalCleanup) {
         synchronized (externalAddons){
-            externalAddons.put(name,addons);
+            externalAddons.remove(pluginName);
         }
     }
-    public void removeExternalAddons(String name){
+
+    @Override
+    public void setPluginItems(String pluginName, List<PluginItem> items) throws Exception {
+        ArrayList<AddonInfo> addons=new ArrayList<>();
+        for (PluginItem pi:items){
+            addons.add(AddonInfo.fromJson(pi.toJson()));
+        }
         synchronized (externalAddons){
-            externalAddons.remove(name);
+            externalAddons.put(pluginName,addons);
         }
     }
 
@@ -87,7 +98,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         throw new Exception("not implemented");
     }
 
@@ -134,6 +145,21 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         return rt;
     }
 
+    @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        JSONArray items=handleList(uri,serverInfo);
+        for (int i=0;i<items.length();i++){
+            try{
+                JSONObject item=items.getJSONObject(i);
+                if (item.has("name") && name.equals(item.getString("name"))){
+                    return item;
+                }
+            }catch (Exception e){}
+        }
+        return null;
+    }
+
     private ArrayList<AddonInfo> getAddons(boolean check){
         ArrayList<AddonInfo> rt=new ArrayList<AddonInfo>();
         SharedPreferences prefs=AvnUtil.getSharedPreferences(context);
@@ -154,8 +180,8 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
                             else url="viewer/"+url;
                             INavRequestHandler nrh = handler.getPrefixHandler(url);
                             try {
-                                ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler, "GET");
-                                if (resp == null) {
+                                ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler, "GET",new HashMap<>() );
+                                if (resp == null || resp.getStatusCode() != 200) {
                                     throw new Exception("not found");
                                 }
                                 resp.getData().close();
@@ -219,6 +245,11 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         }
     }
 
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
     private String computeName(String url, String icon, String title) throws NoSuchAlgorithmException {
         MessageDigest digest=java.security.MessageDigest.getInstance("MD5");
         if (url != null) digest.update(url.getBytes());
@@ -229,8 +260,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        String command= AvnUtil.getMandatoryParameter(uri,"command");
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("list")){
             return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
@@ -269,17 +299,11 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             saveAddons(addons);
             return RequestHandler.getReturn();
         }
-        if (command.equals("delete")){
-            String name=AvnUtil.getMandatoryParameter(uri,"name");
-            boolean rt=handleDelete(name,uri);
-            if (rt) return RequestHandler.getReturn();
-            else return RequestHandler.getErrorReturn("delete failed");
-        }
         return RequestHandler.getErrorReturn("unknown command "+command);
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws FileNotFoundException {
         return null;
     }
 
@@ -287,6 +311,11 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     @Override
     public String getPrefix() {
         return PREFIX;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_ADDON;
     }
 
 

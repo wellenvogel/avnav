@@ -3,8 +3,7 @@ import NavData from '../nav/navdata.js';
 import {
     DialogButtons,
     DialogFrame, showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -17,6 +16,7 @@ import MapHolder from '../map/mapholder';
 import NavCompute from "../nav/navcompute";
 import {ConfirmDialog} from "./BasicDialogs";
 import PropTypes from "prop-types";
+import {useDialogContext} from "./DialogContext";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);

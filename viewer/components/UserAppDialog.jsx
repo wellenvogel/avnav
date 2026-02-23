@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import {showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
+import {showPromiseDialog} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
@@ -14,6 +14,8 @@ import keys from "../util/keys";
 import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
+import {createItemActions} from "./FileDialog";
+import {useDialogContext} from "./DialogContext";
 
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
@@ -21,7 +23,11 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     const [uploadSequence,setUploadSequence]=useState(0);
     const [userFiles,setUserFiles]=useState([]);
     const listFiles=(name)=>{
-        Requests.getJson("?request=list&type=user")
+        Requests.getJson({
+            request:'api',
+            type:'user',
+            command:'list'
+        })
             .then((data) => {
                 let nuserFiles = [];
                 if (data.items) {
@@ -45,18 +51,21 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     useEffect(() => {
         listFiles();
     }, []);
+    const uploadAction=createItemActions('user').getUploadAction().copy({
+        preCheck: (userData, name)=>{
+            if (! name) throw new Error("no file name");
+            if (Helper.getExt(name)!=='html') throw new Error("only HTML files");
+            return {name:name};
+        },
+        withDialog:true
+    });
     const checkNameFunction=(name)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>
         <UploadHandler
             uploadSequence={uploadSequence}
             type={'user'}
-            checkNameCallback={(name)=>{
-                if (name && name.substring(name.length-4).toUpperCase() === 'HTML') {
-                    let err=checkNameFunction(name);
-                    if (err) return err;
-                    return {name: name}
-                }
-                return "only files of type html allowed";
+            checkNameCallback={async (file)=>{
+                return uploadAction.checkFile(file,dialogContext);
             }}
             doneCallback={(v)=>listFiles(v.param.name)}
             errorCallback={(err)=>Toast(err)}
@@ -114,7 +123,11 @@ const TranslateUrlDialog=({resolveFunction,current})=>{
     useEffect(() => {
         (async ()=> {
             try {
-                const data = await Requests.getJson("?request=list&type=user");
+                const data = await Requests.getJson({
+                    request:'api',
+                    command:'list',
+                    type:'user'
+                });
                 if (data.items) {
                     data.items.forEach((el) => {
                         if (Helper.getExt(el.name) === 'html') {
@@ -256,7 +269,7 @@ const UserAppDialog = (props) => {
                 <Input
                     dialogRow={true}
                     label="title"
-                    value={currentAddon.title}
+                    value={currentAddon.title?currentAddon.title:""}
                     minSize={50}
                     maxSize={100}
                     onChange={(value) => {
@@ -319,8 +332,9 @@ const UserAppDialog = (props) => {
                             return;
                         }
                         try{
-                            const data = await Requests.getHtmlOrText("", {useNavUrl:true}, {
-                                request: 'download',
+                            const data = await Requests.getHtmlOrText({
+                                request:'api',
+                                command: 'download',
                                 type: 'user',
                                 name: name,
                                 noattach: true
@@ -329,8 +343,8 @@ const UserAppDialog = (props) => {
                                 data={data}
                                 fileName={name}
                                 title={"Edit "+name}
-                                saveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
-                                resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
+                                saveFunction={async (mData)=> await uploadFromEdit(name,mData,true,'user')}
+                                resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true,'user')}
                             />)
                         }catch (e){
                             if (e) Toast(e);
@@ -361,6 +375,7 @@ const UserAppDialog = (props) => {
                 DBCancel(),
                 DBOk(() => {
                         const addon={...currentAddon, ...props.fixed};
+                        if (!addon.title) addon.title = undefined; //avoid empty/null title
                         Addons.updateAddon(addon.name, addon.url, addon.icon, addon.title, addon.newWindow)
                             .then((data) => {
                                 props.resolveFunction(data);

@@ -31,51 +31,49 @@ import {
     DialogButtons,
     DialogFrame,
     DialogRow,
-    promiseResolveHelper,
-    useDialogContext
+    promiseResolveHelper
 } from "./OverlayDialog";
 import {Input, valueMissing} from "./Inputs";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import formatter from "../util/formatter";
+import {useDialogContext} from "./DialogContext";
 
 export const nameProposal=(prefix)=>{
     const dt=new Date();
     return (prefix||'')+formatter.formatDateTime(dt).replace(/[: /]/g,'');
 }
-export const shrinkName=(name,fixedPrefix,fixedExt)=>{
-    if (!name) return name;
-    let rt=name;
-    if (fixedPrefix) {
-        if (Helper.startsWith(rt, fixedPrefix)) rt=rt.substring(fixedPrefix.length);
-    }
-    if (fixedExt){
-        if (Helper.endsWith(rt,"."+fixedExt)){
-            rt=rt.substring(0,rt.length-fixedExt.length-1)
-        }
-    }
-    return rt;
-}
 
-export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName}) => {
-    const [name, setName] = useState(()=>shrinkName(iname||'',fixedPrefix,fixedExt));
+export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension}) => {
+    const fixedExtRef=useRef(undefined);
+    if (keepExtension && fixedExtRef.current === undefined) {
+        let [fn,ext] = Helper.getNameAndExt(iname || '');
+        fixedExtRef.current = ext||'';
+    }
+    const removeFixedExt=useCallback((name)=>{
+        if (! name || ! keepExtension) return name;
+        if (! fixedExtRef.current) return name;
+        if (Helper.getExt(name) !== fixedExtRef.current) return name;
+        return name.substring(0,name.length-fixedExtRef.current.length-1);
+    },[keepExtension]);
+    const fullName=useCallback((name)=>{
+        if (!fixedExtRef.current ) return name;
+        return name+'.'+fixedExtRef.current;
+    },[])
+    const [name, setName] = useState(iname ||'');
     const [error, setError] = useState();
     const [proposal,setProposal]=useState();
     const [info,setInfo]=useState();
     const dialogContext = useDialogContext();
     const parametersFromCheck=useRef();
     const titlevalue = title ? title : (iname ? "Modify FileName" : "Create FileName");
-    const completeName = (nn) => {
-        if (!fixedExt) return (fixedPrefix?fixedPrefix:'')+nn;
-        return (fixedPrefix?fixedPrefix:'')+nn + "." + fixedExt;
-    }
     let mandatoryFunction=false;
     if (mandatory){
         if (typeof(mandatory) === 'function') mandatoryFunction=mandatory;
         else mandatoryFunction=(name)=>(name === undefined || name === null || ! name);
     }
     useEffect(() => {
-        checkNameAndSet(completeName(name));
+        checkNameAndSet(name);
     }, []);
     const checkResult=useCallback((res)=>{
         if (! res){
@@ -89,7 +87,9 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
                 if (! res.error){
                     setError(undefined);
                     setProposal(undefined);
-                    if ('name' in res){setName(res.name)}
+                    if ('name' in res){
+                        setName(res.name)
+                    }
                     parametersFromCheck.current=res;
                 }
                 else {
@@ -122,41 +122,44 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
           name:'reset',
           label:'Clear',
           onClick: ()=>{
-              setName('');
-              checkNameAndSet(completeName(''));
+              const nn=fullName('');
+              setName(nn);
+              checkNameAndSet(nn);
           },
           close: false
         },
         DBCancel(),
         DBOk(() => {
-            promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, {name:completeName(name)});
+            promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, {name:name});
         }, {close: false, disabled: valueMissing(mandatoryFunction, name) || !!error})
     ];
     if (proposal){
         buttonList.splice(0,0,{
-            name: 'Propose',
+            name: 'propose',
             label: 'Propose',
             onClick: ()=>{
-                let pname=shrinkName(proposal,fixedPrefix,fixedExt);
+                let pname=proposal;
                 setName(pname);
-                checkNameAndSet(completeName(pname));
+                checkNameAndSet(pname);
             },
             close:false
         })
     }
+    const fixedSuffix=fixedExtRef.current?fixedExtRef.current:fixedExt;
     return <DialogFrame className={"itemNameDialog"} title={titlevalue}>
         <Input
             dialogRow={true}
-            value={name}
+            value={removeFixedExt(name)}
             onChange={(nv) => {
+                nv=fullName(nv);
                 setName(nv);
-                checkNameAndSet(completeName(nv));
+                checkNameAndSet(nv);
             }}
             className={error?'error':undefined}
             mandatory={mandatoryFunction}
             label={fixedPrefix?fixedPrefix:''}
         >
-            {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
+            {fixedSuffix && <span className={"ext"}>.{fixedSuffix}</span>}
         </Input>
         {error && <DialogRow className={"errorText"}><span className={'inputLabel'}></span>{error}</DialogRow>}
         {info && <DialogRow className={"info"}><span className={'inputLabel'}>{info}</span> </DialogRow>}
@@ -170,9 +173,11 @@ ItemNameDialog.propTypes={
     checkName: PropTypes.func, //if provided: return an error text if the name is invalid
                                //can also return an object with error, proposal to propose a new name
                                //can return a promise - resolve means ok, reject like return object/string
-    title: PropTypes.func, //use this as dialog title
+    title: PropTypes.string, //use this as dialog title
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
-    fixedExt: PropTypes.string //set a fixed extension
+    fixedExt: PropTypes.string,  //set a fixed extension (display only)
+    fixedPrefix: PropTypes.string, //set a fixed prefix (display only)
+    keepExtension: PropTypes.bool //do not allow to change the extension
 }
 export const safeName=(name)=>{
     if (! name) return;
@@ -186,9 +191,15 @@ export const TMP_PRFX="__avn.";
  * @param itemList the list of items
  * @param [opt_idx]{string|function} the value of each item to be checked, defaults to "name"
  * @param [opt_checkAllowed] set to false to disable the check for allowed file names
- * @returns {{proposal: *, error: string}} - returns undefined if ok
+ * @param opt_notEmpty error if empty
+ * @returns {{proposal: *, error: string}} - returns an object with name only if ok
  */
-export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
+export const checkName=(name,itemList,opt_idx,opt_checkAllowed,opt_notEmpty)=>{
+    if (opt_notEmpty){
+        if (!name || name.match(/^ *$/)) return {
+            error:"must not be empty"
+        }
+    }
     if (! name) return;
     let rt=undefined;
     if (opt_checkAllowed !== false){
@@ -208,7 +219,13 @@ export const checkName=(name,itemList,opt_idx,opt_checkAllowed)=>{
             }
         }
     }
-    if (! rt ) return checkNameList(name,itemList,opt_idx);
+    if (! rt ) {
+        rt= checkNameList(name,itemList,opt_idx);
+        if (! rt) return {name:name};
+        rt.name=name;
+        return rt;
+    }
+    rt.name=name;
     if (! rt.proposal) return rt;
     const finalCheck=checkNameList(rt.proposal,itemList,opt_idx);
     if (! finalCheck) return rt;
@@ -231,7 +248,7 @@ const checkNameList=(name,itemList,opt_idxfct)=>{
     let prfx=fn.replace(/\d*$/,'');
     if (! prfx) prfx=fn;
     for (let i=0;i<itemList.length;i++) {
-        const v=opt_idxfct(itemList[i],name);
+        const v=opt_idxfct(itemList[i]);
         if (! v) continue;
         if (Helper.startsWith(v,prfx) && Helper.endsWith(v,ext)){
             let n=parseInt(v.substring(prfx.length));

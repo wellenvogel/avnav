@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
@@ -71,6 +72,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
     public static class RouteInfo implements AvnUtil.IJsonObect {
         public String name;
         long mtime;
+        long size;
         public int numpoints;
         public double length; //in NM
         public boolean canDelete=true;
@@ -86,11 +88,13 @@ public class RouteHandler extends DirectoryRequestHandler  {
         @Override
         public JSONObject toJson() throws JSONException{
             JSONObject e=new JSONObject();
-            e.put("name",name+".gpx");
+            e.put("name",name);
             e.put("time",mtime/1000);
+            e.put("size",size);
             e.put("numpoints",numpoints);
             e.put("length",length);
             e.put("canDelete",canDelete);
+            e.put("extension",SUFFIX);
             return e;
         }
 
@@ -333,7 +337,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             new EditableParameter.IntegerParameter("nextWpTime",R.string.labelSettingsNextWpTime,10)
                     .cloneCondition(new AvnUtil.KeyValue(WP_MODE.name,M_EARLY));
     public RouteHandler(File routedir,GpsService ctx,NmeaQueue queue) throws IOException {
-        super(RequestHandler.TYPE_ROUTE,ctx,routedir,"route",null);
+        super(Constants.TYPE_ROUTE,ctx,routedir,"route",null);
         this.routedir=routedir;
         updateReceiver=ctx;
         parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE,SOURCE_PRIORITY_PARAMETER,WP_MODE,WP_TIME);
@@ -349,6 +353,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         }
     }
 
+    final static String SUFFIX=".gpx";
 
     @Override
     public void run(int startSequence) {
@@ -374,9 +379,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
             if (routedir.isDirectory()) {
                 for (File f : routedir.listFiles()) {
                     if (!f.isFile()) continue;
-                    if (!f.getName().endsWith(".gpx")) continue;
+                    if (!f.getName().endsWith(SUFFIX)) continue;
                     boolean mustParse = false;
-                    String name = f.getName().replaceAll("\\.gpx$", "");
+                    String name = f.getName();
+                    name=name.substring(0,name.length()-SUFFIX.length());
                     if (routeInfos.containsKey(name)) {
                         RouteInfo old = routeInfos.get(name);
                         long currmtime = f.lastModified();
@@ -393,10 +399,11 @@ public class RouteHandler extends DirectoryRequestHandler  {
                             Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
                             RouteInfo info = rt.getInfo(useRhumbLine);
                             if (!rt.name.equals(name)) {
-                                //TODO: make this more robust!
-                                throw new Exception("name in route " + rt.name + " does not match route file name");
+                                AvnLog.e("name in route " + rt.name + " does not match route file name "+name);
+                                rt.name=name;
                             }
                             info.mtime = f.lastModified();
+                            info.size=f.length();
                             localList.put(name, info);
                             mustUpdate = true;
                             AvnLog.ifs("parsed route: %s" ,info);
@@ -513,7 +520,6 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
 
     private void deleteRouteInfo(String name){
-        if (name.endsWith(".gpx")) name=name.substring(0,name.length()-4);
         synchronized (this){
             routeInfos.remove(name);
         }
@@ -524,17 +530,28 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        boolean rt=super.handleUpload(postData, name, ignoreExisting);
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
+        name+=SUFFIX;
+        boolean rt=super.handleUpload(postData, name, ignoreExisting, completeName);
         if (rt) triggerParser();
         return rt;
     }
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        boolean rt=super.handleDelete(name, uri);
+        boolean rt=super.handleDelete(name+SUFFIX, uri);
         if (rt) deleteRouteInfo(name);
         return rt;
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        return super.handleDownload(name+SUFFIX, uri);
+    }
+
+    @Override
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("cannot rename route on server");
     }
 
     @Override

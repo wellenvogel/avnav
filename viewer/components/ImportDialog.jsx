@@ -80,7 +80,7 @@ const ImportDialog =(props)=>{
                         >Cancel</DB>
                         <DB name="ok"
                             onClick={()=>{
-                                props.resolveFunction({...props,name:name+"."+ext},useSubdir?subdir:undefined);
+                                props.resolveFunction({...props,name:name+"."+ext,type:'import',subdir:useSubdir?subdir:undefined});
                             }}
                             disabled={useSubdir && !subdir}
                         >OK</DB>

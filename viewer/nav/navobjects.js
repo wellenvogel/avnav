@@ -1,7 +1,7 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 let navobjects={};
 
@@ -171,12 +171,12 @@ navobjects.Distance=function(){
      * the distance in meters
      * @type {number}
      */
-    this.dts=0;
+    this.dts=undefined;
     /**
      * the course
      * @type {number}
      */
-    this.course=0
+    this.course=undefined;
 };
 
 

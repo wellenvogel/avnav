@@ -25,7 +25,7 @@
 
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
-import Requests from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import ItemList from "../components/ItemList";
 import {useTimer} from "../util/GuiHelpers";
@@ -33,7 +33,7 @@ import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import DB from "../components/DialogButton";
-import {DialogButtons, DialogFrame, showDialog, showPromiseDialog, useDialogContext} from "../components/OverlayDialog";
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "../components/OverlayDialog";
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
@@ -43,9 +43,10 @@ import Helper from "../util/helper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DownloadButton from "../components/DownloadButton";
 import ButtonList from "../components/ButtonList";
+import {useHistory} from "../components/HistoryProvider";
+import {useDialogContext} from "../components/DialogContext";
 
 const HANDLER_NAME='AVNImporter';
-export const IMPORTERPAGE='importerpage';
 
 const MainStatus=(props)=>{
     let canEdit=globalstore.getData(keys.properties.connectedMode);
@@ -72,7 +73,7 @@ const ImporterItem=(props)=>{
     return <div className="status" >
         <ChildStatus
             {...props}
-            canEdit={canEdit}
+            forceEdit={canEdit}
             connected={true}
             id={props.name}
             name={props.name.replace(/^conv:/,'')}
@@ -99,18 +100,26 @@ const ImportStatusDialog=(props)=>{
     let isRunning=props.status === 'NMEA';
     return <DialogFrame className="importStatusDialog" title={props.name}>
         <div className="dialogRow">
+            <span className="inputLabel"></span>
             <span className="itemInfo">{props.info}</span>
         </div>
         <div className="dialogRow">
             <span className="inputLabel">file</span>
             <span className="itemInfo">{props.basename}</span>
         </div>
+        {props.converter &&
+            <div className="dialogRow">
+                <span className="inputLabel">converter:</span>
+                <span className="itemInfo">{props.converter}</span>
+            </div>
+        }
         <DialogButtons >
             <DB name="delete"
                 onClick={() => {
                     Requests.getJson({
+                        request:'api',
                         type:'import',
-                        request:'delete',
+                        command:'delete',
                         name:props.name
                     })
                         .then((res)=>{
@@ -176,13 +185,21 @@ const ImportStatusDialog=(props)=>{
             {props.canDownload && <DownloadButton name="download"
                                                   close={false}
                                                   useDialogButton={true}
-                                                  url={globalStore.getData(keys.properties.navUrl)+"?request=download&type=import&name="+encodeURIComponent(props.name)}
+                                                  url={prepareUrl({
+                                                      type:'import',
+                                                      command:'download',
+                                                      name: props.name
+                                                  })}
                                 >Download</DownloadButton>
             }
             {props.hasLog &&
             <DB name="log"
                 onClick={() => {
-                    let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(props.name);
+                    let url= prepareUrl({
+                        type: 'import',
+                        command:'getlog',
+                        name:props.name
+                    });
                     dialogContext.replaceDialog((dlprops)=>{
                         return <LogDialog
                             baseUrl={url}
@@ -229,7 +246,11 @@ const ConverterDialog=(props)=>{
             {isRunning &&
             <DB name="log"
                 onClick={() => {
-                    let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name=_current";
+                    let url= prepareUrl({
+                        type:'import',
+                        command:'getlog',
+                        name:'_current'
+                    });
                     dialogContext.replaceDialog((dlprops)=>{
                         return <LogDialog
                             baseUrl={url}
@@ -298,7 +319,8 @@ const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,change
     }
     const timer = useTimer((seq) => {
         Requests.getJson({
-            request: 'list',
+            request:'api',
+            command: 'list',
             type: 'import'
         }).then((json) => {
             handleStatus(json.items);
@@ -343,11 +365,12 @@ const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,change
 })
 
 const ImporterPage = (props) => {
+    const history=useHistory();
     const [uploadSequence, setUploadSequence] = useState(0);
     const [isActive,setIsActive]=useState(false);
     const chartImportExtensions=useRef([]);
     const importSubDir=useRef((props.options && props.options.subdir)?props.options.subdir:undefined);
-    const dialogContext = useRef();
+    const dialogContext = useDialogContext();
     const activeButtons = [
         {
             name: 'DownloadPageUpload',
@@ -364,11 +387,11 @@ const ImporterPage = (props) => {
                 showEditHandlerDialog()
             }
         },
-        Mob.mobDefinition(props.history),
+        Mob.mobDefinition(history),
         {
             name: 'Cancel',
             onClick: () => {
-                props.history.pop()
+                history.pop()
             }
         }
     ];
@@ -416,11 +439,12 @@ const ImporterPage = (props) => {
         return showPromiseDialog(dialogContext, (dprops) => <ImportDialog
                 {...dprops}
                 allowNameChange={true}
-                resolveFunction={(oprops, subdir) => {
+                resolveFunction={(oprops) => {
+                    const subdir=(oprops||{}).subdir;
                     if (subdir !== importSubDir.current) {
                         importSubDir.current=subdir;
                     }
-                    dprops.resolveFunction({name: oprops.name, type: 'import', uploadParameters: {subdir: subdir}});
+                    dprops.resolveFunction({name: oprops.name, type: 'import', options: {subdir: subdir}});
                 }}
                 name={name}
                 allowSubDir={importConfig.subdir}
@@ -429,8 +453,8 @@ const ImporterPage = (props) => {
         );
 
     }, [])
-    return <PageFrame id={IMPORTERPAGE}>
-        <PageLeft title={"Chart Converter"} dialogCtxRef={dialogContext} >
+    return <PageFrame id={props.id}>
+        <PageLeft title={"Chart Converter"} >
             <PageContent
                 showEditDialog={showImportDialog}
                 showConverterDialog={showConverterDialog}
@@ -450,10 +474,10 @@ const ImporterPage = (props) => {
                         if (err) Toast(err);
                     }}
                 uploadSequence={uploadSequence}
-                checkNameCallback={(name)=>checkNameForUpload(name)}
+                checkNameCallback={(file)=>checkNameForUpload(file.name)}
             />
         </PageLeft>
-        <ButtonList itemList={isActive ? activeButtons.concat(buttons) : buttons}/>
+        <ButtonList page={props.id} itemList={isActive ? activeButtons.concat(buttons) : buttons}/>
     </PageFrame>
 }
 

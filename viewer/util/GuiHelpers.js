@@ -6,6 +6,7 @@ import Requests from "./requests";
 import base from "../base";
 import {useEffect, useRef, useState} from "react";
 import cloneDeep from "clone-deep";
+import {IMAGES} from "./itemFunctions";
 
 
 const resizeElementFont=(el)=>{
@@ -388,8 +389,6 @@ const scrollInContainer=(parent, element)=> {
     return 0;
 };
 
-const IMAGES=['png','jpg','jpeg','svg','bmp','tiff','gif'];
-
 /**
  * helper for maintaining an object inside a components state
  * it will add 2 fields to the state:
@@ -547,7 +546,7 @@ const getServerCommand=(name)=>{
     return Requests.getJson({
         request:'api',
         type:'command',
-        action:'getCommands'
+        command:'list'
     })
         .then((data)=> {
             if (!data.data) return;
@@ -558,6 +557,18 @@ const getServerCommand=(name)=>{
             }
         })
         .catch((e)=>base.log("unable to query server command "+name));
+}
+/**
+ * helper for the react callback issue
+ * you can use the stateRef in callbacks to obtain the current value of the state
+ * @param initial
+ * @return {[unknown,(value: unknown) => void,React.MutableRefObject<unknown>]}
+ */
+export const useStateRef=(initial)=>{
+    const [state,setState]=useState(initial);
+    const stateRef=useRef(initial);
+    stateRef.current=state;
+    return [state,setState,stateRef];
 }
 
 export default {
@@ -572,5 +583,6 @@ export default {
     storeHelper,
     storeHelperState,
     stateHelper,
-    getServerCommand
+    getServerCommand,
+    useStateRef
 };

@@ -1,0 +1,109 @@
+
+import java.text.SimpleDateFormat;
+import org.redline_rpm.header.*;
+def taskgroup="avnav"
+
+buildscript{
+	repositories{
+		mavenCentral()
+	}
+    dependencies{
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:12.1.0'
+    }
+}
+
+repositories{
+	mavenCentral()
+}
+
+description="Raspberry specfic stuff for avnav (new)"
+apply plugin: 'java'
+apply plugin: 'com.netflix.nebula.ospackage-base'
+
+def versionFileName="raspi.version"
+def BASE='raspberry'
+task build_raspi_base(type:Deb) {
+    group taskgroup
+    assert project.hasProperty('avnavVersion'),"please provide the package version via -PavnavVersion=xxx"
+    version=project.avnavVersion
+    outputs.upToDateWhen { t->
+        def f=t.determineArchivePath();
+        if (! f.exists()) {
+            println("outfile $f not found, must execute")
+            return false;
+        }
+        return true;
+    }
+    doFirst{
+        def vFile=file("$buildDir/$versionFileName")
+        logger.info("vfile=${vFile}")
+	    if (! vFile.getParentFile().exists()) vFile.getParentFile().mkdirs()
+        vFile.withWriter {wr->
+                wr.println "AVNAV_VERSION=\"$version\""
+        }
+    }
+    //release='3'
+    os = LINUX // only applied to RPM
+    packageGroup='misc'
+    requires 'avnav'
+    requires 'parted'
+    requires 'bc'
+    requires 'mpg123'
+    requires 'ntpsec-ntpdate'
+    requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
+    //requires('canboat','4.12',Flags.GREATER|Flags.EQUAL).or('base-files','11',Flags.LESS)
+    requires 'jq'
+    packageName='avnav-raspi-base'
+    user='root'
+    into ('/usr/lib/avnav/raspberry') {
+        from(BASE){
+            fileMode 0755
+            include 'settime.sh'
+            include 'sound.sh'
+            include 'startup-check.sh'
+            include 'setup-*.sh'
+            include 'prestart.sh'
+            include 'uart_control'
+            include 'can-updown.sh'
+        }
+        from(BASE) {
+            include 'avnav_server.xml'
+            include 'ntp.conf'
+            include 'avnav.conf'
+            fileMode 0644
+        }
+        from('linux'){
+            include 'patchServerConfig.py'
+            fileMode 0755
+        }
+    }
+    into('/usr/lib/avnav/raspberry/xui'){
+        from("${BASE}/xui")
+    }
+    into ('/usr/lib/avnav/raspberry') {
+        from(project.buildDir){
+            include versionFileName
+        }
+    }
+    into('/usr/lib/avnav/plugins/resetAlarm'){
+        from("${BASE}/resetAlarm")
+    }
+    into('/usr/lib/systemd/system/avnav.service.d'){
+        from(BASE){
+            include "raspberry.conf"
+        }
+    }
+    into('/usr/lib/systemd/system'){
+        from(BASE){
+            include('avnav-startup.service')
+            include('can-if@.service')
+        }
+    }
+        
+    postInstall file('raspberry/postinstall')
+    preInstall file('raspberry/preinstall')
+
+}
+
+
+

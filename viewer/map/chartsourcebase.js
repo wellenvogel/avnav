@@ -23,27 +23,45 @@
  ###############################################################################
  */
 
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
-import Helper from '../util/helper.js';
-import CryptHandler from './crypthandler.js';
+import Helper, {getav, injectav, setav} from '../util/helper.js';
 import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
-import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
-import {Stroke as olStroke, Fill as olFill} from 'ol/style';
+import {LineString as olLineString,
+    MultiLineString as olMultiLineString,
+    Point as olPoint} from 'ol/geom';
+import {Stroke as olStroke,
+    Fill as olFill,
+    Icon as olIcon,
+} from 'ol/style';
+import olImageState from 'ol/ImageState';
 import {
     EditableBooleanParameter, EditableColorParameter,
     EditableIconParameter,
     EditableNumberParameter,
     EditableSelectParameter
 } from "../util/EditableParameter";
+import {fetchItemInfo, getUrlWithBase} from "../util/itemFunctions";
 import Requests from "../util/requests";
 
-export const getOverlayConfigName=(chartEntry)=>{
-    return chartEntry.overlayConfig || chartEntry.chartKey;
+/**
+ *
+ * @enum {string}
+ */
+export const CHARTBASE={
+    NAME: "name",
+    URL: "url",
+    UPZOOM:"upzoom",
+    OPACITY: "opacity",
+    MINSCALE: "minScale",
+    MAXSCALE: "maxScale",
+    ENABLED: "enabled",
+    HASFEATUREINFO:"hasFeatureInfo",
 }
+
 class ChartSourceBase {
 
     COLOR_INVISIBLE='rgba(0,0,0,0)';
@@ -61,6 +79,7 @@ class ChartSourceBase {
         this.mapholder = mapholder;
         /**
          * @protected
+         * @type {Object.<CHARTBASE,any>}
          */
         this.chartEntry = assign({},chartEntry);
         for (let k in this.chartEntry){
@@ -69,11 +88,6 @@ class ChartSourceBase {
             }
         }
 
-        /**
-         * @protected
-         * @type {undefined}
-         */
-        this.encryptFunction = undefined;
         /**
          * @protected
          * @type {boolean}
@@ -91,9 +105,14 @@ class ChartSourceBase {
         this.removeSequence=0;
 
         this.visible=true;
+        this.error=undefined;
+    }
+    getError(){
+        return this.error;
     }
     getName(){
-        return (this.chartEntry||{}).name||'unknown';
+        const e=this.chartEntry||{};
+        return e.displayName||e.name||'unknown';
     }
     getConfig(){
         return(assign({},this.chartEntry));
@@ -130,8 +149,8 @@ class ChartSourceBase {
             let view = this.mapholder.olmap.getView();
             let scale = 1;
             let currentZoom = view.getZoom();
-            let cmin=parseFloat(this.chartEntry.minScale);
-            let cmax=parseFloat(this.chartEntry.maxScale);
+            let cmin=parseFloat(this.chartEntry[CHARTBASE.MINSCALE]);
+            let cmax=parseFloat(this.chartEntry[CHARTBASE.MAXSCALE]);
             if (cmin && currentZoom < cmin) {
                 scale = 1 / Math.pow(2, cmin - currentZoom);
             }
@@ -142,30 +161,42 @@ class ChartSourceBase {
         }catch (e){}
         return 1;
     }
-
+    async fetchSequence(){
+        if (!this.chartEntry) return;
+        if (this.chartEntry.type === 'chart') {
+            throw new Error("getSequence must be overloaded for charts");
+        }
+        const itemUrl=getUrlWithBase(this.chartEntry,'url');
+        if (itemUrl) {
+            return await Requests.getLastModified(itemUrl);
+        }
+        const info = await fetchItemInfo(this.chartEntry);
+        return info.time;
+    }
     /**
-     * returns a promise that resolves to 1 for changed
+     * returns a promise that resolves to true for changed
      */
-    checkSequence(force) {
+    async checkSequence(force) {
         let lastRemoveSequence = this.removeSequence;
         if (!globalstore.getData(keys.gui.capabilities.fetchHead, false)) {
-            return Promise.resolve(0);
+            return false;
         }
         if (!this.visible) {
-            return Promise.resolve(0);
+            return false;
         }
-        return Requests.getLastModified(this.getUrl())
-            .then((lastModified) => {
-                if (this.removeSequence !== lastRemoveSequence || (!this.isReady() && !force)) {
-                    return 0;
-                }
-                if (lastModified !== this.sequence) {
-                    this.sequence = lastModified;
-                    let drawn = this.redraw();
-                    return (drawn ? 0 : 1);
-                } else return (0)
-            })
-            .catch((e) => 0);
+        try {
+            const newSequence = await this.fetchSequence(this.chartEntry)
+            if (this.removeSequence !== lastRemoveSequence || (!this.isReady() && !force)) {
+                return false;
+            }
+            if (newSequence !== this.sequence) {
+                this.sequence = newSequence;
+                let drawn = this.redraw();
+                return !drawn;
+            } else return false;
+        } catch (e) {
+        }
+        return false;
     }
 
     isEqual(other){
@@ -173,86 +204,97 @@ class ChartSourceBase {
         if (this.mapholder !== other.mapholder) return false;
         return shallowcompare(this.chartEntry,other.chartEntry);
     }
-    getUrl(){
-        return (this.chartEntry||{}).url;
-    }
+
 
     getChartKey() {
-        let chartBase = this.chartEntry.chartKey;
-        if (!chartBase) chartBase = this.chartEntry.url;
+        let chartBase = this.chartEntry[CHARTBASE.NAME];
         return chartBase;
     }
-    getOverlayConfigName(){
-        return getOverlayConfigName(this.chartEntry);
+
+    async prepareInternal(){
+        throw new Error("prepareInternal not implemented in base class");
     }
-
-    prepareInternal(){
-        return new Promise((resolve,reject)=>{
-            reject("prepareInternal not implemented in base class");
-        })
+    hasValidConfig(){
+        return !! this.chartEntry[CHARTBASE.NAME] && !! this.chartEntry[CHARTBASE.URL]
     }
-
-    prepare() {
-
-        const runPrepare=(resolve,reject)=>{
-            this.checkSequence(true)
-                .then((r)=> {
-                    this.prepareInternal()
-                        .then((layers) => {
-                            layers.forEach((layer)=>{
-                                if (!layer.avnavOptions) layer.avnavOptions={};
-                                layer.avnavOptions.chartSource=this;
-                            });
-                            this.layers = layers;
-                            if (!this.chartEntry.enabled) {
-                                this.visible=false;
-                                this.layers.forEach((layer) => layer.setVisible(false));
-                            }
-                            this.isReadyFlag = true;
-                            resolve(this.layers);
-                        })
-                        .catch((error) => {
-                            reject(error);
-                        });
-                })
-                .catch((e)=>reject(e));
-        };
-        return new Promise((resolve, reject)=> {
-            if (this.chartEntry.tokenUrl) {
-                CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
-                    .then((result)=> {
-                        this.encryptFunction = result.encryptFunction;
-                        runPrepare(resolve,reject)
-                    })
-                    .catch((error)=> {
-                        reject(error)
-                    });
-                return;
+    async prepare() {
+        const fullConfig = await fetchItemInfo(this.chartEntry);
+        this.chartEntry={...fullConfig,...this.chartEntry}; //we prefer values from chartEntry (i.e. from overlay config)
+        const handleError=(error)=>{
+            const txt=error+" for "+this.chartEntry[CHARTBASE.NAME];
+            base.log(txt);
+            if (this.isBaseChart()){
+                throw new Error(txt);
             }
-            runPrepare(resolve,reject);
+            this.error=txt;
+            this.visible=false;
+            this.layers=[];
+            this.isReadyFlag = true;
+            this.chartEntry[CHARTBASE.ENABLED]=false;
+        }
+        if (! this.hasValidConfig()){
+            handleError("unable to get a valid config");
+            return;
+        }
+        this.error=undefined;
+        await this.checkSequence(true);
+        let layers;
+        try {
+            layers = await this.prepareInternal()
+        } catch (e){
+            this.error=e+"";
+        }
+        if (!layers || layers.length <1 || !!this.error){
+            handleError(this.error||"no layers for");
+            return;
+        }
+        layers.forEach((layer) => {
+            setav(layer,{chartSource: this});
         });
+        this.layers = layers;
+        if (!this.chartEntry[CHARTBASE.ENABLED]) {
+            this.visible = false;
+            this.layers.forEach((layer) => layer.setVisible(false));
+        }
+        this.isReadyFlag = true;
+        return this.layers
     }
 
 
 
-    destroy(){
-        CryptHandler.removeChartEntry(this.getChartKey());
+    async destroy(){
         this.isReadyFlag=false;
         this.layers=[];
         this.removeSequence++;
     }
 
     setVisible(visible){
+        if (! this.hasValidConfig()) return;
         this.visible=visible;
         if (! this.isReady()) return;
         this.layers.forEach((layer)=>layer.setVisible(visible));
     }
     resetVisible(){
         if (! this.isReady()) return;
-        this.visible=this.chartEntry.enabled;
-        this.layers.forEach((layer)=>layer.setVisible(this.chartEntry.enabled));
+        this.visible=this.chartEntry[CHARTBASE.ENABLED];
+        this.layers.forEach((layer)=>layer.setVisible(this.chartEntry[CHARTBASE.ENABLED]));
     }
 
+    /**
+     * get the list of all detected features for this source
+     * and build a list of featureInfo objects to be shown in the featureInfoList
+     * the default is just to return the first feature that can be translated
+     * @param allFeatures a list of detected features
+     *                    each entry: {feature,layer,chartSource}
+     * @param pixel the pixel coordinates of the click
+     */
+    featureListToInfo(allFeatures,pixel){
+        for (let featureConfig of allFeatures){
+            const info=this.featureToInfo(featureConfig.feature,pixel,featureConfig.layer);
+            if (info) return info;
+        }
+        return undefined;
+    }
     featureToInfo(feature,pixel,layer){
         return ;
     }
@@ -264,12 +306,31 @@ class ChartSourceBase {
         if (sym.match(/^\//)) return sym;
         if (this.chartEntry[editableOverlayParameters.icon]){
             url=this.chartEntry[editableOverlayParameters.icon] + "/" + sym;
-            if (this.chartEntry[editableOverlayParameters.defaultIcon]) url+="?fallback="+encodeURIComponent(this.chartEntry[editableOverlayParameters.defaultIcon]);
+            //if (this.chartEntry[editableOverlayParameters.defaultIcon]) url+="?fallback="+encodeURIComponent(this.chartEntry[editableOverlayParameters.defaultIcon]);
         }
         else{
             return this.chartEntry[editableOverlayParameters.defaultIcon];
         }
         return url;
+    }
+    createIconWithFallback(url,fallbackUrl){
+        const icon=new olIcon({
+            src: url
+        })
+        if (fallbackUrl) {
+            setav(icon, {fallbackUrl: fallbackUrl})
+            icon.listenImageChange((event) => {
+                if (event.target.getImageState() === olImageState.ERROR) {
+                    const fallback = getav(icon).fallbackUrl;
+                    if (fallback) {
+                        base.log("image error, using fallback",url,fallbackUrl);
+                        setav(icon, {fallbackUrl: undefined});
+                        icon.setSrc(fallback);
+                    }
+                }
+            })
+        }
+        return icon;
     }
     getLinkUrl(link){
         if (! link) return;
@@ -324,6 +385,7 @@ class ChartSourceBase {
     }
 
     setEnabled(enabled,opt_update){
+        if (! this.hasValidConfig()) return;
         this.mapholder.setEnabled(this,enabled,opt_update);
     }
 
@@ -340,7 +402,7 @@ class ChartSourceBase {
 
     hasFeatureInfo(){
         if (! this.isReady()) return false;
-        return this.chartEntry.hasFeatureInfo||false;
+        return this.chartEntry[CHARTBASE.HASFEATUREINFO]||false;
     }
     /**
      *
@@ -360,6 +422,7 @@ class ChartSourceBase {
         })
         return rt;
     }
+
 }
 
 /**

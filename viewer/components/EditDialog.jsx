@@ -5,8 +5,7 @@ import {
     DialogButtons,
     DialogFrame,
     promiseResolveHelper,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from "./OverlayDialog";
 import CodeFlask from 'codeflask';
 import Prism from "prismjs";
@@ -17,6 +16,7 @@ import PropTypes from "prop-types";
 import {ConfirmDialog} from "./BasicDialogs";
 import Requests from "../util/requests";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}) => {
     const flask = useRef();
@@ -67,7 +67,8 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
                     ok: ()=>{
                         setChanged(false);
                     },
-                    err: () => {
+                    err: (e) => {
+                        if (e) Toast(e);
                         setChanged(true)
                     }
                 }, saveFunction, flask.current.getCode())
@@ -103,8 +104,8 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
                     }, () => {
                     })
             }}
-            checkNameCallback={(name) => {
-                return {name: name}
+            checkNameCallback={(file) => {
+                return {name: (file||{}).name}
             }}
             errorCallback={(err) => Toast(err)}
         />
@@ -124,10 +125,12 @@ EditDialog.propTypes={
 export const uploadFromEdit = async (name, data, overwrite,type) => {
     try {
         await Requests.postPlain({
-            request: 'upload',
+            request: 'api',
+            command: 'upload',
             type: type,
             name: name,
-            overwrite: overwrite
+            overwrite: overwrite,
+            completeName: true
         }, data);
     } catch (e) {
         Toast(e);
@@ -182,6 +185,7 @@ export const getTemplate=(name)=>{
 //if set to undefined we will edit them but without highlighting
 export const languageMap = {
     js: 'js',
+    mjs:'js',
     json: 'json',
     html: 'markup',
     css: 'css',

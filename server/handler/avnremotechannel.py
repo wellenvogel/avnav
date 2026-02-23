@@ -212,24 +212,21 @@ class AVNRemoteChannelHandler(AVNWorker):
 
 
   PREFIX='remotechannels'
-  def getHandledCommands(self):
-    return {
-      'websocket':"/"+self.PREFIX,
-      'api': self.PREFIX
-    }
+  def getApiType(self):
+    return self.PREFIX
 
-  def handleApiRequest(self, type, command, requestparam, **kwargs):
-    if type == 'api':
-      command = AVNUtil.getHttpRequestParam(requestparam, 'command', True)
-      if command == 'enabled':
+  def getWebsocketPrefix(self):
+      return "/"+self.PREFIX
+
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
+    if command == 'enabled':
         return {'status':'OK','enabled': self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param)}
-      return {'status':'invalid command '+command}
-    if type != 'websocket':
-      raise Exception("can only handle websocket requests")
-    handler=kwargs.get('handler')
+    raise Exception(f"invalid api request {command}")
+
+  def handleWebSocketRequest(self, type, path, handler=None, **kwargs):
     if handler is None:
       raise Exception("need the request handler for websocket requests")
-    path=command[len(self.PREFIX)+1:]
+    path=path[len(self.PREFIX)+1:]
     if not path.startswith('/'):
       raise Exception("unknown channel")
     path=path[1:]
@@ -238,6 +235,7 @@ class AVNRemoteChannelHandler(AVNWorker):
       raise Exception("invalid channel %d"%chnum)
     AVNLog.info("added channel connection for %s",path)
     return self.channels[chnum].add_connection(handler)
+
 
 avnav_handlerList.registerHandler(AVNRemoteChannelHandler)
 

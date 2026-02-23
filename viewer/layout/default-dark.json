@@ -1,0 +1,360 @@
+{
+  "description": "The system default layout. No keys and no properties.",
+  "layoutVersion": 1,
+  "properties": {
+    "layers": {
+      "ais": true
+    }
+  },
+  "widgets": {
+    "gpspage1": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "weight": 1.5
+        },
+        {
+          "name": "XteDisplay",
+          "compareState": true,
+          "weight": 1
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "SOG",
+          "weight": 1.5
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage2": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "weight": 0.75
+        },
+        {
+          "name": "SOG",
+          "weight": 0.75
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "WindGraphics",
+          "weight": 2.5
+        },
+        {
+          "name": "DateTime"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage3": {
+      "left": [
+        {
+          "name": "BRG",
+          "caption": "BRG",
+          "unit": "°",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "COG",
+          "caption": "COG",
+          "unit": "°",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "linGauge_Compass",
+          "caption": "COG",
+          "unit": "°",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "radGauge_Compass",
+          "caption": "COG",
+          "unit": "°",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "formatterParameters": [
+            ""
+          ],
+          "drawValue": true,
+          "valueFontFactor": 12,
+          "weight": 3
+        }
+      ],
+      "right": [
+        {
+          "name": "DST",
+          "caption": "DST",
+          "unit": "nm",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "VMG",
+          "caption": "VMG",
+          "unit": "kn",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "SOG",
+          "caption": "SOG",
+          "unit": "kn",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "radGauge_Speed",
+          "storeKeys": {
+            "value": "nav.gps.speed"
+          },
+          "formatterParameters": [
+            ""
+          ],
+          "drawValue": true,
+          "valueFontFactor": 12,
+          "colorPlate": "#fff",
+          "minValue": 0,
+          "maxValue": "10",
+          "colorHighlight": "rgba(200, 50, 50, .75)",
+          "startHighlight": "6",
+          "weight": 3,
+          "caption": "SOG",
+          "unit": "kn"
+        }
+      ]
+    },
+    "navpage": {
+      "left": [
+        {
+          "name": "CenterDisplay"
+        },
+        {
+          "name": "Zoom"
+        },
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "ActiveRoute"
+        },
+        {
+          "name": "LargeTime"
+        }
+      ],
+      "left_small": [
+        {
+          "name": "ActiveRoute"
+        }
+      ],
+      "top_small": [
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "LargeTime"
+        },
+        {
+          "name": "Zoom"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ],
+      "bottomLeft_anchor": [
+        {
+          "name": "AnchorBearing",
+          "caption": "ACHR-BRG",
+          "unit": "°"
+        },
+        {
+          "name": "AnchorDistance",
+          "caption": "ACHR-DST",
+          "unit": "m",
+          "formatterParameters": [
+            "m"
+          ]
+        },
+        {
+          "name": "AnchorWatchDistance"
+        }
+      ]
+    },
+    "editroutepage": {
+      "left": [
+        {
+          "name": "EditRoute"
+        },
+        {
+          "name": "RoutePoints"
+        }
+      ],
+      "left_small": [],
+      "top_small": [
+        {
+          "name": "EditRoute"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ]
+    }
+  },
+  "css": ":root{\n--avnav-widget-color: black;\n--avnav-widget-fore-color: white;\n--avnav-widget-head-color: #242323;\n}\n.nightMode{\n--avnav-widget-fore-color: rgb(252 11 11 / 60%)\n}"
+}

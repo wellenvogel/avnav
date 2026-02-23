@@ -10,8 +10,9 @@ import assign from 'object-assign';
 import DB from './DialogButton.jsx';
 import {Checkbox, Input} from './Inputs.jsx';
 import Dms from "geodesy/dms";
-import {DialogButtons, DialogFrame, useDialogContext} from "./OverlayDialog";
+import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import visible from "../hoc/Visible";
+import {useDialogContext} from "./DialogContext";
 
 const strLonToLon=(val)=>{
     if (val === undefined) return;

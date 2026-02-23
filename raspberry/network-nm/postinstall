@@ -1,0 +1,17 @@
+#! /bin/bash
+
+BASE=/usr/lib/avnav/raspberry/network-nm
+FWSCRIPT="$BASE/set-firewall.sh"
+$FWSCRIPT -i || true
+for f in 73-usb-net-by-mac.link 99-default.link
+do
+  fn=/etc/systemd/network/$f
+  if [ -e $fn ] ; then
+    echo "removing $fn"
+    rm -f "$fn"
+  else
+    echo "$fn already removed"
+  fi
+done
+"$BASE/set-network.py" -i
+

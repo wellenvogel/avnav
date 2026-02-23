@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import {useStore, useStoreState} from '../hoc/Dynamic.jsx';
+import {useStore, useStoreState} from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -12,8 +12,7 @@ import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
 import Dialogs, {
     showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
@@ -23,6 +22,9 @@ import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
+import {useHistory} from "../components/HistoryProvider";
+import {PAGEIDS} from "../util/pageids";
+import {useDialogContext} from "../components/DialogContext";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -221,13 +223,15 @@ const scrollWarning=(ev)=>{
     let el=document.querySelector('.aisList .'+WARNING_CLASS);
     if (el) el.scrollIntoView();
 }
+const ID=PAGEIDS.AIS;
 const AisPage =(props)=>{
+    const history=useHistory();
         const options=props.options||{};
         let initialMmsi=useRef(options.mmsi);
         const [sortField,setSortField]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
         const [searchActive,setSearchActive]=useStoreState(keys.gui.aispage.searchActive,false);
         const [searchValue,setSearchValue]=useStoreState(keys.gui.aispage.searchValue,"");
-        const dialogContext=useRef();
+        const dialogContext=useDialogContext();
         const sortDialog=useCallback(()=> {
             for (let i in sortFields) {
                 sortFields[i].selected = sortFields[i].value === sortField;
@@ -243,7 +247,7 @@ const AisPage =(props)=>{
                 name:"AisNearest",
                 onClick:()=>{
                     navdata.getAisHandler().setTrackedTarget(0);
-                    props.history.pop();
+                    history.pop();
                 }
             },
             {
@@ -264,7 +268,7 @@ const AisPage =(props)=>{
                         setSearchActive(false);
                     }
                     else{
-                        showPromiseDialog(dialogContext.current,(props)=><ValueDialog
+                        showPromiseDialog(dialogContext,(props)=><ValueDialog
                             {...props}
                             title={"filter"}
                             value={searchValue}
@@ -279,10 +283,10 @@ const AisPage =(props)=>{
                 },
                 toggle:()=>searchActive
             },
-            Mob.mobDefinition(props.history),
+            Mob.mobDefinition(history),
             {
                 name: 'Cancel',
-                onClick: ()=>{props.history.pop()}
+                onClick: ()=>{history.pop()}
             }
         ];
     let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
@@ -316,9 +320,9 @@ const AisPage =(props)=>{
         return (
             <PageFrame
                 {...props}
-                id="aispage"
+                id={ID}
                 title="Ais">
-                <PageLeft dialogCtxRef={dialogContext}>
+                <PageLeft>
                     <Summary numTargets={0}
                              storeKeys={{
                                  updateCount:keys.nav.ais.updateCount,
@@ -335,12 +339,12 @@ const AisPage =(props)=>{
                         onItemClick={(ev)=> {
                             const item=avitem(ev);
                             let accessor=aisproxy(item);
-                            showDialog(dialogContext.current,()=>{
+                            showDialog(dialogContext,()=>{
                                 return <AisInfoWithFunctions
                                     mmsi={accessor.mmsi}
                                     actionCb={(action,m)=>{
                                         if (action === 'AisNearest' || action === 'AisInfoLocate'){
-                                            props.history.pop();
+                                            history.pop();
                                         }
                                     }}
                                 />;
@@ -362,7 +366,7 @@ const AisPage =(props)=>{
                         }}
                     />
                 </PageLeft>
-                <ButtonList itemList={buttons}/>
+                <ButtonList page={ID} itemList={buttons}/>
             </PageFrame>
         );
 }

@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -431,6 +432,13 @@ public class AvnUtil {
             this.value=v;
         }
     }
+    public static class ItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
+        public ItemMap(AvnUtil.KeyValue<VT>...list){
+            for (AvnUtil.KeyValue<VT> i : list){
+                put(i.key,i);
+            }
+        }
+    }
 
     public static int buildPiFlags(int flags, boolean immutable){
         int rt=flags;
@@ -455,4 +463,30 @@ public class AvnUtil {
             return ctx.registerReceiver(receiver,filter);
         }
     }
+    public static boolean deleteRecursive(File fileOrFolder) {
+        boolean result = true;
+        if(fileOrFolder.isDirectory()) {
+            for (File file : fileOrFolder.listFiles()) {
+                result = result && deleteRecursive(file);
+            }
+        }
+        result = result && fileOrFolder.delete();
+        return result;
+    }
+
+    public static String encodeUrlPath(String path) throws UnsupportedEncodingException {
+        String [] segments=path.split("/");
+        StringBuilder res=new StringBuilder();
+        boolean first=true;
+        for (String segment:segments){
+            String encoded= URLEncoder.encode(segment,"UTF-8").replace("+","%20");
+            if (first) {
+                first=false;
+                res.append(encoded);
+            }
+            else res.append('/').append(encoded);
+        }
+        return res.toString();
+    }
+
 }

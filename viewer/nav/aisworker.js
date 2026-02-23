@@ -57,8 +57,10 @@ const computeAis=()=>{
 
 const queryData=async (distance,center,timeout,navUrl)=>{
     let param = {
-        request: 'ais',
-        distance:  formatter.formatDecimal(distance, 4, 1)
+        distance:  formatter.formatDecimal(distance, 4, 1),
+        request:'api',
+        type:'decoder',
+        command: 'ais'
     };
     for (let idx = 0; idx < center.length; idx++) {
         if (!center[idx]) continue;
@@ -67,16 +69,15 @@ const queryData=async (distance,center,timeout,navUrl)=>{
         param['lon' + sfx] = formatter.formatDecimal(center[idx].lon, 3, 5, false, true);
     }
     return Requests.getJson(navUrl, {
-        checkOk: false,
         timeout: timeout/2,
-        useNavUrl: false
+        useNavUrl:false
         },param).then(
         (data) => {
             aisErrors=0;
             let now = Helper.now();
             let aisList = [];
-            if (data['class'] && data['class'] == "error") aisList = [];
-            else aisList = data;
+            if (! data.data) aisList = [];
+            else aisList = data.data;
             aisList.forEach((ais) => {
                 ais.receiveTime = now;
             })
@@ -137,7 +138,11 @@ const handleError=(error,sequence,inc)=>{
     if (inc) aisErrors++;
     self.postMessage({
         type: 'error',
-        error: error,
+        error: {
+            message:error.message,
+            filename: error.filename,
+            lineno: error.lineno,
+        },
         count: aisErrors
     })
 }

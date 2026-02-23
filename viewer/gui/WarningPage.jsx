@@ -17,6 +17,8 @@ import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import Helper from "../util/helper";
 import base from "../base";
 
+import {itemListToSelectList} from "../util/itemFunctions";
+
 class WarningPage extends React.Component{
     constructor(props){
         super(props);
@@ -34,9 +36,10 @@ class WarningPage extends React.Component{
         }
         let flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         let prefSettings=Helper.getParam("defaultSettings");
-        PropertyHandler.listSettings(true)
+        PropertyHandler.listSettings()
             .then(
-                (settingsList)=>{
+                (settings)=>{
+                    const settingsList=itemListToSelectList(settings);
                     if (prefSettings && settingsList && settingsList.length > 0){
                         try {
                             for (let i=0;i<settingsList.length;i++){
@@ -115,7 +118,7 @@ class WarningPage extends React.Component{
                     name: 'Cancel',
                     storeKeys: {visible: keys.gui.global.onAndroid},
                     onClick: ()=> {
-                        avnav.android.goBack()
+                        window.avnavAndroid.goBack()
                     }
 
                     }

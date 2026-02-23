@@ -27,13 +27,11 @@
 
 
  */
-require('core-js'); //babel polyfills
-require('regenerator-runtime/runtime'); //for babel-plugin-transform-regenerator
-window.avnav={};
-window.fetch=undefined; //force using whatwg-fetch-timeout
+import 'core-js'; //babel polyfills
+import 'regenerator-runtime/runtime'; //for babel-plugin-transform-regenerator
+import './util/polyfill';
+import main from './avnav_viewer.js'
 //we do some lazy loading of modules...
 (function () {
-      require('./util/polyfill');
-      var main=require ('./avnav_viewer.js');
-      main.default();
+      main();
 }());

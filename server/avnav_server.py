@@ -239,41 +239,32 @@ def main(argv):
   else:
     baseConfig.setConfigInfo("%s: not existing, started with empty config"%usedCfgFile)
   houseKeepingCfg(cfgname)
-  if httpServer is not None and options.urlmap is not None:
-    urlmaps = options.urlmap if isinstance(options.urlmap,list) else [options.urlmap]
-    for urlmap in urlmaps:
-      for mapping in re.split(r"\s*,\s*",urlmap):
-        try:
-          url,path=re.split(r"\s*=\s*",mapping,2)
-          httpServer.pathmappings[url] = path
-          AVNLog.info("set url mapping %s=%s"%(url,path))
-        except:
-          pass
   if httpServer is not None:
-    mapurl=httpServer.getStringParam('chartbase')
-    if mapurl is not None and mapurl != '':
-      if options.chartbase is not None:
-        httpServer.pathmappings[mapurl]=options.chartbase
-      else:
-        httpServer.pathmappings[mapurl]=os.path.join(datadir,'charts')
-    defaultMappings={
-      'viewer':os.path.join(os.path.dirname(__file__),'..','viewer'),
-      'sounds':os.path.join(os.path.dirname(__file__),'..','sounds')
-    }
-    for k,v in defaultMappings.items():
-      if not k in httpServer.pathmappings:
-        AVNLog.info("set path mapping for %s to %s",k,v)
-        httpServer.pathmappings[k]=v
+    mappings={}
+    if options.urlmap is not None:
+        urlmaps = options.urlmap if isinstance(options.urlmap,list) else [options.urlmap]
+        for urlmap in urlmaps:
+          for mapping in re.split(r"\s*,\s*",urlmap):
+            try:
+              url,path=re.split(r"\s*=\s*",mapping,2)
+              mappings[url] = path
+              AVNLog.info("set url mapping %s=%s"%(url,path))
+            except:
+              pass
+    if options.chartbase is not None:
+        mappings[AVNHttpServer.PATH_CHARTS]=options.chartbase
+    httpServer.updatePathMappings(mappings)
     for handler in AVNWorker.getAllHandlers(disabled=True):
-      handledCommands=handler.getHandledCommands()
+      handledCommands=handler.getApiType()
       if handledCommands is not None:
-        if isinstance(handledCommands,dict):
-          for h in list(handledCommands.keys()):
-            httpServer.registerRequestHandler(h,handledCommands[h],handler)
-        else:
-          httpServer.registerRequestHandler('api',handledCommands,handler)
-    httpServer.registerRequestHandler('api','config',handlerManager)
-    httpServer.registerRequestHandler('download', 'config', handlerManager)
+          httpServer.registerRequestHandler(handledCommands,handler)
+      path=handler.getHandledPath()
+      if path is not None:
+        httpServer.registerPathHandler(path,handler)
+      websocket=handler.getWebsocketPrefix()
+      if websocket is not None:
+        httpServer.registerWebsocketHandler(websocket,handler)
+    httpServer.registerRequestHandler('config',handlerManager)
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
       httpServer.param[AVNHttpServer.PORT_CONFIG]=optPort

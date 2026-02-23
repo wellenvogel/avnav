@@ -513,9 +513,8 @@ class AVNHandlerManager(object):
 
   def updateChangeCounter(self):
     self.navData.updateChangeCounter('config')
-  def handleApiRequest(self,request,type,requestParam,**kwargs):
-
-    if request == 'download':
+  def handleApiRequest(self,command,requestParam,**kwargs):
+    if command =='download' :
       maxBytes=AVNUtil.getHttpRequestParam(requestParam,'maxBytes')
       if AVNLog.fhandler is None:
         raise Exception("logging not initialized")
@@ -524,13 +523,8 @@ class AVNHandlerManager(object):
         raise Exception("unable to get log file")
       if not os.path.exists(fname):
         raise Exception("log %s not found"%fname)
-      rt=AVNDownload(fname,lastBytes=maxBytes)
+      rt=AVNFileDownloadLB(fname,lastBytes=maxBytes)
       return rt
-    if request != "api":
-      raise Exception("unknown request %s"%request)
-    if type != 'config':
-      raise Exception("unknown config request %s"%type)
-    command=AVNUtil.getHttpRequestParam(requestParam,'command',mantadory=True)
     rt={'status':'OK'}
     if command == 'createHandler':
       tagName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=True)
@@ -567,10 +561,79 @@ class AVNHandlerManager(object):
         raise Exception("AvNav cannot restart")
       self.shouldStop=True
       return rt
+    if command == 'loglevel':
+        level=AVNUtil.getHttpRequestParam(requestParam, 'level',True)
+        timeout=AVNUtil.getHttpRequestParam(requestParam, 'timeout',False)
+        if timeout is not None:
+            timeout=float(timeout)
+        filter=AVNUtil.getHttpRequestParam(requestParam, 'filter',True)
+        crt=AVNLog.changeLogLevelAndFilter(level,filter,timeout)
+        if crt:
+            return AVNUtil.getReturnData()
+        else:
+            return AVNUtil.getReturnData(error=f"invalid level {level}")
+    if command == 'currentLogLevel':
+        (level, filter) = AVNLog.getCurrentLevelAndFilter()
+        return AVNUtil.getReturnData(level=level,filter=filter)
+
+    if command == 'capabilities':
+        rt = {
+            'addons': True,
+            'uploadCharts': True,
+            'plugins': True,
+            'uploadRoute': True,
+            'uploadLayout': True,
+            'uploadUser': True,
+            'uploadImages': True,
+            'uploadImport': True,
+            'uploadOverlays': True,
+            'uploadTracks': True,
+            'uploadSettings': True,
+            'uploadPlugins': True,
+            'canConnect': True,
+            'config': True,
+            'debugLevel': True,
+            'log': True,
+            'remoteChannel': True,
+            'fetchHead': True
+        }
+        return AVNUtil.getReturnData(data=rt)
 
     id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=False)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
     configName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=False)
+    if command == 'status':
+        def handlerToStatus(handler):
+            return {'configname': handler.getConfigName(),
+                     'config': handler.getParam(),
+                     'name': handler.getStatusName(),
+                     'info': handler.getInfo(),
+                     'disabled': handler.isDisabled(),
+                     'properties': handler.getStatusProperties() if not handler.isDisabled() else {},
+                     'canDelete': handler.canDeleteHandler(),
+                     'canEdit': handler.canEdit(),
+                     'id': handler.getId()
+                     }
+        if id is not None:
+            handler = AVNWorker.findHandlerById(int(id))
+            if handler is None:
+                return AVNUtil.getReturnData(error="unable to find handler for %s" % str(id))
+            return AVNUtil.getReturnData(handler=handlerToStatus(handler))
+        rt = []
+        allHandlers = AVNWorker.getAllHandlers(True)
+        # find for each type the first id
+        typIds = {}
+        for h in allHandlers:
+            type = h.getConfigName()
+            if typIds.get(type) is None:
+                typIds[type] = h.getId()
+        # get the sorted list of typeIds
+        typeList = sorted(typIds.keys(), key=lambda k: typIds[k])
+        for type in typeList:
+            for handler in AVNWorker.getAllHandlers(True):
+                if handler.getConfigName() != type: continue
+                rt.append(handlerToStatus(handler))
+        return AVNUtil.getReturnData(handler=rt)
     if command == 'getEditables':
       if id is None and configName is None:
         return AVNUtil.getReturnData(error="either id or handlerName must be provided")

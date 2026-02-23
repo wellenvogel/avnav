@@ -5,7 +5,7 @@
 import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
 import keys, {KeyHelper, PropertyType} from './keys.jsx';
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import LayoutHandler, {layoutLoader} from './layouthandler';
 import RequestHandler from "./requests";
@@ -422,7 +422,8 @@ class PropertyHandler {
                 data=JSON.stringify(data,undefined,2);
             }
             return Requests.postPlain({
-                request:'upload',
+                request:'api',
+                command:'upload',
                 type:'settings',
                 name: fileName,
                 overwrite: !!opt_overwrite
@@ -527,18 +528,16 @@ class PropertyHandler {
         });
     }
 
-    listSettings(opt_forSelect){
+    listSettings(){
         if ( !globalStore.getData(keys.gui.capabilities.uploadSettings,false)){
             return Promise.resolve([]);
         }
         return RequestHandler.getJson({
-            request: 'listdir',
+            request:'api',
+            command: 'list',
             type: 'settings'
         }).then((json)=>{
-            if (!opt_forSelect) return json.items;
-            let rt=[];
-            json.items.forEach((item)=>rt.push({label:item.name,value:item.name}));
-            return rt;
+            return json.items;
         });
     }
 

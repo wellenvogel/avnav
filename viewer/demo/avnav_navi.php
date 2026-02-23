@@ -72,28 +72,46 @@ function readFileEntry($rqtype){
 	$entry=preg_replace('/\s*\n$/','',fgets($h));
 	//echo "data=$entry\n";
 	$edata=preg_split('/\s+/',$entry,2);
-	return $edata[1];
-}
-$rq='gps';
-$type='';
-if (isset($_REQUEST['request'])){
-	$rq=$_REQUEST['request'];
-}
-if (isset($_REQUEST['type'])){
-	$type=$_REQUEST['type'];
+	return "{ \"status\":\"OK\", \"data\":".$edata[1]."}";
 }
 $isEncoded=1;
+$type=$_REQUEST['type'];
+$rq=$_REQUEST['command'];
+$self=$_SERVER[PHP_SELF];
+#echo "s=$self\n";
+
+$rt='{"status":"invalid request"}';
+if (! isset($type) || ! isset($type)){
+	$tc=$_SERVER[PATH_INFO];
+	if (isset($tc) && strlen($tc) > 1){
+		$tc=substr($tc,1);
+		$parts=explode("/",$tc);
+		//echo "t=$tc,p=$parts\n";
+		if (count($parts) >= 2){
+			$type=$parts[0];
+			$rq=$parts[1];
+		}
+		$self=substr($self,0,strlen($self)-strlen($tc));
+	}
+}
+if (! isset($type) || ! isset($type)){
+	$rt='{"status":"invalid request -missing type/command"}';
+}
+else{
+//echo "ty=$type,rq=$rq\n";
 if ($rq == 'list' && $type == 'chart'){
+	    $rt=array();
 		$rt['status']='OK';
-		$base=$_SERVER['REQUEST_URI'];
+		$base=$self;
 		$base=preg_replace("/\?.*/","",$base);
-		$base=preg_replace("?/[^/]*$?","",$base);
+		$base=preg_replace("?/[^/]*/*$?","",$base);
 		$de2=array('name'=>'bsh','url'=>$base.'/demo-bsh','charturl'=>$base.'/demo-bsh');
 		$de3=array('name'=>'osm','url'=>$base.'/demo-osm','charturl'=>$base.'/demo-osm');
 		$rt['items']=array($de2,$de3);
 		$isEncoded=0;
 }
-else if ($rq == 'listdir' || $rq == 'list' || $rq == 'routing'){
+else if ($rq == 'listdir' || $rq == 'list'){
+	$rt=array();
     $rt['status']='OK';
     $rt['data']=array();
     $rt['items']=array();
@@ -103,7 +121,17 @@ else if ($rq == 'nmeaStatus'){
 	$rt='{"status": "OK", "data": {"nmea": {"status": "green", "source": "testreader", "info": "Sat 0 visible/0 used"}, "ais": {"status": "green", "source": "testreader", "info": "70 targets"}}}';
 }
 else {
+	if ($type == 'track' && $rq == 'getTrackV2') {
+		$rq='track';
+	}
+	else if ($type == 'decoder' && $rq=='gpsV2'){
+		$rq="gps";
+	}
+	else if ($type != 'decoder'){
+		$rq='unknown';
+	}
 	$rt=readFileEntry($rq);
+}
 }
 header('Content-type: application/json');
 if (! $isEncoded) echo json_encode($rt);

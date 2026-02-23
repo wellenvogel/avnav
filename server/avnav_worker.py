@@ -455,7 +455,8 @@ class AVNWorker(InfoHandler):
     return rt
   @classmethod
   def resetHandlerList(cls):
-    cls.allHandlers=[]
+      with cls.handlerListLock:
+        cls.allHandlers=[]
 
   def findFeeder(self,feedername=None):
     if feedername is None:
@@ -488,7 +489,7 @@ class AVNWorker(InfoHandler):
     return None
 
   @classmethod
-  def getAllHandlers(cls,disabled=False):
+  def getAllHandlers(cls,disabled=False) -> 'list[AVNWorker]':
     """get the list of all instantiated handlers
     :param disabled if set to true also return disabled handler
     """
@@ -1110,28 +1111,43 @@ class AVNWorker(InfoHandler):
   def freeAllUsedResources(self):
     self.usedResources=[]
 
-  def getHandledCommands(self):
+  def getApiType(self):
     """get the API commands that will be handled by this instance
        the return must either be a single string or a dict
        of the form {'api':'route','download':'route','upload':'route','list':'route'}
     """
     return None
 
-  def handleApiRequest(self,type,command,requestparam,**kwargs):
+  def getHandledPath(self):
+      return None
+  def getWebsocketPrefix(self):
+      return None
+  def handlePathRequest(self, path, requestparam,server=None,handler=None):
+      raise Exception(f"no path mapping for {path} in {self.getConfigName()}")
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     """
-    handle an http request , handling/parameter/return depend on type
-    raise an exception on error
-    :param type:
-           api - return a json with the response
-           download: return a dict with: mimetype,size,stream
-           upload: -- (exception on error)
-           list: dict with {status:OK,items:[]}, items: list of dict{name:xxx,time:xxx}
-    :param command: the (sub)command
-    :param requestparam: the HTTP request parameter
-    :param kwargs: on upload: rfile,flen
-    :return: json
-    """
-    raise Exception("handler for %s:%s not implemented in %s"%(type,command,self.getConfigName()))
+      handle an http request , handling/parameter/return depend on type
+      raise an exception on error
+      :param command: the (sub)command
+      :param requestparam: the HTTP request parameter
+      :param kwargs: on upload: rfile,flen
+      :return: json
+      """
+    raise Exception("handler for %s not implemented in %s"%(command,self.getConfigName()))
+
+  def handleWebSocketRequest(self, type, path, handler=None, **kwargs):
+    raise NotImplementedError(f"websocket not enabled for {type}")
+  @classmethod
+  def apiCondition(cls,value,type,command):
+      '''
+      handle api requests of old and new type
+      the value must be either equal to type or type must be 'api' and value must be equal to command
+      :param value: the value to check against
+      :param type: the old style type or 'api'
+      :param command: only used if type == 'api'
+      :return:
+      '''
+      return value==type or (type == 'api' and value==command)
     
   #we have 2 startup groups - one for the feeders and 2 for the rest
   #by default we start in groupd 2

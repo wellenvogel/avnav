@@ -11,8 +11,11 @@ runIncludes(){
   done
 }
 
-CFG=/boot/avnav.conf
-[ -f $CFG ] && . $CFG
+CFG="$(cat /proc/mounts | grep boot | cut -d\  -f2)"
+if [ "$CFG" != "" ] ; then
+  CFG="$CFG/avnav.conf"
+  [ -f $CFG ] && . $CFG
+fi
 runIncludes early
 [ "$AVNAV_DPI" = "" ] && AVNAV_DPI=96
 if [ "$AVNAV_DPI" != "" ] ; then

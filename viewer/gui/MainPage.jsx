@@ -11,21 +11,23 @@ import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
-import base from '../base.js';
+import base from '../base.ts';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
-import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog.jsx';
+import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
 import FullScreen from '../components/Fullscreen';
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
-import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
 import LayoutHandler from "../util/layouthandler";
-import {avitem} from "../util/helper";
+import Helper, {avitem} from "../util/helper";
+import {shallowEqual} from "shallow-equal";
+import {RecursiveCompare} from "../util/compare";
+import {getUrlWithBase} from "../util/itemFunctions";
 
 
 const getImgSrc=function(color){
@@ -49,7 +51,11 @@ class BottomLine extends React.Component {
         }
 
         timerCall(sequence) {
-            Requests.getJson("?request=nmeaStatus")
+            Requests.getJson({
+                request:'api',
+                type:'decoder',
+                command:'nmeaStatus'
+            })
                 .then((json)=> {
                     this.timer.guardedCall(sequence,()=> {
                         this.setState({status: json.data});
@@ -95,7 +101,7 @@ class BottomLine extends React.Component {
                             }
                         </div>
                         <div className="link">
-                            <div > AVNav Version <span >{avnav.version}</span></div>
+                            <div > AVNav Version <span >{Helper.avNavVersion()}</span></div>
                             <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="extLink">www.wellenvogel.de/software/avnav/index.php</a>
                             </div>
                         </div>
@@ -108,6 +114,10 @@ class BottomLine extends React.Component {
 const DEFAULT_QUERY_INTERVAL=3000;
 const EMPTY_QUERY_INTERVAL=500;
 
+const nameForSort=(item)=>{
+    const n=item?(item.displayName||item.name):undefined;
+    return (n||'ZZZ').toUpperCase();
+}
 class MainPage extends React.Component {
     constructor(props) {
         super(props);
@@ -116,7 +126,6 @@ class MainPage extends React.Component {
             addOns:[],
             selectedChart:0,
             sequence:0,
-            overlays:{},
             loading: false
         };
         this.fillList=this.fillList.bind(this);
@@ -236,7 +245,7 @@ class MainPage extends React.Component {
             {
                 name: 'NavOverlays',
                 onClick: ()=> {
-                    EditOverlaysDialog.createDialog(DEFAULT_OVERLAY_CHARTENTRY,()=>MapHolder.setRedraw(true));
+                    EditOverlaysDialog.createDialog(undefined,()=>MapHolder.setRedraw(true));
                 },
                 editDisable: true,
                 overflow: true,
@@ -265,7 +274,7 @@ class MainPage extends React.Component {
                 name: 'Cancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},
                 onClick: ()=> {
-                    if (avnav.android) avnav.android.goBack()
+                    if (window.avnavAndroid) window.avnavAndroid.goBack()
                 }
 
             }
@@ -276,12 +285,12 @@ class MainPage extends React.Component {
         let cls="chartItem";
         if (props.selected) cls+=" activeEntry";
         if (props.originalScheme) cls+=" userAction";
-        cls+=props.hasOverlays?" withOverlays":" noOverlays";
+        cls+=props.hasOverlay?" withOverlays":" noOverlays";
         let isConnected=globalStore.getData(keys.properties.connectedMode,false);
         return (
             <div className={cls} onClick={props.onClick}>
-                <img src={props.icon||chartImage}/>
-                <span className="chartName">{props.name}</span>
+                <img src={getUrlWithBase(props,'icon')||chartImage}/>
+                <span className="chartName">{props.displayName||props.name}</span>
                 {isConnected && <Button
                     className="smallButton"
                     name="MainOverlays"
@@ -315,38 +324,23 @@ class MainPage extends React.Component {
         if (newIndex != currentIndex){
             this.setState({selectedChart:newIndex});
         }
-    };
-
-    readOverlays(newChartList){
-        return Requests.getJson('',{},{
-            request:'api',
-            type:'chart',
-            command:'listOverlays'
-        })
-            .then((json)=>{
-                let overlays={};
-                for (let i in json.data){
-                    let overlay=json.data[i];
-                    overlays[overlay.name]=overlay;
-                }
-                for (let i in newChartList){
-                    newChartList[i].hasOverlays=!!overlays[newChartList[i].overlayConfig];
-                }
-                return{overlays:overlays,chartList:newChartList};
-            },(e)=>{return {chartList:newChartList}})
-
     }
     fillList(sequence) {
-        Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
+        Requests.getJson({
+            request:'api',
+            type:'chart',
+            command:'list'
+        },{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
                 let items = [];
                 let current=mapholder.getBaseChart();
-                let lastChartKey=current?current.getChartKey():mapholder.getLastChartKey();
+                let lastLoaded=mapholder.getLastChartKey();
+                let lastChartKey=current?current.getChartKey():lastLoaded?lastLoaded.key:undefined;
                 let i=0;
                 let selectedChart;
                 let isLoading= json.loading;
                 json.items.sort((a,b)=>{
-                    let nameA = (a.name).toUpperCase();
-                    let nameB = (b.name).toUpperCase();
+                    let nameA = nameForSort(a);
+                    let nameB = nameForSort(b);
                     if (nameA < nameB) {
                         return -1;
                     }
@@ -357,15 +351,15 @@ class MainPage extends React.Component {
                 })
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
-                    if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.url;
-                    chartEntry.hasOverlays=!!this.state.overlays[chartEntry.overlayConfig];
-                    if (lastChartKey === chartEntry.key){
+                    if (! chartEntry) continue;
+                    chartEntry.key=chartEntry.name;
+                    if (lastChartKey === chartEntry.name){
                         selectedChart=i;
                     }
                     items.push(chartEntry);
                     i++;
                 }
-                let newState={};
+                let newState={chartList:items,loading:isLoading};
                 if (selectedChart === undefined && items.length > 0){
                     selectedChart=0;
                     current=undefined; //it seems that the last chart from the mapholder is not available any more
@@ -381,25 +375,12 @@ class MainPage extends React.Component {
                         }
                     }
                 }
-                if (newState.selectedChart !== this.state.selectedChart)  this.setState(newState);
-                this.readOverlays(items).then((newState)=>{
-                    this.setState((state,props)=>{
-                        let rt={};
-                        if (! RecursiveCompare(state.chartList,newState.chartList)){
-                            rt.chartList=newState.chartList;
-                        }
-                        if (!RecursiveCompare(state.overlays,newState.overlays)) rt.overlays=newState.overlays;
-                        if (state.loading !== isLoading){
-                            rt.loading=isLoading;
-                        }
-                        if (! rt.chartList && ! rt.overlays && rt.loading === undefined) return null;
-                        return rt;
-                    });
-                    if (sequence !== undefined) {
-                        this.timer.setTimeout(isLoading?EMPTY_QUERY_INTERVAL:DEFAULT_QUERY_INTERVAL)
-                        this.timer.startTimer(sequence);
-                    }
-                });
+                if (! RecursiveCompare(this.state.chartList,items) ||
+                    (newState.selectedChart !== this.state.selectedChart))  this.setState(newState);
+                if (sequence !== undefined) {
+                    this.timer.setTimeout(isLoading?EMPTY_QUERY_INTERVAL:DEFAULT_QUERY_INTERVAL)
+                    this.timer.startTimer(sequence);
+                }
             },
             (error)=>{
                 Toast("unable to read chart list: "+error);

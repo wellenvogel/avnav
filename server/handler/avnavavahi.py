@@ -76,7 +76,7 @@ class ServiceDescription:
     self.currentName=self.name
 
   def getKey(self):
-    return self.name+"."+self.type
+    return (self.name or 'unknown') +"."+ ( self.type or 'unknown')
 
   def equal(self, other) -> bool:
     if other is None:
@@ -98,7 +98,7 @@ class ServiceDescription:
     self.reset()
 
   def __str__(self):
-    return "Avahi Service: %s:%d[%s], reg=%s"%(self.getKey(),self.port,self.currentName,self.isRegistered)
+    return "Avahi Service: %s:%d[%s], reg=%s"%(self.getKey(),self.port or 0,self.currentName or '',self.isRegistered)
 
 
 class FoundService:

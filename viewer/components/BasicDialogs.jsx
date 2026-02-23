@@ -25,30 +25,53 @@
  */
 import DB from "./DialogButton";
 import React, {useEffect, useState} from "react";
-import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText} from "./OverlayDialog";
 import Helper from "../util/helper";
+import {getItemIconProperties} from "../util/itemFunctions";
+import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {useDialogContext} from "./DialogContext";
 
-export const SelectList = ({list, onClick}) => {
-    return <div className="selectList">
+export const defaultSelectSort=(a,b)=>{
+    if (typeof(a) !== 'object' || typeof (b) !== 'object') return 0;
+    const av=(a.label||"").toUpperCase();
+    const bv=(b.label||"").toUpperCase();
+    if (av < bv) return -1;
+    if (av > bv) return 1;
+    return 0;
+}
+
+export const SelectList = ({list, onClick,scrollable,className,sort}) => {
+    if (sort){
+        list=[...list];
+        if (typeof(sort)!=='function'){
+            list.sort(defaultSelectSort);
+        }
+        else{
+            list.sort(sort);
+        }
+    }
+    return <ListFrame scrollable={scrollable} className={className}>
         {list.map(function (elem) {
             if (! (elem instanceof Object)) return null;
-            let cl=Helper.concatsp('listEntry',elem.selected?'selectedItem':undefined,elem.className);
+            const iconProperties=getItemIconProperties(elem);
             return (
-                <div className={cl}
-                     onClick={() => onClick(elem)}
-                     key={elem.value + ":" + elem.label}
-                >
-                    {elem.icon && <span className="icon" style={{backgroundImage: "url('" + elem.icon + "')"}}/>}
-                    <span className="entryLabel">{elem.label}</span>
-                </div>);
+                <ListItem
+                    className={elem.className}
+                    selected={elem.selected}
+                    onClick={()=>onClick(elem)}
+                    key={elem.value + ":" + elem.label}>
+                    <ListSlot icon={iconProperties}></ListSlot>
+                    <ListMainSlot>{elem.label}</ListMainSlot>
+                </ListItem>
+            )
         })}
-    </div>
+    </ListFrame>
 }
-export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback}) => {
+export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback,className,sort}) => {
     const dialogContext = useDialogContext();
     return (
-        <DialogFrame className="selectDialog" title={title || ''}>
-            <SelectList list={list} onClick={(elem) => {
+        <DialogFrame className={Helper.concatsp("selectDialog",className)} title={title || ''}>
+            <SelectList list={list} sort={sort} onClick={(elem) => {
                 dialogContext.closeDialog();
                 if (resolveFunction) resolveFunction(elem);
                 else if (okCallback) okCallback(elem);
@@ -67,8 +90,8 @@ export const SelectDialog = ({resolveFunction, title, list, optResetCallback, ok
     );
 
 };
-export const ConfirmDialog = ({title, text, resolveFunction, children}) => {
-    return <DialogFrame title={title || ''}>
+export const ConfirmDialog = ({title, text, resolveFunction, children,className}) => {
+    return <DialogFrame title={title || ''} className={className} >
         <div className="dialogText">{text}</div>
         {children}
         <DialogButtons buttonList={[

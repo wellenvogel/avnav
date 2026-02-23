@@ -22,10 +22,10 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
-import {stateHelper, useStateObject} from "../util/GuiHelpers";
+import {useStateObject} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropertyHandler from '../util/propertyhandler';
-import {ItemActions} from "../components/FileDialog";
+import {createItemActions, ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
 import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
@@ -41,7 +41,8 @@ import {
 import {EditableStringParameterBase} from "../util/EditableParameter";
 import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
-import DialogButton from "../components/DialogButton";
+import {useHistory} from "../components/HistoryProvider";
+import {ListItem, ListMainSlot} from "../components/ListItems";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -112,10 +113,10 @@ sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteCha
 
 
 const SectionItem=(props)=>{
-    let className=(props.className||"")+" listEntry";
-    if (props.activeItem) className+=" activeEntry";
     return(
-        <div className={className} onClick={props.onClick}>{props.name}</div>
+        <ListItem className={props.className} selected={props.activeItem} onClick={props.onClick}>
+            <ListMainSlot primary={props.name}/>
+        </ListItem>
     );
 };
 
@@ -217,6 +218,7 @@ const HasChangesDialog=({resolveFunction})=>{
 }
 
 const SettingsPage = (props) => {
+    const history=useHistory();
     const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);
     const [section, setSection] = useState('Layer');
     const flattenedKeys = useRef(undefined);
@@ -309,19 +311,18 @@ const SettingsPage = (props) => {
     }, []);
 
     const saveSettings = useCallback(() => {
-        let actions = ItemActions.create('settings');
-        let oldName = globalStore.getData(keys.properties.lastLoadedName).replace(/-*[0-9]*$/, '');
+        let actions = createItemActions({type:'settings'});
+        let oldName = actions.nameToBaseName(globalStore.getData(keys.properties.lastLoadedName)).replace(/-*[0-9]*$/, '');
         let suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
-        let proposedName = actions.nameForUpload(oldName + "-" + suffix);
-        PropertyHandler.listSettings(true)
+        let proposedName = oldName + "-" + suffix;
+        PropertyHandler.listSettings()
             .then((settings) => {
                 const checkFunction = (newName) => {
-                    return checkName(newName, settings, (item) => item.label + ".json");
+                    return checkName(newName, settings, actions.nameForCheck,true,true);
                 }
                 return showPromiseDialog(undefined, (dprops) => <ItemNameDialog
                     {...dprops}
                     fixedPrefix={'user.'}
-                    fixedExt={'json'}
                     title={"Select Name to save settings"}
                     iname={proposedName}
                     checkName={checkFunction}
@@ -332,7 +333,7 @@ const SettingsPage = (props) => {
                 if (!settingsName || settingsName === 'user.') {
                     return Promise.reject();
                 }
-                proposedName = actions.nameForUpload(settingsName);
+                proposedName = settingsName;
                 return PropertyHandler.uploadSettingsData(
                     proposedName,
                     PropertyHandler.exportSettings(values.getState(true)),
@@ -348,7 +349,7 @@ const SettingsPage = (props) => {
             })
 
     }, []);
-    const loadSettings = useCallback(() => {
+    const loadSettingsCb = useCallback(() => {
         loadSettings(values.getState(), globalStore.getData(keys.properties.lastLoadedName))
             .then((settings) => values.setState(settings, true))
             .catch((e) => {
@@ -366,7 +367,7 @@ const SettingsPage = (props) => {
                         return;
                     }
                     saveChanges()
-                        .then(() => props.history.pop())
+                        .then(() => history.pop())
                         .catch((err) => {
                             Toast(err + "")
                         })
@@ -408,8 +409,8 @@ const SettingsPage = (props) => {
                 visible: globalStore.getData(keys.gui.global.onAndroid, false),
                 onClick: () => {
                     confirmAbortOrDo(true).then(() => {
-                        props.history.pop();
-                        avnav.android.showSettings();
+                        history.pop();
+                        window.avnavAndroid.showSettings();
                     });
                 }
             },
@@ -434,7 +435,7 @@ const SettingsPage = (props) => {
                 name: 'SettingsAddons',
                 onClick: () => {
                     confirmAbortOrDo(true).then(() => {
-                        props.history.push("addonconfigpage");
+                        history.push("addonconfigpage");
                     });
                 },
                 storeKeys: {
@@ -461,7 +462,7 @@ const SettingsPage = (props) => {
                 onClick: () => {
                     confirmAbortOrDo().then(() => {
                         resetChanges();
-                        loadSettings();
+                        loadSettingsCb();
                     });
                 },
                 storeKeys: {
@@ -493,7 +494,7 @@ const SettingsPage = (props) => {
                     }
                 },
             },
-            Mob.mobDefinition(props.history),
+            Mob.mobDefinition(history),
             {
                 name: 'Cancel',
                 onClick: () => {
@@ -502,7 +503,7 @@ const SettingsPage = (props) => {
                         return;
                     }
                     confirmAbortOrDo(false).then(() => {
-                        props.history.pop();
+                        history.pop();
                     });
                 }
             }
@@ -551,34 +552,31 @@ const SettingsPage = (props) => {
             let startDialog = () => {
                 layoutLoader.listLayouts()
                     .then((list) => {
-                        const currentName = LayoutHandler.getName() + ".json";
+                        const currentName = LayoutHandler.getName();
+                        const itemActions=createItemActions({type:'layout'});
                         showPromiseDialog(undefined, (dprops) => <ItemNameDialog
                             {...dprops}
                             title={"Start Layout Editor"}
-                            iname={layoutLoader.nameToBaseName(LayoutHandler.name)}
+                            iname={itemActions.nameToBaseName(LayoutHandler.name)}
                             fixedPrefix={'user.'}
-                            fixedExt={'json'}
                             checkName={(newName) => {
-                                if (newName) {
-                                    let checkName = newName.replace(/^user./, '').replace(/\.json$/, '');
-                                    if (!checkName) {
+                                    if (!newName) {
                                         return {
                                             error: 'name must not be empty',
-                                            proposal: layoutLoader.nameToBaseName(LayoutHandler.name)
+                                            proposal: itemActions.nameToBaseName(LayoutHandler.name)
                                         }
                                     }
-                                    if (checkName.indexOf('.') >= 0) {
+                                    if (newName.indexOf('.') >= 0) {
                                         return {
                                             error: 'names must not contain a .',
-                                            proposal: checkName.replace(/\./g, '')
+                                            proposal: newName.replace(/\./g, '')
                                         }
                                     }
-                                }
                                 let cr = checkName(newName, undefined, undefined);
                                 if (cr) return cr;
-                                cr = checkName(newName, list, (item) => item.name + '.json');
+                                cr = checkName(newName, list,itemActions.nameForCheck );
                                 if (cr) {
-                                    if (newName === currentName) {
+                                    if ((layoutLoader.getUserPrefix()+newName) === currentName) {
                                         return {
                                             info: "existing"
                                         }
@@ -593,8 +591,8 @@ const SettingsPage = (props) => {
                             }}
                         />)
                             .then((res) => {
-                                LayoutHandler.startEditing(layoutLoader.fileNameToServerName(res.name));
-                                props.history.pop();
+                                LayoutHandler.startEditing(layoutLoader.getUserPrefix()+res.name);
+                                history.pop();
                             })
                             .catch(() => {
                             })
@@ -725,7 +723,7 @@ const SettingsPage = (props) => {
         }
     }
     sectionItems.forEach((sitem) => {
-        let className = "listEntry";
+        let className = "";
         if ((sectionChanges[sitem.name] || {}).isChanged) {
             className += " changed";
         }
@@ -742,7 +740,6 @@ const SettingsPage = (props) => {
     const currentValues = {...values.getState(), ...layoutSettings.getState()};
     return <PageFrame
         {...props}
-        id={'settingspage'}
     >
         <PageLeft
             title={title + ((props.small && !leftPanelVisible) ? " " + section : "")}
@@ -766,7 +763,7 @@ const SettingsPage = (props) => {
                                 changeItem(k, nv[k]);
                             }
                         }}
-                        itemClassName={(param) => Helper.concatsp('listEntry', itemClasses[param.name])}
+                        itemClassName={(param) => itemClasses[param.name]}
                         itemchildren={(param) => {
                             if (!(param.name in layoutValues) || !layoutEditing) return null;
                             return <Button
@@ -783,6 +780,7 @@ const SettingsPage = (props) => {
             </div>
         </PageLeft>
         <ButtonList
+            page={props.id}
             itemList={buttons}
         />
     </PageFrame>

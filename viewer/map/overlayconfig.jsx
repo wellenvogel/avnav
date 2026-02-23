@@ -24,6 +24,7 @@
  */
 import shallowcompare from '../util/compare';
 import Helper from "../util/helper";
+import Requests from "../util/requests";
 
 /**
  * we sort the overlays into 6 buckets (from lowest to highest)
@@ -60,7 +61,7 @@ const itemToBucket=function(buckets,item){
 const filterOverlayItem=(item)=>{
     let rt=undefined;
     if (item.type === 'chart') {
-        let filter={chartKey:true,type:true,opacity:true,enabled:true,bucket:true};
+        let filter={chartKey:true,name:true,displayName:true,type:true,opacity:true,enabled:true,bucket:true};
         filter[OVERLAY_ID]=true;
         rt=Helper.filteredAssign(filter,item);
     }
@@ -85,10 +86,39 @@ export const getKeyFromOverlay=(overlay)=>{
     if (!overlay) return;
     return overlay[OVERLAY_ID];
 }
+const DEFAULT_EXPAND_FILTER={
+    error:true,
+    nonexistent:true,
+    url: true
+}
+export const overlayResetExpands=(item,opt_copy)=>{
+    if (! item) return;
+    if (opt_copy) item={...item};
+    for (let k in DEFAULT_EXPAND_FILTER){
+        delete item[k];
+    }
+    return item;
+}
+/**
+ * get an object with all expansion values set to a defined value
+ * @param opt_value - the value to be set
+ * @returns {{error: boolean, nonexistent: boolean, url: boolean}}
+ */
+export const overlayExpandsValue=(opt_value)=>{
+    const rt={...DEFAULT_EXPAND_FILTER};
+    for (let k in rt) rt[k]=opt_value;
+    return rt;
+}
+const identical=(item1,item2)=>{
+    if (! item1 && item2) return false;
+    if (! item2 && item1) return false;
+    return (item1.type === item2.type && item1.name === item2.name);
+}
 export default class OverlayConfig{
-    constructor(overlayConfig,opt_mutable) {
+    constructor(overlayConfig,opt_mutable,opt_defaults) {
         this.config=overlayConfig||{};
         this.mutable=opt_mutable||false;
+        if (opt_defaults) this.config.defaults=opt_defaults;
         if (! this.config.defaults) this.config.defaults=[];
         else{
             let newDefaults=[];
@@ -153,6 +183,21 @@ export default class OverlayConfig{
         }
         return new OverlayConfig(rt,true);
     }
+
+    /**
+     * removed merged data
+     * only will remove the data from DEFAULT_EXPAND_FILTER
+     */
+    cleanupMerged(){
+        if (! this.config) return;
+        ['overlays','defaults'].forEach((scope)=>{
+            const items=this.config[scope];
+            if (! items ) return;
+            items.forEach(item=>{
+                overlayResetExpands(item);
+            })
+        })
+    }
     /**
      * fill an object (keys are the bucket names) with a copy of the overlay objects
      * @returns {{}}
@@ -199,7 +244,6 @@ export default class OverlayConfig{
      */
     writeBack(overlayList){
         this.checkMutable();
-        let self=this;
         if (! overlayList) return false;
         let newDefaults=[];
         let newOverlays=[];
@@ -207,7 +251,7 @@ export default class OverlayConfig{
         let currentBucket='L2';
         let normalItemBuckets=['L2','L1','H1','H2'];
         overlayList.forEach((item) => {
-            if (self.isChartBucket(item)) {
+            if (this.isChartBucket(item)) {
                 currentBucket = 'M';
                 return;
             }
@@ -291,10 +335,16 @@ export default class OverlayConfig{
      * @returns {{overlays: *, name: *, useDefault: boolean, defaultsOverride: {}}}
      */
     getWriteBackData(){
+        const overlays=[];
+        if (this.config && this.config.overlays) {
+            this.config.overlays.forEach((item) => {
+                overlays.push(overlayResetExpands(item, true));
+            })
+        }
         return {
             useDefault: this.config.useDefault,
             name: this.config.name,
-            overlays: this.config.overlays,
+            overlays: overlays,
             defaultsOverride: this.config.defaultsOverride
         }
     }
@@ -407,5 +457,251 @@ export default class OverlayConfig{
     }
     hasDefaults(){
         return this.config.defaults.length > 0;
+    }
+
+    /**
+     * remove an item from the config
+     * item must have type and name
+     * @param item
+     * @param opt_defaults if set - also remove entries from defaults
+     */
+    removeItem(item,opt_defaults){
+        if (! item || ! item.type || ! item.name) return false;
+        if (! this.config || ! this.config.overlays) return false;
+        let changed=false;
+        const containers=opt_defaults?['overlays','defaults']:['overlays'];
+        for (let container of containers) {
+            const newOverlays=[];
+            (this.config[container]||[]).forEach((overlay) => {
+                if (! identical(item,overlay)) {
+                    newOverlays.push(overlay);
+                } else {
+                    changed = true;
+                }
+            });
+            if (changed) {
+                this.config[container] = newOverlays;
+                this.hasChanges = true;
+            }
+        }
+        return changed;
+    }
+
+    renameItem(item,newName){
+        if (! item || ! item.type || ! item.name || ! newName) return false;
+        if (! this.config || ! this.config.overlays) return false;
+        let changed=0;
+        this.config.overlays.forEach((overlay)=>{
+            if (!identical(item,overlay)) {
+                return;
+            }
+            changed++;
+            overlay.name=newName;
+            delete overlay.url; //the url will be wrong any way
+        });
+        if (changed){
+            this.hasChanges=true;
+        }
+        return changed;
+    }
+
+}
+
+export const fetchOverlayConfig=(chartItem)=>{
+    let getParameters = {
+        request: 'api',
+        type: 'chart',
+        name:chartItem?chartItem.name:undefined,
+        command: 'getConfig'
+    };
+    let defaultConfig;
+    let config;
+    const requests=[
+        Requests.getJson(getParameters)
+            .then((json)=>{
+                config = json.data;
+            })];
+    if (chartItem) {
+        requests.push(
+            Requests.getJson({...getParameters, name:undefined})
+                .then((config) => {
+                    defaultConfig = config.data;
+                }));
+    }
+    return Promise.all(requests)
+        .then((result)=> {
+            if (!config) throw new Error("unable to load overlay config");
+            if (chartItem && !defaultConfig) throw new Error("unable to load default config");
+            if (config.useDefault === undefined) config.useDefault = true;
+            const overlayConfig= new OverlayConfig(config, true, defaultConfig ? defaultConfig.overlays : undefined);
+            return overlayConfig;
+        })
+}
+export const DEFAULT_OVERLAY_CONFIG = "default.cfg";
+
+export const handleOverlaysSum = async (chartList, handleOneConfig) => {
+    try {
+        const results = await handleOverlays(chartList, handleOneConfig);
+        let num = 0;
+        let esum=0;
+        let errors = "";
+        results.forEach(item => {
+            if (item.status !== 'OK') {
+                errors += item.name + ":" + item.status + ","
+            } else {
+                const changes=parseInt(item.info);
+                num += changes;
+                if (changes) esum+=1;
+            }
+        })
+        return {
+            status: (errors !== "") ? errors : 'OK',
+            sum: num,
+            numOverlays:esum
+        }
+    }catch (error){
+        return {
+            status: error+""
+        }
+    }
+}
+export const removeItemsFromOverlays = async (chartList, itemList) => {
+    if (! itemList) return false;
+    const handleOneConfig=(overlayConfig,idx)=>{
+        let numChanges = 0;
+        itemList.forEach(item => {
+            if (overlayConfig.removeItem(item)) {
+                numChanges++;
+            }
+        })
+        return numChanges;
+    }
+    const res=await handleOverlaysSum(chartList, handleOneConfig);
+    if (res.status==='OK'){
+        res.info=`removed ${res.sum} entries from ${res.numOverlays} overlays`;
+    }
+    return res;
+}
+export const renameItemInOverlays=async (chartlist,item,newName)=>{
+    if (!item || ! newName) return false;
+    const handleOneConfig=(overlayConfig,idx)=>{
+        return overlayConfig.renameItem(item,newName);
+    }
+    const res=await handleOverlaysSum(chartlist,handleOneConfig);
+    if (res.status==='OK'){
+        res.info=`renamed ${res.sum} entries from ${res.numOverlays} overlays`;
+    }
+    return res;
+}
+/**
+ * execute a callback function on multiple overlay configs
+ * @param chartList the list of charts (as returned from a list request, each item must have the name property)
+ *                  if name is unset or DEFAULT_OVERLAY_CONFIG it adresses the default config
+ *                  if not set - fetch all charts first
+ * @param callback a callback function that is called with
+ *        overlay - the overlay config as fetched from the server
+ *        idx     - the index in the chart list
+ *        return true to send back the overlay config to the server
+ *        it can also return a promise
+ * @returns {Promise<Awaited<*[]>|*>}
+ */
+export const handleOverlays = async (chartList, callback) => {
+    let paramName="name";
+    if (! chartList) {
+        paramName="configName";
+        const data=await Requests.getJson({
+            type:"chart",
+            command:"listConfig"
+        });
+        chartList=data.items||[];
+    }
+    const results = [];
+    const actions = [];
+    const alreadyHandled = {};
+    const updateResult = (idx, status, info) => {
+        results.forEach((item) => {
+            if (item.index === idx) {
+                item.status = status;
+                item.info = info;
+            }
+        })
+    }
+    const writeBack=async (overlay,requestName)=>{
+        if (! overlay) return false;
+        if (overlay.isEmpty()){
+            await Requests.getJson({
+                type:'chart',
+                command: 'deleteConfig',
+                [paramName]: requestName
+            })
+            return;
+        }
+        let postParam = {
+            request: 'api',
+            command: 'saveConfig',
+            type: 'chart',
+            [paramName]: requestName,
+            overwrite: true
+        };
+        await Requests.postPlain(postParam, JSON.stringify(overlay.getWriteBackData(), undefined, 2))
+    }
+    const handleOneOverlay=async (requestName, chart, idx)=>{
+        const data = await Requests.getJson({
+            type: 'chart',
+            command: 'getConfig',
+            [paramName]: requestName,
+        });
+        if (!data || ! data.data) throw new Error(" no overlay for " + chart);
+        const overlay=new OverlayConfig(data.data);
+        const  res=callback(overlay,idx);
+        if (res instanceof Promise) {
+            const wb=await res;
+            if (wb){
+                await writeBack(overlay,requestName);
+            }
+            return (!!wb)
+        }
+        else{
+            if (res) await writeBack(overlay,requestName);
+            return (!!res);
+        }
+    }
+    let listIdx=-1;
+    chartList.forEach(chart => {
+        listIdx+=1;
+        if (chart instanceof Object) {
+            chart = chart.name;
+        }
+        if (alreadyHandled[chart]) {
+            return;
+        }
+        alreadyHandled[chart] = true;
+        const idx = results.length;
+        const resEntry = {
+            name: chart,
+            info: "not handled",
+            status: 'FAIL',
+            index: idx
+        }
+        const requestName=(chart === DEFAULT_OVERLAY_CONFIG && paramName === 'name')?undefined:chart;
+
+        actions.push(handleOneOverlay(requestName,chart,listIdx));
+        resEntry.info = "started";
+        results.push(resEntry);
+    })
+    if (actions.length > 0) {
+        const actionResults = await Promise.allSettled(actions);
+
+        for (let i = 0; i < actionResults.length; i++) {
+            const res = actionResults[i];
+            if (res.status === 'fulfilled') {
+                updateResult(i, 'OK', res.value);
+            } else {
+                updateResult(i, res.reason || 'ERROR', res.reason);
+            }
+        }
+        return results;
+    } else {
+        return results;
     }
 }

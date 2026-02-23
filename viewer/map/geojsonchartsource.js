@@ -35,6 +35,8 @@ import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
 import {GeoJSON as olGeoJSON} from 'ol/format';
 import {FeatureInfo, OverlayFeatureInfo} from "./featureInfo";
+import {fetchItem} from "../util/itemFunctions";
+import base from "../base";
 
 const supportedStyleParameters= {
     lineWidth:editableOverlayParameters.lineWidth,
@@ -61,7 +63,7 @@ class GeoJsonChartSource extends ChartSourceBase{
      *
      * @param mapholer
      * @param chartEntry
-     *        properties: url - the url of the gpx
+     *        properties: name - the name of the geojson
      *                    icons - the base url for icons (if points have a sym)
      *                    defaultIcon - the url for an icon if sym not found (opt)
      *                    minZoom - minimal zoom (opt)
@@ -205,33 +207,40 @@ class GeoJsonChartSource extends ChartSourceBase{
         });
         return rt;
     }
-    prepareInternal() {
-        let url = this.chartEntry.url;
-        return new Promise((resolve, reject)=> {
-            if (!url) {
-                reject("no url for "+this.chartEntry.name);
-                return;
-            }
-            this.source = new olVectorSource({
-                format: new olGeoJSON(),
-                url: url,
-                wrapX: false
-            });
-            let layerOptions={
-                source: this.source,
-                style: this.styleFunction,
-                opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
-            };
-            if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom=this.chartEntry.minZoom;
-            if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom=this.chartEntry.maxZoom;
-            let vectorLayer = new olVectorLayer(layerOptions);
-            resolve([vectorLayer]);
+
+    async prepareInternal() {
+        this.source = new olVectorSource({
+            format: new olGeoJSON(),
+            loader: (extent,resolution,projection)=> {
+                fetchItem(this.chartEntry)
+                    .then((data)=>{
+                        let features=this.source.getFormat().readFeatures(data,{
+                            extent: extent,
+                            featureProjection: projection,
+                        });
+                        this.source.addFeatures(features);
+                    })
+                    .catch((err)=>{
+                        base.log(`unable to load geojson ${this.chartEntry.name}: ${err}`);
+                        this.source.removeLoadedExtent(extent);
+                    })
+            },
+            wrapX: false
         });
+        let layerOptions = {
+            source: this.source,
+            style: this.styleFunction,
+            opacity: this.chartEntry.opacity !== undefined ? parseFloat(this.chartEntry.opacity) : 1
+        };
+        if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom = this.chartEntry.minZoom;
+        if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom = this.chartEntry.maxZoom;
+        let vectorLayer = new olVectorLayer(layerOptions);
+        return [vectorLayer];
     }
     featureToInfo(feature,pixel){
         let rt=new OverlayFeatureInfo({
             title:this.getName(),
-            url: this.getUrl(),
+            name: this.getChartKey(),
             overlaySource: this
         });
         if (! feature) {
@@ -260,7 +269,8 @@ class GeoJsonChartSource extends ChartSourceBase{
         rt.userInfo=userInfo;
         return rt;
     }
-    static analyzeOverlay(overlay){
+    static async analyzeOverlay(item){
+        const overlay=await fetchItem(item);
         return readFeatureInfoFromGeoJson(overlay);
     }
 }

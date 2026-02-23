@@ -27,19 +27,17 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-
+import os.path
 
 from avnav_manager import *
-from avnav_nmea import *
 from avnav_worker import *
-import avnav_handlerList
 from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHttpServer
 
 
 class AVNUserHandler(AVNDirectoryHandlerBase):
   PREFIX = "/user/viewer"
-  FLIST=['user.css',"user.js","splitkeys.json","images.json"]
+  FLIST=['user.css',"user.js","splitkeys.json","images.json","user.mjs"]
   EMPTY_JSONS=['keys.json']
   @classmethod
   def getPrefix(cls):
@@ -57,7 +55,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
     if not httpserver:
       return
-    srcDir=httpserver.handlePathmapping('viewer')
+    srcDir=httpserver.handlePathmapping(AVNHttpServer.PATH_VIEWER)
     if not os.path.isdir(srcDir):
       return
     if not os.path.isdir(self.baseDir):
@@ -66,6 +64,9 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
       src=os.path.join(srcDir,fn)
       dest=os.path.join(self.baseDir,fn)
       if not os.path.exists(dest) and os.path.exists(src):
+        if fn == 'user.mjs' and os.path.exists(os.path.join(self.baseDir,'user.js')):
+            #only create a user.mjs if no user.js exists
+            continue
         AVNLog.info("copying template from %s to %s"%(src,dest))
         shutil.copyfile(src,dest)
     for jf in self.EMPTY_JSONS:
@@ -74,11 +75,19 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
         with open(dest,"w",encoding='utf-8') as fh:
           fh.write("{\n}\n")
 
+  def handleRename(self, name, newName, requestparam):
+      rt=super().handleRename(name, newName, requestparam)
+      if name in self.FLIST or newName in self.FLIST:
+          self.navdata.updateChangeCounter('config')
+      return rt
+
   def handleDelete(self,name):
     super(AVNUserHandler, self).handleDelete(name)
+    if name in self.FLIST:
+        self.navdata.updateChangeCounter('config')
     if self.addonHandler is not None:
       try:
-        self.addonHandler.deleteByUrl(self.nameToUrl(name))
+        self.addonHandler.deleteByUrl(self.buildUrl(name))
       except Exception as e:
         AVNLog.error("unable to delete addons for %s:%s", name, e)
 
@@ -93,7 +102,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     if path == 'user.js':
       fname=os.path.join(self.baseDir,path)
       if os.path.exists(fname) and handler is not None:
-        return handler.sendJsFile(fname,self.PREFIX)
+        return AVNJsDownload(fname,self.PREFIX)
     return super(AVNUserHandler, self).getPathFromUrl(path, handler,requestParam)
 
 
@@ -140,8 +149,7 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
 
   def startInstance(self, navdata):
     super().startInstance(navdata)
-    self.baseDir=os.path.join(self.httpServer.handlePathmapping('viewer'),'images')
-
+    self.baseDir=os.path.join(self.httpServer.handlePathmapping(AVNHttpServer.PATH_VIEWER),'images')
 
 
 
@@ -149,4 +157,5 @@ avnav_handlerList.registerHandler(AVNOverlayHandler)
 avnav_handlerList.registerHandler(AVNUserHandler)
 avnav_handlerList.registerHandler(AVNImagesHandler)
 avnav_handlerList.registerHandler(AVNIconHandler)
+
 

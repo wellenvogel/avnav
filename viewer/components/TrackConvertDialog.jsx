@@ -31,8 +31,7 @@ import {
     DBCancel,
     DialogButtons,
     DialogFrame,
-    DialogRow,
-    useDialogContext
+    DialogRow
 } from "./OverlayDialog";
 import Requests from '../util/requests';
 import Toast from "./Toast";
@@ -42,13 +41,16 @@ import NavCompute from "../nav/navcompute";
 import Formatter from '../util/formatter';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
-import {Input} from "./Inputs";
+import {Input, InputReadOnly} from "./Inputs";
 import SimpleRouteFilter from "../nav/simpleroutefilter";
 import navdata from "../nav/navdata";
 import routeobjects from "../nav/routeobjects";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import {InfoItem} from "./BasicDialogs";
+import {useHistory} from "./HistoryProvider";
+import {createItemActions} from "./FileDialog";
+import {useDialogContext} from "./DialogContext";
 
 const RouteHandler=navdata.getRoutingHandler();
 
@@ -187,7 +189,9 @@ const TrackPointFields=[
         convert: (v) => parseFloat(v)
     }
 ]
-export const getTrackInfo = (trackName,opt_point) => {
+export const getTrackInfo = (trackItem,opt_point) => {
+    if (! trackItem || ! trackItem.name) return Promise.reject("no track name");
+    const trackName=trackItem.name;
     if (trackName === 'current'){
         let trackPoints=globalstore.getData(keys.nav.track.currentTrack,[]);
         return getInfoForList(trackPoints,opt_point);
@@ -195,10 +199,9 @@ export const getTrackInfo = (trackName,opt_point) => {
     let trackInfo=new TrackInfo(opt_point);
     return new Promise((resolve, reject) => {
         if (!trackName) reject("missing track name");
-        Requests.getHtmlOrText('', {
-            useNavUrl: true
-        }, {
-            request: 'download',
+        Requests.getHtmlOrText({
+            request:'api',
+            command: 'download',
             type: 'track',
             name: trackName
         })
@@ -282,6 +285,7 @@ const CONVERT_INFO_ROWS=[
     ];
 
 const AskEditRoute=(props)=>{
+    const history=useHistory();
     return  <div className="AskEditRouteDialog flexInner">
         <h3 className="dialogTitle">Route Created</h3>
         <div className="dialogRow">
@@ -295,7 +299,7 @@ const AskEditRoute=(props)=>{
                 onClick={()=>{
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                     editor.setNewRoute(props.route,0);
-                    props.history.push('editroutepage',{center:true});
+                    history.push('editroutepage',{center:true});
                 }}
             >Edit</DB>
         </div>
@@ -318,13 +322,16 @@ export const TrackConvertDialog=(props)=> {
     const [name,setName]=useState("Track-"+props.name);
     const [loaded,setLoaded]=useState(false);
     const [processing,setProcessing]=useState(false);
-    const [currentRoutes,setCurrentRoutes]=useState([]);
     const [maxXte,setMaxXte]=useState(props.maxXte||20);
     const [info,setInfo]=useState({});
     const [originalInfo,setOriginalInfo]=useState({});
     const dialogContext=useDialogContext();
+    const itemActions=createItemActions('route');
+    const createAction=itemActions.getCreateAction().copy({
+        proposal: "Track-"+props.name.replace(/\.gpx$/,'')
+    });
     useEffect(() => {
-        getTrackInfo(props.name)
+        getTrackInfo({name:props.name})
             .then((info) => {
                 setPoints(info.points||[])
                 setLoaded(true);
@@ -341,19 +348,20 @@ export const TrackConvertDialog=(props)=> {
             .catch((error) => Toast(error));
     }, []);
     useEffect(() => {
-        RouteHandler.listRoutes(true)
-            .then((routes)=>{
-                setCurrentRoutes(routes);
+        createAction.action(dialogContext)
+            .then((res)=>{
+                if (! res) {
+                    dialogContext.closeDialog();
+                }
+                else {
+                    setName(res.name);
+                }
             })
-            .catch((error)=>{Toast(error)});
+        .catch((error)=>{
+            if (error)Toast(error);
+            dialogContext.closeDialog();
+        });
     },[]);
-    const existsRoute=useCallback((name)=>{
-        if (Helper.getExt(name) !== 'gpx') name+='.gpx';
-        for (let i=0;i<currentRoutes.length;i++){
-            if (currentRoutes[i].name === name) return true;
-        }
-        return false;
-    },[currentRoutes]);
 
     const okClicked=useCallback(()=>{
         let rname=name.replace(/\.gpx$/,"");
@@ -369,7 +377,6 @@ export const TrackConvertDialog=(props)=> {
                 if (mapholder.getCurrentChartEntry()){
                     dialogContext.replaceDialog(()=>{
                         return <AskEditRoute
-                            history={props.history}
                             route={route}
                             />
                     })
@@ -393,8 +400,8 @@ export const TrackConvertDialog=(props)=> {
     },[points,maxXte]);
         let maxroute=props.maxroute||50;
         let currentPoints=info.numPoints||0;
-        let existingName=existsRoute(name);
-        let displayName=name.replace(/\.gpx$/,'');
+        let displayName=routeobjects.nameToBaseName(name);
+        const isServer=routeobjects.isServerName(name);
         if (! loaded){
             return <DialogFrame className="TrackConvertDialog" title={"Convert Track to Route"}>
                 <DialogRow>{"loading "+props.name}</DialogRow>
@@ -402,13 +409,13 @@ export const TrackConvertDialog=(props)=> {
             </DialogFrame>
         }
         return  <DialogFrame className="TrackConvertDialog" title={"Convert Track to Route"}>
-            <Input
+            <InputReadOnly
                 dialogRow={true}
                 label="route name"
                 value={displayName}
-                onChange={(nv)=>setName(nv+".gpx")}
-                />
-            {existingName && <div className="warning">Name already exists</div>}
+                >
+                {isServer && <span className={'infoImages'}> <span className={"icon server"}></span></span>}
+            </InputReadOnly>
             <div className="originalPoints">
                 <div className="heading dialogRow">original points</div>
                 {CONVERT_INFO_ROWS.map((row)=>{
@@ -444,19 +451,14 @@ export const TrackConvertDialog=(props)=> {
             <DialogButtons>
                 <DB name={"cancel"}
                 >Cancel</DB>
-                {existingName?<DB name={"ok"}
-                    onClick={okClicked}
-                    close={false}
-                >Overwrite</DB>:
                 <DB name={"ok"}
                     onClick={okClicked}
                     close={false}
-                >Save</DB>}
+                >Save</DB>
             </DialogButtons>
         </DialogFrame>
 }
 
 TrackConvertDialog.propTypes={
-    history: PropTypes.object.isRequired,
     name: PropTypes.string.isRequired
 }

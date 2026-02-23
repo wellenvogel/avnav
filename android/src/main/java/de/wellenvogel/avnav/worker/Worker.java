@@ -31,7 +31,7 @@ public abstract class Worker implements IWorker {
             new EditableParameter.StringParameter("ipaddress",R.string.labelSettingsIpAddress,null);
     static final EditableParameter.IntegerParameter IPPORT_PARAMETER=
             new EditableParameter.IntegerParameter("port",R.string.labelSettingsIpPort,null);
-    static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
+    protected static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
             new EditableParameter.StringParameter("name",R.string.labelSettingsSource,"");
     static final EditableParameter.StringParameter TYPENAME_PARAMETER=
             new EditableParameter.StringParameter("typeName"); //not intended to be edited
@@ -225,7 +225,8 @@ public abstract class Worker implements IWorker {
         return status.id;
     }
     @Override
-    public synchronized JSONObject getEditableParameters(boolean includeCurrent,Context context) throws JSONException {
+    public synchronized JSONObject getEditableParameters(String child, boolean includeCurrent, Context context) throws JSONException {
+        if (child != null) throw new JSONException("cannot get child parameters");
         JSONObject rt=new JSONObject();
         if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson(context));
         if (includeCurrent) rt.put("values",parameters!=null?parameters:new JSONObject());
@@ -239,7 +240,8 @@ public abstract class Worker implements IWorker {
     }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam, boolean replace,boolean check) throws JSONException, IOException {
+    public synchronized void setParameters(String child, JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
+        if (child != null) throw new JSONException("cannot set child parameters");
         if (parameterDescriptions == null) throw new JSONException("no parameters defined");
         if (! replace){
             for (Iterator<String> it = parameters.keys(); it.hasNext(); ) {
@@ -406,5 +408,10 @@ public abstract class Worker implements IWorker {
 
     @Override
     public void onResume() {
+    }
+
+    @Override
+    public void deleteChild(String child) throws Exception {
+        throw new Exception("cannot delete child");
     }
 }

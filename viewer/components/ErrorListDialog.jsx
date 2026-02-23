@@ -23,11 +23,12 @@
  ###############################################################################
  * show a list of errors
  */
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, showDialog, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow, showDialog} from "./OverlayDialog";
 import React, {useState} from "react";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import {AlertDialog} from "./BasicDialogs";
+import {useDialogContext} from "./DialogContext";
 
 export const ErrorListDialog=({errors,title,className,refresh})=>{
     const [errorList,setErrorList]=useState(errors);

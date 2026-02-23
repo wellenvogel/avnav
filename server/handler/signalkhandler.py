@@ -82,6 +82,7 @@ import hashlib
 import hmac
 import json
 import os
+import posixpath
 import re
 import sys
 import threading
@@ -104,7 +105,7 @@ except:
   pass
 
 
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog, AVNUtil, AVNStringDownload, AVNDataDownload, AVNJsonDownload
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 from avnuserapps import AVNUserAppHandler
 from charthandler import AVNChartHandler
@@ -1751,18 +1752,18 @@ class AVNSignalKHandler(AVNWorker):
       AVNLog.debug("unable to list charts: %s"%traceback.format_exc())
       return []
 
-  def getHandledCommands(self):
-    return {'path': self.PREFIX+"/"+self.CHARTPREFIX}
+  def getHandledPath(self):
+      return self.PREFIX + "/" + self.CHARTPREFIX
 
-  def handleApiRequest(self, type, command, requestparam, **kwargs):
-    handler = kwargs.get('handler')
-    if type == 'path':
-      prefix=self.PREFIX+"/"+self.CHARTPREFIX
-      if not command.startswith(prefix+"/"):
-        raise Exception("unknown path %s"%command)
-      path=command[len(prefix)+1:]
-      return self.handleChartRequest(path,handler)
-    raise Exception("unable to handle user request %s"%(type))
+  def handlePathRequest(self, path, requestparam, server=None, handler=None):
+      prefix = self.CHARTPREFIX
+      if not path.startswith(prefix + "/"):
+          raise Exception("unknown path %s" % path)
+      path = path[len(prefix) + 1:]
+      return self.handleChartRequest(path, handler)
+
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
+    raise Exception("unable to handle user request %s"%(command))
 
   AVNAV_XML="""<?xml version="1.0" encoding="UTF-8" ?>
   <TileMapService version="1.0.0" >
@@ -1802,8 +1803,7 @@ class AVNSignalKHandler(AVNWorker):
       raise Exception("chart %s not found"%chartName)
     if parr[1] == "sequence":
       sData={'status':'OK','sequence':self.configSequence}
-      handler.sendNavResponse(json.dumps(sData))
-      return
+      return AVNJsonDownload(sData)
     if parr[1] == "avnav.xml":
       requestHost = handler.headers.get('host')
       requestHostAddr = requestHost.split(':')[0]
@@ -1820,20 +1820,14 @@ class AVNSignalKHandler(AVNWorker):
         'url':url,
       })
       data=self.AVNAV_XML%param
-      handler.send_response(200)
-      handler.send_header("Content-type", "text/xml")
-      handler.send_header("Content-Length", len(data))
-      handler.send_header("Last-Modified", handler.date_time_string())
-      handler.end_headers()
-      handler.wfile.write(data.encode('utf-8'))
-      return True
+      return AVNStringDownload(data)
     if parr[1] == "sequence":
       return {'status':'OK','sequence':0}
     if len(parr) < 5:
       raise Exception("invalid request to chart %s: %s" % (chartName, url))
     replaceV={'z':parr[2],
               'x':parr[3],
-              'y':re.sub("\..*","",parr[4])}
+              'y':re.sub(r"\..*","",parr[4])}
     skurl=chart['internal']['url']
     for k in list(replaceV.keys()):
       skurl=skurl.replace("{"+k+"}",replaceV[k])
@@ -1845,13 +1839,8 @@ class AVNSignalKHandler(AVNWorker):
     except:
       AVNLog.debug("unable to read tile from sk %s:%s"%(url,traceback.format_exc()))
       return
-    handler.send_response(200)
-    handler.send_header("Content-type", "image/%s"%chart['internal']['format'])
-    handler.send_header("Content-Length", len(tileData))
-    handler.send_header("Last-Modified", handler.date_time_string())
-    handler.end_headers()
-    handler.wfile.write(tileData)
-    return True
+    return AVNDataDownload(tileData,"image/%s"%chart['internal']['format'])
+
 
 avnav_handlerList.registerHandler(AVNSignalKHandler)
 

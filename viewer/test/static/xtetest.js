@@ -91,7 +91,7 @@
             }
         ];
         const NavCompute=window.avnav.debug.navcompute;
-        const LatLon=window.avnav.api.LatLon();
+        const LatLon=window.avnavLegacy.LatLon();
         const getTestPoints=(testset)=>{
             let rt=[];
             testset.testpoints.forEach((tp)=>{

@@ -4,8 +4,11 @@ err(){
     exit 1
 }
 pdir=`dirname $0`
-CFG=/boot/avnav.conf
-[ -f $CFG ] && . $CFG
+CFG="$(cat /proc/mounts | grep boot | cut -d\  -f2)"
+if [ "$CFG" != "" ] ; then
+  CFG="$CFG/avnav.conf"
+  [ -f $CFG ] && . $CFG
+fi
 pluginDir="$pdir/../../server/plugins/switchDesk"    
 if [ "$AVNAV_STARTX" != "yes" ] ; then
   logger -t avnav remove switchdesk

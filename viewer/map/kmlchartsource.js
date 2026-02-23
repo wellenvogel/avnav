@@ -36,7 +36,9 @@ import {Vector as olVectorLayer} from 'ol/layer';
 import {Point as olPoint} from 'ol/geom';
 import {KML as olKMLFormat} from 'ol/format';
 import base from "../base";
-import {FeatureInfo, OverlayFeatureInfo} from "./featureInfo";
+import {OverlayFeatureInfo} from "./featureInfo";
+import {fetchItem, fetchItemInfo} from "../util/itemFunctions";
+import Helper from "../util/helper";
 
 const supportedStyleParameters= {
     lineWidth:editableOverlayParameters.lineWidth,
@@ -66,7 +68,7 @@ class KmlChartSource extends ChartSourceBase{
      *
      * @param mapholer
      * @param chartEntry
-     *        properties: url - the url of the gpx
+     *        properties: name - the name of the kml/kmz
      *                    icons - the base url for icons (if points have an icon url)
      *                    defaultIcon - the url for an icon if sym not found (opt)
      *                    minZoom - minimal zoom (opt)
@@ -82,6 +84,18 @@ class KmlChartSource extends ChartSourceBase{
         this.source=undefined;
         this.styleParameters=this.buildStyleConfig(supportedStyleParameters);
 
+    }
+    static async fetchMain(item){
+        if (! item || ! item.name) throw new Error("invalid overlay, no name");
+        if (Helper.getExt(item.name) !== 'kmz'){
+            return await fetchItem(item);
+        }
+        let info=item;
+        if (! item.url){
+           info=await fetchItemInfo(item);
+        }
+        if (! info.url) throw new Error("unable to obtain url for kmz "+item.name);
+        return await Requests.getHtmlOrText(info.url+"/doc.kml",{},{'_':(new Date()).getTime()})
     }
     redraw() {
         if (this.source){
@@ -104,16 +118,20 @@ class KmlChartSource extends ChartSourceBase{
                 currentUrl=currentUrl.substr(ourBase.length);
                 if (currentUrl.startsWith("/")) currentUrl=currentUrl.substr(1);
             }
+            let fallbackUrl;
             if (currentUrl.startsWith("http")){
                 if (this.styleParameters[supportedStyleParameters.allowOnline]){
                     imageStyle.setScale(this.getScale());
-                    return style;
+                    url=currentUrl;
                 }
-                url=this.styleParameters[supportedStyleParameters.defaultIcon];
+                else {
+                    url = this.styleParameters[supportedStyleParameters.defaultIcon];
+                }
             }
             else{
                 if (this.styleParameters[supportedStyleParameters.icon]){
-                    url=this.styleParameters[supportedStyleParameters.icon]+"/"+currentUrl+"?fallback="+encodeURIComponent(this.styleParameters[supportedStyleParameters.defaultIcon]);
+                    url=this.styleParameters[supportedStyleParameters.icon];
+                    fallbackUrl=this.styleParameters[supportedStyleParameters.defaultIcon];
                 }
                 else{
                     url=this.styleParameters[supportedStyleParameters.defaultIcon];
@@ -121,10 +139,7 @@ class KmlChartSource extends ChartSourceBase{
             }
             if (url) {
                 style.setImage(
-                    new olIcon({
-                            src: url
-                        }
-                    )
+                    this.createIconWithFallback(url,fallbackUrl)
                 )
             }
             else{
@@ -184,19 +199,14 @@ class KmlChartSource extends ChartSourceBase{
         return style;
     }
     prepareInternal() {
-        let url = this.chartEntry.url;
         return new Promise((resolve, reject)=> {
-            if (!url) {
-                reject("no url for "+this.chartEntry.name);
-                return;
-            }
             this.source = new olVectorSource({
                 format: new olKMLFormat({
                     showPointNames: this.styleParameters[supportedStyleParameters.showText],
                 }),
                 wrapX: false,
                 loader: (extent,resolution,projection)=>{
-                    Requests.getHtmlOrText(url,{},{'_':(new Date()).getTime()})
+                    KmlChartSource.fetchMain(this.chartEntry)
                         .then((kml)=>{
                             let features=this.source.getFormat().readFeatures(kml,{
                                 extent: extent,
@@ -222,8 +232,10 @@ class KmlChartSource extends ChartSourceBase{
                             })
                             this.source.addFeatures(features);
                         })
-                        .catch((error)=>{
-                            //vectorSource.removeLoadedExtent(extent);
+                        .catch((err)=>{
+                            base.log(`unable to load geojson ${this.chartEntry.name}: ${err}`);
+                            this.source.removeLoadedExtent(extent);
+
                         })
                 },
             });
@@ -240,7 +252,7 @@ class KmlChartSource extends ChartSourceBase{
     featureToInfo(feature,pixel){
         let rt=new OverlayFeatureInfo({
             title:this.getName(),
-            urlOrKey: this.getUrl(),
+            name: this.getChartKey(),
             overlaySource: this
         });
         if (! feature) {
@@ -281,7 +293,8 @@ class KmlChartSource extends ChartSourceBase{
         rt.userInfo=userInfo;
         return rt;
     }
-    static analyzeOverlay(overlay){
+    static async analyzeOverlay(item){
+        const overlay=await KmlChartSource.fetchMain(item);
         return readFeatureInfoFromKml(overlay);
     }
 }

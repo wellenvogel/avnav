@@ -353,7 +353,10 @@ class SrcLayer(object):
             if (i[0] > 0 or i[0] < width) or (i[1] > 0 or i[1] < height)]
         if not inside:
             return '',''
-
+        # check if closed
+        if pix_lst[-1][0] != pix_lst[0][0] or pix_lst[-1][1] != pix_lst[0][1]:
+            logging.warning("cut polygon not closed, repairing")
+            pix_lst.append(pix_lst[0])
         # Create cutline
         poly_shape=self.gmt_templ % (self.refs.srs(),'\n'.join(
                                 ['%r %r' % (i[0],i[1]) for i in plys.proj_coords()]))

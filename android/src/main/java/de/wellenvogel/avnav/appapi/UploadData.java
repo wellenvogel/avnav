@@ -11,7 +11,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.nio.charset.StandardCharsets;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.MainActivity;
@@ -19,32 +18,35 @@ import de.wellenvogel.avnav.util.AvnLog;
 
 
 public class UploadData{
-    public static final long FILE_MAX_SIZE=1000000; //for file uploads
 
     long id;
-    boolean doRead;
     String name;
-    String fileData;
     Uri fileUri;
     MainActivity mainActivity;
     INavRequestHandler targetHandler;
     Thread copyThread;
     boolean noResults=false;
     long size;
-    public UploadData(MainActivity mainActivity, INavRequestHandler targetHandler, long id, boolean doRead){
+    private boolean overwrite=false;
+    private boolean completeName=false;
+    public UploadData(MainActivity mainActivity, INavRequestHandler targetHandler, long id){
         this.id=id;
-        this.doRead=doRead;
         this.mainActivity = mainActivity;
         this.targetHandler=targetHandler;
     }
 
+    public void setOverwrite(boolean v){
+        overwrite=v;
+    }
+    public void setCompleteName(boolean v){completeName=v;}
+
     public boolean isReady(long id){
         if (id != this.id) return false;
-        if (name == null || (fileData == null && doRead)) return false;
+        if (name == null ) return false;
         return true;
     }
 
-    public void saveFile(Uri uri) {
+    public void saveFile(Uri uri,String targetName) {
         if (noResults ) return;
         try {
             AvnLog.i("importing file: " + uri);
@@ -55,28 +57,13 @@ public class UploadData{
                 throw new IOException("unable to open "+uri.getLastPathSegment());
             }
             size = pfd.getStatSize();
-            if (doRead) {
-                if (size > FILE_MAX_SIZE)
-                    throw new Exception("file to big, allowed " + FILE_MAX_SIZE);
-                AvnLog.i("saving file " + uri.getLastPathSegment());
-                byte buffer[] = new byte[(int) (FILE_MAX_SIZE / 10)];
-                int rd = 0;
-                StringBuilder data = new StringBuilder();
-                InputStream is = new FileInputStream(pfd.getFileDescriptor());
-                while ((rd = is.read(buffer)) > 0) {
-                    data.append(new String(buffer, 0, rd, StandardCharsets.UTF_8));
-                }
-                is.close();
-                fileData = data.toString();
+            pfd.close();
+            if (targetName != null){
+                name=targetName;
             }
-            else{
-                pfd.close();
+            else {
+                name = df.getName();
             }
-            name = df.getName();
-            mainActivity.sendEventToJs(doRead?
-                            Constants.JS_UPLOAD_AVAILABLE:
-                            Constants.JS_FILE_COPY_READY
-                    , id);
         } catch (Throwable e) {
             Toast.makeText(mainActivity.getApplicationContext(), "unable to copy file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -85,10 +72,8 @@ public class UploadData{
         }
     }
 
-    public boolean copyFile(String newName) {
-        if (doRead) return false;
+    public boolean copyFile() {
         if (name == null || fileUri == null || targetHandler==null) return false;
-        if (newName != null) name=newName;
         try {
             final DocumentFile df = DocumentFile.fromSingleUri(mainActivity, fileUri);
             final ParcelFileDescriptor pfd = mainActivity.getContentResolver().openFileDescriptor(fileUri, "r");
@@ -126,7 +111,7 @@ public class UploadData{
                                 return numRead;
                             }
                         };
-                        targetHandler.handleUpload(new PostVars(is,size),name,false);
+                        targetHandler.handleUpload(new PostVars(is,size),name,overwrite, completeName);
                         if (! noResults) mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -171,9 +156,7 @@ public class UploadData{
     public long getSize(){
         return size;
     }
-    public String getFileData(){
-        return fileData;
-    }
+
     public String getName(){
         return name;
     }

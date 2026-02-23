@@ -2,12 +2,13 @@ import Requests from './requests.js';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 import defaultLayout from '../layout/default.json';
 import cloneDeep from "clone-deep";
+import Helper from "./helper";
 const DEFAULT_NAME="system.default";
 
 const ACTION_MOVE=1;
@@ -24,6 +25,16 @@ const getPagename=(page)=>{
     if (page === undefined) return;
     if (typeof(page) === 'string') return page;
     return page.layoutPage || page.location;
+}
+
+class PluginLayout{
+    constructor(name,pluginName,timestamp,url,data) {
+        this.name=name;
+        this.url=url;
+        this.timestamp=timestamp;
+        this.data=data;
+        this.pluginName=pluginName;
+    }
 }
 
 class LayoutAction{
@@ -83,7 +94,7 @@ export class LayoutAndName{
         this.layout = layout;
     }
 }
-
+const USER_PREFIX="user.";
 class LayoutLoader{
     constructor() {
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
@@ -92,6 +103,17 @@ class LayoutLoader{
         globalStore.register(()=>{
             this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         },keys.gui.capabilities.uploadLayout);
+        this.pluginLayouts={};
+        this.prefixes={};
+    }
+
+    async init(){
+        await Requests.getJson({
+            type:'layout',
+            command:'prefixes'
+        }).then((json)=>{
+            this.prefixes=json.data
+        },()=>{})
     }
     /**
      * load a layout from local storage
@@ -112,7 +134,7 @@ class LayoutLoader{
 
     }
 
-    loadStoredLayout(opt_remoteFirst) {
+    async loadStoredLayout(opt_remoteFirst) {
         let layoutName = globalStore.getData(keys.properties.layoutName);
         //if we selected the default layout we will always use our buildin (if store locally)
         //or load from the server
@@ -120,60 +142,92 @@ class LayoutLoader{
             let storedLayout = this._loadFromStorage();
             if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                 this.temporaryLayouts[storedLayout.name] = storedLayout;
-                return Promise.resolve(new LayoutAndName(storedLayout.name,storedLayout.data));
+                return Promise.resolve(new LayoutAndName(storedLayout.name, storedLayout.data));
             }
         }
-        return this.loadLayout(layoutName)
-            .then((layout) => {
-                    return new LayoutAndName(layoutName,layout);
-                },
-                (error) => {
-                    if (opt_remoteFirst) {
-                        let storedLayout = this._loadFromStorage();
-                        if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
-                            this.temporaryLayouts[storedLayout.name] = storedLayout.data;
-                            return new LayoutAndName(storedLayout.name,storedLayout.data);
-                        }
+        try {
+            const layout = await this.loadLayout(layoutName);
+            return new LayoutAndName(layoutName, layout);
+        } catch (error) {
+            if (opt_remoteFirst) {
+                let storedLayout = this._loadFromStorage();
+                if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
+                    this.temporaryLayouts[storedLayout.name] = storedLayout.data;
+                    return new LayoutAndName(storedLayout.name, storedLayout.data);
+                }
+            }
+            let description = KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
+            if (description && description.defaultv) {
+                if (layoutName != description.defaultv) {
+                    globalStore.storeData(keys.properties.layoutName, description.defaultv);
+                    try {
+                        const dlayout = await this.loadLayout(description.defaultv);
+                        return new LayoutAndName(description.defaultv, dlayout);
+                    } catch (error) {
+                        throw new Error("unable to load default layout: " + error);
                     }
-                    let description = KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
-                    if (description && description.defaultv) {
-                        if (layoutName != description.defaultv) {
-                            globalStore.storeData(keys.properties.layoutName, description.defaultv);
-                            return this.loadLayout(description.defaultv).then((layout) => {
-                                    return new LayoutAndName(description.defaultv,layout);
-                                },
-                                (error) => {
-                                    throw new Error("unable to load default layout: " + error);
-                                })
-                        }
-                    } else {
-                        throw new Error("unable to load application layout " + layoutName + ": " + error);
-                    }
-                });
+                } else {
+                    throw new Error("unable to load application layout " + layoutName + ": " + error);
+                }
+            }
+        }
     }
     /**
      * loads a layout but still does not activate it
      * @param name
+     * @param opt_raw
      */
-    loadLayout(name) {
+    async loadLayout(name,opt_raw) {
         if (this.storeLocally) {
             if (!this.temporaryLayouts[name]) {
                 return Promise.reject("layout " + name + " not found");
             } else {
                 let layout = this.temporaryLayouts[name];
+                if (opt_raw){
+                    return Promise.resolve(JSON.stringify(layout,undefined, 2));
+                }
                 return Promise.resolve(layout);
             }
         }
-        return Requests.getJson("?request=download&noattach=true&type=layout&name=" +
-            encodeURIComponent(name), {checkOk: false}).then(
-            (json) => {
-                let error = this.checkLayout(json);
-                if (error !== undefined) {
-                    throw new Error("layout error: " + error);
+        try {
+            let layoutJson;
+            const pluginLayout = this.pluginLayouts[name];
+            if (pluginLayout) {
+                if (pluginLayout.data){
+                    layoutJson = pluginLayout.data;
                 }
-                return json;
-            },
-            (error) => {
+                if (pluginLayout.url){
+                    const layout=await Requests.getHtmlOrText(pluginLayout.url);
+                    if (layout){
+                        layoutJson=JSON.parse(layout);
+                    }
+                    else{
+                        throw new Error("unable to load plugin layout "+pluginLayout.url);
+                    }
+                }
+            }
+            else {
+                layoutJson = await Requests.getJson({
+                    request: 'api',
+                    type: 'layout',
+                    command: 'download',
+                    noattach: true,
+                    name: name
+                }, {checkOk: false});
+            }
+            if (!layoutJson) {
+                throw new Error("unable to load layout "+name);
+            }
+            let error = this.checkLayout(layoutJson);
+            if (error !== undefined) {
+                throw new Error("layout error: " + error);
+            }
+            if (opt_raw) {
+                return JSON.stringify(layoutJson, undefined, 2);
+            }
+            return layoutJson;
+        }catch (error)
+            {
                 try {
                     let raw = LocalStorage.getItem(
                         STORAGE_NAMES.LAYOUT
@@ -187,18 +241,24 @@ class LayoutLoader{
                 } catch (e) {
                     base.log("error when trying to read layout locally: " + e);
                 }
-                throw new Error("" + error);
+                throw error;
             }
-        );
+
     }
 
-    uploadLayout(name, layout, opt_overwrite) {
+    /**
+     * upload a layout to the server
+     * @param name the layout name without user prefix and without .json
+     * @param layout
+     * @param opt_overwrite
+     * @returns {Promise<never>|Promise<Awaited<{status: string}>>|Promise<unknown>}
+     */
+    uploadLayout(name, layout, opt_overwrite,opt_completeName) {
         if (!name || !layout) {
             return Promise.reject("missing parameter name or layout");
         }
         //the provided name should always be without the user./system. prefix
         //when we upload we always create a user. entry...
-        name = this.nameToBaseName(name);
         try {
             if (typeof (layout) === 'string') {
                 layout = JSON.parse(layout);
@@ -210,30 +270,19 @@ class LayoutLoader{
         } catch (e) {
             return Promise.reject(e);
         }
-        let layoutName = this.fileNameToServerName(name);
         if (this.storeLocally) {
-            this.temporaryLayouts[layoutName] = layout;
+            const localName=opt_completeName?name:USER_PREFIX+name;
+            this.temporaryLayouts[localName] = layout;
             return Promise.resolve({status: 'OK'});
         }
         return Requests.postPlain({
-            request: 'upload',
+            request:'api',
+            command: 'upload',
             type: 'layout',
-            name: layoutName,
-            overwrite: !!opt_overwrite
+            name: name,
+            overwrite: !!opt_overwrite,
+            completeName:!!opt_completeName,
         }, JSON.stringify(layout, undefined, 2))
-    }
-
-    nameToBaseName(name) {
-        return name.replace(/^user\./, '').replace(/^system\./, '').replace(/^plugin\./, '').replace(/\.json$/, '').replace(/.*\./, '');
-    }
-    /**
-     * get the name the server will create from our local file name when we upload a layout
-     * @param name
-     * @returns {string}
-     */
-    fileNameToServerName(name){
-        name=this.nameToBaseName(name);
-        return "user."+name;
     }
     /**
      * check the layout
@@ -246,7 +295,7 @@ class LayoutLoader{
         return;
     }
 
-    listLayouts() {
+    async listLayouts() {
         let activeLayout = globalStore.getData(keys.properties.layoutName);
         if (this.storeLocally) {
             let rt = [];
@@ -257,13 +306,18 @@ class LayoutLoader{
                     server: false,
                     canDelete: k != activeLayout,
                     active: k == activeLayout,
+                    checkPrefix: USER_PREFIX,
                     time: (new Date()).getTime() / 1000
                 };
                 rt.push(item);
             }
-            return Promise.resolve(rt);
+            return rt;
         }
-        return Requests.getJson("?request=listdir&type=layout").then((json) => {
+        const layouts=await Requests.getJson({
+            request:'api',
+            type:'layout',
+            command:'list'
+        }).then((json) => {
             let list = [];
             for (let i = 0; i < json.items.length; i++) {
                 let fi = {};
@@ -278,6 +332,19 @@ class LayoutLoader{
             }
             return list;
         });
+        for (let k in this.pluginLayouts){
+            layouts.push({
+                name:k,
+                server: false,
+                canDelete: false,
+                canDownload: true,
+                active: k == activeLayout,
+                type:'layout',
+                time: this.pluginLayouts[k].timestamp,
+                downloadName: this.pluginLayouts[k].name+".json"
+            })
+        }
+        return layouts;
     }
 
     /**
@@ -292,22 +359,72 @@ class LayoutLoader{
                 return Promise.resolve(true);
         }
         return Requests.getJson({
-            request: 'delete',
+            request:'api',
+            command: 'delete',
             type: 'layout',
             name: name
         })
     }
-    /**
-     * get a layout fetch function for downloads we handle this locally
-     * @param name
-     */
-    getLocalDownload() {
-        if (!this.storeLocally) return;
-        return (name) => {
-            let layout = this.temporaryLayouts[name];
-            if (!layout) return;
-            return JSON.stringify(layout, null, 2);
-        };
+    renameLayout(name,newName){
+        if (! name) throw new Error("no name for deleteLayout");
+        if (! name.startsWith(USER_PREFIX)){
+            throw new Error("can only rename user layouts");
+        }
+        if (! newName.startsWith(USER_PREFIX)){
+            throw new Error("the new layout name must also start with "+USER_PREFIX);
+        }
+        if (this.storeLocally){
+            if (this.temporaryLayouts[newName]) {
+                throw new Error("layout " + newName + " already exists");
+            }
+            const layout=this.temporaryLayouts[name];
+            if (! layout) throw new Error("layout "+name+" not found");
+            delete this.temporaryLayouts[name];
+            this.temporaryLayouts[newName] = layout;
+            return Promise.resolve(true);
+        }
+        return Requests.getJson({
+            command:'rename',
+            type:'layout',
+            name: name,
+            newName: newName
+        })
+    }
+    getUserPrefix(){
+        return USER_PREFIX;
+    }
+    addPluginLayout(name,pluginName,timestamp,data,url){
+        if (! this.prefixes || ! this.prefixes.plugin) throw Error("no support for plugin layouts");
+        if (! name || ! pluginName) throw new Error("name and pluginName must be set");
+        if (! data && ! url) throw new Error("either url or data must be set for a plugin layout");
+        if (data){
+            this.checkLayout(data);
+        }
+        const completeName=this.prefixes.plugin+pluginName+"."+name;
+        if (this.pluginLayouts[completeName]){
+            if (this.pluginLayouts[completeName].pluginName !== pluginName) {
+                throw new Error(`layout ${completeName} already exists from ${this.pluginLayouts[completeName].pluginName}`);
+            }
+        }
+        const pluginLayout=new PluginLayout(name,pluginName,timestamp,url,data);
+        this.pluginLayouts[completeName]=pluginLayout;
+        if (url && ! timestamp){
+            Requests.getLastModified(url).then((lm)=>{
+                const ts=(new Date(lm)).getTime()/1000;
+                pluginLayout.timestamp=ts;
+            },()=>{});
+        }
+        return completeName;
+    }
+    removePluginLayouts(pluginName){
+        if (! pluginName) throw new Error("no support for plugin layouts");
+        const deletes=[];
+        for (let k in this.pluginLayouts){
+            if (this.pluginLayouts[k].pluginName === pluginName) deletes.push(k);
+        }
+        deletes.forEach((del)=>{
+            delete this.pluginLayouts[del];
+        })
     }
 }
 
@@ -356,7 +473,7 @@ class LayoutHandler{
     canEdit(name){
         if (name === undefined) name=this.name;
         if (! name) return false;
-        return name.match(/^user\./)?true:false;
+        return Helper.startsWith(name,USER_PREFIX);
     }
     saveCurrent(){
         this.savedLayout=new LayoutAndName(this.name, cloneDeep(this.layout));
@@ -369,7 +486,7 @@ class LayoutHandler{
         this.activateLayout();
     }
     startEditing(name){
-        if (! this.canEdit(name)) return false;
+        if (! this.canEdit(name)) throw new Error(`invalid layout name ${name} for editing`);
         this.name=name;
         this.saveCurrent();
         this._setEditing(true);
@@ -385,13 +502,13 @@ class LayoutHandler{
         return this.editing;
     }
 
-    loadStoredLayout(opt_remoteFirst){
-        return layoutLoader.loadStoredLayout(opt_remoteFirst)
+    async loadStoredLayout(opt_remoteFirst){
+        const layout=await layoutLoader.loadStoredLayout(opt_remoteFirst)
             .then((layoutAndName)=>{
                 this.setLayoutAndName(layoutAndName.layout,layoutAndName.name,true);
-                return true;
-            })
-
+                return layoutAndName.layout;
+            },(err)=>base.log("error while loading stored layout "+err));
+        return layout;
     }
     _setEditing(on){
         this.editing=on;

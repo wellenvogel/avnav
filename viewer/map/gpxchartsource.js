@@ -42,6 +42,9 @@ import {getClosestRoutePoint} from "../nav/routeeditor";
 import Mapholder from "./mapholder";
 import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
 import {getRouteStyles} from "./routelayer";
+import {fetchItem} from "../util/itemFunctions";
+import base from "../base";
+import {getav, setav} from "../util/helper";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -204,7 +207,7 @@ class GpxChartSource extends ChartSourceBase{
         };
     }
     styleFunction(feature,resolution) {
-
+        const fallbackUrl=this.styleParameters[editableOverlayParameters.defaultIcon];
         let type=feature.getGeometry().getType();
         if (type === 'Point'){
             let rt=this.styles[type];
@@ -216,10 +219,12 @@ class GpxChartSource extends ChartSourceBase{
                 if (sym) {
                     if (!this.styleMap[sym]) {
                         rt = rt.clone();
+                        const icon=this.createIconWithFallback(
+                            this.getSymbolUrl(sym, '.png'),
+                            fallbackUrl
+                        )
                         rt.setImage(
-                                new olIcon({
-                                    src: this.getSymbolUrl(sym, '.png')
-                                })
+                          icon
                         );
                         this.styleMap[sym] = rt;
                     }
@@ -315,7 +320,7 @@ class GpxChartSource extends ChartSourceBase{
             this.source = new olVectorSource({
                 format: new OwnGpx(this.mapholder),
                 loader: (extent, resolution, projection) => {
-                    Requests.getHtmlOrText(url, {}, {'_': (new Date()).getTime()})
+                    fetchItem(this.chartEntry)
                         .then((gpx) => {
                             gpx = stripExtensions(gpx);
                             let features = this.source.getFormat().readFeatures(gpx, {
@@ -356,8 +361,9 @@ class GpxChartSource extends ChartSourceBase{
                             );
                             this.buildStyles();
                         })
-                        .catch((error) => {
-                            //vectorSource.removeLoadedExtent(extent);
+                        .catch((err) => {
+                            base.log(`unable to load geojson ${this.chartEntry.name}: ${err}`);
+                            this.source.removeLoadedExtent(extent);
                         })
                 },
                 wrapX: false
@@ -382,15 +388,14 @@ class GpxChartSource extends ChartSourceBase{
         const ot=(this.chartEntry||{}).type;
         const oname=this.getName();
         const fname=feature.get('name');
-        const url=this.getUrl();
         if (ot==='track'){
-            rt=new TrackFeatureInfo({title:oname,isOverlay:true,urlOrKey:oname});
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,name:this.getChartKey()});
         }
         else if (ot === 'route'){
-            rt=new RouteFeatureInfo({isOverlay:true,routeName:fname,title:oname})
+            rt=new RouteFeatureInfo({isOverlay:true,routeName:this.getChartKey(),title:oname})
         }
         else{
-            rt=new OverlayFeatureInfo({title: oname,urlOrKey:url});
+            rt=new OverlayFeatureInfo({title: oname,name:this.getChartKey()});
         }
         rt.overlaySource=this;
         let geometry=feature.getGeometry();
@@ -425,7 +430,8 @@ class GpxChartSource extends ChartSourceBase{
         return rt;
     }
 
-    static analyzeOverlay(overlay){
+    static async analyzeOverlay(item){
+        const overlay=await fetchItem(item);
         return readFeatureInfoFromGpx(overlay)
     }
 }

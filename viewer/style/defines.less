@@ -1,93 +1,16 @@
+@import "properties";
 @normalButtonFont: 1em;
 @widgetFontSize: 14px;
-@navLeftWidgetWidth: 8.8em;
-
-@listWidth: 80em;
-
-@nightModeValue:0.6;
-@nightModePercent: 60%;
-
-@aisNormalColor: #EBEB55;
-@aisNearestColor: #70F3AF; //rgb(112, 243, 175);
-@aisWarningColor: #FA584A; //rgb(250, 88, 74);
-
-
-@nightColor: rgba(252, 11, 11, 0.6);
-
-//from MD Blue Grey
-@colorMain: #546E7A; //600 right panel
-@colorSecond: #CFD8DC; //100 Widget container
-@colorSelection: #CECECE; //50 active entry
-@dialogButtonBackground: #ECEFF1;
-
-@colorGreen: #1DE9B6; //Teal A400
-@colorRed: #C62828; //Red 600
-@colorRedSecond: #FF8A80; //Red A100
-
-@routeApproachingColor: @colorRedSecond;
-
-@editingColor: @colorRed;
-
-@headlineHeight: 4em;
-
+@borderAttention: 2px solid;
+@borderAttentionLarge: 3px solid;
+@normalBorder: 1px solid;
 @iconBase: "../images/icons-new";
-
-.nightColors() {
-  .nightMode & {
-    background-color: #000;
-    color: @nightColor;
-  }
-}
-
-
-.nightForeColor(@normal,@night:@nightColor){
-  color: @normal;
-  .nightMode &{
-    color: @night;
-  }
-}
-.nightForeFade(@normal){
-  .nightForeColor(@normal,fade(@normal,@nightModePercent));
-}
-.nightBackColor(@normal,@night:#000){
-  background-color: @normal;
-  .nightMode &{
-    background-color: @night;
-  }
-}
-.nightBackFade(@normal){
-  .nightBackColor(@normal,fade(@normal,@nightModePercent));
-}
-
-.nightBorderColor(@normal,@night){
-  border-color: @normal;
-  .nightMode &{
-    border-color: @night;
-  }
-}
-
-.nightBorderColorGR(@op:30){
-  .nightBorderColor(fade(rgba(0, 0, 0,1),@op),fade(@nightColor,( 0.6 * @op)));
-}
-.nightBorderFade(@normal){
-  .nightBorderColor(@normal,fade(@normal,@nightModePercent));
-}
+@oldiconBase: "../images";
 
 .nightOPacity() {
-  .nightMode & {
-    opacity: @nightModeValue;
-  }
-}
-.nightOPacity2() {
-  .nightMode & {
-    opacity: min(1,1 - (1 - @nightModeValue)*0.5);
-  }
+    opacity: var(--avnav-night-opacity);
 }
 
-
-.mdShadow1(){
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-}
 
 .mdShadow2(){
   box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);

@@ -4,6 +4,7 @@
  */
 
 import compare from './compare';
+import Version from '../version';
 
 /**
  *
@@ -92,6 +93,20 @@ Helper.filteredAssign=function(){
         if (! o) continue;
         for (let ok in filter){
             if (ok in o ) rt[ok]=o[ok];
+        }
+    }
+    return rt;
+};
+
+Helper.blackListAssign=function(){
+    let args = Array.prototype.slice.call(arguments);
+    let filter=args.shift();
+    let rt={};
+    for (let k in args){
+        let o=args[k];
+        if (! o) continue;
+        for (let ok in o){
+            if (! (ok in filter) ) rt[ok]=o[ok];
         }
     }
     return rt;
@@ -215,9 +230,9 @@ export const getNameAndExt=(fn)=>{
     }
     return [fn,''];
 }
-const injectDateIntoUrl=(oldurl)=>{
+export const injectDateIntoUrl=(oldurl,opt_date)=>{
     let url=oldurl.protocol+"//"+oldurl.host+oldurl.pathname;
-    const newTag='_='+encodeURIComponent((new Date).getTime());
+    const newTag='_='+encodeURIComponent(opt_date||(new Date).getTime());
     if (oldurl.search){
         let hasReplaced=false;
         let add=oldurl.search.replace(/[?&]_=[^&#]*/,(m)=>{
@@ -236,6 +251,16 @@ const injectDateIntoUrl=(oldurl)=>{
         url+=oldurl.hash;
     }
     return url;
+}
+export const urlToString=(url,opt_base)=>{
+    if (typeof(url)==='string'){
+        url= new URL(url,opt_base);
+    }
+    if (! (url instanceof URL)){return url;}
+    if (url.origin === window.location.origin){
+        return url.pathname+url.search;
+    }
+    return url.toString();
 }
 export const reloadPage=()=>{
     let url=injectDateIntoUrl(window.location);
@@ -257,8 +282,12 @@ export const injectav=(obj)=>{
     if (! isObject(obj.avnav)){ throw new Error("injectav: avnav exists, no object: "+typeof(obj.avnav)) ;}
     return obj;
 }
+export const getav=(obj)=>{
+    const av=injectav(obj);
+    return av.avnav;
+}
 export const avitem=(obj,itemName='item',defaultv={})=>{
-    const rt=injectav(obj).avnav[itemName];
+    const rt=getav(obj)[itemName];
     if (rt === undefined){ return defaultv;}
     return rt
 }
@@ -280,8 +309,13 @@ export const loadOrUpdateCss=(url,id)=>{
     if (id){
         let existing=document.head.querySelector('#'+id);
         if (existing && existing.href){
-            let nUrl=injectDateIntoUrl(new URL(url?url:existing.href,window.location.href));
+            if (! url){
+                existing.disabled=true;
+                return;
+            }
+            let nUrl=injectDateIntoUrl(new URL(url,window.location.href));
             existing.href=nUrl;
+            existing.disabled=false;
             return true;
         }
     }
@@ -295,6 +329,27 @@ export const loadOrUpdateCss=(url,id)=>{
     document.head.appendChild(fileref);
     return true;
 }
+export const createOrUpdateStyleSheet=(txt,id)=>{
+    if (! id) return;
+    const existing=document.head.querySelector('#'+id);
+    if (existing){
+        existing.innerHTML=txt;
+    }
+    else{
+        const sheet=document.createElement('style');
+        sheet.setAttribute("id",id);
+        sheet.setAttribute("type","text/css");
+        sheet.innerHTML=txt;
+        document.head.appendChild(sheet);
+    }
+}
+export const avNavVersion=()=>{
+    let version=Version;
+    if (window.avnavAndroid) version=window.avnavAndroid.getVersion();
+    return version;
+}
+
+
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
@@ -307,6 +362,8 @@ Helper.injectav=injectav;
 Helper.avitem=avitem;
 Helper.setav=setav;
 Helper.isset=isset;
+Helper.urlToString=urlToString;
+Helper.avNavVersion=avNavVersion;
 
 export default Helper;
 

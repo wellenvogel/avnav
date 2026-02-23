@@ -21,11 +21,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
 
@@ -49,30 +49,19 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     }
 
 
-    protected void setWorkDir(File workDir) throws IOException {
-        this.workDir=workDir;
-        if (! workDir.exists()){
-            workDir.mkdirs();
-        }
-        if (!workDir.exists() || ! workDir.isDirectory()){
-            throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
-        }
-    }
-
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         File found=findLocalFile(name);
         if (found == null) return null;
         return new ExtendedWebResourceResponse(
-            found.length(),
+                found,
             "application/octet-stream",
-            "",
-            new FileInputStream(found)
+            ""
         );
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         String safeName=safeName(name,true);
         if (postData == null) throw new Exception("no data");
         writeAtomic(new File(workDir,safeName),postData.getStream(),ignoreExisting,postData.getContentLength());
@@ -84,22 +73,41 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
        return "/"+urlPrefix+"/"+
                URLEncoder.encode(name,"utf-8");
     }
+
+    protected JSONObject fileToItem(File localFile) throws JSONException, UnsupportedEncodingException {
+        JSONObject el=new JSONObject();
+        el.put("name",localFile.getName());
+        el.put("size",localFile.length());
+        el.put("time",localFile.lastModified()/1000);
+        el.put("url",getUrlFromName(localFile.getName()));
+        el.put("type",type);
+        el.put("canDelete",true);
+        el.put("type",type);
+        return el;
+    }
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
-            if (localFile.isFile()){
-                JSONObject el=new JSONObject();
-                el.put("name",localFile.getName());
-                el.put("size",localFile.length());
-                el.put("time",localFile.lastModified()/1000);
-                el.put("url",getUrlFromName(localFile.getName()));
-                el.put("type",type);
-                el.put("canDelete",true);
-                rt.put(el);
+            if (localFile.isFile()  && ! localFile.getName().startsWith(TMP_PRFX)){
+                JSONObject jo=fileToItem(localFile);
+                if (jo != null) {
+                    rt.put(jo);
+                }
             }
         }
         return rt;
+    }
+
+    @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        name=safeName(name,true);
+        File localFile=new File(workDir,name);
+        if (localFile.isFile()){
+            return fileToItem(localFile);
+        }
+        return null;
     }
 
     @Override
@@ -116,35 +124,24 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        String command=AvnUtil.getMandatoryParameter(uri,"command");
-        if (command.equals("list")){
-            return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        File found=findLocalFile(oldName);
+        if (found == null){
+            throw new Exception("file "+oldName+" not found");
         }
-        if (command.equals("delete")){
-            String name=AvnUtil.getMandatoryParameter(uri,"name");
-            boolean ok=handleDelete(name,uri);
-            if (ok)  return RequestHandler.getReturn();
-            return RequestHandler.getErrorReturn("delete failed");
+        String safeNewName=safeName(newName,true);
+        File newFile=new File(workDir,safeNewName);
+        if (newFile.exists()){
+            throw new Exception("file "+safeNewName+" already exists");
         }
-        if (command.equals("rename")){
-            String name=AvnUtil.getMandatoryParameter(uri,"name");
-            String newName=AvnUtil.getMandatoryParameter(uri,"newName");
-            File found=findLocalFile(name);
-            if (found == null){
-                return RequestHandler.getErrorReturn("file "+name+" not found");
-            }
-            String safeNewName=safeName(newName,true);
-            File newFile=new File(workDir,safeNewName);
-            if (newFile.exists()){
-                return RequestHandler.getErrorReturn("file "+safeNewName+" already exists");
-            }
-            if (found.renameTo(newFile)){
-                return RequestHandler.getReturn();
-            }
-            return RequestHandler.getErrorReturn("rename failed");
+        if (found.renameTo(newFile)){
+            return true;
+        }
+        return false;
+    }
 
-        }
+    @Override
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         return handleSpecialApiRequest(command,uri,postData,serverInfo);
     }
 
@@ -152,7 +149,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return RequestHandler.getErrorReturn("unknonw api request "+command);
     }
 
-    private File findLocalFile(String name) throws IOException {
+    protected File findLocalFile(String name) throws IOException {
         if (workDir == null) throw new IOException("workdir for "+type+" not set");
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()
@@ -208,7 +205,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return handler.handleRequest(null,fallback);
     }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         String path = uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path = path.substring(1);
@@ -259,6 +256,9 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         String name = URLDecoder.decode(parts[parts.length - 1], "UTF-8");
         File foundFile = findLocalFile(name);
         if (foundFile != null) {
+            if (foundFile.isDirectory()){
+                throw new Exception(name+" is a directory");
+            }
             ExtendedWebResourceResponse rt = new ExtendedWebResourceResponse(
                     foundFile.length(),
                     RequestHandler.mimeType(foundFile.getName()),
@@ -274,17 +274,19 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return urlPrefix;
     }
 
+    @Override
+    public String getType() {
+        return type;
+    }
+
     public static String TMP_PRFX="__avn.";
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
         if (name.startsWith(TMP_PRFX)) throw new Exception("name cannot start with "+TMP_PRFX);
-        //in principle we should forbid : in names as we could in theory run on an SD card
-        //but older versions allowed this (accidently) and so e.g. plugin chart configs have a ':'
         //in the name - original regexp would be [\u0000-\u001f\u007f\"*/:<>?\\\\|]
         //see https://stackoverflow.com/questions/2679699/what-characters-allowed-in-file-names-on-android/28516488
-        //but as we do not run on a FAT32 SD card any way (and have never been able to do so)
-        //we just allow the :
-        String safeName=name.replaceAll("[\u0000-\u001f\u007f\"*/<>?\\\\|]","");
+        String safeName=name.replaceAll("[\u0000-\u001f\u007f\"*/<>?\\\\|:]","");
+        if (".".equals(safeName) || "..".equals(safeName)) throw new Exception("illegal filename "+name);
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }

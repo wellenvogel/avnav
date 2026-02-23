@@ -206,6 +206,9 @@ public class Resolver implements Runnable, Target.IResolver {
                     responseBuffer.get(bytes, 0, responseBuffer.limit());
                     DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length);
                     resp = Response.createFrom(responsePacket);
+                }catch(IllegalArgumentException e){
+                    continue;
+                    //do not fill the log
                 }catch (Exception e){
                     AvnLog.e("unable to parse DNS packet",e);
                     continue;

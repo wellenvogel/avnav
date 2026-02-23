@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_REMOTE;
+
 import android.net.Uri;
 
 import org.json.JSONArray;
@@ -8,6 +10,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
@@ -28,8 +31,8 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
 
     private static String channelFromWs(IWebSocket socket){
         String url=socket.getUrl();
-        if (! url.startsWith("/"+ RequestHandler.TYPE_REMOTE)) return null;
-        url=url.substring(RequestHandler.TYPE_REMOTE.length()+2);
+        if (! url.startsWith("/"+ TYPE_REMOTE)) return null;
+        url=url.substring(TYPE_REMOTE.length()+2);
         url=url.replaceAll("[^0-9]*","");
         if (url.isEmpty()) return null;
         return url;
@@ -124,7 +127,7 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         return false;
     }
 
@@ -134,13 +137,22 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     }
 
     @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        return null;
+    }
+
+    @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         return false;
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        String command= AvnUtil.getMandatoryParameter(uri,"command");
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
+    @Override
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("enabled")){
             return RequestHandler.getReturn( new AvnUtil.KeyValue("enabled",ENABLED_PARAMETER.fromJson(parameters)));
         }
@@ -148,12 +160,17 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         return null;
     }
 
     @Override
     public String getPrefix() {
-        return RequestHandler.TYPE_REMOTE;
+        return null;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_REMOTE;
     }
 }

@@ -9,6 +9,7 @@ import android.os.Build;
 public class Constants {
     //settings
     public static final String WORKDIR="workdir";
+
     public static final String CHARTDIR="chartdir";
     public static final String RESET_CHARTDIR="resetChartdir";
     public static final String SHOWDEMO="showdemo";
@@ -36,14 +37,21 @@ public class Constants {
     //new handler config
     public static final String HANDLER_CONFIG="internal.handler";
 
-
+    //the chart prefixes
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
     public static final String DEMOCHARTS="demo";
     public static final String EXTERNALCHARTS="external";
+
+
     public static final String CHARTOVERVIEW="avnav.xml";
     public static final String USB_DEVICE_EXTRA = "usbDevice" ;
     public static final String SERVICE_TYPE = "foregroundType";
+    public static final String USERPREFIX="user.";
+    public static final String SYSTEMPREFIX="system.";
+    public static final String PLUGINPREFIX="plugin.";
+    public static final String TYPE_PLUGINS="plugins";
+    public static final String TYPE_PROXY="proxy";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{
@@ -58,7 +66,6 @@ public class Constants {
     public static final String LOGPRFX="avnav";
     //request codes in main activity
     public static final int SETTINGS_REQUEST=1;
-    public static final int FILE_OPEN=100;
     public static final int FILE_OPEN_DOWNLOAD=101;
     public static final int FILE_OPEN_UPLOAD=102;
 
@@ -90,12 +97,24 @@ public class Constants {
     public static final String JS_RELOAD="reloadData";
     public static final String JS_BACK="backPressed";
     public static final String JS_PROPERTY_CHANGE="propertyChange";
-    public static final String JS_UPLOAD_AVAILABLE="uploadAvailable";
-    public static final String JS_FILE_COPY_READY="fileCopyReady";
     public static final String JS_FILE_COPY_PERCENT="fileCopyPercent"; //id will be percent
     public static final String JS_FILE_COPY_DONE="fileCopyDone"; //id will be: 0 for success, 1 for error
     public static final String JS_DEVICE_ADDED="deviceAdded";
     public static final String JS_REMOTE_MESSAGE="remoteMessage";
     public static final String JS_REMOTE_CLOSE="channelClose";
 
+    //file types from the js side
+    public static String TYPE_ROUTE="route";
+    public static String TYPE_LAYOUT="layout";
+    public static String TYPE_SETTINGS="settings";
+    public static String TYPE_CHART="chart";
+    public static String TYPE_TRACK="track";
+    public static String TYPE_USER="user";
+    public static String TYPE_IMAGE="images";
+    public static String TYPE_OVERLAY="overlay";
+    public static String TYPE_ICONS="icons";
+    public static String TYPE_ADDON="addon";
+    public static String TYPE_CONFIG="config";
+    public static String TYPE_REMOTE="remotechannels";
+    public static String TYPE_DECODER="decoder";
 }

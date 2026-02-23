@@ -16,11 +16,10 @@ import {
     DialogFrame,
     DialogRow,
     showDialog,
-    showPromiseDialog,
-    useDialogContext
+    showPromiseDialog
 } from '../components/OverlayDialog.jsx';
-import Helper, {injectav, setav} from '../util/helper.js';
-import {useTimer} from '../util/GuiHelpers.js';
+import Helper, {avitem, injectav, setav} from '../util/helper.js';
+import {useStateRef, useTimer} from '../util/GuiHelpers.js';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
@@ -39,14 +38,16 @@ import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 import Page from "../components/Page";
 import PropTypes from "prop-types";
 import {useStore, useStoreState} from "../hoc/Dynamic";
-import {ConfirmDialog, InfoItem, SelectList} from "../components/BasicDialogs";
+import {ConfirmDialog, InfoItem} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
-import plugimage from '../images/icons-new/plug.svg';
-import {ItemActions, ItemDownloadButton} from "../components/FileDialog";
+import {createItemActions} from "../components/FileDialog";
 import UploadHandler from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
-import {existsRoute, loadRoutes} from "../components/RouteInfoHelper";
-import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
+import DownloadButton from "../components/DownloadButton";
+import {useHistory} from "../components/HistoryProvider";
+import {DownloadItemInfoMode, DownloadItemList} from "../components/DownloadItemList";
+import {RouteSyncDialog} from "../components/RouteInfoHelper";
+import {useDialogContext} from "../components/DialogContext";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -58,9 +59,8 @@ const activeRoute = new RouteEdit(RouteEdit.MODES.ACTIVE);
 
 
 const isActiveRoute = (activeState,editorState) => {
-    let activeName = StateHelper.routeName(activeState);
-    if (activeName && activeName === StateHelper.routeName(editorState)) return true;
-    return false;
+    let active = StateHelper.route(activeState);
+    return StateHelper.isSameRoute(editorState,active);
 };
 const getCurrentEditor = () => {
     return isActiveRoute(activeRoute.getState(),editor.getState()) ? activeRoute : editor;
@@ -103,7 +103,7 @@ export const INFO_ROWS = [
     {label: 'length', value: 'length', formatter: (v) => {
             return Formatter.formatDistance(v) + " nm";
         }
-    },
+    }
 ];
 
 const EditPointsDialog=(props)=>{
@@ -114,7 +114,7 @@ const EditPointsDialog=(props)=>{
     const [inverted,setInverted]=useState(props.inverted);
     const activeRouteState= useStore({storeKeys:activeRoute.getStoreKeys()});
     const isActiveRoute=useCallback(()=>{
-        return route.name === StateHelper.routeName(activeRouteState)
+        return StateHelper.isSameRoute(activeRouteState,route)
     },[activeRouteState])
     const changeRoute = (cb) => {
         let newRoute = route.clone();
@@ -221,119 +221,71 @@ EditPointsDialog.propTypes={
     inverted: PropTypes.bool
 }
 
-const LoadRouteDialog=({blacklist,selectedName,resolveFunction,title,allowUpload})=>{
-    const dialogContext=useDialogContext();
-    const [connectedMode]=useStoreState(keys.properties.connectedMode);
-    const [list,setList]=useState(undefined);
-    const [wrOnly,setWrOnly]=useState(true);
-    const [uploadSequence,setUploadSequence]=useState(0);
-    const currentList=useRef([]);
-    useEffect(() => {
-        loadRoutes()
-            .then((routeList)=>{
-                let finalList=[];
-                routeList.forEach((aroute)=>{
-                   let name = aroute.name.replace(/\.gpx/, '');
-                    //mark the route we had been editing on the page before
-                    let selected = selectedName && selectedName === name;
-                    //check with and without gpx extension
-                    const hidden=(blacklist &&(blacklist.indexOf(aroute.name) >= 0 || blacklist.indexOf(name) >= 0));
-                    finalList.push({
-                        label: name,
-                        value: name,
-                        key: name,
-                        name:name,
-                        originalName: aroute.name,
-                        selected: selected,
-                        server: aroute.server,
-                        icon: aroute.server?plugimage:undefined,
-                        hidden: hidden
-                    });
-                })
-                setList(finalList);
-            })
-            .catch(()=>{})
-    }, []);
-    let displayList=[];
-    if (list) {
-        list.forEach((item) => {
-            if (item.hidden) return;
-            let cl = "";
-            if (item.server && !connectedMode) {
-                if (wrOnly) return;
-                cl = "readonly";
-            }
-            displayList.push({...item, className: cl})
-        })
+const isRouteInList=(routeList,route)=>{
+    if (! routeList || ! route) return false;
+    for (let rt of routeList) {
+        if (routeobjects.isSameRoute(rt,route)){return true;}
     }
-    currentList.current=list;
+    return false;
+}
+
+const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUpload})=>{
+    const dialogContext=useDialogContext();
+    const [,,connectedModeRef]=useStoreState(keys.properties.connectedMode);
+    const [wrOnly,setWrOnly,wrOnlyRef]=useStateRef(true);
+    const itemActions=createItemActions('route').copy({
+        canModify:(item)=>(!item.server || connectedModeRef.current),
+        show:(item)=>{
+            if (selectedRoute && selectedRoute.name === item.name) return "selected";
+            if (isRouteInList(blacklist,item)) return "blacklisted";
+            if (! wrOnlyRef.current) return true;
+            if (item.server && ! connectedModeRef.current) return "not con";
+            return true;
+        }
+    })
+    const [uploadSequence,setUploadSequence]=useState(0);
     return <DialogFrame className={'LoadRoutesDialog'} title={title}>
         <Checkbox dialogRow={true} label={"writableOnly"} value={wrOnly} onChange={(nv)=>setWrOnly(nv)}/>
-        {! list && <div className="loading">Loading...</div>}
-        <SelectList
-            list={displayList}
-            onClick={(entry)=>{
-                RouteHandler.fetchRoute(entry.originalName, !(entry.server && connectedMode) ,
-                    (nroute) => {
-                        if (!nroute) {
-                            Toast("unable to load route " + entry.originalName);
-                            return;
-                        }
-                        if (nroute.server != entry.server){
-                            //strange situation:
-                            //we have a local route that originally was a server route - but it is no longer
-                            //available at the server - or we have a local route that is also available on the server
-                            //so we try to correct
-                            nroute.server=entry.server;
-                        }
-                        if (resolveFunction) resolveFunction(nroute.clone());
-                        dialogContext.closeDialog();
-                    },
-                        (err)=>{Toast("unable to load route: "+err)});
+        <DownloadItemList
+            type={'route'}
+            selectCallback={async (ev)=>{
+                const entry=avitem(ev);
+                try {
+                    const nroute = await RouteHandler.fetchRoute(entry.name);
+                    if (!nroute) {
+                        throw new Error("unable to load route " + entry.name);
+                    }
+                    if (resolveFunction) resolveFunction(nroute.clone());
+                    dialogContext.closeDialog();
+                } catch (err) {
+                    Toast("unable to load route: " + err)
+                }
             }}
-            />
+            noExtra={true}
+            infoMode={DownloadItemInfoMode.ICONS}
+            showUpload={false}
+            itemActions={itemActions}
+        />
         <UploadHandler
             local={true}
             uploadSequence={uploadSequence}
             type={'route'}
-            doneCallback={(data)=>{
+            checkNameCallback={async (file)=>{
                 try {
-                    const actions=ItemActions.create({type:'route'},connectedMode)
-                    let nroute = new routeobjects.Route();
-                    nroute.fromXml(data.data);
-                    if (! nroute.name) {
-                        nroute.setName(actions.nameForUpload(data.name));
-                    }
-                    const routeExists=(name)=> {
-                        return checkName(name,currentList.current,(item)=>item.value+".gpx")
-                    }
-                    const name=actions.serverNameToClientName(nroute.name);
-                    if (routeExists(name)) {
-                        showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-                            {...dprops}
-                            title={"route already exists, select new name"}
-                            checkName={routeExists}
-                            fixedExt={'gpx'}
-                            iname={nroute.name}
-                            />)
-                            .then((res)=>{
-                                nroute.setName(actions.nameForUpload(res.name));
-                                if (resolveFunction) resolveFunction(nroute);
-                                dialogContext.closeDialog();
-                            })
-                        return;
-                    }
-                    if (resolveFunction) resolveFunction(nroute);
-                    dialogContext.closeDialog();
+                    const uploadAction=itemActions.getUploadAction().copy({
+                        localAction: async (userData,name,file)=>{
+                            if (! userData.nroute) throw new Error("no route loaded");
+                            userData.nroute.name=name;
+                            if (resolveFunction) resolveFunction(userData.nroute);
+                            dialogContext.closeDialog();
+                        }
+                    });
+                    return uploadAction.checkFile(file,dialogContext);
                 }catch (e) {
                     Toast(e);
                 }
             }}
             errorCallback={(err)=>Toast(err)}
-            checkNameCallback={(name)=>{
-                if(Helper.getExt(name) !== 'gpx') return {error:"only .gpx files"};
-                return {name:name}
-            }}
         />
         <DialogButtons buttonList={[
             {
@@ -356,24 +308,16 @@ const RouteSaveModes={
 }
 
 const EditRouteDialog = (props) => {
+    const itemActions=createItemActions('route');
     const activeRouteState=useStore({storeKeys: activeRoute.getStoreKeys()})
     const [saveMode,setSaveMode]=useState(RouteSaveModes.UPDATE);
     const dialogContext = useDialogContext();
     const [route, setRoute] = useState(props.route);
     const [inverted, setInverted] = useState(false);
-    const [availableRoutes, setAvailableRoutes] = useState();
     const [connectedMode]=useStoreState(keys.properties.connectedMode)
-    useEffect(() => {
-        if (!props.route) return;
-        loadRoutes()
-            .then((routes) => {
-                setAvailableRoutes(routes)
-            });
-    }, []);
     const isActiveRoute = useCallback(() => {
-        let activeName = StateHelper.routeName(activeRouteState);
-        return (activeName !== undefined && route.name === activeName);
-    }, [activeRouteState]);
+        return  StateHelper.isSameRoute(activeRouteState,route);
+    }, [activeRouteState,route]);
     const getCurrentEditor = useCallback(() => {
         return isActiveRoute() ? activeRoute : editor;
     }, []);
@@ -388,10 +332,9 @@ const EditRouteDialog = (props) => {
     }
     const save = (cloned,rtSaveMode) => {
         let oldName = props.route.name;
-        let oldServer = props.route.server;
         if (rtSaveMode === RouteSaveModes.NONE) return false;
         if (rtSaveMode === RouteSaveModes.UPDATE){
-            const isActive=oldName === StateHelper.routeName(activeRouteState);
+            const isActive= StateHelper.isSameRoute(activeRouteState,props.route);
             const nameChanged=route.name !== oldName;
             if ( isActive && nameChanged){
                 Toast("cannot rename active route");
@@ -401,14 +344,12 @@ const EditRouteDialog = (props) => {
             //the page must also know that we are now editing a different route
             editor.setNewRoute(cloned,undefined,true);
             if (nameChanged) {
-                RouteHandler.deleteRoute(oldName,
-                    () => {
+                RouteHandler.deleteRoute(oldName)
+                    .then(() => {
                     },
                     (error) => {
                         Toast(error);
-                    },
-                    !oldServer
-                )
+                    })
             }
             return true;
         }
@@ -417,7 +358,7 @@ const EditRouteDialog = (props) => {
                 //we should never replace the currently active route with a newly created one
                 //basically this should not be possible any way as the name dialog would prevent this
                 //but: do a last check anyway
-                if (cloned.name === StateHelper.routeName(activeRouteState)) {
+                if (StateHelper.isSameRoute(activeRouteState,cloned)) {
                     Toast("unable to copy to active route");
                     return false;
                 }
@@ -427,31 +368,11 @@ const EditRouteDialog = (props) => {
         }
         return false;
     }
-    const deleteRoute = () => {
-        if (isActiveRoute()) return;
-        showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={"Really delete route " + route.name}/>)
-            .then(() => {
-                RouteHandler.deleteRoute(route.name,
-                    () => {
-                        if (editor.getRouteName() === route.name) {
-                            editor.removeRoute();
-                        }
-                        dialogContext.closeDialog();
-                    },
-                    (error) => {
-                        Toast(error)
-                    },
-                    !route.server)
-
-            })
-            .catch(() => {
-            })
-    }
     const loadNewRoute = () => {
         showPromiseDialog(dialogContext,(props)=><LoadRouteDialog
             {...props}
-            blacklist={[route.name]}
-            selectedName={getCurrentEditor().getRouteName()}
+            blacklist={[route]}
+            selectedRoute={getCurrentEditor().getRoute()}
             allowUpload={true}
         />)
             .then((nroute)=>{
@@ -462,50 +383,39 @@ const EditRouteDialog = (props) => {
                     () => {}
             )
     }
-    const nameDialog=(title)=>{
-        const checkExisting=(name)=>{
-            return checkName(name,availableRoutes,(item)=>item.name);
-        }
-        return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-            {...dprops}
-            iname={route.name}
-            fixedExt={'gpx'}
-            checkName={checkExisting}
-            mandatory={true}
-            title={title}
-        />)
-            .then((res)=>{
-                const actions=ItemActions.create({type:'route'},connectedMode);
-                return actions.nameForUpload(res.name);
-            })
-    }
-    const writable= ! route.server || connectedMode;
-    let canDelete = !isActiveRoute() && existsRoute(route.name,availableRoutes) && route.name !== DEFAULT_ROUTE && writable;
+    const writable= ! route.isServer() || connectedMode;
+    let canDelete = !isActiveRoute()  && route.name !== DEFAULT_ROUTE && writable;
     let info = RouteHandler.getInfoFromRoute(route);
+    const createAction=itemActions.getCreateAction().copy({title:'Choose name for new route'});
+    const actions=itemActions.getActions(info,['rename','delete']);
+    const renameAction=actions.rename?actions.rename.copy({
+        execute: (item,newName)=>{
+            changeRoute((nr)=>{nr.setName(newName)})
+        }
+    }):undefined;
+    const deleteAction=actions.delete.copy({
+        close:false
+    });
     return <DialogFrame className={Helper.concatsp("EditRouteDialog",isActiveRoute()?"activeRoute":undefined)} title={"Edit Route"}>
         <InputReadOnly
             dialogRow={true}
             label="name"
-            value={route.name}
+            value={route.displayName()}
         >
         </InputReadOnly>
-        {INFO_ROWS.map((description) => {
+        {INFO_ROWS.concat(itemActions.getInfoRows(info)).map((description) => {
             return InfoItem.show(info, description);
         })}
         {inverted && <InfoItem
             label=""
             value="inverted"
         />}
-        <InfoItem label={'server'} value={""+!!route.server}/>
         <InfoItem label={'writable'} value={""+writable}/>
         <DialogButtons>
             <DB name="new"
                 onClick={() => {
-                    nameDialog("Choose Route Name")
-                        .then((newName)=>{
-                            let newRoute=new routeobjects.Route();
-                            newRoute.setName(newName);
-                            newRoute.server=connectedMode;
+                    createAction.action(dialogContext)
+                        .then((newRoute)=>{
                             setRoute(newRoute);
                             setInverted(false);
                             setSaveMode(RouteSaveModes.REPLACE_NEW);
@@ -517,24 +427,20 @@ const EditRouteDialog = (props) => {
                  onClick={loadNewRoute}
                  close={false}
             >Load</DB>
-            <ItemDownloadButton
-                item={{
-                    type:'route',
-                    name:route.name,
-                    localData: ()=>route.toXml()
-                }}
+            <DownloadButton
+                fileName={route.name+".gpx"}
+                localData={()=>route.toXml()}
                 name={'download'}
                 useDialogButton={true}
-            >Download</ItemDownloadButton>
+            >Download</DownloadButton>
             <DB name="edit"
                 onClick={() => {
-                    nameDialog("Choose New Name")
-                        .then((newName)=>{
-                            changeRoute((nr)=>{nr.setName(newName)})
-                        },()=>{})
+                    renameAction.runAction(info,dialogContext)
+                    .then(() => {},(e)=>{if (e) Toast(e)});
                 }}
                 close={false}
                 disabled={! writable || (props.route.name === DEFAULT_ROUTE && saveMode === RouteSaveModes.UPDATE) || isActiveRoute()}
+                visible={!!renameAction}
             >
                 Rename
             </DB>
@@ -557,6 +463,7 @@ const EditRouteDialog = (props) => {
                     if (! isActiveRoute()) return;
                     RouteHandler.routeOff();
                     MapHolder.triggerRender();
+                    dialogContext.closeDialog();
                 }}
                 visible={isActiveRoute()}
                 disabled={!writable}
@@ -565,21 +472,34 @@ const EditRouteDialog = (props) => {
         </DialogButtons>
         <DialogButtons>
             <DB name="delete"
-                onClick={() => {
-                    deleteRoute();
+                onClick={async () => {
+                    try {
+                        if (await deleteAction.runAction(info, dialogContext)) {
+                            if (editor.isHandling(info)) {
+                                editor.removeRoute();
+                            }
+                            dialogContext.closeDialog();
+                        }
+                    }catch (e) {
+                        if (e) Toast(e);
+                    }
                 }}
                 close={false}
-                disabled={!canDelete}
+                disabled={!canDelete || saveMode === RouteSaveModes.REPLACE_NEW}
+                visible={!!deleteAction }
             >Delete</DB>
             <DB name="copy"
                 onClick={() => {
-                    nameDialog("Save As")
-                        .then((newName)=>{
+                    renameAction.copy({
+                        execute: (item,newName)=>{
+                            const baseName=routeobjects.nameToBaseName(newName);
+                            newName=(itemActions.isConnected()?routeobjects.SERVER_PREFIX:routeobjects.LOCAL_PREFIX)+baseName;
                             let changedRoute=changeRoute((nr)=>{nr.setName(newName)})
-                            if (! connectedMode) changedRoute.server=false;
                             setSaveMode(RouteSaveModes.REPLACE_NEW); //just if something goes wrong during save and we do not close
                             if(save(changedRoute,RouteSaveModes.REPLACE_NEW)) dialogContext.closeDialog()
-                        },()=>{})
+                        },
+                        title:'Save As'
+                    }).runAction(info,dialogContext);
                 }}
                 close={false}
             >
@@ -599,7 +519,7 @@ const EditRouteDialog = (props) => {
 }
 
 EditRouteDialog.propTypes = {
-    route: PropTypes.objectOf(routeobjects.Route).isRequired
+    route: PropTypes.instanceOf(routeobjects.Route).isRequired
 }
 
 
@@ -609,7 +529,8 @@ const getPanelList = (panel) => {
 
 const checkEmptyRoute = () => {
     if (!editor.hasRoute()) {
-        RouteHandler.fetchRoute(DEFAULT_ROUTE, true, (route) => {
+        RouteHandler.fetchRoute(DEFAULT_ROUTE)
+            .then((route) => {
                 editor.setRouteAndIndex(route, 0);
             },
             () => {
@@ -620,24 +541,25 @@ const checkEmptyRoute = () => {
     }
 }
 
-const startRouting=(dialogCtxRef,optIdx,opt_history)=>{
+const startRouting=(dialogContext,optIdx,opt_history)=>{
     //if (!checkRouteWritable()) return;
-    stopAnchorWithConfirm(true,dialogCtxRef)
-        .then(() => {
-            RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
+    stopAnchorWithConfirm(true,dialogContext)
+        .then(async () => {
+            await RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
             if (opt_history) opt_history.pop();
         })
-        .catch(() => {
+        .catch((e) => {
+            if (e) Toast(e);
         });
 }
 
-const checkRouteWritable = (dialogCtxRef) => {
+const checkRouteWritable = (dialogContext) => {
     let currentEditor = getCurrentEditor();
     if (currentEditor.isRouteWritable()) return true;
-    if (!dialogCtxRef) return false;
-    showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to select a new name"}/>)
+    if (!dialogContext) return false;
+    showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to save as new local route."}/>)
         .then(() => {
-            showDialog(dialogCtxRef,(props)=><EditRouteDialog
+            showDialog(dialogContext,(props)=><EditRouteDialog
                 {...props}
                 route={currentEditor.getRoute().clone()}
             />,()=>{
@@ -656,7 +578,8 @@ const getTargetFromInfo=(featureInfo)=> {
 const DEFAULT_ROUTE = "default";
 
 const EditRoutePage = (props) => {
-    const dialogCtxRef = useRef();
+    const history=useHistory();
+    const dialogContext = useDialogContext();
     const editorState=useStore({editor: activeRoute.getStoreKeys()});
     const activeState=useStore({storeKeys:activeRoute.getStoreKeys()})
     const [wpButtonsVisible, setWpButtonsVisible] = useState(false);
@@ -700,7 +623,7 @@ const EditRoutePage = (props) => {
         let currentEditor = getCurrentEditor();
         if (item.name === "EditRoute") {
             if (globalStore.getData(keys.gui.global.layoutEditing)) return;
-            showDialog(dialogCtxRef, () => {
+            showDialog(dialogContext, () => {
                 return <EditRouteDialog
                     route={currentEditor.getRoute()?currentEditor.getRoute().clone():new routeobjects.Route('empty')}
                 />
@@ -719,13 +642,13 @@ const EditRoutePage = (props) => {
                 MapHolder.setCenter(currentEditor.getPointAt());
                 setLastCenteredWp(point.idx);
                 if (lastSelected === point.idx && lastCenteredWp === point.idx) {
-                    startWaypointDialog(point, point.idx, dialogCtxRef);
+                    startWaypointDialog(point, point.idx, dialogContext);
                 }
             }
             return;
         }
         if (LayoutHandler.isEditing()) {
-            showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
+            showDialog(dialogContext, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
                 pageWithOptions={PAGENAME}
                 panelname={panel}
@@ -759,7 +682,7 @@ const EditRoutePage = (props) => {
             onClick: () => {
                 wpTimer.startTimer();
                 let currentEditor = getCurrentEditor();
-                startWaypointDialog(currentEditor.getPointAt(), currentEditor.getIndex(), dialogCtxRef);
+                startWaypointDialog(currentEditor.getPointAt(), currentEditor.getIndex(), dialogContext);
             },
             visible: routeWritable
         },
@@ -801,7 +724,8 @@ const EditRoutePage = (props) => {
         let current = editor.getPointAt(idx);
         if (!otherStart) return;
         const runInsert = () => {
-            RouteHandler.fetchRoute(name, false, (route) => {
+            RouteHandler.fetchRoute(name)
+                .then((route) => {
                     if (!route.points) return;
                     let insertPoints = [];
                     let usePoints = false;
@@ -837,7 +761,7 @@ const EditRoutePage = (props) => {
                 "Really append route ${route} starting at ${start} after ${current}?";
             replace = {route: name, current: current.name, start: otherStart.name};
         }
-        showPromiseDialog(dialogCtxRef, (dprops)=><ConfirmDialog {...dprops} text={Helper.templateReplace(text, replace)}/>)
+        showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={Helper.templateReplace(text, replace)}/>)
             .then(() => runInsert())
             .catch(() => {
             });
@@ -902,7 +826,7 @@ const EditRoutePage = (props) => {
             const newIndex = currentEditor.getIndexFromPoint(evdata.wp);
             if (currentIndex !== newIndex) currentEditor.setNewIndex(newIndex);
             else {
-                startWaypointDialog(currentEditor.getPointAt(currentIndex), currentIndex, dialogCtxRef);
+                startWaypointDialog(currentEditor.getPointAt(currentIndex), currentIndex, dialogContext);
             }
             return true;
         }
@@ -914,8 +838,7 @@ const EditRoutePage = (props) => {
                 const routeActionCondition = (featureInfo) => {
                     if (featureInfo.getType() !== FeatureInfo.TYPE.route || !featureInfo.isOverlay) return false;
                     if (!featureInfo.validPoint()) return false;
-                    let routeName = featureInfo.urlOrKey;
-                    return routeName && routeName.replace(/\.gpx$/, '') !== currentEditor.getRouteName();
+                    return   !currentEditor.isHandling(featureInfo.getItemInfo());
                 }
                 additionalActions.push(new FeatureAction(
                     {
@@ -935,10 +858,9 @@ const EditRoutePage = (props) => {
                         }));
                 }
                 additionalActions.push(hideAction);
-                additionalActions.push(linkAction(props.history));
+                additionalActions.push(linkAction(history));
             }
-            showDialog(dialogCtxRef, (dprops) => <GuardedFeatureListDialog {...dprops}
-                                                                    history={props.history}
+            showDialog(dialogContext, (dprops) => <GuardedFeatureListDialog {...dprops}
                                                                     featureList={featureList}
                                                                     additionalActions={additionalActions}
                                                                     listActions={pointActions}/>)
@@ -962,7 +884,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavAddAfter",
             onClick: () => {
-                if (!checkRouteWritable(dialogCtxRef)) return;
+                if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
                 if (!center) return;
                 let currentEditor = getCurrentEditor();
@@ -979,7 +901,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavAdd",
             onClick: () => {
-                if (!checkRouteWritable(dialogCtxRef)) return;
+                if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
                 if (!center) return;
                 let currentEditor = getCurrentEditor();
@@ -996,7 +918,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavDelete",
             onClick: () => {
-                if (!checkRouteWritable(dialogCtxRef)) return;
+                if (!checkRouteWritable(dialogContext)) return;
                 getCurrentEditor().deleteWaypoint();
                 let newIndex = getCurrentEditor().getIndex();
                 let currentPoint = getCurrentEditor().getPointAt(newIndex);
@@ -1010,7 +932,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavToCenter",
             onClick: () => {
-                if (!checkRouteWritable(dialogCtxRef)) return;
+                if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
                 if (!center) return;
                 let currentEditor = getCurrentEditor();
@@ -1023,7 +945,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavGoto",
             onClick: () => {
-                startRouting(dialogCtxRef,undefined,props.history);
+                startRouting(dialogContext,undefined,history);
             },
             editDisable: true,
             overflow: true
@@ -1049,31 +971,51 @@ const EditRoutePage = (props) => {
         },
         {
             name: "NavOverlays",
-            onClick: () => overlayDialog(dialogCtxRef),
+            onClick: () => overlayDialog(dialogContext),
             overflow: true,
             storeKeys: {
                 visible: keys.gui.capabilities.uploadOverlays
             }
         },
         CenterActionButton,
-        Mob.mobDefinition(props.history),
+        {
+            name: 'SyncRoutes',
+            overflow: true,
+            editDisable: true,
+            storeKeys: {
+                enabled: keys.properties.connectedMode
+            },
+            updateFunction:(state)=>{
+                return {
+                    disabled: !state.enabled
+                }
+            },
+            onClick:()=>{
+                showDialog(dialogContext, ()=><RouteSyncDialog
+                    deleteLocal={true}
+                    showEmpty={true}
+                />)
+            }
+        },
+        Mob.mobDefinition(history),
         EditPageDialog.getButtonDef(PAGENAME,
-            MapPage.PANELS, [LayoutHandler.OPTIONS.SMALL], dialogCtxRef),
-        LayoutFinishedDialog.getButtonDef(undefined, dialogCtxRef),
+            MapPage.PANELS, [LayoutHandler.OPTIONS.SMALL], dialogContext),
+        LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
         LayoutHandler.revertButtonDef((pageWithOptions) => {
             if (pageWithOptions.location !== props.location) {
-                props.history.replace(pageWithOptions.location, pageWithOptions.options);
+                history.replace(pageWithOptions.location, pageWithOptions.options);
             }
         }),
         {
             name: 'Cancel',
             onClick: () => {
-                props.history.pop()
+                history.pop()
             }
         }
     ];
     let overlayContent = (props.small || wpButtonsVisible) ?
         <ButtonList
+            page={props.id}
             itemList={waypointButtons}
             className="overlayContainer"
         />
@@ -1089,7 +1031,6 @@ const EditRoutePage = (props) => {
             panelCreator={getPanelList}
             buttonList={buttons}
             overlayContent={overlayContent}
-            dialogCtxRef={dialogCtxRef}
         />
     );
 }

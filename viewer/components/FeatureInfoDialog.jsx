@@ -28,7 +28,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
@@ -44,6 +44,11 @@ import {WatchDialogWithFunctions} from "./AnchorWatchDialog";
 import MapEventGuard from "../hoc/MapEventGuard";
 import globalStore from "../util/globalstore";
 import MapHolder from "../map/mapholder";
+import {useHistory} from "./HistoryProvider";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {Icon} from "./Icons";
+import {useDialogContext} from "./DialogContext";
+
 NavHandler.getRoutingHandler();
 
 const POS_ROW={label: 'position',value:'point',formatter:(v)=>Formatter.formatLonLats(v)}
@@ -143,14 +148,16 @@ const ImageIcon=({iconImage,className})=>{
 }
 
 const FeatureIcon=({feature,showOverlayIcon})=>{
+    const overlayIconClass=(feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay))?"overlay":"_none";
     return <React.Fragment>
         {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
-        {!feature.icon && <span className={Helper.concatsp('icon',feature.typeString())}/> }
-        { showOverlayIcon && feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay) && <span className={Helper.concatsp('icon','overlay')}/> }
+        {!feature.icon && <Icon className={feature.typeString()}/> }
+        { showOverlayIcon && <Icon className={overlayIconClass}/>}
     </React.Fragment>
 }
 
-export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, history,listActions,className}) => {
+export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, listActions,className}) => {
+    const history=useHistory();
     const dialogContext = useDialogContext();
     const shouldKeep=useRef(false);
     const select = useCallback((featureInfo) => {
@@ -186,7 +193,6 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
                     {...dprops}
                     featureInfo={featureInfo}
                     additionalActions={factions}
-                    history={history}
                     cancelAction={()=>{
                         shouldKeep.current=true;
                         return true;
@@ -201,7 +207,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         } else {
             dialogContext.closeDialog();
         }
-    }, [onSelectCb, additionalActions, history]);
+    }, [onSelectCb, additionalActions]);
     if (!(featureList instanceof Array) || featureList.length < 1) {
         dialogContext.closeDialog();
         return null;
@@ -230,21 +236,23 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, h
         }
         {featureList.map((feature) => {
             if (feature instanceof BaseFeatureInfo) return null;
-            return <DialogRow key={feature.urlOrKey||feature.title} className={'listEntry'} onClick={() => {
+            return <ListItem key={feature.getKey()} onClick={() => {
                 select(feature);
             }}>
-                <div className={'icons'}>
-               <FeatureIcon feature={feature} showOverlayIcon={true}/>
-                </div>
-                <span className={'title'}>{feature.title}</span>
-            </DialogRow>
+                <ListSlot>
+                    <FeatureIcon feature={feature} showOverlayIcon={true}/>
+                </ListSlot>
+                <ListMainSlot
+                    primary={feature.title}
+                >
+                </ListMainSlot>
+            </ListItem>
         })}
         <DialogButtons buttonList={buttonList}/>
     </DialogFrame>
 }
 FeatureListDialog.propTypes={
     className: PropTypes.string,
-    history: PropTypes.object.isRequired,
     featureList: PropTypes.arrayOf(PropTypes.instanceOf(FeatureInfo)),
     onSelectCb: PropTypes.func, //return false to cancel
     additionalActions: PropTypes.arrayOf(PropTypes.instanceOf(FeatureAction)),
@@ -254,15 +262,16 @@ FeatureListDialog.propTypes={
 export const GuardedFeatureListDialog=MapEventGuard(FeatureListDialog);
 GuardedFeatureListDialog.propTypes=FeatureListDialog.propTypes;
 
-const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction}) => {
+const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
     useEffect(() => {
         if (! featureInfo) return;
         let infoFunction = INFO_FUNCTIONS[featureInfo.getType()]
         let infoCoordinates = featureInfo.point;
-        if (infoFunction && infoCoordinates) {
-            infoFunction(featureInfo.urlOrKey,
+        let itemInfo=featureInfo.getItemInfo();
+        if (infoFunction && infoCoordinates && itemInfo) {
+            infoFunction(itemInfo,
                 infoCoordinates
             )
                 .then((info) => {
@@ -325,7 +334,6 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,history,cancelAction})
 
 FeatureInfoDialog.propTypes={
     featureInfo: PropTypes.instanceOf(FeatureInfo),
-    history: PropTypes.object.isRequired,
     additionalActions: PropTypes.array,
     cancelAction: PropTypes.func
 }
@@ -339,6 +347,16 @@ export const hideAction=new FeatureAction({
     condition: (featureInfo)=>featureInfo.isOverlay && featureInfo.overlaySource
     });
 
+const linkTitle=(featureInfo)=>{
+    if (featureInfo.userInfo){
+        let t=featureInfo.userInfo.title||
+            featureInfo.userInfo.linkText||
+            featureInfo.userInfo.desc||
+            featureInfo.userInfo.name;
+        if (t) return t;
+    }
+    return featureInfo.title||featureInfo.urlOrKey|featureInfo;
+}
 export const linkAction=(history)=>new FeatureAction({
     name:"info",
     label:'Info',
@@ -348,10 +366,10 @@ export const linkAction=(history)=>new FeatureAction({
         if (!userInfo.link && !userInfo.htmlInfo) return;
         let url = userInfo.link;
         if (userInfo.htmlInfo) {
-            history.push('viewpage', {html: userInfo.htmlInfo, name: userInfo.title || 'featureInfo'});
+            history.push('viewpage', {html: userInfo.htmlInfo, name: linkTitle(featureInfo)});
             return;
         }
-        history.push('viewpage', {url: url, name: userInfo.title, useIframe: true});
+        history.push('viewpage', {url: url, name: linkTitle(featureInfo), useIframe: true});
     }
 })
 

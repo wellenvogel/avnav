@@ -53,11 +53,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
@@ -174,25 +178,18 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 showsDialog=false;
                 sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
                 break;
-            case Constants.FILE_OPEN:
-                if (resultCode != RESULT_OK) {
-                    // Exit without doing anything else
-                    return;
-                } else {
-                    Uri returnUri = data.getData();
-                    if (jsInterface != null) jsInterface.saveFile(returnUri);
-                }
-                break;
             case Constants.FILE_OPEN_UPLOAD:
                 if (upload == null) return;
                 if (resultCode != RESULT_OK) {
                     upload.onReceiveValue(null);
                     upload=null;
+                    if (jsInterface != null) jsInterface.setLastOpenedUri(null);
                     return;
                 } else {
                     Uri returnUri = data.getData();
                     upload.onReceiveValue(new Uri[]{returnUri});
                     upload=null;
+                    if (jsInterface != null) jsInterface.setLastOpenedUri(returnUri);
                 }
                 break;
             case Constants.FILE_OPEN_DOWNLOAD:
@@ -309,7 +306,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public void run() {
                 AvnLog.i(LOGPRFX,"MainActivity: Service bind action - initWebView");
-                initializeWebView();
+                try {
+                    initializeWebView();
+                }catch (Exception e){
+                    showCrashDialog(e);
+                }
             }
         };
         try {
@@ -532,17 +533,26 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         nextDownload.fileName=fileName;
         startNextDownload(nextDownload,mimeType);
     }
-    private WebResourceResponse handleRequest(WebView view, String url, String method){
+    private WebResourceResponse handleRequest(WebView view, String url,String method, Map<String,String> headers){
         RequestHandler handler= getRequestHandler();
         WebResourceResponse rt=null;
         if (handler != null) {
             try {
-                rt = handler.handleRequest(view,url,method);
+                rt = handler.handleRequest(view, url, method,headers);
+            }catch (RequestHandler.RequestException r){
+                AvnLog.e("web request for "+url+" failed",r);
+                if (Build.VERSION.SDK_INT >= 21){
+                    return new ExtendedWebResourceResponse(r.statusCode,r.getMessage());
+                }
+                else {
+                    return null;
+                }
+
             }catch (Throwable t){
                 AvnLog.e("web request for "+url+" failed",t);
                 InputStream is=new ByteArrayInputStream(new byte[]{});
                 if (Build.VERSION.SDK_INT >= 21){
-                    return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
+                    return new ExtendedWebResourceResponse(500,t.getMessage());
                 }
                 else {
                     return null;
@@ -552,7 +562,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return rt;
     }
 
-    private void initializeWebView(){
+    private void initializeWebView() throws UnsupportedEncodingException {
         if (webView != null) return;
         AvnLog.i(LOGPRFX,"initializeWebView");
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
@@ -588,7 +598,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 @Override
                 public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
                     AvnLog.i(LOGPRFX,"service worker load "+request.getUrl().toString());
-                    WebResourceResponse rt=handleRequest(null,request.getUrl().toString(),request.getMethod());
+                    WebResourceResponse rt=handleRequest(null,request.getUrl().toString(),request.getMethod(),request.getRequestHeaders());
                     if (rt != null) return rt;
                     return super.shouldInterceptRequest(request);
                 }
@@ -602,8 +612,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Nullable
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && (! "POST".equals(request.getMethod()))) {
+                    WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod(),request.getRequestHeaders());
                     if (rt != null) return rt;
                 }
                 return super.shouldInterceptRequest(view, request);
@@ -614,7 +624,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    WebResourceResponse rt = handleRequest(view, url, "GET");
+                    WebResourceResponse rt = handleRequest(view, url, "GET",new HashMap<>());
                     if (rt == null) return super.shouldInterceptRequest(view, url);
                     return rt;
                 }
@@ -683,7 +693,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         if (handler == null){
                             throw new Exception("no handler");
                         }
-                        ExtendedWebResourceResponse r=handler.handleRequest(null,url,"get");
+                        ExtendedWebResourceResponse r=handler.handleRequest(null,url,"get",new HashMap<>());
                         //TODO: separate dl handler
                         if (r == null){
                             throw new Exception("cannot handle "+url);
@@ -718,7 +728,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/avnav_viewer.html?navurl=avnav_navi.php";
+        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/avnav_viewer.html?navurl="+ URLEncoder.encode(RequestHandler.NAVURL, StandardCharsets.UTF_8.toString());
         if (BuildConfig.DEBUG) start+="&logNmea=1";
         if (htmlPage != null) {
             webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);
@@ -972,7 +982,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             gpsService.onResumeInternal();
         }
         if (webView == null) {
-            initializeWebView();
+            try {
+                initializeWebView();
+            }catch (Throwable t){
+                showCrashDialog(t);
+            }
         }
         AvnLog.i(LOGPRFX,"MainActivity:onResumeInternal done");
     }
@@ -1080,7 +1094,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     public void sendEventToJs(String key, long id){
         AvnLog.i("js event key="+key+", id="+id);
         if (webView != null) {
-            webView.loadUrl("javascript:if (avnav && avnav.android) avnav.android.receiveEvent('" + key + "'," + id + ")");
+            webView.loadUrl("javascript:window.avnavAndroid.receiveEvent('" + key + "'," + id + ")");
         }
     }
 

@@ -1,0 +1,122 @@
+#! /bin/sh
+BASE=/usr/lib/avnav/raspberry
+startAvNav=1
+systemctl -q status avnav > /dev/null || startAvNav=0 
+systemctl stop avnav || echo "avnav not running"
+systemctl stop check_parts || echo "check_parts not running"
+systemctl stop check_wlan || echo "check_wlan not running"
+rm -f /etc/init.d/avnav
+rm -f /etc/init.d/check_wlan
+rm -f /etc/init.d/check_parts
+VERSIONFILE=$BASE/raspi.version
+if [ -f $VERSIONFILE ] ; then
+    . $VERSIONFILE
+fi
+PATCHCMD=$BASE/patchServerConfig.py
+systemctl daemon-reload
+systemctl enable avnav
+echo stopping and disabling gpsd
+systemctl disable gpsd || echo ' ' > /dev/null
+systemctl stop gpsd || echo '' > /dev/null
+CONFIG=/home/pi/avnav/data/avnav_server.xml
+if [ -f $CONFIG ] ; then
+    echo "migrating old config $CONFIG"
+    if [ ! -f $CONFIG.save ] ; then
+        cp $CONFIG $CONFIG.save
+        chown pi $CONFIG.save
+    fi
+    if [ -x "$PATCHCMD" ] ; then
+        "$PATCHCMD" -v -f "$CONFIG" -h AVNConfig "settimecmd=/usr/lib/avnav/raspberry/settime.sh"
+        newBt=`"$PATCHCMD" -p -f "$CONFIG" -h AVNPluginHandler -c system-resetAlarm gpio`
+        if [ "$newBt" = "" ] ; then
+            oldBt=`"$PATCHCMD" -p -f "$CONFIG" -h AVNAlarmHandler stopAlarmPin | sed 's/.*=//'`
+            if [ "$?" = 0 -a "$oldBt" != "" ] ; then
+                echo "migrating setting for stop alarm pin $oldBt"
+                "$PATCHCMD" -v -d -f "$CONFIG" -h AVNAlarmHandler stopAlarmPin
+                "$PATCHCMD" -v -f "$CONFIG" -h AVNPluginHandler -c system-resetAlarm "gpio=$oldBt"
+            fi
+        fi
+    else
+        sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh"?' $CONFIG
+    fi
+else
+    echo "no old config $CONFIG found to migrate"
+fi
+grep "^ *FSCKFIX *= *yes" /etc/default/rcS > /dev/null || ( echo "configure FSCKFIX=yes"; echo 'FSCKFIX=yes' >> /etc/default/rcS)
+
+#wlan config for wlan-av1
+
+WLAN_CONFIG=/etc/wpa_supplicant/wpa_supplicant.conf
+if [ ! -f "$WLAN_CONFIG" ] ; then
+    echo "creating $WLAN_CONFIG"
+    cp $BASE/wpa_supplicant.conf $WLAN_CONFIG
+else
+    echo "checking existing $WLAN_CONFIG"
+    if grep "^ *country *=" "$WLAN_CONFIG" > /dev/null ; then
+        echo "country already set"
+    else
+        echo "setting country"
+        echo "country=DE" >> "$WLAN_CONFIG"
+    fi
+    if grep "^ *ctrl_interface *= *DIR=/var/run/wpa_supplicant *GROUP *= *netdev" "$WLAN_CONFIG" > /dev/null ; then
+        echo "socket setting ok"
+    else
+
+        if grep "^ *ctrl_interface" "$WLAN_CONFIG" > /dev/null ; then
+            sed -i -e 's?^ *ctrl_interface.*?ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev?' "$WLAN_CONFIG"
+        else
+            echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" >> "$WLAN_CONFIG"
+        fi
+    fi
+fi
+
+#remove dhcp server ntp conf
+DHCONF=/var/lib/ntp/ntp.conf.dhcp
+if [ -f $DHCONF ] ; then
+    echo "removing $DHCONF"
+    rm -f $DHCONF
+fi
+[ ! -d var/lib/ntp/ ] && mkdir -p var/lib/ntp/
+#a bit dirty trick to force ntpd to use our config file
+cp $BASE/ntp.conf $DHCONF
+HOOK=/etc/dhcp/dhclient-exit-hooks.d/ntp
+if [ -f $HOOK ] ; then
+    echo "moving $HOOK into /etc/dhcp/save"
+    [ ! -d /etc/dhcp/save ] && mkdir /etc/dhcp/save
+    mv $HOOK /etc/dhcp/save
+fi
+#remove wlan0 config from /etc/network/interfaces
+sed -i -e '/^iface *wlan0/,/^[^ ]/d' -e '/wlan0/d' /etc/network/interfaces
+
+BOOTCFG=/boot/avnav.conf
+if [ -d /boot/firmware ]
+then
+  BOOTCFG=/boot/firmware/avnav.conf
+fi
+
+if [ ! -e "$BOOTCFG" ] ; then
+    echo "creating $BOOTCFG"
+    cp $BASE/avnav.conf $BOOTCFG
+fi    
+
+systemctl disable dhcpd || echo "dhcpd not running, dont need to disable"
+systemctl stop dhcpd || echo "dhcpd not running, dont need to disable"
+systemctl disable dhcpcd || echo "dhcpcd not running, dont need to disable"
+systemctl stop dhcpcd || echo "dhcpcd not running, dont need to disable"
+systemctl disable --now ntp || echo "ntp not running, dont need to disable"
+systemctl mask ntp || echo "ntp not running, dont need to mask"
+systemctl disable --now ntpsec || echo "ntpsec not running, dont need to disable"
+systemctl mask ntpsec || echo "ntpsec not running, dont need to mask"
+
+
+systemctl daemon-reload
+systemctl restart dnsmasq
+if [ "$startAvNav" = "1" ] ; then
+    echo "starting avnav"
+    systemctl start avnav
+fi
+systemctl enable avnav-iptables
+systemctl start avnav-iptables
+systemctl enable avnav-startup
+
+exit 0

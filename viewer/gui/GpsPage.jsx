@@ -2,11 +2,11 @@
  * Created by andreas on 02.05.14.
  */
 
-import {useStoreState} from '../hoc/Dynamic.jsx';
+import {useStoreState} from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React, {useCallback, useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import MapHolder from '../map/mapholder.js';
@@ -27,6 +27,8 @@ import {showDialog} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
 import {injectav} from "../util/helper";
+import {useHistory} from "../components/HistoryProvider";
+import {useDialogContext} from "../components/DialogContext";
 const MINPAGE=1;
 const MAXPAGE=5;
 const PANEL_LIST=['left','m1','m2','m3','right'];
@@ -109,6 +111,8 @@ const layoutBaseParam={
 };
 
 const GpsPage = (props) => {
+    const history=useHistory();
+    const reloadSequence=useStoreState(keys.gui.global.reloadSequence);
     const [pageNumber, setPageNumberImpl] = useStoreState(keys.gui.gpspage.pageNumber, (currentNumber) => {
         if (props.options && props.options.widget && !props.options.returning) {
             let pagenNum = findPageWithWidget(props.options.widget);
@@ -122,7 +126,7 @@ const GpsPage = (props) => {
         if (currentNumber >= MINPAGE && currentNumber <= MAXPAGE && hasPageEntries(currentNumber)) return currentNumber;
         return 1;
     }, true);
-    const dialogCtxRef = useRef();
+    const dialogContext = useDialogContext();
     const setPageNumber = useCallback((num, opt_noRemote) => {
         setPageNumberImpl(num);
         if (!opt_noRemote) {
@@ -170,25 +174,25 @@ const GpsPage = (props) => {
             name: 'GpsCenter',
             onClick: () => {
                 MapHolder.centerToGps();
-                props.history.pop();
+                history.pop();
             },
             editDisable: true
         }]
         .concat(createNumButtons(MINPAGE, MAXPAGE))
         .concat([
-            anchorWatch(false, dialogCtxRef),
-            RemoteChannelDialog({overflow: true}, dialogCtxRef),
-            Mob.mobDefinition(props.history),
+            anchorWatch(false, dialogContext),
+            RemoteChannelDialog({overflow: true}, dialogContext),
+            Mob.mobDefinition(history),
             EditPageDialog.getButtonDef(
                 getLayoutPage(pageNumber).layoutPage,
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR],
-                dialogCtxRef),
-            LayoutFinishedDialog.getButtonDef(undefined, dialogCtxRef),
+                dialogContext),
+            LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
             LayoutHandler.revertButtonDef((pageWithOptions) => {
                 let current = getLayoutPage(pageNumber);
                 if (pageWithOptions.location !== current.location) {
-                    props.history.replace(pageWithOptions.location, pageWithOptions.options);
+                    history.replace(pageWithOptions.location, pageWithOptions.options);
                     return;
                 }
                 if (current.layoutPage !== pageWithOptions.layoutPage) {
@@ -202,7 +206,7 @@ const GpsPage = (props) => {
             {
                 name: 'Cancel',
                 onClick: () => {
-                    props.history.pop();
+                    history.pop();
                 }
             }
         ]);
@@ -211,7 +215,7 @@ const GpsPage = (props) => {
         const item=avev.avnav.item;
         if (! item) return;
         if (LayoutHandler.isEditing()) {
-            showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
+            showDialog(dialogContext, () => <EditWidgetDialogWithFunc
                 widgetItem={item}
                 pageWithOptions={getLayoutPage(pageNumber)}
                 panelname={panelInfo.name}
@@ -226,19 +230,19 @@ const GpsPage = (props) => {
         if (item && item.name === "AisTarget") {
             let mmsi = avev.avnav.mmsi;
             if (mmsi === undefined) return;
-            showDialog(dialogCtxRef, () => {
+            showDialog(dialogContext, () => {
                 return <AisInfoWithFunctions
                     mmsi={mmsi}
                     actionCb={(action, m) => {
                         if (action === 'AisInfoList') {
-                            props.history.push('aispage', {mmsi: m});
+                            history.push('aispage', {mmsi: m});
                         }
                     }}
                 />;
             })
             return;
         }
-        props.history.pop();
+        history.pop();
     }, [pageNumber]);
     let autohide = undefined;
     if (globalStore.getData(keys.properties.autoHideGpsPage)) {
@@ -281,7 +285,7 @@ const GpsPage = (props) => {
             },
             onClick: () => {
                 if (LayoutHandler.isEditing()) {
-                    showDialog(dialogCtxRef, () => <EditWidgetDialogWithFunc
+                    showDialog(dialogContext, () => <EditWidgetDialogWithFunc
                         pageWithOptions={getLayoutPage(pageNumber)}
                         panelname={panelData.name}
                         widgetItem={undefined}
@@ -304,10 +308,10 @@ const GpsPage = (props) => {
     let titleIcons = globalStore.getData(keys.properties.titleIconsGps);
     return (
         <PageFrame
-            id={"gpspage"}
+            id={props.id}
             autoHideButtons={autohide}
         >
-            <PageLeft dialogCtxRef={dialogCtxRef}>
+            <PageLeft>
                 {titleIcons && <DynamicTitleIcons/>}
                 {panelList.map((panelProps) => {
                     return (
@@ -317,7 +321,7 @@ const GpsPage = (props) => {
                     )
                 })}
             </PageLeft>
-            <ButtonList itemList={buttons} widthChanged={() => resizeFont()}/>
+            <ButtonList page={props.id} itemList={buttons} widthChanged={() => resizeFont()}/>
         </PageFrame>
     )
 }

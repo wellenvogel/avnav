@@ -25,39 +25,39 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Button from "./Button";
-import globalStore from "../util/globalstore";
-import keys from "../util/keys";
-import Requests from "../util/requests";
-import Toast from "./Toast";
+import Requests, {prepareUrl} from "../util/requests";
 import AndroidEventHandler from "../util/androidEventHandler";
-import {showPromiseDialog, useDialogContext} from "./OverlayDialog";
-import {ItemNameDialog} from "./ItemNameDialog";
 import Helper from "../util/helper";
-import androidEventHandler from "../util/androidEventHandler";
+import {useDialogContext} from "./DialogContext";
 
 const MAXUPLOADSIZE=100000;
 
-const showNameDialog=({result,name,checkName,dialogContext})=>{
-    if (! result ) return Promise.reject(result);
-    if (name){
-        if (result.fixedExt && Helper.endsWith(name,"."+result.fixedExt)){
-            name=name.substring(0,name.length-result.fixedExt.length-1);
-        }
-        if (result.fixedPrefix && Helper.startsWith(name,result.fixedPrefix)){
-            name=name.substring(result.fixedPrefix.length);
+export const readTextFile=async (file) => {
+    if (file.size) {
+        if (file.size > MAXUPLOADSIZE) {
+            throw new Error("file is to big, max allowed: " + MAXUPLOADSIZE);
         }
     }
-    return showPromiseDialog(dialogContext,(dprops)=><ItemNameDialog
-        {...dprops}
-        iname={name}
-        title={`select new name for ${name}`}
-        checkName={checkName}
-        fixedPrefix={result.fixedPrefix}
-        fixedExt={result.fixedExt}
-    />)
-        .then((res)=>Promise.resolve(res))
-        .catch((err)=>Promise.reject({error:err||'cancelled'}))
-}
+    if (!window.FileReader) {
+        throw new Error("your browser does not support FileReader, cannot upload");
+    }
+    return await new Promise((resolve, reject) => {
+        let reader = new FileReader();
+        reader.onloadend = () => {
+            let content = reader.result;
+            if (!content) {
+                reject("unable to load file " + file.name);
+                return;
+            }
+            resolve(content);
+        };
+        reader.onerror = (e) => {
+            reject(e);
+        }
+        reader.readAsText(file);
+    });
+};
+
 
 const UploadHandler = (props) => {
     const dialogContext=useDialogContext();
@@ -72,93 +72,24 @@ const UploadHandler = (props) => {
         props.errorCallback && props.errorCallback(err);
         setStateHelper({});
     }, [props.errorCallback]);
-    /**
-     * check the filename if an external check function has been provided
-     * @param name
-     * @returns a Promise
-     *      resolves withe an object with name, uploadParameters (object)
-     *      or rejects
-     */
-    const checkName = useCallback((name) => {
-        if (!props.checkNameCallback) {
-            return Promise.resolve({name:name});
-        }
-        let rt = props.checkNameCallback(name);
-        if (rt instanceof Promise) return rt.then(
-            (res)=>res,
-            (err)=>{
-            if (err instanceof Object) return Promise.reject(err);
-            return Promise.reject({error:err});
-        });
-        return new Promise((resolve, reject) => {
-            if (typeof (rt) === 'object') {
-                if (!rt.error) resolve(rt);
-                else reject(rt);
-            } else reject({error:rt});
-        })
-    }, [props.checkNameCallback]);
-    const checkNameWithDialog=useCallback((name,fixedPrefix)=>{
-        return checkName((fixedPrefix||'')+name)
-            .then((res)=>res)
-            .catch((err)=>{
-                if (err.proposal || err.dialog){
-                    return showNameDialog({name:name,result:err,checkName,dialogContext})
-                }
-                else return Promise.reject(err)
-            })
-    },[checkName,dialogContext])
-    const upload = useCallback((file,fixedPrefix) => {
-        if (!file || !props.type) return;
-        checkNameWithDialog(file.name,fixedPrefix)
-            .then((res) => {
-                if (!props.local) {
-                    uploadServer(file, res.name, res.type || props.type, res.uploadParameters, res)
-                } else {
-                    uploadFileReader(file, res.name, res)
-                }
-            })
-            .catch((err) => {
-                error(err.error);
-            });
-    }, [props.type]);
-
-    const uploadFileReader = useCallback((file, name, param) => {
-        setStateHelper({});
-        if (file.size) {
-            if (file.size > MAXUPLOADSIZE) {
-                let err = "file is to big, max allowed: " + MAXUPLOADSIZE;
-                error(err)
-                return;
+    const checkName= async (file)=>{
+        if (! props.checkNameCallback){
+            return {
+                name:file.name,
+                file: file
             }
         }
-        if (!window.FileReader) {
-            error("your browser does not support FileReader, cannot upload");
-            return;
-        }
-        let reader = new FileReader();
-        reader.onloadend = () => {
-            let content = reader.result;
-            if (!content) {
-                error("unable to load file " + file.name);
-                return;
-            }
-            props.doneCallback && props.doneCallback({data: content, name: name, param: param});
-
-
-        };
-        reader.readAsText(file);
-    }, [props.doneCallback, error]);
+        const rt=await props.checkNameCallback(file,dialogContext);
+        if (rt && rt.error) return Promise.reject(rt.error);
+        return rt;
+    }
     const uploadServer = useCallback((file, name, type, opt_options, opt_param) => {
-        let url = globalStore.getData(keys.properties.navUrl)
-            + "?request=upload&type=" + type
-            + "&name=" + encodeURIComponent(name);
-        if (opt_options) {
-            for (let k in opt_options) {
-                if (opt_options[k] !== undefined) {
-                    url += "&" + k + "=" + encodeURIComponent(opt_options[k]);
-                }
-            }
-        }
+        let url = prepareUrl({
+            ...opt_options,
+            type:type,
+            command:'upload',
+            name:name
+        })
         let currentSequence = uploadSequenceRef.current;
         Requests.uploadFile(url, file, {
             starthandler: function (param, xhdr) {
@@ -184,7 +115,7 @@ const UploadHandler = (props) => {
                 setStateHelper({});
                 if (props.doneCallback) {
                     props.doneCallback({
-                        param: opt_param
+                        name:name
                     });
                 }
             }
@@ -197,86 +128,12 @@ const UploadHandler = (props) => {
             xhdrRef.current.abort();
             xhdrRef.current = undefined;
         }
-        if (avnav.android) {
-            androidSequence.current = (new Date()).getTime();
-            androidCopyParam.current=undefined;
-            avnav.android.requestFile(props.type, androidSequence.current, props.local ? true : false);
-        }
         uploadSequenceRef.current=props.uploadSequence;
         setStateHelper({}); //trigger render
 
     }, [props.uploadSequence,props.type,props.local]);
     const androidHandlers=useRef();
     androidHandlers.current= {
-        /**
-         * called back from android if the file was completely read
-         * if we had set the "local" flag
-         * @param eventData
-         */
-        uploadAvailable: (eventData) => {
-            if (!avnav.android) return;
-            let {id} = eventData;
-            let requestedId = androidSequence.current;
-            if (id !== requestedId) return;
-            let filename = avnav.android.getFileName(id);
-            if (!filename) return;
-            let data = avnav.android.getFileData(id);
-            checkNameWithDialog(filename, props.fixedPrefix)
-                .then((res) => {
-                    props.doneCallback({
-                        name: res.name,
-                        data: data,
-                        param: res
-                    })
-                })
-                .catch((err) => {
-                    Toast(err.error);
-                });
-        },
-
-        /**
-         * called from android when the file selection is ready
-         * @param eventData
-         */
-        fileCopyReady: (eventData) => {
-            if (!avnav.android) return;
-            let requestedId = androidSequence.current;
-            let {id} = eventData;
-            if (id !== requestedId) return;
-            let fileName = avnav.android.getFileName(id);
-
-            checkNameWithDialog(fileName, props.fixedPrefix)
-                .then((res) => {
-                    xhdrRef.current = {
-                        abort: () => {
-                            avnav.android.interruptCopy(id);
-                        }
-                    };
-                    let copyInfo = {
-                        total: avnav.android.getFileSize(id),
-                        loaded: 0,
-                        loadedPercent: true
-                    };
-                    androidCopyParam.current = res || {};
-                    setStateHelper((old) => {
-                        return {...old, ...copyInfo}
-                    });
-                    if (avnav.android.copyFile(id, res.name)) {
-                        //we update the file size as with copyFile it is fetched again
-                        setStateHelper((old) => {
-                            return {...old, total: avnav.android.getFileSize(id)}
-                        });
-                    } else {
-                        error("unable to upload");
-                        setStateHelper({});
-                    }
-                })
-                .catch((err) => {
-                    avnav.android.interruptCopy(id)
-                    if (err) error(err.error);
-                });
-
-        },
         fileCopyPercent: (eventData) => {
             let {event, id} = eventData;
             if (event === "fileCopyPercent") {
@@ -287,7 +144,7 @@ const UploadHandler = (props) => {
             } else {
                 //done, error already reported from java side
                 setStateHelper({});
-                props.doneCallback && props.doneCallback({param: androidCopyParam.current});
+                props.doneCallback && props.doneCallback({name: androidCopyParam.current.name});
                 androidCopyParam.current = undefined;
             }
         }
@@ -313,11 +170,69 @@ const UploadHandler = (props) => {
     useEffect(() => {
         checkForUpload();
     });
-    const fileChange = useCallback((ev,fixedPrefix) => {
+    const upload = useCallback((file) => {
+        if (!file || !props.type) return;
+        xhdrRef.current=undefined;
+        checkName(file)
+            .then((res) => {
+                if (res) {
+                    if (!props.local) {
+                        if (window.avnavAndroid) {
+                            androidSequence.current = (new Date()).getTime();
+                            const overwrite=(res.options||{}).overwrite;
+                            if (window.avnavAndroid.startFileUpload(res.type || props.type,res.name,!!overwrite,androidSequence.current)){
+                                xhdrRef.current = {
+                                    abort: () => {
+                                        window.avnavAndroid.interruptCopy(androidSequence.current);
+                                    }
+                                };
+                                androidCopyParam.current = {
+                                    name: res.name
+                                }
+                                let copyInfo = {
+                                    total: window.avnavAndroid.getFileSize(androidSequence.current),
+                                    loaded: 0,
+                                    loadedPercent: true
+                                };
+                                setStateHelper((old) => {
+                                    return {...old, ...copyInfo}
+                                });
+                            }
+                            else{
+                                throw new Error("internal Error: upload not ready on Android")
+                            }
+                        }
+                        else {
+                            uploadServer(file, res.name, res.type || props.type, res.options, res)
+                        }
+                    } else {
+                        readTextFile(file)
+                            .then((data) => {
+                                if (props.doneCallback) {
+                                    props.doneCallback({
+                                        name: res.name,
+                                        data: data,
+                                        options: res.options
+                                    })
+                                }
+                            })
+                    }
+                }
+                else{
+                    if (props.doneCallback){
+                        props.doneCallback();
+                    }
+                }
+            })
+            .catch((err) => {
+                error(err);
+            });
+    }, [props.type]);
+    const fileChange = useCallback(async (ev) => {
         ev.stopPropagation();
         let fileObject = ev.target;
         if (fileObject.files && fileObject.files.length > 0) {
-            upload(fileObject.files[0],fixedPrefix);
+            upload(fileObject.files[0]);
         }
     }, [props.type,upload]);
     if (!uploadSequenceRef.current) return null;
@@ -332,7 +247,7 @@ const UploadHandler = (props) => {
     };
     return (
         <React.Fragment>
-            {!avnav.android && <form className="hiddenUpload" method="post">
+            <form className="hiddenUpload" method="post">
                 <input type="file"
                        ref={(el) => {
                            if (!el) return;
@@ -344,7 +259,7 @@ const UploadHandler = (props) => {
                        name="file"
                        key={uploadSequenceRef.current}
                        onChange={(ev) => fileChange(ev,props.fixedPrefix)}/>
-            </form>}
+            </form>
             {loaded !== undefined && <div className="downloadProgress">
                 <div className="progressContainer">
                     <div className="progressInfo">{(loaded || 0) + "/" + (stateHelper.total || 0)}</div>
@@ -368,11 +283,14 @@ UploadHandler.propTypes={
                                           //a new uplaod will trigger - except for a change to 0
                                           //which will abort
     type:               PropTypes.string,
-    local:              PropTypes.bool,
-    doneCallback:       PropTypes.func, //will be called with and object with name,data for local=true, otherwise
-                                        //with no parameter
+    local:              PropTypes.bool, //do not prepare for server uploads
+    doneCallback:       PropTypes.func, //will be called when a server upload is done with an object
+                                        //with name,type (also includes data if local is set)
     errorCallback:      PropTypes.func, //called with error text (or undefined for cancel)
-    checkNameCallback:  PropTypes.func, //must resolve an object with name, uploadParameters, type
+    checkNameCallback:  PropTypes.func, //must resolve an object with name, options and potentially error
+                                        //if it rejects or resolves to undefined the operation is cancelled
+                                        //if a local upload should be done this could be handled within
+                                        //and undefined should be returned
     fixedPrefix:        PropTypes.string
 }
 export default UploadHandler;

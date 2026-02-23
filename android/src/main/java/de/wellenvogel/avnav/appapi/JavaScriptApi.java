@@ -2,7 +2,6 @@ package de.wellenvogel.avnav.appapi;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
@@ -16,9 +15,7 @@ import java.util.HashMap;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.MainActivity;
-import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.AvnUtil;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
@@ -116,12 +113,17 @@ public class JavaScriptApi {
     private int getNextSocketId(){
         return WebSocket.getNextId();
     }
+
+    private Uri lastOpenedUri;
+
     public JavaScriptApi(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
     }
 
-    public void saveFile(Uri uri){
-        if (uploadData != null) uploadData.saveFile(uri);
+    public synchronized Uri setLastOpenedUri(Uri newUri){
+        Uri rt=lastOpenedUri;
+        lastOpenedUri=newUri;
+        return rt;
     }
 
     public void onDetach(){
@@ -160,7 +162,7 @@ public class JavaScriptApi {
         try {
             RequestHandler.NavResponse rt= getRequestHandler().handleNavRequestInternal(Uri.parse(url),new PostVars(data),null);
             if (rt == null){
-                return RequestHandler.getErrorReturn("no data for"+url).toString();
+                return RequestHandler.getErrorReturn("no data for "+url).toString();
             }
             if (! rt.isJson()){
                 return RequestHandler.getErrorReturn("invalid post request").toString();
@@ -177,51 +179,32 @@ public class JavaScriptApi {
 
     }
 
-    /**
-     * request a file from the system
-     * this is some sort of a workaround for the not really working onOpenFileChooser
-     * in the onActivityResult (MainActivity) we do different things depending on the
-     * "readFile" flag
-     * If true we store the selected file and its name in the uploadData structure
-     * we limit the size of the file to 1M - this should be ok for our routes, layouts and similar
-     * the results will be retrieved via getFileName and getFileData
-     * when the file successfully has been fetched, we fire an {@link Constants#JS_UPLOAD_AVAILABLE} event to the JS with the id
-     *
-     * If false, we only store the Uri and wait for {@link #copyFile}
-     * In this case we fire an {@link Constants#JS_FILE_COPY_READY}
-     * the id is some minimal security to ensure that somenone later on can only access the file
-     * when knowing this id
-     * a new call to this API will empty/overwrite any older data being retrieved
-     * @param type one of the user data types (route|layout)
-     * @param id to identify the file
-     * @param readFile if true: read the file (used for small files), otherwise jsut keep the file url for later copy
-     */
+    
     @JavascriptInterface
-    public boolean requestFile(String type,long id,boolean readFile){
+    public boolean startFileUpload(String type,String name,boolean overwrite,long id){
         if (detached) return false;
-        AvnUtil.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
-        if (title == null){
-            AvnLog.e("unknown type for request file "+type);
+        Uri lastOpened=setLastOpenedUri(null); //atomic get and reset
+        if (lastOpened == null){
             return false;
         }
-        if (uploadData != null) uploadData.interruptCopy(true);
-        uploadData=new UploadData(mainActivity, getRequestHandler().getHandler(type),id,readFile);
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        Resources res= mainActivity.getResources();
         try {
-            mainActivity.startActivityForResult(
-                    Intent.createChooser(intent,
-                            //TODO: be more flexible for types...
-                            res.getText(title.value)),
-                    Constants.FILE_OPEN);
-        } catch (android.content.ActivityNotFoundException ex) {
-            // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(mainActivity, res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            UploadData data = uploadData;
+            if (data != null) {
+                uploadData.interruptCopy(true);
+                uploadData = null;
+            }
+            INavRequestHandler handler = getRequestHandler().getHandler(type);
+            if (handler == null) return false;
+            data = new UploadData(mainActivity, handler, id);
+            data.setOverwrite(overwrite);
+            uploadData = data;
+            uploadData.saveFile(lastOpened, name);
+            uploadData.copyFile();
+            return true;
+        }catch (Throwable t){
+            AvnLog.e("unable to start file copy for "+name,t);
             return false;
         }
-        return true;
     }
 
     @JavascriptInterface
@@ -230,28 +213,20 @@ public class JavaScriptApi {
         return uploadData.getName();
     }
 
-    @JavascriptInterface
-    public String getFileData(long id){
-        if (uploadData==null || ! uploadData.isReady(id)) return null;
-        return uploadData.getFileData();
-    }
 
     /**
-     * start a file copy operation for a file that previously has been requested by
-     * {@link #requestFile(String, long, boolean)}
      * during the transfer we fire an {@link Constants#JS_FILE_COPY_PERCENT} event having the
      * progress in % as id.
      * When done we fire {@link Constants#JS_FILE_COPY_DONE} - with 0 for success, 1 for errors
      * The target is determined by the type that we provided in requestFile
-     * @param id the id we used in {@link #requestFile(String, long, boolean)}
-     * @param newName if != null use this as the target file name
+     * @param id the id we used in {@link #startFileUpload(String, String, boolean, long)}
      * @return true if the copy started successfully
      */
     @JavascriptInterface
-    public boolean copyFile(long id,String newName){
+    public boolean copyFile(long id){
         if (detached) return false;
         if (uploadData==null || ! uploadData.isReady(id)) return false;
-        return uploadData.copyFile(newName);
+        return uploadData.copyFile();
     }
     @JavascriptInterface
     public long getFileSize(long id){
@@ -265,34 +240,6 @@ public class JavaScriptApi {
         return uploadData.interruptCopy(false);
     }
 
-
-    @JavascriptInterface
-    public String setLeg(String legData){
-        if (detached) return null;
-        if (getRequestHandler().getRouteHandler() == null) return returnStatus("not initialized");
-        try {
-            getRequestHandler().getRouteHandler().setLeg(legData);
-            getRequestHandler().getGpsService().timerAction();
-            return returnStatus("OK");
-        } catch (Exception e) {
-            AvnLog.i("unable to save leg "+e.getLocalizedMessage());
-            return returnStatus(e.getMessage());
-        }
-    }
-
-    @JavascriptInterface
-    public String unsetLeg(){
-        if (detached) return null;
-        if (getRequestHandler().getRouteHandler() == null) return returnStatus("not initialized");
-        try {
-            getRequestHandler().getRouteHandler().unsetLeg();
-            getRequestHandler().getGpsService().timerAction();
-            return returnStatus("OK");
-        } catch (Exception e) {
-            AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
-            return returnStatus(e.getMessage());
-        }
-    }
 
     @JavascriptInterface
     public void goBack() {

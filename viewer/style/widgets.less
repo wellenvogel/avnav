@@ -3,10 +3,9 @@
 
 @x: rgba(255, 20, 7, 0.54);
 
-@widgetBorderWidth: 2px;
-@horizontalWidgetHeight: 4em;
-@horizontalContainerHeight: calc(@horizontalWidgetHeight + 2*@widgetBorderWidth);
-@horizontalContainerDoubleHeight: calc(2*@horizontalWidgetHeight + 3*@widgetBorderWidth);
+@horizontalWidgetHeight: var(--avnav-horizontal-widgets-height);
+@horizontalContainerHeight: calc( @horizontalWidgetHeight + 0.2em );
+@horizontalContainerDoubleHeight: calc( 2 * @horizontalWidgetHeight - 0.1em );
 @infoFontSize: 0.71em;
 
 .widgetInfo(){
@@ -29,8 +28,8 @@
   overflow: hidden;
   pointer-events: all;
   font-variant-numeric: tabular-nums;
-  background: white;
-  .nightColors();
+  background: var(--avnav-back-color);
+  color:var(--avnav-fore-color);
   .flex-shrink(0);
   .flex-grow(1);
   .flex-basis(auto);
@@ -63,7 +62,7 @@
     padding: 0;
   }
   &.average .infoLeft{
-    .nightForeColor(red);
+    color:var(--avnav-attention-color);
   }
 
   .label {
@@ -92,9 +91,8 @@
 //----- dashboard pages (gps page) ------
 .hfield .widgetContainer .widget{
   .widgetHead {
-    border-bottom: 1px solid;
-    border-top: 1px solid;
-    .nightBackFade(#E2DFDF);
+    border-top: @normalBorder;
+    background-color: var(--avnav-widget-head-color);
     height: unset;
   }
   width: unset;
@@ -117,8 +115,7 @@
     .flex-shrink(0);
   }
   overflow: hidden;
-  background-color: @colorMain;
-  .nightColors();
+  background-color: var(--avnav-main-color);
   .flex-shrink(0);
 }
 .widgetContainer.horizontal{
@@ -194,6 +191,8 @@
 
 .widget{
   width: min-content; // allow dynamic scaling to size of content
+  background-color: var(--avnav-widget-color);
+  color: var(--avnav-widget-fore-color);
 
   .widgetHead {
     .nightBackColor(#eee);
@@ -303,7 +302,6 @@
   }
   &.aisTargetWidget{
     .smallWidget();
-    .nightBackColor(@colorSecond);
     .aisFront{
       display: inline-block;
       font-size: 1.5em;
@@ -315,25 +313,53 @@
     .widgetData ~ .widgetData{
       padding-top: 0;
     }
+    .aisPart.withIcon{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        .icon{
+          flex-grow: 1;
+          border-radius: 0.2em;
+        }
+    }
     .hfield & .aisPart{
       .flex-display();
-      .flex-direction(column);
+      .flex-direction(row);
       .flex(1);
+      .widgetData{
+        flex-basis: 50%;
+        text-align: left;
+        margin: 0;
+      }
     }
     .aisSmall {
       .flex-display();
-      .flex-direction(row);
-      .aisParts {
-        flex-grow: 1;
+      .flex-direction(column);
+      .upper {
+        .flex-display();
+        .flex-direction(row);
+        .aisParts {
+          flex-grow: 1;
+        }
+      }
+      .aisPart.withIcon{
+        .icon{
+          width: 100%;
+          height: 1em;
+          border-radius: unset;
+          margin: 0;
+        }
       }
     }
 
   }
 
   &.activeRouteWidget{
+    &.approach{
+      background-color: var(--avnav-attention-color);
+    }
     .smallWidget();
     .routeName{
-      margin-top: 0.8em;
       margin-right: 0.2em;
       .mdText2();
       overflow: hidden;
@@ -342,263 +368,296 @@
     .routeRemain{
       font-size: 1.5em;
     }
-    &.approach{
-      .nightBackFade(@routeApproachingColor);
+    .small .routeRemain{
+      font-size: unset;
     }
-  }
-  &.editRouteWidget{
-    border: 3px solid;
-    .nightBorderFade(@colorGreen);
-    &.activeRoute{
-      .nightBorderFade(@colorRed);
-    }
-    .smallWidget();
     .widgetData{
-      .routeInfo {
-        width: 4.5em;
-        display: inline-block;
-        .horizontal &{
-          width: auto;
-          margin-right: 0.3em;
-        }
-      }
-      &.routeName{
-        margin-top: 0.5em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      margin-left: 0.1em;
+      &.small{
+        margin: 0;
+        width: 100%;
         max-width: 100%;
-        .horizontal &{
-          text-align: left;
-          display: block;
-        }
       }
-      .horizontal &{
-        margin-top: 0;
-        padding-top: 0;
-        display: inline-block;
-      }
+    }
+    .icon{
+      background-color: var(--avnav-attention-color);
+      flex:1;
+    }
+    .icon.small{
+      width:100%;
+      height:1em;
+      margin:0;
+    }
+    .secondRow{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
 
     }
-    .vertical &{
-      min-height: 8em;
+    .small .secondRow{
+      justify-content: space-between;
+      .icon{
+        flex: unset;
+      }
+    }
+    .routeNext{
+      color: var(--avnav-attention-color);
+    }
+}
+&.editRouteWidget{
+&.activeRoute{
+  border: @borderAttentionLarge;
+  border-color: var(--avnav-attention-color);
+}
+    .smallWidget();
+.widgetData{
+  .routeInfo {
+    width: 4.5em;
+    display: inline-block;
+    .horizontal &{
+      width: auto;
+      margin-right: 0.3em;
     }
   }
-
-  &.centerDisplayWidget{
-    .smallWidget();
-    .widgetData ~ .widgetData{
-      margin-top: 0;
-    }
-    .value{
-      display: inline-block;
-    }
-    .label {
-      display: inline-block;
-      background-size: 1em 1em;
-      background-repeat: no-repeat;
-      width: 1em;
-      height: 1em;
-      float: left;
-      &.boat {
-        background-image: url(../images/icons-new/boat.svg);
-      }
-      &.marker {
-        background-image: url(../images/icons-new/waypoint.svg);
-      }
-      &.measure{
-        background-image: url(../images/icons-new/outlined_flag.svg);
-      }
-    }
+  &.routeName{
+    margin-top: 0.5em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
     .horizontal &{
-      min-width: 10em;
+      text-align: left;
+      display: block;
     }
+  }
+  .horizontal &{
+    margin-top: 0;
+    padding-top: 0;
+    display: inline-block;
+  }
+
+}
+.vertical &{
+  min-height: 8em;
+}
+}
+
+&.centerDisplayWidget{
+    .smallWidget();
+.widgetData ~ .widgetData{
+  margin-top: 0;
+}
+.value{
+  display: inline-block;
+}
+.label {
+  display: inline-block;
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  width: 1em;
+  height: 1em;
+  float: left;
+  &.boat {
+    background-image: url(../images/icons-new/boat.svg);
+  }
+  &.marker {
+    background-image: url(../images/icons-new/waypoint.svg);
+  }
+  &.measure{
+    background-image: url(../images/icons-new/outlined_flag.svg);
+  }
+}
+.horizontal &{
+  min-width: 10em;
+}
     .Position {
       font-family: monospace;
     }
-  }
-  &.windWidget{
+}
+&.windWidget{
     .smallDisplay & {
       .medWidget();
       .resize {
         flex-direction: column;
       }
-    .widgetData{
+.widgetData{
         padding-top: 0.5em;
       }
-    }
-  }
-  &.DepthDisplay{
+}
+}
+&.DepthDisplay{
     .bigWidget();
-  }
-  &.xteWidget{
+}
+&.xteWidget{
     .smallWidget();
-    canvas{
-      margin-right: auto;
-      margin-left: auto;
-    }
-  }
-  &.windGraphics{
+canvas{
+  margin-right: auto;
+  margin-left: auto;
+}
+}
+&.windGraphics{
     .smallWidget();
-    .windSpeed {
-      text-align: right;
-      font-size: @timeFont;
-      position: absolute;
-      right: 0.2em;
-      bottom: 0.2em;
-    }
-    .windReference {
-      text-align: left;
-      font-size: @timeFont;
-      position: absolute;
-      left: 0.2em;
-      bottom: 0.2em;
-    }
-    .horizontal &{
-      .widgetData,.windSpeed{
-        display: inline-block;
-      }
-    }
-    canvas{
+.windSpeed {
+  text-align: right;
+  font-size: @timeFont;
+  position: absolute;
+  right: 0.2em;
+  bottom: 0.2em;
+}
+.windReference {
+  text-align: left;
+  font-size: @timeFont;
+  position: absolute;
+  left: 0.2em;
+  bottom: 0.2em;
+}
+.horizontal &{
+  .widgetData,.windSpeed{
+    display: inline-block;
+  }
+}
+canvas{
 //       width: 85%;
       height: 80%;
-    }
-    .vertical &{
-      height: 11em;
-    }
-  }
-  &.routePointsWidget {
-    .more {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 20%;
-    }
-    .activeEntry .more{
-      display: inline-block;
-    }
-    overflow: hidden;
-    .flex-shrink(1) !important;
-  }
-  &.alarmWidget{
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    height: 3em;
-    font-size: @timeFont;
-    .nightBackFade(@colorRed);
-    padding: 1.5em;
-    padding-top: 0.3em;
-    margin: 0.5em;
-    border-radius: 4px;
-    .mdShadow2();
-    .widgetContainer &{
-      position: inherit;
-      padding: inherit;
-      height: inherit;
-      width: 4em;
-      margin: inherit;
-    }
-  }
-  &.CombinedWidget {
-    .icon.locked {
-      position: absolute;
-      top: calc(50% - 1em);
-      left: calc(50% - 1em);
-      z-index: 101;
-      color: red;
-    }
-    & > .listContainer {
-      .flex-display();
-      .flex-direction(row);
-      height: 100%;
-      width: 100%;
+}
+.vertical &{
+  height: 11em;
+}
+}
+&.routePointsWidget {
+.more {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 20%;
+}
+.activeEntry .more{
+  display: inline-block;
+}
+overflow: hidden;
+.flex-shrink(1) !important;
+}
+&.alarmWidget{
+position: absolute;
+right: 0;
+bottom: 0;
+height: 3em;
+font-size: @timeFont;
+background-color: var(--avnav-attention-color);
+padding: 1.5em;
+padding-top: 0.3em;
+margin: 0.5em;
+border-radius: 4px;
+.mdShadow2();
+.widgetContainer &{
+  position: inherit;
+  padding: inherit;
+  height: inherit;
+  width: 4em;
+  margin: inherit;
+}
+}
+&.CombinedWidget {
+.icon.locked {
+  position: absolute;
+  top: calc(50% - 1em);
+  left: calc(50% - 1em);
+  z-index: 101;
+  color: var(--avnav-attention-color);
+}
+& > .listContainer {
+  .flex-display();
+  .flex-direction(row);
+  height: 100%;
+  width: 100%;
 
-      .widget {
-        height: 100%;
-        .flex-grow(1);
-        .flex-shrink(1);
-        margin: 0;
-        min-width: 0;
-        border-right: 1px solid;
-      }
-
-      .widget:last-of-type {
-        border-right: unset;
-      }
-
-      padding: 0;
-      margin: 0;
-
-    }
-    &.vertical {
-      & > .listContainer {
-        .flex-direction(column);
-      }
-
-      .widget {
-        height: unset;
-        min-height: 0;
-        width: 100%;
-        .flex-grow(1);
-        .flex-shrink(1);
-        border-right: unset;
-      }
-    }
+  .widget {
+    height: 100%;
+    .flex-grow(1);
+    .flex-shrink(1);
+    margin: 0;
+    min-width: 0;
+    border-right: @normalBorder;
   }
 
-  &.canvasGauge {
-    canvas {
-      margin: auto;
-      position: relative;
-    }
-    .canvasFrame {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      .flex-display();
-      .flex-align-items(center);
-      .flex-justify-content(center);
-
-    }
-    .gaugeValue {
-      position: absolute;
-      top: 53%;
-      left: ~"calc(50% - 1em)";
-      z-index: 20;
-      white-space: pre;
-    }
-    &.radGauge_Speed{
-      .gaugeValue{
-        top: 70%;
-      }
-    }
-    &.radGauge_Temperature{
-      .gaugeValue{
-        top: 70%;
-      }
-    }
-    &.linear{
-      padding: 0;
-      .canvasFrame{
-        padding: 0;
-      }
-    }
+  .widget:last-of-type {
+    border-right: unset;
   }
 
-  &.signalKPitch .widgetData{
-    font-size: 2em;
-    text-align: center;
+  padding: 0;
+  margin: 0;
+
+}
+&.vertical {
+  & > .listContainer {
+    .flex-direction(column);
   }
 
-  &.signalKRoll .widgetData{
-    font-size: 2em;
-    text-align: center;
+  .widget {
+    height: unset;
+    min-height: 0;
+    width: 100%;
+    .flex-grow(1);
+    .flex-shrink(1);
+    border-right: unset;
   }
-  .widgetData.critical{
-    color:red;
+}
+}
+
+&.canvasGauge {
+canvas {
+  margin: auto;
+  position: relative;
+}
+.canvasFrame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  .flex-display();
+  .flex-align-items(center);
+  .flex-justify-content(center);
+
+}
+.gaugeValue {
+  position: absolute;
+  top: 53%;
+  left: ~"calc(50% - 1em)";
+  z-index: 20;
+  white-space: pre;
+}
+&.radGauge_Speed{
+  .gaugeValue{
+    top: 70%;
   }
-  &.critical .widgetData{
-    color: red;
+}
+&.radGauge_Temperature{
+  .gaugeValue{
+    top: 70%;
   }
+}
+&.linear{
+  padding: 0;
+  .canvasFrame{
+    padding: 0;
+  }
+}
+}
+
+&.signalKPitch .widgetData{
+font-size: 2em;
+text-align: center;
+}
+
+&.signalKRoll .widgetData{
+font-size: 2em;
+text-align: center;
+}
+.widgetData.critical{
+color:var(--avnav-attention-color);
+}
+&.critical .widgetData{
+color: var(--avnav-attention-color);
+}
 }

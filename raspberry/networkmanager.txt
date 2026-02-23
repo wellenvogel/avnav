@@ -1,0 +1,97 @@
+Steps for handling network manager
+==================================
+(1) remove interface files (except (eth0, lo))
+(2) systemctl disable dnsmasq && systemctl stop dnsmasqd
+(3) systemctl dsiable wpa_supplicant && systemctl stop wpa_supplicant
+(3) create rules file to allow full access for pi (as root)
+/etc/polkit-1/rules.d/00-nmall.rules
+---
+polkit.addRule(function(action, subject) {
+    if (action.id.match(/^org\.freedesktop\.NetworkManager/) &&
+        (subject.isInGroup ("sudo") || subject.isInGroup ("netdev"))) {
+        return polkit.Result.YES;
+    }
+});
+---
+systemctl restart polkit
+(4) check as pi:
+nmcli general permissions
+(5) create AP on wlan-ap:
+nmcli d wifi hotspot ifname wlan-ap ssid pi4canhat password pi4canhat-secret
+(6)set dhcp range
+nmcli con modify Hotspot ipv4.addresses 192.168.30.1/24
+nmcli con down Hotspot
+nmcli con up Hotspot
+
+(7)client connect
+nmcli d wifi list
+nmcli d wifi con Andreas password ...
+
+(8) install firewalld
+apt install firewalld
+#sudo firewall-cmd --permanent --zone=trusted --change-interface=eth0
+sudo firewall-cmd --set-default-zone=trusted #must be changed in /etc/firewalld/firewalld.conf (DefaultZone=trusted)
+sudo firewall-cmd --get-active-zones
+
+(9) zones for interfaces
+nmcli con modify Andreas connection.zone trusted
+nmcli con modify Hotspot connection.zone trusted
+(10)
+set wifi client connection to block external traffic:
+nmcli con modify Andreas connection.zone block
+
+(11) for predictable interface names:
+remove the 73....link and 99-default.link in /etc/systemd/network (can also be done by raspi-config)
+This will end up with end0 and wlan0 for the onboard if and mac based names for others
+see https://wiki.debian.org/NetworkInterfaceNames#THE_.22PREDICTABLE_NAMES.22_SCHEME,
+https://systemd.io/PREDICTABLE_INTERFACE_NAMES/
+
+(12) for easy resolution of local hostname use systemd-resolved
+sudo apt install systemd-resolved
+create file /etc/NetworkManager/conf.d/99-avnav.conf
+---
+[main]
+hostname-mode=none
+dns=systemd-resolved
+---
+sudo systemctl restart NetworkManager
+
+(13) avoid sending our hostname to DHCP server
+nmcli con modify Ethernet ipv4.dhcp-send-hostname false
+nmcli con modify Ethernet ipv6.dhcp-send-hostname false
+nmcli con down Ethernet && nmcli con up Ethernet
+
+(14) better set up for multiple hotspots: bridge
+nmcli con add type bridge con-name Bridge ifname br0 ipv4.method shared
+nmcli con modify Bridge ipv4.addresses 192.168.30.1/24
+nmcli con modify Bridge connection.zone trusted
+nmcli con up Bridge
+#add hotspot
+nmcli connection add con-name 'Hotspot' ifname wlan0 type wifi slave-type bridge master 'Bridge' wifi.mode ap wifi.ssid pi4canhat
+nmcli con mod Hotspot wifi-sec.key-mgmt wpa-psk wifi-sec.psk pi4canhat-secret
+nmcli con mod Hotspot connection.zone trusted
+nmcli con up Hotspot
+
+(15) === concept ===
+* setup WITHOUT bridge (seems to create more trouble)
+* only set up ONE Hotspot
+* predictable interface names
+* avnav.conf with new flag AVNAV_WIFI_INTF - interface for hotspot, default to wlan0
+  change should be possible without additional reboot (only one reboot to pick up setting)
+  modify NetworkManager config  - OR - nmcli
+  explain to user how to determine interface name for stick
+* remove (i.e. ignore) AVNAV_WIFI_CLIENT
+* for WPA config: allow to select interface if multiple ones found (do not offer interface with hotspot)
+* move WPA config to plugin (raspi-network package) with DBUS interface to NetworkManager (functions like today)
+* maybe (step2?) show all network config in UI
+* hint to nmtui in the doc for configurations not being prepared
+
+(16)
+
+nmcli d wifi hotspot con-name Hotspot ifname wlan0 band bg ssid avnav password avnav-secret
+nmcli con modify Hotspot ipv4.addresses 192.168.30.10/24
+nmcli con modify Hotspot autoconnect true
+nmcli con modify Hotspot connection.zone trusted
+
+
+

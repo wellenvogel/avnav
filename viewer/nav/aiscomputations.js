@@ -186,7 +186,7 @@ export const AisOptionMappings={
     lostTime: keys.properties.aisLostTime,
     curved: keys.properties.aisCurvedVectors,
     rmvRange: {key:keys.properties.aisRelativeMotionVectorRange,f: (v)=>parseFloat(v)*Navcompute.NM},
-    navUrl: keys.properties.navUrl,
+    navUrl: keys.gui.global.navUrl,
     markAll: keys.properties.aisMarkAllWarning
 }
 

@@ -294,7 +294,7 @@ class AVNWpaHandler(AVNWorker):
       AVNLog.error("exception in WPAHandler:getStatus: %s",traceback.format_exc())
       return {'wpa_state':'COMMANDERROR'}
 
-  def getHandledCommands(self):
+  def getApiType(self):
     return "wpa"
 
   def safeInt(self,val):
@@ -303,9 +303,8 @@ class AVNWpaHandler(AVNWorker):
     except:
       return None
 
-  def handleApiRequest(self,type,subtype,requestparam,**kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None):
     start=time.monotonic()
-    command=self.getRequestParam(requestparam, 'command')
     AVNLog.debug("wpa api request %s",command)
     rt=None
     if command is None:

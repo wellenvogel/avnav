@@ -24,7 +24,7 @@
 	 this avoids the need for more or less broken rfcomm stuff
 	  -->
 
-<AVNBlueToothReader maxDevices="5">
+<AVNBlueToothReader maxDevices="5" enabled="false">
 </AVNBlueToothReader>
 
 
@@ -135,10 +135,7 @@
      the navurl is the url that is used to control any nav feature
      this of course must fit to the java script part...
 -->
-<AVNHttpServer httpPort="8080" index="/viewer/avnav_viewer.html" navurl="/viewer/avnav_navi.php">
-	<MimeType extension=".avt" type="text/plain"/>
-	<MimeType extension=".log" type="text/plain"/>
-</AVNHttpServer>
+<AVNHttpServer httpPort="8080" />
 <!-- the writer for track data
      tracks are written in a simple file
      each line consists of:
@@ -206,8 +203,6 @@
 <!-- add the following property to AVNWpaHandler to be able to allow external access for wlan client
      firewallCommand="sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1"
 -->
-<AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1">
-</AVNWpaHandler>
 <AVNCommandHandler >
 	<Command name="shutdown" command="sudo halt"/>
      <!-- you can add a -i option to the sound command to select the device to play

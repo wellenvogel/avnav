@@ -12,7 +12,8 @@ import {useTimer} from "../util/GuiHelpers";
 import assign from 'object-assign';
 import Helper from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
-import {NestedDialogDisplay} from "./OverlayDialog";
+import {DialogDisplay} from "./OverlayDialog";
+import {useDialogContext} from "./DialogContext";
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -94,23 +95,20 @@ PageFrame.propTypes={
     id: PropTypes.string.isRequired
 }
 
-export const PageLeft=({className,title,children,dialogCtxRef})=>{
+export const PageLeft=({className,title,children})=>{
     const Alarm=useCallback(WidgetFactory.createWidget({name:'Alarm'}),[])
-    return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}>
-            <NestedDialogDisplay dialogCtxRef={dialogCtxRef}>
+    return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}
+            >
             {title ? <Headline title={title} connectionLost={true}/> : null}
+            <DialogDisplay/>
             {children}
             <Alarm onClick={alarmClick}/>
-            </NestedDialogDisplay>
+
         </div>
 }
 PageLeft.propTypes = {
     className: PropTypes.string,
-    title: PropTypes.string,
-    dialogCtxRef: PropTypes.oneOfType([
-        PropTypes.func,
-        PropTypes.shape({current: PropTypes.any})
-    ])
+    title: PropTypes.string
 }
 
 const Page=forwardRef((props,ref)=>{
@@ -128,6 +126,7 @@ const Page=forwardRef((props,ref)=>{
                 {props.bottomContent ? props.bottomContent : null}
             </PageLeft>
             <ButtonList
+                page={props.id}
                 itemList={props.buttonList}
                 widthChanged={props.buttonWidthChanged}
             />
@@ -139,7 +138,6 @@ Page.pageProperties={
     style: PropTypes.object,
     options: PropTypes.object,
     location: PropTypes.string.isRequired,
-    history: PropTypes.object.isRequired,
     small: PropTypes.bool.isRequired
 }
 Page.propTypes=assign({},Page.pageProperties,{
@@ -152,7 +150,8 @@ Page.propTypes=assign({},Page.pageProperties,{
     style: PropTypes.object,
     buttonWidthChanged: PropTypes.func,
     autoHideButtons: PropTypes.any, // number of ms or undefined
-    windowDimensions: PropTypes.any
+    windowDimensions: PropTypes.any,
+    history: PropTypes.object
 });
 
 

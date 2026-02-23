@@ -4,7 +4,7 @@
  * and widget containers
  */
 
-import Dynamic, {useStore} from '../hoc/Dynamic.jsx';
+import Dynamic, {useStore} from '../hoc/Dynamic.tsx';
 import Visible from '../hoc/Visible.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
@@ -13,14 +13,13 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
-import {handleCtxRef, showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
+import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
-import {getOverlayConfigName} from "../map/chartsourcebase";
 import mapholder from "../map/mapholder.js";
 import Helper, {concatsp, injectav} from "../util/helper";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
@@ -117,8 +116,10 @@ const Map=({mapClass,mapOpacity})=>{
 const MapPage =(iprops)=>{
     const props=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
             widgetFontSize:keys.properties.widgetFontSize,
-            mapFloat: keys.properties.mapFloat
+            mapFloat: keys.properties.mapFloat,
+            reloadSequence:keys.gui.global.reloadSequence
         })});
+    const [layerTypes,setLayerTypes]=useState([]);
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
     const dialogCtx=useRef();
@@ -148,6 +149,7 @@ const MapPage =(iprops)=>{
         MapHolder.loadMap().
         then((result)=>{
             computeScalePosition();
+            setLayerTypes(MapHolder.getMapLayerNames());
         }).
         catch((error)=>{Toast(error)});
     },[]);
@@ -204,12 +206,16 @@ const MapPage =(iprops)=>{
                               LayoutHandler.withTransaction(layoutPage,(handler)=>handler.moveItem(layoutPage.id, frameId, oldIndex, newIndex,targetFrameId))
                           }}
         />
-        },[props.onItemClick]);
+        },[props.onItemClick,props.reloadSequence]);
         let chartEntry=MapHolder.getCurrentChartEntry()||{};
-        let mapClass=concatsp("map",chartEntry.chartKey?chartEntry.chartKey.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
+        let mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        let className=Helper.concatsp(props.className,"mapPage",props.mapFloat?"mapFloat":undefined);
+        let className=Helper.concatsp(
+            props.className,
+            "mapPage",
+            props.mapFloat?"mapFloat":undefined,
+            layerTypes.join(" "));
         let pageProperties=Helper.filteredAssign(Page.propTypes,props);
         let overlay=props.overlayContent || null;
         if (typeof(overlay) === 'function'){
@@ -227,10 +233,7 @@ const MapPage =(iprops)=>{
             >
                 {props.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
                 {props.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} />:null}
-                <PageLeft dialogCtxRef={(ctx)=>{
-                    dialogCtx.current=ctx;
-                    handleCtxRef(ctx,props.dialogCtxRef);
-                }}>
+                <PageLeft>
                         <div className="leftSection">
                             <WidgetContainer
                                 fontSize={props.widgetFontSize + "px"}
@@ -272,6 +275,7 @@ const MapPage =(iprops)=>{
                         </div>
                 </PageLeft>
                 <ButtonList
+                    page={pageProperties.id}
                     itemList={props.buttonList}
                     widthChanged={(width)=>{
                         setButtonWidth(width);
@@ -309,7 +313,7 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
     if (! current) return;
     let currentChart=MapHolder.getCurrentChartEntry()||{};
     showDialog(dialogContext,(props)=> {
-        let canEdit=getOverlayConfigName(currentChart) !== undefined && globalStore.getData(keys.properties.connectedMode,false) ;
+        let canEdit=globalStore.getData(keys.properties.connectedMode,false) ;
         return <EditOverlaysDialog
             {...props}
             chartName={opt_chartName||currentChart.name}
@@ -334,6 +338,7 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
                 return true;
             }:undefined}
             preventEdit={true}
+            hideErrors={true}
             />;
     });
 };

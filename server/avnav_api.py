@@ -301,12 +301,14 @@ class AVNApi(object):
     '''
     raise NotImplemented()
 
-  def getBaseUrl(self):
+  def getBaseUrl(self,ensureSlash=False):
     '''
     return the url for the plugin
     append "/api" to this url for api request
     other requests will look for files with the requested name
     in the plugin directory
+    @param ensureSlash: if True - will ensure that the url ends with a /
+           just be sure to not have two slashes in the URL as AvNav cannot handle this
     @return:
     '''
     raise NotImplemented()

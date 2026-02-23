@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.util;
 
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -7,11 +9,15 @@ import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.Nullable;
+
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 
 public class AvnWorkDir {
     private final boolean withTitles;
@@ -202,7 +208,15 @@ public class AvnWorkDir {
         }
         throw new InvalidWorkdirException("workdir "+cfg+" not found");
     }
-    public void createDirs(File base) throws IOException {
+
+    /**
+     * create the subdirs
+     * @param baseentry the entry for the base dir
+     * @throws IOException
+     */
+    public void createDirs(Context ctx,Entry baseentry) throws IOException {
+        if (baseentry == null) throw new IOException("no base dir");
+        File base=baseentry.getFile();
         if (! base.exists() || ! base.isDirectory()){
             throw new IOException("base dir "+base.getAbsolutePath()+" is no directory");
         }
@@ -213,7 +227,7 @@ public class AvnWorkDir {
             File sdir=new File(base,s);
             if (sdir.exists()){
                 if (! sdir.isDirectory()){
-                    if (sdir.delete()){
+                    if (!sdir.delete()){
                         throw new IOException(" sub dir "+sdir.getAbsolutePath()+" exists as file, cannot delete");
                     }
                 }

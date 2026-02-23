@@ -9,10 +9,10 @@
   border-top-left-radius: 0.3em;
   border-bottom-right-radius: 0.3em;
   border-bottom-left-radius: 0.3em;
-  border: 1px solid;
+  border: @normalBorder;
   text-decoration: none;
-  .nightBorderFade(#D3D3D3);
-  .nightBackColor(#E6E6E6,rgb(30 30 30 / 55%));
+  border-color: var(--avnav-button-color);
+  background-color: var(--avnav-button-color);
   //position: relative;
   cursor: pointer;
   outline: none;
@@ -46,8 +46,8 @@
   bottom: 0.5em;
   right: 0.5em;
   border-radius: 50%;
-  .nightBackFade(@colorMain);
-  .nightForeColor(white,@nightColor);
+  background-color: var(--avnav-main-color);
+  color: var(--avnav-fore-color-inv);
 }
 .smallButton{
   .buttonBase();
@@ -57,18 +57,16 @@
 }
 .button.active{
   border: 0.3em solid ;
-  .nightBorderColor(@colorGreen,@nightColor);
+  border-color: var(--avnav-active-color);
   &.MOB{
-    .nightBorderFade(@colorRed);
+    border-color: var(--avnav-attention-color);
   }
 }
 
 .iconButton(@icon){
   span {
     .icon(@icon);
-    .nightMode &{
-      filter: brightness(0) saturate(50%) invert(16%) sepia(98%) saturate(2000%) hue-rotate(353deg) brightness(94%) contrast(111%)
-    }
+    filter: var(--avnav-button-filter);
   }
 }
 
@@ -90,10 +88,10 @@
     font-size: @normalButtonFont;
     padding: 0.5em;
     width: inherit;
-    .nightBackColor(@dialogButtonBackground);
+    background-color: var(--avnav-button-color);
     border: none;
     position: relative;
-    .nightForeColor(@colorMain,@nightColor);
+    color: var(--avnav-fore-color)
     .flex-display();
     .flex-direction(row);
     .flex-align-items(center);
@@ -114,7 +112,7 @@
     }
     &.active {
       border: 0.3em solid;
-      .nightBorderFade(@colorGreen);
+      border-color: var(--avnav-active-color);
       padding: 0.2em;
     }
 
@@ -227,6 +225,9 @@ button{
   }
   &.NavRestart {
     .iconButton('wpgoto.svg');
+  }
+  &.SyncRoutes{
+    .iconButton('sync.svg');
   }
 
   &.WpLocate{
@@ -413,6 +414,9 @@ button{
   &.DownloadPageImporter{
     .iconButton('swap_horiz.svg');
   }
+  &.DownloadPagePlugins{
+    .iconButton('extension.svg');
+  }
   &.Delete{
     .iconButton('ic_delete.svg');
   }
@@ -420,6 +424,9 @@ button{
     .iconButton('ic_file_download.svg');
   }
   &.Rename{
+    .iconButton('ic_edit_name.svg');
+  }
+  &.rename{
     .iconButton('ic_edit_name.svg');
   }
 
@@ -441,7 +448,7 @@ button{
   &.SettingsLayout{
     .iconButton('ballot.svg');
     &.button.active{
-      border-color: @editingColor;
+      border-color: var(--avnav-attention-color);
     }
   }
   &.SettingsLayoutOff{
@@ -469,7 +476,7 @@ button{
   &.LayoutFinished{
     .iconButton('ballot.svg');
     &.button.active{
-      border-color: @editingColor;
+      border-color: var(--avnav-attention-color);
     }
   }
   &.RevertLayout{
@@ -638,7 +645,7 @@ button{
   .AskEditRouteDialog &.editRoute{
     .dialogIconButton('route.svg');
   }
-  .EditRouteDialog &.copy{
+  &.copy{
     .dialogIconButton('content_copy.svg');
   }
   .EditRouteDialog &.edit{
@@ -708,5 +715,26 @@ button{
   }
   &.start {
     .dialogIconButton('wpgoto.svg')
+  }
+  &.openchart{
+    .dialogIconButton('map2.svg')
+  }
+  &.upload{
+    .dialogIconButton('ic_file_upload.svg');
+  }
+  &.scheme{
+    .dialogIconButton('table_convert.svg');
+  }
+  &.propose{
+    .dialogIconButton('prompt_suggestion.svg')
+  }
+  &.config{
+    .dialogIconButton('ic_settings.svg')
+  }
+  &.open {
+    .dialogIconButton('ic_open.svg');
+  }
+  &.layout{
+    .dialogIconButton('ballot.svg');
   }
 }

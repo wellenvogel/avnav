@@ -181,8 +181,9 @@ class HTTPWebSocketsHandler(SimpleHTTPRequestHandler):
       # This handler is in websocket mode now.
       # do_GET only returns after client close or socket error.
       self._read_messages()
+      return True
     else:
-      super().do_GET()
+      return False
 
   def _read_messages(self):
     if self.send_queue_len() > 0:

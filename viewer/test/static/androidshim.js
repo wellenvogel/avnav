@@ -34,7 +34,7 @@ console.log("android shim loaded");
         console.log("##ANDROIDSHIM: "+txt);
     }
     function event(key,id){
-        window.avnav.android.receiveEvent(key , id);
+        window.avnavAndroid.receiveEvent(key , id);
     }
     var openTransfers={};
     window.avnavAndroid = {

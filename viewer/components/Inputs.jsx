@@ -1,11 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import ColorDialog from './ColorDialog.jsx';
-import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
-import assign from 'object-assign';
 import Toast from "./Toast";
 import {SelectDialog} from "./BasicDialogs";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 /**
  * input elements
@@ -92,7 +91,7 @@ export const Checkbox=(props)=>{
         }
     };
     return <div className={frameClass} onClick={clickFunction} >
-        <span className="inputLabel">{props.label}</span>
+        {(! props.hideLabel) && <span className="inputLabel">{props.label}</span>}
         <div className={props.frame?'inputFrame':''}>
             <span className= {className} ></span>
         </div>
@@ -106,21 +105,24 @@ export const Checkbox=(props)=>{
 Checkbox.propTypes={...DEFAULT_TYPES,
     onClick: PropTypes.func, //if set: do not call onChange but call onClick with the event
     readOnly: PropTypes.bool,
-    frame: PropTypes.bool
+    frame: PropTypes.bool,
+    hideLabel: PropTypes.bool,
 };
 
 export const Radio=(props)=>{
     let className="radio";
-    let frameClass=props.dialogRow?"dialogRow":"";
-    if (props.className) frameClass+=" "+props.className;
+    let frameClass=Helper.concatsp(props.dialogRow?"dialogRow":undefined,props.className);
     return <div className={frameClass} >
-        {props.label&& <span className="inputLabel">{props.label}</span>}
+        {props.label&& <span className="inputLabel radioLabel">{props.label}</span>}
+        <div className={"radioFrame"}>
         {props.itemList.map((el)=>{
             let displayClass=className;
             if (props.value == el.value) displayClass+=" checked";
+            if (el.disabled) displayClass+=" disabled";
             return(
                 <div className="radioInner" onClick={(ev)=>{
                         ev.stopPropagation();
+                        if (el.disabled) return;
                         props.onChange(el.value);
                         }}
                      key={el.label}
@@ -131,12 +133,14 @@ export const Radio=(props)=>{
                 )
             })}
         {props.children}
+        </div>
     </div>
 };
 
-Radio.propTypes=assign({},DEFAULT_TYPES,{
+Radio.propTypes={
+    ...DEFAULT_TYPES,
     itemList: PropTypes.array, //a list of {label:xxx,value:yyy}
-});
+};
 
 
 export const InputReadOnly=(props)=>{
@@ -151,7 +155,9 @@ export const InputReadOnly=(props)=>{
         {props.children}
         </div>
 };
-InputReadOnly.propTypes=DEFAULT_TYPES;
+InputReadOnly.propTypes={
+    ...DEFAULT_TYPES
+};
 
 export const InputSelect=(props)=>{
     const dialogContext=useDialogContext();
@@ -203,12 +209,13 @@ export const InputSelect=(props)=>{
         />
 };
 
-InputSelect.propTypes=assign({},DEFAULT_TYPES,{
+InputSelect.propTypes={
+    ...DEFAULT_TYPES,
     onChange: PropTypes.func, //if set  and if prop.list is set: show the select dialog
     list: PropTypes.any,      //array of items to show or a function to create the list
     changeOnlyValue: PropTypes.bool, //only return the value property of the list element in onChange
     resetCallback: PropTypes.func //if set - show a reset button an call this on reset
-});
+};
 
 
 export const ColorSelector=(props)=>{
@@ -247,7 +254,8 @@ export const ColorSelector=(props)=>{
         {props.children}
     </div>;
 };
-ColorSelector.propTypes={...DEFAULT_TYPES,
+ColorSelector.propTypes={
+    ...DEFAULT_TYPES,
     onClick: PropTypes.func, //if onChange is not set, call this function when clicked
     style: PropTypes.object, //if set use this style for the color display
     readOnly: PropTypes.bool

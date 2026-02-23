@@ -21,12 +21,8 @@
 //general page set up
 //----------------------------------------------------------------------------------------
 
-input {
-  border: 2px inset;
-  .nightBackColor(inherit,#646463)
-}
+
 html,body {
-  .nightColors();
   height: 100%;
   width: 100%;
   margin: 0;
@@ -46,11 +42,8 @@ body{
   position: relative;
 }
 .pageFrame{
-  background-color: white;
-  &.nightMode{
-    background-color: #000;
-    color: @nightColor;
-  }
+  background-color: var(--avnav-back-color);
+  color: var(--avnav-fore-color);
 }
 
 .dimm {
@@ -74,8 +67,8 @@ body{
   bottom: 0;
   right: 0;
   &.editing{
-    border: 4px solid;
-    .nightBorderFade(@editingColor);
+    border: @borderAttentionLarge;
+    border-color: var(--avnav-attention-color);
   }
 }
 
@@ -83,7 +76,7 @@ body{
   .flex-display();
   .flex-direction(column);
   position: relative;
-  .nightBackFade(@colorMain);
+  background-color: var(--avnav-main-color);
   &.wrap{
     overflow: hidden;
     .flex-wrap(wrap-reverse)
@@ -117,7 +110,8 @@ body{
   bottom: 0;
   z-index: 101; //above widgets
   &.shade{
-    background-image: linear-gradient(to right,fade(@colorMain,10), fade(@colorMain,20));
+    background-color: var(--avnav-main-color);
+    opacity: 0.15;
   }
 }
 .iconContainer {
@@ -139,6 +133,11 @@ body{
   background-color: red;
   .maskImage('straighten.svg');
 }
+.jsChangeIcon{
+  background-color: red;
+  .maskImage('javascript.svg');
+  transform: scale(2) translate(0, -0.1em);
+}
 
 
 
@@ -151,14 +150,14 @@ body{
 }
 
 .header{
-  height: @headlineHeight;
+  height: var(--avnav-headline-height);
   padding: 1em;
-  .nightBackFade(@colorMain);
-  .nightForeColor(white,@nightColor);
+  background-color: var(--avnav-main-color);
+  color:var(--avnav-fore-color-inv);
   font-weight: bold;
   .flex-shrink(0);
   &.connectionLost{
-    .nightBackFade(@colorRed);
+    background-color: var(--avnav-attention-color);
   }
 }
 
@@ -167,8 +166,7 @@ body{
 }
 
 .footer{
-    background-color: @colorSecond;
-  .nightColors();
+  background-color: var(--avnav-second-color);
   .flex-shrink(0);
 }
 
@@ -188,8 +186,17 @@ body{
   display: none;
 }
 
+.pre{
+  white-space: pre;
+}
 
-
+.selectedItem {
+  background-color: var(--avnav-select-color);
+  font-weight: bold;
+}
+.activeEntry{
+  .selectedItem();
+}
 //----------------------------------------------------------------------------------------
 //dialogs
 //----------------------------------------------------------------------------------------
@@ -215,19 +222,32 @@ body{
   position: relative;
 }
 
+.rowBase{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
+@dialogInputLabelWidth:7em;
 
 .dialog {
+  &.fullscreen{
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
   & > div {
     min-width: 0;
   }
 
   z-index: 121;
   padding: 0.6em;
-  background-color: white;
+  background-color: var(--avnav-dialog-color);
+  color: var(--avnav-fore-color);
   border-radius: 3px;
   .flex-display();
-  .nightColors();
   .mdShadow2();
 
   &.nested {
@@ -258,11 +278,25 @@ body{
     font-size: inherit;
     font-family: inherit;
     border: none;
-    border-bottom: 1px solid;
-    .nightBorderColorGR();
+    border-bottom: @normalBorder;
+    border-color: var(--avnav-border-color);
     vertical-align: middle;
     line-height: 2em;
-    min-height: 2em;
+    height: 2.1em;
+    //margins to allow outline
+    margin-top: 2px;
+    margin-bottom: 2px;
+    outline: none;
+    color: var(--avnav-fore-color);
+    background-color: var(--avnav-back-color);
+    &:focus {
+      outline: @borderAttention;
+      outline-color: var(--avnav-border-color);
+    }
+  }
+  .error input, .error .input{
+    border: @borderAttention;
+    border-color: var(--avnav-attention-color);
   }
 
   .disabled .input{
@@ -277,7 +311,7 @@ body{
 
   .inputLabel{
     .mdText2();
-    width: 7em;
+    width: @dialogInputLabelWidth;
     display: inline-block;
     margin-right: 0.5em;
     font-size: 0.8em;
@@ -301,27 +335,10 @@ body{
     .dialogButton();
   }
 
-  .selectDialog {
-    .flex-display();
-    .flex-direction(column);
-    overflow: auto;
-    padding-bottom: 1em;
-    .selectList {
-      .flex(1);
-      .flex-shrink(0);
-      .flex-basis(auto);
-    }
 
-    .selectedItem {
-      .nightBackFade(@colorSelection);
-    }
-  }
 
   .dialogRow{
-    .flex-display();
-    .flex-direction(row);
-    .flex-align-items(center);
-    line-height: 1.5em;
+    .rowBase();
     &.infoText{
         white-space: pre-wrap;
     }
@@ -331,14 +348,12 @@ body{
     margin-top: 0.5em;
     .dialogRow();
     .flex-justify-content(flex-end);
-    .flex-wrap(wrap)
   }
   .insertButtons{
     .dialogRow();
-    border-bottom: 1px solid;
-    .nightBorderColorGR(30);
+    border-bottom: @normalBorder;
+    border-color: var(--avnav-border-color);
     .flex-justify-content(flex-end);
-    .flex-wrap(wrap)
   }
   .smallButton{
     width: 1.5em;
@@ -346,16 +361,11 @@ body{
   }
   .missing{
     input, .input {
-      .nightBorderFade(@colorRed);
-    }
-  }
-  .error{
-    input, .input {
-      .nightBackFade(fade(@colorRed,50%));
+      border-color: var(--avnav-attention-color);
     }
   }
   .errorText{
-    .nightForeFade(@colorRed)
+    color: var(--avnav-attention-color)
   }
   .paramButtons {
     .flex-display();
@@ -381,7 +391,7 @@ body{
     .flex-shrink(0);
   }
   .inputLabel {
-    width: 9em;
+    width: 10em;
     text-align: start;
   }
   input, .input{
@@ -415,8 +425,8 @@ body{
 }
 .editPageDialog{
   .panelList{
-    border-top: 1px solid;
-    .nightBorderColorGR(40);
+    border-top: @normalBorder;
+    border-color: var(--avnav-border-color);
     margin-top: 0.3em;
     padding-top: 0.3em;
   }
@@ -429,8 +439,8 @@ body{
 
   .editPanel {
     margin-top: 0.3em;
-    border-bottom: 1px solid;
-    .nightBorderColorGR(20);
+    border-bottom: @normalBorder;
+    border-color: var(--avnav-border-color);
     & >div{
       display: inline-block;
     }
@@ -450,8 +460,8 @@ body{
     margin-bottom: 0.3em;
   }
   .selectCurrent{
-    border-top: 1px solid;
-    .nightBorderColorGR(40);
+    border-top: @normalBorder;
+    border-color: var(--avnav-border-color);
     margin-top: 0.5em;
     padding-top: 0.5em;
   }
@@ -465,86 +475,35 @@ body{
       margin-left: 1em;
     }
   }
-  .listEntry{
-    .flex-wrap(wrap);
-    .flex-align-items(center);
-  }
   .selectedItem {
-    .nightBackFade(@colorSelection);
-  }
-}
-.LoadRoutesDialog{
-  .listEntry{
-    .flex-align-items(center);
-    .icon{
-      margin-right: 0.8em;
-      width: 1em;
-      height: 1em;
-    }
+    background-color: var(--avnav-select-color);
   }
 }
 
-.overlayElement{
-  &.sortableHelper {
-    z-index: 130; //for dragdrop
+.RouteSyncDialog{
+  .dialogRow .radioLabel{
+    width: 10em;
   }
-  .flex-display();
-  .flex-direction(row);
-  padding: 0.5em;
-  @media(max-width: 35em){
-    .flex-direction(column);
-    .flex-align-items(flex-start);
-    .itemInfo{
-      margin-right: 0!important;
-    }
-  }
-  .itemInfo{
-    .flex-grow(1);
-    margin-right: 1em;
-  }
-  .inputLabel{
-    .flex-shrink(0);
-    width: 6em;
-  }
-  .infoRow,.actions{
-    .flex-display();
-    .flex-direction(row);
-  }
-  .infoRow{
-    @media(max-width: 20em){
-      .flex-direction(column);
-      .flex-align-items(flex-start);
-
-    }
-    .valueText{
-      word-break: break-all;
-    }
+  .allowServer .inputLabel{
+    width: 10em
   }
 }
+
 .editOverlaysDialog{
-  .actions{
-    .flex-display();
-    .flex-direction(row);
-  }
-  button.smallButton.disabled {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .overlayEnabled {
-    .inputLabel {
-      display: none;
-    }
-  }
-  .overlayElement.disabled{
-    .valueText{
+  .overlayItems .disabled{
+    .itemInfo{
       .mdText2();
     }
   }
+
   &.preventEdit{
     .button.Edit {
       opacity: 0;
       pointer-events: none;
     }
+  }
+  &.hideErrors .withError{
+    display: none;
   }
   .overlayItems{
     padding-right: 35px; /* some room for scrolling */
@@ -555,6 +514,10 @@ body{
 .editOverlayItemDialog{
   .inputLabel{
     width: 10em;
+  }
+  .radioFrame .radioInner .inputLabel{
+    width: 4em;
+    text-align: right;
   }
 }
 .FeatureInfoDialog{
@@ -603,7 +566,14 @@ body{
 .featureInfoHtml{
   white-space: pre;
   margin-left: 1em;
+  .featureInfoListHtml &{
+    margin: 0.5em;
+    border-bottom: @normalBorder;
+    border-color: var(--avnav-border-color);
+    white-space: unset;
+  }
 }
+
 
 .TrackInfoDialog{
 
@@ -622,7 +592,7 @@ body{
     margin-left: 7.4em;
     max-width: 15em;
     font-size: 0.8em;
-    .nightForeColor(@colorRed)
+    color: var(--avnav-attention-color)
   }
 }
 
@@ -738,19 +708,44 @@ body{
 //----------------------------------------------------------------------------------------
 //lists
 //----------------------------------------------------------------------------------------
-.listContainer.scrollable{
+
+.scrollable{
   overflow: auto;
 }
 .listEntry{
-  overflow: hidden;
+  .rowBase();
+  min-height: 3.2em;
   position: relative;
-  border-bottom: 1px solid;
+  border-bottom: @normalBorder;
   padding: 1em;
-  .nightBorderColorGR(30);
-  .flex-display();
+  border-color: var(--avnav-border-color);
+  .icon{
+    margin-right: 0.5em;
+  }
 }
-.activeEntry{
-  .nightBackColor(@colorSelection);
+.listSlot{
+  margin-left: 12px;
+  &:first-of-type{
+    margin-left:0;
+  }
+  margin-right: 12px;
+  &:last-of-type{
+    margin-right: 0;
+  }
+  display: flex;
+  flex-direction: row;
+  &.listMain{
+    flex-direction: column;
+    flex: 1;
+    flex-basis: 8em;
+    .primary{
+
+    }
+    .secondary{
+      .mdText2();
+      margin-top: 0.2em;
+    }
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -767,9 +762,8 @@ span.valuePrefix{
   position: fixed;
   left: 50px;
   bottom: 10px;
-  background-color: #383838;
-  color: #F0F0F0;
-  .nightColors();
+  background-color: var(--avnav-toast-color);
+  color: var(--avnav-fore-color-inv);
   font-size: 1.5em;
   padding: 1em;
   text-align: center;
@@ -791,8 +785,8 @@ span.valuePrefix{
 //-- WaypointItem
 
 .routeInfoPoint{
-  border-bottom: 1px solid;
-  .nightBorderColorGR();
+  border-bottom: @normalBorder;
+  border-color: var(--avnav-border-color);
   padding-left: 0.1em;
   padding-right: 0.3em;
   padding-top: 0.1em;
@@ -801,21 +795,6 @@ span.valuePrefix{
   position: relative;
 }
 
-//--WaypointListItem
-.waypointListItem{
-  .flex-display();
-  .flex-align-items(center);
-  .name{
-    width: 8em;
-    min-width: 8em;
-    margin-left: 1em;
-    white-space: pre-wrap;
-    margin-right: 1em;
-  }
-  .info{
-    .mdText2();
-  }
-}
 
 //--Checkbox
 
@@ -833,24 +812,35 @@ span.valuePrefix{
 }
 
 //--Radio button
-.radioInner {
-  .inputLabel{
-    width: auto;
-    margin-left: 1em;
-  }
-  .radio {
-    display: inline-block;
-    width: 1.8em;
-    height: 1.8em;
-    .iconImage('radio_button_unchecked.svg');
-    background-repeat: no-repeat;
-    background-size: cover;
-    &.checked {
-      .iconImage('radio_button_checked.svg');
+.radioFrame {
+  .flex-display();
+  .flex-direction(row);
+  .flex-wrap(wrap);
+  .radioInner {
+    .inputLabel {
+      width: auto;
+      margin-left: 1em;
     }
-    vertical-align: middle;
+
+    .radio {
+      display: inline-block;
+      width: 1.8em;
+      height: 1.8em;
+      .iconImage('radio_button_unchecked.svg');
+      background-repeat: no-repeat;
+      background-size: cover;
+
+      &.checked {
+        .iconImage('radio_button_checked.svg');
+      }
+
+      vertical-align: middle;
+    }
+
+    .flex-display(inline);
+    .flex-direction(row);
+    .flex-align-items(center);
   }
-  display: inline-block;
 }
 
 //--ColorSelector
@@ -884,6 +874,10 @@ span.valuePrefix{
   .icon();
   background-image: url("@{iconBase}/@{url}");
 }
+.oldIconImage(@url){
+  .icon();
+  background-image: url("@{oldiconBase}/@{url}");
+}
 .maskImage(@url){
   .icon();
   mask-image: url("@{iconBase}/@{url}");
@@ -906,7 +900,7 @@ span.valuePrefix{
 
 // entry that needs action
 .userAction{
-  color: @colorRed
+  color: var(--avnav-attention-color)
 }
 
 //--errorInfo
@@ -961,16 +955,24 @@ span.valuePrefix{
   height: 1.5em;
   border-radius: 50%;
   border: 2px solid;
-  border-color: #ffffff;
+  border-color: var(--avnav-fore-color);
   border-top-color: #00000000;
-
-  .nightMode & {
-      border-color: @nightColor;
-      border-top-color: #00000000;
+  .dialog &{
+    border-color: var(--avnav-border-color);
+    border-top-color: #00000000;
+  }
+  .nightMode .dialog &{
+    border-top-color: #00000000;
   }
     animation: spinner .8s linear infinite;
   }
 
+.status_image {
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  .nightOPacity();
+}
 
   //----------------------------------------------------------------------------------------
   //pages
@@ -988,8 +990,8 @@ span.valuePrefix{
       padding: 1em;
       padding-right: 0;
       line-height: 2em;
-      border-bottom: 1px solid;
-      border-color: rgba(0, 0, 0, 0.3);
+      border-bottom: @normalBorder;
+      border-color: var(--avnav-border-color);
       .more {
         display: inline-block;
         float: right;
@@ -1033,12 +1035,6 @@ span.valuePrefix{
           white-space: nowrap;
           display: inline-block;
           margin-bottom: 0.2em;
-        }
-        .status_image {
-          width: 1.5em;
-          height: 1.5em;
-          vertical-align: middle;
-          .nightOPacity();
         }
         .link{
           text-align: right;
@@ -1090,8 +1086,8 @@ span.valuePrefix{
     .hfield{
       width: 50%;
       height: 100%;
-      border: 1px solid;
-      .nightBorderFade(grey);
+      border: @normalBorder;
+      border-color: var(--avnav-border-color);
       .widgetContainer{
         height: 100%;
         width: 100%;
@@ -1117,7 +1113,6 @@ span.valuePrefix{
   #aispage{
     .aisListItem{
       .listEntry();
-      .flex-wrap(wrap);
       .aisItemFB{
         width:4em;
         min-width: 4em;
@@ -1157,7 +1152,7 @@ span.valuePrefix{
     }
 
     .aisSummary{
-      .nightBackFade(@colorSecond);
+      background-color: var(--avnav-select-color);
       padding-top: 0.5em;
       padding-left: 1em;
       padding-bottom: 0.5em;
@@ -1220,13 +1215,14 @@ span.valuePrefix{
         font-weight: bold;
       }
       .aisWarning{
-        color: @colorRed; //should also be ok for night mode as normal night color is dimmed to 60%
+        color: var(--avnav-attention-color); //should also be ok for night mode as normal night color is dimmed to 60%
       }
     }
     .dialogRow{
       min-height: 0;
       flex-shrink: 1;
       overflow: auto;
+      line-height: 1.5em;
       @media(max-width: @aisInfoSmall){
         .flex-direction(column-reverse)
       }
@@ -1269,7 +1265,8 @@ span.valuePrefix{
     }
     .status {
       .listEntry();
-      .flex-direction(column);
+      flex-direction: column;
+      align-items: flex-start;
       padding-left: 1em;
       margin-top: 5px;
       line-height: 1.5em;
@@ -1287,7 +1284,6 @@ span.valuePrefix{
       margin-top: 3px;
       .flex-display();
       .flex-direction(row);
-      .flex-align-items(center);
       .flex-wrap(wrap);
       .mdText2();
       img {
@@ -1309,7 +1305,7 @@ span.valuePrefix{
     }
     &.serverError{
       .header {
-        .nightBackFade(@colorRed);
+        background-color: var(--avnav-attention-color);
       }
     }
   }
@@ -1319,6 +1315,9 @@ span.valuePrefix{
       margin-left: 1.5em;
       padding-left: 3px;
       .mdText2();
+    }
+    .importStatusDialog .inputLabel{
+        width: 3em;
     }
   }
 
@@ -1369,57 +1368,67 @@ span.valuePrefix{
 
   }
 
-  #downloadpage{
-    .itemMain {
-      .flex-display();
-      .flex-direction(row);
-      .flex(1);
-      .flex-wrap(wrap);
-      .flex-align-items(start);
-    }
-    .listEntry{
-      .flex-wrap(wrap);
-      .flex-align-items(center);
-    }
-    .downloadItemData{
-      .flex(1);
-      padding-left: 0.8em;
-      padding-right: 0.8em;
-      .flex-display();
-      .flex-direction(row);
-      .flex-align-items(center);
-      @media(max-width: 35em){
-        .flex-direction(column);
-        .flex-align-items(flex-start);
-      }
-      .date{
-        .mdText2();
-        width: 11.5em;
-      }
-      .info{
-        .flex(1);
-        word-break: break-all;
-      }
-      &.noDelete{
-        margin-left: 2.4em;
-      }
-    }
-    .infoImages{
-      padding-left: 0.8em;
-    }
-    .listrasimage{
-      .iconImage('plug.svg');
-    }
-    .editimage{
-      .iconImage('ic_edit.svg');
-    }
-    .viewimage{
-      .iconImage('visibility.svg');
-    }
-    .appimage{
-      .iconImage('apps.svg');
-    }
+.infoImages {
+  padding-left: 0.8em;
 
+
+  .icon.server {
+    .iconImage('plug.svg');
+  }
+
+  .icon.edit {
+    .iconImage('ic_edit.svg');
+  }
+
+  .icon.view {
+    .iconImage('visibility.svg');
+  }
+
+  .appimage {
+    .iconImage('apps.svg');
+  }
+}
+
+
+  //------ type icons ------
+  .icon.track{
+    .iconImage('track.svg');
+  }
+  .icon.route{
+    .iconImage('route.svg');
+  }
+  .icon.layout{
+    .iconImage('ballot.svg');
+  }
+  .icon.settings{
+    .iconImage('ic_settings.svg');
+  }
+  .icon.images{
+    .iconImage('image-icon.svg')
+  }
+  .icon.overlay{
+    .iconImage('layers-black.svg');
+  }
+  .icon.plugins{
+    .iconImage('extension.svg');
+  }
+  .icon.chart{
+    .oldIconImage('Chart60.png');
+  }
+  .icon.user.special{
+    .iconImage('ic_settings.svg');
+  }
+  .icon.user.html{
+    .iconImage('internet-web-browser.svg');
+  }
+  .icon.user.other{
+    .iconImage('draft.svg');
+  }
+  .icon.text{
+    .iconImage('ic_text_snippet.svg');
+  }
+  .icon.directory{
+    .iconImage('folder_shared.svg');
   }
 
   .downloadProgress{
@@ -1428,10 +1437,9 @@ span.valuePrefix{
     right: 0;
     bottom: 0;
     padding: 1em 1em 1em 1em;
-    background-color: lightgrey;
+    background-color: var(--avnav-second-color);
     z-index: 10;
     .flex-display();
-    .nightColors();
     .progressContainer{
       .flex(1);
     }
@@ -1439,7 +1447,7 @@ span.valuePrefix{
       margin: 0.5em 0.5em 0.5em 0.5em;
       height: 2em;
       display: block;
-      border: 1px solid;
+      border: @normalBorder;
       margin-left: 1em;
       margin-bottom: 1em;
       margin-right: 1em;
@@ -1450,14 +1458,14 @@ span.valuePrefix{
     }
     .progressDone{
       height: 100%;
-      .nightBackColor(blue);
+      background-color: var(--avnav-slide-color);
     }
   }
 
   .fileDialog{
     .existing input{
-      border-bottom: 1px solid;
-      .nightBorderFade(@colorRed)
+      border-bottom: @borderAttention;
+      border-color: var(--avnav-attention-color);
     }
   }
   .userAppDialog{
@@ -1465,6 +1473,10 @@ span.valuePrefix{
       width: auto;
       .flex(1);
       min-width: 10em;
+      line-break: anywhere;
+    }
+    .inputLabel{
+      width: 3.5em;
     }
   }
 
@@ -1489,10 +1501,9 @@ span.valuePrefix{
   }
   .EditRouteDialog{
     &.activeRoute{
-      border-width: 3px;
-      border-style: solid;
+      border: @borderAttentionLarge;
       padding: 5px;
-      .nightBorderFade(@colorRed);
+      border-color: var(--avnav-attention-color);
     }
   }
   .EditRoutePoints{
@@ -1516,9 +1527,9 @@ span.valuePrefix{
       min-height: 0;
     }
     .sectionList{
-      border-right: 1px solid ;
+      border-right: @normalBorder ;
       margin-right: 2em;
-      .nightBorderColorGR();
+      border-color: var(--avnav-border-color);
       width: 10em;
       .flex-grow(0);
       &.expand{
@@ -1527,16 +1538,20 @@ span.valuePrefix{
         margin:0;
       }
       .layoutSetting{
-        .nightForeFade(@editingColor);
+        color:var(--avnav-attention-color);
       }
     }
     .settingsList{
-      input,.input{
+      input,.input,.inputFrame{
         border-bottom: none;
-        width: 10em;
+        width: calc(100% - @dialogInputLabelWidth - 3em); //room for 2 buttons
+        max-width: 30em;
+        overflow: clip;
+        line-break: anywhere;
       }
-      .inputFrame{
-        width: 10em;
+      .error input,.error .input,.error .inputFrame{
+        border-bottom: @borderAttention;
+        border-bottom-color: var(--avnav-attention-color);
       }
       overflow: auto;
       .flex-grow(1);
@@ -1544,7 +1559,7 @@ span.valuePrefix{
         line-height: unset;
       }
       .layoutSetting{
-        .nightForeFade(@editingColor);
+        color: var(--avnav-attention-color);
       }
     }
     .sectionList,.settingsList{
@@ -1656,23 +1671,12 @@ span.valuePrefix{
   }
 
   #addonconfigpage{
-    .appIcon{
-      width: 3em;
-      height: 3em;
-      margin-left: 0.5em;
-      margin-right: 1em;
+    .primary{
+      line-break: anywhere;
     }
-    .itemMain{
-      .flex(1);
-      .flex-display();
-      .flex-direction(column);
-      .itemTitle{
+     .sourceInfo {
         .mdText2();
-      }
-      overflow: hidden;
-      min-width: 0;
-      .sourceInfo {
-        .mdText2();
+       margin-top: 0.2em;
       }
       .sourceInfo:before{
         content:"(";
@@ -1680,10 +1684,6 @@ span.valuePrefix{
       .sourceInfo:after{
         content:")";
       }
-    }
-    .AddonConfigView{
-      .flex-shrink(0);
-    }
   }
 
   //-------------- pages with map and widgets ----------------------------
@@ -1740,11 +1740,11 @@ span.valuePrefix{
     &.editing .bottomSection{
       .bottomLeft {
         border-right: 0.3em solid;
-        .nightBorderFade(@editingColor);
+        border-color: var(--avnav-attention-color);
       }
       .bottomRight {
         border-left: 0.3em solid;
-        .nightBorderFade(@editingColor);
+        border-color: var(--avnav-attention-color);
       }
     }
     .widgetContainer.left{
@@ -1753,7 +1753,7 @@ span.valuePrefix{
       left:0;
       max-height: 100%;
       z-index: 3;
-      width:  @navLeftWidgetWidth;
+      width:  var(--avnav-left-widgets-width);
     }
     .widgetContainer.top{
       z-index: 3;

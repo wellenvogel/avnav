@@ -35,24 +35,19 @@ from avndirectorybase import *
 from avnav_util import *
 
 TYPE="layout"
-PREFIX="/layouts"
 
 
 class AVNLayoutHandler(AVNScopedDirectoryHandler):
-  ALLOWED_EXTENSIONS=['.json']
 
   def __init__(self, param):
-    super().__init__(param, TYPE)
+    super().__init__(param, TYPE,'.json')
     self.baseDir= AVNHandlerManager.getDirWithDefault(self.param,'userDir',TYPE)
     self.type=TYPE
 
-  @classmethod
-  def getAutoScanExtensions(cls):
-    return cls.ALLOWED_EXTENSIONS
 
   @classmethod
   def getPrefix(cls):
-    return PREFIX
+    return None
 
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)

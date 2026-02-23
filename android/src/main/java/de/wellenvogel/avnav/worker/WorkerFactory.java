@@ -36,7 +36,7 @@ public class WorkerFactory {
         registerCreator(BLUETOOTH_NAME, new BluetoothConnectionHandler.Creator());
         registerCreator(UDPREADER_NAME,new UdpReceiver.Creator());
         registerCreator(UDPWRITER_NAME, new UdpWriter.Creator());
-        registerCreator(PluginWorker.TYPENAME,new PluginWorker.Creator());
+        registerCreator(ExternalPluginWorker.TYPENAME,new ExternalPluginWorker.Creator());
         for (TcpServiceReader.Description d:TcpServiceReader.SERVICES){
             registerCreator(d.displayName,d.getCreator());
         }

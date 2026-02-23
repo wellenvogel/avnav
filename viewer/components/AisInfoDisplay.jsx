@@ -32,9 +32,10 @@ import React from "react";
 import {Drawing} from "../map/drawing";
 import MapHolder, {LOCK_MODES} from "../map/mapholder";
 import ItemList from "./ItemList";
-import {DBCancel, DialogButtons, DialogFrame, DialogRow, useDialogContext} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
 
 const displayItems = [
     {name: 'distance'},

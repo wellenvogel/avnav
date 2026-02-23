@@ -451,23 +451,22 @@ class AVNAlarmHandler(AVNWorker):
         return fn
 
 
-  def getHandledCommands(self):
-    return {"api":"alarm","download":"alarm"}
+  def getApiType(self):
+    return "alarm"
 
-  def handleApiRequest(self,type,command,requestparam,**kwargs):
+  def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     '''
-    handle the URL based requests
-    :param type: api
-    :param command: alarm
-    :param requestparam: url parameters
-    :param kwargs:
-    :return: the answer
-    status=name,name,|all returns a hash {name:{name:alarmName,running:true}
-    start=name returns {status:ok|error}
-    stop=name,name {status: ok|err}
-    media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
-    '''
-    if type == "download":
+      handle the URL based requests
+      :param command: alarm
+      :param requestparam: url parameters
+      :param kwargs:
+      :return: the answer
+      status=name,name,|all returns a hash {name:{name:alarmName,running:true}
+      start=name returns {status:ok|error}
+      stop=name,name {status: ok|err}
+      media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
+      '''
+    if command =="download":
       name = AVNUtil.getHttpRequestParam(requestparam, "name",mantadory=True)
       AVNLog.debug("download alarm %s",name)
       running=None
@@ -484,16 +483,7 @@ class AVNAlarmHandler(AVNWorker):
       file=self.getSoundFile(alarmInfo.sound)
       if file is None:
         return None
-      fh=open(file,"rb")
-      if fh is None:
-        AVNLog.error("unable to find alarm sound %s",file)
-        return None
-      fsize=os.path.getsize(file)
-      rt={}
-      rt['mimetype'] = "audio/mpeg"
-      rt['size']=fsize
-      rt['stream']=fh
-      return rt
+      return AVNFileDownload(file, mimeType="audio/mpeg")
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')
@@ -511,20 +501,20 @@ class AVNAlarmHandler(AVNWorker):
                   }
       return {"status":"OK","data":rt}
     mode="start"
-    command=AVNUtil.getHttpRequestParam(requestparam,"start")
-    if command is None:
-      command = AVNUtil.getHttpRequestParam(requestparam, "stop")
+    alarm=AVNUtil.getHttpRequestParam(requestparam,"start")
+    if alarm is None:
+      alarm = AVNUtil.getHttpRequestParam(requestparam, "stop")
       mode="stop"
-      if command is None:
+      if alarm is None:
         rt={'info':"missing request parameter start or stop",'status':'error'}
         return rt
     rt={'status':'ok'}
     if mode == "start":
       category=AVNUtil.getHttpRequestParam(requestparam,'defaultCategory')
-      if not self.startAlarm(command,defaultCategory=category):
+      if not self.startAlarm(alarm,defaultCategory=category):
         rt['status']='error'
       return rt
-    if not self.stopAlarm(command):
+    if not self.stopAlarm(alarm):
       rt['status'] = 'error'
     return rt
 

@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure CAN interface %i
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/avnav/raspberry/can-updown.sh %i start
+ExecStop=/usr/lib/avnav/raspberry/can-updown.sh %i stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+

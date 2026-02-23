@@ -11,13 +11,13 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpServerConnection;
-import org.apache.http.HttpStatus;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -44,12 +44,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -59,8 +56,10 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -73,7 +72,7 @@ import de.wellenvogel.avnav.worker.Worker;
 import de.wellenvogel.avnav.worker.WorkerStatus;
 
 public class WebServer extends Worker {
-
+    private static final String CATTR_PROXY="avnav.proxy";
     static final String NAME="AvNavWebServer";
     private final EditableParameter.StringParameter mdnsNameParameter;
     private final EditableParameter.BooleanParameter mdnsEnabledParameter;
@@ -277,7 +276,21 @@ public class WebServer extends Worker {
                             postData,
                             getServerInfo(currentTarget));
                 }
-            }catch (Throwable t){
+            }catch (RequestHandler.RequestException u){
+                AvnLog.e("error handling request "+url,u);
+                httpResponse.setStatusCode(u.statusCode);
+                httpResponse.setReasonPhrase(u.getMessage());
+                if (u.statusCode == 409) {
+                    HttpServerConnection con = (HttpServerConnection) httpContext.getAttribute(ExecutionContext.HTTP_CONNECTION);
+                    //in principle we should call response interceptors here
+                    //but as we do not have any we skip this
+                    con.sendResponseHeader(httpResponse);
+                    con.sendResponseEntity(httpResponse);
+                    con.close();
+                }
+                return;
+            }
+            catch (Throwable t){
                 AvnLog.e("error handling request "+url,t);
                 if (postData != null) {
                     postData.closeInput();
@@ -287,11 +300,17 @@ public class WebServer extends Worker {
                 throw new HttpException("error handling "+url,t);
             }
             if (resp != null){
+                resp.applyRangeHeader(httpRequest.getFirstHeader(ExtendedWebResourceResponse.RANGE_HDR));
+                httpResponse.setStatusCode(resp.getStatusCode());
+                httpResponse.setReasonPhrase(resp.getReasonPhrase());
                 httpResponse.setHeader("content-type",resp.getMimeType());
                 for (String k:resp.getHeaders().keySet()){
                     httpResponse.setHeader(k,resp.getHeaders().get(k));
                 }
                 httpResponse.setEntity(new FdKeepingEntity(resp));
+                if (resp.isProxy()){
+                    httpContext.setAttribute(CATTR_PROXY, Boolean.TRUE);
+                }
             }
             else {
                 AvnLog.d(NAME,"no data for "+url);
@@ -312,6 +331,13 @@ public class WebServer extends Worker {
             this.handler=handler;
             this.prefix=prefix;
         }
+        private Map<String,String> convertHeaders(Header[]headers){
+            HashMap<String,String> rt=new HashMap<>();
+            for (Header h:headers){
+                rt.put(h.getName(),h.getValue());
+            }
+            return rt;
+        }
         @Override
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
             AvnLog.d(NAME,"prefix request for "+prefix+request.getRequestLine());
@@ -325,19 +351,22 @@ public class WebServer extends Worker {
                 }
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
                 if (method.equals("GET") || method.equals("HEAD")) {
-                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri,method);
+                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri,method,
+                            convertHeaders(request.getAllHeaders()));
                     if (resp != null) {
+                        resp.applyRangeHeader(request.getFirstHeader(ExtendedWebResourceResponse.RANGE_HDR));
+                        response.setStatusCode(resp.getStatusCode());
+                        response.setReasonPhrase(resp.getReasonPhrase());
                         for (String n : resp.getHeaders().keySet()){
                             response.setHeader(n,resp.getHeaders().get(n));
                         }
                         response.setHeader("content-type", resp.getMimeType());
                         InputStream ris=resp.getData();
                         if (ris != null) {
-                            if (resp.getLength() < 0) {
-                                response.setEntity(streamToEntity(resp.getData()));
-                            } else {
-                                response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
-                            }
+                            response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
+                        }
+                        if (resp.isProxy()){
+                            context.setAttribute(CATTR_PROXY,Boolean.TRUE);
                         }
                     } else {
                         AvnLog.d(NAME, "no data for " + url);
@@ -380,35 +409,14 @@ public class WebServer extends Worker {
                 return;
             }
             path=path.replaceAll("^/*","");
-            //TODO: restrict access
-            try {
-                InputStream is= gpsService.getAssets().open(path);
-                httpResponse.setStatusCode(HttpStatus.SC_OK);
-                httpResponse.setEntity(new InputStreamEntity(is,-1));
-                httpResponse.addHeader("content-type", RequestHandler.mimeType(path));
-
-            }catch (Exception e){
-                AvnLog.d(NAME,"file "+path+" not found: "+e);
-                httpResponse.setStatusCode(404);
-                httpResponse.setReasonPhrase("not found");
-            }
-
+            AvnLog.d(NAME,"file "+path+" not found");
+            httpResponse.setStatusCode(404);
+            httpResponse.setReasonPhrase("not found");
         }
     }
 
 
     private BaseRequestHandler baseRequestHandler=new BaseRequestHandler();
-
-    //we need to read completely as currently there is no streaming entity without the size
-    private static HttpEntity streamToEntity(InputStream is) throws IOException {
-        byte tmp[] = new byte[4096];
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int length;
-        //we need to read completely as currently there is no streaming entity without the size
-        while ((length = is.read(tmp)) != -1) buffer.write(tmp, 0, length);
-        AvnLog.d(NAME,"convert is: "+buffer.size());
-        return new InputStreamEntity(new ByteArrayInputStream(buffer.toByteArray()), buffer.size());
-    }
 
     private Listener listener;
 
@@ -488,7 +496,14 @@ public class WebServer extends Worker {
             httpContext = new BasicHttpContext();
             httpproc.addInterceptor(new ResponseDate());
             httpproc.addInterceptor(new ResponseServer());
-            httpproc.addInterceptor(new ResponseContent());
+            httpproc.addInterceptor(new ResponseContent(){
+                @Override
+                public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
+                    if (context.getAttribute(CATTR_PROXY) == null) {
+                        super.process(response, context);
+                    }
+                }
+            });
             httpproc.addInterceptor(new ResponseConnControl());
 
             httpService = new HttpService(httpproc,
@@ -530,8 +545,9 @@ public class WebServer extends Worker {
             };
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
-            registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
-            for (INavRequestHandler h: gpsService.getRequestHandler().getHandlers()){
+            registry.register(RequestHandler.NAVURL+"*",navRequestHandler);
+            registry.register(RequestHandler.NAVURL_COMPAT+"*",navRequestHandler);
+            for (INavRequestHandler h: gpsService.getRequestHandler().getAllPrefixHandlers()){
                 String prefix=h.getPrefix();
                 if (prefix == null) continue;
                 DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix, gpsService.getRequestHandler());

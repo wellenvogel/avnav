@@ -1,4 +1,4 @@
-import base from '../base.js';
+import base from '../base.ts';
 import remotechannel, {COMMANDS} from "./remotechannel";
 
 

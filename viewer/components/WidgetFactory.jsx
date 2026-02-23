@@ -1,12 +1,12 @@
 import React from "react";
 import assign from "object-assign";
 import widgetList from './WidgetList';
-import {useStore} from '../hoc/Dynamic.jsx';
+import {useStore} from '../hoc/Dynamic.tsx';
 import DirectWidget from './DirectWidget.jsx';
 import Formatter from '../util/formatter';
 import ExternalWidget from './ExternalWidget.jsx';
 import keys from '../util/keys.jsx';
-import base from '../base.js';
+import base from '../base.ts';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
 import MapWidget from "./MapWidget";
 import editableParameterFactory, {
@@ -20,6 +20,7 @@ import {Input, InputReadOnly} from "./Inputs";
 import {shallowEqualArrays} from "shallow-equal";
 import Helper from "../util/helper";
 import {SortableProps} from "../hoc/Sortable";
+import UndefinedWidget from "./UndefinedWidget";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -85,6 +86,7 @@ class FormatterParameterUI extends EditableParameter {
         const definedParameter=getFormatterParameters(currentValues);
         if (! definedParameter) {
             if (common.value instanceof Array) common.value=common.value.join(',');
+            else if (common.value == undefined) common.value="";
             if (this.readonly) {
                 return <InputReadOnly {...common}/>
             }
@@ -241,9 +243,17 @@ class WidgetFactory{
      * @returns {*}
      */
     findWidget(widget,opt_fallback,opt_mergeEditables){
-        let i=this.findWidgetIndex(widget,opt_fallback);
-        if (i < 0) return undefined;
-        let e=this.widgetDefinitions[i];
+        let e=this.findWidgetDefinition(widget);
+        if ( !e ){
+            if (! opt_fallback) return;
+            e= {wclass: UndefinedWidget};
+            if (typeof(widget)!=='object'){
+                e.name=widget;
+            }
+            else {
+                e.name = widget.name;
+            }
+        }
         let RenderWidget = e.wclass || DirectWidget;
         let widgetPredefines=RenderWidget.predefined;
         if (! (widgetPredefines instanceof Object)) widgetPredefines= {};
@@ -342,7 +352,14 @@ class WidgetFactory{
                 overrides.default = defaultv;
             }
             if (pname === 'formatter'){
-                if (widgetData.formatter) overrides.readOnly=true;
+                if (widgetData.formatter) {
+                    overrides.readOnly=true;
+                }
+                if (typeof defaultv === 'function') {
+                    //if this is a function
+                    //it is intentionally predefined and should not be changed
+                    continue;
+                }
             }
             if (typeof foundEditableParameter.render === 'function'){
                 rt.push(foundEditableParameter.clone(overrides));
@@ -364,22 +381,26 @@ class WidgetFactory{
     /**
      * find the index for a widget
      * @param widget - either a name or a widget description with a name field
-     * @returns {number} - -1 omn error
+     * @returns undefined if not found
      */
-    findWidgetIndex(widget,opt_useFallback){
+    findWidgetDefinition(widget,replace){
         if (widget === undefined) return -1;
         let search=widget;
         if (typeof(widget) !== "string"){
             search=widget.name;
         }
+        else{
+            if (replace) throw new Error("findWidgetdefinition needs object for replace");
+        }
         for (let i=0;i<this.widgetDefinitions.length;i++) {
             let e = this.widgetDefinitions[i];
             if ((e.name !== undefined && e.name == search ) || (e.caption == search)) {
-                return i;
+                if (replace){
+                    this.widgetDefinitions[i]=widget;
+                }
+                return e;
             }
         }
-        if (! opt_useFallback) return -1;
-        return this.findWidgetIndex("Undefined");
     }
 
     createWidget(props, opt_properties) {
@@ -488,12 +509,30 @@ class WidgetFactory{
     addWidget(definition,ignoreExisting){
         if (! definition) throw new Error("missing parameter definition");
         if (! definition.name) throw new Error("missing parameter name");
-        let existing=this.findWidgetIndex(definition);
-        if (existing >= 0 ) {
+        let existing=this.findWidgetDefinition(definition,ignoreExisting);
+        if (existing ) {
             if (! ignoreExisting) throw new Error("widget " + definition.name + " already exists");
-            this.widgetDefinitions[existing]=definition;
         }
-        this.widgetDefinitions.push(definition);
+        else {
+            this.widgetDefinitions.push(definition);
+            return definition.name;
+        }
+    }
+    deregisterWidget(name){
+        let idx=-1;
+        for (let i=0;i<this.widgetDefinitions.length;i++) {
+            let e = this.widgetDefinitions[i];
+            if ((e.name !== undefined && e.name == name ) || (e.caption == name)) {
+                idx=i;
+                break;
+            }
+        }
+        if (idx >= 0){
+            this.widgetDefinitions.splice(idx, 1);
+            delete this.editableParametersCache[name];
+            return true;
+        }
+        return false;
     }
     getWidgetFromTypeName(typeName){
         switch(typeName){
@@ -566,7 +605,7 @@ class WidgetFactory{
             internalDescription.editableParameters=opt_editableParameters;
         }
 
-        this.addWidget(internalDescription);
+        return this.addWidget(internalDescription);
     }
     registerFormatter(name,formatterFunction){
         if (! name) throw new Error("registerFormatter: missing parameter name");
@@ -577,6 +616,10 @@ class WidgetFactory{
             throw new Error("registerFormatter("+name+"): formatter already exists");
         }
         Formatter[name]=formatterFunction;
+        return name;
+    }
+    deregisterFormatter(name){
+        delete Formatter[name];
     }
 
 }

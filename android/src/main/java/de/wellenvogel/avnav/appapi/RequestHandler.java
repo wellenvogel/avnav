@@ -1,7 +1,7 @@
 package de.wellenvogel.avnav.appapi;
 
+import android.content.Context;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
@@ -19,12 +19,17 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.charts.ChartHandler;
+import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
@@ -32,7 +37,7 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.Alarm;
 import de.wellenvogel.avnav.worker.GpsService;
-import de.wellenvogel.avnav.worker.RouteHandler;
+import de.wellenvogel.avnav.worker.IWorker;
 
 /**
  * Created by andreas on 22.11.15.
@@ -49,7 +54,8 @@ public class RequestHandler {
      */
     public static final String INTERNAL_URL_PREFIX ="http://assets";
     public static final String ROOT_PATH="/viewer";
-    protected static final String NAVURL="viewer/avnav_navi.php";
+    public static final String NAVURL="/api";
+    protected static final String NAVURL_COMPAT="/viewer/avnav_navi.php";
     GpsService service;
     private SharedPreferences preferences;
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
@@ -59,54 +65,111 @@ public class RequestHandler {
     private SettingsHandler settingsHandler;
     private AddonHandler addonHandler;
 
-    //file types from the js side
-    public static String TYPE_ROUTE="route";
-    public static String TYPE_LAYOUT="layout";
-    public static String TYPE_SETTINGS="settings";
-    public static String TYPE_CHART="chart";
-    public static String TYPE_TRACK="track";
-    public static String TYPE_USER="user";
-    public static String TYPE_IMAGE="images";
-    public static String TYPE_OVERLAY="overlay";
-    public static String TYPE_ICONS="icons";
-    public static String TYPE_ADDON="addon";
-    public static String TYPE_CONFIG="config";
-    public static String TYPE_REMOTE="remotechannels";
-
 
     static final String LOGPRFX="AvNav:requestHandler";
 
-    public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
-        public TypeItemMap(AvnUtil.KeyValue<VT>...list){
-            for (AvnUtil.KeyValue<VT> i : list){
-                put(i.key,i);
-            }
-        }
-    }
 
-    public static TypeItemMap<Integer> typeHeadings=new TypeItemMap<Integer>(
-            new AvnUtil.KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
-            new AvnUtil.KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
-            new AvnUtil.KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
-            new AvnUtil.KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
-            new AvnUtil.KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
-            new AvnUtil.KeyValue<Integer>(TYPE_SETTINGS,R.string.uploadSettings),
-            new AvnUtil.KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
-            new AvnUtil.KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
+    public static AvnUtil.ItemMap<Integer> typeHeadings= new AvnUtil.ItemMap<>(
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_ROUTE, R.string.uploadRoute),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_CHART,R.string.uploadChart),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_IMAGE,R.string.uploadImage),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_USER,R.string.uploadUser),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_LAYOUT,R.string.uploadLayout),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_SETTINGS,R.string.uploadSettings),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_OVERLAY,R.string.uploadOverlay),
+            new AvnUtil.KeyValue<Integer>(Constants.TYPE_TRACK,R.string.uploadTrack)
     );
 
     //directories below workdir
-    public static TypeItemMap<File> typeDirs=new TypeItemMap<File>(
-            new AvnUtil.KeyValue<File>(TYPE_ROUTE,new File("routes")),
-            new AvnUtil.KeyValue<File>(TYPE_CHART,new File("charts")),
-            new AvnUtil.KeyValue<File>(TYPE_TRACK,new File("tracks")),
-            new AvnUtil.KeyValue<File>(TYPE_LAYOUT,new File("layout")),
-            new AvnUtil.KeyValue<File>(TYPE_SETTINGS,new File("settings")),
-            new AvnUtil.KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
-            new AvnUtil.KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
-            new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
+    public static AvnUtil.ItemMap<File> typeDirs= new AvnUtil.ItemMap<>(
+            new AvnUtil.KeyValue<File>(Constants.TYPE_ROUTE,new File("routes")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_CHART,new File("charts")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_TRACK,new File("tracks")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_LAYOUT,new File("layout")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_SETTINGS,new File("settings")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_USER,new File(new File("user"),"viewer")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_IMAGE,new File(new File("user"),"images")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_OVERLAY,new File("overlays")),
+            new AvnUtil.KeyValue<File>(Constants.TYPE_PLUGINS,new File("plugins"))
 
     );
+
+    static class AssetsRequestHandler implements INavRequestHandler{
+        Context context;
+        String prefix;
+        String assetPath;
+        private String pathPrefix;
+        private int plen;
+        AssetsRequestHandler(Context ctx,String prefix,String assetPath){
+            this.assetPath=assetPath;
+            this.prefix=prefix;
+            this.context=ctx;
+            this.pathPrefix=prefix+"/";
+            this.plen=this.pathPrefix.length();
+        }
+
+        @Override
+        public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
+            return false;
+        }
+
+        @Override
+        public JSONArray handleList(Uri uri, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public JSONObject handleInfo(String name, Uri uri, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean handleDelete(String name, Uri uri) throws Exception {
+            return false;
+        }
+
+        @Override
+        public boolean handleRename(String oldName, String newName) throws Exception {
+            return false;
+        }
+
+        @Override
+        public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, ServerInfo serverInfo) throws Exception {
+            return null;
+        }
+
+        @Override
+        public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
+            String path=uri.getPath();
+            if (path == null) return null;
+            if (path.startsWith("/")) path = path.substring(1);
+            if (! path.startsWith(pathPrefix)) return null;
+            path=path.substring(plen);
+            String[] parts=path.split("//*");
+            for (String part:parts){
+                DirectoryRequestHandler.safeName(part,true);
+            }
+            ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(-1,mimeType(path),null,
+                    context.getAssets().open(assetPath+"/"+path));
+            rt.setDateHeader("last-modified",new Date(BuildConfig.TIMESTAMP));
+            return rt;
+        }
+
+        @Override
+        public String getPrefix() {
+            return prefix;
+        }
+
+        @Override
+        public String getType() {
+            return null;
+        }
+    }
 
     public static class ServerInfo{
         public InetAddress address;
@@ -116,10 +179,15 @@ public class RequestHandler {
             if (address == null) return url;
             try {
                 URI uri=new URI(url);
-                uri = new URI(uri.getScheme(), uri.getUserInfo(),
-                    address.getHostAddress(), uri.getPort(), uri.getPath(),
-                    uri.getQuery(), uri.getFragment());
-                return uri.toString();
+                if (uri.getScheme() != null && uri.getHost() != null) {
+                    uri = new URI(uri.getScheme(), uri.getUserInfo(),
+                            address.getHostAddress(), uri.getPort(), uri.getPath(),
+                            uri.getQuery(), uri.getFragment());
+                    return uri.toString();
+                }
+                else{
+                    return url;
+                }
             } catch (Exception e) {
                 AvnLog.e("cannot replace invalid url "+url+": ",e);
             }
@@ -149,6 +217,7 @@ public class RequestHandler {
     }
 
     private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
+    private ArrayList<LazyHandlerAccess> prefixHandlers=new ArrayList<>();
 
     public static JSONObject getReturn(AvnUtil.KeyValue...data) throws JSONException {
         JSONObject rt=new JSONObject();
@@ -194,120 +263,77 @@ public class RequestHandler {
         return chartHandler;
     }
 
+    private void addHandler(INavRequestHandler handler){
+        if (handler.getType() != null) {
+            handlerMap.put(handler.getType(), new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return handler;
+                }
+            });
+        }
+        if (handler.getPrefix() != null){
+            prefixHandlers.add(new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return handler;
+                }
+            });
+        }
+    }
+
     public RequestHandler(GpsService service){
         AvnLog.i(LOGPRFX,"Construct");
         this.service = service;
+        addHandler(this.service);
+        addHandler(new AssetsRequestHandler(service,"viewer","viewer"));
+        addHandler(new AssetsRequestHandler(service,"modules","viewer/modules"));
         this.chartHandler =new ChartHandler(service,this);
+        addHandler(chartHandler);
         this.addonHandler= new AddonHandler(service,this);
+        addHandler(addonHandler);
         layoutHandler=new LayoutHandler(service,  "viewer/layout",
-                new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
-        handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return layoutHandler;
-            }
-        });
+                new File(getWorkDir(),typeDirs.get(Constants.TYPE_LAYOUT).value.getPath()));
+        addHandler(layoutHandler);
         settingsHandler=new SettingsHandler(service,  "viewer/settings",
-                new File(getWorkDir(),typeDirs.get(TYPE_SETTINGS).value.getPath()));
-        handlerMap.put(TYPE_SETTINGS, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return settingsHandler;
-            }
-        });
-        handlerMap.put(TYPE_ROUTE, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return getRouteHandler();
-            }
-        });
-        handlerMap.put(TYPE_TRACK, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return getTrackWriter();
-            }
-        });
-        handlerMap.put(TYPE_CHART, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return chartHandler;
-            }
-        });
+                new File(getWorkDir(),typeDirs.get(Constants.TYPE_SETTINGS).value.getPath()));
+        addHandler(settingsHandler);
         try{
             final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,service,
                     addonHandler);
-            handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return userHandler;
-                }
-            });
+            addHandler(userHandler);
         }catch (Exception e){
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,service,
-                    getWorkDirFromType(TYPE_IMAGE), "user/images",null);
-            handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return imageHandler;
-                }
-            });
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(Constants.TYPE_IMAGE,service,
+                    getWorkDirFromType(Constants.TYPE_IMAGE), "user/images",null);
+            addHandler(imageHandler);
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,service,
-                    getWorkDirFromType(TYPE_OVERLAY), "user/overlays",null);
-            handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return overlayHandler;
-                }
-            });
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(Constants.TYPE_OVERLAY,service,
+                    getWorkDirFromType(Constants.TYPE_OVERLAY), "user/overlays",null);
+            addHandler(overlayHandler);
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final IconRequestHandler iconHandler=new IconRequestHandler(TYPE_ICONS,service,
+            final IconRequestHandler iconHandler=new IconRequestHandler(Constants.TYPE_ICONS,service,
                      "viewer/icons");
-            handlerMap.put(TYPE_ICONS, new LazyHandlerAccess() {
-                @Override
-                public INavRequestHandler getHandler() {
-                    return iconHandler;
-                }
-            });
+            addHandler(iconHandler);
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
-        handlerMap.put(TYPE_ADDON, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return addonHandler;
+        List<IWorker> workers=service.getAllWorkers();
+        for (IWorker w:workers){
+            if (w instanceof INavRequestHandler){
+                INavRequestHandler handler=(INavRequestHandler)w;
+                addHandler(handler);
             }
-        });
-        handlerMap.put(TYPE_CONFIG, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return getGpsService();
-            }
-        });
-        handlerMap.put(TYPE_REMOTE, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                GpsService s=getGpsService();
-                if (s != null) return s.getRemoteChannel();
-                return null;
-            }
-        });
+        }
         AvnLog.i(LOGPRFX,"Construct done");
-    }
-
-    private INavRequestHandler getTrackWriter() {
-        GpsService gps=getGpsService();
-        if (gps == null) return null;
-        return gps.getTrackWriter();
     }
 
     INavRequestHandler getHandler(String type){
@@ -316,11 +342,12 @@ public class RequestHandler {
         if (access == null) return null;
         return access.getHandler();
     }
-
-    RouteHandler getRouteHandler(){
-        GpsService service=getGpsService();
-        if (service == null) return null;
-        return service.getRouteHandler();
+    public IPluginAware getPluginAwareHandler(String type){
+        try{
+            INavRequestHandler h=getHandler(type);
+            return (IPluginAware) h;
+        }catch (Exception ignored){}
+        return null;
     }
 
     protected File getWorkDir(){
@@ -347,8 +374,9 @@ public class RequestHandler {
     }
 
     public ExtendedWebResourceResponse handleRequest(View view, String url) throws Exception {
-        return handleRequest(view,url,"GET");
+        return handleRequest(view,url,"GET", new HashMap<>());
     }
+
 
     /**
      * used for the internal requests from our WebView
@@ -357,7 +385,7 @@ public class RequestHandler {
      * @return
      * @throws Exception
      */
-    public ExtendedWebResourceResponse handleRequest(View view, String url,String method) throws Exception {
+    public ExtendedWebResourceResponse handleRequest(View view, String url,String method,Map<String,String> headers) throws Exception {
         Uri uri=null;
         try {
             uri = Uri.parse(url);
@@ -368,15 +396,21 @@ public class RequestHandler {
         if (path == null) return null;
         if (url.startsWith(INTERNAL_URL_PREFIX)){
             try {
-                if (path.startsWith("/")) path=path.substring(1);
-                if (path.startsWith(NAVURL)){
-                    return handleNavRequest(uri,null);
+                ExtendedWebResourceResponse rt=null;
+                if (path.startsWith(NAVURL) || path.startsWith(NAVURL_COMPAT)) {
+                    rt= handleNavRequest(uri, null);
                 }
-                ExtendedWebResourceResponse rt=tryDirectRequest(uri,method);
-                if (rt != null) return rt;
-                InputStream is= (view != null)?view.getContext().getAssets().open(path):service.getAssets().open(path);
-                Log.i(LOGPRFX,String.format("loading asset %s from %s (%d avail)",path,Thread.currentThread().getId(),is.available()));
-                return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
+                else {
+                    rt = tryDirectRequest(uri, method, headers);
+                }
+                if (rt != null) {
+                    rt.applyRangeHeader(headers.get(ExtendedWebResourceResponse.RANGE_HDR),true);
+                    return rt;
+                }
+                throw new Exception("invalid path "+path);
+            } catch (RequestException r){
+                r.printStackTrace();
+                throw r;
             } catch (Throwable e) {
                 e.printStackTrace();
                 throw new Exception("error processing "+url+": "+e.getLocalizedMessage());
@@ -388,13 +422,13 @@ public class RequestHandler {
         }
     }
 
-    public ExtendedWebResourceResponse tryDirectRequest(Uri uri,String method) throws Exception {
+    public ExtendedWebResourceResponse tryDirectRequest(Uri uri,String method,Map<String,String>headers) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
         INavRequestHandler handler=getPrefixHandler(path);
         if (handler != null){
-            return handler.handleDirectRequest(uri,this, method);
+            return handler.handleDirectRequest(uri,this, method,headers );
         }
         return null;
     }
@@ -418,14 +452,13 @@ public class RequestHandler {
         return htmlPage;
     }
 
-    JSONObject handleUploadRequest(Uri uri,PostVars postData) throws Exception{
-        String dtype = uri.getQueryParameter("type");
-        if (dtype == null ) throw new IOException("missing parameter type for upload");
-        String overwrite=uri.getQueryParameter("overwrite");
+    JSONObject handleUploadRequest(String type,Uri uri,PostVars postData) throws Exception{
+        boolean  overwrite=AvnUtil.getFlagParameter(uri,"overwrite",false);
         String name=uri.getQueryParameter("name");
-        INavRequestHandler handler=getHandler(dtype);
+        boolean completeName=AvnUtil.getFlagParameter(uri,"completeName",false);
+        INavRequestHandler handler=getHandler(type);
         if (handler != null){
-            boolean success=handler.handleUpload(postData,name,overwrite != null && overwrite.equals("true"));
+            boolean success=handler.handleUpload(postData,name,overwrite , completeName);
             JSONObject rt=new JSONObject();
             if (success) {
 
@@ -442,7 +475,7 @@ public class RequestHandler {
     IWebSocketHandler getWebSocketHandler(String path){
         //for now limited to one handler
         //can be extended with the same pattern like for normal handlers
-        if (path.startsWith("/"+TYPE_REMOTE)){
+        if (path.startsWith("/"+ Constants.TYPE_REMOTE)){
             GpsService service=getGpsService();
             if (service != null) return service.getRemoteChannel();
             return null;
@@ -482,6 +515,13 @@ public class RequestHandler {
         }
         return null;
     }
+    static public class RequestException extends Exception{
+        public int statusCode=500;
+        public RequestException(String r,int code){
+            super(r);
+            statusCode=code;
+        }
+    }
 
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData) throws Exception{
         return handleNavRequest(uri,postData,null);
@@ -498,7 +538,7 @@ public class RequestHandler {
         NavResponse(ExtendedWebResourceResponse r){response=r;}
         ExtendedWebResourceResponse getResponse() throws UnsupportedEncodingException {
             if (response != null) return response;
-            byte o[]=jsonResponse.toString().getBytes("UTF-8");
+            byte o[]=jsonResponse.toString().getBytes(StandardCharsets.UTF_8);
             long len=o.length;
             InputStream is = new ByteArrayInputStream(o);
             return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
@@ -506,81 +546,101 @@ public class RequestHandler {
         boolean isJson(){return jsonResponse != null;}
         Object getJson(){return jsonResponse;}
     }
+    static class RType{
+        public String type=null;
+        public String command=null;
+        public RType(String type, String command){
+            this.type=type;
+            this.command=command;
+        }
+        public RType(){}
+        void setCommand(String command){
+            if (command != null) this.command=command;
+        }
+        void setType(String type){
+            if (type != null) this.type=type;
+        }
+        boolean compare(String type,String command){
+            return type.equals(this.type) && command.equals(this.command);
+        }
+    }
+
+    RType mapOldStyleRequest(String request,RType tc){
+        RType rt=new RType(tc.type,tc.command);
+        if (! "api".equals(request)) {
+            if (Arrays.asList(new String[]{null, "gps", "self"}).contains(request)) {
+                rt.type = Constants.TYPE_DECODER;
+                rt.command = "gps";
+                return rt;
+            }
+            if (Arrays.asList(new String[]{"ais", "nmeaStatus"}).contains(request)) {
+                rt.type = Constants.TYPE_DECODER;
+                rt.command = request;
+                return rt;
+            }
+            if (Arrays.asList(new String[]{"status", "loglevel", "currentLogLevel"}).contains(request)) {
+                rt.type = Constants.TYPE_CONFIG;
+                rt.command = request;
+                return rt;
+            }
+            if (Arrays.asList(new String[]{"download", "upload", "list", "delete"}).contains(request)) {
+                rt.command = request;
+                return rt;
+            }
+        }
+        if ("listDir".equals(request) || "listDir".equals(rt.command)){
+            rt.command="list";
+            return rt;
+        }
+        return rt;
+    }
     NavResponse handleNavRequestInternal(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
         long start=SystemClock.uptimeMillis();
         if (uri.getPath() == null) return null;
         String remain=uri.getPath();
-        if (remain.startsWith("/")) remain=remain.substring(1);
+        String request=null;
+        RType typeAndCommand=new RType();
         if (remain != null) {
-            remain=remain.substring(Math.min(remain.length(),NAVURL.length()+1));
+            if (remain.startsWith(NAVURL)) {
+                remain = remain.substring(Math.min(remain.length(), NAVURL.length() + 1));
+            }
+            else if (remain.startsWith(NAVURL_COMPAT)){
+                remain = remain.substring(Math.min(remain.length(), NAVURL_COMPAT.length() + 1));
+            }
+            else{
+                RequestException e=new RequestException("invalid call to handleNavRequestInternal with url"+remain,500);
+                AvnLog.e("",e);
+                throw e;
+            }
+            String[] parts=remain.split("/");
+            if (parts.length >= 2){
+                typeAndCommand.setType(parts[0]);
+                typeAndCommand.setCommand(parts[1]);
+                request="api";
+            }
         }
-        String type=uri.getQueryParameter("request");
-        if (type == null) type="gps";
+        String prequest=uri.getQueryParameter("request");
+        if (prequest != null) request=prequest;
+        typeAndCommand.setType(uri.getQueryParameter("type"));
+        typeAndCommand.setCommand(uri.getQueryParameter("command"));
+        typeAndCommand=mapOldStyleRequest(request,typeAndCommand);
         Object fout=null;
         InputStream is=null;
         int len=0;
         boolean handled=false;
         try{
-            if (type.equals("gps")){
-                handled=true;
-                JSONObject navLocation=null;
-                if (getGpsService() != null) {
-                    navLocation=getGpsService().getGpsData();
-                    if (navLocation == null) {
-                        navLocation = new JSONObject();
-                    }
-                }
-                fout=navLocation;
-            }
-            if (type.equals("nmeaStatus")){
-                handled=true;
-                JSONObject o=new JSONObject();
-                if (getGpsService() != null) {
-                    JSONObject status = getGpsService().getNmeaStatus();
-                    o.put("data", status);
-                    o.put("status", "OK");
-                }
-                else{
-                    o.put("status","no gps service");
-                }
-                fout=o;
-            }
-            if (type.equals("ais")) {
-                handled=true;
-                ArrayList<Location> centers=new ArrayList<Location>();
-                String sdistance=uri.getQueryParameter("distance");
-                double lat=0,lon=0,distance=0;
-                String[] suffixes=new String[]{"","1"};
-                for (String sfx:suffixes){
-                    String slat=uri.getQueryParameter("lat"+sfx);
-                    String slon=uri.getQueryParameter("lon"+sfx);
-                    try{
-                        if (slat != null) lat=Double.parseDouble(slat);
-                        if (slon != null) lon=Double.parseDouble(slon);
-                        Location l=new Location((String)null);
-                        l.setLatitude(lat);
-                        l.setLongitude(lon);
-                        centers.add(l);
-                    }catch(Exception e){}
-                }
-                try{
-                    if (sdistance != null)distance=Double.parseDouble(sdistance);
-                }catch (Exception e){}
-                if (getGpsService() !=null){
-                    fout=getGpsService().getAisData(centers, distance);
+            if ("info".equals(typeAndCommand.command)){
+                String name=uri.getQueryParameter("name");
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
+                if (handler != null){
+                    handled=true;
+                    JSONObject item=handler.handleInfo(name,uri,serverInfo);
+                    if (item == null) fout=getErrorReturn("item "+name+" not found");
+                    else  fout=getReturn(new AvnUtil.KeyValue<JSONObject>("item",item));
                 }
             }
-            if (type.equals("route")){
-                if (getGpsService() != null && getRouteHandler() != null) {
-                    JSONObject o=getRouteHandler().handleApiRequest(uri,postData, null);
-                    if (o != null){
-                        handled=true;
-                        fout=o;
-                    }
-                }
-            }
-            if (type.equals("listdir") || type.equals("list")){
-                String dirtype=uri.getQueryParameter("type");
+            else if ("list".equals(typeAndCommand.command)){
+                String dirtype=typeAndCommand.type;
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
                     if (handler instanceof NavRequestHandlerBase){
@@ -593,24 +653,22 @@ public class RequestHandler {
                 }
 
             }
-            if (type.equals("download")){
+            else if ("download".equals(typeAndCommand.command)){
                 boolean setAttachment=true;
-                String dltype=uri.getQueryParameter("type");
                 String name=uri.getQueryParameter("name");
                 String noattach=uri.getQueryParameter("noattach");
                 if (noattach != null && noattach.equals("true")) setAttachment=false;
                 ExtendedWebResourceResponse resp=null;
-                INavRequestHandler handler=getHandler(dltype);
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
                 if (handler != null){
                     handled=true;
                     try {
                         resp = handler.handleDownload(name, uri);
                     }catch (Exception e){
                         AvnLog.e("error in download request "+uri.getPath(),e);
-                        return null;
                     }
                 }
-                if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
+                if (!handled && typeAndCommand.type != null && typeAndCommand.type.equals("alarm") && name != null) {
                     AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name, service);
                     if (info != null){
                         AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info, service);
@@ -626,69 +684,56 @@ public class RequestHandler {
                     }
                 }
                 if (resp == null) {
-                    byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
-                    resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
+                    resp = new ExtendedWebResourceResponse(404,"file " + ((name != null) ? name : "<null>") + " not found");
                 }
-                if (setAttachment) {
-                    String value="attachment";
-                    if (remain != null && ! remain.isEmpty()) {
-                        value+="; filename=\""+remain+"\"";
-                    }
-                    else{
-                        String fn=uri.getQueryParameter("filename");
-                        if (fn != null){
-                            value+="; filename=\"" + DirectoryRequestHandler.safeName(fn,false)+"\"";
+                else {
+                    if (setAttachment) {
+                        String value = "attachment";
+                        String fn = uri.getQueryParameter("filename");
+                        if (fn != null) {
+                            value += "; filename=\"" + DirectoryRequestHandler.safeName(fn, false) + "\"";
                         }
+                        resp.setHeader("Content-Disposition", value);
                     }
-                    resp.setHeader("Content-Disposition", value);
                 }
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return new NavResponse(resp);
             }
-            if (type.equals("delete")) {
-                JSONObject o=new JSONObject();
-                String dtype = uri.getQueryParameter("type");
+            else if ("delete".equals(typeAndCommand.command)) {
                 String name = uri.getQueryParameter("name");
-                INavRequestHandler handler=getHandler(dtype);
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
                 if (handler != null){
                     handled=true;
                     try {
                         boolean deleteOk = handler.handleDelete(name, uri);
-                        if (!"chart".equals(dtype)) {
-                            INavRequestHandler chartHandler = getHandler("chart");
-                            if (chartHandler != null) {
-                                try {
-                                    ((ChartHandler) chartHandler).deleteFromOverlays(dtype, name);
-                                } catch (Exception e){
-                                    AvnLog.e("exception when trying to delete from overlays",e);
-                                }
-                            }
-                        }
                         if (deleteOk) {
-                            o.put("status", "OK");
+                            fout=getReturn();
                         } else {
-                            o.put("status", "unable to delete");
+                            fout=getErrorReturn("unable to delete");
                         }
                     }catch (Exception e){
-                        o.put("status","error deleting "+name+": "+e.getLocalizedMessage());
+                        fout=getErrorReturn("error deleting "+name+": "+e.getLocalizedMessage());
                     }
                 }
-                fout=o;
             }
-            if (type.equals("status")){
-                handled=true;
-                JSONObject o=new JSONObject();
-                JSONArray items=new JSONArray();
-                if (getGpsService() != null) {
-                    JSONArray gpsStatus=getGpsService().getStatus();
-                    for (int i=0;i<gpsStatus.length();i++){
-                        items.put(gpsStatus.get(i));
+            else if ("rename".equals(typeAndCommand.command)){
+                String name = AvnUtil.getMandatoryParameter(uri,"name");
+                String newName= AvnUtil.getMandatoryParameter(uri,"newName");
+                INavRequestHandler handler=getHandler(typeAndCommand.type);
+                if (handler != null) {
+                    handled = true;
+                    try {
+                        boolean rok = handler.handleRename(name, newName);
+                        if (rok) {
+                            fout = getReturn();
+                        }
+                        else fout = getErrorReturn("unable to rename");
+                    } catch (Throwable t) {
+                        fout = getErrorReturn(t.getMessage());
                     }
                 }
-                o.put("handler",items);
-                fout=o;
             }
-            if (type.equals("alarm")){
+            else if ("alarm".equals(typeAndCommand.type)){
                 handled=true;
                 JSONObject o=null;
                 String status=uri.getQueryParameter("status");
@@ -725,65 +770,61 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            if (type.equals("upload")){
-                fout=handleUploadRequest(uri,postData);
-                if (fout != null) handled=true;
-            }
-            if (type.equals("capabilities")){
-                //see keys.jsx in viewer - gui.capabilities
-                handled=true;
-                JSONObject o=new JSONObject();
-                o.put("addons",true);
-                o.put("uploadCharts",true);
-                o.put("plugins",false);
-                o.put("uploadRoute",true);
-                o.put("uploadLayout",true);
-                o.put("uploadSettings",true);
-                o.put("canConnect",true);
-                o.put("uploadUser",true);
-                o.put("uploadImages",true);
-                o.put("uploadOverlays",true);
-                o.put("uploadTracks",true);
-                o.put("remoteChannel",true);
-                o.put("fetchHead",Constants.HAS_HEAD_SUPPORT|| serverInfo != null);
-                if (serverInfo == null) {
-                    //we can only handle the config stuff internally
-                    //as potentially there are permission dialogs
-                    o.put("config", true);
-                }
-                fout=getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
-            }
-            if (type.equals("api")){
+            else if ("upload".equals(typeAndCommand.command)){
                 try {
-                    String apiType = AvnUtil.getMandatoryParameter(uri, "type");
-                    LazyHandlerAccess handler = handlerMap.get(apiType);
-                    if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
-                    JSONObject resp=handler.getHandler().handleApiRequest(uri,postData, serverInfo);
-                    if (resp == null){
-                        fout=getErrorReturn("api request returned null");
+                    fout = handleUploadRequest(typeAndCommand.type, uri, postData);
+                    if (fout != null) {
+                        handled = true;
                     }
-                    else{
-                        fout=resp;
+                }catch (Throwable t){
+                    throw new RequestException(t.getMessage(),409);
+                }
+            }
+            else {
+                try {
+                    String apiType = typeAndCommand.type;
+                    if (typeAndCommand.command == null) {
+                        throw new Exception("invalid api request " + apiType + " without command");
                     }
+                    INavRequestHandler handler = getHandler(apiType);
+                    if (handler == null)
+                        throw new Exception("no handler for api request " + apiType);
+                    handled = true;
+                    JSONObject resp = handler.handleApiRequest(typeAndCommand.command, uri, postData, serverInfo);
+                    if (resp == null) {
+                        fout = getErrorReturn("api request returned null");
+                    } else {
+                        fout = resp;
+                    }
+                }catch(RequestException r){
+                    throw r;
                 }catch (Throwable t){
                     fout=getErrorReturn("exception: "+t.getLocalizedMessage());
                 }
 
             }
             if (!handled){
-                AvnLog.d(LOGPRFX,"unhandled nav request "+type);
+                AvnLog.d(LOGPRFX,"unhandled nav request "+typeAndCommand.type);
             }
             long done=SystemClock.uptimeMillis();
             if ((done-start) > 3000){
                 long dummy=done-start;
                 dummy=dummy+1;
-                AvnLog.d(LOGPRFX,"long navrequest "+type+" duration: "+dummy);
+                AvnLog.d(LOGPRFX,"long navrequest "+typeAndCommand.type+" duration: "+dummy);
             }
             if (fout != null) return new NavResponse(fout);
             return new NavResponse(getErrorReturn("request not handled"));
         } catch (JSONException jse) {
             return new NavResponse(getErrorReturn(jse.getMessage()));
+        } catch (RequestException r){
+            AvnLog.e("exception for "+remain,r);
+            throw r;
+        } catch(Throwable t){
+            AvnLog.e("exception for "+remain,t);
+            throw new RequestException(t.getMessage(),500);
         }
+
+
     }
 
 
@@ -801,16 +842,16 @@ public class RequestHandler {
 
     public INavRequestHandler getPrefixHandler(String url){
         if (url == null) return null;
-        for (LazyHandlerAccess handler : handlerMap.values()){
+        for (LazyHandlerAccess handler : prefixHandlers){
             if (handler.getHandler() == null || handler.getHandler().getPrefix() == null) continue;
             if (url.startsWith(handler.getHandler().getPrefix())) return handler.getHandler();
         }
         return null;
     }
 
-    public Collection<INavRequestHandler> getHandlers(){
+    public Collection<INavRequestHandler> getAllPrefixHandlers(){
         ArrayList<INavRequestHandler> rt=new ArrayList<INavRequestHandler>();
-        for (LazyHandlerAccess handler : handlerMap.values()){
+        for (LazyHandlerAccess handler : prefixHandlers){
             if (handler.getHandler() == null ) continue;
             rt.add(handler.getHandler());
         }
@@ -821,7 +862,9 @@ public class RequestHandler {
 
 
     public void stop(){
-        if (chartHandler != null) chartHandler.stop();
+        ChartHandler ch=chartHandler;
+        if (ch != null) ch.stop();
+        chartHandler=null;
     }
 
 

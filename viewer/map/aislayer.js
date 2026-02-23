@@ -5,7 +5,7 @@
 import navobjects from '../nav/navobjects';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import base from '../base.js';
+import base from '../base.ts';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
 import AisFormatter, {AIS_CLASSES, aisproxy} from '../nav/aisformatter.jsx';

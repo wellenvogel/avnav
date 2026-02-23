@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import KeyHandler from '../util/keyhandler';
-import {concatsp} from "../util/helper";
-import {useDialogContext} from "./OverlayDialog";
+import {concatsp, setav} from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
+import {useDialogContext} from "./DialogContext";
 
 const COMPONENT="dialogButton";
 const DialogButton=(props)=>{
@@ -21,6 +21,7 @@ const DialogButton=(props)=>{
         }
         if (close === undefined) close=true;
         const clickHandler=(ev)=>{
+            setav(ev,{dialogContext:dialogContext});
             if (! onClick || close) {
                 let closeDialog=true;
                 if (onPreClose) {

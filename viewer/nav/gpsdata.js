@@ -6,7 +6,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import assign from 'object-assign';
 import Requests from '../util/requests.js';
-import base from '../base.js';
+import base from '../base.ts';
 import Average, {CourseAverage} from "../util/average.mjs";
 
 
@@ -186,21 +186,25 @@ GpsData.prototype.computeKeys=function(key,data,base){
  *
  */
 GpsData.prototype.startQuery=function(){
-    let self=this;
     let timeout=parseInt(globalStore.getData(keys.properties.positionQueryTimeout,1000));
-    Requests.getJson("?request=gps",{checkOk:false}).then(
+    Requests.getJson({
+        request:'api',
+        type:'decoder',
+        command:"gpsV2"
+    },).then(
         (data)=>{
-            self.handleGpsResponse(data,true);
-            self.timer=window.setTimeout(function(){
-                self.startQuery();
+            if (! data.data) throw new Error("no data in gps response");
+            this.handleGpsResponse(data.data,true);
+            this.timer=window.setTimeout(()=>{
+                this.startQuery();
             },timeout);
         }
     ).catch(
         (error)=>{
             base.log("query position error");
-            self.handleGpsResponse({},false);
-            self.timer=window.setTimeout(function(){
-                self.startQuery();
+            this.handleGpsResponse({},false);
+            this.timer=window.setTimeout(()=>{
+                this.startQuery();
             },timeout);
         }
     );

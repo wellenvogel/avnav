@@ -1,31 +1,17 @@
 package de.wellenvogel.avnav.appapi;
 
+import static de.wellenvogel.avnav.main.Constants.TYPE_ICONS;
+
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.Map;
 
-import androidx.annotation.NonNull;
 import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -78,7 +64,7 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     }
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         throw new IOException("upload not allowed");
     }
 
@@ -88,13 +74,32 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     }
 
     @Override
+    public JSONObject handleInfo(String name, Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (name == null) return new JSONObject();
+        JSONArray items=iconFiles; //atomic
+        for (int i=0;i<items.length();i++){
+            try{
+                JSONObject item=items.getJSONObject(i);
+                if (item.has("name") && name.equals(item.getString("name"))){
+                    return item;
+                }
+            }catch (Exception e){}
+        }
+        return null;
+    }
+
+    @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
         throw new IOException("delete not allowed");
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        String command=AvnUtil.getMandatoryParameter(uri,"command");
+    public boolean handleRename(String oldName, String newName) throws Exception {
+        throw new Exception("not available");
+    }
+
+    @Override
+    public JSONObject handleApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("list")){
             return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
@@ -102,7 +107,7 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method, Map<String, String> headers) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
@@ -125,6 +130,11 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     @Override
     public String getPrefix() {
         return urlPrefix;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE_ICONS;
     }
 
 

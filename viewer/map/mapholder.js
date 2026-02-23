@@ -12,8 +12,7 @@ import {Drawing, DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import Requests from '../util/requests.js';
-import base from '../base.js';
+import base from '../base.ts';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';
@@ -34,7 +33,8 @@ import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle, Circle as olCircle, Stroke as olStroke, Fill as olFill} from 'ol/style';
 import * as olTransforms from 'ol/proj/transforms';
 import {ScaleLine as olScaleLine} from 'ol/control';
-import OverlayConfig from "./overlayconfig";
+import {shared as IconImageCache} from 'ol/style/IconImageCache';
+import OverlayConfig, {fetchOverlayConfig} from "./overlayconfig";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
@@ -52,7 +52,11 @@ import {
     WpFeatureInfo
 } from "./featureInfo";
 import Leavehandler from "../util/leavehandler";
-
+import {createItemActions} from "../components/FileDialog";
+import {avitem, getav, setav} from "../util/helper";
+import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
+import {addProtocol} from "maplibre-gl";
+import {Protocol} from "pmtiles";
 
 export const EventTypes = {
     SELECTWP: 2,
@@ -170,7 +174,6 @@ class MapHolder extends DrawingPositionConverter {
         } catch (e) {
         }
 
-        this.slideIn = 0; //when set we step by step zoom in
         /**
          * @private
          * @type {Drawing}
@@ -563,7 +566,9 @@ class MapHolder extends DrawingPositionConverter {
         if (!this.olmap) return;
         this._callHandlers({type: div ? EventTypes.SHOWMAP : EventTypes.HIDEMAP});
         let mapDiv = div || this.defaultDiv;
-        this.olmap.setTarget(mapDiv);
+        if (this.olmap.getTarget() !== mapDiv) {
+            this.olmap.setTarget(mapDiv);
+        }
         if (!this.timer && div) {
             this.timer = window.setInterval(() => {
                 this.timerFunction()
@@ -590,7 +595,7 @@ class MapHolder extends DrawingPositionConverter {
             }
             let baseVisible = globalStore.getData(keys.properties.layers.base, false);
             this.olmap.getLayers().forEach((layer) => {
-                if (layer.avnavOptions && layer.avnavOptions.isBase) {
+                if (getav(layer).isBase) {
                     layer.setVisible(baseVisible);
                 }
             })
@@ -612,10 +617,11 @@ class MapHolder extends DrawingPositionConverter {
 
     setChartEntry(entry, opt_noRemote) {
         //set the new base chart
-        const baseClass = this.findChartSource('chart', entry.url);
+        const baseClass = this.findChartSourceForItem({...entry,type:'chart'});
         this._baseChart = new baseClass(this, {...entry, type: 'chart', enabled: true, baseChart: true})
         try {
-            LocalStorage.setItem(STORAGE_NAMES.LASTCHART, undefined, this._baseChart.getChartKey());
+            const dp=this._baseChart.getName();
+            LocalStorage.setItem(STORAGE_NAMES.LASTCHART, undefined, JSON.stringify({key:this._baseChart.getChartKey(),name:dp}));
         } catch (e) {
         }
         if (!opt_noRemote) {
@@ -630,81 +636,56 @@ class MapHolder extends DrawingPositionConverter {
         let rt;
         try {
             rt = LocalStorage.getItem(STORAGE_NAMES.LASTCHART);
+            if (rt){
+                rt=JSON.parse(rt);
+            }
             return rt;
         } catch (e) {
         }
     }
 
-    prepareSourcesAndCreate(newSources) {
-        return new Promise((resolve, reject) => {
-            for (let k in this.sources) {
-                this.sources[k].destroy();
+    async prepareSourcesAndCreate(newSources) {
+        for (let k in this.sources) {
+            await this.sources[k].destroy();
+        }
+        if (newSources) {
+            this.sources = newSources;
+        }
+        CryptHandler.resetHartbeats();
+        if (this.sources.length < 1) {
+            throw new Error("no sources");
+        }
+        //now trigger all prepares
+        const prepares = [];
+        for (let k in this.sources) {
+            prepares.push(this.sources[k].prepare());
+        }
+        const done = await Promise.all(prepares);
+        this.sources.forEach((source) => {
+            if (!source.isReady()) {
+                throw new Error(source.getName() + " not ready");
             }
-            if (newSources) {
-                this.sources = newSources;
-            }
-            CryptHandler.resetHartbeats();
-            if (this.sources.length < 1) {
-                reject("no sources");
-            }
-            let readyCount = 0;
-            //now trigger all prepares
-            for (let k in this.sources) {
-                this.sources[k].prepare()
-                    .then(() => {
-                        //check if all are ready now...
-                        readyCount++;
-                        let ready = true;
-                        for (let idx in this.sources) {
-                            if (!this.sources[idx].isReady()) {
-                                ready = false;
-                                break;
-                            }
-                        }
-                        if (ready) {
-                            this.updateOverlayConfig();
-                            this.initMap();
-                            resolve(1);
-                        } else {
-                            if (readyCount >= this.sources.length) {
-                                reject("internal error: not all sources are ready");
-                            }
-                        }
-                    })
-                    .catch((error) => {
-                        reject(error)
-                    });
-            }
-        });
+        })
+        this.updateOverlayConfig();
+        this.initMap();
+        return true;
     }
-
-    /**
-     *
-     * @param type chart || overlay
-     *      type: chart:
-     *      type overlay:
-     * @param url (mandatory)
-     *
-     * @returns {ChartSourceBase}
-     */
-
-    findChartSource(type, url) {
-        if (type == 'chart') {
-            return AvNavChartSource;
-        }
-        if (!url) {
-            throw Error("missing url for overlay");
-        }
-        if (url.match(/\.gpx$/)) {
+    findChartSourceForItem(item){
+        if (! item) item={};
+        if (item.type === 'chart') return AvNavChartSource;
+        const actions=createItemActions(item.type);
+        if (! actions ) throw Error("unknown item type "+item.type)
+        const ext=actions.getExtensionForView(item);
+        if (ext === 'gpx'){
             return GpxChartSource;
         }
-        if (url.match(/\.kml$/)) {
+        if (ext === 'kml' || ext === 'kmz'){
             return KmlChartSource;
         }
-        if (url.match(/\.geojson$/)) {
+        if (ext === 'geojson'){
             return GeoJsonChartSource;
         }
-        throw Error("unsupported overlay: " + url)
+        throw new Error("unknown overlay extension "+ext);
     }
 
     getBaseChart() {
@@ -722,8 +703,7 @@ class MapHolder extends DrawingPositionConverter {
             if (!chartSource) {
                 reject("chart not set");
             }
-            let url = chartSource.getConfig().url;
-            if (!url) {
+            if (! chartSource.hasValidConfig()) {
                 reject("no map selected");
                 return;
             }
@@ -773,24 +753,15 @@ class MapHolder extends DrawingPositionConverter {
                 checkChanges();
                 return;
             }
-            let cfgParam = {
-                request: 'api',
-                type: 'chart',
-                overlayConfig: chartSource.getOverlayConfigName(),
-                command: 'getConfig',
-                expandCharts: true,
-                mergeDefault: true
-            };
-            Requests.getJson("", {}, cfgParam)
-                .then((config) => {
-                    config = config.data;
-                    if (!config) {
+            fetchOverlayConfig(chartSource.chartEntry, true)
+                .then((overlayConfig) => {
+                    if (!overlayConfig) {
                         this.overlayConfig = new OverlayConfig();
                         if (resetOverrides) this.overlayOverrides = this.overlayConfig.copy();
                         checkChanges();
                         return;
                     }
-                    this.overlayConfig = new OverlayConfig(config);
+                    this.overlayConfig = overlayConfig;
                     if (resetOverrides) {
                         this.overlayOverrides = this.overlayConfig.copy();
                     } else {
@@ -804,22 +775,25 @@ class MapHolder extends DrawingPositionConverter {
                             newSources.push(chartSource);
                             return;
                         }
-                        const overlaySourceClass = this.findChartSource(overlay.type, overlay.url);
+                        if (overlay.error) {
+                            return;
+                        }
+                        const overlaySourceClass = this.findChartSourceForItem(overlay);
                         if (overlaySourceClass) newSources.push(new overlaySourceClass(this, overlay));
                     });
                     checkChanges();
                 })
-                .catch((error) => {
-                    reject("unable to query overlays:" + error);
-                })
-
-        });
-
+        })
     }
 
     getCurrentMergedOverlayConfig() {
         let rt = this.overlayConfig.copy();
         rt.mergeOverrides(this.overlayOverrides);
+        for (let source of this.sources) {
+            if (source.getError()) {
+                rt.removeItem(source.getConfig(), true);
+            }
+        }
         return rt;
     }
 
@@ -888,7 +862,7 @@ class MapHolder extends DrawingPositionConverter {
             style: styleFunction,
             visible: visible
         });
-        vectorLayer.avnavOptions = {isBase: true};
+        setav(vectorLayer,{isBase: true});
         return vectorLayer;
     }
 
@@ -903,31 +877,35 @@ class MapHolder extends DrawingPositionConverter {
         let source = new olVectorSource({
             wrapX: false
         });
+        let hasExtent = false;
         if (layers && layers.length > 0) {
             let extent = olExtent.createEmpty();
             layers.forEach((layer) => {
-                if (layer.avnavOptions && layer.avnavOptions.extent) {
-                    let e = layer.avnavOptions.extent;
+                const e=getav(layer).extent;
+                if (e){
+                    hasExtent = true;
                     extent = olExtent.extend(extent, e);
                 }
             });
-            let feature = new olFeature(new olPolygonGemotery([
-                [
-                    olExtent.getBottomLeft(extent),
-                    olExtent.getBottomRight(extent),
-                    olExtent.getTopRight(extent),
-                    olExtent.getTopLeft(extent)
+            if (hasExtent) {
+                let feature = new olFeature(new olPolygonGemotery([
+                    [
+                        olExtent.getBottomLeft(extent),
+                        olExtent.getBottomRight(extent),
+                        olExtent.getTopRight(extent),
+                        olExtent.getTopLeft(extent)
 
-                ]
-            ]));
-            feature.setStyle(style);
-            source.addFeature(feature);
+                    ]
+                ]));
+                feature.setStyle(style);
+                source.addFeature(feature);
+            }
         }
         let vectorLayer = new olVectorLayer({
             source: source,
             visible: visible
         });
-        vectorLayer.avnavOptions = {isBase: true};
+        setav(vectorLayer,{isBase: true});
         return vectorLayer;
     }
 
@@ -951,6 +929,27 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
+    clampZoom(zoom){
+        if (zoom < this.minzoom) return this.minzoom;
+        if (zoom > this.maxzoom) return this.maxzoom;
+        return zoom;
+    }
+
+    getMapLayerNames(){
+        let mapLayerNames = [];
+        for (let source of this.sources) {
+            if (! source)continue;
+            const layers=source.getLayers();
+            if (Array.isArray(layers)) {
+                layers.forEach((layer) => {
+                    const profile=getav(layer).layerProfile;
+                    if (profile) mapLayerNames.push(profile);
+                })
+            }
+        }
+        return mapLayerNames;
+    }
+
     /**
      * init the map (deinit an old one...)
      */
@@ -962,15 +961,20 @@ class MapHolder extends DrawingPositionConverter {
         this.minzoom = 32;
         this.mapMinZoom = this.minzoom;
         this.maxzoom = 0;
+        IconImageCache.clear();
+        //we need to reset the protocol as it has caches for the PMTiles - but they could have changed
+        addProtocol(PMTILESPROTO,()=>{throw new Error("no map active")});
         for (let i = 0; i < this.sources.length; i++) {
             let sourceLayers = this.sources[i].getLayers();
             sourceLayers.forEach((layer) => {
-                if (this.sources[i].getConfig().baseChart && layer.avnavOptions) {
-                    if (layer.avnavOptions.minZoom < this.minzoom) {
-                        this.minzoom = layer.avnavOptions.minZoom;
+                if (this.sources[i].isBaseChart()) {
+                    const avminz=avitem(layer,'minZoom',1);
+                    const avmaxz=avitem(layer,'maxZoom',26);
+                    if ( avminz< this.minzoom) {
+                        this.minzoom = avminz;
                     }
-                    if (layer.avnavOptions.maxZoom > this.maxzoom) {
-                        this.maxzoom = layer.avnavOptions.maxZoom;
+                    if (avmaxz > this.maxzoom) {
+                        this.maxzoom = avmaxz;
                     }
                     baseLayers.push(layer);
                 }
@@ -1005,9 +1009,18 @@ class MapHolder extends DrawingPositionConverter {
                 let olarray_in = oldlayers.getArray();
                 olarray = olarray_in.slice(0);
                 for (let i = 0; i < olarray.length; i++) {
-                    this.olmap.removeLayer(olarray[i]);
+                    const layer=olarray[i];
+                    if (layer && layer.dispose){
+                        try{
+                            layer.dispose();
+                        }catch (e){
+                            const debug=1;
+                        }
+                    }
+                    this.olmap.removeLayer(layer);
                 }
             }
+            addProtocol(PMTILESPROTO,(new Protocol()).tile)
             this.olmap.addLayer(this.getBaseLayer(hasBaseLayers));
             if (baseLayers.length > 0) {
                 this.olmap.addLayer(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
@@ -1017,6 +1030,7 @@ class MapHolder extends DrawingPositionConverter {
             }
             this.renderTo(div);
         } else {
+            addProtocol(PMTILESPROTO,(new Protocol()).tile)
             let base = [];
             base.push(this.getBaseLayer(hasBaseLayers));
             if (baseLayers.length > 0) {
@@ -1089,38 +1103,19 @@ class MapHolder extends DrawingPositionConverter {
         if (this.referencePoint && this.zoom > 0) {
             //if we load a new map - try to restore old center and zoom
             this._centerToReference();
-            if (this.zoom < this.minzoom) this.zoom = this.minzoom;
-            if (this.zoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale)))
-                this.zoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
-            let slideLevels = 0;
-            if (globalStore.getData(keys.properties.mapUpZoom) < globalStore.getData(keys.properties.slideLevels)) {
-                //TODO: pick the right maxUpZoom depending on the chart
-                //but should be good enough as online maps should have all levels
-                slideLevels = globalStore.getData(keys.properties.slideLevels) - globalStore.getData(keys.properties.mapUpZoom);
-            }
-            if (slideLevels > 0) {
-                if (this.zoom >= (this.minzoom + slideLevels)) {
-                    this.zoom -= slideLevels;
-                    this.doSlide(slideLevels);
-                }
-            }
+            this.zoom=this.clampZoom(this.zoom);
             this.requiredZoom = this.zoom;
             this.setMapZoom(this.zoom);
             recenter = false;
             let lext = undefined;
             if (baseLayers.length > 0) {
-                lext = baseLayers[0].avnavOptions.extent;
+                lext = getav(baseLayers[0]).extent;
                 if (lext !== undefined && !olExtent.containsCoordinate(lext, this.pointToMap(this.referencePoint))) {
-                    if (baseLayers.length > 0) {
-                        let view = this.getView();
-                        lext = baseLayers[0].avnavOptions.extent;
-                        if (lext !== undefined) view.fit(lext, this.olmap.getSize());
-                        this.setMapZoom(this.minzoom);
-                        this.center = this.pointFromMap(view.getCenter());
-                        this.zoom = view.getZoom();
-
-
-                    }
+                    let view = this.getView();
+                    view.fit(lext, this.olmap.getSize());
+                    this.setMapZoom(this.minzoom);
+                    this.center = this.pointFromMap(view.getCenter());
+                    this.zoom = view.getZoom();
                     this.saveCenter();
                 }
             }
@@ -1128,7 +1123,7 @@ class MapHolder extends DrawingPositionConverter {
         if (recenter) {
             if (baseLayers.length > 0) {
                 view = this.getView();
-                let lextx = baseLayers[0].avnavOptions.extent;
+                let lextx = getav(baseLayers[0]).extent;
                 if (lextx !== undefined) view.fit(lextx, this.olmap.getSize());
                 this.setMapZoom(this.minzoom);
                 this.referencePoint = this.pointFromMap(view.getCenter());
@@ -1239,10 +1234,7 @@ class MapHolder extends DrawingPositionConverter {
         this.setZoom(curzoom,opt_force);
     }
     setZoom(curzoom,opt_force){
-        if (curzoom < this.minzoom) curzoom = this.minzoom;
-        if (curzoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale))) {
-            curzoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
-        }
+        curzoom=this.clampZoom(curzoom);
         this.requiredZoom = curzoom;
         this.forceZoom = opt_force || false;
         this.setMapZoom(curzoom);
@@ -1436,9 +1428,6 @@ class MapHolder extends DrawingPositionConverter {
             }
             return;
         }
-        if (this.slideIn) {
-            return;
-        }
         //check if we have tiles available for this zoom
         //otherwise change zoom but leave required as it is
         let centerCoord = this.olmap.getView().getCenter();
@@ -1450,24 +1439,15 @@ class MapHolder extends DrawingPositionConverter {
             let layers = this.olmap.getLayers().getArray();
             for (let i = 0; i < layers.length && !zoomOk; i++) {
                 let layer = layers[i];
-                if (!layer.avnavOptions || !layer.avnavOptions.zoomLayerBoundings) continue;
+                let boundings = getav(layer).zoomLayerBoundings;
+                if (! boundings) continue;
                 let source = layer.get('source');
                 if (!source || !(source instanceof olXYZSource)) continue;
                 hasZoomInfo = true;
-                let boundings = layer.avnavOptions.zoomLayerBoundings;
                 let centerTile = source.getTileGrid().getTileCoordForCoordAndZ(centerCoord, tzoom);
-                let z = centerTile[0];
-                let x = centerTile[1];
-                let y = centerTile[2];
-                y = -y - 1; //we still have the old counting...
-                //TODO: have a common function for this and the tileUrlFunction
-                if (!boundings[z]) continue; //nothing at this zoom level
-                for (let bindex in boundings[z]) {
-                    let zbounds = boundings[z][bindex];
-                    if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
-                        zoomOk = true;
-                        break;
-                    }
+                if (checkZoomBounds(centerTile, boundings)) {
+                    zoomOk = true;
+                    break;
                 }
             }
             if (zoomOk) {
@@ -1597,8 +1577,10 @@ class MapHolder extends DrawingPositionConverter {
         let rot = rotation == 0 ? 0 : (360 - rotation) * Math.PI / 180;
         let maprot = view.getRotation();
         let delta = rot - maprot;
-        //console.log("rot",rot,"maprot",maprot,"delta",delta);
-        view.adjustRotation(delta, this.transformToMap(opt_anchor !== undefined ? opt_anchor : this.referencePoint));
+        if (delta !== 0) {
+            //console.log("rot",rot,"maprot",maprot,"delta",delta);
+            view.adjustRotation(delta, this.transformToMap(opt_anchor !== undefined ? opt_anchor : this.referencePoint));
+        }
     }
 
     moveCenterPercentKey(deltax, deltay) {
@@ -1731,30 +1713,35 @@ class MapHolder extends DrawingPositionConverter {
         }
         let currentTrackPoint = this.tracklayer.findTarget(pixel);
         if (currentTrackPoint) {
-            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',urlOrKey:'current'}));
+            featureInfos.push(new TrackFeatureInfo({point: currentTrackPoint, title: 'current track',name:'current'}));
         }
-        const detectedFeatures = [];
+        const detectedFeatures = {};
         this.olmap.forEachFeatureAtPixel(pixel, (feature, layer) => {
-                if (!layer.avnavOptions || !layer.avnavOptions.chartSource) return;
-                detectedFeatures.push({feature: feature, layer: layer, source: layer.avnavOptions.chartSource});
+                const chartSource=getav(layer).chartSource;
+                if (!chartSource) return;
+                const key=chartSource.getChartKey();
+                if (! detectedFeatures[key]){
+                    detectedFeatures[key] = [];
+                }
+                detectedFeatures[key].push({feature: feature, layer: layer, source: chartSource});
             },
             {
                 hitTolerance: globalStore.getData(keys.properties.clickTolerance) / 2
             });
         //sort the detected features by the order of our sources
         for (let i = this.sources.length - 1; i >= 0; i--) {
-            for (let fidx = 0; fidx < detectedFeatures.length; fidx++) {
-                const df = detectedFeatures[fidx];
-                if (df.source === this.sources[i]) {
-                    const fi=df.source.featureToInfo(df.feature, pixel);
-                    if (fi) featureInfos.push(fi);
-                    break;
-                }
+            const sourceFeatures=detectedFeatures[this.sources[i].getChartKey()];
+            if (!sourceFeatures) continue;
+            let fi=this.sources[i].featureListToInfo(sourceFeatures,pixel);
+            if (fi){
+                if (!Array.isArray(fi)) fi=[fi];
+                fi.forEach((featureInfo)=>featureInfos.push(featureInfo));
             }
         }
         let promises = [];
         //just get chart features on top of the currently detected feature
         for (let i = this.sources.length - 1; i >= 0; i--) {
+            if (detectedFeatures[this.sources[i].getChartKey()])continue;
             if (this.sources[i].hasFeatureInfo()) {
                 promises.push(this.sources[i].getChartFeaturesAtPixel(pixel));
             }
@@ -1762,7 +1749,7 @@ class MapHolder extends DrawingPositionConverter {
                 if (this.sources[i].isChart()) {
                     featureInfos.push(new ChartFeatureInfo({
                         title: this.sources[i].getName(),
-                        chartKey: this.sources[i].getChartKey(),
+                        name: this.sources[i].getChartKey(),
                         isOverlay: !this.sources[i].isBaseChart(),
                         point: clickPoint,
                         overlaySource: this.sources[i]
@@ -1778,11 +1765,11 @@ class MapHolder extends DrawingPositionConverter {
         Promise.all(promises)
             .then((promiseFeatures) => {
                 for (let pi = 0; pi < promiseFeatures.length; pi++) {
-                    if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
-                    let feature = promiseFeatures[pi][0];
-                    //TODO: handle multiple chart features here
-                    if (feature) {
-                        featureInfos.push(feature);
+                    if (! Array.isArray(promiseFeatures[pi])|| promiseFeatures[pi].length < 1) continue;
+                    for (let feature of promiseFeatures[pi]) {
+                        if (feature) {
+                            featureInfos.push(feature);
+                        }
                     }
                 }
                 this._callGuards('click'); //do this again as some time could have passed
@@ -1799,21 +1786,15 @@ class MapHolder extends DrawingPositionConverter {
     onZoomChange(evt) {
         evt.preventDefault();
         base.log("zoom changed");
-        if (this.mapZoom >= 0) {
             let vZoom = this.getView().getZoom();
             if (vZoom != this.mapZoom) {
-                if (vZoom < this.minzoom) vZoom = this.minzoom;
-                if (vZoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale))) {
-                    vZoom = this.maxzoom + globalStore.getData(keys.properties.maxUpscale);
-                }
+                vZoom=this.clampZoom(vZoom);
                 base.log("zoom required from map: " + vZoom);
                 this.requiredZoom = vZoom;
-                if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
             }
             if (this.isInUserActionGuard()) {
                 this.remoteChannel.sendMessage(COMMANDS.setZoom + " " + vZoom);
             }
-        }
     }
 
     /**
@@ -1864,6 +1845,7 @@ class MapHolder extends DrawingPositionConverter {
         this.lastRender = (new Date()).getTime();
         this.drawing.setContext(evt.context);
         this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
+        this.drawing.setPixelTransform(evt.inversePixelTransform);
         this.drawing.setRotation(evt.frameState.viewState.rotation);
         let rt = new navobjects.Point();
         rt.fromCoord(this.pointFromMap(evt.frameState.viewState.center));
@@ -1878,32 +1860,7 @@ class MapHolder extends DrawingPositionConverter {
         this.drawing.setContext(this.userLayerContext.context);
         this.userLayer.onPostCompose(evt.frameState.viewState.center, this.drawing);
         evt.context.drawImage(this.userLayerContext.context.canvas, 0, 0, this.userLayerContext.width, this.userLayerContext.height);
-
     }
-
-    /**
-     * this function is some "dirty workaround"
-     * ol3 nicely zoomes up lower res tiles if there are no tiles
-     * BUT: not when we never loaded them.
-     * so we do some guess when we load a map and should go to a higher zoom level:
-     * we start at a lower level and then zoom up in several steps...
-     * @param start - when set, do not zoom up but start timeout
-     */
-    doSlide(start) {
-        if (!start) {
-            if (!this.slideIn) return;
-            this.changeZoom(1, false, true);
-            this.slideIn--;
-            if (!this.slideIn) return;
-        } else {
-            this.slideIn = start;
-        }
-        let to = globalStore.getData(keys.properties.slideTime);
-        window.setTimeout(() => {
-            this.doSlide();
-        }, to);
-    }
-
     /**
      * tell the map that it's size has changed
      */
