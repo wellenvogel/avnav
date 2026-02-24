@@ -572,6 +572,7 @@ class Plugin(object):
             apPath='/'
         conPath=self.build_path(conPath)
         devPath=self.build_path(devPath)
+        self.api.log(f"activating connection apath={apPath} conPath={conPath} devPath={devPath}")
         rt=nm.ActivateConnection(conPath,devPath,apPath)
         return self.short_path(rt)
 
@@ -649,7 +650,7 @@ class Plugin(object):
         con=self.nm(path,nm_base + ".Settings.Connection")
         if psk is not None:
             sec_key="802-11-wireless-security"
-            if nested(props,sec_key+"key-mgmt") != "wpa-psk":
+            if nested(props,sec_key+".key-mgmt") != "wpa-psk":
                 raise Exception(f"can only set psk for key-mgmt wpa-psk on connection {path}")
             wsec = {
                 "key-mgmt": "wpa-psk",
