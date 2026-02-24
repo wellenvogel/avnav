@@ -525,7 +525,7 @@ class Pluginmanager{
                                 } else {
                                     updatedMjs = true;
                                 }
-                                await api.loadModule("plugin.mjs", plugin.mjs.timestamp);
+                                await api.loadModule((pluginName === USERNAME)?"user.mjs":"plugin.mjs", plugin.mjs.timestamp);
                                 this.createdApis[pluginName] = api;
                             } catch (e) {
                                 console.error("unable to create api and load module", plugin, e);

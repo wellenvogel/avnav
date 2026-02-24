@@ -76,6 +76,8 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
           fh.write("{\n}\n")
 
   def handleRename(self, name, newName, requestparam):
+      if newName.startswith('__'):
+          raise Exception("name must not start with __")
       rt=super().handleRename(name, newName, requestparam)
       if name in self.FLIST or newName in self.FLIST:
           self.navdata.updateChangeCounter('config')
@@ -92,6 +94,8 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
         AVNLog.error("unable to delete addons for %s:%s", name, e)
 
   def handleUpload(self, name, handler, requestparam):
+      if name.startswith('__'):
+          raise Exception("name must not start with __")
       rt=super().handleUpload(name, handler, requestparam)
       if name in self.FLIST:
           self.navdata.updateChangeCounter('config')
@@ -103,6 +107,11 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
       fname=os.path.join(self.baseDir,path)
       if os.path.exists(fname) and handler is not None:
         return AVNJsDownload(fname,self.PREFIX)
+    if path.startswith('__'):
+        slash=path.find('/')
+        if slash < 0:
+            raise Exception("invalid path starting with __")
+        path=path[slash+1:]
     return super(AVNUserHandler, self).getPathFromUrl(path, handler,requestParam)
 
 
