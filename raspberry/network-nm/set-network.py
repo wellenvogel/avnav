@@ -126,7 +126,7 @@ SETTINGS={
     'SSID':ConfigEntry('ssid','avnav',check=check_ssid),
     'PSK':ConfigEntry('psk','avnav-secret',check=check_psk),
     'WIFI_COUNTRY':ConfigEntry('','DE',type=ChangeType.REBOOT,action=wifi_country_action),
-    'WIFI_INTF':ConfigEntry('interface','wlan0'),
+    'WIFI_INTF':ConfigEntry('interface-name','wlan0'),
     'WIFI_BAND':ConfigEntry('band','bg',check=check_band),
     'WIFI_CHANNEL':ConfigEntry('channel','7'),
     'WIFI_ADDRESS':ConfigEntry('address1','192.168.30.10/24',check=check_addr),

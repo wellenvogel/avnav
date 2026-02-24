@@ -5,6 +5,7 @@ type=wifi
 interface-name=wlan0
 timestamp=1769942358
 zone=trusted
+autoconnect-priority=999
 
 [wifi]
 band=bg
