@@ -343,7 +343,6 @@
     const [selected,setSelected]=useState(); //path of selected interface
     const disableFetch=useRef(false);
     const timer=useRef(undefined);
-    const initial=useRef(true);
     const fetchItems=useCallback((url,setter,key)=>{
         if (disableFetch.current) return;
         setFetchState((old)=>old | key);
@@ -363,9 +362,6 @@
         const intfUrl=api.getBaseUrl()+"api/devices?full=true&deviceType=Wi-Fi";
         fetchItems(intfUrl,(intf)=>{
             setInterfaces(intf);
-            if (intf.length > 0){
-                setSelected((old)=>(old<0)?0:(old>=intf.length)?old=intf.length-1:old);
-            }
             }
             ,1);
         const acUrl=api.getBaseUrl()+"api/activeConnections?includeIpConfig=true&type=802-11-wireless";
@@ -448,14 +444,18 @@
         }
         availableInterfaces.push(intf);
     });
-    if (initial.current && ! selected && availableInterfaces.length > 0 && fetchState == 0){
-        initial.current=false;
+    if (! selected && availableInterfaces.length > 0 && fetchState == 0){
         const path=availableInterfaces[0].path;
         window.setTimeout(()=>{
             selectChange(path)
         },10);
     }
     let selectedInterface=itemFromPath(availableInterfaces,selected);
+    if (selected && ! selectedInterface){
+        window.setTimeout(()=>{
+            selectChange('');
+        },10);
+    }
     const seenNetworks=[];
     if (selectedInterface){
         const path=nested(selectedInterface,"path");
