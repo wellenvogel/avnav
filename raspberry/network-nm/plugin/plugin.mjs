@@ -23,8 +23,8 @@
 
  import html from '/modules/htm.js';
  import {useState,useEffect,useCallback,useRef} from '/modules/react.js';
- import {useDialogContext,ListItem,ListSlot,ListMainSlot} from '/modules/avnavui.js';
- import avnav from '/modules/avnavui.js'
+ import {useDialogContext,ListItem,ListSlot,ListMainSlot,Icon} from '/modules/avnavui.js';
+
 
  const ZONE_T='trusted';
  const ZONE_B='block';
@@ -49,6 +49,10 @@
 
  const Interface=({intf,selected,onClick})=>{
     let className="interface";
+    let zoneClass='_none';
+    const zone=nested(intf,'condata.connection.connection.zone');
+    if (zone == ZONE_B) zoneClass='zblocked';
+    if (zone == ZONE_T) zoneClass='ztrusted';
     return html`
     <${ListItem} className=${className} selected=${selected} onClick=${(ev)=>onClick(ev)}>
         <${ListMainSlot}
@@ -56,16 +60,23 @@
             secondary=${html`<span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
             ${!!intf.condata && html` 
             <span className="bssid">${nested(intf,"condata.hwaddress")}</span>
-            <span className="zone">${nested(intf,'condata.connection.connection.zone')}</span>
             <span className="freq">${nested(intf,'condata.frequency')}MHz</span>
             <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>
             `}
             `}
             />
+        <${ListSlot} icon=${{className:zoneClass}}/>
     <//> `;
  }
  const netNeedsPw=(net)=>{
     return !!((net.flags||"").match(/PRIVACY/));
+ }
+ const strengthToClass=(strength)=>{
+    if (isNaN(strength)) return '';
+    if (strength< 25) return 'wifi1';
+    if (strength < 50) return 'wifi2';
+    if (strength < 75) return 'wifi3';
+    return 'wififull';
  }
  const Network=({net,onClick})=>{
     const mbr=(net.maxbitrate||0)/1000;
@@ -78,7 +89,9 @@
     const needsPw=netNeedsPw(net);
     return html`<${ListItem} className="network" onClick=${(ev)=>onClick(ev)}>
         <${ListMainSlot} primary=${net.ssid} secondary=${secondary}/>
-        <${ListSlot}> ${net.condata?"configured":"unknown"},${needsPw?"encr":"open"}<//>
+        <${ListSlot} icon=${{className: strengthToClass(net.strength)}}/>
+        <${ListSlot} icon=${{className:net.condata?'configured':'_none'}}/>
+        <${ListSlot} icon=${{className:needsPw?"encrypted":"open"}}/>
         <//>`
  }
 
@@ -530,7 +543,6 @@
  }
 
  export default async (api)=>{
-    console.log("avnav",avnav);
     const KVISIBLE=api.getStoreBaseKey()+".visible";
     api.setStoreData(KVISIBLE,false);
     let dialogHandle;

@@ -71,7 +71,38 @@
 .nwmplugin.WifiDialog .listEntry.network span.strength {
     width: 2.5em;
 }
+.nwmplugin.WifiDialog .listEntry.network .listSlot{
+    margin-left: 0;
+    margin-right: 0;
+}
 .nwmplugin .conState .intf {
     display: inline-block;
     width: 12em;
+}
+.nwmplugin .icon.configured{
+    background-image: url(ic_settings.svg);
+}
+.nwmplugin .icon.encrypted{
+    background-image: url(key.svg);
+}
+.nwmplugin .icon.open{
+    background-image: url(key-off.svg);
+}
+.nwmplugin .icon.wifi1{
+    background-image: url(wifi-1.svg);
+}
+.nwmplugin .icon.wifi2{
+    background-image: url(wifi-2.svg);
+}
+.nwmplugin .icon.wifi3{
+    background-image: url(wifi-3.svg);
+}
+.nwmplugin .icon.wififull{
+    background-image: url(wifi-full.svg);
+}
+.nwmplugin .icon.zblocked{
+    background-image: url(security.svg);
+}
+.nwmplugin .icon.ztrusted{
+    background-image: url(sync-lr.svg);
 }
