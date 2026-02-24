@@ -3,6 +3,7 @@ import threading
 import socket
 import struct
 import re
+import threading
 
 hasDbus = False
 Glib = None
@@ -166,6 +167,7 @@ class Plugin(object):
         self.api.registerRequestHandler(self.handleApiRequest)
         self.api.registerRestart(self.stop)
         self.bus=LocalBus()
+        self.lock=threading.Lock()
 
     def build_path(self,path):
         path = path if path.startswith("/") else nm_path + "/" + path if path else nm_path
@@ -173,7 +175,7 @@ class Plugin(object):
             raise Exception(f"path {path} does not start with {nm_path}")
         sub=path[len(nm_path):]
         if sub == "":
-            return path
+            return dbus.types.ObjectPath(path)
         ALLOWED_PATTERN=[
             "^/[a-zA-Z0-9]+/[0-9]+$",
             "^/[a-zA-Z0-9]+$"
@@ -185,7 +187,7 @@ class Plugin(object):
                 break
         if not matched:
             raise Exception(f"path {path} contains invalid characters {sub}")
-        return path
+        return dbus.types.ObjectPath(path)
     def nm(self, path="", interface=None):
         "access NM on dbus"
         bus=self.bus.bus
@@ -679,74 +681,75 @@ class Plugin(object):
             raise Exception(f"invalid path: {rt} for {key}")
         return rt
     def handleApiRequest(self, url, handler, args):
-        try:
-            data = None
-            includeSecrets = self.get_bool_arg(args, 'includeSecrets', False)
-            includeDevices = self.get_bool_arg(args, 'includeDevices', False)
-            includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', False)
-            path = self.get_path_arg(args)
-            type=self.get_arg(args, 'type')
-            if url == 'test':
-                pass
-            elif url == 'devices':
-                deviceType=self.get_arg(args, 'deviceType')
-                full=self.get_bool_arg(args, 'full', False)
-                data = self.getDevices(includeIpConfig=includeIpConfig,deviceType=deviceType,full=full or includeIpConfig)
-            elif url == 'connections':
-                data=self.getConnections(includeSecrets,type=type)
-            elif url == 'activateConnection':
-                if path is None:
-                    raise Exception(f"missing parameter path")
-                data=self.activateConnection(path,
-                                             self.get_path_arg(args,'device',True),
-                                             self.get_path_arg(args,'ap'))
-                self.api.log(f"activated connection {data} ")
-            elif url == 'deactivateConnection':
-                self.deactivateConnection(path)
-                self.api.log(f"deactivated connection {path}")
-            elif url == 'addConnection':
-                ssid=self.get_arg(args, 'ssid')
-                psk=self.get_arg(args, 'psk')
-                data=self.addConnection(ssid,
-                                        psk,
-                                        zone=self.get_arg(args, 'zone'),
-                                        autoconnect=self.get_bool_arg(args, 'autoconnect')
-                                        )
-                self.api.log(f"added connection {data} for {ssid}")
-            elif url == 'removeConnection':
-                data=self.removeConnection(path)
-            elif url == 'updateConnection':
-                data=self.updateConnection(path,
-                                           psk=self.get_arg(args,'psk'),
-                                           zone=self.get_arg(args,'zone'),
-                                           autoconnect=self.get_bool_arg(args, 'autoconnect', False))
-            elif url == 'getItem':
-                if path is None:
-                    raise Exception(f"path is required")
-                parts=path.split('/')
-                if len(parts) < 2:
-                    raise Exception(f"invalid path: {path}")
-                if parts[0]=='Settings':
-                    data=self.getConnectionInfo(path,includeSecrets=includeSecrets)
-                elif parts[0]=='ActiveConnection':
-                    data=self.getActiveConnectionInfo(path,includeSecrets=includeSecrets,includeDevices=includeDevices,includeIpConfig=includeIpConfig)
-                elif parts[0]=='IP4Config':
-                    data=self.getIpConfig(path,True,True)
-                elif parts[0]=='IP6Config':
-                    data=self.getIpConfig(path,False,True)
-                elif parts[0]=='Devices':
-                    data=self.getDeviceProps(path,
-                                             includeIpConfig=includeIpConfig,
-                                             full=True,
-                                             includeConnection=self.get_bool_arg(args,'includeConnection'))
+        with self.lock:
+            try:
+                data = None
+                includeSecrets = self.get_bool_arg(args, 'includeSecrets', False)
+                includeDevices = self.get_bool_arg(args, 'includeDevices', False)
+                includeIpConfig = self.get_bool_arg(args, 'includeIpConfig', False)
+                path = self.get_path_arg(args)
+                type=self.get_arg(args, 'type')
+                if url == 'test':
+                    pass
+                elif url == 'devices':
+                    deviceType=self.get_arg(args, 'deviceType')
+                    full=self.get_bool_arg(args, 'full', False)
+                    data = self.getDevices(includeIpConfig=includeIpConfig,deviceType=deviceType,full=full or includeIpConfig)
+                elif url == 'connections':
+                    data=self.getConnections(includeSecrets,type=type)
+                elif url == 'activateConnection':
+                    if path is None:
+                        raise Exception(f"missing parameter path")
+                    data=self.activateConnection(path,
+                                                 self.get_path_arg(args,'device',True),
+                                                 self.get_path_arg(args,'ap'))
+                    self.api.log(f"activated connection {data} ")
+                elif url == 'deactivateConnection':
+                    self.deactivateConnection(path)
+                    self.api.log(f"deactivated connection {path}")
+                elif url == 'addConnection':
+                    ssid=self.get_arg(args, 'ssid')
+                    psk=self.get_arg(args, 'psk')
+                    data=self.addConnection(ssid,
+                                            psk,
+                                            zone=self.get_arg(args, 'zone'),
+                                            autoconnect=self.get_bool_arg(args, 'autoconnect')
+                                            )
+                    self.api.log(f"added connection {data} for {ssid}")
+                elif url == 'removeConnection':
+                    data=self.removeConnection(path)
+                elif url == 'updateConnection':
+                    data=self.updateConnection(path,
+                                               psk=self.get_arg(args,'psk'),
+                                               zone=self.get_arg(args,'zone'),
+                                               autoconnect=self.get_bool_arg(args, 'autoconnect', False))
+                elif url == 'getItem':
+                    if path is None:
+                        raise Exception(f"path is required")
+                    parts=path.split('/')
+                    if len(parts) < 2:
+                        raise Exception(f"invalid path: {path}")
+                    if parts[0]=='Settings':
+                        data=self.getConnectionInfo(path,includeSecrets=includeSecrets)
+                    elif parts[0]=='ActiveConnection':
+                        data=self.getActiveConnectionInfo(path,includeSecrets=includeSecrets,includeDevices=includeDevices,includeIpConfig=includeIpConfig)
+                    elif parts[0]=='IP4Config':
+                        data=self.getIpConfig(path,True,True)
+                    elif parts[0]=='IP6Config':
+                        data=self.getIpConfig(path,False,True)
+                    elif parts[0]=='Devices':
+                        data=self.getDeviceProps(path,
+                                                 includeIpConfig=includeIpConfig,
+                                                 full=True,
+                                                 includeConnection=self.get_bool_arg(args,'includeConnection'))
+                    else:
+                        raise Exception(f"invalid path: {path} for getItem")
+                elif url == 'activeConnections':
+                    data=self.getActiveConnections(includeSecrets,includeDevices,includeIpConfig,type=type)
+                elif url == 'scan':
+                    data=self.scan(path=path,rescan=self.get_bool_arg(args,'rescan'))
                 else:
-                    raise Exception(f"invalid path: {path} for getItem")
-            elif url == 'activeConnections':
-                data=self.getActiveConnections(includeSecrets,includeDevices,includeIpConfig,type=type)
-            elif url == 'scan':
-                data=self.scan(path=path,rescan=self.get_bool_arg(args,'rescan'))
-            else:
-                return {'status': f"request {url} not implemented"}
-            return {'status': 'OK', 'data': data}
-        except Exception as x:
-            return {'status': 'ERROR', 'error': str(x)}
+                    return {'status': f"request {url} not implemented"}
+                return {'status': 'OK', 'data': data}
+            except Exception as x:
+                return {'status': 'ERROR', 'error': str(x)}
