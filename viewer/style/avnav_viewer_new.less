@@ -40,6 +40,7 @@ body{
   height: 100%;
   overflow: hidden;
   position: relative;
+  z-index: 2;
 }
 .pageFrame{
   background-color: var(--avnav-back-color);
@@ -200,6 +201,12 @@ body{
 //----------------------------------------------------------------------------------------
 //dialogs
 //----------------------------------------------------------------------------------------
+#___uploadInput{
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+}
 .noEvents{
   pointer-events: none;
 }

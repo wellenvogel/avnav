@@ -37,7 +37,7 @@ import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "../comp
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
-import UploadHandler from "../components/UploadHandler";
+import UploadHandler, {uploadClick} from "../components/UploadHandler";
 import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
 import Helper from "../util/helper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
@@ -366,7 +366,7 @@ const PageContent=(({showEditDialog,showConverterDialog,showScannerDialog,change
 
 const ImporterPage = (props) => {
     const history=useHistory();
-    const [uploadSequence, setUploadSequence] = useState(0);
+    const [uploadFile, setUploadFile] = useState(undefined);
     const [isActive,setIsActive]=useState(false);
     const chartImportExtensions=useRef([]);
     const importSubDir=useRef((props.options && props.options.subdir)?props.options.subdir:undefined);
@@ -376,7 +376,7 @@ const ImporterPage = (props) => {
             name: 'DownloadPageUpload',
             visible: globalStore.getData(keys.properties.connectedMode, true),
             onClick: () => {
-                setUploadSequence(uploadSequence + 1);
+                uploadClick((ev)=>setUploadFile(ev.target.files[0]));
             }
         }
     ]
@@ -467,13 +467,14 @@ const ImporterPage = (props) => {
                 local={false}
                 type={'chart'}
                 doneCallback={() => {
-
+                    setUploadFile(undefined);
                 }}
                 errorCallback={
                     (err) => {
+                        setUploadFile(undefined);
                         if (err) Toast(err);
                     }}
-                uploadSequence={uploadSequence}
+                file={uploadFile}
                 checkNameCallback={(file)=>checkNameForUpload(file.name)}
             />
         </PageLeft>

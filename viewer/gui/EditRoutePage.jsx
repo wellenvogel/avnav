@@ -41,7 +41,7 @@ import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
 import {createItemActions} from "../components/FileDialog";
-import UploadHandler from "../components/UploadHandler";
+import UploadHandler, {uploadClick} from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
 import DownloadButton from "../components/DownloadButton";
 import {useHistory} from "../components/HistoryProvider";
@@ -243,7 +243,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
             return true;
         }
     })
-    const [uploadSequence,setUploadSequence]=useState(0);
+    const [uploadFile,setUploadFile]=useState(undefined);
     return <DialogFrame className={'LoadRoutesDialog'} title={title}>
         <Checkbox dialogRow={true} label={"writableOnly"} value={wrOnly} onChange={(nv)=>setWrOnly(nv)}/>
         <DownloadItemList
@@ -268,7 +268,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
         />
         <UploadHandler
             local={true}
-            uploadSequence={uploadSequence}
+            file={uploadFile}
             type={'route'}
             checkNameCallback={async (file)=>{
                 try {
@@ -285,13 +285,19 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
                     Toast(e);
                 }
             }}
-            errorCallback={(err)=>Toast(err)}
+            errorCallback={(err)=>{
+                setUploadFile(undefined);
+                Toast(err)
+            }}
+            doneCallback={()=>setUploadFile(undefined)}
         />
         <DialogButtons buttonList={[
             {
                 name:'upload',
                 label:'Upload',
-                onClick: ()=>setUploadSequence(uploadSequence+1),
+                onClick: ()=>uploadClick((ev)=>{
+                    setUploadFile(ev.target.files[0]);
+                },"application/gpx"),
                 visible: allowUpload,
                 close:false
             },

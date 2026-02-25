@@ -29,17 +29,18 @@ import Requests, {prepareUrl} from "../util/requests";
 import AndroidEventHandler from "../util/androidEventHandler";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
+import base from "../base";
 
 const MAXUPLOADSIZE=100000;
 
 export const readTextFile=async (file) => {
     if (file.size) {
         if (file.size > MAXUPLOADSIZE) {
-            throw new Error("file is to big, max allowed: " + MAXUPLOADSIZE);
+            return Promise.reject("file is to big, max allowed: " + MAXUPLOADSIZE);
         }
     }
     if (!window.FileReader) {
-        throw new Error("your browser does not support FileReader, cannot upload");
+        return Promise.reject("your browser does not support FileReader, cannot upload");
     }
     return await new Promise((resolve, reject) => {
         let reader = new FileReader();
@@ -57,17 +58,32 @@ export const readTextFile=async (file) => {
         reader.readAsText(file);
     });
 };
-
+const FI_ID="___uploadInput";
+export const uploadClick=(callback,type)=>{
+    let fi=document.getElementById(FI_ID);
+    if (fi) {
+        fi.remove();
+    }
+    fi = document.createElement('input');
+    fi.setAttribute('type', 'file');
+    fi.setAttribute('id',FI_ID);
+    if (type) {
+        fi.setAttribute('accept', type);
+    }
+    document.body.appendChild(fi);
+    fi.addEventListener('change', e => {
+        callback(e);
+    })
+    fi.click();
+}
 
 const UploadHandler = (props) => {
     const dialogContext=useDialogContext();
     const xhdrRef = useRef();
     const androidSequence = useRef(0);
     const androidCopyParam=useRef();
-    const uploadSequenceRef=useRef(props.uploadSequence);
-    const [lastClickSequence, setLastClickSequence] = useState(0);
+    const uploadSequenceRef = useRef(0);
     const [stateHelper, setStateHelper] = useState({});
-
     const error = useCallback((err) => {
         props.errorCallback && props.errorCallback(err);
         setStateHelper({});
@@ -121,55 +137,6 @@ const UploadHandler = (props) => {
             }
         });
     }, [props.doneCallback]);
-    const checkForUpload = useCallback(() => {
-        if (uploadSequenceRef.current === props.uploadSequence) return;
-        //first stop a running upload if any
-        if (xhdrRef.current) {
-            xhdrRef.current.abort();
-            xhdrRef.current = undefined;
-        }
-        uploadSequenceRef.current=props.uploadSequence;
-        setStateHelper({}); //trigger render
-
-    }, [props.uploadSequence,props.type,props.local]);
-    const androidHandlers=useRef();
-    androidHandlers.current= {
-        fileCopyPercent: (eventData) => {
-            let {event, id} = eventData;
-            if (event === "fileCopyPercent") {
-                if (!androidCopyParam.current) return;
-                setStateHelper((old) => {
-                    return {...old, loaded: id}
-                });
-            } else {
-                //done, error already reported from java side
-                setStateHelper({});
-                props.doneCallback && props.doneCallback({name: androidCopyParam.current.name});
-                androidCopyParam.current = undefined;
-            }
-        }
-    };
-    androidHandlers.current.fileCopyDone=androidHandlers.current.fileCopyPercent;
-    const androidEventHandler=useCallback((eventData)=>{
-        let {event, id} = eventData;
-        const handler=androidHandlers.current[event];
-        if (! handler) return;
-        return handler(eventData);
-    },[]);
-    useEffect(() => {
-        const subscriptions = [];
-        for (let k in androidHandlers.current) {
-            subscriptions.push(AndroidEventHandler.subscribe(k, androidEventHandler));
-        }
-        return () => {
-            subscriptions.forEach((s) => AndroidEventHandler.unsubscribe(s));
-            if (xhdrRef.current) xhdrRef.current.abort();
-
-        }
-    }, []);
-    useEffect(() => {
-        checkForUpload();
-    });
     const upload = useCallback((file) => {
         if (!file || !props.type) return;
         xhdrRef.current=undefined;
@@ -206,7 +173,7 @@ const UploadHandler = (props) => {
                             uploadServer(file, res.name, res.type || props.type, res.options, res)
                         }
                     } else {
-                        readTextFile(file)
+                        return readTextFile(file)
                             .then((data) => {
                                 if (props.doneCallback) {
                                     props.doneCallback({
@@ -228,14 +195,59 @@ const UploadHandler = (props) => {
                 error(err);
             });
     }, [props.type]);
-    const fileChange = useCallback(async (ev) => {
-        ev.stopPropagation();
-        let fileObject = ev.target;
-        if (fileObject.files && fileObject.files.length > 0) {
-            upload(fileObject.files[0]);
+    useEffect(() => {
+        base.log("retrigger upload, current=",xhdrRef.current);
+        if (xhdrRef.current) {
+            xhdrRef.current.abort();
+            xhdrRef.current = undefined;
         }
-    }, [props.type,upload]);
-    if (!uploadSequenceRef.current) return null;
+        if (! props.file) {
+            //cleanup??
+            return;
+        }
+        uploadSequenceRef.current = uploadSequenceRef.current+1;
+        base.log("start upload",props.file,uploadSequenceRef.current);
+        setStateHelper({});
+        upload(props.file);
+    },[props.file,props.type,props.local]);
+
+    const androidHandlers=useRef();
+    androidHandlers.current= {
+        fileCopyPercent: (eventData) => {
+            let {event, id} = eventData;
+            if (event === "fileCopyPercent") {
+                if (!androidCopyParam.current) return;
+                setStateHelper((old) => {
+                    return {...old, loaded: id}
+                });
+            } else {
+                //done, error already reported from java side
+                setStateHelper({});
+                props.doneCallback && props.doneCallback({name: androidCopyParam.current.name});
+                androidCopyParam.current = undefined;
+            }
+        }
+    };
+    androidHandlers.current.fileCopyDone=androidHandlers.current.fileCopyPercent;
+    const androidEventHandler=useCallback((eventData)=>{
+        let {event, id} = eventData;
+        const handler=androidHandlers.current[event];
+        if (! handler) return;
+        return handler(eventData);
+    },[]);
+    useEffect(() => {
+        const subscriptions = [];
+        for (let k in androidHandlers.current) {
+            subscriptions.push(AndroidEventHandler.subscribe(k, androidEventHandler));
+        }
+        return () => {
+            subscriptions.forEach((s) => AndroidEventHandler.unsubscribe(s));
+            if (xhdrRef.current) xhdrRef.current.abort();
+
+        }
+    }, []);
+
+    if (!xhdrRef.current) return null;
     let loaded = stateHelper.loaded;
     let percentComplete = stateHelper.total ? 100 * loaded / stateHelper.total : 0;
     if (stateHelper.loadedPercent) {
@@ -247,19 +259,6 @@ const UploadHandler = (props) => {
     };
     return (
         <React.Fragment>
-            <form className="hiddenUpload" method="post">
-                <input type="file"
-                       ref={(el) => {
-                           if (!el) return;
-                           if (uploadSequenceRef.current !== lastClickSequence) {
-                               el.click();
-                               setLastClickSequence(uploadSequenceRef.current);
-                           }
-                       }}
-                       name="file"
-                       key={uploadSequenceRef.current}
-                       onChange={(ev) => fileChange(ev,props.fixedPrefix)}/>
-            </form>
             {loaded !== undefined && <div className="downloadProgress">
                 <div className="progressContainer">
                     <div className="progressInfo">{(loaded || 0) + "/" + (stateHelper.total || 0)}</div>
@@ -279,7 +278,7 @@ const UploadHandler = (props) => {
 }
 
 UploadHandler.propTypes={
-    uploadSequence:     PropTypes.number, //whenever this changes to anything different from last
+    file:     PropTypes.instanceOf(File), //whenever this changes to anything different from last
                                           //a new uplaod will trigger - except for a change to 0
                                           //which will abort
     type:               PropTypes.string,

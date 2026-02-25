@@ -6,7 +6,7 @@ import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
 import Helper, {unsetOrTrue} from '../util/helper.js';
 import Requests from '../util/requests.js';
-import UploadHandler from "./UploadHandler";
+import UploadHandler, {uploadClick} from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
 import globalStore from "../util/globalstore";
@@ -20,7 +20,7 @@ import {useDialogContext} from "./DialogContext";
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     const dialogContext=useDialogContext();
-    const [uploadSequence,setUploadSequence]=useState(0);
+    const [uploadFile,setUploadFile]=useState(undefined);
     const [userFiles,setUserFiles]=useState([]);
     const listFiles=(name)=>{
         Requests.getJson({
@@ -62,13 +62,19 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     const checkNameFunction=(name)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>
         <UploadHandler
-            uploadSequence={uploadSequence}
+            file={uploadFile}
             type={'user'}
             checkNameCallback={async (file)=>{
                 return uploadAction.checkFile(file,dialogContext);
             }}
-            doneCallback={(v)=>listFiles(v.param.name)}
-            errorCallback={(err)=>Toast(err)}
+            doneCallback={(v)=>{
+                setUploadFile(undefined);
+                listFiles(v.name)
+            }}
+            errorCallback={(err)=>{
+                setUploadFile(undefined);
+                Toast(err);
+            }}
         />
         <SelectList
             list={userFiles}
@@ -81,7 +87,9 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
             {
                 name: 'upload',
                 label: 'Upload',
-                onClick: ()=>{ setUploadSequence((old)=>old+1)},
+                onClick: ()=>{
+                    uploadClick((ev)=>setUploadFile(ev.target.files[0]),'text/html');
+                },
                 visible: (allowUpload === undefined|| allowUpload) && globalStore.getData(keys.gui.capabilities.uploadUser),
                 close: false
             },

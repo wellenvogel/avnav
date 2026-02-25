@@ -89,7 +89,7 @@ const DownloadItem = (props) => {
         </ListItem>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,noExtra,showUpload,itemActions,autoreload}) => {
+export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,autoreload,uploadDone}) => {
     const [items, setItems] = useState([]);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
@@ -188,18 +188,20 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,
             local={uploadAction.hasLocalAction()}
             type={type}
             doneCallback={async (param) => {
-                const rs = await uploadAction.afterUpload()
+                const rs = await uploadAction.afterUpload();
+                if (uploadDone) uploadDone(true);
                 if (rs) return;
                 readItems();
             }}
             errorCallback={(err) => {
+                if (uploadDone) uploadDone(false);
                 if (err) Toast(err);
                 readItems();
             }}
-            uploadSequence={uploadSequence}
+            file={uploadFile}
             checkNameCallback={(file, dialogContext) => uploadAction.checkFile(file, dialogContext)}
         />
-        {(type === "user" && showUpload) ?
+        {(type === "user" && showCreate) ?
             <DynamicButton
                 className="fab"
                 name="DownloadPageCreate"
@@ -216,10 +218,11 @@ export const DownloadItemList = ({type, selectCallback, uploadSequence,infoMode,
 DownloadItemList.propTypes = {
     type: PropTypes.string,
     selectCallback: PropTypes.func,
-    uploadSequence: PropTypes.number,
+    uploadFile: PropTypes.instanceOf(File),
+    uploadDone: PropTypes.func,
     infoMode: PropTypes.number,
     noExtra: PropTypes.bool,
-    showUpload: PropTypes.bool,
     itemActions: PropTypes.instanceOf(ItemActions),
-    autoreload: PropTypes.number
+    autoreload: PropTypes.number,
+    showCreate: PropTypes.bool,
 }
