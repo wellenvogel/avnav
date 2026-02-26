@@ -21,20 +21,30 @@
  #
  */
 import React, {useCallback,} from "react";
+// @ts-ignore
 import {showDialog, DialogFrame,DialogRow,DialogButtons} from "./OverlayDialog";
+// @ts-ignore
 import Helper, {getav, setav} from "../util/helper";
+// @ts-ignore
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
 import {ErrorBoundary} from "./ErrorBoundary";
-import {useDialogContext} from "./DialogContext";
+import {IDialogContext, useDialogContext} from "./DialogContext";
+import {Button as TButton, DialogConfig, WidgetParameterValues} from '../api/api.interface';
+import {UserHtml} from "./UserHtml";
+import Headline from "./Headline";
 
-export const ParameterDialog = (props) => {
+type TEditableParameterUI=Record<string, any>;
+export interface TParameterDialog extends Omit<DialogConfig, "parameters"> {
+    parameters?: TEditableParameterUI[];
+}
+export const ParameterDialog = (props:TParameterDialog) => {
     const [values, setValues] = React.useState(props.values||{});
     const dialogContext=useDialogContext();
     const className=Helper.concatsp("ParameterDialog",props.className)
-    const changeValues=useCallback((newValues)=>{
+    const changeValues=useCallback((newValues:any)=>{
         if (! (newValues instanceof Object) || ! props.parameters) return;
-        const changedValues={};
-        for (let parameter of props.parameters) {
+        const changedValues:WidgetParameterValues={};
+        for (const parameter of props.parameters) {
             const key=parameter.name;
             if (! key) continue;
             if (key in newValues){
@@ -42,17 +52,17 @@ export const ParameterDialog = (props) => {
             }
         }
         if (Object.keys(changedValues).length > 0) {
-            setValues({...values,changedValues});
+            setValues({...values,...changedValues});
         }
     },[props.values,props.parameters]);
-    const buttons=[];
+    const buttons:Record<string,any>[]=[];
     if (props.buttons) {
-        props.buttons.forEach(button => {
+        props.buttons.forEach((button:TButton) => {
             buttons.push({
                 ...button,
-                onClick: (ev) => {
+                onClick: (ev:Event) => {
                     setav(ev, {dialogContext: dialogContext});
-                    if (button.onClick) changeValues(button.onClick(ev, values, dialogContext));
+                    if (button.onClick) changeValues(button.onClick(ev, values, dialogContext.closeDialog));
                 }
             })
         })
@@ -70,14 +80,26 @@ export const ParameterDialog = (props) => {
             }
         })
     }
-    return<ErrorBoundary fallback={"render error in dialog"}>
-    <DialogFrame title={props.title} className={className}>
-        {props.text && <DialogRow>{props.text}</DialogRow>}
+    let text;
+    if (props.text){
+        const tt=typeof props.text;
+        if (tt !== "string") {
+            text=`invalid type ${tt} for text, expected string`
+        }
+        else{
+            text=props.text;
+        }
+    }
+    return<ErrorBoundary>
+    <DialogFrame title={props.title && ! props.fullscreen} className={className}>
+        {(props.fullscreen && props.title) && <Headline title={props.title}/>}
+        {text && <DialogRow>{text}</DialogRow>}
+        <UserHtml userHtml={props.html} context={props.context}/>
         {props.parameters && <EditableParameterListUI
             values={values}
             parameters={props.parameters}
             initialValues={props.values||{}}
-            onChange={(nv)=>{
+            onChange={(nv:any)=>{
                 if (props.onChange) changeValues(props.onChange(setav({},{dialogContext:dialogContext}),nv));
                 setValues({...values,...nv});
             }}
@@ -93,10 +115,14 @@ export const ParameterDialog = (props) => {
  *
  * @param config {DialogConfig}
  * @param dialogContext
+ * @param opt_cancelCb
  */
-export const showParameterDialog = (dialogContext,config,opt_cancelCb) => {
+export const showParameterDialog = (dialogContext: IDialogContext ,
+                                    config: DialogConfig,
+                                    opt_cancelCb?:()=>void ) => {
     if (dialogContext) {
         if (! dialogContext.showDialog) {
+            // @ts-ignore
             if (!dialogContext.current){
                 const evctx=getav(dialogContext).dialogContext;
                 if (evctx && evctx.showDialog) {
@@ -105,7 +131,7 @@ export const showParameterDialog = (dialogContext,config,opt_cancelCb) => {
             }
         }
     }
-    const parameters=[];
+    const parameters:TEditableParameterUI[]=[];
     if (Array.isArray(config.parameters)){
         config.parameters.forEach(item=>{
             parameters.push(EditableParameterUIFactory.createEditableParameterUI(item));
@@ -127,13 +153,9 @@ export const showParameterDialog = (dialogContext,config,opt_cancelCb) => {
         }
     }
     return showDialog(dialogContext,
-        (dp)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,
+        (dp:any)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,
         cancel,
         {
             dialogClassName:config.fullscreen?"fullscreen":undefined
         });
-}
-//@type {DialogConfig}
-ParameterDialog.propTypes = {
-
 }

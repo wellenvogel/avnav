@@ -490,11 +490,12 @@ export interface Button{
 }
 export interface DialogConfig {
     className?: string;
-    title?: string;                      //the dialog title
+    title?: string|React.ReactNode;      //the dialog title
     text?: string;                       //some text to be shown in the dialog
-    html?: string;                       //some html to be shown after the text
-    parameters?: [ParametersWithName];  //the list of parameters to be shown
-    values?: WidgetParameterValues; //the initial values
+    html?: string|React.ReactNode;       //some html to be shown after the text
+    context?: Record<string,any>;        //context for rendering the html, see user widgets
+    parameters?: [ParametersWithName];   //the list of parameters to be shown
+    values?: WidgetParameterValues;      //the initial values
     fullscreen?: boolean;                //fill the complete page
     /**
      * callback when a value changes

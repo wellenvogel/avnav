@@ -107,13 +107,19 @@
         </div>
     </div>` 
  }
- const InterfaceList=({selectedPath,items,onChange})=>{
-    if (items.length < 1){
-        return html`<div className="interfaceList nointf">no available interfaces</div>`
-    }
+ const InterfaceList=({selectedPath,items,scanning,onChange})=>{
     return html`
+    <${ListItem} className="heading">
+        <${ListMainSlot} primary="Available Interfaces"/>
+        <${ListSlot}>
+        ${scanning && html`<span className="spinner"/>`}
+        <//>
+    <//>
+    ${(items.length < 1)? html`
+        <div className="interfaceList nointf">no available interfaces</div>`
+        :
+    html`
     <div className="interfaceList">
-        <div className="heading">Available Interfaces<//>
         <div className="itemList">
         ${items.map((item)=>{
             const path=nested(item,'path');
@@ -123,6 +129,7 @@
         )}
         </div>
     </div>`
+    }`
  }
  const ConnectionMonitor=({api,intf,activeConnection})=>{
     const [conState,setConState]=useState("Connecting");
@@ -158,7 +165,7 @@
         onClose: onClose,
         className:"nwmplugin connectionMonitor",
         title:'Connecting...',
-        text: html`<${ConnectionMonitor} api=${api} activeConnection=${activeConnection} intf=${intf}/>`,
+        html: html`<${ConnectionMonitor} api=${api} activeConnection=${activeConnection} intf=${intf}/>`,
         buttons: [{name:'cancel'}]
     },dialogContext);
  }
@@ -509,13 +516,12 @@
          }
      }
     return html`
-    <${ListItem} className="headline">
-        <${ListMainSlot} primary="Wifi"/>
-        <${ListSlot}>
-        ${fetchState && html`<span className="spinner"/>`}
-        <//>
-    <//>
-    <${InterfaceList} selectedPath=${selected} items=${availableInterfaces} onChange=${(path)=>selectChange(path)}/>
+    <${InterfaceList} 
+        selectedPath=${selected} 
+        items=${availableInterfaces} 
+        onChange=${(path)=>selectChange(path)}
+        scanning=${fetchState != 0}
+        />
     <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{
         disableFetch.current=1;
         const intf=itemFromPath(availableInterfaces,selected);
@@ -548,12 +554,13 @@
     let dialogHandle;
     const showNetworkDialog=async (ev)=>{
         const rt=await api.showDialog({
-            text: html`<${NetworkDialog} api=${api}/>`,
+            html: html`<${NetworkDialog} api=${api}/>`,
             onClose:()=>{
                 api.setStoreData(KVISIBLE,false);
                 dialogHandle=undefined;
             },
             fullscreen: true,
+            title: 'Wifi',
             className: 'nwmplugin WifiDialog'
         },ev);
         api.setStoreData(KVISIBLE,true);

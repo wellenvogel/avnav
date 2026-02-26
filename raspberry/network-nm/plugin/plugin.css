@@ -1,34 +1,18 @@
 /* reset the additional dialogRow that surrounds the dialogText */
 .nwmplugin.WifiDialog{
-    max-width: 100%;
-    width: 35em;
-    margin-left: auto;
-    margin-right: auto;
-}
-.nwmplugin.WifiDialog > .dialogRow{
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    align-items: flex-start;
     width: 100%;
-    flex-wrap: nowrap;
-    overflow: auto;
+    font-size: 0.91em;  /*avnav sets 1.1 for the dialog*/
 }
-.nwmplugin.WifiDialog .headline {
-    width: 100%;
-    height: 3em;
-}
-.nwmplugin.WifiDialog .headline .primary{
-    font-weight: bold;
-    font-size: 1.2em;
-}
+
+
 .nwmplugin.WifiDialog .heading {
     padding: 1em;
-    border-top: 3px solid;
-    border-color: var(--avnav-border-color);
+    min-height: 3.7em;;
 }
 .nwmplugin.WifiDialog .interfaceList{
     width: 100%;
+    border-bottom: 3px solid;
+    border-color: var(--avnav-border-color);
 }
 .nwmplugin.WifiDialog .interfaceList.nointf {
     padding: 1em;

@@ -21,20 +21,27 @@
  #
  */
 import * as React from 'react';
-import PropTypes from "prop-types";
 
-export class ErrorBoundary extends React.Component {
-    constructor(props) {
+export interface TErrorBoundary {
+    children:React.ReactNode;
+    fallback?:string;
+}
+interface EState{
+    error:Error;
+}
+export class ErrorBoundary extends React.Component<TErrorBoundary> {
+    state:EState
+    constructor(props:TErrorBoundary) {
         super(props);
         this.state = { error: undefined };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(error:Error) {
         // Update state so the next render will show the fallback UI.
         return { error: error };
     }
 
-    componentDidCatch(error, info) {
+    componentDidCatch(error:Error, info:React.ErrorInfo) {
         console.log("component error",error,info)
     }
 
@@ -47,8 +54,3 @@ export class ErrorBoundary extends React.Component {
         return this.props.children;
     }
 }
-ErrorBoundary.propTypes = {
-    fallback:PropTypes.element,
-    children:PropTypes.any
-}
- 

@@ -1,6 +1,6 @@
 import React, {Children, cloneElement, forwardRef, useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import Headline from './Headline.jsx';
+import Headline from './Headline.tsx';
 import ButtonList from './ButtonList.jsx';
 import {hideToast} from '../components/Toast.jsx';
 import WidgetFactory from './WidgetFactory.jsx';
