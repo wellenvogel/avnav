@@ -858,9 +858,9 @@ class AVNDownload(object):
                     reached=self.stream.seek(starti)
                     if reached != starti:
                         raise Exception("could not seek start")
-                    self.size=endi-starti+1
                     self.responseCode=206
                     addHeaders={"Content-Range":f"bytes {starti}-{endi}/{self.size}"}
+                    self.size = endi - starti + 1
             except Exception as e:
                 self.setError(416,str(e))
                 stream=self.stream

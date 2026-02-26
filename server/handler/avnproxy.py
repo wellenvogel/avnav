@@ -25,8 +25,10 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 import shutil
+import traceback
 import urllib.request
 import urllib.parse
+from urllib.error import HTTPError
 
 import avnav_handlerList
 from avnav_util import AVNUtil, AVNLog, AVNProxyDownload, AVNDownloadError
@@ -95,7 +97,13 @@ class AVNProxy(AVNWorker):
                     continue
                 request.add_header(k, v)
             request.method = handler.command
-            response = urllib.request.urlopen(request)
+            try:
+                response = urllib.request.urlopen(request)
+            except HTTPError as httpError:
+                if httpError.code in self.OK_STATS:
+                    response=httpError.file
+                else:
+                    raise
             status=response.status
             if status not in self.OK_STATS:
                 return AVNDownloadError(status,f"request error:{response.reason}")
@@ -106,6 +114,7 @@ class AVNProxy(AVNWorker):
                 headers[k]=v
             return AVNProxyDownload(status,headers,response.fp,userData=response)
         except Exception as e:
+            traceback.print_exc()
             AVNLog.debug("proxy request for %s failed: %s", constructed,str(e))
             return AVNDownloadError(status,str(e))
 
