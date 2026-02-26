@@ -297,7 +297,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
                 label:'Upload',
                 onClick: ()=>uploadClick((ev)=>{
                     setUploadFile(ev.target.files[0]);
-                },"application/gpx"),
+                },".gpx"),
                 visible: allowUpload,
                 close:false
             },

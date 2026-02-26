@@ -122,4 +122,13 @@ export const checkExt=(ext,extensionList)=>{
     return {allow:false,sub:false}
 }
 
+export const getAcceptedExtensions=(extensionList)=>{
+    if (! extensionList) return;
+    const rt=[];
+    for (let e of extensionList){
+        rt.push(e.ext);
+    }
+    return rt;
+}
+
 export default ImportDialog;

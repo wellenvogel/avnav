@@ -76,6 +76,16 @@ export const uploadClick=(callback,type)=>{
     })
     fi.click();
 }
+export const extensionListToAccept=(extList)=>{
+    if (! extList) return;
+    let rt="";
+    for (let ext of extList){
+        if (! ext.startsWith('.')){ext="."+ext;}
+        if (rt) rt+=","+ext;
+        else rt=ext;
+    }
+    return rt;
+}
 
 const UploadHandler = (props) => {
     const dialogContext=useDialogContext();

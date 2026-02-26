@@ -88,7 +88,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                 name: 'upload',
                 label: 'Upload',
                 onClick: ()=>{
-                    uploadClick((ev)=>setUploadFile(ev.target.files[0]),'text/html');
+                    uploadClick((ev)=>setUploadFile(ev.target.files[0]),'.html');
                 },
                 visible: (allowUpload === undefined|| allowUpload) && globalStore.getData(keys.gui.capabilities.uploadUser),
                 close: false

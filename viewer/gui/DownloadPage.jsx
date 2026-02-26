@@ -14,7 +14,7 @@ import ButtonList from "../components/ButtonList";
 import {DownloadItemList} from "../components/DownloadItemList";
 import {PAGEIDS} from "../util/pageids";
 import base from "../base";
-import {uploadClick} from "../components/UploadHandler";
+import {extensionListToAccept, uploadClick} from "../components/UploadHandler";
 
 const DownloadPage=(props)=>{
     useStoreState(keys.gui.global.reloadSequence)
@@ -70,12 +70,13 @@ const DownloadPage=(props)=>{
             {
                 name:'DownloadPageUpload',
                 visible: actions.showUpload(),
-                onClick:()=>{
+                onClick:async ()=>{
                     base.log("upload click");
+                    const allowed=extensionListToAccept(await actions.getAllowedExtensions());
                     uploadClick((ev)=>{
                         ev.preventDefault();
                         setUploadFile(ev.target.files[0]);
-                    })
+                    },allowed);
                 }
             },
             Mob.mobDefinition(history),

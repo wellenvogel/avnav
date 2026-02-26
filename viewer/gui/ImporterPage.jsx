@@ -37,8 +37,13 @@ import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "../comp
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
-import UploadHandler, {uploadClick} from "../components/UploadHandler";
-import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
+import UploadHandler, {extensionListToAccept, uploadClick} from "../components/UploadHandler";
+import ImportDialog, {
+    checkExt,
+    getAcceptedExtensions,
+    getAcceptFromExtensions,
+    readImportExtensions
+} from "../components/ImportDialog";
 import Helper from "../util/helper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DownloadButton from "../components/DownloadButton";
@@ -376,7 +381,9 @@ const ImporterPage = (props) => {
             name: 'DownloadPageUpload',
             visible: globalStore.getData(keys.properties.connectedMode, true),
             onClick: () => {
-                uploadClick((ev)=>setUploadFile(ev.target.files[0]));
+                uploadClick((ev)=>setUploadFile(ev.target.files[0]),
+                    extensionListToAccept(getAcceptedExtensions(chartImportExtensions.current))
+                );
             }
         }
     ]
