@@ -23,7 +23,7 @@ apply plugin: 'com.netflix.nebula.ospackage-base'
 
 
 def BASE='raspberry'
-def LEGACY="$BASE/raspberry"
+def LEGACY="$BASE/legacy"
 def versionFileName="raspi.version"
 task build_raspi(type: Deb) {
     group taskgroup

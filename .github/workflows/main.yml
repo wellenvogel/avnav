@@ -32,5 +32,5 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: gradle build
-        run: ./gradlew beta
+        run: ./gradlew PoldRaspi beta
 
