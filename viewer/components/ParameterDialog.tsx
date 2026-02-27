@@ -91,7 +91,7 @@ export const ParameterDialog = (props:TParameterDialog) => {
         }
     }
     return<ErrorBoundary>
-    <DialogFrame title={props.title && ! props.fullscreen} className={className}>
+    <DialogFrame title={props.fullscreen?undefined:props.title} className={className}>
         {(props.fullscreen && props.title) && <Headline title={props.title}/>}
         {text && <DialogRow>{text}</DialogRow>}
         <UserHtml userHtml={props.html} context={props.context}/>
