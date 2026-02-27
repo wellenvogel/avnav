@@ -1,10 +1,9 @@
 [connection]
-id=Ethernet
-uuid=e4d74184-c11a-3ed7-b7f7-907af7e9b62a
+id=EthernetFallback
+uuid=fef06a32-040e-3a41-b64a-1650bcbb9653
 type=ethernet
-autoconnect-priority=100
+autoconnect-priority=-999
 interface-name=end0
-timestamp=1772213615
 zone=trusted
 
 [ethernet]
@@ -12,12 +11,12 @@ zone=trusted
 [ipv4]
 dhcp-send-hostname-deprecated=false
 dhcp-send-hostname=0
-method=auto
+method=link-local
 
 [ipv6]
 addr-gen-mode=default
 dhcp-send-hostname-deprecated=false
 dhcp-send-hostname=0
-method=auto
+method=link-local
 
 [proxy]

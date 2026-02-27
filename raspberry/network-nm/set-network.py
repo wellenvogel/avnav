@@ -20,7 +20,7 @@ LAST='/etc/avnav-network-checks'
 TEMPLATE_DIR=os.path.dirname(__file__)
 CFG_DIR='/etc/NetworkManager/system-connections'
 CON_FILE='Hotspot.nmconnection'
-COPY_FILES=['Ethernet.nmconnection']
+COPY_FILES=['Ethernet.nmconnection','EthernetFallback.nmconnection']
 
 class ChangeType(Enum):
     NWMANAGER=1
