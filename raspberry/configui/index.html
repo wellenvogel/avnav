@@ -13,6 +13,10 @@
     <h2>avnav.conf Generator</h2>
     <div id="warn">Warning: This is a preview version, do not use for production</div>
     <div class="info" id="info"></div>
+    <div class="row">
+            <span class="label">Image Realease</span>
+            <select id="IMAGE_VERSION" data-default="trixie"></select>
+    </div>
     <div class="parameters" id="parameterContainer">
         <div class="row">
             <span class="label"><a href="../docs/install.html#configSEQUENCE" target="cfghelp">Config Sequence</a></span>
@@ -27,14 +31,37 @@
             <input type="text" id="AVNAV_PSK" value="avnav-secret"/>
         </div>
         <div class="row">
-            <span class="label">User pi Password</span>
-            <input type="text" id="AVNAV_PASSWD" value="raspberry"/>
+            <span class="label">Wifi Country<span class="since">(since 20210429)</span></span>
+            <select id="AVNAV_WIFI_COUNTRY" data-default="DE"></select>
+        </div>
+        <div class="row bookworm">
+            <span class="label">Internal Wifi as Client<span class="since">(since 20210429)</span></span>
+            <input type="checkbox" id="AVNAV_WIFI_CLIENT"/>
         </div>
         <div class="row">
             <span class="label">Hostname<span class="since">(since 20210429)</span></span>
             <input type="text" id="AVNAV_HOSTNAME" value="avnav"/>
         </div>
+        <div class="row trixie">
+            <span class="label">Wifi interface</span>
+            <input type="text" id="AVNAV_WIFI_INTF" value="wlan0"/>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi band</span>
+            <select id="AVNAV_WIFI_BAND" data-default="bg"></select>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi channel</span>
+            <input type="text" id="AVNAV_WIFI_CHANNEL" value="7"/>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi address</span>
+            <input type="text" id="AVNAV_WIFI_ADDRESS" value="192.168.30.10/24"/>
+        </div>
         <div class="row">
+            <span class="label">User pi Password</span>
+            <input type="text" id="AVNAV_PASSWD" value="raspberry"/>
+        </div>        <div class="row">
             <span class="label" ><a href="../docs/install.html#configBOARDS" target="cfghelp">Base Board</a><span class="since">(since 202303xx)</span></span>
             <select id="AVNAV_BASE_BOARD" data-default="NONE"></select>
         </div>
@@ -53,14 +80,6 @@
         <div class="row">
             <span class="label">TimeZone<span class="since">(since 20210429)</span></span>
             <select id="AVNAV_TIMEZONE" data-default="Europe/Berlin"></select>
-        </div>
-        <div class="row">
-            <span class="label">Wifi Country<span class="since">(since 20210429)</span></span>
-            <select id="AVNAV_WIFI_COUNTRY" data-default="DE"></select>
-        </div>
-        <div class="row">
-            <span class="label">Internal Wifi as Client<span class="since">(since 20210429)</span></span>
-            <input type="checkbox" id="AVNAV_WIFI_CLIENT"/>
         </div>
         <div class="row">
             <span class="label">KeyboardLayout<span class="since">(since 20210429)</span></span>

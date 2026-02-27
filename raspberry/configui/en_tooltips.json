@@ -17,5 +17,9 @@
   "AVNAV_STARTX":"Start a Firefox Browser in kiosk mode for a local touchscreen",
   "AVNAV_DPI":"pixel/inch for your monitor to adapt various elements (only for local touch screen)",
   "AVNAV_KEYHEIGHT":"height (in mm) of a keyboard row for the on screen keyboard (local touch screen)",
-  "AVNAV_HIDE_CURSOR":"hide the cursor on the local touch screen"
+  "AVNAV_HIDE_CURSOR":"hide the cursor on the local touch screen",
+  "AVNAV_WIFI_INTF":"the wifi interface for the hotspot",
+  "AVNAV_WIFI_BAND": "the wifi band for the hotspot (bg - 2.4Ghz or a - 5Ghz)",
+  "AVNAV_WIFI_CHANNEL":"the wifi channel for the hotspot",
+  "AVNAV_WIFI_ADDRESS": "ip address and range for the hotspot - format 192.168.30.10/24"
 }

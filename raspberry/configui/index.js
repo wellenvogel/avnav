@@ -1,4 +1,9 @@
 (function(){
+    const selects={
+            AVNAV_HAT: ['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH','MCARTHUR'],
+            IMAGE_VERSION:['bookworm','trixie'],
+            AVNAV_WIFI_BAND:['bg','a']
+       }
     let getToolTips=function(lang){
         let prefix=(lang === 'de' || ! lang)?'':(lang+'_');
         fetch(prefix+'tooltips.json')
@@ -108,6 +113,10 @@
         AVNAV_CONFIG_SEQUENCE: {r:getValue,s:setValue},
         AVNAV_MODULE_RTL8188EU: {r:checkBox,s:setCheckBox},
         AVNAV_MODULE_RTL8192EU: {r:checkBox,s:setCheckBox},
+        AVNAV_WIFI_INTF: {r:getValue,s:setValue},
+        AVNAV_WIFI_BAND: {r:selectValue,s:setSelected},
+        AVNAV_WIFI_CHANNEL: {r:getValue,s:setValue},
+        AVNAV_WIFI_ADDRESS: {r:getValue,s:setValue},
     };
     
     let templateReplace=function(template,replace){
@@ -260,6 +269,19 @@
         }
     }
     
+    const showHide=()=>{
+        const type=selectValue(document.getElementById('IMAGE_VERSION'));
+        for (let itype of selects.IMAGE_VERSION){
+            for (let el of document.querySelectorAll('.'+itype)){
+                if (itype == type){
+                    delete el.style.display;
+                }
+                else{
+                    el.style.display='none'
+                }
+            }
+        }
+    }
     window.addEventListener('load',function(){
        console.log("loaded");
        let fieldParent=document.getElementById('parameterContainer');
@@ -318,6 +340,7 @@
                pass.removeAttribute('data-encrypted');
            })
        }
+
         let BASE_BOARDS = {
             MCS: {
                 href: "https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/",
@@ -355,11 +378,12 @@
             setFieldValues(board.parameters);
         })
        }
-       let HATS=['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH','MCARTHUR'];
-       let hats=document.getElementById('AVNAV_HAT');
-       if (hats){
-            fillSelect(hats,HATS);
+       for (let k in selects){
+            fillSelect(document.getElementById(k),selects[k]);
        }
+       const isel=document.getElementById('IMAGE_VERSION');
+       isel.addEventListener('change',()=>showHide());
+       showHide();
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){
            if (!template) {

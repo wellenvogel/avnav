@@ -82,9 +82,6 @@ task build_raspi(type: Deb) {
             include 'hosts'
             include 'avnav_server.xml'
             include 'ntp.conf'
-            fileMode 0644
-        }
-        from(BASE) {
             include 'avnav.conf'
             fileMode 0644
         }
