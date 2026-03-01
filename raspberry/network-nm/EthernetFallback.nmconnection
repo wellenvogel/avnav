@@ -4,6 +4,7 @@ uuid=fef06a32-040e-3a41-b64a-1650bcbb9653
 type=ethernet
 autoconnect-priority=-999
 interface-name=end0
+timestamp=1772375729
 zone=trusted
 
 [ethernet]
@@ -14,7 +15,7 @@ dhcp-send-hostname=0
 method=link-local
 
 [ipv6]
-addr-gen-mode=default
+addr-gen-mode=eui64
 dhcp-send-hostname-deprecated=false
 dhcp-send-hostname=0
 method=link-local
