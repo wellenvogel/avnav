@@ -368,7 +368,11 @@ class Plugin(object):
                         deviceType=k
                         break
         for d in nm.GetDevices():
-            converted=self.getDeviceProps(d,includeIpConfig=includeIpConfig,deviceType=deviceType,full=full)
+            converted=self.getDeviceProps(d,
+                                          includeIpConfig=includeIpConfig,
+                                          deviceType=deviceType,
+                                          full=full,
+                                          includeConnection=includeConnection)
             if converted is not None:
                 rt.append(converted)
         return rt
@@ -432,6 +436,8 @@ class Plugin(object):
         4: "Deactivated",
     }
     def getActiveConnectionInfo(self,path,includeSecrets=False,includeDevices=True,includeIpConfig=False):
+        if path is None or path == "/":
+            return None
         def get_devices(dlist):
             rt = []
             if not dlist:
@@ -694,7 +700,10 @@ class Plugin(object):
                 elif url == 'devices':
                     deviceType=self.get_arg(args, 'deviceType')
                     full=self.get_bool_arg(args, 'full', False)
-                    data = self.getDevices(includeIpConfig=includeIpConfig,deviceType=deviceType,full=full or includeIpConfig)
+                    data = self.getDevices(includeIpConfig=includeIpConfig,
+                                           deviceType=deviceType,
+                                           full=full or includeIpConfig,
+                                           includeConnection=self.get_bool_arg(args, 'includeConnection', False),)
                 elif url == 'connections':
                     data=self.getConnections(includeSecrets,type=type)
                 elif url == 'activateConnection':

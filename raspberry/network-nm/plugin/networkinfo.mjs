@@ -30,6 +30,8 @@
     const driver=nested(intf,'driver');
     const ipv4=nested(intf,'ip4config.addressdata')||[];
     const ipv6=nested(intf,'ip6config.addressdata')||[];
+    const wifimode=nested(intf,'activeconnection.connection.802-11-wireless.mode');
+    const ssid=nested(intf,'activeconnection.connection.802-11-wireless.ssid');
     return html`
         <${ListItem} className="InterfaceItem">
             <${ListMainSlot}>
@@ -43,6 +45,13 @@
                 <span className="label">hwaddr<//>
                 <span className="props">${nested(intf,'hwaddress')}<//>
             <//>
+            ${wifimode && html`
+                <div className="row wifi">
+                <span className="label">wifi<//>
+                <span className="props">${wifimode}<//>
+                <span className="props">${ssid}<//>
+            <//>
+                `}
             ${ipv4.map(ip=>html`
                 <div className="row ip">
                     <span className="label">ipv4<//>
@@ -68,9 +77,8 @@
     const [interfaces,setInterfaces]=useState([]);
     const [error,setError]=useState();
     const [loading,setLoading]=useState(true);
-    const dialogContext=useDialogContext();
     useEffect(()=>{
-        const url=api.getBaseUrl()+"api/devices?full=true&includeIpConfig=true";
+        const url=api.getBaseUrl()+"api/devices?full=true&includeIpConfig=true&includeConnection=true";
         fetchData(url)
             .then((res)=>{
                 setInterfaces(res.data);
@@ -82,10 +90,10 @@
         return html`<div className="dialogRow error">${error+""}<//>`
     }
     if (loading){
-        return html`<div className="spinner" onClick=${()=>dialogContext.closeDialog()}/>`
+        return html`<div className="spinner"/>`
     }
     return html`
-        <div className="networkInfo" onClick=${()=>dialogContext.closeDialog()}>
+        <div className="networkInfo">
             ${interfaces.map(intf=>html`<${InterfaceItem} intf=${intf}/>`)}
         <//>    
     `;
