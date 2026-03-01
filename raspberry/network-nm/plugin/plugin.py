@@ -164,8 +164,6 @@ class Plugin(object):
     def __init__(self, api):
         self.api = api  # type: AVNApi
         # we register an handler for API requests
-        self.api.registerRequestHandler(self.handleApiRequest)
-        self.api.registerRestart(self.stop)
         self.bus=LocalBus()
         self.lock=threading.Lock()
 
@@ -214,6 +212,8 @@ class Plugin(object):
         """
         if not hasDbus:
             raise Exception("no DBUS installed, cannot run")
+        self.api.registerRequestHandler(self.handleApiRequest)
+        self.api.registerRestart(self.stop)
         self.api.log("started")
         self.api.setStatus('STARTED', 'starting')
         self.api.setStatus('NMEA', 'running')

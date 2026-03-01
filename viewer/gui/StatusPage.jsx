@@ -262,7 +262,6 @@ StatusList.propTypes={
 class StatusPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         this.state={
             addresses:false,
             wpa:false,
@@ -270,6 +269,7 @@ class StatusPage extends React.Component{
             serverError:false,
             canRestart:false
         }
+        this.reloadHelper=GuiHelpers.storeHelperState(this,{reload:keys.gui.global.reloadSequence});
         this.reloadNotifier=new Notifier();
     }
     componentDidMount(){
