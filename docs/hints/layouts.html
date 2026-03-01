@@ -122,62 +122,74 @@
           <td>wie bei formatDecimal</td>
         </tr>
         <tr>
+          <td>formatFloat</td>
+          <td>Formatierung als Gleitkommazahl</td>
+          <td>digits: Anzahl der Stellen insgesamt, negative Werte zeigen Zahlen mit potenziell negativem Vorzeichen an (signed, fügt Vorzeichenplatzhalter ein)<br/>
+              maxFrac: maximale Anzahl Nachkommastellen<br/>
+              leadingZeroes: führende Nullen anzeigen<br/>
+          </td>
+        </tr>
+        <tr>
           <td>formatDistance</td>
-          <td>Entfernung in nm|m|km</td>
-          <td>unit:<br>
-            nm - Enterfnung in nm<br>
-            m - Entfernung in m statt nm<br>
-            km - Entfernung in km statt nm</td>
+          <td>Entfernung in der gewählten Einheit</td>
+          <td>unit: Entfernungseinheit<br>
+            nm - Seemeilen (nautical miles)<br>
+            m - Meter<br>
+            km - Kilometer<br>
+            ft - Fuß (foot)<br>
+            yd - Yards<br>
+            digits: Anzahl der Stellen (siehe formatFloat)<br/>
+            maxFrac: maximale Anzahl Nachkommastellen (siehe formatFloat)</td>
         </tr>
         <tr>
           <td>formatSpeed</td>
-          <td>Geschwindigkeit in kn|m/s|km/h</td>
+          <td>Geschwindigkeit in der gewählten Einheit</td>
           <td>unit:<br>
-            kn - knoten<br>
-            ms - m/s statt kn<br>
-            kmh - km/h statt kn</td>
+            kn - Knoten<br>
+            ms oder m/s - Meter pro Sekunde<br>
+            kmh oder km/h - Kilometer pro Stunde</td>
         </tr>
         <tr>
           <td>formatDirection</td>
-          <td>Formatiere einen Gradwert</td>
-          <td>inputRadian: - Input in rad statt Grad<br>
+          <td>Richtung als Gradwert</td>
+          <td>inputRadian: Input in rad statt Grad<br>
             range180: zeige +/- 180° statt 0...360°<br>
             leadingZero: zeige immer 3 Stellen</td>
         </tr>
         <tr>
           <td>formatDirection360</td>
-          <td>Formatiere einen Gradwert</td>
+          <td>Richtung als Gradwert immer im Bereich 0...360°</td>
           <td>leadingZero: zeige immer 3 Stellen</td>
         </tr>
         <tr>
           <td>formatTime</td>
-          <td>Formatiere einen Zeitwert (Wert muss intern ein Date Wert sein)
+          <td>Formatiere einen Zeitwert (nur auf Zeit/Datumswerte anwendbar)
             (hh:mm:ss)</td>
-          <td><br>
+          <td>seconds: Sekunden anzeigen<br>
           </td>
         </tr>
         <tr>
           <td>formatClock</td>
-          <td>Formatiere einen Zeitwert (Wert muss intern ein Date Wert sein)
+          <td>Formatiere einen Zeitwert (nur auf Zeit/Datumswerte anwendbar)
             (hh:mm)</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>formatDateTime</td>
-          <td>Formatiere Datum und Uhrzeit (Wert muss intern ein Date Wert sein)</td>
+          <td>Formatiere Datum und Uhrzeit (nur auf Zeit/Datumswerte anwendbar)</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>formatDate</td>
-          <td>Formatiere Datum (Wert muss intern ein Date Wert sein)</td>
+          <td>Formatiere Datum (nur auf Zeit/Datumswerte anwendbar)</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>formatString</td>
-          <td>gibt den Input unverändert weiter</td>
+          <td>direkte Umwandlung in einen String durch JavaScript</td>
           <td><br>
           </td>
         </tr>
@@ -185,7 +197,7 @@
           <td>formatTemperature</td>
           <td>Formatiere eine Temperatur (seit 20210106), Input in Kelvin</td>
           <td>unit:<br>
-            celsius, kelvin</td>
+            celsius, kelvin, fahrenheit</td>
         </tr>
         <tr>
           <td>formatPressure</td>

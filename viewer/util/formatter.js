@@ -15,37 +15,49 @@ function pad(num, size, pad='0') {
  * @param axis
  * @returns {string}
  */
-const formatLonLatsDecimal=function(coordinate,axis){
+const formatLonLatsDecimal=function(coordinate,axis,format='DDM',hemFirst=false){
+    if(coordinate==null) {
+      let str="____\u00B0__.___'";
+      if(format=='DD') str="____._____\u00B0"; // use _ to prevent line breaks
+      if(format=='DMS') str="____\u00B0__'__._\"";
+      return hemFirst?'_'+str:str+'_';
+    }
     coordinate = Helper.to180(coordinate); // normalize to ±180°
-
-    let abscoordinate = Math.abs(coordinate);
-    let coordinatedegrees = Math.floor(abscoordinate);
-
-    let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-    let numdecimal=2;
-    //correctly handle the toFixed(x) - will do math rounding
-    if (coordinateminutes.toFixed(numdecimal) == 60){
-        coordinatedegrees+=1;
-        coordinateminutes=0;
-    }
-    if( coordinatedegrees < 10 ) {
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    if (coordinatedegrees < 100 && axis == 'lon'){
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    let str = coordinatedegrees + "\u00B0";
-
-    if( coordinateminutes < 10 ) {
-        str +="0";
-    }
-    str += coordinateminutes.toFixed(numdecimal) + "'";
+    let deg = Math.abs(coordinate);
+    let padding = 2;
+    let str = '\u00A0';
+    let hem = coordinate < 0 ? "S" :"N";
     if (axis == "lon") {
-        str += coordinate < 0 ? "W" :"E";
-    } else {
-        str += coordinate < 0 ? "S" :"N";
+        padding = 3;
+        str = '';
+        hem = coordinate < 0 ? "W" :"E";
     }
-    return str;
+    if(format=='DD') {
+      str += pad(deg.toFixed(5),padding+6) + "\u00B0";
+    } else if(format=='DMS') {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      let MIN = Math.floor(min);
+      let sec = 60*(min-MIN);
+      if (sec.toFixed(1).startsWith('60.')){
+          MIN+=1;
+          sec=0;
+          if(MIN==60){
+            MIN=0;
+            DEG+=1;
+          }
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(MIN,2) + "'" + pad(sec.toFixed(1),4) + '"';
+    } else {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      if (min.toFixed(3).startsWith('60.')){
+          DEG+=1;
+          min=0;
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(min.toFixed(3),6) + "'";
+    }
+    return hemFirst?hem+str:str+hem;
 };
 
 /**
@@ -53,114 +65,100 @@ const formatLonLatsDecimal=function(coordinate,axis){
  * @param {Point} lonlat
  * @returns {string}
  */
-const formatLonLats=function(lonlat){
-    if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
-        return "-----";
-    }
-    let ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
-    let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
-    return ns + ', ' + ew;
+const formatLonLats=function(lonlat,format='DDM',hemFirst=false){
+    let lat=this.formatLonLatsDecimal(lonlat?.lat, 'lat', format, hemFirst);
+    let lon=this.formatLonLatsDecimal(lonlat?.lon, 'lon', format, hemFirst);
+    return lat + ' ' + lon;
 };
-formatLonLats.parameters=[];
+formatLonLats.parameters=[
+    {name:'format',type:'SELECT',list:['DD','DDM','DMS'],default:'DDM'},
+    {name:'hemFirst',type:'BOOLEAN',default:false}
+];
+
 
 /**
  * format a number with a fixed number of fractions
  * @param number
- * @param fix
- * @param fract
- * @param addSpace if set - add a space for positive numbers
- * @param prefixZero if set - use 0 instead of space to fill the fixed digits
- * @returns {string}
+ * @param fix number of integer digits (before .)
+ * @param fract number of fractional digits (after .)
+ * @param addSpace if set - add a padding space for sign
+ * @param prefixZero if set - print leading zeroes, not space
+ * @returns number as string, always with decimal point
  */
 
 const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
-    let sign="";
     number=parseFloat(number);
-    if (isNaN(number)){
-        let rt="";
-        while (fix > 0) {
-            rt+="-";
-            fix--;
-        }
-        return rt;
+    if (!isFinite(number)) return '-'.repeat(fix)+(fract?'.'+'-'.repeat(fract):'');
+    let sign = addSpace ? ' ' : '';
+    if (number < 0) { number=-number; sign='-'; }
+    let str = number.toFixed(fract); // formatted number w/o sign
+    let n = fix+fract+(fract?1:0); // expected length of string w/o sign
+    if(prefixZero || fix<0) {
+      return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
+    } else {
+      return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
     }
-    if (addSpace !== undefined && addSpace) sign=" ";
-    if (number < 0) {
-        number=-number;
-        sign="-";
-    }
-    let rt=(prefixZero?"":sign)+number.toFixed(fract);
-    let v=10;
-    fix-=1;
-    while (fix > 0){
-        if (number < v){
-            if (prefixZero) rt="0"+rt;
-            else  rt=" "+rt;
-        }
-        v=v*10;
-        fix-=1;
-    }
-    return prefixZero?(sign+rt):rt;
 };
 formatDecimal.parameters=[
-    {name:'fix',type:'NUMBER'},
-    {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'},
-    {name: 'prefixZero',type:'BOOLEAN'}
+    {name:'fix',type:'NUMBER',description:'number of integer digits (before .)'},
+    {name:'fract',type:'NUMBER',description:'number of fractional digits (after .)'},
+    {name:'addSpace',type:'BOOLEAN',description:'add single padding space for sign'},
+    {name:'prefixZero',type:'BOOLEAN',description:'add leading zeroes'}
 ];
+
+// like formatDecimal, but with OPTional decimal point if number is integer
 const formatDecimalOpt=function(number,fix,fract,addSpace,prefixZero){
     number=parseFloat(number);
-    if (isNaN(number)) return formatDecimal(number,fix,fract,addSpace,prefixZero);
-    if (Math.floor(number) == number){
-        return formatDecimal(number,fix,0,addSpace,prefixZero);
-    }
-    return formatDecimal(number,fix,fract,addSpace,prefixZero);
+    let isint = Math.floor(number) == number;
+    return formatDecimal(number,fix,isint?0:fract,addSpace,prefixZero);
 };
+formatDecimalOpt.parameters=formatDecimal.parameters;
 
-formatDecimalOpt.parameters=[
-    {name:'fix',type:'NUMBER'},
-    {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'},
-    {name: 'prefixZero',type:'BOOLEAN'}
-];
+// clamp x to a<=x<=b
+function clamp(a,x,b) {
+  return Math.max(a,Math.min(x,b));
+}
 
 /**
- * format number with N digits
+ * format number with N significant digits
+ * naming: the number 12.345 has 5 TOTAL digits, 2 INTEGER digits, 3 FRACTIONAL digits
  * at max N-1 digits after decimal point
- * there are at least N digits and a decimal point at a variable position
- * like the display of a multimeter in auto-range mode
- * bigger numbers: more digits are appended to the right if necessary
- * smaller numbers: up to maxPlaces decimal places are added or they get rounded to zero
+ * there are at least N total digits and the decimal point at a variable position and and optional sign
+ * it's like the display of a multimeter in auto-range mode
+ * bigger numbers: more integer digits are appended to the left if necessary, fractional digits are removed
+ * smaller numbers: up to maxFrac fractional digits are added (can get rounded to zero)
  * negative numbers: minus sign is added if necessary
- * @param digits = number of (significant) digits in total, negative: padding space is added for sign
- * @param maxPlaces = max. number of decimal places (after the decimal point, default = digits-1)
+ * @param digits = number of total digits, negative: single padding space is added for sign
+ * @param maxFrac = max. number of fractional digits (default = digits-1), negative: fixed value of fractional digits
  * @param leadingZeroes = use leading zeroes instead of spaces
- * returns string with at least digits(+1 if digits<0) characters
+ * returns string with at least digits (+1 if digits<0) (+1 if maxFrac!=0) characters
  */
-const formatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
-    if (digits == null) digits=3;
+const formatFloat=function(number, digits, maxFrac, leadingZeroes=false) {
+    if (!digits) digits=3;
     let signed = digits<0;
     digits = Math.abs(digits);
-    if(maxPlaces==null) maxPlaces=digits-1;
-    if(isNaN(number)) return '-'.repeat(digits+(signed?1:0)-maxPlaces)+(maxPlaces?'.'+'-'.repeat(maxPlaces):'');
+    if(maxFrac==null) maxFrac=digits-1;
+    maxFrac=clamp(0,maxFrac,digits-1);
+    number=parseFloat(number); // null-->NaN
+    if(!isFinite(number)) return '-'.repeat(digits+(signed?1:0)-maxFrac)+(maxFrac?'.'+'-'.repeat(maxFrac):'');
     if(digits==0) return number.toFixed(0);
-    if(number<0 && !signed) digits-=1;
+    if(number<0 && !signed) digits-=1; // make room for unexpected sign
     let sign = number<0 ? '-' : signed ? ' ' : '';
     number = Math.abs(number);
-    let decPlaces = digits-1-Math.floor(Math.log10(Math.abs(number)));
-    decPlaces = Math.max(0,Math.min(decPlaces,Math.max(0,maxPlaces)));
+    let decPlaces = digits-1-Math.floor(Math.log10(number));
+    decPlaces = clamp(0,decPlaces,maxFrac);
     let str = number.toFixed(decPlaces);
     let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
     if(leadingZeroes) {
-        return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
+        return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // -001.23
     } else {
-        return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
+        return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // __-1.23
     }
 };
 formatFloat.parameters=[
-    {name:'digits',type:'NUMBER',default: 3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
-    {name:'maxPlaces',type:'NUMBER',default:2,description:"max. number of decimal places (after the decimal point, default = digits-1)"},
-    {name: 'leadingZeroes', type: 'BOOLEAN',description: "use leading zeroes instead of spaces"}
+    {name:'digits',type:'NUMBER',default:3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
+    {name:'maxFrac',type:'NUMBER',default:2,list:[0,20],description:"max. number of decimal places (after the decimal point, default = digits-1)"},
+    {name:'leadingZeroes',type:'BOOLEAN',description: "use leading zeroes instead of spaces"}
 ];
 /**
  * format a distance
@@ -170,75 +168,57 @@ formatFloat.parameters=[
  * @param opt_fixed if > 0 set this much digits at min
  * @param opt_fillRight if set - extend the fractional part
  */
-const formatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
+const formatDistance=function(distance,opt_unit,digits,maxFrac){
     let number=parseFloat(distance);
-    if (isNaN(number)) return "    -"; //4 spaces
     let factor=unitToFactor(opt_unit||'nm');
-    number=number/factor;
-    let fract=0;
-    let fixed=undefined;
-    if (number < 1) {
-        fract = 2;
-        fixed = 1;
-    }
-    else if (number < 10){
-        fract=1;
-        fixed=1;
-    }
-    else if (number < 100){
-        fract=1;
-        fixed=2;
-    }
-    else{
-        fixed=1+Math.floor(Math.log10(Math.abs(number)));
-    }
-    if (opt_fixed == null || opt_fixed < (fixed+fract)){
-        fixed=undefined;
-    }
-    if (fixed != null){
-        if (opt_fillRight){
-            fract+=opt_fixed-(fixed+fract);
-        }
-        else{
-            fixed+=opt_fixed-(fixed+fract);
-        }
-    }
-    return formatDecimal(number,fixed,fract,false,true);
+    return formatFloat(number/factor,digits,maxFrac);
 };
 formatDistance.parameters=[
     {name:'unit',type:'SELECT',list:DEPTH_UNITS,default:'nm'},
-    {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits. Leave at 0 to have this flexible.'},
-    {name:'fillRight', type: 'BOOLEAN',default: false, description:'let the fractional part extend to have the requested number of digits (only if numDigits > 0)'}
+    {name:'digits',type:'NUMBER',default:3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
+    {name:'maxFrac',type:'NUMBER',default:1,description:"max. number of decimal places (after the decimal point, default = digits-1)"},
 ];
 
 /**
  *
  * @param speed in m/s
- * @param opt_unit one of kn,ms,kmh
+ * @param opt_unit one of kn,ms,kmh,bft
  * @returns {*}
  */
 
 const formatSpeed=function(speed,opt_unit){
     let number=parseFloat(speed);
-    if (isNaN(number)) return "  -"; //2 spaces
-    let factor=3600/navcompute.NM;
-    if (opt_unit == 'ms') factor=1;
-    if (opt_unit == 'kmh') factor=3.6;
-    number=number*factor;
-    if (number < 100){
-        return formatDecimal(number,undefined,1,false);
+    if (opt_unit == 'bft') {
+      let v=number*3600/navcompute.NM;
+      if(v<=1)  return ' 0';
+      if(v<=3)  return ' 1';
+      if(v<=6)  return ' 2';
+      if(v<=10) return ' 3';
+      if(v<=16) return ' 4';
+      if(v<=21) return ' 5';
+      if(v<=27) return ' 6';
+      if(v<=33) return ' 7';
+      if(v<=40) return ' 8';
+      if(v<=47) return ' 9';
+      if(v<=55) return '10';
+      if(v<=63) return '11';
+      return '12';
     }
-    return formatDecimal(number,undefined,0,false);
+    let factor=3600/navcompute.NM;
+    if (opt_unit == 'ms' || opt_unit == 'm/s') factor=1;
+    if (opt_unit == 'kmh' || opt_unit == 'km/h') factor=3.6;
+    number*=factor;
+    return formatFloat(number,3,1);
 };
 
 formatSpeed.parameters=[
-    {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
+    {name:'unit',type:'SELECT',list:['kn','ms','kmh','bft','m/s','km/h'],default:'kn'}
 ];
 
 const formatDirection=function(dir,opt_rad,opt_180,opt_lz){
     dir=opt_rad ? Helper.degrees(dir) : dir;
     dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
-    return formatDecimal(dir,3,0,(!!opt_lz && !!opt_180),!!opt_lz);
+    return formatDecimal(dir,3,0,opt_180,opt_lz);
 };
 formatDirection.parameters=[
     {name:'inputRadian',type:'BOOLEAN',default:false},
@@ -247,7 +227,7 @@ formatDirection.parameters=[
 ];
 
 const formatDirection360=function(dir,opt_lz){
-    return formatDecimal(dir,3,0,false,!!opt_lz);
+    return formatDecimal(dir,3,0,false,opt_lz);
 };
 formatDirection360.parameters=[
     {name:'leadingZero',type:'BOOLEAN',default: false,description:'show leading zeroes (012)'}
@@ -258,49 +238,47 @@ formatDirection360.parameters=[
  * @param {Date} curDate
  * @returns {string}
  */
-const formatTime=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "--:--:--";
-    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
-    return datestr;
+const formatTime=function(curDate, seconds=true){
+    if (!(curDate instanceof Date)) return "--:--"+(seconds?':--':'');
+    return this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
+           this.formatDecimal(curDate.getMinutes(),2,0,false,true)+(seconds?":"+
+           this.formatDecimal(curDate.getSeconds(),2,0,false,true):'');
 };
-formatTime.parameters=[]
+formatTime.parameters=[
+    {name:'seconds',type:'BOOLEAN',default:true}
+];
 /**
  *
  * @param {Date} curDate
  * @returns {string} hh:mm
  */
 const formatClock=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "--:--";
-    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
-    return datestr;
+    if (!(curDate instanceof Date)) return "--:--";
+    return this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
+           this.formatDecimal(curDate.getMinutes(),2,0,false,true);
 };
-formatClock.parameters=[]
+formatClock.parameters=[];
 /**
  * format date and time
  * @param {Date} curDate
  * @returns {string}
  */
 const formatDateTime=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "----/--/-- --:--:--";
-    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+    if (!(curDate instanceof Date)) return "----/--/-- --:--:--";
+    return this.formatDecimal(curDate.getFullYear(),4,0,false,true)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0,false,true)+"/"+
         this.formatDecimal(curDate.getDate(),2,0,false,true)+" "+
         this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
         this.formatDecimal(curDate.getMinutes(),2,0,false,true)+":"+
         this.formatDecimal(curDate.getSeconds(),2,0,false,true);
-    return datestr;
 };
 formatDateTime.parameters=[];
 
 const formatDate=function(curDate){
-    if (! curDate || ! (curDate instanceof Date)) return "----/--/--";
-    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
-        this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
-        this.formatDecimal(curDate.getDate(),2,0);
-    return datestr;
+    if (!(curDate instanceof Date)) return "----/--/--";
+    return this.formatDecimal(curDate.getFullYear(),4,0,false,true)+"/"+
+           this.formatDecimal(curDate.getMonth()+1,2,0,false,true)+"/"+
+           this.formatDecimal(curDate.getDate(),2,0,false,true);
 };
 formatDate.parameters=[];
 
@@ -312,13 +290,13 @@ const formatPressure=function(data,opt_unit){
     try {
         if (!opt_unit || opt_unit.toLowerCase() === 'pa') return formatDecimal(data);
         if (opt_unit.toLowerCase() === 'hpa') {
-            return (parseFloat(data)/100).toFixed(2)
+            return (parseFloat(data)/100).toFixed(2);
         }
         if (opt_unit.toLowerCase() === 'bar') {
             return formatDecimal(parseFloat(data)/100000,2,4,false);
         }
     }catch(e){
-        return "-----";
+        return "---";
     }
 }
 formatPressure.parameters=[
@@ -328,17 +306,20 @@ formatPressure.parameters=[
 const formatTemperature=function(data,opt_unit){
     try{
         if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
-            return formatDecimal(data,3,1);
+            return formatFloat(data,3,1);
         }
         if (opt_unit.toLowerCase().match(/^c/)){
-            return formatDecimal(parseFloat(data)-273.15,3,1)
+            return formatFloat(parseFloat(data)-273.15,3,1)
+        }
+        if (opt_unit.toLowerCase().match(/^f/)){
+            return formatFloat(parseFloat(data)*9/5+32,3,1)
         }
     }catch(e){
-        return "-----"
+        return "---"
     }
 }
 formatTemperature.parameters=[
-    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'kelvin'}
+    {name:'unit',type:'SELECT',list:['celsius','kelvin','fahrenheit'],default:'kelvin'}
 ]
 
 const skTemperature=formatTemperature;

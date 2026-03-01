@@ -12,26 +12,37 @@
   font-size: @infoFontSize;
   opacity: 0.7;
 }
+#navpage {
+  .widgetContainer {
+    padding: var(--avnav-widget-border-width);
+    gap: var(--avnav-widget-border-width);
+  }
+  .widgetContainer:empty { display: none; }
+  .widgetContainer.vertical   { padding-bottom: 0; }
+  .widgetContainer.bottomLeft { padding-right: 0; }
+}
 .widget{
   position: relative;
   z-index: 100;
-  margin: 0.1em;
+  margin: 0;
   overflow: hidden;
   pointer-events: all;
+  font-variant-numeric: tabular-nums;
   background: var(--avnav-back-color);
   color:var(--avnav-fore-color);
   .flex-shrink(0);
   .flex-grow(1);
+  .flex-basis(auto);
   .flex-display();
   .flex-direction(column);
   .flex-justify-content(flex-start);
   .widgetHead {
     margin: 0;
-    padding: 0.1em;
+    padding: 0 0.2em;
     display: flex;
     .flex-direction(row);
     .flex-justify-content(space-between);
-    height: 0.7em;
+    white-space: nowrap;
     .infoLeft{
       .widgetInfo();
     }
@@ -40,13 +51,15 @@
     }
   }
   .widgetData{
-    text-align: right;
-    max-width: calc(100% - 0.2em);
-    margin-left: auto;
-    margin-right: 0.1em;
+    text-align: center;
+    padding: 0 0.1em;
+    width: 100%;
     max-height: 100%;
     min-height: 0;
     min-width: 0;
+  }
+  canvas.widgetData{
+    padding: 0;
   }
   &.average .infoLeft{
     color:var(--avnav-attention-color);
@@ -57,6 +70,7 @@
   }
   .editing &{
     .flex-grow(0);
+    min-width: 3em;
   }
   #gpspage.editing &{
     .flex-grow(1);
@@ -86,7 +100,7 @@
   .widgetData{
     padding-top: 0;
     display: block;
-    white-space: pre;
+    white-space: pre-wrap;
   }
   .centeredWidget {
     .widgetData{
@@ -106,7 +120,7 @@
 }
 .widgetContainer.horizontal{
   .flex-wrap(wrap);
-  .flex-align-items(center);
+  .flex-align-items(top);
   max-height: @horizontalContainerHeight;
   .twoRows &{
     max-height: @horizontalContainerDoubleHeight;
@@ -131,11 +145,9 @@
   .widget{
     min-width: 0;
     .flex-shrink(0);
-    margin-left: 0.1em;
-    margin-right: 0.1em;
-    padding-left: 0.1em;
-    padding-right: 0.1em;
-    width: calc(100% - 0.2em);
+    margin-left: 0;
+    margin-right: 2px;
+    width: 100%;
   }
   .editing &{
     .widget{
@@ -159,7 +171,7 @@
 }
 
 //------------------ dedicated widgets -------------------------
-//widgets have their name from the widget list and maybe some additonial fixed name as classes
+//widgets have their name from the widget list and maybe some additional fixed name as classes
 @bigFont: 3em;
 @bigFontVertical: 2em;
 @smallFont: 1em;
@@ -168,101 +180,96 @@
 @size1: 7em;
 @size15: 9em;
 @size2: 11em;
+
+.blink(@period:1s) {
+  animation: blinker @period linear infinite;
+}
+
+@keyframes blinker {
+  50% { opacity: 0; }
+}
+
 .widget{
+  width: min-content; // allow dynamic scaling to size of content
   background-color: var(--avnav-widget-color);
   color: var(--avnav-widget-fore-color);
-  .bigWidget(@size){
+
+  .widgetHead {
+    background: var(--avnav-widget-head-color);
+  }
+
+  .widgetData {
+    line-height: 1em;
+//     background: yellow;
+  }
+
+  .bigWidget(){
     .widgetData{
       font-size: @bigFont;
+      white-space: nowrap;
     }
-    width: @size;
-    .vertical &{
-      .widgetData{
+    .vertical & .widgetData {
         font-size: @bigFontVertical;
       }
     }
-  }
-  .smallWidget(@size){
-    .widgetData{
-      font-size: @smallFont;
-    }
-    width: @size;
-    .vertical &{
-      .widgetData{
-        font-size: @smallFont;
-      }
-    }
-  }
-  .timeWidget(@font){
-    .widgetData{
-      font-size: @font;
-    }
-    width: 7em;
-    .vertical &{
-      .widgetData{
-        font-size: @font;
-      }
-    }
-  }
-  &.SOG{
-    .bigWidget(@size2);
-  }
-  &.VMG{
-    .bigWidget(@size2);
-  }
-  &.COG{
-    .bigWidget(@size1);
-  }
-  &.BRG{
-    .bigWidget(@size1);
-  }
-  &.DST{
-    .bigWidget(@size2);
-  }
-  &.WindAngle,&.WindSpeed{
-    .bigWidget(@size1);
-  }
-  &.AnchorBearing{
-    .bigWidget(@size1);
-  }
-  &.AnchorDistance{
-    .bigWidget(@size2);
-  }
-  &.AnchorWatchDistance{
-    .bigWidget(@size15);
-  }
-  &.RteDistance{
-    .bigWidget(@size2);
-  }
-  &.RteDistance{
-    .timeWidget(@timeFont);
-  }
-  &.LargeTime{
-    .timeWidget(@clockFont);
-  }
-  &.zoomWidget{
-    .smallWidget(@size1);
+
+  .medWidget(){
     .widgetData{
       text-align: center;
       font-size: @timeFont;
+      white-space: normal;
     }
-    .vertical &{
-      .widgetData{
-        font-size: @timeFont;
-      }
-    }
-    .rzoom{
-      display: inline-block;
+    .horizontal & .widgetData {
+      padding-top: 0.5em;
     }
   }
+
+  .smallWidget(){
+      .widgetData{
+      font-size: @smallFont;
+      line-height: 1.2em;
+      white-space: normal;
+    }
+    .horizontal & .widgetData {
+      padding-top: 0.2em;
+      }
+    }
+
+  .bigWidget(); // big is the default
+
+  // shortcuts for manual use
+  &.big { .bigWidget(); }
+  &.med { .medWidget(); }
+  &.small { .smallWidget(); }
+
+  &.DateTime { .smallWidget(); }
+//   &.ETA { .medWidget(); }
+//   &.RteEta { .medWidget(); }
+//   &.TimeStatus { .medWidget(); }
+  &.GNSSStatus { .smallWidget(); }
+  &.error .infoRight {
+    .blink();
+    color: red;
+    font-weight: bold;
+    }
+  &.warning .infoRight {
+    .blink(2s);
+    color: orange;
+    font-weight: bold;
+  }
+  &.ok .infoRight {
+    opacity: 1;
+    color: green;
+  }
   &.Position,&.WpPosition{
-    .smallWidget(@size1);
+    .smallWidget();
     .widgetData{
       text-align: center;
+      font-family: monospace;
     }
   }
   &.timeStatusWidget{
-    .smallWidget(@size1);
+    .smallWidget();
     .status{
       width: 1.5em;
       height: 1.5em;
@@ -282,7 +289,7 @@
     }
   }
   &.etaWidget{
-    .smallWidget(@size1);
+    .smallWidget();
     .widgetData{
       text-align: center;
       margin-left: auto;
@@ -294,13 +301,20 @@
     }
   }
   &.aisTargetWidget{
-    .smallWidget(@size1);
+    .smallWidget();
     .aisFront{
       display: inline-block;
       font-size: 1.5em;
+      line-height: 1.2em;
     }
     .label{
       width: 2em;
+    }
+    .widgetData{
+      display: flex;
+      span{
+        flex: 1 0 1em;
+      }
     }
     .widgetData ~ .widgetData{
       padding-top: 0;
@@ -342,15 +356,17 @@
           margin: 0;
         }
       }
+      .widgetData{
+        display: block;
+      }
     }
-
   }
 
   &.activeRouteWidget{
     &.approach{
       background-color: var(--avnav-attention-color);
     }
-    .smallWidget(@size1);
+    .smallWidget();
     .routeName{
       margin-right: 0.2em;
       .mdText2();
@@ -403,7 +419,7 @@
   border: @borderAttentionLarge;
   border-color: var(--avnav-attention-color);
 }
-.smallWidget(@size1);
+.smallWidget();
 .widgetData{
   .routeInfo {
     width: 4.5em;
@@ -437,7 +453,7 @@
 }
 
 &.centerDisplayWidget{
-.smallWidget(@size1);
+    .smallWidget();
 .widgetData ~ .widgetData{
   margin-top: 0;
 }
@@ -464,28 +480,33 @@
 .horizontal &{
   min-width: 10em;
 }
+    .Position {
+      font-family: monospace;
+    }
 }
 &.windWidget{
-.smallWidget(@size15);
-padding-top: 0;
-padding-left: 0;
-padding-right: 0;
+    .smallDisplay & {
+      .medWidget();
+      .resize {
+        flex-direction: column;
+      }
 .widgetData{
-  font-size: @timeFont;
+        padding-top: 0.5em;
+      }
 }
 }
 &.DepthDisplay{
-.bigWidget(@size2);
+    .bigWidget();
 }
 &.xteWidget{
-.smallWidget(@size1);
+    .smallWidget();
 canvas{
   margin-right: auto;
   margin-left: auto;
 }
 }
 &.windGraphics{
-.smallWidget(@size2);
+    .smallWidget();
 .windSpeed {
   text-align: right;
   font-size: @timeFont;
@@ -506,8 +527,8 @@ canvas{
   }
 }
 canvas{
-  height: 90%;
-  width: 90%;
+//       width: 85%;
+      height: 80%;
 }
 .vertical &{
   height: 11em;

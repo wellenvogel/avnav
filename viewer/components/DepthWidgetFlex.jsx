@@ -36,7 +36,7 @@ const DepthDisplayFlex=(props)=>{
     const iprops={...props};
     iprops.unit=props.dunit;
     iprops.formatter=(v)=>{
-        return formatter.formatDistance(v,props.dunit,props.digits,props.fillRight);
+        return formatter.formatDistance(v,props.dunit,props.digits,props.maxFrac);
     }
     if (iprops.offset && iprops.value != null){
         iprops.value+=parseFloat(iprops.offset );
@@ -85,18 +85,19 @@ DepthDisplayFlex.predefined={
             displayName:"unit",
             list:DEPTH_UNITS,
             default:'m',
-            description:'Select the unit for the depth display'},
+            description:'Select the unit for the depth display'
+        },
         digits:{
             type:'NUMBER',
             default:0,
-            description:'minimal number of digits for the depth display, set to 0 to let the system choose',
+            description:'minimal number of digits for the depth display, 0=global default',
             list:[0,10]
         },
-        fillRight:{
-            type:'BOOLEAN',
-            default: false,
-            description: 'let the fractional part extend to have the requested number of digits',
-            condition: {digits:(all,dv)=>dv>0}
+        maxFrac:{
+            type:'NUMBER',
+            default:1,
+            description: 'max. number of decimal places',
+            list:[0,10]
         },
         offset: new EditableFloatParameterUI({
             name:'offset',
