@@ -1,7 +1,6 @@
 /* reset the additional dialogRow that surrounds the dialogText */
 .nwmplugin.WifiDialog{
     width: 100%;
-    font-size: 0.91em;  /*avnav sets 1.1 for the dialog*/
 }
 
 
@@ -63,6 +62,29 @@
     display: inline-block;
     width: 12em;
 }
+
+.nwmplugin .row{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    height: 1.5em;
+}
+.nwmplugin .row:nth-child(n+2){
+    margin-left: 0.5em;
+}
+.nwmplugin .row span{
+    display: inline-block;
+    margin-right: 1em;
+}
+
+.nwmplugin.IpInfoDialog .name{
+    font-weight: bold;
+}
+.nwmplugin.IpInfoDialog .label{
+    opacity: 0.6;
+    width: 3em;
+}
+
 .nwmplugin .icon.configured{
     background-image: url(ic_settings.svg);
 }
@@ -89,4 +111,7 @@
 }
 .nwmplugin .icon.ztrusted{
     background-image: url(sync-lr.svg);
+}
+.nwmplugin .icon.info{
+    background-image: url(ic_info.svg);
 }

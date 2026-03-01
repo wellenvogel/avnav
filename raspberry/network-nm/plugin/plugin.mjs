@@ -24,29 +24,13 @@
  import html from '/modules/htm.js';
  import {useState,useEffect,useCallback,useRef} from '/modules/react.js';
  import {useDialogContext,ListItem,ListSlot,ListMainSlot,Icon} from '/modules/avnavui.js';
-
+ import {fetchData,nested} from './helper.mjs';
+ import { IpInfoDialog } from './networkinfo.mjs';
 
  const ZONE_T='trusted';
  const ZONE_B='block';
 
- const fetchData=async (url)=>{
-    const response=await fetch(url);
-    if (! response.ok) throw new Error(`error fetching ${url}: ${response.status}`);
-    const data=await response.json();
-    if (data.status != 'OK') throw new Error(`error fetching ${url}: ${data.status} ${data.error}`);
-    return data;
- }
-
- const nested=(obj,key)=>{
-    const parts=key.split('.')
-    for (let pp of parts){
-        if (typeof(obj) !== 'object') return;
-        if (! (pp in obj )) return;
-        obj=obj[pp];
-    }
-    return obj;
- }
-
+ 
  const Interface=({intf,selected,onClick})=>{
     let className="interface";
     let zoneClass='_none';
@@ -107,13 +91,22 @@
         </div>
     </div>` 
  }
- const InterfaceList=({selectedPath,items,scanning,onChange})=>{
+ const InterfaceList=({api,selectedPath,items,scanning,onChange})=>{
+    const dialogContext=useDialogContext();
     return html`
     <${ListItem} className="heading">
         <${ListMainSlot} primary="Available Interfaces"/>
         <${ListSlot}>
         ${scanning && html`<span className="spinner"/>`}
         <//>
+        <${ListSlot} icon=${{className:'info'}} onClick=${(ev=>
+            api.showDialog({
+                className: 'nwmplugin IpInfoDialog',
+                title: 'NetworkInfo',
+                buttons: [{name:'cancel'}],
+                html: html`<${IpInfoDialog} api=${api}/>`,
+            },dialogContext)
+        )}/>
     <//>
     ${(items.length < 1)? html`
         <div className="interfaceList nointf">no available interfaces</div>`
@@ -521,6 +514,7 @@
         items=${availableInterfaces} 
         onChange=${(path)=>selectChange(path)}
         scanning=${fetchState != 0}
+        api=${api}
         />
     <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{
         disableFetch.current=1;
