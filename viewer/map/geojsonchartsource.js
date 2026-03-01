@@ -225,7 +225,7 @@ class GeoJsonChartSource extends ChartSourceBase{
                         this.source.removeLoadedExtent(extent);
                     })
             },
-            wrapX: false
+            wrapX: true
         });
         let layerOptions = {
             source: this.source,

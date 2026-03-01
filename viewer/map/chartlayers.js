@@ -41,11 +41,10 @@ import Helper, {setav} from "../util/helper";
 import {CHARTBASE} from "./chartsourcebase";
 import CryptHandler from './crypthandler';
 import {ChartFeatureInfo} from "./featureInfo";
-import {featureListFormatter} from "../util/featureFormatter";
 import {getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
-import {PMTiles,Header,Protocol} from 'pmtiles';
+import {PMTiles} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
 import {fetchWithTimeout} from "../util/requests";
 import {load as yamlLoad} from 'js-yaml';
@@ -80,8 +79,8 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,minZoom,inversy)=>
             super(tileCoord,state,opt_options);
             this.ownImage = new Image();
             this.ownTileLoadFunction = tileLoadFunction;
-            this.ownSrc = src;
-            this.key=src;
+            this.ownSrc = src;  //src is the value returned from the olSource tileUrlFunction
+                                //we just return the coordinates as we compute "lazily"
             this.listenerKeys = [];
             this.tileUrlFunction=tileUrlFunction;
             this.downZoom=0;
@@ -91,7 +90,7 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,minZoom,inversy)=>
         }
 
         getModifiedUrl(){
-            let coord=this.tileCoord.slice(0);
+            let coord=this.ownSrc.slice(0);
             let dz=0;
             while (this.downZoom <= maxUpZoom) {
                 for (; dz < this.downZoom; dz++) {
@@ -446,7 +445,7 @@ class LayerConfigXYZ extends LayerConfig{
         const tileUrlFunction = this.createTileUrlFunction(options);
         this.source = new olXYZSource({
             tileUrlFunction: (coord) => {
-                return tileUrlFunction(coord);
+                return coord;
             },
             tileLoadFunction: (imageTile, src) => {
                 this.tileLoadFunction(imageTile, src);

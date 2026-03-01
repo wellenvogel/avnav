@@ -854,7 +854,7 @@ class MapHolder extends DrawingPositionConverter {
         const vectorSource = new olVectorSource({
             format: new olGeoJSONFormat(),
             url: 'countries-110m.json',
-            wrapX: false
+            wrapX: true
         });
 
         const vectorLayer = new olVectorLayer({
@@ -875,7 +875,7 @@ class MapHolder extends DrawingPositionConverter {
         });
 
         let source = new olVectorSource({
-            wrapX: false
+            wrapX: true
         });
         let hasExtent = false;
         if (layers && layers.length > 0) {
@@ -1071,7 +1071,7 @@ class MapHolder extends DrawingPositionConverter {
                 view: new olView({
                     center: this.transformToMap([13.8, 54.1]),
                     zoom: 9,
-                    extent: this.transformToMap([-200, -89, 200, 89]),
+                    extent: this.transformToMap([-359, -89, 359, 89]),
                     constrainRotation: false
                 })
 

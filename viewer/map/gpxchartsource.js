@@ -366,7 +366,7 @@ class GpxChartSource extends ChartSourceBase{
                             this.source.removeLoadedExtent(extent);
                         })
                 },
-                wrapX: false
+                wrapX: true
             });
             this.buildStyles();
             let layerOptions={
