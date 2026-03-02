@@ -106,14 +106,16 @@ def createFailedBackup(cfgname):
     AVNLog.error("unable to create failed backup %s", failedBackup)
   return False
 
-def setLogFile(filename,level,consoleOff=False):
+def setLogFile(filename,level,consoleOff=False,version=None):
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0o777)
   firstLevel=level
   if firstLevel > logging.INFO:
     firstLevel=logging.INFO
+  if version is None:
+      version=AVNAV_VERSION
   AVNLog.initLoggingSecond(firstLevel, filename, debugToFile=True,consoleOff=consoleOff)
-  AVNLog.info("#### avnserver pid=%d,version=%s,parameters=%s start processing ####", os.getpid(), AVNAV_VERSION,
+  AVNLog.info("#### avnserver pid=%d,version=%s,parameters=%s start processing ####", os.getpid(), version,
               " ".join(sys.argv))
   if firstLevel != level:
     AVNLog.setLogLevel(level)
@@ -151,7 +153,12 @@ def main(argv):
   parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO", help="loglevel, default INFO")
   parser.add_option("-d","--debug",dest="loglevel", action="store_const", const="DEBUG")
   parser.add_option("-o","--serverport",dest=A_SERVERPORT, help="http listener port, overwrite the one from config")
+  parser.add_option("-v","--serverversion",dest="version",default=AVNAV_VERSION,help="set the avnav version")
   (options, args) = parser.parse_args(argv[1:])
+  if options.version is not None:
+      usedVersion=options.version
+  else:
+      usedVersion=AVNAV_VERSION
   AVNLog.initLoggingInitial(AVNLog.levelToNumeric(options.loglevel))
   basedir = os.path.abspath(os.path.dirname(__file__))
   datadir = options.datadir
@@ -172,10 +179,10 @@ def main(argv):
     quiet=True
   logDir = os.path.join(datadir, "log")
   logFile = os.path.join(logDir, LOGFILE)
-  AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####", AVNAV_VERSION, logFile,
+  AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####", usedVersion, logFile,
                 " ".join(argv))
 
-  setLogFile(logFile,AVNLog.levelToNumeric(options.loglevel),consoleOff=quiet)
+  setLogFile(logFile,AVNLog.levelToNumeric(options.loglevel),consoleOff=quiet,version=usedVersion)
   canRestart=options.canRestart or systemdEnv is not None
   handlerManager=AVNHandlerManager(canRestart)
   handlerManager.setBaseParam(handlerManager.BASEPARAM.BASEDIR,basedir)
@@ -227,7 +234,7 @@ def main(argv):
   if baseConfig is None:
     AVNLog.errorOut("internal error: base config not loaded")
     sys.exit(1)
-  baseConfig.setVersion(AVNAV_VERSION)
+  baseConfig.setVersion(usedVersion)
   parseError=handlerManager.parseError
   if existingConfig:
     cfgStat = os.stat(usedCfgFile)
@@ -273,7 +280,7 @@ def main(argv):
     aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),
     ownMMSI=baseConfig.getWParam(baseConfig.P_OWNMMSI)
     )
-  navData.setValue(navData.KEY_VERSION,AVNAV_VERSION,keepAlways=True)
+  navData.setValue(navData.KEY_VERSION,usedVersion,keepAlways=True)
   NMEAParser.registerKeys(navData)
   if options.pidfile is not None:
     f=open(options.pidfile,"w",encoding='utf-8')
