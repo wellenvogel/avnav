@@ -714,6 +714,7 @@ class MapHolder extends DrawingPositionConverter {
                 //new chart - forget all local overlay overrides
                 resetOverrides = true;
             }
+            let newSources = [];
             let prepareAndCreate = (newSources) => {
                 this.prepareSourcesAndCreate(newSources)
                     .then((res) => {
@@ -745,7 +746,6 @@ class MapHolder extends DrawingPositionConverter {
                 this._callHandlers({type: EventTypes.LOAD});
                 resolve(0);
             };
-            let newSources = [];
             if (!globalStore.getData(keys.gui.capabilities.uploadOverlays)) {
                 this.overlayConfig = new OverlayConfig();
                 this.overlayOverrides = this.overlayConfig.copy();
@@ -755,11 +755,8 @@ class MapHolder extends DrawingPositionConverter {
             }
             fetchOverlayConfig(chartSource.chartEntry, true)
                 .then((overlayConfig) => {
-                    if (!overlayConfig) {
-                        this.overlayConfig = new OverlayConfig();
-                        if (resetOverrides) this.overlayOverrides = this.overlayConfig.copy();
-                        checkChanges();
-                        return;
+                    if (! overlayConfig) {
+                        throw new Error("no overlay config");
                     }
                     this.overlayConfig = overlayConfig;
                     if (resetOverrides) {

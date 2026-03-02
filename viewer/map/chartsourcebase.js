@@ -87,6 +87,14 @@ class ChartSourceBase {
                 delete this.chartEntry[k];
             }
         }
+        /**
+         * the chartentry as being read from the configuration
+         * during prepare it is typically updated by the full item info
+         * to avoid reloading on every page change
+         * we compare the entry as it comes from the config to decide whether
+         * to reaload or not
+         */
+        this.originalChartEntry={...this.chartEntry};
 
         /**
          * @protected
@@ -200,8 +208,10 @@ class ChartSourceBase {
     }
 
     isEqual(other){
-
         if (this.mapholder !== other.mapholder) return false;
+        if (this.originalChartEntry && other.originalChartEntry){
+            return shallowcompare(this.originalChartEntry,other.originalChartEntry);
+        }
         return shallowcompare(this.chartEntry,other.chartEntry);
     }
 
