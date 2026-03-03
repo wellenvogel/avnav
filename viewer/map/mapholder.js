@@ -58,6 +58,8 @@ import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
 import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
 
+
+
 export const EventTypes = {
     SELECTWP: 2,
     RELOAD: 3,
@@ -68,6 +70,61 @@ export const EventTypes = {
 
 };
 
+/**
+ * workaround for buggy handling of firefox touch events
+ * firefox additionally sends mouse events when using touch
+ * the pinch zoom get's totally confused by this as it does
+ * not consider the type of the pointer
+ * The main change is to filter out all non-touch events in handleEvents
+ * for the handling in pinchZoom (but to restore them afterwards)
+ * As pinchZoom only makes sense with touch events we just skip all events
+ * that do not contain touch pointers.
+ * The additional change in handleDrag is just to prevent the generation
+ * of invalid resolutions the case of zero distance events
+ */
+class OurPinchZoom extends olInteraction.PinchZoom{
+
+    constructor(options) {
+        super(options);
+    }
+
+    handleEvent(mapBrowserEvent) {
+        //base.log("PZ event",mapBrowserEvent);
+        if (mapBrowserEvent.activePointers) {
+            const newActivePointers = [];
+            for (let ap of mapBrowserEvent.activePointers) {
+                if (ap.pointerType !== 'touch' && ap.pointerType != undefined) continue;
+                newActivePointers.push(ap);
+            }
+            if (newActivePointers.length < 1) {
+                //we are only interested in touch events
+                return true
+            }
+            const originalPointers=mapBrowserEvent.activePointers;
+            mapBrowserEvent.activePointers = newActivePointers;
+            const rt=super.handleEvent(mapBrowserEvent);
+            mapBrowserEvent.activePointers = originalPointers;
+            return rt;
+        }
+        return super.handleEvent(mapBrowserEvent);
+    }
+
+
+    handleDragEvent(mapBrowserEvent) {
+        if (this.targetPointers.length < 2) return;
+        const touch0 = this.targetPointers[0];
+        const touch1 = this.targetPointers[1];
+        const dx = touch0.clientX - touch1.clientX;
+        const dy = touch0.clientY - touch1.clientY;
+
+        // distance between touches
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        //just to be sure not to create an invalid scale
+        if (distance < 2) return;
+        //base.log("PZ drag",distance,this.targetPointers.length);
+        super.handleDragEvent(mapBrowserEvent);
+    }
+}
 class Context {
     constructor() {
         this.width = undefined;
@@ -264,7 +321,7 @@ class MapHolder extends DrawingPositionConverter {
          */
         this._lastSequenceQuery = 0;
 
-
+        this.warnings={};
         globalStore.storeData(keys.map.courseUp, this.courseUp);
         this.timer = undefined;
         KeyHandler.registerHandler(() => {
@@ -394,7 +451,18 @@ class MapHolder extends DrawingPositionConverter {
             this.saveCenter(true);
         })
     }
-
+    logError(key,...error){
+        if (!error || (Array.isArray(error) && error.length<1)) {
+            if (this.warnings[key]){
+                base.log(`mapholder error ${key} cleared`);
+                delete this.warnings[key];
+            }
+            return;
+        }
+        if (this.warnings[key]){ return}
+        this.warnings[key]=true;
+        base.error(`mapholder ${key}`,...error);
+    }
     updateStoreKeys(newKeys, page, name) {
         if (page !== undefined && name !== undefined) {
             if (newKeys) {
@@ -1045,7 +1113,8 @@ class MapHolder extends DrawingPositionConverter {
             let interactions = olInteraction.defaults({
                 altShiftDragRotate: false,
                 pinchRotate: false,
-                mouseWheelZoom: false
+                mouseWheelZoom: false,
+                pinchZoom: false,
             });
             interactions.push(new MouseWheelZoom({
                 condition: (ev) => {
@@ -1059,6 +1128,7 @@ class MapHolder extends DrawingPositionConverter {
                     return true;
                 }
             }));
+            interactions.push(new OurPinchZoom())
             this.olmap = new olMap({
                 pixelRatio: pixelRatio,
                 target: div ? div : this.defaultDiv,
@@ -1145,9 +1215,15 @@ class MapHolder extends DrawingPositionConverter {
     }
 
     postrender(evt) {
+        return;
         let view = this.getView();
         if (!view) return;
         let newCenter = view.getCenter();
+        if (! Array.isArray(newCenter) || newCenter.length < 2 || isNaN(newCenter[0]) || isNaN(newCenter[1])) {
+            this.logError('nan',newCenter);
+            return;
+        }
+        this.logError('nan');
         let newZoom = view.getZoom();
         const centerPoint=this.fromMapToPoint(newCenter);
         globalStore.storeData(keys.map.centerPosition, centerPoint);
@@ -1421,6 +1497,11 @@ class MapHolder extends DrawingPositionConverter {
         if (!this.olmap) return;
         if (!enabled || !(this.gpsLocked || opt_force)) {
             if (this.olmap.getView().getZoom() != this.requiredZoom) {
+                if (this.requiredZoom == null || isNaN(this.requiredZoom)) {
+                    this.logError('requiredZoom','invlaid required zoom',this.requiredZoom);
+                    return;
+                }
+                this.logError('requiredZoom');
                 this.setMapZoom(this.requiredZoom);
             }
             return;
@@ -1787,6 +1868,11 @@ class MapHolder extends DrawingPositionConverter {
             if (vZoom != this.mapZoom) {
                 vZoom=this.clampZoom(vZoom);
                 base.log("zoom required from map: " + vZoom);
+                if (vZoom == null || isNaN(vZoom)) {
+                    this.logError('zoomChange','invalid zoom in zoomChange',vZoom,this.getView().getZoom(),this.mapZoom);
+                    return;
+                }
+                this.logError('zoomChange');
                 this.requiredZoom = vZoom;
             }
             if (this.isInUserActionGuard()) {
@@ -1840,6 +1926,11 @@ class MapHolder extends DrawingPositionConverter {
      */
     onPostCompose(evt) {
         this.lastRender = (new Date()).getTime();
+        if (evt.context.canvas.width < 1 || evt.context.canvas.height < 1){
+            this.logError('size','invalid canvas w/h',evt.context.canvas.width,evt.context.canvas.height);
+            return;
+        }
+        this.logError('size');
         this.drawing.setContext(evt.context);
         this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
         this.drawing.setPixelTransform(evt.inversePixelTransform);
