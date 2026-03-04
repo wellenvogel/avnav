@@ -1215,7 +1215,6 @@ class MapHolder extends DrawingPositionConverter {
     }
 
     postrender(evt) {
-        return;
         let view = this.getView();
         if (!view) return;
         let newCenter = view.getCenter();
