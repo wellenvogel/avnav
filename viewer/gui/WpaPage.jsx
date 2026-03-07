@@ -4,18 +4,20 @@
 
 import Dynamic from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
-import React from 'react';
+import React, {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
-import Page from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper, {avitem} from '../util/helper.js';
-import {showDialog} from '../components/OverlayDialog.jsx';
+import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import Mob from '../components/Mob.js';
 import Store from "../util/store";
+import {PAGEIDS} from "../util/pageids";
+import ButtonList from "../components/ButtonList";
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -71,76 +73,79 @@ const Interface = (props)=> {
 
 };
 
-class Dialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            psk: '',
-            allowAccess: props.allowAccess||false
-        };
-        this.buttonClick=this.buttonClick.bind(this);
-    }
-    buttonClick(event){
-        let button=event.target.name;
-        this.props.closeCallback();
-        if (button != "cancel")  this.props.resultCallback(button,this.state.psk,this.state.allowAccess);
-    }
-    render(){
-        let id=this.props.id;
-        return (
-            <div className="wpaDialog inner">
-                <div>
-                    <h3><span >{this.props.ssid}</span></h3>
+const Dialog = (props) => {
+    const [psk, setPsk] = useState('');
+    const [allowAccess, setAllowAccess] = useState(false);
+    const result = useCallback((button) => {
+        props.resultCallback(button, psk, allowAccess);
+    }, [props.id, psk, allowAccess]);
 
-                        <Input
-                            dialogRow={true}
-                            label="Password"
-                            type="password"
-                            name="psk"
-                            onChange={(value)=>this.setState({psk:value})}
-                            value={this.state.psk}/>
-                        {this.props.showAccess?
-                            <Checkbox
-                                dialogRow={true}
-                                onChange={(newVal)=>this.setState({allowAccess:newVal})}
-                                label="External access"
-                                value={this.state.allowAccess}/>
-                            :null
-                        }
-                    <div className="dialogButtons">
-                        <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
-                        {id >= 0 && <DB name="remove" onClick={this.buttonClick}>Remove</DB>}
-                        {id >= 0 && <DB name="enable" onClick={this.buttonClick}>Enable</DB>}
-                        {id >= 0 && <DB name="disable" onClick={this.buttonClick}>Disable</DB>}
-                        <DB name="connect" onClick={this.buttonClick}>Connect</DB>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const buttons = [
+        DBCancel(),
+        {
+            name: 'remove',
+            visible: props.id >= 0,
+            onClick: () => {
+                result('remove')
+            }
+        },
+        {
+            name: 'enable',
+            visible: props.id >= 0,
+            onClick: () => {
+                result('enable')
+            }
+        },
+        {
+            name: 'disable',
+            visible: props.id >= 0,
+            onClick: () => {
+                result('disable')
+            }
+        },
+        {
+            name:'connect',
+            onClick: () => {result('connect')}
+        }
+    ]
+    return (
+        <DialogFrame className="wpaDialog inner" title={props.ssid}>
+            <Input
+                dialogRow={true}
+                label="Password"
+                type="password"
+                name="psk"
+                onChange={(value) => setPsk(value)}
+                value={psk}/>
+            {props.showAccess ?
+                <Checkbox
+                    dialogRow={true}
+                    onChange={(newVal) => setAllowAccess(newVal)}
+                    label="External access"
+                    value={allowAccess}/>
+                : null
+            }
+
+            <DialogButtons buttonList={buttons}/>
+        </DialogFrame>
+    );
 };
 Dialog.propTypes={
-    closeCallback:PropTypes.func.isRequired,
     resultCallback: PropTypes.func.isRequired,
     showAccess: PropTypes.bool,
+    id: PropTypes.any,
+    ssid: PropTypes.string,
 
 };
 const LISTKEY='list';
 const timeout=4000;
-class WpaPage extends React.Component{
+class WpaPageContent extends React.Component{
     constructor(props){
         super(props);
         this.state={
             interface:undefined,
             showAccess: undefined
         }
-        this.buttons=[
-            Mob.mobDefinition(this.props.history),
-            {
-                name: 'Cancel',
-                onClick: ()=>{this.props.history.pop()}
-            }
-        ];
         this.itemClick=this.itemClick.bind(this);
         this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,timeout,true);
         this.numErrors=0;
@@ -270,7 +275,6 @@ class WpaPage extends React.Component{
     componentWillUnmount(){
     }
     render(){
-        const MainContent=(props)=> {
             return(
             <React.Fragment>
                 <Interface
@@ -288,20 +292,25 @@ class WpaPage extends React.Component{
                     />
             </React.Fragment>
             );
-        };
-
-        return (
-            <Page
-                {...this.props}
-                id="wpapage"
-                title="Wifi Client connection"
-                mainContent={
-                            <MainContent
-                            />
-                        }
-                buttonList={this.buttons}/>
-        );
     }
 }
 
-export default WpaPage;
+export default (props)=>{
+    const buttons=[
+        Mob.mobDefinition(props.history),
+        {
+            name: 'Cancel',
+            onClick: ()=>{props.history.pop()}
+        }
+    ];
+    return <PageFrame id={PAGEIDS.WPA} className={props.className}>
+        <PageLeft title="Wifi Client connection">
+            <WpaPageContent></WpaPageContent>
+        </PageLeft>
+        <ButtonList
+                page={PAGEIDS.WPA}
+                itemList={buttons}
+                widthChanged={props.buttonWidthChanged}
+            />
+    </PageFrame>
+};
