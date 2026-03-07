@@ -6,11 +6,14 @@ import Dynamic from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React from 'react';
+import React, {useEffect} from 'react';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests, {prepareUrl} from '../util/requests.js';
 import {
+    DBCancel, DBOk,
+    DialogButtons,
+    DialogFrame,
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
@@ -27,6 +30,7 @@ import Helper from "../util/helper";
 import GuiHelper from "../util/GuiHelpers";
 import {StatusItem} from '../components/StatusItems';
 import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
+import {useDialogContext} from "../components/exports";
 
 class Notifier{
     constructor() {
@@ -49,73 +53,59 @@ class Notifier{
     }
 }
 
-class DebugDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            isDebug:false,
-            pattern:'',
-            timeout:60
-        };
-        this.save=this.save.bind(this);
-    }
-    componentDidMount() {
+const DebugDialog=(props)=> {
+    const [isDebug,setDebug]=React.useState(false);
+    const [pattern,setPattern]=React.useState('');
+    const [timeout,setTimeout]=React.useState(60);
+    const dialogContext=useDialogContext();
+    useEffect(()=> {
         Requests.getJson({
-            request:'api',
-            type:'config',
-            command:'currentLogLevel'
+            request: 'api',
+            type: 'config',
+            command: 'currentLogLevel'
         })
-            .then((data)=>{
-                let ns={};
-                ns.isDebug=(data.level && data.level.match(/debug/i));
-                ns.pattern=data.filter||'';
-                this.setState(ns);
+            .then((data) => {
+                setDebug(data.level && data.level.match(/debug/i));
+                setPattern(data.filter || '');
             })
-            .catch((e)=>Toast(e))
-    }
+            .catch((e) => Toast(e))
+    },[]);
 
-    save(){
+    const save=()=> {
         Requests.getJson({
-            request:'api',
-            type:'config',
-            command:'loglevel',
-            level: this.state.isDebug?'debug':'info',
-            timeout:this.state.timeout,
-            filter:this.state.pattern ||''
+            request: 'api',
+            type: 'config',
+            command: 'loglevel',
+            level: isDebug ? 'debug' : 'info',
+            timeout: timeout,
+            filter: pattern || ''
         })
-            .then(()=>this.props.closeCallback())
-            .catch((e)=>Toast(e));
+            .then(() => dialogContext.closeDialog())
+            .catch((e) => Toast(e));
     }
-    render(){
-        return <div className="selectDialog DebugDialog">
-            <h3 className="dialogTitle">{this.props.title||'Enable/Disable Debug'}</h3>
+        return <DialogFrame className="selectDialog DebugDialog" title={props.title||'Enable/Disable Debug'}>
             <Checkbox
                 dialogRow={true}
                 label={'debug'}
-                value={this.state.isDebug}
-                onChange={(nv)=>this.setState({isDebug:nv})}
+                value={isDebug}
+                onChange={(nv)=>setDebug(nv)}
                 />
             <Input
                 type={'number'}
                 label={'timeout(s)'}
                 dialogRow={true}
-                value={this.state.timeout}
-                onChange={(nv)=>this.setState({timeout:nv})}/>
+                value={timeout}
+                onChange={(nv)=>setTimeout(nv)}/>
             <Input
                 label={'pattern'}
                 dialogRow={true}
-                value={this.state.pattern}
-                onChange={(nv)=>this.setState({pattern:nv})}/>
-            <div className="dialogButtons">
-                <DB name={'cancel'}
-                    onClick={this.props.closeCallback}
-                >Cancel</DB>
-                <DB name={'ok'}
-                    onClick={this.save}>Ok</DB>
-            </div>
-        </div>
-    }
-
+                value={pattern}
+                onChange={(nv)=>setPattern(nv)}/>
+            <DialogButtons buttonList={[
+                DBCancel(),
+                DBOk(()=>save())
+                ]}/>
+        </DialogFrame>
 }
 
 

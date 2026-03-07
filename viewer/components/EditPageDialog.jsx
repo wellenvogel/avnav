@@ -181,8 +181,7 @@ EditPageDialog.propTypes={
     title: PropTypes.string,
     page: PropTypes.string,
     panelNames: PropTypes.array,
-    supportedOptions: PropTypes.array,
-    closeCallback: PropTypes.func.isRequired
+    supportedOptions: PropTypes.array
 };
 
 /**
