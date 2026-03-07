@@ -143,6 +143,11 @@ class NMEAParser(object):
   K_TIME=Key('time','the received GPS time',signalK='navigation.datetime')
   K_SATUSED=Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites')
   K_SATVIEW=Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count')
+  K_FIX_TYPE=Key('fixType', 'GNSS fix type (1=none, 2=2D, 3=3D)')
+  K_FIX_QUALITY=Key('fixQuality', 'GNSS fix quality (0=invalid, 1=nonRTK, 2=SBAS/diff, 4=RTK fixed, 5=RTK float, 6=dead reckoning)')
+  K_PDOP=Key('PDOP', 'Position Dilution of Precision')
+  K_HDOP=Key('HDOP', 'Horizontal Dilution of Precision')
+  K_VDOP=Key('VDOP', 'Vertical Dilution of Precision')
   #we will add the GPS base to all entries
   GPS_DATA=[
     K_LAT,
@@ -162,6 +167,11 @@ class NMEAParser(object):
     K_TIME,
     K_SATVIEW,
     K_SATUSED,
+    K_FIX_TYPE,
+    K_FIX_QUALITY,
+    K_PDOP,
+    K_HDOP,
+    K_VDOP,
     Key('transducers.*','transducer data from xdr'),
     K_HDGC,
     K_HDGM,
@@ -382,9 +392,14 @@ class NMEAParser(object):
     try:
       if tag=='GGA':
         mode=int(darray[6] or 0) #quality
+        rt[self.K_FIX_QUALITY.key]=mode
         if mode >= 1 and all(darray[i] for i in (2,3,4,5)):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[2],darray[3])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[4],darray[5])
+        if darray[7]:
+          rt[self.K_SATUSED.key]=int(darray[7])
+        if darray[8]:
+          rt[self.K_HDOP.key]=float(darray[8])
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp,priority=basePriority)
         return True
       if tag == 'GSA':
@@ -393,6 +408,13 @@ class NMEAParser(object):
         used=store.getUsed()
         AVNLog.debug("GSA: added %d used %d",an,used)
         rt[self.K_SATUSED.key]=used
+        if darray[2]:
+          fix=int(darray[2])
+          if fix>1: rt[self.K_FIX_TYPE.key]=fix
+        for i,k in enumerate((self.K_PDOP,self.K_HDOP,self.K_VDOP)):
+          if not k: continue
+          dop=float(darray[15+i])
+          rt[k.key]=dop
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp,priority=basePriority)
         return True
       if tag=='GSV':
