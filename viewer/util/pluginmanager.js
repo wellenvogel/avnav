@@ -35,6 +35,7 @@ import Addons from "../components/Addons";
 import {layerFactory} from "../map/chartlayers";
 import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
 import React from 'react';
+import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
 
 
 class PluginApi extends ApiV2 {
@@ -479,6 +480,7 @@ class Pluginmanager{
         const foundPlugins={};
         queries.push(this.query().then((plugins)=>{
             if (!plugins || !(plugins instanceof Array)) {
+                if (alarmhandler.isBlocked(LOCAL_TYPES.connectionLost)) return;
                 Toast("unable to query plugins");
                 return;
             }

@@ -10,7 +10,7 @@ import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
-import alarmhandler from "../nav/alarmhandler";
+import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
 import Keyhandler from "../util/keyhandler";
 import GuiHelpers from "../util/GuiHelpers";
 
@@ -155,10 +155,10 @@ class AddOnPage extends React.Component{
                     else url+="?"+urladd;
                 }
                 if (currentAddOn.preventConnectionLost){
-                    this.blockAlarm('connectionLost');
+                    this.blockAlarm(LOCAL_TYPES.connectionLost);
                 }
                 else{
-                    this.unblockAlarm('connectionLost');
+                    this.unblockAlarm(LOCAL_TYPES.connectionLost);
                 }
                 let showInWindow=currentAddOn.newWindow === 'true';
                 let MainContent= (props)=>
