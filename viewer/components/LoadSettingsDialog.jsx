@@ -88,8 +88,8 @@ export const loadSettings = (currentValues, defaultName, opt_title, opt_preventD
         .then(
             (settings) => {
                 let replacements;
-                if (selectedEntry && selectedEntry.scopePrefix){
-                    replacements={prefix:selectedEntry.scopePrefix};
+                if (selectedEntry && selectedEntry.scope){
+                    replacements={prefix:selectedEntry.scope};
                 }
                 return PropertyHandler.verifySettingsData(settings, false, false,replacements)
             },
