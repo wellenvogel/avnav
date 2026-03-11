@@ -59,7 +59,6 @@ import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
 
 
-
 export const EventTypes = {
     SELECTWP: 2,
     RELOAD: 3,
@@ -70,61 +69,8 @@ export const EventTypes = {
 
 };
 
-/**
- * workaround for buggy handling of firefox touch events
- * firefox additionally sends mouse events when using touch
- * the pinch zoom get's totally confused by this as it does
- * not consider the type of the pointer
- * The main change is to filter out all non-touch events in handleEvents
- * for the handling in pinchZoom (but to restore them afterwards)
- * As pinchZoom only makes sense with touch events we just skip all events
- * that do not contain touch pointers.
- * The additional change in handleDrag is just to prevent the generation
- * of invalid resolutions the case of zero distance events
- */
-class OurPinchZoom extends olInteraction.PinchZoom{
+const EVENTLOG=false;
 
-    constructor(options) {
-        super(options);
-    }
-
-    handleEvent(mapBrowserEvent) {
-        //base.log("PZ event",mapBrowserEvent);
-        if (mapBrowserEvent.activePointers) {
-            const newActivePointers = [];
-            for (let ap of mapBrowserEvent.activePointers) {
-                if (ap.pointerType !== 'touch' && ap.pointerType != undefined) continue;
-                newActivePointers.push(ap);
-            }
-            if (newActivePointers.length < 1) {
-                //we are only interested in touch events
-                return true
-            }
-            const originalPointers=mapBrowserEvent.activePointers;
-            mapBrowserEvent.activePointers = newActivePointers;
-            const rt=super.handleEvent(mapBrowserEvent);
-            mapBrowserEvent.activePointers = originalPointers;
-            return rt;
-        }
-        return super.handleEvent(mapBrowserEvent);
-    }
-
-
-    handleDragEvent(mapBrowserEvent) {
-        if (this.targetPointers.length < 2) return;
-        const touch0 = this.targetPointers[0];
-        const touch1 = this.targetPointers[1];
-        const dx = touch0.clientX - touch1.clientX;
-        const dy = touch0.clientY - touch1.clientY;
-
-        // distance between touches
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        //just to be sure not to create an invalid scale
-        if (distance < 2) return;
-        //base.log("PZ drag",distance,this.targetPointers.length);
-        super.handleDragEvent(mapBrowserEvent);
-    }
-}
 class Context {
     constructor() {
         this.width = undefined;
@@ -450,6 +396,22 @@ class MapHolder extends DrawingPositionConverter {
         Leavehandler.subscribe(()=>{
             this.saveCenter(true);
         })
+        /**
+         * remember the currently active touch targets
+         * to ignore pointerevents with pinterType mouse
+         * while touch actions are ongoing.
+         * see https://github.com/wellenvogel/avnav/issues/549
+         * @type {*[]}
+         * @private
+         */
+        this._lastTouches=[];
+        /**
+         * keep the last map viewport that we used to register
+         * our event handlers BEFORE any map handlers
+         * @type {undefined}
+         * @private
+         */
+        this._lastEventDiv=undefined;
     }
     logError(key,...error){
         if (!error || (Array.isArray(error) && error.length<1)) {
@@ -612,6 +574,7 @@ class MapHolder extends DrawingPositionConverter {
         if (opt_map) {
             this.mapUserAction()
         }
+        return true;
     }
 
     isInUserActionGuard(opt_map) {
@@ -1026,6 +989,7 @@ class MapHolder extends DrawingPositionConverter {
         this.minzoom = 32;
         this.mapMinZoom = this.minzoom;
         this.maxzoom = 0;
+        this._lastTouches=[];
         IconImageCache.clear();
         //we need to reset the protocol as it has caches for the PMTiles - but they could have changed
         addProtocol(PMTILESPROTO,()=>{throw new Error("no map active")});
@@ -1065,6 +1029,18 @@ class MapHolder extends DrawingPositionConverter {
         if (hasBaseLayers) {
             this.minzoom = 2;
         }
+        const LOGEVENTS=['pointerdown','pointercancel','pointerup',
+            'pointermove','pointerdrag'];
+        const evlog=(type,event)=>{
+            const pt=event.pointerType || (event.originalEvent?event.originalEvent.pointerType:undefined);
+            if (pt == 'mouse'){
+                base.log(`### mouseEvent ${type}`,event);
+            }
+            else{
+                base.log(`Event ${type}`,event)
+            }
+            return true;
+        }
         if (this.olmap) {
             let oldlayers = this.olmap.getLayers();
             if (oldlayers && oldlayers.getArray().length) {
@@ -1096,10 +1072,10 @@ class MapHolder extends DrawingPositionConverter {
             this.renderTo(div);
         } else {
             addProtocol(PMTILESPROTO,(new Protocol()).tile)
-            let base = [];
-            base.push(this.getBaseLayer(hasBaseLayers));
+            let baseWithOutline = [];
+            baseWithOutline.push(this.getBaseLayer(hasBaseLayers));
             if (baseLayers.length > 0) {
-                base.push(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
+                baseWithOutline.push(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
             }
             let pixelRatio = undefined;
             try {
@@ -1114,7 +1090,7 @@ class MapHolder extends DrawingPositionConverter {
                 altShiftDragRotate: false,
                 pinchRotate: false,
                 mouseWheelZoom: false,
-                pinchZoom: false,
+                //pinchZoom: false,
             });
             interactions.push(new MouseWheelZoom({
                 condition: (ev) => {
@@ -1128,11 +1104,10 @@ class MapHolder extends DrawingPositionConverter {
                     return true;
                 }
             }));
-            interactions.push(new OurPinchZoom())
             this.olmap = new olMap({
                 pixelRatio: pixelRatio,
                 target: div ? div : this.defaultDiv,
-                layers: base.concat(layers),
+                layers: baseWithOutline.concat(layers),
                 interactions: interactions,
                 controls: [],
                 view: new olView({
@@ -1143,6 +1118,53 @@ class MapHolder extends DrawingPositionConverter {
                 })
 
             });
+            /**
+             * firefox on touch devices (AvNav touch images) seems
+             * to have a very strange bug: Sometimes it fires mouse events
+             * (pointermove, pointerdrag) additionally to the touch events
+             * This confuses ol - see https://github.com/wellenvogel/avnav/issues/549
+             * To prevent this we will silently ignore pointerxxx events with
+             * pointerType mouse if we have active touch events (we monitor
+             * them by remembering the active targets from
+             * pointerdown and pointerup)
+             * Still no solution if a mouse event occurs outside
+             * of touch actions - but only observed for pointermove
+             * and this gets ignored if no previous pointerdown was there
+             * To register our handlers before any map handlers we overwrite
+             * getViewport as this is used by MapBrowserEventHandler to
+             * obtain the element it uses to register events.
+             * By checking if this viewport element changes
+             * and registering our handlers then we are sure that they run before any map
+             * event handler so that we have the chance to use stopImmediatePropagation
+             * on pointerType mouse
+             */
+            const getViewport=this.olmap.getViewport.bind(this.olmap);
+            this.olmap.getViewport=()=>{
+                const vp=getViewport();
+                if (vp && vp !== this._lastEventDiv){
+                    base.log("setting element event listeners",vp);
+                    for (let ev of LOGEVENTS){
+                        vp.addEventListener(ev, (fe)=>{
+                            if (fe.pointerType === 'mouse'){
+                                if (this._lastTouches !== undefined && this._lastTouches.length > 0){
+                                    base.log("drop mouse event");
+                                    fe.stopImmediatePropagation();
+                                }
+                            }
+                            if (EVENTLOG) {
+                                evlog("RAW" + ev, fe)
+                            }
+                        })
+                    }
+                    this._lastEventDiv=vp;
+                }
+                return vp;
+            }
+            if (EVENTLOG) {
+                this.olmap.addChangeListener('target', (ev) => {
+                    base.log("map target changed", ev);
+                })
+            }
             this.olmap.on('click', (evt) => {
                 this._callGuards('click');
                 this.userAction(true);
@@ -1154,6 +1176,23 @@ class MapHolder extends DrawingPositionConverter {
             this.olmap.getView().on('change:resolution', (evt) => {
                 return this.onZoomChange(evt);
             });
+            if (EVENTLOG) {
+                for (let ev of LOGEVENTS) {
+                    this.olmap.on(ev, (fe) => evlog(ev, fe));
+                }
+            }
+            for (let ev of ['pointerup','pointerdown']) {
+                this.olmap.on(ev,(fe)=>{
+                    this._lastTouches=[];
+                    if (fe.activePointers){
+                        for (let tp of fe.activePointers){
+                            if (tp.pointerType === 'touch'){
+                                this._lastTouches.push(tp);
+                            }
+                        }
+                    }
+                })
+            }
         }
         if (layers.length > 0) {
             layers[layers.length - 1].on('postrender', (evt) => {
