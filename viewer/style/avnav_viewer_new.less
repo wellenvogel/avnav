@@ -1535,10 +1535,11 @@ span.valuePrefix{
     }
     .sectionList{
       border-right: @normalBorder ;
-      margin-right: 2em;
       border-color: var(--avnav-border-color);
-      width: 10em;
-      .flex-grow(0);
+      flex-basis: 10em;
+      flex-grow: 0;
+      display: flex;
+      flex-direction: column;
       &.expand{
         .flex-grow(1);
         width: 100%;
