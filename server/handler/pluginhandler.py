@@ -652,6 +652,7 @@ class ApiImpl(AVNApi):
             AVNLog.info("plugin %s is disabled by config", self.prefix)
             self.setStatus(WorkerStatus.INACTIVE, "disabled by config")
             return
+        self.stopped=False
         try:
             self.handlePluginJson()
         except Exception as e:

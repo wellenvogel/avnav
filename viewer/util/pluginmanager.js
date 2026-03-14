@@ -557,6 +557,7 @@ class Pluginmanager{
                     base.log("loading/updating css for " + pluginName);
                     loadOrUpdateCss(plugin.css.url, cssid);
                     this.css[pluginName]=plugin.css.timestamp;
+                    hasUpdates=true
                 }
             }
         }
@@ -572,6 +573,7 @@ class Pluginmanager{
                 base.log("deleting css for " + pname);
                 loadOrUpdateCss(undefined, cssid);
                 delete this.css[pname];
+                hasUpdates=true;
             }
         }
         //for the legacy JS we know that all js entries have been now created
