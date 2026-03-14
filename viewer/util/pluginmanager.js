@@ -480,9 +480,7 @@ class Pluginmanager{
         const foundPlugins={};
         queries.push(this.query().then((plugins)=>{
             if (!plugins || !(plugins instanceof Array)) {
-                if (alarmhandler.isBlocked(LOCAL_TYPES.connectionLost)) return;
-                Toast("unable to query plugins");
-                return;
+                throw new Error("no plugins returned")
             }
             for (let plugin of plugins) {
                 const name = plugin.name;
@@ -494,7 +492,14 @@ class Pluginmanager{
         queries.push(this.queryUser().then((userFiles)=>{
             foundPlugins[userFiles.name] = userFiles;
         }));
-        await Promise.all(queries);
+        try {
+            await Promise.all(queries);
+        }catch (e){
+            base.error("unable to query plugins",e);
+            if (alarmhandler.isBlocked(LOCAL_TYPES.connectionLost)) return;
+            Toast("unable to query plugins");
+            return;
+        }
         base.log("got plugin/user info");
         let unloadedJsChanges=false;
         let updatedMjs=false;
