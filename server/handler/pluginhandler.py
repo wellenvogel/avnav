@@ -171,7 +171,7 @@ class ApiImpl(AVNApi):
         except:
             pass
         try:
-            importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName())  # type: AVNImporter
+            importer = AVNWorker.findHandlerByName(AVNImporter.getConfigName(),disabled=True)  # type: AVNImporter
             if importer:
                 for name in self.converters:
                     importer.deregisterConverter(name)

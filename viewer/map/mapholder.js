@@ -1873,10 +1873,12 @@ class MapHolder extends DrawingPositionConverter {
                 }
             }
         }
-
-        if (promises.length < 1) {
+        const callResults=()=>{
             this._callGuards('click'); //do this again as some time could have passed
             return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos})
+        }
+        if (promises.length < 1) {
+            return callResults();
         }
         Promise.all(promises)
             .then((promiseFeatures) => {
@@ -1888,12 +1890,11 @@ class MapHolder extends DrawingPositionConverter {
                         }
                     }
                 }
-                this._callGuards('click'); //do this again as some time could have passed
-                this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos});
-                return true;
+                callResults();
             })
             .catch((error) => {
                 base.log("error in query features: " + error);
+                callResults();
             });
         return false;
     }

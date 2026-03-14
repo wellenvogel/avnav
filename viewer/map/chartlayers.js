@@ -428,14 +428,11 @@ class LayerConfigXYZ extends LayerConfig{
             return f;
         }
     }
-    finalUrl(url) {
-        return url;
-    }
     tileLoadFunction(imageTile, src){
         if (this.userCallbackData.tileLoadFunction){
             return this.userCallbackData.tileLoadFunction(imageTile, src,this.userContext);
         }
-        imageTile.getImage().src = this.finalUrl(src)
+        imageTile.getImage().src = src
     }
 
     createOL(options) {
@@ -595,7 +592,10 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
             if (this.inversy) {
                 y = (1 << z) - y - 1
             }
-            let tileUrl = "##encrypt##"+ z + '/' + x + '/' + y + ".png";
+            let tileUrl = z + '/' + x + '/' + y + ".png";
+            if (this.encryptFunction){
+                tileUrl=this.encryptFunction(tileUrl);
+            }
             return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl)
         }
         if (this.userCallbackData.createTileUrlFunction){
@@ -603,19 +603,11 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
         }
         return f;
     }
-    finalUrl(url) {
-        let encryptPart = url.replace(/.*##encrypt##/, "");
-        let basePart = url.replace(/##encrypt##.*/, "");
-        if (! this.encryptFunction) {
-            return basePart+encryptPart;
-        }
-        return basePart + this.encryptFunction(encryptPart);
-    }
-
     createOL(options) {
         const rt=super.createOL(options);
+        const tileUrlFunction=this.createTileUrlFunction(options);
         setav(rt,{
-            finalUrl:(url)=>this.finalUrl(url)
+            tileUrlFunction:(tile)=>tileUrlFunction(tile)
         })
         return rt;
     }
