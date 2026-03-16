@@ -28,6 +28,8 @@ import Helper, {avitem} from "../util/helper";
 import {shallowEqual} from "shallow-equal";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase} from "../util/itemFunctions";
+import {showDialog} from "../components/OverlayDialog";
+import {MainNav} from "./MainNav";
 
 
 const getImgSrc=function(color){
@@ -177,6 +179,13 @@ class MainPage extends React.Component {
 
     getButtons() {
         return [
+            {
+                name: 'MainNav',
+                onClick: ()=>showDialog(undefined,()=><MainNav
+                    current={'mainpage'}
+                    history={this.props.history}
+                />,undefined,{coverClassName:'MainNavCover'})
+            },
             {
                 name: 'ShowStatus',
                 onClick: ()=> {

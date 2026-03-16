@@ -270,8 +270,7 @@ body{
   max-width: 100%;
 
   .flexInner {
-    .flex-display();
-    .flex-direction(column);
+    display: block;
   }
   .dialogObjects();
 }
@@ -982,6 +981,28 @@ span.valuePrefix{
   height: 1.5em;
   vertical-align: middle;
   .nightOPacity();
+}
+//----------------------------------------------------------------------------------------
+//MainNav
+//----------------------------------------------------------------------------------------
+.MainNavCover{
+  justify-content: end;
+  align-items: start;
+  .icon.MNcollapsed{
+    .iconImage('navigate_next.svg');
+    rotate: 90deg;
+  }
+  .icon.MNexpanded{
+    .iconImage('navigate_next.svg');
+    rotate: 270deg;
+  }
+  .flexInner{
+    min-width: 15em;
+  }
+  .ButtonRow.listEntry{
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
   //----------------------------------------------------------------------------------------
