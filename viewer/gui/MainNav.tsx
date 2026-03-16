@@ -76,12 +76,12 @@ const mainTree=[
     new Page('mainpage','navigation','Select Chart',[
         BACK,
         MOB,
-        new ButtonEntry('connected','connected mode'),
-        new ButtonEntry('dashboards','Dashboard'),
-        new ButtonEntry('night','night mode'),
-        new ButtonEntry('fullscreen'),
-        new ButtonEntry('remote','remote control'),
-        new ButtonEntry('split','split mode'),
+        new ButtonEntry('Connected','connected mode'),
+        new ButtonEntry('ShowGps','dashboard'),
+        new ButtonEntry('Night','night mode'),
+        new ButtonEntry('FullScreen','full screen'),
+        new ButtonEntry('RemoteChannel','remote control'),
+        new ButtonEntry('Split','split mode'),
     ])
 ]
 type EventHandler=(e:SyntheticEvent) => void;
@@ -105,9 +105,9 @@ interface PageRowProps{
     page:Page;
     onClick:EventHandler;
     isCurrent:boolean;
+    expanded: boolean;
 }
-const PageRow=({page,onClick,isCurrent}:PageRowProps)=>{
-    const [expanded, setExpanded] = useState(isCurrent);
+const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind)
     return <React.Fragment>
         <ListItem
@@ -122,22 +122,24 @@ const PageRow=({page,onClick,isCurrent}:PageRowProps)=>{
         <ListSlot
             icon={{className:expanded?'MNexpanded':'MNcollapsed'}}
             onClick={(ev)=>{
-                ev.stopPropagation();
-                setExpanded((old)=>!old)
+                setav(ev,{expanded:!expanded});
+                onClick(ev);
             }}
         ></ListSlot>
         </ListItem>
         {expanded &&
             <ListFrame className={'ButtonList'}>
-                {page.buttons.map((bt)=>
-                        <ButtonRow
+                {page.buttons.map((bt)=> {
+                    if (bt.localOnly && ! isCurrent) return null;
+                    return <ButtonRow
                             button={bt}
                             key={bt.name}
-                            onClick={(ev)=>{
+                            onClick={(ev) => {
                                 ev.stopPropagation()
-                                setav(ev,{page:page.name,button:bt.name})
+                                setav(ev, {page: page.name, button: bt.name})
                                 onClick(ev)
-                        }}></ButtonRow>
+                            }}></ButtonRow>
+                    }
                 )}
             </ListFrame>}
 
@@ -147,13 +149,26 @@ const PageRow=({page,onClick,isCurrent}:PageRowProps)=>{
 export interface MainNavProps extends Record<string, any> {}
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
+    const [expanded,setExpanded]=useState(props.current);
     return <DialogFrame className={'MainNav'}>
         {mainTree.map((page)=>{
             return <PageRow key={page.name} page={page} onClick={(ev: SyntheticEvent)=> {
                 const av=getav(ev);
+                if (av.expanded !== undefined) {
+                    if (av.expanded) {
+                        setExpanded(page.name);
+                    }
+                    else {
+                        setExpanded(undefined);
+                    }
+                    return;
+                }
                 alert(`page=${av.page},bt=${av.button}`)
                 dialogContext.closeDialog();
-            }} isCurrent={page.name==props.current}/>;
+            }}
+                 isCurrent={page.name==props.current}
+                 expanded={page.name === expanded}
+            />;
         })}
     </DialogFrame>
 }
