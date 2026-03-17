@@ -26,7 +26,8 @@ import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListIte
 import Helper, {getav, setav} from "../util/helper";
 import {useDialogContext} from "../components/DialogContext";
 // @ts-ignore
-import {DialogFrame} from '../components/OverlayDialog.jsx';
+import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
+import {useHistory} from "../components/HistoryProvider";
 
 class ButtonEntry{
     name:string;
@@ -150,8 +151,11 @@ export interface MainNavProps extends Record<string, any> {}
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
     const [expanded,setExpanded]=useState(props.current);
+    const history=useHistory();
+    const pages=mainTree.slice(0);
+    pages.sort((a)=>(a.name===props.current)?-1:0);
     return <DialogFrame className={'MainNav'}>
-        {mainTree.map((page)=>{
+        {pages.map((page)=>{
             return <PageRow key={page.name} page={page} onClick={(ev: SyntheticEvent)=> {
                 const av=getav(ev);
                 if (av.expanded !== undefined) {
@@ -163,8 +167,13 @@ export const MainNav = (props:MainNavProps) => {
                     }
                     return;
                 }
-                alert(`page=${av.page},bt=${av.button}`)
                 dialogContext.closeDialog();
+                if (page.name === props.current) {
+                    history.replace(page.name, {button: av.button});
+                }
+                else {
+                    history.push(page.name,{button:av.button});
+                }
             }}
                  isCurrent={page.name==props.current}
                  expanded={page.name === expanded}
@@ -172,4 +181,15 @@ export const MainNav = (props:MainNavProps) => {
         })}
     </DialogFrame>
 }
- 
+
+export const MainNavButton=(pagename:string) => {
+    return {
+        name: 'MainNav',
+        onClick: (ev:SyntheticEvent)=>{
+            const dialogContext=getav(ev).dialogContext;
+            showDialog(dialogContext,()=><MainNav
+                current={pagename}
+            />,undefined,{coverClassName:'MainNavCover'})
+        }
+    }
+}

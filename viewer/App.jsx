@@ -1,7 +1,7 @@
 //avnav (C) wellenvogel 2019
 
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
-import History from './util/history.js';
+import History from './util/history.ts';
 import Dynamic from './hoc/Dynamic.tsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
@@ -76,13 +76,14 @@ const computeAlarmSound=(state)=> {
     return {enabled:true,...off};
 }
 //legacy support - hand over to the "old" gui handler
-class Other extends React.Component{
-    constructor(props){
-        super(props);
-    }
-    render() {
-        return <h1>Unknown page</h1>;
-    }
+const Other=(props)=>{
+        return <React.Fragment>
+            <h1>Unknown page {'"'+props.id+'"'}</h1>
+            <Button
+                name={'main'}
+                onClick={()=>props.history.replace(PAGEIDS.MAIN)}
+            >Main</Button>
+        </React.Fragment>
 }
 
 

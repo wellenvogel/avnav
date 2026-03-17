@@ -22,28 +22,59 @@
  #
  ###############################################################################
  */
-import {createContext, useContext} from "react";
+import {createContext, ReactNode, useContext} from "react";
 import React from 'react';
-import PropTypes from "prop-types";
+import History, {HistoryEntry, HistoryOptions, IHistory} from "../util/history";
 
-const buildContext=(history)=>{
-    const f=(name)=> (...args)=>{
-        if (history) return history[name](...args);
+
+class IHistoryImpl implements IHistory {
+    private history: History;
+    constructor(history: History) {
+        this.history = history;
     }
-    const rt={};
-    for ( const n of ['replace','push','pop','reset','setOptions','currentLocation']){
-        rt[n]=f(n)
+
+    currentLocation(opt_includeOptions?: boolean | undefined): string | HistoryEntry {
+        if (! this.history) return;
+        return this.history.currentLocation(opt_includeOptions);
     }
-    return rt;
+
+    pop(): void {
+        if (! this.history) return;
+        this.history.pop();
+    }
+
+    push(location: string, options: HistoryOptions | undefined): void {
+        if (! this.history) return;
+        this.history.push(location, options);
+    }
+
+    replace(location: string, options: HistoryOptions | undefined): void {
+        if (! this.history) return;
+        this.history.replace(location, options);
+    }
+
+    reset(): void {
+        if (! this.history) return;
+        this.history.reset();
+    }
+
+    setOptions(options: HistoryOptions | undefined): void {
+        if (! this.history) return;
+        this.history.setOptions(options);
+    }
+
+}
+const buildContext=(history?:History):IHistory=>{
+    return new IHistoryImpl(history);
 }
 const HistoryContextImpl=createContext(buildContext());
 export const useHistory=()=>useContext(HistoryContextImpl);
-export const HistoryContext=({history,children})=>{
+export interface HistoryContextParameters{
+    history:History;
+    children: ReactNode;
+}
+export const HistoryContext=({history,children}:HistoryContextParameters)=>{
     return <HistoryContextImpl.Provider value={buildContext(history)}>
         {children}
     </HistoryContextImpl.Provider>
-}
-HistoryContext.propTypes={
-    history:PropTypes.object,
-    children:PropTypes.node,
 }

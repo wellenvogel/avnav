@@ -11,7 +11,7 @@ const Button = (props) => {
         if (props.onClick && !props.disabled) props.onClick();
     });
     const dialogContext=useDialogContext();
-    let {toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, dummy, ...forward} = props;
+    let {toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, dummy,children, ...forward} = props;
     let className = props.className || "";
     className += " button " + props.name;
     if (toggle !== undefined) {
@@ -35,6 +35,7 @@ const Button = (props) => {
     return (
         <button {...forward} {...add} className={className}>
             <span style={spanStyle}/>
+            {children}
         </button>
     );
 }
