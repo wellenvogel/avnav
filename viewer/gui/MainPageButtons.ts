@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import {propsToDefs} from "../components/Button";
+import {propsToDefs, updateButtons} from "../components/Button";
 // @ts-ignore
 import keys from "../util/keys";
 // @ts-ignore
@@ -33,8 +33,13 @@ import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../components/Fullscreen';
 // @ts-ignore
 import splitsupport from '../util/splitsupport';
+import GeneralButtons from "./GeneralButtons";
 
-export default propsToDefs([
+// @ts-ignore
+// @ts-ignore
+// @ts-ignore
+// @ts-ignore
+export default updateButtons(GeneralButtons.concat(propsToDefs([
     {
         name: 'ShowStatus',
         displayName: 'status',
@@ -103,4 +108,9 @@ export default propsToDefs([
     FullScreen.fullScreenDefinition,
     splitsupport.buttonDef({overflow:true}),
 
-])
+])),{
+    Cancel:{
+        //@ts-ignore
+        visible:!!window.avnavAndroid
+    }
+});

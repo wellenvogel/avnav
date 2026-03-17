@@ -85,6 +85,7 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
         <ListMainSlot primary={page.getDisplay()}>
         </ListMainSlot>
         <ListSlot
+            className={'iconSlot'}
             icon={{className:expanded?'MNexpanded':'MNcollapsed'}}
             onClick={(ev)=>{
                 setav(ev,{expanded:!expanded});

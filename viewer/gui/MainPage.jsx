@@ -225,8 +225,7 @@ class MainPage extends React.Component {
             Cancel: {
                 onClick: () => {
                     if (window.avnavAndroid) window.avnavAndroid.goBack()
-                },
-                visible:!!window.avnavAndroid
+                }
             }
         }
 
