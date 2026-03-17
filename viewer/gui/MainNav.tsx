@@ -30,6 +30,9 @@ import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, ButtonEventHandler, ButtonRow} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
 import GeneralButtons from "./GeneralButtons";
+import globalstore from "../util/globalstore";
+// @ts-ignore
+import keys from "../util/keys";
 
 type PageKind='navigation'|'settings';
 
@@ -69,7 +72,8 @@ interface PageRowProps{
     expanded: boolean;
 }
 const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
-    const className=Helper.concatsp('Page',page.kind)
+    const className=Helper.concatsp('Page',page.kind);
+    const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     return <React.Fragment>
         <ListItem
         className={className}
@@ -92,9 +96,9 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
             <ListFrame className={'ButtonList'}>
                 {page.buttons.map((bt)=> {
                     if (bt.localOnly && ! isCurrent) return null;
+                    if (bt.editOnly && ! layoutEditing) return null;
                     return <ButtonRow
-                            name={bt.name}
-                            displayName={bt.displayName}
+                            {...bt}
                             key={bt.name}
                             onClick={(ev) => {
                                 ev.stopPropagation()

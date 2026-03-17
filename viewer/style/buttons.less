@@ -3,15 +3,19 @@
 //----------------------------------------------------------------------------------------
 //buttons
 //----------------------------------------------------------------------------------------
+.activeColor(@activeColor){
+  & > span:first-child{
+    border-color: @activeColor;
+  }
+}
 .buttonBase(){
   margin: 0.2em 0.2em 0.2em 0.2em;
   border-top-right-radius: 0.3em;
   border-top-left-radius: 0.3em;
   border-bottom-right-radius: 0.3em;
   border-bottom-left-radius: 0.3em;
-  border: @normalBorder;
+  border: unset;
   text-decoration: none;
-  border-color: var(--avnav-button-color);
   background-color: var(--avnav-button-color);
   //position: relative;
   cursor: pointer;
@@ -32,6 +36,17 @@
     opacity: 0.5;
   }
   .flex-shrink(0);
+  &.active{
+    .activeColor(var(--avnav-active-color));
+    &.MOB{
+      .activeColor(var(--avnav-attention-color));
+    }
+    & > span:first-child{
+      border-width: 0.3em;
+      border-style: solid ;
+      border-radius: inherit;
+    }
+  }
 }
 
 .button{
@@ -55,13 +70,6 @@
   height: 2em;
   font-size: 1rem;
 }
-.button.active{
-  border: 0.3em solid ;
-  border-color: var(--avnav-active-color);
-  &.MOB{
-    border-color: var(--avnav-attention-color);
-  }
-}
 
 .iconButton(@icon){
   span {
@@ -79,6 +87,8 @@
     content: @text;
   }
 }
+
+
 
 .dialogButton{
     .buttonBase();
@@ -110,11 +120,6 @@
       padding-left: 1.3em;
       font-size: 0.9em;
     }
-    &.active {
-      border: 0.3em solid;
-      border-color: var(--avnav-active-color);
-      padding: 0.2em;
-    }
 
 }
 
@@ -128,6 +133,21 @@
   > span:after{
     content: @text;
   }
+}
+
+.buttonRow{
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: unset;
+  border-radius: 0;
+  border: unset;
+  background-color: unset;
+  width: unset;
+  height: unset;
+}
+.buttonRow > span:first-child{
+  position: unset;
+  .smallButton();
 }
 
 .button{
@@ -450,9 +470,7 @@
 
   &.SettingsLayout{
     .iconButton('ballot.svg');
-    &.button.active{
-      border-color: var(--avnav-attention-color);
-    }
+    .activeColor(var(--avnav-attention-color));
   }
   &.SettingsLayoutOff{
     .iconButton('ballot-off.svg');
@@ -478,9 +496,7 @@
 
   &.LayoutFinished{
     .iconButton('ballot.svg');
-    &.button.active{
-      border-color: var(--avnav-attention-color);
-    }
+    .activeColor(var(--avnav-attention-color));
   }
   &.RevertLayout{
     .iconButton('ic_undo.svg');

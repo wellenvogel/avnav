@@ -5,7 +5,7 @@ import {DynamicProps, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
-import {ListItem, ListMainSlot} from "./exports";
+import {ListMainSlot} from "./exports";
 export interface ButtonProps {
         onClick?: (ev:SyntheticEvent|Record<string,any>)=>void,
         className?: string;
@@ -50,6 +50,14 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     localOnly?: boolean;
     displayName?: string;
 }
+export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
+
+const toggleClass=(props:ButtonProps)=> {
+    if (props.toggle !== undefined) {
+        const togglev = (typeof (props.toggle) === 'function') ? props.toggle() : props.toggle;
+        return togglev ? " active" : " inactive";
+    }
+}
 
 const Button = (props:ButtonProps) => {
     const dialogContext=useDialogContext();
@@ -59,14 +67,16 @@ const Button = (props:ButtonProps) => {
             props.onClick(ev);
         }
     });
+    const iprops=useStore(props);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children, ...forward} = props;
-    let className = props.className || "";
-    className += " button " + props.name;
-    if (toggle !== undefined) {
-        const togglev = (typeof (toggle) === 'function') ? toggle() : toggle;
-        className += togglev ? " active" : " inactive";
+    const {name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children, ...forward} = iprops;
+    if (visible !== undefined && ! visible) {
+        return null;
     }
+    const className=Helper.concatsp(props.className,
+        'button',
+        name,
+        toggleClass(iprops));
     const spanStyle:Record<string, any> = {};
     if (icon !== undefined) {
         spanStyle.backgroundImage = "url(" + icon + ")";
@@ -77,36 +87,27 @@ const Button = (props:ButtonProps) => {
     }
     if (forward.onClick){
         const click=forward.onClick;
-        forward.onClick=(ev)=>{
+        forward.onClick=(ev:ButtonEvent)=>{
             click(setav(ev,{dialogContext:dialogContext}));
         }
     }
     return (
-        <button {...forward} {...add} className={className}>
+        <div {...forward} {...add} className={className}>
             <span style={spanStyle}/>
             {children}
-        </button>
+        </div>
     );
 }
 
-export const ButtonRow=(button:ButtonProps) => {
-    const className=Helper.concatsp('buttonRow','button','smallButton',button.name);
-    return <ListItem className={className} onClick={button.onClick}>
-            <span className={'buttonIcon'}></span>
+export const ButtonRow=(button:DynamicButtonProps) => {
+    const className=Helper.concatsp('buttonRow listEntry',button.className);
+    return <Button {...button} className={className} displayName={undefined}>
         <ListMainSlot primary={button.displayName||button.name}></ListMainSlot>
-    </ListItem>
+    </Button>
 }
 
 
 export default Button;
-export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
-export const DynamicButton=(props:DynamicButtonProps)=>{
-    const iprops=useStore(props);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {visible,storeKeys,store,...forward}=iprops;
-    if (! visible) return null;
-    return <Button {...forward}>{props.children}</Button>;
-}
 
 export const propsToDefs=(props:DynamicButtonProps[]):ButtonDef[] => {
     const rt:ButtonDef[] = [];

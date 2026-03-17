@@ -37,19 +37,23 @@ import splitsupport from '../util/splitsupport';
 export default propsToDefs([
     {
         name: 'ShowStatus',
+        displayName: 'status',
         editDisable: true
     },
     {
         name: 'ShowSettings',
+        displayName: 'settings',
         overflow: true
     },
     {
         name: 'ShowDownload',
+        displayName: 'download',
         editDisable: true,
         overflow: true
     },
     {
         name: 'Connected',
+        displayName: 'connected',
         storeKeys: {
             onAndroid:keys.gui.global.onAndroid,
             connected: keys.properties.connectedMode,
@@ -65,9 +69,11 @@ export default propsToDefs([
     },
     {
         name: 'ShowGps',
+        displayName: 'dashboard',
     },
     {
         name: 'Night',
+        displayName: 'night mode',
         storeKeys: {toggle: keys.properties.nightMode},
     },
     LayoutFinishedDialog.getButtonDef(),
@@ -75,6 +81,7 @@ export default propsToDefs([
 
     {
         name: 'NavOverlays',
+        displayName: 'overlays',
         editDisable: true,
         overflow: true,
         storeKeys: {
@@ -89,6 +96,7 @@ export default propsToDefs([
     },
     {
         name: 'MainAddOns',
+        displayName: 'user apps',
         editDisable: true
     },
     RemoteChannelDialog({overflow:true}),

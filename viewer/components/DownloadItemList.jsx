@@ -34,7 +34,7 @@ import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
 import UploadHandler from "./UploadHandler";
-import {DynamicButton} from "./Button";
+import Button, {DynamicButton} from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
 import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunctions";
@@ -202,7 +202,7 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
             checkNameCallback={(file, dialogContext) => uploadAction.checkFile(file, dialogContext)}
         />
         {(type === "user" && showCreate) ?
-            <DynamicButton
+            <Button
                 className="fab"
                 name="DownloadPageCreate"
                 onClick={() => {

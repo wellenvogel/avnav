@@ -123,6 +123,7 @@ const init=()=>{
 
 const fullScreenDefinition={
     name: "FullScreen",
+    displayName:"full screen",
     storeKeys: {
         visible:keys.properties.showFullScreen,
         toggle:keys.gui.global.isFullScreen,
