@@ -2,9 +2,9 @@
  * Created by andreas on 02.05.14.
  */
 
-import Button from '../components/Button.jsx';
+import Button, {updateButtons} from '../components/Button.tsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
@@ -15,7 +15,7 @@ import base from '../base.ts';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import Addons from '../components/Addons.js';
 import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
@@ -31,6 +31,7 @@ import {getUrlWithBase} from "../util/itemFunctions";
 import {showDialog} from "../components/OverlayDialog";
 import {MainNav, MainNavButton} from "./MainNav";
 import {PAGEIDS} from "../util/pageids";
+import MainPageButtons from "./MainPageButtons";
 
 
 const getImgSrc=function(color){
@@ -163,6 +164,71 @@ class MainPage extends React.Component {
         },"page",["selectChart","nextChart","previousChart"]);
         this.showNavpage=this.showNavpage.bind(this);
         this.ChartItem=this.ChartItem.bind(this);
+        //TODO
+        const revertButton=LayoutHandler.revertButtonDef(
+            (pageWithOptions)=>{
+                if (pageWithOptions.location !== this.props.location){
+                    this.props.history.push(pageWithOptions.location,pageWithOptions.options);
+                }
+            }
+        )
+        this.buttonActions = {
+            ShowStatus: {
+                onClick: () => {
+                    this.props.history.push('statuspage')
+                }
+            },
+            ShowSettings: {
+                onClick: () => {
+                    this.props.history.push('settingspage')
+                },
+            },
+            ShowDownload: {
+                onClick: () => {
+                    this.props.history.push('downloadpage')
+                }
+            },
+            Connected: {
+                onClick: () => {
+                    let con = globalStore.getData(keys.properties.connectedMode, false);
+                    con = !con;
+                    globalStore.storeData(keys.properties.connectedMode, con);
+                }
+            },
+            ShowGps: {
+                onClick: () => {
+                    this.props.history.push('gpspage')
+                }
+            },
+            Night: {
+                onClick: () => {
+                    let mode = globalStore.getData(keys.properties.nightMode, false);
+                    mode = !mode;
+                    globalStore.storeData(keys.properties.nightMode, mode);
+                }
+            },
+            [revertButton.name]: {
+                onClick: (ev) => {
+                    revertButton.onClick(ev);
+                }
+            },
+            NavOverlays: {
+                onClick: () => {
+                    EditOverlaysDialog.createDialog(undefined, () => MapHolder.setRedraw(true));
+                }
+            },
+            MainAddOns: {
+                onClick: () => {
+                    this.props.history.push('addonpage')
+                }
+            },
+            Cancel: {
+                onClick: () => {
+                    if (window.avnavAndroid) window.avnavAndroid.goBack()
+                },
+                visible:!!window.avnavAndroid
+            }
+        }
 
     }
 
@@ -175,114 +241,14 @@ class MainPage extends React.Component {
         base.log("activating navpage with url " + entry.url);
         MapHolder.setChartEntry(entry);
         this.props.history.push('navpage');
-    };
+    }
 
 
     getButtons() {
         return [
-            MainNavButton(PAGEIDS.MAIN),
-            {
-                name: 'ShowStatus',
-                onClick: ()=> {
-                    this.props.history.push('statuspage')
-                },
-                editDisable: true
-            },
-            {
-                name: 'ShowSettings',
-                onClick: ()=> {
-                    this.props.history.push('settingspage')
-                },
-                overflow: true
-            },
-            {
-                name: 'ShowDownload',
-                onClick: ()=> {
-                    this.props.history.push('downloadpage')
-                },
-                editDisable: true,
-                overflow: true
-            },
-            {
-                name: 'Connected',
-                storeKeys: {
-                    onAndroid:keys.gui.global.onAndroid,
-                    connected: keys.properties.connectedMode,
-                    canConnect: keys.gui.capabilities.canConnect},
-                updateFunction: (state) => {
-                    return {
-                        visible: !state.onAndroid && state.canConnect,
-                        toggle: state.connected
-                    }
-                },
-                onClick: ()=> {
-                    let con = globalStore.getData(keys.properties.connectedMode, false);
-                    con = !con;
-                    globalStore.storeData(keys.properties.connectedMode, con);
-                },
-                editDisable: true,
-                overflow: true
-            },
-            {
-                name: 'ShowGps',
-                onClick: ()=> {
-                    this.props.history.push('gpspage')
-                }
-            },
-            {
-                name: 'Night',
-                storeKeys: {toggle: keys.properties.nightMode},
-                onClick: ()=> {
-                    let mode = globalStore.getData(keys.properties.nightMode, false);
-                    mode = !mode;
-                    globalStore.storeData(keys.properties.nightMode, mode);
-                }
-            },
-            Mob.mobDefinition(this.props.history),
-            LayoutFinishedDialog.getButtonDef(),
-            LayoutHandler.revertButtonDef((pageWithOptions)=>{
-                if (pageWithOptions.location !== this.props.location){
-                    this.props.history.push(pageWithOptions.location,pageWithOptions.options);
-                }
-            }),
+            MainNavButton(PAGEIDS.MAIN)
+        ].concat(updateButtons(MainPageButtons, this.buttonActions));
 
-            {
-                name: 'NavOverlays',
-                onClick: ()=> {
-                    EditOverlaysDialog.createDialog(undefined,()=>MapHolder.setRedraw(true));
-                },
-                editDisable: true,
-                overflow: true,
-                storeKeys: {
-                    visible: keys.gui.capabilities.uploadOverlays,
-                    connected: keys.properties.connectedMode
-                },
-                updateFunction: (state)=>{
-                    return {
-                        visible: state.visible && state.connected
-                    }
-                }
-            },
-            {
-                name: 'MainAddOns',
-                onClick: ()=> {
-                    this.props.history.push('addonpage')
-                },
-                visible: this.state.addOns.length > 0,
-                editDisable: true
-            },
-            RemoteChannelDialog({overflow:true}),
-            FullScreen.fullScreenDefinition,
-            splitsupport.buttonDef({overflow:true}),
-            {
-                name: 'Cancel',
-                storeKeys: {visible: keys.gui.global.onAndroid},
-                onClick: ()=> {
-                    if (window.avnavAndroid) window.avnavAndroid.goBack()
-                }
-
-            }
-        ];
     }
 
     ChartItem(props){

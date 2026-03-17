@@ -1,4 +1,4 @@
-import globalStore from './globalstore.jsx';
+import globalStore from './globalstore.ts';
 import keys from './keys.jsx';
 import splitsupport from "./splitsupport";
 import Helper from "./helper";

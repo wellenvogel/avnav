@@ -3,11 +3,11 @@
  */
 
 import {useStoreState} from '../hoc/Dynamic.tsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React, {useCallback, useState} from 'react';
 import {PageFrame, PageLeft} from '../components/Page.jsx';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import {createItemActions} from '../components/FileDialog';
 import {useHistory} from "../components/HistoryProvider";
 import ButtonList from "../components/ButtonList";

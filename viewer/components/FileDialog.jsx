@@ -29,14 +29,7 @@ import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import {
-    DBCancel,
-    DBOk,
-    DialogButtons,
-    DialogFrame,
-    DialogRow,
-    showPromiseDialog
-} from "./OverlayDialog";
+import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, showPromiseDialog} from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
 import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
@@ -68,6 +61,7 @@ import {statusTextToImageUrl} from "./StatusItems";
 import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
 import base from "../base";
 import {useDialogContext} from "./DialogContext";
+import {CopyAware} from "../util/CopyAware";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -85,30 +79,6 @@ const scopedNameForCheck=(item)=>{
     if (! item || ! item.name) return;
     if (item.checkPrefix === undefined) return;
     return item.name.substring(item.checkPrefix.length);
-}
-class CopyAware{
-    constructor() {
-    }
-
-    copy(updates){
-        const rt=new this.constructor({});
-        for (let k of Object.keys(this)){
-            rt[k]=this[k];
-        }
-        if (updates && updates instanceof Object){
-            for (let k in updates){
-                rt[k]=updates[k];
-            }
-        }
-        return rt;
-    }
-    _fhelper(name,item){
-        const target=this[name];
-        if (typeof target === 'function'){
-            return target(this,item);
-        }
-        return target;
-    }
 }
 /**
  * handler for uploads based on file type

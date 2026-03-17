@@ -4,7 +4,7 @@
 
 import navobjects from '../nav/navobjects';
 import keys, {KeyHelper} from '../util/keys.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';

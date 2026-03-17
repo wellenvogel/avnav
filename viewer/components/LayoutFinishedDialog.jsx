@@ -5,7 +5,7 @@ import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
 import {EditDialog} from "./EditDialog";
 import Toast from "./Toast";
-import Helper from "../util/helper";
+import Helper, {getav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 
 const LayoutFinishedDialog=(props)=>{
@@ -69,13 +69,17 @@ LayoutFinishedDialog.propTypes={
     finishCallback: PropTypes.func
 };
 
+LayoutFinishedDialog.show=(event,callback)=>{
+    const dialogContext=getav(event).dialogContext;
+    showDialog(dialogContext,()=><LayoutFinishedDialog finishCallback={(res)=>{if (callback) callback(res)}}/>);
+}
 
-LayoutFinishedDialog.getButtonDef=(callback,opt_dialogContext)=>{
+LayoutFinishedDialog.getButtonDef=(callback)=>{
     return {
         name: 'LayoutFinished',
         editOnly: true,
-        onClick: ()=>{
-            showDialog(opt_dialogContext,()=><LayoutFinishedDialog finishCallback={(res)=>{if (callback) callback(res)}}/>);
+        onClick: (ev)=>{
+            LayoutFinishedDialog.show(ev,callback);
         },
         toggle: true
     }

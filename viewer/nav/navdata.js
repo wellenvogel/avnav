@@ -8,7 +8,7 @@ import RouteData from './routedata';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
 import navobjects from './navobjects';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import RouteEdit,{StateHelper} from './routeeditor.js';
 import assign from 'object-assign';

@@ -2,11 +2,11 @@
  * Created by andreas on 02.05.14.
  */
 
-import Button from '../components/Button.jsx';
+import Button from '../components/Button.tsx';
 import ItemList from '../components/ItemList.jsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
 import {showPromiseDialog} from "../components/OverlayDialog";

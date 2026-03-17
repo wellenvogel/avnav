@@ -7,7 +7,7 @@ import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
 import Toast from '../components/Toast.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';

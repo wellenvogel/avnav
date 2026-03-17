@@ -4,7 +4,7 @@
 
 import {useStore, useStoreState} from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React, {useCallback, useRef} from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
@@ -14,7 +14,7 @@ import Dialogs, {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import Compare from "../util/compare";
 import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";

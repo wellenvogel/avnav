@@ -4,7 +4,7 @@
 
 import Dynamic from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React, {useEffect} from 'react';
 import Page from '../components/Page.jsx';
@@ -18,7 +18,7 @@ import {
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DB from '../components/DialogButton';
 import {Checkbox, Input} from "../components/Inputs";

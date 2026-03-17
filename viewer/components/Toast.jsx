@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import Helper from '../util/helper.ts';
 import Dynamic from '../hoc/Dynamic.tsx';
 import keys from '../util/keys.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 
 export const ToastComponent=(props)=>{
         if (! props.html ){

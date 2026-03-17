@@ -34,7 +34,7 @@ import React from 'react';
 import propertyHandler from './util/propertyhandler';
 import App from './App.jsx';
 import keys from './util/keys.jsx';
-import globalStore from './util/globalstore.jsx';
+import globalStore from './util/globalstore.ts';
 import base from './base.ts';
 import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';

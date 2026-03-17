@@ -1,5 +1,5 @@
 import Requests from './requests.js';
-import globalStore from './globalstore.jsx';
+import globalStore from './globalstore.ts';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
 import base from '../base.ts';
@@ -997,9 +997,9 @@ class LayoutHandler{
     }
 
     revertButtonDef(pageCallback){
-        return{
+        const rt={
             name: 'RevertLayout',
-            onClick: ()=>this.revertAction(pageCallback),
+            displayName: 'Undo',
             editOnly: true,
             overflow: true,
             storeKeys:{
@@ -1011,6 +1011,10 @@ class LayoutHandler{
               }
             }
         }
+        if (pageCallback){
+            rt.onClick= ()=>this.revertAction(pageCallback);
+        }
+        return rt;
     }
 
 }

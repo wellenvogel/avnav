@@ -4,7 +4,7 @@ import Headline from './Headline.tsx';
 import ButtonList from './ButtonList.jsx';
 import {hideToast} from '../components/Toast.jsx';
 import WidgetFactory from './WidgetFactory.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import KeyHandler from '../util/keyhandler.js';
 import AlarmHandler from '../nav/alarmhandler.js';

@@ -5,7 +5,7 @@ import {
     DialogFrame, showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import Toast from '../components/Toast.jsx';
 import AlarmHandler from '../nav/alarmhandler.js';

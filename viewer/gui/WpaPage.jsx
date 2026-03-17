@@ -14,7 +14,7 @@ import Helper, {avitem} from '../util/helper.ts';
 import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import Store from "../util/store";
 import {PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";

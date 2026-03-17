@@ -3,7 +3,7 @@
  */
 import {shallowEqualObjects as equalsObjects, shallowEqualArrays as equalsArrays} from 'shallow-equal';
 
-let Compare=function(oldData, newData){
+const Compare=function(oldData:any    , newData:any){
     if (oldData === undefined && newData === undefined) return true;
     if (oldData === undefined) return false;
     if (newData === undefined) return false;
@@ -20,7 +20,7 @@ let Compare=function(oldData, newData){
     return oldData == newData;
 };
 
-export const RecursiveCompare=(oldData,newData)=>{
+export const RecursiveCompare=(oldData:any,newData:any)=>{
     if ( oldData === newData) return true;
     if (oldData === undefined) return false;
     if (newData === undefined) return false;
@@ -31,7 +31,7 @@ export const RecursiveCompare=(oldData,newData)=>{
     if (newData instanceof Array && oldData instanceof Array){
         if (oldData.length !== newData.length) return false;
         for (let i=0;i<oldData.length;i++){
-            let ec=RecursiveCompare(oldData[i],newData[i]);
+            const ec=RecursiveCompare(oldData[i],newData[i]);
             if (! ec) {
                 return false;
             }
@@ -39,15 +39,15 @@ export const RecursiveCompare=(oldData,newData)=>{
         return true;
     }
     if (newData instanceof Object && oldData instanceof Object){
-        let oKeys=Object.keys(oldData);
-        let nKeys=Object.keys(newData);
+        const oKeys=Object.keys(oldData);
+        const nKeys=Object.keys(newData);
         if (oKeys.length !== nKeys.length) return false;
         for (let i=0;i<oKeys.length;i++){
-            let k=oKeys[i];
+            const k=oKeys[i];
             if (!Object.prototype.hasOwnProperty.call(newData,k)){
                 return false;
             }
-            let ec=RecursiveCompare(oldData[k],newData[k]);
+            const ec=RecursiveCompare(oldData[k],newData[k]);
             if (! ec) {
                 return false;
             }

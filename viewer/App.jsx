@@ -24,7 +24,7 @@ import {
     DialogContext, DialogDisplay,
     showPromiseDialog
 } from './components/OverlayDialog.jsx';
-import globalStore from './util/globalstore.jsx';
+import globalStore from './util/globalstore.ts';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
@@ -32,9 +32,9 @@ import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
-import Mob from './components/Mob.js';
+import Mob from './components/Mob.ts';
 import Dimmer from './util/dimhandler.js';
-import Button from './components/Button.jsx';
+import Button from './components/Button.tsx';
 import LeaveHandler from './util/leavehandler';
 import EditHandlerDialog from "./components/EditHandlerDialog";
 import AndroidEventHandler from './util/androidEventHandler';

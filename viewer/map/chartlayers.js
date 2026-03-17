@@ -28,7 +28,7 @@ import {Source as olSource} from 'ol/source';
 import MapLibreLayer from "./maplibre/MapLibreLayer";
 import {Point as olPoint} from 'ol/geom';
 import {injectBaseUrl} from "../util/itemFunctions";
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from "../util/keys";
 import {listenOnce,unlistenByKey} from 'ol/events';
 import olEventType from 'ol/events/EventType';

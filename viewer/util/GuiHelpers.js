@@ -1,4 +1,4 @@
-import globalStore from '../util/globalstore.jsx';
+import globalStore from './globalstore.ts';
 import KeyHandler from './keyhandler.js';
 import assign from 'object-assign';
 import shallowcompare from "./compare";

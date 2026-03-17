@@ -20,7 +20,7 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
-import globalStore from '../util/globalstore.jsx';
+import globalStore from './globalstore.ts';
 import keys from '../util/keys.jsx';
 import assign from 'object-assign';
 import globalstore from "./globalstore";

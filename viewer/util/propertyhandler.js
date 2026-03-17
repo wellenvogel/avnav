@@ -3,7 +3,7 @@
  */
 
 import Toast from '../components/Toast.jsx';
-import globalStore from './globalstore.jsx';
+import globalStore from './globalstore.ts';
 import keys, {KeyHelper, PropertyType} from './keys.jsx';
 import base from '../base.ts';
 import assign from 'object-assign';

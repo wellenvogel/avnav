@@ -3,7 +3,7 @@
  */
 
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
@@ -17,7 +17,7 @@ import {
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DimHandler from '../util/dimhandler';

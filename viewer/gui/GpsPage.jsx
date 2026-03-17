@@ -4,7 +4,7 @@
 
 import {useStoreState} from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
@@ -17,7 +17,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import Dimmer from '../util/dimhandler.js';
 import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";

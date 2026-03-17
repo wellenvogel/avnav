@@ -1,5 +1,5 @@
 import fullscreen from 'fullscreen-polyfill';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
 import Requests from '../util/requests';

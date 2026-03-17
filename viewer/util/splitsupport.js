@@ -115,11 +115,13 @@ class SplitSupport{
         return assign(
             {
                 name: 'Split',
+                displayName: 'full screen',
                 storeKeys: {
                     toggle: keys.gui.global.splitMode,
                     visible: keys.properties.showSplitButton
                 },
                 editDisable: true,
+                overflow: true,
                 onClick: () => {
                     this.toggleSplitMode();
                 }

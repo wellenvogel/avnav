@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import MapPage, {overlayDialog} from '../components/MapPage.jsx';
@@ -29,7 +29,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {Checkbox, InputReadOnly} from "../components/Inputs";
 import DB from '../components/DialogButton';

@@ -3,12 +3,12 @@
  */
 
 
-import Button from '../components/Button.jsx';
+import Button from '../components/Button.tsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import keys, {KeyHelper} from '../util/keys.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import PropertyHandler from '../util/propertyhandler';
 import loadSettings from "../components/LoadSettingsDialog";
 import LayoutHandler from "../util/layouthandler";

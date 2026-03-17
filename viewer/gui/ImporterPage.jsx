@@ -26,7 +26,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Requests, {prepareUrl} from '../util/requests.js';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import ItemList from "../components/ItemList";
 import {useTimer} from "../util/GuiHelpers";
 import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";

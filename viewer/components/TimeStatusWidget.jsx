@@ -6,7 +6,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const TimeStatusWidget = (props=> {

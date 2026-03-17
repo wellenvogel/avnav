@@ -8,17 +8,19 @@
  */
 
 // @ts-ignore
-import globalStore from "../util/globalstore.jsx";
+import globalStore from "../util/globalstore";
 import React, {Children, cloneElement, useEffect, useRef, useState} from 'react';
 // @ts-ignore
 import {KeyHelper} from "../util/keys";
 // @ts-ignore
 import {useStateRef} from "../util/GuiHelpers";
+import {StoreCallback} from "../util/store";
 
 
 export type StoreKeys=Record<string, string>;
-export type Props=Record<string, any>;
-export type UpdateFunction=(props:Props,storeKeys:StoreKeys) => Props;
+export interface DynamicProps extends Record<string, any>,Options{
+}
+export type UpdateFunction=(props:DynamicProps, storeKeys:StoreKeys) => DynamicProps;
 interface Options{
     storeKeys?:StoreKeys;
     store?:any
@@ -26,7 +28,7 @@ interface Options{
     changeCallback?:(value:any) => void;
     minTime?: number; //minimal intervale between updates
 }
-const getStoreAndKeys=(props:Props,options:Options)=>{
+const getStoreAndKeys=(props:DynamicProps, options:Options)=>{
     if (! options) options={};
     if (! props) props={};
     const usedStoreKeys=KeyHelper.removeNodeInfo({...options.storeKeys,...props.storeKeys});
@@ -41,13 +43,13 @@ const computeValues=(fw:any,storeKeys:StoreKeys,data:Record<string,any>,usedUpda
     if (usedUpdateFunction) return {...fw,...usedUpdateFunction({...data},storeKeys)};
     return {...fw,...data};
 }
-const getStoreValues=(forwardData:Props,store:any|undefined,storeKeys:StoreKeys|undefined,updateFunction:UpdateFunction)=>{
+const getStoreValues=(forwardData:DynamicProps, store:any|undefined, storeKeys:StoreKeys|undefined, updateFunction:UpdateFunction)=>{
     if (! store || ! storeKeys) return forwardData;
-    const values:Props=store.getMultiple(storeKeys);
+    const values:DynamicProps=store.getMultiple(storeKeys);
     return computeValues(forwardData,storeKeys,values,updateFunction);
 }
 
-export const useStore=(props:Props,opt_options?:Options)=>{
+export const useStore=(props:DynamicProps, opt_options?:Options)=>{
     if (! props) return;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {storeKeys,updateFunction,minTime,changeCallback,...forward}=props;
@@ -79,7 +81,7 @@ export const useStore=(props:Props,opt_options?:Options)=>{
             doSetValues(store.getMultiple(usedStoreKeys));
         },usedStoreKeys)
     }
-    const doSetValues=(data:Props)=>{
+    const doSetValues=(data:DynamicProps)=>{
         setValues(data);
         lastUpdate.current=(new Date()).getTime();
         if (usedChangeCallback) usedChangeCallback(computeValues(forward,usedStoreKeys,data,usedUpdateFunction));
@@ -95,7 +97,7 @@ export const useStore=(props:Props,opt_options?:Options)=>{
     return computeValues(forward,usedStoreKeys,values,usedUpdateFunction);
 }
 
-export const DynamicFrame=(props:Props)=>{
+export const DynamicFrame=(props:DynamicProps)=>{
     const values=useStore(props);
     return <React.Fragment>
         {Children.map(props.children,(child)=>cloneElement(child,values))}
@@ -107,16 +109,17 @@ export const DynamicFrame=(props:Props)=>{
  * @param options
  * @returns {*|(*)|(*)}
  */
-export const dynamicWrapper=(props:Props,options:Options)=>{
+export const dynamicWrapper=(props:DynamicProps, options:Options)=>{
     if (! props) return;
     const [store,storeKeys,updateFunctions]=getStoreAndKeys(props,options);
     if (! storeKeys) return props;
     return getStoreValues(props,store,storeKeys,updateFunctions);
 }
 
+
 export default  function(Component:any,opt_options?:Options,opt_store?:any){
     const store=opt_store||globalStore;
-     return (props:Props)=>{
+     return (props:DynamicProps)=>{
         const currentValues=useStore(props,{...opt_options,store:store});
         return <Component {...currentValues}/>
     }
@@ -137,7 +140,7 @@ export const useStoreState = (storeKey:string, defaultInitialValue?:any, forceIn
         }
         return iv;
     });
-    const setter = useRef();
+    const setter = useRef<StoreCallback>();
     if (!setter.current) {
         setter.current = globalStore.register(() => {
             setValue(globalStore.getData(storeKey));

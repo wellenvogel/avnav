@@ -5,7 +5,7 @@
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import AvNavVersion from '../version.js';
 
 class InfoPage extends React.Component{

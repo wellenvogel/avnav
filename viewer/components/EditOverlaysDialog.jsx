@@ -10,7 +10,7 @@ import {
 import assign from 'object-assign';
 import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
-import Button from './Button.jsx';
+import Button from './Button.tsx';
 import ItemList from './ItemList.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';

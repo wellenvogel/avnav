@@ -3,7 +3,7 @@
  */
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import {aisproxy} from './aisformatter';
 import {AisOptionMappings} from "./aiscomputations";

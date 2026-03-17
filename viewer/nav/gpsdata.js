@@ -2,7 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 import navobjects from './navobjects';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import assign from 'object-assign';
 import Requests from '../util/requests.js';

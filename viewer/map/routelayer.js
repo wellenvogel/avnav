@@ -3,7 +3,7 @@
  */
 
 import keys,{KeyHelper} from '../util/keys.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import RouteEdit from '../nav/routeeditor.js';
 import orangeMarker from '../images/MarkerOrange.png';
 import NavCompute from "../nav/navcompute";

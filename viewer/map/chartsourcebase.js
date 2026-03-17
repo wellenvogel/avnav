@@ -26,7 +26,7 @@
 import base from '../base.ts';
 import assign from 'object-assign';
 import Helper, {getav, injectav, setav} from '../util/helper.ts';
-import shallowcompare from '../util/compare.js';
+import shallowcompare from '../util/compare.ts';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';

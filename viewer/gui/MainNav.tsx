@@ -27,29 +27,18 @@ import {useDialogContext} from "../components/DialogContext";
 // @ts-ignore
 import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {useHistory} from "../components/HistoryProvider";
-
-class ButtonEntry{
-    name:string;
-    buttonName?:string;
-    localOnly:boolean
-    constructor(name:string,buttonName?:string,localOnly?:boolean){
-        this.name = name;
-        this.buttonName = buttonName;
-        this.localOnly = !!localOnly;
-    }
-    getDisplay(){
-        return this.buttonName||this.name;
-    }
-}
+import {ButtonDef, ButtonEventHandler, ButtonRow} from "../components/Button";
+import MainPageButtons from "./MainPageButtons";
+import GeneralButtons from "./GeneralButtons";
 
 type PageKind='navigation'|'settings';
 
 class Page{
     name:string;
     displayName?:string;
-    buttons:ButtonEntry[];
+    buttons:ButtonDef[];
     kind:PageKind;
-    constructor(name:string,kind:PageKind,displayName?:string,buttons?:ButtonEntry[]){
+    constructor(name:string,kind:PageKind,displayName?:string,buttons?:ButtonDef[]){
         this.name=name;
         this.displayName=displayName;
         this.buttons=buttons;
@@ -60,50 +49,22 @@ class Page{
     }
 }
 
-const MOB=new ButtonEntry('MOB','mob',true);
-const BACK=new ButtonEntry('Cancel','back',true);
 
 const mainTree=[
     new Page('charts','settings','Charts, Overlays',
-        [
-        BACK,
-        MOB,
-        new ButtonEntry('charts'),
-        new ButtonEntry('overlays'),
-        new ButtonEntry('import','chart import'),
-        new ButtonEntry('display')
-        ]),
-    new Page('mainpage','navigation','Select Chart',[
-        BACK,
-        MOB,
-        new ButtonEntry('Connected','connected mode'),
-        new ButtonEntry('ShowGps','dashboard'),
-        new ButtonEntry('Night','night mode'),
-        new ButtonEntry('FullScreen','full screen'),
-        new ButtonEntry('RemoteChannel','remote control'),
-        new ButtonEntry('Split','split mode'),
-    ])
+        GeneralButtons.concat([
+        new ButtonDef({name:'dummy',displayName:'Test1'}),
+        ])
+        ),
+    new Page('mainpage','navigation','Select Chart',
+        MainPageButtons
+        )
 ]
-type EventHandler=(e:SyntheticEvent) => void;
 
-interface ButtonRowProps{
-    button:ButtonEntry,
-    onClick:EventHandler
-}
-
-const ButtonRow=({button,onClick}:ButtonRowProps) => {
-    const className=Helper.concatsp('button','smallButton',button.name);
-    return <ListItem className={'ButtonRow'} onClick={onClick}>
-        <ListSlot>
-            <button className={className}><span></span></button>
-        </ListSlot>
-        <ListMainSlot primary={button.getDisplay()}></ListMainSlot>
-    </ListItem>
-}
 
 interface PageRowProps{
     page:Page;
-    onClick:EventHandler;
+    onClick:ButtonEventHandler;
     isCurrent:boolean;
     expanded: boolean;
 }
@@ -132,7 +93,8 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
                 {page.buttons.map((bt)=> {
                     if (bt.localOnly && ! isCurrent) return null;
                     return <ButtonRow
-                            button={bt}
+                            name={bt.name}
+                            displayName={bt.displayName}
                             key={bt.name}
                             onClick={(ev) => {
                                 ev.stopPropagation()

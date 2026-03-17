@@ -4,13 +4,13 @@
 
 import Dynamic from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import QRCode from 'qrcode.react';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 
 const AddressItem=(props)=>{
     let url="http://"+props.value;

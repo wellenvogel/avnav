@@ -1,10 +1,11 @@
 import React, {useState} from 'react';
 import {DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import {Checkbox, InputSelect} from "./Inputs";
 import DialogButton from "./DialogButton";
 import assign from "object-assign";
+import {getav} from "../util/helper";
 
 
 const RemoteChannelDialog=(props)=> {
@@ -54,9 +55,10 @@ const storeKeys={
     connected: keys.properties.connectedMode
 };
 
-export default  (options, opt_dialogContext)=>{
+export default  (options)=>{
     return assign({
         name: "RemoteChannel",
+        displayName: 'remote control',
         storeKeys: storeKeys,
         updateFunction:(state)=>{
             let enabled=state.available && state.connected && state.active;
@@ -65,9 +67,10 @@ export default  (options, opt_dialogContext)=>{
                 visible: enabled
             }
         },
-        onClick: ()=>{
+        onClick: (ev)=>{
             const current=globalStore.getMultiple(storeKeys);
-            showDialog(opt_dialogContext,()=><RemoteChannelDialog
+            const dialogContext=getav(ev).dialogContext;
+            showDialog(dialogContext,()=><RemoteChannelDialog
                 {...current}
                 setCallback={(values)=>{
                     if (! values.read && ! values.write){
@@ -79,6 +82,7 @@ export default  (options, opt_dialogContext)=>{
                 }}
             />)
         },
-        editDisable:true
+        editDisable:true,
+        overflow: true
     },options);
 }

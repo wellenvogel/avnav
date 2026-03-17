@@ -3,7 +3,7 @@
  */
 
 import keys from '../util/keys.jsx';
-import globalStore from '../util/globalstore.jsx';
+import globalStore from '../util/globalstore.ts';
 import mapholder from "./mapholder";
 
 

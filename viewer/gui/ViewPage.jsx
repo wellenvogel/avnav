@@ -7,7 +7,7 @@ import Helper from '../util/helper.ts';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests, {prepareUrl} from '../util/requests.js';
-import Mob from '../components/Mob.js';
+import Mob from '../components/Mob.ts';
 import Toast, {hideToast} from '../components/Toast.jsx';
 import {showPromiseDialog} from '../components/OverlayDialog.jsx';
 import CodeFlask from 'codeflask';

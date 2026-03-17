@@ -1,19 +1,17 @@
-import Helper from './helper.ts';
+import Helper from './helper';
+// @ts-ignore
 import {KeyHelper} from './keys.jsx';
 import shallowCompare from './compare';
-/**
- * Created by andreas on 20.11.16.
- * a simple interface to register for value updates
- * following the reactjs StoreApi concept
- */
-/** @interface */
-class UpdateCallback{
-    constructor() {
-    }
-    dataChanged=function(){
-        throw new Error("dataChanged not implemented");
-    };
+
+export type StoreDataType=any;
+export type StoreKeyType=string|string[]|Record<string, string>;
+export type DataChangedFunction=(keys:string[])=>void;
+export interface UpdateCallback{
+    dataChanged:DataChangedFunction;
 }
+export type StoreCallback=DataChangedFunction|UpdateCallback;
+
+
 
 
 /**
@@ -25,34 +23,32 @@ class UpdateCallback{
  * @constructor
  */
 class CallbackDescriptor {
-    constructor(callback, keys) {
+    callback:StoreCallback;
+    private keys:string[];
+    private equalsFunction:(val:string,cmp:string) => boolean;
+    constructor(callback:StoreCallback, keys:string[]|object) {
         this.callback = callback;
-        if (KeyHelper.keyNodeToString(keys)) {
-            this.keys = KeyHelper.keyNodeToString(keys);
-            this.prefix = true;
+        const keyNodeStr:string=KeyHelper.keyNodeToString(keys);
+        if (keyNodeStr) {
+            this.keys = [keyNodeStr];
+            this.equalsFunction=(val:string,cmp:string) =>Helper.startsWith(val,cmp);
         } else {
-            this.keys = keys;
-            this.prefix = false;
+            this.keys = keys as string[];
+            this.equalsFunction=(val, cmp) => val === cmp;
         }
     }
 
-    isCallbackFor(keylist) {
+    isCallbackFor(keylist:string[]|undefined):boolean {
         if (!keylist || keylist.length === 0) return true;
-        if (this.prefix) {
-            for (let k in keylist) {
-                if (Helper.startsWith(keylist[k], this.keys)) return true;
-            }
-            return false;
-        }
         if (!this.keys || this.keys.length === 0) return true;
-        for (let k in this.keys) {
-            for (let t in keylist) {
-                if (this.keys[k] === keylist[t]) return true;
+        for (const val of this.keys) {
+            for (const cmp of keylist) {
+                if (this.equalsFunction(val,cmp)) return true;
             }
         }
         return false;
     }
-    call(keys) {
+    call(keys:string[]) {
         if (typeof (this.callback) === 'function') {
             return this.callback(keys);
         } else {
@@ -61,13 +57,25 @@ class CallbackDescriptor {
     }
 }
 
+export type HasCallback=(key:string)=>boolean;
+export type ValueCallback=(key:string)=>StoreDataType;
+export interface Provider{
+    has:HasCallback;
+    getValue:ValueCallback;
+}
 
 /**
  * @class
  * @constructor
  */
 class Store {
-    constructor(name) {
+    private callbacks: CallbackDescriptor[];
+    private data: Record<string, StoreDataType>;
+    private provider: Record<number, Provider>;
+    private providerId: number;
+    // @ts-ignore
+    private name: string;
+    constructor(name:string) {
         /**
          * @private
          * @type {CallbackDescriptor[]}
@@ -85,13 +93,13 @@ class Store {
      * @param hasCallback
      * @param getValueCallback
      */
-    registerProvider(hasCallback,getValueCallback){
+    registerProvider(hasCallback:HasCallback,getValueCallback:ValueCallback){
         this.providerId++;
         this.provider[this.providerId]={has:hasCallback,getValue:getValueCallback};
         return this.providerId;
     }
 
-    deregisterProvider(providerId){
+    deregisterProvider(providerId:number){
         delete this.provider[providerId];
     }
     /**
@@ -100,7 +108,7 @@ class Store {
      * @returns {number} - -1 if not found
      * @private
      */
-    findCallback(callback) {
+    findCallback(callback:StoreCallback) {
         let i;
         for (i = 0; i < this.callbacks.length; i++) {
             if (this.callbacks[i].callback == callback) return i;
@@ -112,20 +120,20 @@ class Store {
     /**
      * register a callback handler
      * @param {UpdateCallback||function} callback
-     * @param list of keys, can be an object with the values being the keys or a keyNode - registering a prefix
+     * @param ikeys list of keys, can be an object with the values being the keys or a keyNode - registering a prefix
      */
-    register(callback/*,...*/) {
-        let args = Array.prototype.slice.call(arguments, 1);
-        let keys = [];
+    register(callback:StoreCallback,...ikeys:StoreKeyType[]/*,...*/) {
+        const args = Array.prototype.slice.call(ikeys);
+        let keys:string[] = [];
         if (args.length == 1 && KeyHelper.keyNodeToString(args[0])) {
             keys = args[0];
         } else {
-            args.forEach(function (arg) {
+            args.forEach((arg:StoreKeyType)=> {
                 if (arg === undefined) return;
                 if (arg instanceof Array) {
                     keys = keys.concat(arg)
                 } else if (arg instanceof Object) {
-                    for (let k in arg) {
+                    for (const k in arg) {
                         keys.push(arg[k])
                     }
                 } else keys = keys.concat(arg);
@@ -133,7 +141,7 @@ class Store {
         }
         if (!callback) return;
         if (keys.length < 1) return;
-        let idx = this.findCallback(callback);
+        const idx = this.findCallback(callback);
         if (idx < 0) {
             this.callbacks.push(new CallbackDescriptor(callback, keys));
             return callback;
@@ -147,8 +155,8 @@ class Store {
      * @param {UpdateCallback||function} callback
      * @returns {boolean}
      */
-    deregister(callback) {
-        let idx = this.findCallback(callback);
+    deregister(callback:StoreCallback) {
+        const idx = this.findCallback(callback);
         if (idx < 0) return false;
         this.callbacks.splice(idx, 1);
         return true;
@@ -159,12 +167,12 @@ class Store {
      * @param keys - an array of keys
      * @param opt_omitHandler e reference to a handler to be omitted
      */
-    callCallbacks(keys, opt_omitHandler) {
+    callCallbacks(keys:string[], opt_omitHandler:any) {
         this.callbacks.forEach(function (cbItem) {
             if (opt_omitHandler) {
                 if (opt_omitHandler === cbItem.callback) return;
-                if (opt_omitHandler instanceof Array) {
-                    for (let k in opt_omitHandler) {
+                if (Array.isArray(opt_omitHandler)) {
+                    for (const k in opt_omitHandler) {
                         if (opt_omitHandler[k] == cbItem.callback) return;
                     }
                 }
@@ -175,7 +183,7 @@ class Store {
         });
     }
 
-    equalsData(d, c) {
+    equalsData(d:any, c:any) {
         return shallowCompare(d, c);
     }
 
@@ -187,11 +195,11 @@ class Store {
      * @param opt_ignoreProvider ignore any installed providers
      * @returns {*}
      */
-    getData(key, opt_default,opt_ignoreProvider) {
+    getData(key:string, opt_default?:StoreDataType,opt_ignoreProvider?:boolean) {
         let rt;
         let ext=false;
         if (! opt_ignoreProvider) {
-            for (let k in this.provider) {
+            for (const k in this.provider) {
                 if (this.provider[k].has(key)) {
                     rt = this.provider[k].getValue(key);
                     ext = true;
@@ -212,12 +220,12 @@ class Store {
      * @param keys single key or array or object (keys used and being translated)
      * @param opt_ignoreProvider
      */
-    getMultiple(keys,opt_ignoreProvider) {
+    getMultiple(keys:StoreDataType,opt_ignoreProvider?:boolean) {
         let storeKeys = keys;
-        let rt = {};
+        const rt:Record<string, StoreDataType> = {};
         if (!(storeKeys instanceof Array)) {
             if (storeKeys instanceof Object) {
-                for (let k in storeKeys) {
+                for (const k in storeKeys) {
                     let v = undefined;
                     if (typeof (storeKeys[k]) === 'object') {
                         v = this.getMultiple(storeKeys[k],opt_ignoreProvider);
@@ -231,8 +239,8 @@ class Store {
                 storeKeys = [storeKeys];
             }
         }
-        storeKeys.forEach((key) => {
-            let v = this.getData(key,undefined,opt_ignoreProvider);
+        storeKeys.forEach((key:string) => {
+            const v = this.getData(key,undefined,opt_ignoreProvider);
             rt[key] = v;
         });
         return rt;
@@ -243,10 +251,10 @@ class Store {
      * store a data item for a key and trigger the registered callbacks
      * @param key
      * @param data
-     * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
+     * @param opt_noCallbacks
      */
-    storeData(key, data, opt_noCallbacks) {
-        let hasChanged = !this.equalsData(this.data[key], data);
+    storeData(key:string, data:StoreDataType, opt_noCallbacks?:boolean) {
+        const hasChanged = !this.equalsData(this.data[key], data);
         this.data[key] = data;
         if (hasChanged && !(opt_noCallbacks === true)) this.callCallbacks([key], opt_noCallbacks);
         return hasChanged;
@@ -258,17 +266,21 @@ class Store {
      * for the keys
      * @param data
      * @param keyTranslations objectKey:storeKey - can be undefined - no translations
-     * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
+     * @param opt_noCallbacks
+     * @param opt_omitUndefined
      */
-    storeMultiple(data, keyTranslations, opt_noCallbacks, opt_omitUndefined) {
-        let changeKeys = [];
+    storeMultiple(data: Record<string, StoreDataType>,
+                  keyTranslations: Record<string, string>,
+                  opt_noCallbacks:boolean,
+                  opt_omitUndefined?:boolean) {
+        let changeKeys: string[] = [];
         if (data === undefined && keyTranslations === undefined) return;
-        for (let k in (keyTranslations !== undefined) ? keyTranslations : data) {
-            let storeKey = (keyTranslations !== undefined) ? keyTranslations[k] : k;
+        for (const k in (keyTranslations !== undefined) ? keyTranslations : data) {
+            const storeKey = (keyTranslations !== undefined) ? keyTranslations[k] : k;
             if (storeKey === undefined) continue;
-            let v = (data !== undefined) ? data[k] : undefined;
+            const v = (data !== undefined) ? data[k] : undefined;
             if (typeof (storeKey) === 'object') {
-                let subChanged = this.storeMultiple(v, storeKey, true, opt_omitUndefined);
+                const subChanged = this.storeMultiple(v, storeKey, true, opt_omitUndefined);
                 changeKeys = changeKeys.concat(subChanged);
                 continue;
             }
@@ -286,8 +298,8 @@ class Store {
     }
 
 
-    getKeysByPrefix(prefix, opt_simpleValuesOnly) {
-        let rt = [];
+    getKeysByPrefix(prefix:string, opt_simpleValuesOnly?:boolean) {
+        const rt:string[]= [];
         if (!prefix) return rt;
         for (let k in this.data) {
             if (k.startsWith(prefix)) {
@@ -299,12 +311,13 @@ class Store {
         }
         return rt;
     }
-    deleteByPrefix(prefix) {
-        for (let k of this.getKeysByPrefix(prefix)) {
+    deleteByPrefix(prefix:string) {
+        for (const k of this.getKeysByPrefix(prefix)) {
             delete this.data[k];
         }
     }
 
-};
+
+}
 
 export default Store;

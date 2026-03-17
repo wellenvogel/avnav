@@ -3,7 +3,7 @@
  * inputs
  */
 
-import globalStore from "../util/globalstore.jsx";
+import globalStore from "../util/globalstore.ts";
 import React, {useEffect} from 'react';
 import keys from '../util/keys.jsx';
 

@@ -28,7 +28,7 @@
  */
 
 
-import globalStore from "../util/globalstore.jsx";
+import globalStore from "../util/globalstore.ts";
 import React, {useEffect, useState} from 'react';
 import keys from '../util/keys.jsx';
 import MapHolder from '../map/mapholder';
