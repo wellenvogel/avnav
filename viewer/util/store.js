@@ -1,4 +1,4 @@
-import Helper from './helper.js';
+import Helper from './helper.ts';
 import {KeyHelper} from './keys.jsx';
 import shallowCompare from './compare';
 /**

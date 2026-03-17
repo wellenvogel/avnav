@@ -22,7 +22,6 @@
  */
 
 import React from 'react';
-// @ts-ignore
 import {concatsp} from "../util/helper";
 import {Icon, IconProps} from "./Icons";
 // @ts-ignore

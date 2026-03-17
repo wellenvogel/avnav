@@ -3,7 +3,7 @@
  */
 
 import navcompute, {DEPTH_UNITS, unitToFactor} from '../nav/navcompute.js';
-import Helper from "./helper.js";
+import Helper from "./helper.ts";
 
 function pad(num, size, pad='0') {
     return (''+num).trim().padStart(size,pad);

@@ -5,7 +5,6 @@ import {DynamicTitleIcons} from "./TitleIcons";
 import keys from "../util/keys";
 import {useStore} from "../hoc/Dynamic";
 import PropTypes from "prop-types";
-// @ts-ignore
 import Helper from "../util/helper";
 const storeKeys={
     connectionLostState: keys.nav.gps.connectionLost

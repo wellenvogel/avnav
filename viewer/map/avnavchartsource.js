@@ -27,7 +27,7 @@ import base from '../base.ts';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import Helper, {avitem, getav, setav} from '../util/helper.js';
+import Helper, {avitem, getav, setav} from '../util/helper.ts';
 import ChartSourceBase, {CHARTBASE} from './chartsourcebase.js';
 import {CHARTAV, layerFactory} from './chartlayers';
 import navobjects from "../nav/navobjects";

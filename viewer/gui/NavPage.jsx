@@ -13,7 +13,7 @@ import {
     DialogButtons, DialogFrame, DialogRow,
     DialogText, OverlayContainer, showDialog, showPromiseDialog
 } from '../components/OverlayDialog.jsx';
-import Helper, {injectav} from '../util/helper.js';
+import Helper, {injectav} from '../util/helper.ts';
 import {
     useKeyEventHandlerPlain,
     useStoreHelper,

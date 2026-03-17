@@ -14,7 +14,7 @@ import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
-import Helper, {avitem, injectav, setav} from '../util/helper.js';
+import Helper, {avitem, injectav, setav} from '../util/helper.ts';
 import {editableOverlayParameters} from '../map/chartsourcebase'
 import OverlayConfig, {
     DEFAULT_OVERLAY_CONFIG,

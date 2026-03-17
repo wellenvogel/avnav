@@ -2,8 +2,8 @@
  * Created by andreas on 02.05.14.
  */
 
-import helper from '../util/helper.js';
-import Helper from '../util/helper.js';
+import helper from '../util/helper.ts';
+import Helper from '../util/helper.ts';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests, {prepareUrl} from '../util/requests.js';

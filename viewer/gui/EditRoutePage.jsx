@@ -18,7 +18,7 @@ import {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
-import Helper, {avitem, injectav, setav} from '../util/helper.js';
+import Helper, {avitem, injectav, setav} from '../util/helper.ts';
 import {useStateRef, useTimer} from '../util/GuiHelpers.js';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';

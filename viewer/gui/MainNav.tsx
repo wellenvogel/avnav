@@ -22,7 +22,6 @@
  */
 import React,{SyntheticEvent, useState} from "react";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
-// @ts-ignore
 import Helper, {getav, setav} from "../util/helper";
 import {useDialogContext} from "../components/DialogContext";
 // @ts-ignore

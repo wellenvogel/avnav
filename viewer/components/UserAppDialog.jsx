@@ -4,7 +4,7 @@ import {showPromiseDialog} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
-import Helper, {unsetOrTrue} from '../util/helper.js';
+import Helper, {unsetOrTrue} from '../util/helper.ts';
 import Requests from '../util/requests.js';
 import UploadHandler, {uploadClick} from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";

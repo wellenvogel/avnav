@@ -9,8 +9,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import base from '../base';
 // @ts-ignore
 import Formatter from './formatter.js';
-// @ts-ignore
-import Helper from './helper.js';
+import Helper from './helper';
 // @ts-ignore
 import Toast from '../components/Toast.jsx';
 // @ts-ignore
@@ -61,7 +60,7 @@ export class ApiImpl implements ApiIntf {
      * @param replacements
      * @returns {string}
      */
-    templateReplace(template: string, replacements: object): string {
+    templateReplace(template: string, replacements: Record<string,string>): string {
         return Helper.templateReplace(template, replacements)
     }
 

@@ -10,7 +10,7 @@ import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
-import Helper, {avitem} from '../util/helper.js';
+import Helper, {avitem} from '../util/helper.ts';
 import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';

@@ -23,7 +23,6 @@
 import React, {useCallback,} from "react";
 // @ts-ignore
 import {showDialog, DialogFrame,DialogRow,DialogButtons} from "./OverlayDialog";
-// @ts-ignore
 import Helper, {getav, setav} from "../util/helper";
 // @ts-ignore
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';

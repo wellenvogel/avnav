@@ -21,7 +21,6 @@
  #
  */
 import React from 'react';
-// @ts-ignore
 import {concatsp} from "../util/helper";
 export interface IconProps{
     className?: string;
