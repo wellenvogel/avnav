@@ -251,7 +251,7 @@ class MainPage extends React.Component {
     }
     handleButton(ev,name){
         if (! name) return;
-        setav(ev,{dialogContext:undefined}); //TODO own ctx
+        setav(ev,{dialogContext:undefined,history: this.props.history}); //TODO own ctx
         executeButtonAction(ev,name,this.getButtons());
     }
 

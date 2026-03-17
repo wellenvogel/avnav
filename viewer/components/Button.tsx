@@ -6,6 +6,7 @@ import Helper, {setav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {ListMainSlot} from "./exports";
+import {useHistory} from "./HistoryProvider";
 export interface ButtonProps {
         onClick?: (ev:SyntheticEvent|Record<string,any>)=>void,
         className?: string;
@@ -61,9 +62,10 @@ const toggleClass=(props:ButtonProps)=> {
 
 const Button = (props:ButtonProps) => {
     const dialogContext=useDialogContext();
+    const history = useHistory();
     useKeyEventHandlerPlain(props.name, "button", () => {
         if (props.onClick && !props.disabled) {
-            const ev= setav({},{dialogContext:dialogContext});
+            const ev= setav({},{dialogContext:dialogContext,history:history});
             props.onClick(ev);
         }
     });
@@ -88,7 +90,7 @@ const Button = (props:ButtonProps) => {
     if (forward.onClick){
         const click=forward.onClick;
         forward.onClick=(ev:ButtonEvent)=>{
-            click(setav(ev,{dialogContext:dialogContext}));
+            click(setav(ev,{dialogContext:dialogContext,history:history}));
         }
     }
     return (

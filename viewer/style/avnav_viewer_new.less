@@ -986,6 +986,9 @@ span.valuePrefix{
 //MainNav
 //----------------------------------------------------------------------------------------
 .MainNavCover{
+  &>.dialog{
+    width: 90%;
+  }
   justify-content: end;
   align-items: start;
   .icon.MNcollapsed{
@@ -997,11 +1000,28 @@ span.valuePrefix{
     rotate: 270deg;
   }
   .flexInner{
-    min-width: 15em;
+    width: 100%;
   }
   .iconSlot{
     border: 1px solid var(--avnav-border-color);
     border-radius: 4px;
+  }
+  .ButtonList{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    border-bottom: 1px solid var(--avnav-border-color);
+    & .listMain{
+      flex-basis: unset;
+    }
+    & .listEntry.buttonRow{
+      flex-direction: column;
+      align-items: center;
+      border-bottom: unset;
+      flex-grow: 1;
+      flex-basis: 8em;
+    }
   }
 }
 
