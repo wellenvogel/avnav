@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import Button, {updateButtons} from '../components/Button.tsx';
+import Button, {executeButtonAction, updateButtons} from '../components/Button.tsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
@@ -24,7 +24,7 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
 import LayoutHandler from "../util/layouthandler";
-import Helper, {avitem} from "../util/helper";
+import Helper, {avitem, setav} from "../util/helper";
 import {shallowEqual} from "shallow-equal";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase} from "../util/itemFunctions";
@@ -246,9 +246,14 @@ class MainPage extends React.Component {
 
     getButtons() {
         return [
-            MainNavButton(PAGEIDS.MAIN)
+            MainNavButton(PAGEIDS.MAIN,(ev,name)=> this.handleButton(ev,name))
         ].concat(updateButtons(MainPageButtons, this.buttonActions));
 
+    }
+    handleButton(ev,name){
+        if (! name) return;
+        setav(ev,{dialogContext:undefined}); //TODO own ctx
+        executeButtonAction(ev,name,this.getButtons());
     }
 
     ChartItem(props){
@@ -279,6 +284,9 @@ class MainPage extends React.Component {
 
     componentDidMount() {
         globalStore.storeData(keys.gui.global.soundEnabled,true);
+        if (this.props.options && this.props.options.button){
+            this.handleButton({},this.props.options.button);
+        }
     }
 
     selectChart(offset){

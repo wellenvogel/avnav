@@ -42,7 +42,7 @@
       .activeColor(var(--avnav-attention-color));
     }
     & > span:first-child{
-      border-width: 0.3em;
+      border-width: var(--avnav-active-button-border-width);
       border-style: solid ;
       border-radius: inherit;
     }
@@ -81,7 +81,7 @@
 .textButton(@text,@fontSize:2.3em){
   span {
     font-size: @fontSize;
-    position: relative;
+    text-align: center;
   }
   span:after{
     content: @text;
@@ -146,8 +146,12 @@
   height: unset;
 }
 .buttonRow > span:first-child{
+  width: 2em;
+  height: 2em;
+  display: block;
+  outline: none;
   position: unset;
-  .smallButton();
+  margin-right: 0.3em;
 }
 
 .button{

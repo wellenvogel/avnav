@@ -27,7 +27,7 @@ import {useDialogContext} from "../components/DialogContext";
 // @ts-ignore
 import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {useHistory} from "../components/HistoryProvider";
-import {ButtonDef, ButtonEventHandler, ButtonRow} from "../components/Button";
+import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
 import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
@@ -111,8 +111,11 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
 
     </React.Fragment>
 }
-
-export interface MainNavProps extends Record<string, any> {}
+export type ButtonCallback= (ev:ButtonEvent, button:string)=>void;
+export interface MainNavProps{
+    current:string,
+    buttonCallback: ButtonCallback,
+}
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
     const [expanded,setExpanded]=useState(props.current);
@@ -134,7 +137,7 @@ export const MainNav = (props:MainNavProps) => {
                 }
                 dialogContext.closeDialog();
                 if (page.name === props.current) {
-                    history.replace(page.name, {button: av.button});
+                    props.buttonCallback(ev,av.button);
                 }
                 else {
                     history.push(page.name,{button:av.button});
@@ -146,14 +149,14 @@ export const MainNav = (props:MainNavProps) => {
         })}
     </DialogFrame>
 }
-
-export const MainNavButton=(pagename:string) => {
+export const MainNavButton=(pagename:string,buttonAction:ButtonCallback) => {
     return {
         name: 'MainNav',
         onClick: (ev:SyntheticEvent)=>{
             const dialogContext=getav(ev).dialogContext;
             showDialog(dialogContext,()=><MainNav
                 current={pagename}
+                buttonCallback={buttonAction}
             />,undefined,{coverClassName:'MainNavCover'})
         }
     }

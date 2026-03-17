@@ -115,7 +115,7 @@ class SplitSupport{
         return assign(
             {
                 name: 'Split',
-                displayName: 'full screen',
+                displayName: 'split screen',
                 storeKeys: {
                     toggle: keys.gui.global.splitMode,
                     visible: keys.properties.showSplitButton
