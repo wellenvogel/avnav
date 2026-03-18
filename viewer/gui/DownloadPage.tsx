@@ -22,6 +22,7 @@ import {extensionListToAccept, uploadClick} from "../components/UploadHandler";
 import {ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import Helper from "../util/helper";
 import DownloadPageButtons from "./DownloadPageButtons";
+import {HistoryEntry} from "../util/history";
 
 export interface DownloadPageProps extends PageProps {
     options: {
@@ -51,9 +52,11 @@ const DownloadPage=(props:DownloadPageProps)=>{
         setUploadFile(undefined);
         setType(newType);
         //store the new type to have this available if we come back
+        const current:HistoryEntry=history.currentLocation(true) as HistoryEntry;
         history.replace(
-            history.currentLocation() as string,
+            current.location,
             {
+                ...current.options,
                 downloadtype:newType
             }
         )
@@ -82,7 +85,7 @@ const DownloadPage=(props:DownloadPageProps)=>{
         Partial<DynamicButtonProps>=>{
         const update:Partial<DynamicButtonProps>={};
         if (config.visible !== false){
-            update.visible=type === config.type || (
+            update.visible=(type === config.type) || (
                 Helper.unsetorTrue(options.allowChange)
                 && (! options.allowedTypes || ! options.allowedTypes.length || options.allowedTypes.includes(config.type))
             )

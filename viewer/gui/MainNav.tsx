@@ -33,6 +33,8 @@ import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
 // @ts-ignore
 import keys from "../util/keys";
+import {ChartOverlayButtons} from "./DownloadPageButtons";
+import {PAGEIDS} from "../util/pageids";
 
 type PageKind='navigation'|'settings';
 
@@ -41,11 +43,17 @@ class Page{
     displayName?:string;
     buttons:ButtonDef[];
     kind:PageKind;
-    constructor(name:string,kind:PageKind,displayName?:string,buttons?:ButtonDef[]){
+    options:Record<string, any>;
+    constructor(name:string,kind:PageKind,
+                displayName?:string,
+                buttons?:ButtonDef[],
+                options?:Record<string, any>
+        ){
         this.name=name;
         this.displayName=displayName;
         this.buttons=buttons;
         this.kind=kind;
+        this.options=options;
     }
     getDisplay(){
         return this.displayName||this.name;
@@ -54,12 +62,9 @@ class Page{
 
 
 const mainTree=[
-    new Page('charts','settings','Charts, Overlays',
-        GeneralButtons.concat([
-        new ButtonDef({name:'dummy',displayName:'Test1'}),
-        ])
-        ),
-    new Page('mainpage','navigation','Select Chart',
+    new Page(PAGEIDS.DOWNLOAD,'settings','Charts, Overlays',
+        GeneralButtons.concat(ChartOverlayButtons),{allowedTypes:['chart','overlay']}),
+    new Page(PAGEIDS.MAIN,'navigation','Select Chart',
         MainPageButtons
         )
 ]
@@ -142,7 +147,7 @@ export const MainNav = (props:MainNavProps) => {
                     props.buttonCallback(ev,av.button);
                 }
                 else {
-                    history.push(page.name,{button:av.button});
+                    history.push(page.name,{...page.options, button:av.button});
                 }
             }}
                  isCurrent={page.name==props.current}

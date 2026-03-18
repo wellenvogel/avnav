@@ -34,7 +34,7 @@ const getButtonParam=(name:string,type:string,overflow?:boolean,displayName?:str
     }
     return rt;
 }
-export default GeneralButtons.concat(propsToDefs([
+export const ChartOverlayButtons=propsToDefs([
     getButtonParam('DownloadPageCharts','chart'),
     {
         name: 'DownloadPageImporter',
@@ -43,14 +43,28 @@ export default GeneralButtons.concat(propsToDefs([
             visible: keys.gui.capabilities.uploadImport
         }
     },
+    getButtonParam('DownloadPageOverlays','overlay',true),
+]);
+export const TrackButtons=propsToDefs([
     getButtonParam('DownloadPageTracks','track'),
+])
+export const PluginButtons=propsToDefs([
+    getButtonParam('DownloadPagePlugins','plugins',true,keys.gui.capabilities.uploadPlugins),
+])
+export const RouteButtons=propsToDefs([
     getButtonParam('DownloadPageRoutes','route'),
+])
+
+export default GeneralButtons.concat(
+    ChartOverlayButtons,
+    TrackButtons,
+    RouteButtons,
+    PluginButtons,
+    propsToDefs([
     getButtonParam('DownloadPageLayouts','layout'),
     getButtonParam('DownloadPageSettings','settings',true,keys.gui.capabilities.uploadSettings),
     getButtonParam('DownloadPageUser','user',true),
     getButtonParam('DownloadPageImages','images',true),
-    getButtonParam('DownloadPageOverlays','overlay',true),
-    getButtonParam('DownloadPagePlugins','plugins',true,keys.gui.capabilities.uploadPlugins),
     {
         name:'DownloadPageUpload',
         displayName:'upload',
