@@ -25,12 +25,16 @@ import GeneralButtons from "./GeneralButtons";
 // @ts-ignore
 import keys from "../util/keys";
 
-const getButtonParam=(name:string,type:string,overflow?:boolean,displayName?:string):DynamicButtonProps=>{
+const getButtonParam=(name:string,type:string,
+                      overflow?:boolean,
+                      capability?:string,
+                      displayName?:string):DynamicButtonProps=>{
     const rt:DynamicButtonProps={
         name:name,
         type:type,
         displayName:displayName||type,
         overflow:!!overflow,
+        capability:capability,
     }
     return rt;
 }
