@@ -29,7 +29,7 @@ import {shallowEqual} from "shallow-equal";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase} from "../util/itemFunctions";
 import {showDialog} from "../components/OverlayDialog";
-import {MainNav, MainNavButton} from "./MainNav";
+import {MainNav, InjectMainMenu} from "./MainNav";
 import {PAGEIDS} from "../util/pageids";
 import MainPageButtons from "./MainPageButtons";
 
@@ -244,9 +244,8 @@ class MainPage extends React.Component {
 
 
     getButtons() {
-        return [
-            MainNavButton(PAGEIDS.MAIN,(ev,name)=> this.handleButton(ev,name))
-        ].concat(updateButtons(MainPageButtons, this.buttonActions));
+        const normalActions=updateButtons(MainPageButtons, this.buttonActions);
+        return  InjectMainMenu(PAGEIDS.MAIN,normalActions);
 
     }
     handleButton(ev,name){

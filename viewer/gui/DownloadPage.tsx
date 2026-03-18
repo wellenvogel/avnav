@@ -23,6 +23,7 @@ import {ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Butt
 import Helper from "../util/helper";
 import DownloadPageButtons from "./DownloadPageButtons";
 import {HistoryEntry} from "../util/history";
+import {InjectMainMenu} from "./MainNav";
 
 export interface DownloadPageProps extends PageProps {
     options: {
@@ -99,8 +100,7 @@ const DownloadPage=(props:DownloadPageProps)=>{
         }
         return update;
     }
-    const getButtons=()=>{
-        const rt=updateButtons(DownloadPageButtons, {
+    const buttons=updateButtons(DownloadPageButtons, {
             DownloadPageCharts: (config: Partial<DynamicButtonProps>) => updateButton(config),
             DownloadPageImporter: (config: Partial<DynamicButtonProps>) => updateButton(config,
                 () => history.push('importerpage')),
@@ -129,8 +129,6 @@ const DownloadPage=(props:DownloadPageProps)=>{
                 }
             }
         })
-        return rt;
-    }
         return (
             <PageFrame id={PAGEIDS.DOWNLOAD}>
                 <PageLeft title={actions.headline}>
@@ -144,7 +142,7 @@ const DownloadPage=(props:DownloadPageProps)=>{
                 </PageLeft>
                 <ButtonList
                     page={PAGEIDS.DOWNLOAD}
-                    itemList={getButtons()}
+                    itemList={InjectMainMenu(PAGEIDS.DOWNLOAD,buttons)}
                 />
             </PageFrame>
         )

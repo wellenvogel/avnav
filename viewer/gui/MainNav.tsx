@@ -27,7 +27,7 @@ import {useDialogContext} from "../components/DialogContext";
 // @ts-ignore
 import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {useHistory} from "../components/HistoryProvider";
-import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow} from "../components/Button";
+import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
 import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
@@ -35,10 +35,11 @@ import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {ChartOverlayButtons} from "./DownloadPageButtons";
 import {PAGEIDS} from "../util/pageids";
+import {CopyAware} from "../util/CopyAware";
 
 type PageKind='navigation'|'settings';
 
-class Page{
+class Page extends CopyAware{
     name:string;
     displayName?:string;
     buttons:ButtonDef[];
@@ -49,6 +50,7 @@ class Page{
                 buttons?:ButtonDef[],
                 options?:Record<string, any>
         ){
+        super();
         this.name=name;
         this.displayName=displayName;
         this.buttons=buttons;
@@ -79,6 +81,7 @@ interface PageRowProps{
 const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
+    const dialogContext=useDialogContext();
     return <React.Fragment>
         <ListItem
         className={className}
@@ -108,6 +111,17 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
                             {...bt}
                             key={bt.name}
                             onClick={(ev) => {
+                                if (isCurrent) {
+                                    //directly call the butoon action from the page
+                                    //remove the dialog context
+                                    //to ensure the global context will be used
+                                    setav(ev,{dialogContext:undefined});
+                                    dialogContext.closeDialog();
+                                    if (bt.onClick) {
+                                        bt.onClick(ev);
+                                    }
+                                    return;
+                                }
                                 ev.stopPropagation()
                                 setav(ev, {page: page.name, button: bt.name})
                                 onClick(ev)
@@ -121,7 +135,7 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
 export type ButtonCallback= (ev:ButtonEvent, button:string)=>void;
 export interface MainNavProps{
     current:string,
-    buttonCallback: ButtonCallback,
+    currentButtons:ButtonDef[],
 }
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
@@ -131,7 +145,10 @@ export const MainNav = (props:MainNavProps) => {
     pages.sort((a)=>(a.name===props.current)?-1:0);
     return <DialogFrame className={'MainNav'}>
         {pages.map((page)=>{
-            return <PageRow key={page.name} page={page} onClick={(ev: SyntheticEvent)=> {
+            const displayPage=(page.name === props.current)?page.copy({
+                buttons:props.currentButtons
+            }):page;
+            return <PageRow key={page.name} page={displayPage} onClick={(ev: SyntheticEvent)=> {
                 const av=getav(ev);
                 if (av.expanded !== undefined) {
                     if (av.expanded) {
@@ -143,10 +160,7 @@ export const MainNav = (props:MainNavProps) => {
                     return;
                 }
                 dialogContext.closeDialog();
-                if (page.name === props.current) {
-                    props.buttonCallback(ev,av.button);
-                }
-                else {
+                if (page.name !== props.current) {
                     history.push(page.name,{...page.options, button:av.button});
                 }
             }}
@@ -156,15 +170,15 @@ export const MainNav = (props:MainNavProps) => {
         })}
     </DialogFrame>
 }
-export const MainNavButton=(pagename:string,buttonAction:ButtonCallback) => {
-    return {
+export const InjectMainMenu=(pagename:string, pageButtons:ButtonDef[]) => {
+    return propsToDefs([ {
         name: 'MainNav',
         onClick: (ev:SyntheticEvent)=>{
             const dialogContext=getav(ev).dialogContext;
             showDialog(dialogContext,()=><MainNav
                 current={pagename}
-                buttonCallback={buttonAction}
+                currentButtons={pageButtons}
             />,undefined,{coverClassName:'MainNavCover'})
         }
-    }
+    }]).concat(pageButtons);
 }
