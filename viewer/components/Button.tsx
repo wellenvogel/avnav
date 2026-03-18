@@ -139,14 +139,3 @@ export const updateButtons=(buttonDefs:ButtonDef[],updates?:Record<string, Butto
    }
    return rt;
 }
-
-export const executeButtonAction=(ev:ButtonEvent,name: string,buttons:ButtonDef[])=>{
-    if (! ev || ! buttons) return;
-    for (const bt of buttons){
-        if (bt.name === name){
-            if (bt.onClick){ bt.onClick(ev); }
-            return;
-        }
-    }
-    return;
-}

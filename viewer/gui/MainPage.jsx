@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import Button, {executeButtonAction, updateButtons} from '../components/Button.tsx';
+import Button, {updateButtons} from '../components/Button.tsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.jsx';
@@ -14,22 +14,15 @@ import MapHolder from '../map/mapholder.js';
 import base from '../base.ts';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
-import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import Mob from '../components/Mob.ts';
 import Addons from '../components/Addons.js';
 import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
-import FullScreen from '../components/Fullscreen';
-import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import LocalStorage from '../util/localStorageManager';
-import splitsupport from "../util/splitsupport";
 import LayoutHandler from "../util/layouthandler";
-import Helper, {avitem, setav} from "../util/helper";
-import {shallowEqual} from "shallow-equal";
+import Helper, {avitem} from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase} from "../util/itemFunctions";
-import {showDialog} from "../components/OverlayDialog";
-import {MainNav, InjectMainMenu, handleInitialButton} from "./MainNav";
+import {InjectMainMenu, handleInitialButton} from "./MainNav";
 import {PAGEIDS} from "../util/pageids";
 import MainPageButtons from "./MainPageButtons";
 
@@ -247,11 +240,6 @@ class MainPage extends React.Component {
         const normalActions=updateButtons(MainPageButtons, this.buttonActions);
         return  InjectMainMenu(PAGEIDS.MAIN,normalActions);
 
-    }
-    handleButton(ev,name){
-        if (! name) return;
-        setav(ev,{dialogContext:undefined,history: this.props.history}); //TODO own ctx
-        executeButtonAction(ev,name,this.getButtons());
     }
 
     ChartItem(props){
