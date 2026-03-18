@@ -985,9 +985,11 @@ span.valuePrefix{
 //----------------------------------------------------------------------------------------
 //MainNav
 //----------------------------------------------------------------------------------------
+@mainNavItemWidth: 7em;
+@mainNavItemColumns: 3;
 .MainNavCover{
   &>.dialog{
-    width: 90%;
+    width: ( @mainNavItemWidth * @mainNavItemColumns + 2em)
   }
   justify-content: end;
   align-items: start;
@@ -1006,6 +1008,12 @@ span.valuePrefix{
     border: 1px solid var(--avnav-border-color);
     border-radius: 4px;
   }
+  .icon.navigation{
+    .icon('boat.svg')
+  }
+  .icon.settings{
+    .icon('build-200.svg')
+  }
   .ButtonList{
     display: flex;
     flex-direction: row;
@@ -1015,12 +1023,15 @@ span.valuePrefix{
     & .listMain{
       flex-basis: unset;
     }
+    & .listEntry{
+      padding: 0.5em;
+    }
     & .listEntry.buttonRow{
       flex-direction: column;
       align-items: center;
+      text-align: center;
       border-bottom: unset;
-      flex-grow: 1;
-      flex-basis: 9em;
+      width: @mainNavItemWidth;
     }
   }
 }

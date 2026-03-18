@@ -376,7 +376,7 @@ class MainPage extends React.Component {
 
     render() {
         const Title=(props)=><React.Fragment>
-            <span>{"AvNav "+ LocalStorage.getPrefix()}</span>
+            <span>{"AvNav "+ LocalStorage.getPrefix()+" Select Chart"}</span>
             {this.state.loading && <span className={"spinner"}/>}
         </React.Fragment>
         return (
