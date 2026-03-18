@@ -12,7 +12,7 @@ import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
 import StatusPage from './gui/StatusPage.jsx';
 import WpaPage from './gui/WpaPage.jsx';
-import DownloadPage from './gui/DownloadPage.jsx';
+import DownloadPage from './gui/DownloadPage.tsx';
 import SettingsPage from './gui/SettingsPage.jsx';
 import NavPage from './gui/NavPage.jsx';
 import EditRoutePage from './gui/EditRoutePage.jsx';

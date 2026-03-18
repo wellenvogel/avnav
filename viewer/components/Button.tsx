@@ -119,13 +119,19 @@ export const propsToDefs=(props:DynamicButtonProps[]):ButtonDef[] => {
     }
     return rt;
 }
-export const updateButtons=(buttonDefs:ButtonDef[],updates?:Record<string, Partial<DynamicButtonProps>>):ButtonDef[]=> {
+export type ButtonUpdate=Partial<DynamicButtonProps> | ((old:Partial<DynamicButtonProps>)=>Partial<DynamicButtonProps>)
+export const updateButtons=(buttonDefs:ButtonDef[],updates?:Record<string, ButtonUpdate>):ButtonDef[]=> {
    if (! updates) return buttonDefs;
    const rt:ButtonDef[] = [];
    for (const bt of buttonDefs){
        const update=updates[bt.name];
        if (update){
-           rt.push(bt.copy(update));
+           if (typeof (update) === 'function') {
+               rt.push(bt.copy(update(bt)))
+           }
+           else {
+               rt.push(bt.copy(update));
+           }
        }
        else{
            rt.push(bt);

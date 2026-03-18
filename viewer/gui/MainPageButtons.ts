@@ -35,10 +35,6 @@ import FullScreen from '../components/Fullscreen';
 import splitsupport from '../util/splitsupport';
 import GeneralButtons from "./GeneralButtons";
 
-// @ts-ignore
-// @ts-ignore
-// @ts-ignore
-// @ts-ignore
 export default updateButtons(GeneralButtons.concat(propsToDefs([
     {
         name: 'ShowStatus',
