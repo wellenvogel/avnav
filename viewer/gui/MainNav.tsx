@@ -20,10 +20,10 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React,{SyntheticEvent, useState} from "react";
+import React, {RefObject, SyntheticEvent, useEffect, useState} from "react";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
-import {useDialogContext} from "../components/DialogContext";
+import {IDialogContext, useDialogContext} from "../components/DialogContext";
 // @ts-ignore
 import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {useHistory} from "../components/HistoryProvider";
@@ -36,6 +36,7 @@ import keys from "../util/keys";
 import {ChartOverlayButtons} from "./DownloadPageButtons";
 import {PAGEIDS} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
+import {HistoryEntry, IHistory} from "../util/history";
 
 type PageKind='navigation'|'settings';
 
@@ -181,4 +182,35 @@ export const InjectMainMenu=(pagename:string, pageButtons:ButtonDef[]) => {
             />,undefined,{coverClassName:'MainNavCover'})
         }
     }]).concat(pageButtons);
+}
+
+export const handleInitialButton = (history: IHistory, pageButtons: ButtonDef[], dialogContext?: IDialogContext) => {
+    //check and remove the button from the history
+    const current = history.currentLocation(true) as HistoryEntry;
+    if (current.options && current.options.button) {
+        const bname = current.options.button;
+        history.replace(current.location,
+            {
+                ...current.options,
+                button: undefined
+            });
+        for (const bt of pageButtons) {
+            if (bt.name === bname && bt.onClick) {
+                bt.onClick(setav(new Event('avnav'), {
+                    history: history,
+                    dialogContext: dialogContext
+                }))
+                return;
+            }
+        }
+    }
+}
+
+export const useInitialButton=(buttonList:RefObject<ButtonDef[]>)=>{
+    const history=useHistory()
+    const dialogContext=useDialogContext()
+    useEffect(() => {
+        if (! buttonList.current) return;
+        handleInitialButton(history,buttonList.current,dialogContext);
+    }, []);
 }

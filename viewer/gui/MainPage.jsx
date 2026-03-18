@@ -29,7 +29,7 @@ import {shallowEqual} from "shallow-equal";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase} from "../util/itemFunctions";
 import {showDialog} from "../components/OverlayDialog";
-import {MainNav, InjectMainMenu} from "./MainNav";
+import {MainNav, InjectMainMenu, handleInitialButton} from "./MainNav";
 import {PAGEIDS} from "../util/pageids";
 import MainPageButtons from "./MainPageButtons";
 
@@ -281,10 +281,12 @@ class MainPage extends React.Component {
 
 
     componentDidMount() {
+        //"soft" reset the history but keep the options
+        const current=this.props.history.currentLocation(true);
+        this.props.history.reset();
+        this.props.history.replace(current.location,current.options);
         globalStore.storeData(keys.gui.global.soundEnabled,true);
-        if (this.props.options && this.props.options.button){
-            this.handleButton({},this.props.options.button);
-        }
+        handleInitialButton(this.props.history,this.getButtons());
     }
 
     selectChart(offset){

@@ -6,7 +6,7 @@ import {useStoreState} from '../hoc/Dynamic';
 import globalStore from '../util/globalstore';
 // @ts-ignore
 import keys from '../util/keys.jsx';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore
 import {createItemActions} from '../components/FileDialog';
@@ -20,11 +20,10 @@ import base from "../base";
 // @ts-ignore
 import {extensionListToAccept, uploadClick} from "../components/UploadHandler";
 import {ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
-import Helper, {setav} from "../util/helper";
+import Helper from "../util/helper";
 import DownloadPageButtons from "./DownloadPageButtons";
 import {HistoryEntry} from "../util/history";
-import {InjectMainMenu} from "./MainNav";
-import {useDialogContext} from "../components/exports";
+import {InjectMainMenu, useInitialButton} from "./MainNav";
 
 export interface DownloadPageProps extends PageProps {
     options: {
@@ -133,27 +132,7 @@ const DownloadPage=(props:DownloadPageProps)=>{
             }
         })
     buttonListRef.current=buttons;
-    const dialogContext=useDialogContext();
-    useEffect(() => {
-        if (! buttonListRef.current) return;
-        if (options.button){
-            //remove the button from the history
-            const current=history.currentLocation(true) as HistoryEntry;
-            history.replace(current.location,
-                {
-                    ...current.options,
-                    button:undefined
-                });
-            for (const bt of buttonListRef.current) {
-                if (bt.name === options.button && bt.onClick){
-                    bt.onClick(setav(new Event('avnav'),{
-                        history:history,
-                        dialogContext:dialogContext
-                    }))
-                }
-            }
-        }
-    }, []);
+    useInitialButton(buttonListRef);
         return (
             <PageFrame id={PAGEIDS.DOWNLOAD}>
                 <PageLeft title={actions.headline}>

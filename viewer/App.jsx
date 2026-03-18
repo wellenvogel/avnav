@@ -87,17 +87,10 @@ const Other=(props)=>{
 }
 
 
-const MainWrapper=(props)=>{
-    const history=useHistory();
-    useEffect(()=>{
-        history.reset();
-    },[]);
-    return <MainPage {...props}/>
-}
-MainWrapper.propTypes=MainPage.propTypes;
+
 
 const pages={
-    [PAGEIDS.MAIN]: MainWrapper,
+    [PAGEIDS.MAIN]: MainPage,
     [PAGEIDS.INFO]: InfoPage,
     [PAGEIDS.GPS]: GpsPage,
     [PAGEIDS.AIS]: AisPage,
