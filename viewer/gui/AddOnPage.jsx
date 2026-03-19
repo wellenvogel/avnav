@@ -4,7 +4,7 @@
 
 import Dynamic from '../hoc/Dynamic.tsx';
 import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.ts';

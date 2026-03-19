@@ -5,7 +5,7 @@
 
 import globalStore from "../util/globalstore.ts";
 import React, {useEffect} from 'react';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 
 
 let activeInputs={};

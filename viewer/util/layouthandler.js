@@ -1,6 +1,6 @@
 import Requests from './requests.js';
 import globalStore from './globalstore.ts';
-import keys,{KeyHelper} from './keys.jsx';
+import keys,{KeyHelper} from './keys.ts';
 import KeyHandler from './keyhandler.js';
 import base from '../base.ts';
 import assign from 'object-assign';

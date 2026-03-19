@@ -1,5 +1,5 @@
 import Requests, {prepareUrl} from '../util/requests.js';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import assign from 'object-assign';

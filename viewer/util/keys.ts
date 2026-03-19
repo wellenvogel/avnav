@@ -2,32 +2,40 @@
  * Created by andreas on 27.07.19.
  */
 
-import assign from 'object-assign';
+
+// @ts-ignore
 import greyBubble from '../images/GreyBubble40.png';
+// @ts-ignore
 import redBubble from '../images/RedBubble40.png';
+// @ts-ignore
 import greenBubble from '../images/GreenBubble40.png';
+// @ts-ignore
 import yellowBubble from '../images/YellowBubble40.png';
+// @ts-ignore
 import AisFormatter from "../nav/aisformatter";
-import {EditableParameterTypes} from "./EditableParameter";
+import {EditableParameterTypes, ListEntry} from "./EditableParameter";
+// @ts-ignore
+import assign from "object-assign";
+
 
 const K=999; //the real value does not matter
 const V=888; //keys that can be used as value display
 
-let valueKeys=[]; // a list of keys that can be used to display values in widgets
+const valueKeys:string[]=[]; // a list of keys that can be used to display values in widgets
 
-export const PropertyType={
-    CHECKBOX:EditableParameterTypes.BOOLEAN,
-    RANGE:EditableParameterTypes.FLOAT,
-    LIST:EditableParameterTypes.SELECT,
-    COLOR:EditableParameterTypes.COLOR,
-    LAYOUT:EditableParameterTypes.PROP_BASE+1,
-    SELECT: EditableParameterTypes.SELECT,
-    INTERNAL: EditableParameterTypes.PROP_BASE,
-    MULTICHECKBOX: EditableParameterTypes.PROP_BASE+2, //unused?
-    STRING: EditableParameterTypes.STRING,
-    DELETED: EditableParameterTypes.PROP_BASE+10
-};
-
+export enum PropertyType {
+    CHECKBOX = EditableParameterTypes.BOOLEAN,
+    RANGE=EditableParameterTypes.FLOAT,
+    LIST=EditableParameterTypes.SELECT,
+    COLOR=EditableParameterTypes.COLOR,
+    LAYOUT=EditableParameterTypes.PROP_BASE+1,
+    SELECT= EditableParameterTypes.SELECT,
+    INTERNAL= EditableParameterTypes.PROP_BASE,
+    MULTICHECKBOX=EditableParameterTypes.PROP_BASE+2, //unused?
+    STRING= EditableParameterTypes.STRING,
+    DELETED= EditableParameterTypes.PROP_BASE+10
+}
+export type PropertyValue= string|number|boolean
 /**
  * data holder for property description
  * @param defaultv
@@ -38,14 +46,25 @@ export const PropertyType={
  * @constructor
  */
 export class Property{
-    constructor(defaultv,opt_label,opt_type,opt_values,opt_description,opt_initial){
+    defaultv: PropertyValue;
+    label: string;
+    type: PropertyType;
+    values?: ListEntry[];
+    canChange: boolean;
+    description?: string;
+    initialValue?: PropertyValue;
+    constructor(defaultv:PropertyValue,opt_label?:string,
+                opt_type?:PropertyType,
+                opt_values?:ListEntry[],
+                opt_description?:string,
+                opt_initial?:PropertyValue){
         this.defaultv=defaultv;
         this.label=opt_label;
         this.type=(opt_type !== undefined)?opt_type:PropertyType.INTERNAL;
         this.values=(opt_values !== undefined)?opt_values:[0,1000];//assume range 0...1000
         if (this.values instanceof Object){
             const v=[];
-            for (let k in this.values){
+            for (const k in this.values){
                 v.push(this.values[k])
             }
             this.values=v;
@@ -53,9 +72,6 @@ export class Property{
         this.canChange=opt_type !== undefined;
         this.description=opt_description;
         this.initialValue=opt_initial;
-        if (opt_initial!==undefined){
-            let debug=1;
-        }
     }
     isSplit(){
         return false;
@@ -63,8 +79,11 @@ export class Property{
 }
 
 export class SplitProperty extends Property{
-    constructor(defaultv,opt_label,opt_type,opt_values,opt_initial) {
-        super(defaultv,opt_label,opt_type,opt_values,opt_initial);
+    constructor(defaultv:PropertyValue,opt_label?:string,
+                opt_type?:PropertyType,
+                opt_values?:ListEntry[],
+                opt_initial?:PropertyValue) {
+        super(defaultv,opt_label,opt_type,opt_values,undefined,opt_initial);
     }
 
     isSplit() {
@@ -77,41 +96,63 @@ export class SplitProperty extends Property{
  * @param description
  * @constructor
  */
-const D=function(description){
-    this.description=description;
-};
+class D{
+    description: string;
+    constructor(description:string) {
+        this.description = description;
+    }
+}
 
 /**
  * key with description for values that can be used in widgets
  * @param description
  * @constructor
  */
-const VD=function(description){
-    this.description=description;
-};
+class VD {
+    description: string;
+    constructor(description:string) {
+        this.description = description;
+    }
+}
 
-let keyDescriptions={}; //will be filled on first module loading
+const keyDescriptions:Record<string,KeyType>={}; //will be filled on first module loading
 
 export class KeyNode{
-    constructor(original,path){
+    __path: string;
+    constructor(original:any,path:string){
         assign(this,original);
         this.__path=path;
     }
     getKeys(){
-        let rt={};
-        for (let k in this){
-            if (k.substr(0,1) === '_') continue;
-            let v=this[k];
+        const rt:Record<string, string>={};
+        for (const k in this){
+            if (k.substring(0,1) === '_') continue;
+            const v=this[k];
             if (typeof(v) !== 'string') continue;
             rt[k]=v;
         }
         return rt;
     }
 }
-
+//type KeyTypeBase=typeof V|typeof K|string|VD|D|number|Property|KeyNode
+//type Nested=KeyTypeBase|Record<string,KeyTypeBase>;
+type KeyType=any;//Nested|Record<string,Nested>|Record<string,Record<string,Nested>>
 //the global definition of all used store keys
 //every leaf entry having the value "K" will be replaced with its path as a string
-let keys={
+
+export enum MainExpandMode {
+    CURRENT="current",
+    NONE="none",
+    ALL="all"
+}
+export enum MainColumns{
+    three="3",
+    five="5",
+    seven="7",
+    all="all"
+}
+
+const keys:Record<string,KeyType>={
     nav:{
         gps:{
             lat:V,
@@ -214,6 +255,7 @@ let keys={
     },
     map:{
         lockPosition: K,
+
         courseUp: K,
         currentZoom:K,
         requiredZoom:K,
@@ -302,7 +344,7 @@ let keys={
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
             base: new Property(true, "Base", PropertyType.CHECKBOX),
             scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
-            user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
+            user: new Property(true,"User/Plugins",PropertyType.CHECKBOX)
         },
         startNavPage: new Property(false,"start with last map",PropertyType.CHECKBOX),
         startLastSplit: new Property(false,"start with last split mode",PropertyType.CHECKBOX),
@@ -431,6 +473,8 @@ let keys={
         autoHideGpsPage: new Property(false,"auto hide buttons on Dashboard Pages",PropertyType.CHECKBOX),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
         layoutName: new SplitProperty("system.default","Layout name",PropertyType.LAYOUT),
+        mainNavCols: new Property(3,"main nav columns",PropertyType.LIST,Object.values(MainColumns),'number of columns in the main nav menu'),
+        mainNavExpand: new Property('current',"man nav expand",PropertyType.LIST,Object.values(MainExpandMode),"which entries of the main nav menu should be expanded when opening"),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20],"the zoom that is automatically set when MOB is activated (except if the zoom was already higher)"),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,"if set the back button will always be on top",true),
@@ -487,9 +531,9 @@ let keys={
 };
 
 //replace all leaf values with their path as string
-function update_keys(base,name){
-    for (let k in base){
-        let cname=name?(name+"."+k):k;
+function update_keys(base:Record<string,any>,name?:string){
+    for (const k in base){
+        const cname=name?(name+"."+k):k;
         if (base[k] === K){
             base[k]=cname;
             continue;
@@ -499,7 +543,7 @@ function update_keys(base,name){
             base[k]=cname;
             continue;
         }
-        let current=base[k];
+        const current=base[k];
         if (typeof (current) === 'object'){
             if (current instanceof D || current instanceof Property || current instanceof VD){
                 keyDescriptions[cname]=current;
@@ -509,7 +553,7 @@ function update_keys(base,name){
                 base[k]=cname;
                 continue;
             }
-            update_keys(base[k],cname);
+            update_keys(current,cname);
             base[k]=new KeyNode(base[k],cname);
         }
     }
@@ -519,9 +563,9 @@ update_keys(keys);
 
 
 export const KeyHelper = {
-    keyNodeToString:(keyNode)=> {
+    keyNodeToString:(keyNode:KeyNode|any)=> {
         if (!keyNode) return;
-        if (typeof(keyNode.__path) === undefined) return;
+        if (typeof(keyNode.__path) === "undefined") return;
         return keyNode.__path;
     },
     /**
@@ -529,19 +573,21 @@ export const KeyHelper = {
     * for calling storeMultiple at the store API
     */
     getDefaultKeyValues:()=> {
-        let values = {};
-        for (let k in keyDescriptions) {
-            let description = keyDescriptions[k];
-            if (description.defaultv !== undefined) {
-                values[k] = description.defaultv;
+        const values:Record<string,PropertyValue> = {};
+        for (const k in keyDescriptions) {
+            const description = keyDescriptions[k];
+            if (description instanceof Property) {
+                if (description.defaultv !== undefined) {
+                    values[k] = description.defaultv;
+                }
             }
         }
         return values;
     },
-    getKeyDescriptions:(opt_propertiesOnly)=> {
+    getKeyDescriptions:(opt_propertiesOnly?:boolean)=> {
         if (!opt_propertiesOnly) return keyDescriptions;
-        let rt = {};
-        for (let k in keyDescriptions) {
+        const rt:Record<string,KeyType> = {};
+        for (const k in keyDescriptions) {
             if (keyDescriptions[k] instanceof Property) {
                 rt[k] = keyDescriptions[k];
             }
@@ -551,14 +597,14 @@ export const KeyHelper = {
     /**
      * return all the keys as an arry of strings
      * the input can be any type that can be used in store functions
-     * @param keyObject: string, array of strings, key objects (keys being the values, can be nested)
+     * @param keyObject
      */
-    flattenedKeys:(keyObject)=>{
+    flattenedKeys:(keyObject:KeyType):string[]=>{
         if (keyObject instanceof Array) return keyObject;
-        if (keyObject instanceof Object){
-            let rt=[];
-            for (let k in keyObject){
-                let kv=keyObject[k];
+        if (typeof(keyObject) === 'object'){
+            let rt:any[]=[];
+            for (const k in keyObject){
+                const kv=(keyObject as Record<string, any>)[k];
                 if (kv instanceof Object){
                     rt=rt.concat(KeyHelper.flattenedKeys(kv))
                 }
@@ -568,11 +614,11 @@ export const KeyHelper = {
             }
             return rt;
         }
-        return [keyObject]
+        return [keyObject as string]
 
     },
-    getValue:(obj,path,opt_skip)=>{
-        let parts=path.split('.');
+    getValue:(obj:any,path:string,opt_skip?:number)=>{
+        const parts=path.split('.');
         let current=obj;
         let rt=undefined;
         for (let i=opt_skip||0;i<parts.length;i++){
@@ -589,10 +635,10 @@ export const KeyHelper = {
     getValueKeys:()=>{
         return valueKeys;
     },
-    removeNodeInfo:(keys)=>{
+    removeNodeInfo:(keys:any)=>{
         if (! (keys instanceof Object)) return keys;
         if (keys.__path !== undefined) {
-            let rt={...keys};
+            const rt={...keys};
             delete rt.__path;
             return rt;
         }

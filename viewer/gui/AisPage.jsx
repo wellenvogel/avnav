@@ -5,7 +5,7 @@
 import {useStore, useStoreState} from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import React, {useCallback, useRef} from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';

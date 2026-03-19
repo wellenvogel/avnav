@@ -27,12 +27,12 @@ import {IDialogContext, useDialogContext} from "../components/DialogContext";
 // @ts-ignore
 import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {useHistory} from "../components/HistoryProvider";
-import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
+import {ButtonDef, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
 import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
 // @ts-ignore
-import keys from "../util/keys";
+import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import {ChartOverlayButtons} from "./DownloadPageButtons";
 import {PAGEIDS} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
@@ -83,6 +83,7 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
+    const [isExpanded,setExpanded]=useState(expanded);
     return <React.Fragment>
         <ListItem
         className={className}
@@ -98,12 +99,12 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
             className={'iconSlot'}
             icon={{className:expanded?'MNexpanded':'MNcollapsed'}}
             onClick={(ev)=>{
-                setav(ev,{expanded:!expanded});
-                onClick(ev);
+                setExpanded(!isExpanded);
+                ev.stopPropagation();
             }}
         ></ListSlot>
         </ListItem>
-        {expanded &&
+        {isExpanded &&
             <ListFrame className={'ButtonList'}>
                 {page.buttons.map((bt)=> {
                     if (bt.localOnly && ! isCurrent) return null;
@@ -113,7 +114,7 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
                             key={bt.name}
                             onClick={(ev) => {
                                 if (isCurrent) {
-                                    //directly call the butoon action from the page
+                                    //directly call the button action from the page
                                     //remove the dialog context
                                     //to ensure the global context will be used
                                     setav(ev,{dialogContext:undefined});
@@ -133,14 +134,13 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
 
     </React.Fragment>
 }
-export type ButtonCallback= (ev:ButtonEvent, button:string)=>void;
 export interface MainNavProps{
     current:string,
     currentButtons:ButtonDef[],
+    expandMode:MainExpandMode
 }
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
-    const [expanded,setExpanded]=useState(props.current);
     const history=useHistory();
     const pages=mainTree.slice(0);
     pages.sort((a)=>(a.name===props.current)?-1:0);
@@ -149,37 +149,44 @@ export const MainNav = (props:MainNavProps) => {
             const displayPage=(page.name === props.current)?page.copy({
                 buttons:props.currentButtons
             }):page;
-            return <PageRow key={page.name} page={displayPage} onClick={(ev: SyntheticEvent)=> {
-                const av=getav(ev);
-                if (av.expanded !== undefined) {
-                    if (av.expanded) {
-                        setExpanded(page.name);
-                    }
-                    else {
-                        setExpanded(undefined);
-                    }
-                    return;
-                }
+            const isCurrent=page.name==props.current;
+            const expand=(props.expandMode == MainExpandMode.ALL)
+                || isCurrent && ( props.expandMode == MainExpandMode.CURRENT);
+            return <PageRow
+                key={page.name}
+                page={displayPage}
+                onClick={(ev: SyntheticEvent)=> {
                 dialogContext.closeDialog();
+                const av=getav(ev);
                 if (page.name !== props.current) {
                     history.push(page.name,{...page.options, button:av.button});
                 }
             }}
-                 isCurrent={page.name==props.current}
-                 expanded={page.name === expanded}
+                 isCurrent={isCurrent}
+                 expanded={expand }
             />;
         })}
     </DialogFrame>
 }
-export const InjectMainMenu=(pagename:string, pageButtons:ButtonDef[]) => {
+export const InjectMainMenu=(
+    pagename:string,
+    pageButtons:ButtonDef[]
+    ) => {
     return propsToDefs([ {
         name: 'MainNav',
         onClick: (ev:SyntheticEvent)=>{
             const dialogContext=getav(ev).dialogContext;
+            const expandMode=globalstore.getData(keys.properties.mainNavExpand);
+            const columns=globalstore.getData(keys.properties.mainNavCols);
+            let colClass="";
+            if (columns == MainColumns.five) colClass="col5";
+            else if (columns == MainColumns.seven) colClass="col7";
+            else if (columns == MainColumns.all) colClass="full";
             showDialog(dialogContext,()=><MainNav
                 current={pagename}
                 currentButtons={pageButtons}
-            />,undefined,{coverClassName:'MainNavCover'})
+                expandMode={expandMode}
+            />,undefined,{coverClassName:Helper.concatsp('MainNavCover',colClass)})
         }
     }]).concat(pageButtons);
 }

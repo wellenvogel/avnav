@@ -1,5 +1,5 @@
 import globalStore from './globalstore.ts';
-import keys from './keys.jsx';
+import keys from './keys.ts';
 import splitsupport from "./splitsupport";
 import Helper from "./helper";
 import GuiHelpers from "./GuiHelpers";

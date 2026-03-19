@@ -1,5 +1,5 @@
 import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import base from "../base";

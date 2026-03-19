@@ -5,7 +5,7 @@
 import NavCompute from '../nav/navcompute' ;
 import navobjects from '../nav/navobjects' ;
 import anchor from '../images/icons-new/anchor.png' ;
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import RouteEdit from '../nav/routeeditor.js';
 import boatImage from '../images/Boat-NoNeedle.png';

@@ -23,7 +23,7 @@
  ###############################################################################
  */
 import React, {useCallback, useEffect, useState} from "react";
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import {InputReadOnly, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";

@@ -2,7 +2,7 @@
  * Created by andreas on 14.07.14.
  */
 
-import keys,{KeyHelper} from '../util/keys.jsx';
+import keys,{KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import RouteEdit from '../nav/routeeditor.js';
 import orangeMarker from '../images/MarkerOrange.png';

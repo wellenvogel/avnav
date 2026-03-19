@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.ts';
-import keys, {KeyHelper} from '../util/keys.jsx';
+import keys, {KeyHelper} from '../util/keys.ts';
 import {Checkbox, InputSelect} from "./Inputs";
 import DialogButton from "./DialogButton";
 import assign from "object-assign";

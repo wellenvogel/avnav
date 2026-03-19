@@ -3,7 +3,7 @@
  */
 
 import navobjects from '../nav/navobjects';
-import keys, {KeyHelper} from '../util/keys.jsx';
+import keys, {KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import assign from 'object-assign';

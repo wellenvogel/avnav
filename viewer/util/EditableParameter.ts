@@ -22,7 +22,18 @@
 
 import Helper from "./helper";
 
-export const assignableProperties={
+export type Properties =Record<string,any>;
+export type Value =string|number|boolean|Record<string,string>;
+export type Values =Record<string, Value>;
+export type Condition=Value|((values:Values,value:Value)=>boolean);
+export type Conditions =Record<string,Condition>;
+export type ListEntry=Value| {
+    value:Value,
+    label?:string,
+    l?:string,
+    displayName?:string
+}
+export const assignableProperties:Properties={
     name: undefined,
     default: undefined,
     list: undefined,
@@ -41,30 +52,41 @@ export const assignableProperties={
     existingUnchecked: false //allow to keep an existing value even if the check would fail (still marking it red in the UI)
 }
 
-export const EditableParameterTypes={
-    STRING:1,
-    NUMBER:2,
-    FLOAT: 3,
-    SELECT:4,
-    BOOLEAN:5,
-    COLOR:6,
-    ICON: 7,
-    KEY: 8,
-    UNKNOWN: 10,
-    WIDGET_BASE: 100,
-    PROP_BASE: 200
-};
+export enum EditableParameterTypes{
+    STRING=1,
+    NUMBER=2,
+    FLOAT=3,
+    SELECT=4,
+    BOOLEAN=5,
+    COLOR=6,
+    ICON= 7,
+    KEY= 8,
+    UNKNOWN= 10,
+    WIDGET_BASE=100,
+    PROP_BASE= 200
+}
 
+export type CheckFunction=(value:any,values:Values)=>boolean;
 
 export class EditableParameter extends Object{
     static TYPE=EditableParameterTypes.UNKNOWN
+    protected type: EditableParameterTypes;
+    protected name: string;
+    protected checker?:CheckFunction;
+    protected displayName?: string;
+    protected default?: Value;
+    protected readOnly?: boolean;
+    protected list: ListEntry[]|(()=>ListEntry[]);
+    protected condition?: Conditions|Conditions[];
+    protected mandatory?: boolean;
+    protected existingUnchecked?: boolean;
 
     /**
      * @param plain {Object} object with properties from assignableProperties
      * @param type the type from EditableParameterTypes
      * @param [opt_noFreeze] {boolean} if set - do not freeze the object
      */
-    constructor(plain,type,opt_noFreeze) {
+    constructor(plain:Properties, type:EditableParameterTypes, opt_noFreeze:boolean=false) {
         super();
         this.type=type;
         this.assign(this,plain);
@@ -74,23 +96,28 @@ export class EditableParameter extends Object{
         if (this.displayName === undefined) this.displayName=this.name;
         if (! opt_noFreeze) Object.freeze(this);
     }
-    assignImpl(properties,target,plain,onlyExisting){
-        if (! target) target={};
-        for (let k in properties){
+    assignImpl(properties:Properties, target:EditableParameter, plain:Properties, onlyExisting?:boolean){
+        for (const k in properties){
+            // @ts-ignore
             if (Object.hasOwn(plain,k)){
+                // @ts-ignore
                 target[k]=plain[k];
+                // @ts-ignore
                 if (target[k] === null) target[k]=undefined;
             }
             else{
-                if (! onlyExisting) target[k]=properties[k];
+                if (! onlyExisting) {
+                    // @ts-ignore
+                    target[k]=properties[k];
+                }
             }
         }
         return target;
     }
-    assign(target,plain,onlyExisting){
+    assign(target:EditableParameter, plain:Properties, onlyExisting?:boolean){
         return this.assignImpl(assignableProperties,target,plain,onlyExisting);
     }
-    clone(updates){
+    clone(updates:Properties){
         let param;
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         if (! updates) param=this;
@@ -99,10 +126,11 @@ export class EditableParameter extends Object{
             param.type=this.type;
             this.assign(param,updates,true);
         }
-        let rt=new this.constructor(param,this.type);
+        // @ts-ignore
+        const rt=new this.constructor(param,this.type);
         return rt;
     }
-    reset(values){
+    reset(values:Values){
         return this.setValue(values, this.default);
     }
     canEdit(){
@@ -111,11 +139,11 @@ export class EditableParameter extends Object{
     getTypeForEdit(){
         return this.type;
     }
-    getList(){
+    getList():ListEntry[]|Promise<ListEntry[]>{
         if (typeof (this.list) === 'function') return this.list();
         return this.list;
     }
-    setValue(values,value,check){
+    setValue(values:Values|undefined, value:any, check?:boolean){
         if (! values) values={};
         if (check && this.checker) {
             if (! this.checker(value,values)) throw new Error("invalid value for "+this.name+": "+value);
@@ -128,15 +156,15 @@ export class EditableParameter extends Object{
         return values;
     }
 
-    getValue(values){
+    getValue(values:Values){
         if (! values) values={};
-        let rt=values[this.name];
+        const rt=values[this.name];
         if (rt === undefined && this.default !== undefined){
             return this.default;
         }
         return rt;
     }
-    conditionMatch(values,compare){
+    conditionMatch(values:Values, compare:Condition){
         const value=this.getValue(values);
         if (typeof compare === 'function'){
             return compare(values,value);
@@ -144,16 +172,16 @@ export class EditableParameter extends Object{
         else return compare == value;
     }
 
-    checkConditions(values,allParameters){
+    checkConditions(values:Values, allParameters:EditableParameter[]){
         if (!this.condition) return true;
         if (! values) values={};
         const conditions=(this.condition instanceof Array)?this.condition:[this.condition];
-        const knownEditables={};
+        const knownEditables:Record<string, EditableParameter>={};
         for (let i=0;i<conditions.length;i++){
             const condition=conditions[i];
             if (!(condition instanceof Object)) continue;
             let match=true;
-            for (let k in condition){
+            for (const k in condition){
                 //try to find the editableParameter with the name
                 //that matches the key
                 let editableParameter=knownEditables[k];
@@ -207,15 +235,15 @@ export class EditableParameter extends Object{
         return false;
     }
 
-    mandatoryOk(cv){
+    mandatoryOk(cv:Value){
         if (! this.mandatory) return true;
         if (cv !== undefined && cv !== null && cv !== '') return true;
         return false;
     }
-    isDefault(values){
+    isDefault(values:Values){
         return this.getValue(values) === this.default;
     }
-    isChanged(currentValues,initialValues){
+    isChanged(currentValues:Values, initialValues:Values){
         if (! initialValues || ! currentValues) return false;
         return this.getValue(currentValues) !== this.getValue(initialValues)
     }
@@ -233,7 +261,7 @@ export class EditableParameter extends Object{
      * @param values
      * @param [opt_old]
      */
-    hasError(values,opt_old){
+    hasError(values:Values, opt_old?:Values){
         const cv=this.getValue(values);
         if (opt_old && this.existingUnchecked){
             const ov=this.getValue(opt_old)
@@ -250,8 +278,9 @@ export class EditableParameter extends Object{
         return{}
     }
 }
+
 export class EditableStringParameterBase extends EditableParameter{
-    constructor(plain,type,opt_noFreeze) {
+    constructor(plain:Properties, type:EditableParameterTypes, opt_noFreeze?:boolean) {
         super(plain,type,opt_noFreeze);
     }
     /**
@@ -261,11 +290,11 @@ export class EditableStringParameterBase extends EditableParameter{
      * @param [check] {boolean} - check the value type
      * @returns {*}
      */
-    setValue(values, value,check) {
+    setValue(values:Values, value:Value, check?:boolean) {
         return super.setValue(values, (value!==undefined)?value+"":undefined,check);
     }
 
-    getValue(values) {
+    getValue(values:Values) {
         const rt=super.getValue(values);
         if (rt === undefined) return rt;
         return rt+"";
@@ -273,16 +302,16 @@ export class EditableStringParameterBase extends EditableParameter{
 }
 export class EditableStringParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.STRING;
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties, opt_noFreeze?:boolean) {
         super(plain,EditableParameterTypes.STRING,opt_noFreeze);
     }
 }
 export class EditableBooleanParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.BOOLEAN;
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties, opt_noFreeze?:boolean) {
         super(plain,EditableBooleanParameter.TYPE,opt_noFreeze);
     }
-    toBool(v){
+    toBool(v:Value):boolean{
         if (v === undefined) return false;
         if (typeof(v) === 'string'){
             return v.toLowerCase() === 'true';
@@ -297,97 +326,112 @@ export class EditableBooleanParameter extends EditableParameter{
      * @param [check] {boolean} - check the value type
      * @returns {*}
      */
-    setValue(values, value,check) {
+    setValue(values:Values, value:Value, check?:boolean) {
         return super.setValue(values, this.toBool(value),check);
     }
 
-    getValue(values) {
+    getValue(values:Values) {
         const rt=super.getValue(values);
         return this.toBool(rt);
     }
 }
+export interface Range {
+    min:number;
+    max:number;
+}
 export class EditableNumberParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.NUMBER;
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties, opt_noFreeze?:boolean) {
         super(plain,EditableNumberParameter.TYPE,opt_noFreeze);
     }
     getRange() {
-        let rt={};
+        const rt:Range={
+            min: undefined,
+            max: undefined
+        };
         const list = this.getList();
         if (! list || ! (list instanceof Array)) return rt;
         if (list.length >= 1) {
-            rt.min = parseFloat(list[0]);
+            if (typeof list[0] !== 'object') {
+                rt.min = parseFloat(list[0] as string);
+            }
         }
         if (list.length >= 2) {
-            rt.max = parseFloat(list[1]);
+            if (typeof list[1] !== 'object') {
+                rt.max = parseFloat(list[1] as string);
+            }
         }
         return rt;
     }
 
-    setValue(values, value, check) {
-        let parsed = (value !== undefined) ? parseInt(value) : value;
+    setValue(values:Values, value:Value, check?:boolean) {
+        const parsed:number = (value !== undefined) ? parseInt(value as string) : undefined;
         if (check) {
-            if (isNaN(parsed)) throw new Error("no value for " + this.name);
+            if (isNaN(parsed as number)) throw new Error("no value for " + this.name);
             const range = this.getRange();
             if ((range.min !== undefined && parsed < range.min) ||
                 (range.max !== undefined && parsed > range.max)) {
-                throw new Error("value " + parsed + " for " + this.name + " outside range " + list[0] + "," + list[1]);
+                throw new Error("value " + parsed + " for " + this.name + " outside range " + range.min + "," + range.max);
             }
         }
         return super.setValue(values, parsed, check);
     }
 
-    getValue(values) {
+    getValue(values:Values) {
         const rt=super.getValue(values);
         if (rt === undefined) return rt;
-        return parseInt(rt);
+        return parseInt(rt as string);
     }
 }
 export class EditableFloatParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.FLOAT;
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties, opt_noFreeze?:boolean) {
         super(plain,EditableFloatParameter.TYPE,opt_noFreeze);
     }
     getRange() {
-        let rt={};
+        const rt:Range={max: undefined, min: undefined};
         const list = this.getList();
         if (! list || ! (list instanceof Array)) return rt;
         if (list.length >= 1) {
-            rt.min = parseFloat(list[0]);
+            if (typeof list[0] !== 'object') {
+                rt.min = parseFloat(list[0] as string);
+            }
         }
         if (list.length >= 2) {
-            rt.max = parseFloat(list[1]);
+            if (typeof list[1] !== 'object') {
+                rt.max = parseFloat(list[1] as string);
+            }
         }
         return rt;
     }
-    setValue(values, value,check) {
-        let parsed=(value!==undefined)?parseFloat(value):value;
+    setValue(values:Values, value:Value, check?:boolean) {
+        const parsed=(value!==undefined)?parseFloat(value as string):undefined;
         if (check){
             if (isNaN(parsed)) throw new Error("invalid value (NaN): "+value+" for "+this.name);
             const range = this.getRange();
             if ((range.min !== undefined && parsed < range.min) ||
                 (range.max !== undefined && parsed > range.max)) {
-                throw new Error("value " + parsed + " for " + this.name + " outside range " + list[0] + "," + list[1]);
+                throw new Error("value " + parsed + " for " + this.name + " outside range " + range.min + "," + range.max);
             }
         }
         return super.setValue(values, parsed,check);
     }
 
-    getValue(values) {
+    getValue(values:Values) {
         const rt=super.getValue(values);
         if (rt === undefined) return rt;
-        return parseFloat(rt);
+        return parseFloat(rt as string);
     }
 }
 
 export class EditableSelectParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.SELECT;
-    static getValueFromListEntry(listEntry){
+    static getValueFromListEntry(listEntry:ListEntry){
         if (typeof listEntry === 'string') return listEntry;
         if (! (listEntry instanceof Object)) return listEntry;
         return listEntry.value;
     }
-    static getLabelFromListEntry(listEntry){
+    static getLabelFromListEntry(listEntry:ListEntry){
         if (typeof listEntry === 'string') return listEntry;
         if (! (listEntry instanceof Object)) return listEntry;
         if ('label' in listEntry) return listEntry.label+'';
@@ -395,7 +439,7 @@ export class EditableSelectParameter extends EditableParameter{
         if ('displayName' in listEntry) return listEntry.displayName+'';
         return listEntry.value+'';
     }
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties,opt_noFreeze?:boolean) {
         super(plain,EditableSelectParameter.TYPE,opt_noFreeze);
         const theList=super.getList();
         if (theList === undefined) throw new Error("missing list parameter for select "+this.name);
@@ -413,8 +457,8 @@ export class EditableSelectParameter extends EditableParameter{
         })
     }
     getList(){
-        let list=super.getList();
-        const fillDefault=(clist)=>{
+        const list=super.getList();
+        const fillDefault=(clist:ListEntry[])=>{
             if (!(clist instanceof Array)) {
                 //just get a list with the default value
                 clist=[];
@@ -428,7 +472,7 @@ export class EditableSelectParameter extends EditableParameter{
         }
         return fillDefault(list);
     }
-    setValue(values, value,check) {
+    setValue(values:Values, value:Value,check?:boolean) {
         if (check){
             const list=this.getList();
             if (!(list instanceof Promise)) {
@@ -451,7 +495,7 @@ export class EditableSelectParameter extends EditableParameter{
         }
         return super.setValue(values, value,check);
     }
-    getValue(values) {
+    getValue(values:Values) {
         const rt=super.getValue(values);
         return rt;
     }
@@ -460,28 +504,28 @@ export class EditableSelectParameter extends EditableParameter{
 export class EditableKeyParameter extends EditableParameter{
     static TYPE=EditableParameterTypes.KEY;
     static KEY='storeKeys';
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties,opt_noFreeze?:boolean) {
         super(plain,EditableKeyParameter.TYPE,opt_noFreeze);
     }
-    setValue(values, value,check) {
+    setValue(values:Values, value:Value,check?:boolean) {
         if (! values) values={};
         if (check){
             if (! this.mandatoryOk(value)) throw new Error("missing mandatory value for "+this.name);
         }
         if (this.readOnly) return values;
-        const current=values[EditableKeyParameter.KEY]||{};
+        const current:Record<string,string>=(values[EditableKeyParameter.KEY]||{}) as Record<string, string>;
         if (! value){
             delete current[this.name];
         }
         else {
-            current[this.name] = value;
+            current[this.name] = value as string;
         }
         values[EditableKeyParameter.KEY]=current;
         return values;
     }
-    getValue(values) {
+    getValue(values:Values) {
         if (! values) values={};
-        const current=values[EditableKeyParameter.KEY]||{};
+        const current=(values[EditableKeyParameter.KEY]||{}) as Record<string, string>;
         if (this.name in current) return current [this.name];
         return this.default;
     }
@@ -489,33 +533,43 @@ export class EditableKeyParameter extends EditableParameter{
 
 export class EditableIconParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.ICON;
-    constructor(plain,opt_noFreeze) {
+    constructor(plain:Properties,opt_noFreeze?:boolean) {
         super(plain,EditableIconParameter.TYPE,opt_noFreeze);
     }
 }
 export class EditableColorParameter extends EditableStringParameterBase{
     static TYPE=EditableParameterTypes.COLOR;
-    constructor(plain,opt_noFreeze) {
-        super({checker:(cv)=>{
+    constructor(plain:Properties,opt_noFreeze?:boolean) {
+        super({checker:(cv:string)=>{
             if (! cv) return true;
             return CSS.supports('color',cv);
             },...plain},EditableColorParameter.TYPE,opt_noFreeze);
     }
 }
+type EditableParameterAnyClass=
+    typeof EditableStringParameter|
+    typeof EditableColorParameter|
+    typeof EditableNumberParameter|
+    typeof EditableFloatParameter|
+    typeof EditableSelectParameter|
+    typeof EditableIconParameter|
+    typeof EditableColorParameter|
+    typeof EditableKeyParameter
 
 class EditableParameterFactory{
-    constructor(list) {
+    private list: EditableParameterAnyClass[];
+    constructor(list:EditableParameterAnyClass[]) {
         this.list=list;
     }
-    addParameterClass(clazz){
+    addParameterClass(clazz :EditableParameterAnyClass){
         if (!clazz) throw new Error("no class in addParameter class:"+clazz);
         if (! (clazz.prototype instanceof EditableParameter)) throw new Error(clazz + " is no EditableParameter");
-        this.list.forEach((exiting)=>{
+        this.list.forEach((exiting:EditableParameterAnyClass)=>{
             if (exiting.TYPE === clazz.TYPE) throw new Error("type "+exiting.TYPE+" already found in addParameterClass for "+clazz);
         })
         this.list.push(clazz);
     }
-    createParameterFromPlain(plain,base){
+    createParameterFromPlain(plain:Properties,base:Partial<Properties>){
         if (! (plain instanceof Object)) throw new Error("invalid data type "+plain+ " in createParameterFromPlain");
         if (base) plain={...base,...plain}
         let type=plain.type;
@@ -531,7 +585,7 @@ class EditableParameterFactory{
         return new EditableStringParameter(plain);
     }
 }
-const editableParameters=[
+const editableParameters: EditableParameterAnyClass[]=[
     EditableStringParameter,
     EditableBooleanParameter,
     EditableNumberParameter,

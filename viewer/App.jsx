@@ -3,7 +3,7 @@
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history.ts';
 import Dynamic from './hoc/Dynamic.tsx';
-import keys from './util/keys.jsx';
+import keys from './util/keys';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
 import GpsPage from './gui/GpsPage.jsx';

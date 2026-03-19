@@ -6,7 +6,7 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Helper from '../util/helper.ts';
 import Dynamic from '../hoc/Dynamic.tsx';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 
 export const ToastComponent=(props)=>{

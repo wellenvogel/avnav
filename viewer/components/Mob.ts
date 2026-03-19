@@ -7,8 +7,7 @@ import navobjects from '../nav/navobjects.js';
 // @ts-ignore
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import globalStore from '../util/globalstore';
-// @ts-ignore
-import keys from '../util/keys.jsx';
+import keys from '../util/keys';
 // @ts-ignore
 import LayoutHandler from '../util/layouthandler.js';
 import {getav} from "../util/helper";

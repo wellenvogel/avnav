@@ -10,7 +10,7 @@ import TrackLayer from './tracklayer';
 import RouteLayer from './routelayer';
 import {Drawing, DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
-import keys, {KeyHelper} from '../util/keys.jsx';
+import keys, {KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import northImage from '../images/nadel_mit.png';

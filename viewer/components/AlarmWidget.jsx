@@ -4,7 +4,7 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import AlarmHandler from '../nav/alarmhandler.js';
 import {WidgetFrame} from "./WidgetBase";

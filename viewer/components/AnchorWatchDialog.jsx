@@ -6,7 +6,7 @@ import {
     showPromiseDialog
 } from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import Toast from '../components/Toast.jsx';
 import AlarmHandler from '../nav/alarmhandler.js';
 import RouteEdit from '../nav/routeeditor.js';

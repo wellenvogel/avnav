@@ -5,7 +5,7 @@ import {useStore} from '../hoc/Dynamic.tsx';
 import DirectWidget from './DirectWidget.jsx';
 import Formatter from '../util/formatter';
 import ExternalWidget from './ExternalWidget.jsx';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import base from '../base.ts';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
 import MapWidget from "./MapWidget";

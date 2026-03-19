@@ -30,7 +30,7 @@
 
 import globalStore from "../util/globalstore.ts";
 import React, {useEffect, useState} from 'react';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import MapHolder from '../map/mapholder';
 import Helper from "../util/helper";
 

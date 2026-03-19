@@ -4,8 +4,7 @@
 
 import {useStoreState} from '../hoc/Dynamic';
 import globalStore from '../util/globalstore';
-// @ts-ignore
-import keys from '../util/keys.jsx';
+import keys from '../util/keys';
 import React, {useCallback, useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore

@@ -4,7 +4,7 @@
 
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.ts';
-import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
+import keys,{KeyHelper,PropertyType} from '../util/keys.ts';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -57,7 +57,7 @@ const settingsSections={
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
-        keys.properties.autoUpdateUserCss],
+        keys.properties.autoUpdateUserCss, keys.properties.mainNavExpand,keys.properties.mainNavCols],
     AIS:        [keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
         keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,

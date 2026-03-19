@@ -21,7 +21,7 @@
 */
 
 import globalStore from './globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from './keys.ts';
 import assign from 'object-assign';
 import globalstore from "./globalstore";
 import base from "../base";

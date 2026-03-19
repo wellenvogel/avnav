@@ -33,7 +33,7 @@ import splitsupport from "./util/splitsupport";
 import React from 'react';
 import propertyHandler from './util/propertyhandler';
 import App from './App.jsx';
-import keys from './util/keys.jsx';
+import keys from './util/keys.ts';
 import globalStore from './util/globalstore.ts';
 import base from './base.ts';
 import Requests from './util/requests.js';

@@ -4,7 +4,7 @@
 
 import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import routeobjects from '../nav/routeobjects.js';
 import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';

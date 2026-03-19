@@ -2,7 +2,7 @@
  * Created by andreas on 18.05.14.
  */
 
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from "../base";
 

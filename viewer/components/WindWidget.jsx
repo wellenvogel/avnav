@@ -5,7 +5,7 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 
 export const getWindData=(props)=>{

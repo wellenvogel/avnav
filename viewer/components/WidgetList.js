@@ -12,7 +12,7 @@ import XteWidget from './XteWidget';
 import EmptyWidget from './EmptyWidget';
 import WindGraphics from './WindGraphics';
 import ZoomWidget from './ZoomWidget.jsx';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import AlarmWidget from './AlarmWidget.jsx';
 import RoutePointsWidget from './RoutePointsWidget.jsx';
 import DateTimeWidget from './DateTimeWidget.jsx';

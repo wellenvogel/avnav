@@ -4,7 +4,7 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";

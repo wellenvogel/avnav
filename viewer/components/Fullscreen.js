@@ -1,6 +1,6 @@
 import fullscreen from 'fullscreen-polyfill';
 import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
 import Requests from '../util/requests';
 import Toast from "./Toast";

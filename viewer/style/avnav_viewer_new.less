@@ -988,8 +988,17 @@ span.valuePrefix{
 @mainNavItemWidth: 7em;
 @mainNavItemColumns: 3;
 .MainNavCover{
-  &>.dialog{
-    width: ( @mainNavItemWidth * @mainNavItemColumns + 2em)
+  &>.dialog {
+    width: ( @mainNavItemWidth * @mainNavItemColumns + 2em);
+  }
+  &.col5 >.dialog{
+      width: ( @mainNavItemColumns * 5 + 2em);
+  }
+  &.col7>.dialog{
+      width: ( @mainNavItemColumns * 7 + 2em);
+  }
+  &.full>.dialog{
+      width: 100%;
   }
   justify-content: end;
   align-items: start;

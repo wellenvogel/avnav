@@ -5,7 +5,7 @@
 import routeobjects from './routeobjects';
 import navobjects from './navobjects';
 import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.jsx';
+import keys from '../util/keys.ts';
 import assign from 'object-assign';
 import NavCompute from "./navcompute";
 
