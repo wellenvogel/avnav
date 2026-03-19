@@ -78,12 +78,16 @@ interface PageRowProps{
     onClick:ButtonEventHandler;
     isCurrent:boolean;
     expanded: boolean;
+    expandSequence: number;
 }
-const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
+const PageRow=({page,onClick,isCurrent,expanded,expandSequence}:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
     const [isExpanded,setExpanded]=useState(expanded);
+    useEffect(() => {
+        setExpanded(expanded);
+    }, [expanded,expandSequence]);
     return <React.Fragment>
         <ListItem
         className={className}
@@ -97,7 +101,7 @@ const PageRow=({page,onClick,isCurrent,expanded}:PageRowProps)=>{
         </ListMainSlot>
         <ListSlot
             className={'iconSlot'}
-            icon={{className:expanded?'MNexpanded':'MNcollapsed'}}
+            icon={{className:isExpanded?'MNexpanded':'MNcollapsed'}}
             onClick={(ev)=>{
                 setExpanded(!isExpanded);
                 ev.stopPropagation();
@@ -142,16 +146,40 @@ export interface MainNavProps{
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
     const history=useHistory();
+    const [expandMode,setExpandMode]=useState(props.expandMode);
+    const [expandSequence,setExpandSequence]=useState(0);
     const pages=mainTree.slice(0);
     pages.sort((a)=>(a.name===props.current)?-1:0);
     return <DialogFrame className={'MainNav'}>
+        <ListItem className={'heading'}>
+            <ListSlot className={'iconSlot'}
+                icon={{className:'MNcollapsed'}}
+                onClick={()=>{
+                    setExpandMode(MainExpandMode.ALL);
+                    setExpandSequence((old)=>old+1)
+                }}
+            />
+            <ListSlot className={'iconSlot'}
+                icon={{className:'MNexpanded'}}
+                onClick={()=>{
+                        setExpandMode(MainExpandMode.NONE);
+                        setExpandSequence((old)=>old+1)
+                        }}
+                />
+            <ListSlot className={'iconSlot'}
+                icon={{className:'Cancel'}}
+                onClick={()=>{
+                            dialogContext.closeDialog();
+                        }}
+                />
+        </ListItem>
         {pages.map((page)=>{
             const displayPage=(page.name === props.current)?page.copy({
                 buttons:props.currentButtons
             }):page;
             const isCurrent=page.name==props.current;
-            const expand=(props.expandMode == MainExpandMode.ALL)
-                || isCurrent && ( props.expandMode == MainExpandMode.CURRENT);
+            const expand=(expandMode == MainExpandMode.ALL)
+                || isCurrent && ( expandMode == MainExpandMode.CURRENT);
             return <PageRow
                 key={page.name}
                 page={displayPage}
@@ -164,6 +192,7 @@ export const MainNav = (props:MainNavProps) => {
             }}
                  isCurrent={isCurrent}
                  expanded={expand }
+                 expandSequence={expandSequence}
             />;
         })}
     </DialogFrame>
