@@ -1,6 +1,6 @@
 import Helper from './helper';
 // @ts-ignore
-import {KeyHelper} from './keys.jsx';
+import {KeyHelper} from './keys';
 import shallowCompare from './compare';
 
 export type StoreDataType=any;
@@ -31,7 +31,7 @@ class CallbackDescriptor {
         const keyNodeStr:string=KeyHelper.keyNodeToString(keys);
         if (keyNodeStr) {
             this.keys = [keyNodeStr];
-            this.equalsFunction=(val:string,cmp:string) =>Helper.startsWith(val,cmp);
+            this.equalsFunction=(val:string,cmp:string) =>Helper.startsWith(cmp,val);
         } else {
             this.keys = keys as string[];
             this.equalsFunction=(val, cmp) => val === cmp;
