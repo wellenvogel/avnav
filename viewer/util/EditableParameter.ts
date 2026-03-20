@@ -96,7 +96,8 @@ export class EditableParameter extends Object{
         if (this.displayName === undefined) this.displayName=this.name;
         if (! opt_noFreeze) Object.freeze(this);
     }
-    assignImpl(properties:Properties, target:EditableParameter, plain:Properties, onlyExisting?:boolean){
+    assignImpl(properties:Properties, target:EditableParameter|Properties, plain:Properties, onlyExisting?:boolean){
+        if (! target) target={};
         for (const k in properties){
             // @ts-ignore
             if (Object.hasOwn(plain,k)){
@@ -114,7 +115,7 @@ export class EditableParameter extends Object{
         }
         return target;
     }
-    assign(target:EditableParameter, plain:Properties, onlyExisting?:boolean){
+    assign(target:EditableParameter|Properties, plain:Properties, onlyExisting?:boolean){
         return this.assignImpl(assignableProperties,target,plain,onlyExisting);
     }
     clone(updates:Properties){
@@ -123,6 +124,7 @@ export class EditableParameter extends Object{
         if (! updates) param=this;
         else {
             param=this.assign(undefined,this);
+            // @ts-ignore
             param.type=this.type;
             this.assign(param,updates,true);
         }
