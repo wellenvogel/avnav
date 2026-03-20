@@ -3,7 +3,7 @@
  */
 
 import Dynamic from '../hoc/Dynamic.tsx';
-import ItemList from '../components/ItemList.jsx';
+import ItemList from '../components/ItemList.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useEffect} from 'react';

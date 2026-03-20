@@ -3,7 +3,7 @@
  */
 
 import Dynamic from '../hoc/Dynamic.tsx';
-import ItemList from '../components/ItemList.jsx';
+import ItemList from '../components/ItemList.tsx';
 import React, {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';

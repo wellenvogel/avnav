@@ -11,7 +11,7 @@ import assign from 'object-assign';
 import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.tsx';
-import ItemList from './ItemList.jsx';
+import ItemList from './ItemList.tsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.ts';

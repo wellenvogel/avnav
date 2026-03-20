@@ -11,11 +11,13 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
-import {SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
+import {OnDragEnd, SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
 import {injectav} from "../util/helper";
+import {ButtonEvent, ButtonEventHandler} from "./Button";
 
-const getKey=function(obj,opt_keyFunction){
+export type KeyFunction=(p:Record<string, any>)=>string
+
+const getKey=(obj:Record<string,any>,opt_keyFunction?:KeyFunction)=>{
     if (opt_keyFunction){
         return opt_keyFunction(obj);
     }
@@ -25,8 +27,24 @@ const getKey=function(obj,opt_keyFunction){
     return rt;
 };
 
+export interface Item extends Record<string, any> {}
 
-const Content=(props)=>{
+interface ContentProps{
+    className?:string
+    style?:Record<string, any>
+    onClick?:ButtonEventHandler
+    onItemClick?: ButtonEventHandler
+    itemClass?: React.ElementType                           //one of itemClass or itemCreator must be set
+    itemCreator?: (item:Item)=>React.ElementType
+    itemList: Item[],
+    scrollable?: boolean
+    hideOnEmpty?: boolean
+    listRef?: (el:HTMLElement) => void
+    selectedIndex?: number
+    reverse?: boolean                               //let the index count backwards
+}
+
+const Content=(props:ContentProps)=>{
     const sortFrameProps=useAvNavSortFrame();
     return (
         <div {...sortFrameProps}
@@ -40,7 +58,7 @@ const Content=(props)=>{
                  }
              }}
         >
-            {props.allitems.map(function (entry) {
+            {props.itemList.map(function (entry) {
                 const itemProps={...entry};
                 let ItemClass;
                 if (props.itemCreator) {
@@ -52,12 +70,12 @@ const Content=(props)=>{
                 }
                 let onClick;
                 if (!itemProps.onClick && props.onItemClick) {
-                    onClick=(idata)=>{
+                    onClick=(idata:ButtonEvent)=>{
                         const data=injectav(idata);
                         if (data && data.stopPropagation) data.stopPropagation();
                         if (data && data.preventDefault) data.preventDefault();
                         if (props.reverse){
-                            let len=props.itemList?props.itemList.length:0;
+                            const len=props.itemList?props.itemList.length:0;
                             data.avnav.item=data.avnav.item?{...data.avnav.item,index:len-itemProps.index}:{...itemProps,index:len-itemProps.index};
                         }
                         else {
@@ -72,8 +90,17 @@ const Content=(props)=>{
     );
 };
 
+interface SortableContentProps extends ContentProps{
+    horizontal?: boolean;
+    allowOther?: boolean;
+    dragFrame?: number;
+    onSortEnd?: OnDragEnd;
+    dragdrop?: boolean;
+
+}
+
 const SortableContent =
-    (sprops) => {
+    (sprops:SortableContentProps) => {
         if (sprops.dragdrop) {
             return (
                 <SortContext
@@ -90,9 +117,14 @@ const SortableContent =
         }
     };
 
-const ItemList = (props) => {
-    const itemList = [];
-    const existingKeys = {};
+export interface ItemListProps extends SortableContentProps{
+    keyFunction?:KeyFunction;
+    fontSize?: string;
+}
+
+const ItemList = (props:ItemListProps) => {
+    const itemList:any[] = [];
+    const existingKeys:Record<string,boolean> = {};
     let idx = 0;
     const allitems = props.itemList || [];
     allitems.forEach((entry) => {
@@ -128,7 +160,7 @@ const ItemList = (props) => {
     if (props.scrollable) className += " scrollable";
     if (props.className) className += " " + props.className;
     if (props.horizontal) className += " horizontal";
-    let style = props.style || {};
+    const style = props.style || {};
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
@@ -138,38 +170,14 @@ const ItemList = (props) => {
             <div onClick={props.onClick} className={className} style={style} ref={(el) => {
                 if (props.listRef) props.listRef(el)
             }}>
-                <SortableContent className="listScroll" {...props} allitems={itemList}/>
+                <SortableContent className="listScroll" {...props} itemList={itemList}/>
             </div>
         );
     } else {
         return (
-            <SortableContent className={className} {...props} allitems={itemList}
+            <SortableContent className={className} {...props} itemList={itemList}
                              style={style}/>
         );
     }
 }
-
-ItemList.propTypes={
-        onItemClick:    PropTypes.func, //will be called with 2 parameters:
-                                        //1st: the item description, 2nd: the data provided by the item
-        itemClass:      PropTypes.any, //one of itemClass or itemCreator must be set
-        itemCreator:    PropTypes.func,
-        itemList:       PropTypes.array,
-        className:      PropTypes.string,
-        scrollable:     PropTypes.bool,
-        hideOnEmpty:    PropTypes.bool,
-        fontSize:       PropTypes.any,
-        listRef:        PropTypes.func,
-        selectedIndex:  PropTypes.number,
-        onClick:        PropTypes.func,
-        dragdrop:       PropTypes.bool,
-        horizontal:     PropTypes.bool,
-        reverse:        PropTypes.bool, //let the index count backwards
-        onSortEnd:      PropTypes.func,
-        style:          PropTypes.object,
-        dragFrame:      PropTypes.string,
-        allowOther:     PropTypes.bool, //allow dragging from other frames
-        keyFunction:    PropTypes.func
-};
-Content.propTypes=ItemList.propTypes;
 export default ItemList;

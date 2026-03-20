@@ -6,7 +6,7 @@
 
 import Dynamic, {useStore} from '../hoc/Dynamic.tsx';
 import Visible from '../hoc/Visible.jsx';
-import ItemList from '../components/ItemList.jsx';
+import ItemList from './ItemList.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';

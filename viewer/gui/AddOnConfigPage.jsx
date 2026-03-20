@@ -3,7 +3,7 @@
  */
 
 import Button from '../components/Button.tsx';
-import ItemList from '../components/ItemList.jsx';
+import ItemList from '../components/ItemList.tsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.ts';

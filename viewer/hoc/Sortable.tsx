@@ -20,13 +20,15 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
-import React, {createContext, useContext} from 'react';
+import React, {createContext, DragEvent, useContext} from 'react';
 import PropTypes from "prop-types";
 
-export const SortModes={
-    horizontal: 0,
-    vertical:1
+export enum SortModes{
+    horizontal=0,
+    vertical=1
 }
+
+export type OnDragEnd=(oldIndex:number,newIndex:number,oldFrame:number|string,targetFrame:number|string) => void;
 
 let sid=0;
 const uniqId=()=>{
@@ -34,7 +36,7 @@ const uniqId=()=>{
     return sid;
 }
 
-const percentOverlap=(itstart,itext,cmpstart,cmpext)=>{
+const percentOverlap=(itstart:number,itext:number,cmpstart:number,cmpext:number)=>{
     const itend=itstart+itext;
     const cmpend=cmpstart+cmpext;
     if (itext === 0) return 0;
@@ -49,27 +51,37 @@ const percentOverlap=(itstart,itext,cmpstart,cmpext)=>{
     }
     return 100*ext/itext;
 }
+interface Rectangle{
+    top:number;
+    left:number;
+    height:number;
+    width:number;
+}
+export type DragId=string|number
 class SortHandler{
-    constructor(mode,reverse) {
-        this.refs={};
-        this.dragging=undefined;
+    private mode:SortModes;
+    private reverse: boolean;
+    private refs:Record<number, HTMLElement>;
+
+    constructor(mode: SortModes, reverse?: boolean) {
+        this.refs = {};
         this.mode=mode;
         this.reverse=reverse;
     }
-    ref(id,el){
-        id=parseInt(id);
+    ref(id:DragId,el:HTMLElement):void{
+        id=parseInt(id as string);
         if (el) this.refs[id]=el;
         else delete this.refs[id];
     }
-    findPosition(dragRect,id){
-        let bestMatching=[];
-        let maxv=undefined;
-        let minv=undefined;
+    findPosition(dragRect:Rectangle){
+        const bestMatching=[];
+        let maxv:number=undefined;
+        let minv:number=undefined;
         let minid=undefined;
         let maxid=undefined;
-        let itemstart=(this.mode===SortModes.vertical)?dragRect.top:dragRect.left;
-        let itemext=(this.mode===SortModes.vertical)?dragRect.height:dragRect.width;
-        const se=(rect)=>{
+        const itemstart=(this.mode===SortModes.vertical)?dragRect.top:dragRect.left;
+        const itemext=(this.mode===SortModes.vertical)?dragRect.height:dragRect.width;
+        const se=(rect:Rectangle)=>{
             if (this.mode===SortModes.vertical){
                 return {start:rect.top,ext:rect.height};
             }
@@ -77,14 +89,14 @@ class SortHandler{
                 return{start:rect.left,ext:rect.width};
             }
         }
-        const d=(rect)=>{
+        const d=(rect:Rectangle)=>{
             const {start,ext}=se(rect);
             if (minv === undefined || start < minv ) minv=start;
             if (maxv === undefined || (start+ext) > maxv) maxv=start+ext;
             return percentOverlap(itemstart,itemext,start,ext);
         }
-        for (let k in this.refs){
-            k=parseInt(k);
+        for (const idx in this.refs){
+            const k=parseInt(idx as string);
             if (minid === undefined || k < minid) minid=k;
             if (maxid === undefined || k > maxid) maxid=k;
             const el=this.refs[k];
@@ -124,13 +136,19 @@ class SortHandler{
         return bestMatching[0].id;
     }
 }
-const SortContextImpl=createContext({
+interface SortContextImplProps extends SortContextProps{
+    handler:any,
+    uniqId:number|string
+}
+const DefaultSortContext:SortContextImplProps={
     id:undefined,
-    onDragEnd:undefined,
-    handler:undefined,
-    allowOther: false,
-    uniqId: undefined
-});
+        onDragEnd:undefined as OnDragEnd,
+        handler:undefined,
+        allowOther: false,
+        uniqId: undefined,
+        mode:SortModes.vertical
+}
+const SortContextImpl=createContext(DefaultSortContext);
 
 export const SortableProps={
     dragId: PropTypes.number
@@ -139,37 +157,40 @@ export const SortableProps={
 const ATTR='data-dragid';
 const CATTR='data-dragctx';
 const TYPE='application-x-avnav-dnd';
-export const useAvNavSortable=(id,opt_nodrag)=>{
+interface Offset{x:number; y:number}
+export const useAvNavSortable=(id:DragId,opt_nodrag?:boolean)=>{
     const context= useContext(SortContextImpl);
     if (id === undefined || context.uniqId === undefined) return {};
-    let rt={
-        onDragStart:(ev)=>{
-            let data={
-                rect: ev.currentTarget.getBoundingClientRect(),
+    const rt={
+        onDragStart:(ev:DragEvent)=>{
+            const data={
+                rect: (ev.currentTarget as Element).getBoundingClientRect(),
                 id: id,
                 client: {x:ev.clientX,y:ev.clientY},
                 ctxid: context.id,
-                uniqId: context.uniqId
+                uniqId: context.uniqId,
+                offset: undefined as Offset,
             };
             data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
             ev.dataTransfer.setData(TYPE,JSON.stringify(data));
         },
-        ref: (el)=>{
+        ref: (el:HTMLElement)=>{
             context.handler.ref(id,el);
-        }
+        },
+        draggable:false,
+        [ATTR]:id
     }
     if (opt_nodrag !== true){
         rt.draggable=true;
     }
-    rt[ATTR]=id;
     return rt;
 }
-const isSet=(val)=>val !== null && val !== undefined;
+const isSet=(val:any)=>val !== null && val !== undefined;
 export const useAvNavSortFrame=()=>{
     const context= useContext(SortContextImpl);
-    let rt={
-        onDragOver:(ev)=>{
-            let ta=ev.target.getAttribute(CATTR);
+    const rt={
+        onDragOver:(ev:DragEvent)=>{
+            const ta=(ev.currentTarget as Element).getAttribute(CATTR);
             if ( ta !== undefined) {
                 const tdatas=ev.dataTransfer.getData(TYPE);
                 if (tdatas !== undefined) {
@@ -177,18 +198,18 @@ export const useAvNavSortFrame=()=>{
                 }
             }
         },
-        onDrop: (ev)=>{
+        onDrop: (ev:DragEvent)=>{
             ev.preventDefault();
             ev.stopPropagation();
-            let dids=ev.dataTransfer.getData(TYPE);
-            let tdata=JSON.parse(dids);
-            let other=tdata.uniqId !== context.uniqId;
+            const dids=ev.dataTransfer.getData(TYPE);
+            const tdata=JSON.parse(dids);
+            const other=tdata.uniqId !== context.uniqId;
             if (other) {
                 if (!context.allowOther) return;
                 //moving between frames requires the id's to be set
                 if (!isSet(context.id) || !isSet(tdata.id)) return;
             }
-            let bestMatching=context.handler.findPosition({
+            const bestMatching=context.handler.findPosition({
                 left:ev.clientX-tdata.offset.x,
                 top:ev.clientY-tdata.offset.y,
                 height: tdata.rect.height,
@@ -198,39 +219,40 @@ export const useAvNavSortFrame=()=>{
             if (bestMatching !== undefined && (other || (bestMatching !== tdata.id)) && context.onDragEnd){
                 context.onDragEnd(tdata.id,bestMatching,tdata.ctxid,context.id);
             }
-        }
+        },
+        [CATTR]:context.uniqId
     }
-    rt[CATTR]=context.uniqId;
     return rt;
 }
 
 export const useAvnavSortContext=()=>useContext(SortContextImpl);
 
-export const SortContext=({onDragEnd,id,mode,children,allowOther,reverse})=>{
+export interface SortContextProps{
+    onDragEnd?: OnDragEnd
+    id:number,
+    mode: SortModes,
+    children?: React.ReactNode,
+    allowOther?: boolean,
+    reverse?: boolean
+}
+export const SortContext=({onDragEnd,id,mode,children,allowOther,reverse}:SortContextProps)=>{
     return <SortContextImpl.Provider value={{
         onDragEnd: onDragEnd,
         id:id,
         handler: new SortHandler(mode,reverse),
         allowOther: allowOther,
-        uniqId: uniqId()
+        uniqId: uniqId(),
+        mode:mode
     }}>
         {children}
     </SortContextImpl.Provider>
 }
-SortContext.propTypes={
-    onDragEnd: PropTypes.func,
-    id: PropTypes.any,
-    mode: PropTypes.number,
-    children: PropTypes.any,
-    allowOther: PropTypes.bool,
-    reverse: PropTypes.bool
-}
 
-export const moveItem=(oldIndex,newIndex,list)=>{
+export const moveItem=(oldIndex:number,newIndex:number,list:any[])=>{
     if (oldIndex < 0 || oldIndex >= list.length) return;
     if (newIndex < 0 ) return;
-    let next=[...list];
-    let item=next[oldIndex];
+    const next=[...list];
+    const item=next[oldIndex];
     next.splice(oldIndex,1);
     next.splice(newIndex,0,item);
     return next;

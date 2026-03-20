@@ -6,7 +6,7 @@ import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.ts';
 import routeobjects from '../nav/routeobjects.js';
-import ItemList from './ItemList.jsx';
+import ItemList from './ItemList.tsx';
 import WaypointItem from './WayPointItem.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import GuiHelper from '../util/GuiHelpers.js';

@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import ItemList from '../components/ItemList.jsx';
+import ItemList from '../components/ItemList.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper,PropertyType} from '../util/keys.ts';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';

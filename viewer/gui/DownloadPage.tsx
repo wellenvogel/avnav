@@ -3,7 +3,6 @@
  */
 
 import {useStoreState} from '../hoc/Dynamic';
-import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {useCallback, useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
@@ -63,22 +62,6 @@ const DownloadPage=(props:DownloadPageProps)=>{
         )
     },[type,history])
     const actions=createItemActions(type);
-    useCallback((bName:string,bType:string,overflow?:boolean, opt_capability?: string)=>{
-        let visible=type === bType || (
-            Helper.unsetorTrue(options.allowChange)
-            && (! options.allowedTypes || ! options.allowedTypes.length || options.allowedTypes.includes(bType))
-        )
-        if (opt_capability){
-            visible = visible && globalStore.getData(opt_capability,false);
-        }
-        return {
-            name: bName,
-            toggle:  type === bType,
-            visible:  visible,
-            onClick: () => changeType(bType),
-            overflow: overflow === true
-        };
-    },[type]);
     const updateButton=(
         config:Partial<DynamicButtonProps>,
         onClick?:(ev:ButtonEvent) => void,
