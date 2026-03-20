@@ -1,6 +1,6 @@
 import React, {SyntheticEvent} from 'react';
 // @ts-ignore
-import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
+import {useKeyEventHandlerPlain} from '../util/GuiHelpers';
 import {DynamicProps, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";

@@ -83,7 +83,7 @@ const lifecycleSupport=(thisref,callback,opt_onUpdate)=> {
             if (oldupdate) oldupdate.apply(thisref);
             callback.apply(thisref,[false]);
         };
-    };
+    }
 };
 
 class Callback{
@@ -264,15 +264,17 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
  * @param timercallback
  * @param interval
  * @param [opt_autostart]
+ * @param opt_immediate
  * @returns {{guardedCall: ((function(*, *): (boolean))|*), setTimeout: *, startTimer: (function(*): boolean), currentSequence: (function(): number), stopTimer: (function(*): boolean)}}
  */
-export const useTimer=(timercallback,interval,opt_autostart)=>{
+export const useTimer=(timercallback,interval,opt_autostart,opt_immediate)=>{
     const timer=useRef(undefined);
     const currentSequence=useRef(0);
     const currentInterval=useRef(interval);
     //we must wrap this into a ref to ensure that always the current callback
     //with an up to date closure is called
     const callbackHandler=useRef(timercallback);
+    callbackHandler.current=timercallback;
     const startTimer=(sequence)=>{
         if (sequence !== undefined && sequence !== currentSequence.current) return false;
         if (timer.current !== undefined){
@@ -296,9 +298,9 @@ export const useTimer=(timercallback,interval,opt_autostart)=>{
         }
     }
     useEffect(() => {
-        callbackHandler.current=timercallback;
-    }, [timercallback]);
-    useEffect(() => {
+        if (opt_immediate && currentSequence.current ===0 ){
+            callbackHandler.current(currentSequence.current);
+        }
         if (opt_autostart){
             startTimer(0); //only start the timer if this is really an initial call
         }
@@ -318,6 +320,17 @@ export const useTimer=(timercallback,interval,opt_autostart)=>{
             if (sequence !== undefined && sequence !== currentSequence.current) return false;
             callback(currentSequence.current);
             return true;
+        },
+        restart(opt_witCallback){
+            stopTimer(currentSequence.current);
+            if (opt_witCallback){
+                window.setTimeout(()=>{
+                    callbackHandler.current(currentSequence.current);
+                },0)
+            }
+            else{
+                startTimer(currentSequence.current);
+            }
         }
     }
 }

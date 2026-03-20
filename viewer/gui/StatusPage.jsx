@@ -31,6 +31,7 @@ import GuiHelper from "../util/GuiHelpers";
 import {StatusItem} from '../components/StatusItems';
 import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
 import {useDialogContext} from "../components/exports";
+import StatusView from "../components/StatusView";
 
 class Notifier{
     constructor() {
@@ -398,6 +399,7 @@ class StatusPage extends React.Component{
                 id="statuspage"
                 title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={
+                   /*
                     <StatusList
                         connected={props.connected}
                         allowEdit={props.config}
@@ -407,6 +409,10 @@ class StatusPage extends React.Component{
                             return nv;
                         }),1)}
                         reloadNotifier={this.reloadNotifier}
+                    />
+                    */
+                    <StatusView
+                        allowEdit={props.config}
                     />
                 }
                 buttonList={buttons}/>
