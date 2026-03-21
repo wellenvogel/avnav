@@ -21,7 +21,7 @@ import {
 } from '../util/GuiHelpers.js';
 import MapHolder, {EventTypes, LOCK_MODES} from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
-import ButtonList from '../components/ButtonList.jsx';
+import ButtonList from '../components/ButtonList.tsx';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';

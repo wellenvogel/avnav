@@ -25,7 +25,7 @@ interface Options{
     changeCallback?:(value:any) => void;
     minTime?: number; //minimal intervale between updates
 }
-const getStoreAndKeys=(props:DynamicProps, options:Options)=>{
+const getStoreAndKeys=(props:DynamicProps, options?:Options)=>{
     if (! options) options={};
     if (! props) props={};
     const usedStoreKeys=KeyHelper.removeNodeInfo({...options.storeKeys,...props.storeKeys});
@@ -106,7 +106,7 @@ export const DynamicFrame=(props:DynamicProps)=>{
  * @param options
  * @returns {*|(*)|(*)}
  */
-export const dynamicWrapper=(props:DynamicProps, options:Options)=>{
+export const dynamicWrapper=(props:DynamicProps, options?:Options)=>{
     if (! props) return;
     const [store,storeKeys,updateFunctions]=getStoreAndKeys(props,options);
     if (! storeKeys) return props;

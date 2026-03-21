@@ -1,7 +1,6 @@
 import React from 'react';
 // @ts-ignore
 import {DynamicTitleIcons} from "./TitleIcons";
-// @ts-ignore
 import keys from "../util/keys";
 import {useStore} from "../hoc/Dynamic";
 import PropTypes from "prop-types";

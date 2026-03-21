@@ -119,7 +119,7 @@ const SortableContent =
 
 export interface ItemListProps extends SortableContentProps{
     keyFunction?:KeyFunction;
-    fontSize?: string;
+    fontSize?: string|number;
 }
 
 const ItemList = (props:ItemListProps) => {

@@ -1,5 +1,4 @@
 import Helper from './helper';
-// @ts-ignore
 import {KeyHelper} from './keys';
 import shallowCompare from './compare';
 

@@ -31,7 +31,6 @@ import {ButtonDef, ButtonEventHandler, ButtonRow, propsToDefs} from "../componen
 import MainPageButtons from "./MainPageButtons";
 import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
-// @ts-ignore
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import {ChartOverlayButtons} from "./DownloadPageButtons";
 import {PAGEIDS} from "../util/pageids";

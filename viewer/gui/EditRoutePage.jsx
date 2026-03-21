@@ -23,7 +23,7 @@ import {useStateRef, useTimer} from '../util/UiHelper';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import mapholder, {EventTypes} from '../map/mapholder.js';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
-import ButtonList from '../components/ButtonList.jsx';
+import ButtonList from '../components/ButtonList.tsx';
 import RouteEdit, {StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';

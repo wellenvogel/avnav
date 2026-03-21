@@ -21,7 +21,6 @@
  #
  */
 import {propsToDefs, updateButtons} from "../components/Button";
-// @ts-ignore
 import keys from "../util/keys";
 // @ts-ignore
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog';

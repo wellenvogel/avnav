@@ -22,7 +22,6 @@
  */
 import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import GeneralButtons from "./GeneralButtons";
-// @ts-ignore
 import keys from "../util/keys";
 
 const getButtonParam=(name:string,type:string,
