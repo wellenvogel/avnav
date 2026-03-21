@@ -8,7 +8,7 @@ import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React from 'react';
 import Page from '../components/Page.jsx';
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast.tsx';
 import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
 import base from '../base.ts';

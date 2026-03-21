@@ -7,7 +7,7 @@ import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper,PropertyType} from '../util/keys.ts';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast.tsx';
 import assign from 'object-assign';
 import {
     DBCancel,

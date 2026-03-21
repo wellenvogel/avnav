@@ -11,7 +11,7 @@ import base from '../base';
 import Formatter from './formatter.js';
 import Helper from './helper';
 // @ts-ignore
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast';
 // @ts-ignore
 import featureFormatter from "./featureFormatter";
 import LatLonSperical from "geodesy/latlon-spherical";

@@ -13,7 +13,7 @@ import DB from './DialogButton.jsx';
 import Button from './Button.tsx';
 import ItemList from './ItemList.tsx';
 import Requests from '../util/requests.js';
-import Toast from './Toast.jsx';
+import Toast from './Toast.tsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.ts';
 import {editableOverlayParameters} from '../map/chartsourcebase'
 import OverlayConfig, {

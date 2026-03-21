@@ -2,6 +2,7 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Button from "./Button";
 import React from 'react';
+import Helper from "../util/helper";
 
 /**
  *###############################################################################
@@ -62,10 +63,7 @@ export const StatusItem=(props)=>{
     if (props.id !== undefined){
         name="["+props.id+"]"+name;
     }
-    let cl="status";
-    if (props.requestFocus){
-        cl+=" requestFocus";
-    }
+    let cl=Helper.concatsp("status",props.className,props.requestFocus?"requestFocus":undefined);
     let children=(props.info && props.info.items)?props.info.items:[];
     children.sort((a,b)=>{
         if (a.name>b.name) return 1;

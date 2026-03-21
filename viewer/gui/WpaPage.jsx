@@ -7,7 +7,7 @@ import ItemList from '../components/ItemList.tsx';
 import React, {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast.tsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper, {avitem} from '../util/helper.ts';

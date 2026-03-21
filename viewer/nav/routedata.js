@@ -6,7 +6,7 @@ import routeobjects from './routeobjects';
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import RoutEdit from './routeeditor.js';

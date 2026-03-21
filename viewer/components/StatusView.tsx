@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import ItemList from "./ItemList";
 // @ts-ignore
 import Requests from '../util/requests';
@@ -31,12 +31,15 @@ import EditHandlerDialog from './EditHandlerDialog';
 import {ScrollExeMode, scrollInContainer, useTimer} from '../util/UiHelper';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
+import base from "../base";
+import Helper from "../util/helper";
 
 export interface StatusViewProps{
     className?: string;
     kinds?:string[];
     allowEdit?:boolean;
-    focusItem?:number|string
+    focusItem?:number|string,
+    callback?:(handlerList?:any[])=>void
 }
 const queryStatus= async ():Promise<any[]>=>{
     return Requests.getJson({
@@ -51,35 +54,41 @@ const queryStatus= async ():Promise<any[]>=>{
 const ACTIVE_CLASS='activeEntry';
 // eslint-disable-next-line react/display-name
 export default (props:StatusViewProps)=>{
-    const [statusList, setStatusList] = React.useState<any[]>([]);
+    const [statusList, setStatusList] = useState<any[]>([]);
     const connected=globalstore.getData(keys.properties.connectedMode);
-    const nextFocusItem=useRef(props.focusItem);
+    const [focusItem,setFocusItem]=useState(props.focusItem);
+    const lastFocusItem=useRef(null);
     const listRef=useRef(null);
     const timer=useTimer((sequence)=>{
         queryStatus().then((data)=>{
             setStatusList(data);
+            if (props.callback){
+                props.callback(data);
+            }
             timer.startTimer(sequence);
-        })
+        },
+            (error)=>{
+                base.log('StatusView error',error);
+                if (props.callback){
+                    props.callback();
+                }
+            })
     },3000);
     useEffect(()=>{
+        setFocusItem(props.focusItem);
         timer.restart(true);
     },[props.focusItem]);
     useEffect(() => {
-        if (!nextFocusItem.current) return;
-        nextFocusItem.current = undefined;
+        if (lastFocusItem.current === focusItem || ! focusItem) return;
         if (!listRef.current) return;
         const itemElement=listRef.current.querySelector('.'+ACTIVE_CLASS);
         if (itemElement){
+            lastFocusItem.current=focusItem;
             scrollInContainer(listRef.current,itemElement,ScrollExeMode.vertical);
         }
-    });
-    return <ItemList
-        listRef={(el)=>listRef.current=el}
-        className={props.className}
-        itemList={statusList}
-        keyFunction={(item)=>item.displayKey||item.id}
-        itemClass={(iprops: any) => <StatusItem
-            className={iprops.id === props.focusItem ? ACTIVE_CLASS: ""}
+    },[focusItem,statusList]);
+    const itemClass=useCallback((iprops:any)=><StatusItem
+            className={iprops.id === focusItem ? ACTIVE_CLASS: ""}
             connected={connected}
             allowEdit={props.allowEdit}
             finishCallback={
@@ -93,10 +102,19 @@ export default (props:StatusViewProps)=>{
             showEditDialog={
                 (handlerId: string | number,
                  child?: string,
-                 opt_doneCallback?: () => void) =>
+                 opt_doneCallback?: () => void) => {
+                    setFocusItem(handlerId);
                     EditHandlerDialog.createDialog(handlerId, child, opt_doneCallback)
+                }
             }
-            {...iprops}/>}
+            {...iprops}/>
+        ,[focusItem,props.allowEdit,connected]);
+    return <ItemList
+        listRef={(el)=>listRef.current=el}
+        className={Helper.concatsp('StatusView',props.className)}
+        itemList={statusList}
+        keyFunction={(item)=>item.displayKey||item.id}
+        itemClass={itemClass}
         scrollable={true}
     />
 }

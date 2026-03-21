@@ -2,21 +2,25 @@
  * Created by andreas on 23.02.16.
  */
 
-import React from "react";
-import PropTypes from 'prop-types';
-import Helper from '../util/helper.ts';
-import Dynamic from '../hoc/Dynamic.tsx';
-import keys from '../util/keys.ts';
-import globalStore from '../util/globalstore.ts';
+import React, {SyntheticEvent} from "react";
+import Dynamic from '../hoc/Dynamic';
+import keys from '../util/keys';
+import globalStore from '../util/globalstore';
 
-export const ToastComponent=(props)=>{
+export interface ToastProps{
+    html?:string,
+    onClick?: (ev:SyntheticEvent)=>void
+    className?: string
+    style?:Record<string, any>
+}
+export const ToastComponent=(props:ToastProps)=>{
         if (! props.html ){
             return null;
         }
-        let style=props.style||{};
+        const style=props.style||{};
         return (
-        <div className={"toast "+props.className||""} onClick={()=>{
-            if (props.onClick)props.onClick();
+        <div className={"toast "+props.className||""} onClick={(ev)=>{
+            if (props.onClick)props.onClick(ev);
             }}
         style={style}>
             {props.html}
@@ -24,11 +28,6 @@ export const ToastComponent=(props)=>{
         );
 };
 
-ToastComponent.propTypes={
-    html: PropTypes.string,
-    onClick: PropTypes.func,
-    className: PropTypes.string
-};
 const storeKeys={
     html:keys.gui.global.toastText,
     time:keys.gui.global.toastTimeout,
@@ -38,7 +37,7 @@ export const ToastDisplay=Dynamic(ToastComponent,{
     storeKeys:storeKeys
 });
 
-let toastTimer=undefined;
+let toastTimer:number=undefined;
 
 const clearTimer=()=>{
     if (toastTimer){
@@ -46,7 +45,7 @@ const clearTimer=()=>{
         toastTimer=undefined;
     }
 };
-const Toast=(html,time,opt_callback)=>{
+const Toast=(html:string|any,time?:number,opt_callback?:()=>void)=>{
     clearTimer();
     if (! time){
         time=parseInt(globalStore.getData(keys.properties.toastTimeout||15))*1000;

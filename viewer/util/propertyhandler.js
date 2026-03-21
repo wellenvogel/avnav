@@ -2,7 +2,7 @@
  * Created by andreas on 03.05.14.
  */
 
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast.tsx';
 import globalStore from './globalstore.ts';
 import keys, {KeyHelper, PropertyType} from './keys.ts';
 import base from '../base.ts';

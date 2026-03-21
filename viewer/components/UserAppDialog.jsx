@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {showPromiseDialog} from './OverlayDialog.jsx';
-import Toast from './Toast.jsx';
+import Toast from './Toast.tsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
 import Helper, {unsetOrTrue} from '../util/helper.ts';

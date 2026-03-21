@@ -37,7 +37,7 @@ import keys from './util/keys.ts';
 import globalStore from './util/globalstore.ts';
 import base from './base.ts';
 import Requests from './util/requests.js';
-import Toast from './components/Toast.jsx';
+import Toast from './components/Toast.tsx';
 import Api from './util/api.impl.ts';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
 import assign from 'object-assign';

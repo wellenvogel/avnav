@@ -12,7 +12,7 @@ import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
-import Toast from '../components/Toast.jsx';
+import Toast from './Toast.tsx';
 import {showDialog, showPromiseDialog} from '../components/OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';

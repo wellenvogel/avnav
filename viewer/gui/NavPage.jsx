@@ -6,7 +6,7 @@ import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
-import Toast from '../components/Toast.jsx';
+import Toast from '../components/Toast.tsx';
 import NavHandler from '../nav/navdata.js';
 import {
     DBCancel,

@@ -271,7 +271,7 @@ class Store {
      */
     storeMultiple(data: Record<string, StoreDataType>,
                   keyTranslations: Record<string, string>,
-                  opt_noCallbacks:boolean,
+                  opt_noCallbacks?:boolean,
                   opt_omitUndefined?:boolean) {
         let changeKeys: string[] = [];
         if (data === undefined && keyTranslations === undefined) return;

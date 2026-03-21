@@ -10,7 +10,7 @@ import GpsPage from './gui/GpsPage.jsx';
 import AisPage from './gui/AisPage.jsx';
 import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
-import StatusPage from './gui/StatusPage.jsx';
+import StatusPage from './gui/StatusPage.tsx';
 import WpaPage from './gui/WpaPage.jsx';
 import DownloadPage from './gui/DownloadPage.tsx';
 import SettingsPage from './gui/SettingsPage.jsx';
@@ -27,7 +27,7 @@ import {
 import globalStore from './util/globalstore.ts';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
-import Toast,{ToastDisplay} from './components/Toast.jsx';
+import Toast,{ToastDisplay} from './components/Toast.tsx';
 import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';

@@ -2,7 +2,7 @@ import React, {Children, cloneElement, forwardRef, useCallback, useEffect, useRe
 import PropTypes from 'prop-types';
 import Headline from './Headline.tsx';
 import ButtonList from './ButtonList.jsx';
-import {hideToast} from '../components/Toast.jsx';
+import {hideToast} from './Toast.tsx';
 import WidgetFactory from './WidgetFactory.jsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
