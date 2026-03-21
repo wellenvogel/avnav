@@ -22,15 +22,25 @@
  #
  ###############################################################################
  */
+// @ts-ignore
 import Requests from "./requests";
+// @ts-ignore
 import {layoutLoader} from "./layouthandler";
+// @ts-ignore
 import PropertyHandler from "./propertyhandler";
+// @ts-ignore
 import NavHandler from "../nav/navdata";
+import {ListEntry} from "./EditableParameter";
 import Helper, {urlToString} from "./helper";
 import base from "../base";
 
 const RouteHandler=NavHandler.getRoutingHandler();
-export const listItems = async (type) => {
+export type ItemType='chart'|'track'|'route'|'layout'|'settings'|'overlays'|'images'|'user'|'plugins';
+export interface Item extends Record<string, any> {
+    type:ItemType;
+    name:string;
+}
+export const listItems = async (type:ItemType) => {
     let items;
     if (type === 'route') {
         items = await RouteHandler.listRoutes();
@@ -43,20 +53,20 @@ export const listItems = async (type) => {
             type: type,
             command: 'list'
         })).items || [];
-        items.forEach(item => {
+        items.forEach((item:Item) => {
             if (!item) return;
             item.server = true;
         })
     }
     if (items){
-        for (let i in items){
+        for (const i in items){
             if (!items[i]) items[i]={};
             items[i].type=type;
         }
     }
     return items;
 }
-export const fetchItem = async (item) => {
+export const fetchItem = async (item:Item) => {
     if (!item) throw new Error("no item def in fetch");
     if (item.type === 'chart') throw new Error("fetch not supported for charts")
     let data;
@@ -74,7 +84,7 @@ export const fetchItem = async (item) => {
     }
     return data;
 }
-export const fetchItemInfo = async (item) => {
+export const fetchItemInfo = async (item:Item) => {
     if (!item) return;
     let rt;
     try {
@@ -92,31 +102,14 @@ export const fetchItemInfo = async (item) => {
     } catch (e) {
     }
 }
-
-export const injectBaseUrl=(url,baseUrlIn)=>{
-    if (! url) return;
-    try {
-        const baseUrl = baseUrlIn ? (new URL(baseUrlIn, window.location.href)) : window.location.href;
-        return urlToString(url, baseUrl);
-    }catch (e){
-        base.log(`error converting url ${url}, base ${baseUrlIn}: ${e}`);
-    }
-    return url;
-
-}
-export const getUrlWithBase=(item,element='url')=>{
-    if (!item) return;
-    const url=item[element];
-    return injectBaseUrl(url,item.baseUrl);
-}
-export const itemListToSelectList = (itemList, opt_selected,opt_filter) => {
-    const rt = [];
+export const itemListToSelectList = (itemList:Item[], opt_selected?:string,opt_filter?:(item:Item)=>boolean) => {
+    const rt:ListEntry[] = [];
     if (!itemList) return rt;
     itemList.forEach(item => {
         if (opt_filter) {
             if (!opt_filter(item)) return;
         }
-        const sitem = {...item,
+        const sitem:ListEntry = {...item,
             value: item.name,
             key: item.name,
             label: item.displayName || item.name,
@@ -128,9 +121,26 @@ export const itemListToSelectList = (itemList, opt_selected,opt_filter) => {
     });
     return rt;
 }
+export const injectBaseUrl=(url:string|URL,baseUrlIn?:URL|string)=>{
+    if (! url) return;
+    try {
+        const baseUrl = baseUrlIn ? (new URL(baseUrlIn, window.location.href)) : window.location.href;
+        return urlToString(url, baseUrl);
+    }catch (e){
+        base.log(`error converting url ${url}, base ${baseUrlIn}: ${e}`);
+    }
+    return url;
+
+}
+export const getUrlWithBase=(item:Record<string, any>,element='url')=>{
+    if (!item) return;
+    const url=item[element];
+    return injectBaseUrl(url,item.baseUrl);
+}
 
 export const KNOWN_OVERLAY_EXTENSIONS = ['gpx', 'kml', 'kmz', 'geojson'];
 export const IMAGES = ['png', 'jpg', 'jpeg', 'svg', 'bmp', 'tiff', 'gif'];
+
 const ICONCLASS_TYPES=['chart',
     'route',
     'track',
@@ -140,8 +150,9 @@ const ICONCLASS_TYPES=['chart',
     'images',
     'overlay',
     'plugins'];
-export const getItemIconProperties=(item)=>{
-    let icon=getUrlWithBase(item,'icon');
+
+export const getItemIconProperties=(item:Record<string, any>)=>{
+    const icon=getUrlWithBase(item,'icon');
     if (icon){
         return {
             className:'icon',
@@ -151,11 +162,11 @@ export const getItemIconProperties=(item)=>{
     if (! item.type || ICONCLASS_TYPES.indexOf(item.type) <0) return;
     let typeClass=item.isDirectory?'directory':item.type;
     if (item.type === 'overlay'){
-        const [fn,ext]=Helper.getNameAndExt(item.name);
+        const [,ext]=Helper.getNameAndExt(item.name);
         if (KNOWN_OVERLAY_EXTENSIONS.indexOf(ext) < 0) typeClass="user other"
     }
     else if (item.type === 'track'){
-        const [fn,ext]=Helper.getNameAndExt(item.name);
+        const [,ext]=Helper.getNameAndExt(item.name);
         if (ext !== 'gpx') typeClass="user other"
     }
     else if (item.type === 'user'){
@@ -164,7 +175,7 @@ export const getItemIconProperties=(item)=>{
             typeClass= 'user special';
         }
         else {
-            const [fn, ext] = Helper.getNameAndExt(item.name);
+            const [, ext] = Helper.getNameAndExt(item.name);
             if (IMAGES.indexOf(ext) >= 0) {
                 typeClass= 'images';
             }
@@ -182,3 +193,5 @@ export const getItemIconProperties=(item)=>{
         className: Helper.concatsp('icon',typeClass)
     }
 }
+
+

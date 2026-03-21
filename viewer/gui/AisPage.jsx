@@ -16,7 +16,6 @@ import Dialogs, {
 } from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.ts';
 import Compare from "../util/compare";
-import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
@@ -25,6 +24,7 @@ import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
 import {PAGEIDS} from "../util/pageids";
 import {useDialogContext} from "../components/DialogContext";
+import {scrollInContainer} from "../util/UiHelper";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -360,7 +360,7 @@ const AisPage =(props)=>{
                             let selected=list.querySelector('.initialTarget');
                             if (! selected) return;
                             initialMmsi.current=undefined;
-                            let mode=GuiHelper.scrollInContainer(list,selected);
+                            let mode=scrollInContainer(list,selected);
                             if (mode < 1 || mode > 2) return;
                             selected.scrollIntoView(mode===1);
                         }}

@@ -38,7 +38,7 @@ import Button, {DynamicButton} from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
 import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunctions";
-import {useTimer} from "../util/GuiHelpers";
+import {useTimer} from "../util/UiHelper";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 import {useDialogContext} from "./DialogContext";

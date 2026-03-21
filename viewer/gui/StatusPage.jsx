@@ -20,18 +20,16 @@ import {
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.ts';
 import EditHandlerDialog from "../components/EditHandlerDialog";
-import DB from '../components/DialogButton';
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import assign from "object-assign";
-import Compare from "../util/compare";
 import PropTypes from 'prop-types';
 import Helper from "../util/helper";
-import GuiHelper from "../util/GuiHelpers";
 import {StatusItem} from '../components/StatusItems';
 import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
 import {useDialogContext} from "../components/exports";
 import StatusView from "../components/StatusView";
+import {scrollInContainer} from "../util/UiHelper";
 
 class Notifier{
     constructor() {
@@ -214,7 +212,7 @@ class StatusList extends React.Component{
         if (this.mainListRef){
             let focusItem=this.mainListRef.querySelector(".requestFocus");
             if (focusItem){
-                let mode=GuiHelper.scrollInContainer(this.mainListRef,focusItem);
+                let mode=scrollInContainer(this.mainListRef,focusItem);
                 if (mode >= 1 && mode <=2 ) {
                     focusItem.scrollIntoView(mode === 1);
                 }

@@ -2,9 +2,9 @@ import globalStore from './globalstore.ts';
 import keys from './keys.ts';
 import splitsupport from "./splitsupport";
 import Helper from "./helper";
-import GuiHelpers from "./GuiHelpers";
 import base from "../base";
 import RequestHandler from "./requests";
+import {getServerCommand} from "./UiHelper";
 
 const KEY=keys.gui.global.dimActive;
 const URLPARAM="dimm";
@@ -35,7 +35,7 @@ class DimmHandler{
         if (mode){
             if (mode.match(/^server:/)){
                 let command=mode.replace(/^server:/,'');
-                GuiHelpers.getServerCommand(command)
+                getServerCommand(command)
                     .then((serverCommand)=>{
                         if (serverCommand) {
                             this.actionFunction = (value) => {

@@ -28,9 +28,10 @@ import Requests from '../util/requests';
 import {StatusItem} from './StatusItems';
 // @ts-ignore
 import EditHandlerDialog from './EditHandlerDialog';
-import {useTimer} from '../util/GuiHelpers';
+import {ScrollExeMode, scrollInContainer, useTimer} from '../util/UiHelper';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
+
 export interface StatusViewProps{
     className?: string;
     kinds?:string[];
@@ -47,7 +48,7 @@ const queryStatus= async ():Promise<any[]>=>{
             return json.handler as any[]
         });
 }
-
+const ACTIVE_CLASS='activeEntry';
 // eslint-disable-next-line react/display-name
 export default (props:StatusViewProps)=>{
     const [statusList, setStatusList] = React.useState<any[]>([]);
@@ -67,18 +68,18 @@ export default (props:StatusViewProps)=>{
         if (!nextFocusItem.current) return;
         nextFocusItem.current = undefined;
         if (!listRef.current) return;
-        const itemElement=listRef.current.querySelector('.focus');
+        const itemElement=listRef.current.querySelector('.'+ACTIVE_CLASS);
         if (itemElement){
-            //TODO
-            itemElement.focus();
+            scrollInContainer(listRef.current,itemElement,ScrollExeMode.vertical);
         }
     });
     return <ItemList
         listRef={(el)=>listRef.current=el}
         className={props.className}
         itemList={statusList}
+        keyFunction={(item)=>item.displayKey||item.id}
         itemClass={(iprops: any) => <StatusItem
-            className={iprops.id === nextFocusItem.current ? "focus" : ""}
+            className={iprops.id === props.focusItem ? ACTIVE_CLASS: ""}
             connected={connected}
             allowEdit={props.allowEdit}
             finishCallback={

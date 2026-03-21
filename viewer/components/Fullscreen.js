@@ -7,7 +7,7 @@ import Toast from "./Toast";
 import piIcon from '../images/rpi.png';
 import splitsupport from "../util/splitsupport";
 import Helper from "../util/helper";
-import GuiHelpers from "../util/GuiHelpers";
+import {getServerCommand} from "../util/UiHelper";
 
 let fullScreenBlocked=false;
 let fullScreenIcon=defaultFullScreenIcon;
@@ -71,7 +71,7 @@ const init=()=>{
             splitsupport.addUrlParameter("fullscreen", mode);
             if (mode.match(/^server:/)) {
                 let command = mode.replace(/^server:/, '');
-                GuiHelpers.getServerCommand(command)
+                getServerCommand(command)
                     .then((serverCommand) => {
                         if (serverCommand) {
 

@@ -2,11 +2,9 @@ import globalStore from './globalstore.ts';
 import KeyHandler from './keyhandler.js';
 import assign from 'object-assign';
 import shallowcompare from "./compare";
-import Requests from "./requests";
-import base from "../base";
 import {useEffect, useRef, useState} from "react";
 import cloneDeep from "clone-deep";
-import {IMAGES} from "./itemFunctions";
+import {getServerCommand, scrollInContainer, useStateRef} from "./UiHelper";
 
 
 const resizeElementFont=(el)=>{
@@ -259,81 +257,6 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         }
     };
 };
-/**
- *
- * @param timercallback
- * @param interval
- * @param [opt_autostart]
- * @param opt_immediate
- * @returns {{guardedCall: ((function(*, *): (boolean))|*), setTimeout: *, startTimer: (function(*): boolean), currentSequence: (function(): number), stopTimer: (function(*): boolean)}}
- */
-export const useTimer=(timercallback,interval,opt_autostart,opt_immediate)=>{
-    const timer=useRef(undefined);
-    const currentSequence=useRef(0);
-    const currentInterval=useRef(interval);
-    //we must wrap this into a ref to ensure that always the current callback
-    //with an up to date closure is called
-    const callbackHandler=useRef(timercallback);
-    callbackHandler.current=timercallback;
-    const startTimer=(sequence)=>{
-        if (sequence !== undefined && sequence !== currentSequence.current) return false;
-        if (timer.current !== undefined){
-            currentSequence.current++;
-            window.clearTimeout(timer.current);
-        }
-        const startSequence=currentSequence.current;
-        timer.current=window.setTimeout(()=>{
-            if (currentSequence.current !== startSequence) return;
-            timer.current=undefined;
-            callbackHandler.current(startSequence);
-        },currentInterval.current);
-        return true;
-    }
-    const stopTimer=(sequence)=>{
-        if (sequence !== undefined && sequence !== currentSequence.current) return false;
-        if (timer.current !== undefined){
-            currentSequence.current++;
-            window.clearTimeout(timer.current);
-            timer.current=undefined;
-        }
-    }
-    useEffect(() => {
-        if (opt_immediate && currentSequence.current ===0 ){
-            callbackHandler.current(currentSequence.current);
-        }
-        if (opt_autostart){
-            startTimer(0); //only start the timer if this is really an initial call
-        }
-        return ()=>{
-            stopTimer();
-        }
-    }, []);
-    return {
-        startTimer:(sequence)=>startTimer(sequence),
-        stopTimer:(sequence)=>stopTimer(sequence),
-        setTimeout:(newInterval,opt_stop)=>{
-            if (opt_stop) stopTimer();
-            currentInterval.current=newInterval;
-        },
-        currentSequence:()=>currentSequence.current,
-        guardedCall:(sequence,callback)=>{
-            if (sequence !== undefined && sequence !== currentSequence.current) return false;
-            callback(currentSequence.current);
-            return true;
-        },
-        restart(opt_witCallback){
-            stopTimer(currentSequence.current);
-            if (opt_witCallback){
-                window.setTimeout(()=>{
-                    callbackHandler.current(currentSequence.current);
-                },0)
-            }
-            else{
-                startTimer(currentSequence.current);
-            }
-        }
-    }
-}
 
 const keyEventHandler=(thisref,callback,component,action)=>{
     const handler=(cbComponent,cbAction)=>{
@@ -348,7 +271,7 @@ const keyEventHandler=(thisref,callback,component,action)=>{
         }
     });
 };
-
+export {useTimer} from './UiHelper';
 const nameKeyEventHandler=(thisref,component,opt_callback)=>{
     if (! thisref.props || ! thisref.props.name || ! (thisref.props.onClick||opt_callback)) return;
     if (! component) component="widget";
@@ -364,43 +287,7 @@ const nameKeyEventHandler=(thisref,component,opt_callback)=>{
     },component,thisref.props.name);
 };
 
-export const useKeyEventHandler=(props,component,opt_callback)=>{
-    return useEffect(()=>{
-        if (! props.name || ! (props.onClick|| opt_callback)) return;
-        const handler=(cbComponent,cbAction)=>{
-            if (cbComponent === component && cbAction === props.name){
-                if (opt_callback) opt_callback(cbComponent,cbAction);
-                else props.onClick();
-            }
-        };
-        KeyHandler.registerHandler(handler,component,props.name);
-        return ()=>{
-            KeyHandler.deregisterHandler(handler);
-        }
-    },[])
-}
-export const useKeyEventHandlerPlain=(name,component,callback)=>{
-    return useKeyEventHandler({name:name},component,callback);
-}
-
-//from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
-//returns:
-//0 - no scroll
-//1 - scrollTop
-//2 - scrollBottom
-//3 - left
-//4 - right
-const scrollInContainer=(parent, element)=> {
-    if (!parent || ! element) return false;
-    let parentRect = parent.getBoundingClientRect();
-    let elRect = element.getBoundingClientRect();
-
-    if (elRect.top < parentRect.top) return 1;
-    if (elRect.bottom > parentRect.bottom) return 2;
-    if (elRect.left < parentRect.left) return 3;
-    if (elRect.right > parentRect.right) return 4;
-    return 0;
-};
+export {useKeyEventHandler, useKeyEventHandlerPlain} from './UiHelper'
 
 /**
  * helper for maintaining an object inside a components state
@@ -555,34 +442,7 @@ export const useStateObject=(initialValues,opt_deepCopy)=>{
     }
 }
 
-const getServerCommand=(name)=>{
-    return Requests.getJson({
-        request:'api',
-        type:'command',
-        command:'list'
-    })
-        .then((data)=> {
-            if (!data.data) return;
-            for (let i=0;i<data.data.length;i++){
-                if (data.data[i].name === name){
-                    return data.data[i];
-                }
-            }
-        })
-        .catch((e)=>base.log("unable to query server command "+name));
-}
-/**
- * helper for the react callback issue
- * you can use the stateRef in callbacks to obtain the current value of the state
- * @param initial
- * @return {[unknown,(value: unknown) => void,React.MutableRefObject<unknown>]}
- */
-export const useStateRef=(initial)=>{
-    const [state,setState]=useState(initial);
-    const stateRef=useRef(initial);
-    stateRef.current=state;
-    return [state,setState,stateRef];
-}
+
 
 export default {
     resizeElementFont,
@@ -592,7 +452,6 @@ export default {
     scrollInContainer,
     keyEventHandler,
     nameKeyEventHandler,
-    IMAGES,
     storeHelper,
     storeHelperState,
     stateHelper,

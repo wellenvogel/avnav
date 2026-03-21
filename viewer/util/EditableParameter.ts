@@ -27,12 +27,14 @@ export type Value =string|number|boolean|Record<string,string>;
 export type Values =Record<string, Value>;
 export type Condition=Value|((values:Values,value:Value)=>boolean);
 export type Conditions =Record<string,Condition>;
-export type ListEntry=Value| {
+export interface SelectListEntry extends Record<string, any>{
     value:Value,
     label?:string,
     l?:string,
-    displayName?:string
+    displayName?:string,
+    selected?:boolean,
 }
+export type ListEntry=Value| SelectListEntry;
 export const assignableProperties:Properties={
     name: undefined,
     default: undefined,

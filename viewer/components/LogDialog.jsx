@@ -23,13 +23,13 @@
  ###############################################################################
  * dialog for log file display
  */
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import DB from "./DialogButton";
 import Formatter from "../util/formatter";
 import PropTypes from 'prop-types';
-import {useTimer} from "../util/GuiHelpers";
+import {useTimer} from "../util/UiHelper";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import DownloadButton from "./DownloadButton";
 

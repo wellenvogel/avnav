@@ -28,7 +28,7 @@ import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
 import Requests, {prepareUrl} from '../util/requests.js';
 import Mob from '../components/Mob.ts';
 import ItemList from "../components/ItemList";
-import {useTimer} from "../util/GuiHelpers";
+import {useTimer} from "../util/UiHelper";
 import {ChildStatus, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';

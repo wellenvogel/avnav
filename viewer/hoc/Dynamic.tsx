@@ -7,13 +7,10 @@
  * (possibly already translated if storeKeys was an object) and the list of keys and must return the new state
  */
 
-// @ts-ignore
 import globalStore from "../util/globalstore";
 import React, {Children, cloneElement, useEffect, useRef, useState} from 'react';
-// @ts-ignore
 import {KeyHelper} from "../util/keys";
-// @ts-ignore
-import {useStateRef} from "../util/GuiHelpers";
+import {useStateRef} from "../util/UiHelper";
 import {StoreCallback} from "../util/store";
 
 

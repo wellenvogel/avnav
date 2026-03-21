@@ -30,7 +30,7 @@ import navdata from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
-import {useStateRef} from "../util/GuiHelpers";
+import {useStateRef} from "../util/UiHelper";
 import Toast from "./Toast";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, DialogText} from "./OverlayDialog";
 import {Checkbox, Radio} from "./Inputs";

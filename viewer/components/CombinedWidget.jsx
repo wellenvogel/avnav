@@ -21,7 +21,7 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 */
-import {useKeyEventHandler} from "../util/GuiHelpers";
+import {useKeyEventHandler} from "../util/UiHelper";
 import {moveItem, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
 import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";

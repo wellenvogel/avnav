@@ -26,7 +26,7 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import {useKeyEventHandler} from "../util/GuiHelpers";
+import {useKeyEventHandler} from "../util/UiHelper";
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
 import {ResizeFrame} from "../hoc/Resizable";
 import Helper from "../util/helper";

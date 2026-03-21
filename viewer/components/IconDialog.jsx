@@ -28,16 +28,15 @@ import PropTypes from "prop-types";
 import {Checkbox} from "./Inputs";
 import React,{useEffect, useState} from "react";
 import Requests from "../util/requests";
-import GuiHelpers from "../util/GuiHelpers";
 import Helper from "../util/helper";
 import UploadHandler, {extensionListToAccept, uploadClick} from "./UploadHandler";
 import Toast from "./Toast";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {SelectList} from "./BasicDialogs";
-import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
 import {IMAGES} from "../util/itemFunctions";
+
 
 const IMAGES_FLAG=1;
 const SOURCES=[
@@ -89,7 +88,7 @@ export const IconDialog=(props)=>{
                         if (data.items) {
                             let allIcons = [];
                             data.items.forEach((el) => {
-                                if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
+                                if (IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
                                     if (!contains(allIcons, el.url)) {
                                         el.label = el.name;
                                         el.value = el.url;
@@ -178,8 +177,8 @@ export const IconDialog=(props)=>{
                     }
                     let ext = Helper.getExt(name);
                     let rt = {name: name};
-                    if (GuiHelpers.IMAGES.indexOf(ext) < 0) {
-                        reject("only images of types " + GuiHelpers.IMAGES.join(","));
+                    if (IMAGES.indexOf(ext) < 0) {
+                        reject("only images of types " + IMAGES.join(","));
                         return;
                     }
                     resolve(rt);
