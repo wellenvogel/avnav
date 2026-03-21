@@ -270,7 +270,8 @@ body{
   max-width: 100%;
 
   .flexInner {
-    display: block;
+    display:flex;
+    flex-direction: column;
   }
   .dialogObjects();
 }
@@ -724,6 +725,7 @@ body{
 .listEntry{
   .rowBase();
   min-height: var(--avnav-min-listitem-height);
+  flex-shrink: 0;
   position: relative;
   border-bottom: @normalBorder;
   padding: 1em;
@@ -1338,11 +1340,14 @@ span.valuePrefix{
     }
   }
 
-  #statuspage,#importerpage,.importConverterDialog,.importScannerDialog{
+  .StatusView,#importerpage,.importConverterDialog,.importScannerDialog{
     .editIcon {
       margin-left: 1em;
     }
     .status {
+      &.activeEntry{
+        font-weight: unset;
+      }
       .listEntry();
       flex-direction: column;
       align-items: flex-start;
