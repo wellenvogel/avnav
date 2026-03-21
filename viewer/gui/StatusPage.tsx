@@ -27,8 +27,6 @@ import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import Helper from "../util/helper";
 // @ts-ignore
-import {StatusItem} from '../components/StatusItems';
-// @ts-ignore
 import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
 import {useDialogContext} from  '../components/DialogContext';
 // @ts-ignore

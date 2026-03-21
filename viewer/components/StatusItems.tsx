@@ -1,9 +1,3 @@
-import globalStore from "../util/globalstore";
-import keys from "../util/keys";
-import Button from "./Button";
-import React from 'react';
-import Helper from "../util/helper";
-
 /**
  *###############################################################################
  # Copyright (c) 2012-2024 Andreas Vogel andreas@wellenvogel.net
@@ -28,21 +22,44 @@ import Helper from "../util/helper";
  #
  ###############################################################################
  */
+import globalStore from "../util/globalstore";
+import keys from "../util/keys";
+import Button, {ButtonEventHandler} from "./Button";
+import React from 'react';
+import Helper from "../util/helper";
 
-export const statusTextToImageUrl=(text)=>{
+export const statusTextToImageUrl=(text:string)=>{
     let rt=globalStore.getData(keys.properties.statusIcons[text]);
     if (! rt) rt=globalStore.getData(keys.properties.statusIcons.INACTIVE);
     return rt;
 };
-export const EditIcon=(props)=>{
+interface EditIconProps{
+    onClick?:ButtonEventHandler;
+}
+export const EditIcon=({onClick}:EditIconProps)=>{
     return <Button
-        name="Edit" className="Edit smallButton editIcon" onClick={props.onClick}/>
+        name="Edit" className="Edit smallButton editIcon" onClick={onClick}/>
 
 }
-export const ChildStatus=(props)=>{
-    let canEdit=props.canEdit && props.connected && props.allowEdit;
-    let sub=props.sub || (props.name && (typeof(props.name.match) === 'function') && props.name.match(/:#:/));
-    let name=sub?props.name.replace(/^.*:#:/,''):props.name;
+interface ChildStatusProps{
+    id: string; // the child id
+    handlerId: string | number;
+    forceEdit?: boolean;
+    info?: string;
+    status: string;
+    onClick?: ButtonEventHandler;
+    name?: string;
+    sub?: boolean;
+    allowEdit?: boolean;
+    connected?: boolean;
+    canEdit?: boolean;
+    showEditDialog?:(handlerId: string|number, id: string, finishCallback: (id:number|string)=>void)=>void;
+    finishCallback?:(id:string|number)=>void ;
+}
+export const ChildStatus=(props:ChildStatusProps)=>{
+    const canEdit=props.canEdit && props.connected && props.allowEdit;
+    const sub=props.sub || (props.name && (typeof(props.name.match) === 'function') && props.name.match(/:#:/));
+    const name=sub?props.name.replace(/^.*:#:/,''):props.name;
     let clName="childStatus";
     if (sub) clName+=" sub";
     return (
@@ -56,15 +73,29 @@ export const ChildStatus=(props)=>{
         </div>
     );
 };
-export const StatusItem=(props)=>{
-    let canEdit=props.canEdit && props.connected && props.allowEdit;
-    let isDisabled=props.disabled;
+export interface StatusItemProps{
+    info: {
+        items:any[]
+    };
+    className?: string,
+    id: string | number;
+    name: string;
+    disabled?:boolean ;
+    allowEdit?: boolean;
+    connected?: boolean;
+    canEdit?: boolean;
+    showEditDialog?:(handlerId: string|number, id: string, finishCallback: (id:number|string)=>void)=>void;
+    finishCallback?:(id:string|number)=>void ;
+}
+export const StatusItem=(props:StatusItemProps)=>{
+    const canEdit=props.canEdit && props.connected && props.allowEdit;
+    const isDisabled=props.disabled;
     let name=props.name.replace(/\[.*\]/, '');
     if (props.id !== undefined){
         name="["+props.id+"]"+name;
     }
-    let cl=Helper.concatsp("status",props.className,props.requestFocus?"requestFocus":undefined);
-    let children=(props.info && props.info.items)?props.info.items:[];
+    const cl=Helper.concatsp("status",props.className);
+    const children=(props.info && props.info.items)?props.info.items:[];
     children.sort((a,b)=>{
         if (a.name>b.name) return 1;
         if (a.name < b.name) return -1;

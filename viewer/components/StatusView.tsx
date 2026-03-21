@@ -24,7 +24,6 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import ItemList from "./ItemList";
 // @ts-ignore
 import Requests from '../util/requests';
-// @ts-ignore
 import {StatusItem} from './StatusItems';
 // @ts-ignore
 import EditHandlerDialog from './EditHandlerDialog';
