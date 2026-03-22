@@ -58,6 +58,9 @@ import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
 import {PAGEIDS} from "../util/pageids";
 import {useDialogContext} from "../components/DialogContext";
+import {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
+import {InjectMainMenu, useInitialButton} from "./MainNav";
+import NavPageButtons from "./NavPageButtons";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -714,6 +717,23 @@ const NavPage=(props)=>{
             return true;
         }
     }, [history]);
+    const editLayoutButtons=propsToDefs([
+        EditPageDialog.getButtonDef(PAGENAME,
+            MapPage.PANELS,
+            [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
+        {
+            name: 'NavMapWidgets',
+            editOnly: true,
+            overflow: true,
+            onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
+        },
+        LayoutFinishedDialog.getButtonDef(undefined,dialogCtx),
+        LayoutHandler.revertButtonDef((pageWithOptions)=>{
+            if (pageWithOptions.location !== props.location){
+                history.replace(pageWithOptions.location,pageWithOptions.options);
+            }
+        })
+        ]);
     const buttons=[
             {
                 name: "ZoomIn",
@@ -727,9 +747,6 @@ const NavPage=(props)=>{
                 name: "LockPos",
                 storeKeys:{
                     toggle: keys.map.lockPosition
-                },
-                updateFunction:(state)=>{
-                    return state;
                 },
                 onClick:()=>{
                     let old=globalStore.getData(keys.map.lockPosition);
@@ -827,21 +844,7 @@ const NavPage=(props)=>{
             },
             CenterActionButton,
             Mob.mobDefinition(history),
-            EditPageDialog.getButtonDef(PAGENAME,
-                MapPage.PANELS,
-                [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
-            {
-                name: 'NavMapWidgets',
-                editOnly: true,
-                overflow: true,
-                onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
-            },
-            LayoutFinishedDialog.getButtonDef(undefined,dialogCtx),
-            LayoutHandler.revertButtonDef((pageWithOptions)=>{
-                if (pageWithOptions.location !== props.location){
-                    history.replace(pageWithOptions.location,pageWithOptions.options);
-                }
-            }),
+
             RemoteChannelDialog({overflow:true},dialogCtx),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
@@ -850,6 +853,12 @@ const NavPage=(props)=>{
                 onClick: ()=>{history.pop()}
             }
         ];
+        const currentButtons=useRef();
+        currentButtons.current=
+            InjectMainMenu(PAGEIDS.NAV,
+                updateFromOld(NavPageButtons,buttons).concat(propsToDefs(editLayoutButtons))
+                );
+        useInitialButton(currentButtons)
         let autohide=undefined;
         if (globalStore.getData(keys.properties.autoHideNavPage) && ! wpButtonsVisible && ! globalStore.getData(keys.gui.global.layoutEditing)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
@@ -892,7 +901,7 @@ const NavPage=(props)=>{
                         }}
 
                     />}
-                buttonList={buttons}
+                buttonList={currentButtons.current}
                 autoHideButtons={autohide}
                 />
         );

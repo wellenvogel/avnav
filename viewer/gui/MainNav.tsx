@@ -39,6 +39,7 @@ import {HistoryEntry, IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
 import addons from '../components/Addons';
+import NavPageButtons from "./NavPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -73,6 +74,8 @@ class Page extends CopyAware{
 const mainTree=[
     new Page(PAGEIDS.MAIN,'navigation',PAGE_TITLES.MAIN,
         MainPageButtons),
+    new Page(PAGEIDS.NAV,'navigation',PAGE_TITLES.NAV,
+        NavPageButtons),
     new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
         ChannelsPageButtons),
     new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,

@@ -210,6 +210,7 @@ EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions,opt_dialogContex
     return{
         name: 'EditPage',
         editOnly: true,
+        visible: true,
         onClick:()=>{
             EditPageDialog.createDialog(pagename,panelNames,handledOptions,opt_dialogContext);
         }

@@ -140,3 +140,15 @@ export const updateButtons=(buttonDefs:ButtonDef[],updates?:Record<string, Butto
    }
    return rt;
 }
+
+export const updateFromOld=(
+    buttons:ButtonDef[],
+    updates:ButtonUpdate[],
+):ButtonDef[] => {
+    const converted:Record<string, ButtonUpdate> = {};
+    for (const update of updates){
+        if (! update.name) continue;
+        converted[update.name]=update;
+    }
+    return updateButtons(buttons,converted);
+}

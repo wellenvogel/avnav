@@ -51,7 +51,7 @@ export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     IMPORT: "",
     INFO: "",
     MAIN: "Select Chart",
-    NAV: "",
+    NAV: "Navigation",
     ROUTE: "Routes",
     SETTINGS: "Display Settings",
     SERVER: "Server",
