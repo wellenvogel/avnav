@@ -1131,7 +1131,9 @@ public class Decoder extends Worker  implements INavRequestHandler {
         } else {
             workerStatus.setChildStatus("ais", WorkerStatus.Status.INACTIVE,"no AIS data");
         }
-        return workerStatus.toJson();
+        JSONObject rt=workerStatus.toJson();
+        rt.put("kind",getKind().name);
+        return rt;
     }
 
     public static class SatStatus{

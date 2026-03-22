@@ -338,6 +338,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                     .cloneCondition(new AvnUtil.KeyValue(WP_MODE.name,M_EARLY));
     public RouteHandler(File routedir,GpsService ctx,NmeaQueue queue) throws IOException {
         super(Constants.TYPE_ROUTE,ctx,routedir,"route",null);
+        kind=Kind.ROUTE;
         this.routedir=routedir;
         updateReceiver=ctx;
         parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE,SOURCE_PRIORITY_PARAMETER,WP_MODE,WP_TIME);

@@ -42,6 +42,11 @@ public class NmeaLogger extends Worker {
     }
 
     @Override
+    public Kind getKind() {
+        return Kind.TRACK;
+    }
+
+    @Override
     protected void run(int startSequence) throws JSONException, IOException {
         numRecords=0;
         File currentFile = null;

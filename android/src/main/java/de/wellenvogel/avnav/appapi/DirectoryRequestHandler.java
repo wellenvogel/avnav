@@ -22,9 +22,11 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
@@ -34,6 +36,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     protected String urlPrefix;
     protected String type;
     protected IDeleteByUrl deleter;
+    protected Kind kind;
     public DirectoryRequestHandler(String type, GpsService ctx,File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
         super(type,ctx);
         this.type=type;
@@ -46,6 +49,10 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
             throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
         }
         this.deleter=deleter;
+        if (Objects.equals(type, Constants.TYPE_IMAGE)) kind=Kind.USER;
+        if (Objects.equals(type, Constants.TYPE_OVERLAY)) kind=Kind.CHART;
+        if (Objects.equals(type, Constants.TYPE_ICONS)) kind=Kind.USER;
+        if (Objects.equals(type, Constants.TYPE_USER)) kind=Kind.USER;
     }
 
 
@@ -163,6 +170,11 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
 
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
+    }
+
+    @Override
+    public Kind getKind() {
+        return kind;
     }
 
     static class CloseHelperStream extends InputStream {

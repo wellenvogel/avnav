@@ -276,6 +276,7 @@ public class PluginManager extends DirectoryRequestHandler {
     private final Object createLock=new Object();
     public PluginManager(String type, GpsService ctx, File workDir, String urlPrefrix) throws IOException {
         super(type, ctx, workDir, urlPrefrix, null);
+        kind=Kind.PLUGINS;
     }
 
     private Plugin createPlugin(File pdir) throws UnsupportedEncodingException {

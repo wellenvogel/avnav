@@ -24,6 +24,11 @@ public abstract class ChannelWorker extends Worker{
         this.queue=queue;
     }
 
+    @Override
+    public Kind getKind() {
+        return Kind.CHANNEL;
+    }
+
     protected ConnectionReaderWriter.ConnectionProperties getConnectionProperties() throws JSONException {
             ConnectionReaderWriter.ConnectionProperties rt=new ConnectionReaderWriter.ConnectionProperties();
             rt.readData=true;

@@ -103,6 +103,11 @@ public abstract class Worker implements IWorker {
     }
     private static final ArrayList<ResourceClaim> resourceClaims=new ArrayList<>();
 
+    @Override
+    public Kind getKind() {
+        return Kind.OTHER;
+    }
+
     protected void removeClaims(){
         synchronized (resourceClaims){
             for (int i=resourceClaims.size()-1;i>=0;i--){
@@ -208,6 +213,7 @@ public abstract class Worker implements IWorker {
         if (!getTypeName().equals(getSourceName())){
             ro.put("name",rt.typeName +"("+getSourceName()+")");
         }
+        ro.put("kind",getKind().name);
         return ro;
     }
 

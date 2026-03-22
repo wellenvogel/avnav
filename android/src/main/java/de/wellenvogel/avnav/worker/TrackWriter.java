@@ -259,6 +259,7 @@ public class TrackWriter extends DirectoryRequestHandler {
 
     TrackWriter(File trackdir,GpsService ctx) throws IOException {
         super(Constants.TYPE_TRACK,ctx,trackdir,"track",null);
+        kind=Kind.TRACK;
         this.trackdir=trackdir;
         this.updater=ctx.getMediaUpdater();
         parameterDescriptions.addParams(ENABLED_PARAMETER,PARAM_INTERVAL,PARAM_DISTANCE,PARAM_MINTIME,PARAM_LENGTH);

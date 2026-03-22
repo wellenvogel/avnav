@@ -2,6 +2,8 @@ package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,11 +11,33 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public interface IWorker {
+    public enum Kind {
+        CHART("chart"),
+        TRACK( "track"),
+        ROUTE( "route"),
+        LAYOUT("layout"),
+        SETTINGS("settings"),
+        PLUGINS("plugins"),
+        CHANNEL("channel"),
+        USER("user"),
+        ADDON("addon"),
+        OTHER("other");
+        private Kind(String s){
+            name=s;
+        }
+        public final String name;
+        @NonNull
+        public String toString(){
+            return name;
+        }
+    }
     boolean isEnabled();
 
     interface PermissionCallback{
         void permissionNeeded(NeededPermissions perm);
     }
+
+    Kind getKind();
     WorkerStatus getStatus();
 
     JSONObject getJsonStatus() throws JSONException;

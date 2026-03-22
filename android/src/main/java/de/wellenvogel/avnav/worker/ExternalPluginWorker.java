@@ -45,6 +45,12 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         }
 
     }
+
+    @Override
+    public Kind getKind() {
+        return Kind.PLUGINS;
+    }
+
     @Override
     public JSONObject getFiles() throws JSONException {
         long lm=lastModified;
