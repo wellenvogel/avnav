@@ -7,7 +7,7 @@ import ItemList from '../components/ItemList.tsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.ts';
-import Addons from '../components/Addons.js';
+import Addons from '../components/Addons.ts';
 import UserAppDialog from '../components/UserAppDialog.jsx';
 import {showPromiseDialog} from "../components/OverlayDialog";
 import {avitem, concatsp} from "../util/helper";

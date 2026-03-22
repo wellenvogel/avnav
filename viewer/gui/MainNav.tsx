@@ -38,6 +38,7 @@ import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
+import addons from '../components/Addons';
 
 type PageKind='navigation'|'settings';
 
@@ -61,6 +62,10 @@ class Page extends CopyAware{
     }
     getDisplay(){
         return this.displayName||this.name;
+    }
+    getButtons(){
+        const addonButtons=addons.getPageUserButtons(this.name);
+        return this.buttons.concat(propsToDefs(addonButtons));
     }
 }
 
@@ -114,7 +119,7 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence}:PageRowProps)=>{
         </ListItem>
         {isExpanded &&
             <ListFrame className={'ButtonList'}>
-                {page.buttons.map((bt)=> {
+                {page.getButtons().map((bt)=> {
                     if (bt.localOnly && ! isCurrent) return null;
                     if (bt.editOnly && ! layoutEditing) return null;
                     return <ButtonRow
@@ -221,7 +226,7 @@ export const InjectMainMenu=(
                 expandMode={expandMode}
             />,undefined,{coverClassName:Helper.concatsp('MainNavCover',colClass)})
         }
-    }]).concat(pageButtons);
+    }]).concat(pageButtons,propsToDefs(addons.getPageUserButtons(pagename)));
 }
 
 export const handleInitialButton = (history: IHistory, pageButtons: ButtonDef[], dialogContext?: IDialogContext) => {

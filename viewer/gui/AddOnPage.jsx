@@ -8,7 +8,7 @@ import keys from '../util/keys.ts';
 import React from 'react';
 import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.ts';
-import Addons from '../components/Addons.js';
+import Addons from '../components/Addons.ts';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
 import Keyhandler from "../util/keyhandler";

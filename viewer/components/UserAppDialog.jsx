@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {showPromiseDialog} from './OverlayDialog.jsx';
 import Toast from './Toast.tsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
-import Addons from './Addons.js';
+import Addons from './Addons.ts';
 import Helper, {unsetOrTrue} from '../util/helper.ts';
 import Requests from '../util/requests.js';
 import UploadHandler, {uploadClick} from "./UploadHandler";

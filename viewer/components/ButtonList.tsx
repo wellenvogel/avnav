@@ -116,8 +116,7 @@ const ButtonList = (iprops:ButtonListProps) => {
     //if their visibility changes
     let invisibleItems = [];
     let allowedOverflowItems = 0;
-    const userButtons=sprops.page?addons.getPageUserButtons(sprops.page):[];
-    for (const button of sprops.itemList.concat(userButtons)) {
+    for (const button of sprops.itemList) {
         const stateKey = getStateKey(button);
         if (!stateKey) continue;
         if (!sprops.buttonsHidden && (visibility[stateKey] === undefined || visibility[stateKey])) {

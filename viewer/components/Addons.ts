@@ -1,13 +1,36 @@
-import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.ts';
-import Requests from '../util/requests.js';
-import Toast from './Toast.tsx';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
+// @ts-ignore
+import Requests from '../util/requests';
+import Toast from './Toast';
 import base from "../base";
 import {UserButtonProps} from "../util/api.impl";
 import Helper from "../util/helper";
+import {UserButton} from "../api/api.interface";
 
+export interface PluginAddonProps{
+    name: string;
+    pluginName: string;
+    displayName?: string;
+    url:string;
+    icon: string;
+    title?: string;
+    newWindow?:boolean;
+    preventConnectionLost?:boolean
+}
 class PluginAddOn{
-    constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost}){
+    name: string;
+    pluginName: string;
+    displayName: string;
+    url: string;
+    icon: string;
+    title: string;
+    newWindow: boolean;
+    source: string;
+    canDelete: boolean;
+    preventConnectionLost: boolean;
+    key: string;
+    constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost,displayName}:PluginAddonProps) {
         this.name=name;
         this.pluginName=pluginName;
         this.url=url;
@@ -19,24 +42,31 @@ class PluginAddOn{
         this.newWindow=newWindow;
         this.preventConnectionLost=preventConnectionLost;
         this.key=pluginName+'.'+name;
+        this.displayName=displayName||name;
     }
 }
+
 class PluginUserButton{
-    constructor(plugin,button,page){
+    key:string;
+    page:string;
+    button:UserButton;
+    pluginName:string;
+    constructor(plugin:string,button:UserButton,page:string){
         if (! plugin) throw new Error("missing plugin")
         if (! button) throw new Error("missing button")
         if (! button.name) throw new Error("missing name in button def")
         if ( typeof(button.onClick) !== "function") throw new Error("button.onClick is not a function")
         this.key=plugin+'.'+button.name
         this.page=page || 'addonpage';
-        this.button=Helper.filteredAssign(UserButtonProps,button);
+        this.button=Helper.filteredAssign(UserButtonProps,button) as UserButton;
         this.pluginName=plugin;
     }
 }
-const pluginAddOns={};
-const pluginUserButtons={};
+const pluginAddOns:Record<string, PluginAddOn> = {};
+const pluginUserButtons:Record<string, PluginUserButton> = {};
 
-const addPluginAddOn=({name,pluginName,url,icon,...other})=>{
+const addPluginAddOn=(
+    {name,pluginName,url,icon,...other}:PluginAddonProps)=>{
     if (!name) throw new Error("name is required");
     if (!pluginName) throw new Error("pluginName is required");
     if (!url) throw new Error("url is required");
@@ -49,26 +79,26 @@ const addPluginAddOn=({name,pluginName,url,icon,...other})=>{
     pluginAddOns[completeName]=new PluginAddOn({name,pluginName,url,icon,...other});
     return completeName;
 }
-const addUserButton=(plugin,button,page)=>{
+const addUserButton=(plugin:string,button:UserButton,page:string)=>{
     const def=new PluginUserButton(plugin,button,page);
     if (! def.key) throw new Error("invalid userButton def");
     const existing=pluginUserButtons[def.key];
-    if (existing && existing.pluginName!==pluginName) {
+    if (existing && existing.pluginName!==plugin) {
         throw new Error(`UserButton ${button.name} already exists from ${existing.pluginName}`)
     }
     pluginUserButtons[def.key]=def;
     base.log(`added user button ${def.key}`);
 }
-const getPageUserButtons=(page)=>{
+const getPageUserButtons=(page:string)=>{
     const rt=[];
-    for (let k in pluginUserButtons){
+    for (const k in pluginUserButtons){
         const buttonDef=pluginUserButtons[k];
         if (page === buttonDef.page){
             rt.push({...buttonDef.button,overflow:true});
         }
         else{
             if (Array.isArray(buttonDef.page)){
-                for (let dp of buttonDef.page){
+                for (const dp of buttonDef.page){
                     if (dp === page){
                         rt.push({...buttonDef.button,overflow:true});
                         break;
@@ -79,38 +109,41 @@ const getPageUserButtons=(page)=>{
     }
     return rt;
 }
-const removePluginAddOns=(pluginName)=>{
+const removePluginAddOns=(pluginName:string)=>{
     let todel=[];
-    for (let k in pluginAddOns) {
+    for (const k in pluginAddOns) {
         if (pluginAddOns[k].pluginName===pluginName) todel.push(k);
     }
-    for (let td of todel) {
+    for (const td of todel) {
         delete pluginAddOns[td];
     }
     todel=[];
-    for (let k in pluginUserButtons) {
+    for (const k in pluginUserButtons) {
         if (pluginUserButtons[k].pluginName===pluginName) todel.push(k);
     }
-    for (let td of todel) {
+    for (const td of todel) {
         delete pluginUserButtons[td];
     }
 }
 
-const readAddOns = async (opt_showToast,opt_includeInvalid)=> {
+const readAddOns = async (
+    opt_showToast?:boolean,
+    opt_includeInvalid?:boolean)=> {
         if (!globalStore.getData(keys.gui.capabilities.addons)) return [];
-        let req={
+        const req={
             request:'api',
             command:'list',
-            type:"addon"
+            type:"addon",
+            invalid:false
         };
         if (opt_includeInvalid){
             req.invalid=true;
         }
         try {
-            const addons = await Requests.getJson(req).then((json) => {
-                let items = [];
-                for (let e in json.items) {
-                    let item = json.items[e];
+            const addons = await Requests.getJson(req).then((json:any) => {
+                const items = [];
+                for (const e in json.items) {
+                    const item = json.items[e];
                     if (!item.key) item.key = item.name;
                     if (item.name) {
                         items.push(item);
@@ -118,7 +151,7 @@ const readAddOns = async (opt_showToast,opt_includeInvalid)=> {
                 }
                 return items;
             });
-            for (let k in pluginAddOns){
+            for (const k in pluginAddOns){
                 addons.push(pluginAddOns[k]);
             }
             return addons;
@@ -128,12 +161,12 @@ const readAddOns = async (opt_showToast,opt_includeInvalid)=> {
         }
 };
 
-const findAddonByUrl=(addons,url,opt_all)=>{
+const findAddonByUrl=(addons:any[],url:string,opt_all?:boolean)=>{
     if (! addons || !(addons instanceof Array)) return;
     if (! url) return;
-    let rtall=[];
-    for (let i in addons){
-        let addon=addons[i];
+    const rtall=[];
+    for (const i in addons){
+        const addon=addons[i];
         if (addon.url == url){
             if (! opt_all) return addon;
             rtall.push(addon);
@@ -147,9 +180,15 @@ const findAddonByUrl=(addons,url,opt_all)=>{
  * @param url
  * @param icon
  * @param title
+ * @param newWindow
  * @returns {*}
  */
-const updateAddon=(name,url,icon,title,newWindow)=>{
+const updateAddon=(
+    name: string,
+    url:string,
+    icon: string,
+    title?:string,
+    newWindow?:boolean)=>{
    return Requests.getJson({
        request:'api',
        type:'addon',
@@ -162,7 +201,7 @@ const updateAddon=(name,url,icon,title,newWindow)=>{
    });
 };
 
-const removeAddon=(name)=>{
+const removeAddon=(name:string)=>{
     return Requests.getJson(
         {
             request:'api',

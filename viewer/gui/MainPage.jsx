@@ -14,7 +14,7 @@ import MapHolder from '../map/mapholder.js';
 import base from '../base.ts';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
-import Addons from '../components/Addons.js';
+import Addons from '../components/Addons.ts';
 import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
 import LocalStorage from '../util/localStorageManager';

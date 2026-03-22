@@ -525,6 +525,8 @@ export interface ProxyOptions{
 export type Page=keyof typeof PAGEIDS;
 export interface UserButton{
     name: string;                   //will set the CSS class, unique inside the plugin
+    displayName?: string;           //shown in main nav
+    localOnly?: boolean;            //if set: not shown in main nav
     icon?: string|URL;              //relative to plugin base
     onClick:(event:object)=>void    //if set this function is called instead of invoking the url
     visible?:boolean;

@@ -12,9 +12,9 @@ export interface ButtonProps {
         className?: string;
         toggle?: boolean|(()=>boolean);
         name: string;
-        icon?: string;
+        icon?: string|URL;
         style?: Record<string, any>;
-        disabled?:()=>boolean;
+        disabled?:boolean|(()=>boolean);
         overflow?:boolean;
         editDisable?:boolean;
         editOnly?:boolean;
@@ -40,9 +40,9 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     className?: string;
     toggle?: boolean | (() => boolean);
     name: string;
-    icon?: string;
+    icon?: string|URL;
     style?: Record<string, any>;
-    disabled?: () => boolean;
+    disabled?: boolean|(() => boolean);
     overflow?: boolean;
     editDisable?:boolean;
     editOnly?: boolean;
@@ -63,8 +63,9 @@ const toggleClass=(props:ButtonProps)=> {
 const Button = (props:ButtonProps) => {
     const dialogContext=useDialogContext();
     const history = useHistory();
+    const disabledv=(typeof (props.disabled) === 'function') ? props.disabled() : props.disabled;
     useKeyEventHandlerPlain(props.name, "button", () => {
-        if (props.onClick && !props.disabled) {
+        if (props.onClick && !disabledv) {
             const ev= setav({},{dialogContext:dialogContext,history:history});
             props.onClick(ev);
         }
@@ -84,7 +85,7 @@ const Button = (props:ButtonProps) => {
         spanStyle.backgroundImage = "url(" + icon + ")";
     }
     const add:Record<string, any> = {};
-    if (disabled) {
+    if (disabledv) {
         add.disabled = "disabled";
     }
     if (forward.onClick){

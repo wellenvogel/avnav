@@ -182,7 +182,7 @@ const KeyHelper: Required<FeatureInfoType> = {
 
 export const getFeatureInfoKeys = (): FeatureInfoKeys => Object.keys(KeyHelper) as FeatureInfoKeys;
 
-export const UserButtonProps: Required<UserButton>={
+export const UserButtonProps: Required<UserButton>= {
     disabled: true,
     icon: "",
     name: "",
@@ -193,7 +193,9 @@ export const UserButtonProps: Required<UserButton>={
     updateFunction(_values: object): object {
         return undefined;
     },
-    visible: false
+    visible: false,
+    displayName: "",
+    localOnly: false
 }
 
 export const modules: Modules={
