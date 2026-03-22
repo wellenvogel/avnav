@@ -1,3 +1,6 @@
+import {ReactElement} from "react";
+import {ItemType} from "../util/itemFunctions";
+
 /**
  * # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
  #
@@ -20,24 +23,25 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React from "react";
-
-export interface CombinedViewProps {
-    leftView: React.ReactNode;
-    rightView: React.ReactNode;
-    leftActive: boolean;
-    rightActive: boolean;
-}
-
-export const CombinedView=(props:CombinedViewProps)=>{
-    return <div className="combinedView">
-        <div className="leftView view">
-            {props.leftActive ?props.leftView:null}
-        </div>
-        <div className="rightView view">
-            {props.rightActive ?props.rightView:null}
-        </div>
-    </div>
+export type DownloadItemListProps = {
+    type: ItemType;
+    selectCallback?:(item:Item)=>void;
+    uploadFile?: File;
+    infoMode?: 0|1|2;
+    noExtra?:boolean;
+    showCreate?:booolean;
+    itemActions?:any;
+    autoreload?:number;
+    uploadDone?:(done:boolean) => void;
 
 }
-
+export declare function DownloadItemList (
+    {type,
+        selectCallback,
+        uploadFile,
+        infoMode,
+        noExtra,
+        showCreate,
+        itemActions,
+        autoreload,
+        uploadDone}:DownloadItemListProps):ReactNode;

@@ -20,24 +20,17 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React from "react";
+import GeneralButtons from "./GeneralButtons";
+import {propsToDefs} from "../components/Button";
 
-export interface CombinedViewProps {
-    leftView: React.ReactNode;
-    rightView: React.ReactNode;
-    leftActive: boolean;
-    rightActive: boolean;
-}
-
-export const CombinedView=(props:CombinedViewProps)=>{
-    return <div className="combinedView">
-        <div className="leftView view">
-            {props.leftActive ?props.leftView:null}
-        </div>
-        <div className="rightView view">
-            {props.rightActive ?props.rightView:null}
-        </div>
-    </div>
-
-}
+export default GeneralButtons.concat(propsToDefs([
+    {
+        name:'ServerView',
+        displayName: 'server settings',
+    },
+    {
+        name:'ItemsView',
+        displayName: 'stored routes',
+    }
+]))
 

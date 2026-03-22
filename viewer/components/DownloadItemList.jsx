@@ -52,7 +52,7 @@ const itemSort = (a, b) => {
     return 0;
 };
 export const DownloadItemInfoMode={
-    NO_INFO:1,
+    NO_INFO:0,
     ICONS:1,
     ALL:2
 }

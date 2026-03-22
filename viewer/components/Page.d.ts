@@ -44,9 +44,10 @@ export interface PageBaseProps{
     options?: Record<string, any>;
     location: string;
     small: boolean;
+    id: string;
+    windowDimensions?:{width:number,height:number};
 }
 export interface PageProps extends PageBaseProps{
-     id: string;
     title?: string;
     mainContent?: React.ReactNode;
     floatContent?: React.ReactNode;
@@ -55,7 +56,6 @@ export interface PageProps extends PageBaseProps{
     style?: Record<string, any>;
     buttonWidthChanged?: ()=>void;
     autoHideButtons?: number; //ms or undefined
-    windowDimensions?: any;
     history: IHistory
 }
 

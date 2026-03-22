@@ -37,7 +37,8 @@ export const PAGEIDS={
     VIEW:'viewpage',
     ADDCFG:'addonconfigpage',
     IMPORT:'importerpage',
-    CHANNELS:'channelspage'
+    CHANNELS:'channelspage',
+    NROUTE: 'routepage'
 }
 
 export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
@@ -52,7 +53,8 @@ export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     INFO: "",
     MAIN: "Select Chart",
     NAV: "Navigation",
-    ROUTE: "Routes",
+    ROUTE: "Route Editor",
+    NROUTE: "Routes",
     SETTINGS: "Display Settings",
     SERVER: "Server",
     VIEW: "",

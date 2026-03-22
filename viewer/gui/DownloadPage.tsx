@@ -22,6 +22,7 @@ import Helper from "../util/helper";
 import DownloadPageButtons from "./DownloadPageButtons";
 import {HistoryEntry} from "../util/history";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
+import {ItemType} from "../util/itemFunctions";
 
 export interface DownloadPageProps extends PageProps {
     options: {
@@ -119,7 +120,7 @@ const DownloadPage=(props:DownloadPageProps)=>{
             <PageFrame id={PAGEIDS.DOWNLOAD}>
                 <PageLeft title={actions.headline}>
                     <DownloadItemList
-                        type={type}
+                        type={type as ItemType}
                         uploadFile={uploadFile}
                         autoreload={5000}
                         uploadDone={()=>setUploadFile(undefined)}

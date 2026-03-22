@@ -41,6 +41,7 @@ import ServerPageButtons from "./ServerPageButtons";
 import addons from '../components/Addons';
 import NavPageButtons from "./NavPageButtons";
 import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
+import RoutesPageButtons from "./RoutesPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -77,6 +78,8 @@ const mainTree=[
         MainPageButtons),
     new Page(PAGEIDS.NAV,'navigation',PAGE_TITLES.NAV,
         NavPageButtons),
+    new Page(PAGEIDS.NROUTE,'settings',PAGE_TITLES.NROUTE,
+        RoutesPageButtons),
     new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
         ChannelsPageButtons),
     new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,

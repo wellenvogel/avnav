@@ -58,6 +58,7 @@ import {RouteSyncDialog} from "./components/RouteInfoHelper";
 import {PAGEIDS} from "./util/pageids";
 import {useDialogContext} from "./components/DialogContext";
 import ChannelsPage from "./gui/ChannelsPage";
+import RoutesPage from "./gui/RoutesPage";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -107,7 +108,8 @@ const pages={
     [PAGEIDS.VIEW]:ViewPage,
     [PAGEIDS.ADDCFG]: AddonConfigPage,
     [PAGEIDS.IMPORT]: ImporterPage,
-    [PAGEIDS.CHANNELS]: ChannelsPage
+    [PAGEIDS.CHANNELS]: ChannelsPage,
+    [PAGEIDS.NROUTE]: RoutesPage
 };
 const Router = (props) => {
     const history = useHistory();
