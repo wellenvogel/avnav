@@ -64,6 +64,10 @@ class AVNUdpWriter(AVNWorker):
   def canDeleteHandler(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.socket=None

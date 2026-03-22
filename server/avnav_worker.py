@@ -402,6 +402,17 @@ class SubInfoHandler(InfoHandler):
   def deleteInfo(self, name):
     self._parent.deleteInfo(self._gn(name))
 
+class WorkerKind:
+    CHART = 'chart'
+    TRACK = 'track'
+    ROUTE = 'route'
+    LAYOUT='layout'
+    SETTINGS='settings'
+    PLUGINS='plugins'
+    CHANNEL='channel'
+    USER='user'
+    ADDON='addon'
+    OTHER='other'
 
 class AVNWorker(InfoHandler):
   QUEUE_NAME_PARAMETER=WorkerParameter('queueName',default='',type=WorkerParameter.T_STRING,editable=False)
@@ -428,7 +439,7 @@ class AVNWorker(InfoHandler):
   allHandlers=[] #the list of all instantiated handlers
   __workerId=WorkerId()
   Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
-
+  #worker kind
 
   @classmethod
   def getNextWorkerId(cls):
@@ -457,6 +468,9 @@ class AVNWorker(InfoHandler):
   def resetHandlerList(cls):
       with cls.handlerListLock:
         cls.allHandlers=[]
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.OTHER
 
   def findFeeder(self,feedername=None):
     if feedername is None:

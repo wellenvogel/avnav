@@ -219,6 +219,10 @@ class AVNUsbSerialReader(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()

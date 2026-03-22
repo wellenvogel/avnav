@@ -75,6 +75,10 @@ class AVNUserAppHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.USER
+
   def __init__(self,param):
     self.userHandler=None   # AVNUserHandler
     self.imagesHandler=None # AVNImagesHandler

@@ -794,6 +794,9 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
     def autoInstantiate(cls):
         return True
 
+    @classmethod
+    def getKind(cls):
+        return WorkerKind.PLUGINS
 
     def isHidden(self, name):
         ev = os.getenv(ENV_PREFIX + normalizedName(name))

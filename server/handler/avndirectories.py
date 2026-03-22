@@ -42,6 +42,11 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.USER
+
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "user")
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
@@ -120,6 +125,11 @@ class AVNImagesHandler(AVNDirectoryHandlerBase):
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.USER
+
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "images")
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'images'))
@@ -131,12 +141,22 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHART
+
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "overlay")
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'overlayDir', "overlays")
 
 class AVNIconHandler(AVNDirectoryHandlerBase):
   PREFIX = "/icons"
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.USER
+
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX

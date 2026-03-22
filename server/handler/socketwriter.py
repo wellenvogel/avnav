@@ -85,7 +85,11 @@ class AVNSocketWriter(AVNWorker):
   @classmethod
   def canDeleteHandler(cls):
     return True
-  
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.listener=None

@@ -612,7 +612,8 @@ class AVNHandlerManager(object):
                      'properties': handler.getStatusProperties() if not handler.isDisabled() else {},
                      'canDelete': handler.canDeleteHandler(),
                      'canEdit': handler.canEdit(),
-                     'id': handler.getId()
+                     'id': handler.getId(),
+                     'kind': handler.getKind()
                      }
         if id is not None:
             handler = AVNWorker.findHandlerById(int(id))

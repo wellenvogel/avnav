@@ -188,6 +188,10 @@ class AVNBMP180Reader(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def isDisabled(self):
     if not hasBMP180:
       return True

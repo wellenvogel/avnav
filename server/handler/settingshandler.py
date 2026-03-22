@@ -48,6 +48,10 @@ class AVNSettingsHandler(AVNScopedDirectoryHandler):
   def getPrefix(cls):
     return PREFIX
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.SETTINGS
+
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)
 

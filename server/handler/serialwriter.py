@@ -308,6 +308,10 @@ class AVNSerialWriter(AVNWorker):
     WorkerParameter.updateParamFor(rt, SerialWriter.P_PORT.name, {'rangeOrList':slist})
     return rt
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.writer=None

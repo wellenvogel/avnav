@@ -32,7 +32,7 @@ import avnav_handlerList
 import gemf_reader
 import mbtiles_reader
 from avnav_util import *
-from avnav_worker import WorkerStatus
+from avnav_worker import WorkerStatus, WorkerKind
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 
 
@@ -227,6 +227,9 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def getPrefix(cls):
     return cls.PATH_PREFIX
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHART
 
   def getSleepTime(self):
     rt=self.getFloatParam('period')

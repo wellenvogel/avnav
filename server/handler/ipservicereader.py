@@ -88,6 +88,9 @@ class AVNIpServiceReader(AVNWorker):
   def canDeleteHandler(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
 
   def __init__(self,param):
     self.feederWrite=None

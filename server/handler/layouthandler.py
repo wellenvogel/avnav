@@ -49,6 +49,10 @@ class AVNLayoutHandler(AVNScopedDirectoryHandler):
   def getPrefix(cls):
     return None
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.LAYOUT
+
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)
 

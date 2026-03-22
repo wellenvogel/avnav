@@ -99,6 +99,10 @@ class AVNBlueToothReader(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def _closeSockets(self):
     for host,sock in list(self.addrmap.items()):
       try:

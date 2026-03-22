@@ -100,6 +100,10 @@ class AVNSenseHatReader(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def isDisabled(self):
     if not hasSenseHat:
       return True

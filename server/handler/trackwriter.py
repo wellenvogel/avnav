@@ -119,6 +119,11 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
 
   def getTrackDir(self):
     return self.baseDir
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.TRACK
+
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,tp: TrackPoint):

@@ -106,7 +106,7 @@ except:
 
 
 from avnav_util import AVNLog, AVNUtil, AVNStringDownload, AVNDataDownload, AVNJsonDownload
-from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
+from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus, WorkerKind
 from avnuserapps import AVNUserAppHandler
 from charthandler import AVNChartHandler
 from pluginhandler import AVNPluginHandler
@@ -737,6 +737,10 @@ class AVNSignalKHandler(AVNWorker):
   @classmethod
   def autoInstantiate(cls):
     return True
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
 
   def updateConfig(self, param, child=None):
     rt=super().updateConfig(param, child)

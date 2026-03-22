@@ -389,6 +389,11 @@ class AVNImporter(AVNWorker):
   @classmethod
   def preventMultiInstance(cls):
     return True
+
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHART
+
   INFO_MAIN="main"
   INFO_CONVERTER="converter"
   EXT_LINK=".CLK"

@@ -237,6 +237,10 @@ class AVNBME280Reader(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return WorkerKind.CHANNEL
+
   def isDisabled(self):
     if not hasBME280:
       return True

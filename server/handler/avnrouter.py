@@ -701,6 +701,10 @@ class AVNRouter(AVNDirectoryHandlerBase):
   '''
 
   @classmethod
+  def getKind(cls):
+      return WorkerKind.ROUTE
+
+  @classmethod
   def getListEntryClass(cls):
       return AVNRouteInfo
 
