@@ -34,10 +34,12 @@ export interface ListItemProps {
     onClick?: (ev:any) => void;
     dragId?: string|number;
     noDrag?: boolean;
+    ref?: (el:HTMLElement) => void;
 }
-export const ListItem = ({selected,className,children,onClick,dragId,noDrag }: ListItemProps) => {
+export const ListItem = ({selected,className,children,onClick,dragId,noDrag,ref }: ListItemProps) => {
     const dd=useAvNavSortable(dragId,!!noDrag);
     return <div
+        ref={(el:HTMLElement) =>{if(ref) ref(el)}}
         {...dd}
         className={concatsp(className,"listEntry",selected?"activeEntry":undefined)}
         onClick={onClick}

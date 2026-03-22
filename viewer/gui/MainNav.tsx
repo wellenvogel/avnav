@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {RefObject, SyntheticEvent, useEffect, useState} from "react";
+import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
@@ -40,6 +40,7 @@ import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
 import addons from '../components/Addons';
 import NavPageButtons from "./NavPageButtons";
+import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
 
 type PageKind='navigation'|'settings';
 
@@ -91,8 +92,9 @@ interface PageRowProps{
     isCurrent:boolean;
     expanded: boolean;
     expandSequence: number;
+    pageref?:(el:HTMLElement)=>void;
 }
-const PageRow=({page,onClick,isCurrent,expanded,expandSequence}:PageRowProps)=>{
+const PageRow=({page,onClick,isCurrent,expanded,expandSequence,pageref}:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
@@ -100,7 +102,10 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence}:PageRowProps)=>{
     useEffect(() => {
         setExpanded(expanded);
     }, [expanded,expandSequence]);
-    return <React.Fragment>
+    return <div ref={(el:HTMLElement) =>{
+            if (pageref) pageref(el);
+            }
+        } className={'PageRowFrame'}>
         <ListItem
         className={className}
         selected={isCurrent}
@@ -148,7 +153,7 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence}:PageRowProps)=>{
                 )}
             </ListFrame>}
 
-    </React.Fragment>
+    </div>
 }
 export interface MainNavProps{
     current:string,
@@ -161,7 +166,12 @@ export const MainNav = (props:MainNavProps) => {
     const [expandMode,setExpandMode]=useState(props.expandMode);
     const [expandSequence,setExpandSequence]=useState(0);
     const pages=mainTree.slice(0);
-    pages.sort((a)=>(a.name===props.current)?-1:0);
+    const currentEl=useRef<HTMLElement>(null);
+    //pages.sort((a)=>(a.name===props.current)?-1:0);
+    useEffect(() => {
+        if (!currentEl.current) return;
+        scrollInContainer(currentEl.current.parentElement,currentEl.current,ScrollExeMode.vertical)
+    }, []);
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
             <ListSlot className={'iconSlot'}
@@ -193,6 +203,10 @@ export const MainNav = (props:MainNavProps) => {
             const expand=(expandMode == MainExpandMode.ALL)
                 || isCurrent && ( expandMode == MainExpandMode.CURRENT);
             return <PageRow
+                pageref={isCurrent?(el)=>{
+                    currentEl.current=el
+                    }
+                    :undefined}
                 key={page.name}
                 page={displayPage}
                 onClick={(ev: SyntheticEvent)=> {
