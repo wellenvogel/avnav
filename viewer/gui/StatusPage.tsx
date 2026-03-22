@@ -19,8 +19,7 @@ import {
     // @ts-ignore
 } from '../components/OverlayDialog';
 import Mob from '../components/Mob';
-// @ts-ignore
-import EditHandlerDialog from "../components/EditHandlerDialog";
+import {createAddDialog} from "../components/EditHandlerDialog";
 // @ts-ignore
 import {Checkbox, Input} from "../components/Inputs";
 // @ts-ignore
@@ -228,7 +227,7 @@ const StatusPage=(iprops:PageBaseProps)=>{
                     name: 'StatusAdd',
                     visible: props.config && props.connected,
                     onClick: ()=>{
-                        EditHandlerDialog.createAddDialog((id:string|number)=>setFocusId(id));
+                        createAddDialog((id:string|number)=>setFocusId(id));
                     }
                 },
                 Mob.mobDefinition(),

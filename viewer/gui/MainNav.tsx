@@ -33,9 +33,10 @@ import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import {ChartOverlayButtons} from "./DownloadPageButtons";
-import {PAGEIDS} from "../util/pageids";
+import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
+import ChannelsPageButtons from "./ChannelsPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -64,11 +65,12 @@ class Page extends CopyAware{
 
 
 const mainTree=[
-    new Page(PAGEIDS.DOWNLOAD,'settings','Charts, Overlays',
+    new Page(PAGEIDS.MAIN,'navigation',PAGE_TITLES.MAIN,
+        MainPageButtons),
+    new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
+        ChannelsPageButtons),
+    new Page(PAGEIDS.DOWNLOAD,'settings',PAGE_TITLES.DOWNLOAD,
         GeneralButtons.concat(ChartOverlayButtons),{allowedTypes:['chart','overlay']}),
-    new Page(PAGEIDS.MAIN,'navigation','Select Chart',
-        MainPageButtons
-        )
 ]
 
 

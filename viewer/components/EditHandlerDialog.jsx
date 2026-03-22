@@ -206,7 +206,7 @@ EditHandlerDialog.propTypes={
  * @param opt_child: the child identifier
  * @return {boolean}
  */
-EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handlerName)=>{
+export const createDialog=(handlerId,opt_child,opt_doneCallback,opt_handlerName)=>{
     showDialog(undefined,(props)=> {
         return <EditHandlerDialog
             {...props}
@@ -218,8 +218,9 @@ EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handler
     },undefined,opt_doneCallback);
     return true;
 };
+EditHandlerDialog.createDialog=createDialog;
 
-EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_doneCallback)=>{
+export const createNewHandlerDialog=(typeName,opt_initialParameters,opt_doneCallback)=>{
     showDialog(undefined,(props)=> {
         return <EditHandlerDialog
             {...props}
@@ -231,8 +232,9 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_don
         />
     },undefined);
 }
+EditHandlerDialog.createNewHandlerDialog=createNewHandlerDialog;
 
-EditHandlerDialog.createAddDialog=(opt_doneCallback,dialogCtx)=>{
+export const createAddDialog=(opt_doneCallback,dialogCtx)=>{
     RequestHandler.getJson({
         request:'api',
         type: 'config',
@@ -253,6 +255,6 @@ EditHandlerDialog.createAddDialog=(opt_doneCallback,dialogCtx)=>{
         })
         .catch((err)=>Toast(err));
 }
-
+EditHandlerDialog.createAddDialog=createAddDialog;
 
 export default  EditHandlerDialog;

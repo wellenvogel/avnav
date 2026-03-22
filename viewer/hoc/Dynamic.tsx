@@ -8,7 +8,7 @@
  */
 
 import globalStore from "../util/globalstore";
-import React, {Children, cloneElement, useEffect, useRef, useState} from 'react';
+import React, {Children, cloneElement, MutableRefObject, useEffect, useRef, useState} from 'react';
 import {KeyHelper} from "../util/keys";
 import {useStateRef} from "../util/UiHelper";
 import {StoreCallback} from "../util/store";
@@ -128,7 +128,9 @@ export default  function(Component:any,opt_options?:Options,opt_store?:any){
  *        can be a function
  * @param forceInitial - always set this initial value if not undefine
  */
-export const useStoreState = (storeKey:string, defaultInitialValue?:any, forceInitial?:boolean) => {
+export type StoreState=[v:any,setV:(v:any) => void,ref:MutableRefObject<any>];
+    
+export const useStoreState = (storeKey:string, defaultInitialValue?:any, forceInitial?:boolean):StoreState => {
     const [value, setValue,valueRef] = useStateRef(() => {
         let iv = globalStore.getData(storeKey);
         if (iv === undefined || forceInitial) {

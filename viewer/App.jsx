@@ -57,6 +57,7 @@ import {HistoryContext, useHistory} from "./components/HistoryProvider";
 import {RouteSyncDialog} from "./components/RouteInfoHelper";
 import {PAGEIDS} from "./util/pageids";
 import {useDialogContext} from "./components/DialogContext";
+import ChannelsPage from "./gui/ChannelsPage";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -105,7 +106,8 @@ const pages={
     [PAGEIDS.WARNING]:WarningPage,
     [PAGEIDS.VIEW]:ViewPage,
     [PAGEIDS.ADDCFG]: AddonConfigPage,
-    [PAGEIDS.IMPORT]: ImporterPage
+    [PAGEIDS.IMPORT]: ImporterPage,
+    [PAGEIDS.CHANNELS]: ChannelsPage
 };
 const Router = (props) => {
     const history = useHistory();

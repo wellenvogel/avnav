@@ -20,44 +20,18 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-export const PAGEIDS={
-    MAIN:'mainpage',
-    INFO:'infopage',
-    GPS:'gpspage',
-    AIS:'aispage',
-    ADDON:'addonpage',
-    ADDR:'addresspage',
-    STATUS:'statuspage',
-    WPA:'wpapage',
-    DOWNLOAD:'downloadpage',
-    SETTINGS:'settingspage',
-    NAV:'navpage',
-    ROUTE:'editroutepage',
-    WARNING:'warningpage',
-    VIEW:'viewpage',
-    ADDCFG:'addonconfigpage',
-    IMPORT:'importerpage',
-    CHANNELS:'channelspage'
-}
+import {IDialogContext} from "./DialogContext";
 
-export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
-    ADDCFG: "",
-    ADDON: "",
-    ADDR: "",
-    AIS: "",
-    CHANNELS: "Connections/Devices",
-    DOWNLOAD: "",
-    GPS: "",
-    IMPORT: "",
-    INFO: "",
-    MAIN: "Select Chart",
-    NAV: "",
-    ROUTE: "Routes",
-    SETTINGS: "Display Settings",
-    STATUS: "Server Status",
-    VIEW: "",
-    WARNING: "",
-    WPA: ""
-
-}
- 
+export type DoneFunction=(id:string|number)=>void;
+export declare function createAddDialog(
+    opt_doneCallback?:DoneFunction,
+    dialogCtx?:IDialogContext):void
+export declare function createDialog(
+    handlerId:string|number,
+    opt_child?:string,
+    opt_doneCallback?:DoneFunction,
+    opt_handlerName?:string):void
+export declare function createNewHandlerDialog(
+    typeName:string,
+    opt_initialParameters?:Record<string,any>,
+    opt_doneCallback?:DoneFunction):void

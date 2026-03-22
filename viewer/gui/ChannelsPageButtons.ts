@@ -20,44 +20,14 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-export const PAGEIDS={
-    MAIN:'mainpage',
-    INFO:'infopage',
-    GPS:'gpspage',
-    AIS:'aispage',
-    ADDON:'addonpage',
-    ADDR:'addresspage',
-    STATUS:'statuspage',
-    WPA:'wpapage',
-    DOWNLOAD:'downloadpage',
-    SETTINGS:'settingspage',
-    NAV:'navpage',
-    ROUTE:'editroutepage',
-    WARNING:'warningpage',
-    VIEW:'viewpage',
-    ADDCFG:'addonconfigpage',
-    IMPORT:'importerpage',
-    CHANNELS:'channelspage'
-}
+ import GeneralButtons from "./GeneralButtons";
+import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
 
-export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
-    ADDCFG: "",
-    ADDON: "",
-    ADDR: "",
-    AIS: "",
-    CHANNELS: "Connections/Devices",
-    DOWNLOAD: "",
-    GPS: "",
-    IMPORT: "",
-    INFO: "",
-    MAIN: "Select Chart",
-    NAV: "",
-    ROUTE: "Routes",
-    SETTINGS: "Display Settings",
-    STATUS: "Server Status",
-    VIEW: "",
-    WARNING: "",
-    WPA: ""
-
-}
- 
+export default GeneralButtons.concat(propsToDefs([
+    {
+        name: 'StatusAdd',
+        displayName: "add connection",
+        storeKeys: {visible:keys.properties.connectedMode}
+    }
+]))

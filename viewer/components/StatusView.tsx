@@ -25,8 +25,7 @@ import ItemList from "./ItemList";
 // @ts-ignore
 import Requests from '../util/requests';
 import {StatusItem} from './StatusItems';
-// @ts-ignore
-import EditHandlerDialog from './EditHandlerDialog';
+import {createDialog} from './EditHandlerDialog';
 import {ScrollExeMode, scrollInContainer, useTimer} from '../util/UiHelper';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
@@ -35,7 +34,7 @@ import Helper from "../util/helper";
 
 export interface StatusViewProps{
     className?: string;
-    kinds?:string[];
+    kinds?:ChannelKinds[];
     allowEdit?:boolean;
     focusItem?:number|string,
     callback?:(handlerList?:any[])=>void
@@ -55,14 +54,26 @@ const ACTIVE_CLASS='activeEntry';
 export default (props:StatusViewProps)=>{
     const [statusList, setStatusList] = useState<any[]>([]);
     const connected=globalstore.getData(keys.properties.connectedMode);
+    const allowEdit=Helper.unsetorTrue(props.allowEdit);
     const [focusItem,setFocusItem]=useState(props.focusItem);
     const lastFocusItem=useRef(null);
     const listRef=useRef(null);
     const timer=useTimer((sequence)=>{
         queryStatus().then((data)=>{
-            setStatusList(data);
+            let displayData=[];
+            if (props.kinds){
+                for (const handler of data){
+                    if (props.kinds.indexOf(handler.kind) >= 0){
+                        displayData.push(handler);
+                    }
+                }
+            }
+            else{
+                displayData=data
+            }
+            setStatusList(displayData);
             if (props.callback){
-                props.callback(data);
+                props.callback(displayData);
             }
             timer.startTimer(sequence);
         },
@@ -89,7 +100,7 @@ export default (props:StatusViewProps)=>{
     const itemClass=useCallback((iprops:any)=><StatusItem
             className={iprops.id === focusItem ? ACTIVE_CLASS: ""}
             connected={connected}
-            allowEdit={props.allowEdit}
+            allowEdit={allowEdit}
             finishCallback={
                 () => {
                     window.setTimeout(() => {
@@ -103,7 +114,7 @@ export default (props:StatusViewProps)=>{
                  child?: string,
                  opt_doneCallback?: () => void) => {
                     setFocusItem(handlerId);
-                    EditHandlerDialog.createDialog(handlerId, child, opt_doneCallback)
+                    createDialog(handlerId, child, opt_doneCallback)
                 }
             }
             {...iprops}/>
@@ -118,3 +129,15 @@ export default (props:StatusViewProps)=>{
     />
 }
 
+export enum ChannelKinds {
+    CHART = 'chart',
+    TRACK = 'track',
+    ROUTE = 'route',
+    LAYOUT = 'layout',
+    SETTINGS = 'settings',
+    PLUGINS = 'plugins',
+    CHANNEL = 'channel',
+    USER = 'user',
+    ADDON = 'addon',
+    OTHER = 'other'
+}
