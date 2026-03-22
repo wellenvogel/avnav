@@ -14,7 +14,7 @@ import keys, {KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import northImage from '../images/nadel_mit.png';
-import KeyHandler from '../util/keyhandler.js';
+import KeyHandler from '../util/keyhandler.ts';
 import assign from 'object-assign';
 import AvNavChartSource from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';

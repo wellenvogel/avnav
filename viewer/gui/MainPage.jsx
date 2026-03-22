@@ -168,7 +168,7 @@ class MainPage extends React.Component {
         this.buttonActions = {
             ShowStatus: {
                 onClick: () => {
-                    this.props.history.push('statuspage')
+                    this.props.history.push(PAGEIDS.SERVER)
                 }
             },
             ShowSettings: {

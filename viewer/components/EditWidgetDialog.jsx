@@ -30,7 +30,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, DialogRow, showDialog} from './OverlayDialog.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import {Input, InputSelect} from './Inputs.jsx';
-import DB from './DialogButton.jsx';
+import DB from './DialogButton.tsx';
 import cloneDeep from 'clone-deep';
 import Compare from "../util/compare";
 import {EditableParameterListUI} from "./EditableParameterUI";

@@ -28,7 +28,7 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from './OverlayDialog.jsx';
 import assign from 'object-assign';
-import DB from './DialogButton.jsx';
+import DB from './DialogButton.tsx';
 import RequestHandler from "../util/requests";
 import Toast from "./Toast";
 import editableParameterUIFactory, {EditableParameterListUI} from "./EditableParameterUI";

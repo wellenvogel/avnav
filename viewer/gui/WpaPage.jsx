@@ -13,7 +13,7 @@ import Requests from '../util/requests.js';
 import Helper, {avitem} from '../util/helper.ts';
 import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
-import DB from '../components/DialogButton.jsx';
+import DB from '../components/DialogButton.tsx';
 import Mob from '../components/Mob.ts';
 import Store from "../util/store";
 import {PAGEIDS} from "../util/pageids";

@@ -24,10 +24,11 @@
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 
-export default GeneralButtons.concat(propsToDefs([
+export const ChannelsPageButtonsPlain=propsToDefs([
     {
         name: 'StatusAdd',
         displayName: "add connection",
         storeKeys: {visible:keys.properties.connectedMode}
     }
-]))
+])
+export default GeneralButtons.concat(ChannelsPageButtonsPlain);

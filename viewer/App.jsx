@@ -10,7 +10,7 @@ import GpsPage from './gui/GpsPage.jsx';
 import AisPage from './gui/AisPage.jsx';
 import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
-import StatusPage from './gui/StatusPage.tsx';
+import ServerPage from './gui/ServerPage.tsx';
 import WpaPage from './gui/WpaPage.jsx';
 import DownloadPage from './gui/DownloadPage.tsx';
 import SettingsPage from './gui/SettingsPage.jsx';
@@ -28,7 +28,7 @@ import globalStore from './util/globalstore.ts';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.tsx';
-import KeyHandler from './util/keyhandler.js';
+import KeyHandler from './util/keyhandler.ts';
 import LayoutHandler from './util/layouthandler.js';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
@@ -97,7 +97,7 @@ const pages={
     [PAGEIDS.AIS]: AisPage,
     [PAGEIDS.ADDON]:AddOnPage,
     [PAGEIDS.ADDR]:AddressPage,
-    [PAGEIDS.STATUS]:StatusPage,
+    [PAGEIDS.SERVER]:ServerPage,
     [PAGEIDS.WPA]:WpaPage,
     [PAGEIDS.DOWNLOAD]:DownloadPage,
     [PAGEIDS.SETTINGS]:SettingsPage,

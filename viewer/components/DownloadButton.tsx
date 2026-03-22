@@ -23,15 +23,14 @@
  ###############################################################################
  */
 import React, {useRef} from 'react';
-import PropTypes from 'prop-types';
 import DB from './DialogButton';
-import Button from './Button';
+import Button, {ButtonEvent} from './Button';
 import Toast from "./Toast";
 
-const toBase64=(val)=>{
+const toBase64=(val:any)=>{
     if (typeof(val) === 'string'){
-        val=new TextEncoder().encode(val);
-        const binString=Array.from(val,(byte)=>{
+        const aval =new TextEncoder().encode(val);
+        const binString=Array.from(aval,(byte)=>{
             return String.fromCodePoint(byte)
         }).join("");
         return window.btoa(binString);
@@ -39,10 +38,21 @@ const toBase64=(val)=>{
     return window.btoa(val);
 }
 
-const DownloadButton=(props)=>{
-    const hiddenA=useRef();
-    const downloadFrame=useRef();
-    const saveLocal=async (fileName)=>{
+export interface DownloadButtonProps{
+    localData?: any|Promise<any>|(()=>any);
+    url: string|(()=>string);
+    className?: string;
+    useDialogButton?: boolean;
+    fileName?:  string;
+    onClick?: (ev:ButtonEvent) => void;
+    children?: React.ReactNode;
+    name?:string;
+    close?:boolean;
+}
+const DownloadButton=(props:DownloadButtonProps)=>{
+    const hiddenA=useRef<HTMLAnchorElement>();
+    const downloadFrame=useRef<HTMLIFrameElement>();
+    const saveLocal=async (fileName:string)=>{
         if (! hiddenA.current) return;
         if (!props.localData) return false;
         let data=props.localData;
@@ -52,17 +62,19 @@ const DownloadButton=(props)=>{
         if (data instanceof Promise){
             data=await data;
         }
-        let dataUrl="data:application/octet-stream;base64,"+toBase64(data);
+        const dataUrl="data:application/octet-stream;base64,"+toBase64(data);
+        // @ts-ignore
         if (window.avnavAndroid && window.avnavAndroid.dataDownload){
-           window.avnavAndroid.dataDownload(dataUrl,fileName,"application/octet-stream");
+           // @ts-ignore
+            window.avnavAndroid.dataDownload(dataUrl,fileName,"application/octet-stream");
         }
         else {
             hiddenA.current.href = dataUrl;
             hiddenA.current.click();
         }
     }
-    let {useDialogButton,url,localData,fileName,...forward}=props;
-    let Bt = useDialogButton ? DB : Button;
+    const {useDialogButton,url,localData,fileName,...forward}=props;
+    const Bt = useDialogButton ? DB : Button;
     if (!url && ! localData) return null;
         return (
             <React.Fragment>
@@ -78,6 +90,7 @@ const DownloadButton=(props)=>{
                     className="downloadFrame"
                     onLoad={(ev) => {
                         let txt;
+                        // @ts-ignore
                         const doc= ev.target.contentDocument;
                         if (doc.body) txt=doc.body.textContent;
                         if (!txt) {
@@ -89,6 +102,7 @@ const DownloadButton=(props)=>{
                     ref={downloadFrame}/>
                 }
                 <Bt
+                    name={props.name||'download'}
                     {...forward}
                     close={useDialogButton?false:undefined}
                     onClick={(ev) => {
@@ -100,11 +114,13 @@ const DownloadButton=(props)=>{
                         }
                         else {
                             if (downloadFrame.current) {
-                                let src=url;
                                 if (typeof(url) === 'function') {
-                                    src=url();
+                                    downloadFrame.current.src=url();
                                 }
-                                downloadFrame.current.src=src;
+                                else {
+                                    downloadFrame.current.src=url;
+                                }
+
                             }
                         }
                         if (props.onClick) props.onClick(ev);
@@ -116,13 +132,5 @@ const DownloadButton=(props)=>{
         )
 }
 
-DownloadButton.propTypes={
-    localData: PropTypes.any,
-    url: PropTypes.oneOfType([PropTypes.string,PropTypes.func]),
-    className: PropTypes.string,
-    useDialogButton: PropTypes.bool,
-    fileName:  PropTypes.string,
-    onClick: PropTypes.func
-}
 
 export default DownloadButton;

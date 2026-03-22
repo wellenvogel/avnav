@@ -1,26 +1,40 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
+import {useKeyEventHandlerPlain} from '../util/UiHelper';
 import KeyHandler from '../util/keyhandler';
 import {concatsp, setav} from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
-import {useDialogContext} from "./DialogContext";
+import {IDialogContext, useDialogContext} from "./DialogContext";
+import {ButtonEvent, ButtonEventHandler} from "./Button";
 
+export interface DialogButtonProps{
+    onClick?: ButtonEventHandler;
+    onPreClose?: (ev:ButtonEvent,ctx:IDialogContext)=>boolean;
+    className?: string;
+    name?: string;
+    icon?: string;
+    style?: Record<string, any>;
+    disabled?: boolean;
+    toggle?: boolean;
+    visible?: boolean;
+    close?: boolean;  //default: true
+    children?: React.ReactNode;
+}
 const COMPONENT="dialogButton";
-const DialogButton=(props)=>{
+const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
         KeyHandler.registerDialogComponent(COMPONENT);
+    // eslint-disable-next-line prefer-const
         let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,...forward}=useStore(props);
-        let spanStyle={};
+        const spanStyle:Record<string, any>={};
         if (icon !== undefined) {
             spanStyle.backgroundImage = "url(" + icon + ")";
         }
-        let add = {};
+        const add:Record<string, any> = {};
         if (disabled) {
             add.disabled = true;
         }
         if (close === undefined) close=true;
-        const clickHandler=(ev)=>{
+        const clickHandler=(ev:ButtonEvent)=>{
             setav(ev,{dialogContext:dialogContext});
             if (! onClick || close) {
                 let closeDialog=true;
@@ -50,17 +64,6 @@ const DialogButton=(props)=>{
         );
     }
 
-DialogButton.propTypes={
-    onClick: PropTypes.func,
-    onPreClose: PropTypes.func,
-    className: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    icon: PropTypes.string,
-    style: PropTypes.object,
-    disabled: PropTypes.bool,
-    toggle: PropTypes.bool,
-    visible: PropTypes.bool,
-    close: PropTypes.bool  //default: true
-};
+
 
 export default DialogButton;

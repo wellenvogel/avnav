@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import ColorPicker from '../components/ColorPicker.jsx';
-import DB from './DialogButton.jsx';
+import DB from './DialogButton.tsx';
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 
 const ColorDialog =(props)=>{

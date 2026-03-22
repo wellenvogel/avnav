@@ -24,19 +24,27 @@
  * dialog for log file display
  */
 import React, {useEffect, useRef, useState} from "react";
+// @ts-ignore
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import DB from "./DialogButton";
+// @ts-ignore
 import Formatter from "../util/formatter";
-import PropTypes from 'prop-types';
 import {useTimer} from "../util/UiHelper";
+// @ts-ignore
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import DownloadButton from "./DownloadButton";
-
-const LogDialog=(props)=> {
+export interface LogDialogProps{
+    baseUrl: string;
+    title?: string;
+    maxBytes?: number;
+    dlname?:string;
+    autoreload?: boolean;
+}
+const LogDialog=(props:LogDialogProps)=> {
     const [log,setLog]=useState();
     const [autoreload,setAutoReload]=useState(props.autoreload);
-    const mainref=useRef();
+    const mainref=useRef<HTMLDivElement>();
     const timer= useTimer((seq)=> {
         if (autoreload) {
             getLog().then(() => timer.startTimer(seq));
@@ -56,11 +64,11 @@ const LogDialog=(props)=> {
         return Requests.getHtmlOrText(props.baseUrl, {useNavUrl:false},{
             maxBytes:props.maxBytes||500000
         })
-            .then((data)=>{
+            .then((data:any)=>{
                 setLog(data);
                 return data;
             })
-            .catch((e)=>Toast(e))
+            .catch((e:any)=>Toast(e))
     }
     return <DialogFrame className="selectDialog LogDialog" title={props.title||'AvNav log'}>
             <div className="logDisplay dialogRow" ref={mainref}>
@@ -78,7 +86,7 @@ const LogDialog=(props)=> {
                     name={"download"}
                     useDialogButton={true}
                     url={()=>{
-                        let name=props.dlname?props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
+                        const name=props.dlname?props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
                         return props.baseUrl+"&filename="+encodeURIComponent(name);
                     }}
                     close={false}
@@ -99,11 +107,4 @@ const LogDialog=(props)=> {
         </DialogFrame>
 }
 
-LogDialog.propTypes={
-    baseUrl: PropTypes.string.isRequired,
-    title: PropTypes.string,
-    maxBytes: PropTypes.number,
-    dlname:PropTypes.string,
-    autoreload: PropTypes.bool
-}
 export default LogDialog;

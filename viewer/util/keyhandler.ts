@@ -1,9 +1,35 @@
-import base from '../base.ts';
+import base from '../base';
+// @ts-ignore
 import remotechannel, {COMMANDS} from "./remotechannel";
+import {PAGEIDS} from "./pageids";
 
-
+type IDX=number
+export type Page=typeof PAGEIDS[keyof typeof PAGEIDS];
+export type ActionFunction=(component:string,action:string)=>void
+/**
+ * the type of one key mapping
+ * dict with key being the action and values being lists of keys
+ */
+export type KeyMapping=Record<string, string|string[]>;
+/**
+ * the mapping for a component
+ */
+export type ComponentMapping=Record<string,KeyMapping>;
+export type MappingPage=Page|'all';
+/**
+ * the global key mappings
+ */
+export type KeyMappings=Partial<Record<MappingPage, ComponentMapping>>
 class Mapping{
-    constructor(idx,page,component,action){
+    component: string;
+    action: string;
+    page: MappingPage;
+    idx: IDX;
+    constructor(
+        idx:IDX,
+        page:MappingPage,
+        component:string,
+        action:string){
         this.component=component;
         this.action=action;
         this.page=page;
@@ -16,10 +42,18 @@ export const PageKeyMode = {
     NONE: 'none',
     EXPLICIT: 'explicit'
 }
-
+type Actions=Record<string,ActionFunction[]>
 class KeyHandler{
     static CONFIG='_config'; //entry at page mappings for config values
     static CFG_mode='mode'; //config for page mode
+    private keymappings: KeyMappings;
+    private merges: Record<number,KeyMappings>;
+    private mergeLevels: number[];
+    private registrations: Record<string,Actions>;
+    private page: Page;
+    private pageConfig: Record<string,typeof PageKeyMode[keyof typeof PageKeyMode]>;
+    private ALLPAGES: string;
+    private dialogComponents: string[];
     constructor(){
         this.keymappings={};
         this.merges={};
@@ -29,22 +63,25 @@ class KeyHandler{
         this.pageConfig={};
         this.ALLPAGES="all";
         this.dialogComponents=[]; //components registered here will be handled in dialogs
-        this.remoteSubscription=remotechannel.subscribe(COMMANDS.key,(msg)=>{
+        remotechannel.subscribe(COMMANDS.key,(msg:string)=>{
             this.handleKey(msg);
         })
     }
 
-    registerDialogComponent(component){
+    registerDialogComponent(component:string){
         if (component === KeyHandler.CONFIG) throw new Error("unable to register component "+component);
         if (this.dialogComponents.indexOf(component)>=0) return;
         this.dialogComponents.push(component);
     }
-    registerHandler(handlerFunction,component,action){
+    registerHandler(
+        handlerFunction:ActionFunction,
+        component:string,
+        action:string|string[]){
         if (component === KeyHandler.CONFIG) throw new Error("unable to register component "+component);
         if (! this.registrations[component]){
             this.registrations[component]={};
         }
-        let regComponent=this.registrations[component];
+        const regComponent=this.registrations[component];
         if (! (action instanceof Array)){
             action=[action]
         }
@@ -56,12 +93,12 @@ class KeyHandler{
         }
         return true;
     }
-    deregisterHandler(handlerFunction){
-        for (let k in this.registrations){
-            let regComponent=this.registrations[k];
-            for (let a in regComponent){
-                let action=regComponent[a];
-                let idx=action.indexOf(handlerFunction);
+    deregisterHandler(handlerFunction:ActionFunction){
+        for (const k in this.registrations){
+            const regComponent=this.registrations[k];
+            for (const a in regComponent){
+                const action=regComponent[a];
+                const idx=action.indexOf(handlerFunction);
                 if (idx >= 0){
                     action.splice(idx,1);
                 }
@@ -80,32 +117,32 @@ class KeyHandler{
      *                  }
      *  use "all" for all pages
      */
-    registerMappings(mappings){
+    registerMappings(mappings:KeyMappings){
         //TODO: checks
         this.keymappings=mappings;
     }
 
-    mergeMappings(level,mappings){
+    mergeMappings(level:number,mappings:KeyMappings){
         this.merges[level]=mappings;
         if (this.mergeLevels.indexOf(level) < 0){
             this.mergeLevels.push(level);
             this.mergeLevels.sort();
         }
     }
-    resetMerge(level){
+    resetMerge(level:number){
         delete this.merges[level];
-        let idx=this.mergeLevels.indexOf(level);
+        const idx=this.mergeLevels.indexOf(level);
         if (idx < 0) return;
         this.mergeLevels.splice(idx,1);
         this.mergeLevels.sort();
     }
 
-    setPage(page){
+    setPage(page:Page){
         this.page=page;
         this.pageConfig=this.findConfigForPage(page);
     }
-    findConfigForPage(page){
-        let rt={};
+    findConfigForPage(page:Page){
+        const rt={};
         for (let i=-1;i<this.mergeLevels.length;i++){
             const mapping=(i<0)?this.keymappings:this.merges[this.mergeLevels[i]];
             if (! mapping) continue;
@@ -116,8 +153,8 @@ class KeyHandler{
         }
         return rt;
     }
-    findMappingForPage(key,page,opt_inDialog) {
-        let mapping=this.findMappingForPageInternal(key,page,opt_inDialog);
+    findMappingForPage(key:string,page:Page,opt_inDialog?:boolean) {
+        const mapping=this.findMappingForPageInternal(key,page,opt_inDialog);
         if (! mapping) return;
         //check if we have the same page/action on higher merges
         //this would mean the key is not included there any more
@@ -126,13 +163,13 @@ class KeyHandler{
         if (startIdx === undefined) startIdx=0;
         else startIdx++;
         for (let idx=startIdx;idx<this.mergeLevels.length;idx++){
-            let mergeIndex=this.mergeLevels[idx];
-            let mappings=this.merges[mergeIndex];
+            const mergeIndex=this.mergeLevels[idx];
+            const mappings=this.merges[mergeIndex];
             if (! mappings) continue;
             //we need to use mapping.page as this could be "all" now
-            let pageActions=mappings[mapping.page];
+            const pageActions=mappings[mapping.page];
             if (! pageActions) continue;
-            let component=pageActions[mapping.component];
+            const component=pageActions[mapping.component];
             if (! component) continue;
             if (component[mapping.action] !== undefined){
                 //we have an entry for this action
@@ -146,7 +183,7 @@ class KeyHandler{
 
     }
 
-    findMappingForPageInternal(key,page,opt_inDialog){
+    findMappingForPageInternal(key:string,page:Page,opt_inDialog?:boolean){
         let mapping=undefined;
         for (let lidx=this.mergeLevels.length-1;lidx>=0;lidx--) {
             try {
@@ -165,20 +202,20 @@ class KeyHandler{
         return this.findMappingForType(undefined,key,this.ALLPAGES,opt_inDialog);
 
     }
-    hasRegistrations(component,action){
-        let compReg=this.registrations[component];
+    hasRegistrations(component:string,action:string){
+        const compReg=this.registrations[component];
         if (!compReg) return false;
-        for (let a in compReg){
+        for (const a in compReg){
             if (a === action) {
                 return compReg[a].length > 0;
             }
         }
         return false;
     }
-    findMappingForType(idx,key,page,opt_inDialog){
+    findMappingForType(idx:number,key:string,page:Page,opt_inDialog?:boolean){
         let mappings;
         if (idx !== undefined){
-            let mergeIndex=this.mergeLevels[idx];
+            const mergeIndex=this.mergeLevels[idx];
             mappings=this.merges[mergeIndex];
         }
         else{
@@ -188,19 +225,19 @@ class KeyHandler{
         if (key === undefined) return;
         if (page === undefined) return;
         if (! mappings[page]) return;
-        for (let k in mappings[page]){
+        for (const k in mappings[page]){
             if (opt_inDialog){
                 if (this.dialogComponents.indexOf(k) < 0){
                     continue;
                 }
             }
-            let component=mappings[page][k];
-            for (let a in component){
+            const component=mappings[page][k];
+            for (const a in component){
                 if (! this.hasRegistrations(k,a)) continue;
-                let actionKey=component[a];
-                if (actionKey instanceof Array){
-                    for (let i in actionKey){
-                        if (actionKey[i] === key){
+                const actionKey=component[a];
+                if (Array.isArray(actionKey)){
+                    for (const i of actionKey){
+                        if (i === key){
                             return new Mapping(idx,page,k,a);
                         }
                     }
@@ -214,7 +251,7 @@ class KeyHandler{
         }
     }
 
-    handleKeyEvent(keyEvent,opt_inDialog) {
+    handleKeyEvent(keyEvent:KeyboardEvent,opt_inDialog?:boolean) {
         if (!keyEvent) return;
         let key = keyEvent.key;
         if (!key) return;
@@ -223,23 +260,23 @@ class KeyHandler{
         }
         return this.handleKey(key, opt_inDialog, keyEvent)
     }
-    handleKey(key,opt_inDialog,opt_keyEvent){
+    handleKey(key:string,opt_inDialog?:boolean,opt_keyEvent?:KeyboardEvent) {
         base.log("handle key: "+key);
         if (! this.keymappings) return;
         if (this.pageConfig[KeyHandler.CFG_mode] === PageKeyMode.NONE) return
-        let page=this.page;
-        let mapping=this.findMappingForPage(key,page,opt_inDialog);
+        const page=this.page;
+        const mapping=this.findMappingForPage(key,page,opt_inDialog);
         if (! mapping) return;
         if (opt_keyEvent) {
             opt_keyEvent.preventDefault();
             opt_keyEvent.stopPropagation();
         }
         base.log("found keymapping, page="+page+", component="+mapping.component+", action="+mapping.action);
-        let regComponent=this.registrations[mapping.component];
+        const regComponent=this.registrations[mapping.component];
         if (! regComponent) return;
-        let action=regComponent[mapping.action];
+        const action=regComponent[mapping.action];
         if (! action) return;
-        for (let i in action){
+        for (const i in action){
             action[i](mapping.component,mapping.action);
         }
     }

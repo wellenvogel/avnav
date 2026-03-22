@@ -32,6 +32,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Htm from "htm";
 import * as OpenLayers from 'ol/index';
+import {PAGEIDS} from "../util/pageids";
 
 
 
@@ -521,7 +522,7 @@ export interface ProxyOptions{
     x:number;       //x
     y:number;       //y
 }
-export type Page="mainpage"|"navpage"|"gpspage"|"addonpage"|"wpapage"|"settingspage"|"editroutepage"|"downloadpage"|"statuspage"
+export type Page=keyof typeof PAGEIDS;
 export interface UserButton{
     name: string;                   //will set the CSS class, unique inside the plugin
     icon?: string|URL;              //relative to plugin base

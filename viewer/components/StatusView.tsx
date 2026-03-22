@@ -87,7 +87,7 @@ export default (props:StatusViewProps)=>{
     useEffect(()=>{
         setFocusItem(props.focusItem);
         timer.restart(true);
-    },[props.focusItem]);
+    },[props.focusItem,props.kinds]);
     useEffect(() => {
         if (lastFocusItem.current === focusItem || ! focusItem) return;
         if (!listRef.current) return;

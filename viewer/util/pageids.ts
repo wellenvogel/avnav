@@ -27,7 +27,7 @@ export const PAGEIDS={
     AIS:'aispage',
     ADDON:'addonpage',
     ADDR:'addresspage',
-    STATUS:'statuspage',
+    SERVER:'serverpage',
     WPA:'wpapage',
     DOWNLOAD:'downloadpage',
     SETTINGS:'settingspage',
@@ -54,7 +54,7 @@ export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     NAV: "",
     ROUTE: "Routes",
     SETTINGS: "Display Settings",
-    STATUS: "Server Status",
+    SERVER: "Server",
     VIEW: "",
     WARNING: "",
     WPA: ""

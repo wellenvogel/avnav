@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
 import {Checkbox} from './Inputs.jsx';
-import DB from './DialogButton.jsx';
+import DB from './DialogButton.tsx';
 import cloneDeep from "clone-deep";
 
 const OPTION_COMBINATIONS=[

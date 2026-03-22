@@ -1,5 +1,5 @@
 import globalStore from './globalstore.ts';
-import KeyHandler from './keyhandler.js';
+import KeyHandler from './keyhandler.ts';
 import assign from 'object-assign';
 import shallowcompare from "./compare";
 import {useEffect, useRef, useState} from "react";

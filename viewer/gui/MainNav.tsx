@@ -37,6 +37,7 @@ import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
+import ServerPageButtons from "./ServerPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -69,8 +70,10 @@ const mainTree=[
         MainPageButtons),
     new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
         ChannelsPageButtons),
+    new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,
+        ServerPageButtons),
     new Page(PAGEIDS.DOWNLOAD,'settings',PAGE_TITLES.DOWNLOAD,
-        GeneralButtons.concat(ChartOverlayButtons),{allowedTypes:['chart','overlay']}),
+        GeneralButtons.concat(ChartOverlayButtons)),
 ]
 
 

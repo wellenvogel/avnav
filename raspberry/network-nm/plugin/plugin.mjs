@@ -573,5 +573,5 @@
         storeKeys: {
                 toggle:KVISIBLE
             },
-    },'statuspage');
+    },'serverpage');
  }

@@ -9,7 +9,7 @@
 
 import React, {Children, cloneElement, forwardRef, useEffect, useRef, useState} from 'react';
 import {useInputMonitor} from '../hoc/InputMonitor.jsx';
-import DialogButton from './DialogButton.jsx';
+import DialogButton from './DialogButton.tsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
 import Helper, {concatsp} from "../util/helper";

@@ -6,7 +6,7 @@ import {hideToast} from './Toast.tsx';
 import WidgetFactory from './WidgetFactory.jsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
-import KeyHandler from '../util/keyhandler.js';
+import KeyHandler from '../util/keyhandler.ts';
 import AlarmHandler from '../nav/alarmhandler.js';
 import {useTimer} from "../util/UiHelper";
 import assign from 'object-assign';

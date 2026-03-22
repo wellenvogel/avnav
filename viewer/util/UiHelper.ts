@@ -1,6 +1,6 @@
 import {SyntheticEvent, useEffect, useRef, useState} from "react";
 // @ts-ignore
-import KeyHandler from './keyhandler.js';
+import KeyHandler from './keyhandler';
 // @ts-ignore
 import Requests from './requests';
 import base from "../base";
