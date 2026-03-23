@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import GeneralButtons from "./GeneralButtons";
+import GeneralButtons, {Connected} from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 
@@ -28,14 +28,6 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'StatusAdd',
         displayName:'new route',
-    },
-    {
-        name:'ServerView',
-        displayName: 'server settings',
-    },
-    {
-        name:'ItemsView',
-        displayName: 'stored routes',
     },
     {
         name: 'SyncRoutes',
@@ -50,6 +42,15 @@ export default GeneralButtons.concat(propsToDefs([
                 disabled: !state.enabled
             }
         },
+    },
+    Connected,
+    {
+        name:'ServerView',
+        displayName: 'server settings',
+    },
+    {
+        name:'ItemsView',
+        displayName: 'stored routes',
     },
 ]))
 

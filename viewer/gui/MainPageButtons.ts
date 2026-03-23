@@ -32,7 +32,7 @@ import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../components/Fullscreen';
 // @ts-ignore
 import splitsupport from '../util/splitsupport';
-import GeneralButtons from "./GeneralButtons";
+import GeneralButtons, {Connected} from "./GeneralButtons";
 
 export default updateButtons(GeneralButtons.concat(propsToDefs([
     {
@@ -51,22 +51,7 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
         editDisable: true,
         overflow: true
     },
-    {
-        name: 'Connected',
-        displayName: 'connected',
-        storeKeys: {
-            onAndroid:keys.gui.global.onAndroid,
-            connected: keys.properties.connectedMode,
-            canConnect: keys.gui.capabilities.canConnect},
-        updateFunction: (state) => {
-            return {
-                visible: !state.onAndroid && state.canConnect,
-                toggle: state.connected
-            }
-        },
-        editDisable: true,
-        overflow: true
-    },
+    Connected,
     {
         name: 'ShowGps',
         displayName: 'dashboard',

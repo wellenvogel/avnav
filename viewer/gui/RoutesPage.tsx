@@ -44,6 +44,7 @@ import Toast from "../components/Toast";
 import {showDialog} from "../components/OverlayDialog";
 // @ts-ignore
 import {RouteSyncDialog} from '../components/RouteInfoHelper';
+import globalstore from "../util/globalstore";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -92,7 +93,14 @@ const RoutesPage=(props:RoutesPageProps)=>{
                      showEmpty={true}
                  />)
              }
-         }
+         },
+         Connected: {
+             onClick: () => {
+                 let con = globalstore.getData(keys.properties.connectedMode, false);
+                 con = !con;
+                 globalstore.storeData(keys.properties.connectedMode, con);
+             }
+         },
      }
      buttonListRef.current=updateButtons(RoutesPageButtons,buttonActions);
      useInitialButton(buttonListRef);

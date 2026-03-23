@@ -21,8 +21,9 @@
  #
  */
 
-import {propsToDefs} from "../components/Button";
+import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import mob from '../components/Mob';
+import keys from "../util/keys";
 export default propsToDefs([
     {
         name:'Cancel',
@@ -31,3 +32,20 @@ export default propsToDefs([
     },
     mob.mobDefinition()
 ])
+
+export const Connected:DynamicButtonProps={
+    name: 'Connected',
+    displayName: 'connected',
+    storeKeys: {
+        onAndroid:keys.gui.global.onAndroid,
+        connected: keys.properties.connectedMode,
+        canConnect: keys.gui.capabilities.canConnect},
+    updateFunction: (state) => {
+        return {
+            visible: !state.onAndroid && state.canConnect,
+            toggle: state.connected
+        }
+    },
+    editDisable: true,
+    overflow: true
+}
