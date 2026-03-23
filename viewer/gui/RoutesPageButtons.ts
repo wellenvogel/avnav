@@ -25,6 +25,10 @@ import {propsToDefs} from "../components/Button";
 
 export default GeneralButtons.concat(propsToDefs([
     {
+        name:'StatusAdd',
+        displayName:'new route',
+    },
+    {
         name:'ServerView',
         displayName: 'server settings',
     },

@@ -38,6 +38,7 @@ export interface StatusViewProps{
     allowEdit?:boolean;
     focusItem?:number|string,
     callback?:(handlerList?:any[])=>void
+    noFocusItem?:boolean;
 }
 const queryStatus= async ():Promise<any[]>=>{
     return Requests.getJson({
@@ -85,7 +86,7 @@ export default (props:StatusViewProps)=>{
             })
     },3000);
     useEffect(()=>{
-        setFocusItem(props.focusItem);
+        if (! props.noFocusItem)setFocusItem(props.focusItem);
         timer.restart(true);
     },[props.focusItem,props.kinds]);
     useEffect(() => {
@@ -113,7 +114,7 @@ export default (props:StatusViewProps)=>{
                 (handlerId: string | number,
                  child?: string,
                  opt_doneCallback?: () => void) => {
-                    setFocusItem(handlerId);
+                    if (! props.noFocusItem)setFocusItem(handlerId);
                     createDialog(handlerId, child, opt_doneCallback)
                 }
             }

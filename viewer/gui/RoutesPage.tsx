@@ -35,6 +35,11 @@ import {CombinedView} from "../components/CombinedView";
 import {DownloadItemList} from '../components/DownloadItemList';
 import {ScrollType} from "../util/UiHelper";
 import Headline from "../components/Headline";
+// @ts-ignore
+import {createItemActions} from '../components/FileDialog';
+// @ts-ignore
+import NavHandler from '../nav/navdata';
+import Toast from "../components/Toast";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -57,6 +62,20 @@ const RoutesPage=(props:RoutesPageProps)=>{
          },
          Cancel:{
              onClick:()=>history.pop()
+         },
+         StatusAdd:{
+             onClick:async ()=>{
+                 setScrollType(ScrollType.right);
+                 try {
+                     const routeActions = createItemActions('route');
+                     const route = await routeActions.getCreateAction().action();
+                     const RouteHandler=NavHandler.getRoutingHandler();
+                     await RouteHandler.saveRoute(route);
+                 }catch (e){
+                     Toast(e);
+                 }
+
+             }
          }
      }
      buttonListRef.current=updateButtons(RoutesPageButtons,buttonActions);

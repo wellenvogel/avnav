@@ -15,8 +15,6 @@ import assign from 'object-assign';
 import base from '../base.ts';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import LatLon from 'geodesy/latlon-spherical';
-import requests from "../util/requests.js";
-import r from "nlf/lib/module";
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
