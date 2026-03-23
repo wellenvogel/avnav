@@ -46,6 +46,7 @@ export interface PageBaseProps{
     small: boolean;
     id: string;
     windowDimensions?:{width:number,height:number};
+    settingsSplit?: boolean; //wide enough for split mode
 }
 export interface PageProps extends PageBaseProps{
     title?: string;

@@ -41,21 +41,19 @@ const TITLE=PAGE_TITLES.NROUTE;
 export type RoutesPageProps = Partial<PageBaseProps>;
 const RoutesPage=(props:RoutesPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
-     const mustSplit=! props.windowDimensions ||
-         props.windowDimensions.width < 800; //TODO
      const history=useHistory();
      const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions={
          ServerView:{
              onClick:()=>setScrollType(ScrollType.left),
-             disabled:!mustSplit,
-             toggle: scrollType===ScrollType.left||!mustSplit,
+             disabled:props.settingsSplit,
+             toggle: scrollType===ScrollType.left||props.settingsSplit,
          },
          ItemsView:{
              onClick:()=>setScrollType(ScrollType.right),
-             disabled:!mustSplit,
-             toggle:scrollType===ScrollType.right||!mustSplit,
+             disabled:props.settingsSplit,
+             toggle:scrollType===ScrollType.right||props.settingsSplit,
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -82,7 +80,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
                               />
                               </React.Fragment>
                           }
-                          single={mustSplit}
+                          single={!props.settingsSplit}
                           scrollType={scrollType}
                           viewChanged={(left:boolean)=>setScrollType(left?ScrollType.left:ScrollType.right)}
             />
