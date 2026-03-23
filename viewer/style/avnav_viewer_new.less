@@ -156,7 +156,10 @@ body{
   background-color: var(--avnav-main-color);
   color:var(--avnav-fore-color-inv);
   font-weight: bold;
-  .flex-shrink(0);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
   &.connectionLost{
     background-color: var(--avnav-attention-color);
   }
@@ -201,12 +204,21 @@ body{
 .combinedView{
   display: flex;
   flex-direction: row;
-  overflow: hidden;
-  max-width: 100%;
-  max-height: 100%;
+  overflow-y: hidden;
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+  scroll-snap-type: x mandatory;
   .view{
-    display: flex;
+    display: inline-flex;
     flex-direction: column;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    .header{
+      height: calc(var(--avnav-headline-height) * 0.6);
+      padding: 0.2em 0.2em 0.2em 1em;
+      margin-top: 2px;
+    }
   }
 }
 //----------------------------------------------------------------------------------------

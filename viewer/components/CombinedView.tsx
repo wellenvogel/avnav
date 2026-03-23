@@ -20,23 +20,65 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React from "react";
+import React, {useEffect} from "react";
+import Helper from "../util/helper";
+import {ScrollType} from "../util/UiHelper";
 
 export interface CombinedViewProps {
     leftView: React.ReactNode;
     rightView: React.ReactNode;
-    leftActive: boolean;
-    rightActive: boolean;
+    single?:boolean
+    scrollType?:ScrollType
+}
+interface ViewProps{
+    className?:string;
+    children:React.ReactNode;
+    width?:number
+    scrollInto?:boolean;
+}
+const View=(props:ViewProps) => {
+    const className=Helper.concatsp(props.className,'view');
+    const viewRef=React.useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (! props.scrollInto || ! viewRef.current) return;
+        viewRef.current.scrollIntoView({
+            behavior: "smooth",
+            inline: "start"
+        });
+    }, [props.scrollInto]);
+    return <div className={className} ref={viewRef} style={{width:(props.width||0)+"px"}}>
+        {props.width?props.children:null}
+    </div>;
+
 }
 
-export const CombinedView=(props:CombinedViewProps)=>{
-    return <div className="combinedView">
-        <div className="leftView view">
-            {props.leftActive ?props.leftView:null}
-        </div>
-        <div className="rightView view">
-            {props.rightActive ?props.rightView:null}
-        </div>
+export const CombinedView = (props: CombinedViewProps) => {
+    const [itemWidth,setItemWidth]=React.useState(0);
+    const outerRef = React.useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (! outerRef.current) {
+            setItemWidth(0);
+            return;
+        }
+        const rect=outerRef.current.getBoundingClientRect();
+        if (props.single) setItemWidth(rect.width);
+        else setItemWidth(rect.width/2);
+    });
+    return <div className="combinedView outer" ref={outerRef}>
+            <View
+                className="leftView"
+                width={itemWidth}
+                scrollInto={props.single && props.scrollType === ScrollType.left}
+            >
+                {props.leftView}
+            </View>
+            <View
+                className="rightView"
+                width={itemWidth}
+                scrollInto={props.single && props.scrollType === ScrollType.right}
+            >
+                {props.rightView}
+            </View>
     </div>
 
 }

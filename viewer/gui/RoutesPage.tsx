@@ -33,6 +33,8 @@ import {ButtonDef, updateButtons} from "../components/Button";
 import RoutesPageButtons from "./RoutesPageButtons";
 import {CombinedView} from "../components/CombinedView";
 import {DownloadItemList} from '../components/DownloadItemList';
+import {ScrollType} from "../util/UiHelper";
+import Headline from "../components/Headline";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -42,18 +44,18 @@ const RoutesPage=(props:RoutesPageProps)=>{
      const mustSplit=! props.windowDimensions ||
          props.windowDimensions.width < 800; //TODO
      const history=useHistory();
-     const [leftVisible, setLeftVisible] = useState<boolean>(true);
+     const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions={
          ServerView:{
-             onClick:()=>setLeftVisible(true),
+             onClick:()=>setScrollType(ScrollType.left),
              disabled:!mustSplit,
-             toggle: leftVisible||!mustSplit,
+             toggle: scrollType===ScrollType.left||!mustSplit,
          },
          ItemsView:{
-             onClick:()=>setLeftVisible(false),
+             onClick:()=>setScrollType(ScrollType.right),
              disabled:!mustSplit,
-             toggle:!leftVisible||!mustSplit,
+             toggle:scrollType===ScrollType.right||!mustSplit,
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -64,18 +66,25 @@ const RoutesPage=(props:RoutesPageProps)=>{
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
             <CombinedView leftView={
+                <React.Fragment>
+                    <Headline title={"Server"}/>
                 <StatusView
                     kinds={[ChannelKinds.ROUTE]}
                 ></StatusView>
+                </React.Fragment>
             }
                           rightView={
+                            <React.Fragment>
+                              <Headline title={"Stored Routes"}></Headline>
                               <DownloadItemList
                                   type={"route"}
                                   autoreload={3000}
                               />
+                              </React.Fragment>
                           }
-                          leftActive={leftVisible || ! mustSplit}
-                          rightActive={! leftVisible || ! mustSplit}/>
+                          single={mustSplit}
+                          scrollType={scrollType}
+            />
 
         </PageLeft>
         <ButtonList

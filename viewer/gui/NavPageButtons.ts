@@ -34,8 +34,9 @@ import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../components/Fullscreen';
 // @ts-ignore
 import Dimmer from '../util/dimhandler';
+import GeneralButtons from "./GeneralButtons";
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
-export default propsToDefs([
+export default GeneralButtons.concat(propsToDefs([
     {
         name:"ZoomIn",
         displayName:"zoom in",
@@ -123,4 +124,4 @@ export default propsToDefs([
     }),
     FullScreen.fullScreenDefinition,
     Dimmer.buttonDef(),
-])
+]))

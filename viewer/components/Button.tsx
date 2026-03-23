@@ -79,23 +79,25 @@ const Button = (props:ButtonProps) => {
     const className=Helper.concatsp(props.className,
         'button',
         name,
-        toggleClass(iprops));
+        toggleClass(iprops),
+        disabled ? 'disabled' : undefined,
+    );
     const spanStyle:Record<string, any> = {};
     if (icon !== undefined) {
         spanStyle.backgroundImage = "url(" + icon + ")";
     }
-    const add:Record<string, any> = {};
-    if (disabledv) {
-        add.disabled = "disabled";
-    }
     if (forward.onClick){
         const click=forward.onClick;
         forward.onClick=(ev:ButtonEvent)=>{
+            if (disabledv) {
+                ev.stopPropagation();
+                return;
+            }
             click(setav(ev,{dialogContext:dialogContext,history:history}));
         }
     }
     return (
-        <div {...forward} {...add} className={className}>
+        <div {...forward} className={className}>
             <span style={spanStyle}/>
             {children}
         </div>
