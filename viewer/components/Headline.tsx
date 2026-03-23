@@ -12,6 +12,7 @@ export interface THeadline{
     className?:string;
     connectionLost?:boolean;
     dynamicTitleIcons?:boolean;
+    children?:React.ReactNode;
 }
 interface THeadlineInt extends THeadline{
     connectionLostState?:boolean;
@@ -23,6 +24,7 @@ const Headline= (iprops:THeadline)=>{
     if (vprops.connectionLost && vprops.connectionLostState) className+=" connectionLost";
     return <div className={className}>
         <span>{vprops.title}</span>
+        {vprops.children}
         {Helper.unsetorTrue(vprops.dynamicTitleIcons) && <DynamicTitleIcons/>}
     </div>
 };

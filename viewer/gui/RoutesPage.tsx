@@ -84,6 +84,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
                           }
                           single={mustSplit}
                           scrollType={scrollType}
+                          viewChanged={(left:boolean)=>setScrollType(left?ScrollType.left:ScrollType.right)}
             />
 
         </PageLeft>

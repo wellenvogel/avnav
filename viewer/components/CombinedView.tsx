@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useEffect} from "react";
+import React, {UIEvent, useCallback, useEffect} from "react";
 import Helper from "../util/helper";
 import {ScrollType} from "../util/UiHelper";
 
@@ -28,7 +28,8 @@ export interface CombinedViewProps {
     leftView: React.ReactNode;
     rightView: React.ReactNode;
     single?:boolean
-    scrollType?:ScrollType
+    scrollType?:ScrollType,
+    viewChanged?:(leftVisible: boolean) => void
 }
 interface ViewProps{
     className?:string;
@@ -55,6 +56,8 @@ const View=(props:ViewProps) => {
 export const CombinedView = (props: CombinedViewProps) => {
     const [itemWidth,setItemWidth]=React.useState(0);
     const outerRef = React.useRef<HTMLDivElement>(null);
+    const scrollTimerRef = React.useRef<number>(undefined);
+    const lastReportedVisibleRef = React.useRef<boolean>(undefined);
     useEffect(() => {
         if (! outerRef.current) {
             setItemWidth(0);
@@ -64,7 +67,25 @@ export const CombinedView = (props: CombinedViewProps) => {
         if (props.single) setItemWidth(rect.width);
         else setItemWidth(rect.width/2);
     });
-    return <div className="combinedView outer" ref={outerRef}>
+    useEffect(() => {
+        return ()=>{
+            if (scrollTimerRef.current !== undefined) clearTimeout(scrollTimerRef.current);
+        }
+    }, []);
+    const onScroll=useCallback((ev:UIEvent<HTMLDivElement>) => {
+        if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
+        scrollTimerRef.current = window.setTimeout(()=>{
+            const { scrollLeft} = ev.target as HTMLElement;
+            const leftActive=scrollLeft < itemWidth;
+            if (leftActive !== lastReportedVisibleRef.current) {
+                lastReportedVisibleRef.current = leftActive;
+                if (props.viewChanged){
+                    props.viewChanged(leftActive);
+                }
+            }
+        },500)
+    },[itemWidth])
+    return <div className="combinedView outer" ref={outerRef} onScroll={onScroll}>
             <View
                 className="leftView"
                 width={itemWidth}
