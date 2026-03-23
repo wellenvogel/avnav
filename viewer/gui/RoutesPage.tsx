@@ -46,6 +46,8 @@ const TITLE=PAGE_TITLES.NROUTE;
 export type RoutesPageProps = Partial<PageBaseProps>;
 const RoutesPage=(props:RoutesPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
+     const [selectedName, setSelectedName] = useState<string>();
+     const [scrollSelected, setScrollSelected] = useState<number>(1);
      const history=useHistory();
      const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
      const buttonListRef=useRef<ButtonDef[]>();
@@ -71,6 +73,8 @@ const RoutesPage=(props:RoutesPageProps)=>{
                      const route = await routeActions.getCreateAction().action();
                      const RouteHandler=NavHandler.getRoutingHandler();
                      await RouteHandler.saveRoute(route);
+                     setSelectedName(route.name);
+                     setScrollSelected(scrollSelected+1);
                  }catch (e){
                      Toast(e);
                  }
@@ -96,6 +100,8 @@ const RoutesPage=(props:RoutesPageProps)=>{
                               <DownloadItemList
                                   type={"route"}
                                   autoreload={3000}
+                                  selectedName={selectedName}
+                                  scrollSelected={scrollSelected}
                               />
                               </React.Fragment>
                           }

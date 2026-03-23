@@ -10,9 +10,9 @@
  * ths onIemClick will directly pass through
  */
 
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import {OnDragEnd, SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
-import {injectav} from "../util/helper";
+import Helper, {injectav} from "../util/helper";
 import {ButtonEvent, ButtonEventHandler} from "./Button";
 
 export type KeyFunction=(p:Record<string, any>)=>string
@@ -41,9 +41,11 @@ interface ContentProps{
     hideOnEmpty?: boolean
     listRef?: (el:HTMLElement) => void
     selectedIndex?: number
+    scrollSelected?:number                          //if > 0 we scroll to a selected index
+                                                    //every increment will scroll again
     reverse?: boolean                               //let the index count backwards
 }
-
+const SELECTED_CLASS='focusSelect';
 const Content=(props:ContentProps)=>{
     const sortFrameProps=useAvNavSortFrame();
     return (
@@ -69,6 +71,7 @@ const Content=(props:ContentProps)=>{
                     ItemClass = props.itemClass;
                 }
                 let onClick;
+                const className=Helper.concatsp(itemProps.className,itemProps.selected?SELECTED_CLASS:undefined);
                 if (!itemProps.onClick && props.onItemClick) {
                     onClick=(idata:ButtonEvent)=>{
                         const data=injectav(idata);
@@ -84,7 +87,12 @@ const Content=(props:ContentProps)=>{
                         props.onItemClick(data);
                     }
                 }
-                return <ItemClass onClick={onClick} key={itemProps.key} {...itemProps}/>
+                return <ItemClass
+                    onClick={onClick}
+                    key={itemProps.key}
+                    {...itemProps}
+                    className={className}
+                />
             })}
         </div>
     );
@@ -123,6 +131,9 @@ export interface ItemListProps extends SortableContentProps{
 }
 
 const ItemList = (props:ItemListProps) => {
+    const lastSelectedIndex=useRef<number>(undefined);
+    const lastScrollSelected=useRef<number>(undefined);
+    const outerRef=useRef<HTMLDivElement>();
     const itemList:any[] = [];
     const existingKeys:Record<string,boolean> = {};
     let idx = 0;
@@ -164,10 +175,26 @@ const ItemList = (props:ItemListProps) => {
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
-
+    useEffect(() => {
+        if (! props.scrollSelected || props.selectedIndex === undefined) {
+            lastSelectedIndex.current = undefined;
+            lastScrollSelected.current = undefined;
+            return;
+        }
+        if (props.selectedIndex === lastSelectedIndex.current &&
+            props.scrollSelected === lastScrollSelected.current
+        ) return;
+        if (! outerRef.current) return;
+        lastSelectedIndex.current=props.selectedIndex;
+        lastScrollSelected.current=props.scrollSelected;
+        const selectedItem=outerRef.current.querySelector('.'+SELECTED_CLASS);
+        if (!selectedItem) return;
+        selectedItem.scrollIntoView({behavior: "smooth",block:"nearest",inline:"nearest"});
+    },[props.selectedIndex,props.scrollSelected]);
     if (props.scrollable) {
         return (
             <div onClick={props.onClick} className={className} style={style} ref={(el) => {
+                outerRef.current = el;
                 if (props.listRef) props.listRef(el)
             }}>
                 <SortableContent className="listScroll" {...props} itemList={itemList}/>

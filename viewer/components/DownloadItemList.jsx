@@ -24,8 +24,8 @@
  */
 
 import {createItemActions, FileDialog, ItemActions} from "./FileDialog";
-import Helper, {avitem, setav} from "../util/helper";
-import React, {useCallback, useEffect, useState} from "react";
+import {avitem, concatsp, setav} from "../util/helper";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
 import {showDialog, showPromiseDialog} from "./OverlayDialog";
@@ -34,12 +34,12 @@ import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
 import UploadHandler from "./UploadHandler";
-import Button, {DynamicButton} from "./Button";
+import Button from "./Button";
 import keys from "../util/keys";
 import PropTypes from "prop-types";
-import {getItemIconProperties, getUrlWithBase, listItems} from "../util/itemFunctions";
-import {useTimer} from "../util/UiHelper";
-import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import {getItemIconProperties, listItems} from "../util/itemFunctions";
+import {useStateRef, useTimer} from "../util/UiHelper";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 import {useDialogContext} from "./DialogContext";
 
@@ -64,7 +64,7 @@ const DownloadItem = (props) => {
     const iconProperties=getItemIconProperties(props);
     return (
         <ListItem
-            className={actions.getClassName(props)}
+            className={concatsp(actions.getClassName(props),props.className)}
             selected={props.selected}
             onClick={(ev)=>props.onClick(setav(ev, {action: 'select'}))}
             >
@@ -89,8 +89,10 @@ const DownloadItem = (props) => {
         </ListItem>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,autoreload,uploadDone}) => {
+export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,autoreload,uploadDone,selectedName,scrollSelected}) => {
     const [items, setItems] = useState([]);
+    const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
+    const lastSelectedName=useRef(undefined);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
         setItems(items);
@@ -164,14 +166,36 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
     if (type !== 'plugins') {
         displayList.sort(itemSort);
     }
+    let selectedIndex=-1;
+    if (scrollSelected || vselectedName){
+        lastSelectedName.current=vselectedName;
+        if (vselectedName) {
+            for (let i = 0; i < displayList.length; i++) {
+                if (displayList[i].name === vselectedName) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+    useEffect(()=>{
+        if (selectedName !== vSelectedNameRef.current){
+            setVselectedName(selectedName);
+        }
+    },[selectedName,scrollSelected]);
     return <React.Fragment>
         <ItemList
             className={'DownloadItemList'}
             itemClass={item}
             scrollable={true}
             itemList={displayList}
+            selectedIndex={selectedIndex}
+            scrollSelected={scrollSelected}
             onItemClick={async (ev) => {
                 const item = avitem(ev);
+                if (scrollSelected) {
+                    setVselectedName(item.name);
+                }
                 setav(ev,{dialogContext:dialogContext});
                 if (selectCallback) {
                     if (await selectCallback(ev)) return;
@@ -225,4 +249,6 @@ DownloadItemList.propTypes = {
     itemActions: PropTypes.instanceOf(ItemActions),
     autoreload: PropTypes.number,
     showCreate: PropTypes.bool,
+    selectedName: PropTypes.string,
+    scrollSelected: PropTypes.number //if > 0 we scroll to selected item, scroll again on increment
 }

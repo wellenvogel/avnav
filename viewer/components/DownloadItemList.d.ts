@@ -33,6 +33,8 @@ export type DownloadItemListProps = {
     itemActions?:any;
     autoreload?:number;
     uploadDone?:(done:boolean) => void;
+    selectedName?:string;
+    scrollSelected?:number;  //if != 0 scroll selected item, repeat scroll on change
 
 }
 export declare function DownloadItemList (
