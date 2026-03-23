@@ -22,6 +22,7 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -35,6 +36,20 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'ItemsView',
         displayName: 'stored routes',
-    }
+    },
+    {
+        name: 'SyncRoutes',
+        displayName:'sync to server',
+        overflow: true,
+        editDisable: true,
+        storeKeys: {
+            enabled: keys.properties.connectedMode
+        },
+        updateFunction:(state)=>{
+            return {
+                disabled: !state.enabled
+            }
+        },
+    },
 ]))
 

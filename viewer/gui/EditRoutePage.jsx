@@ -984,25 +984,6 @@ const EditRoutePage = (props) => {
             }
         },
         CenterActionButton,
-        {
-            name: 'SyncRoutes',
-            overflow: true,
-            editDisable: true,
-            storeKeys: {
-                enabled: keys.properties.connectedMode
-            },
-            updateFunction:(state)=>{
-                return {
-                    disabled: !state.enabled
-                }
-            },
-            onClick:()=>{
-                showDialog(dialogContext, ()=><RouteSyncDialog
-                    deleteLocal={true}
-                    showEmpty={true}
-                />)
-            }
-        },
         Mob.mobDefinition(history),
         EditPageDialog.getButtonDef(PAGENAME,
             MapPage.PANELS, [LayoutHandler.OPTIONS.SMALL], dialogContext),

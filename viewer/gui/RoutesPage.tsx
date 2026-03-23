@@ -40,6 +40,10 @@ import {createItemActions} from '../components/FileDialog';
 // @ts-ignore
 import NavHandler from '../nav/navdata';
 import Toast from "../components/Toast";
+// @ts-ignore
+import {showDialog} from "../components/OverlayDialog";
+// @ts-ignore
+import {RouteSyncDialog} from '../components/RouteInfoHelper';
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -79,6 +83,14 @@ const RoutesPage=(props:RoutesPageProps)=>{
                      Toast(e);
                  }
 
+             }
+         },
+         SyncRoutes:{
+             onClick:()=>{
+                 showDialog(undefined, ()=><RouteSyncDialog
+                     deleteLocal={true}
+                     showEmpty={true}
+                 />)
              }
          }
      }
