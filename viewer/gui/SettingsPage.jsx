@@ -217,6 +217,85 @@ const HasChangesDialog=({resolveFunction})=>{
     </DialogFrame>
 }
 
+const EditSettingsItems=(props)=>{
+   const values=useStateObject(props.initialValues,false);
+   const layoutValues=useStateObject(props.layoutValues,false);
+   const layoutEditing=globalStore.getData(keys.gui.global.layoutEditing);
+   const renderItemCache=useRef({});
+   const settingsItems=[];
+   const itemClasses={};
+    for (const key of props.settings) {
+        if (props.settingsConditions && props.settingsConditions[key] !== undefined) {
+            if (!settingsConditions[key](values.getState())) continue;
+        }
+        const description = KeyHelper.getKeyDescriptions()[key];
+        let className = "listEntry";
+        if (propertyhandler.isPrefixProperty(key)) {
+            className += " prefix";
+        }
+        if (key in layoutValues) {
+            className += " layoutSetting";
+        }
+            let item = {
+                ...description,
+                name: key,
+            };
+            //do not recreate items on each render
+            //as this would loos focus on every change
+            //to avoid a separate creation step
+            //we simply keep every item that has been rendered available
+            //as only then it needs to be persistent
+            let uiItem = renderItemCache.current[item.name];
+            if (uiItem === undefined) {
+                uiItem = itemUiFromPlain(item);
+                renderItemCache.current[item.name] = uiItem;
+            }
+            settingsItems.push(uiItem);
+            itemClasses[key] = className;
+        }
+    const changeItem=useCallback((key,value)=>{
+        if (layoutEditing) {
+            layoutValues.setValue(key, value);
+        } else {
+            if (key in layoutValues.getState()) {
+                Toast("cannot change layout settings when not editing");
+                return;
+            }
+            if (key === keys.properties.layoutName) {
+                Toast("cannot change layout here");
+                return;
+            }
+            values.setValue(key, value);
+        }
+    },[layoutEditing]);
+    return <div
+        className="settingsList dialogObjects">
+        <EditableParameterListUI
+            values={values.getState()}
+            initialValues={values.initialValues()}
+            parameters={settingsItems}
+            onChange={(nv) => {
+                for (let k in nv) {
+                    changeItem(k, nv[k]);
+                }
+            }}
+            itemClassName={(param) => itemClasses[param.name]}
+            itemchildren={(param) => {
+                if (!(param.name in layoutValues) || !layoutEditing) return null;
+                return <Button
+                    name={"SettingsLayoutOff"}
+                    className={"smallButton"}
+                    onClick={(ev) => {
+                        ev.stopPropagation();
+                        layoutValues.deleteValue(param.name);
+                    }}
+                />
+            }}
+        />
+    </div>
+}
+
+
 const SettingsPage = (props) => {
     const history=useHistory();
     const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);

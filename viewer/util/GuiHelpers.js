@@ -438,6 +438,10 @@ export const useStateObject=(initialValues,opt_deepCopy)=>{
                 v=opt_default;
             }
             return v;
+        },
+        initialValues(opt_copy){
+            if (! opt_copy){ return innerInitial}
+            return copy(innerInitial);
         }
     }
 }
