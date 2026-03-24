@@ -1,9 +1,12 @@
 import {SyntheticEvent, useEffect, useRef, useState} from "react";
+import shallowcompare from './compare';
 // @ts-ignore
 import KeyHandler from './keyhandler';
 // @ts-ignore
 import Requests from './requests';
 import base from "../base";
+// @ts-ignore
+import cloneDeep from "clone-deep";
 
 export type TimerCallback=(sequence:number)=>void
 export interface Timer{
@@ -204,4 +207,77 @@ export const useStateRef=(initial:any)=>{
     const stateRef=useRef(initial);
     stateRef.current=state;
     return [state,setState,stateRef];
+}
+
+interface StateObjectType extends Record<string,any>{}
+/**
+ * replacement for stateHelper
+ * @param initialValues
+ * @param opt_deepCopy use deep copy
+ */
+export const useStateObject=(
+    initialValues:StateObjectType,
+    opt_deepCopy?:boolean)=>{
+    const copy=opt_deepCopy?(v:StateObjectType)=>cloneDeep(v):(v:StateObjectType)=>{return {...v}};
+    let innerInitial=copy(initialValues||{});
+    const [current,setCurrent]=useState(innerInitial);
+    const ref=useRef(current);
+    ref.current=current;
+    return {
+        setValue:(key:string,value:any)=>{
+            if (ref.current[key]==value) return;
+            const values=copy(ref.current);
+            values[key]=value;
+            setCurrent(values);
+        },
+        deleteValue:(key:string)=>{
+            if (! (key in ref.current)) return;
+            const values=copy(ref.current);
+            delete values[key];
+            setCurrent(values);
+        },
+        setState:(partialState:StateObjectType,opt_overwrite?:boolean)=>{
+            let values;
+            if (! opt_overwrite) {
+                if (opt_deepCopy){
+                    values=copy(ref.current);
+                    Object.assign(values,partialState);
+                }
+                else{
+                    values={...ref.current,...partialState};
+                }
+            }
+            else values=partialState||{};
+            setCurrent(values);
+        },
+        isChanged(){
+            return !shallowcompare(ref.current,innerInitial);
+        },
+        isItemChanged(name:string){
+            return ! shallowcompare(ref.current[name],initialValues[name]);
+        },
+        reset(opt_newInitial?:StateObjectType){
+            if (opt_newInitial){
+                innerInitial=copy(opt_newInitial)
+            }
+            setCurrent(innerInitial);
+        },
+        getState(opt_copy?:boolean){
+            if (opt_copy){
+                return copy(ref.current);
+            }
+            return ref.current;
+        },
+        getValue(key:string,opt_default?:any){
+            let v=ref.current[key];
+            if (v === undefined && opt_default !== undefined){
+                v=opt_default;
+            }
+            return v;
+        },
+        initialValues(opt_copy?:boolean){
+            if (! opt_copy){ return innerInitial}
+            return copy(innerInitial);
+        }
+    }
 }

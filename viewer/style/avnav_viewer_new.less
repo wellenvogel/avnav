@@ -1626,7 +1626,7 @@ span.valuePrefix{
     }
   }
 
-  #settingspage{
+  #settingspage,.settings{
     .leftSection{
       .flex-display();
       .flex-direction(row);
@@ -1652,7 +1652,7 @@ span.valuePrefix{
     .settingsList{
       input,.input,.inputFrame{
         border-bottom: none;
-        width: calc(100% - @dialogInputLabelWidth - 3em); //room for 2 buttons
+        flex-grow: 1;
         max-width: 30em;
         overflow: clip;
         line-break: anywhere;

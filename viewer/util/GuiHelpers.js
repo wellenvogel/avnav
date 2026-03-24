@@ -3,7 +3,6 @@ import KeyHandler from './keyhandler.ts';
 import assign from 'object-assign';
 import shallowcompare from "./compare";
 import {useEffect, useRef, useState} from "react";
-import cloneDeep from "clone-deep";
 import {getServerCommand, scrollInContainer, useStateRef} from "./UiHelper";
 
 
@@ -376,77 +375,8 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
     return rt;
 
 };
-/**
- * replacement for stateHelper
- * @param initialValues
- * @param opt_deepCopy use deep copy
- */
-export const useStateObject=(initialValues,opt_deepCopy)=>{
-    const copy=opt_deepCopy?(v)=>cloneDeep(v):(v)=>{return {...v}};
-    let innerInitial=copy(initialValues||{});
-    const [current,setCurrent]=useState(innerInitial);
-    const ref=useRef(current);
-    ref.current=current;
-    return {
-        setValue:(key,value)=>{
-            if (ref.current[key]==value) return;
-            let values=copy(ref.current);
-            values[key]=value;
-            setCurrent(values);
-        },
-        deleteValue:(key)=>{
-            if (! (key in ref.current)) return;
-            let values=copy(ref.current);
-            delete values[key];
-            setCurrent(values);
-        },
-        setState:(partialState,opt_overwrite)=>{
-            let values;
-            if (! opt_overwrite) {
-                if (opt_deepCopy){
-                    values=copy(ref.current);
-                    Object.assign(values,partialState);
-                }
-                else{
-                    values={...ref.current,...partialState};
-                }
-            }
-            else values=partialState||{};
-            setCurrent(values);
-        },
-        isChanged(){
-            return !shallowcompare(ref.current,innerInitial);
-        },
-        isItemChanged(name){
-            return ! shallowcompare(ref.current[name],initialValues[name]);
-        },
-        reset(opt_newInitial){
-            if (opt_newInitial){
-                innerInitial=copy(opt_newInitial)
-            }
-            setCurrent(innerInitial);
-        },
-        getState(opt_copy){
-            if (opt_copy){
-                return copy(ref.current);
-            }
-            return ref.current;
-        },
-        getValue(key,opt_default){
-            let v=ref.current[key];
-            if (v === undefined && opt_default !== undefined){
-                v=opt_default;
-            }
-            return v;
-        },
-        initialValues(opt_copy){
-            if (! opt_copy){ return innerInitial}
-            return copy(innerInitial);
-        }
-    }
-}
 
-
+export {useStateObject} from './UiHelper';
 
 export default {
     resizeElementFont,

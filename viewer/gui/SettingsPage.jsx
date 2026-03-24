@@ -19,13 +19,10 @@ import {
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.ts';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {InputSelect, InputReadOnly} from '../components/Inputs.jsx';
-import DimHandler from '../util/dimhandler';
-import FullScreen from '../components/Fullscreen';
 import {useStateObject} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropertyHandler from '../util/propertyhandler';
-import {createItemActions, ItemActions} from "../components/FileDialog";
+import {createItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
 import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
@@ -34,82 +31,16 @@ import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import Helper, {avitem} from "../util/helper";
 import {
-    default as EditableParameterUIFactory,
-    EditableParameterListUI,
-    getCommonParam
+    EditableParameterListUI
 } from "../components/EditableParameterUI";
-import {EditableStringParameterBase} from "../util/EditableParameter";
 import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot} from "../components/ListItems";
+import {settingsSections, settingsConditions, itemUiFromPlain, EditSettingsItems} from "../components/Settings";
 
-const settingsSections={
-    Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
-        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
-        keys.properties.layers.user],
-    UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
-                keys.properties.connectionLostAlarm],
-    Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows],
-    Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
-        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
-        keys.properties.showSplitButton],
-    Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
-        keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
-        keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
-        keys.properties.autoUpdateUserCss, keys.properties.mainNavExpand,keys.properties.mainNavCols],
-    AIS:        [keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
-        keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
-        keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
-        keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
-        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRange,keys.properties.style.aisNormalColor,
-        keys.properties.style.aisNearestColor, keys.properties.style.aisWarningColor,keys.properties.style.aisTrackingColor,
-        keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowA,
-        keys.properties.aisShowB,keys.properties.aisShowOther,keys.properties.aisUseHeading,
-        keys.properties.aisReducedList,keys.properties.aisListUpdateTime, keys.properties.aisHideTime, keys.properties.aisLostTime,
-        keys.properties.aisMarkAllWarning,keys.properties.aisShowErrors],
-    Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
-        keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
-        keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
-        keys.properties.courseAverageTolerance,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
-        keys.properties.anchorCircleColor,keys.properties.measureColor,keys.properties.measureRhumbLine],
-    Map:        [
-        keys.properties.startNavPage,
-        keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
-        keys.properties.clickTolerance,keys.properties.featureInfo,
-        keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
-        keys.properties.mapOnlineUpZoom,
-        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
-        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
-    ],
-    Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
-    Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
-    Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite,keys.properties.remoteGuardTime]
-};
-
-const settingsConditions={
-};
-
-settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
-settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
-settingsConditions[keys.properties.showFullScreen]=()=>FullScreen.fullScreenAvailable();
-settingsConditions[keys.properties.boatDirectionVector]=(values)=>{
-    let cur=(values||{})
-    return cur[keys.properties.boatDirectionMode]!== 'cog';
-}
-settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
-    (values||{})[keys.properties.aisShowEstimated]
-settingsConditions[keys.properties.aisMinDisplaySpeed]=(values)=>
-    (values||{})[keys.properties.aisOnlyShowMoving]||(values||{})[keys.properties.aisShowEstimated]
-settingsConditions[keys.properties.aisEstimatedOpacity]=(values)=>
-    (values||{})[keys.properties.aisShowEstimated]
-settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
-    (values||{})[keys.properties.aisShowEstimated]
-settingsConditions[keys.properties.boatSteadyMax]=(values)=>
-    (values||{})[keys.properties.boatSteadyDetect]
 const sectionConditions={};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
-
 
 
 const SectionItem=(props)=>{
@@ -120,76 +51,8 @@ const SectionItem=(props)=>{
     );
 };
 
-class LayoutParameterUI extends EditableStringParameterBase{
-    constructor(props) {
-        super(props,props.type,true);
-        this.render=this.render.bind(this);
-        Object.freeze(this);
-    }
-    render({currentValues,initialValues,className,onChange,children}){
-        const isEditing=()=>{
-            Toast("cannot change layout during editing");
-        }
-        if (LayoutHandler.isEditing()){
-            return <InputReadOnly
-                {...getCommonParam({ep:this,currentValues,className,initialValues,children})}
-                value={LayoutHandler.name}
-                onClick={isEditing}
-            />
-        }
-        const changeFunction=(newVal)=>{
-            if (LayoutHandler.isEditing()) {
-                isEditing();
-                return;
-            }
-            onChange(this.setValue(undefined, newVal.value));
-        };
-        const changeWithCheck=(newVal)=>{
-            if (LayoutHandler.isEditing()) {
-                isEditing();
-                return;
-            }
-            onChange(newVal);
-        }
-        return <InputSelect
-            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:changeWithCheck,children})}
-            onChange={changeFunction}
-            itemList={(currentLayout)=>{
-                    return layoutLoader.listLayouts()
-                        .then((list)=>{
-                            let displayList=[];
-                            list.forEach((el)=>{
-                                let le={label:el.name,value:el.name};
-                                if (currentLayout === el.name ) le.selected=true;
-                                displayList.push(le);
-                            });
-                            return displayList;
-                        })}
-            }
-            />
-    }
-}
 
-const itemUiFromPlain=(item)=>{
-    if (item.type === PropertyType.LAYOUT){
-        return new LayoutParameterUI({type: item.type,
-            default: item.defaultv,
-            list: item.values,
-            displayName: item.label,
-            name:item.name,
-            description: item.description
-        })
-    }
-    let rt=EditableParameterUIFactory.createEditableParameterUI({
-        type: item.type,
-        default: item.defaultv,
-        list: item.values,
-        displayName: item.label,
-        name:item.name,
-        description: item.description
-    })
-    return rt;
-}
+
 
 
 const HasChangesDialog=({resolveFunction})=>{
@@ -217,87 +80,11 @@ const HasChangesDialog=({resolveFunction})=>{
     </DialogFrame>
 }
 
-const EditSettingsItems=(props)=>{
-   const values=useStateObject(props.initialValues,false);
-   const layoutValues=useStateObject(props.layoutValues,false);
-   const layoutEditing=globalStore.getData(keys.gui.global.layoutEditing);
-   const renderItemCache=useRef({});
-   const settingsItems=[];
-   const itemClasses={};
-    for (const key of props.settings) {
-        if (props.settingsConditions && props.settingsConditions[key] !== undefined) {
-            if (!settingsConditions[key](values.getState())) continue;
-        }
-        const description = KeyHelper.getKeyDescriptions()[key];
-        let className = "listEntry";
-        if (propertyhandler.isPrefixProperty(key)) {
-            className += " prefix";
-        }
-        if (key in layoutValues) {
-            className += " layoutSetting";
-        }
-            let item = {
-                ...description,
-                name: key,
-            };
-            //do not recreate items on each render
-            //as this would loos focus on every change
-            //to avoid a separate creation step
-            //we simply keep every item that has been rendered available
-            //as only then it needs to be persistent
-            let uiItem = renderItemCache.current[item.name];
-            if (uiItem === undefined) {
-                uiItem = itemUiFromPlain(item);
-                renderItemCache.current[item.name] = uiItem;
-            }
-            settingsItems.push(uiItem);
-            itemClasses[key] = className;
-        }
-    const changeItem=useCallback((key,value)=>{
-        if (layoutEditing) {
-            layoutValues.setValue(key, value);
-        } else {
-            if (key in layoutValues.getState()) {
-                Toast("cannot change layout settings when not editing");
-                return;
-            }
-            if (key === keys.properties.layoutName) {
-                Toast("cannot change layout here");
-                return;
-            }
-            values.setValue(key, value);
-        }
-    },[layoutEditing]);
-    return <div
-        className="settingsList dialogObjects">
-        <EditableParameterListUI
-            values={values.getState()}
-            initialValues={values.initialValues()}
-            parameters={settingsItems}
-            onChange={(nv) => {
-                for (let k in nv) {
-                    changeItem(k, nv[k]);
-                }
-            }}
-            itemClassName={(param) => itemClasses[param.name]}
-            itemchildren={(param) => {
-                if (!(param.name in layoutValues) || !layoutEditing) return null;
-                return <Button
-                    name={"SettingsLayoutOff"}
-                    className={"smallButton"}
-                    onClick={(ev) => {
-                        ev.stopPropagation();
-                        layoutValues.deleteValue(param.name);
-                    }}
-                />
-            }}
-        />
-    </div>
-}
 
 
 const SettingsPage = (props) => {
     const history=useHistory();
+    const [reloadSequence,setReloadSequence] = useState(0);
     const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);
     const [section, setSection] = useState('Layer');
     const flattenedKeys = useRef(undefined);
@@ -320,7 +107,6 @@ const SettingsPage = (props) => {
             }
         })
     }
-    const renderItemCache = useRef({});
     const hasChanges = () => {
         return values.isChanged() || layoutSettings.isChanged();
     }
@@ -706,6 +492,7 @@ const SettingsPage = (props) => {
     }, []);
 
     const resetData = useCallback(() => {
+        setReloadSequence((old)=>old+1);
         if (LayoutHandler.isEditing()) {
             layoutSettings.setState({}, true);
         } else {
@@ -754,7 +541,6 @@ const SettingsPage = (props) => {
     let sectionChanges = {};
     let sectionHasLayoutSettings = {};
     const layoutValues = layoutSettings.getState();
-    const itemClasses = {};
     for (let section in settingsSections) {
         for (let s in settingsSections[section]) {
             let key = settingsSections[section][s];
@@ -764,9 +550,7 @@ const SettingsPage = (props) => {
             if (settingsConditions[key] !== undefined) {
                 if (!settingsConditions[key](values.getState())) continue;
             }
-            let description = KeyHelper.getKeyDescriptions()[key];
             let value = values.getValue(key);
-            let className = "listEntry";
             if (value !== defaultValues.current[key]) {
                 if (!sectionChanges[section]) sectionChanges[section] = {};
                 sectionChanges[section].isDefault = false;
@@ -775,29 +559,8 @@ const SettingsPage = (props) => {
                 if (!sectionChanges[section]) sectionChanges[section] = {};
                 sectionChanges[section].isChanged = true;
             }
-            if (propertyhandler.isPrefixProperty(key)) {
-                className += " prefix";
-            }
-            if (key in layoutValues) {
-                className += " layoutSetting";
-            }
             if (section === currentSection) {
-                let item = {
-                    ...description,
-                    name: key,
-                };
-                //do not recreate items on each render
-                //as this would loose focus on every change
-                //to avoid a separate creation step
-                //we simply keep every item that has been rendered available
-                //as only then it needs to be persistent
-                let uiItem = renderItemCache.current[item.name];
-                if (uiItem === undefined) {
-                    uiItem = itemUiFromPlain(item);
-                    renderItemCache.current[item.name] = uiItem;
-                }
-                settingsItems.push(uiItem);
-                itemClasses[key] = className;
+                settingsItems.push(key);
             }
         }
     }
@@ -816,7 +579,6 @@ const SettingsPage = (props) => {
     });
     const layoutEditing = LayoutHandler.isEditing();
     const title = layoutEditing ? "LayoutSettings" : "Settings";
-    const currentValues = {...values.getState(), ...layoutSettings.getState()};
     return <PageFrame
         {...props}
     >
@@ -831,7 +593,24 @@ const SettingsPage = (props) => {
                     onItemClick={sectionClick}
                     itemList={sectionItems}
                 /> : null}
-                {rightVisible ? <div
+                {rightVisible ?
+                    <EditSettingsItems
+                        values={values.getState()}
+                        layoutValues={layoutValues}
+                        settings={settingsItems}
+                        onChange={(key,value,isLayout)=>{
+                            if (isLayout){
+                                if (value === undefined) layoutValues.deleteValue(key);
+                                else layoutSettings.setValue(key,value);
+                                return;
+                            }
+                            changeItem(key,value);
+                        }}
+                        layoutEditing={layoutEditing}
+                        reloadSequence={reloadSequence}
+                    />
+                    /*
+                    <div
                     className="settingsList dialogObjects">
                     <EditableParameterListUI
                         values={currentValues}
@@ -855,7 +634,9 @@ const SettingsPage = (props) => {
                             />
                         }}
                     />
-                </div> : null}
+                </div>
+                 */
+                    : null}
             </div>
         </PageLeft>
         <ButtonList

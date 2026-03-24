@@ -1,0 +1,361 @@
+/**
+ * # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
+ #
+ #  Permission is hereby granted, free of charge, to any person obtaining a
+ #  copy of this software and associated documentation files (the "Software"),
+ #  to deal in the Software without restriction, including without limitation
+ #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ #  and/or sell copies of the Software, and to permit persons to whom the
+ #  Software is furnished to do so, subject to the following conditions:
+ #
+ #  The above copyright notice and this permission notice shall be included
+ #  in all copies or substantial portions of the Software.
+ #
+ #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHERtime
+ #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ #  DEALINGS IN THE SOFTWARE.
+ #
+ */
+import React, {useCallback, useRef} from 'react';
+import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/keys";
+// @ts-ignore
+import DimHandler from '../util/dimhandler';
+// @ts-ignore
+import FullScreen from './Fullscreen';
+// @ts-ignore
+import propertyhandler from '../util/propertyhandler';
+import Toast from "./Toast";
+import Button from "./Button";
+import {EditableStringParameterBase, Properties, SelectListEntry, Value, Values} from "../util/EditableParameter";
+import {
+    default as EditableParameterUIFactory,
+    EditableParameterListUI,
+    getCommonParam
+    // @ts-ignore
+} from "../components/EditableParameterUI";
+// @ts-ignore
+import {InputSelect, InputReadOnly} from '../components/Inputs';
+import globalstore from "../util/globalstore";
+// @ts-ignore
+import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
+import Helper, {unsetOrTrue} from "../util/helper";
+
+export interface SettingsDefinition extends Property{
+    name:string;
+}
+export const settingsSections={
+    Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
+        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
+        keys.properties.layers.user],
+    UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
+        keys.properties.connectionLostAlarm],
+    Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows],
+    Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
+        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
+        keys.properties.showSplitButton],
+    Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
+        keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
+        keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
+        keys.properties.autoUpdateUserCss, keys.properties.mainNavExpand,keys.properties.mainNavCols],
+    AIS:        [keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
+        keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
+        keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
+        keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
+        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.aisCurvedVectors,keys.properties.aisRelativeMotionVectorRange,keys.properties.style.aisNormalColor,
+        keys.properties.style.aisNearestColor, keys.properties.style.aisWarningColor,keys.properties.style.aisTrackingColor,
+        keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowA,
+        keys.properties.aisShowB,keys.properties.aisShowOther,keys.properties.aisUseHeading,
+        keys.properties.aisReducedList,keys.properties.aisListUpdateTime, keys.properties.aisHideTime, keys.properties.aisLostTime,
+        keys.properties.aisMarkAllWarning,keys.properties.aisShowErrors],
+    Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
+        keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
+        keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
+        keys.properties.courseAverageTolerance,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
+        keys.properties.anchorCircleColor,keys.properties.measureColor,keys.properties.measureRhumbLine],
+    Map:        [
+        keys.properties.startNavPage,
+        keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
+        keys.properties.clickTolerance,keys.properties.featureInfo,
+        keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
+        keys.properties.mapOnlineUpZoom,
+        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
+        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
+    ],
+    Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
+    Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
+    Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite,keys.properties.remoteGuardTime]
+};
+
+type Condition=(values?:SettingsValuesType)=>boolean;
+export const settingsConditions:Record<string,Condition>={
+};
+
+settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
+settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
+settingsConditions[keys.properties.showFullScreen]=()=>FullScreen.fullScreenAvailable();
+settingsConditions[keys.properties.boatDirectionVector]=(values)=>{
+    const cur=(values||{})
+    return cur[keys.properties.boatDirectionMode]!== 'cog';
+}
+settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
+    !!((values||{})[keys.properties.aisShowEstimated])
+settingsConditions[keys.properties.aisMinDisplaySpeed]=(values)=>
+    !!((values||{})[keys.properties.aisOnlyShowMoving]||(values||{})[keys.properties.aisShowEstimated])
+settingsConditions[keys.properties.aisEstimatedOpacity]=(values)=>
+    !!((values||{})[keys.properties.aisShowEstimated])
+settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
+    !!((values||{})[keys.properties.aisShowEstimated])
+settingsConditions[keys.properties.boatSteadyMax]=(values)=>
+    !!((values||{})[keys.properties.boatSteadyDetect])
+
+
+export type SettingsValuesType=Record<string, PropertyValue>;
+export class SettingsValues{
+    private initialValues: SettingsValuesType;
+    private values: { [p: string]: string | number | boolean };
+    private changed: boolean;
+    private onlyExisting: boolean;
+    constructor(values:SettingsValuesType,onlyExisting?:boolean) {
+        this.initialValues=values;
+        this.values={...values};
+        this.changed=false;
+        this.onlyExisting=!!onlyExisting;
+    }
+    setValue(key:string,value:PropertyValue){
+        if (this.onlyExisting && ! (key in this.initialValues)) return false;
+        this.values[key]=value;
+        if (value !== this.initialValues[key]) this.changed = true;
+        return true;
+    }
+    getValue(key:string){
+        return this.values[key];
+    }
+    getInitialValues(copy?:boolean):SettingsValuesType{
+        return copy?{...this.initialValues}:this.initialValues;
+    }
+    getValues(copy?:boolean):SettingsValuesType{
+        return copy?{...this.values}:this.values;
+    }
+    hasChanges(){
+        return this.changed;
+    }
+    isChanged(key:string){
+        return this.initialValues[key] !== this.values[key];
+    }
+    reset(){
+        this.values={...this.initialValues};
+        this.changed=false;
+    }
+}
+
+function useRefHelper<T extends Record<string,any>>(values:T,sequence?:number){
+    const initialValues = useRef<T>(values);
+    const seqRef = useRef(sequence);
+    return {
+        isChanged:(key:string,current:T)=>{
+            if (! initialValues.current) return false;
+            return initialValues.current[key] !== current[key];
+        },
+        value:(key:string)=>{
+            if (! initialValues.current) return;
+            return initialValues.current[key]
+        },
+        values:()=>initialValues.current||{},
+        isSet:()=>!!initialValues.current,
+        update(values:T,sequence?:number){
+            if (sequence !== seqRef.current) {
+                seqRef.current=sequence;
+                initialValues.current=values;
+                return true;
+            }
+            return false;
+        }
+    }
+}
+
+interface ParameterUIRenderProps{
+    currentValues:SettingsValuesType;
+    initialValues:SettingsValuesType;
+    className?:string;
+    onChange?:(values:Values) => void;
+    children?:React.ReactNode;
+}
+class LayoutParameterUI extends EditableStringParameterBase{
+    constructor(props:Properties) {
+        super(props,props.type,true);
+        this.render=this.render.bind(this);
+        Object.freeze(this);
+    }
+    _layoutEditing(){
+        return globalstore.getData(keys.gui.global.layoutEditing);
+    }
+    render({currentValues,initialValues,className,onChange,children}:ParameterUIRenderProps){
+        const isEditing=()=>{
+            Toast("cannot change layout during editing");
+        }
+        if (this._layoutEditing()){
+            return <InputReadOnly
+                {...getCommonParam({ep:this,currentValues,className,initialValues,children})}
+                value={LayoutHandler.name}
+                onClick={isEditing}
+            />
+        }
+        const changeFunction=(newVal:SelectListEntry)=>{
+            if (this._layoutEditing()) {
+                isEditing();
+                return;
+            }
+            onChange(this.setValue(undefined, newVal.value));
+        };
+        const changeWithCheck=(newVal:{name:string,value:Value})=>{
+            if (this._layoutEditing()) {
+                isEditing();
+                return;
+            }
+            onChange(newVal);
+        }
+        return <InputSelect
+            {...getCommonParam({ep:this,currentValues,className,initialValues,onChange:changeWithCheck,children})}
+            onChange={changeFunction}
+            itemList={(currentLayout:string)=>{
+                return layoutLoader.listLayouts()
+                    .then((list:{name:string}[])=>{
+                        const displayList:SelectListEntry[]=[];
+                        list.forEach((el:{name:string})=>{
+                            const le:SelectListEntry={label:el.name,value:el.name};
+                            if (currentLayout === el.name ) le.selected=true;
+                            displayList.push(le);
+                        });
+                        return displayList;
+                    })}
+            }
+        />
+    }
+}
+
+export const itemUiFromPlain=(item:SettingsDefinition)=>{
+    if (item.type === PropertyType.LAYOUT){
+        return new LayoutParameterUI({type: item.type,
+            default: item.defaultv,
+            list: item.values,
+            displayName: item.label,
+            name:item.name,
+            description: item.description
+        })
+    }
+    const rt=EditableParameterUIFactory.createEditableParameterUI({
+        type: item.type,
+        default: item.defaultv,
+        list: item.values,
+        displayName: item.label,
+        name:item.name,
+        description: item.description,
+        readOnly: !item.canChange
+    })
+    return rt;
+}
+
+export interface EditSettingsItemsProps{
+    values:SettingsValuesType;
+    layoutValues:SettingsValuesType;
+    reloadSequence?:number;  //if changed the values and layout values will be taken as initial
+    settings:string[];
+    /**
+     *
+     * @param name name to be set
+     * @param value new value. Undefined: delete if layout
+     * @param layout: is a layout value
+     */
+    onChange:(name:string,value:PropertyValue,layout:boolean)=>boolean;
+    className?:string;
+    layoutEditing:boolean
+}
+export const EditSettingsItems=(props:EditSettingsItemsProps)=>{
+    const initialValues=
+        useRefHelper<SettingsValuesType>(props.values,props.reloadSequence);
+    initialValues.update(props.values,props.reloadSequence);
+    const initialLayoutValues=
+        useRefHelper<SettingsValuesType>(props.layoutValues,props.reloadSequence);
+    initialLayoutValues.update(props.values,props.reloadSequence);
+    const values=props.values||{};
+    const layoutValues=props.layoutValues||{};
+    const renderItemCache=useRef<Record<string,any>>({});
+    const settingsItems=[];
+    const itemClasses:Record<string, string> = {};
+    for (const key of props.settings) {
+        if (settingsConditions && settingsConditions[key] !== undefined) {
+            if (!settingsConditions[key](values)) continue;
+        }
+        const description = KeyHelper.getKeyDescriptions()[key];
+        let className = "listEntry";
+        if (propertyhandler.isPrefixProperty(key)) {
+            className += " prefix";
+        }
+        const item = {
+            ...description,
+            name: key,
+            canChange:unsetOrTrue(description.canChange)
+        };
+        if (key in layoutValues) {
+            className += " layoutSetting";
+            if (! props.layoutEditing) item.canChange = false;
+        }
+        //do not recreate items on each render
+        //as this would loos focus on every change
+        //to avoid a separate creation step
+        //we simply keep every item that has been rendered available
+        //as only then it needs to be persistent
+        let uiItem = renderItemCache.current[item.name];
+        if (uiItem === undefined) {
+            uiItem = itemUiFromPlain(item);
+            renderItemCache.current[item.name] = uiItem;
+        }
+        settingsItems.push(uiItem);
+        itemClasses[key] = className;
+    }
+    const changeItem=useCallback((key:string,value:PropertyValue)=>{
+        if (props.layoutEditing) {
+            if (key === keys.properties.layoutName){
+                Toast("cannot change layout during editing");
+                return;
+            }
+            props.onChange(key,value,true);
+        } else {
+            if (key in layoutValues) {
+                Toast("cannot change layout settings when not editing");
+                return;
+            }
+            props.onChange(key,value,false)
+        }
+    },[props.layoutEditing]);
+    return <div
+        className={Helper.concatsp("settingsList","dialogObjects",props.className)}>
+        <EditableParameterListUI
+            values={{...values,...layoutValues}}
+            initialValues={{...initialValues.values(),...initialLayoutValues.values()}}
+            parameters={settingsItems}
+            onChange={(nv:SettingsValuesType) => {
+                for (const k in nv) {
+                    changeItem(k, nv[k]);
+                }
+            }}
+            itemClassName={(param:SettingsDefinition) => itemClasses[param.name]}
+            itemchildren={(param:SettingsDefinition) => {
+                if (!(param.name in layoutValues) || !props.layoutEditing) return null;
+                return <Button
+                    name={"SettingsLayoutOff"}
+                    className={"smallButton"}
+                    onClick={(ev) => {
+                        ev.stopPropagation();
+                        props.onChange(param.name,undefined,true);
+                    }}
+                />
+            }}
+        />
+    </div>
+}
+

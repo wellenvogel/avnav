@@ -26,7 +26,7 @@ const alarmClick =function(){
 
 export const PageFrame=forwardRef((iprops,ref)=>{
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,...forward}=useStore(iprops,{
+    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,settingsSplit,...forward}=useStore(iprops,{
         storeKeys:{
             isEditing: keys.gui.global.layoutEditing
         }
