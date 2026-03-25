@@ -220,35 +220,37 @@ export const useStateObject=(
     opt_deepCopy?:boolean)=>{
     const copy=opt_deepCopy?(v:StateObjectType)=>cloneDeep(v):(v:StateObjectType)=>{return {...v}};
     let innerInitial=copy(initialValues||{});
-    const [current,setCurrent]=useState(innerInitial);
-    const ref=useRef(current);
-    ref.current=current;
+    const [,setCurrent,ref]=useStateRef(innerInitial);
     return {
         setValue:(key:string,value:any)=>{
             if (ref.current[key]==value) return;
-            const values=copy(ref.current);
-            values[key]=value;
-            setCurrent(values);
+            setCurrent((old:StateObjectType)=>{
+                const values=copy(old);
+                values[key]=value;
+                return values;
+            })
         },
         deleteValue:(key:string)=>{
             if (! (key in ref.current)) return;
-            const values=copy(ref.current);
-            delete values[key];
-            setCurrent(values);
+            setCurrent((old:StateObjectType)=>{
+                const values=copy(old);
+                delete values[key];
+                return values;
+            })
         },
         setState:(partialState:StateObjectType,opt_overwrite?:boolean)=>{
-            let values;
             if (! opt_overwrite) {
-                if (opt_deepCopy){
-                    values=copy(ref.current);
-                    Object.assign(values,partialState);
-                }
-                else{
-                    values={...ref.current,...partialState};
-                }
+                setCurrent((old:StateObjectType)=> {
+                    const v = copy(old);
+                    Object.assign(v, partialState);
+                    return v
+                });
             }
-            else values=partialState||{};
-            setCurrent(values);
+            else {
+                setCurrent(()=>{
+                    return partialState;
+                });
+            }
         },
         isChanged(){
             return !shallowcompare(ref.current,innerInitial);
@@ -259,8 +261,11 @@ export const useStateObject=(
         reset(opt_newInitial?:StateObjectType){
             if (opt_newInitial){
                 innerInitial=copy(opt_newInitial)
+                setCurrent(innerInitial);
             }
-            setCurrent(innerInitial);
+            else {
+                setCurrent(copy(innerInitial));
+            }
         },
         getState(opt_copy?:boolean){
             if (opt_copy){

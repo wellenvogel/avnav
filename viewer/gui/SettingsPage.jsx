@@ -84,7 +84,6 @@ const HasChangesDialog=({resolveFunction})=>{
 
 const SettingsPage = (props) => {
     const history=useHistory();
-    const [reloadSequence,setReloadSequence] = useState(0);
     const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);
     const [section, setSection] = useState('Layer');
     const flattenedKeys = useRef(undefined);
@@ -92,11 +91,11 @@ const SettingsPage = (props) => {
         flattenedKeys.current = KeyHelper.flattenedKeys(keys.properties);
     }
     const initialValues = useRef();
-    if (!initialValues.current) {
-        initialValues.current = globalStore.getMultiple(flattenedKeys.current, true);
-    }
+    initialValues.current = globalStore.getMultiple(flattenedKeys.current, true);
     const values = useStateObject(initialValues.current);
-    const layoutSettings = useStateObject(LayoutHandler.getLayoutProperties());
+    const initialLayoutValues= useRef();
+    initialLayoutValues.current=LayoutHandler.getLayoutProperties();
+    const layoutSettings = useStateObject(initialLayoutValues.current);
     const defaultValues = useRef(undefined);
     if (!defaultValues.current) {
         defaultValues.current = {};
@@ -492,7 +491,6 @@ const SettingsPage = (props) => {
     }, []);
 
     const resetData = useCallback(() => {
-        setReloadSequence((old)=>old+1);
         if (LayoutHandler.isEditing()) {
             layoutSettings.setState({}, true);
         } else {
@@ -597,45 +595,20 @@ const SettingsPage = (props) => {
                     <EditSettingsItems
                         values={values.getState()}
                         layoutValues={layoutValues}
+                        initialValues={initialValues.current}
+                        initialLayoutValues={initialLayoutValues.current}
                         settings={settingsItems}
                         onChange={(key,value,isLayout)=>{
                             if (isLayout){
-                                if (value === undefined) layoutValues.deleteValue(key);
+                                if (! layoutEditing) return;
+                                if (value === undefined) layoutSettings.deleteValue(key);
                                 else layoutSettings.setValue(key,value);
                                 return;
                             }
                             changeItem(key,value);
                         }}
                         layoutEditing={layoutEditing}
-                        reloadSequence={reloadSequence}
                     />
-                    /*
-                    <div
-                    className="settingsList dialogObjects">
-                    <EditableParameterListUI
-                        values={currentValues}
-                        initialValues={initialValues.current}
-                        parameters={settingsItems}
-                        onChange={(nv) => {
-                            for (let k in nv) {
-                                changeItem(k, nv[k]);
-                            }
-                        }}
-                        itemClassName={(param) => itemClasses[param.name]}
-                        itemchildren={(param) => {
-                            if (!(param.name in layoutValues) || !layoutEditing) return null;
-                            return <Button
-                                name={"SettingsLayoutOff"}
-                                className={"smallButton"}
-                                onClick={(ev) => {
-                                    ev.stopPropagation();
-                                    layoutSettings.deleteValue(param.name);
-                                }}
-                            />
-                        }}
-                    />
-                </div>
-                 */
                     : null}
             </div>
         </PageLeft>

@@ -45,6 +45,7 @@ import {showDialog} from "../components/OverlayDialog";
 // @ts-ignore
 import {RouteSyncDialog} from '../components/RouteInfoHelper';
 import globalstore from "../util/globalstore";
+import {EditSettingsCategory} from "../components/Settings";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -101,6 +102,14 @@ const RoutesPage=(props:RoutesPageProps)=>{
                  globalstore.storeData(keys.properties.connectedMode, con);
              }
          },
+         ShowSettings:{
+             onClick:()=>{
+                 showDialog(undefined, ()=><EditSettingsCategory
+                     category={"Route"}
+                     title={'Route Display'}
+                 />)
+             }
+         }
      }
      buttonListRef.current=updateButtons(RoutesPageButtons,buttonActions);
      useInitialButton(buttonListRef);

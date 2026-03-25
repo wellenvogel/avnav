@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useMemo, useRef} from 'react';
 import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/keys";
 // @ts-ignore
 import DimHandler from '../util/dimhandler';
@@ -29,7 +29,7 @@ import FullScreen from './Fullscreen';
 // @ts-ignore
 import propertyhandler from '../util/propertyhandler';
 import Toast from "./Toast";
-import Button from "./Button";
+import Button, {ButtonEvent} from "./Button";
 import {EditableStringParameterBase, Properties, SelectListEntry, Value, Values} from "../util/EditableParameter";
 import {
     default as EditableParameterUIFactory,
@@ -43,11 +43,18 @@ import globalstore from "../util/globalstore";
 // @ts-ignore
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import Helper, {unsetOrTrue} from "../util/helper";
+import {useStateObject} from "../util/UiHelper";
+// @ts-ignore
+import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog} from "./OverlayDialog";
+// @ts-ignore
+import {ConfirmDialog} from './BasicDialogs';
+import {useDialogContext} from "./exports";
+import {IDialogContext} from "./DialogContext";
 
 export interface SettingsDefinition extends Property{
     name:string;
 }
-export const settingsSections={
+export const settingsSections:Record<string, string[]> = {
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
         keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
         keys.properties.layers.user],
@@ -152,7 +159,7 @@ export class SettingsValues{
     }
 }
 
-function useRefHelper<T extends Record<string,any>>(values:T,sequence?:number){
+export function useRefHelper<T extends Record<string,any>>(values:T,sequence?:number){
     const initialValues = useRef<T>(values);
     const seqRef = useRef(sequence);
     return {
@@ -262,7 +269,8 @@ export const itemUiFromPlain=(item:SettingsDefinition)=>{
 export interface EditSettingsItemsProps{
     values:SettingsValuesType;
     layoutValues:SettingsValuesType;
-    reloadSequence?:number;  //if changed the values and layout values will be taken as initial
+    initialValues:SettingsValuesType;
+    initialLayoutValues:SettingsValuesType;
     settings:string[];
     /**
      *
@@ -270,19 +278,15 @@ export interface EditSettingsItemsProps{
      * @param value new value. Undefined: delete if layout
      * @param layout: is a layout value
      */
-    onChange:(name:string,value:PropertyValue,layout:boolean)=>boolean;
+    onChange:(name:string,value:PropertyValue,layout:boolean)=>void;
     className?:string;
     layoutEditing:boolean
 }
 export const EditSettingsItems=(props:EditSettingsItemsProps)=>{
-    const initialValues=
-        useRefHelper<SettingsValuesType>(props.values,props.reloadSequence);
-    initialValues.update(props.values,props.reloadSequence);
-    const initialLayoutValues=
-        useRefHelper<SettingsValuesType>(props.layoutValues,props.reloadSequence);
-    initialLayoutValues.update(props.values,props.reloadSequence);
     const values=props.values||{};
     const layoutValues=props.layoutValues||{};
+    const initialValues=props.initialValues||{};
+    const initialLayoutValues=props.initialLayoutValues||{};
     const renderItemCache=useRef<Record<string,any>>({});
     const settingsItems=[];
     const itemClasses:Record<string, string> = {};
@@ -336,7 +340,7 @@ export const EditSettingsItems=(props:EditSettingsItemsProps)=>{
         className={Helper.concatsp("settingsList","dialogObjects",props.className)}>
         <EditableParameterListUI
             values={{...values,...layoutValues}}
-            initialValues={{...initialValues.values(),...initialLayoutValues.values()}}
+            initialValues={{...initialValues,...initialLayoutValues}}
             parameters={settingsItems}
             onChange={(nv:SettingsValuesType) => {
                 for (const k in nv) {
@@ -357,5 +361,118 @@ export const EditSettingsItems=(props:EditSettingsItemsProps)=>{
             }}
         />
     </div>
+}
+
+export const discardChanges=(dialogContext?:IDialogContext)=>{
+    return showPromiseDialog(dialogContext, (props:any) => <ConfirmDialog {...props}
+                                                           text={"discard settings changes?"}/>)
+        .then(()=>true,()=>false)
+
+
+}
+
+export interface EditSettingsCategoryProps{
+    className?:string;
+    category:string;
+    title?:string;
+}
+export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{
+    const keys:string[]=settingsSections[props.category];
+    const initialValues:SettingsValuesType=useMemo(()=>globalstore.getMultiple(keys),[]);
+    const initialLayoutValues=useMemo(()=>LayoutHandler.getLayoutProperties(),[]);
+    const values=useStateObject(initialValues);
+    const layoutValues=useStateObject(initialLayoutValues);
+    const layoutEditing=LayoutHandler.isEditing();
+    const dialogContext=useDialogContext();
+    const setValue=useCallback((name:string,value:PropertyValue,forLayout:boolean)=>{
+        if (forLayout){
+            if (value === undefined) layoutValues.deleteValue(name);
+            else layoutValues.setValue(name, value);
+        }
+        else{
+            values.setValue(name, value);
+        }
+    },[]);
+
+    return <DialogFrame
+        title={`${props.title?props.title:props.category}`}
+        className={'settings'}
+        flex={true}
+    >
+        <EditSettingsItems
+            values={values.getState()}
+            layoutValues={layoutValues.getState()}
+            initialValues={initialValues}
+            initialLayoutValues={initialLayoutValues}
+            settings={keys}
+            onChange={setValue}
+            layoutEditing={layoutEditing}/>
+        <DialogButtons
+            buttonList={[
+                {
+                    name:'reset',
+                    onClick:async ()=>{
+                        const action=()=>{
+                            if (layoutEditing){
+                                layoutValues.setState({},true);
+                            }
+                            else{
+                                const defaultValues:Record<string, PropertyValue> = {};
+                                keys.forEach((key) => {
+                                    const description = KeyHelper.getKeyDescriptions()[key];
+                                    if (description) {
+                                        defaultValues[key] = description.defaultv;
+                                    }
+                                })
+                                values.setState(defaultValues);
+                            }
+                        }
+                        if (layoutValues.isChanged()||values.isChanged()) {
+                            const ok = await discardChanges(dialogContext);
+                            if (ok) {
+                                action();
+                            }
+                        }
+                        else{
+                            action();
+                        }
+                    },
+                    close: false,
+                },
+                DBCancel({
+                    close: false,
+                    onClick:async (ev:ButtonEvent)=>{
+                        ev.stopPropagation();
+                        if (layoutValues.isChanged()||values.isChanged()){
+                            const ok=await discardChanges(dialogContext);
+                            if (ok){
+                                dialogContext.closeDialog();
+                            }
+                            return;
+                        }
+                        dialogContext.closeDialog();
+                    }
+                }),
+                DBOk(()=>{
+                    if (layoutEditing){
+                        if (layoutValues.isChanged()){
+                            LayoutHandler.updateLayoutProperties(layoutValues.getState(true));
+                        }
+                    }
+                    else{
+                        if (values.isChanged()){
+                            globalstore.storeMultiple(values.getState())
+                        }
+                    }
+                    //TODO: save dialog
+                    dialogContext.closeDialog();
+                },{
+                    disabled:!layoutValues.isChanged() && !values.isChanged(),
+                    close: false
+                })
+            ]}
+        />
+    </DialogFrame>
+
 }
 

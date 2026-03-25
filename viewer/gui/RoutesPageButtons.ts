@@ -52,5 +52,9 @@ export default GeneralButtons.concat(propsToDefs([
         name:'ItemsView',
         displayName: 'stored routes',
     },
+    {
+        name: 'ShowSettings',
+        displayName:'display settings'
+    }
 ]))
 
