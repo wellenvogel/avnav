@@ -20,48 +20,21 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-export const PAGEIDS={
-    MAIN:'mainpage',
-    INFO:'infopage',
-    GPS:'gpspage',
-    AIS:'aispage',
-    ADDON:'addonpage',
-    ADDR:'addresspage',
-    SERVER:'serverpage',
-    WPA:'wpapage',
-    DOWNLOAD:'downloadpage',
-    SETTINGS:'settingspage',
-    NAV:'navpage',
-    ROUTE:'editroutepage',
-    WARNING:'warningpage',
-    VIEW:'viewpage',
-    ADDCFG:'addonconfigpage',
-    IMPORT:'importerpage',
-    CHANNELS:'channelspage',
-    NROUTE: 'routepage',
-    TRACKS: 'tracks'
-}
+import GeneralButtons from "./GeneralButtons";
+import {propsToDefs} from "../components/Button";
 
-export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
-    TRACKS: "Tracks/NMEALogs",
-    ADDCFG: "",
-    ADDON: "",
-    ADDR: "",
-    AIS: "",
-    CHANNELS: "Connections/Devices",
-    DOWNLOAD: "",
-    GPS: "",
-    IMPORT: "",
-    INFO: "",
-    MAIN: "Select Chart",
-    NAV: "Navigation",
-    ROUTE: "Route Editor",
-    NROUTE: "Routes",
-    SETTINGS: "Display Settings",
-    SERVER: "Server",
-    VIEW: "",
-    WARNING: "",
-    WPA: ""
+export default GeneralButtons.concat(propsToDefs([
+    {
+        name:'ServerView',
+        displayName: 'server settings',
+    },
+    {
+        name:'ItemsView',
+        displayName: 'list tracks/logs',
+    },
+    {
+        name: 'ShowSettings',
+        displayName:'display settings'
+    }
+]))
 
-}
- 
