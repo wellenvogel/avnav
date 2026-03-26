@@ -412,6 +412,7 @@ class WorkerKind:
     CHANNEL='channel'
     USER='user'
     ADDON='addon'
+    AIS='ais'
     OTHER='other'
 
 class AVNWorker(InfoHandler):

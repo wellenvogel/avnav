@@ -152,8 +152,6 @@ class AVNBaseConfig(AVNWorker):
       return None
     return [
             cls.P_EXPIRY_TIME,
-            cls.P_AIS_EXPIRYTIME,
-            cls.P_OWNMMSI,
             cls.P_DEBUGTOLOG,
             cls.P_MAXTIMEBACK,
             cls.P_SETTIME,
