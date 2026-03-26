@@ -43,6 +43,7 @@ import NavPageButtons from "./NavPageButtons";
 import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
 import RoutesPageButtons from "./RoutesPageButtons";
 import TracksPageButtons from "./TracksPageButtons";
+import AisCfgPageButtons from "./AisCfgPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -83,6 +84,8 @@ const mainTree=[
         RoutesPageButtons),
     new Page(PAGEIDS.TRACKS,'settings',PAGE_TITLES.TRACKS,
         TracksPageButtons),
+    new Page(PAGEIDS.AISCFG,'settings',PAGE_TITLES.AISCFG,
+        AisCfgPageButtons),
     new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
         ChannelsPageButtons),
     new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,

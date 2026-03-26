@@ -56,7 +56,7 @@ const DialogButton=(props:DialogButtonProps)=>{
                 {...style}
                 name={name}
                 onClick={clickHandler}
-                className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
+                className={concatsp("button dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
             >
             <span style={spanStyle}/>
                 {children}

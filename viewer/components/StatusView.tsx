@@ -140,5 +140,6 @@ export enum ChannelKinds {
     CHANNEL = 'channel',
     USER = 'user',
     ADDON = 'addon',
-    OTHER = 'other'
+    OTHER = 'other',
+    AIS='ais'
 }

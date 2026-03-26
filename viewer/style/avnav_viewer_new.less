@@ -1217,47 +1217,55 @@ span.valuePrefix{
   .aisHidden{
     opacity: 0.5;
   }
-  #aispage{
-    .aisListItem{
+  #aispage,.aisList {
+    .aisListItem {
       .listEntry();
-      .aisItemFB{
-        width:4em;
+
+      .aisItemFB {
+        width: 4em;
         min-width: 4em;
       }
-      .fb1{
+
+      .fb1 {
         font-size: 2.5em;
         font-weight: bold;
       }
-      .aisData{
+
+      .aisData {
         overflow: hidden;
         max-width: 100%;
-        .aisData1{
+
+        .aisData1 {
           font-weight: bold;
           margin-bottom: 0.2em;
         }
-        .aisData2{
+
+        .aisData2 {
           white-space: pre-line;
           font-family: monospace;
         }
-        .infoLine{
+
+        .infoLine {
           margin-bottom: 0.2em;
           .flex-display();
           .flex-direction(row);
           .flex-wrap(wrap);
         }
-        .label{
+
+        .label {
           .mdText2();
           width: 2em;
           display: inline-block;
         }
-        .info{
+
+        .info {
           padding-left: 1em;
           min-width: 6.5em;
           display: inline-block;
         }
       }
     }
-
+  }
     .aisSummary{
       background-color: var(--avnav-select-color);
       padding-top: 0.5em;
@@ -1278,7 +1286,7 @@ span.valuePrefix{
         vertical-align: middle;
       }
     }
-  }
+
 
   @aisInfoSmall: 35em;
   @aisInfoNoIconHeight: 40em;

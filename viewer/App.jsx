@@ -60,6 +60,7 @@ import {useDialogContext} from "./components/DialogContext";
 import ChannelsPage from "./gui/ChannelsPage";
 import RoutesPage from "./gui/RoutesPage";
 import TracksPage from "./gui/TracksPage";
+import AisCfgPage from "./gui/AisCfgPage";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -112,6 +113,7 @@ const pages={
     [PAGEIDS.CHANNELS]: ChannelsPage,
     [PAGEIDS.NROUTE]: RoutesPage,
     [PAGEIDS.TRACKS]: TracksPage,
+    [PAGEIDS.AISCFG]: AisCfgPage,
 };
 const Router = (props) => {
     const history = useHistory();

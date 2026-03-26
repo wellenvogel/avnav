@@ -25,6 +25,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {PAGEIDS} from "../util/pageids";
 import {useDialogContext} from "../components/DialogContext";
 import {scrollInContainer} from "../util/UiHelper";
+import cloneDeep from "clone-deep";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -223,25 +224,139 @@ const scrollWarning=(ev)=>{
     let el=document.querySelector('.aisList .'+WARNING_CLASS);
     if (el) el.scrollIntoView();
 }
+/*
+export interface CompleteAisListProps{
+    sortField?:string,
+    searchActive?:boolean,
+    searchValue?:string
+    sortCallback:()=>void,
+    mmsi:number|string
+}
+ */
+
+export const CompleteAisList=(iprops)=>{
+    const dialogContext=useDialogContext();
+    const history=useHistory();
+    const initialMmsi=useRef(iprops.mmsi)
+    const sortField=iprops.sortField||sortFields[0].value;
+    let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
+        computeList(Object.assign(
+            {
+                sortField: sortField,
+                searchActive: iprops.searchActive,
+                searchValue: iprops.searchValue,
+                initialMmsi: initialMmsi.current||''
+            },
+            globalStore.getMultiple({
+                aisList: keys.nav.ais.list,
+                trackingTarget: keys.nav.ais.trackedMmsi
+            })
+        ))
+        :
+        {
+            storeKeys: {
+                updateCount: keys.nav.ais.updateCount,
+                aisList: keys.nav.ais.list,
+                trackingTarget: keys.nav.ais.trackedMmsi,
+            },
+            updateFunction: (state) => computeList({
+                ...state,
+                sortField: sortField,
+                searchActive: iprops.searchActive,
+                searchValue: iprops.searchValue,
+                initialMmsi: initialMmsi.current
+            })
+        };
+    return <React.Fragment>
+    <Summary numTargets={0}
+                    storeKeys={{
+                        updateCount:keys.nav.ais.updateCount,
+                        aisList:keys.nav.ais.list
+                    }}
+                    updateFunction={(state)=>computeSummary({...state,sortField:iprops.sortField})}
+                    sortField={iprops.sortField}
+                    searchValue={iprops.searchActive?iprops.searchValue:undefined}
+                    scrollWarning={(el)=>scrollWarning(el)}
+                    onClick={iprops.sortCallback}
+    />
+    <AisList
+        itemClass={MemoAisItem}
+        onItemClick={(ev)=> {
+            const item=avitem(ev);
+            let accessor=aisproxy(item);
+            showDialog(dialogContext,()=>{
+                return <AisInfoWithFunctions
+                    mmsi={accessor.mmsi}
+                    actionCb={(action,m)=>{
+                        if (action === 'AisNearest' || action === 'AisInfoLocate'){
+                            history.pop();
+                        }
+                    }}
+                />;
+            })
+        }}
+        className="aisList"
+        keyFunction={(item)=>item.mmsi}
+        {...aisListProps}
+        scrollable={true}
+        listRef={(list)=>{
+            if (!list) return;
+            if (! initialMmsi.current) return;
+            let selected=list.querySelector('.initialTarget');
+            if (! selected) return;
+            initialMmsi.current=undefined;
+            let mode=scrollInContainer(list,selected);
+            if (mode < 1 || mode > 2) return;
+            selected.scrollIntoView(mode===1);
+        }}
+    />
+    </React.Fragment>
+}
+
+export const sortDialog=(dialogContext)=>{
+    const fields=cloneDeep(sortFields);
+    const sortField=globalStore.getData(keys.gui.aispage.sortField);
+    for (let i in fields) {
+        fields[i].selected = fields[i].value === sortField;
+    }
+    showPromiseDialog(dialogContext,SelectDialog,{title:'Sort Order',list:fields})
+        .then((selected)=>{
+            globalStore.storeData(keys.gui.aispage.sortField,selected.value);
+        })
+        .catch(()=>{})
+};
+
+export const searchActiveChange=(dialogContext)=>{
+    const searchActive=globalStore.getData(keys.gui.aispage.searchActive);
+    const setSearchActive=(searchActive)=> {
+        globalStore.storeData(keys.gui.aispage.searchActive,searchActive);
+    }
+    if (searchActive){
+        setSearchActive(false);
+    }
+    else{
+        showPromiseDialog(dialogContext,(props)=><ValueDialog
+            {...props}
+            title={"filter"}
+            value={globalStore.getData(keys.gui.aispage.searchValue)}
+            clear={true}
+        />)
+            .then((value)=>{
+                setSearchActive(true);
+                globalStore.storeData(keys.gui.aispage.searchValue,value.toUpperCase());
+            })
+            .catch((e)=>{});
+    }
+}
+
 const ID=PAGEIDS.AIS;
 const AisPage =(props)=>{
     const history=useHistory();
         const options=props.options||{};
-        let initialMmsi=useRef(options.mmsi);
-        const [sortField,setSortField]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
-        const [searchActive,setSearchActive]=useStoreState(keys.gui.aispage.searchActive,false);
-        const [searchValue,setSearchValue]=useStoreState(keys.gui.aispage.searchValue,"");
+        const [sortField,]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
+        const [searchActive,]=useStoreState(keys.gui.aispage.searchActive,false);
+        const [searchValue,]=useStoreState(keys.gui.aispage.searchValue,"");
         const dialogContext=useDialogContext();
-        const sortDialog=useCallback(()=> {
-            for (let i in sortFields) {
-                sortFields[i].selected = sortFields[i].value === sortField;
-            }
-            showPromiseDialog(dialogContext,SelectDialog,{title:'Sort Order',list:sortFields})
-                .then((selected)=>{
-                     setSortField(selected.value);
-                })
-                .catch(()=>{})
-        },[sortField]);
         const buttons=[
             {
                 name:"AisNearest",
@@ -264,22 +379,7 @@ const AisPage =(props)=>{
             {
                 name:'AisSearch',
                 onClick: ()=>{
-                    if (searchActive){
-                        setSearchActive(false);
-                    }
-                    else{
-                        showPromiseDialog(dialogContext,(props)=><ValueDialog
-                            {...props}
-                            title={"filter"}
-                            value={searchValue}
-                            clear={true}
-                        />)
-                            .then((value)=>{
-                                setSearchActive(true);
-                                setSearchValue(value.toUpperCase());
-                            })
-                            .catch((e)=>{});
-                    }
+                    searchActiveChange(dialogContext);
                 },
                 toggle:()=>searchActive
             },
@@ -289,81 +389,19 @@ const AisPage =(props)=>{
                 onClick: ()=>{history.pop()}
             }
         ];
-    let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
-        computeList(Object.assign(
-            {
-                sortField: sortField,
-                searchActive: searchActive,
-                searchValue: searchValue,
-                initialMmsi: initialMmsi.current
-            },
-            globalStore.getMultiple({
-                aisList: keys.nav.ais.list,
-                trackingTarget: keys.nav.ais.trackedMmsi
-            })
-        ))
-        :
-        {
-            storeKeys: {
-                updateCount: keys.nav.ais.updateCount,
-                aisList: keys.nav.ais.list,
-                trackingTarget: keys.nav.ais.trackedMmsi,
-            },
-            updateFunction: (state) => computeList({
-                ...state,
-                sortField: sortField,
-                searchActive: searchActive,
-                searchValue: searchValue,
-                initialMmsi: initialMmsi.current
-            })
-        };
+
         return (
             <PageFrame
                 {...props}
                 id={ID}
                 title="Ais">
                 <PageLeft>
-                    <Summary numTargets={0}
-                             storeKeys={{
-                                 updateCount:keys.nav.ais.updateCount,
-                                 aisList:keys.nav.ais.list
-                             }}
-                             updateFunction={(state)=>computeSummary({...state,sortField:sortField})}
-                             sortField={sortField}
-                             searchValue={searchActive?searchValue:undefined}
-                             scrollWarning={(el)=>scrollWarning(el)}
-                             onClick={sortDialog}
-                    />
-                    <AisList
-                        itemClass={MemoAisItem}
-                        onItemClick={(ev)=> {
-                            const item=avitem(ev);
-                            let accessor=aisproxy(item);
-                            showDialog(dialogContext,()=>{
-                                return <AisInfoWithFunctions
-                                    mmsi={accessor.mmsi}
-                                    actionCb={(action,m)=>{
-                                        if (action === 'AisNearest' || action === 'AisInfoLocate'){
-                                            history.pop();
-                                        }
-                                    }}
-                                />;
-                            })
-                        }}
-                        className="aisList"
-                        keyFunction={(item)=>item.mmsi}
-                        {...aisListProps}
-                        scrollable={true}
-                        listRef={(list)=>{
-                            if (!list) return;
-                            if (! initialMmsi.current) return;
-                            let selected=list.querySelector('.initialTarget');
-                            if (! selected) return;
-                            initialMmsi.current=undefined;
-                            let mode=scrollInContainer(list,selected);
-                            if (mode < 1 || mode > 2) return;
-                            selected.scrollIntoView(mode===1);
-                        }}
+                    <CompleteAisList
+                        sortField={sortField}
+                        searchActive={searchActive}
+                        searchValue={searchValue}
+                        mmsi={props.mmsi}
+                        sortCallback={sortDialog}
                     />
                 </PageLeft>
                 <ButtonList page={ID} itemList={buttons}/>
