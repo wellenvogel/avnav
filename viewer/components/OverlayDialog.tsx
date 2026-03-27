@@ -274,18 +274,18 @@ export const DialogRow=
         {children}
     </div>
 })
-
+type DialogButtonDef=DialogButtonProps|((props:any) => React.ReactNode)
 export interface DialogButtonProps extends Record<string, any>{
     className?:string;
     children?:React.ReactNode;
-    buttonList?:(DialogButtonProps|((props:any) => React.ReactNode))[];
+    buttonList?:DialogButtonDef|DialogButtonDef[];
 }
 export const DialogButtons=(props:DialogButtonProps)=>{
     const {className,children,buttonList,...fw}=props;
     let buttons=buttonList;
     if (! (buttons instanceof Array)) buttons=[buttons];
     return <div {...fw} className={Helper.concatsp("dialogButtons",className)}>
-        {buttons.map((button)=>{
+        {buttons.map((button:DialogButtonDef)=>{
             if (! button) return null;
             if (typeof(button) === 'function'){
                 const El=button;

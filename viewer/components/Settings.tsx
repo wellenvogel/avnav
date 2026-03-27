@@ -44,9 +44,7 @@ import globalstore from "../util/globalstore";
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
-// @ts-ignore
 import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog} from "./OverlayDialog";
-// @ts-ignore
 import {ConfirmDialog} from './BasicDialogs';
 import {useDialogContext} from "./exports";
 import {IDialogContext} from "./DialogContext";

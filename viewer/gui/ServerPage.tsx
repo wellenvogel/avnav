@@ -22,7 +22,6 @@ import {createAddDialog} from "../components/EditHandlerDialog";
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import Helper from "../util/helper";
-// @ts-ignore
 import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
 import {useDialogContext} from  '../components/DialogContext';
 import ButtonList from '../components/ButtonList';

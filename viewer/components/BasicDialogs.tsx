@@ -24,14 +24,18 @@
  * basic dialog implementations
  */
 import DB from "./DialogButton";
-import React, {useEffect, useState} from "react";
+import React, {SyntheticEvent, useEffect, useState} from "react";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {getItemIconProperties} from "../util/itemFunctions";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {useDialogContext} from "./DialogContext";
+import {SelectListEntry} from "../util/EditableParameter";
+import {ButtonEvent} from "./Button";
 
-export const defaultSelectSort=(a,b)=>{
+export const defaultSelectSort=(
+    a:SelectListEntry,
+    b:SelectListEntry)=>{
     if (typeof(a) !== 'object' || typeof (b) !== 'object') return 0;
     const av=(a.label||"").toUpperCase();
     const bv=(b.label||"").toUpperCase();
@@ -39,8 +43,14 @@ export const defaultSelectSort=(a,b)=>{
     if (av > bv) return 1;
     return 0;
 }
-
-export const SelectList = ({list, onClick,scrollable,className,sort}) => {
+export interface SelectListProps{
+    list:SelectListEntry[];
+    onClick:(e:SelectListEntry)=>void;
+    scrollable?:boolean;
+    className?:string;
+    sort?:(a:SelectListEntry,b:SelectListEntry)=>number;
+}
+export const SelectList = ({list, onClick,scrollable,className,sort}:SelectListProps) => {
     if (sort){
         list=[...list];
         if (typeof(sort)!=='function'){
@@ -67,7 +77,17 @@ export const SelectList = ({list, onClick,scrollable,className,sort}) => {
         })}
     </ListFrame>
 }
-export const SelectDialog = ({resolveFunction, title, list, optResetCallback, okCallback,className,sort}) => {
+export interface SelectDialogProps{
+    resolveFunction:(el:SelectListEntry) => void;
+    title?:React.ReactNode;
+    list:SelectListEntry[];
+    optResetCallback:(ev:ButtonEvent) => void;
+    okCallback:(el:SelectListEntry) => void;
+    className?:string;
+    sort:(a:SelectListEntry, b:SelectListEntry)=>number;
+}
+export const SelectDialog = (
+    {resolveFunction, title, list, optResetCallback, okCallback,className,sort}:SelectDialogProps) => {
     const dialogContext = useDialogContext();
     return (
         <DialogFrame className={Helper.concatsp("selectDialog",className)} title={title || ''}>
@@ -90,7 +110,15 @@ export const SelectDialog = ({resolveFunction, title, list, optResetCallback, ok
     );
 
 };
-export const ConfirmDialog = ({title, text, resolveFunction, children,className}) => {
+export interface ConfirmDialogProps{
+    title?:React.ReactNode;
+    text?:React.ReactNode;
+    resolveFunction:(ev:SyntheticEvent) => void;
+    className?:string;
+    children?:React.ReactNode;
+}
+export const ConfirmDialog = (
+    {title, text, resolveFunction, children,className}:ConfirmDialogProps) => {
     return <DialogFrame title={title || ''} className={className} >
         <div className="dialogText">{text}</div>
         {children}
@@ -100,21 +128,37 @@ export const ConfirmDialog = ({title, text, resolveFunction, children,className}
         ]}/>
     </DialogFrame>
 }
-export const AlertDialog = ({text, resolveFunction,children,className}) => {
+export interface AlertDialogProps{
+    text:React.ReactNode;
+    resolveFunction?:(ev:ButtonEvent) => void;
+    className?:string;
+    children?:React.ReactNode;
+}
+export const AlertDialog = (
+    {text, resolveFunction,children,className}:AlertDialogProps) => {
     return <DialogFrame title={"Alert"} className={className}>
         <DialogText>{text}</DialogText>
         {children}
         <DialogButtons buttonList={DBOk(resolveFunction )}/>
     </DialogFrame>
 }
-export const ValueDialog = ({value, label, title, clear, resolveFunction,checkFunction}) => {
+export interface ValueDialogProps{
+    value:string;
+    label?:React.ReactNode;
+    title?:React.ReactNode;
+    clear?:boolean|((nv:string)=>string);
+    resolveFunction?:(nv:string) => void;
+    checkFunction?:(nv:string) => string|undefined|Promise<string|void>;
+}
+export const ValueDialog = (
+    {value, label, title, clear, resolveFunction,checkFunction}:ValueDialogProps) => {
     const [nvalue, setValueImpl] = useState(value);
     const [error,setError]=useState(undefined)
-    const setValue=(nv)=> {
+    const setValue=(nv:string)=> {
         setValueImpl(nv);
         check(nv);
     }
-    const check=(nv)=>{
+    const check=(nv:string)=>{
         if (!checkFunction) return;
         const res=checkFunction(nv);
         if (!res){
@@ -150,14 +194,25 @@ export const ValueDialog = ({value, label, title, clear, resolveFunction,checkFu
     );
 }
 
-export const InfoItem = (props) => {
+export interface InfoItemProps{
+    className?:string,
+    label?:React.ReactNode;
+    value?:React.ReactNode;
+}
+export const InfoItem = (props:InfoItemProps) => {
     return <div className={"dialogRow " + props.className}>
         <span className={"inputLabel"}>{props.label}</span>
         <span className={"itemInfo"}>{props.value}</span>
     </div>
 }
 
-InfoItem.show = (data, description) => {
+InfoItem.show = (
+    data:Record<string,any>,
+    description:{
+        value:string,
+        formatter?:(v:any,data:Record<string,any>)=>string,
+        label:string,
+    }) => {
     let v = data[description.value];
     if (v === undefined) return null;
     if (description.formatter) {
