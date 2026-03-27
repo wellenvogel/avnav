@@ -26,6 +26,9 @@ import {PAGEIDS} from "../util/pageids";
 import {useDialogContext} from "../components/DialogContext";
 import {scrollInContainer} from "../util/UiHelper";
 import cloneDeep from "clone-deep";
+import {InjectMainMenu, useInitialButton} from "./MainNav";
+import AisPageButtons from "./AisPageButtons";
+import {updateButtons} from "../components/Button";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -348,48 +351,47 @@ export const searchActiveChange=(dialogContext)=>{
             .catch((e)=>{});
     }
 }
+export const AisButtonActions = ({nearestAction}) => {
+    return {
+        AisNearest: {
+            onClick: () => {
+                navdata.getAisHandler().setTrackedTarget(0);
+                if (nearestAction) nearestAction();
+            }
+        },
+        AisSort: {
+            onClick: sortDialog
+
+        },
+        AisLock: {
+            onClick: () => {
+                globalStore.storeData(keys.properties.aisListLock, !globalStore.getData(keys.properties.aisListLock, false))
+            },
+            storeKeys: {toggle: keys.properties.aisListLock}
+
+        },
+        AisSearch: {
+            onClick: () => {
+                searchActiveChange();
+            }
+        }
+    }
+}
 
 const ID=PAGEIDS.AIS;
 const AisPage =(props)=>{
-    const history=useHistory();
         const options=props.options||{};
         const [sortField,]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
         const [searchActive,]=useStoreState(keys.gui.aispage.searchActive,false);
         const [searchValue,]=useStoreState(keys.gui.aispage.searchValue,"");
-        const dialogContext=useDialogContext();
-        const buttons=[
-            {
-                name:"AisNearest",
-                onClick:()=>{
-                    navdata.getAisHandler().setTrackedTarget(0);
-                    history.pop();
-                }
-            },
-            {
-                name:"AisSort",
-                onClick:sortDialog
-
-            },
-            {
-                name:"AisLock",
-                onClick:()=>{globalStore.storeData(keys.properties.aisListLock,!globalStore.getData(keys.properties.aisListLock,false))},
-                storeKeys: {toggle:keys.properties.aisListLock}
-
-            },
-            {
-                name:'AisSearch',
-                onClick: ()=>{
-                    searchActiveChange(dialogContext);
-                },
-                toggle:()=>searchActive
-            },
-            Mob.mobDefinition(history),
-            {
-                name: 'Cancel',
-                onClick: ()=>{history.pop()}
-            }
-        ];
-
+        const currentButtons=useRef();
+        const history=useHistory();
+    useDialogContext();
+    currentButtons.current=InjectMainMenu(PAGEIDS.AIS,
+        updateButtons(AisPageButtons,AisButtonActions({
+            nearestAction: ()=>history.push(PAGEIDS.NAV)
+        })));
+    useInitialButton(currentButtons);
         return (
             <PageFrame
                 {...props}
@@ -404,7 +406,7 @@ const AisPage =(props)=>{
                         sortCallback={sortDialog}
                     />
                 </PageLeft>
-                <ButtonList page={ID} itemList={buttons}/>
+                <ButtonList page={ID} itemList={currentButtons.current}/>
             </PageFrame>
         );
 }
