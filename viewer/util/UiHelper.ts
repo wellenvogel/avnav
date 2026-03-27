@@ -130,7 +130,7 @@ export const scrollInContainer=(
     parent:HTMLElement,
     element:HTMLElement,
     opt_execute?:ScrollExeMode)=> {
-    if (!parent || ! element) return false;
+    if (!parent || ! element) return 0;
     const parentRect = parent.getBoundingClientRect();
     const elRect = element.getBoundingClientRect();
     let rt=0;

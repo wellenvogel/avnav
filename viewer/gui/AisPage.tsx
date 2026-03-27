@@ -2,33 +2,37 @@
  * Created by andreas on 02.05.14.
  */
 
-import {useStore, useStoreState} from '../hoc/Dynamic.tsx';
-import ItemList from '../components/ItemList.tsx';
-import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.ts';
-import React, {useRef} from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
-import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
-import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
+import {StoreKeys, UpdateFunction, useStore, useStoreState} from '../hoc/Dynamic';
+import ItemList, {ItemListProps} from '../components/ItemList';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
+import React, {SyntheticEvent, useRef} from 'react';
+// @ts-ignore
+import PropertyHandler from '../util/propertyhandler';
+import {PageFrame, PageLeft, PageProps} from '../components/Page';
+// @ts-ignore
+import AisFormatter, {aisproxy} from '../nav/aisformatter';
 import {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog';
-import Mob from '../components/Mob.ts';
 import Compare from "../util/compare";
+// @ts-ignore
 import navdata from "../nav/navdata";
+// @ts-ignore
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
 import {PAGEIDS} from "../util/pageids";
-import {useDialogContext} from "../components/DialogContext";
+import {IDialogContext, useDialogContext} from "../components/DialogContext";
 import {scrollInContainer} from "../util/UiHelper";
+// @ts-ignore
 import cloneDeep from "clone-deep";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import AisPageButtons from "./AisPageButtons";
-import {updateButtons} from "../components/Button";
+import {ButtonDef, updateButtons} from "../components/Button";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -49,26 +53,26 @@ const sortFields = [
     {label:'MMSI',value:'mmsi'},
 ];
 
-const fieldToLabel=(field)=>{
+const fieldToLabel=(field:string)=>{
     let rt;
     sortFields.forEach((e)=>{ if(e.value==field) rt=e.label; });
     return rt||field;
 };
 
-const aisSortCreator=(sortField)=>{
-    return (a,b)=> {
+const aisSortCreator=(sortField:string)=>{
+    return (a:any,b:any)=> {
         if (sortField==='prio') {
             return a.priority - b.priority;
         }
-        let useFmt=sortField === 'shipname';
-        var fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
-        var fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
+        const useFmt=sortField === 'shipname';
+        let fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
+        let fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
         if (sortField.includes('cpa')) {
             // pull warnings up
             if (b.warning && !a.warning) return 1;
             if (a.warning && !b.warning) return -1;
             // push down passed CPAs
-            let ta = a.tcpa, tb = b.tcpa;
+            const ta = a.tcpa, tb = b.tcpa;
             if (ta < 0 && tb >= 0) return 1;
             if (tb < 0 && ta >= 0) return -1;
             // if both passed CPA, sort by distance
@@ -83,21 +87,29 @@ const aisSortCreator=(sortField)=>{
     };
 };
 
-const pad=(val,len)=>{
+const pad=(val:any,len:number)=>{
     let str = (''+val).trim();
     str = ' '.repeat(Math.max(0,len-str.length)) + str;
     return str;
 }
 
+interface AisItemProps{
+    addClass?: string;
+    initialTarget?:boolean;
+    warning?:boolean;
+    hidden?:boolean;
+    lost?:boolean;
+    onClick?:(ev:SyntheticEvent) => void;
+}
 
-const AisItem=(props)=>{
-    let reduceDetails=globalStore.getData(keys.properties.aisReducedList,false);
-    let fmt=AisFormatter;
-    let fb=fmt.format('passFront',props);
-    let style={
+const AisItem=(props:AisItemProps)=>{
+    const reduceDetails=globalStore.getData(keys.properties.aisReducedList,false);
+    const fmt=AisFormatter;
+    const fb=fmt.format('passFront',props);
+    const style={
         color:PropertyHandler.getAisColor(props)
     };
-    let cl=Helper.concatsp(
+    const cl=Helper.concatsp(
         "aisListItem",
         props.addClass,
         props.initialTarget?"initialTarget":undefined,
@@ -107,7 +119,7 @@ const AisItem=(props)=>{
     let clazz=fmt.format('clazz',props);
     if (clazz !== '') clazz="["+clazz+"]";
     let txt="";
-    let infos=reduceDetails?reducedAisInfos:aisInfos;
+    const infos=reduceDetails?reducedAisInfos:aisInfos;
     let newLine=false;
     infos.forEach((infoLine)=>{
         if (newLine) txt+="\n";
@@ -119,7 +131,7 @@ const AisItem=(props)=>{
             lbl=pad(lbl,reduceDetails?1:5);
             txt+=lbl+' ';
             let val=(fmt.format(info,props)||'');
-            let unit=fmt.getUnit(info);
+            const unit=fmt.getUnit(info);
             if(!reduceDetails && unit) val+=unit;
             val=pad(val,reduceDetails?1:6);
             txt+=val;
@@ -143,7 +155,7 @@ const AisItem=(props)=>{
     );
 };
 
-const itemCompare=(oldValues,newValues)=>{
+const itemCompare=(oldValues:any,newValues:any)=>{
     return Compare(oldValues,newValues);
 }
 
@@ -151,34 +163,50 @@ const MemoAisItem=React.memo(AisItem,itemCompare);
 
 const WARNING_CLASS='aisWarning';
 const HIDDEN_CLASS='aisHidden';
-
-const Summary=(iprops)=>{
-    const props=useStore(iprops,{minTime:globalStore.getData(keys.properties.aisListUpdateTime,1)*1000})
-    let color=PropertyHandler.getAisColor({
+interface SummaryProps{
+    numTargets?:number;
+    warning?:boolean;
+    scrollWarning?:(ev:SyntheticEvent) => void;
+    searchValue?:string;
+    storeKeys?:StoreKeys,
+    sortField?:string,
+    onClick:(ev:SyntheticEvent) => void;
+    updateFunction?:UpdateFunction;
+}
+const Summary=(iprops:SummaryProps)=>{
+    const sprops=useStore(iprops,{minTime:globalStore.getData(keys.properties.aisListUpdateTime,1)*1000})
+    const color=PropertyHandler.getAisColor({
         warning: true
     });
-    const dialogContext=useDialogContext();
     return (
-        <div className="aisSummary" onClick={(ev)=>iprops.onClick(ev,dialogContext)}>
-            <span className="aisNumTargets">{props.numTargets} Targets</span>
-            {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
+        <div className="aisSummary" onClick={(ev)=>iprops.onClick(ev)}>
+            <span className="aisNumTargets">{sprops.numTargets} Targets</span>
+            {(sprops.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                       onClick={iprops.scrollWarning}/>}
-            <span>sorted by {fieldToLabel(props.sortField)}</span>
-            {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
+            <span>sorted by {fieldToLabel(sprops.sortField)}</span>
+            {(sprops.searchValue !== undefined) && <span>[{sprops.searchValue}]</span>}
         </div>
     );
 };
 
-const AisList=(iprops)=> {
+const AisList=(iprops:Partial<ItemListProps>)=> {
     const props = useStore(iprops, {minTime: globalStore.getData(keys.properties.aisListUpdateTime, 1) * 1000});
     return <ItemList {...props}/>
 }
-const computeSummary=({sortField,aisList})=>{
-    let empty={sortField:sortField,numTargets:0,warning:undefined};
+interface ComputeSummaryProps{
+    sortField:string;
+    aisList:any[]
+}
+const computeSummary=({sortField,aisList}:ComputeSummaryProps)=>{
+    const empty:{
+      sortField:string;
+      numTargets:number;
+      warning?:number|string|undefined;
+    }={sortField:sortField,numTargets:0,warning:undefined};
     if (! aisList || aisList.length === 0) return empty;
-    let rt=empty;
-    for( let aisidx in aisList){
-        let ais=aisList[aisidx];
+    const rt=empty;
+    for( const aisidx in aisList){
+        const ais=aisList[aisidx];
         if (ais.warning) rt.warning=ais.mmsi;
     }
     rt.numTargets=aisList.length;
@@ -187,19 +215,28 @@ const computeSummary=({sortField,aisList})=>{
 
 
 
+interface ComputeListProps{
+    aisList:any[];
+    trackingTarget?:number|string;
+    sortField?:string;
+    searchActive?:boolean;
+    searchValue?:string;
+    initialMmsi?:string|number
+}
 
-const computeList=({aisList,trackingTarget,sortField,searchActive,searchValue,initialMmsi})=>{
+const computeList=(
+    {aisList,trackingTarget,sortField,searchActive,searchValue,initialMmsi}:ComputeListProps):{itemList:any[]}=>{
     if (! aisList) return {itemList:[]};
-    let items=[];
-    let sortFunction=aisSortCreator(sortField||sortFields[0]);
-    for( let aisidx in aisList){
+    const items=[];
+    const sortFunction=aisSortCreator(sortField||sortFields[0].value);
+    for( const aisidx in aisList){
         let ais={...aisList[aisidx]};
         ais=aisproxy(ais,true);
         if (! ais.mmsi) continue;
         if (searchActive){
             let found=false;
             ['name','mmsi','callsign','shipname'].forEach((n)=>{
-                let v=ais[n];
+                const v=ais[n];
                 if (! v) return;
                 if ((v+"").toUpperCase().indexOf(searchValue) >= 0) found=true;
             });
@@ -222,39 +259,34 @@ const computeList=({aisList,trackingTarget,sortField,searchActive,searchValue,in
     return {itemList:items};
 };
 
-const scrollWarning=(ev)=>{
+const scrollWarning=(ev:SyntheticEvent)=>{
     if (ev && ev.stopPropagation) ev.stopPropagation();
-    let el=document.querySelector('.aisList .'+WARNING_CLASS);
+    const el=document.querySelector('.aisList .'+WARNING_CLASS);
     if (el) el.scrollIntoView();
 }
-/*
 export interface CompleteAisListProps{
     sortField?:string,
     searchActive?:boolean,
     searchValue?:string
-    sortCallback:()=>void,
-    mmsi:number|string
+    sortCallback?:()=>void,
+    mmsi?:number|string
 }
- */
-
-export const CompleteAisList=(iprops)=>{
+export const CompleteAisList=(iprops:CompleteAisListProps)=>{
     const dialogContext=useDialogContext();
     const history=useHistory();
     const initialMmsi=useRef(iprops.mmsi)
     const sortField=iprops.sortField||sortFields[0].value;
-    let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
-        computeList(Object.assign(
+    const aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
+        computeList(
             {
                 sortField: sortField,
                 searchActive: iprops.searchActive,
                 searchValue: iprops.searchValue,
-                initialMmsi: initialMmsi.current||''
-            },
-            globalStore.getMultiple({
-                aisList: keys.nav.ais.list,
-                trackingTarget: keys.nav.ais.trackedMmsi
-            })
-        ))
+                initialMmsi: initialMmsi.current || '',
+                aisList: globalStore.getData(keys.nav.ais.list),
+                trackingTarget: globalStore.getData(keys.nav.ais.trackedMmsi)
+            }
+        )
         :
         {
             storeKeys: {
@@ -262,7 +294,11 @@ export const CompleteAisList=(iprops)=>{
                 aisList: keys.nav.ais.list,
                 trackingTarget: keys.nav.ais.trackedMmsi,
             },
-            updateFunction: (state) => computeList({
+            updateFunction: (state:{
+                updateCount:number,
+                aisList:any[],
+                trackingTarget?:string|number
+            }) => computeList({
                 ...state,
                 sortField: sortField,
                 searchActive: iprops.searchActive,
@@ -276,7 +312,7 @@ export const CompleteAisList=(iprops)=>{
                         updateCount:keys.nav.ais.updateCount,
                         aisList:keys.nav.ais.list
                     }}
-                    updateFunction={(state)=>computeSummary({...state,sortField:iprops.sortField})}
+                    updateFunction={(state:{updateCount:number,aisList:any[]})=>computeSummary({...state,sortField:iprops.sortField})}
                     sortField={iprops.sortField}
                     searchValue={iprops.searchActive?iprops.searchValue:undefined}
                     scrollWarning={(el)=>scrollWarning(el)}
@@ -286,11 +322,11 @@ export const CompleteAisList=(iprops)=>{
         itemClass={MemoAisItem}
         onItemClick={(ev)=> {
             const item=avitem(ev);
-            let accessor=aisproxy(item);
+            const accessor=aisproxy(item);
             showDialog(dialogContext,()=>{
                 return <AisInfoWithFunctions
                     mmsi={accessor.mmsi}
-                    actionCb={(action)=>{
+                    actionCb={(action:string)=>{
                         if (action === 'AisNearest' || action === 'AisInfoLocate'){
                             history.push(PAGEIDS.NAV);
                         }
@@ -305,10 +341,10 @@ export const CompleteAisList=(iprops)=>{
         listRef={(list)=>{
             if (!list) return;
             if (! initialMmsi.current) return;
-            let selected=list.querySelector('.initialTarget');
+            const selected=list.querySelector('.initialTarget');
             if (! selected) return;
             initialMmsi.current=undefined;
-            let mode=scrollInContainer(list,selected);
+            const mode=scrollInContainer(list,selected as HTMLElement);
             if (mode < 1 || mode > 2) return;
             selected.scrollIntoView(mode===1);
         }}
@@ -316,22 +352,22 @@ export const CompleteAisList=(iprops)=>{
     </React.Fragment>
 }
 
-export const sortDialog=(dialogContext)=>{
+export const sortDialog=(dialogContext?:IDialogContext)=>{
     const fields=cloneDeep(sortFields);
     const sortField=globalStore.getData(keys.gui.aispage.sortField);
-    for (let i in fields) {
+    for (const i in fields) {
         fields[i].selected = fields[i].value === sortField;
     }
     showPromiseDialog(dialogContext,SelectDialog,{title:'Sort Order',list:fields})
-        .then((selected)=>{
+        .then((selected:{value:string})=>{
             globalStore.storeData(keys.gui.aispage.sortField,selected.value);
         })
         .catch(()=>{})
 };
 
-export const searchActiveChange=(dialogContext)=>{
+export const searchActiveChange=(dialogContext?:IDialogContext)=>{
     const searchActive=globalStore.getData(keys.gui.aispage.searchActive);
-    const setSearchActive=(searchActive)=> {
+    const setSearchActive=(searchActive:boolean)=> {
         globalStore.storeData(keys.gui.aispage.searchActive,searchActive);
     }
     if (searchActive){
@@ -344,14 +380,17 @@ export const searchActiveChange=(dialogContext)=>{
             value={globalStore.getData(keys.gui.aispage.searchValue)}
             clear={true}
         />)
-            .then((value)=>{
+            .then((value:string)=>{
                 setSearchActive(true);
                 globalStore.storeData(keys.gui.aispage.searchValue,value.toUpperCase());
             })
-            .catch((e)=>{});
+            .catch(()=>{});
     }
 }
-export const AisButtonActions = ({nearestAction}) => {
+export interface AisButtonActionParam{
+    nearestAction?:()=>void
+}
+export const AisButtonActions = ({nearestAction}:AisButtonActionParam) => {
     return {
         AisNearest: {
             onClick: () => {
@@ -379,12 +418,13 @@ export const AisButtonActions = ({nearestAction}) => {
 }
 
 const ID=PAGEIDS.AIS;
-const AisPage =(props)=>{
+export interface AisPageProps extends PageProps{}
+const AisPage =(props:AisPageProps)=>{
         const options=props.options||{};
         const [sortField,]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
         const [searchActive,]=useStoreState(keys.gui.aispage.searchActive,false);
         const [searchValue,]=useStoreState(keys.gui.aispage.searchValue,"");
-        const currentButtons=useRef();
+        const currentButtons=useRef<ButtonDef[]>();
         const history=useHistory();
     useDialogContext();
     currentButtons.current=InjectMainMenu(PAGEIDS.AIS,
@@ -402,7 +442,7 @@ const AisPage =(props)=>{
                         sortField={sortField}
                         searchActive={searchActive}
                         searchValue={searchValue}
-                        mmsi={props.mmsi}
+                        mmsi={options.mmsi}
                         sortCallback={sortDialog}
                     />
                 </PageLeft>
@@ -410,5 +450,4 @@ const AisPage =(props)=>{
             </PageFrame>
         );
 }
-AisPage.propTypes= Page.pageProperties;
 export default AisPage;

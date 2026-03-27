@@ -33,6 +33,7 @@ export interface PageFrameProps{
     id: string;
     children?: React.ReactNode;
     style?:Record<string, any>;
+    title?:React.ReactNode;
 }
 export interface PageLeftProps{
     className?: string;

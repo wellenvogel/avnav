@@ -7,7 +7,7 @@ import keys from './util/keys';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
 import GpsPage from './gui/GpsPage.jsx';
-import AisPage from './gui/AisPage.jsx';
+import AisPage from './gui/AisPage.tsx';
 import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
 import ServerPage from './gui/ServerPage.tsx';
