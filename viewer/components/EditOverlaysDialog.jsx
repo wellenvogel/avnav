@@ -8,7 +8,7 @@ import {
     showPromiseDialog
 } from './OverlayDialog.tsx';
 import assign from 'object-assign';
-import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.jsx';
+import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
 import Button from './Button.tsx';
 import ItemList from './ItemList.tsx';

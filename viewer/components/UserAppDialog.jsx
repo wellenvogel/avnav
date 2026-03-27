@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {showPromiseDialog} from './OverlayDialog.tsx';
 import Toast from './Toast.tsx';
-import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
+import {Checkbox, Input, InputReadOnly} from './Inputs.tsx';
 import Addons from './Addons.ts';
 import Helper, {unsetOrTrue} from '../util/helper.ts';
 import Requests from '../util/requests.js';

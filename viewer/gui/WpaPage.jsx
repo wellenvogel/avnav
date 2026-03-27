@@ -12,7 +12,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper, {avitem} from '../util/helper.ts';
 import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.tsx';
-import {Input,Checkbox} from '../components/Inputs.jsx';
+import {Input,Checkbox} from '../components/Inputs.tsx';
 import DB from '../components/DialogButton.tsx';
 import Mob from '../components/Mob.ts';
 import Store from "../util/store";

@@ -18,7 +18,6 @@ import {
     showPromiseDialog
 } from '../components/OverlayDialog';
 import {createAddDialog} from "../components/EditHandlerDialog";
-// @ts-ignore
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import Helper from "../util/helper";

@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 import navobjects from '../nav/navobjects';
 import assign from 'object-assign';
 import DB from './DialogButton.tsx';
-import {Checkbox, Input} from './Inputs.jsx';
+import {Checkbox, Input} from './Inputs.tsx';
 import Dms from "geodesy/dms";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import visible from "../hoc/Visible";

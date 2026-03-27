@@ -37,7 +37,6 @@ import {
     getCommonParam
     // @ts-ignore
 } from "../components/EditableParameterUI";
-// @ts-ignore
 import {InputSelect, InputReadOnly} from '../components/Inputs';
 import globalstore from "../util/globalstore";
 // @ts-ignore

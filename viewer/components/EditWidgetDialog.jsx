@@ -29,7 +29,7 @@ import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, DialogRow, showDialog} from './OverlayDialog.tsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
-import {Input, InputSelect} from './Inputs.jsx';
+import {Input, InputSelect} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
 import cloneDeep from 'clone-deep';
 import Compare from "../util/compare";

@@ -78,13 +78,13 @@ export const SelectList = ({list, onClick,scrollable,className,sort}:SelectListP
     </ListFrame>
 }
 export interface SelectDialogProps{
-    resolveFunction:(el:SelectListEntry) => void;
+    resolveFunction?:(el:SelectListEntry) => void;
     title?:React.ReactNode;
     list:SelectListEntry[];
     optResetCallback:(ev:ButtonEvent) => void;
-    okCallback:(el:SelectListEntry) => void;
+    okCallback?:(el:SelectListEntry) => void;
     className?:string;
-    sort:(a:SelectListEntry, b:SelectListEntry)=>number;
+    sort?:(a:SelectListEntry, b:SelectListEntry)=>number;
 }
 export const SelectDialog = (
     {resolveFunction, title, list, optResetCallback, okCallback,className,sort}:SelectDialogProps) => {

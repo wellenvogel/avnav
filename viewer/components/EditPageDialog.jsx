@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
-import {Checkbox} from './Inputs.jsx';
+import {Checkbox} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
 import cloneDeep from "clone-deep";
 

@@ -1,10 +1,11 @@
-import React, {useEffect, useState} from 'react';
-import ColorDialog from './ColorDialog.jsx';
-import PropTypes from 'prop-types';
+import React, {SyntheticEvent, useEffect, useState} from 'react';
+// @ts-ignore
+import ColorDialog from './ColorDialog';
 import Toast from "./Toast";
 import {SelectDialog} from "./BasicDialogs";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
+import {SelectListEntry} from "../util/EditableParameter";
 
 /**
  * input elements
@@ -15,24 +16,33 @@ import {useDialogContext} from "./DialogContext";
  * className
  */
 
-const DEFAULT_TYPES={
-    value: PropTypes.any,
-    label: PropTypes.string,
-    className: PropTypes.string,
-    onChange: PropTypes.func,
-    dialogRow: PropTypes.bool,
-    mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func])
-};
+interface DEFAULT_TYPES{
+    value: any;
+    label?: string;
+    className?: string;
+    onChange: (v:any) => void;
+    dialogRow?: boolean;
+    mandatory?: boolean|((v:any)=>boolean);
+    children?: React.ReactNode;
+}
 
-export const valueMissing=(check,value)=>{
+export const valueMissing=(check:((value:any)=>boolean)|boolean,value:any)=>{
     if (!check) return false;
     if (typeof check === 'function'){
         return check(value);
     }
     return value === undefined || value === null;
 }
-
-export const Input=(props)=>{
+export interface InputProps extends DEFAULT_TYPES{
+        type?: string; //the type of the input element, default: text
+        minSize?: number;
+        maxSize?: number;
+        min?: number;
+        max?: number;
+        step?: number|string;
+        checkFunction?: (v:any)=>boolean|Promise<boolean>;
+}
+export const Input=(props:InputProps)=>{
     const [hasError,setError]=useState(false);
     let size=undefined;
     if (props.minSize){
@@ -51,7 +61,7 @@ export const Input=(props)=>{
             else setError(!cr);
         }
     }, [props.value]);
-    let className=Helper.concatsp(props.dialogRow?"dialogRow":undefined,
+    const className=Helper.concatsp(props.dialogRow?"dialogRow":undefined,
         props.className,
         hasError?"error":undefined,
         valueMissing(props.mandatory,props.value)?"missing":undefined);
@@ -64,22 +74,19 @@ export const Input=(props)=>{
         </div>;
 };
 
-Input.propTypes={...DEFAULT_TYPES,
-    type: PropTypes.string, //the type of the input element, default: text
-    minSize: PropTypes.number,
-    maxSize: PropTypes.number,
-    min: PropTypes.number,
-    max: PropTypes.number,
-    step: PropTypes.oneOfType([PropTypes.number,PropTypes.string]),
-    checkFunction: PropTypes.func
-};
+export interface CheckBoxProps extends DEFAULT_TYPES{
+    onClick?: (ev:SyntheticEvent)=>void; //if set: do not call onChange but call onClick with the event
+    readOnly?: boolean;
+    frame?: boolean;
+    hideLabel?: boolean;
+}
 
-export const Checkbox=(props)=>{
+export const Checkbox=(props:CheckBoxProps)=>{
     let className="checkBox";
     if (props.value) className+=" checked";
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
-    let clickFunction=(ev)=>{
+    const clickFunction=(ev:SyntheticEvent)=>{
         if (props.readOnly) {
             ev.stopPropagation();
             return;
@@ -100,18 +107,13 @@ export const Checkbox=(props)=>{
     </div>
 };
 
+export interface RadioProps extends DEFAULT_TYPES{
+    itemList: SelectListEntry[] //a list of {label:xxx,value:yyy}
+}
 
-
-Checkbox.propTypes={...DEFAULT_TYPES,
-    onClick: PropTypes.func, //if set: do not call onChange but call onClick with the event
-    readOnly: PropTypes.bool,
-    frame: PropTypes.bool,
-    hideLabel: PropTypes.bool,
-};
-
-export const Radio=(props)=>{
-    let className="radio";
-    let frameClass=Helper.concatsp(props.dialogRow?"dialogRow":undefined,props.className);
+export const Radio=(props:RadioProps)=>{
+    const className="radio";
+    const frameClass=Helper.concatsp(props.dialogRow?"dialogRow":undefined,props.className);
     return <div className={frameClass} >
         {props.label&& <span className="inputLabel radioLabel">{props.label}</span>}
         <div className={"radioFrame"}>
@@ -137,31 +139,37 @@ export const Radio=(props)=>{
     </div>
 };
 
-Radio.propTypes={
-    ...DEFAULT_TYPES,
-    itemList: PropTypes.array, //a list of {label:xxx,value:yyy}
-};
 
-
-export const InputReadOnly=(props)=>{
+export interface InputReadOnlyProps extends DEFAULT_TYPES{
+    onClick?: (ev:SyntheticEvent)=>void;
+    frameClick?: boolean;
+}
+export const InputReadOnly=(props:InputReadOnlyProps)=>{
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
     if (! props.onClick) className+=" disabled";
     if (valueMissing(props.mandatory,props.value)) className+=" missing";
-    let frameClick=props.frameClick?props.onClick:undefined;
+    const frameClick=props.frameClick?props.onClick:undefined;
     return <div className={className}  onClick={frameClick}>
         <span className="inputLabel">{props.label}</span>
         <div className="input" onClick={frameClick?undefined:props.onClick}>{props.value}</div>
         {props.children}
         </div>
 };
-InputReadOnly.propTypes={
-    ...DEFAULT_TYPES
-};
 
-export const InputSelect=(props)=>{
+export type InputSelectList=SelectListEntry[]|((v:any)=>SelectListEntry[]|Promise<SelectListEntry[]>)
+export interface InputSelectProps extends DEFAULT_TYPES{
+    onChange: (nv:any)=>void; //if set  and if prop.list is set: show the select dialog
+    onClick?: (ev:SyntheticEvent)=>void;
+    list?: InputSelectList ;      //array of items to show or a function to create the list
+    itemList?: InputSelectList;
+    changeOnlyValue?: boolean; //only return the value property of the list element in onChange
+    resetCallback?: ()=>void //if set - show a reset button an call this on reset
+}
+export const InputSelect=(props:InputSelectProps)=>{
     const dialogContext=useDialogContext();
     let onClick=props.onClick;
+    // eslint-disable-next-line prefer-const
     let {value,...forwardProps}=props;
     if (value === null || value === undefined) value='';
     let label=value;
@@ -171,15 +179,19 @@ export const InputSelect=(props)=>{
     }
     if (label === undefined) label=value;
     if (label === undefined) label='';
-    let displayList = props.list||props.itemList;
+    const displayList = props.list||props.itemList;
     if (props.onChange && displayList){
         onClick=()=> {
-            const valueChanged = (newValue)=>{
+            const valueChanged = (newValue:any)=>{
                 props.onChange(props.changeOnlyValue?(newValue||{}).value:newValue);
             };
-            let resetCallback= props.resetCallback?props.resetCallback:undefined;
-            const showDialog=(finalList)=>{
-                dialogContext.showDialog(()=><SelectDialog title={props.label} list={finalList} resolveFunction={valueChanged} optResetCallback={resetCallback}/>);
+            const resetCallback= props.resetCallback?props.resetCallback:undefined;
+            const showDialog=(finalList:SelectListEntry[])=>{
+                dialogContext.showDialog(()=><SelectDialog
+                    title={props.label}
+                    list={finalList}
+                    resolveFunction={valueChanged}
+                    optResetCallback={resetCallback}/>);
             }
             let finalList;
             if (typeof(displayList) === 'function') finalList = displayList(props.value);
@@ -209,21 +221,19 @@ export const InputSelect=(props)=>{
         />
 };
 
-InputSelect.propTypes={
-    ...DEFAULT_TYPES,
-    onChange: PropTypes.func, //if set  and if prop.list is set: show the select dialog
-    list: PropTypes.any,      //array of items to show or a function to create the list
-    changeOnlyValue: PropTypes.bool, //only return the value property of the list element in onChange
-    resetCallback: PropTypes.func //if set - show a reset button an call this on reset
-};
-
-
-export const ColorSelector=(props)=>{
+export interface ColorSelectorProps extends DEFAULT_TYPES{
+        onClick?: (ev:SyntheticEvent)=>void; //if onChange is not set, call this function when clicked
+        style?: Record<string, any>; //if set use this style for the color display
+        readOnly?: boolean;
+        default?:string;
+        showUnset?:boolean;
+}
+export const ColorSelector=(props:ColorSelectorProps)=>{
     const dialogContext=useDialogContext();
     let onClick=props.onClick;
     if (props.onChange){
         //show the dialog and call onChange
-        let colorChange=(newColor)=>{
+        const colorChange=(newColor:string)=>{
             props.onChange(newColor)
         };
         onClick=(ev)=>{
@@ -239,7 +249,7 @@ export const ColorSelector=(props)=>{
             })
         }
     }
-    let style=props.style||{backgroundColor:props.value};
+    const style=props.style||{backgroundColor:props.value};
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
     let ipClass="input";
@@ -253,10 +263,4 @@ export const ColorSelector=(props)=>{
         </div>
         {props.children}
     </div>;
-};
-ColorSelector.propTypes={
-    ...DEFAULT_TYPES,
-    onClick: PropTypes.func, //if onChange is not set, call this function when clicked
-    style: PropTypes.object, //if set use this style for the color display
-    readOnly: PropTypes.bool
 };
