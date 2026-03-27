@@ -35,7 +35,6 @@ import {CombinedView} from "../components/CombinedView";
 import {DownloadItemList} from '../components/DownloadItemList';
 import {ScrollType} from "../util/UiHelper";
 import Headline from "../components/Headline";
-// @ts-ignore
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 

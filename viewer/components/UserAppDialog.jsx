@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import {showPromiseDialog} from './OverlayDialog.jsx';
+import {showPromiseDialog} from './OverlayDialog.tsx';
 import Toast from './Toast.tsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.ts';

@@ -85,7 +85,7 @@ export const CombinedView = (props: CombinedViewProps) => {
             }
         },500)
     },[itemWidth])
-    return <div className="combinedView outer" ref={outerRef} onScroll={onScroll}>
+    return <div className={Helper.concatsp("combinedView","outer",props.single?"single":"multi")} ref={outerRef} onScroll={onScroll}>
             <View
                 className="leftView"
                 width={itemWidth}

@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys, {KeyHelper} from '../util/keys.ts';
 import {Checkbox, InputSelect} from "./Inputs";

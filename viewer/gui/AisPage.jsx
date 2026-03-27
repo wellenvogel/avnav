@@ -8,12 +8,12 @@ import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useRef} from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
-import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
 import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
 import Dialogs, {
     showDialog,
     showPromiseDialog
-} from '../components/OverlayDialog.jsx';
+} from '../components/OverlayDialog.tsx';
 import Mob from '../components/Mob.ts';
 import Compare from "../util/compare";
 import navdata from "../nav/navdata";

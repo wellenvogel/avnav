@@ -6,7 +6,7 @@ import {
     DialogRow,
     showDialog,
     showPromiseDialog
-} from './OverlayDialog.jsx';
+} from './OverlayDialog.tsx';
 import assign from 'object-assign';
 import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.jsx';
 import DB from './DialogButton.tsx';

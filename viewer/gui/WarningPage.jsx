@@ -5,7 +5,7 @@
 
 import Button from '../components/Button.tsx';
 import React from 'react';
-import Page from '../components/Page.jsx';
+import Page from '../components/Page.tsx';
 import Requests from '../util/requests.js';
 import keys, {KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';

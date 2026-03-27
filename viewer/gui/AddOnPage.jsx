@@ -6,7 +6,7 @@ import Dynamic from '../hoc/Dynamic.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React from 'react';
-import Page from '../components/Page.jsx';
+import Page from '../components/Page.tsx';
 import Mob from '../components/Mob.ts';
 import Addons from '../components/Addons.ts';
 import remotechannel, {COMMANDS} from "../util/remotechannel";

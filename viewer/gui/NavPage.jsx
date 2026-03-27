@@ -12,7 +12,7 @@ import {
     DBCancel,
     DialogButtons, DialogFrame, DialogRow,
     DialogText, OverlayContainer, showDialog, showPromiseDialog
-} from '../components/OverlayDialog.jsx';
+} from '../components/OverlayDialog.tsx';
 import Helper, {injectav} from '../util/helper.ts';
 import {
     useKeyEventHandlerPlain,

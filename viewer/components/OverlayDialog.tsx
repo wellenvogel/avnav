@@ -7,32 +7,43 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {Children, cloneElement, forwardRef, useEffect, useRef, useState} from 'react';
-import {useInputMonitor} from '../hoc/InputMonitor.jsx';
-import DialogButton from './DialogButton.tsx';
+import React, {Children, cloneElement, forwardRef, ReactNode, SyntheticEvent, useEffect, useRef, useState} from 'react';
+// @ts-ignore
+import {useInputMonitor} from '../hoc/InputMonitor';
+import DialogButton from './DialogButton';
+// @ts-ignore
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
 import Helper, {concatsp} from "../util/helper";
 import {
     DialogContextImpl,
     globalContext,
-    ReactDialogContextImpl,
+    IDialogContext,
+    ReactDialogContextImpl, SetDialogFunction,
+    SetDialogOptions,
     useDialogContext
 } from "./DialogContext";
 
+export interface OverlayContainerProps {
+    coverClassName?: string;
+    children?: React.ReactNode;
+    onClick?: (ev: SyntheticEvent) => void;
+    dialogClassName?: string;
+}
 
-export const OverlayContainer=MapEventGuard(React.forwardRef((props,ref)=>{
+// eslint-disable-next-line react/display-name
+export const OverlayContainer=MapEventGuard(React.forwardRef<any>(
+    (oprops:OverlayContainerProps,ref)=>{
     const dialogContext=useDialogContext();
-    const style={zIndex:dialogContext.zIndex,
-        left:dialogContext.left,right:dialogContext.right};
+    const style={zIndex:dialogContext.zIndex};
     return (
         <div
-            className={Helper.concatsp("overlay_cover_active",props.coverClassName)}
-            onClick={props.onClick}
+            className={Helper.concatsp("overlay_cover_active",oprops.coverClassName)}
+            onClick={oprops.onClick}
             style={style}
             ref={ref}>
             <div
-                className={Helper.concatsp("dialog",props.dialogClassName)}
+                className={Helper.concatsp("dialog",oprops.dialogClassName)}
                 onClick={
                     (ev) => {
                         //ev.preventDefault();
@@ -41,13 +52,18 @@ export const OverlayContainer=MapEventGuard(React.forwardRef((props,ref)=>{
                 }
                 style={{zIndex:dialogContext.zIndex+1}}
             >
-            {props.children}
+            {oprops.children}
             </div>
         </div>
     )
 }));
-
-const OverlayDialog = ({dialogClassName,coverClassName, children}) => {
+export interface OverlayDialogProps{
+    dialogClassName?: string;
+    coverClassName?: string;
+    children?: React.ReactElement;
+}
+const OverlayDialog = (
+    {dialogClassName,coverClassName, children}:OverlayDialogProps) => {
     const dialogContext = useDialogContext();
     const nestedDialogContext = useRef(new DialogContextImpl(dialogContext));
     useInputMonitor();
@@ -61,7 +77,8 @@ const OverlayDialog = ({dialogClassName,coverClassName, children}) => {
                 context={nestedDialogContext.current}
             >
                 <DialogDisplay/>
-                {Children.map(children, (child) => cloneElement(child, {closeCallback: close}))}
+                {Children.map(children,
+                    (child) => cloneElement(child, {closeCallback: close}))}
             </DialogContext>
         </OverlayContainer>
     );
@@ -69,10 +86,12 @@ const OverlayDialog = ({dialogClassName,coverClassName, children}) => {
 
 export const DialogDisplay=()=>{
     const dialogContext=useDialogContext();
-    let [Display,setDialog]=useDialog();
+    const [Display,setDialog]=useDialog();
     useEffect(() => {
         const id=dialogContext.setDisplay(setDialog);
-        return ()=>dialogContext.removeDisplay(id);
+        return ()=>{
+            dialogContext.removeDisplay(id);
+        }
     }, []);
     return <Display/>
 }
@@ -80,22 +99,26 @@ export const DialogDisplay=()=>{
 
 
 
-export const DialogContext=({context,children})=>{
+export const DialogContext=(
+    {context,children}:{context:DialogContextImpl,children:React.ReactNode})=>{
     return <ReactDialogContextImpl.Provider value={context||globalContext}>
         {children}
     </ReactDialogContextImpl.Provider>
 }
 
-/**
- * new style dialog usage
- * @param closeCb
- */
-export const useDialog=(closeCb)=>{
+export type UseDialogResult=[React.ElementType,SetDialogFunction];
+
+export const useDialog=(
+    closeCb?:()=>void):UseDialogResult=>{
     const [dialogContent,setDialog]=useState(undefined);
     const dialogId=useRef(1);
     const lastContent=useRef(undefined);
-    const setNewDialog=(content,opt_closeCb,opt_options,opt_id)=>{
-        return new Promise((resolve,reject)=> {
+    const setNewDialog=(
+                        content:React.ElementType,
+                        opt_closeCb?:()=>void,
+                        opt_options?:SetDialogOptions,
+                        opt_id?:string|number):Promise<void|(()=>void)>=>{
+        return new Promise((resolve)=> {
             window.requestAnimationFrame(() => {
                 const currentContent=lastContent.current;
                 if (content) {
@@ -141,17 +164,21 @@ export const useDialog=(closeCb)=>{
             )
         }
         ,
-        (content,opt_closeCb,opt_options)=>{
+        (content:React.ElementType,opt_closeCb?:()=>void,opt_options?:SetDialogOptions)=>{
             return setNewDialog(content,opt_closeCb,opt_options);
         }
     ]
 }
-export const showPromiseDialog=(dialogContext,Dialog,args,opt_options)=>{
+export const showPromiseDialog=(
+    dialogContext:IDialogContext|undefined,
+    Dialog:React.ElementType,
+    args?:Record<string, any>,
+    opt_options?:SetDialogOptions)=>{
     if (!dialogContext) dialogContext=globalContext;
     return new Promise((resolve,reject)=>{
         let resolved=false;
         showDialog(dialogContext,()=>{
-            return <Dialog {...args} resolveFunction={(val)=>{
+            return <Dialog {...args} resolveFunction={(val:any)=>{
                 resolved=true;
                 resolve(val);
                 return true;
@@ -164,18 +191,21 @@ export const showPromiseDialog=(dialogContext,Dialog,args,opt_options)=>{
         },opt_options);
     })
 }
-export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback,opt_options)=>{
+export const showDialog=(
+    opt_dialogContext:IDialogContext|undefined,
+    dialog:React.ElementType,
+    opt_cancelCallback?:()=>void,
+    opt_options?:SetDialogOptions)=>{
     if (opt_dialogContext){
         if (! opt_dialogContext.showDialog){
-            if(opt_dialogContext.current && opt_dialogContext.current.showDialog)
-                opt_dialogContext=opt_dialogContext.current;
-            else
                 opt_dialogContext=undefined;
         }
     }
     if (! opt_dialogContext) {
         const cancel=()=>{
+            // @ts-ignore
             if (window.avnavAndroid && window.avnavAndroid.dialogClosed){
+                // @ts-ignore
                 window.avnavAndroid.dialogClosed();
             }
             if (opt_cancelCallback) opt_cancelCallback();
@@ -185,9 +215,16 @@ export const showDialog=(opt_dialogContext,dialog,opt_cancelCallback,opt_options
     else return opt_dialogContext.showDialog(dialog,opt_cancelCallback,opt_options);
 }
 
+export interface PromiseResolveHelperProps{
+    ok:()=>void
+    err:(e?:any)=>void
+}
 
-export const promiseResolveHelper = ({ok, err}, resolveFunction, ...args) => {
-    let rt = resolveFunction(...args);
+export const promiseResolveHelper = (
+    {ok, err}:PromiseResolveHelperProps,
+    resolveFunction:(...rp:any[])=>boolean|Promise<void>,
+    ...args:any[]) => {
+    const rt = resolveFunction(...args);
     if (rt instanceof Promise) {
         rt.then(() => ok && ok())
             .catch((e) => {
@@ -199,10 +236,16 @@ export const promiseResolveHelper = ({ok, err}, resolveFunction, ...args) => {
     else err && err();
 }
 
+export interface DialogFrameProps extends Record<string, any>{
+    title?:ReactNode;
+    className?:string;
+    flex?:boolean;
+    children?:React.ReactNode;
+}
 
-export const DialogFrame=(props)=>{
+export const DialogFrame=(props:DialogFrameProps)=>{
     let classNameS="";
-    let {title,className,flex,children,...fwprops}=props;
+    const {title,className,flex,children,...fwprops}=props;
     if (className) classNameS+=" "+className;
     if (flex !== false) classNameS+=" flexInner";
     return <div {...fwprops} className={classNameS}>
@@ -210,24 +253,34 @@ export const DialogFrame=(props)=>{
         {children}
     </div>
 }
-export const DialogText=({className,children})=>{
+export interface DialogTextProps{
+    className?:string;
+    children?:React.ReactNode;
+}
+export const DialogText=({className,children}:DialogTextProps)=>{
     return <div className={concatsp(className,"dialogText")}>
         {children}
     </div>
 }
-export const DialogRow=forwardRef(({className,onClick,children},ref)=>{
+export interface DialogRowProps{
+    className?:string;
+    children?:React.ReactNode;
+    onClick?:(ev?:SyntheticEvent)=>void;
+}
+export const DialogRow=
+    // eslint-disable-next-line react/display-name,react/prop-types
+    forwardRef<HTMLDivElement,React.HTMLProps<HTMLDivElement>>(({className,onClick,children}:DialogRowProps,ref)=>{
     return <div className={concatsp(className,"dialogRow")} ref={ref} onClick={onClick}>
         {children}
     </div>
 })
-DialogFrame.propTypes={
-    className: PropTypes.string,
-    title: PropTypes.string,
-    flex: PropTypes.bool,
-    children: PropTypes.any
-}
 
-export const DialogButtons=(props)=>{
+export interface DialogButtonProps extends Record<string, any>{
+    className?:string;
+    children?:React.ReactNode;
+    buttonList?:(DialogButtonProps|((props:any) => React.ReactNode))[];
+}
+export const DialogButtons=(props:DialogButtonProps)=>{
     const {className,children,buttonList,...fw}=props;
     let buttons=buttonList;
     if (! (buttons instanceof Array)) buttons=[buttons];
@@ -236,6 +289,7 @@ export const DialogButtons=(props)=>{
             if (! button) return null;
             if (typeof(button) === 'function'){
                 const El=button;
+                // eslint-disable-next-line react/jsx-key
                 return <El/>
             }
             const label=button.label?button.label:button.name.substring(0,1).toUpperCase()+button.name.substring(1);
@@ -253,10 +307,10 @@ DialogButtons.propTypes={
 /**
  * helper for dialogButtonList
  */
-export const DBCancel=(props)=>{
+export const DBCancel=(props?:DialogButtonProps)=>{
     return {close: true,name:'cancel',label:'Cancel',...props};
 }
-export const DBOk=(onClick,props)=>{
+export const DBOk=(onClick:(ev:SyntheticEvent)=>void,props?:DialogButtonProps)=>{
     return {close: true,name:'ok',onClick:onClick,label:'Ok',...props};
 }
 

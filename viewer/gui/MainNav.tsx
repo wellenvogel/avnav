@@ -24,8 +24,7 @@ import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "rea
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
-// @ts-ignore
-import {DialogFrame, showDialog} from '../components/OverlayDialog.jsx';
+import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";

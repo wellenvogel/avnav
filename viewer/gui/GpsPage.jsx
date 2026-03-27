@@ -8,7 +8,7 @@ import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';

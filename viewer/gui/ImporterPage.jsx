@@ -24,7 +24,7 @@
  */
 
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
 import Requests, {prepareUrl} from '../util/requests.js';
 import Mob from '../components/Mob.ts';
 import ItemList from "../components/ItemList";

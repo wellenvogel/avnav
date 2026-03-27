@@ -21,7 +21,6 @@
  #
  */
 import React, {useCallback,} from "react";
-// @ts-ignore
 import {showDialog, DialogFrame,DialogRow,DialogButtons} from "./OverlayDialog";
 import Helper, {getav, setav} from "../util/helper";
 // @ts-ignore
@@ -121,13 +120,10 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
                                     opt_cancelCb?:()=>void ) => {
     if (dialogContext) {
         if (! dialogContext.showDialog) {
-            // @ts-ignore
-            if (!dialogContext.current){
                 const evctx=getav(dialogContext).dialogContext;
                 if (evctx && evctx.showDialog) {
                     dialogContext=evctx;
                 }
-            }
         }
     }
     const parameters:TEditableParameterUI[]=[];

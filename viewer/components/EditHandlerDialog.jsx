@@ -26,7 +26,7 @@
 
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog, showPromiseDialog} from './OverlayDialog.tsx';
 import assign from 'object-assign';
 import DB from './DialogButton.tsx';
 import RequestHandler from "../util/requests";

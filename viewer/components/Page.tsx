@@ -1,30 +1,80 @@
-import React, {Children, cloneElement, forwardRef, useCallback, useEffect, useRef, useState} from 'react';
-import PropTypes from 'prop-types';
-import Headline from './Headline.tsx';
-import ButtonList from './ButtonList.tsx';
-import {hideToast} from './Toast.tsx';
-import WidgetFactory from './WidgetFactory.jsx';
-import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.ts';
-import KeyHandler from '../util/keyhandler.ts';
-import AlarmHandler from '../nav/alarmhandler.js';
+import React, {
+    Children,
+    cloneElement,
+    forwardRef,
+    SyntheticEvent,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+import Headline from './Headline';
+import ButtonList from './ButtonList';
+import {hideToast} from './Toast';
+// @ts-ignore
+import WidgetFactory from './WidgetFactory';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
+import KeyHandler from '../util/keyhandler';
+// @ts-ignore
+import AlarmHandler from '../nav/alarmhandler';
 import {useTimer} from "../util/UiHelper";
-import assign from 'object-assign';
 import Helper from "../util/helper";
 import {useStore} from "../hoc/Dynamic";
 import {DialogDisplay} from "./OverlayDialog";
-import {useDialogContext} from "./DialogContext";
+import {ButtonDef, DynamicButtonProps} from "./Button";
+import {IHistory} from "../util/history";
+
+export interface PageFrameProps{
+    className?: string;
+    autoHideButtons?: number;
+    hideCallback?: ()=>void;
+    editingChanged?: ()=>void;
+    id: string;
+    children?: React.ReactNode;
+    style?:Record<string, any>;
+}
+export interface PageLeftProps{
+    className?: string;
+    title?: string;
+    children?: React.ReactNode;
+}
+
+export interface PageBaseProps{
+    className?: string;
+    style?: Record<string, any>;
+    options?: Record<string, any>;
+    location: string;
+    small: boolean;
+    id: string;
+    windowDimensions?:{width:number,height:number};
+    settingsSplit?: boolean; //wide enough for split mode
+}
+export interface PageProps extends PageBaseProps{
+    title?: string;
+    mainContent?: React.ReactNode;
+    floatContent?: React.ReactNode;
+    bottomContent?: React.ReactNode;
+    buttonList?: ButtonDef[]|DynamicButtonProps[];
+    style?: Record<string, any>;
+    buttonWidthChanged?: ()=>void;
+    autoHideButtons?: number; //ms or undefined
+    history: IHistory
+}
+
 
 const alarmClick =function(){
-    let alarms=globalStore.getData(keys.nav.alarms.all,"");
+    const alarms=globalStore.getData(keys.nav.alarms.all,"");
     if (! alarms) return;
-    for (let k in alarms){
+    for (const k in alarms){
         if (!alarms[k].running)continue;
         AlarmHandler.stopAlarm(k);
     }
 };
 
-export const PageFrame=forwardRef((iprops,ref)=>{
+export const PageFrame=
+    // eslint-disable-next-line react/display-name
+    forwardRef((iprops:PageFrameProps,ref)=>{
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,settingsSplit,...forward}=useStore(iprops,{
         storeKeys:{
@@ -45,7 +95,7 @@ export const PageFrame=forwardRef((iprops,ref)=>{
     },[hidden]);
     const timer=useTimer((sequence)=>{
         if (autoHideButtons !== undefined && ! isEditing){
-            let now=Helper.now();
+            const now=Helper.now();
             if (globalStore.getData(keys.gui.global.hasActiveInputs)){
                 lastUserEvent.current=now;
             }
@@ -57,13 +107,13 @@ export const PageFrame=forwardRef((iprops,ref)=>{
         }
         timer.startTimer(sequence);
     },1000,true);
-    const userEvent=useCallback((ev)=>{
+    const userEvent=useCallback((ev:SyntheticEvent)=>{
         lastUserEvent.current=Helper.now();
         if (hidden && ev && ev.type === 'click'){
             setHidden(false);
         }
     },[hideCallback,hidden]);
-    let cl=Helper.concatsp("page",
+    const cl=Helper.concatsp("page",
         className,
         hidden?"hiddenButtons":undefined,
         isEditing?"editing":undefined
@@ -87,15 +137,9 @@ export const PageFrame=forwardRef((iprops,ref)=>{
     </div>
 })
 
-PageFrame.propTypes={
-    className: PropTypes.string,
-    autoHideButtons: PropTypes.number,
-    hideCallback: PropTypes.func,
-    editingChanged: PropTypes.func,
-    id: PropTypes.string.isRequired
-}
 
-export const PageLeft=({className,title,children})=>{
+export const PageLeft=
+    ({className,title,children}:PageLeftProps)=>{
     const Alarm=useCallback(WidgetFactory.createWidget({name:'Alarm'}),[])
     return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}
             >
@@ -106,12 +150,10 @@ export const PageLeft=({className,title,children})=>{
 
         </div>
 }
-PageLeft.propTypes = {
-    className: PropTypes.string,
-    title: PropTypes.string
-}
 
-const Page=forwardRef((props,ref)=>{
+const Page=
+    // eslint-disable-next-line react/display-name
+    forwardRef((props:PageProps,ref)=>{
         return <PageFrame
             className={props.className}
             id={props.id}
@@ -132,28 +174,6 @@ const Page=forwardRef((props,ref)=>{
             />
         </PageFrame>
 });
-
-Page.pageProperties={
-    className: PropTypes.string,
-    style: PropTypes.object,
-    options: PropTypes.object,
-    location: PropTypes.string.isRequired,
-    small: PropTypes.bool.isRequired
-}
-Page.propTypes=assign({},Page.pageProperties,{
-    id: PropTypes.string.isRequired,
-    title: PropTypes.string,
-    mainContent: PropTypes.any,
-    floatContent: PropTypes.any,
-    bottomContent: PropTypes.any,
-    buttonList: PropTypes.array,
-    style: PropTypes.object,
-    buttonWidthChanged: PropTypes.func,
-    autoHideButtons: PropTypes.any, // number of ms or undefined
-    windowDimensions: PropTypes.any,
-    history: PropTypes.object
-});
-
 
 
 export default Page;

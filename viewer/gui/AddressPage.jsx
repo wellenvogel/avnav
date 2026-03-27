@@ -7,7 +7,7 @@ import ItemList from '../components/ItemList.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React from 'react';
-import Page from '../components/Page.jsx';
+import Page from '../components/Page.tsx';
 import Requests from '../util/requests.js';
 import QRCode from 'qrcode.react';
 import Mob from '../components/Mob.ts';

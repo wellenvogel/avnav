@@ -23,7 +23,7 @@ import ImporterPage from "./gui/ImporterPage";
 import {
     DialogContext, DialogDisplay,
     showPromiseDialog
-} from './components/OverlayDialog.jsx';
+} from './components/OverlayDialog';
 import globalStore from './util/globalstore.ts';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';

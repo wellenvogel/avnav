@@ -4,7 +4,7 @@ import {
     DialogButtons,
     DialogFrame, showDialog,
     showPromiseDialog
-} from '../components/OverlayDialog.jsx';
+} from './OverlayDialog.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import Toast from './Toast.tsx';

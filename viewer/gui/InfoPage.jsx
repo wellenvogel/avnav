@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import Page from '../components/Page.jsx';
+import Page from '../components/Page.tsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.ts';
 import AvNavVersion from '../version.js';

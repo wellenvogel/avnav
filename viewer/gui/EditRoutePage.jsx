@@ -17,7 +17,7 @@ import {
     DialogRow,
     showDialog,
     showPromiseDialog
-} from '../components/OverlayDialog.jsx';
+} from '../components/OverlayDialog.tsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.ts';
 import {useStateRef, useTimer} from '../util/UiHelper';
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';

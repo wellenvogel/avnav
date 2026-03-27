@@ -6,7 +6,7 @@ import ItemList from '../components/ItemList.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper,PropertyType} from '../util/keys.ts';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import Page, {PageFrame, PageLeft} from '../components/Page.jsx';
+import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
 import Toast from '../components/Toast.tsx';
 import assign from 'object-assign';
 import {
@@ -15,7 +15,7 @@ import {
     DialogFrame, DialogText,
     showDialog,
     showPromiseDialog
-} from '../components/OverlayDialog.jsx';
+} from '../components/OverlayDialog.tsx';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
 import Mob from '../components/Mob.ts';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';

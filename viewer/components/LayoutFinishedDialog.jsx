@@ -1,7 +1,7 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
-import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
 import DB from './DialogButton.tsx';
 import {EditDialog} from "./EditDialog";
 import Toast from "./Toast";

@@ -61,7 +61,6 @@
  */
 
 
-
 import React, {createContext, useContext} from "react";
 
 /**
@@ -76,7 +75,9 @@ const getCtxId = () => {
     return dialogCtxId;
 }
 export type DialogCallback=()=>void;
-export type SetDialogFunction=(dialog?:React.ReactNode,closeCallback?:DialogCallback,options?:any) => DialogCallback;
+export interface SetDialogOptions extends Record<string, any> {
+}
+export type SetDialogFunction=(dialog?:React.ElementType,closeCallback?:DialogCallback,options?:SetDialogOptions) => Promise<DialogCallback|void>;
 class DialogDisplayEntry {
     setDialog:SetDialogFunction;
     id:number;
@@ -104,7 +105,7 @@ export class DialogContextImpl implements IDialogContext {
             this.parent = parent;
         }
         this.displayStack.push(new DialogDisplayEntry(() => {
-            return ()=>{}
+            return Promise.resolve()
         }));
         this.closeDialog = this.closeDialog.bind(this);
         this.showDialog = this.showDialog.bind(this);
@@ -115,7 +116,7 @@ export class DialogContextImpl implements IDialogContext {
         return this.displayStack[this.displayStack.length - 1];
     }
 
-    showDialog(content:React.ReactNode, closeCallback?:DialogCallback, options?:any) {
+    showDialog(content:React.ElementType, closeCallback?:DialogCallback, options?:any) {
         return this._getTop().setDialog(content, closeCallback, options);
     }
 
@@ -127,7 +128,7 @@ export class DialogContextImpl implements IDialogContext {
         return this._getTop().setDialog();
     }
 
-    replaceDialog(content:React.ReactNode, closeCallback?:DialogCallback, options?:any) {
+    replaceDialog(content:React.ElementType, closeCallback?:DialogCallback, options?:any) {
         if (this.parent) return this.parent.showDialog(content, closeCallback, options);
         return this.showDialog(content, closeCallback, options);
     }

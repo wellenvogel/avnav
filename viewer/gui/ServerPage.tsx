@@ -16,7 +16,6 @@ import {
     DialogFrame,
     showDialog,
     showPromiseDialog
-    // @ts-ignore
 } from '../components/OverlayDialog';
 import {createAddDialog} from "../components/EditHandlerDialog";
 // @ts-ignore

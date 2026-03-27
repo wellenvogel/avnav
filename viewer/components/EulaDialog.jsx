@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import Requests from '../util/requests.js';
-import {DialogButtons, DialogFrame, DialogRow} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, DialogRow} from './OverlayDialog.tsx';
 import DB from './DialogButton.tsx';
 
 const EulaDialog=(props)=>{
