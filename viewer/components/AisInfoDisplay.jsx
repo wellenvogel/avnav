@@ -36,6 +36,7 @@ import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
+import mapholder from "../map/mapholder";
 
 const displayItems = [
     {name: 'distance'},
@@ -201,7 +202,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
             },
             label: 'Nearest',
             disabled: mmsi === undefined,
-            visible: ! hiddenButtons.AisNearest,
+            visible: ! hiddenButtons.AisNearest && (mapholder.getCurrentChartEntry() !== undefined),
         },
         {
             name: 'AisInfoLocate',
@@ -216,7 +217,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
             },
             label: 'Locate',
             disabled: mmsi === undefined,
-            visible: ! hiddenButtons.AisInfoLocate
+            visible: ! hiddenButtons.AisInfoLocate && (mapholder.getCurrentChartEntry() !== undefined)
         },
         {
             name: 'AisInfoHide',

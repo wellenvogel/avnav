@@ -269,10 +269,6 @@ class MainPage extends React.Component {
 
 
     componentDidMount() {
-        //"soft" reset the history but keep the options
-        const current=this.props.history.currentLocation(true);
-        this.props.history.reset();
-        this.props.history.replace(current.location,current.options);
         globalStore.storeData(keys.gui.global.soundEnabled,true);
         handleInitialButton(this.props.history,this.getButtons());
     }

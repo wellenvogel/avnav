@@ -6,14 +6,14 @@ import {useStore, useStoreState} from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
-import React, {useCallback, useRef} from 'react';
+import React, {useRef} from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
 import AisFormatter, {aisproxy} from '../nav/aisformatter.jsx';
-import Dialogs, {
+import {
     showDialog,
     showPromiseDialog
-} from '../components/OverlayDialog.tsx';
+} from '../components/OverlayDialog';
 import Mob from '../components/Mob.ts';
 import Compare from "../util/compare";
 import navdata from "../nav/navdata";
@@ -287,9 +287,9 @@ export const CompleteAisList=(iprops)=>{
             showDialog(dialogContext,()=>{
                 return <AisInfoWithFunctions
                     mmsi={accessor.mmsi}
-                    actionCb={(action,m)=>{
+                    actionCb={(action)=>{
                         if (action === 'AisNearest' || action === 'AisInfoLocate'){
-                            history.pop();
+                            history.push(PAGEIDS.NAV);
                         }
                     }}
                 />;

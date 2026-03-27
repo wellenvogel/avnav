@@ -79,6 +79,7 @@ class History implements IHistory{
         }
         const hentry=this.history[this.history.length - 1];
         this.history.splice(-1,1,{location:location,options:options||{},back:hentry});
+        this._tryAnchor();
         this.updateCallback();
     }
     backFromReplace(opt_popNotFound?:boolean){
@@ -105,13 +106,32 @@ class History implements IHistory{
     }
     push(location:string,options?:HistoryOptions){
         this.history.push({location:location,options:options||{}});
+        this._tryAnchor();
         this.updateCallback();
     }
     pop(){
         if (this.history.length > 1) {
             this.history.splice(-1, 1);
         }
+        this._tryAnchor();
         this.updateCallback(true);
+    }
+
+    /**
+     * cleanup the history if we hit an anchor page
+     * will be called before the update callback
+     */
+    _tryAnchor(){
+        if (this.history.length < 1) return false;
+        const current=this.history[this.history.length - 1];
+        if (current.location === PAGEIDS.MAIN){
+            this.history=[current];
+            return true;
+        }
+        if (current.location === PAGEIDS.NAV){
+            this.history.splice(1,this.history.length);
+            this.history.push(current);
+        }
     }
 
     currentLocation(opt_includeOptions?:boolean){
