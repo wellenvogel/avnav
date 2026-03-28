@@ -44,17 +44,22 @@ const TracksPage=(props:TracksPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
      const [scrollType, setScrollType] = useState<number>(-1);
+     const [visMax,setVisMax] = useState<number>(props.pageColumns-1);
+     const [visMin,setVisMin] = useState<number>(0);
      const buttonListRef=useRef<ButtonDef[]>();
+     const visible=(nr:number)=>{
+         return nr >= visMin && nr <= visMax
+     }
      const buttonActions={
          ServerView:{
              onClick:()=>setScrollType(0),
-             disabled:props.pageColumns > 1,
-             toggle: scrollType===0||(props.pageColumns > 1),
+             disabled:props.pageColumns > 2,
+             toggle: visible(0),
          },
          ItemsView:{
              onClick:()=>setScrollType(1),
-             disabled:props.pageColumns > 1,
-             toggle:scrollType===1||(props.pageColumns > 1),
+             disabled:props.pageColumns > 2,
+             toggle:visible(1),
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -68,7 +73,13 @@ const TracksPage=(props:TracksPageProps)=>{
              }
          }
      }
-     buttonListRef.current=updateButtons(TracksPageButtons,buttonActions);
+     buttonListRef.current=updateButtons(TracksPageButtons,buttonActions).concat(
+         new ButtonDef({
+             name:'Test',
+             onClick:()=>setScrollType(2),
+             toggle:visible(2)
+         })
+     );
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
@@ -87,11 +98,18 @@ const TracksPage=(props:TracksPageProps)=>{
                         autoreload={3000}
                     />
                 </React.Fragment>
+                ,
+                <div key={2}>
+                    TEST
+                </div>
             ]}
                        maxNumber={props.pageColumns}
                        visibleNumber={scrollType}
 
-                       viewChanged={(min: number) => setScrollType(min)}
+                       viewChanged={(min: number,max:number) => {
+                           setVisMin(min);
+                           setVisMax(max);
+                       }}
             />
 
         </PageLeft>

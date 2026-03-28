@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {UIEvent, useCallback, useEffect} from "react";
+import React, {useCallback, useEffect} from "react";
 import Helper from "../util/helper";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -56,6 +56,7 @@ const View=(props:ViewProps) => {
 export const MultiView = (props: MultiViewProps) => {
     const windowDimensions=useStoreState(keys.gui.global.windowDimensions);
     const [itemWidth,setItemWidth]=React.useState(0);
+    const [visibleNumber,setVisibleNumber]=React.useState(props.visibleNumber);
     const outerRef = React.useRef<HTMLDivElement>(null);
     const scrollTimerRef = React.useRef<number>(undefined);
     const lastReportedLeftRef = React.useRef<number>(undefined);
@@ -74,10 +75,17 @@ export const MultiView = (props: MultiViewProps) => {
             if (scrollTimerRef.current !== undefined) clearTimeout(scrollTimerRef.current);
         }
     }, []);
-    const onScroll=useCallback((ev:UIEvent<HTMLDivElement>) => {
+    useEffect(() => {
+        setVisibleNumber(props.visibleNumber);
+    }, [props.visibleNumber]);
+    useEffect(() => {
+        reportVisibility();
+    }, [itemWidth,numViews]);
+    const reportVisibility=useCallback(()=>{
         if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
         scrollTimerRef.current = window.setTimeout(()=>{
-            const { scrollLeft} = ev.target as HTMLElement;
+            if (! outerRef.current || itemWidth === 0) return;
+            const { scrollLeft} = outerRef.current;
             const leftView=Math.floor(scrollLeft/itemWidth);
             if (leftView !== lastReportedLeftRef.current) {
                 lastReportedLeftRef.current = leftView;
@@ -87,16 +95,21 @@ export const MultiView = (props: MultiViewProps) => {
                     props.viewChanged(leftView,max);
                 }
             }
-        },500)
+        },300);
     },[itemWidth,numViews])
+    const onScroll=useCallback(() => {
+        reportVisibility();
+    },[reportVisibility]);
     let idx=-1;
-    return <div className={Helper.concatsp("multiView","outer",(maxNumber<2)? "single":"multi")} ref={outerRef} onScroll={onScroll}>
+    return <div className={Helper.concatsp("multiView","outer",(maxNumber<2)? "single":"multi")}
+                ref={outerRef}
+                onScroll={onScroll}>
         {props.views.map((view)=> {
             return <View
                 key={idx++}
                 className="leftView"
                 width={itemWidth}
-                scrollInto={idx === props.visibleNumber}
+                scrollInto={idx === visibleNumber}
             >
                 {view}
             </View>
