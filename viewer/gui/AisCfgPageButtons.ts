@@ -22,6 +22,7 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import {AisListButtons} from "./AisPageButtons";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -31,7 +32,9 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'ItemsView',
         displayName: 'AIS Targets',
-    },
+    }]),
+    AisListButtons,
+    propsToDefs([
     {
         name: 'ShowSettings',
         displayName:'display settings'

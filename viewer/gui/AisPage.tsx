@@ -269,14 +269,15 @@ export interface CompleteAisListProps{
     searchActive?:boolean,
     searchValue?:string
     sortCallback?:()=>void,
-    mmsi?:number|string
+    mmsi?:number|string,
+    listLock?:boolean
 }
 export const CompleteAisList=(iprops:CompleteAisListProps)=>{
     const dialogContext=useDialogContext();
     const history=useHistory();
     const initialMmsi=useRef(iprops.mmsi)
     const sortField=iprops.sortField||sortFields[0].value;
-    const aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
+    const aisListProps = iprops.listLock ?
         computeList(
             {
                 sortField: sortField,
@@ -352,6 +353,27 @@ export const CompleteAisList=(iprops:CompleteAisListProps)=>{
     </React.Fragment>
 }
 
+export interface CompleteAisListWithStoreProps{
+    className?:string;
+    sortField?:string;
+    mmsi?:string|number
+}
+
+export const CompleteAisListWithStore=(props:CompleteAisListWithStoreProps)=>{
+    const [sortField,]=useStoreState(keys.gui.aispage.sortField,props.sortField||sortFields[0].value);
+    const [searchActive,]=useStoreState(keys.gui.aispage.searchActive,false);
+    const [searchValue,]=useStoreState(keys.gui.aispage.searchValue,"");
+    const [listLock,]=useStoreState( globalStore.getData(keys.properties.aisListLock, false))
+    return <CompleteAisList
+        sortField={sortField}
+        searchActive={searchActive}
+        searchValue={searchValue}
+        sortCallback={sortDialog}
+        listLock={listLock}
+        mmsi={props.mmsi}
+    />
+}
+
 export const sortDialog=(dialogContext?:IDialogContext)=>{
     const fields=cloneDeep(sortFields);
     const sortField=globalStore.getData(keys.gui.aispage.sortField);
@@ -421,9 +443,6 @@ const ID=PAGEIDS.AIS;
 export interface AisPageProps extends PageProps{}
 const AisPage =(props:AisPageProps)=>{
         const options=props.options||{};
-        const [sortField,]=useStoreState(keys.gui.aispage.sortField,options.sortField||sortFields[0].value);
-        const [searchActive,]=useStoreState(keys.gui.aispage.searchActive,false);
-        const [searchValue,]=useStoreState(keys.gui.aispage.searchValue,"");
         const currentButtons=useRef<ButtonDef[]>();
         const history=useHistory();
     useDialogContext();
@@ -438,12 +457,9 @@ const AisPage =(props:AisPageProps)=>{
                 id={ID}
                 title="Ais">
                 <PageLeft>
-                    <CompleteAisList
-                        sortField={sortField}
-                        searchActive={searchActive}
-                        searchValue={searchValue}
+                    <CompleteAisListWithStore
+                        sortField={options.sortField}
                         mmsi={options.mmsi}
-                        sortCallback={sortDialog}
                     />
                 </PageLeft>
                 <ButtonList page={ID} itemList={currentButtons.current}/>

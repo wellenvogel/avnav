@@ -29,16 +29,14 @@ import StatusView, {ChannelKinds} from "../components/StatusView";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {ButtonDef, updateButtons} from "../components/Button";
+import {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
 import {CombinedView} from "../components/CombinedView";
 import {ScrollType} from "../util/UiHelper";
 import Headline from "../components/Headline";
-// @ts-ignore
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import AisCfgPageButtons from "./AisCfgPageButtons";
-// @ts-ignore
-import {CompleteAisList} from './AisPage';
+import {AisButtonActions, CompleteAisListWithStore} from './AisPage';
 
 const PAGE=PAGEIDS.AISCFG;
 const TITLE=PAGE_TITLES.AISCFG;
@@ -48,7 +46,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
      const history=useHistory();
      const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
      const buttonListRef=useRef<ButtonDef[]>();
-     const buttonActions={
+     const buttonActions:Record<string,Partial<DynamicButtonProps>> ={
          ServerView:{
              onClick:()=>setScrollType(ScrollType.left),
              disabled:props.settingsSplit,
@@ -69,7 +67,14 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                      title={'Ais Compute & Display'}
                  />)
              }
-         }
+         },
+             ...AisButtonActions({
+                 nearestAction:()=>history.push(PAGEIDS.NAV)
+             })
+     }
+     //enable/disable buttons
+     for (const button of ['AisNearest','AisSort','AisLock','AisSearch']){
+         buttonActions[button]={...buttonActions[button],disabled:! props.settingsSplit && scrollType===ScrollType.left};
      }
      buttonListRef.current=updateButtons(AisCfgPageButtons,buttonActions);
      useInitialButton(buttonListRef);
@@ -86,7 +91,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                           rightView={
                             <React.Fragment>
                               <Headline title={"AIS Targets"}></Headline>
-                              <CompleteAisList/>
+                              <CompleteAisListWithStore/>
                               </React.Fragment>
                           }
                           single={!props.settingsSplit}
