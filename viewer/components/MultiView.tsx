@@ -40,13 +40,14 @@ interface ViewProps{
 const View=(props:ViewProps) => {
     const className=Helper.concatsp(props.className,'view');
     const viewRef=React.useRef<HTMLDivElement>(null);
+    const hasWidth=props.width!=0;
     useEffect(() => {
         if (! props.scrollInto || ! viewRef.current) return;
         viewRef.current.scrollIntoView({
             behavior: "smooth",
             inline: "start"
         });
-    }, [props.scrollInto]);
+    }, [props.scrollInto,hasWidth]);
     return <div className={className} ref={viewRef} style={{width:(props.width||0)+"px"}}>
         {props.width?props.children:null}
     </div>;
@@ -59,7 +60,7 @@ export const MultiView = (props: MultiViewProps) => {
     const [visibleNumber,setVisibleNumber]=React.useState(props.visibleNumber);
     const outerRef = React.useRef<HTMLDivElement>(null);
     const scrollTimerRef = React.useRef<number>(undefined);
-    const lastReportedLeftRef = React.useRef<number>(undefined);
+    const lastReportedRef = React.useRef([-1,-1]);
     const numViews=props.views?props.views.length:0;
     const maxNumber=(props.maxNumber>0)?props.maxNumber:1;
     useEffect(() => {
@@ -78,25 +79,25 @@ export const MultiView = (props: MultiViewProps) => {
     useEffect(() => {
         setVisibleNumber(props.visibleNumber);
     }, [props.visibleNumber]);
-    useEffect(() => {
-        reportVisibility();
-    }, [itemWidth,numViews]);
     const reportVisibility=useCallback(()=>{
         if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
         scrollTimerRef.current = window.setTimeout(()=>{
             if (! outerRef.current || itemWidth === 0) return;
             const { scrollLeft} = outerRef.current;
             const leftView=Math.floor(scrollLeft/itemWidth);
-            if (leftView !== lastReportedLeftRef.current) {
-                lastReportedLeftRef.current = leftView;
+            let max=leftView+maxNumber-1;
+            if (max >= numViews) max=numViews-1;
+            if (leftView !== lastReportedRef.current[0] || max != lastReportedRef.current[1]) {
+                lastReportedRef.current = [leftView,max];
                 if (props.viewChanged){
-                    let max=leftView+maxNumber-1;
-                    if (max >= numViews) max=numViews-1;
                     props.viewChanged(leftView,max);
                 }
             }
         },300);
-    },[itemWidth,numViews])
+    },[itemWidth,numViews,maxNumber]);
+    useEffect(() => {
+        reportVisibility();
+    }, [itemWidth,numViews,maxNumber,reportVisibility]);
     const onScroll=useCallback(() => {
         reportVisibility();
     },[reportVisibility]);
