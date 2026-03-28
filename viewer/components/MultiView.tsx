@@ -29,13 +29,14 @@ export interface MultiViewProps {
     views: React.ReactNode[];
     maxNumber?: number;
     visibleNumber?:number; //-1 for none
+    visibleNumberSequence?:number;
     viewChanged?:(first:number,last:number) => void
 }
 interface ViewProps{
     className?:string;
     children:React.ReactNode;
     width?:number
-    scrollInto?:boolean;
+    scrollInto?:number;
 }
 const View=(props:ViewProps) => {
     const className=Helper.concatsp(props.className,'view');
@@ -110,7 +111,7 @@ export const MultiView = (props: MultiViewProps) => {
                 key={idx++}
                 className="leftView"
                 width={itemWidth}
-                scrollInto={idx === visibleNumber}
+                scrollInto={(idx === visibleNumber)?(props.visibleNumberSequence||1):0}
             >
                 {view}
             </View>

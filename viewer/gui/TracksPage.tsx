@@ -51,14 +51,18 @@ const TracksPage=(props:TracksPageProps)=>{
      const visible=(nr:number)=>{
          return nr >= visMin && nr <= visMax
      }
+     const scrollTo=(nr:number)=>{
+         setScrollType(nr);
+         setSequence((o)=>o+1);
+     }
      const buttonActions={
          ServerView:{
-             onClick:()=>{setScrollType(0);setSequence((o)=>o+1)},
+             onClick:()=>scrollTo(0),
              disabled:props.pageColumns > 2,
              toggle: visible(0),
          },
          ItemsView:{
-             onClick:()=>{setScrollType(1);setSequence((o)=>o+1)},
+             onClick:()=>scrollTo(1),
              disabled:props.pageColumns > 2,
              toggle:visible(1),
          },
@@ -77,14 +81,14 @@ const TracksPage=(props:TracksPageProps)=>{
      buttonListRef.current=updateButtons(TracksPageButtons,buttonActions).concat(
          new ButtonDef({
              name:'Test',
-             onClick:()=>{setScrollType(2);setSequence((o)=>o+1)},
+             onClick:()=>scrollTo(2),
              toggle:visible(2)
          })
      );
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <MultiView key={sequence} views={[
+            <MultiView visibleNumberSequence={sequence} views={[
                 <React.Fragment key={0}>
                     <Headline title={"Server"}/>
                     <StatusView
