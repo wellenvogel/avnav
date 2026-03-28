@@ -30,13 +30,12 @@ import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
-import {CombinedView} from "../components/CombinedView";
-import {ScrollType} from "../util/UiHelper";
 import Headline from "../components/Headline";
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import AisCfgPageButtons from "./AisCfgPageButtons";
 import {AisButtonActions, CompleteAisListWithStore} from './AisPage';
+import {MultiView} from "../components/MultiView";
 
 const PAGE=PAGEIDS.AISCFG;
 const TITLE=PAGE_TITLES.AISCFG;
@@ -44,18 +43,18 @@ export type AisCfgPageProps = Partial<PageBaseProps>;
 const AisCfgPage=(props:AisCfgPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
-     const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
+     const [scrollType, setScrollType] = useState<number>(-1);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions:Record<string,Partial<DynamicButtonProps>> ={
          ServerView:{
-             onClick:()=>setScrollType(ScrollType.left),
+             onClick:()=>setScrollType(0),
              disabled:props.settingsSplit,
-             toggle: scrollType===ScrollType.left||props.settingsSplit,
+             toggle: scrollType===0||props.settingsSplit,
          },
          ItemsView:{
-             onClick:()=>setScrollType(ScrollType.right),
+             onClick:()=>setScrollType(1),
              disabled:props.settingsSplit,
-             toggle:scrollType===ScrollType.right||props.settingsSplit,
+             toggle:scrollType===1||props.settingsSplit,
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -74,29 +73,28 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
      }
      //enable/disable buttons
      for (const button of ['AisNearest','AisSort','AisLock','AisSearch']){
-         buttonActions[button]={...buttonActions[button],disabled:! props.settingsSplit && scrollType===ScrollType.left};
+         buttonActions[button]={...buttonActions[button],disabled:! props.settingsSplit && scrollType===0};
      }
      buttonListRef.current=updateButtons(AisCfgPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <CombinedView leftView={
-                <React.Fragment>
+            <MultiView views={[
+                <React.Fragment key={"0"}>
                     <Headline title={"Server"}/>
                 <StatusView
                     kinds={[ChannelKinds.AIS]}
                 ></StatusView>
                 </React.Fragment>
-            }
-                          rightView={
-                            <React.Fragment>
+                ,
+                <React.Fragment key={"1"}>
                               <Headline title={"AIS Targets"}></Headline>
                               <CompleteAisListWithStore/>
                               </React.Fragment>
-                          }
-                          single={!props.settingsSplit}
-                          scrollType={scrollType}
-                          viewChanged={(left:boolean)=>setScrollType(left?ScrollType.left:ScrollType.right)}
+                ]}
+                       maxNumber={props.settingsSplit?2:1}
+                       visibleNumber={scrollType}
+                       viewChanged={(first:number)=>setScrollType(first)}
             />
 
         </PageLeft>

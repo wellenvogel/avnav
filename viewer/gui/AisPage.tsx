@@ -363,7 +363,7 @@ export const CompleteAisListWithStore=(props:CompleteAisListWithStoreProps)=>{
     const [sortField,]=useStoreState(keys.gui.aispage.sortField,props.sortField||sortFields[0].value);
     const [searchActive,]=useStoreState(keys.gui.aispage.searchActive,false);
     const [searchValue,]=useStoreState(keys.gui.aispage.searchValue,"");
-    const [listLock,]=useStoreState( globalStore.getData(keys.properties.aisListLock, false))
+    const [listLock,]=useStoreState( keys.properties.aisListLock, false)
     return <CompleteAisList
         sortField={sortField}
         searchActive={searchActive}

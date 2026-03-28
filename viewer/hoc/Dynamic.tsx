@@ -135,7 +135,14 @@ export const useStoreState = (storeKey:string, defaultInitialValue?:any, forceIn
         let iv = globalStore.getData(storeKey);
         if (iv === undefined || forceInitial) {
             iv = (typeof defaultInitialValue === 'function') ? defaultInitialValue(iv) : defaultInitialValue;
-            if (iv !== undefined) globalStore.storeData(storeKey, iv);
+            if (iv !== undefined) {
+                //we must ensure that this gets called
+                //outside render
+                //as potentially there are listeners
+                requestAnimationFrame(()=>
+                    globalStore.storeData(storeKey, iv)
+                )
+            }
         }
         return iv;
     });
