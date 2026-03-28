@@ -31,9 +31,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ButtonDef, updateButtons} from "../components/Button";
 import RoutesPageButtons from "./RoutesPageButtons";
-import {CombinedView} from "../components/CombinedView";
 import {DownloadItemList} from '../components/DownloadItemList';
-import {ScrollType} from "../util/UiHelper";
 import Headline from "../components/Headline";
 // @ts-ignore
 import {createItemActions} from '../components/FileDialog';
@@ -45,6 +43,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {RouteSyncDialog} from '../components/RouteInfoHelper';
 import globalstore from "../util/globalstore";
 import {EditSettingsCategory} from "../components/Settings";
+import {MultiView} from "../components/MultiView";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -54,25 +53,25 @@ const RoutesPage=(props:RoutesPageProps)=>{
      const [selectedName, setSelectedName] = useState<string>();
      const [scrollSelected, setScrollSelected] = useState<number>(1);
      const history=useHistory();
-     const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
+     const [scrollType, setScrollType] = useState<number>(-1);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions={
          ServerView:{
-             onClick:()=>setScrollType(ScrollType.left),
+             onClick:()=>setScrollType(0),
              disabled:props.pageColumns>1,
-             toggle: scrollType===ScrollType.left||(props.pageColumns>1),
+             toggle: scrollType===0||(props.pageColumns>1),
          },
          ItemsView:{
-             onClick:()=>setScrollType(ScrollType.right),
+             onClick:()=>setScrollType(1),
              disabled:props.pageColumns>1,
-             toggle:scrollType===ScrollType.right||(props.pageColumns>1),
+             toggle:scrollType===1||(props.pageColumns>1),
          },
          Cancel:{
              onClick:()=>history.pop()
          },
          StatusAdd:{
              onClick:async ()=>{
-                 setScrollType(ScrollType.right);
+                 setScrollType(1);
                  try {
                      const routeActions = createItemActions('route');
                      const route = await routeActions.getCreateAction().action();
@@ -114,28 +113,27 @@ const RoutesPage=(props:RoutesPageProps)=>{
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <CombinedView leftView={
-                <React.Fragment>
+            <MultiView views={[
+                <React.Fragment key={0}>
                     <Headline title={"Server"}/>
-                <StatusView
-                    kinds={[ChannelKinds.ROUTE]}
-                ></StatusView>
+                    <StatusView
+                        kinds={[ChannelKinds.ROUTE]}
+                    ></StatusView>
                 </React.Fragment>
-            }
-                          rightView={
-                            <React.Fragment>
-                              <Headline title={"Stored Routes"}></Headline>
-                              <DownloadItemList
-                                  type={"route"}
-                                  autoreload={3000}
-                                  selectedName={selectedName}
-                                  scrollSelected={scrollSelected}
-                              />
-                              </React.Fragment>
-                          }
-                          single={props.pageColumns < 2}
-                          scrollType={scrollType}
-                          viewChanged={(left:boolean)=>setScrollType(left?ScrollType.left:ScrollType.right)}
+                ,
+                <React.Fragment key={1}>
+                    <Headline title={"Stored Routes"}></Headline>
+                    <DownloadItemList
+                        type={"route"}
+                        autoreload={3000}
+                        selectedName={selectedName}
+                        scrollSelected={scrollSelected}
+                    />
+                </React.Fragment>
+            ]}
+                       maxNumber={props.pageColumns}
+                       visibleNumber={scrollType}
+                       viewChanged={(min: number) => setScrollType(min)}
             />
 
         </PageLeft>

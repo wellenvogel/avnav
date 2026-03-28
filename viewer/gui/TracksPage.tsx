@@ -31,12 +31,11 @@ import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ButtonDef, updateButtons} from "../components/Button";
 import TracksPageButtons from "./TracksPageButtons";
-import {CombinedView} from "../components/CombinedView";
 import {DownloadItemList} from '../components/DownloadItemList';
-import {ScrollType} from "../util/UiHelper";
 import Headline from "../components/Headline";
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
+import {MultiView} from "../components/MultiView";
 
 const PAGE=PAGEIDS.TRACKS;
 const TITLE=PAGE_TITLES.TRACKS;
@@ -44,18 +43,18 @@ export type TracksPageProps = Partial<PageBaseProps>;
 const TracksPage=(props:TracksPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
-     const [scrollType, setScrollType] = useState<ScrollType>(ScrollType.left);
+     const [scrollType, setScrollType] = useState<number>(-1);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions={
          ServerView:{
-             onClick:()=>setScrollType(ScrollType.left),
+             onClick:()=>setScrollType(0),
              disabled:props.pageColumns > 1,
-             toggle: scrollType===ScrollType.left||(props.pageColumns > 1),
+             toggle: scrollType===0||(props.pageColumns > 1),
          },
          ItemsView:{
-             onClick:()=>setScrollType(ScrollType.right),
+             onClick:()=>setScrollType(1),
              disabled:props.pageColumns > 1,
-             toggle:scrollType===ScrollType.right||(props.pageColumns > 1),
+             toggle:scrollType===1||(props.pageColumns > 1),
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -73,26 +72,26 @@ const TracksPage=(props:TracksPageProps)=>{
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <CombinedView leftView={
-                <React.Fragment>
+            <MultiView views={[
+                <React.Fragment key={0}>
                     <Headline title={"Server"}/>
-                <StatusView
-                    kinds={[ChannelKinds.TRACK]}
-                ></StatusView>
+                    <StatusView
+                        kinds={[ChannelKinds.TRACK]}
+                    ></StatusView>
                 </React.Fragment>
-            }
-                          rightView={
-                            <React.Fragment>
-                              <Headline title={"Tracks & Logs"}></Headline>
-                              <DownloadItemList
-                                  type={"track"}
-                                  autoreload={3000}
-                              />
-                              </React.Fragment>
-                          }
-                          single={props.pageColumns<2}
-                          scrollType={scrollType}
-                          viewChanged={(left:boolean)=>setScrollType(left?ScrollType.left:ScrollType.right)}
+                ,
+                <React.Fragment key={1}>
+                    <Headline title={"Tracks & Logs"}></Headline>
+                    <DownloadItemList
+                        type={"track"}
+                        autoreload={3000}
+                    />
+                </React.Fragment>
+            ]}
+                       maxNumber={props.pageColumns}
+                       visibleNumber={scrollType}
+
+                       viewChanged={(min: number) => setScrollType(min)}
             />
 
         </PageLeft>
