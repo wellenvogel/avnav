@@ -21,14 +21,9 @@ import java.util.Map;
  */
 public class AisStore {
     private int ownMmsi=0;
-    public AisStore(String ownMmsi){
-        if (ownMmsi != null && ! ownMmsi.isEmpty()){
-            try {
-                this.ownMmsi = Integer.parseInt(ownMmsi);
-            }catch (Exception e){
-                AvnLog.e("unable to set own MMSI from "+ownMmsi+": "+e);
-            }
-        }
+    private long expiryTime=1200; //seconds
+    public AisStore(){
+
     }
     private HashMap<Integer,JSONObject> aisData=new HashMap<Integer, JSONObject>();
     private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24,4,21};
@@ -43,6 +38,20 @@ public class AisStore {
             }
         }
         return false;
+    }
+    public synchronized void updateParameters(String ownMmsi,long expiryTime){
+        if (ownMmsi != null && ! ownMmsi.isEmpty()){
+            try {
+                this.ownMmsi = Integer.parseInt(ownMmsi);
+            }catch (Exception e){
+                AvnLog.e("unable to set own MMSI from "+ownMmsi+": "+e);
+            }
+        }
+        else{
+            this.ownMmsi=0;
+        }
+        this.expiryTime=expiryTime;
+        aisData.clear();
     }
     public synchronized boolean addAisMessage(AisMessage msg, int priority){
         if (! isHandledMessage(msg)){
@@ -284,8 +293,8 @@ public class AisStore {
         return rt;
     }
 
-    public synchronized void cleanup(long lifetime){
-        long cleanupTime=System.currentTimeMillis()-lifetime*1000;
+    public synchronized void cleanup(boolean force){
+        long cleanupTime=System.currentTimeMillis()-(force?-1:(expiryTime*1000));
         Iterator<Map.Entry<Integer,JSONObject>> it=aisData.entrySet().iterator();
         while (it.hasNext()){
             Map.Entry<Integer,JSONObject>et=it.next();

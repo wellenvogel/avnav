@@ -108,6 +108,11 @@ public abstract class Worker implements IWorker {
         return Kind.OTHER;
     }
 
+    @Override
+    public void preRun() throws Exception {
+
+    }
+
     protected void removeClaims(){
         synchronized (resourceClaims){
             for (int i=resourceClaims.size()-1;i>=0;i--){

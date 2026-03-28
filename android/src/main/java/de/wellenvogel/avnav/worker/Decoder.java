@@ -99,18 +99,31 @@ public class Decoder extends Worker  implements INavRequestHandler {
     private static final long AIS_CLEANUP_INTERVAL=60000;
     private String lastAisSource="";
 
+    private String ownMmsi;
+    private long aisExpiryTime=1200; //seconds
+
+    public void updateAisParameters(String ownMmsi,long aisExpiryTime){
+        //in theory we should synchronize
+        //but the store will only change on startup
+        //and it's very iunlikely for a startup to occur
+        //at the same time we change
+        this.ownMmsi=ownMmsi;
+        this.aisExpiryTime=aisExpiryTime;
+        AisStore currentStore=store;
+        if (currentStore != null){
+            currentStore.updateParameters(ownMmsi,aisExpiryTime);
+        }
+    }
+
     public static final EditableParameter.IntegerParameter POSITION_AGE= new
             EditableParameter.IntegerParameter("posAge",R.string.labelSettingsPosAge,10);
     public static final EditableParameter.IntegerParameter NMEA_AGE = new
             EditableParameter.IntegerParameter("nmeaAge",R.string.labelSettingsAuxAge,600);
-    public static final EditableParameter.IntegerParameter AIS_AGE= new
-            EditableParameter.IntegerParameter("aisAge", R.string.labelSettingsAisLifetime,1200);
-    public static final EditableParameter.StringParameter OWN_MMSI= new
-            EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
+
     private NmeaQueue.Fetcher fetcher;
 
     private void addParameters(){
-        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE, QUEUE_AGE_PARAMETER);
+        parameterDescriptions.addParams(POSITION_AGE, NMEA_AGE, QUEUE_AGE_PARAMETER);
     }
 
     @Override
@@ -591,7 +604,8 @@ public class Decoder extends Worker  implements INavRequestHandler {
 
         @Override
         public void run(int startSequence) throws JSONException {
-            store=new AisStore(OWN_MMSI.fromJson(parameters));
+            store=new AisStore();
+            store.updateParameters(ownMmsi,aisExpiryTime);
             SentenceFactory factory = SentenceFactory.getInstance();
             factory.registerParser("VTG", EVTGParser.class);
             factory.registerParser("DBK",EDepthParser.class);
@@ -603,7 +617,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
                     while (! shouldStop(startSequence)) {
                         AvnLog.d(LOGPRFX, getTypeName() + ": cleanup AIS data");
                         try {
-                            cleanupAis(AIS_AGE.fromJson(parameters));
+                            cleanupAis();
                         } catch (Throwable t) {
                             AvnLog.e("exception in AIS cleanup", t);
                         }
@@ -967,12 +981,12 @@ public class Decoder extends Worker  implements INavRequestHandler {
         }
 
 
-    public void cleanupAis(long lifetime){
+    public void cleanupAis(){
         if (store != null) {
             long now=SystemClock.uptimeMillis();
             if (now > (lastAisCleanup+AIS_CLEANUP_INTERVAL)) {
                 lastAisCleanup=now;
-                store.cleanup(lifetime);
+                store.cleanup(false);
             }
         }//satellite view
     }
@@ -1178,7 +1192,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
     }
 
     public synchronized void cleanup(){
-        store.cleanup(-1); //cleanup all
+        store.cleanup(true); //cleanup all
         gsvStores.cleanup(true);
         nmeaData.clear();
     }

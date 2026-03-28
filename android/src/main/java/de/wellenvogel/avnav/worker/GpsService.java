@@ -569,8 +569,27 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new Proxy(TYPE_PROXY,ctx);
         }
     };
+    private static final WorkerConfig WAIS= new WorkerConfig("Ais",11) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new AisWorker(typeName,ctx);
+        }
+    };
 
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE ,WPLUGINS,WOCHARTS,WPROXY};
+    private static final WorkerConfig[] INTERNAL_WORKERS ={
+            WDECODER,
+            WROUTER,
+            WTRACK,
+            WLOGGER,
+            WSERVER,
+            WGPS,
+            WMDNS,
+            WREMOTE ,
+            WPLUGINS,
+            WOCHARTS,
+            WPROXY,
+            WAIS
+    };
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -710,8 +729,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             String MMSI=prefs.getString(Constants.AISOWN,null);
             if (MMSI != null){
                 handler=new JSONObject();
-                Decoder.OWN_MMSI.write(handler,MMSI);
-                edit.putString(WDECODER.configName,handler.toString());
+                AisWorker.OWN_MMSI.write(handler,MMSI);
+                edit.putString(WAIS.configName,handler.toString());
             }
             edit.commit();
         } catch (Throwable t) {
@@ -982,7 +1001,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                             worker.setParameters(null, po,true,false);
                         }catch (JSONException e){
                             //all internal workers must be able to run with empty parameters
-                            AvnLog.e("error parsing decoder parameters",e);
+                            AvnLog.e("error parsing worker parameters",e);
                         }
                     }
                     internalWorkers.add(worker);
@@ -1023,6 +1042,25 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             if (requestHandler != null) requestHandler.stop();
             requestHandler=new RequestHandler(this);
         }
+        if (startInternal) {
+            for (IWorker w : internalWorkers) {
+                try {
+                    w.preRun();
+                } catch (Throwable t) {
+                    AvnLog.e("error in preRun " + w.getTypeName(), t);
+                }
+            }
+        }
+        if (startExternal){
+            for (IWorker w : workers) {
+                try {
+                    w.preRun();
+                } catch (Throwable t) {
+                    AvnLog.e("error in preRun " + w.getTypeName(), t);
+                }
+            }
+        }
+
         if (startInternal) {
             for (IWorker w : internalWorkers) {
                 try {

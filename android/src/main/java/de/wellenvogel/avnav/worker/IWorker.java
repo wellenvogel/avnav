@@ -21,7 +21,8 @@ public interface IWorker {
         CHANNEL("channel"),
         USER("user"),
         ADDON("addon"),
-        OTHER("other");
+        OTHER("other"),
+        AIS("ais");
         private Kind(String s){
             name=s;
         }
@@ -37,6 +38,12 @@ public interface IWorker {
         void permissionNeeded(NeededPermissions perm);
     }
 
+    /**
+     * will be run after all workers have
+     * be created but before any is run
+     * @throws Exception on errors
+     */
+    void preRun() throws Exception;
     Kind getKind();
     WorkerStatus getStatus();
 
