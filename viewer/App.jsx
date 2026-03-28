@@ -145,11 +145,11 @@ const Router = (props) => {
     let style = {};
     if (props.nightMode) style['opacity'] = globalStore.getData(keys.properties.nightFade) / 100;
     let dimStyle = {opacity: 0.5};
-    let split=false;
+    let nCol=1;
     if (props.windowDimensions && props.buttonWidth && props.fontSize){
         const width=props.windowDimensions.width - props.buttonWidth;
-        const limit=props.splitLimit*props.fontSize/14;
-        if (width>=limit) split=true;
+        const limit=props.pageColumnWidth*props.fontSize/14;
+        nCol=Math.floor(width/limit);
     }
     return <div className={className}>
         {props.dim ?
@@ -168,7 +168,7 @@ const Router = (props) => {
             small={props.smallDisplay}
             isEditing={props.isEditing}
             windowDimensions={props.windowDimensions}
-            settingsSplit={split}
+            pageColumns={nCol}
         />
     </div>
 }
@@ -180,7 +180,7 @@ Router.propTypes = {
     dim: PropTypes.bool,
     nightMode: PropTypes.bool,
     smallDisplay: PropTypes.bool,
-    splitLimit: PropTypes.number,
+    pageColumnWidth: PropTypes.number,
     buttonWidth: PropTypes.number,
     fontSize: PropTypes.number,
 }
@@ -215,7 +215,7 @@ const MainBody = ({ history, nightMode}) => {
                     isEditing: keys.gui.global.layoutEditing,
                     layoutSequence: keys.gui.global.layoutSequence,
                     smallDisplay: keys.gui.global.smallDisplay,
-                    splitLimit: keys.properties.settingsSplit,
+                    pageColumnWidth: keys.properties.pageColumnWidth,
                     buttonWidth:keys.gui.global.computedButtonWidth,
                     fontSize: keys.properties.baseFontSize,
                     ...keys.gui.capabilities

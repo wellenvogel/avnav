@@ -49,13 +49,13 @@ const TracksPage=(props:TracksPageProps)=>{
      const buttonActions={
          ServerView:{
              onClick:()=>setScrollType(ScrollType.left),
-             disabled:props.settingsSplit,
-             toggle: scrollType===ScrollType.left||props.settingsSplit,
+             disabled:props.pageColumns > 1,
+             toggle: scrollType===ScrollType.left||(props.pageColumns > 1),
          },
          ItemsView:{
              onClick:()=>setScrollType(ScrollType.right),
-             disabled:props.settingsSplit,
-             toggle:scrollType===ScrollType.right||props.settingsSplit,
+             disabled:props.pageColumns > 1,
+             toggle:scrollType===ScrollType.right||(props.pageColumns > 1),
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -90,7 +90,7 @@ const TracksPage=(props:TracksPageProps)=>{
                               />
                               </React.Fragment>
                           }
-                          single={!props.settingsSplit}
+                          single={props.pageColumns<2}
                           scrollType={scrollType}
                           viewChanged={(left:boolean)=>setScrollType(left?ScrollType.left:ScrollType.right)}
             />

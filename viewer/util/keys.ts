@@ -457,7 +457,7 @@ const keys:Record<string,KeyType>={
         showDimButton: new Property(true,"Show Dim Button",PropertyType.CHECKBOX),
         showSplitButton: new Property(true,"Show Split Button", PropertyType.CHECKBOX),
         baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28],"The base font size for all text except for widgets"),
-        settingsSplit: new Property(700,"setting 2 columns",PropertyType.RANGE,[400,1300],"show 2 columns  in settings if main window wider"),
+        pageColumnWidth: new Property(350,"Pages Column Width",PropertyType.RANGE,[200,800],"The minimal width for one columns on pages with multiple columns. Show multiple columns if the window width is n x this width."),
         widgetFontSize: new Property(14, "Widget Base Font(px)", PropertyType.RANGE, [8, 28],"The base fonst size for widgets. Particular widgets typically define their font sizes relative to this value."),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX,undefined,"If set the bottom display on map pages will allow for two row of widgets"),
         autoZoom: new Property(true, "automatic zoom", PropertyType.CHECKBOX,undefined,"If set the map will automatically switch to lower zoom levels if there are no tiles for the selected zoom level."+

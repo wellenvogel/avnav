@@ -48,13 +48,13 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
      const buttonActions:Record<string,Partial<DynamicButtonProps>> ={
          ServerView:{
              onClick:()=>setScrollType(0),
-             disabled:props.settingsSplit,
-             toggle: scrollType===0||props.settingsSplit,
+             disabled:props.pageColumns >1,
+             toggle: scrollType===0||props.pageColumns > 1,
          },
          ItemsView:{
              onClick:()=>setScrollType(1),
-             disabled:props.settingsSplit,
-             toggle:scrollType===1||props.settingsSplit,
+             disabled:props.pageColumns>1,
+             toggle:scrollType===1||props.pageColumns>1,
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -73,7 +73,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
      }
      //enable/disable buttons
      for (const button of ['AisNearest','AisSort','AisLock','AisSearch']){
-         buttonActions[button]={...buttonActions[button],disabled:! props.settingsSplit && scrollType===0};
+         buttonActions[button]={...buttonActions[button],disabled:(props.pageColumns < 2) && scrollType===0};
      }
      buttonListRef.current=updateButtons(AisCfgPageButtons,buttonActions);
      useInitialButton(buttonListRef);
@@ -92,7 +92,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                               <CompleteAisListWithStore/>
                               </React.Fragment>
                 ]}
-                       maxNumber={props.settingsSplit?2:1}
+                       maxNumber={props.pageColumns}
                        visibleNumber={scrollType}
                        viewChanged={(first:number)=>setScrollType(first)}
             />

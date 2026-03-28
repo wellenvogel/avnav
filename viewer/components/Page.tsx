@@ -49,7 +49,7 @@ export interface PageBaseProps{
     small: boolean;
     id: string;
     windowDimensions?:{width:number,height:number};
-    settingsSplit?: boolean; //wide enough for split mode
+    pageColumns: number;
 }
 export interface PageProps extends PageBaseProps{
     title?: string;
@@ -77,7 +77,7 @@ export const PageFrame=
     // eslint-disable-next-line react/display-name
     forwardRef((iprops:PageFrameProps,ref)=>{
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,settingsSplit,...forward}=useStore(iprops,{
+    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,pageColumns,...forward}=useStore(iprops,{
         storeKeys:{
             isEditing: keys.gui.global.layoutEditing
         }
