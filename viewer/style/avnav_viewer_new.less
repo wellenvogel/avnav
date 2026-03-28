@@ -747,7 +747,8 @@ body{
 //----------------------------------------------------------------------------------------
 
 .scrollable{
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .listEntry{
   .rowBase();
@@ -1417,10 +1418,13 @@ span.valuePrefix{
     }
     .statusName {
       padding-left: 3px;
+      line-break: auto;
+      word-break: break-word;
     }
     .statusInfo {
       padding-left: 3px;
-      word-wrap: break-word;
+      word-break: break-word;
+      line-break: auto;
     }
     &.serverError{
       .header {
