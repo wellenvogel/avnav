@@ -24,6 +24,8 @@ import React, {useCallback, useEffect} from "react";
 import Helper from "../util/helper";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
+import {ListSlot} from "./ListItems";
+
 
 export interface MultiViewProps {
     views: React.ReactNode[];
@@ -105,6 +107,30 @@ export const useScrollHelper=(initialScroll:number=0):ScrollHelper=>{
         scrollTo,
         isVisible
     ]
+}
+
+export interface MvHeadlineProps{
+    className?:string;
+    title?:string;
+    leftScroll?:()=>void;
+    rightScroll?:()=>void;
+}
+
+export const MvHeadline=(props:MvHeadlineProps)=>{
+    const className=Helper.concatsp("header",props.className);
+    return <div className={className}>
+        { (!! props.leftScroll) && <ListSlot
+            className={'left'}
+            icon={{className:'left'}}
+            onClick={()=>props.leftScroll()}
+        />}
+        <ListSlot text={props.title} className={'main'}/>
+        { (!! props.rightScroll) && <ListSlot
+            className={'right'}
+            icon={{className:'right'}}
+            onClick={()=>props.rightScroll()}
+        />}
+    </div>
 }
 
 export const MultiView = (props: MultiViewProps) => {

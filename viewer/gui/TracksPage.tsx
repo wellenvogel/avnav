@@ -32,10 +32,9 @@ import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ButtonDef, updateButtons} from "../components/Button";
 import TracksPageButtons from "./TracksPageButtons";
 import {DownloadItemList} from '../components/DownloadItemList';
-import Headline from "../components/Headline";
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
-import {MultiView,useScrollHelper} from "../components/MultiView";
+import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.TRACKS;
 const TITLE=PAGE_TITLES.TRACKS;
@@ -80,23 +79,32 @@ const TracksPage=(props:TracksPageProps)=>{
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <Headline title={"Server"}/>
+                    <MvHeadline title={"Server"} rightScroll={()=>scrollTo(1)}/>
                     <StatusView
                         kinds={[ChannelKinds.TRACK]}
                     ></StatusView>
                 </React.Fragment>
                 ,
                 <React.Fragment key={1}>
-                    <Headline title={"Tracks & Logs"}></Headline>
+                    <MvHeadline
+                        title={"Tracks & Logs"}
+                        leftScroll={()=>scrollTo(0)}
+                        rightScroll={()=>scrollTo(2)}
+                    ></MvHeadline>
                     <DownloadItemList
                         type={"track"}
                         autoreload={3000}
                     />
                 </React.Fragment>
                 ,
+                <React.Fragment key={2}>
+                    <MvHeadline title={'Test'}
+                                leftScroll={()=>scrollTo(1)}
+                    />
                 <div key={2}>
                     TEST
                 </div>
+                </React.Fragment>
             ]}
                        maxNumber={props.pageColumns}
             />

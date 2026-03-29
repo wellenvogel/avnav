@@ -224,6 +224,19 @@ body{
     border-left: 3px solid;
     border-color: var(--avnav-border-color);
   }
+  .header{
+    .main{
+      flex-grow: 1;
+    }
+    .icon.left{
+      .iconImage('navigate_before.svg');
+      filter: var(--avnav-filter-white);
+    }
+    .icon.right{
+      .iconImage('navigate_next.svg');
+      filter: var(--avnav-filter-white);
+    }
+  }
 }
 //----------------------------------------------------------------------------------------
 //dialogs
