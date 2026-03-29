@@ -33,7 +33,7 @@ import {ButtonDef, updateButtons} from "../components/Button";
 import LayoutsPageButtons from "./LayoutsPageButtons";
 import {DownloadItemList} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
-import {EditSettingsCategory} from "../components/Settings";
+import {EditSettingsCategory, SelectLayoutDialog} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.LAYOUT;
@@ -41,6 +41,7 @@ const TITLE=PAGE_TITLES.LAYOUT;
 export type LayoutsPageProps = Partial<PageBaseProps>;
 const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
+     const [layoutName]=useStoreState(keys.properties.layoutName);
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(0);
      const buttonListRef=useRef<ButtonDef[]>();
@@ -65,12 +66,17 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                      title={'Layout & Layout Settings'}
                  />)
              }
+         },
+         SettingsLayout:{
+             onClick:()=>{
+                 showDialog(undefined, ()=><SelectLayoutDialog/>)
+             }
          }
      }
      buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
-        <PageLeft title={TITLE}>
+        <PageLeft title={TITLE+` [${layoutName}]`}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
                     <MvHeadline title={"Server"} {...scrollProps} number={0} max={1}/>

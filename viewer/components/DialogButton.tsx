@@ -18,6 +18,7 @@ export interface DialogButtonProps{
     visible?: boolean;
     close?: boolean;  //default: true
     children?: React.ReactNode;
+    label?: React.ReactNode;
 }
 const COMPONENT="dialogButton";
 const DialogButton=(props:DialogButtonProps)=>{

@@ -10,7 +10,7 @@
 import React, {Children, cloneElement, forwardRef, ReactNode, SyntheticEvent, useEffect, useRef, useState} from 'react';
 // @ts-ignore
 import {useInputMonitor} from '../hoc/InputMonitor';
-import DialogButton from './DialogButton';
+import DialogButton, {DialogButtonProps} from './DialogButton';
 // @ts-ignore
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
@@ -169,13 +169,13 @@ export const useDialog=(
         }
     ]
 }
-export const showPromiseDialog=(
+export const showPromiseDialog=<T=any,>(
     dialogContext:IDialogContext|undefined,
     Dialog:React.ElementType,
     args?:Record<string, any>,
     opt_options?:SetDialogOptions)=>{
     if (!dialogContext) dialogContext=globalContext;
-    return new Promise((resolve,reject)=>{
+    return new Promise<T>((resolve,reject)=>{
         let resolved=false;
         showDialog(dialogContext,()=>{
             return <Dialog {...args} resolveFunction={(val:any)=>{
@@ -275,12 +275,12 @@ export const DialogRow=
     </div>
 })
 type DialogButtonDef=DialogButtonProps|((props:any) => React.ReactNode)
-export interface DialogButtonProps extends Record<string, any>{
+export interface DialogButtonListProps extends Record<string, any>{
     className?:string;
     children?:React.ReactNode;
     buttonList?:DialogButtonDef|DialogButtonDef[];
 }
-export const DialogButtons=(props:DialogButtonProps)=>{
+export const DialogButtons=(props:DialogButtonListProps)=>{
     const {className,children,buttonList,...fw}=props;
     let buttons=buttonList;
     if (! (buttons instanceof Array)) buttons=[buttons];

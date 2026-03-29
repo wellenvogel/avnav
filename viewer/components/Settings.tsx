@@ -37,7 +37,7 @@ import {
     getCommonParam
     // @ts-ignore
 } from "../components/EditableParameterUI";
-import {InputSelect, InputReadOnly} from '../components/Inputs';
+import {InputSelect, InputReadOnly} from './Inputs';
 import globalstore from "../util/globalstore";
 // @ts-ignore
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
@@ -47,6 +47,10 @@ import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog} from "./O
 import {ConfirmDialog} from './BasicDialogs';
 import {useDialogContext} from "./exports";
 import {IDialogContext} from "./DialogContext";
+// @ts-ignore
+import {createItemActions} from './FileDialog';
+// @ts-ignore
+import {ItemNameDialog,checkName} from './ItemNameDialog';
 
 export interface SettingsDefinition extends Property{
     name:string;
@@ -61,7 +65,7 @@ export const settingsSections:Record<string, string[]> = {
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
         keys.properties.showSplitButton],
-    Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
+    Layout:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
         keys.properties.autoUpdateUserCss, keys.properties.mainNavExpand,keys.properties.mainNavCols],
@@ -118,69 +122,6 @@ settingsConditions[keys.properties.boatSteadyMax]=(values)=>
 
 
 export type SettingsValuesType=Record<string, PropertyValue>;
-export class SettingsValues{
-    private initialValues: SettingsValuesType;
-    private values: { [p: string]: string | number | boolean };
-    private changed: boolean;
-    private onlyExisting: boolean;
-    constructor(values:SettingsValuesType,onlyExisting?:boolean) {
-        this.initialValues=values;
-        this.values={...values};
-        this.changed=false;
-        this.onlyExisting=!!onlyExisting;
-    }
-    setValue(key:string,value:PropertyValue){
-        if (this.onlyExisting && ! (key in this.initialValues)) return false;
-        this.values[key]=value;
-        if (value !== this.initialValues[key]) this.changed = true;
-        return true;
-    }
-    getValue(key:string){
-        return this.values[key];
-    }
-    getInitialValues(copy?:boolean):SettingsValuesType{
-        return copy?{...this.initialValues}:this.initialValues;
-    }
-    getValues(copy?:boolean):SettingsValuesType{
-        return copy?{...this.values}:this.values;
-    }
-    hasChanges(){
-        return this.changed;
-    }
-    isChanged(key:string){
-        return this.initialValues[key] !== this.values[key];
-    }
-    reset(){
-        this.values={...this.initialValues};
-        this.changed=false;
-    }
-}
-
-export function useRefHelper<T extends Record<string,any>>(values:T,sequence?:number){
-    const initialValues = useRef<T>(values);
-    const seqRef = useRef(sequence);
-    return {
-        isChanged:(key:string,current:T)=>{
-            if (! initialValues.current) return false;
-            return initialValues.current[key] !== current[key];
-        },
-        value:(key:string)=>{
-            if (! initialValues.current) return;
-            return initialValues.current[key]
-        },
-        values:()=>initialValues.current||{},
-        isSet:()=>!!initialValues.current,
-        update(values:T,sequence?:number){
-            if (sequence !== seqRef.current) {
-                seqRef.current=sequence;
-                initialValues.current=values;
-                return true;
-            }
-            return false;
-        }
-    }
-}
-
 interface ParameterUIRenderProps{
     currentValues:SettingsValuesType;
     initialValues:SettingsValuesType;
@@ -275,7 +216,7 @@ export interface EditSettingsItemsProps{
      * @param value new value. Undefined: delete if layout
      * @param layout: is a layout value
      */
-    onChange:(name:string,value:PropertyValue,layout:boolean)=>void;
+    onChange:(name:string,value:PropertyValue,layout:boolean,saveAction?:()=>void)=>void;
     className?:string;
     layoutEditing:boolean
 }
@@ -471,5 +412,136 @@ export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{
         />
     </DialogFrame>
 
+}
+export interface SelectLayoutDialogProps{
+    className?:string;
+}
+
+const newNameForLayoutEdit=async (currentName:string)=>{
+    try {
+        const list = await layoutLoader.listLayouts();
+        const itemActions = createItemActions({type: 'layout'});
+        const fixedPrefix= itemActions.prefixForDisplay();
+        const res = await showPromiseDialog<{name:string}>(undefined, (dprops) => <ItemNameDialog
+            {...dprops}
+            title={"ReadOnly, select a new name"}
+            iname={itemActions.nameToBaseName(currentName)}
+            fixedPrefix={fixedPrefix}
+            checkName={(newName: string) => {
+                if (!newName) {
+                    return {
+                        error: 'name must not be empty',
+                        proposal: itemActions.nameToBaseName(currentName),
+                    }
+                }
+                if (newName.indexOf('.') >= 0) {
+                    return {
+                        error: 'names must not contain a .',
+                        proposal: newName.replace(/\./g, '')
+                    }
+                }
+                let cr = checkName(newName, undefined, undefined);
+                if (cr && cr.error) return cr;
+                cr = checkName(newName, list, itemActions.nameForCheck);
+                if (cr && cr.error) {
+                        return cr;
+                } else {
+                    return {
+                        info: "new"
+                    }
+                }
+            }}
+        />)
+        return res.name?fixedPrefix+res.name:undefined;
+    }
+     catch(error){
+        if (error)Toast("cannot start layout editing: " + error)
+        }
+}
+
+export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
+    const layoutKey=keys.properties.layoutName;
+    const description=KeyHelper.getKeyDescriptions(true)[layoutKey];
+    const layoutParameter = itemUiFromPlain({...description,name:layoutKey});
+    const currentName=LayoutHandler.getName();
+    const currentValues=useStateObject({[layoutKey]:currentName});
+    const initialValues={
+        [layoutKey]:currentName
+    }
+    const dialogContext=useDialogContext();
+    const checkAnLoad=async ()=>{
+        const layoutName=currentValues.getValue(layoutKey);
+        if (! layoutName){
+            Toast("no layout selected");
+            return;
+        }
+        try {
+            const layout = await layoutLoader.loadLayout(layoutName)
+            return [layoutName,layout];
+        }catch (e){
+            Toast(e);
+            return;
+        }
+    }
+    return <DialogFrame title={'Select/Edit Layout'} className={Helper.concatsp(props.className,'selectLayout')}>
+        <EditableParameterListUI
+            values={currentValues.getState()}
+            parameters={[layoutParameter]}
+            initialValues={initialValues}
+            onChange={(values:Record<string, PropertyValue>) =>{
+                if (layoutKey in values) {
+                    currentValues.setState(values);
+                }
+            }}
+        />
+        <DialogButtons buttonList={[
+            DBCancel(),
+            DBOk(async ()=>{
+                const layoutAndName=await checkAnLoad();
+                if (! layoutAndName) return;
+                try {
+                    LayoutHandler.setLayoutAndName(layoutAndName[0],layoutAndName[1],true);
+                }catch (e){
+                    Toast(e);
+                    return;
+                }
+                await dialogContext.closeDialog();
+            },{
+                disabled:!currentValues.isChanged(),
+                close:false,
+                label:'Load'
+            }),
+            {
+                name:'editLayout',
+                label:'Edit',
+                onClick: async () => {
+                    const layoutName=currentValues.getValue(layoutKey);
+                    let layoutAndName = [];
+                    try {
+                        if (! LayoutHandler.canEdit(layoutName)) {
+                            const newName=await newNameForLayoutEdit(layoutName);
+                            if (! newName) return;
+                            layoutAndName.push(newName);
+                        }
+                        else {
+                            if (currentValues.isChanged()) {
+                                layoutAndName = await checkAnLoad();
+                                if (!layoutAndName) return;
+                                LayoutHandler.setLayoutAndName(layoutAndName[0], layoutAndName[1], true);
+                            } else {
+                                layoutAndName.push(currentName);
+                            }
+                        }
+                        LayoutHandler.startEditing(layoutAndName[0]);
+                    } catch (e) {
+                        Toast(e);
+                        return;
+                    }
+                }
+
+            }
+
+        ]}/>
+    </DialogFrame>
 }
 

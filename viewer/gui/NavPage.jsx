@@ -727,7 +727,6 @@ const NavPage=(props)=>{
             overflow: true,
             onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
         },
-        LayoutFinishedDialog.getButtonDef(undefined,dialogCtx),
         LayoutHandler.revertButtonDef((pageWithOptions)=>{
             if (pageWithOptions.location !== props.location){
                 history.replace(pageWithOptions.location,pageWithOptions.options);

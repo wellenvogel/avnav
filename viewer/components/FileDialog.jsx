@@ -1513,7 +1513,8 @@ class LayoutItemActions extends ItemActions{
                 />);
                 if (res) await save(res);
                 dialogContext.closeDialog();
-            }
+            },
+            label: 'Raw'
         }))
         actions.push(standardActions.download.copy({
             localData: ()=>fetchItem(item)

@@ -22,15 +22,26 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
 
 export default GeneralButtons.concat(propsToDefs([
     {
         name:'ServerView',
-        displayName: 'server settings',
+        displayName: 'server status',
     },
     {
         name:'ItemsView',
-        displayName: 'list tracks/logs',
+        displayName: 'manage layouts',
+    },
+    {
+        name: 'SettingsLayout',
+        displayName: 'select/edit layout',
+        storeKeys: {hidden:keys.gui.global.layoutEditing},
+        updateFunction:(state)=>{
+            return {
+                visible:!state.hidden
+            }
+        }
     },
     {
         name: 'ShowSettings',

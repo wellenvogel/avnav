@@ -44,6 +44,8 @@ import RoutesPageButtons from "./RoutesPageButtons";
 import TracksPageButtons from "./TracksPageButtons";
 import AisCfgPageButtons from "./AisCfgPageButtons";
 import LayoutsPageButtons from "./LayoutsPageButtons";
+// @ts-ignore
+import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
 
 type PageKind='navigation'|'settings';
 
@@ -254,7 +256,9 @@ export const InjectMainMenu=(
                 expandMode={expandMode}
             />,undefined,{coverClassName:Helper.concatsp('MainNavCover',colClass)})
         }
-    }]).concat(pageButtons,propsToDefs(addons.getPageUserButtons(pagename)));
+    },
+        LayoutFinishedDialog.getButtonDef(),
+    ]).concat(pageButtons,propsToDefs(addons.getPageUserButtons(pagename)));
 }
 
 export const handleInitialButton = (history: IHistory, pageButtons: ButtonDef[], dialogContext?: IDialogContext) => {

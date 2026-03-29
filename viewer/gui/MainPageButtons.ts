@@ -61,7 +61,6 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
         displayName: 'night mode',
         storeKeys: {toggle: keys.properties.nightMode},
     },
-    LayoutFinishedDialog.getButtonDef(),
     LayoutHandler.revertButtonDef(),
 
     {
