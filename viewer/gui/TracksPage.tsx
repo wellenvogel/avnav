@@ -67,19 +67,13 @@ const TracksPage=(props:TracksPageProps)=>{
              }
          }
      }
-     buttonListRef.current=updateButtons(TracksPageButtons,buttonActions).concat(
-         new ButtonDef({
-             name:'Test',
-             onClick:()=>scrollTo(2),
-             toggle:visible(2)
-         })
-     );
+     buttonListRef.current=updateButtons(TracksPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <MvHeadline title={"Server"} {...scrollProps} number={0} max={2}/>
+                    <MvHeadline title={"Server"} {...scrollProps} number={0} max={1}/>
                     <StatusView
                         kinds={[ChannelKinds.TRACK]}
                     ></StatusView>
@@ -90,21 +84,12 @@ const TracksPage=(props:TracksPageProps)=>{
                         title={"Tracks & Logs"}
                         {...scrollProps}
                         number={1}
-                        max={2}
+                        max={1}
                     ></MvHeadline>
                     <DownloadItemList
                         type={"track"}
                         autoreload={3000}
                     />
-                </React.Fragment>
-                ,
-                <React.Fragment key={2}>
-                    <MvHeadline title={'Test'}
-                                {...scrollProps} number={2} max={2}
-                    />
-                <div key={2}>
-                    TEST
-                </div>
                 </React.Fragment>
             ]}
                        maxNumber={props.pageColumns}
