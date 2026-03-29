@@ -30,14 +30,10 @@ import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {checkName, ItemNameDialog} from "../components/ItemNameDialog";
 import Helper, {avitem} from "../util/helper";
-import {
-    EditableParameterListUI
-} from "../components/EditableParameterUI";
-import Button from "../components/Button";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot} from "../components/ListItems";
-import {settingsSections, settingsConditions, itemUiFromPlain, EditSettingsItems} from "../components/Settings";
+import {settingsSections, settingsConditions, EditSettingsItems} from "../components/Settings";
 
 const sectionConditions={};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
@@ -279,23 +275,6 @@ const SettingsPage = (props) => {
                 }
             },
             {
-                name: 'SettingsLayout',
-                onClick: () => {
-                    handleLayoutClick();
-                },
-                updateFunction: (state) => {
-                    return {
-                        toggle: state.toggle,
-                        visible: !state.cap || state.con
-                    }
-                },
-                storeKeys: {
-                    toggle: keys.gui.global.layoutEditing,
-                    cap: keys.gui.capabilities.uploadLayout,
-                    con: keys.properties.connectedMode
-                }
-            },
-            {
                 name: 'SettingsAddons',
                 onClick: () => {
                     confirmAbortOrDo(true).then(() => {
@@ -382,16 +361,6 @@ const SettingsPage = (props) => {
                 return;
             }
             values.setValue(key, value);
-            if (key === keys.properties.layoutName) {
-                layoutLoader.loadLayout(value)
-                    .then((layout) => {
-                        const newLayoutSettings = LayoutHandler.getLayoutProperties(layout);
-                        layoutSettings.setState(newLayoutSettings, true);
-                    })
-                    .catch((e) => {
-                        Toast(e + "")
-                    })
-            }
         }
     }, []);
 
@@ -409,8 +378,7 @@ const SettingsPage = (props) => {
             }
         }
     }, [props.small, leftPanelVisible]);
-
-    const handleLayoutClick = useCallback(() => {
+    useCallback(() => {
         let isEditing = LayoutHandler.isEditing();
         if (!isEditing) {
             let startDialog = () => {
@@ -424,18 +392,18 @@ const SettingsPage = (props) => {
                             iname={itemActions.nameToBaseName(LayoutHandler.name)}
                             fixedPrefix={'user.'}
                             checkName={(newName) => {
-                                    if (!newName) {
-                                        return {
-                                            error: 'name must not be empty',
-                                            proposal: itemActions.nameToBaseName(LayoutHandler.name)
-                                        }
+                                if (!newName) {
+                                    return {
+                                        error: 'name must not be empty',
+                                        proposal: itemActions.nameToBaseName(LayoutHandler.name)
                                     }
-                                    if (newName.indexOf('.') >= 0) {
-                                        return {
-                                            error: 'names must not contain a .',
-                                            proposal: newName.replace(/\./g, '')
-                                        }
+                                }
+                                if (newName.indexOf('.') >= 0) {
+                                    return {
+                                        error: 'names must not contain a .',
+                                        proposal: newName.replace(/\./g, '')
                                     }
+                                }
                                 let cr = checkName(newName, undefined, undefined);
                                 if (cr) return cr;
                                 cr = checkName(newName, list,itemActions.nameForCheck );
@@ -489,18 +457,12 @@ const SettingsPage = (props) => {
             })
         }
     }, []);
-
     const resetData = useCallback(() => {
         if (LayoutHandler.isEditing()) {
             layoutSettings.setState({}, true);
         } else {
-            const oldLayoutName = values.getValue(keys.properties.layoutName);
             let newValues = assign({}, defaultValues.current);
-            const newLayoutName = newValues[keys.properties.layoutName];
             values.setState(newValues, true);
-            if (oldLayoutName !== newLayoutName) {
-                changeItem(keys.properties.layoutName, newLayoutName); //reset layoutSettings
-            }
         }
     }, []);
 
