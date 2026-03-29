@@ -97,7 +97,7 @@ const Button = (props:ButtonProps) => {
         }
     }
     return (
-        <div {...forward} className={className}>
+        <div {...forward} className={className} title={displayName}>
             <span style={spanStyle}/>
             {children}
         </div>
