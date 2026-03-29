@@ -30,12 +30,11 @@ import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
-import Headline from "../components/Headline";
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import AisCfgPageButtons from "./AisCfgPageButtons";
 import {AisButtonActions, CompleteAisListWithStore} from './AisPage';
-import {MultiView, useScrollHelper} from "../components/MultiView";
+import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.AISCFG;
 const TITLE=PAGE_TITLES.AISCFG;
@@ -83,14 +82,25 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                 {...scrollProps}
                        views={[
                 <React.Fragment key={"0"}>
-                    <Headline title={"Server"}/>
+                    <MvHeadline
+                        {...scrollProps}
+                        title={"Server"}
+                        number={0}
+                        max={1}
+                    />
                 <StatusView
                     kinds={[ChannelKinds.AIS]}
                 ></StatusView>
                 </React.Fragment>
                 ,
                 <React.Fragment key={"1"}>
-                              <Headline title={"AIS Targets"}></Headline>
+                              <MvHeadline
+                                {...scrollProps}
+                                title={"AIS Targets"}
+                                number={1}
+                                max={1}
+                              >
+                              </MvHeadline>
                               <CompleteAisListWithStore/>
                               </React.Fragment>
                 ]}

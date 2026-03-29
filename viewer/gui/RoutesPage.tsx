@@ -32,7 +32,6 @@ import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ButtonDef, updateButtons} from "../components/Button";
 import RoutesPageButtons from "./RoutesPageButtons";
 import {DownloadItemList} from '../components/DownloadItemList';
-import Headline from "../components/Headline";
 // @ts-ignore
 import {createItemActions} from '../components/FileDialog';
 // @ts-ignore
@@ -43,7 +42,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {RouteSyncDialog} from '../components/RouteInfoHelper';
 import globalstore from "../util/globalstore";
 import {EditSettingsCategory} from "../components/Settings";
-import {MultiView, useScrollHelper} from "../components/MultiView";
+import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -115,14 +114,24 @@ const RoutesPage=(props:RoutesPageProps)=>{
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <Headline title={"Server"}/>
+                    <MvHeadline
+                        {...scrollProps}
+                        title={"Server"}
+                        number={0}
+                        max={1}
+                    />
                     <StatusView
                         kinds={[ChannelKinds.ROUTE]}
                     ></StatusView>
                 </React.Fragment>
                 ,
                 <React.Fragment key={1}>
-                    <Headline title={"Stored Routes"}></Headline>
+                    <MvHeadline
+                        {...scrollProps}
+                        title={"Stored Routes"}
+                        number={1}
+                        max={1}
+                    ></MvHeadline>
                     <DownloadItemList
                         type={"route"}
                         autoreload={3000}

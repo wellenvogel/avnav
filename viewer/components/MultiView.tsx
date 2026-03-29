@@ -61,6 +61,8 @@ export type ScrollHelper=[
         visibleNumber:number;
         visibleNumberSequence:number;
         viewChanged:(first:number,last:number) => void;
+        scrollTo:(nr:number)=>void;
+        isVisible:(nr:number)=>boolean;
     },
     (nr:number)=>void,
     (nr:number)=>boolean
@@ -103,6 +105,8 @@ export const useScrollHelper=(initialScroll:number=0):ScrollHelper=>{
             visibleNumber:scrollItem,
             visibleNumberSequence:sequence,
             viewChanged:updateVis,
+            scrollTo:scrollTo,
+            isVisible:isVisible
         },
         scrollTo,
         isVisible
@@ -112,24 +116,29 @@ export const useScrollHelper=(initialScroll:number=0):ScrollHelper=>{
 export interface MvHeadlineProps{
     className?:string;
     title?:string;
-    leftScroll?:()=>void;
-    rightScroll?:()=>void;
+    scrollTo?:(nr:number)=>void;
+    isVisible?:(nr:number)=>boolean;
+    number?:number;
+    max?:number;
 }
 
 export const MvHeadline=(props:MvHeadlineProps)=>{
     const className=Helper.concatsp("header",props.className);
+    const showScroll=!!props.scrollTo && !!props.isVisible && props.number!==undefined && props.max !== undefined;
+    const showLeft=showScroll && props.number > 0 && !props.isVisible(props.number-1);
+    const showRight=showScroll && props.number < props.max && ! props.isVisible(props.number+1);
     return <div className={className}>
-        { (!! props.leftScroll) && <ListSlot
+        <ListSlot
             className={'left'}
-            icon={{className:'left'}}
-            onClick={()=>props.leftScroll()}
-        />}
+            icon={{className:showLeft?'left':'_undefined'}}
+            onClick={()=>showLeft && props.scrollTo(props.number-1)}
+        />
         <ListSlot text={props.title} className={'main'}/>
-        { (!! props.rightScroll) && <ListSlot
+        <ListSlot
             className={'right'}
-            icon={{className:'right'}}
-            onClick={()=>props.rightScroll()}
-        />}
+            icon={{className:showRight?'right':'_undefined'}}
+            onClick={()=>showRight && props.scrollTo(props.number+1)}
+        />
     </div>
 }
 
@@ -141,7 +150,8 @@ export const MultiView = (props: MultiViewProps) => {
     const scrollTimerRef = React.useRef<number>(undefined);
     const lastReportedRef = React.useRef([-1,-1]);
     const numViews=props.views?props.views.length:0;
-    const maxNumber=(props.maxNumber>0)?props.maxNumber:1;
+    let maxNumber=(props.maxNumber>0)?props.maxNumber:1;
+    if (maxNumber>numViews) { maxNumber=numViews;}
     useEffect(() => {
         if (! outerRef.current) {
             setItemWidth(0);
@@ -149,7 +159,7 @@ export const MultiView = (props: MultiViewProps) => {
         }
         const rect=outerRef.current.getBoundingClientRect();
         setItemWidth(rect.width/maxNumber);
-    },[props.maxNumber,windowDimensions]);
+    },[maxNumber,windowDimensions]);
     useEffect(() => {
         return ()=>{
             if (scrollTimerRef.current !== undefined) clearTimeout(scrollTimerRef.current);
