@@ -7,8 +7,11 @@ import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
+export type ButtonEvent=SyntheticEvent | Record<string, any>;
+export type ButtonEventHandler=((ev:ButtonEvent)=>void)|((ev:ButtonEvent) => Promise<void>);
+
 export interface ButtonProps {
-        onClick?: (ev:SyntheticEvent|Record<string,any>)=>void,
+        onClick?: ButtonEventHandler;
         className?: string;
         toggle?: boolean|(()=>boolean);
         name: string;
@@ -23,10 +26,7 @@ export interface ButtonProps {
         localOnly?:boolean;
         displayName?:string
 }
-
-export type ButtonEvent=SyntheticEvent | Record<string, any>;
-export type ButtonEventHandler=(ev:ButtonEvent)=>void;
-
+export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{
     constructor(props:DynamicButtonProps) {
         super();
@@ -51,7 +51,6 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     localOnly?: boolean;
     displayName?: string;
 }
-export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 
 const toggleClass=(props:ButtonProps)=> {
     if (props.toggle !== undefined) {

@@ -213,12 +213,15 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
             type={type}
             doneCallback={async (param) => {
                 const rs = await uploadAction.afterUpload();
-                if (uploadDone) uploadDone(true);
+                if (uploadDone) uploadDone(param?param.name:undefined);
+                if (param && param.name && scrollSelected) {
+                    setVselectedName(param.name);
+                }
                 if (rs) return;
                 readItems();
             }}
             errorCallback={(err) => {
-                if (uploadDone) uploadDone(false);
+                if (uploadDone) uploadDone();
                 if (err) Toast(err);
                 readItems();
             }}

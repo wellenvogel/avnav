@@ -29,7 +29,7 @@ import StatusView, {ChannelKinds} from "../components/StatusView";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {ButtonDef, updateButtons} from "../components/Button";
+import {ButtonDef,  updateButtons} from "../components/Button";
 import RoutesPageButtons from "./RoutesPageButtons";
 import {DownloadItemList} from '../components/DownloadItemList';
 // @ts-ignore
@@ -43,6 +43,7 @@ import {RouteSyncDialog} from '../components/RouteInfoHelper';
 import globalstore from "../util/globalstore";
 import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
+import {useUploadHelper} from "../components/UploadHandler";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -54,6 +55,8 @@ const RoutesPage=(props:RoutesPageProps)=>{
      const [scrollSelected, setScrollSelected] = useState<number>(1);
      const history=useHistory();
      const buttonListRef=useRef<ButtonDef[]>();
+     const [uploadProps,uploadAction]=useUploadHelper('route',true);
+     const actions=createItemActions('route');
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
@@ -72,8 +75,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
              onClick:async ()=>{
                  scrollTo(1);
                  try {
-                     const routeActions = createItemActions('route');
-                     const route = await routeActions.getCreateAction().action();
+                     const route = await actions.getCreateAction().action();
                      const RouteHandler=NavHandler.getRoutingHandler();
                      await RouteHandler.saveRoute(route);
                      setSelectedName(route.name);
@@ -106,6 +108,10 @@ const RoutesPage=(props:RoutesPageProps)=>{
                      title={'Route Display'}
                  />)
              }
+         },
+         DownloadPageUpload:{
+             onClick:uploadAction,
+             disabled:!isVisible(1)
          }
      }
      buttonListRef.current=updateButtons(RoutesPageButtons,buttonActions);
@@ -133,6 +139,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
                         max={1}
                     ></MvHeadline>
                     <DownloadItemList
+                        {...uploadProps}
                         type={"route"}
                         autoreload={3000}
                         selectedName={selectedName}

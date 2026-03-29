@@ -9,13 +9,10 @@ import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore
 import {createItemActions} from '../components/FileDialog';
 import {useHistory} from "../components/HistoryProvider";
-// @ts-ignore
 import ButtonList from "../components/ButtonList";
-// @ts-ignore
 import {DownloadItemList} from "../components/DownloadItemList";
 import {PAGEIDS} from "../util/pageids";
 import base from "../base";
-// @ts-ignore
 import {extensionListToAccept, uploadClick} from "../components/UploadHandler";
 import {ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import Helper from "../util/helper";

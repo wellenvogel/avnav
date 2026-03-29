@@ -33,6 +33,11 @@ export default GeneralButtons.concat(propsToDefs([
         displayName: 'list tracks/logs',
     },
     {
+        name:'DownloadPageUpload',
+        displayName: 'import',
+        localOnly:true,
+    },
+    {
         name: 'ShowSettings',
         displayName:'display settings'
     }

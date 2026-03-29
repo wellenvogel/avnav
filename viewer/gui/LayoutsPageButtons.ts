@@ -44,6 +44,11 @@ export default GeneralButtons.concat(propsToDefs([
         }
     },
     {
+        name:'DownloadPageUpload',
+        displayName: 'import',
+        localOnly:true
+    },
+    {
         name: 'ShowSettings',
         displayName:'display settings'
     }

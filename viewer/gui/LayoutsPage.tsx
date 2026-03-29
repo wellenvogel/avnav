@@ -35,9 +35,11 @@ import {DownloadItemList} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory, SelectLayoutDialog} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
+import {useUploadHelper} from "../components/UploadHandler";
 
 const PAGE=PAGEIDS.LAYOUT;
 const TITLE=PAGE_TITLES.LAYOUT;
+const ITEM_TYPE='layout';
 export type LayoutsPageProps = Partial<PageBaseProps>;
 const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
@@ -45,6 +47,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(0);
      const buttonListRef=useRef<ButtonDef[]>();
+     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE,true);
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
@@ -63,7 +66,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
              onClick:()=>{
                  showDialog(undefined, ()=><EditSettingsCategory
                      category={"Layout"}
-                     title={'Layout & Layout Settings'}
+                     title={'Layout Settings'}
                  />)
              }
          },
@@ -71,6 +74,10 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
              onClick:()=>{
                  showDialog(undefined, ()=><SelectLayoutDialog/>)
              }
+         },
+         DownloadPageUpload:{
+             onClick:uploadAction,
+             disabled:!visible(1),
          }
      }
      buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
@@ -93,7 +100,9 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                         max={1}
                     ></MvHeadline>
                     <DownloadItemList
+                        {...uploadProps}
                         type={"layout"}
+                        scrollSelected={1}
                         autoreload={3000}
                     />
                 </React.Fragment>

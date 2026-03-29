@@ -24,19 +24,21 @@
 
  */
 
+// @ts-ignore
 import PubSub from 'PubSub';
 const PSTOPIC="androidevent.";
 class AndroidEventHandler{
+    private pubsub: any;
     constructor(){
         this.pubsub=new PubSub();
     }
-    subscribe(type,callback){
+    subscribe(type:string,callback:(data:any,topic:string)=>void):string{
         return this.pubsub.subscribe(PSTOPIC+type,callback);
     }
-    unsubscribe(token){
+    unsubscribe(token:string){
         return this.pubsub.unsubscribe(token);
     }
-    handleEvent(event,id){
+    handleEvent(event:string,id:string|number){
         window.setTimeout(()=> {
             this.pubsub.publish(PSTOPIC + event, {event: event, id: id});
         },0);

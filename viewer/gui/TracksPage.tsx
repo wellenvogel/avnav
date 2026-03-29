@@ -35,15 +35,18 @@ import {DownloadItemList} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
+import {useUploadHelper} from "../components/UploadHandler";
 
 const PAGE=PAGEIDS.TRACKS;
 const TITLE=PAGE_TITLES.TRACKS;
+const ITEM_TYPE="track";
 export type TracksPageProps = Partial<PageBaseProps>;
 const TracksPage=(props:TracksPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(0);
      const buttonListRef=useRef<ButtonDef[]>();
+     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE,true);
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
@@ -65,6 +68,10 @@ const TracksPage=(props:TracksPageProps)=>{
                      title={'Track Display'}
                  />)
              }
+         },
+         DownloadPageUpload: {
+             onClick:uploadAction,
+             disabled:! visible(1),
          }
      }
      buttonListRef.current=updateButtons(TracksPageButtons,buttonActions);
@@ -87,8 +94,10 @@ const TracksPage=(props:TracksPageProps)=>{
                         max={1}
                     ></MvHeadline>
                     <DownloadItemList
-                        type={"track"}
+                        {...uploadProps}
+                        type={ITEM_TYPE}
                         autoreload={3000}
+                        scrollSelected={1}
                     />
                 </React.Fragment>
             ]}
