@@ -54,6 +54,58 @@ const View=(props:ViewProps) => {
     </div>;
 
 }
+export type ScrollHelper=[
+    {
+        visibleNumber:number;
+        visibleNumberSequence:number;
+        viewChanged:(first:number,last:number) => void;
+    },
+    (nr:number)=>void,
+    (nr:number)=>boolean
+]
+/**
+ * helper for scrolling the MultiView
+ * const [scrollProps,scrollTo,isVisible]=useScrollHelper(0);
+ * ...
+ * const button={
+ *     ...
+ *     toggle: isVisible(1)
+ *     onClick:()=>scrollTo(1)
+ * }
+ * ...
+ * return <MultiView
+ *    {...scrollProps}
+ *    ...
+ *    />
+ * @param initialScroll
+ */
+
+export const useScrollHelper=(initialScroll:number=0):ScrollHelper=>{
+    const [scrollItem,setScrollItem]=React.useState(initialScroll);
+    const [sequence,setSequence]=React.useState(0);
+    const [minVisible,setMinVisible]=React.useState(0);
+    const [maxVisible,setMaxVisible]=React.useState(0);
+    const updateVis=useCallback((min:number,max:number)=>{
+       setMinVisible(min);
+       setMaxVisible(max);
+    },[]);
+    const scrollTo=useCallback((nr:number)=>{
+       setScrollItem(nr);
+       setSequence((o)=>o+1);
+    },[])
+    const isVisible=useCallback((nr:number)=>{
+        return nr >= minVisible && nr <= maxVisible;
+    },[minVisible,maxVisible]);
+    return [
+        {
+            visibleNumber:scrollItem,
+            visibleNumberSequence:sequence,
+            viewChanged:updateVis,
+        },
+        scrollTo,
+        isVisible
+    ]
+}
 
 export const MultiView = (props: MultiViewProps) => {
     const windowDimensions=useStoreState(keys.gui.global.windowDimensions);

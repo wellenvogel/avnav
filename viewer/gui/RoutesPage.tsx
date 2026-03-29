@@ -43,7 +43,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {RouteSyncDialog} from '../components/RouteInfoHelper';
 import globalstore from "../util/globalstore";
 import {EditSettingsCategory} from "../components/Settings";
-import {MultiView} from "../components/MultiView";
+import {MultiView, useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=PAGE_TITLES.NROUTE;
@@ -51,27 +51,27 @@ export type RoutesPageProps = Partial<PageBaseProps>;
 const RoutesPage=(props:RoutesPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const [selectedName, setSelectedName] = useState<string>();
+     const [scrollProps,scrollTo,isVisible]=useScrollHelper(0);
      const [scrollSelected, setScrollSelected] = useState<number>(1);
      const history=useHistory();
-     const [scrollType, setScrollType] = useState<number>(-1);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions={
          ServerView:{
-             onClick:()=>setScrollType(0),
+             onClick:()=>scrollTo(0),
              disabled:props.pageColumns>1,
-             toggle: scrollType===0||(props.pageColumns>1),
+             toggle: isVisible(0),
          },
          ItemsView:{
-             onClick:()=>setScrollType(1),
+             onClick:()=>scrollTo(1),
              disabled:props.pageColumns>1,
-             toggle:scrollType===1||(props.pageColumns>1),
+             toggle:isVisible(1),
          },
          Cancel:{
              onClick:()=>history.pop()
          },
          StatusAdd:{
              onClick:async ()=>{
-                 setScrollType(1);
+                 scrollTo(1);
                  try {
                      const routeActions = createItemActions('route');
                      const route = await routeActions.getCreateAction().action();
@@ -113,7 +113,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <MultiView views={[
+            <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
                     <Headline title={"Server"}/>
                     <StatusView
@@ -132,8 +132,6 @@ const RoutesPage=(props:RoutesPageProps)=>{
                 </React.Fragment>
             ]}
                        maxNumber={props.pageColumns}
-                       visibleNumber={scrollType}
-                       viewChanged={(min: number) => setScrollType(min)}
             />
 
         </PageLeft>

@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useRef, useState} from "react";
+import React, {useRef} from "react";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
@@ -35,7 +35,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import AisCfgPageButtons from "./AisCfgPageButtons";
 import {AisButtonActions, CompleteAisListWithStore} from './AisPage';
-import {MultiView} from "../components/MultiView";
+import {MultiView, useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.AISCFG;
 const TITLE=PAGE_TITLES.AISCFG;
@@ -43,18 +43,18 @@ export type AisCfgPageProps = Partial<PageBaseProps>;
 const AisCfgPage=(props:AisCfgPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
-     const [scrollType, setScrollType] = useState<number>(-1);
+     const [scrollProps,scrollTo,isVisible]=useScrollHelper(0);
      const buttonListRef=useRef<ButtonDef[]>();
      const buttonActions:Record<string,Partial<DynamicButtonProps>> ={
          ServerView:{
-             onClick:()=>setScrollType(0),
+             onClick:()=>scrollTo(0),
              disabled:props.pageColumns >1,
-             toggle: scrollType===0||props.pageColumns > 1,
+             toggle: isVisible(0),
          },
          ItemsView:{
-             onClick:()=>setScrollType(1),
+             onClick:()=>scrollTo(1),
              disabled:props.pageColumns>1,
-             toggle:scrollType===1||props.pageColumns>1,
+             toggle:isVisible(1),
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -73,13 +73,15 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
      }
      //enable/disable buttons
      for (const button of ['AisNearest','AisSort','AisLock','AisSearch']){
-         buttonActions[button]={...buttonActions[button],disabled:(props.pageColumns < 2) && scrollType===0};
+         buttonActions[button]={...buttonActions[button],disabled:! isVisible(1)};
      }
      buttonListRef.current=updateButtons(AisCfgPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <MultiView views={[
+            <MultiView
+                {...scrollProps}
+                       views={[
                 <React.Fragment key={"0"}>
                     <Headline title={"Server"}/>
                 <StatusView
@@ -93,8 +95,6 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                               </React.Fragment>
                 ]}
                        maxNumber={props.pageColumns}
-                       visibleNumber={scrollType}
-                       viewChanged={(first:number)=>setScrollType(first)}
             />
 
         </PageLeft>

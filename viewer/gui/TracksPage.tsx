@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useRef, useState} from "react";
+import React, {useRef} from "react";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
@@ -35,7 +35,7 @@ import {DownloadItemList} from '../components/DownloadItemList';
 import Headline from "../components/Headline";
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
-import {MultiView} from "../components/MultiView";
+import {MultiView,useScrollHelper} from "../components/MultiView";
 
 const PAGE=PAGEIDS.TRACKS;
 const TITLE=PAGE_TITLES.TRACKS;
@@ -43,18 +43,8 @@ export type TracksPageProps = Partial<PageBaseProps>;
 const TracksPage=(props:TracksPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
-     const [scrollType, setScrollType] = useState<number>(-1);
-     const [sequence,setSequence] = useState<number>(0);
-     const [visMax,setVisMax] = useState<number>(props.pageColumns-1);
-     const [visMin,setVisMin] = useState<number>(0);
+     const [scrollProps,scrollTo,visible]=useScrollHelper(0);
      const buttonListRef=useRef<ButtonDef[]>();
-     const visible=(nr:number)=>{
-         return nr >= visMin && nr <= visMax
-     }
-     const scrollTo=(nr:number)=>{
-         setScrollType(nr);
-         setSequence((o)=>o+1);
-     }
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
@@ -88,7 +78,7 @@ const TracksPage=(props:TracksPageProps)=>{
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
-            <MultiView visibleNumberSequence={sequence} views={[
+            <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
                     <Headline title={"Server"}/>
                     <StatusView
@@ -109,12 +99,6 @@ const TracksPage=(props:TracksPageProps)=>{
                 </div>
             ]}
                        maxNumber={props.pageColumns}
-                       visibleNumber={scrollType}
-
-                       viewChanged={(min: number,max:number) => {
-                           setVisMin(min);
-                           setVisMax(max);
-                       }}
             />
 
         </PageLeft>
