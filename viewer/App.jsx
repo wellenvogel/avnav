@@ -61,6 +61,7 @@ import ChannelsPage from "./gui/ChannelsPage";
 import RoutesPage from "./gui/RoutesPage";
 import TracksPage from "./gui/TracksPage";
 import AisCfgPage from "./gui/AisCfgPage";
+import LayoutsPage from "./gui/LayoutsPage";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -114,6 +115,7 @@ const pages={
     [PAGEIDS.NROUTE]: RoutesPage,
     [PAGEIDS.TRACKS]: TracksPage,
     [PAGEIDS.AISCFG]: AisCfgPage,
+    [PAGEIDS.LAYOUT]: LayoutsPage,
 };
 const Router = (props) => {
     const history = useHistory();
