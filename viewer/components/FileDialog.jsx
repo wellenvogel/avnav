@@ -1292,6 +1292,9 @@ class RouteItemActions extends ItemActions{
                 //when we are in disconnected mode we store the route locally
                 userData.nroute.setName(this.isConnected()?name:routeobjects.LOCAL_PREFIX+name);
                 await RouteHandler.saveRoute(userData.nroute);
+                return {
+                    name:userData.nroute.name,
+                }
             },
             checkName:(name,itemList,accessor)=>{
                 const pr=this.namePreCheck(name);
