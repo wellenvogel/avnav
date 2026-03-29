@@ -101,7 +101,9 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                                 max={1}
                               >
                               </MvHeadline>
-                              <CompleteAisListWithStore/>
+                              <CompleteAisListWithStore
+                                  hidden={!isVisible(1)}
+                              />
                               </React.Fragment>
                 ]}
                        maxNumber={props.pageColumns}

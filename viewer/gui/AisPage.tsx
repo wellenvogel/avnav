@@ -356,7 +356,8 @@ export const CompleteAisList=(iprops:CompleteAisListProps)=>{
 export interface CompleteAisListWithStoreProps{
     className?:string;
     sortField?:string;
-    mmsi?:string|number
+    mmsi?:string|number;
+    hidden?:boolean;
 }
 
 export const CompleteAisListWithStore=(props:CompleteAisListWithStoreProps)=>{
@@ -369,7 +370,7 @@ export const CompleteAisListWithStore=(props:CompleteAisListWithStoreProps)=>{
         searchActive={searchActive}
         searchValue={searchValue}
         sortCallback={sortDialog}
-        listLock={listLock}
+        listLock={listLock||props.hidden}
         mmsi={props.mmsi}
     />
 }
