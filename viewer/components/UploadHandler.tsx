@@ -31,6 +31,7 @@ import {IDialogContext, useDialogContext} from "./DialogContext";
 import base from "../base";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
+import {ItemType} from "../util/itemFunctions";
 
 
 const MAXUPLOADSIZE=100000;
@@ -316,12 +317,12 @@ const UploadHandler = (props:UploadHandlerProps) => {
 }
 
 export const useUploadHelper = (
-    type: string,
+    type?: ItemType,
     forList?: boolean,
     doneCallback?: (name?:string) => void
 ): [
-        { type: string, uploadFile: File, uploadDone: () => void } |
-        { type: string, file: File, doneCallback: () => void },
+        { type: ItemType, uploadFile: File, uploadDone: () => void } |
+        { type: ItemType, file: File, doneCallback: () => void },
     ButtonEventHandler,
     (file?: File) => void
 ] => {

@@ -35,7 +35,7 @@ import Helper, {urlToString} from "./helper";
 import base from "../base";
 
 const RouteHandler=NavHandler.getRoutingHandler();
-export type ItemType='chart'|'track'|'route'|'layout'|'settings'|'overlays'|'images'|'user'|'plugins';
+export type ItemType='chart'|'track'|'route'|'layout'|'settings'|'overlay'|'images'|'user'|'plugins';
 export interface Item extends Record<string, any> {
     type:ItemType;
     name:string;

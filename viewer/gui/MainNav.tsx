@@ -46,6 +46,7 @@ import AisCfgPageButtons from "./AisCfgPageButtons";
 import LayoutsPageButtons from "./LayoutsPageButtons";
 // @ts-ignore
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
+import ChartsPageButtons from "./ChartsPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -82,6 +83,8 @@ const mainTree=[
         MainPageButtons),
     new Page(PAGEIDS.NAV,'navigation',PAGE_TITLES.NAV,
         NavPageButtons),
+    new Page(PAGEIDS.CHARTS,'settings',PAGE_TITLES.CHARTS,
+        ChartsPageButtons),
     new Page(PAGEIDS.NROUTE,'settings',PAGE_TITLES.NROUTE,
         RoutesPageButtons),
     new Page(PAGEIDS.TRACKS,'settings',PAGE_TITLES.TRACKS,

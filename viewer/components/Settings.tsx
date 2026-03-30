@@ -311,11 +311,18 @@ export const discardChanges=(dialogContext?:IDialogContext)=>{
 
 export interface EditSettingsCategoryProps{
     className?:string;
-    category:string;
+    category:string|string[];
     title?:string;
 }
 export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{
-    const keys:string[]=settingsSections[props.category];
+    let keys:string[]=[];
+    const categories=Array.isArray(props.category)?props.category:[props.category];
+    for (const cat of categories){
+        const sectionKeys=settingsSections[cat];
+        if (Array.isArray(sectionKeys)) {
+            keys = keys.concat(sectionKeys);
+        }
+    }
     const initialValues:SettingsValuesType=useMemo(()=>globalstore.getMultiple(keys),[]);
     const initialLayoutValues=useMemo(()=>LayoutHandler.getLayoutProperties(),[]);
     const values=useStateObject(initialValues);
