@@ -1,7 +1,7 @@
 import React, {SyntheticEvent} from 'react';
 // @ts-ignore
 import {useKeyEventHandlerPlain} from '../util/UiHelper';
-import {DynamicProps, useStore} from "../hoc/Dynamic";
+import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
@@ -24,7 +24,9 @@ export interface ButtonProps {
         visible?:boolean;
         children?:React.ReactNode;
         localOnly?:boolean;
-        displayName?:string
+        displayName?:string,
+        storeKeys?: StoreKeys;
+        updateFunction?: UpdateFunction;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{

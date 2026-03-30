@@ -700,7 +700,9 @@ const standardActions={
     })
 
 }
-export class ItemActions extends CopyAware{
+
+
+export class ItemActions extends CopyAware {
     constructor(type) {
         super();
         this.type=type;
@@ -721,33 +723,35 @@ export class ItemActions extends CopyAware{
         this.build();
         this.postCreate()
     }
-    postCreate(){
-        this.nameForCheck=this.nameForCheck.bind(this);
-        this.prefixForDisplay=this.prefixForDisplay.bind(this);
-        this.getExtensionForView=this.getExtensionForView.bind(this);
-        if (! this.allowedExtensions){
-            if (this.fixedExtension){
-                this.allowedExtensions=[this.fixedExtension];
+    postCreate() {
+        this.nameForCheck = this.nameForCheck.bind(this);
+        this.prefixForDisplay = this.prefixForDisplay.bind(this);
+        this.getExtensionForView = this.getExtensionForView.bind(this);
+        if (!this.allowedExtensions) {
+            if (this.fixedExtension) {
+                this.allowedExtensions = [this.fixedExtension];
             }
         }
     }
-    getExtensionForView(item){
-        if (this.fixedExtension){
+    getExtensionForView(item) {
+        if (this.fixedExtension) {
             return this.fixedExtension;
         }
         return getExtensionForView(item);
     }
-
     /**
      * allowed extensions for upload buttons
      * @returns {Promise<*|*[]>}
      */
-    async getAllowedExtensions(){
-        if (this.fixedExtension){ return [this.fixedExtension];}
-        if (! this.allowedExtensions){ return;}
+    async getAllowedExtensions() {
+        if (this.fixedExtension) {
+            return [this.fixedExtension];
+        }
+        if (!this.allowedExtensions) {
+            return;
+        }
         return this.allowedExtensions;
     }
-
     /**
      * convert an item.name into a base name that can be used
      * to upload a new item
@@ -755,13 +759,13 @@ export class ItemActions extends CopyAware{
      * @param name
      * @returns {*}
      */
-    nameToBaseName(name){
-        if (! name) return name;
+    nameToBaseName(name) {
+        if (!name) return name;
         if (this.hasScope) {
             name = name.replace(/^user\./, '').replace(/^system\./, '').replace(/^plugin\.[^.]*[.]*/, '');
         }
-        if (this.fixedExtension && Helper.endsWith(name.toLowerCase(),"."+this.fixedExtension)){
-            name=name.substring(0,name.length-this.fixedExtension.length-1);
+        if (this.fixedExtension && Helper.endsWith(name.toLowerCase(), "." + this.fixedExtension)) {
+            name = name.substring(0, name.length - this.fixedExtension.length - 1);
         }
         return name;
     }
@@ -770,149 +774,147 @@ export class ItemActions extends CopyAware{
      * @param item an entry from the list
      * @param opt_ext - if true add an fixed extension
      */
-    nameForCheck(item,opt_ext){
-        const res=this.hasScope?scopedNameForCheck(item):plainNameForCheck(item);
-        if (! opt_ext || ! res || ! this.fixedExtension) return res;
-        return res+"."+this.fixedExtension;
+    nameForCheck(item, opt_ext) {
+        const res = this.hasScope ? scopedNameForCheck(item) : plainNameForCheck(item);
+        if (!opt_ext || !res || !this.fixedExtension) return res;
+        return res + "." + this.fixedExtension;
     }
     /**
      * get a prefix to be shown in upload/rename dialogs
      * @returns {string|undefined}
      */
-    prefixForDisplay(){
-        return this.hasScope?'user.':undefined;
+    prefixForDisplay() {
+        return this.hasScope ? 'user.' : undefined;
     }
     canModify(item) {
-        return item.canDelete && (! item.server || this.isConnected());
+        return item.canDelete && (!item.server || this.isConnected());
     }
     canView(item) {
         return false;
     }
-    showIsServer(item){
+    showIsServer(item) {
         return false;
     }
-    showUpload(){
+    showUpload() {
         return this.isConnected();
     }
-    async buildExtendedInfo(item){
+    async buildExtendedInfo(item) {
         return {}
     }
-    getExtendedInfoRows(item){
-        return  [];
+    getExtendedInfoRows(item) {
+        return [];
     }
-    fillActions(item,actions){
-
+    fillActions(item, actions) {
     }
-    getCreateAction(){
+    getCreateAction() {
         return new CreateAction({
             type: this.type,
-            accessor: (item)=>this.nameForCheck(item),
+            accessor: (item) => this.nameForCheck(item),
             fixedExtension: this.fixedExtension
         })
     }
-    getUploadAction(){
-        let rt=new UploadAction({type:this.type,accessor:(data)=>this.nameForCheck(data)});
-        if (! this.fixedExtension && (! this.allowedExtensions || this.allowedExtensions.length < 1)){
+    getUploadAction() {
+        let rt = new UploadAction({type: this.type, accessor: (data) => this.nameForCheck(data)});
+        if (!this.fixedExtension && (!this.allowedExtensions || this.allowedExtensions.length < 1)) {
             return rt;
         }
-        const nameChecker=(userData,name)=> {
+        const nameChecker = (userData, name) => {
             const [fn, ext] = Helper.getNameAndExt(name);
-            const err=this.checkExtension(ext);
+            const err = this.checkExtension(ext);
             if (err) throw new Error(err);
-            if (this.fixedExtension){
-                return {name:fn};
+            if (this.fixedExtension) {
+                return {name: fn};
             }
-            return {name:name};
+            return {name: name};
         }
         return rt.copy({
-            preCheck:nameChecker,
+            preCheck: nameChecker,
             fixedPrefix: this.prefixForDisplay(),
         })
     }
-    getActionButtons(item){
-        const actions= [];
-        this.fillActions(item,actions);
-        const rt=[];
-        actions.forEach(action=>{
-            if (action.isVisible(item)){
+    getActionButtons(item) {
+        const actions = [];
+        this.fillActions(item, actions);
+        const rt = [];
+        actions.forEach(action => {
+            if (action.isVisible(item)) {
                 rt.push(action.getButton(item));
             }
         })
         return rt;
     }
-    getActions(item,filter){
-        class ActionList{
+    getActions(item, filter) {
+        class ActionList {
             constructor(filter) {
-                this.filter=filter;
-                if (this.filter && ! (this.filter instanceof Array)){
+                this.filter = filter;
+                if (this.filter && !(this.filter instanceof Array)) {
                     this.filter = [this.filter]
                 }
-                this.items={}
+                this.items = {}
             }
-
             push(...items) {
                 for (let item of items) {
-                    if (! this.filter || this.filter.indexOf(item.name) >= 0){
-                        this.items[item.name]=item;
+                    if (!this.filter || this.filter.indexOf(item.name) >= 0) {
+                        this.items[item.name] = item;
                     }
                 }
             }
         }
-        const actions=new ActionList(filter);
-        this.fillActions(item,actions);
+
+        const actions = new ActionList(filter);
+        this.fillActions(item, actions);
         return actions.items;
     }
-
     /**
      * check for allowed extensions, return an error text if not allowed
      * @param ext
      * @param opt_title
      */
-    checkExtension(ext,opt_title){
-        if (! ext || ! this.allowedExtensions) return ;
-        if (this.allowedExtensions.indexOf(ext) >=0) return;
-        const title=opt_title?opt_title+": ":"";
-        return title+`extension ${ext} not allowed, only `+this.allowedExtensions.join(",");
-
+    checkExtension(ext, opt_title) {
+        if (!ext || !this.allowedExtensions) return;
+        if (this.allowedExtensions.indexOf(ext) >= 0) return;
+        const title = opt_title ? opt_title + ": " : "";
+        return title + `extension ${ext} not allowed, only ` + this.allowedExtensions.join(",");
     }
-    isConnected(){
+    isConnected() {
         return globalStore.getData(keys.properties.connectedMode);
     }
-    canEditOverlays(){
+    canEditOverlays() {
         return globalStore.getData(keys.gui.capabilities.uploadOverlays) && this.isConnected();
     }
-    getInfoRows(item){
+    getInfoRows(item) {
         return [
-            {label:'Time',value:'time',formatter:(v,item)=>this.getTimeText(item)},
-            {label:'Size',value:'size',formatter:(v)=>{
-                if (v === 0) return undefined;
-                if (v < 10*1024) return v;
-                if (v < 10*1024*1024) return (v/1024).toFixed(1)+" k";
-                return (v/(1024*1024)).toFixed(1)+ " M";
-                }}
+            {label: 'Time', value: 'time', formatter: (v, item) => this.getTimeText(item)},
+            {
+                label: 'Size', value: 'size', formatter: (v) => {
+                    if (v === 0) return undefined;
+                    if (v < 10 * 1024) return v;
+                    if (v < 10 * 1024 * 1024) return (v / 1024).toFixed(1) + " k";
+                    return (v / (1024 * 1024)).toFixed(1) + " M";
+                }
+            }
         ]
     }
-    getTimeText(item){
+    getTimeText(item) {
         if (item.time !== undefined) {
-            return Formatter.formatDateTime(new Date(item.time*1000));
+            return Formatter.formatDateTime(new Date(item.time * 1000));
         }
     }
-    getInfoText(item){
-        return item.displayName||item.name
+    getInfoText(item) {
+        return item.displayName || item.name
     }
-    getClassName(item){
-        return item.isActive?"activeEntry":undefined;
+    getClassName(item) {
+        return item.isActive ? "activeEntry" : undefined;
     }
-    build(){
+    build() {
     }
-
     /**
      * used in DownloadItemList to decide if the item should be shown
      * intended to be overwritten
      * @param item
      * @return {boolean|string} - to hide return false or an error string
      */
-    show(item){
+    show(item) {
         return true;
     }
 }

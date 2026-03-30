@@ -23,27 +23,35 @@
  ###############################################################################
  */
 
-import {createItemActions, FileDialog, ItemActions} from "./FileDialog";
-import {avitem, concatsp, setav} from "../util/helper";
+// @ts-ignore
+import {createItemActions, FileDialog, ItemActions,Action} from "./FileDialog";
+import {avitem, concatsp, setav, valueof} from "../util/helper";
 import React, {useCallback, useEffect, useRef, useState} from "react";
+// @ts-ignore
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
 import {showDialog, showPromiseDialog} from "./OverlayDialog";
+// @ts-ignore
 import {checkName} from "./ItemNameDialog";
+// @ts-ignore
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
+// @ts-ignore
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
 import UploadHandler from "./UploadHandler";
-import Button from "./Button";
+import Button, {ButtonEvent} from "./Button";
 import keys from "../util/keys";
-import PropTypes from "prop-types";
-import {getItemIconProperties, listItems} from "../util/itemFunctions";
+import {getItemIconProperties, Item, ItemType, listItems} from "../util/itemFunctions";
 import {useStateRef, useTimer} from "../util/UiHelper";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
-import {useDialogContext} from "./DialogContext";
+import {IDialogContext, useDialogContext} from "./DialogContext";
 
-const itemSort = (a, b) => {
+interface SortProps{
+    time?:number,
+    name?:string
+}
+const itemSort = (a:SortProps, b:SortProps) => {
     if (a.time !== undefined && b.time !== undefined) {
         return b.time - a.time;
     }
@@ -57,16 +65,24 @@ export const DownloadItemInfoMode={
     ALL:2
 }
 
-const DownloadItem = (props) => {
+interface DownloadItemProps{
+    infoMode:valueof<typeof DownloadItemInfoMode>;
+    itemActions:ItemActions;
+    className?:string;
+    selected?:boolean;
+    onClick?:(ev:Event)=>void;
+}
+
+const DownloadItem = (props:DownloadItemProps) => {
     let infoMode=props.infoMode;
     if (infoMode === undefined) infoMode=DownloadItemInfoMode.ALL;
-    let actions = props.itemActions;
+    const actions = props.itemActions;
     const iconProperties=getItemIconProperties(props);
     return (
         <ListItem
             className={concatsp(actions.getClassName(props),props.className)}
             selected={props.selected}
-            onClick={(ev)=>props.onClick(setav(ev, {action: 'select'}))}
+            onClick={(ev)=>props.onClick && props.onClick(setav(ev, {action: 'select'}))}
             >
             <ListSlot><Icon {...iconProperties}/></ListSlot>
             <ListMainSlot
@@ -89,7 +105,24 @@ const DownloadItem = (props) => {
         </ListItem>
     );
 };
-export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,autoreload,uploadDone,selectedName,scrollSelected}) => {
+export type DownloadItemListProps = {
+    type: ItemType;
+    selectCallback?:(ev:ButtonEvent)=>boolean;
+    uploadFile?: File;
+    infoMode?: 0|1|2;
+    noExtra?:boolean;
+    showCreate?:boolean;
+    itemActions?:any;
+    autoreload?:number;
+    uploadDone?:(done?:boolean|string) => void;
+    selectedName?:string;
+    scrollSelected?:number;  //if != 0 scroll selected item, repeat scroll on change
+
+}
+
+export const DownloadItemList = (
+    {type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,
+        autoreload,uploadDone,selectedName,scrollSelected}:DownloadItemListProps) => {
     const [items, setItems] = useState([]);
     const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
     const lastSelectedName=useRef(undefined);
@@ -108,12 +141,12 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
     }, [type,autoreload])
     const dialogContext = useDialogContext();
     if (!itemActions) itemActions = createItemActions(type);
-    const item=useCallback((props)=>{
+    const item=useCallback((props:Item)=>{
         return <DownloadItem {...props} infoMode={infoMode}
                              itemActions={itemActions}/>
     },[itemActions,infoMode]);
     const createAction=itemActions.getCreateAction().copy({
-        checkName:(name,itemList,accessor)=>{
+        checkName:(name:string,_itemList:Item[],accessor:(item:Item)=>string)=>{
             const rs=itemActions.show({name:name,type:type});
             if (rs !== true){
                 if (typeof(rs) === 'string'){
@@ -127,7 +160,7 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
             }
             return checkName(name, items, accessor);
         },
-        doneAction:async (action,name,dialogContext)=>{
+        doneAction:async (_action:Action,name:string,dialogContext?:IDialogContext)=>{
             const template = getTemplate(name);
             if (template) {
                 await showPromiseDialog(dialogContext, (dprops) => <EditDialogWithSave
@@ -138,7 +171,7 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
                 />)
                 return readItems();
             } else {
-                let data = "";
+                const data = "";
                 try {
                     await Requests.postPlain({
                         command: 'upload',
@@ -154,7 +187,7 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
         }
     })
     const uploadAction = itemActions.getUploadAction();
-    let displayList=[];
+    const displayList=[];
     (items||[]).forEach((item) => {
         if (itemActions.show(item) === true){
             displayList.push(item);
@@ -240,18 +273,4 @@ export const DownloadItemList = ({type, selectCallback, uploadFile,infoMode,noEx
             :
             null}
     </React.Fragment>
-}
-
-DownloadItemList.propTypes = {
-    type: PropTypes.string,
-    selectCallback: PropTypes.func,
-    uploadFile: PropTypes.instanceOf(File),
-    uploadDone: PropTypes.func,
-    infoMode: PropTypes.number,
-    noExtra: PropTypes.bool,
-    itemActions: PropTypes.instanceOf(ItemActions),
-    autoreload: PropTypes.number,
-    showCreate: PropTypes.bool,
-    selectedName: PropTypes.string,
-    scrollSelected: PropTypes.number //if > 0 we scroll to selected item, scroll again on increment
 }

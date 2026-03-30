@@ -8,6 +8,8 @@ import compare from './compare';
 // @ts-ignore
 import Version from '../version';
 
+
+export type valueof<T> = T[keyof T];
 /**
  *
  * @constructor
