@@ -46,7 +46,7 @@ const TracksPage=(props:TracksPageProps)=>{
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(0);
      const buttonListRef=useRef<ButtonDef[]>();
-     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE,true);
+     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),

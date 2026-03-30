@@ -55,7 +55,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
      const [scrollSelected, setScrollSelected] = useState<number>(1);
      const history=useHistory();
      const buttonListRef=useRef<ButtonDef[]>();
-     const [uploadProps,uploadAction]=useUploadHelper('route',true);
+     const [uploadProps,uploadAction]=useUploadHelper('route');
      const actions=createItemActions('route');
      const buttonActions={
          ServerView:{

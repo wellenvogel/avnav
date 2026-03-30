@@ -21,7 +21,7 @@
  #
  */
  
-import React, {useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {ChildStatus, ChildStatusProps, StatusItem, statusTextToImageUrl} from "./StatusItems";
@@ -36,6 +36,7 @@ import LogDialog from "./LogDialog";
 import ItemList from "./ItemList";
 import {useTimer} from "../util/UiHelper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
+import Helper from "../util/helper";
 
 const HANDLER_NAME='AVNImporter';
 interface MainStatusProps{
@@ -82,11 +83,21 @@ interface ImporterProps extends ChildStatusProps{
     basename:string,
     realname?:string,
     converter?:string
+    className?:string
+    selected?:boolean
 }
 const ImporterItem=(props:ImporterProps)=>{
+    if (!props.name || !props.name.match(/^conv:/)) return null;
     const canEdit=globalstore.getData(keys.properties.connectedMode);
-    return <div className="status" >
+    const dialogContext=useDialogContext();
+    const showEditDialog=useCallback((_handlerId:string|number, _id:string)=> {
+                showDialog(dialogContext, () => <ImportStatusDialog
+                    {...props}
+                />);
+    },[]);
+    return <div className={Helper.concatsp("status",props.className,props.selected?'activeEntry':undefined)} >
         <ChildStatus
+            showEditDialog={showEditDialog}
             {...props}
             forceEdit={canEdit}
             connected={true}
@@ -113,7 +124,7 @@ const ImporterItem=(props:ImporterProps)=>{
 interface ImporterStatusDialogProps{
     name:string;
     status:string;
-    info:string;
+    info?:string;
     basename:string;
     converter?:string;
     canDownload?:boolean;
@@ -219,7 +230,7 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
             {props.hasLog &&
                 <DB name="log"
                     onClick={() => {
-                        let url= prepareUrl({
+                        const url= prepareUrl({
                             type: 'import',
                             command:'getlog',
                             name:props.name
@@ -331,21 +342,29 @@ const ScannerDialog=(props:ScannerDialogProps)=>{
 
 export interface ImporterViewProps {
     changeActive?:(b:boolean) => void;
+    selected?:string;
 }
 
 export const ImporterView = (props:ImporterViewProps) => {
-    const dialogContext=useDialogContext();
-const [items,setItems]=useState([]);
-const [disabled, setDisabled] = useState(true);
+    useDialogContext();
+    const [items,setItems]=useState([]);
+    const [disabled, setDisabled] = useState(true);
 const [mainStatus,setMainStatus]=useState<Record<string,any>>({});
 const lastActive=useRef(false);
+const [selectedIdx,setSelectedIdx]=useState(-1);
+let idx=0;
 const handleStatus=(items:any[],error?:boolean)=>{
     const mainStatusr:Record<string,any> = {};
     setItems(items||[]);
+    setSelectedIdx(-1);
     (items || []).forEach((st) => {
         if (st.name === 'main' || st.name === 'converter') {
             mainStatusr[st.name] = st;
         }
+        if (props.selected && st.basename===props.selected) {
+            setSelectedIdx(idx);
+        }
+        idx++;
     })
     setMainStatus(mainStatusr);
     setDisabled(error)
@@ -379,28 +398,9 @@ return <div className="importerView">
     <ItemList
         scrollable={true}
         itemList={items}
-        itemCreator={(item) => {
-            if (!item.name || !item.name.match(/^conv:/)) return null;
-            // eslint-disable-next-line react/display-name
-            return (iprops:ImporterProps) => {
-                return <ImporterItem
-                    {...iprops}
-                    showEditDialog={(_handlerId:string|number, id:string)=>{
-                        if (!items) return;
-                        for (let k = 0; k < items.length; k++) {
-                            if (items[k].name === id) {
-                                showDialog(dialogContext,()=><ImportStatusDialog
-                                    {...items[k]}
-                                    title="Edit Importer"
-                                    handlerName={HANDLER_NAME}
-                            />);
-                                return;
-                            }
-                        }
-                    }}
-                />
-            }
-        }}
+        selectedIndex={selectedIdx}
+        scrollSelected={selectedIdx}
+        itemClass={ImporterItem}
     />
 </div>
 }

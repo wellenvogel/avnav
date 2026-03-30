@@ -124,6 +124,9 @@ class UploadAction extends CopyAware{
                 delete completeResult.name;
             }
             if (res.final){
+                if (this.userData && completeResult.name){
+                    this.userData.name=completeResult.name;
+                }
                 return true;
             }
             return false;
@@ -158,6 +161,7 @@ class UploadAction extends CopyAware{
         if (this.postCheck) {
             if (checkRes(await this.postCheck(this.userData, rs.name, file, dialogContext,existing, accessor),rs)) return rs;
         }
+        this.userData.name=rs.name;
         if (this.localAction){
             return await this.localAction(this.userData,rs.name,file)
         }

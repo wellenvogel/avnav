@@ -49,7 +49,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(1);
      const buttonListRef=useRef<ButtonDef[]>();
-     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE,true);
+     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),

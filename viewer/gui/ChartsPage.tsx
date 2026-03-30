@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useRef} from "react";
+import React, {useRef, useState} from "react";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
@@ -35,11 +35,13 @@ import {DownloadItemList} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
-import {useUploadHelper} from "../components/UploadHandler";
+import {UploadHandlerWithActions, useUploadHelper, useUploadHelperHandler} from "../components/UploadHandler";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import DialogButton from "../components/DialogButton";
 import Helper from "../util/helper";
 import {ImporterView} from "../components/ImporterView";
+// @ts-ignore
+import {createItemActions} from '../components/FileDialog';
 
 const PAGE=PAGEIDS.CHARTS;
 const TITLE=PAGE_TITLES.CHARTS;
@@ -68,8 +70,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(1);
      const buttonListRef=useRef<ButtonDef[]>();
-     const [uploadPropsCharts,uploadActionCharts]=useUploadHelper('chart',true);
-    const [uploadPropsOverlays,uploadActionOverlays]=useUploadHelper('overlay',true);
+     const [uploadPropsCharts,uploadActionCharts]=useUploadHelperHandler('chart');
+     const [uploadPropsOverlays,uploadActionOverlays]=useUploadHelper('overlay');
+     const [uploadedChart,setUploadedChart]=useState(undefined);
+     const [uploadedImport,setUploadedImport]=useState(undefined);
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
@@ -105,6 +109,25 @@ const ChartsPage=(props:ChartsPageProps)=>{
      }
      buttonListRef.current=updateButtons(ChartsPageButtons,buttonActions);
      useInitialButton(buttonListRef);
+     const chartActions=createItemActions('chart');
+     const usedChartActions=chartActions.copy({
+         getUploadAction:()=>{
+             const ul=chartActions.getUploadAction();
+             ul.doneAction=(userData:{importer?:boolean,name?:string})=>{
+                 if (userData.name){
+                     if (userData.importer){
+                         setUploadedImport(userData.name);
+                         scrollTo(2);
+                     }
+                     else{
+                         setUploadedChart(userData.name);
+                         scrollTo(1);
+                     }
+                 }
+             }
+             return ul;
+         }
+     })
     return <PageFrame id={PAGE}>
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
@@ -124,10 +147,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                     ></MvHeadline>
                     <UploadAction onClick={uploadActionCharts} title={'chart'}/>
                     <DownloadItemList
-                        {...uploadPropsCharts}
                         type={'chart'}
                         autoreload={3000}
                         scrollSelected={1}
+                        selectedName={uploadedChart}
                     />
                 </React.Fragment>
                 ,
@@ -137,7 +160,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                                 number={2}
                                 max={NUMVIEWS - 1}
                     />
-                    <ImporterView/>
+                    <UploadAction onClick={uploadActionCharts} title={'import'}/>
+                    <ImporterView
+                        selected={uploadedImport}
+                    />
                 </React.Fragment>,
                 <React.Fragment key={3}>
                     <MvHeadline title={"Overlays"}
@@ -155,6 +181,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
             ]}
                        maxNumber={props.pageColumns}
             />
+        <UploadHandlerWithActions
+            {...uploadPropsCharts}
+            itemAction={usedChartActions}
+        />
 
         </PageLeft>
         <ButtonList

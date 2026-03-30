@@ -32,6 +32,7 @@ import base from "../base";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
 import {ItemType} from "../util/itemFunctions";
+import Toast from "./Toast";
 
 
 const MAXUPLOADSIZE=100000;
@@ -316,13 +317,22 @@ const UploadHandler = (props:UploadHandlerProps) => {
     );
 }
 
-export const useUploadHelper = (
+export interface UploadPropsList{
+    type: ItemType,
+    uploadFile: File,
+    uploadDone: (name?:string) => void
+}
+export interface UploadPropsHandler{
+    type: ItemType,
+    file: File,
+    doneCallback: (name?:string) => void
+}
+
+export const useUploadHelperHandler =(
     type?: ItemType,
-    forList?: boolean,
     doneCallback?: (name?:string) => void
 ): [
-        { type: ItemType, uploadFile: File, uploadDone: () => void } |
-        { type: ItemType, file: File, doneCallback: () => void },
+    UploadPropsHandler,
     ButtonEventHandler,
     (file?: File) => void
 ] => {
@@ -335,34 +345,71 @@ export const useUploadHelper = (
             setUploadFile(ev.target.files[0]);
         }, allowed);
     };
-    if (forList) {
-        return [
-            {
-                type: type,
-                uploadFile: uploadFile,
-                uploadDone: (name?:string) => {
-                    setUploadFile(undefined)
-                    if (doneCallback) doneCallback(name);
-                },
-            },
-            clickHandler,
-            setUploadFile
-        ]
-    } else {
         return [
             {
                 type: type,
                 file: uploadFile,
-                doneCallback: (param?:{name?:string}) => {
+                doneCallback: (param?:{name?:string}|string) => {
                     setUploadFile(undefined);
-                    if (doneCallback) doneCallback(param?param.name:undefined);
+                    let name=param;
+                    if (name && typeof name === 'object'){
+                        name=name.name;
+                    }
+                    if (doneCallback) doneCallback(name as string);
                 }
             },
             clickHandler,
             setUploadFile
         ]
-    }
+}
 
+export const useUploadHelper=
+        (type?: ItemType,
+         doneCallback?: (name?:string) => void):
+        [UploadPropsList,
+        ButtonEventHandler,
+        (file?: File) => void] =>{
+    const [props,action,setUploadFile]=useUploadHelperHandler(type,doneCallback);
+    return [
+        {
+            type: type,
+            uploadFile:props.file,
+            uploadDone:props.doneCallback
+        },
+        action,
+        setUploadFile,
+    ]
+
+}
+
+export interface UploadHandlerWithActionProps{
+    type: ItemType;
+    itemAction?:any;
+    file:File,
+    doneCallback?: (name?:string,rs?:any) => void;
+    errorCallback?: (error?:string) => void;
+}
+
+export const UploadHandlerWithActions=(props: UploadHandlerWithActionProps) => {
+    const itemActions=props.itemAction||createItemActions(props.type);
+    if (! itemActions) {
+        return null
+    }
+    const uploadAction=itemActions.getUploadAction();
+    return <UploadHandler
+        type={props.type}
+        doneCallback={async (param) => {
+            const rs = await uploadAction.afterUpload();
+            if (props.doneCallback) props.doneCallback(param?param.name:undefined,rs);
+        }}
+        errorCallback={(err) => {
+            if (props.doneCallback) props.doneCallback();
+            if (err) Toast(err);
+        }}
+        file={props.file}
+        checkNameCallback={(file, dialogContext) => uploadAction.checkFile(file, dialogContext)}
+
+    />
 }
 
 export default UploadHandler;
