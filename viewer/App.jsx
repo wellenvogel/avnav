@@ -19,7 +19,6 @@ import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
-import ImporterPage from "./gui/ImporterPage";
 import {
     DialogContext, DialogDisplay,
     showPromiseDialog
@@ -111,7 +110,6 @@ const pages={
     [PAGEIDS.WARNING]:WarningPage,
     [PAGEIDS.VIEW]:ViewPage,
     [PAGEIDS.ADDCFG]: AddonConfigPage,
-    [PAGEIDS.IMPORT]: ImporterPage,
     [PAGEIDS.CHANNELS]: ChannelsPage,
     [PAGEIDS.NROUTE]: RoutesPage,
     [PAGEIDS.TRACKS]: TracksPage,
