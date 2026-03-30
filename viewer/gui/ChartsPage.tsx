@@ -39,6 +39,7 @@ import {useUploadHelper} from "../components/UploadHandler";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import DialogButton from "../components/DialogButton";
 import Helper from "../util/helper";
+import {ImporterView} from "../components/ImporterView";
 
 const PAGE=PAGEIDS.CHARTS;
 const TITLE=PAGE_TITLES.CHARTS;
@@ -136,7 +137,7 @@ const ChartsPage=(props:ChartsPageProps)=>{
                                 number={2}
                                 max={NUMVIEWS - 1}
                     />
-                    <div>Imports</div>
+                    <ImporterView/>
                 </React.Fragment>,
                 <React.Fragment key={3}>
                     <MvHeadline title={"Overlays"}

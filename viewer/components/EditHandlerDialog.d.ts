@@ -21,6 +21,7 @@
  #
  */
 import {IDialogContext} from "./DialogContext";
+import React from 'react'
 
 export type DoneFunction=(id:string|number)=>void;
 export declare function createAddDialog(
@@ -35,3 +36,13 @@ export declare function createNewHandlerDialog(
     typeName:string,
     opt_initialParameters?:Record<string,any>,
     opt_doneCallback?:DoneFunction):void
+export interface EditHandlerDialogProps{
+    title?: string;
+    handlerId?: string|number;
+    childId?: string;
+    handlerName?: string;
+    initialValues?: Record<string, any>;
+    createdCallback?: (id:string|number) => void;
+    addHandler?:boolean
+}
+export default function EditHandlerDialog(props:EditHandlerDialogProps):React.ReactNode

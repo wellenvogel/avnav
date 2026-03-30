@@ -41,7 +41,7 @@ export const EditIcon=({onClick}:EditIconProps)=>{
         name="Edit" className="Edit smallButton editIcon" onClick={onClick}/>
 
 }
-interface ChildStatusProps{
+export interface ChildStatusProps{
     id: string; // the child id
     handlerId: string | number;
     forceEdit?: boolean;
@@ -74,11 +74,11 @@ export const ChildStatus=(props:ChildStatusProps)=>{
     );
 };
 export interface StatusItemProps{
-    info: {
-        items:any[]
+    info?: {
+        items?:any[]
     };
     className?: string,
-    id: string | number;
+    id?: string | number;
     name: string;
     disabled?:boolean ;
     allowEdit?: boolean;

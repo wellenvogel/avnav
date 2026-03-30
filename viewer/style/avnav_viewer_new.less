@@ -1394,7 +1394,7 @@ span.valuePrefix{
     }
   }
 
-  .StatusView,#importerpage,.importConverterDialog,.importScannerDialog{
+  .StatusView,#importerpage,.importerView,.importConverterDialog,.importScannerDialog{
     .editIcon {
       margin-left: 1em;
     }
@@ -1403,6 +1403,9 @@ span.valuePrefix{
         font-weight: unset;
       }
       .listEntry();
+      .status{
+        border-bottom: none;
+      }
       flex-direction: column;
       align-items: flex-start;
       padding-left: 1em;
@@ -1451,7 +1454,7 @@ span.valuePrefix{
     }
   }
 
-  #importerpage{
+  #importerpage,.importerView{
     .itemInfo {
       margin-left: 1.5em;
       padding-left: 3px;
@@ -1460,6 +1463,13 @@ span.valuePrefix{
     .importStatusDialog .inputLabel{
         width: 3em;
     }
+  }
+  .importerView{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   #layoutspage{
     .activeLayout{
