@@ -36,6 +36,8 @@ import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory, SelectLayoutDialog} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
+import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
+import DialogButton from "../components/DialogButton";
 
 const PAGE=PAGEIDS.LAYOUT;
 const TITLE=PAGE_TITLES.LAYOUT;
@@ -45,18 +47,18 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const [layoutName]=useStoreState(keys.properties.layoutName);
      const history=useHistory();
-     const [scrollProps,scrollTo,visible]=useScrollHelper(0);
+     const [scrollProps,scrollTo,visible]=useScrollHelper(1);
      const buttonListRef=useRef<ButtonDef[]>();
      const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE,true);
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
-             disabled:props.pageColumns > 2,
+             disabled:props.pageColumns > 1,
              toggle: visible(0),
          },
          ItemsView:{
              onClick:()=>scrollTo(1),
-             disabled:props.pageColumns > 2,
+             disabled:props.pageColumns > 1,
              toggle:visible(1),
          },
          Cancel:{
@@ -83,7 +85,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
-        <PageLeft title={TITLE+` [${layoutName}]`}>
+        <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
                     <MvHeadline title={"Server"} {...scrollProps} number={0} max={1}/>
@@ -94,11 +96,23 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                 ,
                 <React.Fragment key={1}>
                     <MvHeadline
-                        title={"Layouts"}
+                        title={"Current"}
                         {...scrollProps}
                         number={1}
                         max={1}
                     ></MvHeadline>
+                    <ListItem className={'activeLayout'}
+                              onClick={()=>showDialog(undefined, ()=><SelectLayoutDialog/>)}
+                    >
+                        <ListMainSlot primary={layoutName}/>
+                        <ListSlot>
+                            <DialogButton
+                                name={'SettingsLayout'}
+                                displayName={'select/edit layout'}
+                            />
+                        </ListSlot>
+                    </ListItem>
+                    <MvHeadline title={"Layouts"}/>
                     <DownloadItemList
                         {...uploadProps}
                         type={"layout"}

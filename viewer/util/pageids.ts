@@ -39,9 +39,9 @@ export const PAGEIDS={
     IMPORT:'importerpage',
     CHANNELS:'channelspage',
     NROUTE: 'routepage',
-    TRACKS: 'tracks',
-    AISCFG: 'aiscfg',
-    LAYOUT:'layout'
+    TRACKS: 'trackspage',
+    AISCFG: 'aiscfgpage',
+    LAYOUT:'layoutspage'
 }
 
 export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {

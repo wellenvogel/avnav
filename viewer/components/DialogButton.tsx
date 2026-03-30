@@ -19,13 +19,14 @@ export interface DialogButtonProps{
     close?: boolean;  //default: true
     children?: React.ReactNode;
     label?: React.ReactNode;
+    displayName?:string;
 }
 const COMPONENT="dialogButton";
 const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
         KeyHandler.registerDialogComponent(COMPONENT);
     // eslint-disable-next-line prefer-const
-        let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,...forward}=useStore(props);
+        let {icon,displayName,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,...forward}=useStore(props);
         const spanStyle:Record<string, any>={};
         if (icon !== undefined) {
             spanStyle.backgroundImage = "url(" + icon + ")";
@@ -58,6 +59,7 @@ const DialogButton=(props:DialogButtonProps)=>{
                 name={name}
                 onClick={clickHandler}
                 className={concatsp("button dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
+                title={displayName}
             >
             <span style={spanStyle}/>
                 {children}
