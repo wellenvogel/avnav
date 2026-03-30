@@ -22,6 +22,7 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -35,6 +36,9 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'ImportsView',
         displayName: 'show imports',
+        storeKeys:{
+            visible: keys.gui.capabilities.uploadImport
+        }
     },
     {
         name:'OverlaysView',

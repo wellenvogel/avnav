@@ -28,10 +28,9 @@ import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
-import GeneralButtons from "./GeneralButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
-import {ChartOverlayButtons} from "./DownloadPageButtons";
+import DownloadPageButtons from "./DownloadPageButtons";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
@@ -98,7 +97,7 @@ const mainTree=[
     new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,
         ServerPageButtons),
     new Page(PAGEIDS.DOWNLOAD,'settings',PAGE_TITLES.DOWNLOAD,
-        GeneralButtons.concat(ChartOverlayButtons)),
+        DownloadPageButtons),
 ]
 
 

@@ -195,6 +195,7 @@ export const MultiView = (props: MultiViewProps) => {
                 ref={outerRef}
                 onScroll={onScroll}>
         {props.views.map((view)=> {
+            if (!view) return null;
             return <View
                 key={idx++}
                 className="leftView"

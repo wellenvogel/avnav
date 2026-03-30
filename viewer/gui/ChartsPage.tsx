@@ -67,6 +67,7 @@ const UploadAction=(props:UploadActionProps)=>{
 }
 const ChartsPage=(props:ChartsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
+     const [hasImports]=useStoreState(keys.gui.capabilities.uploadImport);
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(1);
      const buttonListRef=useRef<ButtonDef[]>();
@@ -74,26 +75,27 @@ const ChartsPage=(props:ChartsPageProps)=>{
      const [uploadPropsOverlays,uploadActionOverlays]=useUploadHelper('overlay');
      const [uploadedChart,setUploadedChart]=useState(undefined);
      const [uploadedImport,setUploadedImport]=useState(undefined);
+     const numViews=hasImports?NUMVIEWS:NUMVIEWS-1;
      const buttonActions={
          ServerView:{
              onClick:()=>scrollTo(0),
-             disabled:props.pageColumns >= NUMVIEWS,
+             disabled:props.pageColumns >= numViews,
              toggle: visible(0),
          },
          ChartsView:{
              onClick:()=>scrollTo(1),
-             disabled:props.pageColumns >= NUMVIEWS,
+             disabled:props.pageColumns >= numViews,
              toggle:visible(1),
          },
          ImportsView: {
              onClick:()=>scrollTo(2),
-             disabled:props.pageColumns >= NUMVIEWS,
+             disabled:props.pageColumns >= numViews,
              toggle:visible(2),
          },
          OverlaysView:{
-             onClick:()=>scrollTo(3),
-             disabled:props.pageColumns >= NUMVIEWS,
-             toggle:visible(3),
+             onClick:()=>scrollTo(hasImports?3:2),
+             disabled:props.pageColumns >= numViews,
+             toggle:visible(hasImports?3:2),
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -143,7 +145,7 @@ const ChartsPage=(props:ChartsPageProps)=>{
                         title={"Charts"}
                         {...scrollProps}
                         number={1}
-                        max={NUMVIEWS - 1}
+                        max={numViews - 1}
                     ></MvHeadline>
                     <UploadAction onClick={uploadActionCharts} title={'chart'}/>
                     <DownloadItemList
@@ -154,22 +156,22 @@ const ChartsPage=(props:ChartsPageProps)=>{
                     />
                 </React.Fragment>
                 ,
-                <React.Fragment key={2}>
+                hasImports ?<React.Fragment key={2}>
                     <MvHeadline title={'Imports'}
                                 {...scrollProps}
                                 number={2}
-                                max={NUMVIEWS - 1}
+                                max={numViews - 1}
                     />
                     <UploadAction onClick={uploadActionCharts} title={'import'}/>
                     <ImporterView
                         selected={uploadedImport}
                     />
-                </React.Fragment>,
+                </React.Fragment>:null,
                 <React.Fragment key={3}>
                     <MvHeadline title={"Overlays"}
                                 {...scrollProps}
-                                number={3}
-                                max={NUMVIEWS - 1}/>
+                                number={hasImports?3:2}
+                                max={numViews - 1}/>
                     <UploadAction onClick={uploadActionOverlays} title={'overlay'}/>
                     <DownloadItemList
                         {...uploadPropsOverlays}

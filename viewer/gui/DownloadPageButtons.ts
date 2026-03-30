@@ -39,13 +39,6 @@ const getButtonParam=(name:string,type:string,
 }
 export const ChartOverlayButtons=propsToDefs([
     getButtonParam('DownloadPageCharts','chart'),
-    {
-        name: 'DownloadPageImporter',
-        displayName: 'chart import',
-        storeKeys: {
-            visible: keys.gui.capabilities.uploadImport
-        }
-    },
     getButtonParam('DownloadPageOverlays','overlay',true),
 ]);
 export const TrackButtons=propsToDefs([

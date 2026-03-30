@@ -1403,6 +1403,7 @@ span.valuePrefix{
         font-weight: unset;
       }
       .listEntry();
+      padding: 0.5em;
       .status{
         border-bottom: none;
         padding:0;
@@ -1413,8 +1414,9 @@ span.valuePrefix{
       margin-top: 5px;
       line-height: 1.5em;
       .statusHeading{
-        .flex-display();
-        .flex-direction(row);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
         &.disabled{
           .mdText2();
         }
@@ -1424,9 +1426,10 @@ span.valuePrefix{
     .childStatus {
       padding-left: 1.5em;
       margin-top: 3px;
-      .flex-display();
-      .flex-direction(row);
-      .flex-wrap(wrap);
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
       .mdText2();
       img {
         width: 1em;
@@ -1482,6 +1485,8 @@ span.valuePrefix{
     .uploadAction{
       border-color: var(--avnav-main-color);
       border-bottom-width: 5px;
+      padding-top: 0;
+      padding-bottom: 0;
     }
   }
 
