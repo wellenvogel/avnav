@@ -24,7 +24,6 @@ import Formatter from "../util/formatter";
 import PropertyHandler from '../util/propertyhandler';
 import {createItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
-import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
 import leavehandler from "../util/leavehandler";
 import {ConfirmDialog} from "../components/BasicDialogs";
@@ -250,7 +249,7 @@ const SettingsPage = (props) => {
                     return {visible: !state.editing && LocalStorage.hasPrefix()}
                 },
                 onClick: () => {
-                    let masterValues = propertyhandler.getMasterValues();
+                    let masterValues = PropertyHandler.getMasterValues();
                     let promises = [];
                     for (let key in masterValues) {
                         let description = KeyHelper.getKeyDescriptions()[key];

@@ -26,7 +26,6 @@ import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/ke
 import DimHandler from '../util/dimhandler';
 // @ts-ignore
 import FullScreen from './Fullscreen';
-// @ts-ignore
 import propertyhandler from '../util/propertyhandler';
 import Toast from "./Toast";
 import Button, {ButtonEvent} from "./Button";
@@ -52,7 +51,7 @@ import {createItemActions} from './FileDialog';
 // @ts-ignore
 import {ItemNameDialog,checkName} from './ItemNameDialog';
 
-export interface SettingsDefinition extends Property{
+export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
 }
 export const settingsSections:Record<string, string[]> = {

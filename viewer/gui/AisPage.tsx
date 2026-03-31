@@ -7,7 +7,6 @@ import ItemList, {ItemListProps} from '../components/ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {SyntheticEvent, useRef} from 'react';
-// @ts-ignore
 import PropertyHandler from '../util/propertyhandler';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore

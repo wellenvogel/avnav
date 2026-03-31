@@ -1,6 +1,5 @@
 import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
-import PropertyHandler from '../util/propertyhandler.js';
 import Toast from './Toast.tsx';
 import compare from '../util/compare.ts';
 import globalStore from '../util/globalstore';

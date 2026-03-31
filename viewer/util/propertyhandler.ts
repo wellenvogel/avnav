@@ -2,27 +2,39 @@
  * Created by andreas on 03.05.14.
  */
 
-import Toast from '../components/Toast.tsx';
-import globalStore from './globalstore.ts';
-import keys, {KeyHelper, PropertyType} from './keys.ts';
-import base from '../base.ts';
-import assign from 'object-assign';
+import Toast from '../components/Toast';
+import globalStore from './globalstore';
+import keys, {KeyHelper, Property, PropertyType, PropertyValue} from './keys';
+import base from '../base';
+// @ts-ignore
 import LayoutHandler, {layoutLoader} from './layouthandler';
 import Requests from "./requests";
+// @ts-ignore
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
+// @ts-ignore
 import splitsupport from "./splitsupport";
+import {StoreDataType} from "./store";
+import Helper from "./helper";
 
+export interface SavedSettingsData{
+    settingsVersion:number|string;
+    properties?: Record<string, PropertyValue>;
+}
+export interface VerifySettingsResult{
+    warnings?:string[]
+    data?:SavedSettingsData
+}
 
-const hex2rgba= (hex, opacity)=> {
-    let patt = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
-    let matches = patt.exec(hex);
-    let r = parseInt(matches[1], 16);
-    let g = parseInt(matches[2], 16);
-    let b = parseInt(matches[3], 16);
-    let rgba = "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
+const hex2rgba= (hex:string, opacity:string|number)=> {
+    const patt = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+    const matches = patt.exec(hex);
+    const r = parseInt(matches[1], 16);
+    const g = parseInt(matches[2], 16);
+    const b = parseInt(matches[3], 16);
+    const rgba = "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
     return rgba;
 };
-
+type UserData=Record<string,any>;
 
 /**
  * a storage handler for properties and userData
@@ -33,7 +45,10 @@ const hex2rgba= (hex, opacity)=> {
  * @constructor
  */
 class PropertyHandler {
-    constructor(propertyDescriptions) {
+    private propertyDescriptions: Record<string, Property>;
+    private propertyPrefix: string;
+    private vprefixKeys: string[];
+    constructor() {
         this.propertyPrefix=KeyHelper.keyNodeToString(keys.properties)+".";
         this.propertyDescriptions = KeyHelper.getKeyDescriptions(true);
         this.getProperties=this.getProperties.bind(this);
@@ -43,11 +58,11 @@ class PropertyHandler {
         this.incrementSequence=this.incrementSequence.bind(this);
         this.dataChanged=this.dataChanged.bind(this);
         this.resetToSaved=this.resetToSaved.bind(this);
-        this.prefixKeys=[];
-        for (let k in this.propertyDescriptions){
-            let description=this.propertyDescriptions[k];
+        this.vprefixKeys=[];
+        for (const k in this.propertyDescriptions){
+            const description=this.propertyDescriptions[k];
             if (description.isSplit()){
-                this.prefixKeys.push(k);
+                this.vprefixKeys.push(k);
             }
         }
         //register at the store for updates of our synced data
@@ -63,26 +78,26 @@ class PropertyHandler {
         });
     }
 
-    setPrefixKeys(prefixKeys){
+    setPrefixKeys(prefixKeys:string|string[]){
         if (! (prefixKeys instanceof Array)){
             throw new Error("prefix keys must be an array");
         }
-        let newPrefixKeys=[];
+        const newPrefixKeys:string[]=[];
         prefixKeys.forEach((key)=>{
             if (key.indexOf(this.propertyPrefix) !== 0) key=this.propertyPrefix+key;
             newPrefixKeys.push(key);
         })
-        this.prefixKeys=newPrefixKeys;
+        this.vprefixKeys=newPrefixKeys;
     }
 
-    loadUserData(use_prefix) {
-        let rt = {};
+    loadUserData(use_prefix?:boolean):UserData {
+        const rt = {};
         if (use_prefix && !LocalStorage.hasPrefix()) return rt;
-        let storageName = use_prefix ?
+        const storageName = use_prefix ?
             STORAGE_NAMES.SPLITSETTINGS :
             STORAGE_NAMES.SETTINGS;
         try {
-            let rawdata = LocalStorage.getItem(storageName);
+            const rawdata = LocalStorage.getItem(storageName);
             if (rawdata) {
                 return JSON.parse(rawdata);
             }
@@ -102,25 +117,25 @@ class PropertyHandler {
      * @deprecated - expensive!
      * @returns {*}
      */
-    getProperties() {
+    getProperties(): Record<string,PropertyValue > {
         return globalStore.getMultiple(keys.properties);
     }
 
     /**
      * save the current settings
      */
-    saveUserData(data,opt_forPrefix) {
-        let raw = JSON.stringify(data);
+    saveUserData(data:UserData,opt_forPrefix?:boolean) {
+        const raw = JSON.stringify(data);
         LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
         splitsupport.sendToFrame('settingsChanged');
     }
 
-    setItem(obj,path,value,opt_skip){
+    setItem(obj:UserData,path:string,value:PropertyValue,opt_skip?:number) {
         if (! obj) obj={};
         let current=obj;
-        let parts=path.split('.');
-        for (let i=opt_skip||0;i<parts.length;i++){
-            let pk=parts[i];
+        const parts=path.split('.');
+        for (let i=opt_skip||0; i < parts.length ;i++){
+            const pk=parts[i];
             if (i < (parts.length-1)){
                 if (typeof(current[pk]) !== 'object') current[pk]={};
                 current=current[pk];
@@ -131,25 +146,25 @@ class PropertyHandler {
         return obj;
     }
     savePrefixedValues(){
-        let saveDataSplit={}
-        let hasPrefix=LocalStorage.hasPrefix();
+        const saveDataSplit:UserData={}
+        const hasPrefix=LocalStorage.hasPrefix();
         if (! hasPrefix) return;
-        for (let dk in this.propertyDescriptions){
-            let v=globalStore.getData(dk);
-            if (this.prefixKeys.indexOf(dk) >= 0){
+        for (const dk in this.propertyDescriptions){
+            const v=globalStore.getData(dk);
+            if (this.vprefixKeys.indexOf(dk) >= 0){
                 //in any case also write default values to prefixed settings
                 this.setItem(saveDataSplit,dk,v,1);
             }
         }
         this.saveUserData(saveDataSplit, true);
     }
-    dataChanged(storeKeys){
-        let saveData={};
-        let saveDataSplit={}
-        let hasPrefix=LocalStorage.hasPrefix();
-        for (let dk in this.propertyDescriptions){
-            let v=globalStore.getData(dk);
-            if (this.prefixKeys.indexOf(dk) >= 0 && hasPrefix){
+    dataChanged(){
+        const saveData:UserData={};
+        const saveDataSplit:UserData={}
+        const hasPrefix=LocalStorage.hasPrefix();
+        for (const dk in this.propertyDescriptions){
+            const v=globalStore.getData(dk);
+            if (this.vprefixKeys.indexOf(dk) >= 0 && hasPrefix){
                 //in any case also write default values to prefixed settings
                 this.setItem(saveDataSplit,dk,v,1);
             }
@@ -168,17 +183,17 @@ class PropertyHandler {
 
 
 
-    getColor(colorName, addNightFade) {
-        let rt = globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"." + colorName);
+    getColor(colorName:string, addNightFade?:boolean) {
+        const rt = globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"." + colorName);
         if (rt === undefined) return rt;
-        if ((addNightFade === undefined || addNightFade) && globalStore.getData(keys.properties.nightMode)) {
-            let nf = globalStore.getData(keys.properties.nightColorDim);
+        if (Helper.unsetorTrue(addNightFade) && globalStore.getData(keys.properties.nightMode)) {
+            const nf = globalStore.getData(keys.properties.nightColorDim);
             return hex2rgba(rt, nf / 100);
         }
         return rt;
     }
-
-    getAisColor(currentObject) {
+    //TODO: use AisItemProps here - but needs to go to a lower place
+    getAisColor(currentObject:any) {
         let color = "";
         if ((currentObject.warning && globalStore.getData(keys.properties.aisMarkAllWarning))||
             currentObject.nextWarning) {
@@ -197,15 +212,15 @@ class PropertyHandler {
 
 
     _getSavedValues(){
-        let values=KeyHelper.getDefaultKeyValues();
+        const values=KeyHelper.getDefaultKeyValues();
         try {
-            let ndata = this.loadUserData();
-            let prefixData = this.loadUserData(true);
+            const ndata = this.loadUserData();
+            const prefixData = this.loadUserData(true);
             if (ndata) {
-                for (let k in this.propertyDescriptions){
+                for (const k in this.propertyDescriptions){
                     let v=KeyHelper.getValue(ndata,k,1);
-                    if (this.prefixKeys.indexOf(k) >= 0){
-                        let pv=KeyHelper.getValue(prefixData,k,1);
+                    if (this.vprefixKeys.indexOf(k) >= 0){
+                        const pv=KeyHelper.getValue(prefixData,k,1);
                         if (pv !== undefined) v=pv;
                     }
                     if ( v === undefined) continue;
@@ -225,9 +240,9 @@ class PropertyHandler {
     }
 
     firstStart(){
-        let changes={};
-        for (let path in this.propertyDescriptions){
-            let pd=this.propertyDescriptions[path];
+        const changes:Record<string,StoreDataType> = {};
+        for (const path in this.propertyDescriptions){
+            const pd=this.propertyDescriptions[path];
             if (pd.initialValue !== undefined){
                 changes[path]=pd.initialValue;
             }
@@ -241,7 +256,7 @@ class PropertyHandler {
      * raise an exception if invalid
      * the input expects the following form:
      * {
-     *     "version":nnn
+     *     "settingsVersion":nnn
      *     "properties": {
      *         "layers.ais":true,
      *         ...
@@ -249,32 +264,39 @@ class PropertyHandler {
      * }
      * With the keys below the properties are the flattened keys
      * without the leading "keys.properties"
-     * @param data
+     * @param dataIn
      * @param opt_checkValues if set - reject on invalid values, otherwise correct them
      * @param opt_errorNonExistent treat non existing properties as error
      * @param opt_replacements an object with key/value, keys will be used for a $key$ replacement
      * @return the checked (and potentially corrected) flattend properties
      */
-    verifySettingsData(data, opt_checkValues, opt_errorNonExistent,opt_replacements) {
+    verifySettingsData(dataIn:SavedSettingsData|string,
+                       opt_checkValues?:boolean,
+                       opt_errorNonExistent?:boolean,
+                       opt_replacements?:Record<string,string>):Promise<VerifySettingsResult> {
 
         return new Promise((resolve, reject) => {
-            let warnings=[];
-            const eHandler=(txt,nonExistant)=>{
+            const warnings:string[]=[];
+            const eHandler=(txt:string,nonExistant?:boolean)=>{
                 if ((nonExistant && opt_errorNonExistent) || (! nonExistant && opt_checkValues)){
                     reject(txt);
                     return true;
                 }
                 warnings.push(txt);
             }
-            if (typeof (data) === 'string') {
+            let data:SavedSettingsData;
+            if (typeof (dataIn) === 'string') {
                 try {
-                    data = JSON.parse(data);
+                    data = JSON.parse(dataIn);
                 }catch (e){
                     reject("unable to parse json: "+e);
                     return;
                 }
             }
-            let version=data.settingsVersion;
+            else{
+                data = dataIn;
+            }
+            const version=data.settingsVersion;
             if (version === undefined) {
                 reject("no settings version found");
                 return;
@@ -284,20 +306,20 @@ class PropertyHandler {
                 return;
             }
             const prefix = "properties.";
-            let rt = {};
-            let descriptions = KeyHelper.getKeyDescriptions(true);
-            let promises=[];
-            for (let dk in data.properties) {
-                let key = prefix + dk;
+            const rt:Record<string,PropertyValue> = {};
+            const descriptions = KeyHelper.getKeyDescriptions(true);
+            const promises=[];
+            for (const dk in data.properties) {
+                const key = prefix + dk;
                 if (!(key in descriptions)) {
                     if (eHandler(dk+" is no existing property",true)) return;
                     continue; //silently ignore non existing
                     //throw new Error("no property dk is defined")
                 }
-                let des = descriptions[key];
+                const des = descriptions[key];
                 let v = data.properties[dk];
                 if (opt_replacements && typeof(v) === 'string'){
-                    for (let rk in opt_replacements){
+                    for (const rk in opt_replacements){
                         v=v.replace('$'+rk+'$',opt_replacements[rk]);
                     }
                 }
@@ -318,20 +340,20 @@ class PropertyHandler {
                         break;
                     case PropertyType.RANGE:
                         if (typeof (v) !== 'number') {
-                            v = parseFloat(v);
+                            v = parseFloat(v as string);
                             if (isNaN(v)) {
-                                v = des.values[0];
+                                v = des.values[0] as any;
                                 if (eHandler("nan " + ov + "(=>"+v+") for " + dk)) return;
                             }
                         }
                         if (v > des.values[1]) {
                             ov=v;
-                            v = des.values[1];
+                            v = des.values[1] as any;
                             if (eHandler(ov + " to big (=>"+v+") for " + dk)) return;
                         }
                         if (v < des.values[0]) {
                             ov=v;
-                            v = des.values[0];
+                            v = des.values[0] as any;
                             if (eHandler(ov + " to small (=>"+v+") for " + dk)) return;
                         }
                         rt[dk] = v;
@@ -344,32 +366,32 @@ class PropertyHandler {
                         rt[dk] = v;
                         break;
                     case PropertyType.LIST:
-                    case PropertyType.SELECT:
+                    case PropertyType.SELECT: {
                         let found = false;
                         des.values.forEach((le) => {
-                            if (le instanceof Object){
-                               if (le.value === v) found=true;
-                            }
-                            else {
+                            if (le instanceof Object) {
+                                if (le.value === v) found = true;
+                            } else {
                                 if (le === v) found = true;
                             }
                         })
                         if (!found) {
-                            v = des.values[0];
-                            if (eHandler(ov + " is not a valid value (=>"+v+") for " + dk)) return;
+                            v = des.values[0] as string;
+                            if (eHandler(ov + " is not a valid value (=>" + v + ") for " + dk)) return;
                         }
                         rt[dk] = v;
+                        }
                         break;
                     case PropertyType.LAYOUT:
                         promises.push(
                             layoutLoader.loadLayout(v)
-                                .then((o) => {
-                                        let rt = {};
+                                .then(() => {
+                                        const rt:Record<string,any> = {};
                                         rt[dk] = v;
                                         return rt;
                                     },
-                                    (error) => {
-                                        let e=dk + ": " + v + ": " + error;
+                                    (error:string) => {
+                                        const e=dk + ": " + v + ": " + error;
                                         if (opt_checkValues) {
                                             return Promise.reject(e);
                                         } else {
@@ -392,8 +414,8 @@ class PropertyHandler {
             }
             Promise.all(promises)
                 .then((values)=>{
-                    values.forEach((v)=>{
-                        for (let k in v){
+                    values.forEach((v:PropertyValue[])=>{
+                        for (const k in v){
                             rt[k]=v[k];
                         }
                     })
@@ -412,11 +434,14 @@ class PropertyHandler {
      * @param opt_overwrite overwrite on server
      * @return {Promise<* | void>}
      */
-    uploadSettingsData(fileName, data,opt_check,opt_overwrite){
+    uploadSettingsData(fileName:string,
+                       data:SavedSettingsData|string,
+                       opt_check?:boolean,
+                       opt_overwrite?:boolean,){
         if (!globalStore.getData(keys.properties.connectedMode,false)){
             return Promise.reject("not in connected mode, cannot upload");
         }
-        const upload=(data)=>{
+        const upload=(data:SavedSettingsData|string)=>{
             if (typeof(data) !== 'string'){
                 data=JSON.stringify(data,undefined,2);
             }
@@ -439,18 +464,18 @@ class PropertyHandler {
         }
     }
 
-    exportSettings(current){
-        let descriptions = KeyHelper.getKeyDescriptions(true);
-        let values = {};
+    exportSettings(current?:Record<string,PropertyValue>){
+        const descriptions = KeyHelper.getKeyDescriptions(true);
+        const values:Record<string, PropertyValue> = {};
         if (! current) {
-            let keys = Object.keys(descriptions);
+            const keys = Object.keys(descriptions);
             current = globalStore.getMultiple(keys);
         }
-        for (let dk in descriptions){
-            let des=descriptions[dk];
+        for (const dk in descriptions){
+            const des=descriptions[dk];
             let found=false;
-            for (let k in PropertyType){
-                if (PropertyType[k] === des.type && PropertyType[k] !== PropertyType.INTERNAL){
+            for (const k of Object.values(PropertyType)){
+                if (k === des.type && k !== PropertyType.INTERNAL){
                     found=true;
                     break;
                 }
@@ -459,7 +484,7 @@ class PropertyHandler {
                 continue;
             }
             if (current[dk] === des.defaultv) continue;
-            let okey=dk.replace(/^properties\./,'');
+            const okey=dk.replace(/^properties\./,'');
             values[okey]=current[dk];
         }
         return {settingsVersion:1,properties:values}
@@ -473,7 +498,9 @@ class PropertyHandler {
      * @param opt_setDefaults if true it will set all values that are different from default
      * @return {Promise}
      */
-    importSettings(propertyData, currentValues, opt_setDefaults) {
+    importSettings(propertyData:SavedSettingsData,
+                   currentValues:Record<string,PropertyValue>,
+                   opt_setDefaults?:boolean,) {
         return new Promise((resolve, reject) => {
             if (propertyData.settingsVersion === undefined) {
                 reject("missing settingsVersion");
@@ -483,15 +510,15 @@ class PropertyHandler {
                 reject("missing or invalid properties");
                 return;
             }
-            let newValues=propertyData.properties;
-            let descriptions = KeyHelper.getKeyDescriptions(true);
-            let values = assign({},currentValues);
-            let newLayout;
-            for (let dk in descriptions) {
-                let des = descriptions[dk];
+            const newValues=propertyData.properties;
+            const descriptions = KeyHelper.getKeyDescriptions(true);
+            const values = {...currentValues};
+            let newLayout:string;
+            for (const dk in descriptions) {
+                const des = descriptions[dk];
                 let found=false;
-                for (let pk in PropertyType){
-                    if (PropertyType[pk] === des.type && des.type !== PropertyType.INTERNAL){
+                for (const pk of Object.values(PropertyType)){
+                    if (pk === des.type && des.type !== PropertyType.INTERNAL){
                         found=true;
                         break;
                     }
@@ -499,26 +526,26 @@ class PropertyHandler {
                 if (!found) {
                     continue;
                 }
-                let okey=dk.replace(/^properties\./,'');
+                const okey=dk.replace(/^properties\./,'');
                 if (okey in newValues) {
                     values[dk] = newValues[okey];
-                    if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
+                    if (des.type === PropertyType.LAYOUT) newLayout=values[dk] as string;
                 }
                 else{
                     if (opt_setDefaults ){
                         values[dk]=des.defaultv;
-                        if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
+                        if (des.type === PropertyType.LAYOUT) newLayout=values[dk] as string;
                     }
                 }
 
             }
             if (newLayout){
                 layoutLoader.loadLayout(newLayout)
-                    .then((layout)=>{
+                    .then((layout:any)=>{
                         LayoutHandler.setLayoutAndName(layout,newLayout);
                         resolve(values);
                     })
-                    .catch((e)=>reject("unable to load layout: "+e));
+                    .catch((e:any)=>reject("unable to load layout: "+e));
                 //load layout
             }
             else {
@@ -540,12 +567,12 @@ class PropertyHandler {
         });
     }
 
-    isPrefixProperty(name){
+    isPrefixProperty(name:string){
         if (! name || ! LocalStorage.hasPrefix()) return false;
         if (name.indexOf(this.propertyPrefix) !== 0){
-            name=this.propertyPrefix+key;
+            return false;
         }
-        return this.prefixKeys.indexOf(name) >= 0;
+        return this.vprefixKeys.indexOf(name) >= 0;
     }
 
     /**
@@ -554,13 +581,13 @@ class PropertyHandler {
      * return them in the flattend structure with the keys being the store keys
      */
     getMasterValues(){
-        let masterData=this.loadUserData();
-        let rt={};
-        this.prefixKeys.forEach((key)=>{
-            let v=KeyHelper.getValue(masterData,key,1);
+        const masterData=this.loadUserData();
+        const rt:Record<string,PropertyValue> = {};
+        this.vprefixKeys.forEach((key)=>{
+            const v=KeyHelper.getValue(masterData,key,1);
             if ( v!== undefined) rt[key]=v;
             else{
-                let description=this.propertyDescriptions[key];
+                const description=this.propertyDescriptions[key];
                 if (description){
                     rt[key]=description.defaultv;
                 }

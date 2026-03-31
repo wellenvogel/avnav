@@ -585,7 +585,7 @@ export const KeyHelper = {
         }
         return values;
     },
-    getKeyDescriptions:(opt_propertiesOnly?:boolean)=> {
+    getKeyDescriptions:(opt_propertiesOnly?:boolean):Record<string,Property> => {
         if (!opt_propertiesOnly) return keyDescriptions;
         const rt:Record<string,KeyType> = {};
         for (const k in keyDescriptions) {
