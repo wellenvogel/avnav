@@ -1,6 +1,5 @@
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-// @ts-ignore
 import Requests from '../util/requests';
 import Toast from './Toast';
 import base from "../base";

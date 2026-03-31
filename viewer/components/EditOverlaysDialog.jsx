@@ -12,7 +12,7 @@ import {Checkbox, Input, InputReadOnly, Radio} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
 import Button from './Button.tsx';
 import ItemList from './ItemList.tsx';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import Toast from './Toast.tsx';
 import Helper, {avitem, injectav, setav} from '../util/helper.ts';
 import {editableOverlayParameters} from '../map/chartsourcebase'

@@ -9,7 +9,7 @@ import keys from '../util/keys.ts';
 import React from 'react';
 import Page from '../components/Page.tsx';
 import Toast from '../components/Toast.tsx';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import MapHolder from '../map/mapholder.js';
 import base from '../base.ts';
 import chartImage from '../images/Chart60.png';

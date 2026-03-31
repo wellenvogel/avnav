@@ -35,7 +35,6 @@ import {showDialog, showPromiseDialog} from "./OverlayDialog";
 import {checkName} from "./ItemNameDialog";
 // @ts-ignore
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
-// @ts-ignore
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
 import UploadHandler from "./UploadHandler";

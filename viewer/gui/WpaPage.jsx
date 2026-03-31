@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
 import Toast from '../components/Toast.tsx';
 import GuiHelpers from '../util/GuiHelpers.js';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import Helper, {avitem} from '../util/helper.ts';
 import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.tsx';
 import {Input,Checkbox} from '../components/Inputs.tsx';

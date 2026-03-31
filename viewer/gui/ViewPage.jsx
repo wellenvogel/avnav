@@ -6,7 +6,7 @@ import helper from '../util/helper.ts';
 import Helper from '../util/helper.ts';
 import React from 'react';
 import Page from '../components/Page.tsx';
-import Requests, {prepareUrl} from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests';
 import Mob from '../components/Mob.ts';
 import Toast, {hideToast} from '../components/Toast.tsx';
 import {showPromiseDialog} from '../components/OverlayDialog.tsx';

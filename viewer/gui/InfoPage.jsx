@@ -4,7 +4,7 @@
 
 import React from 'react';
 import Page from '../components/Page.tsx';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import Mob from '../components/Mob.ts';
 import AvNavVersion from '../version.js';
 

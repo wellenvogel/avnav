@@ -1,4 +1,4 @@
-import Requests, {prepareUrl} from '../util/requests.js';
+import Requests, {prepareUrl} from '../util/requests';
 import keys from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';

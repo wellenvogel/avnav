@@ -28,7 +28,6 @@ import {ChildStatus, ChildStatusProps, StatusItem, statusTextToImageUrl} from ".
 import {useDialogContext} from "./exports";
 import {DialogButtons, DialogFrame, showDialog} from "./OverlayDialog";
 import DB from './DialogButton';
-// @ts-ignore
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import DownloadButton from "./DownloadButton";

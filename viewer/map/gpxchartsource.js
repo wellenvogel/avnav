@@ -23,7 +23,6 @@
  ###############################################################################
  */
 
-import Requests from '../util/requests.js';
 import ChartSourceBase, {
     addToSettings, buildOlFontConfig, editableOverlayParameters, FoundFeatureFlags, orderSettings, TEXT_FORMAT_SETTINGS
 } from './chartsourcebase.js';

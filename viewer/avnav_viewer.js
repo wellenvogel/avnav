@@ -36,7 +36,7 @@ import App from './App.jsx';
 import keys from './util/keys.ts';
 import globalStore from './util/globalstore.ts';
 import base from './base.ts';
-import Requests from './util/requests.js';
+import Requests from './util/requests';
 import Toast from './components/Toast.tsx';
 import Api from './util/api.impl.ts';
 import registerRadial from './components/CanvasGaugeDefinitions.js';

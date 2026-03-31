@@ -24,10 +24,10 @@
  */
 
 import base from '../base.ts';
-import Requests from '../util/requests.js';
-import globalStore from '../util/globalstore.ts';
+import Requests from '../util/requests';
+import globalStore from '../util/globalstore';
 import keys from '../util/keys.ts';
-import Helper, {avitem, getav, setav} from '../util/helper.ts';
+import Helper, {avitem, getav, setav} from '../util/helper';
 import ChartSourceBase, {CHARTBASE} from './chartsourcebase.js';
 import {CHARTAV, layerFactory} from './chartlayers';
 import navobjects from "../nav/navobjects";

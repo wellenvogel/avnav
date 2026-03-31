@@ -10,7 +10,7 @@ import Toast from '../components/Toast.tsx';
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import RoutEdit from './routeeditor.js';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import assign from 'object-assign';
 import base from '../base.ts';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';

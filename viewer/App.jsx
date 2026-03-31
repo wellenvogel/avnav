@@ -24,7 +24,7 @@ import {
     showPromiseDialog
 } from './components/OverlayDialog';
 import globalStore from './util/globalstore.ts';
-import Requests from './util/requests.js';
+import Requests from './util/requests';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.tsx';
 import KeyHandler from './util/keyhandler.ts';

@@ -20,14 +20,15 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
-import globalStore from './globalstore.ts';
-import keys from './keys.ts';
-import assign from 'object-assign';
+import globalStore from './globalstore';
+import keys from './keys';
 import globalstore from "./globalstore";
 import base from "../base";
 
 class ResponseError extends Error {
-    constructor(response) {
+    code: number;
+    txt: string;
+    constructor(response:{status: number, statusText: string}) {
         super();
         this.code=response.status;
         this.txt=response.statusText;
@@ -35,6 +36,20 @@ class ResponseError extends Error {
     toString() {
         return this.txt;
     }
+}
+export interface RequestOptions{
+    resolveObject?: boolean; //include the Response
+    checkOk?: boolean;  //default true
+    sequenceFunction?: ()=>number;
+    useNavUrl?:boolean; //default true
+    timeout?:number;
+    noCache?: boolean;
+}
+export type UrlType=URL|string|Record<string, any>;
+export type HeaderType=Record<string, any>;
+export interface FetchOptions extends RequestInit{
+    timeout?:number;
+    headers?:Record<string, string>
 }
 /**
  *
@@ -44,7 +59,7 @@ class ResponseError extends Error {
  * @param options
  * @returns {string}
  */
-export const prepareUrl=(url, options)=>{
+export const prepareUrl=(url:UrlType, options?:RequestOptions)=>{
     if (url === undefined) {
         return undefined;
     }
@@ -80,48 +95,49 @@ export const prepareUrl=(url, options)=>{
 
 };
 
-export const buildProxyUrl=(url, baseUrl,headers,parameters)=>{
+export const buildProxyUrl=(url:URL|string, baseUrl:URL|string,headers:HeaderType,parameters:Record<string,any>)=>{
     if (! (url instanceof URL)){
         url=new URL(url,baseUrl||window.location.href);
     }
     if (url.origin === window.location.origin){
         return url.toString();
     }
-    let proxyUrl=new URL("/proxy/"+encodeURIComponent(url.toString()),window.location.href);
+    const proxyUrl=new URL("/proxy/"+encodeURIComponent(url.toString()),window.location.href);
     if (headers){
-        for (let k in headers){
+        for (const k in headers){
             proxyUrl.searchParams.append("h:"+k, headers[k]);
         }
     }
     if (parameters){
-        for (let k in parameters){
+        for (const k in parameters){
             proxyUrl.searchParams.append(k, parameters[k]);
         }
     }
     return proxyUrl.toString();
 }
 
-const prepareInternal=(url, options, defaults)=>{
+const prepareInternal=
+    (url:UrlType, options:RequestOptions):[url:string,options:FetchOptions]=>{
     if (url === undefined) {
         return [undefined,undefined];
     }
-    let ioptions=assign({},defaults,options);
-    let rurl=prepareUrl(url, ioptions);
+    const ioptions={...options};
+    const rurl=prepareUrl(url, ioptions);
     if (ioptions.timeout === undefined) ioptions.timeout=parseInt(globalStore.getData(keys.properties.networkTimeout));
-    let headers=undefined;
+    let headers:HeaderType=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
         headers={};
         headers['pragma']='no-cache';
         headers['cache-control']='no-cache';
     }
-    let requestOptions={};
+    const requestOptions:FetchOptions={};
     if (headers) requestOptions.headers=headers;
     requestOptions.timeout=ioptions.timeout;
     return [rurl,requestOptions];
 }
 
 
-export const fetchWithTimeout=(url,options)=>{
+export const fetchWithTimeout=(url:string|URL,options?:FetchOptions)=>{
     const timeout=(options||{}).timeout;
     if (timeout === undefined){
         return fetch(url,options);
@@ -139,7 +155,10 @@ export const fetchWithTimeout=(url,options)=>{
 }
 
 
-const handleJson=(rurl,requestOptions,options)=>{
+const handleJson=(
+    rurl:string|URL,
+    requestOptions:FetchOptions,
+    options?:RequestOptions):Promise<Record<string,any>> => {
     return new Promise((resolve,reject)=>{
         if (!rurl) {
             reject("missing url");
@@ -186,10 +205,10 @@ const handleJson=(rurl,requestOptions,options)=>{
     });
 };
 
-const addParameters=(url,parameters)=>{
+const addParameters=(url:string,parameters:Record<string, any>)=>{
     if (!parameters) return url;
-    for (let k in parameters){
-        let v=parameters[k];
+    for (const k in parameters){
+        const v=parameters[k];
         if (v === undefined) continue;
         if (typeof(v) == 'function' || typeof(k) == 'object') continue;
         if (url.match(/\?/)) url+="&";
@@ -198,12 +217,13 @@ const addParameters=(url,parameters)=>{
     }
     return url;
 };
-const handleAndroidPost=(url,body)=>{
+const handleAndroidPost=(url:string|URL,body:string)=>{
     return new Promise((resolve,reject)=> {
         //we need to build the full url here
         //as the navUrl could just be relative
         const fullUrl=new URL(url,window.location.href);
-        let res=JSON.parse(window.avnavAndroid.handleUpload(fullUrl.toString(), body));
+        // @ts-ignore
+        const res=JSON.parse(window.avnavAndroid.handleUpload(fullUrl.toString(), body));
         if (res.status === 'OK'){
             resolve(res);
             return;
@@ -214,7 +234,14 @@ const handleAndroidPost=(url,body)=>{
         }
     });
 };
-let RequestHandler={
+export type TextResponse=Promise<string|{data:string,response:Response}>
+export interface UploadFileParam{
+    starthandler:(param:UploadFileParam,xhr:XMLHttpRequest)=>void;
+    progresshandler:(param:UploadFileParam,event:ProgressEvent)=>void;
+    errorhandler:(param:UploadFileParam,error:string)=>void;
+    okhandler:(param:UploadFileParam,result:Record<string,any>)=>void;
+}
+const RequestHandler={
     /**
      * do a json get request
      * @param url - either string or object with request parameters
@@ -228,17 +255,19 @@ let RequestHandler={
      * @param options
      * @param opt_parameter
      */
-    getJson:(url,options,opt_parameter)=>{
-        let [rurl,requestOptions]=prepareInternal(url,options);
+    getJson:(url:UrlType,options?:RequestOptions,opt_parameter?:Record<string,any>)=>{
+        const [rurl,requestOptions]=prepareInternal(url,options);
         return handleJson(addParameters(rurl,opt_parameter),requestOptions,options);
     },
-    postJson:(url,body,options,opt_parameters)=>{
+    postJson:(url:UrlType,body:any,options?:RequestOptions,opt_parameters?:Record<string, any>)=>{
+        // eslint-disable-next-line prefer-const
         let [rurl,requestOptions]=prepareInternal(url,options);
         requestOptions.method='POST';
         rurl=addParameters(rurl,opt_parameters);
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/json';
-        let encodedBody=JSON.stringify(body);
+        const encodedBody=JSON.stringify(body);
+        // @ts-ignore
         if (window.avnavAndroid){
             return handleAndroidPost(rurl,encodedBody)
         }
@@ -246,12 +275,14 @@ let RequestHandler={
         return handleJson(rurl,requestOptions,options);
     },
 
-    postPlain:(url,body,options,opt_parameters)=>{
+    postPlain:(url:UrlType,body:any,options?:RequestOptions,opt_parameters?:Record<string, any>)=>{
+        // eslint-disable-next-line prefer-const
         let [rurl,requestOptions]=prepareInternal(url,options);
         rurl=addParameters(rurl,opt_parameters);
         requestOptions.method='POST';
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/octet-string';
+        // @ts-ignore
         if (window.avnavAndroid){
             return handleAndroidPost(rurl,body);
         }
@@ -261,12 +292,14 @@ let RequestHandler={
     /**
      * do a json get request
      * @param url either string or object with request parameters
-     * @param options:
      *        useNavUrl - (default: false) - prepend the navUrl to the provided url
      *        noCache   - (default: false) - prevent caching
+     * @param options
      * @param opt_parameter request parameters
      */
-    getHtmlOrText:(url,options,opt_parameter)=>{
+
+    getHtmlOrText:(url:UrlType,options?:RequestOptions,opt_parameter?:Record<string,any>):TextResponse=>{
+        // eslint-disable-next-line prefer-const
         let [rurl,requestOptions]=prepareInternal(url,{...options,useNavUrl:false,noCache:false});
         return new Promise((resolve,reject)=>{
           rurl=addParameters(rurl,opt_parameter)
@@ -276,7 +309,7 @@ let RequestHandler={
           }
           let sequence=undefined;
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
-          let finalResponse;
+          let finalResponse:Response;
           fetchWithTimeout(rurl,requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
@@ -292,7 +325,7 @@ let RequestHandler={
               },
               (error)=>{
                   reject(error.message);
-              }).then((text)=>{
+              }).then((text:string)=>{
                   if (sequence !== undefined){
                       if (sequence != options.sequenceFunction()) {
                           reject("sequence changed");
@@ -323,13 +356,14 @@ let RequestHandler={
      *        errorhandler: called on error
      *        see https://mobiarch.wordpress.com/2012/08/21/html5-file-upload-with-progress-bar-using-jquery/
      */
-    uploadFile: (url, file, param)=> {
-        let type = "application/octet-stream";
+
+    uploadFile: (url:string|URL, file:File, param:UploadFileParam)=> {
+        const type = "application/octet-stream";
         try {
-            let xhr=new XMLHttpRequest();
+            const xhr=new XMLHttpRequest();
             xhr.open('POST',url,true);
             xhr.setRequestHeader('Content-Type', type);
-            xhr.addEventListener('load',(event)=>{
+            xhr.addEventListener('load',()=>{
                 if (xhr.status != 200){
                     if (param.errorhandler) param.errorhandler(param,xhr.statusText);
                     return;
@@ -350,7 +384,7 @@ let RequestHandler={
             xhr.upload.addEventListener('progress',(event)=>{
                 if (param.progresshandler) param.progresshandler(param,event);
             });
-            xhr.addEventListener('error',(event)=>{
+            xhr.addEventListener('error',()=>{
                if (param.errorhandler) param.errorhandler(param,"upload error");
             });
             if (param.starthandler) param.starthandler(param,xhr);
@@ -359,7 +393,7 @@ let RequestHandler={
             if (param.errorhandler) param.errorhandler(param,e);
         }
     },
-    getLastModified:(url)=>{
+    getLastModified:(url:string|URL)=>{
         if (! globalstore.getData(keys.gui.capabilities.fetchHead,false)){
             return Promise.resolve(0);
         }

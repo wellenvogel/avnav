@@ -1,9 +1,9 @@
 
 import navobjects from './navobjects';
-import keys from '../util/keys.ts';
-import globalStore from '../util/globalstore.ts';
-import Requests from '../util/requests.js';
-import base from '../base.ts';
+import keys from '../util/keys';
+import globalStore from '../util/globalstore';
+import Requests from '../util/requests';
+import base from '../base';
 
 
 

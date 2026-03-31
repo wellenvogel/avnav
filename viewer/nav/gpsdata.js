@@ -5,7 +5,7 @@ import navobjects from './navobjects';
 import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper} from '../util/keys.ts';
 import assign from 'object-assign';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import base from '../base.ts';
 import Average, {CourseAverage} from "../util/average.mjs";
 

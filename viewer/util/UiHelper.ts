@@ -1,8 +1,6 @@
 import {SyntheticEvent, useEffect, useRef, useState} from "react";
 import shallowcompare from './compare';
-// @ts-ignore
 import KeyHandler from './keyhandler';
-// @ts-ignore
 import Requests from './requests';
 import base from "../base";
 // @ts-ignore

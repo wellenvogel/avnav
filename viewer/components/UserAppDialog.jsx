@@ -5,7 +5,7 @@ import Toast from './Toast.tsx';
 import {Checkbox, Input, InputReadOnly} from './Inputs.tsx';
 import Addons from './Addons.ts';
 import Helper, {unsetOrTrue} from '../util/helper.ts';
-import Requests from '../util/requests.js';
+import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";

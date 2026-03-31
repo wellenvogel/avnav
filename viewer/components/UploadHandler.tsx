@@ -24,7 +24,6 @@
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Button, {ButtonEvent, ButtonEventHandler} from "./Button";
-// @ts-ignore
 import Requests, {prepareUrl} from "../util/requests";
 import AndroidEventHandler from "../util/androidEventHandler";
 import {IDialogContext, useDialogContext} from "./DialogContext";

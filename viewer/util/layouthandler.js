@@ -1,8 +1,8 @@
-import Requests from './requests.js';
-import globalStore from './globalstore.ts';
-import keys,{KeyHelper} from './keys.ts';
-import KeyHandler from './keyhandler.ts';
-import base from '../base.ts';
+import Requests from './requests';
+import globalStore from './globalstore';
+import keys,{KeyHelper} from './keys';
+import KeyHandler from './keyhandler';
+import base from '../base';
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 

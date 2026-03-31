@@ -24,7 +24,6 @@
  * dialog for log file display
  */
 import React, {useEffect, useRef, useState} from "react";
-// @ts-ignore
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import DB from "./DialogButton";

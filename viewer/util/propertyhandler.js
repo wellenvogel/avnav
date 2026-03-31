@@ -8,7 +8,6 @@ import keys, {KeyHelper, PropertyType} from './keys.ts';
 import base from '../base.ts';
 import assign from 'object-assign';
 import LayoutHandler, {layoutLoader} from './layouthandler';
-import RequestHandler from "./requests";
 import Requests from "./requests";
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 import splitsupport from "./splitsupport";
@@ -532,7 +531,7 @@ class PropertyHandler {
         if ( !globalStore.getData(keys.gui.capabilities.uploadSettings,false)){
             return Promise.resolve([]);
         }
-        return RequestHandler.getJson({
+        return Requests.getJson({
             request:'api',
             command: 'list',
             type: 'settings'
