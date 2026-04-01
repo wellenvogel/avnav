@@ -1,3 +1,5 @@
+import {valueof} from "./helper";
+
 /**
  * # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
  #
@@ -43,6 +45,8 @@ export const PAGEIDS={
     LAYOUT:'layoutspage',
     CHARTS:'chartspage'
 }
+
+export type PageType=valueof<typeof PAGEIDS>;
 
 export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     TRACKS: "Tracks/NMEALogs",

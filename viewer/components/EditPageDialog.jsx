@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
 import {Checkbox} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
@@ -13,15 +13,15 @@ const OPTION_COMBINATIONS=[
     },
     {
         display: 'small',
-        options: [LayoutHandler.OPTIONS.SMALL]
+        options: [LAYOUT_OPTIONS.SMALL]
     },
     {
         display: 'anchor',
-        options: [LayoutHandler.OPTIONS.ANCHOR]
+        options: [LAYOUT_OPTIONS.ANCHOR]
     },
     {
         display: 'anchor+small',
-        options: [LayoutHandler.OPTIONS.ANCHOR,LayoutHandler.OPTIONS.SMALL]
+        options: [LAYOUT_OPTIONS.ANCHOR,LAYOUT_OPTIONS.SMALL]
     }
 ];
 

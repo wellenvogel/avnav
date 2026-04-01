@@ -26,7 +26,7 @@
 
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {ADD_MODES} from '../util/layouthandler.ts';
 import {DialogButtons, DialogFrame, DialogRow, showDialog} from './OverlayDialog.tsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import {Input, InputSelect} from './Inputs.tsx';
@@ -115,8 +115,13 @@ const EditWidgetDialog = (props) => {
             let fv = parameter.getValue(widget);
             if (fv !== undefined) {
                 let dv = parameter.getValue(nwidget);
-                if (Compare(fv, dv)) {
-                    return; //we have set the value that is at the widget anyway - do not write this out
+                //if there is a "children" parameter this is used
+                //by the layout handler so we have to write this in any case
+                //otherwise we can omit default values
+                if (parameter.getName() !== 'children') {
+                    if (Compare(fv, dv)) {
+                        return; //we have set the value that is at the widget anyway - do not write this out
+                    }
                 }
                 parameter.setValue(rt, fv);
             }
@@ -242,12 +247,12 @@ export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt
         weight={opt_options.weight}
         insertCallback={(selected,before,newPanel)=>{
             if (! selected || ! selected.name) return;
-            let addMode=LayoutHandler.ADD_MODES.noAdd;
+            let addMode=ADD_MODES.noAdd;
             if (widgetItem){
-                addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
+                addMode=before?ADD_MODES.beforeIndex:ADD_MODES.afterIndex;
             }
             else{
-                addMode=opt_options.beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
+                addMode=opt_options.beginning?ADD_MODES.beginning:ADD_MODES.end;
             }
             LayoutHandler.withTransaction(pageWithOptions,(handler)=> {
                 handler.replaceItem(pageWithOptions, newPanel, index, filterObject(selected), addMode);
@@ -262,7 +267,7 @@ export const EditWidgetDialogWithFunc=({widgetItem,pageWithOptions,panelname,opt
             if (newPanel !== panelname){
                 LayoutHandler.withTransaction(pageWithOptions,(handler)=>{
                     handler.replaceItem(pageWithOptions,panelname,index);
-                    handler.replaceItem(pageWithOptions,newPanel,1,filterObject(changes),LayoutHandler.ADD_MODES.end);
+                    handler.replaceItem(pageWithOptions,newPanel,1,filterObject(changes),ADD_MODES.end);
                 })
             }
             else{

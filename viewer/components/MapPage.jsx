@@ -17,7 +17,7 @@ import {showDialog, showPromiseDialog} from './OverlayDialog.tsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler from '../util/layouthandler.ts';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";

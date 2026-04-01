@@ -39,7 +39,7 @@ import {
 import {InputSelect, InputReadOnly} from './Inputs';
 import globalstore from "../util/globalstore";
 // @ts-ignore
-import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
+import LayoutHandler, {LayoutData, layoutLoader} from '../util/layouthandler';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
 import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog} from "./OverlayDialog";
@@ -144,7 +144,7 @@ class LayoutParameterUI extends EditableStringParameterBase{
         if (this._layoutEditing()){
             return <InputReadOnly
                 {...getCommonParam({ep:this,currentValues,className,initialValues,children})}
-                value={LayoutHandler.name}
+                value={LayoutHandler.getName()}
                 onClick={isEditing}
             />
         }
@@ -475,7 +475,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
         [layoutKey]:currentName
     }
     const dialogContext=useDialogContext();
-    const checkAnLoad=async ()=>{
+    const checkAnLoad=async ():Promise<[name:string,data:LayoutData]> =>{
         const layoutName=currentValues.getValue(layoutKey);
         if (! layoutName){
             Toast("no layout selected");
@@ -506,7 +506,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
                 const layoutAndName=await checkAnLoad();
                 if (! layoutAndName) return;
                 try {
-                    LayoutHandler.setLayoutAndName(layoutAndName[0],layoutAndName[1],true);
+                    LayoutHandler.setLayoutAndName(layoutAndName[1],layoutAndName[0],true);
                 }catch (e){
                     Toast(e);
                     return;
@@ -533,7 +533,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
                             if (currentValues.isChanged()) {
                                 layoutAndName = await checkAnLoad();
                                 if (!layoutAndName) return;
-                                LayoutHandler.setLayoutAndName(layoutAndName[0], layoutAndName[1], true);
+                                LayoutHandler.setLayoutAndName(layoutAndName[1], layoutAndName[0], true);
                             } else {
                                 layoutAndName.push(currentName);
                             }

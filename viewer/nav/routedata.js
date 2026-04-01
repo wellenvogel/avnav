@@ -562,12 +562,12 @@ class  RouteData {
         return true;
     };
     async _downloadRoute(name, opt_returnraw) {
-        const response = await Requests.getHtmlOrText({
+        const response = await Requests.getHtmlOrTextWithResponse({
             request: 'api',
             type: 'route',
             command: 'download',
             name: name
-        },{resolveObject:true});
+        });
         if (opt_returnraw) {
             return response.data;
         }

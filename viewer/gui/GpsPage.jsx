@@ -15,7 +15,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.ts';
 import Dimmer from '../util/dimhandler.js';
@@ -58,7 +58,7 @@ const getLayoutPage=(pageNum)=>{
 
 const getPanelList=(panel,pageNum)=>{
     let page=getLayoutPage(pageNum);
-    let rt=LayoutHandler.getPanelData(page,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.ANCHOR]));
+    let rt=LayoutHandler.getPanelData(page,panel,LayoutHandler.getOptionValues([LAYOUT_OPTIONS.ANCHOR]));
     rt.page=page;
     return rt;
 
@@ -186,7 +186,7 @@ const GpsPage = (props) => {
             EditPageDialog.getButtonDef(
                 getLayoutPage(pageNumber).layoutPage,
                 PANEL_LIST,
-                [LayoutHandler.OPTIONS.ANCHOR],
+                [LAYOUT_OPTIONS.ANCHOR],
                 dialogContext),
             LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
             LayoutHandler.revertButtonDef((pageWithOptions) => {

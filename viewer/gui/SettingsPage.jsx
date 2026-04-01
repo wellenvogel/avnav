@@ -16,7 +16,7 @@ import {
     showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog.tsx';
-import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
+import LayoutHandler, {layoutLoader} from '../util/layouthandler.ts';
 import Mob from '../components/Mob.ts';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {useStateObject} from "../util/GuiHelpers";

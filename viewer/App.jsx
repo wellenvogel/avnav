@@ -28,7 +28,7 @@ import Requests from './util/requests';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.tsx';
 import KeyHandler from './util/keyhandler.ts';
-import LayoutHandler from './util/layouthandler.js';
+import LayoutHandler from './util/layouthandler.ts';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.ts';

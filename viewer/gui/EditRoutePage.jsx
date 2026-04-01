@@ -28,7 +28,7 @@ import RouteEdit, {StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import Mob from '../components/Mob.ts';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {Checkbox, InputReadOnly} from "../components/Inputs";
@@ -530,7 +530,7 @@ EditRouteDialog.propTypes = {
 
 
 const getPanelList = (panel) => {
-    return LayoutHandler.getPanelData(PAGENAME, panel, LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
+    return LayoutHandler.getPanelData(PAGENAME, panel, LayoutHandler.getOptionValues([LAYOUT_OPTIONS.SMALL]));
 };
 
 const checkEmptyRoute = () => {
@@ -986,7 +986,7 @@ const EditRoutePage = (props) => {
         CenterActionButton,
         Mob.mobDefinition(history),
         EditPageDialog.getButtonDef(PAGENAME,
-            MapPage.PANELS, [LayoutHandler.OPTIONS.SMALL], dialogContext),
+            MapPage.PANELS, [LAYOUT_OPTIONS.SMALL], dialogContext),
         LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
         LayoutHandler.revertButtonDef((pageWithOptions) => {
             if (pageWithOptions.location !== props.location) {

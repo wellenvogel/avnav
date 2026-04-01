@@ -25,7 +25,7 @@ import {useKeyEventHandler} from "../util/UiHelper";
 import {moveItem, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
 import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import theFactory from "./WidgetFactory";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
@@ -33,8 +33,9 @@ import {DialogButtons} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 import {EditableParameter} from "../util/EditableParameter";
-import Helper from "../util/helper";
+import Helper, {avitem} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
+import Layouthandler from "../util/layouthandler";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);
@@ -65,6 +66,11 @@ const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
         if (ch === undefined) return;
         onChange({children:ch});
     }
+    useEffect(()=>{
+        if (currentValues.children === undefined) {
+            setChildren([]);
+        }
+    },[])
     return <div className={Helper.concatsp('childWidgets',className)}>
         <ItemList
             itemList={children}
@@ -76,7 +82,8 @@ const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
                     setChildren(next);
                 }
             }}
-            onItemClick={(item,data)=>{
+            onItemClick={(ev)=>{
+                const item=avitem(ev);
                 dialogContext.showDialog((dprops)=>{
                     return <EditWidgetDialog
                         {...dprops}
@@ -155,7 +162,7 @@ export const CombinedWidget=(props)=>{
     (children||[]).forEach((child)=>{
         weightSum+=getWeight(child);
     });
-    const dragFrame=sortContext.id+":"+dragId;
+    const dragFrame=Layouthandler.subPanelName(sortContext.id,dragId);
     const itemClick=editing?undefined:cl;
     return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl}>
         { (editing && locked) && <div className="icon locked">Locked</div>}

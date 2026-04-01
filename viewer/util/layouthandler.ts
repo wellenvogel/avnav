@@ -1,34 +1,71 @@
 import Requests from './requests';
 import globalStore from './globalstore';
-import keys,{KeyHelper} from './keys';
-import KeyHandler from './keyhandler';
+import keys, {KeyHelper, PropertyValue} from './keys';
+import KeyHandler, {KeyMappings} from './keyhandler';
 import base from '../base';
-import assign from 'object-assign';
+// @ts-ignore
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
+// @ts-ignore
 import defaultLayout from '../layout/default.json';
+// @ts-ignore
 import cloneDeep from "clone-deep";
-import Helper from "./helper";
+import Helper, {valueof} from "./helper";
+import {PageType} from "./pageids";
+import {Item} from "./itemFunctions";
 const DEFAULT_NAME="system.default";
 
-const ACTION_MOVE=1;
-const ACTION_ADD=2;
-const ACTION_REPLACE=3;
-const ACTION_DELETE=4;
+export enum ACTIONS {
+    ACTION_MOVE = 1,
+    ACTION_ADD = 2,
+    ACTION_REPLACE = 3,
+    ACTION_DELETE = 4
+}
+export enum LAYOUT_OPTIONS{
+        SMALL='small',
+        ANCHOR='anchor'
+}
 
+export enum ADD_MODES{
+    noAdd=0,
+    beginning= 1,
+    end= 2,
+    beforeIndex= 3,
+    afterIndex= 4
+}
+
+
+/**
+ * an object with the keys being the enum values
+ */
+export type LayoutOptionFlags=Partial<Record<valueof<typeof LAYOUT_OPTIONS>,boolean>>;
+
+export type LayoutPage=PageType|{layoutPage?:PageType,location?:PageType};
+export interface LayoutData{
+    keys?: KeyMappings;
+    css?: string;
+    layoutVersion:string|number;
+    widgets?:Record<string, any>;
+    properties?:Record<string, PropertyValue>;
+}
 /**
  * allow pagename to be an object with the mane being in location
  * @param page
  * @returns {*|string}
  */
-const getPagename=(page)=>{
+const getPagename=(page:LayoutPage):  string=>{
     if (page === undefined) return;
     if (typeof(page) === 'string') return page;
     return page.layoutPage || page.location;
 }
 
 class PluginLayout{
-    constructor(name,pluginName,timestamp,url,data) {
+    name: string;
+    url: URL | string;
+    timestamp: number;
+    data: LayoutData;
+    pluginName: string;
+    constructor(name:string,pluginName:string,timestamp:number,url:URL|string,data:LayoutData) {
         this.name=name;
         this.url=url;
         this.timestamp=timestamp;
@@ -36,25 +73,43 @@ class PluginLayout{
         this.pluginName=pluginName;
     }
 }
+export type LayoutItem=Record<string, any>;
+export interface ActionOptions{
+    addMode?: ADD_MODES;
+    oldIndex?:number;
+    index?:number;
+    newIndex?:number;
+    newPanel?:string
+    item?:LayoutItem
+}
+export interface ActionHandler{
+    moveItem:(page:string,panel:string,oldIndex:number,newIndex:number,newPanel:string) => boolean,
+    replaceItem:(page:string,panel:string,index:number,item?:LayoutItem,addMode?:ADD_MODES)=>boolean,
 
+}
 class LayoutAction{
-    constructor(action,page,panel,options){
+    private action: ACTIONS;
+    private page: string;
+    private panel: string;
+    private options: ActionOptions;
+    pageWithProps: LayoutPage;
+    constructor(action:ACTIONS,page:string,panel:string,options:ActionOptions) {
         this.action=action;
         this.page=page;
         this.panel=panel;
         this.options=options;
     }
-    run(handler){
-        if (this.action === ACTION_MOVE){
+    run(handler:ActionHandler):boolean{
+        if (this.action === ACTIONS.ACTION_MOVE){
             return handler.moveItem(this.page,this.panel,this.options.oldIndex,this.options.newIndex,this.options.newPanel)
         }
-        if (this.action === ACTION_REPLACE){
+        if (this.action === ACTIONS.ACTION_REPLACE){
             return handler.replaceItem(this.page,this.panel,this.options.index,this.options.item)
         }
-        if (this.action === ACTION_DELETE){
+        if (this.action === ACTIONS.ACTION_DELETE){
             return handler.replaceItem(this.page,this.panel,this.options.index)
         }
-        if (this.action === ACTION_ADD){
+        if (this.action === ACTIONS.ACTION_ADD){
             return handler.replaceItem(this.page,this.panel,this.options.index,this.options.item,this.options.addMode)
         }
         return false;
@@ -62,7 +117,9 @@ class LayoutAction{
 }
 
 class LayoutTransaction{
-    constructor(pageWithProps) {
+    pageWithProps: { location?: string ,layoutPage?:string};
+    actions: LayoutAction[];
+    constructor(pageWithProps:LayoutPage) {
         if (typeof(pageWithProps) === 'string'){
             this.pageWithProps={
                 location: pageWithProps
@@ -73,10 +130,10 @@ class LayoutTransaction{
         }
         this.actions=[];
     }
-    add(action){
+    add(action:LayoutAction){
         this.actions.push(action);
     }
-    run(handler){
+    run(handler:ActionHandler){
         let rt=false;
         this.actions.forEach((action)=>{
             if (action.run(handler)) rt=true;
@@ -89,13 +146,19 @@ class LayoutTransaction{
 }
 
 export class LayoutAndName{
-    constructor(name,layout) {
+    name: string;
+    layout: LayoutData;
+    constructor(name:string,layout:LayoutData) {
         this.name = name;
         this.layout = layout;
     }
 }
 const USER_PREFIX="user.";
 class LayoutLoader{
+    private storeLocally: boolean;
+    private temporaryLayouts: Record<string, LayoutData>;
+    private pluginLayouts: Record<string, PluginLayout>;
+    private prefixes:Record<string, string>;
     constructor() {
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         this.temporaryLayouts={};
@@ -122,7 +185,7 @@ class LayoutLoader{
      */
     _loadFromStorage(){
         try {
-            let raw = LocalStorage.getItem(
+            const raw = LocalStorage.getItem(
                 STORAGE_NAMES.LAYOUT
             );
             if (raw) {
@@ -134,12 +197,12 @@ class LayoutLoader{
 
     }
 
-    async loadStoredLayout(opt_remoteFirst) {
-        let layoutName = globalStore.getData(keys.properties.layoutName);
+    async loadStoredLayout(opt_remoteFirst?:boolean) {
+        const layoutName = globalStore.getData(keys.properties.layoutName);
         //if we selected the default layout we will always use our buildin (if store locally)
         //or load from the server
         if (layoutName !== DEFAULT_NAME && !opt_remoteFirst) {
-            let storedLayout = this._loadFromStorage();
+            const storedLayout = this._loadFromStorage();
             if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                 this.temporaryLayouts[storedLayout.name] = storedLayout;
                 return Promise.resolve(new LayoutAndName(storedLayout.name, storedLayout.data));
@@ -150,19 +213,19 @@ class LayoutLoader{
             return new LayoutAndName(layoutName, layout);
         } catch (error) {
             if (opt_remoteFirst) {
-                let storedLayout = this._loadFromStorage();
+                const storedLayout = this._loadFromStorage();
                 if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                     this.temporaryLayouts[storedLayout.name] = storedLayout.data;
                     return new LayoutAndName(storedLayout.name, storedLayout.data);
                 }
             }
-            let description = KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
+            const description = KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
             if (description && description.defaultv) {
                 if (layoutName != description.defaultv) {
                     globalStore.storeData(keys.properties.layoutName, description.defaultv);
                     try {
-                        const dlayout = await this.loadLayout(description.defaultv);
-                        return new LayoutAndName(description.defaultv, dlayout);
+                        const dlayout = await this.loadLayout(description.defaultv as string);
+                        return new LayoutAndName(description.defaultv as string, dlayout);
                     } catch (error) {
                         throw new Error("unable to load default layout: " + error);
                     }
@@ -177,12 +240,12 @@ class LayoutLoader{
      * @param name
      * @param opt_raw
      */
-    async loadLayout(name,opt_raw) {
+    async loadLayout(name:string,opt_raw?:boolean) {
         if (this.storeLocally) {
             if (!this.temporaryLayouts[name]) {
                 return Promise.reject("layout " + name + " not found");
             } else {
-                let layout = this.temporaryLayouts[name];
+                const layout = this.temporaryLayouts[name];
                 if (opt_raw){
                     return Promise.resolve(JSON.stringify(layout,undefined, 2));
                 }
@@ -218,7 +281,7 @@ class LayoutLoader{
             if (!layoutJson) {
                 throw new Error("unable to load layout "+name);
             }
-            let error = this.checkLayout(layoutJson);
+            const error = this.checkLayout(layoutJson);
             if (error !== undefined) {
                 throw new Error("layout error: " + error);
             }
@@ -229,11 +292,11 @@ class LayoutLoader{
         }catch (error)
             {
                 try {
-                    let raw = LocalStorage.getItem(
+                    const raw = LocalStorage.getItem(
                         STORAGE_NAMES.LAYOUT
                     );
                     if (raw) {
-                        let layoutData = JSON.parse(raw);
+                        const layoutData = JSON.parse(raw);
                         if (layoutData.name == name && layoutData.data) {
                             return layoutData.data;
                         }
@@ -251,19 +314,28 @@ class LayoutLoader{
      * @param name the layout name without user prefix and without .json
      * @param layout
      * @param opt_overwrite
+     * @param opt_completeName
      * @returns {Promise<never>|Promise<Awaited<{status: string}>>|Promise<unknown>}
      */
-    uploadLayout(name, layout, opt_overwrite,opt_completeName) {
+    uploadLayout(
+        name:string,
+        layout:LayoutData|string,
+        opt_overwrite?:boolean,
+        opt_completeName?:boolean) {
         if (!name || !layout) {
             return Promise.reject("missing parameter name or layout");
         }
         //the provided name should always be without the user./system. prefix
         //when we upload we always create a user. entry...
+        let parsedLayout:LayoutData;
         try {
             if (typeof (layout) === 'string') {
-                layout = JSON.parse(layout);
+                parsedLayout = JSON.parse(layout);
             }
-            let error = this.checkLayout(layout);
+            else{
+                parsedLayout = layout;
+            }
+            const error = this.checkLayout(parsedLayout);
             if (error) {
                 return Promise.reject(error);
             }
@@ -272,7 +344,7 @@ class LayoutLoader{
         }
         if (this.storeLocally) {
             const localName=opt_completeName?name:USER_PREFIX+name;
-            this.temporaryLayouts[localName] = layout;
+            this.temporaryLayouts[localName] = parsedLayout;
             return Promise.resolve({status: 'OK'});
         }
         return Requests.postPlain({
@@ -282,25 +354,25 @@ class LayoutLoader{
             name: name,
             overwrite: !!opt_overwrite,
             completeName:!!opt_completeName,
-        }, JSON.stringify(layout, undefined, 2))
+        }, JSON.stringify(parsedLayout, undefined, 2))
     }
     /**
      * check the layout
      * returns an error string if there are errors
      * @param json
      */
-    checkLayout(json){
+    checkLayout(json:LayoutData){
         if (! json.layoutVersion) return "no layoutVersion found in layout";
         if (! json.widgets) return "no property widgets found in Layout";
         return;
     }
 
-    async listLayouts() {
-        let activeLayout = globalStore.getData(keys.properties.layoutName);
+    async listLayouts():Promise<Item[]> {
+        const activeLayout = globalStore.getData(keys.properties.layoutName);
         if (this.storeLocally) {
-            let rt = [];
-            for (let k in this.temporaryLayouts) {
-                let item = {
+            const rt = [];
+            for (const k in this.temporaryLayouts) {
+                const item:Item = {
                     name: k,
                     type: 'layout',
                     server: false,
@@ -318,10 +390,9 @@ class LayoutLoader{
             type:'layout',
             command:'list'
         }).then((json) => {
-            let list = [];
+            const list = [];
             for (let i = 0; i < json.items.length; i++) {
-                let fi = {};
-                assign(fi, json.items[i]);
+                const fi={...json.items[i]};
                 fi.type = 'layout';
                 fi.server = true;
                 if (activeLayout == fi.name) {
@@ -332,7 +403,7 @@ class LayoutLoader{
             }
             return list;
         });
-        for (let k in this.pluginLayouts){
+        for (const k in this.pluginLayouts){
             layouts.push({
                 name:k,
                 server: false,
@@ -353,7 +424,7 @@ class LayoutLoader{
      * @param name
      * @returns {Promise}
      */
-    deleteLayout(name){
+    deleteLayout(name:string){
         if (this.storeLocally) {
                 delete this.temporaryLayouts[name];
                 return Promise.resolve(true);
@@ -365,7 +436,7 @@ class LayoutLoader{
             name: name
         })
     }
-    renameLayout(name,newName){
+    renameLayout(name:string,newName:string){
         if (! name) throw new Error("no name for deleteLayout");
         if (! name.startsWith(USER_PREFIX)){
             throw new Error("can only rename user layouts");
@@ -393,7 +464,12 @@ class LayoutLoader{
     getUserPrefix(){
         return USER_PREFIX;
     }
-    addPluginLayout(name,pluginName,timestamp,data,url){
+    addPluginLayout(
+        name:string,
+        pluginName:string,
+        timestamp:number,
+        data?:LayoutData,
+        url?:string|URL){
         if (! this.prefixes || ! this.prefixes.plugin) throw Error("no support for plugin layouts");
         if (! name || ! pluginName) throw new Error("name and pluginName must be set");
         if (! data && ! url) throw new Error("either url or data must be set for a plugin layout");
@@ -416,10 +492,10 @@ class LayoutLoader{
         }
         return completeName;
     }
-    removePluginLayouts(pluginName){
+    removePluginLayouts(pluginName:string){
         if (! pluginName) throw new Error("no support for plugin layouts");
         const deletes=[];
-        for (let k in this.pluginLayouts){
+        for (const k in this.pluginLayouts){
             if (this.pluginLayouts[k].pluginName === pluginName) deletes.push(k);
         }
         deletes.forEach((del)=>{
@@ -434,6 +510,17 @@ const FORBIDDEN_LAYOUTSETTINGS=[
     keys.properties.layoutName
 ]
 class LayoutHandler{
+    private layout: LayoutData;
+    private name: string;
+    private hiddenPanels:Record<string, Record<string,boolean>>;
+    private temporaryOptions: Record<string, any>;
+    private actions: LayoutTransaction[];
+    private currentTransaction: LayoutTransaction;
+    private styleSheet: HTMLStyleElement;
+    private savedLayout: LayoutAndName;
+    storeProviderId: number;
+    private allowedLayoutProperties: Record<string,boolean>;
+    private editing: boolean;
     constructor(){
         this.layout=undefined;
         this.name=undefined;
@@ -470,7 +557,7 @@ class LayoutHandler{
     getAllowedLayoutProperties(){
         return {...this.allowedLayoutProperties};
     }
-    canEdit(name){
+    canEdit(name:string){
         if (name === undefined) name=this.name;
         if (! name) return false;
         return Helper.startsWith(name,USER_PREFIX);
@@ -485,7 +572,7 @@ class LayoutHandler{
         }
         this.activateLayout();
     }
-    startEditing(name){
+    startEditing(name:string){
         if (! this.canEdit(name)) throw new Error(`invalid layout name ${name} for editing`);
         this.name=name;
         this.saveCurrent();
@@ -502,7 +589,7 @@ class LayoutHandler{
         return this.editing;
     }
 
-    async loadStoredLayout(opt_remoteFirst){
+    async loadStoredLayout(opt_remoteFirst?:boolean){
         const layout=await layoutLoader.loadStoredLayout(opt_remoteFirst)
             .then((layoutAndName)=>{
                 this.setLayoutAndName(layoutAndName.layout,layoutAndName.name,true);
@@ -510,12 +597,12 @@ class LayoutHandler{
             },(err)=>base.log("error while loading stored layout "+err));
         return layout;
     }
-    _setEditing(on){
+    _setEditing(on:boolean){
         this.editing=on;
         this.resetActions();
         globalStore.storeData(keys.gui.global.layoutEditing,on);
     }
-    _setLayout(layout){
+    _setLayout(layout:LayoutData){
         this.layout=layout;
         if (layout && layout.css){
             this.styleSheet.textContent=layout.css;
@@ -524,7 +611,7 @@ class LayoutHandler{
             this.styleSheet.textContent="";
         }
     }
-    setLayoutAndName(layout,name,opt_activate){
+    setLayoutAndName(layout:LayoutData,name:string,opt_activate?:boolean){
         this.name=name;
         this._setLayout(layout);
         if (opt_activate){
@@ -535,12 +622,12 @@ class LayoutHandler{
         if (! this.layout) return;
         return this.layout.css;
     }
-    getLayoutProperties(layout){
+    getLayoutProperties(layout?:LayoutData){
         if (! layout) layout=this.layout;
         if (! layout) return {};
-        const rt={};
+        const rt:Record<string, PropertyValue> = {};
         if (! layout.properties) return rt;
-        for (let k in this.allowedLayoutProperties){
+        for (const k in this.allowedLayoutProperties){
             if (k in layout.properties){
                 rt[k] = layout.properties[k];
             }
@@ -553,24 +640,24 @@ class LayoutHandler{
      * no check, no copy
      * @param properties
      */
-    updateLayoutProperties(properties){
+    updateLayoutProperties(properties:Record<string, PropertyValue>){
         if (! this.layout) return;
         if (!properties || Object.keys(properties).length === 0) {
             delete this.layout.properties;
         }
         this.layout.properties={};
-        for (let k in this.allowedLayoutProperties){
+        for (const k in this.allowedLayoutProperties){
             if (k in properties){
                 this.layout.properties[k] = properties[k];
             }
         }
     }
-    updateCss(css){
+    updateCss(css:string){
         if (! this.layout) return;
         this.layout.css=css;
         this._setLayout(this.layout);
     }
-    hasLoaded(layoutName){
+    hasLoaded(layoutName:string){
         if (this.name !== layoutName)return false;
         if (! this.layout) return false;
         return true;
@@ -579,8 +666,8 @@ class LayoutHandler{
         if (! this.layout || ! this.layout.widgets) return {};
         return this.layout.widgets;
     }
-    getLayout(){
-        return this.layout||{};
+    getLayout():LayoutData{
+        return this.layout||{layoutVersion:1};
     }
     getName(){
         return this.name;
@@ -605,17 +692,17 @@ class LayoutHandler{
         return true;
     }
     incrementSequence(){
-        let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
+        const ls=globalStore.getData(keys.gui.global.layoutSequence,0);
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
     }
 
-    _isHiddenPanel(page,panelname){
+    _isHiddenPanel(page:string,panelname:string){
         if (! this.isEditing()) return false;
-        let pd=this.hiddenPanels[page];
+        const pd=this.hiddenPanels[page];
         if (!pd) return;
         return pd[panelname]?true:false;
     }
-    _setHiddenPanel(page,panelname,hidden){
+    _setHiddenPanel(page:string,panelname:string,hidden:boolean){
         let pd=this.hiddenPanels[page];
         if (!pd){
             pd={};
@@ -626,11 +713,11 @@ class LayoutHandler{
 
     _removeHiddenPanels(){
         if (! this.isEditing()) return;
-        for (let pg in this.hiddenPanels){
-            let pageData=this.getPageData(pg);
+        for (const pg in this.hiddenPanels){
+            const pageData=this.getPageData(pg);
             if (!pageData) continue;
-            let page=this.hiddenPanels[pg];
-            for (let pn in page){
+            const page=this.hiddenPanels[pg];
+            for (const pn in page){
                 if (! page[pn]) continue;
                 delete pageData[pn];
             }
@@ -638,9 +725,9 @@ class LayoutHandler{
         this.hiddenPanels={};
     }
 
-    getPageData(pageWithOptions,opt_add){
-        let page=getPagename(pageWithOptions);
-        let widgets=this.getLayoutWidgets();
+    getPageData(pageWithOptions:PageType,opt_add?:boolean){
+        const page=getPagename(pageWithOptions);
+        const widgets=this.getLayoutWidgets();
         if (!widgets) return;
         let pageData=widgets[page];
         if (! pageData){
@@ -653,38 +740,34 @@ class LayoutHandler{
     }
 
     getAllOptions(){
-        let rt={};
-        for (let k in this.OPTIONS){
-            rt[this.OPTIONS[k]]=true;
+        const rt:Record<string, boolean> = {};
+        for (const k of Object.values(LAYOUT_OPTIONS)){
+            rt[k]=true;
         }
         return rt;
     }
     getOptionsAsArray(){
-        let rt=[];
-        for (let k in this.OPTIONS){
-            rt.push(this.OPTIONS[k]);
-        }
-        return rt;
+        return Object.values(LAYOUT_OPTIONS);
     }
 
     /**
      * get an array of panel names to try for the options being set
      * the last element is the basename and the first element is the name with the max amount of options
      * @param basename
-     * @param options object with the keys being LayoutHandler.prototype.OPTIONS
+     * @param options object with the keys being LAYOUT_OPTIONS
      * @return {*[]}
      */
-    getPanelTryList(basename,options){
-        if (! options) options=[];
+    getPanelTryList(basename:string,options:LayoutOptionFlags){
+        if (! options) options={};
         let panelName=basename;
-        let tryList=[panelName];
-        for (let o in this.OPTIONS){
-            if (options[this.OPTIONS[o]]){
-                panelName+="_"+this.OPTIONS[o];
+        const tryList=[panelName];
+        for (const o of Object.values(LAYOUT_OPTIONS)){
+            if (options[o]){
+                panelName+="_"+o;
                 tryList.push(panelName);
             }
         }
-        let rt=[];
+        const rt:string[]=[];
         for (let k=tryList.length-1;k>=0;k--){
             rt.push(tryList[k]);
         }
@@ -692,18 +775,21 @@ class LayoutHandler{
     }
     /**
      *
-     * @param page
+     * @param pageWithOptions
      * @param basename
      * @param options object with the keys being LayoutHandler.prototype.OPTIONS
      * @returns an object with {name:panelName, list: the data}
      */
-    getPanelData(pageWithOptions,basename,options){
-        let page=getPagename(pageWithOptions);
-        let pageData=this.getPageData(page);
+    getPanelData(
+        pageWithOptions:LayoutPage,
+        basename:string,
+        options:LayoutOptionFlags){
+        const page=getPagename(pageWithOptions);
+        const pageData=this.getPageData(page);
         if (!pageData) return {name:basename};
-        let tryList=this.getPanelTryList(basename,options);
+        const tryList=this.getPanelTryList(basename,options);
         for (let i=0;i<tryList.length;i++){
-            let list=this.getDirectPanelData(page,tryList[i]);
+            const list=this.getDirectPanelData(page,tryList[i]);
             if (list) {
                 return {name:tryList[i],list:list};
             }
@@ -711,23 +797,33 @@ class LayoutHandler{
         return {name:basename};
     }
 
-    splitPanelName(panel){
-        return panel.split(":");
+    splitPanelName(panel:string){
+        const parts=panel.split(":");
+        const sub=parts.slice(1);
+        const subIdx:number[]=[];
+        sub.forEach((v)=>subIdx.push(parseInt(v)));
+        return {
+            panel:parts[0],
+            sub:subIdx,
+        }
     }
     /**
      * get the data for a panel (name already includes options)
      * if opt_add is true and we are editing - just add the structure if it is not there
-     * @param page
+     * @param pageWithOptions
      * @param panel - the panel name, optionally with :n:m... being indices of items with child properties
      * @param opt_add if set to true: create the panel (only possible if we are editing)
      * @return {*}
      */
-    getDirectPanelData(pageWithOptions,panel,opt_add){
-        let page=getPagename(pageWithOptions);
-        let pageData=this.getPageData(page,opt_add);
+    getDirectPanelData(
+        pageWithOptions:LayoutPage,
+        panel:string,
+        opt_add?:boolean){
+        const page=getPagename(pageWithOptions);
+        const pageData=this.getPageData(page,opt_add);
         if (! pageData) return;
         const panelParts=this.splitPanelName(panel);
-        let panelData=pageData[panelParts[0]];
+        let panelData=pageData[panelParts.panel];
         if (! panelData) {
             if ((! opt_add) || (! this.isEditing())) return ;
             panelData=[];
@@ -737,36 +833,36 @@ class LayoutHandler{
             if (!opt_add) return;
             this._setHiddenPanel(page,panel,false);
         }
-        for (let i=1;i<panelParts.length;i++){
-            let item=panelData[panelParts[i]];
+        for (let i=0;i<panelParts.sub.length;i++){
+            const item=panelData[panelParts.sub[i]];
             if (item === undefined || item.children === undefined) return;
             panelData=item.children;
         }
         return panelData;
     }
 
-    removePanel(pageWithOptions,panel){
+    removePanel(pageWithOptions:LayoutPage,panel:string){
         if (!this.isEditing()) return false;
-        let pagename=getPagename(pageWithOptions);
+        const pagename=getPagename(pageWithOptions);
         this._setHiddenPanel(pagename,panel,true);
         return true;
     }
 
-    getItem(pageWithOptions,panel,index){
-        let page=getPagename(pageWithOptions);
+    getItem(pageWithOptions:LayoutPage,panel:string,index:number){
+        const page=getPagename(pageWithOptions);
         if (! this.isEditing()) return ;
-        let panelData=this.getDirectPanelData(page,panel);
+        const panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return;
         if (index < 0 || index >= panelData.length) return;
         return panelData[index];
     }
 
-    getPagePanels(pageWithOptions){
-        let pagename=getPagename(pageWithOptions);
-        let rt=[];
-        let pageData=this.getPageData(pagename);
+    getPagePanels(pageWithOptions:LayoutPage){
+        const pagename=getPagename(pageWithOptions);
+        const rt:string[]=[];
+        const pageData=this.getPageData(pagename);
         if (! pageData) return rt;
-        for (let panelName in pageData){
+        for (const panelName in pageData){
             if (this._isHiddenPanel(pagename,panelName)) continue;
             //TODO: we should filter the allowed panels
             rt.push(panelName);
@@ -785,14 +881,19 @@ class LayoutHandler{
      * @type ADD_MODES
      * @return {boolean} true if success
      */
-    replaceItem(pageWithOptions,panel,index,item,opt_add){
+    replaceItem(
+        pageWithOptions:LayoutPage,
+        panel:string,
+        index:number,
+        item:LayoutItem,
+        opt_add?:ADD_MODES){
         const page=getPagename(pageWithOptions);
         if (! this.isEditing()) return false;
-        let allowAdd=opt_add !== undefined && opt_add !== this.ADD_MODES.noAdd;
+        const allowAdd=opt_add !== undefined && opt_add !== ADD_MODES.noAdd;
         if (allowAdd && ! item) return false;
-        let layoutItem={};
+        const layoutItem:LayoutItem={};
         if (item){
-            for (let k in item){
+            for (const k in item){
                 if (k === 'key') continue;
                 if (k === 'index') continue;
                 if (k === 'wclass') continue;
@@ -800,22 +901,22 @@ class LayoutHandler{
                 layoutItem[k]=item[k];
             }
         }
-        let panelData=this.getDirectPanelData(page,panel,allowAdd);
+        const panelData=this.getDirectPanelData(page,panel,allowAdd);
         if (!panelData) return false;
         if (allowAdd) {
-            if (opt_add == this.ADD_MODES.beginning) {
+            if (opt_add == ADD_MODES.beginning) {
                 //insert at the beginning
                 panelData.splice(0, 0, layoutItem);
-                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                this._addAction(new LayoutAction(ACTIONS.ACTION_DELETE,page,panel,{
                     index:0
                 }));
                 this.incrementSequence();
                 return true;
             }
-            if (opt_add == this.ADD_MODES.end) {
+            if (opt_add == ADD_MODES.end) {
                 //append
                 panelData.push(layoutItem);
-                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                this._addAction(new LayoutAction(ACTIONS.ACTION_DELETE,page,panel,{
                     index: panelData.length-1
                 }));
                 this.incrementSequence();
@@ -826,25 +927,25 @@ class LayoutHandler{
             return false;
         }
         if (allowAdd){
-            if (opt_add == this.ADD_MODES.afterIndex){
+            if (opt_add == ADD_MODES.afterIndex){
                 if (index == (panelData.length-1)){
                     panelData.push(layoutItem);
-                    this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    this._addAction(new LayoutAction(ACTIONS.ACTION_DELETE,page,panel,{
                         index: panelData.length-1
                     }));
                 }
                 else {
                     panelData.splice(index + 1, 0, layoutItem)
-                    this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    this._addAction(new LayoutAction(ACTIONS.ACTION_DELETE,page,panel,{
                         index: index+1
                     }));
                 }
                 this.incrementSequence();
                 return true;
             }
-            if (opt_add == this.ADD_MODES.beforeIndex){
+            if (opt_add == ADD_MODES.beforeIndex){
                 panelData.splice(index,0,layoutItem);
-                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                this._addAction(new LayoutAction(ACTIONS.ACTION_DELETE,page,panel,{
                     index: index
                 }));
                 this.incrementSequence();
@@ -855,14 +956,14 @@ class LayoutHandler{
         const old=panelData[index];
         if (item) {
             panelData.splice(index, 1, layoutItem);
-            this._addAction(new LayoutAction(ACTION_REPLACE,page,panel,{
+            this._addAction(new LayoutAction(ACTIONS.ACTION_REPLACE,page,panel,{
                 index: index,
                 item: old
             }));
         }
         else{
             panelData.splice(index, 1);
-            this._addAction(new LayoutAction(ACTION_ADD,page,panel,{
+            this._addAction(new LayoutAction(ACTIONS.ACTION_ADD,page,panel,{
                 index: index,
                 item: old
             }));
@@ -870,13 +971,26 @@ class LayoutHandler{
         this.incrementSequence();
         return true;
     }
+    subPanelName(panel:string,sub:number|number[]):string{
+        if (sub === undefined) return panel;
+        if (! Array.isArray(sub)) sub=[sub];
+        sub.forEach((v:number) => {
+            panel+=":"+v;
+        })
+        return panel;
+    }
 
-    moveItem(pageWithOptions,panel,oldIndex,newIndex,opt_newPanel){
+    moveItem(
+        pageWithOptions:LayoutPage,
+        panel:string,
+        oldIndex:number,
+        newIndex:number,
+        opt_newPanel?:string){
         base.log("moveItem",pageWithOptions,panel,oldIndex,newIndex,opt_newPanel);
         if (oldIndex == newIndex && (opt_newPanel === undefined || panel === opt_newPanel)) return true;
         if (! this.isEditing()) return false;
         const page=getPagename(pageWithOptions);
-        let panelData=this.getDirectPanelData(page,panel);
+        const panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return false;
         if (oldIndex < 0 || oldIndex >= panelData.length) return false;
         if (newIndex < 0) return false;
@@ -888,53 +1002,55 @@ class LayoutHandler{
         //for the fallback we have to recompute panel and indices if the insertion or removal
         //affects the indices - only if the panels have sub-indices
         let revertSourcePanel=opt_newPanel||panel;
-        let revertSourceParts=this.splitPanelName(revertSourcePanel);
-        let revertOldIndex=newIndex;
-        let revertNewIndex=oldIndex;
+        const revertSourceParts=this.splitPanelName(revertSourcePanel);
+        const revertOldIndex=newIndex;
+        const revertNewIndex=oldIndex;
         let revertTargetPanel=panel;
-        let revertTargetParts=this.splitPanelName(revertTargetPanel);
-        if (revertTargetParts[0] === revertSourceParts[0] && revertTargetParts.length !== revertSourceParts.length) {
-            if (revertTargetParts.length > revertSourceParts.length){
+        const revertTargetParts=this.splitPanelName(revertTargetPanel);
+        if (revertTargetParts.panel === revertSourceParts.panel &&
+            revertTargetParts.sub.length !== revertSourceParts.sub.length) {
+            if (revertTargetParts.sub.length > revertSourceParts.sub.length){
                 //in this case the target could be inserted before the original source
                 //so for reverting the source index increases
-                let idx=revertSourceParts.length;
-                if (newIndex <= revertTargetParts[idx]) revertTargetParts[idx]++;
+                const idx=revertSourceParts.sub.length;
+                if (newIndex <= revertTargetParts.sub[idx]) revertTargetParts.sub[idx]++;
             }
             else{
                 //in this case the source panel could be moved to lower if the source
                 //was located before the source panel
-                let idx=revertTargetParts.length;
-                if (oldIndex < revertSourceParts[idx]) revertSourceParts[idx]--;
+                const idx=revertTargetParts.sub.length;
+                if (oldIndex < revertSourceParts.sub[idx]) revertSourceParts.sub[idx]--;
             }
-            revertTargetPanel=revertTargetParts.join(":");
-            revertSourcePanel=revertSourceParts.join(":");
+            revertTargetPanel=this.subPanelName(revertTargetParts.panel,revertTargetParts.sub);
+            revertSourcePanel=this.subPanelName(revertSourceParts.panel, revertSourceParts.sub);
         }
-        this._addAction(new LayoutAction(ACTION_MOVE,page,revertSourcePanel,{
+        this._addAction(new LayoutAction(ACTIONS.ACTION_MOVE,page,revertSourcePanel,{
             oldIndex: revertOldIndex,
             newIndex: revertNewIndex,
             newPanel: revertTargetPanel
         }));
-        let item=panelData[oldIndex];
+        const item=panelData[oldIndex];
         panelData.splice(oldIndex,1);
         newPanelData.splice(newIndex,0,item);
         this.incrementSequence();
         return true;
     }
-    getStoreKeys(others){
-        let rt={
-            layoutSequence:keys.gui.global.layoutSequence,
-            isEditing: keys.gui.global.layoutEditing
-        };
-        rt["layout"+this.OPTIONS.ANCHOR]=keys.nav.anchor.watchDistance;
-        rt["layout"+this.OPTIONS.SMALL]=keys.gui.global.smallDisplay;
-        return assign(rt,others);
+    getStoreKeys(others?:Record<string,string>){
+        const rt= {
+            layoutSequence: keys.gui.global.layoutSequence,
+            isEditing: keys.gui.global.layoutEditing,
+            ["layout" + LAYOUT_OPTIONS.ANCHOR]: keys.nav.anchor.watchDistance,
+            ["layout" + LAYOUT_OPTIONS.SMALL]: keys.gui.global.smallDisplay,
+            ...others
+        }
+        return rt;
     }
-    setTemporaryOptionValues(options){
+    setTemporaryOptionValues(options?:Record<string, any>){
         if (! this.isEditing()) return;
         if (!options){
             this.temporaryOptions=this.getOptionValues(this.getOptionsAsArray(),true);
         }
-        this.temporaryOptions=assign({},this.temporaryOptions,options);
+        this.temporaryOptions={...this.temporaryOptions,...options};
         this.incrementSequence();
     }
 
@@ -944,14 +1060,14 @@ class LayoutHandler{
      * @param opt_ignoreTemporary
      * @returns {{}}
      */
-    getOptionValues(handledOptions,opt_ignoreTemporary){
+    getOptionValues(handledOptions:LAYOUT_OPTIONS[],opt_ignoreTemporary?:boolean){
         if (this.isEditing() && ! opt_ignoreTemporary){
             return this.temporaryOptions;
         }
-        let rt={};
-        let keys=this.getStoreKeys();
+        const rt:Record<string,any>={};
+        const keys=this.getStoreKeys();
         handledOptions.forEach((option)=>{
-            let storeKey=keys['layout'+option];
+            const storeKey=keys['layout'+option];
             if (storeKey){
                 rt[option]=globalStore.getData(storeKey,false);
             }
@@ -967,20 +1083,20 @@ class LayoutHandler{
     hasRevertableActions(){
         return this.isEditing() && this.actions.length > 0;
     }
-    revertAction(pageCallback){
+    revertAction(pageCallback:(page:LayoutPage)=>void){
         if (! this.hasRevertableActions() || this.currentTransaction) return false;
         const action=this.actions.pop();
         globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
-        let rt=action.run(this);
+        const rt=action.run(this);
         if (rt && pageCallback && action.pageWithProps) pageCallback(action.pageWithProps);
         return rt;
     }
-    _addAction(action){
+    _addAction(action:LayoutAction){
         if (this.currentTransaction) {
             this.currentTransaction.add(action);
         }
     }
-    withTransaction(pageWithOptions, callback){
+    withTransaction(pageWithOptions:LayoutPage, callback:(handler:LayoutHandler)=>boolean){
         this.currentTransaction=new LayoutTransaction(pageWithOptions);
         let rt=false;
         try{
@@ -996,8 +1112,8 @@ class LayoutHandler{
         return rt;
     }
 
-    revertButtonDef(pageCallback){
-        const rt={
+    revertButtonDef(pageCallback?:(page:LayoutPage)=>void){
+        const rt:Record<string,any>={
             name: 'RevertLayout',
             displayName: 'Undo',
             editOnly: true,
@@ -1005,7 +1121,7 @@ class LayoutHandler{
             storeKeys:{
                 reverts: keys.gui.global.layoutReverts
             },
-            updateFunction:(state)=>{
+            updateFunction:(state:Record<string,any>)=>{
               return {
                   disabled: state.reverts < 1
               }
@@ -1019,17 +1135,6 @@ class LayoutHandler{
 
 }
 
-LayoutHandler.prototype.OPTIONS={
-    SMALL:'small',
-    ANCHOR:'anchor'
-};
 
-LayoutHandler.prototype.ADD_MODES={
-    noAdd:0,
-    beginning: 1,
-    end: 2,
-    beforeIndex: 3,
-    afterIndex: 4
-};
 
 export default  new LayoutHandler();

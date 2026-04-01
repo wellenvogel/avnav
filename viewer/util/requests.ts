@@ -234,7 +234,7 @@ const handleAndroidPost=(url:string|URL,body:string)=>{
         }
     });
 };
-export type TextResponse=Promise<string|{data:string,response:Response}>
+export type TextResponse=Promise<{data:string,response:Response}>
 export interface UploadFileParam{
     starthandler:(param:UploadFileParam,xhr:XMLHttpRequest)=>void;
     progresshandler:(param:UploadFileParam,event:ProgressEvent)=>void;
@@ -298,7 +298,7 @@ const RequestHandler={
      * @param opt_parameter request parameters
      */
 
-    getHtmlOrText:(url:UrlType,options?:RequestOptions,opt_parameter?:Record<string,any>):TextResponse=>{
+    getHtmlOrTextWithResponse:(url:UrlType,options?:RequestOptions,opt_parameter?:Record<string,any>):TextResponse=>{
         // eslint-disable-next-line prefer-const
         let [rurl,requestOptions]=prepareInternal(url,{...options,useNavUrl:false,noCache:false});
         return new Promise((resolve,reject)=>{
@@ -325,25 +325,25 @@ const RequestHandler={
               },
               (error)=>{
                   reject(error.message);
-              }).then((text:string)=>{
-                  if (sequence !== undefined){
-                      if (sequence != options.sequenceFunction()) {
-                          reject("sequence changed");
-                          return;
-                      }
+              }).then((text:string)=> {
+              if (sequence !== undefined) {
+                  if (sequence != options.sequenceFunction()) {
+                      reject("sequence changed");
+                      return;
                   }
-                  if (options && options.resolveObject){
-                      resolve({data:text,response:finalResponse});
-                  }
-                  else {
-                      resolve(text);
-                  }
+              }
+              resolve({data: text, response: finalResponse});
               },(error)=>{
                   reject(error);
               });
         });
     },
 
+    getHtmlOrText:(url:UrlType,options?:RequestOptions,opt_parameter?:Record<string,any>):Promise<string> => {
+        return RequestHandler.getHtmlOrTextWithResponse(url,options,opt_parameter).then((response)=>{
+            return response.data;
+        })
+    },
 
     /**
      * @param url {string}

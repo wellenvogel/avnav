@@ -384,7 +384,7 @@ class PropertyHandler {
                         break;
                     case PropertyType.LAYOUT:
                         promises.push(
-                            layoutLoader.loadLayout(v)
+                            layoutLoader.loadLayout(v as string)
                                 .then(() => {
                                         const rt:Record<string,any> = {};
                                         rt[dk] = v;

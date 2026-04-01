@@ -281,6 +281,9 @@ export class EditableParameter extends Object{
     getRange(){
         return{}
     }
+    getName(){
+        return this.name;
+    }
 }
 
 export class EditableStringParameterBase extends EditableParameter{

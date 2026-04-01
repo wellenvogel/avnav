@@ -24,7 +24,7 @@ import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.tsx';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import LayoutHandler from '../util/layouthandler.js';
+import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
@@ -73,7 +73,7 @@ const PAGENAME=PAGEIDS.NAV;
 
 
 const getPanelList=(panel)=>{
-    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]));
+    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LAYOUT_OPTIONS.SMALL,LAYOUT_OPTIONS.ANCHOR]));
 };
 const getPanelWidgets=(panel)=>{
     let panelData=getPanelList(panel);
@@ -720,7 +720,7 @@ const NavPage=(props)=>{
     const editLayoutButtons=propsToDefs([
         EditPageDialog.getButtonDef(PAGENAME,
             MapPage.PANELS,
-            [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
+            [LAYOUT_OPTIONS.SMALL,LAYOUT_OPTIONS.ANCHOR]),
         {
             name: 'NavMapWidgets',
             editOnly: true,

@@ -33,6 +33,7 @@ import ReactDOM from 'react-dom';
 import Htm from "htm";
 import * as OpenLayers from 'ol/index';
 import {PAGEIDS} from "../util/pageids";
+import {valueof} from "../util/helper";
 
 
 
@@ -522,7 +523,7 @@ export interface ProxyOptions{
     x:number;       //x
     y:number;       //y
 }
-export type Page=keyof typeof PAGEIDS;
+export type Page=valueof<typeof PAGEIDS>;
 export interface UserButton{
     name: string;                   //will set the CSS class, unique inside the plugin
     displayName?: string;           //shown in main nav

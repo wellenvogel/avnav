@@ -1,6 +1,6 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
-import LayoutHandler, {layoutLoader} from '../util/layouthandler.js';
+import LayoutHandler, {layoutLoader} from '../util/layouthandler.ts';
 import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
 import DB from './DialogButton.tsx';
 import {EditDialog} from "./EditDialog";
