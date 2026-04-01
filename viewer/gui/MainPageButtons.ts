@@ -22,9 +22,6 @@
  */
 import {propsToDefs, updateButtons} from "../components/Button";
 import keys from "../util/keys";
-// @ts-ignore
-import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
-// @ts-ignore
 import LayoutHandler from '../util/layouthandler';
 // @ts-ignore
 import RemoteChannelDialog from '../components/RemoteChannelDialog';

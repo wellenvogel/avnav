@@ -24,7 +24,6 @@
  */
 // @ts-ignore
 import Requests from "./requests";
-// @ts-ignore
 import {layoutLoader} from "./layouthandler";
 import PropertyHandler from "./propertyhandler";
 // @ts-ignore

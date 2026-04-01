@@ -38,7 +38,6 @@ import {
 } from "../components/EditableParameterUI";
 import {InputSelect, InputReadOnly} from './Inputs';
 import globalstore from "../util/globalstore";
-// @ts-ignore
 import LayoutHandler, {LayoutData, layoutLoader} from '../util/layouthandler';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";

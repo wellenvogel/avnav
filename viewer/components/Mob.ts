@@ -8,7 +8,6 @@ import navobjects from '../nav/navobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-// @ts-ignore
 import LayoutHandler from '../util/layouthandler';
 import {getav} from "../util/helper";
 import {IHistory} from "../util/history";

@@ -6,10 +6,8 @@ import Toast from '../components/Toast';
 import globalStore from './globalstore';
 import keys, {KeyHelper, Property, PropertyType, PropertyValue} from './keys';
 import base from '../base';
-// @ts-ignore
 import LayoutHandler, {layoutLoader} from './layouthandler';
 import Requests from "./requests";
-// @ts-ignore
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 // @ts-ignore
 import splitsupport from "./splitsupport";

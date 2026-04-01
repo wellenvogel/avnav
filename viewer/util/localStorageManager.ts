@@ -1,4 +1,4 @@
-import assign from 'object-assign';
+
 export const PREFIX_NAMES={
     LAYOUT:'avnav.layout',
     LASTCHART:'avnav.lastChartV2',
@@ -17,13 +17,15 @@ export const UNPREFIXED_NAMES={
     EXTERNAL: 'avnav.external',  //user.mjs and plugins
 }
 
-export const STORAGE_NAMES=assign({},UNPREFIXED_NAMES,PREFIX_NAMES);
+export const STORAGE_NAMES={...UNPREFIXED_NAMES,...PREFIX_NAMES};
 
-const log=(name,text)=>{
+const log=(name:string,text:string)=>{
     console.trace("LocalStorage invalid name "+name+": "+text);
 }
 
 class LocalStorage{
+    private prefix: string;
+    private impl: Storage;
     constructor() {
         this.prefix="";
         this.impl=(typeof(window.localStorage) === 'object')?window.localStorage:undefined;
@@ -34,21 +36,21 @@ class LocalStorage{
     hasStorage(){
         return this.impl !== undefined;
     }
-    setPrefix(prefix){
+    setPrefix(prefix:string){
         this.prefix=prefix;
     }
     getPrefix(){
         return this.prefix;
     }
 
-    _getRealNameImpl(name,nameList){
-        for (let k in nameList){
+    _getRealNameImpl(name:string,nameList:Record<string,string>){
+        for (const k in nameList){
             if (name === nameList[k]){
                 return name;
             }
         }
     }
-    getRealName(name, suffix,opt_omitPrefix) {
+    getRealName(name:string, suffix?:string,opt_omitPrefix?:boolean) {
         if (! name) return;
         let realName=this._getRealNameImpl(name,PREFIX_NAMES);
         if (realName){
@@ -64,41 +66,41 @@ class LocalStorage{
         }
         log(name, "not found");
     }
-    getItem(name,suffix,opt_omitPrefix){
+    getItem(name:string,suffix?:string,opt_omitPrefix?:boolean) {
         if (! this.impl) return;
-        let realName=this.getRealName(name,suffix,opt_omitPrefix);
+        const realName=this.getRealName(name,suffix,opt_omitPrefix);
         if (! realName) return;
         return this.impl.getItem(realName);
     }
-    setItem(name,suffix,data){
+    setItem(name:string,suffix:string,data:any){
         if (! this.impl) return;
-        let realName=this.getRealName(name,suffix);
+        const realName=this.getRealName(name,suffix);
         if (! realName) return;
         return this.impl.setItem(realName,data);
     }
-    removeItem(name,suffix){
+    removeItem(name:string,suffix?:string){
         if (! this.impl) return;
-        let realName=this.getRealName(name,suffix);
+        const realName=this.getRealName(name,suffix);
         if (! realName) return;
         this.impl.removeItem(realName);
     }
-    listByPrefix(prefix){
+    listByPrefix(prefix:string){
         if (! this.impl) return [];
-        let realName=this.getRealName(prefix);
+        const realName=this.getRealName(prefix);
         if (! realName) return [];
-        let len=realName.length;
-        let rt=[];
+        const len=realName.length;
+        const rt=[];
         for (let i=0;i< this.impl.length;i++){
-            let key=this.impl.key(i);
-            if (key.substr(0,len) === realName){
+            const key=this.impl.key(i);
+            if (key.substring(0,len) === realName){
                 rt.push(key);
             }
         }
         return rt;
     }
-    deleteByPrefix(prefix){
+    deleteByPrefix(prefix:string){
         const names=this.listByPrefix(prefix);
-        for (let name of names){
+        for (const name of names){
             this.removeItem(name);
         }
     }

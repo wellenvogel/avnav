@@ -3,9 +3,7 @@ import globalStore from './globalstore';
 import keys, {KeyHelper, PropertyValue} from './keys';
 import KeyHandler, {KeyMappings} from './keyhandler';
 import base from '../base';
-// @ts-ignore
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
-
 // @ts-ignore
 import defaultLayout from '../layout/default.json';
 // @ts-ignore
