@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useCallback, useMemo, useRef} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/keys";
 // @ts-ignore
 import DimHandler from '../util/dimhandler';
@@ -49,6 +49,9 @@ import {IDialogContext} from "./DialogContext";
 import {createItemActions} from './FileDialog';
 // @ts-ignore
 import {ItemNameDialog,checkName} from './ItemNameDialog';
+// @ts-ignore
+import Formatter from "../util/formatter";
+import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
 
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
@@ -549,4 +552,51 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
         ]}/>
     </DialogFrame>
 }
-
+export interface SaveSettingsDialogProps{
+    values?:Record<string, PropertyValue>;
+    title?:React.ReactNode;
+}
+export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
+    const actions = createItemActions({type:'settings'});
+    let lastName=LocalStorageManager.getItem(PREFIX_NAMES.SETTINGS_NAME);
+    if (! lastName) lastName="settings";
+    const oldName = actions.nameToBaseName(lastName).replace(/-*[0-9]*$/, '');
+    const suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
+    let proposedName = oldName + "-" + suffix;
+    const [settingsList,setSettingsList]=useState<string[]>();
+    const checkFunction = (newName:string) => {
+        return checkName(newName, settingsList||[], actions.nameForCheck,true,true);
+    }
+    useEffect(()=>{
+        propertyhandler.listSettings()
+            .then((settings:string[])=>setSettingsList(settings))
+            .catch(()=>{})
+    },[])
+    return <ItemNameDialog
+                resolveFunction={async (res:{name:string})=>{
+                    const settingsName=res.name;
+                    if (!settingsName || settingsName === 'user.') {
+                        return false;
+                    }
+                    proposedName = settingsName;
+                    try {
+                        await propertyhandler.uploadSettingsData(
+                            proposedName,
+                            propertyhandler.exportSettings(props.values),
+                            true
+                        )
+                        LocalStorageManager.setItem(PREFIX_NAMES.SETTINGS_NAME, undefined, proposedName);
+                        globalstore.storeData(keys.gui.global.settingsChanged, false);
+                        Toast("settings saved");
+                        return true;
+                    }catch(e){
+                        Toast(e);
+                    }
+                    return false;
+                }}
+                fixedPrefix={'user.'}
+                title={props.title|| "Select Name to save settings"}
+                iname={proposedName}
+                checkName={checkFunction}
+                />
+}

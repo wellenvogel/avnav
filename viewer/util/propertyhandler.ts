@@ -8,7 +8,7 @@ import keys, {KeyHelper, Property, PropertyType, PropertyValue} from './keys';
 import base from '../base';
 import LayoutHandler, {layoutLoader} from './layouthandler';
 import Requests from "./requests";
-import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
+import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './localStorageManager';
 // @ts-ignore
 import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
@@ -125,6 +125,8 @@ class PropertyHandler {
     saveUserData(data:UserData,opt_forPrefix?:boolean) {
         const raw = JSON.stringify(data);
         LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
+        LocalStorage.setItem(PREFIX_NAMES.SETTINGS_CHANGED,undefined, true);
+        globalStore.storeData(keys.gui.global.settingsChanged,true);
         splitsupport.sendToFrame('settingsChanged');
     }
 
@@ -235,6 +237,7 @@ class PropertyHandler {
         const saved=this._getSavedValues()
         globalStore.storeMultiple(saved,undefined,true);
         globalStore.storeData(keys.gui.global.propertiesLoaded,true);
+        globalStore.storeData(keys.gui.global.settingsChanged,LocalStorage.getItem(PREFIX_NAMES.SETTINGS_CHANGED)||false);
     }
 
     firstStart(){

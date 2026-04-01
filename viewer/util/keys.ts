@@ -312,7 +312,8 @@ const keys:Record<string,KeyType>={
             navUrl: K,
             unloadedJsChanges:K,
             updatedJsModules:K,
-            pluginLoadingDone:K
+            pluginLoadingDone:K,
+            settingsChanged:K,
         },
         gpspage:{
             pageNumber:K,

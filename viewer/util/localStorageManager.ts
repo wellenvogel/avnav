@@ -5,7 +5,9 @@ export const PREFIX_NAMES={
     ROUTING: 'avnav.routing',
     ROUTE: 'avnav.route.', //prefix for routes, let them sync via the server
     CENTER: 'avnav.center',
-    SPLITSETTINGS:'avnav.splitsettings'
+    SPLITSETTINGS:'avnav.splitsettings',
+    SETTINGS_NAME:'avnav.settingsname',
+    SETTINGS_CHANGED:'avnav.settingschanged',
 }
 export const UNPREFIXED_NAMES={
     CHARTINFO: 'avnav.chartinfo',
