@@ -13,7 +13,7 @@ import AddressPage from './gui/AddressPage.jsx';
 import ServerPage from './gui/ServerPage.tsx';
 import WpaPage from './gui/WpaPage.jsx';
 import DownloadPage from './gui/DownloadPage.tsx';
-import SettingsPage from './gui/SettingsPage.jsx';
+import SettingsPage from './gui/SettingsPage.tsx';
 import NavPage from './gui/NavPage.jsx';
 import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';

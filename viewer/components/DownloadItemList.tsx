@@ -30,7 +30,7 @@ import React, {useCallback, useEffect, useRef, useState} from "react";
 // @ts-ignore
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
-import {showDialog, showPromiseDialog} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "./OverlayDialog";
 // @ts-ignore
 import {checkName} from "./ItemNameDialog";
 // @ts-ignore
@@ -272,4 +272,30 @@ export const DownloadItemList = (
             :
             null}
     </React.Fragment>
+}
+
+export interface DownloadItemSelectDialogProps{
+    type:ItemType,
+    className?:string,
+    title?:string,
+    resolveFunction:(item:Item)=>void
+}
+
+export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> {
+    const dialogContext = useDialogContext();
+    return <DialogFrame title={props.title || `select ${props.type}`}>
+    <DownloadItemList type={props.type}
+                             autoreload={0}
+                             noExtra={true}
+                             selectCallback={(ev: ButtonEvent) => {
+                                 const item=avitem(ev);
+                                 if (! item) return false;
+                                 props.resolveFunction(item);
+                                 dialogContext.closeDialog();
+                                 return true
+                             }}/>
+        <DialogButtons buttonList={[
+            DBCancel()
+        ]}/>
+    </DialogFrame>
 }

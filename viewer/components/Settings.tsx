@@ -26,7 +26,7 @@ import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/ke
 import DimHandler from '../util/dimhandler';
 // @ts-ignore
 import FullScreen from './Fullscreen';
-import propertyhandler from '../util/propertyhandler';
+import propertyhandler, {SavedSettingsData} from '../util/propertyhandler';
 import Toast from "./Toast";
 import Button, {ButtonEvent} from "./Button";
 import {EditableStringParameterBase, Properties, SelectListEntry, Value, Values} from "../util/EditableParameter";
@@ -52,6 +52,8 @@ import {ItemNameDialog,checkName} from './ItemNameDialog';
 // @ts-ignore
 import Formatter from "../util/formatter";
 import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
+import {fetchItem} from "../util/itemFunctions";
+
 
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
@@ -599,4 +601,44 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                 iname={proposedName}
                 checkName={checkFunction}
                 />
+}
+
+/**
+ * will return a promise that reolves to the loaded settings
+ * or rejects with undefined of abort - or an error string
+ * @param currentValues
+ * @param defaultName
+ * @param opt_title
+ * @param opt_preventDialog
+ */
+export interface LoadSettingsProps{
+    name:string,
+    scope?:string,
+    dialogContext?:IDialogContext; //if not set - nop dialog but fail
+}
+export const loadSettings = async (props:LoadSettingsProps) => {
+    const setSettings = (checkedValues:SavedSettingsData) => {
+        return propertyhandler.importSettings(checkedValues, undefined, true);
+    }
+    let settings=await fetchItem({type:'settings',name:props.name})
+    if (typeof settings === 'string'){
+        settings=JSON.parse(settings);
+    }
+    let replacements;
+    if (props.scope){
+        replacements={prefix:props.scope};
+    }
+    const verified=await propertyhandler.verifySettingsData(settings, false, false,replacements);
+    if (verified.warnings && verified.warnings.length) {
+        if (!props.dialogContext) {
+            throw new Error("Warnings: " + verified.warnings.join(", "));
+        }
+        const user = await showPromiseDialog(props.dialogContext,
+            (dprops) => <ConfirmDialog
+                {...dprops}
+                text={verified.warnings.join('\n')}
+                title={'Import anyway?'}/>);
+        if (!user) return;
+    }
+    return setSettings(verified.data);
 }

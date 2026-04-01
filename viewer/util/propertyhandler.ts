@@ -500,7 +500,7 @@ class PropertyHandler {
      * @return {Promise}
      */
     importSettings(propertyData:SavedSettingsData,
-                   currentValues:Record<string,PropertyValue>,
+                   currentValues?:Record<string,PropertyValue>,
                    opt_setDefaults?:boolean,) {
         return new Promise((resolve, reject) => {
             if (propertyData.settingsVersion === undefined) {
@@ -513,7 +513,8 @@ class PropertyHandler {
             }
             const newValues=propertyData.properties;
             const descriptions = KeyHelper.getKeyDescriptions(true);
-            const values = {...currentValues};
+            if (! currentValues)currentValues=globalStore.getMultiple(Object.keys(descriptions));
+            const values = {...currentValues}
             let newLayout:string;
             for (const dk in descriptions) {
                 const des = descriptions[dk];
