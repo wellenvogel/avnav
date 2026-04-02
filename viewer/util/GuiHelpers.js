@@ -378,6 +378,7 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
 
 export {useStateObject} from './UiHelper';
 
+
 export default {
     resizeElementFont,
     resizeByQuerySelector,

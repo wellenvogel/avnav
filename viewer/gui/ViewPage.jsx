@@ -16,6 +16,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import {createItemActions} from "../components/FileDialog";
 import {ConfirmDialog} from "../components/BasicDialogs";
 import {languageMap, uploadFromEdit} from "../components/EditDialog";
+import {IMAGES} from "../util/itemFunctions";
 
 const MAXEDITSIZE=1000000;
 
@@ -149,7 +150,7 @@ class ViewPage extends React.Component{
     }
     isImage(){
         let ext=this.getExt().toLowerCase();
-        return (GuiHelpers.IMAGES.indexOf(ext) >= 0);
+        return (IMAGES.indexOf(ext) >= 0);
     }
     canChangeMode(){
         return this.getExt() == 'html' && ! this.props.options.readOnly && ! this.url && ! this.html;
@@ -247,7 +248,7 @@ class ViewPage extends React.Component{
     }
 }
 
-ViewPage.VIEWABLES=Object.keys(languageMap).concat(GuiHelpers.IMAGES);
+ViewPage.VIEWABLES=Object.keys(languageMap).concat(IMAGES);
 ViewPage.EDITABLES=Object.keys(languageMap);
 ViewPage.MAXEDITSIZE=MAXEDITSIZE;
 

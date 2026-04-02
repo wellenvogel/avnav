@@ -54,7 +54,7 @@ import routeobjects from "../nav/routeobjects";
 import ImportDialog, {checkExt, getAcceptedExtensions, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
-import {fetchItem, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
+import {fetchItem, IMAGES, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
 import {EditDialog} from "./EditDialog";
 import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
@@ -1742,7 +1742,7 @@ class ImageItemActions extends ItemActions{
 
     build() {
        this.headline = 'Images';
-       this.allowedExtensions = GuiHelpers.IMAGES;
+       this.allowedExtensions = IMAGES;
     }
 }
 
