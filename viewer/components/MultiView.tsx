@@ -158,7 +158,7 @@ export const MultiView = (props: MultiViewProps) => {
             return;
         }
         const rect=outerRef.current.getBoundingClientRect();
-        setItemWidth(rect.width/maxNumber);
+        setItemWidth(Math.round(rect.width/maxNumber));
     },[maxNumber,windowDimensions]);
     useEffect(() => {
         return ()=>{
@@ -173,7 +173,7 @@ export const MultiView = (props: MultiViewProps) => {
         scrollTimerRef.current = window.setTimeout(()=>{
             if (! outerRef.current || itemWidth === 0) return;
             const { scrollLeft} = outerRef.current;
-            const leftView=Math.floor(scrollLeft/itemWidth);
+            const leftView=Math.round(scrollLeft/itemWidth);
             let max=leftView+maxNumber-1;
             if (max >= numViews) max=numViews-1;
             if (leftView !== lastReportedRef.current[0] || max != lastReportedRef.current[1]) {

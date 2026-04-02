@@ -233,7 +233,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                        views={[
                 <React.Fragment key={0}>
                     <MvHeadline
-                    title={'Setting Sections'}
+                    title={'Categories'}
                     number={0}
                     max={1}
                     />
