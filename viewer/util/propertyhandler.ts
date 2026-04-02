@@ -13,6 +13,7 @@ import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './localStorageManager';
 import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
 import Helper from "./helper";
+import localStorageManager from "./localStorageManager";
 
 export interface SavedSettingsData{
     settingsVersion:number|string;
@@ -241,6 +242,12 @@ class PropertyHandler {
         globalStore.storeMultiple(saved,undefined,true);
         globalStore.storeData(keys.gui.global.propertiesLoaded,true);
         globalStore.storeData(keys.gui.global.settingsChanged,LocalStorage.getItem(PREFIX_NAMES.SETTINGS_CHANGED)||false);
+    }
+    resetToDefaults(){
+        this.saveUserData({});
+        if (localStorageManager.hasPrefix()) this.saveUserData({},true);
+        this._setChangedFlag(false);
+        this.resetToSaved();
     }
 
     firstStart(){

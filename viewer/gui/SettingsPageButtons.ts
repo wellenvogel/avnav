@@ -35,6 +35,10 @@ export default GeneralButtons.concat(propsToDefs([
         displayName: 'list tracks/logs',
     },
     {
+        name: 'SettingsDefaults',
+
+    },
+    {
         name: 'SettingsLoad',
         storeKeys: {
             editing: keys.gui.global.layoutEditing,

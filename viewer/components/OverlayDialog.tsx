@@ -191,6 +191,16 @@ export const showPromiseDialog=<T=any,>(
         },opt_options);
     })
 }
+export const showPromiseDialogTrue=(dialogContext:IDialogContext|undefined,
+                                    Dialog:React.ElementType,
+                                    args?:Record<string, any>,
+                                    opt_options?:SetDialogOptions)=>{
+    return showPromiseDialog(dialogContext,Dialog,args,opt_options)
+        .then((v:any)=>{
+            if (v) return v;
+            return true
+        },()=>false)
+}
 export const showDialog=(
     opt_dialogContext:IDialogContext|undefined,
     dialog:React.ElementType,

@@ -9,7 +9,7 @@ import React, {useRef, useState} from 'react';
 import {PageBaseProps, PageFrame, PageLeft} from '../components/Page';
 import Toast from '../components/Toast';
 import {
-    showDialog
+    showDialog, showPromiseDialogTrue
 } from '../components/OverlayDialog';
 import {layoutLoader} from '../util/layouthandler';
 import PropertyHandler from '../util/propertyhandler';
@@ -36,6 +36,9 @@ import {handleInitialButton, InjectMainMenu} from "./MainNav";
 import SettingsPageButtons from "./SettingsPageButtons";
 import {useDialogContext} from "../components/exports";
 import {DownloadItemList} from "../components/DownloadItemList";
+import propertyhandler from "../util/propertyhandler";
+import globalstore from "../util/globalstore";
+import {ConfirmDialog} from "../components/BasicDialogs";
 
 const sectionConditions:Record<string, ()=>boolean> = {};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
@@ -98,9 +101,13 @@ const SectionList=(props:SectionListProps)=>{
         if (isDefault) {
             item.className += " defaultValue";
         }
+        else{
+            item.className += " changed";
+        }
         sectionItems.push(item);
     }
     return <ItemList
+        className={'sectionList'}
         itemList={sectionItems}
         itemClass={SectionItem}
         onItemClick={(ev:Event) =>{
@@ -134,6 +141,27 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
               onClick:() =>{scrollTo(1)},
               toggle: visible(1),
               disabled:visible(1) && visible(0),
+            },
+            SettingsDefaults:{
+                onClick: async () => {
+                    const ok=await showPromiseDialogTrue(dialogContext,(dp)=>
+                        <ConfirmDialog {...dp}
+                            title={'Reset to Defaults?'}
+                            text={'This will reset all settings to their defaults (including the layout)'}
+                        />)
+                    if (!ok) return;
+                    if (layoutEditing) {
+                        layouthandler.updateLayoutProperties({})
+                    }
+                    else{
+                        const layout=layouthandler.getName();
+                        propertyhandler.resetToDefaults();
+                        const newLayout=globalstore.getData(keys.properties.layoutName);
+                        if (layout != newLayout){
+                            layouthandler.resetToDefault();
+                        }
+                    }
+                }
             },
             SettingsSplitReset: {
                 onClick: () => {

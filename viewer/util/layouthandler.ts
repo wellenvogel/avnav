@@ -1,6 +1,6 @@
 import Requests from './requests';
 import globalStore from './globalstore';
-import keys, {KeyHelper, PropertyValue} from './keys';
+import keys, {DEFAULT_LAYOUT_NAME, KeyHelper, PropertyValue} from './keys';
 import KeyHandler, {KeyMappings} from './keyhandler';
 import base from '../base';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
@@ -11,7 +11,6 @@ import cloneDeep from "clone-deep";
 import Helper, {valueof} from "./helper";
 import {PageType} from "./pageids";
 import {Item} from "./itemFunctions";
-const DEFAULT_NAME="system.default";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -160,7 +159,7 @@ class LayoutLoader{
     constructor() {
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         this.temporaryLayouts={};
-        this.temporaryLayouts[DEFAULT_NAME]=defaultLayout;
+        this.temporaryLayouts[DEFAULT_LAYOUT_NAME]=defaultLayout;
         globalStore.register(()=>{
             this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         },keys.gui.capabilities.uploadLayout);
@@ -199,7 +198,7 @@ class LayoutLoader{
         const layoutName = globalStore.getData(keys.properties.layoutName);
         //if we selected the default layout we will always use our buildin (if store locally)
         //or load from the server
-        if (layoutName !== DEFAULT_NAME && !opt_remoteFirst) {
+        if (layoutName !== DEFAULT_LAYOUT_NAME && !opt_remoteFirst) {
             const storedLayout = this._loadFromStorage();
             if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                 this.temporaryLayouts[storedLayout.name] = storedLayout;
@@ -615,6 +614,9 @@ class LayoutHandler{
         if (opt_activate){
             this.activateLayout()
         }
+    }
+    resetToDefault():void{
+        this.setLayoutAndName(defaultLayout,DEFAULT_LAYOUT_NAME,true);
     }
     getCss(){
         if (! this.layout) return;

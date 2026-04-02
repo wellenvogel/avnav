@@ -16,7 +16,7 @@ import AisFormatter from "../nav/aisformatter";
 import {EditableParameterTypes, ListEntry} from "./EditableParameter";
 // @ts-ignore
 import assign from "object-assign";
-
+export const DEFAULT_LAYOUT_NAME = "system.default";
 
 const K=999; //the real value does not matter
 const V=888; //keys that can be used as value display
@@ -474,7 +474,7 @@ const keys:Record<string,KeyType>={
         autoHideNavPage: new Property(false,"auto hide buttons on NavPage",PropertyType.CHECKBOX),
         autoHideGpsPage: new Property(false,"auto hide buttons on Dashboard Pages",PropertyType.CHECKBOX),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
-        layoutName: new SplitProperty("system.default","Layout name",PropertyType.LAYOUT),
+        layoutName: new SplitProperty(DEFAULT_LAYOUT_NAME,"Layout name",PropertyType.LAYOUT),
         mainNavCols: new Property(3,"main nav columns",PropertyType.LIST,Object.values(MainColumns),'number of columns in the main nav menu'),
         mainNavExpand: new Property('current',"man nav expand",PropertyType.LIST,Object.values(MainExpandMode),"which entries of the main nav menu should be expanded when opening"),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20],"the zoom that is automatically set when MOB is activated (except if the zoom was already higher)"),
@@ -649,4 +649,3 @@ export const KeyHelper = {
 };
 
 export default  keys;
-
