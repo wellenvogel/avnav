@@ -46,6 +46,7 @@ import LayoutsPageButtons from "./LayoutsPageButtons";
 // @ts-ignore
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
 import ChartsPageButtons from "./ChartsPageButtons";
+import SettingsPageButtons from "./SettingsPageButtons";
 
 type PageKind='navigation'|'settings';
 
@@ -94,6 +95,8 @@ const mainTree=[
         LayoutsPageButtons),
     new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
         ChannelsPageButtons),
+    new Page(PAGEIDS.SETTINGS,'settings',PAGE_TITLES.SETTINGS,
+        SettingsPageButtons),
     new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,
         ServerPageButtons),
     new Page(PAGEIDS.DOWNLOAD,'settings',PAGE_TITLES.DOWNLOAD,

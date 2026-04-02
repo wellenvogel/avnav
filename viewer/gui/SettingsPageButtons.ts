@@ -22,20 +22,76 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
+import localStorageManager from "../util/localStorageManager";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'ServerView',
-        displayName: 'server settings',
+        name: 'SectionView',
+        displayName: 'settings sections',
     },
     {
-        name:'ItemsView',
+        name: 'ItemsView',
         displayName: 'list tracks/logs',
     },
     {
-        name:'DownloadPageUpload',
+        name: 'SettingsLoad',
+        storeKeys: {
+            editing: keys.gui.global.layoutEditing,
+            connected: keys.properties.connectedMode,
+            allowed: keys.gui.capabilities.uploadSettings
+        },
+        updateFunction: (state: Record<string, any>) => {
+            return {
+                visible: !state.editing && state.connected && state.allowed
+            }
+        },
+        overflow: true
+    },
+    {
+        name:'SettingsSave',
+        storeKeys: {
+            editing: keys.gui.global.layoutEditing,
+            connected: keys.properties.connectedMode,
+            allowed: keys.gui.capabilities.uploadSettings
+        },
+        updateFunction: (state: Record<string, any>) => {
+            return {
+                visible: !state.editing && state.connected && state.allowed
+            }
+        },
+        overflow: true
+    },
+    {
+        name: 'SettingsReload',
+        storeKeys: {
+            visible: keys.gui.global.layoutEditing,
+        },
+        updateFunction: (state: Record<string, any>) => {
+            return {
+                visible: !state.visible
+            }
+        },
+    },
+    {
+        name: 'DownloadPageUpload',
         displayName: 'import',
-        localOnly:true,
-    }
+        localOnly: true,
+    },
+    {
+        name: 'SettingsSplitReset',
+        storeKeys: {
+            editing: keys.gui.global.layoutEditing
+        },
+        updateFunction: (state: Record<string, any>) => {
+            return {visible: !state.editing && localStorageManager.hasPrefix()}
+        },
+    },
+    {
+        name: 'SettingsAddons',
+        storeKeys: {
+            visible: keys.properties.connectedMode
+        }
+    },
 ]))
 

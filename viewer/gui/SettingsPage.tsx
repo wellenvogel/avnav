@@ -4,24 +4,17 @@
 
 import ItemList from '../components/ItemList';
 import globalStore from '../util/globalstore';
-import keys, {KeyHelper, PropertyType, PropertyValue} from '../util/keys';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {PageFrame, PageLeft} from '../components/Page';
+import keys, {KeyHelper, PropertyType} from '../util/keys';
+import React, {useRef, useState} from 'react';
+import {PageBaseProps, PageFrame, PageLeft} from '../components/Page';
 import Toast from '../components/Toast';
 import {
-    DBCancel,
-    DialogButtons,
-    DialogFrame, DialogText, showDialog,
-    showPromiseDialog
+    showDialog
 } from '../components/OverlayDialog';
-import LayoutHandler, {layoutLoader} from '../util/layouthandler';
-import Mob from '../components/Mob';
-import {useStateObject} from "../util/UiHelper";
+import {layoutLoader} from '../util/layouthandler';
 import PropertyHandler from '../util/propertyhandler';
-import LocalStorage from '../util/localStorageManager';
 // @ts-ignore
 import leavehandler from "../util/leavehandler";
-import {ConfirmDialog} from "../components/BasicDialogs";
 
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
@@ -30,12 +23,19 @@ import {ListItem, ListMainSlot} from "../components/ListItems";
 import {
     settingsSections,
     settingsConditions,
-    EditSettingsItems,
     SaveSettingsDialog,
-    LoadSettingsDialog
+    LoadSettingsDialog, EditSettingsCategory
 } from "../components/Settings";
-import {ButtonEventHandler} from "../components/Button";
+import {ButtonDef, ButtonEventHandler, updateButtons} from "../components/Button";
 import {PAGEIDS} from "../util/pageids";
+import layouthandler from "../util/layouthandler";
+import {useStoreState} from "../hoc/Dynamic";
+import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
+import {useUploadHelper} from "../components/UploadHandler";
+import {handleInitialButton, InjectMainMenu} from "./MainNav";
+import SettingsPageButtons from "./SettingsPageButtons";
+import {useDialogContext} from "../components/exports";
+import {DownloadItemList} from "../components/DownloadItemList";
 
 const sectionConditions:Record<string, ()=>boolean> = {};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
@@ -54,52 +54,18 @@ const SectionItem=(props:SectionItemProps)=>{
     );
 };
 
-
-
-
-
-const HasChangesDialog=({resolveFunction}:{resolveFunction:(v:boolean)=>void}   )=>{
-    return <DialogFrame>
-        <DialogText>Settings changed</DialogText>
-        <DialogButtons
-            buttonList={[
-                DBCancel(),
-                {
-                    name:'delete',
-                    label:'Discard',
-                    onClick: ()=>{
-                        resolveFunction(false);
-                    }
-                },
-                {
-                    name:'SettingsOK',
-                    label:'Activate',
-                    onClick: ()=>{
-                        resolveFunction(true);
-                    }
-                }
-            ]}
-        />
-    </DialogFrame>
+interface SectionListProps{
+    onSelect:(ev:Event) => void;
 }
-
-
-
-const SettingsPage = (props:Record<string,any>) => {
-    const history=useHistory();
-    const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);
-    const [section, setSection] = useState('Layer');
+const SectionList=(props:SectionListProps)=>{
     const flattenedKeys = useRef(undefined);
+    const [selectedSection, setSelectedSection] = useState<string>(null);
     if (!flattenedKeys.current) {
         flattenedKeys.current = KeyHelper.flattenedKeys(keys.properties);
     }
-    const initialValues = useRef<Record<string,PropertyValue>>();
-    initialValues.current = globalStore.getMultiple(flattenedKeys.current, true);
-    const values = useStateObject(initialValues.current);
-    const initialLayoutValues= useRef<Record<string,PropertyValue>>();
-    initialLayoutValues.current=LayoutHandler.getLayoutProperties();
-    const layoutSettings = useStateObject(initialLayoutValues.current);
+    const currentValues=globalStore.getMultiple(flattenedKeys.current, true);
     const defaultValues = useRef(undefined);
+    const layoutValues=layouthandler.getLayoutProperties();
     if (!defaultValues.current) {
         defaultValues.current = {};
         flattenedKeys.current.forEach((key:string) => {
@@ -109,107 +75,67 @@ const SettingsPage = (props:Record<string,any>) => {
             }
         })
     }
-    const hasChanges = () => {
-        return values.isChanged() || layoutSettings.isChanged();
+    const sectionItems = [];
+    for (const s in settingsSections) {
+        const sectionCondition = sectionConditions[s];
+        if (sectionCondition !== undefined) {
+            if (!sectionCondition()) continue;
+        }
+        const item: Record<string, any> = {name: s,className:""};
+        let isDefault=true;
+        for (const key of settingsSections[s]) {
+            if (key in layoutValues) {
+                item.className += " layoutSetting";
+            }
+            if (settingsConditions[key] !== undefined) {
+                if (!settingsConditions[key](currentValues)) continue;
+            }
+            const value = currentValues[key];
+            if (value !== defaultValues.current[key]) {
+                isDefault = false;
+            }
+        }
+        if (isDefault) {
+            item.className += " defaultValue";
+        }
+        sectionItems.push(item);
     }
-    const handlePanel = useCallback((section:string) => {
-        if (section === undefined) {
-            setLeftPanelVisible(true);
-        } else {
-            setLeftPanelVisible(!props.small);
-            setSection(section);
-        }
-    }, [props.small]);
-    const resetChanges = useCallback(() => {
-        initialValues.current = globalStore.getMultiple(flattenedKeys.current, true);
-        values.reset(initialValues.current);
-        layoutSettings.reset(LayoutHandler.getLayoutProperties());
-    }, []);
-    const saveChanges = useCallback(() => {
-        if (!hasChanges()) return Promise.resolve(true);
-        const val = values.getState(true);
-        //if the layout changed we need to set it
-        const layoutName = val[keys.properties.layoutName];
-        const finish = () => {
-            if (LayoutHandler.isEditing()) {
-                if (layoutSettings.isChanged()) {
-                    LayoutHandler.updateLayoutProperties(layoutSettings.getState(true));
-                }
-            } else {
-                LayoutHandler.activateLayout();
-                globalStore.storeMultiple(val);
-            }
-            resetChanges();
-            return true;
-        }
-        if (!LayoutHandler.hasLoaded(layoutName) && !LayoutHandler.isEditing()) {
-            return layoutLoader.loadLayout(layoutName)
-                .then((layout) => {
-                    LayoutHandler.setLayoutAndName(layout, layoutName)
-                    return finish();
-                })
-        }
-        return Promise.resolve(finish());
-    }, []);
+    return <ItemList
+        itemList={sectionItems}
+        itemClass={SectionItem}
+        onItemClick={(ev:Event) =>{
+            const item=avitem(ev);
+            props.onSelect(ev);
+            setSelectedSection(item.name)
+        }}
+        selectedKey={selectedSection}
+        scrollSelected={1}
+    />
 
-    /**
-     * will check for changes and revert or save changes
-     * @returns {Promise}
-     */
-    const confirmAbortOrDo = useCallback((allowSave?:boolean) => {
-        if (hasChanges()) {
-            if (allowSave) {
-                return showPromiseDialog(undefined, (props) => <HasChangesDialog {...props} />)
-                    .then((save) => {
-                        if (save) {
-                            return saveChanges();
-                        } else {
-                            resetChanges();
-                            return true;
-                        }
-                    })
-            } else {
-                return showPromiseDialog(undefined, (props) => <ConfirmDialog {...props}
-                                                                              text={"discard settings changes?"}/>)
-            }
-        } else {
-            return Promise.resolve(0);
-        }
-    }, []);
-    
-
-    const buttons = useMemo(() => {
-        return [
-            {
-                name: 'SettingsOK',
-                onClick: () => {
-                    if (!leftPanelVisible) {
-                        handlePanel(undefined);
-                        return;
-                    }
-                    saveChanges()
-                        .then(() => history.pop())
-                        .catch((err) => {
-                            Toast(err + "")
-                        })
-                }
+}
+const PAGE=PAGEIDS.SETTINGS;
+//const TITLE=PAGE_TITLES.SETTINGS;
+const ITEM_TYPE="settings";
+const SettingsPage = (props:Partial<PageBaseProps>) => {
+    const history=useHistory();
+    const dialogContext = useDialogContext();
+    const [layoutEditing]=useStoreState(keys.gui.global.layoutEditing);
+    const [scrollProps,scrollTo,visible]=useScrollHelper(0);
+    const buttonListRef=useRef<ButtonDef[]>();
+    const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
+    const buttonActions=
+        {
+            SectionView:{
+              onClick:() =>{scrollTo(0)},
+              toggle: visible(0),
+              disabled:visible(0) && visible(1),
             },
-            {
-                name: 'SettingsDefaults',
-                onClick: () => {
-                    confirmAbortOrDo(false).then(() => {
-                        resetData();
-                    });
-                }
+            ItemsView:{
+              onClick:() =>{scrollTo(1)},
+              toggle: visible(1),
+              disabled:visible(1) && visible(0),
             },
-            {
-                name: 'SettingsSplitReset',
-                storeKeys: {
-                    editing: keys.gui.global.layoutEditing
-                },
-                updateFunction: (state:Record<string, any>) => {
-                    return {visible: !state.editing && LocalStorage.hasPrefix()}
-                },
+            SettingsSplitReset: {
                 onClick: () => {
                     const masterValues = PropertyHandler.getMasterValues();
                     const promises = [];
@@ -220,247 +146,90 @@ const SettingsPage = (props:Record<string,any>) => {
                         }
                     }
                     Promise.all(promises)
-                        .then(() => values.setState(masterValues))
+                        .then(() => globalStore.storeMultiple(masterValues))
                         .catch((e) => Toast(e));
                 },
                 overflow: true
             },
-            {
-                name: 'SettingsAndroid',
-                visible: globalStore.getData(keys.gui.global.onAndroid, false),
+            SettingsAddons: {
                 onClick: () => {
-                    confirmAbortOrDo(true).then(() => {
-                        history.pop();
-                        // @ts-ignore
-                        window.avnavAndroid.showSettings();
-                    });
+                    history.push("addonconfigpage");
                 }
             },
-            {
-                name: 'SettingsAddons',
-                onClick: () => {
-                    confirmAbortOrDo(true).then(() => {
-                        history.push("addonconfigpage");
-                    });
-                },
-                storeKeys: {
-                    visible: keys.properties.connectedMode
-                }
-            },
-            {
-                name: 'SettingsSave',
-                onClick: () => showDialog(undefined,()=><SaveSettingsDialog/>),
+            SettingsSave: {
+                onClick: () => showDialog(undefined, () => <SaveSettingsDialog/>),
                 storeKeys: {
                     editing: keys.gui.global.layoutEditing,
                     connected: keys.properties.connectedMode,
                     allowed: keys.gui.capabilities.uploadSettings
                 },
-                updateFunction: (state:Record<string,any>) => {
+                updateFunction: (state: Record<string, any>) => {
                     return {
                         visible: !state.editing && state.connected && state.allowed
                     }
                 },
                 overflow: true
             },
-            {
-                name: 'SettingsLoad',
+            SettingsLoad: {
                 onClick: () => {
-                    confirmAbortOrDo().then(() => {
-                        resetChanges();
-                        showDialog(undefined,()=><LoadSettingsDialog/>);
-                    });
-                },
-                storeKeys: {
-                    editing: keys.gui.global.layoutEditing,
-                    connected: keys.properties.connectedMode,
-                    allowed: keys.gui.capabilities.uploadSettings
-                },
-                updateFunction: (state:Record<string, any>) => {
-                    return {
-                        visible: !state.editing && state.connected && state.allowed
-                    }
-                },
-                overflow: true
-            },
-            {
-                name: 'SettingsReload',
-                onClick: () => {
-                    confirmAbortOrDo(true).then(() => {
-                        leavehandler.stop();
-                        Helper.reloadPage();
-                    });
-                },
-                storeKeys: {
-                    visible: keys.gui.global.layoutEditing,
-                },
-                updateFunction: (state:Record<string, any>) => {
-                    return {
-                        visible: !state.visible
-                    }
-                },
-            },
-            Mob.mobDefinition(),
-            {
-                name: 'Cancel',
-                onClick: () => {
-                    if (!leftPanelVisible) {
-                        handlePanel(undefined);
-                        return;
-                    }
-                    confirmAbortOrDo(false).then(() => {
-                        history.pop();
-                    });
+                    showDialog(undefined, () => <LoadSettingsDialog/>);
                 }
-            }
-        ]
-    }, [leftPanelVisible]);
-    const changeItem = useCallback((key:string, value:PropertyValue) => {
-        if (LayoutHandler.isEditing()) {
-            layoutSettings.setValue(key, value);
-        } else {
-            if (key in layoutSettings.getState()) {
-                Toast("cannot change layout settings when not editing");
-                return;
-            }
-            values.setValue(key, value);
-        }
-    }, []);
-
-    //show the left panel when changing from small to not small
-    const lastSmall = useRef(props.small);
-    useEffect(() => {
-        if (props.small !== lastSmall.current) {
-            if (lastSmall.current && !leftPanelVisible) {
-                setLeftPanelVisible(true);
-            }
-            lastSmall.current = props.small;
-        } else {
-            if (!props.small && !leftPanelVisible) {
-                setLeftPanelVisible(true);
+            },
+            SettingsReload: {
+                onClick: () => {
+                    leavehandler.stop();
+                    Helper.reloadPage();
+                }
+            },
+            Cancel: {
+                onClick: () => {
+                    history.pop();
+                }
+            },
+            DownloadPageUpload: {
+                onClick:uploadAction
             }
         }
-    }, [props.small, leftPanelVisible]);
-
-    const resetData = useCallback(() => {
-        if (LayoutHandler.isEditing()) {
-            layoutSettings.setState({}, true);
-        } else {
-            const newValues = {...defaultValues.current};
-            values.setState(newValues, true);
-        }
-    }, []);
-
-
-    const sectionClick = useCallback((ev:Event) => {
-        const item = avitem(ev);
-        handlePanel(item.name);
-    }, [handlePanel]);
-    const leftVisible = leftPanelVisible;
-    const rightVisible = !props.small || !leftVisible
-    let leftClass = "sectionList";
-    if (!rightVisible) leftClass += " expand";
-    let currentSection = section || 'Layer';
-    const sectionItems = [];
-    for (const s in settingsSections) {
-        const sectionCondition = sectionConditions[s];
-        if (sectionCondition !== undefined) {
-            if (!sectionCondition()) continue;
-        }
-        const item:Record<string,any> = {name: s};
-        if (s === currentSection) item.activeItem = true;
-        sectionItems.push(item);
-    }
-    let hasCurrentSection = false;
-    sectionItems.forEach((item) => {
-        if (item.name === currentSection) {
-            hasCurrentSection = true;
-        }
-    });
-    if (!hasCurrentSection) {
-        currentSection = sectionItems[0].name;
-        sectionItems[0].activeItem = true;
-        //TODO: send up
-    }
-    const settingsItems:string[] = [];
-    const sectionChanges:Record<string, any> = {};
-    const sectionHasLayoutSettings:Record<string, boolean> = {};
-    const layoutValues = layoutSettings.getState();
-    for (const section in settingsSections) {
-        for (const s in settingsSections[section]) {
-            const key = settingsSections[section][s];
-            if (key in layoutValues) {
-                sectionHasLayoutSettings[section] = true;
-            }
-            if (settingsConditions[key] !== undefined) {
-                if (!settingsConditions[key](values.getState())) continue;
-            }
-            const value = values.getValue(key);
-            if (value !== defaultValues.current[key]) {
-                if (!sectionChanges[section]) sectionChanges[section] = {};
-                sectionChanges[section].isDefault = false;
-            }
-            if (values.isItemChanged(key)) {
-                if (!sectionChanges[section]) sectionChanges[section] = {};
-                sectionChanges[section].isChanged = true;
-            }
-            if (section === currentSection) {
-                settingsItems.push(key);
-            }
-        }
-    }
-    sectionItems.forEach((sitem) => {
-        let className = "";
-        if ((sectionChanges[sitem.name] || {}).isChanged) {
-            className += " changed";
-        }
-        if ((sectionChanges[sitem.name] || {}).isDefault !== false) {
-            className += " defaultValue";
-        }
-        if (sectionHasLayoutSettings[sitem.name]) {
-            className += " layoutSetting";
-        }
-        sitem.className = className;
-    });
-    const layoutEditing = LayoutHandler.isEditing();
-    const title = layoutEditing ? "LayoutSettings" : "Settings";
+    buttonListRef.current=InjectMainMenu(PAGE,updateButtons(SettingsPageButtons,
+        buttonActions));
+    handleInitialButton(history,buttonListRef.current);
+        const title = layoutEditing ? "LayoutSettings" : "Settings";
     return <PageFrame id={PAGEIDS.SETTINGS}
         {...props}
     >
         <PageLeft
-            title={title + ((props.small && !leftPanelVisible) ? " " + section : "")}
+            title={title}
         >
-            <div className="leftSection">
-                {leftVisible ? <ItemList
-                    className={leftClass}
-                    scrollable={true}
-                    itemClass={SectionItem}
-                    onItemClick={sectionClick}
-                    itemList={sectionItems}
-                /> : null}
-                {rightVisible ?
-                    <EditSettingsItems
-                        values={values.getState()}
-                        layoutValues={layoutValues}
-                        initialValues={initialValues.current}
-                        initialLayoutValues={initialLayoutValues.current}
-                        settings={settingsItems}
-                        onChange={(key,value,isLayout)=>{
-                            if (isLayout){
-                                if (! layoutEditing) return;
-                                if (value === undefined) layoutSettings.deleteValue(key);
-                                else layoutSettings.setValue(key,value);
-                                return;
-                            }
-                            changeItem(key,value);
-                        }}
-                        layoutEditing={layoutEditing}
+            <MultiView {...scrollProps}
+                maxNumber={props.pageColumns}
+                       views={[
+                <React.Fragment key={0}>
+                    <MvHeadline
+                    title={'Setting Sections'}
+                    number={0}
+                    max={1}
                     />
-                    : null}
-            </div>
+                    <SectionList onSelect={(ev:Event) =>{
+                        const item=avitem(ev);
+                        showDialog(dialogContext,()=><EditSettingsCategory category={item.name}/>)
+                    }
+                    }/>
+                </React.Fragment>,
+                <React.Fragment key={1}>
+                    <MvHeadline title={'Stored Settings'}
+                                number={1}
+                                max={1}/>
+                    <DownloadItemList type={ITEM_TYPE}
+                                      {...uploadProps}
+                                      autoreload={3000}
+                                      scrollSelected={1}
+                    />
+                </React.Fragment>
+            ]}/>
         </PageLeft>
         <ButtonList
-            page={props.id}
-            itemList={buttons}
+            page={PAGE}
+            itemList={buttonListRef.current}
         />
     </PageFrame>
 }
