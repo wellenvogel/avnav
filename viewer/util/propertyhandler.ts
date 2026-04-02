@@ -125,8 +125,11 @@ class PropertyHandler {
      */
     saveUserData(data:UserData,opt_forPrefix?:boolean) {
         const raw = JSON.stringify(data);
-        LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
-        this._setChangedFlag(true);
+        const name=opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS;
+        const old=LocalStorage.getItem(name);
+        const changed=old !== raw;
+        LocalStorage.setItem(name,undefined, raw);
+        this._setChangedFlag(globalStore.getData(keys.gui.global.settingsChanged)||changed);
         splitsupport.sendToFrame('settingsChanged');
     }
 
@@ -241,7 +244,7 @@ class PropertyHandler {
         const saved=this._getSavedValues()
         globalStore.storeMultiple(saved,undefined,true);
         globalStore.storeData(keys.gui.global.propertiesLoaded,true);
-        globalStore.storeData(keys.gui.global.settingsChanged,LocalStorage.getItem(PREFIX_NAMES.SETTINGS_CHANGED)||false);
+        globalStore.storeData(keys.gui.global.settingsChanged,LocalStorage.getItem(PREFIX_NAMES.SETTINGS_CHANGED)==='true');
     }
     resetToDefaults(){
         this.saveUserData({});
