@@ -95,13 +95,6 @@ export default GeneralButtons.concat(propsToDefs([
         updateFunction: (state: Record<string, any>) => {
             return {visible: !state.editing && localStorageManager.hasPrefix()}
         },
-    },
-    {
-        name: 'SettingsAddons',
-        displayName: 'configure addons',
-        storeKeys: {
-            visible: keys.properties.connectedMode
-        }
-    },
+    }
 ]))
 

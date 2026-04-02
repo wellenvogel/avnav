@@ -13,6 +13,8 @@ import {showPromiseDialog} from "../components/OverlayDialog";
 import {avitem, concatsp} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
+import {InjectMainMenu} from "./MainNav";
+import {PAGEIDS} from "../util/pageids";
 
 
 const AddonItem=(props)=>{
@@ -96,6 +98,7 @@ class AddonConfigPage extends React.Component{
 
     render() {
         let self=this;
+        const buttons=InjectMainMenu(PAGEIDS.ADDCFG, this.buttons);
         let MainContent = (props)=>
             <ItemList
                 className="addonItems"
@@ -127,7 +130,7 @@ class AddonConfigPage extends React.Component{
                                 items={self.state.addOns}
                             />
                         }
-                buttonList={self.buttons}/>
+                buttonList={buttons}/>
         );
 
     }

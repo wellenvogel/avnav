@@ -179,11 +179,6 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                 },
                 overflow: true
             },
-            SettingsAddons: {
-                onClick: () => {
-                    history.push("addonconfigpage");
-                }
-            },
             SettingsSave: {
                 onClick: () => showDialog(undefined, () => <SaveSettingsDialog/>),
                 storeKeys: {

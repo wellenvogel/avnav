@@ -97,6 +97,9 @@ const mainTree=[
         ChannelsPageButtons),
     new Page(PAGEIDS.SETTINGS,'settings',PAGE_TITLES.SETTINGS,
         SettingsPageButtons),
+    //TODO: only with capabilities + connected mode
+    new Page(PAGEIDS.ADDCFG,'settings',PAGE_TITLES.ADDCFG,
+        []),
     new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,
         ServerPageButtons),
     new Page(PAGEIDS.DOWNLOAD,'settings',PAGE_TITLES.DOWNLOAD,

@@ -50,7 +50,7 @@ export type PageType=valueof<typeof PAGEIDS>;
 
 export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     TRACKS: "Tracks/NMEALogs",
-    ADDCFG: "",
+    ADDCFG: "Configure User Apps",
     ADDON: "",
     ADDR: "",
     AIS: "",
