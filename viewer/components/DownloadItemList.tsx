@@ -290,8 +290,10 @@ export interface DownloadItemSelectDialogProps{
 
 export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> {
     const dialogContext = useDialogContext();
+    const [hideList,setHideList]=useState(false);
     return <DialogFrame title={props.title || `select ${props.type}`}>
-    <DownloadItemList type={props.type}
+
+        { ! hideList && <DownloadItemList type={props.type}
                              autoreload={0}
                              noExtra={true}
                              selectedName={props.selectedName}
@@ -299,10 +301,16 @@ export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> 
                              selectCallback={async (ev: ButtonEvent) => {
                                  const item=avitem(ev);
                                  if (! item) return false;
-                                 await props.resolveFunction(item);
-                                 dialogContext.closeDialog();
-                                 return true
-                             }}/>
+                                 setHideList(true);
+                                 try {
+                                     await props.resolveFunction(item);
+                                     dialogContext.closeDialog();
+                                     return true
+                                 }catch(e){
+                                     setHideList(false);
+                                     throw e;
+                                 }
+                             }}/> }
         <DialogButtons buttonList={[
             DBCancel()
         ]}/>

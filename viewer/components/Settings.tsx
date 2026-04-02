@@ -665,12 +665,17 @@ export const LoadSettingsDialog=(props:LoadSettingsDialogProps) => {
     const [notSavedOverride,setNotSavedOverride]=useState(false);
     if (notSaved && ! notSavedOverride){
         return <DialogFrame title={"Current settings not saved"} >
-            <div className="dialogText">{"Your current settings are not saved to the server. OK to save now."}</div>
+            <div className="dialogText">{"Your current settings are not saved to the server. OK to save now. Ignore to continue."}</div>
             <DialogButtons buttonList={[
                 DBCancel({
-                    onClick:()=>{setNotSavedOverride(true)},
                     close:false
                 }),
+                {
+                    name:'ignore',
+                    displayName:"Ignore",
+                    close:false,
+                    onClick:()=>{setNotSavedOverride(true)},
+                },
                 DBOk(async ()=>{
                     await showDialog(dialogContext,()=><SaveSettingsDialog/>);
                 },{close:false})

@@ -29,7 +29,7 @@ import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, showPromiseDialog} from "./OverlayDialog";
+import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, showDialog, showPromiseDialog} from "./OverlayDialog";
 import ViewPage from "../gui/ViewPage";
 import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
@@ -62,6 +62,7 @@ import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
 import base from "../base";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
+import {loadSettings, LoadSettingsDialog} from "./Settings";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -1611,6 +1612,18 @@ class SettingsItemActions extends ItemActions{
             fixedPrefix: 'user.',
             hasScope: true,
             nameToBaseName:(name)=>this.nameToBaseName(name)
+        }))
+        actions.push(new Action({
+            label:'Activate',
+            name:'open',
+            visible:true
+        }).copy({
+            action: async (action,item, dialogContext)=>{
+                await showDialog(dialogContext,()=><LoadSettingsDialog
+                    tryName={item.name}
+                />,()=>dialogContext.closeDialog())
+
+            }
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
