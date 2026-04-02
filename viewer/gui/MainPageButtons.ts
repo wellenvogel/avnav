@@ -38,11 +38,6 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
         editDisable: true
     },
     {
-        name: 'ShowSettings',
-        displayName: 'settings',
-        overflow: true
-    },
-    {
         name: 'ShowDownload',
         displayName: 'download',
         editDisable: true,

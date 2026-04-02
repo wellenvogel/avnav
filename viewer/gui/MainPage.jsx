@@ -171,11 +171,6 @@ class MainPage extends React.Component {
                     this.props.history.push(PAGEIDS.SERVER)
                 }
             },
-            ShowSettings: {
-                onClick: () => {
-                    this.props.history.push('settingspage')
-                },
-            },
             ShowDownload: {
                 onClick: () => {
                     this.props.history.push('downloadpage')

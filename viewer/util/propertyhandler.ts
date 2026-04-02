@@ -246,8 +246,8 @@ class PropertyHandler {
     resetToDefaults(){
         this.saveUserData({});
         if (localStorageManager.hasPrefix()) this.saveUserData({},true);
-        this._setChangedFlag(false);
         this.resetToSaved();
+        this._setChangedFlag(false);
     }
 
     firstStart(){
