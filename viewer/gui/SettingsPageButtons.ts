@@ -32,14 +32,16 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'ItemsView',
-        displayName: 'list tracks/logs',
+        displayName: 'stored settings',
     },
     {
         name: 'SettingsDefaults',
+        displayName: 'reset to defaults',
 
     },
     {
         name: 'SettingsLoad',
+        displayName: 'load settings',
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
             connected: keys.properties.connectedMode,
@@ -54,6 +56,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name:'SettingsSave',
+        displayName: 'save settings',
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
             connected: keys.properties.connectedMode,
@@ -68,6 +71,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'SettingsReload',
+        displayName: 'reload AvNav UI',
         storeKeys: {
             visible: keys.gui.global.layoutEditing,
         },
@@ -84,6 +88,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'SettingsSplitReset',
+        displayName: 'reset split settings',
         storeKeys: {
             editing: keys.gui.global.layoutEditing
         },
@@ -93,6 +98,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'SettingsAddons',
+        displayName: 'configure addons',
         storeKeys: {
             visible: keys.properties.connectedMode
         }
