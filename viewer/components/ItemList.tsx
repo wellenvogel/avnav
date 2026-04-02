@@ -128,6 +128,9 @@ const SortableContent =
 export interface ItemListProps extends SortableContentProps{
     keyFunction?:KeyFunction;
     fontSize?: string|number;
+    selectedKey?:string|number; //if set - select this item
+                                // only this one or selected index should be used
+                                //selected index will win
 }
 
 const ItemList = (props:ItemListProps) => {
@@ -141,6 +144,8 @@ const ItemList = (props:ItemListProps) => {
     allitems.forEach((entry) => {
         const itemProps = {...entry};
         let key = getKey(entry,props.keyFunction);
+        const isSelectedKey= (props.selectedKey === undefined)?false:
+            key === props.selectedKey;
         //we allow for multiple items with the same name
         //we try at most 20 times to get a unique key by appending _idx
         let tries = 20;
@@ -160,6 +165,9 @@ const ItemList = (props:ItemListProps) => {
             } else {
                 itemProps.selected = false;
             }
+        }
+        else{
+            itemProps.selected = isSelectedKey;
         }
         idx++;
         itemList.push(itemProps);

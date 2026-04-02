@@ -11,7 +11,7 @@ import Toast from '../components/Toast';
 import {
     DBCancel,
     DialogButtons,
-    DialogFrame, DialogText,
+    DialogFrame, DialogText, showDialog,
     showPromiseDialog
 } from '../components/OverlayDialog';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler';
@@ -27,7 +27,13 @@ import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot} from "../components/ListItems";
-import {settingsSections, settingsConditions, EditSettingsItems} from "../components/Settings";
+import {
+    settingsSections,
+    settingsConditions,
+    EditSettingsItems,
+    SaveSettingsDialog,
+    LoadSettingsDialog
+} from "../components/Settings";
 import {ButtonEventHandler} from "../components/Button";
 import {PAGEIDS} from "../util/pageids";
 
@@ -150,7 +156,7 @@ const SettingsPage = (props:Record<string,any>) => {
      * will check for changes and revert or save changes
      * @returns {Promise}
      */
-    const confirmAbortOrDo = useCallback((allowSave:boolean) => {
+    const confirmAbortOrDo = useCallback((allowSave?:boolean) => {
         if (hasChanges()) {
             if (allowSave) {
                 return showPromiseDialog(undefined, (props) => <HasChangesDialog {...props} />)
@@ -243,7 +249,7 @@ const SettingsPage = (props:Record<string,any>) => {
             },
             {
                 name: 'SettingsSave',
-                //onClick: () => saveSettings(),
+                onClick: () => showDialog(undefined,()=><SaveSettingsDialog/>),
                 storeKeys: {
                     editing: keys.gui.global.layoutEditing,
                     connected: keys.properties.connectedMode,
@@ -258,12 +264,12 @@ const SettingsPage = (props:Record<string,any>) => {
             },
             {
                 name: 'SettingsLoad',
-                /*onClick: () => {
+                onClick: () => {
                     confirmAbortOrDo().then(() => {
                         resetChanges();
-                        loadSettingsCb();
+                        showDialog(undefined,()=><LoadSettingsDialog/>);
                     });
-                },*/
+                },
                 storeKeys: {
                     editing: keys.gui.global.layoutEditing,
                     connected: keys.properties.connectedMode,

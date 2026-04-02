@@ -125,8 +125,7 @@ class PropertyHandler {
     saveUserData(data:UserData,opt_forPrefix?:boolean) {
         const raw = JSON.stringify(data);
         LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
-        LocalStorage.setItem(PREFIX_NAMES.SETTINGS_CHANGED,undefined, true);
-        globalStore.storeData(keys.gui.global.settingsChanged,true);
+        this._setChangedFlag(true);
         splitsupport.sendToFrame('settingsChanged');
     }
 
@@ -233,6 +232,10 @@ class PropertyHandler {
         return values;
     }
 
+    _setChangedFlag(v:boolean) {
+        globalStore.storeData(keys.gui.global.settingsChanged,v);
+        LocalStorage.setItem(PREFIX_NAMES.SETTINGS_CHANGED,undefined,v);
+    }
     resetToSaved(){
         const saved=this._getSavedValues()
         globalStore.storeMultiple(saved,undefined,true);
@@ -492,68 +495,50 @@ class PropertyHandler {
     }
 
     /**
-     * create a list of properties (for the settings page)
-     * with filtered properties from the input
+     * get the properties as they have been saved
+     * and store them to the global store
+     * will reset the settingsChanged flag
      * @param propertyData
-     * @param currentValues
-     * @param opt_setDefaults if true it will set all values that are different from default
-     * @return {Promise}
      */
-    importSettings(propertyData:SavedSettingsData,
-                   currentValues?:Record<string,PropertyValue>,
-                   opt_setDefaults?:boolean,) {
-        return new Promise((resolve, reject) => {
-            if (propertyData.settingsVersion === undefined) {
-                reject("missing settingsVersion");
-                return;
+    async importSettings(propertyData: SavedSettingsData) {
+        if (propertyData.settingsVersion === undefined) {
+            return Promise.reject("missing settingsVersion");
+        }
+        if (typeof (propertyData.properties) !== 'object') {
+            return Promise.reject("missing or invalid properties");
+        }
+        const newValues = propertyData.properties;
+        const descriptions = KeyHelper.getKeyDescriptions(true);
+        const values = globalStore.getMultiple(Object.keys(descriptions));
+        let newLayout: string;
+        for (const dk in descriptions) {
+            const des = descriptions[dk];
+            let found = false;
+            for (const pk of Object.values(PropertyType)) {
+                if (pk === des.type && des.type !== PropertyType.INTERNAL) {
+                    found = true;
+                    break;
+                }
             }
-            if (typeof (propertyData.properties) !== 'object') {
-                reject("missing or invalid properties");
-                return;
+            if (!found) {
+                continue;
             }
-            const newValues=propertyData.properties;
-            const descriptions = KeyHelper.getKeyDescriptions(true);
-            if (! currentValues)currentValues=globalStore.getMultiple(Object.keys(descriptions));
-            const values = {...currentValues}
-            let newLayout:string;
-            for (const dk in descriptions) {
-                const des = descriptions[dk];
-                let found=false;
-                for (const pk of Object.values(PropertyType)){
-                    if (pk === des.type && des.type !== PropertyType.INTERNAL){
-                        found=true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    continue;
-                }
-                const okey=dk.replace(/^properties\./,'');
-                if (okey in newValues) {
-                    values[dk] = newValues[okey];
-                    if (des.type === PropertyType.LAYOUT) newLayout=values[dk] as string;
-                }
-                else{
-                    if (opt_setDefaults ){
-                        values[dk]=des.defaultv;
-                        if (des.type === PropertyType.LAYOUT) newLayout=values[dk] as string;
-                    }
-                }
+            const okey = dk.replace(/^properties\./, '');
+            if (okey in newValues) {
+                values[dk] = newValues[okey];
+                if (des.type === PropertyType.LAYOUT) newLayout = values[dk] as string;
+            } else {
+                values[dk] = des.defaultv;
+                if (des.type === PropertyType.LAYOUT) newLayout = values[dk] as string;
+            }
 
-            }
-            if (newLayout){
-                layoutLoader.loadLayout(newLayout)
-                    .then((layout:any)=>{
-                        LayoutHandler.setLayoutAndName(layout,newLayout);
-                        resolve(values);
-                    })
-                    .catch((e:any)=>reject("unable to load layout: "+e));
-                //load layout
-            }
-            else {
-                resolve(values);
-            }
-        });
+        }
+        if (newLayout) {
+            const layout = await layoutLoader.loadLayout(newLayout)
+            LayoutHandler.setLayoutAndName(layout, newLayout);
+        }
+        globalStore.storeMultiple(values);
+        this._setChangedFlag(false);
     }
 
     listSettings(){

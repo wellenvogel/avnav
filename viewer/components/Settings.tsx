@@ -41,9 +41,9 @@ import globalstore from "../util/globalstore";
 import LayoutHandler, {LayoutData, layoutLoader} from '../util/layouthandler';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
-import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog} from "./OverlayDialog";
+import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog, showDialog} from "./OverlayDialog";
 import {ConfirmDialog} from './BasicDialogs';
-import {useDialogContext} from "./exports";
+import {useDialogContext, useStoreState} from "./exports";
 import {IDialogContext} from "./DialogContext";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
@@ -52,7 +52,9 @@ import {ItemNameDialog,checkName} from './ItemNameDialog';
 // @ts-ignore
 import Formatter from "../util/formatter";
 import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
-import {fetchItem} from "../util/itemFunctions";
+import {fetchItem, listItems} from "../util/itemFunctions";
+import {DownloadItemSelectDialog} from "./DownloadItemList";
+import {Item} from "./ItemList";
 
 
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{
@@ -570,7 +572,7 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
         return checkName(newName, settingsList||[], actions.nameForCheck,true,true);
     }
     useEffect(()=>{
-        propertyhandler.listSettings()
+        listItems('settings')
             .then((settings:string[])=>setSettingsList(settings))
             .catch(()=>{})
     },[])
@@ -614,11 +616,12 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
 export interface LoadSettingsProps{
     name:string,
     scope?:string,
-    dialogContext?:IDialogContext; //if not set - nop dialog but fail
+    dialogContext?:IDialogContext; //if not set - no dialog but fail
+    alwaysDialog?:boolean;
 }
 export const loadSettings = async (props:LoadSettingsProps) => {
     const setSettings = (checkedValues:SavedSettingsData) => {
-        return propertyhandler.importSettings(checkedValues, undefined, true);
+        return propertyhandler.importSettings(checkedValues);
     }
     let settings=await fetchItem({type:'settings',name:props.name})
     if (typeof settings === 'string'){
@@ -637,8 +640,54 @@ export const loadSettings = async (props:LoadSettingsProps) => {
             (dprops) => <ConfirmDialog
                 {...dprops}
                 text={verified.warnings.join('\n')}
-                title={'Import anyway?'}/>);
+                title={'Activate them anyway?'}/>);
         if (!user) return;
     }
+    else{
+        if (props.alwaysDialog){
+            const user=await showPromiseDialog(props.dialogContext,
+                (dprops) => <ConfirmDialog
+                    {...dprops}
+                    text={`settings ${props.name} verified`}
+                    title={'Activate settings?'}
+                />)
+            if (!user) return;
+        }
+    }
     return setSettings(verified.data);
+}
+export interface LoadSettingsDialogProps{
+    tryName?:string;
+}
+export const LoadSettingsDialog=(props:LoadSettingsDialogProps) => {
+    const dialogContext=useDialogContext();
+    const [notSaved]=useStoreState(keys.gui.global.settingsChanged);
+    if (notSaved){
+        return <DialogFrame title={"Current settings not saved"} >
+            <div className="dialogText">{"Your current settings are not saved to the server. OK to save now."}</div>
+            <DialogButtons buttonList={[
+                DBCancel(),
+                DBOk(async ()=>{
+                    await showDialog(dialogContext,()=><SaveSettingsDialog/>);
+                },{close:false})
+            ]}/>
+        </DialogFrame>
+    }
+    return <DownloadItemSelectDialog
+        type={'settings'}
+        title={'Select settings to activate'}
+        resolveFunction={
+        async (item:Item)=>{
+            try{
+                await loadSettings({name:item.name,scope:item.scope,dialogContext:dialogContext,alwaysDialog:true});
+            }catch (e){
+                if (e) Toast(e);
+                return;
+            }
+            await dialogContext.closeDialog();
+        }
+        }
+        immediateSelect={!!props.tryName}
+        selectedName={props.tryName}
+    />
 }

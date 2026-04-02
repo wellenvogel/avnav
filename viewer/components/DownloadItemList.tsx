@@ -106,7 +106,7 @@ const DownloadItem = (props:DownloadItemProps) => {
 };
 export type DownloadItemListProps = {
     type: ItemType;
-    selectCallback?:(ev:ButtonEvent)=>boolean;
+    selectCallback?:((ev:ButtonEvent)=>boolean)|((ev:ButtonEvent) => Promise<boolean>);
     uploadFile?: File;
     infoMode?: 0|1|2;
     noExtra?:boolean;
@@ -115,19 +115,32 @@ export type DownloadItemListProps = {
     autoreload?:number;
     uploadDone?:(done?:boolean|string) => void;
     selectedName?:string;
+    immediateSelect?:boolean; //if set and selectedName is set - immediately call the selectCallback if found
     scrollSelected?:number;  //if != 0 scroll selected item, repeat scroll on change
 
 }
 
 export const DownloadItemList = (
     {type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,
-        autoreload,uploadDone,selectedName,scrollSelected}:DownloadItemListProps) => {
+        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect}:DownloadItemListProps) => {
     const [items, setItems] = useState([]);
     const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
     const lastSelectedName=useRef(undefined);
+    const initialSelectedNameRef = useRef((immediateSelect && selectCallback)?selectedName:undefined);
     const readItems = useCallback(async () => {
         const items = await listItems(type);
         setItems(items);
+        if (initialSelectedNameRef.current) {
+            if (Array.isArray(items)){
+                for (const item of items){
+                    if (item.name === initialSelectedNameRef.current){
+                        initialSelectedNameRef.current=undefined;
+                        await selectCallback(setav(new Event('avnav'),{item:item}));
+                    }
+                }
+            }
+            initialSelectedNameRef.current=undefined;
+        }
     }, [type])
     const timer=useTimer((seq)=>{
        readItems().then(() => {
@@ -198,17 +211,8 @@ export const DownloadItemList = (
     if (type !== 'plugins') {
         displayList.sort(itemSort);
     }
-    let selectedIndex=-1;
     if (scrollSelected || vselectedName){
         lastSelectedName.current=vselectedName;
-        if (vselectedName) {
-            for (let i = 0; i < displayList.length; i++) {
-                if (displayList[i].name === vselectedName) {
-                    selectedIndex = i;
-                    break;
-                }
-            }
-        }
     }
     useEffect(()=>{
         if (selectedName !== vSelectedNameRef.current){
@@ -217,11 +221,12 @@ export const DownloadItemList = (
     },[selectedName,scrollSelected]);
     return <React.Fragment>
         <ItemList
+            keyFunction={(item:Item)=>item.name}
             className={'DownloadItemList'}
             itemClass={item}
             scrollable={true}
             itemList={displayList}
-            selectedIndex={selectedIndex}
+            selectedKey={vselectedName}
             scrollSelected={scrollSelected}
             onItemClick={async (ev) => {
                 const item = avitem(ev);
@@ -278,7 +283,9 @@ export interface DownloadItemSelectDialogProps{
     type:ItemType,
     className?:string,
     title?:string,
-    resolveFunction:(item:Item)=>void
+    selectedName?:string,
+    immediateSelect?:boolean,
+    resolveFunction:((item:Item)=>void)|((item:Item)=>Promise<void>)
 }
 
 export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> {
@@ -287,10 +294,12 @@ export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> 
     <DownloadItemList type={props.type}
                              autoreload={0}
                              noExtra={true}
-                             selectCallback={(ev: ButtonEvent) => {
+                             selectedName={props.selectedName}
+                             immediateSelect={props.immediateSelect}
+                             selectCallback={async (ev: ButtonEvent) => {
                                  const item=avitem(ev);
                                  if (! item) return false;
-                                 props.resolveFunction(item);
+                                 await props.resolveFunction(item);
                                  dialogContext.closeDialog();
                                  return true
                              }}/>
