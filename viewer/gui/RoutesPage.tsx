@@ -120,24 +120,14 @@ const RoutesPage=(props:RoutesPageProps)=>{
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <MvHeadline
-                        {...scrollProps}
-                        title={"Server"}
-                        number={0}
-                        max={1}
-                    />
+                    <MvHeadline title={"Server"}/>
                     <StatusView
                         kinds={[ChannelKinds.ROUTE]}
                     ></StatusView>
                 </React.Fragment>
                 ,
                 <React.Fragment key={1}>
-                    <MvHeadline
-                        {...scrollProps}
-                        title={"Stored Routes"}
-                        number={1}
-                        max={1}
-                    ></MvHeadline>
+                    <MvHeadline title={"Stored Routes"}/>
                     <DownloadItemList
                         {...uploadProps}
                         type={"route"}

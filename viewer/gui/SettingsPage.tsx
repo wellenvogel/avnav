@@ -228,10 +228,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                        views={[
                 <React.Fragment key={0}>
                     <MvHeadline
-                        {...scrollProps}
                     title={'Categories'}
-                    number={0}
-                    max={1}
                     />
                     <SectionList onSelect={(ev:Event) =>{
                         const item=avitem(ev);
@@ -240,10 +237,9 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     }/>
                 </React.Fragment>,
                 <React.Fragment key={1}>
-                    <MvHeadline {...scrollProps}
+                    <MvHeadline
                                 title={'Stored Settings'}
-                                number={1}
-                                max={1}/>
+                               />
                     <DownloadItemList type={ITEM_TYPE}
                                       {...uploadProps}
                                       autoreload={3000}

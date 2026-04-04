@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useCallback, useEffect} from "react";
+import React, {createContext, useCallback, useContext, useEffect} from "react";
 import Helper from "../util/helper";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -112,32 +112,55 @@ export const useScrollHelper=(initialScroll:number=0):ScrollHelper=>{
         isVisible
     ]
 }
+interface MvContextProps{
+    minVisible:number;
+    maxVisible:number;
+    numViews:number;
+    currentView:number;
+    scrollTo:(nr:number)=>void;
+}
+const defaultMvConext:MvContextProps={
+    currentView: 0,
+    maxVisible: 0,
+    minVisible: 0,
+    numViews: 0,
+    scrollTo:()=>{}
+}
+
+const MvContext=createContext<MvContextProps>(defaultMvConext);
+
+export const useMvContext=()=>{
+    const mvContext=useContext(MvContext);
+    return {
+        visible: mvContext.currentView >= mvContext.minVisible && mvContext.currentView <= mvContext.maxVisible,
+        currentView: mvContext.currentView,
+        showLeftScroll:mvContext.currentView === mvContext.minVisible && mvContext.minVisible > 0,
+        showRightScroll: mvContext.currentView === mvContext.maxVisible && mvContext.maxVisible < (mvContext.numViews-1),
+        scrollTo:(nr:number)=>mvContext.scrollTo(nr),
+    }
+}
 
 export interface MvHeadlineProps{
     className?:string;
     title?:string;
-    scrollTo?:(nr:number)=>void;
-    isVisible?:(nr:number)=>boolean;
-    number?:number;
-    max?:number;
+    showScroll?:boolean  //default: true
 }
 
 export const MvHeadline=(props:MvHeadlineProps)=>{
     const className=Helper.concatsp("header",props.className);
-    const showScroll=!!props.scrollTo && !!props.isVisible && props.number!==undefined && props.max !== undefined;
-    const showLeft=showScroll && props.number > 0 && !props.isVisible(props.number-1);
-    const showRight=showScroll && props.number < props.max && ! props.isVisible(props.number+1);
+    const mvContext=useMvContext();
+    const showScroll = Helper.unsetorTrue(props.showScroll);
     return <div className={className}>
         <ListSlot
             className={'left'}
-            icon={{className:showLeft?'left':'_undefined'}}
-            onClick={()=>showLeft && props.scrollTo(props.number-1)}
+            icon={{className:(showScroll && mvContext.showLeftScroll)?'left':'_undefined'}}
+            onClick={()=>showScroll && mvContext.showLeftScroll && mvContext.scrollTo(mvContext.currentView-1)}
         />
         <ListSlot text={props.title} className={'main'}/>
         <ListSlot
             className={'right'}
-            icon={{className:showRight?'right':'_undefined'}}
-            onClick={()=>showRight && props.scrollTo(props.number+1)}
+            icon={{className:showScroll && mvContext.showRightScroll?'right':'_undefined'}}
+            onClick={()=>showScroll && mvContext.showRightScroll && mvContext.scrollTo(mvContext.currentView+1)}
         />
     </div>
 }
@@ -146,12 +169,17 @@ export const MultiView = (props: MultiViewProps) => {
     const windowDimensions=useStoreState(keys.gui.global.windowDimensions);
     const [itemWidth,setItemWidth]=React.useState(0);
     const [visibleNumber,setVisibleNumber]=React.useState(props.visibleNumber);
+    const [minVisible,setMinVisible]=React.useState(-1);
+    const [maxVisible,setMaxVisible]=React.useState(-1);
     const outerRef = React.useRef<HTMLDivElement>(null);
     const scrollTimerRef = React.useRef<number>(undefined);
     const lastReportedRef = React.useRef([-1,-1]);
     const numViews=props.views?props.views.length:0;
     let maxNumber=(props.maxNumber>0)?props.maxNumber:1;
     if (maxNumber>numViews) { maxNumber=numViews;}
+    const scrollTo=useCallback((nr:number)=>{
+        if (nr >= 0 && nr < numViews) setVisibleNumber(nr);
+    },[])
     useEffect(() => {
         if (! outerRef.current) {
             setItemWidth(0);
@@ -178,6 +206,8 @@ export const MultiView = (props: MultiViewProps) => {
             if (max >= numViews) max=numViews-1;
             if (leftView !== lastReportedRef.current[0] || max != lastReportedRef.current[1]) {
                 lastReportedRef.current = [leftView,max];
+                setMinVisible(leftView);
+                setMaxVisible(max);
                 if (props.viewChanged){
                     props.viewChanged(leftView,max);
                 }
@@ -202,7 +232,15 @@ export const MultiView = (props: MultiViewProps) => {
                 width={itemWidth}
                 scrollInto={(idx === visibleNumber)?(props.visibleNumberSequence||1):0}
             >
+                <MvContext.Provider value={{
+                    numViews:numViews,
+                    minVisible:minVisible,
+                    maxVisible:maxVisible,
+                    currentView:idx,
+                    scrollTo:scrollTo
+                }}>
                 {view}
+                </MvContext.Provider>
             </View>
         })
         }

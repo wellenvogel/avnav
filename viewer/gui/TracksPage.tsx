@@ -80,7 +80,7 @@ const TracksPage=(props:TracksPageProps)=>{
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <MvHeadline title={"Server"} {...scrollProps} number={0} max={1}/>
+                    <MvHeadline title={"Server"}/>
                     <StatusView
                         kinds={[ChannelKinds.TRACK]}
                     ></StatusView>
@@ -89,9 +89,6 @@ const TracksPage=(props:TracksPageProps)=>{
                 <React.Fragment key={1}>
                     <MvHeadline
                         title={"Tracks & Logs"}
-                        {...scrollProps}
-                        number={1}
-                        max={1}
                     ></MvHeadline>
                     <DownloadItemList
                         {...uploadProps}

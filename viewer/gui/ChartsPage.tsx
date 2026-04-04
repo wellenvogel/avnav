@@ -134,7 +134,7 @@ const ChartsPage=(props:ChartsPageProps)=>{
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <MvHeadline title={"Server"} {...scrollProps} number={0} max={NUMVIEWS - 1}/>
+                    <MvHeadline title={"Server"}/>
                     <StatusView
                         kinds={[ChannelKinds.CHART]}
                     ></StatusView>
@@ -143,9 +143,6 @@ const ChartsPage=(props:ChartsPageProps)=>{
                 <React.Fragment key={1}>
                     <MvHeadline
                         title={"Charts"}
-                        {...scrollProps}
-                        number={1}
-                        max={numViews - 1}
                     ></MvHeadline>
                     <UploadAction onClick={uploadActionCharts} title={'chart'}/>
                     <DownloadItemList
@@ -158,9 +155,6 @@ const ChartsPage=(props:ChartsPageProps)=>{
                 ,
                 hasImports ?<React.Fragment key={2}>
                     <MvHeadline title={'Imports'}
-                                {...scrollProps}
-                                number={2}
-                                max={numViews - 1}
                     />
                     <UploadAction onClick={uploadActionCharts} title={'import'}/>
                     <ImporterView
@@ -169,9 +163,7 @@ const ChartsPage=(props:ChartsPageProps)=>{
                 </React.Fragment>:null,
                 <React.Fragment key={3}>
                     <MvHeadline title={"Overlays"}
-                                {...scrollProps}
-                                number={hasImports?3:2}
-                                max={numViews - 1}/>
+                                />
                     <UploadAction onClick={uploadActionOverlays} title={'overlay'}/>
                     <DownloadItemList
                         {...uploadPropsOverlays}

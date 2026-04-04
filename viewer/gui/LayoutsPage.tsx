@@ -88,7 +88,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
         <PageLeft title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <MvHeadline title={"Server"} {...scrollProps} number={0} max={1}/>
+                    <MvHeadline title={"Server"}/>
                     <StatusView
                         kinds={[ChannelKinds.LAYOUT]}
                     ></StatusView>
@@ -97,9 +97,6 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                 <React.Fragment key={1}>
                     <MvHeadline
                         title={"Current"}
-                        {...scrollProps}
-                        number={1}
-                        max={1}
                     ></MvHeadline>
                     <ListItem className={'activeLayout'}
                               onClick={()=>showDialog(undefined, ()=><SelectLayoutDialog/>)}

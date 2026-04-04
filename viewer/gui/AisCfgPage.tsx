@@ -83,10 +83,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                        views={[
                 <React.Fragment key={"0"}>
                     <MvHeadline
-                        {...scrollProps}
                         title={"Server"}
-                        number={0}
-                        max={1}
                     />
                 <StatusView
                     kinds={[ChannelKinds.AIS]}
@@ -95,10 +92,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
                 ,
                 <React.Fragment key={"1"}>
                               <MvHeadline
-                                {...scrollProps}
                                 title={"AIS Targets"}
-                                number={1}
-                                max={1}
                               >
                               </MvHeadline>
                               <CompleteAisListWithStore
