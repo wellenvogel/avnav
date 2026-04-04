@@ -590,7 +590,7 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                             true
                         )
                         LocalStorageManager.setItem(PREFIX_NAMES.SETTINGS_NAME, undefined, proposedName);
-                        globalstore.storeData(keys.gui.global.settingsChanged, false);
+                        propertyhandler.setChangedFlag(false);
                         Toast("settings saved");
                         return true;
                     }catch(e){

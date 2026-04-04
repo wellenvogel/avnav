@@ -129,7 +129,7 @@ class PropertyHandler {
         const old=LocalStorage.getItem(name);
         const changed=old !== raw;
         LocalStorage.setItem(name,undefined, raw);
-        this._setChangedFlag(globalStore.getData(keys.gui.global.settingsChanged)||changed);
+        this.setChangedFlag(globalStore.getData(keys.gui.global.settingsChanged)||changed);
         splitsupport.sendToFrame('settingsChanged');
     }
 
@@ -236,9 +236,9 @@ class PropertyHandler {
         return values;
     }
 
-    _setChangedFlag(v:boolean) {
+    setChangedFlag(v:boolean) {
         globalStore.storeData(keys.gui.global.settingsChanged,v);
-        LocalStorage.setItem(PREFIX_NAMES.SETTINGS_CHANGED,undefined,v);
+        LocalStorage.setItem(PREFIX_NAMES.SETTINGS_CHANGED,undefined,v?"true":"false");
     }
     resetToSaved(){
         const saved=this._getSavedValues()
@@ -250,7 +250,7 @@ class PropertyHandler {
         this.saveUserData({});
         if (localStorageManager.hasPrefix()) this.saveUserData({},true);
         this.resetToSaved();
-        this._setChangedFlag(false);
+        this.setChangedFlag(false);
     }
 
     firstStart(){
@@ -548,7 +548,7 @@ class PropertyHandler {
             LayoutHandler.setLayoutAndName(layout, newLayout);
         }
         globalStore.storeMultiple(values);
-        this._setChangedFlag(false);
+        this.setChangedFlag(false);
     }
 
     listSettings(){
