@@ -563,7 +563,10 @@ export interface SaveSettingsDialogProps{
 export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
     const actions = createItemActions({type:'settings'});
     let lastName=LocalStorageManager.getItem(PREFIX_NAMES.SETTINGS_NAME);
-    if (! lastName) lastName="settings";
+    if (! lastName) {
+        lastName="settings";
+        if (LocalStorageManager.hasPrefix()) lastName=lastName+'-'+LocalStorageManager.getPrefix()+"-";
+    }
     const oldName = actions.nameToBaseName(lastName).replace(/-*[0-9]*$/, '');
     const suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
     let proposedName = oldName + "-" + suffix;
