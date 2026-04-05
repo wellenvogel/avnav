@@ -68,7 +68,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
              onClick:()=>{
                  showDialog(undefined, ()=><EditSettingsCategory
                      category={"General"}
-                     title={'Layout Settings'}
+                     title={'General Settings'}
                  />)
              }
          },
