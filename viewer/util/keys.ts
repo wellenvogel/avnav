@@ -335,17 +335,16 @@ const keys:Record<string,KeyType>={
     //they will be written to local storage on change
     //and the store will be filled with initial values on start
     properties: {
-        lastLoadedName: new Property('system.default'),
         layers: {
-            ais: new Property(true, "AIS", PropertyType.CHECKBOX),
-            track: new Property(true, "Track", PropertyType.CHECKBOX),
-            nav: new Property(true, "Navigation", PropertyType.CHECKBOX),
-            boat: new Property(true, "Boat", PropertyType.CHECKBOX),
-            grid: new Property(true, "Grid", PropertyType.CHECKBOX),
-            compass: new Property(true, "Compass", PropertyType.CHECKBOX),
-            base: new Property(true, "Base", PropertyType.CHECKBOX),
-            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
-            user: new Property(true,"User/Plugins",PropertyType.CHECKBOX)
+            ais: new Property(true, "AISLayer", PropertyType.CHECKBOX),
+            track: new Property(true, "TrackLayer", PropertyType.CHECKBOX),
+            nav: new Property(true, "NavigationLayer", PropertyType.CHECKBOX),
+            boat: new Property(true, "BoatLayer", PropertyType.CHECKBOX),
+            grid: new Property(true, "Show Grid", PropertyType.CHECKBOX),
+            compass: new Property(true, "Show Compass", PropertyType.CHECKBOX),
+            base: new Property(true, "Show Base Map", PropertyType.CHECKBOX),
+            scale: new Property(true,"Show ScaleLine", PropertyType.CHECKBOX),
+            user: new Property(true,"Show User/Plugin objects",PropertyType.CHECKBOX)
         },
         startNavPage: new Property(false,"start with last map",PropertyType.CHECKBOX),
         startLastSplit: new Property(false,"start with last split mode",PropertyType.CHECKBOX),
@@ -529,6 +528,7 @@ const keys:Record<string,KeyType>={
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.DELETED),
         minAISspeed: new Property(0.1,"",PropertyType.DELETED), //minimal speed in m/s that we consider when computing cpa/tcpa
         navUrl: new Property("/api","",PropertyType.DELETED),
+        lastLoadedName: new Property('system.default','',PropertyType.DELETED),
     }
 };
 

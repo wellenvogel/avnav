@@ -61,19 +61,33 @@ export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
 }
 export const settingsSections:Record<string, string[]> = {
-    Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
-        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
-        keys.properties.layers.user],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
         keys.properties.connectionLostAlarm],
-    Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
         keys.properties.showSplitButton],
-    Layout:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
+    General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
+        keys.properties.allowTwoWidgetRows,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
         keys.properties.autoUpdateUserCss, keys.properties.mainNavExpand,keys.properties.mainNavCols],
+    Navigation: [keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
+        keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
+        keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
+        keys.properties.courseAverageTolerance,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
+        keys.properties.anchorCircleColor,keys.properties.measureColor,keys.properties.measureRhumbLine],
+    Map:        [
+        keys.properties.layers.base,
+        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
+        keys.properties.layers.user,
+        keys.properties.startNavPage,
+        keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
+        keys.properties.clickTolerance,keys.properties.featureInfo,
+        keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
+        keys.properties.mapOnlineUpZoom,
+        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
+        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
+    ],
     AIS:        [keys.properties.layers.ais,keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
         keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
@@ -84,24 +98,12 @@ export const settingsSections:Record<string, string[]> = {
         keys.properties.aisShowB,keys.properties.aisShowOther,keys.properties.aisUseHeading,
         keys.properties.aisReducedList,keys.properties.aisListUpdateTime, keys.properties.aisHideTime, keys.properties.aisLostTime,
         keys.properties.aisMarkAllWarning,keys.properties.aisShowErrors],
-    Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
-        keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
-        keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
-        keys.properties.courseAverageTolerance,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
-        keys.properties.anchorCircleColor,keys.properties.measureColor,keys.properties.measureRhumbLine],
-    Map:        [
-        keys.properties.startNavPage,
-        keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
-        keys.properties.clickTolerance,keys.properties.featureInfo,
-        keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
-        keys.properties.mapOnlineUpZoom,
-        keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
-        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
-    ],
-    Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
+    Track:      [keys.properties.layers.track,keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
     Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
     Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite,keys.properties.remoteGuardTime]
 };
+
+export type SettingSectionKeys=keyof typeof settingsSections;
 
 type Condition=(values?:SettingsValuesType)=>boolean;
 export const settingsConditions:Record<string,Condition>={
@@ -316,7 +318,7 @@ export const discardChanges=(dialogContext?:IDialogContext)=>{
 
 export interface EditSettingsCategoryProps{
     className?:string;
-    category:string|string[];
+    category:SettingSectionKeys|SettingSectionKeys[];
     title?:string;
 }
 export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{

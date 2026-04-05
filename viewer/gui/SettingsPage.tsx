@@ -164,7 +164,13 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                 }
             },
             SettingsSplitReset: {
-                onClick: () => {
+                onClick: async () => {
+                    const ok=showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog
+                        {...dp}
+                        title={'Reset Split Settings to Defaults?'}
+                        text={'This will reset all settings for this side (left/right) to the values used when not in split mode.'}
+                    />)
+                    if (!ok) return;
                     const masterValues = PropertyHandler.getMasterValues();
                     const promises = [];
                     for (const key in masterValues) {
