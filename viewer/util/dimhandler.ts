@@ -1,5 +1,6 @@
-import globalStore from './globalstore.ts';
-import keys from './keys.ts';
+import globalStore from './globalstore';
+import keys from './keys';
+// @ts-ignore
 import splitsupport from "./splitsupport";
 import Helper from "./helper";
 import base from "../base";
@@ -8,10 +9,18 @@ import {getServerCommand} from "./UiHelper";
 
 const KEY=keys.gui.global.dimActive;
 const URLPARAM="dimm";
+type ActionFunction=(p:string|number)=>(void|Promise<void>)
 class DimmHandler{
-    constructor(opt_defaultTimeout){
+    // @ts-ignore
+    private timer: number;
+    private timeout: number;
+    private mode: string;
+    private actionFunction:ActionFunction;
+    private lastTrigger: number;
+    private lastOff: number;
+    constructor(opt_defaultTimeout?:number){
         this.timerAction=this.timerAction.bind(this);
-        this.timer=window.setInterval(this.timerAction(),1000);
+        this.timer=window.setInterval(()=>this.timerAction(),1000);
         this.timeout=opt_defaultTimeout||60000;
         globalStore.storeData(KEY,false);
         this.trigger=this.trigger.bind(this);
@@ -22,7 +31,7 @@ class DimmHandler{
         this.actionFunction=undefined;
         this.lastTrigger=0;
         this.lastOff=0;
-        splitsupport.subscribe('dimm',(data)=>{
+        splitsupport.subscribe('dimm',(data:{value:string})=>{
             if (data.value !== globalStore.getData(KEY)){
                 if (data.value) this.activate(true);
                 else this.trigger(true);
@@ -31,14 +40,14 @@ class DimmHandler{
 
     }
     init(){
-        let mode=Helper.getParam(URLPARAM);
+        const mode=Helper.getParam(URLPARAM);
         if (mode){
             if (mode.match(/^server:/)){
-                let command=mode.replace(/^server:/,'');
+                const command=mode.replace(/^server:/,'');
                 getServerCommand(command)
                     .then((serverCommand)=>{
                         if (serverCommand) {
-                            this.actionFunction = (value) => {
+                            this.actionFunction = (value:string) => {
                                 RequestHandler.getJson({
                                     request: 'api',
                                     type: 'command',
@@ -46,13 +55,13 @@ class DimmHandler{
                                     name: command,
                                     parameter: value+""
                                 })
-                                    .then((res)=>{})
+                                    .then(()=>{})
                                     .catch((err)=>base.log("cannot execute command "+command+": "+err));
                             }
                             splitsupport.addUrlParameter(URLPARAM,mode);
                         }
                     })
-                    .catch((err)=>base.log("cannot get command for dim: "+command));
+                    .catch(()=>base.log("cannot get command for dim: "+command));
             }
             else{
                 if (mode === "true"){
@@ -65,14 +74,19 @@ class DimmHandler{
         }
         else {
             try {
+                // @ts-ignore
                 if (window && window.bonjourBrowser && window.bonjourBrowser.dimScreen) {
+                    // @ts-ignore
                     this.actionFunction = window.bonjourBrowser.dimScreen.bind(window.bonjourBrowser);
                 }
             } catch (e) {
+                base.log("dimhandler action error",e);
             }
             if (!this.actionFunction) {
                 try {
+                    // @ts-ignore
                     if (window.avnavAndroid && window.avnavAndroid.dimScreen) {
+                        // @ts-ignore
                         this.actionFunction = window.avnavAndroid.dimScreen.bind(window.avnavAndroid);
                     }
                 } catch (e) {
@@ -80,7 +94,7 @@ class DimmHandler{
             }
         }
     }
-    activate(opt_noSend){
+    activate(opt_noSend?:boolean){
         if (this.mode != "manual" && this.mode != "timer") return;
         if (! this.enabled()) return;
         globalStore.storeData(KEY,true);
@@ -94,7 +108,7 @@ class DimmHandler{
             })
         }
     }
-    setMode(mode){
+    setMode(mode:string){
         if (this.mode != "manual" && this.mode != "timer" && this.mode != "off") return false;
         this.mode=mode;
         this.trigger();
@@ -103,15 +117,15 @@ class DimmHandler{
 
         if (this.mode == "timer"){
             if (globalStore.getData(KEY,false)) return;
-            let now=(new Date()).getTime();
+            const now=(new Date()).getTime();
             if (now > (this.lastTrigger+this.timeout)){
                 this.activate();
             }
         }
     }
 
-    trigger(opt_noSend){
-        let now=(new Date()).getTime();
+    trigger(opt_noSend?:boolean){
+        const now=(new Date()).getTime();
         this.lastTrigger=now;
         if (this.isActive()){
             this.lastOff=now;
@@ -129,7 +143,7 @@ class DimmHandler{
             this.trigger();
         }
         else{
-            let now=(new Date()).getTime();
+            const now=(new Date()).getTime();
             if (this.lastOff > (now - parseFloat(globalStore.getData(keys.properties.remoteDimGuard,200)))) {
                 return;//prevent a re-activate in a remote channel action
             }

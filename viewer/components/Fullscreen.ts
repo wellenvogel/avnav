@@ -1,23 +1,25 @@
-import fullscreen from 'fullscreen-polyfill';
-import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.ts';
+// @ts-ignore
+import 'fullscreen-polyfill';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
+// @ts-ignore
 import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
 import Requests from '../util/requests';
 import Toast from "./Toast";
-import piIcon from '../images/rpi.png';
+// @ts-ignore
 import splitsupport from "../util/splitsupport";
 import Helper from "../util/helper";
 import {getServerCommand} from "../util/UiHelper";
 
 let fullScreenBlocked=false;
 let fullScreenIcon=defaultFullScreenIcon;
-let userAgent=navigator.userAgent;
+const userAgent=navigator.userAgent;
 //it seems that fullscreen does not work on older android versions (at least tested to work since 6/chrome44)
 if (userAgent.match(/Chrome/)){
-    let chromeVersion=userAgent.replace(/.*Chrome[/]*/,'').replace(/ .*/,'');
+    const chromeVersion=userAgent.replace(/.*Chrome[/]*/,'').replace(/ .*/,'');
     if (chromeVersion){
-        chromeVersion=chromeVersion.replace(/\..*/,'');
-        if (chromeVersion < 44){
+        const chromeVersionI=parseInt(chromeVersion.replace(/\..*/,''));
+        if (chromeVersionI < 44){
             fullScreenBlocked=true;
         }
     }
@@ -36,7 +38,7 @@ let isFullScreen=()=>{
 
 const toggleFullscreenDefault=()=>{
     if (! fullScreenAvailable()) return;
-    let element=document.fullscreenElement;
+    const element=document.fullscreenElement;
     if (! element) {
         document.body.requestFullscreen();
     }
@@ -49,12 +51,13 @@ let toggleFullscreen=toggleFullscreenDefault;
 
 const handleSplitMode=()=>{
     if (globalStore.getData(keys.gui.global.splitMode)){
+        // @ts-ignore
         fullScreenAvailable=()=> ! window.avnavAndroid;
         isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
         toggleFullscreen=()=>{
             splitsupport.sendToFrame('fullscreen');
         }
-        splitsupport.subscribe('fullScreenChanged',(data)=>{
+        splitsupport.subscribe('fullScreenChanged',(data:{isFullScreen?:boolean})=>{
             globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
         })
     }
@@ -66,11 +69,11 @@ const init=()=>{
             handleSplitMode();
         },[keys.gui.global.splitMode]);
         handleSplitMode();
-        let mode=Helper.getParam("fullscreen");
+        const mode=Helper.getParam("fullscreen");
         if (mode) {
             splitsupport.addUrlParameter("fullscreen", mode);
             if (mode.match(/^server:/)) {
-                let command = mode.replace(/^server:/, '');
+                const command = mode.replace(/^server:/, '');
                 getServerCommand(command)
                     .then((serverCommand) => {
                         if (serverCommand) {
@@ -81,7 +84,7 @@ const init=()=>{
                             fullScreenBlocked = true;
                         }
 
-                        let current = globalStore.getData(keys.gui.global.isFullScreen);
+                        const current = globalStore.getData(keys.gui.global.isFullScreen);
                         //toggle this to triger button redraw
                         globalStore.storeData(keys.gui.global.isFullScreen, !current);
                         globalStore.storeData(keys.gui.global.isFullScreen, current);
@@ -129,9 +132,10 @@ const fullScreenDefinition={
         toggle:keys.gui.global.isFullScreen,
         split: keys.gui.global.splitMode
     },
-    updateFunction:(state)=>{
+    updateFunction:(state:Record<string,any>)=>{
         return {
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...
+            // @ts-ignore
             visible: state.visible && fullScreenAvailable() && ! window.avnavAndroid,
             dummy: state.toggle,
             icon: fullScreenIcon

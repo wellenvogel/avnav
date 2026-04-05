@@ -465,6 +465,8 @@ const keys:Record<string,KeyType>={
         nightMode: new Property(false, "NightMode", PropertyType.CHECKBOX),
         nightColorDim: new Property(60, "Night Dim for Colors", PropertyType.RANGE, [5, 100]), //should match @nightModeVale in less
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999],"If the display with in pixel is below this value the \"small\" flag for the layout is set"),
+        dashboardNum: new Property(5,"number of dashboards",PropertyType.RANGE,[1,10],
+            'The maximum number of dashboard pages. Pages are only shown if widgets are assigned during layout editing'),
         mapClickWorkaroundTime: new Property(300, "time to ignore events map click", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
         nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.CHECKBOX),

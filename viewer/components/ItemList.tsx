@@ -101,7 +101,7 @@ const Content=(props:ContentProps)=>{
 interface SortableContentProps extends ContentProps{
     horizontal?: boolean;
     allowOther?: boolean;
-    dragFrame?: number;
+    dragFrame?: string|number;
     onSortEnd?: OnDragEnd;
     dragdrop?: boolean;
 

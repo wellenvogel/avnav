@@ -27,7 +27,7 @@ import ButtonList from '../components/ButtonList.tsx';
 import RouteEdit, {StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
-import EditPageDialog from '../components/EditPageDialog.jsx';
+import {createDialog, RawButtonDef} from '../components/EditPageDialog';
 import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import Mob from '../components/Mob.ts';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
@@ -985,8 +985,11 @@ const EditRoutePage = (props) => {
         },
         CenterActionButton,
         Mob.mobDefinition(history),
-        EditPageDialog.getButtonDef(PAGENAME,
-            MapPage.PANELS, [LAYOUT_OPTIONS.SMALL], dialogContext),
+        {
+            ...RawButtonDef,
+            onClick:()=>createDialog(PAGENAME,
+            MapPage.PANELS, [LAYOUT_OPTIONS.SMALL], dialogContext)
+        },
         LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
         LayoutHandler.revertButtonDef((pageWithOptions) => {
             if (pageWithOptions.location !== props.location) {

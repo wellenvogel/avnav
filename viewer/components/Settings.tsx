@@ -22,9 +22,7 @@
  */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/keys";
-// @ts-ignore
 import DimHandler from '../util/dimhandler';
-// @ts-ignore
 import FullScreen from './Fullscreen';
 import propertyhandler, {SavedSettingsData} from '../util/propertyhandler';
 import Toast from "./Toast";
@@ -67,7 +65,7 @@ export const settingsSections = {
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
         keys.properties.showSplitButton],
     General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
-        keys.properties.allowTwoWidgetRows,keys.properties.nightFade,
+        keys.properties.allowTwoWidgetRows,keys.properties.dashboardNum,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
         keys.properties.autoUpdateUserCss, keys.properties.mainNavExpand,keys.properties.mainNavCols],

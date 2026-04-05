@@ -56,7 +56,7 @@ export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     AIS: "",
     CHANNELS: "Connections/Devices",
     DOWNLOAD: "",
-    GPS: "",
+    GPS: "Dashboard",
     INFO: "",
     MAIN: "Select Chart",
     NAV: "Navigation",

@@ -229,7 +229,7 @@ export const useAvnavSortContext=()=>useContext(SortContextImpl);
 
 export interface SortContextProps{
     onDragEnd?: OnDragEnd
-    id:number,
+    id:number|string,
     mode: SortModes,
     children?: React.ReactNode,
     allowOther?: boolean,

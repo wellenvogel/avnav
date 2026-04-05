@@ -47,18 +47,19 @@ import LayoutsPageButtons from "./LayoutsPageButtons";
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
 import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
+import GpsPageButtons from "./GpsPageButtons";
 
 type PageKind='navigation'|'settings';
 
 class Page extends CopyAware{
     name:string;
     displayName?:string;
-    buttons:ButtonDef[];
+    buttons:ButtonDef[]|(()=>ButtonDef[]);
     kind:PageKind;
     options:Record<string, any>;
     constructor(name:string,kind:PageKind,
                 displayName?:string,
-                buttons?:ButtonDef[],
+                buttons?:ButtonDef[]|(()=>ButtonDef[]),
                 options?:Record<string, any>
         ){
         super();
@@ -73,7 +74,8 @@ class Page extends CopyAware{
     }
     getButtons(){
         const addonButtons=addons.getPageUserButtons(this.name);
-        return this.buttons.concat(propsToDefs(addonButtons));
+        const buttons=(typeof this.buttons === 'function'? this.buttons() :this.buttons)
+        return buttons.concat(propsToDefs(addonButtons));
     }
 }
 
@@ -83,6 +85,8 @@ const mainTree=[
         MainPageButtons),
     new Page(PAGEIDS.NAV,'navigation',PAGE_TITLES.NAV,
         NavPageButtons),
+    new Page(PAGEIDS.GPS,'navigation',PAGE_TITLES.GPS,
+        GpsPageButtons),
     new Page(PAGEIDS.CHARTS,'settings',PAGE_TITLES.CHARTS,
         ChartsPageButtons),
     new Page(PAGEIDS.NROUTE,'settings',PAGE_TITLES.NROUTE,
@@ -246,8 +250,9 @@ export const MainNav = (props:MainNavProps) => {
 }
 export const InjectMainMenu=(
     pagename:string,
-    pageButtons:ButtonDef[]
+    pageButtons:ButtonDef[]|(()=>ButtonDef[])
     ) => {
+    const computedButtons=(typeof pageButtons === 'function'? pageButtons() :pageButtons);
     return propsToDefs([ {
         name: 'MainNav',
         onClick: (ev:SyntheticEvent)=>{
@@ -260,13 +265,13 @@ export const InjectMainMenu=(
             else if (columns == MainColumns.all) colClass="full";
             showDialog(dialogContext,()=><MainNav
                 current={pagename}
-                currentButtons={pageButtons}
+                currentButtons={computedButtons}
                 expandMode={expandMode}
             />,undefined,{coverClassName:Helper.concatsp('MainNavCover',colClass)})
         }
     },
         LayoutFinishedDialog.getButtonDef(),
-    ]).concat(pageButtons,propsToDefs(addons.getPageUserButtons(pagename)));
+    ]).concat(computedButtons,propsToDefs(addons.getPageUserButtons(pagename)));
 }
 
 export const handleInitialButton = (history: IHistory, pageButtons: ButtonDef[], dialogContext?: IDialogContext) => {

@@ -30,9 +30,7 @@ import anchorWatch,{AnchorWatchKeys,isWatchActive} from "../components/AnchorWat
 import {CenterActionButton} from "../components/FeatureInfoDialog";
 // @ts-ignore
 import RemoteChannelDialog from '../components/RemoteChannelDialog';
-// @ts-ignore
 import FullScreen from '../components/Fullscreen';
-// @ts-ignore
 import Dimmer from '../util/dimhandler';
 import GeneralButtons from "./GeneralButtons";
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);

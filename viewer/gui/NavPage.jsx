@@ -27,10 +27,10 @@ import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
-import EditPageDialog from '../components/EditPageDialog.jsx';
+import {RawButtonDef,createDialog} from '../components/EditPageDialog';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.ts';
-import Dimmer from '../util/dimhandler.js';
+import Dimmer from '../util/dimhandler';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
 import FullScreen from '../components/Fullscreen';
@@ -718,9 +718,12 @@ const NavPage=(props)=>{
         }
     }, [history]);
     const editLayoutButtons=propsToDefs([
-        EditPageDialog.getButtonDef(PAGENAME,
-            MapPage.PANELS,
-            [LAYOUT_OPTIONS.SMALL,LAYOUT_OPTIONS.ANCHOR]),
+        {
+            ...RawButtonDef,
+            onClick: () => createDialog(PAGENAME,
+                MapPage.PANELS,
+                [LAYOUT_OPTIONS.SMALL, LAYOUT_OPTIONS.ANCHOR])
+        },
         {
             name: 'NavMapWidgets',
             editOnly: true,

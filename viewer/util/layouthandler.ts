@@ -9,7 +9,7 @@ import defaultLayout from '../layout/default.json';
 // @ts-ignore
 import cloneDeep from "clone-deep";
 import Helper, {valueof} from "./helper";
-import {PageType} from "./pageids";
+import {PAGEIDS, PageType} from "./pageids";
 import {Item} from "./itemFunctions";
 
 export enum ACTIONS {
@@ -37,7 +37,12 @@ export enum ADD_MODES{
  */
 export type LayoutOptionFlags=Partial<Record<valueof<typeof LAYOUT_OPTIONS>,boolean>>;
 
-export type LayoutPage=PageType|{layoutPage?:PageType,location?:PageType};
+export interface PageWithOptions{
+    layoutPage?:PageType|string,
+    location:PageType,
+    options?:Record<string,any>
+}
+export type LayoutPage=PageType|PageWithOptions;
 export interface LayoutData{
     keys?: KeyMappings;
     css?: string;
@@ -114,7 +119,7 @@ class LayoutAction{
 }
 
 class LayoutTransaction{
-    pageWithProps: { location?: string ,layoutPage?:string};
+    pageWithProps: { location: string ,layoutPage?:string};
     actions: LayoutAction[];
     constructor(pageWithProps:LayoutPage) {
         if (typeof(pageWithProps) === 'string'){
@@ -725,7 +730,7 @@ class LayoutHandler{
         this.hiddenPanels={};
     }
 
-    getPageData(pageWithOptions:PageType,opt_add?:boolean){
+    getPageData(pageWithOptions:LayoutPage,opt_add?:boolean){
         const page=getPagename(pageWithOptions);
         const widgets=this.getLayoutWidgets();
         if (!widgets) return;
@@ -783,7 +788,7 @@ class LayoutHandler{
     getPanelData(
         pageWithOptions:LayoutPage,
         basename:string,
-        options:LayoutOptionFlags){
+        options:LayoutOptionFlags): {name:string|PageType,list?:Record<string,any>[]} {
         const page=getPagename(pageWithOptions);
         const pageData=this.getPageData(page);
         if (!pageData) return {name:basename};
@@ -1045,6 +1050,18 @@ class LayoutHandler{
         }
         return rt;
     }
+    getDashboardNum(){
+        const max=globalStore.getData(keys.properties.dashboardNum);
+        if (this.editing) return max;
+        let rt=0;
+        for (let idx=1;idx<=max;idx++){
+            const name=PAGEIDS.GPS+idx;
+            const widgets=this.getPageData(name);
+            if (widgets) rt++;
+        }
+        if (rt < 1) rt=1;
+        return rt;
+    }
     setTemporaryOptionValues(options?:Record<string, any>){
         if (! this.isEditing()) return;
         if (!options){
@@ -1083,7 +1100,7 @@ class LayoutHandler{
     hasRevertableActions(){
         return this.isEditing() && this.actions.length > 0;
     }
-    revertAction(pageCallback:(page:LayoutPage)=>void){
+    revertAction(pageCallback:(page: PageWithOptions)=>void){
         if (! this.hasRevertableActions() || this.currentTransaction) return false;
         const action=this.actions.pop();
         globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);

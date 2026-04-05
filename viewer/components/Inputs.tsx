@@ -74,11 +74,12 @@ export const Input=(props:InputProps)=>{
         </div>;
 };
 
-export interface CheckBoxProps extends DEFAULT_TYPES{
+export interface CheckBoxProps extends Omit<DEFAULT_TYPES,'onChange'>{
     onClick?: (ev:SyntheticEvent)=>void; //if set: do not call onChange but call onClick with the event
     readOnly?: boolean;
     frame?: boolean;
     hideLabel?: boolean;
+    onChange?: (v:any) => void;
 }
 
 export const Checkbox=(props:CheckBoxProps)=>{

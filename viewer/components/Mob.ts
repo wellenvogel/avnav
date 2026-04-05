@@ -69,7 +69,7 @@ const mobDefinition=()=>{return {
         if (! history) return;
         toggleMob(history);
     },
-    editDisable:true,
+    editDisable:false,
     localOnly: true
 }};
 

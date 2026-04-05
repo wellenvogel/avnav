@@ -1,10 +1,11 @@
 import React, {useState} from 'react';
-import PropTypes from 'prop-types';
-import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
-import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
-import {Checkbox} from './Inputs.tsx';
-import DB from './DialogButton.tsx';
+import LayoutHandler, {LAYOUT_OPTIONS, LayoutPage} from '../util/layouthandler';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog';
+import {Checkbox} from './Inputs';
+import DB from './DialogButton';
+// @ts-ignore
 import cloneDeep from "clone-deep";
+import {IDialogContext} from "./DialogContext";
 
 const OPTION_COMBINATIONS=[
     {
@@ -25,12 +26,12 @@ const OPTION_COMBINATIONS=[
     }
 ];
 
-const getFilteredOptions=(handledOptions)=>{
-    let rt=[];
-    for (let i in OPTION_COMBINATIONS){
-        let required=OPTION_COMBINATIONS[i].options;
+const getFilteredOptions=(handledOptions:LAYOUT_OPTIONS[])=>{
+    const rt=[];
+    for (const i in OPTION_COMBINATIONS){
+        const required=OPTION_COMBINATIONS[i].options;
         let matches=true;
-        for (let k in required){
+        for (const k in required){
             if (handledOptions.indexOf(required[k])<0){
                 matches=false;
                 break;
@@ -42,30 +43,34 @@ const getFilteredOptions=(handledOptions)=>{
     }
     return rt;
 };
-const optionListToObject=(optionList,opt_false)=>{
-    let option={};
+const optionListToObject=(optionList:LAYOUT_OPTIONS[],opt_false?:boolean)=>{
+    const option:Partial<Record<LAYOUT_OPTIONS,boolean>> = {};
     optionList.forEach((el)=>{option[el]=opt_false?false:true;});
     return option;
 };
 class PanelListEntry{
-    constructor(pagename,basename,handledOptions){
+    private pagename: string;
+    private handledOptions: LAYOUT_OPTIONS[];
+    basename: string;
+    foundCombinations: boolean[];
+    constructor(pagename:string,basename:string,handledOptions:LAYOUT_OPTIONS[]){
         this.pagename=pagename;
         this.handledOptions=handledOptions;
         this.basename=basename;
         //array of the same length like OPTION_COMBINATIONS
         this.foundCombinations=[];
     }
-    hasOptionCombination(index){
+    hasOptionCombination(index:number){
         if (index < 0 || index >= this.foundCombinations.length) return false;
         return this.foundCombinations[index];
     }
     fillCombinations(){
-        let combinations=getFilteredOptions(this.handledOptions);
-        for (let i in combinations){
-            let definition=combinations[i];
-            let tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
+        const combinations=getFilteredOptions(this.handledOptions);
+        for (const i in combinations){
+            const definition=combinations[i];
+            const tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
             //first element has the panel we check for
-            let panelData=LayoutHandler.getDirectPanelData(this.pagename,tryList[0]);
+            const panelData=LayoutHandler.getDirectPanelData(this.pagename,tryList[0]);
             if (panelData){
                 this.foundCombinations.push(true);
             }
@@ -76,11 +81,11 @@ class PanelListEntry{
     }
 
     writePanelsToLayout(){
-        let combinations=getFilteredOptions(this.handledOptions);
+        const combinations=getFilteredOptions(this.handledOptions);
         for (let i=0;i<this.foundCombinations.length;i++){
-            let definition=combinations[i];
-            let shouldExist=this.foundCombinations[i];
-            let tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
+            const definition=combinations[i];
+            const shouldExist=this.foundCombinations[i];
+            const tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
             if (! shouldExist){
                 LayoutHandler.removePanel(this.pagename,tryList[0]);
             }
@@ -91,37 +96,42 @@ class PanelListEntry{
         }
     }
 }
-const getPanelList=(page,panelNames,handledOptions)=>{
-    let rt={};
+const getPanelList=(page:string,panelNames:string[],handledOptions:LAYOUT_OPTIONS[])=>{
+    const rt:Record<string,PanelListEntry>={};
     panelNames.forEach((pn)=>{
-        let pe=new PanelListEntry(page,pn,handledOptions);
+        const pe=new PanelListEntry(page,pn,handledOptions);
         pe.fillCombinations();
         rt[pn]=pe;
     });
     return rt;
 };
 
-const EditPageDialog=(props)=>{
-        const page=props.page;
+export interface EditPageDialogProps{
+    title?: string,
+    page: string,
+    panelNames: string[],
+    handledOptions?: LAYOUT_OPTIONS[]
+};
+const EditPageDialog=(props:EditPageDialogProps)=>{
         const [currentOptions,setCurrentOptions]=useState(LayoutHandler.getOptionValues(props.handledOptions));
         const [panelList,setPanelList]=useState(getPanelList(props.page,props.panelNames,props.handledOptions));
             
     const getPanelsAsArray=()=>{
-        let rt=[];
-        for (let k in panelList){
+        const rt=[];
+        for (const k in panelList){
             rt.push(panelList[k]);
         }
         return rt;
     }
-    const setMode=(option)=>{
+    const setMode=(option:LAYOUT_OPTIONS)=>{
         setCurrentOptions((old)=>{
-            let rt={...old};
+            const rt={...old};
             rt[option]=!old[option]
             return rt;
         })
     }
-    const setCombination=(panel,index)=>{
-        let nv=cloneDeep(panelList);
+    const setCombination=(panel:PanelListEntry,index:number)=>{
+        const nv=cloneDeep(panelList);
         nv[panel.basename].foundCombinations[index]=!nv[panel.basename].foundCombinations[index];
         setPanelList(nv);
     }
@@ -165,8 +175,8 @@ const EditPageDialog=(props)=>{
                 <DialogButtons>
                     <DB name="cancel" >Cancel</DB>
                     <DB name="ok" onClick={()=>{
-                        for (let pn in panelList){
-                            let panel=panelList[pn];
+                        for (const pn in panelList){
+                            const panel=panelList[pn];
                             panel.writePanelsToLayout();
                         }
                         LayoutHandler.setTemporaryOptionValues(currentOptions);
@@ -177,12 +187,6 @@ const EditPageDialog=(props)=>{
         );
 }
 
-EditPageDialog.propTypes={
-    title: PropTypes.string,
-    page: PropTypes.string,
-    panelNames: PropTypes.array,
-    supportedOptions: PropTypes.array
-};
 
 /**
  *
@@ -192,7 +196,9 @@ EditPageDialog.propTypes={
  * @param opt_dialogContext
  * @return {boolean}
  */
-EditPageDialog.createDialog=(pagename,panelnames,handledOptions,opt_dialogContext)=>{
+export const createDialog=(pagename:LayoutPage,panelnames:string[],
+                             handledOptions:LAYOUT_OPTIONS[],
+                             opt_dialogContext?:IDialogContext)=>{
     if (! LayoutHandler.isEditing()) return false;
     showDialog(opt_dialogContext,(props)=> {
         return <EditPageDialog
@@ -206,16 +212,10 @@ EditPageDialog.createDialog=(pagename,panelnames,handledOptions,opt_dialogContex
     return true;
 };
 
-EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions,opt_dialogContext)=>{
-    return{
+export const RawButtonDef={
         name: 'EditPage',
         editOnly: true,
         visible: true,
-        onClick:()=>{
-            EditPageDialog.createDialog(pagename,panelNames,handledOptions,opt_dialogContext);
-        }
-    }
-
 };
 
 export default  EditPageDialog;
