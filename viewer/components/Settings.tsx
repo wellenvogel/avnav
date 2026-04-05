@@ -60,7 +60,7 @@ import {Item} from "./ItemList";
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
 }
-export const settingsSections:Record<string, string[]> = {
+export const settingsSections = {
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
         keys.properties.connectionLostAlarm],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,

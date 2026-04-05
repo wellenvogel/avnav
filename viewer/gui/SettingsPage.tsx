@@ -24,7 +24,7 @@ import {
     settingsSections,
     settingsConditions,
     SaveSettingsDialog,
-    LoadSettingsDialog, EditSettingsCategory
+    LoadSettingsDialog, EditSettingsCategory, SettingSectionKeys
 } from "../components/Settings";
 import {ButtonDef, ButtonEventHandler, updateButtons} from "../components/Button";
 import {PAGEIDS} from "../util/pageids";
@@ -86,7 +86,7 @@ const SectionList=(props:SectionListProps)=>{
         }
         const item: Record<string, any> = {name: s,className:""};
         let isDefault=true;
-        for (const key of settingsSections[s]) {
+        for (const key of settingsSections[s as SettingSectionKeys]) {
             if (key in layoutValues) {
                 item.className += " layoutSetting";
             }
