@@ -87,6 +87,8 @@ const mainTree=[
         NavPageButtons),
     new Page(PAGEIDS.GPS,'navigation',PAGE_TITLES.GPS,
         GpsPageButtons),
+    new Page(PAGEIDS.ADDON,'navigation',PAGE_TITLES.ADDON,
+        []),
     new Page(PAGEIDS.CHARTS,'settings',PAGE_TITLES.CHARTS,
         ChartsPageButtons),
     new Page(PAGEIDS.NROUTE,'settings',PAGE_TITLES.NROUTE,

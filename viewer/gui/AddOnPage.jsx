@@ -13,6 +13,10 @@ import remotechannel, {COMMANDS} from "../util/remotechannel";
 import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
 import Keyhandler from "../util/keyhandler";
 import GuiHelpers from "../util/GuiHelpers";
+import {InjectMainMenu} from "./MainNav";
+import {PAGEIDS} from "../util/pageids";
+import GeneralButtons from "./GeneralButtons";
+import {propsToDefs, updateButtons} from "../components/Button";
 
 
 class AddOnPage extends React.Component{
@@ -20,14 +24,9 @@ class AddOnPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            Mob.mobDefinition(this.props.history),
             {
                 name: 'Back',
                 onClick: ()=>{window.history.back();}
-            },
-            {
-                name: 'Cancel',
-                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.state={
@@ -144,6 +143,12 @@ class AddOnPage extends React.Component{
     render(){
         let self=this;
         let Rt=Dynamic((props)=> {
+            const buttons=this.buildButtonList(this.state.addOns,props.activeAddOn||0);
+            const finalButtons=InjectMainMenu(PAGEIDS.ADDON,updateButtons(GeneralButtons,{
+                Cancel:{
+                    onClick:()=>this.props.history.pop()
+                }
+            }).concat(propsToDefs(buttons)));
                 let currentAddOn={};
                 if (this.state.addOns) {
                     currentAddOn = this.state.addOns[props.activeAddOn || 0] || {};
@@ -173,7 +178,7 @@ class AddOnPage extends React.Component{
                         mainContent={
                             <MainContent/>
                         }
-                        buttonList={this.buildButtonList(this.state.addOns,props.activeAddOn||0)}/>
+                        buttonList={finalButtons}/>
                 );
             },{
             storeKeys:{
