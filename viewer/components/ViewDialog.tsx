@@ -29,6 +29,7 @@ import {createItemActions} from './FileDialog'
 import {IMAGES} from "../util/itemFunctions";
 import requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
+import {languageMap} from "./EditDialog";
 
 export interface ViewDialogProps{
     title?:React.ReactNode,
@@ -97,3 +98,6 @@ export const ViewDialog=(props:ViewDialogProps)=>{
     </React.Fragment>
 }
  
+export const VIEWABLES=Object.keys(languageMap).concat(IMAGES);
+export const EDITABLES=Object.keys(languageMap);
+export const MAXEDITSIZE=1000000;

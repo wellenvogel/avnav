@@ -864,7 +864,7 @@ const EditRoutePage = (props) => {
                         }));
                 }
                 additionalActions.push(hideAction);
-                additionalActions.push(linkAction(history));
+                additionalActions.push(linkAction);
             }
             showDialog(dialogContext, (dprops) => <GuardedFeatureListDialog {...dprops}
                                                                     featureList={featureList}

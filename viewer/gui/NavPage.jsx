@@ -665,7 +665,7 @@ const NavPage=(props)=>{
                 condition:(featureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && ! featureInfo.isOverlay && globalStore.getData(keys.properties.connectedMode)
             }))
             additionalActions.push(hideAction);
-            additionalActions.push(linkAction(history));
+            additionalActions.push(linkAction);
             const listActions=[
                 new FeatureAction({
                     name: 'goto',

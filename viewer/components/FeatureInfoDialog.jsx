@@ -48,6 +48,7 @@ import {useHistory} from "./HistoryProvider";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 import {useDialogContext} from "./DialogContext";
+import {ViewDialog} from "./ViewDialog";
 
 NavHandler.getRoutingHandler();
 
@@ -357,20 +358,29 @@ const linkTitle=(featureInfo)=>{
     }
     return featureInfo.title||featureInfo.urlOrKey|featureInfo;
 }
-export const linkAction=(history)=>new FeatureAction({
+export const linkAction=new FeatureAction({
     name:"info",
     label:'Info',
     condition: (featureInfo)=>featureInfo.userInfo && (featureInfo.userInfo.link || featureInfo.userInfo.htmlInfo),
-    onClick: (featureInfo)=>{
+    onClick: (featureInfo,dialogContext)=>{
         const userInfo=featureInfo.userInfo||{};
         if (!userInfo.link && !userInfo.htmlInfo) return;
         let url = userInfo.link;
         if (userInfo.htmlInfo) {
-            history.push('viewpage', {html: userInfo.htmlInfo, name: linkTitle(featureInfo)});
-            return;
+            dialogContext.showDialog(()=><ViewDialog
+                html={userInfo.htmlInfo}
+                title={linkTitle(featureInfo)}
+            />,()=>dialogContext.closeDialog())
+            return false;
         }
-        history.push('viewpage', {url: url, name: linkTitle(featureInfo), useIframe: true});
-    }
+        dialogContext.showDialog(()=><ViewDialog
+            url={url}
+            title={linkTitle(featureInfo)}
+            useIframe={true}
+        />,()=>dialogContext.closeDialog())
+        return false;
+    },
+    close:false
 })
 
 export const CenterActionButton={

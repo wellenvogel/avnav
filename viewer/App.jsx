@@ -17,7 +17,6 @@ import SettingsPage from './gui/SettingsPage.tsx';
 import NavPage from './gui/NavPage.jsx';
 import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';
-import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import {
     DialogContext, DialogDisplay,
@@ -108,7 +107,6 @@ const pages={
     [PAGEIDS.NAV]: NavPage,
     [PAGEIDS.ROUTE]:EditRoutePage,
     [PAGEIDS.WARNING]:WarningPage,
-    [PAGEIDS.VIEW]:ViewPage,
     [PAGEIDS.ADDCFG]: AddonConfigPage,
     [PAGEIDS.CHANNELS]: ChannelsPage,
     [PAGEIDS.NROUTE]: RoutesPage,

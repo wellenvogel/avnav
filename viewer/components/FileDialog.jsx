@@ -30,7 +30,6 @@ import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, showDialog, showPromiseDialog} from "./OverlayDialog";
-import ViewPage from "../gui/ViewPage";
 import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
@@ -45,7 +44,6 @@ import Formatter from '../util/formatter';
 import PropertyHandler from "../util/propertyhandler";
 import {ConfirmDialog, InfoItem} from "./BasicDialogs";
 import {checkName, ItemNameDialog, safeName} from "./ItemNameDialog";
-import GuiHelpers from "../util/GuiHelpers";
 import {DEFAULT_OVERLAY_CONFIG, removeItemsFromOverlays, renameItemInOverlays} from "../map/overlayconfig";
 import {useHistory} from "./HistoryProvider";
 import globalStore from '../util/globalstore';
@@ -63,7 +61,7 @@ import base from "../base";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {loadSettings, LoadSettingsDialog} from "./Settings";
-import {ViewDialog} from "./ViewDialog";
+import {EDITABLES, MAXEDITSIZE, VIEWABLES, ViewDialog} from "./ViewDialog";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -637,12 +635,10 @@ const standardActions={
                 ext={action.fixedExtension||getExtensionForView(item)}
             />)
             return false;
-            //history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:action.fixedExtension||getExtensionForView(item)});
-            return true;
         },
         visible: (action,item)=>{
             let ext=action.fixedExtension||getExtensionForView(item);
-            return ViewPage.VIEWABLES.indexOf(ext)>=0;
+            return VIEWABLES.indexOf(ext)>=0;
         }
     }),
     download:new DownloadAction({
@@ -1386,7 +1382,7 @@ class TrackItemActions extends ItemActions{
             visible:this.isConnected(),
         }))
         actions.push(standardActions.copy.copy({
-            visible:this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
+            visible:this.isConnected() && item.size !== undefined && item.size < MAXEDITSIZE,
             keepExtension:true,
         }))
         if (item.name) {
@@ -1520,7 +1516,7 @@ class LayoutItemActions extends ItemActions{
             fixedExtension:this.fixedExtension
         }))
         actions.push(standardActions.edit.copy({
-            visible: this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE && item.canDelete,
+            visible: this.isConnected() && item.size !== undefined && item.size < MAXEDITSIZE && item.canDelete,
             action: async (action,item, dialogContext,history) => {
                 const save=async (data)=>{
                     return  await layoutLoader.uploadLayout(item.name, data, true, true)
@@ -1640,7 +1636,7 @@ class SettingsItemActions extends ItemActions{
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
-            visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
+            visible: canModify && item.size !== undefined && item.size < MAXEDITSIZE,
             action: async (action,item, dialogContext,history) => {
                 const save=async (data)=>{
                     await PropertyHandler.verifySettingsData(data, true,true)
@@ -1707,13 +1703,14 @@ class UserItemActions extends ItemActions{
             visible:canModify,
         }))
         actions.push(standardActions.copy.copy({
-            visible:this.isConnected() && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE,
+            visible:this.isConnected() && item.size !== undefined && item.size < MAXEDITSIZE,
             keepExtension:true,
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
-            visible: canModify && item.size !== undefined && item.size < ViewPage.MAXEDITSIZE
-                && ViewPage.EDITABLES.indexOf(Helper.getExt(item.name)) >= 0
+            visible: canModify && item.size !== undefined && item.size < MAXEDITSIZE
+                &&
+                EDITABLES.indexOf(Helper.getExt(item.name)) >= 0
         }))
         actions.push(standardActions.download.copy({}))
         actions.push(new Action({
@@ -1777,8 +1774,8 @@ class OverlayItemActions extends ItemActions{
         }))
         actions.push(standardActions.view.copy({}))
         actions.push(standardActions.edit.copy({
-            visible: item.size !== undefined && item.size < ViewPage.MAXEDITSIZE &&
-                ViewPage.EDITABLES.indexOf(Helper.getExt(item.name)) >= 0
+            visible: item.size !== undefined && item.size < MAXEDITSIZE &&
+                EDITABLES.indexOf(Helper.getExt(item.name)) >= 0
                 && canModify
         }))
         actions.push(standardActions.download.copy({}))
