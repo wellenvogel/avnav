@@ -53,7 +53,7 @@ import ImportDialog, {checkExt, getAcceptedExtensions, readImportExtensions} fro
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {fetchItem, IMAGES, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
-import {EditDialog, EditDialogWithSaveAndDownload} from "./EditDialog";
+import {EDITABLES, EditDialog, EditDialogWithSaveAndDownload, MAXEDITSIZE, VIEWABLES} from "./EditDialog";
 import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
 import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
@@ -61,7 +61,7 @@ import base from "../base";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {loadSettings, LoadSettingsDialog} from "./Settings";
-import {EDITABLES, MAXEDITSIZE, VIEWABLES, ViewDialog} from "./ViewDialog";
+import {ViewDialog} from "./ViewDialog";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();

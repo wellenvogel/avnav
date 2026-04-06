@@ -48,6 +48,10 @@ import {useHistory} from "../components/HistoryProvider";
 import {DownloadItemInfoMode, DownloadItemList} from "../components/DownloadItemList";
 import {RouteSyncDialog} from "../components/RouteInfoHelper";
 import {useDialogContext} from "../components/DialogContext";
+import {InjectMainMenu} from "./MainNav";
+import {PAGEIDS} from "../util/pageids";
+import {propsToDefs, updateButtons} from "../components/Button";
+import GeneralButtons from "./GeneralButtons";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -80,6 +84,7 @@ const startWaypointDialog = (item, index, dialogContext) => {
     };
     const canWrite=checkRouteWritable();
     let RenderDialog = function (props) {
+        const history = useHistory();
         return <WayPointDialog
             {...props}
             readOnly={!canWrite}
@@ -90,7 +95,7 @@ const startWaypointDialog = (item, index, dialogContext) => {
                 return true;
             }}
             startCallback={()=>{
-                startRouting(dialogContext,index);
+                startRouting(dialogContext,index,history);
                 return true;
             }}
         />
@@ -552,7 +557,7 @@ const startRouting=(dialogContext,optIdx,opt_history)=>{
     stopAnchorWithConfirm(true,dialogContext)
         .then(async () => {
             await RouteHandler.wpOn(getCurrentEditor().getPointAt(optIdx));
-            if (opt_history) opt_history.pop();
+            if (opt_history) opt_history.push(PAGEIDS.NAV);
         })
         .catch((e) => {
             if (e) Toast(e);
@@ -984,24 +989,16 @@ const EditRoutePage = (props) => {
             }
         },
         CenterActionButton,
-        Mob.mobDefinition(history),
         {
             ...RawButtonDef,
             onClick:()=>createDialog(PAGENAME,
             MapPage.PANELS, [LAYOUT_OPTIONS.SMALL], dialogContext)
         },
-        LayoutFinishedDialog.getButtonDef(undefined, dialogContext),
         LayoutHandler.revertButtonDef((pageWithOptions) => {
             if (pageWithOptions.location !== props.location) {
                 history.replace(pageWithOptions.location, pageWithOptions.options);
             }
-        }),
-        {
-            name: 'Cancel',
-            onClick: () => {
-                history.pop()
-            }
-        }
+        })
     ];
     let overlayContent = (props.small || wpButtonsVisible) ?
         <ButtonList
@@ -1019,7 +1016,11 @@ const EditRoutePage = (props) => {
             mapEventCallback={mapEvent}
             onItemClick={widgetClick}
             panelCreator={getPanelList}
-            buttonList={buttons}
+            buttonList={InjectMainMenu(PAGEIDS.ROUTE,updateButtons(GeneralButtons,{
+                Cancel:{
+                    onClick:()=>{ history.pop()}
+                }
+            }).concat(propsToDefs(buttons)))}
             overlayContent={overlayContent}
         />
     );

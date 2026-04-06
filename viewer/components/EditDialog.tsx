@@ -1,7 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
 import {
     DBCancel,
-    DBOk, DialogButtonListProps,
+    DBOk,
+    DialogButtonListProps,
     DialogButtons,
     DialogFrame,
     promiseResolveHelper,
@@ -18,7 +19,7 @@ import {ConfirmDialog} from "./BasicDialogs";
 import Requests from "../util/requests";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
-import {fetchItem, ItemType} from "../util/itemFunctions";
+import {fetchItem, IMAGES, ItemType} from "../util/itemFunctions";
 import {ViewDialog} from "./ViewDialog";
 
 export interface EditDialogProps {
@@ -231,3 +232,6 @@ export const languageMap:Record<string, string> = {
     gpx: 'markup',
     txt: undefined
 };
+export const VIEWABLES = Object.keys(languageMap).concat(IMAGES);
+export const EDITABLES = Object.keys(languageMap);
+export const MAXEDITSIZE = 1000000;
