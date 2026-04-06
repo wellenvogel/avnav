@@ -56,6 +56,7 @@ const toggleMob=(history:IHistory)=>{
 
 const mobDefinition=()=>{return {
     name: "MOB",
+    displayName: "MOB",
     storeKeys: activeRoute.getStoreKeys({visible:keys.properties.connectedMode, hasGps: keys.nav.gps.valid}),
     updateFunction:(state:Record<string, any>)=>{
         const toggle=StateHelper.targetName(state) === navobjects.WayPoint.MOB

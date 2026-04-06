@@ -255,6 +255,7 @@ export const InjectMainMenu=(
     const computedButtons=(typeof pageButtons === 'function'? pageButtons() :pageButtons);
     return propsToDefs([ {
         name: 'MainNav',
+        displayName: 'main menu',
         onClick: (ev:SyntheticEvent)=>{
             const dialogContext=getav(ev).dialogContext;
             const expandMode=globalstore.getData(keys.properties.mainNavExpand);
