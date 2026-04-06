@@ -166,7 +166,7 @@ const ItemList = (props:ItemListProps) => {
                 itemProps.selected = false;
             }
         }
-        else{
+        else if (props.selectedKey !== undefined) {
             itemProps.selected = isSelectedKey;
         }
         idx++;
