@@ -39,6 +39,8 @@ export interface ViewDialogProps{
     useIframe?: boolean,
     text?:React.ReactNode,
     ext?:string
+    fullscreen?:boolean, //default true
+    omitCancel?:boolean,
 }
 
 export const ViewDialog=(props:ViewDialogProps)=>{
@@ -78,7 +80,7 @@ export const ViewDialog=(props:ViewDialogProps)=>{
                 .catch((e)=>Toast(e))
     },[props.url,props.useIframe,props.text,props.html]);
     return <React.Fragment>
-        <DialogFrame fullscreen={true} title={props.title||`${props.type} ${props.name}`} className={Helper.concatsp('viewDialog')}>
+        <DialogFrame fullscreen={Helper.unsetorTrue(props.fullscreen)} title={props.title||`${props.type} ${props.name}`} className={Helper.concatsp('viewDialog')}>
             {(mode === 1) && <div className={"html"} dangerouslySetInnerHTML={{__html: viewData}}></div>}
             {(mode === 0) && <img className="readOnlyImage" src={getUrl()} alt=""/>}
             {(mode === 2) && <div className={"text"}>{viewData}</div>}
@@ -88,7 +90,9 @@ export const ViewDialog=(props:ViewDialogProps)=>{
                 </div>}
     </DialogFrame>
         <DialogButtons buttonList={[
-            DBCancel()
+            DBCancel({
+                visible:!props.omitCancel
+            })
         ]}/>
     </React.Fragment>
 }
