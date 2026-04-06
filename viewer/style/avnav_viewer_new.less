@@ -777,9 +777,11 @@ body{
   min-height: var(--avnav-min-listitem-height);
   flex-shrink: 0;
   position: relative;
-  border-bottom: @normalBorder;
+  &.border {
+    border-bottom: @normalBorder;
+    border-color: var(--avnav-border-color);
+  }
   padding: 1em;
-  border-color: var(--avnav-border-color);
   .icon{
     margin-right: 0.5em;
   }
@@ -1097,7 +1099,6 @@ span.valuePrefix{
       flex-direction: column;
       align-items: center;
       text-align: center;
-      border-bottom: unset;
       width: @mainNavItemWidth;
       .listMain{
         max-width: @mainNavItemWidth;

@@ -29,7 +29,7 @@ const ListEntry=(props)=>{
     let disabled=(props.flags !== undefined && props.flags.match(/DISABLED/));
     let addClass=props.activeItem?'activeEntry':'';
     return(
-        <div className={'listEntry wpaNetwork '+addClass} onClick={props.onClick} >
+        <div className={'listEntry border wpaNetwork '+addClass} onClick={props.onClick} >
             <span className='ssid'>{props.ssid}</span>
             <div className='detailsContainer'>
                 <span className='detail'>Signal:{level}</span>

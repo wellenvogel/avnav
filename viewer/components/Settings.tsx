@@ -238,7 +238,7 @@ export const EditSettingsItems=(props:EditSettingsItemsProps)=>{
             if (!settingsConditions[key](values)) continue;
         }
         const description = KeyHelper.getKeyDescriptions()[key];
-        let className = "listEntry";
+        let className = "listEntry border";
         if (propertyhandler.isPrefixProperty(key)) {
             className += " prefix";
         }
