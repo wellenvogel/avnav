@@ -42,7 +42,7 @@ export interface ViewDialogProps{
 }
 
 export const ViewDialog=(props:ViewDialogProps)=>{
-    const [viewData,setViewData]=React.useState(props.text||'');
+    const [viewData,setViewData]=React.useState(props.html||props.text||'');
     const getUrl=()=>{
         if (props.url) return props.url;
         return prepareUrl({

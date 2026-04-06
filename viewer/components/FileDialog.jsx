@@ -55,7 +55,7 @@ import ImportDialog, {checkExt, getAcceptedExtensions, readImportExtensions} fro
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {fetchItem, IMAGES, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
-import {EditDialog} from "./EditDialog";
+import {EditDialog, EditDialogWithSaveAndDownload} from "./EditDialog";
 import EditHandlerDialog from "./EditHandlerDialog";
 import {statusTextToImageUrl} from "./StatusItems";
 import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
@@ -685,8 +685,14 @@ const standardActions={
         label: 'Edit',
         name: 'edit',
         action: async (action,item,dialogContext,history)=>{
-            history.push('viewpage', {type: item.type, name: item.name, ext:action.fixedExtension||getExtensionForView(item)});
-            return true;
+            dialogContext.replaceDialog(()=> {
+                return <EditDialogWithSaveAndDownload
+                    fullscreen={true}
+                    type={item.type}
+                    fileName={item.name}
+                    resolveFunction={()=>dialogContext.closeDialog()}/>
+            })
+            return false;
         },
         visible: false,
         close: true
@@ -1245,7 +1251,7 @@ class RouteItemActions extends ItemActions{
             }
         }))
         actions.push(standardActions.view.copy({
-            action: async (action,item, dialogContext,history) => {
+            action: async (action,item, dialogContext) => {
                 const route = await RouteHandler.fetchRoute(item.name)
                 dialogContext.replaceDialog(()=><ViewDialog
                     type={item.type}
@@ -1255,14 +1261,6 @@ class RouteItemActions extends ItemActions{
                     text={route.toXml()}
                 />)
                 return false;
-                /*history.push('viewpage', {
-                    type: item.type,
-                    name: item.name,
-                    readOnly: true,
-                    ext:this.getExtensionForView(),
-                    data: route.toXml()
-                });*/
-                return true;
             }
         }))
         actions.push(standardActions.edit.copy({
@@ -1518,14 +1516,6 @@ class LayoutItemActions extends ItemActions{
                     text={JSON.stringify(layout,undefined, 2)}
                 />);
                 return false;
-                /*history.push('viewpage', {
-                    type: item.type,
-                    name: item.name,
-                    readOnly: true,
-                    ext:this.getExtensionForView(),
-                    data:JSON.stringify(layout,undefined,"  ")
-                });*/
-                return true;
             },
             fixedExtension:this.fixedExtension
         }))

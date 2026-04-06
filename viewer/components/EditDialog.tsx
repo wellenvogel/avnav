@@ -18,17 +18,21 @@ import {ConfirmDialog} from "./BasicDialogs";
 import Requests from "../util/requests";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
+import {fetchItem, ItemType} from "../util/itemFunctions";
+import {ViewDialog} from "./ViewDialog";
 
 export interface EditDialogProps {
     data:string
     title?:string
-    language:string
+    language?:string
     resolveFunction:(data:string) => Promise<void>
     saveFunction?:(data:string) => Promise<void>
     fileName?:string,
     showCollapse?:boolean,
+    fullscreen?:boolean,
 }
-export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}:EditDialogProps) => {
+export const EditDialog = ({data, title, language, resolveFunction,
+                               saveFunction, fileName,showCollapse,fullscreen}:EditDialogProps) => {
     const flask = useRef<typeof CodeFlask>();
     const editElement = useRef();
     const [changed, setChanged] = useState(false);
@@ -37,10 +41,10 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
     if (changed)everChanged.current=true;
     const dialogContext = useDialogContext();
     const [uploadFile, setUploadFile] = useState(undefined);
-    const languageImpl=language||languageMap[Helper.getExt(fileName)];
+    const languageImpl=language||languageMap[Helper.getExt(fileName)]||'markup';
     useEffect(() => {
         flask.current = new CodeFlask(editElement.current, {
-            language: languageImpl || 'html',
+            language: languageImpl,
             lineNumbers: true,
             defaultTheme: false,
             noInitialCallback: true,
@@ -51,7 +55,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             flask.current.updateCode(data, true);
             flask.current.onUpdate(() => setChanged(true));
         }
-    }, []);
+    }, [data]);
     const buttonList:DialogButtonListProps=[
         {
             name: 'upload',
@@ -71,6 +75,18 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             name={"download"}
             close={false}
         >Download</DownloadButton>,
+        {
+          name:'view',
+          label: 'Preview',
+          onClick: () => {
+            dialogContext.showDialog(()=><ViewDialog
+                html={flask.current.getCode()}
+                title={fileName}
+            />)
+          },
+          visible: languageImpl === 'markup',
+          close: false
+        },
         {
             name: 'save',
             close: false,
@@ -105,7 +121,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             }
         })
     }
-    return <DialogFrame title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
+    return <DialogFrame fullscreen={fullscreen} title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
         <UploadHandler
             file={uploadFile}
             local={true}
@@ -163,6 +179,15 @@ export const EditDialogWithSave=(props:EditDialogWithSaveProps)=>{
         saveFunction={async (data)=> await uploadFromEdit(props.fileName,data,true,props.type)}
     />
 
+}
+export const EditDialogWithSaveAndDownload=(props:Omit<EditDialogWithSaveProps,'data'>)=>{
+    const [data,setData]=useState('');
+    useEffect(() => {
+        fetchItem({type:props.type as ItemType,name:props.fileName})
+            .then((itemData)=>setData(itemData))
+            .catch((e)=>Toast(e));
+    }, [props.fileName,props.type]);
+    return <EditDialogWithSave {...props} data={data}/>
 }
 
 
