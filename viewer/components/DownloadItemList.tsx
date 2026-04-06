@@ -33,7 +33,6 @@ import Toast from "./Toast";
 import {DBCancel, DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "./OverlayDialog";
 // @ts-ignore
 import {checkName} from "./ItemNameDialog";
-// @ts-ignore
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
 import ItemList from "./ItemList";

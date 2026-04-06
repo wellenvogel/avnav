@@ -493,7 +493,9 @@
 
   &.SettingsLayout,&.editLayout{
     .iconButton('ballot.svg');
-    .activeColor(var(--avnav-attention-color));
+    &.active {
+      .activeColor(var(--avnav-attention-color));
+    }
   }
   &.SettingsLayoutOff{
     .iconButton('ballot-off.svg');
@@ -519,7 +521,9 @@
 
   &.LayoutFinished{
     .iconButton('ballot.svg');
-    .activeColor(var(--avnav-attention-color));
+    &.active {
+      .activeColor(var(--avnav-attention-color));
+    }
   }
   &.RevertLayout{
     .iconButton('ic_undo.svg');

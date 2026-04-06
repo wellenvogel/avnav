@@ -62,7 +62,8 @@ export const readTextFile=async (file:File) => {
     });
 };
 const FI_ID="___uploadInput";
-export const uploadClick=(callback:(e:Event)=>void,type?:string)=>{
+export type UploadEvent=Event & {target:HTMLInputElement}
+export const uploadClick=(callback:(e:UploadEvent)=>void,type?:string)=>{
     let fi=document.getElementById(FI_ID);
     if (fi) {
         fi.remove();
@@ -74,7 +75,7 @@ export const uploadClick=(callback:(e:Event)=>void,type?:string)=>{
         fi.setAttribute('accept', type);
     }
     document.body.appendChild(fi);
-    fi.addEventListener('change', e => {
+    fi.addEventListener('change', (e:UploadEvent) => {
         callback(e);
     })
     fi.click();
@@ -96,14 +97,16 @@ export interface CheckNameReturn{
     file?:File;
     type?:string;
 }
+export interface UploadDoneCallbackParam{name:string,data?:any,options?:Record<string, any>}
 export interface UploadHandlerProps{
-   doneCallback?: (p:{name:string,data?:any,options?:Record<string, any>}|void)=>void,
+   doneCallback?: (p?:UploadDoneCallbackParam)=>void,
    errorCallback?:(e:any) => void;
-   checkNameCallback?:(file:File,dialogContext?:IDialogContext) => Promise<CheckNameReturn>;
+   checkNameCallback?:(file:File,dialogContext?:IDialogContext) => (Promise<CheckNameReturn>|CheckNameReturn);
    type:string;
    local?:boolean;
    file?:File
 }
+
 const UploadHandler = (props:UploadHandlerProps) => {
     const dialogContext=useDialogContext();
     const xhdrRef = useRef<Partial<XMLHttpRequest>>();

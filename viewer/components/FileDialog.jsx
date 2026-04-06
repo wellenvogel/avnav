@@ -63,6 +63,7 @@ import base from "../base";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {loadSettings, LoadSettingsDialog} from "./Settings";
+import {ViewDialog} from "./ViewDialog";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -630,7 +631,13 @@ const standardActions={
         label: 'View',
         name: 'view',
         action: async (action,item,dialogContext,history)=>{
-            history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:action.fixedExtension||getExtensionForView(item)});
+            dialogContext.replaceDialog(()=><ViewDialog
+                type={item.type}
+                name={item.name}
+                ext={action.fixedExtension||getExtensionForView(item)}
+            />)
+            return false;
+            //history.push('viewpage', {type: item.type, name: item.name, readOnly: true,ext:action.fixedExtension||getExtensionForView(item)});
             return true;
         },
         visible: (action,item)=>{
@@ -1240,13 +1247,21 @@ class RouteItemActions extends ItemActions{
         actions.push(standardActions.view.copy({
             action: async (action,item, dialogContext,history) => {
                 const route = await RouteHandler.fetchRoute(item.name)
-                history.push('viewpage', {
+                dialogContext.replaceDialog(()=><ViewDialog
+                    type={item.type}
+                    name={item.name}
+                    title={`Route ${item.name}`}
+                    ext={this.getExtensionForView()}
+                    text={route.toXml()}
+                />)
+                return false;
+                /*history.push('viewpage', {
                     type: item.type,
                     name: item.name,
                     readOnly: true,
                     ext:this.getExtensionForView(),
                     data: route.toXml()
-                });
+                });*/
                 return true;
             }
         }))
@@ -1495,13 +1510,21 @@ class LayoutItemActions extends ItemActions{
         actions.push(standardActions.view.copy({
             action: async (action,item,dialogContext,history) => {
                 const layout = await layoutLoader.loadLayout(item.name);
-                history.push('viewpage', {
+                dialogContext.replaceDialog(()=><ViewDialog
+                    name={item.name}
+                    type={item.type}
+                    title={ `Layout ${item.displayName||item.name}` }
+                    ext={this.getExtensionForView()}
+                    text={JSON.stringify(layout,undefined, 2)}
+                />);
+                return false;
+                /*history.push('viewpage', {
                     type: item.type,
                     name: item.name,
                     readOnly: true,
                     ext:this.getExtensionForView(),
                     data:JSON.stringify(layout,undefined,"  ")
-                });
+                });*/
                 return true;
             },
             fixedExtension:this.fixedExtension

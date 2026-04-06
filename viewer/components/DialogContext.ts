@@ -76,6 +76,8 @@ const getCtxId = () => {
 }
 export type DialogCallback=()=>void;
 export interface SetDialogOptions extends Record<string, any> {
+    dialogClassName?: string;
+    coverClassName?: string;
 }
 export type SetDialogFunction=(dialog?:React.ElementType,closeCallback?:DialogCallback,options?:SetDialogOptions) => Promise<DialogCallback|void>;
 class DialogDisplayEntry {

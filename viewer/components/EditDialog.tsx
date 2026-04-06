@@ -1,25 +1,35 @@
 import React, {useEffect, useRef, useState} from "react";
 import {
     DBCancel,
-    DBOk,
+    DBOk, DialogButtonListProps,
     DialogButtons,
     DialogFrame,
     promiseResolveHelper,
     showPromiseDialog
 } from "./OverlayDialog";
+// @ts-ignore
 import CodeFlask from 'codeflask';
+// @ts-ignore
 import Prism from "prismjs";
 import UploadHandler, {uploadClick} from "./UploadHandler";
 import Toast from "./Toast";
 import DownloadButton from "./DownloadButton";
-import PropTypes from "prop-types";
 import {ConfirmDialog} from "./BasicDialogs";
 import Requests from "../util/requests";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 
-export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}) => {
-    const flask = useRef();
+export interface EditDialogProps {
+    data:string
+    title?:string
+    language:string
+    resolveFunction:(data:string) => Promise<void>
+    saveFunction?:(data:string) => Promise<void>
+    fileName?:string,
+    showCollapse?:boolean,
+}
+export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}:EditDialogProps) => {
+    const flask = useRef<typeof CodeFlask>();
     const editElement = useRef();
     const [changed, setChanged] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
@@ -37,10 +47,12 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             highLighter: Prism.highlightElement
         });
         //this.flask.addLanguage(language,Prism.languages[language]);
-        flask.current.updateCode(data, true);
-        flask.current.onUpdate(() => setChanged(true));
+        if (flask.current) {
+            flask.current.updateCode(data, true);
+            flask.current.onUpdate(() => setChanged(true));
+        }
     }, []);
-    const buttonList=[
+    const buttonList:DialogButtonListProps=[
         {
             name: 'upload',
             label: 'Import',
@@ -120,15 +132,8 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
     </DialogFrame>
 }
 
-EditDialog.propTypes={
-    data: PropTypes.string,
-    title: PropTypes.string,
-    language: PropTypes.string,
-    resolveFunction: PropTypes.func,
-    saveFunction: PropTypes.func,
-    fileName: PropTypes.string
-}
-export const uploadFromEdit = async (name, data, overwrite,type) => {
+
+export const uploadFromEdit = async (name:string, data:string, overwrite:boolean,type:string) => {
     try {
         await Requests.postPlain({
             request: 'api',
@@ -144,22 +149,24 @@ export const uploadFromEdit = async (name, data, overwrite,type) => {
     }
 }
 
-export const EditDialogWithSave=(props)=>{
+export interface EditDialogWithSaveProps extends EditDialogProps{
+    type:string
+}
+
+export const EditDialogWithSave=(props:EditDialogWithSaveProps)=>{
     return <EditDialog
         {...props}
         resolveFunction={async (data)=>{
             await uploadFromEdit(props.fileName,data,true,props.type);
-            props.resolveFunction(data);
+            await props.resolveFunction(data);
         }}
         saveFunction={async (data)=> await uploadFromEdit(props.fileName,data,true,props.type)}
     />
 
 }
-EditDialogWithSave.propTypes={...EditDialog.propTypes,
-    type: PropTypes.string.isRequired
-}
 
-export const getTemplate=(name)=>{
+
+export const getTemplate=(name:string)=>{
     if (! name) return;
     const ext=Helper.getExt(name);
     if (ext === 'html'){
@@ -189,7 +196,7 @@ export const getTemplate=(name)=>{
     }
 } //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
-export const languageMap = {
+export const languageMap:Record<string, string> = {
     js: 'js',
     mjs:'js',
     json: 'json',

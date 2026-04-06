@@ -40,7 +40,7 @@ const toBase64=(val:any)=>{
 
 export interface DownloadButtonProps{
     localData?: any|Promise<any>|(()=>any);
-    url: string|(()=>string);
+    url?: string|(()=>string);
     className?: string;
     useDialogButton?: boolean;
     fileName?:  string;

@@ -23,6 +23,7 @@ import {
     SetDialogOptions,
     useDialogContext
 } from "./DialogContext";
+import Headline from "./Headline";
 
 export interface OverlayContainerProps {
     coverClassName?: string;
@@ -227,14 +228,14 @@ export const showDialog=(
 
 export interface PromiseResolveHelperProps{
     ok:()=>void
-    err:(e?:any)=>void
+    err?:(e?:any)=>void
 }
 
 export const promiseResolveHelper = (
     {ok, err}:PromiseResolveHelperProps,
-    resolveFunction:(...rp:any[])=>boolean|Promise<void>,
-    ...args:any[]) => {
-    const rt = resolveFunction(...args);
+    resolveFunction:(r:any)=>boolean|Promise<void>,
+    args:any) => {
+    const rt = resolveFunction(args);
     if (rt instanceof Promise) {
         rt.then(() => ok && ok())
             .catch((e) => {
@@ -250,15 +251,31 @@ export interface DialogFrameProps extends Record<string, any>{
     title?:ReactNode;
     className?:string;
     flex?:boolean;
+    fullscreen?:boolean;
     children?:React.ReactNode;
 }
 
 export const DialogFrame=(props:DialogFrameProps)=>{
-    let classNameS="";
+    const frameRef=useRef<HTMLDivElement>(null);
     const {title,className,flex,children,...fwprops}=props;
-    if (className) classNameS+=" "+className;
-    if (flex !== false) classNameS+=" flexInner";
-    return <div {...fwprops} className={classNameS}>
+    useEffect(() => {
+        if (! props.fullscreen) return;
+        if (!frameRef.current) return;
+        const parent=frameRef.current.parentElement;
+        if (!parent) return;
+        if (! parent.classList.contains('fullscreen')) {
+            parent.classList.add('fullscreen');
+        }
+    }, [props.fullscreen]);
+    if (props.fullscreen){
+        return <div className={Helper.concatsp(className,'dialogFrame')} ref={frameRef}>
+            {props.title &&<Headline title={props.title} dynamicTitleIcons={false}/>}
+            <div className={Helper.concatsp('inner',(flex !== false)?'flexInner':undefined)}>
+                {props.children}
+            </div>
+        </div>
+    }
+    return <div {...fwprops} className={Helper.concatsp(className,'dialogFrame',(flex !== false)?'flexInner':undefined)}>
         {(title)?<h3 className="dialogTitle">{title}</h3>:null}
         {children}
     </div>
