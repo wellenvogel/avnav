@@ -15,12 +15,12 @@ const AisFullDisplay=(display)=> {
     return <React.Fragment>
         <div className="aisPart">
             <div className="widgetData">
+                <span className="aisData">{display.name}</span>
+            </div>
+            <div className="widgetData">
                 <span className='label'>{AisFormatter.getHeadline('distance')} </span>
                 <span className="aisData">{display.distance}</span>
                 <span className="unit">{AisFormatter.getUnit('distance')}</span>
-            </div>
-            <div className="widgetData">
-                <span className="aisData">{display.name}</span>
             </div>
         </div>
     {
