@@ -142,18 +142,38 @@ let widgetList=[
           server: keys.nav.wp.server
         },
         formatter: 'formatTime',
-        translateFunction: (props)=>{
+      translateFunction: (props) => {
             return {...props,
-              value: !props.value?null:props.kind=='TTG'?new Date(props.value-props.time):props.value,
               unit: props.name,
-              caption: (props.caption||' ')+props.kind,
+              caption: (props.caption||'ETA'),
               disconnect: props.server === false,
-              addClass: (!props.formatterParameters||props.formatterParameters?.[0])?'med':null,
+              addClass: props.formatterParameters?.[0]?'med':null,
             }
         },
         editableParameters: {
             unit: false,
-            kind: {type:'SELECT',list:['ETA','TTG'],default:'ETA'},
+      }
+    },
+    {
+        name: 'TTG',
+        storeKeys:{
+          value: keys.nav.wp.eta,
+          time:keys.nav.gps.rtime,
+          name: keys.nav.wp.name,
+          server: keys.nav.wp.server
+        },
+        formatter: 'formatDuration',
+      translateFunction: (props) => {
+            return {...props,
+              value: !props.value || !props.time ? null : props.value - props.time,
+              unit: props.name,
+              caption: (props.caption||'TTG'),
+              disconnect: props.server === false,
+              addClass: props.formatterParameters?.[0]?'med':null,
+            }
+        },
+        editableParameters: {
+            unit: false,
       }
     },
     {
@@ -360,15 +380,33 @@ let widgetList=[
         formatter: 'formatTime',
         translateFunction: (props)=>{
             return {...props,
-              value: !props.value?null:props.kind=='TTG'?new Date(props.value-props.time):props.value,
-              caption: (props.caption||'RTE-')+props.kind,
+              caption: (props.caption||'RTE-ETA'),
               disconnect: props.server === false,
               addClass: props.formatterParameters?.[0]?'med':null,
             }
         },
         editableParameters: {
             unit: false,
-            kind: {type:'SELECT',list:['ETA','TTG'],default:'ETA'},
+        }
+    },
+    {
+        name: 'RteTTG',
+        storeKeys:{
+            value:keys.nav.route.eta,
+            time:keys.nav.gps.rtime,
+            server: keys.nav.wp.server,
+        },
+        formatter: 'formatDuration',
+        translateFunction: (props)=>{
+            return {...props,
+              value: !props.value || !props.time ? null : props.value - props.time,
+              caption: (props.caption||'RTE-TTG'),
+              disconnect: props.server === false,
+              addClass: props.formatterParameters?.[0]?'med':null,
+            }
+        },
+        editableParameters: {
+            unit: false,
         }
     },
     {

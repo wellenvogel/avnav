@@ -247,6 +247,30 @@ const formatTime=function(curDate, seconds=true){
 formatTime.parameters=[
     {name:'seconds',type:'BOOLEAN',default:true}
 ];
+
+/**
+ *
+ * @param {Number} ms
+ * @returns {string}
+ */
+const formatDuration = function (ms,seconds=false) {
+  if (ms == null) return "--:--";
+  let number = parseInt(ms);
+  if (!isFinite(number)) return "--:--";
+  number = Math.abs(number);
+  const totalSeconds = Math.floor(number / 1000);
+  const secs = totalSeconds % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const mins = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+  return this.formatDecimal(hours, 2, 0, false, true) + ':' +
+    this.formatDecimal(mins, 2, 0, false, true) + (seconds?':' +
+      this.formatDecimal(secs, 2, 0, false, true):'');
+};
+formatDuration.parameters=[
+  { name: 'seconds', type: 'BOOLEAN', default: false }
+];
+
 /**
  *
  * @param {Date} curDate
@@ -328,6 +352,7 @@ export default {
     formatDateTime,
     formatClock,
     formatTime,
+    formatDuration,
     formatDecimalOpt,
     formatDecimal,
     formatFloat,
