@@ -1,7 +1,6 @@
 import globalStore from './globalstore';
 import keys from './keys';
 import Requests from './requests';
-import Toast from '../components/Toast';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
 import Helper from "./helper";
@@ -126,7 +125,6 @@ const removePluginAddOns=(pluginName:string)=>{
 }
 
 const readAddOns = async (
-    opt_showToast?:boolean,
     opt_includeInvalid?:boolean)=> {
         if (!globalStore.getData(keys.gui.capabilities.addons)) return [];
         const req={
@@ -155,7 +153,6 @@ const readAddOns = async (
             }
             return addons;
         }catch (error){
-            if (opt_showToast)Toast("reading addons failed: " + error);
             throw error;
         }
 };

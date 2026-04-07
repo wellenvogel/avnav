@@ -346,11 +346,11 @@ class MainPage extends React.Component {
 
     };
     readAddOns() {
-        Addons.readAddOns(true)
+        Addons.readAddOns()
             .then((items)=>{
                 this.setState({addOns: items});
             })
-            .catch(()=>{});
+            .catch((e)=>{Toast(e)});
     };
 
 

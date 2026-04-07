@@ -17,6 +17,7 @@ import {InjectMainMenu} from "./MainNav";
 import {PAGEIDS} from "../util/pageids";
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs, updateButtons} from "../components/Button";
+import Toast from "../components/Toast";
 
 
 class AddOnPage extends React.Component{
@@ -78,7 +79,7 @@ class AddOnPage extends React.Component{
         }
     }
     readAddOns(){
-        Addons.readAddOns(true)
+        Addons.readAddOns()
             .then((items)=>{
                 let currenIndex = globalStore.getData(keys.gui.addonpage.activeAddOn);
                 for (let i = 0; i < items.length; i++) {
@@ -102,7 +103,7 @@ class AddOnPage extends React.Component{
                 }
                 this.setState({addOns:items})
             })
-            .catch(()=>{});    
+            .catch((e)=>{Toast(e)});
     }
     componentDidMount(){
         this.readAddOns();

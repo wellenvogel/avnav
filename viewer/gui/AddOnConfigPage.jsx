@@ -15,6 +15,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import {InjectMainMenu} from "./MainNav";
 import {PAGEIDS} from "../util/pageids";
+import Toast from "../components/Toast";
 
 
 const AddonItem=(props)=>{
@@ -86,11 +87,11 @@ class AddonConfigPage extends React.Component{
     }
     readAddons(){
         let self=this;
-        Addons.readAddOns(true,true)
+        Addons.readAddOns(true)
             .then((items)=>{
                 self.setState({addOns:items})
             })
-            .catch(()=>{});
+            .catch((e)=>{Toast(e)});
     }
     componentDidMount(){
         this.readAddons();
