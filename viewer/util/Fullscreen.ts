@@ -1,15 +1,15 @@
 // @ts-ignore
 import 'fullscreen-polyfill';
-import globalStore from '../util/globalstore';
-import keys from '../util/keys';
+import globalStore from './globalstore';
+import keys from './keys';
 // @ts-ignore
 import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
-import Requests from '../util/requests';
-import Toast from "./Toast";
+import Requests from './requests';
+import Toast from "../components/Toast";
 // @ts-ignore
 import splitsupport from "../util/splitsupport";
-import Helper from "../util/helper";
-import {getServerCommand} from "../util/UiHelper";
+import Helper from "./helper";
+import {getServerCommand} from "./UiHelper";
 
 let fullScreenBlocked=false;
 let fullScreenIcon=defaultFullScreenIcon;

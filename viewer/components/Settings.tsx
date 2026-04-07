@@ -23,7 +23,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/keys";
 import DimHandler from '../util/dimhandler';
-import FullScreen from './Fullscreen';
+import FullScreen from '../util/Fullscreen';
 import propertyhandler, {SavedSettingsData} from '../util/propertyhandler';
 import Toast from "./Toast";
 import Button, {ButtonEvent} from "./Button";

@@ -33,7 +33,7 @@ import Mob from '../components/Mob.ts';
 import Dimmer from '../util/dimhandler';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
-import FullScreen from '../components/Fullscreen';
+import FullScreen from '../util/Fullscreen';
 import DialogButton from "../components/DialogButton";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import assign from 'object-assign';

@@ -28,7 +28,7 @@ import AnchorWatchButton from '../components/AnchorWatchDialog';
 // @ts-ignore
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
-import FullScreen from '../components/Fullscreen';
+import FullScreen from '../util/Fullscreen';
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
 

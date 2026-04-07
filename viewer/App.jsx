@@ -45,7 +45,7 @@ import alarmhandler from "./nav/alarmhandler.js";
 import LocalStorage, {STORAGE_NAMES} from './util/localStorageManager';
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
-import fullscreen from "./components/Fullscreen";
+import fullscreen from "./util/Fullscreen";
 import mapholder from "./map/mapholder";
 import 'drag-drop-touch';
 import {ConfirmDialog} from "./components/BasicDialogs";
