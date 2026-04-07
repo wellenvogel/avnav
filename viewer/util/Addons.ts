@@ -1,10 +1,10 @@
-import globalStore from '../util/globalstore';
-import keys from '../util/keys';
-import Requests from '../util/requests';
-import Toast from './Toast';
+import globalStore from './globalstore';
+import keys from './keys';
+import Requests from './requests';
+import Toast from '../components/Toast';
 import base from "../base";
-import {UserButtonProps} from "../util/api.impl";
-import Helper from "../util/helper";
+import {UserButtonProps} from "./api.impl";
+import Helper from "./helper";
 import {UserButton} from "../api/api.interface";
 
 export interface PluginAddonProps{

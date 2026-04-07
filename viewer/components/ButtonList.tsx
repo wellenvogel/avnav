@@ -4,7 +4,7 @@ import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic';
 import keys from '../util/keys';
 import ItemList from './ItemList';
 // @ts-ignore
-import addons from "./Addons";
+import addons from "../util/Addons";
 import Helper from "../util/helper";
 
 const storeKeys={

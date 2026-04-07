@@ -36,7 +36,7 @@ import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
-import addons from '../components/Addons';
+import addons from '../util/Addons';
 import NavPageButtons from "./NavPageButtons";
 import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
 import RoutesPageButtons from "./RoutesPageButtons";

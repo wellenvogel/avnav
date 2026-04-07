@@ -31,7 +31,7 @@ import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
 import FeatureFormatter from "./featureFormatter";
 import {layoutLoader} from "./layouthandler";
-import Addons from "../components/Addons";
+import Addons from "./Addons";
 import {layerFactory} from "../map/chartlayers";
 import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
 import React from 'react';
