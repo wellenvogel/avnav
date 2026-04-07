@@ -26,97 +26,116 @@ import Toast from "../components/Toast";
 import globalstore from "./globalstore";
 import keys from "./keys";
 import {ApiV2} from "./api.impl";
-import {loadJs, loadOrUpdateCss, urlToString} from "./helper";
+import {Index, loadJs, loadOrUpdateCss, urlToString} from "./helper";
+// @ts-ignore
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
+// @ts-ignore
 import FeatureFormatter from "./featureFormatter";
 import {layoutLoader} from "./layouthandler";
 import Addons from "./Addons";
+// @ts-ignore
 import {layerFactory} from "../map/chartlayers";
 import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
 import React from 'react';
+// @ts-ignore
 import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
+import {
+    DialogConfig,
+    FeatureFormatterFunction,
+    FormatterFunction,
+    LayoutData,
+    MapLayerProfiles,
+    Page,
+    ProxyOptions,
+    StoreData,
+    UserApp,
+    UserButton,
+    UserButtonBase,
+    UserMapLayerCallback
+} from "../api/api.interface";
+
 
 
 class PluginApi extends ApiV2 {
-    #impl=undefined;
-    constructor(impl) {
+    #impl:Plugin=undefined;
+    constructor(impl:Plugin) {
         super();
         this.#impl=impl;
     }
 
-    getBaseUrl() {
+    override getBaseUrl() {
         return this.#impl.getBaseUrl();
     }
 
-
-    buildProxyUrl(url,headers,proxyOptions) {
+    override buildProxyUrl(url:string|URL,headers?:Record<string, string>,proxyOptions?:ProxyOptions): string {
         return this.#impl.buildProxyUrl(url,headers,proxyOptions);
     }
 
-    getPluginName() {
+    override getPluginName() {
         return this.#impl.getPluginName();
     }
 
-    registerWidget(description, opt_editableParameters) {
+    override registerWidget(description:Record<string, any>,
+                            opt_editableParameters?:Record<string,any>) {
         this.#impl.registerWidget(description, opt_editableParameters);
     }
 
-    registerFormatter(name, formatterFunction) {
+    override registerFormatter(name:string, formatterFunction:FormatterFunction) {
         this.#impl.registerFormatter(name, formatterFunction);
     }
 
-    registerFeatureFormatter(name, formatterFunction) {
+    override registerFeatureFormatter(name:string, formatterFunction:FeatureFormatterFunction) {
         this.#impl.registerFeatureFormatter(name, formatterFunction);
     }
 
-    registerLayoutData(name, layoutJson) {
+    override registerLayoutData(name:string, layoutJson:LayoutData) {
         this.#impl.registerLayoutData(name, layoutJson);
     }
 
-    registerLayout(name, url) {
+    override registerLayout(name:string, url:string|URL) {
         this.#impl.registerLayout(name, url);
     }
 
-    registerUserApp(name, url, icon, title, newWindow) {
-        this.#impl.registerUserApp(name, url, icon, title, newWindow);
+    override registerUserApp(button:UserButtonBase,app:UserApp,page?:Page) {
+        this.#impl.registerUserApp(button,app,page);
     }
 
-    registerUserButton(_button, _page) {
-        this.#impl.registerUserButton(_button, _page);
+    override registerUserButton(button:UserButton, page:Page) {
+        this.#impl.registerUserButton(button, page);
     }
 
-    registerUserMapLayer(_baseName, _name, _callback) {
-        this.#impl.registerUserMapLayer(_baseName, _name, _callback);
+    override registerUserMapLayer(baseName:MapLayerProfiles, name:string, callback:UserMapLayerCallback) {
+        this.#impl.registerUserMapLayer(baseName, name, callback);
     }
 
 
-    getStoreBaseKey() {
+    override getStoreBaseKey() {
         return this.#impl.getStoreBaseKey();
     }
 
-    setStoreData(_key, _data) {
-        this.#impl.setStoreData(_key, _data);
+    override setStoreData(key:string, data:StoreData) {
+        this.#impl.setStoreData(key, data);
     }
 
-    getStoreData(_key) {
-        return this.#impl.getStoreData(_key);
+    override getStoreData(key:string,defaultv?:StoreData) {
+        return this.#impl.getStoreData(key,defaultv);
     }
 
-    showDialog(_dialog, _context) {
-        return this.#impl.showDialog(_dialog, _context);
+    override showDialog(dialog:DialogConfig, context:object) {
+        return this.#impl.showDialog(dialog, context);
     }
 
 
-    getLocalStorage(_key, _defaultv) {
-        return this.#impl.getLocalStorage(_key, _defaultv);
+    override getLocalStorage(key:string, defaultv:StoreData) {
+        return this.#impl.getLocalStorage(key, defaultv);
     }
 
-    setLocalStorage(_key, _data) {
-        this.#impl.setLocalStorage(_key, _data);
+    override setLocalStorage(key:string, data:StoreData|undefined) {
+        this.#impl.setLocalStorage(key, data);
     }
 
-    async getConfig() {
+    override async getConfig() {
         return await this.#impl.getConfig();
     }
 
@@ -128,8 +147,23 @@ class PluginApi extends ApiV2 {
  * all requests are handled by PluginApi above.
  * But with this dependency the IDE makes it easier to implement new methods
  */
-export class Plugin extends ApiV2{
-    constructor(manager,baseUrl,name) {
+class Plugin extends ApiV2{
+    name: string;
+    private baseUrl: string;
+    private api: PluginApi;
+    private disabled: boolean;
+    // @ts-ignore
+    private mjs: string;
+    private shutdown: (api:ApiV2)=>void;
+    private registeredFormatters: string[];
+    private widgets: string[];
+    private featureFormatter: string[];
+    private mapLayers: string[];
+    private moduleTs: number;
+    private manager: Pluginmanager;
+    // @ts-ignore
+    private module: any;
+    constructor(manager:Pluginmanager,baseUrl:string,name:string) {
         super();
         this.name=name;
         this.baseUrl=baseUrl;
@@ -140,8 +174,6 @@ export class Plugin extends ApiV2{
         this.registeredFormatters=[];
         this.widgets=[];
         this.featureFormatter=[];
-        this.layouts=[];
-        this.featureListFormatter=[];
         this.mapLayers=[];
         this.moduleTs=undefined;
         this.manager=manager;
@@ -192,10 +224,11 @@ export class Plugin extends ApiV2{
         })
         globalstore.deleteByPrefix(this.getStoreBaseKey());
     }
-    async loadModule(url,timestamp){
+    async loadModule(url:string|URL,timestamp:number){
         try {
             base.log(`importing ${url} for ${this.name}`);
             url=this.baseUrl+url;
+            // @ts-ignore
             const module = await import(/* webpackIgnore: true */ url);
             let shutdown = undefined;
             this.module=module;
@@ -212,11 +245,12 @@ export class Plugin extends ApiV2{
             console.log("unable to load module (plugin.mjs) "+this.name,e);
         }
     }
-    mustUpdate(timestamp){
+    mustUpdate(timestamp:number){
         return timestamp !== this.moduleTs;
     }
 
-    registerWidget(description, opt_editableParameters) {
+    override registerWidget(description:Record<string, any>,
+                            opt_editableParameters?:Record<string, any>):void {
         if (this.disabled) throw new Error("disabled");
         const name=widgetFactory.registerWidget(description, opt_editableParameters);
         if (name) {
@@ -225,7 +259,7 @@ export class Plugin extends ApiV2{
         }
     }
 
-    registerFormatter(name, formatterFunction) {
+    override registerFormatter(name:string, formatterFunction:FormatterFunction) {
         if (this.disabled) throw new Error("disabled");
         const fname=widgetFactory.registerFormatter(name,formatterFunction);
         if (fname) {
@@ -234,7 +268,7 @@ export class Plugin extends ApiV2{
         }
     }
 
-    registerFeatureFormatter(name, formatterFunction) {
+    override registerFeatureFormatter(name:string, formatterFunction:FeatureFormatterFunction) {
         if (this.disabled) throw new Error("disabled");
         super.registerFeatureFormatter(name, formatterFunction);
         base.log(`registered featureformatter ${name} for ${this.name}`);
@@ -242,64 +276,72 @@ export class Plugin extends ApiV2{
     }
 
 
-    getBaseUrl() {
+    override getBaseUrl() {
         if (this.disabled) throw new Error("disabled");
         return this.baseUrl;
     }
-    buildProxyUrl(url,headers,proxyOptions) {
+    override buildProxyUrl(url:string|URL,headers?:Record<string,string>,
+                           proxyOptions?:ProxyOptions):string {
         return buildProxyUrl(url,this.getBaseUrl(),headers,proxyOptions);
     }
 
-    getPluginName() {
+    override getPluginName() {
         if (this.disabled) throw new Error("disabled");
         return this.name===USERNAME?"":this.name;
     }
 
-    _registerLayout(name,data,url){
+    _registerLayout(name:string,data:LayoutData,url?:string|URL){
         if (this.disabled) throw new Error("disabled");
         if (this.name === USERNAME) throw new Error("regsiterLayout only for plugins");
         const ts=data?this.moduleTs:undefined;
         const layoutname=layoutLoader.addPluginLayout(name,this.name,ts,data,url);
         if (layoutname){
             base.log(`registered layout ${name} for ${this.name}`);
-            this.layouts.push(layoutname);
         }
     }
 
-    registerLayoutData(name, layoutJson) {
+    override registerLayoutData(name:string, layoutJson:LayoutData) {
         this._registerLayout(name, layoutJson);
     }
 
-    registerLayout(name, url) {
+    override registerLayout(name:string, url:string|URL) {
         if (! url) throw Error("url must not be empty");
         url=urlToString(url,this.getBaseUrl());
         this._registerLayout(name, undefined,url);
     }
 
-    registerUserApp(name, url, icon, title, newWindow) {
-        if (! url) throw Error("url must not be empty");
-        url=urlToString(url,this.getBaseUrl());
-        if (! icon) throw Error("icon must not be empty");
-        icon=urlToString(icon,this.getBaseUrl());
-        Addons.addPluginAddOn({name,pluginName:this.name, url, icon, title, newWindow});
+    override registerUserApp(button:UserButtonBase,app:UserApp,_page?:Page):void {
+        if (! app.url) throw Error("url must not be empty");
+        const url=urlToString(app.url,this.getBaseUrl());
+        if (! button.icon) throw Error("icon must not be empty");
+        const icon=urlToString(button.icon,this.getBaseUrl());
+        Addons.addPluginAddOn({name:button.name,
+            pluginName:this.name,
+            url,
+            icon,
+            title:app.title,
+            newWindow:app.newWindow,});
     }
-    registerUserButton(button, page) {
+    override registerUserButton(button:UserButton, page:Page) {
         const buttonDef={...button};
-        for (let k of ['icon']){
+        for (const k of ['icon']){
             if (k in buttonDef){
+                // @ts-ignore
                 buttonDef[k] = urlToString(buttonDef[k],this.getBaseUrl());
             }
         }
         Addons.addUserButton(this.name,buttonDef,page);
     }
 
-    registerUserMapLayer(baseName, name, callback) {
+    override registerUserMapLayer(baseName:MapLayerProfiles,
+                                  name:string,
+                                  callback:UserMapLayerCallback) {
         name=(this.name === USERNAME)?"user_"+name:"plugin_"+name;
         layerFactory.registerUserChartLayer(baseName, name, callback);
         this.mapLayers.push(name);
     }
 
-    async getConfig() {
+    override async getConfig() {
         const res=await Requests.getJson({
             type:'plugins',
             command:'pluginConfig',
@@ -309,37 +351,38 @@ export class Plugin extends ApiV2{
     }
 
 
-    getStoreBaseKey() {
+    override getStoreBaseKey() {
         return "ext."+this.name;
     }
 
-    setStoreData(key, data) {
+    override setStoreData(key:string, data:StoreData) {
         if (!key || ! key.startsWith(this.getStoreBaseKey())) throw new Error(`invalid store key ${key}`);
         globalstore.storeData(key, data);
     }
 
-    getStoreData(key,defaultv) {
+    override getStoreData(key:string,defaultv:StoreData) {
         return globalstore.getData(key,defaultv);
     }
 
-    showDialog(dialog, context) {
+    override showDialog(dialog:DialogConfig, context:object):Promise<()=>void> {
         if (! this.manager.dialogStarter) throw new Error("cannot start a dialog in this state");
-        for (let k of ['text','title']){
-            if (dialog[k] !== undefined) {
-                if ( typeof(dialog[k]) !== 'string' && ! React.isValidElement(dialog[k])) { throw new Error(`invalid dialog property ${k}: ${dialog[k]}`); }
+        for (const k of ['text','title']){
+            const v=Index<DialogConfig>(dialog,k);
+            if (v !== undefined) {
+                if ( typeof(v) !== 'string' && ! React.isValidElement(v)) { throw new Error(`invalid dialog property ${k}: ${v}`); }
             }
         }
         return this.manager.dialogStarter(context,dialog);
     }
 
-    getLocalStorage(key, defaultv) {
+    override getLocalStorage(key:string, defaultv?:StoreData) {
         const name=this.name+"."+key;
         const rt=LocalStorageManager.getItem(UNPREFIXED_NAMES.EXTERNAL,name);
         if (! rt) return defaultv;
         return JSON.parse(rt);
     }
 
-    setLocalStorage(key, data) {
+    setLocalStorage(key:string, data:StoreData) {
         const name=this.name+"."+key;
         if (! data) LocalStorageManager.removeItem(UNPREFIXED_NAMES.EXTERNAL,name);
         else {
@@ -349,22 +392,33 @@ export class Plugin extends ApiV2{
     }
 
 }
-const USERFILES={
+const USERFILES:Record<string,string>={
     js:'user.js',
     css:'user.css',
     mjs:'user.mjs'
 };
 const USERNAME='__avnavuser'; //must be disjunct from all plugin names
+interface PluginBaseConfig{
+    name:string;
+    active:boolean;
+    base?:string;
+}
+type PluginConfig = Record<keyof typeof USERFILES, {
+    url:string,
+    timestamp:number
+}> & PluginBaseConfig
+
 class Pluginmanager{
+    private css: Record<string,number>={};
+    dialogStarter : (context: object, dialog: DialogConfig) => Promise<()=>void>
+    private createdApis: Record<string, Plugin>={};
+    private legacyJs: Record<string, number>={};
+    private mjs:Record<string,number>={};
+    private updateRequests:number=0;
     constructor(){
-        this.createdApis={}
-        this.legacyJs={};
-        this.css={};
-        this.mjs={}
-        this.updateRequests=0;
         this.dialogStarter=undefined;
     }
-    cssId(pluginName) {
+    cssId(pluginName:string) {
         return '_PL_'+pluginName+"_css"
     }
     async query(){
@@ -379,15 +433,15 @@ class Pluginmanager{
         }
     }
     async queryUser(){
-        const rt={
+        const rt:PluginConfig={
             name:USERNAME,
             active:true,
-        }
+        } as PluginConfig;
         try{
             const userList=await listItems('user');
             let urlBase;
-            for (let item of userList) {
-                for (let k in USERFILES) {
+            for (const item of userList) {
+                for (const k in USERFILES) {
                     if (item.name === USERFILES[k] && item.url){
                         base.log("detected userfile "+item.name);
                         let timestamp=item.time;
@@ -467,7 +521,7 @@ class Pluginmanager{
         this.nextUpdate(); //maybe in the mean time new update requests have arrived
         globalstore.storeData(keys.gui.global.pluginLoadingDone,true);
     }
-    deleteApi(api){
+    deleteApi(api:Plugin){
         if (!api) return false;
         base.log(`deleteApi ${api.name}`);
         api.disable();
@@ -477,12 +531,12 @@ class Pluginmanager{
     async update(){
         if (! globalstore.getData(keys.gui.capabilities.plugins)) return;
         const queries=[];
-        const foundPlugins={};
+        const foundPlugins:Record<string,PluginConfig>={};
         queries.push(this.query().then((plugins)=>{
             if (!plugins || !(plugins instanceof Array)) {
                 throw new Error("no plugins returned")
             }
-            for (let plugin of plugins) {
+            for (const plugin of plugins) {
                 const name = plugin.name;
                 if (!name || !plugin.base) continue;
                 if (!plugin.active) continue;
@@ -505,7 +559,7 @@ class Pluginmanager{
         let updatedMjs=false;
         let hasUpdates=false;
         const asyncActions=[];
-        for (let pluginName in foundPlugins) {
+        for (const pluginName in foundPlugins) {
             const plugin = foundPlugins[pluginName];
             let api = this.createdApis[pluginName];
             if (plugin.mjs) {
@@ -538,8 +592,7 @@ class Pluginmanager{
                                 console.error("unable to create api and load module", plugin, e);
                                 try {
                                     api.disable();
-                                } catch (e) {
-                                }
+                                } catch (e) { /* empty */ }
                             }
                         }
                         asyncActions.push(createPlugin());
@@ -567,12 +620,12 @@ class Pluginmanager{
             }
         }
         await Promise.all(asyncActions);
-        for (let pname in this.createdApis){
+        for (const pname in this.createdApis){
             if (!foundPlugins[pname]) {
                 hasUpdates=hasUpdates || this.deleteApi(this.createdApis[pname]);
             }
         }
-        for (let pname in this.css){
+        for (const pname in this.css){
             if (!foundPlugins[pname]) {
                 const cssid = this.cssId(pname);
                 base.log("deleting css for " + pname);
@@ -588,7 +641,7 @@ class Pluginmanager{
         //there was a js change
         //but if later on enabling it again with unchanged code
         //there is no change any more
-        for (let lname in this.legacyJs){
+        for (const lname in this.legacyJs){
             if (!foundPlugins[lname] || ! foundPlugins[lname].js) {
                 unloadedJsChanges = true;
                 break;
@@ -608,9 +661,10 @@ class Pluginmanager{
             globalstore.storeData(keys.gui.global.updatedJsModules,true);
         }
     }
-    setDialogStarter(starterFunction){
+    setDialogStarter(starterFunction:(context: object, dialog: DialogConfig) => Promise<()=>void>){
         this.dialogStarter=starterFunction;
     }
+
 }
 
 export default new Pluginmanager();

@@ -36,7 +36,7 @@ import {
 } from "../components/EditableParameterUI";
 import {InputSelect, InputReadOnly} from './Inputs';
 import globalstore from "../util/globalstore";
-import LayoutHandler, {LayoutData, layoutLoader} from '../util/layouthandler';
+import LayoutHandler, {layoutLoader} from '../util/layouthandler';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
 import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog, showDialog} from "./OverlayDialog";
@@ -53,6 +53,7 @@ import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
 import {fetchItem, listItems} from "../util/itemFunctions";
 import {DownloadItemSelectDialog} from "./DownloadItemList";
 import {Item} from "./ItemList";
+import {LayoutData} from "../api/api.interface";
 
 
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{

@@ -1,7 +1,7 @@
 import Requests from './requests';
 import globalStore from './globalstore';
 import keys, {DEFAULT_LAYOUT_NAME, KeyHelper, PropertyValue} from './keys';
-import KeyHandler, {KeyMappings} from './keyhandler';
+import KeyHandler from './keyhandler';
 import base from '../base';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 // @ts-ignore
@@ -11,6 +11,7 @@ import cloneDeep from "clone-deep";
 import Helper, {valueof} from "./helper";
 import {PAGEIDS, PageType} from "./pageids";
 import {Item} from "./itemFunctions";
+import {LayoutData} from "../api/api.interface";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -43,13 +44,6 @@ export interface PageWithOptions{
     options?:Record<string,any>
 }
 export type LayoutPage=PageType|PageWithOptions;
-export interface LayoutData{
-    keys?: KeyMappings;
-    css?: string;
-    layoutVersion:string|number;
-    widgets?:Record<string, any>;
-    properties?:Record<string, PropertyValue>;
-}
 /**
  * allow pagename to be an object with the mane being in location
  * @param page

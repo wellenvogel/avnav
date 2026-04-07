@@ -119,7 +119,7 @@ export const itemListToSelectList = (itemList:Item[], opt_selected?:string,opt_f
     });
     return rt;
 }
-export const injectBaseUrl=(url:string|URL,baseUrlIn?:URL|string)=>{
+export const injectBaseUrl=(url:string|URL,baseUrlIn?:URL|string):string=>{
     if (! url) return;
     try {
         const baseUrl = baseUrlIn ? (new URL(baseUrlIn, window.location.href)) : window.location.href;
@@ -127,7 +127,7 @@ export const injectBaseUrl=(url:string|URL,baseUrlIn?:URL|string)=>{
     }catch (e){
         base.log(`error converting url ${url}, base ${baseUrlIn}: ${e}`);
     }
-    return url;
+    return url as string;
 
 }
 export const getUrlWithBase=(item:Record<string, any>,element='url')=>{

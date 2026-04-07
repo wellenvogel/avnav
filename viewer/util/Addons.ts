@@ -12,7 +12,7 @@ export interface PluginAddonProps{
     displayName?: string;
     url:string;
     icon: string;
-    title?: string;
+    title?: React.ReactNode;
     newWindow?:boolean;
     preventConnectionLost?:boolean
 }
@@ -22,7 +22,7 @@ class PluginAddOn{
     displayName: string;
     url: string;
     icon: string;
-    title: string;
+    title: React.ReactNode;
     newWindow: boolean;
     source: string;
     canDelete: boolean;
@@ -125,36 +125,32 @@ const removePluginAddOns=(pluginName:string)=>{
 }
 
 const readAddOns = async (
-    opt_includeInvalid?:boolean)=> {
-        if (!globalStore.getData(keys.gui.capabilities.addons)) return [];
-        const req={
-            request:'api',
-            command:'list',
-            type:"addon",
-            invalid:false
-        };
-        if (opt_includeInvalid){
-            req.invalid=true;
-        }
-        try {
-            const addons = await Requests.getJson(req).then((json:any) => {
-                const items = [];
-                for (const e in json.items) {
-                    const item = json.items[e];
-                    if (!item.key) item.key = item.name;
-                    if (item.name) {
-                        items.push(item);
-                    }
-                }
-                return items;
-            });
-            for (const k in pluginAddOns){
-                addons.push(pluginAddOns[k]);
+    opt_includeInvalid?: boolean) => {
+    if (!globalStore.getData(keys.gui.capabilities.addons)) return [];
+    const req = {
+        request: 'api',
+        command: 'list',
+        type: "addon",
+        invalid: false
+    };
+    if (opt_includeInvalid) {
+        req.invalid = true;
+    }
+    const addons = await Requests.getJson(req).then((json: any) => {
+        const items = [];
+        for (const e in json.items) {
+            const item = json.items[e];
+            if (!item.key) item.key = item.name;
+            if (item.name) {
+                items.push(item);
             }
-            return addons;
-        }catch (error){
-            throw error;
         }
+        return items;
+    });
+    for (const k in pluginAddOns) {
+        addons.push(pluginAddOns[k]);
+    }
+    return addons;
 };
 
 const findAddonByUrl=(addons:any[],url:string,opt_all?:boolean)=>{

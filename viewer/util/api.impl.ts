@@ -24,10 +24,10 @@ import {
     FeatureFormatterFunction,
     FeatureInfoKeys,
     FeatureInfoType,
-    FormatterFunction,
+    FormatterFunction, LayoutData,
     MapLayerProfiles, Modules, Page, ProxyOptions,
-    StoreData,
-    UserButton,
+    StoreData, UserApp,
+    UserButton, UserButtonBase,
     UserMapLayerCallback
 } from '../api/api.interface';
 import React from "react";
@@ -44,7 +44,7 @@ export class ApiImpl implements ApiIntf {
         base.log("API: " + text);
     }
 
-    registerWidget(description: object, opt_editableParameters: object): void {
+    registerWidget(description: Record<string,any>, opt_editableParameters?:Record<string,any>): void {
         WidgetFactory.registerWidget(description, opt_editableParameters);
     }
 
@@ -230,15 +230,14 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
         throw new Error("Method not implemented.");
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    registerLayoutData(_name: string, _layoutJson: object): void {
+    registerLayoutData(_name: string, _layoutJson: LayoutData): void {
         throw new Error("Method not implemented.");
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     registerLayout(_name: string, _url: string | URL): void {
         throw new Error("Method not implemented.");
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    registerUserApp(_name: string, _url: string | URL, _icon: string | URL, _title?: string, _newWindow?: boolean): void {
+    registerUserApp(_button:UserButtonBase,_app:UserApp,_page?:Page): void {
         throw new Error("Method not implemented.");
     }
     get FEATUREINFO_KEYS():FeatureInfoKeys {
@@ -253,7 +252,7 @@ export class ApiV2 extends ApiImpl implements ApiV2Intf {
     setStoreData(_key: string, _data: StoreData): void {
         throw new Error("Method not implemented.");
     }
-    getStoreData(_key: string,_defaultv: StoreData): StoreData {
+    getStoreData(_key: string,_defaultv?: StoreData): StoreData {
         throw new Error("Method not implemented.");
     }
 

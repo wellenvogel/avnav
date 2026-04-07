@@ -34,7 +34,8 @@ import Htm from "htm";
 import * as OpenLayers from 'ol/index';
 import {PAGEIDS} from "../util/pageids";
 import {valueof} from "../util/helper";
-
+import {KeyMappings} from "../util/keyhandler";
+import {PropertyValue} from "../util/keys";
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
@@ -524,17 +525,33 @@ export interface ProxyOptions{
     y:number;       //y
 }
 export type Page=valueof<typeof PAGEIDS>;
-export interface UserButton{
+export interface UserButtonBase{
     name: string;                   //will set the CSS class, unique inside the plugin
     displayName?: string;           //shown in main nav
     localOnly?: boolean;            //if set: not shown in main nav
-    icon?: string|URL;              //relative to plugin base
-    onClick:(event:object)=>void    //if set this function is called instead of invoking the url
+    icon?: string|URL;              //relative to plugin base. If not set use CSS with the name as CSS class
     visible?:boolean;
     disabled?:boolean;
-    toggle?:boolean;
     storeKeys?:Record<string, string>; //can control visible/disabled/toogle
     updateFunction?:(values:object)=>object; //translate store values
+}
+export interface UserButton extends UserButtonBase{
+    onClick:(event:object)=>void    //if set this function is called instead of invoking the url
+    toggle?:boolean;
+}
+export interface UserApp{
+    url?:string|URL;                //absolute URL or relative URL based on your plugin dir
+    title?:string|React.ReactNode;  //if set show a title
+    newWindow?:boolean;             //open in a new window
+                                    //ignored if renderHtml is set
+    renderHtml?:(p:Record<string,any>)=>React.ReactNode;
+                                    //if set the url is ignored but the window is populated
+                                    //with this html
+                                    //the return can be an HTML string
+    storeKeys?:Record<string, string>;
+                                    //if set the parameters for the html function
+                                    //will be read from the store
+                                    //and it is called again if those values change
 }
 
 /**
@@ -611,7 +628,7 @@ export interface ApiV2 extends Api{
      * @param name
      * @param layoutJson
      */
-    registerLayoutData(name:string,layoutJson:object):void;
+    registerLayoutData(name:string,layoutJson:LayoutData):void;
 
     /**
      * register a layout file that can be accessed by an url
@@ -626,16 +643,15 @@ export interface ApiV2 extends Api{
 
     /**
      * register a user app (i.e. a web page that should be shown as user app)
-     * @param name (namdatory) a name that should uniquely identify this userapp in your plugin/user.mjs
-     * @param url (mandatory) either an internal or external url as string or URL object
      *            to use an HTML file in your plugin directory just use the file name
      *            If you have an external URL just use it as is
-     * @param icon (mandatory) an icon URL
      *            build it the same way like the url parameter
-     * @param title (optional) a title to be shown
-     * @param newWindow (optional) if set open the page in a new window
+     * @param button the button to be shown
+     * @param app the user app to be shown
+     * @param page the page on which the button should be shown,
+     *             defaulst to userApp
      */
-    registerUserApp(name:string,url:string|URL,icon:string|URL,title?:string,newWindow?:boolean):void;
+    registerUserApp(button:UserButtonBase,app:UserApp,page?:Page):void;
 
     /**
      * register
@@ -720,3 +736,10 @@ export interface ApiV2 extends Api{
 }
 
 
+export interface LayoutData {
+    keys?: KeyMappings;
+    css?: string;
+    layoutVersion: string | number;
+    widgets?: Record<string, any>;
+    properties?: Record<string, PropertyValue>;
+}

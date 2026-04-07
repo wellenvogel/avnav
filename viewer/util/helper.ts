@@ -268,7 +268,7 @@ export const injectDateIntoUrl=(oldurl:URL,opt_date?:number)=>{
     }
     return url;
 }
-export const urlToString=(url:any,opt_base?:string|URL)=>{
+export const urlToString=(url:any,opt_base?:string|URL):string=>{
     if (typeof(url)==='string'){
         url= new URL(url,opt_base);
     }
@@ -386,4 +386,6 @@ Helper.avNavVersion=avNavVersion;
 export default Helper;
 
 
-
+export function Index<T>(p: T, k: string) {
+    return p[k as keyof T];
+}
