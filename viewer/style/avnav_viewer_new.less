@@ -1383,11 +1383,16 @@ span.valuePrefix{
   }
 
   .addOnFrame{
-    .flex(1);
-    .flex-display();
-    .flex-align-items(stretch);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
+    .addonInner{
+      flex: 1;
+    }
     iframe{
-      .flex(1);
+      flex: 1;
       height: 100%; /* older microsoft ...*/
       min-height: 100%; //old safari
       min-width: 100%; //old safari

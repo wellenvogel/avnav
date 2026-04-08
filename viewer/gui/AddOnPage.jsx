@@ -18,6 +18,7 @@ import {PAGEIDS} from "../util/pageids";
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs, updateButtons} from "../components/Button";
 import Toast from "../components/Toast";
+import {addonButtonAction} from "../components/AddonView";
 
 
 class AddOnPage extends React.Component{
@@ -110,6 +111,7 @@ class AddOnPage extends React.Component{
         globalStore.storeData(keys.gui.global.preventSizeChange,true);
     }
     setAddon(addOn,i){
+        return;
         remotechannel.sendMessage(COMMANDS.addOn,i);
         if (addOn.newWindow === 'true'){
             window.open(addOn.url,addOn.key);
@@ -129,10 +131,18 @@ class AddOnPage extends React.Component{
                 let button = {
                     name: addOn.key,
                     icon: addOn.icon,
-                    onClick: ()=> {
+                    onClick: (ev)=> {
+                        addonButtonAction(ev,{
+                            name: addOn.key,
+                            icon: addOn.icon,
+                            url:addOn.url,
+                            newWindow:addOn.newWindow,
+                            title:addOn.title,
+                            preventConnectionLost:addOn.preventConnectionLost,
+                        },true)
                         this.setAddon(addOn,i);
                     },
-                    toggle: activeIndex == i,
+                    //toggle: activeIndex == i,
                     overflow: true,
                     visible: addOn.newWindow !== 'true' || addOn.url.match(/^http/) || ! globalStore.getData(keys.gui.global.onAndroid,false)
                 };
