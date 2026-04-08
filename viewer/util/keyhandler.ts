@@ -107,6 +107,15 @@ class KeyHandler{
         }
     }
 
+    callHandler(component:string,action:string){
+        const handlers=this.registrations[component]?.[action];
+        if (! handlers) return;
+        for (const h of handlers){
+            h(component,action);
+        }
+
+    }
+
     /**
      * register the keymappings
      * @param mappings

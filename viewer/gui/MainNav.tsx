@@ -48,6 +48,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
 import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
+import keyhandler from "../util/keyhandler";
 
 type PageKind='navigation'|'settings';
 
@@ -162,14 +163,8 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence,pageref}:PageRowP
                             key={bt.name}
                             onClick={(ev) => {
                                 if (isCurrent) {
-                                    //directly call the button action from the page
-                                    //remove the dialog context
-                                    //to ensure the global context will be used
-                                    setav(ev,{dialogContext:undefined});
                                     dialogContext.closeDialog();
-                                    if (bt.onClick) {
-                                        bt.onClick(ev);
-                                    }
+                                    keyhandler.callHandler('button',bt.name);
                                     return;
                                 }
                                 ev.stopPropagation()
@@ -277,7 +272,7 @@ export const InjectMainMenu=(
     ]).concat(computedButtons,propsToDefs(addons.getPageUserButtons(pagename)));
 }
 
-export const handleInitialButton = (history: IHistory, pageButtons: ButtonDef[], dialogContext?: IDialogContext) => {
+export const handleInitialButton = (history: IHistory, _pageButtons: ButtonDef[], _dialogContext?: IDialogContext) => {
     //check and remove the button from the history
     const current = history.currentLocation(true) as HistoryEntry;
     if (current.options && current.options.button) {
@@ -287,15 +282,7 @@ export const handleInitialButton = (history: IHistory, pageButtons: ButtonDef[],
                 ...current.options,
                 button: undefined
             });
-        for (const bt of pageButtons) {
-            if (bt.name === bname && bt.onClick) {
-                bt.onClick(setav(new Event('avnav'), {
-                    history: history,
-                    dialogContext: dialogContext
-                }))
-                return;
-            }
-        }
+            keyhandler.callHandler('button',bname);
     }
 }
 
