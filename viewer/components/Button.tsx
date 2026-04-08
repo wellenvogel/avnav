@@ -1,13 +1,21 @@
-import React, {SyntheticEvent} from 'react';
+import React from 'react';
 // @ts-ignore
-import {useKeyEventHandlerPlain} from '../util/UiHelper';
+import {useKeyEventHandlerPlain, useStateObject} from '../util/UiHelper';
 import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
-import {useDialogContext} from "./DialogContext";
+import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
-export type ButtonEvent=SyntheticEvent | Record<string, any>;
+import {ButtonContext} from "../api/api.interface";
+
+export type ButtonEventBase=Record<string, any>;
+export interface ButtonEvent extends ButtonEventBase {
+    avnav?:{
+        context: ButtonContext;
+        dialogContext: IDialogContext;
+    }
+}
 export type ButtonEventHandler=((ev:ButtonEvent)=>void)|((ev:ButtonEvent) => Promise<void>);
 
 export interface ButtonProps {
@@ -56,34 +64,54 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     noDialogsClose?: boolean;
 }
 
-const toggleClass=(props:ButtonProps)=> {
+const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
+    if (ctxToggle !== undefined) {
+        return ctxToggle?"active":"inactive";
+    }
     if (props.toggle !== undefined) {
         const togglev = (typeof (props.toggle) === 'function') ? props.toggle() : props.toggle;
         return togglev ? " active" : " inactive";
+    }
+}
+export const useButtonContext=(initial?:Record<string,any>):ButtonContext=>{
+    const ctx=useStateObject(initial||{});
+    return {
+        getValue: (key: string) => ctx.getValue(key),
+        setValue: (key: string, value: any) => ctx.setValue(key, value)
     }
 }
 
 const Button = (props:ButtonProps) => {
     const dialogContext=useDialogContext();
     const history = useHistory();
-    const disabledv=(typeof (props.disabled) === 'function') ? props.disabled() : props.disabled;
+    const ctx =useButtonContext();
+    const disabledv=((typeof (props.disabled) === 'function') ? props.disabled() : props.disabled)||
+        !!ctx.getValue('disabled');
     useKeyEventHandlerPlain(props.name, "button", () => {
         if (props.onClick && !disabledv) {
-            const ev= setav({},{dialogContext:dialogContext,history:history});
+            const ev= setav({},{
+                dialogContext:dialogContext,
+                history:history,
+                context:ctx
+            });
             if (props.noDialogsClose) props.onClick(ev);
             else dialogContext.closeDialog().then(()=>props.onClick(ev));
         }
     });
-    const iprops=useStore(props);
+    const iprops={...useStore(props)};
+    for (const k of ['visible','icon','className']){
+        const v=ctx.getValue(k);
+        if (v !== undefined) iprops[k]=v;
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
+    const {className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
     if (visible !== undefined && ! visible) {
         return null;
     }
-    const className=Helper.concatsp(props.className,
+    const classNamev=Helper.concatsp(className,
         'button',
         name,
-        toggleClass(iprops),
+        toggleClass(iprops,ctx.getValue('toggle')),
         disabled ? 'disabled' : undefined,
     );
     const spanStyle:Record<string, any> = {};
@@ -97,18 +125,23 @@ const Button = (props:ButtonProps) => {
                 ev.stopPropagation();
                 return;
             }
+            const avev=setav(ev,{
+                dialogContext:dialogContext,
+                history:history,
+                context:ctx
+            });
             if (props.noDialogsClose){
-                click(setav(ev,{dialogContext:dialogContext,history:history}))
+                click(avev);
             }
             else {
                 dialogContext.closeDialog().then(() =>
-                    click(setav(ev, {dialogContext: dialogContext, history: history}))
+                    click(avev)
                 );
             }
         }
     }
     return (
-        <div {...forward} className={className} title={displayName}>
+        <div {...forward} className={classNamev} title={displayName}>
             <span style={spanStyle}/>
             {children}
         </div>
