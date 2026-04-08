@@ -74,17 +74,21 @@ const getCtxId = () => {
     dialogCtxId++;
     return dialogCtxId;
 }
-export type DialogCallback=()=>void;
+export type DialogCallback=()=>(Promise<void>|void);
 export interface SetDialogOptions extends Record<string, any> {
     dialogClassName?: string;
     coverClassName?: string;
 }
-export type SetDialogFunction=(dialog?:React.ElementType,closeCallback?:DialogCallback,options?:SetDialogOptions) => Promise<DialogCallback|void>;
+export type SetDialogFunction=(dialog?:React.ElementType,closeCallback?:DialogCallback,options?:SetDialogOptions) => Promise<DialogCallback>;
 class DialogDisplayEntry {
     setDialog:SetDialogFunction;
+    closeDialog:DialogCallback;
     id:number;
-    constructor(setDialog:SetDialogFunction) {
-        this.setDialog = setDialog;
+    constructor(setDialog?:SetDialogFunction,closeDialog?:DialogCallback) {
+        this.setDialog = setDialog|| (():Promise<DialogCallback>=>{
+            return Promise.resolve(()=>{})
+        });
+        this.closeDialog = closeDialog|| (() => {}) ;
         this.id = getCtxId();
     }
 
@@ -107,7 +111,7 @@ export class DialogContextImpl implements IDialogContext {
             this.parent = parent;
         }
         this.displayStack.push(new DialogDisplayEntry(() => {
-            return Promise.resolve()
+            return Promise.resolve(()=>{})
         }));
         this.closeDialog = this.closeDialog.bind(this);
         this.showDialog = this.showDialog.bind(this);
@@ -122,12 +126,12 @@ export class DialogContextImpl implements IDialogContext {
         return this._getTop().setDialog(content, closeCallback, options);
     }
 
-    closeDialog() {
+    async closeDialog() {
         //only go up to first parent
         //we cannot call closeDialog at the parent as this would potentially
         //go up further
-        if (this.parent) return this.parent._getTop().setDialog();
-        return this._getTop().setDialog();
+        if (this.parent) await this.parent._getTop().closeDialog();
+        await this._getTop().closeDialog();
     }
 
     replaceDialog(content:React.ElementType, closeCallback?:DialogCallback, options?:any) {
@@ -135,10 +139,10 @@ export class DialogContextImpl implements IDialogContext {
         return this.showDialog(content, closeCallback, options);
     }
 
-    setDisplay(setDialogFunction:SetDialogFunction) {
+    setDisplay(setDialogFunction:SetDialogFunction,closeDialog:DialogCallback) {
         const current = this._getTop();
-        current.setDialog(); //cleanup any dialog if we change the display
-        this.displayStack.push(new DialogDisplayEntry(setDialogFunction));
+        current.closeDialog(); //cleanup any dialog if we change the display
+        this.displayStack.push(new DialogDisplayEntry(setDialogFunction,closeDialog));
         return this._getTop().id;
     }
 
@@ -146,7 +150,7 @@ export class DialogContextImpl implements IDialogContext {
         //never remove the first entry from the stack
         for (let idx = 1; idx < this.displayStack.length; idx++) {
             if (this.displayStack[idx].id === id) {
-                this.displayStack[idx].setDialog(); //correctly close any dialog
+                this.displayStack[idx].closeDialog(); //correctly close any dialog
                 this.displayStack.splice(idx, 1);
                 return true;
             }

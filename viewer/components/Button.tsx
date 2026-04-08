@@ -27,6 +27,7 @@ export interface ButtonProps {
         displayName?:string,
         storeKeys?: StoreKeys;
         updateFunction?: UpdateFunction;
+        noDialogsClose?: boolean;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{
@@ -52,6 +53,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     children?: React.ReactNode;
     localOnly?: boolean;
     displayName?: string;
+    noDialogsClose?: boolean;
 }
 
 const toggleClass=(props:ButtonProps)=> {
@@ -68,7 +70,8 @@ const Button = (props:ButtonProps) => {
     useKeyEventHandlerPlain(props.name, "button", () => {
         if (props.onClick && !disabledv) {
             const ev= setav({},{dialogContext:dialogContext,history:history});
-            props.onClick(ev);
+            if (props.noDialogsClose) props.onClick(ev);
+            else dialogContext.closeDialog().then(()=>props.onClick(ev));
         }
     });
     const iprops=useStore(props);
@@ -94,7 +97,14 @@ const Button = (props:ButtonProps) => {
                 ev.stopPropagation();
                 return;
             }
-            click(setav(ev,{dialogContext:dialogContext,history:history}));
+            if (props.noDialogsClose){
+                click(setav(ev,{dialogContext:dialogContext,history:history}))
+            }
+            else {
+                dialogContext.closeDialog().then(() =>
+                    click(setav(ev, {dialogContext: dialogContext, history: history}))
+                );
+            }
         }
     }
     return (

@@ -16,6 +16,7 @@ import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
 import Helper, {concatsp} from "../util/helper";
 import {
+    DialogCallback,
     DialogContextImpl,
     globalContext,
     IDialogContext,
@@ -87,9 +88,9 @@ const OverlayDialog = (
 
 export const DialogDisplay=()=>{
     const dialogContext=useDialogContext();
-    const [Display,setDialog]=useDialog();
+    const [Display,setDialog,closeDialog]=useDialog();
     useEffect(() => {
-        const id=dialogContext.setDisplay(setDialog);
+        const id=dialogContext.setDisplay(setDialog,closeDialog);
         return ()=>{
             dialogContext.removeDisplay(id);
         }
@@ -107,46 +108,50 @@ export const DialogContext=(
     </ReactDialogContextImpl.Provider>
 }
 
-export type UseDialogResult=[React.ElementType,SetDialogFunction];
-
-export const useDialog=(
+export type UseDialogResult=[React.ElementType,SetDialogFunction,DialogCallback];
+const useDialog=(
     closeCb?:()=>void):UseDialogResult=>{
     const [dialogContent,setDialog]=useState(undefined);
     const dialogId=useRef(1);
     const lastContent=useRef(undefined);
+    const resetDialog=(opt_id?:string|number):Promise<void>=>{
+        return new Promise(resolve=>{
+            window.requestAnimationFrame(() => {
+                const currentContent=lastContent.current;
+                if (currentContent && (opt_id === undefined || currentContent.id === opt_id)) {
+                    if (currentContent.close) currentContent.close();
+                    if (closeCb) closeCb();
+                    setDialog(undefined)
+                    lastContent.current = undefined;
+                }
+                resolve();
+            })
+        });
+    }
     const setNewDialog=(
                         content:React.ElementType,
                         opt_closeCb?:()=>void,
                         opt_options?:SetDialogOptions,
-                        opt_id?:string|number):Promise<void|(()=>void)>=>{
-        return new Promise((resolve)=> {
+                        ):Promise<DialogCallback>=>{
+        return new Promise((resolve) => {
             window.requestAnimationFrame(() => {
-                const currentContent=lastContent.current;
-                if (content) {
-                    if (currentContent) {
-                        if (currentContent.close) currentContent.close();
-                        //we will not call the global close callback
-                    }
-                    dialogId.current++;
-                    const newValues={content: content, close: opt_closeCb, id: dialogId.current, options: opt_options};
-                    setDialog(newValues);
-                    lastContent.current=newValues;
-                    const id=dialogId.current;
-                    resolve(() => {
-                        //as the resturned function can be called any time
-                        //later we need to check if this is still the expected dialog
-                        //that we are going to close
-                        setNewDialog(undefined,undefined,undefined,id);
-                    });
-                } else {
-                    if (currentContent && (opt_id === undefined || currentContent.id === opt_id)) {
-                        if (currentContent.close) currentContent.close();
-                        if (closeCb) closeCb();
-                        setDialog(undefined)
-                        lastContent.current = undefined;
-                    }
-                    resolve();
+                const currentContent = lastContent.current;
+                if (!content) content = () => <div>Empty</div>
+                if (currentContent) {
+                    if (currentContent.close) currentContent.close();
+                    //we will not call the global close callback
                 }
+                dialogId.current++;
+                const newValues = {content: content, close: opt_closeCb, id: dialogId.current, options: opt_options};
+                setDialog(newValues);
+                lastContent.current = newValues;
+                const id = dialogId.current;
+                resolve(() => {
+                    //as the returned function can be called any time
+                    //later we need to check if this is still the expected dialog
+                    //that we are going to close
+                    return resetDialog(id);
+                });
             });
         });
     };
@@ -167,7 +172,8 @@ export const useDialog=(
         ,
         (content:React.ElementType,opt_closeCb?:()=>void,opt_options?:SetDialogOptions)=>{
             return setNewDialog(content,opt_closeCb,opt_options);
-        }
+        },
+        (id?:number)=>resetDialog(id)
     ]
 }
 export const showPromiseDialog=<T=any,>(
