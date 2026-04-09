@@ -205,7 +205,7 @@ const getPageUserButtons=(
     for (const k in pluginUserButtons){
         const buttonDef=pluginUserButtons[k];
         if (isOnPage(page,buttonDef.page)){
-            rt.push({...buttonDef.button,overflow:true});
+            rt.push({...buttonDef.button,overflow:true,isAddon:true});
         }
     }
     for (const k in pluginAddOns){
@@ -216,6 +216,7 @@ const getPageUserButtons=(
                 displayName:addon.title || addon.name, //TODO
                 icon:addon.icon,
                 overflow: true,
+                isAddon:true,
                 config: {...addon}
             }
             rt.push(buttonDef);
@@ -231,6 +232,7 @@ const getPageUserButtons=(
                 displayName:addon.title || addon.name,
                 icon:addon.icon,
                 overflow: true,
+                isAddon:true,
                 config: {...addon}
             }
             rt.push(buttonDef);

@@ -283,7 +283,7 @@ export const InjectMainMenu=(
     ]).concat(computedButtons,propsToDefs(addonButtons));
 }
 
-export const handleInitialButton = (history: IHistory, _pageButtons: ButtonDef[], _dialogContext?: IDialogContext) => {
+export const handleInitialButton = (history: IHistory, _pageButtons?: ButtonDef[], _dialogContext?: IDialogContext) => {
     //check and remove the button from the history
     const current = history.currentLocation(true) as HistoryEntry;
     if (current.options && current.options.button) {
@@ -293,7 +293,8 @@ export const handleInitialButton = (history: IHistory, _pageButtons: ButtonDef[]
                 ...current.options,
                 button: undefined
             });
-            keyhandler.callHandler('button',bname);
+        keyhandler.callHandler('button', bname);
+        return true;
     }
 }
 

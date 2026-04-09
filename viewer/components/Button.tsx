@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 // @ts-ignore
 import {useKeyEventHandlerPlain, useStateObject} from '../util/UiHelper';
 import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
@@ -8,6 +8,7 @@ import {CopyAware} from "../util/CopyAware";
 import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
 import {ButtonContext} from "../api/api.interface";
+import base from "../base";
 
 export type ButtonEventBase=Record<string, any>;
 export interface ButtonEvent extends ButtonEventBase {
@@ -36,6 +37,7 @@ export interface ButtonProps {
         storeKeys?: StoreKeys;
         updateFunction?: UpdateFunction;
         noDialogsClose?: boolean;
+        isAddon?: boolean;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{
@@ -62,6 +64,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     localOnly?: boolean;
     displayName?: string;
     noDialogsClose?: boolean;
+    isAddon?: boolean;
 }
 
 const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
@@ -98,13 +101,19 @@ const Button = (props:ButtonProps) => {
             else dialogContext.closeDialog().then(()=>props.onClick(ev));
         }
     });
+    useEffect(() => {
+        return ()=>{
+            base.log("button dismiss",props.name,ctx.getValue('toggle'));
+        }
+    }, []);
+    base.log("button render",props.name,ctx.getValue('toggle'));
     const iprops={...useStore(props)};
     for (const k of ['visible','icon','className']){
         const v=ctx.getValue(k);
         if (v !== undefined) iprops[k]=v;
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
+    const {isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
     if (visible !== undefined && ! visible) {
         return null;
     }
