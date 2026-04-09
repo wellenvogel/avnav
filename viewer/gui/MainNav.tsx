@@ -26,7 +26,7 @@ import Helper, {getav, setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
 import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
-import {ButtonDef, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
+import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
@@ -49,6 +49,7 @@ import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
 import keyhandler from "../util/keyhandler";
+import {addonButtonAction} from "../components/AddonView";
 
 type PageKind='navigation'|'settings';
 
@@ -250,6 +251,16 @@ export const InjectMainMenu=(
     pageButtons:ButtonDef[]|(()=>ButtonDef[])
     ) => {
     const computedButtons=(typeof pageButtons === 'function'? pageButtons() :pageButtons);
+    const addonButtons=addons.getPageUserButtons(pagename)
+    for (const addonButton of addonButtons){
+        if (!addonButton.onClick && addonButton.config){
+            const appConfig=addonButton.config;
+            addonButton.onClick=(ev:ButtonEvent)=>{
+                addonButtonAction(ev,appConfig,true)
+            }
+            delete addonButton.config;
+        }
+    }
     return propsToDefs([ {
         name: 'MainNav',
         displayName: 'main menu',
@@ -269,7 +280,7 @@ export const InjectMainMenu=(
         }
     },
         LayoutFinishedDialog.getButtonDef(),
-    ]).concat(computedButtons,propsToDefs(addons.getPageUserButtons(pagename)));
+    ]).concat(computedButtons,propsToDefs(addonButtons));
 }
 
 export const handleInitialButton = (history: IHistory, _pageButtons: ButtonDef[], _dialogContext?: IDialogContext) => {

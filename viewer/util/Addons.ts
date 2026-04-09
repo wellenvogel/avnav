@@ -4,7 +4,12 @@ import Requests from './requests';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
 import Helper from "./helper";
-import {UserButton} from "../api/api.interface";
+import {UserApp, UserButton} from "../api/api.interface";
+import globalstore from "./globalstore";
+import {StoreCallback} from "./store";
+import {Page} from "./keyhandler";
+import {PAGEIDS} from "./pageids";
+import {DynamicButtonProps} from "../components/Button";
 
 export interface PluginAddonProps{
     name: string;
@@ -16,7 +21,7 @@ export interface PluginAddonProps{
     newWindow?:boolean;
     preventConnectionLost?:boolean
 }
-class PluginAddOn{
+class PluginAddOn implements UserApp{
     name: string;
     pluginName: string;
     displayName: string;
@@ -28,6 +33,7 @@ class PluginAddOn{
     canDelete: boolean;
     preventConnectionLost: boolean;
     key: string;
+    page?: Page;
     constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost,displayName}:PluginAddonProps) {
         this.name=name;
         this.pluginName=pluginName;
@@ -60,8 +66,83 @@ class PluginUserButton{
         this.pluginName=plugin;
     }
 }
+
+class ServerAddon implements UserApp{
+    name: string;
+    invalid?: boolean;
+    canDelete?: boolean;
+    source?: string;
+    title?: string;
+    icon?: string;
+    keepUrl?: boolean;
+    originalUrl?: string;
+    preventConnectionLost?: boolean;
+    newWindow?: boolean;
+    page?:string
+    constructor(raw:any) {
+        this.name=raw.name;
+        this.invalid=raw.invalid;
+        this.canDelete=raw.canDelete;
+        this.source=raw.source;
+        this.title=raw.title;
+        this.icon=raw.icon;
+        this.keepUrl=raw.keepUrl;
+        this.preventConnectionLost=raw.preventConnectionLost;
+        this.newWindow=raw.newWindow;
+    }
+}
+const serverAddOns:ServerAddon[]=[]
 const pluginAddOns:Record<string, PluginAddOn> = {};
 const pluginUserButtons:Record<string, PluginUserButton> = {};
+
+const addonsChanged=()=>{
+    globalstore.storeData(keys.gui.global.addonsChanged,globalstore.getData(keys.gui.global.addonsChanged,0)+1)
+}
+class QueryHandler{
+    callback:StoreCallback;
+    timer:number=-1;
+    constructor(){
+    }
+    start(){
+        serverAddOns.length=0;
+        addonsChanged();
+        this.callback=globalstore.register(()=>{
+            this.fillAddons()
+        },keys.nav.gps.updateconfig);
+        this.fillAddons();
+    }
+    stop(){
+        globalstore.deregister(this.callback);
+    }
+    fillAddons(){
+        base.log("reading addons");
+        readAddOns(true,true)
+            .then(data=>{
+                if (this.timer > 0) {
+                    window.clearTimeout(this.timer);
+                    this.timer=-1;
+                }
+                serverAddOns.length=0;
+                base.log(`successfully read ${data.length} addons`);
+                for (const addon of data){
+                    serverAddOns.push(new ServerAddon(addon));
+                }
+                addonsChanged();
+            },
+                (err)=>{
+                    base.error("unable to read addons",err);
+                    serverAddOns.length=0;
+                    addonsChanged();
+                    if (this.timer < 0) {
+                        this.timer=window.setTimeout(() => {
+                            base.log("retrying read addons");
+                            this.timer=-1;
+                            this.fillAddons()
+                        },3000);
+                    }
+                })
+    }
+}
 
 const addPluginAddOn=(
     {name,pluginName,url,icon,...other}:PluginAddonProps)=>{
@@ -75,6 +156,7 @@ const addPluginAddOn=(
         throw new Error(`AddOn "${name}" already exists from "${existing.pluginName}"`);
     }
     pluginAddOns[completeName]=new PluginAddOn({name,pluginName,url,icon,...other});
+    addonsChanged();
     return completeName;
 }
 const addUserButton=(plugin:string,button:UserButton,page:string)=>{
@@ -86,27 +168,74 @@ const addUserButton=(plugin:string,button:UserButton,page:string)=>{
     }
     pluginUserButtons[def.key]=def;
     base.log(`added user button ${def.key}`);
+    addonsChanged();
 }
-const getPageUserButtons=(page:string)=>{
-    const rt=[];
+const isOnPage=(page:string,pageDef:string|string[])=>{
+    if (! page) return false;
+    if (! pageDef){
+        return page === PAGEIDS.ADDON
+    }
+    if (! Array.isArray(pageDef)){
+        if (Object.values(PAGEIDS).indexOf(pageDef) < 0){
+            return page === PAGEIDS.ADDON;
+        }
+        return page === pageDef;
+    }
+    let anyValid=false;
+    for (const p of pageDef){
+        if (Object.values(PAGEIDS).indexOf(p) >=0) {
+            anyValid=true;
+            if (p === page) return true;
+        }
+    }
+    if (! anyValid){
+        return page === PAGEIDS.ADDON;
+    }
+    return false;
+}
+const getPageUserButtons=(
+    page:string,
+    includeInvalid?:boolean,
+    ):DynamicButtonProps[]=>{
+    const rt:DynamicButtonProps[]=[];
     for (const k in pluginUserButtons){
         const buttonDef=pluginUserButtons[k];
-        if (page === buttonDef.page){
+        if (isOnPage(page,buttonDef.page)){
             rt.push({...buttonDef.button,overflow:true});
         }
-        else{
-            if (Array.isArray(buttonDef.page)){
-                for (const dp of buttonDef.page){
-                    if (dp === page){
-                        rt.push({...buttonDef.button,overflow:true});
-                        break;
-                    }
-                }
+    }
+    for (const k in pluginAddOns){
+        const addon=pluginAddOns[k];
+        if (isOnPage(page,addon.page)){
+            const buttonDef={
+                name:addon.name,
+                displayName:addon.title || addon.name, //TODO
+                icon:addon.icon,
+                overflow: true,
+                config: {...addon}
             }
+            rt.push(buttonDef);
+        }
+    }
+    for (const addon of serverAddOns){
+        if (addon.invalid && ! includeInvalid){
+            continue;
+        }
+        if (isOnPage(page,addon.page)){
+            const buttonDef={
+                name:addon.name,
+                displayName:addon.title || addon.name,
+                icon:addon.icon,
+                overflow: true,
+                config: {...addon}
+            }
+            rt.push(buttonDef);
         }
     }
     return rt;
 }
+
+
 const removePluginAddOns=(pluginName:string)=>{
     let todel=[];
     for (const k in pluginAddOns) {
@@ -122,10 +251,12 @@ const removePluginAddOns=(pluginName:string)=>{
     for (const td of todel) {
         delete pluginUserButtons[td];
     }
+    addonsChanged();
 }
 
 const readAddOns = async (
-    opt_includeInvalid?: boolean) => {
+    opt_includeInvalid?: boolean,
+    opt_omitLocal?:boolean) => {
     if (!globalStore.getData(keys.gui.capabilities.addons)) return [];
     const req = {
         request: 'api',
@@ -147,8 +278,10 @@ const readAddOns = async (
         }
         return items;
     });
-    for (const k in pluginAddOns) {
-        addons.push(pluginAddOns[k]);
+    if (! opt_omitLocal) {
+        for (const k in pluginAddOns) {
+            addons.push(pluginAddOns[k]);
+        }
     }
     return addons;
 };
@@ -211,5 +344,6 @@ export default  {
     addPluginAddOn:addPluginAddOn,
     addUserButton: addUserButton,
     getPageUserButtons:getPageUserButtons,
-    removePluginAddOns:removePluginAddOns
+    removePluginAddOns:removePluginAddOns,
+    QueryHandler:QueryHandler,
 }

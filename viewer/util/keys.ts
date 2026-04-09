@@ -314,6 +314,7 @@ const keys:Record<string,KeyType>={
             updatedJsModules:K,
             pluginLoadingDone:K,
             settingsChanged:K,
+            addonsChanged:K,
         },
         gpspage:{
             pageNumber:K,

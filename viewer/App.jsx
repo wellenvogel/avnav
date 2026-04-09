@@ -61,6 +61,7 @@ import TracksPage from "./gui/TracksPage";
 import AisCfgPage from "./gui/AisCfgPage";
 import LayoutsPage from "./gui/LayoutsPage";
 import ChartsPage from "./gui/ChartsPage";
+import addons from "./util/Addons";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -453,6 +454,8 @@ class App extends React.Component {
             this.checkReload();
         },[keys.nav.gps.version])
         this.titleSet=false;
+        this.addonReader=new addons.QueryHandler();
+        this.addonReader.start();
     }
     newDeviceHandler(){
         try{

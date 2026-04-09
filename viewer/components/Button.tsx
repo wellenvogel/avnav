@@ -32,7 +32,7 @@ export interface ButtonProps {
         visible?:boolean;
         children?:React.ReactNode;
         localOnly?:boolean;
-        displayName?:string,
+        displayName?:React.ReactNode,
         storeKeys?: StoreKeys;
         updateFunction?: UpdateFunction;
         noDialogsClose?: boolean;
