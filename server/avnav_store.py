@@ -70,8 +70,8 @@ class AVNStore(object):
       if not type(self.value) is dict:
         return None
       return self.value.get('mmsi')
-
-  CHANGE_COUNTER = ['alarm', 'leg', 'route','config']
+  CHANGE_CONFIG='config'
+  CHANGE_COUNTER = ['alarm', 'leg', 'route',CHANGE_CONFIG]
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.__list={}
     self.__aisList={}

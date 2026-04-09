@@ -29,6 +29,7 @@
 ###############################################################################
 
 import hashlib
+import time
 
 import avnav_handlerList
 from avnav_nmea import *
@@ -107,6 +108,8 @@ class AVNUserAppHandler(AVNWorker):
     while not self.shouldStop():
       self.wait(sleepTime)
 
+  def _updateSequence(self):
+      self.navdata.updateChangeCounter(self.navdata.CHANGE_CONFIG)
 
   def computeKey(self,entry):
     md5=hashlib.md5()
@@ -182,6 +185,7 @@ class AVNUserAppHandler(AVNWorker):
           addon['invalid'] = True
     self.addonList=data
     self.setInfo('main', "active, %d addons"%len(data), WorkerStatus.NMEA)
+    self._updateSequence()
     return
 
 
@@ -273,6 +277,7 @@ class AVNUserAppHandler(AVNWorker):
       'preventConnectionLost': preventConnectionLost
     }
     self.additionalAddOns.append(newAddon)
+    self._updateSequence()
 
   def unregisterAddOn(self,name):
     if name is None:
@@ -280,6 +285,7 @@ class AVNUserAppHandler(AVNWorker):
     for ao in self.additionalAddOns:
       if ao.get('name') == name:
         self.additionalAddOns.remove(ao)
+        self._updateSequence()
         return True
 
 
