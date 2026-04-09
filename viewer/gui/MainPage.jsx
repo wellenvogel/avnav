@@ -14,7 +14,6 @@ import MapHolder from '../map/mapholder.js';
 import base from '../base.ts';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
-import Addons from '../util/Addons.ts';
 import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
 import LocalStorage from '../util/localStorageManager';
@@ -120,15 +119,11 @@ class MainPage extends React.Component {
         super(props);
         this.state={
             chartList:[],
-            addOns:[],
             selectedChart:0,
             sequence:0,
             loading: false
         };
         this.fillList=this.fillList.bind(this);
-        GuiHelper.storeHelper(this,(data)=>{
-            this.readAddOns();
-        },{sequence:keys.gui.global.reloadSequence},2);
         GuiHelper.storeHelper(this,(data)=>{
             this.setState({
                 chartList:[],
@@ -203,11 +198,6 @@ class MainPage extends React.Component {
             NavOverlays: {
                 onClick: () => {
                     EditOverlaysDialog.createDialog(undefined, () => MapHolder.setRedraw(true));
-                }
-            },
-            MainAddOns: {
-                onClick: () => {
-                    this.props.history.push('addonpage')
                 }
             },
             Cancel: {
@@ -344,15 +334,7 @@ class MainPage extends React.Component {
                 if (sequence !== undefined) this.timer.startTimer(sequence);
             });
 
-    };
-    readAddOns() {
-        Addons.readAddOns()
-            .then((items)=>{
-                this.setState({addOns: items});
-            })
-            .catch((e)=>{Toast(e)});
-    };
-
+    }
 
     render() {
         const Title=(props)=><React.Fragment>

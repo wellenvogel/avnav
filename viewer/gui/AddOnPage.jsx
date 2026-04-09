@@ -79,6 +79,7 @@ class AddOnPage extends React.Component{
         }
     }
     readAddOns(){
+        return;
         Addons.readAddOns()
             .then((items)=>{
                 let currenIndex = globalStore.getData(keys.gui.addonpage.activeAddOn);

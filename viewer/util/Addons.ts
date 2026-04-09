@@ -76,9 +76,11 @@ class ServerAddon implements UserApp{
     icon?: string;
     keepUrl?: boolean;
     originalUrl?: string;
+    url:string;
     preventConnectionLost?: boolean;
     newWindow?: boolean;
     page?:string
+    key:string;
     constructor(raw:any) {
         this.name=raw.name;
         this.invalid=raw.invalid;
@@ -89,6 +91,8 @@ class ServerAddon implements UserApp{
         this.keepUrl=raw.keepUrl;
         this.preventConnectionLost=raw.preventConnectionLost;
         this.newWindow=raw.newWindow;
+        this.key=raw.key||raw.name;
+        this.url=raw.url;
     }
 }
 const serverAddOns:ServerAddon[]=[]
@@ -208,7 +212,7 @@ const getPageUserButtons=(
         const addon=pluginAddOns[k];
         if (isOnPage(page,addon.page)){
             const buttonDef={
-                name:addon.name,
+                name:addon.key||addon.name,
                 displayName:addon.title || addon.name, //TODO
                 icon:addon.icon,
                 overflow: true,
@@ -223,7 +227,7 @@ const getPageUserButtons=(
         }
         if (isOnPage(page,addon.page)){
             const buttonDef={
-                name:addon.name,
+                name:addon.key||addon.name,
                 displayName:addon.title || addon.name,
                 icon:addon.icon,
                 overflow: true,

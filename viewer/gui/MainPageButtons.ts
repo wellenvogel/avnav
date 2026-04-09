@@ -69,11 +69,6 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
             }
         }
     },
-    {
-        name: 'MainAddOns',
-        displayName: 'user apps',
-        editDisable: true
-    },
     RemoteChannelDialog({overflow:true}),
     FullScreen.fullScreenDefinition,
     splitsupport.buttonDef({overflow:true}),
