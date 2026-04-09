@@ -202,7 +202,8 @@ const formatSpeed=function(speed,opt_unit){
       if(v<=47) return ' 9';
       if(v<=55) return '10';
       if(v<=63) return '11';
-      return '12';
+      if (v>63) return '12';
+      return '--';
     }
     let factor=3600/navcompute.NM;
     if (opt_unit == 'ms' || opt_unit == 'm/s') factor=1;
@@ -253,22 +254,22 @@ formatTime.parameters=[
  * @param {Number} ms
  * @returns {string}
  */
-const formatDuration = function (ms,seconds=false) {
-  if (ms == null) return "--:--";
-  let number = parseInt(ms);
-  if (!isFinite(number)) return "--:--";
-  number = Math.abs(number);
-  const totalSeconds = Math.floor(number / 1000);
+const formatDuration = function (value,seconds,factor=1000) {
+  if (value == null) return "--:--"+(seconds?':--':'');
+  value = parseInt(value);
+  if (!isFinite(value)) return "--:--"+(seconds?':--':'');
+  const totalSeconds = Math.floor(Math.abs(value)/factor);
   const secs = totalSeconds % 60;
   const totalMinutes = Math.floor(totalSeconds / 60);
   const mins = totalMinutes % 60;
   const hours = Math.floor(totalMinutes / 60);
-  return this.formatDecimal(hours, 2, 0, false, true) + ':' +
-    this.formatDecimal(mins, 2, 0, false, true) + (seconds?':' +
-      this.formatDecimal(secs, 2, 0, false, true):'');
+  return (value<0?'-':'')+this.formatDecimal(hours, 2, 0, false, true) + ':' +
+         this.formatDecimal(mins, 2, 0, false, true) + (seconds?':' +
+         this.formatDecimal(secs, 2, 0, false, true):'');
 };
 formatDuration.parameters=[
-  { name: 'seconds', type: 'BOOLEAN', default: false }
+  {name: 'seconds', type: 'BOOLEAN', default: false },
+  {name:'factor',type:'NUMBER',default:1000,description:'unit conversion factor such that seconds=value/factor'}
 ];
 
 /**
