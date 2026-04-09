@@ -32,6 +32,7 @@ import PubSub from "PubSub";
 import androidEventHandler from "./androidEventHandler";
 import dimhandler from "./dimhandler";
 import Requests from './requests';
+
 const PSTOPIC="remote.";
 export enum COMMANDS{
     setPage='CP', //str page
@@ -166,7 +167,7 @@ class RemoteChannel{
         if (! globalstore.getData(keys.properties.connectedMode,false)) return;
         const parts=data.split(/  */);
         if (parts.length < 2) return;
-        if (! (parts[0] in COMMANDS)) return;
+        if (Object.values(COMMANDS).indexOf(parts[0] as COMMANDS) < 0 ) return;
         data=data.replace(/^[^ ]* */,'');
         window.setTimeout(()=> {
             dimhandler.trigger(); //get us out of dim mode
