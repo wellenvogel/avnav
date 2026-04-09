@@ -20,7 +20,6 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-// @ts-ignore
 import remotechannel, {COMMANDS} from "./remotechannel";
 import {PAGEIDS} from "./pageids";
 const REMOTE_CMD=COMMANDS.setPage;

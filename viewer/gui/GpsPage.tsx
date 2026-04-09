@@ -19,8 +19,6 @@ import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog';
 // @ts-ignore
 import {createDialog as createEditPageDialog, RawButtonDef as EditPageButton} from '../components/EditPageDialog';
 import LayoutHandler, {LAYOUT_OPTIONS, LayoutPage} from '../util/layouthandler';
-// @ts-ignore
-import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import {DynamicTitleIcons} from "../components/TitleIcons";
 import {showDialog} from "../components/OverlayDialog";
 // @ts-ignore
@@ -31,12 +29,10 @@ import {useHistory} from "../components/HistoryProvider";
 import {useDialogContext} from "../components/DialogContext";
 import {PAGEIDS, PageType} from "../util/pageids";
 import layouthandler from "../util/layouthandler";
-// @ts-ignore
 import remotechannel,{COMMANDS} from '../util/remotechannel';
 import {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import GpsPageButtons from "./GpsPageButtons";
-// @ts-ignore
 const PAGE=PAGEIDS.GPS;
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container

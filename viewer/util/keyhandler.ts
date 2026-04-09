@@ -1,5 +1,4 @@
 import base from '../base';
-// @ts-ignore
 import remotechannel, {COMMANDS} from "./remotechannel";
 import {PAGEIDS} from "./pageids";
 

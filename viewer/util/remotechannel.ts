@@ -27,36 +27,45 @@
 import globalstore from "./globalstore";
 import keys from "./keys";
 import base from "../base";
+// @ts-ignore
 import PubSub from "PubSub";
 import androidEventHandler from "./androidEventHandler";
 import dimhandler from "./dimhandler";
 import Requests from './requests';
 const PSTOPIC="remote.";
-export const COMMANDS={
-    setPage:'CP', //str page
-    key:'K', //str key
-    setChart: 'CM', //json chartEntry
-    setCenter: 'CC', //json lat,lon
-    setZoom: 'CZ', //float zoom
-    lock: 'CL', //str true|false
-    courseUp: 'CU', //str true|false
-    gpsNum: 'CN', //num number gpspage number
-    addOn: 'CA' //the add on number
-};
+export enum COMMANDS{
+    setPage='CP', //str page
+    key='K', //str key
+    setChart= 'CM', //json chartEntry
+    setCenter= 'CC', //json lat,lon
+    setZoom= 'CZ', //float zoom
+    lock= 'CL', //str true|false
+    courseUp= 'CU', //str true|false
+    gpsNum= 'CN', //num number gpspage number
+    addOn= 'CA' //the add on number
+}
 class RemoteChannel{
-    constructor(props) {
+    private timer: number;
+    private websocket: WebSocket;
+    private pubsub: typeof PubSub;
+    private channel: string;
+    private android: any;
+    private androidChannel:number=-1;
+    private id: number;
+    constructor() {
         this.timerCall=this.timerCall.bind(this);
         this.timer=undefined;
         this.websocket=undefined;
         this.pubsub=new PubSub();
         this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
         this.channelChanged=this.channelChanged.bind(this);
+        // @ts-ignore
         this.android=window.avnavAndroid;
         if (this.android){
-            this.token=androidEventHandler.subscribe('remoteMessage',(ev)=>{
+            androidEventHandler.subscribe('remoteMessage',()=>{
                 window.setTimeout(()=>{
-                    while (true) {
-                        let msg = this.android.readChannelMessage(this.websocket);
+                    for (let i=0;i<100;i++) {
+                        const msg = this.android.readChannelMessage(this.androidChannel);
                         if (msg) {
                             this.onMessage(msg);
                         }
@@ -66,8 +75,8 @@ class RemoteChannel{
                     }
                 },0);
             })
-            this.closeToken=androidEventHandler.subscribe('channelClose',(ev)=>{
-               if (ev.id === this.websocket){
+            androidEventHandler.subscribe('channelClose',(ev)=>{
+               if (ev.id === this.androidChannel){
                    this.close();
                }
             });
@@ -78,22 +87,25 @@ class RemoteChannel{
         },[keys.nav.gps.updateconfig]);
     }
     close(){
-        if (this.websocket !== undefined){
             if (this.android){
                 try{
-                    this.android.channelClose(this.websocket);
-                }catch (e){}
+                    if (this.androidChannel >= 0) {
+                        this.android.channelClose(this.androidChannel);
+                        this.androidChannel=-1;
+                    }
+                }catch (e){ /* empty */ }
                 this.websocket=undefined;
                 return;
             }
+        if (this.websocket !== undefined){
             try{
                 this.websocket.close();
-            }catch (e){}
+            }catch (e){ /* empty */ }
             this.websocket=undefined;
         }
     }
     channelChanged(){
-       let nc=globalstore.getData(keys.properties.remoteChannelName,'0');
+       const nc=globalstore.getData(keys.properties.remoteChannelName,'0');
        if (nc !== this.channel){
            this.channel=nc;
            this.close();
@@ -109,7 +121,7 @@ class RemoteChannel{
         }).then((json)=> {
             return json.enabled;
        },(e)=>{
-           base.log("unable to query websocket enabled state")
+           base.log("unable to query websocket enabled state",e)
            return false;
         })
     }
@@ -137,7 +149,7 @@ class RemoteChannel{
         })
     }
     start(){
-        if (window.WebSocket === undefined) return;
+        if (window.WebSocket === undefined && ! this.android) return;
         globalstore.register(this.channelChanged,[keys.properties.remoteChannelName]);
         this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
         this.queryEnabled().then((enabled)=> {
@@ -148,13 +160,13 @@ class RemoteChannel{
         })
         this.timer=window.setInterval(this.timerCall,1000);
     }
-    onMessage(data){
+    onMessage(data:string){
         base.log("message",data);
         if (! globalstore.getData(keys.properties.remoteChannelRead,false)) return;
         if (! globalstore.getData(keys.properties.connectedMode,false)) return;
-        let parts=data.split(/  */);
+        const parts=data.split(/  */);
         if (parts.length < 2) return;
-        if (! parts[0] in COMMANDS) return;
+        if (! (parts[0] in COMMANDS)) return;
         data=data.replace(/^[^ ]* */,'');
         window.setTimeout(()=> {
             dimhandler.trigger(); //get us out of dim mode
@@ -165,13 +177,12 @@ class RemoteChannel{
         if (! this.isActive()) return;
         this.close();
         if (this.android){
-            this.websocket=this.android.channelOpen("/remotechannels/"+this.channel);
-            if (this.websocket < 0) this.websocket=undefined;
+            this.androidChannel=this.android.channelOpen("/remotechannels/"+this.channel);
             return;
         }
         this.id++;
-        let connectionId=this.id;
-        let url='ws://'+window.location.host+
+        const connectionId=this.id;
+        const url='ws://'+window.location.host+
             "/remotechannels/"+this.channel;
         try{
             base.log("opening websocket to ",url);
@@ -195,7 +206,7 @@ class RemoteChannel{
                 }
                 try{
                     this.websocket.close();
-                }catch (e){}
+                }catch (e){ /* empty */ }
                 this.websocket=undefined;
             })
         }catch (e){
@@ -210,30 +221,28 @@ class RemoteChannel{
         }
         this.close();
     }
-    sendMessage(msg,param){
+    sendMessage(msg:string,param?:string|number){
         if (! this.websocket) return;
         if (! globalstore.getData(keys.properties.remoteChannelWrite,false)) return;
         if (! globalstore.getData(keys.properties.connectedMode,false)) return;
         try {
             if (param !== undefined) msg+=" "+param;
             if (this.android){
-                this.android.sendChannelMessage(this.websocket,msg);
+                this.android.sendChannelMessage(this.androidChannel,msg);
             }
             else {
                 this.websocket.send(msg);
             }
-        }catch (e){
-
-        }
+        }catch (e){ /* empty */ }
     }
-    sendJsonMessage(command,data){
-        let p=JSON.stringify(data);
+    sendJsonMessage(command:string,data:any){
+        const p=JSON.stringify(data);
         this.sendMessage(command,p);
     }
-    subscribe(type,callback){
+    subscribe(type:COMMANDS,callback:(msg:string)=>void   ){
         return this.pubsub.subscribe(PSTOPIC+type,callback);
     }
-    unsubscribe(token){
+    unsubscribe(token: string){
         return this.pubsub.unsubscribe(token);
     }
 }

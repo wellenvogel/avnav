@@ -1,23 +1,23 @@
 //avnav (C) wellenvogel 2019
 
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
-import History from './util/history.ts';
-import Dynamic from './hoc/Dynamic.tsx';
+import History from './util/history';
+import Dynamic from './hoc/Dynamic';
 import keys from './util/keys';
-import MainPage from './gui/MainPage.jsx';
-import InfoPage from './gui/InfoPage.jsx';
-import GpsPage from './gui/GpsPage.tsx';
-import AisPage from './gui/AisPage.tsx';
-import AddOnPage from './gui/AddOnPage.jsx';
-import AddressPage from './gui/AddressPage.jsx';
-import ServerPage from './gui/ServerPage.tsx';
-import WpaPage from './gui/WpaPage.jsx';
-import DownloadPage from './gui/DownloadPage.tsx';
-import SettingsPage from './gui/SettingsPage.tsx';
-import NavPage from './gui/NavPage.jsx';
-import EditRoutePage from './gui/EditRoutePage.jsx';
-import WarningPage from './gui/WarningPage.jsx';
-import AddonConfigPage from './gui/AddOnConfigPage.jsx';
+import MainPage from './gui/MainPage';
+import InfoPage from './gui/InfoPage';
+import GpsPage from './gui/GpsPage';
+import AisPage from './gui/AisPage';
+import AddOnPage from './gui/AddOnPage';
+import AddressPage from './gui/AddressPage';
+import ServerPage from './gui/ServerPage';
+import WpaPage from './gui/WpaPage';
+import DownloadPage from './gui/DownloadPage';
+import SettingsPage from './gui/SettingsPage';
+import NavPage from './gui/NavPage';
+import EditRoutePage from './gui/EditRoutePage';
+import WarningPage from './gui/WarningPage';
+import AddonConfigPage from './gui/AddOnConfigPage';
 import {
     DialogContext, DialogDisplay,
     showPromiseDialog
