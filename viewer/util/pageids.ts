@@ -46,6 +46,28 @@ export const PAGEIDS={
 }
 
 export type PageType=valueof<typeof PAGEIDS>;
+/**
+ * pages that allow userapps/plugins
+ */
+export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>={
+    ADDCFG: PAGEIDS.ADDCFG,
+    ADDON: PAGEIDS.ADDON,
+    ADDR: PAGEIDS.ADDR,
+    AIS: PAGEIDS.AIS,
+    AISCFG: PAGEIDS.AISCFG,
+    CHANNELS: PAGEIDS.CHANNELS,
+    CHARTS: PAGEIDS.CHARTS,
+    GPS: PAGEIDS.GPS,
+    LAYOUT: PAGEIDS.LAYOUT,
+    MAIN: PAGEIDS.MAIN,
+    NAV: PAGEIDS.NAV,
+    NROUTE: PAGEIDS.NROUTE,
+    ROUTE: PAGEIDS.ROUTE,
+    SERVER: PAGEIDS.SERVER,
+    SETTINGS: PAGEIDS.SETTINGS,
+    TRACKS: PAGEIDS.TRACKS
+}
+export type PluginPageType=valueof<typeof PLUGINPAGES>
 
 export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
     TRACKS: "Tracks/NMEALogs",

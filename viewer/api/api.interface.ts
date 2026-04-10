@@ -32,8 +32,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Htm from "htm";
 import * as OpenLayers from 'ol/index';
-import {PAGEIDS} from "../util/pageids";
-import {valueof} from "../util/helper";
+import {PageType, PluginPageType} from "../util/pageids";
 import {KeyMappings} from "../util/keyhandler";
 import {PropertyValue} from "../util/keys";
 
@@ -524,8 +523,8 @@ export interface ProxyOptions{
     x:number;       //x
     y:number;       //y
 }
-export type Page=valueof<typeof PAGEIDS>;
-export type PluginPage=Extract<Page,valueof<Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'>>>
+export type Page=PageType;
+export type PluginPage=PluginPageType;
 export interface UserButtonBase{
     name: string;                   //will set the CSS class, unique inside the plugin
     displayName?: string;           //shown in main nav
