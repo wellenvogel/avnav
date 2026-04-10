@@ -525,6 +525,7 @@ export interface ProxyOptions{
     y:number;       //y
 }
 export type Page=valueof<typeof PAGEIDS>;
+export type PluginPage=Extract<Page,valueof<Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'>>>
 export interface UserButtonBase{
     name: string;                   //will set the CSS class, unique inside the plugin
     displayName?: string;           //shown in main nav
@@ -556,7 +557,7 @@ export enum ButtonContextProps{
     VISIBLE='visible',
     TOGGLE='toggle',
     ICON='icon',
-    CLASSNAME='classname',
+    CLASSNAME='className',
 }
 export interface UserButton extends UserButtonBase{
     onClick:(event:object)=>void    //if set this function is called instead of invoking the url
@@ -674,7 +675,7 @@ export interface ApiV2 extends Api{
      * @param page the page on which the button should be shown,
      *             defaulst to userApp
      */
-    registerUserApp(button:UserButtonBase,app:UserApp,page?:Page):void;
+    registerUserApp(button:UserButtonBase,app:UserApp,page?:PluginPage|[PluginPage]):void;
 
     /**
      * register
@@ -682,7 +683,7 @@ export interface ApiV2 extends Api{
      * @param page the page (or list of pages) that should show the button
      *             defaults to addonpage
      */
-    registerUserButton(button: UserButton,page?:Page|[Page]):void;
+    registerUserButton(button: UserButton,page?:PluginPage|[PluginPage]):void;
 
     get FEATUREINFO_KEYS():FeatureInfoKeys;
 

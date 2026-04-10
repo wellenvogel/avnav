@@ -46,7 +46,7 @@ import {
     FormatterFunction,
     LayoutData,
     MapLayerProfiles,
-    Page,
+    PluginPage,
     ProxyOptions,
     StoreData,
     UserApp,
@@ -97,11 +97,11 @@ class PluginApi extends ApiV2 {
         this.#impl.registerLayout(name, url);
     }
 
-    override registerUserApp(button:UserButtonBase,app:UserApp,page?:Page) {
+    override registerUserApp(button:UserButtonBase,app:UserApp,page?:PluginPage|[PluginPage]) {
         this.#impl.registerUserApp(button,app,page);
     }
 
-    override registerUserButton(button:UserButton, page:Page) {
+    override registerUserButton(button:UserButton, page:PluginPage|[PluginPage]):void {
         this.#impl.registerUserButton(button, page);
     }
 
@@ -310,7 +310,7 @@ class Plugin extends ApiV2{
         this._registerLayout(name, undefined,url);
     }
 
-    override registerUserApp(button:UserButtonBase,app:UserApp,_page?:Page):void {
+    override registerUserApp(button:UserButtonBase,app:UserApp,_page?:PluginPage|[PluginPage]):void {
         if (! app.url) throw Error("url must not be empty");
         const url=urlToString(app.url,this.getBaseUrl());
         if (! button.icon) throw Error("icon must not be empty");
@@ -322,7 +322,7 @@ class Plugin extends ApiV2{
             title:app.title,
             newWindow:app.newWindow,});
     }
-    override registerUserButton(button:UserButton, page:Page) {
+    override registerUserButton(button:UserButton, page:PluginPage|[PluginPage]):void {
         const buttonDef={...button};
         for (const k of ['icon']){
             if (k in buttonDef){

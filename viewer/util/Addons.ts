@@ -5,7 +5,7 @@ import Requests from './requests';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
 import Helper from "./helper";
-import {UserApp, UserButton} from "../api/api.interface";
+import {PluginPage, UserApp, UserButton} from "../api/api.interface";
 import {StoreCallback} from "./store";
 import {Page} from "./keyhandler";
 import {PAGEIDS} from "./pageids";
@@ -19,7 +19,8 @@ export interface PluginAddonProps{
     icon: string;
     title?: React.ReactNode;
     newWindow?:boolean;
-    preventConnectionLost?:boolean
+    preventConnectionLost?:boolean,
+    page?:Page,
 }
 class PluginAddOn implements UserApp{
     name: string;
@@ -34,7 +35,7 @@ class PluginAddOn implements UserApp{
     preventConnectionLost: boolean;
     key: string;
     page?: Page;
-    constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost,displayName}:PluginAddonProps) {
+    constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost,displayName,page}:PluginAddonProps) {
         this.name=name;
         this.pluginName=pluginName;
         this.url=url;
@@ -47,15 +48,16 @@ class PluginAddOn implements UserApp{
         this.preventConnectionLost=preventConnectionLost;
         this.key=pluginName+'.'+name;
         this.displayName=displayName||name;
+        this.page=page;
     }
 }
 
 class PluginUserButton{
     key:string;
-    page:string;
+    page:PluginPage|[PluginPage];
     button:UserButton;
     pluginName:string;
-    constructor(plugin:string,button:UserButton,page:string){
+    constructor(plugin:string,button:UserButton,page:PluginPage|[PluginPage]){
         if (! plugin) throw new Error("missing plugin")
         if (! button) throw new Error("missing button")
         if (! button.name) throw new Error("missing name in button def")
@@ -79,7 +81,7 @@ class ServerAddon implements UserApp{
     url:string;
     preventConnectionLost?: boolean;
     newWindow?: boolean;
-    page?:string
+    page?:PluginPage|[PluginPage];
     key:string;
     constructor(raw:any) {
         this.name=raw.name;
@@ -93,6 +95,7 @@ class ServerAddon implements UserApp{
         this.newWindow=Helper.toBoolean(raw.newWindow);
         this.key=raw.key||raw.name;
         this.url=raw.url;
+        this.page=raw.page;
     }
 }
 const serverAddOns:ServerAddon[]=[]
@@ -163,7 +166,7 @@ const addPluginAddOn=(
     addonsChanged();
     return completeName;
 }
-const addUserButton=(plugin:string,button:UserButton,page:string)=>{
+const addUserButton=(plugin:string,button:UserButton,page:PluginPage|[PluginPage])=>{
     const def=new PluginUserButton(plugin,button,page);
     if (! def.key) throw new Error("invalid userButton def");
     const existing=pluginUserButtons[def.key];
@@ -174,7 +177,7 @@ const addUserButton=(plugin:string,button:UserButton,page:string)=>{
     base.log(`added user button ${def.key}`);
     addonsChanged();
 }
-const isOnPage=(page:string,pageDef:string|string[])=>{
+const isOnPage=(page:string,pageDef:PluginPage|[PluginPage])=>{
     if (! page) return false;
     if (! pageDef){
         return page === PAGEIDS.ADDON
@@ -322,7 +325,8 @@ const updateAddon=(
     url:string,
     icon: string,
     title?:string,
-    newWindow?:boolean)=>{
+    newWindow?:boolean,
+    page?:string)=>{
    return Requests.getJson({
        request:'api',
        type:'addon',
@@ -331,7 +335,8 @@ const updateAddon=(
        title: title,
        icon:icon,
        name:name,
-       newWindow: newWindow
+       newWindow: newWindow,
+       page:page,
    });
 };
 
