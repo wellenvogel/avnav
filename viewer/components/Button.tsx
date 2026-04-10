@@ -103,7 +103,7 @@ export const useButtonContext=(initial?:Record<string,any>):ButtonContext=>{
         cleanup:async ()=>{
             const cf=ctx.getValue(CTXRESERVED);
             if (cf && typeof cf === 'function'){
-                await cf
+                await cf();
             }
         }
     }
