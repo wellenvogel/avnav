@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 // @ts-ignore
 import {useKeyEventHandlerPlain, useStateObject} from '../util/UiHelper';
 import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
@@ -9,6 +9,7 @@ import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
 import {ButtonContext} from "../api/api.interface";
 import base from "../base";
+import {ButtonDescription} from "./ButtonList";
 
 export type ButtonEventBase=Record<string, any>;
 export interface ButtonEvent extends ButtonEventBase {
@@ -38,6 +39,8 @@ export interface ButtonProps {
         updateFunction?: UpdateFunction;
         noDialogsClose?: boolean;
         isAddon?: boolean;
+        initialClick?:(name:string)=>boolean;
+        dataChanged?:(data:ButtonDescription) => void;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{
@@ -48,6 +51,13 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
             this[key] = props[key];
         }
     }
+
+    [x: string]: any;
+    storeKeys?: StoreKeys;
+    updateFunction?: UpdateFunction;
+    dataChanged: (data: ButtonDescription) => void;
+    store?: any;
+    minTime?: number;
 
     onClick?: ButtonEventHandler
     className?: string;
@@ -65,6 +75,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     displayName?: string;
     noDialogsClose?: boolean;
     isAddon?: boolean;
+    initialClick?:(name:string)=>boolean;
 }
 
 const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
@@ -84,33 +95,50 @@ export const useButtonContext=(initial?:Record<string,any>):ButtonContext=>{
     }
 }
 
-const Button = (props:ButtonProps) => {
+let idx=0
+const getIdx=()=>{
+    idx++;
+    return idx;
+}
+
+const Button = (sprops:ButtonProps) => {
+    const iprops:ButtonProps=useStore(sprops,{changeCallback:sprops.dataChanged});
+    const idxRef=useRef(getIdx());
     const dialogContext=useDialogContext();
     const history = useHistory();
     const ctx =useButtonContext();
-    const disabledv=((typeof (props.disabled) === 'function') ? props.disabled() : props.disabled)||
+    const disabledv=((typeof (iprops.disabled) === 'function') ? iprops.disabled() : iprops.disabled)||
         !!ctx.getValue('disabled');
-    useKeyEventHandlerPlain(props.name, "button", () => {
-        if (props.onClick && !disabledv) {
+    const syntheticClick=useCallback(()=>{
+        if (sprops.onClick && !disabledv) {
+            base.log("synthetic button click",idxRef.current);
             const ev= setav({},{
                 dialogContext:dialogContext,
                 history:history,
                 context:ctx
             });
-            if (props.noDialogsClose) props.onClick(ev);
-            else dialogContext.closeDialog().then(()=>props.onClick(ev));
+            if (iprops.noDialogsClose) sprops.onClick(ev);
+            else dialogContext.closeDialog().then(()=>sprops.onClick(ev));
         }
+    },[iprops.name,sprops.onClick,disabledv])
+    useKeyEventHandlerPlain(sprops.name, "button", () => {
+        syntheticClick();
     });
     useEffect(() => {
-        return ()=>{
-            base.log("button dismiss",props.name,ctx.getValue('toggle'));
+        if (sprops.initialClick && sprops.initialClick(sprops.name)){
+            syntheticClick();
         }
-    }, []);
-    base.log("button render",props.name,ctx.getValue('toggle'));
-    const iprops={...useStore(props)};
+        return ()=>{
+            base.log("button dismiss",sprops.name,idxRef.current,ctx.getValue('toggle'));
+        }
+    }, [sprops.name]);
+    base.log("button render",sprops.name,idxRef.current, ctx.getValue('toggle'));
     for (const k of ['visible','icon','className']){
         const v=ctx.getValue(k);
-        if (v !== undefined) iprops[k]=v;
+        if (v !== undefined) {
+            // @ts-ignore
+            iprops[k]=v;
+        }
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
@@ -139,7 +167,7 @@ const Button = (props:ButtonProps) => {
                 history:history,
                 context:ctx
             });
-            if (props.noDialogsClose){
+            if (iprops.noDialogsClose){
                 click(avev);
             }
             else {
@@ -150,7 +178,7 @@ const Button = (props:ButtonProps) => {
         }
     }
     return (
-        <div {...forward} className={classNamev} title={displayName}>
+        <div {...forward} className={classNamev} title={displayName+""}>
             <span style={spanStyle}/>
             {children}
         </div>

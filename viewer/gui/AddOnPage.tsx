@@ -8,13 +8,14 @@ import keys from '../util/keys';
 import React, {useEffect, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
-import {handleInitialButton, InjectMainMenu} from "./MainNav";
+import {handleInitialButton, InjectMainMenu, useInitialButtonRef} from "./MainNav";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
 import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
 import ButtonList from "../components/ButtonList";
+import base from "../base";
 
 const PAGE=PAGEIDS.ADDON;
 export interface AddOnPageProps extends Partial<PageProps> {}
@@ -22,6 +23,8 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     useStoreState(keys.gui.global.reloadSequence);
     useStoreState(keys.gui.global.addonsChanged);
     const history=useHistory();
+    const initialRef=useInitialButtonRef(history);
+    base.log("AddOnPage render",props);
         const buttonActions:Record<string,Partial<DynamicButtonProps>> = {
             Back: {
                 onClick: () => {
@@ -57,17 +60,20 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     const currentButtons=useRef<ButtonDef[]>(null);
     currentButtons.current=finalButtons;
     useEffect(() => {
+        base.log(PAGE,"handleInitialButton")
         const remoteToken=remotechannel.subscribe(COMMANDS.addOn,(addon:string)=>{
             keyhandler.callHandler('button',addon);
         })
-        if (currentButtons.current) {
+        if (currentButtons.current && false) {
             if (!handleInitialButton(history)) {
                 let hasSet=false;
                 const last = globalStore.getData(keys.gui.addonpage.activeAddOn);
                 if (last) {
                     for (const button of currentButtons.current){
                         if (button.name === last && button.isAddon){
-                            keyhandler.callHandler('button', last);
+                            window.setTimeout(()=> {
+                                keyhandler.callHandler('button', last);
+                            },0);
                             hasSet=true;
                             break;
                         }
@@ -78,14 +84,19 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
                     for (const button of currentButtons.current){
                         if (! button.isAddon) continue;
                         if (button.name && button.onClick){
-                            keyhandler.callHandler('button', button.name);
+                            window.setTimeout(()=> {
+                                keyhandler.callHandler('button', button.name);
+                            },0);
                             break;
                         }
                     }
                 }
             }
         }
-        return ()=>remotechannel.unsubscribe(remoteToken);
+        return ()=>{
+            base.log("AddOnPage dismiss");
+            remotechannel.unsubscribe(remoteToken);
+        }
     }, []);
 
     return <PageFrame
@@ -97,7 +108,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
                 No addons configured
             </div>
         </PageLeft>
-        <ButtonList page={PAGE} itemList={finalButtons}/>
+        <ButtonList page={PAGE} itemList={finalButtons} initialClick={initialRef.current} />
     </PageFrame>
 }
 

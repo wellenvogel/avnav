@@ -116,6 +116,7 @@ export const dynamicWrapper=(props:DynamicProps, options?:Options)=>{
 
 export default  function(Component:any,opt_options?:Options,opt_store?:any){
     const store=opt_store||globalStore;
+    // eslint-disable-next-line react/display-name
      return (props:DynamicProps)=>{
         const currentValues=useStore(props,{...opt_options,store:store});
         return <Component {...currentValues}/>

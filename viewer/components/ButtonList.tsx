@@ -1,10 +1,8 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Button, {ButtonDef,  DynamicButtonProps} from './Button';
-import Dynamic, {dynamicWrapper, useStore} from '../hoc/Dynamic';
+import {dynamicWrapper, useStore} from '../hoc/Dynamic';
 import keys from '../util/keys';
 import ItemList from './ItemList';
-// @ts-ignore
-import addons from "../util/Addons";
 import Helper from "../util/helper";
 
 const storeKeys={
@@ -26,6 +24,7 @@ export interface ButtonListProps{
     className?: string;
     buttonsHidden?: boolean;
     shadeCallback?: ()=>void;
+    initialClick?: string;
 }
 
 type ButtonListPropsI=ButtonListProps & Record<keyof typeof storeKeys,any>;
@@ -34,6 +33,14 @@ const ButtonList = (iprops:ButtonListProps) => {
     const sprops:ButtonListPropsI=useStore(iprops,{
         storeKeys: storeKeys})
     const [showOverflow, setShowOverflow] = useState(false);
+    const initialRef=useRef(iprops.initialClick);
+    const isInitial=useCallback((name:string) => {
+        if (! initialRef.current) return false;
+        if (name === initialRef.current){
+            initialRef.current=undefined;
+            return true;
+        }
+    },[])
     const getStateKey = useCallback((iprops:ButtonDescription) => {
         if (!iprops || !iprops.name) return;
         return "button-" + iprops.name;
@@ -111,19 +118,19 @@ const ButtonList = (iprops:ButtonListProps) => {
     const className=Helper.concatsp(sprops.className,"buttonContainer",
         sprops.buttonsHidden?"buttonsHidden":undefined);
     const listHeight = (sprops.dimensions) ? sprops.dimensions.height : 0;
-    let items = [];
+    let items:ButtonDescription[] = [];
     //we must render all invsible buttons to be sure to get called back
     //if their visibility changes
-    let invisibleItems = [];
+    let invisibleItems:ButtonDescription[] = [];
     let allowedOverflowItems = 0;
     for (const button of sprops.itemList) {
         const stateKey = getStateKey(button);
         if (!stateKey) continue;
         if (!sprops.buttonsHidden && (visibility[stateKey] === undefined || visibility[stateKey])) {
-            items.push(button);
+            items.push({...button,initialClick:isInitial,dataChanged:buttonChanged});
             if (button.overflow) allowedOverflowItems++;
         } else {
-            invisibleItems.push(button);
+            invisibleItems.push({...button,initialClick:isInitial,dataChanged:buttonChanged});
         }
     }
     items = itemSort(items);
@@ -189,7 +196,7 @@ const ButtonList = (iprops:ButtonListProps) => {
                                                   fontSize={fontSize}
                                                   className={className + " main"}
                                                   itemList={mainItems}
-                                                  itemClass={Dynamic(Button, {changeCallback: buttonChanged})}
+                                                  itemClass={Button}
             />
             }
             {(hasOverflow && (showOverflow || sprops.buttonCols)) ?
@@ -197,14 +204,14 @@ const ButtonList = (iprops:ButtonListProps) => {
                           fontSize={fontSize}
                           className={className + " overflow"}
                           itemList={overflowItems}
-                          itemClass={Dynamic(Button, {changeCallback: buttonChanged})}
+                          itemClass={Button}
                 />
                 :
                 null
             }
             <ItemList className="hidden"
                       itemList={invisibleItems}
-                      itemClass={Dynamic(Button, {changeCallback: buttonChanged})}
+                      itemClass={Button}
             />
             {sprops.buttonsHidden &&
                 <div
