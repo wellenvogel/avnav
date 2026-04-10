@@ -551,6 +551,13 @@ export interface ButtonContext {
     setCleanup:(cleanup:()=>void|Promise<void>)=>void,
     cleanup:()=>Promise<void>
 }
+export enum ButtonContextProps{
+    DISABLED='disabled',
+    VISIBLE='visible',
+    TOGGLE='toggle',
+    ICON='icon',
+    CLASSNAME='classname',
+}
 export interface UserButton extends UserButtonBase{
     onClick:(event:object)=>void    //if set this function is called instead of invoking the url
     toggle?:boolean;

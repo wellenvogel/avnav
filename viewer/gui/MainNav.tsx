@@ -50,6 +50,7 @@ import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
 import keyhandler from "../util/keyhandler";
 import {addonButtonAction} from "../components/AddonView";
+import {ButtonContextProps} from "../api/api.interface";
 
 type PageKind='navigation'|'settings';
 
@@ -267,20 +268,35 @@ export const InjectMainMenu=(
     return propsToDefs([ {
         name: 'MainNav',
         displayName: 'main menu',
-        onClick: (ev:SyntheticEvent)=>{
+        noDialogsClose: true,
+        onClick: async (ev:ButtonEvent)=>{
             const dialogContext=getav(ev).dialogContext;
+            const buttonCtx=ev?.avnav?.context
+            const toggle=buttonCtx?.getValue(ButtonContextProps.TOGGLE);
+            if (toggle){
+                toggle();
+                buttonCtx?.setValue(ButtonContextProps.TOGGLE,undefined);
+                buttonCtx?.setCleanup(undefined);
+                if (mainCancel) mainCancel();
+                return;
+            }
             const expandMode=globalstore.getData(keys.properties.mainNavExpand);
             const columns=globalstore.getData(keys.properties.mainNavCols);
             let colClass="";
             if (columns == MainColumns.five) colClass="col5";
             else if (columns == MainColumns.seven) colClass="col7";
             else if (columns == MainColumns.all) colClass="full";
-            showDialog(dialogContext,()=><MainNav
+            const cleanup=await showDialog(dialogContext,()=><MainNav
                 current={pagename}
                 currentButtons={computedButtons}
                 expandMode={expandMode}
                 cancelCallback={mainCancel}
-            />,undefined,{coverClassName:Helper.concatsp('MainNavCover',colClass)})
+            />,()=>{
+                buttonCtx?.setCleanup(undefined);
+                buttonCtx?.setValue(ButtonContextProps.TOGGLE,undefined);
+            },{coverClassName:Helper.concatsp('MainNavCover',colClass)})
+            buttonCtx?.setCleanup(cleanup);
+            buttonCtx?.setValue(ButtonContextProps.TOGGLE,cleanup);
         }
     },
         LayoutFinishedDialog.getButtonDef(),
