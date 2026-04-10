@@ -182,6 +182,7 @@ export interface MainNavProps{
     current:string,
     currentButtons:ButtonDef[],
     expandMode:MainExpandMode
+    cancelCallback?:()=>void
 }
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
@@ -214,6 +215,7 @@ export const MainNav = (props:MainNavProps) => {
             <ListSlot className={'iconSlot'}
                 icon={{className:'Cancel'}}
                 onClick={()=>{
+                            if (props.cancelCallback) props.cancelCallback();
                             dialogContext.closeDialog();
                         }}
                 />
@@ -248,7 +250,8 @@ export const MainNav = (props:MainNavProps) => {
 }
 export const InjectMainMenu=(
     pagename:string,
-    pageButtons:ButtonDef[]|(()=>ButtonDef[])
+    pageButtons:ButtonDef[]|(()=>ButtonDef[]),
+    mainCancel?:()=>void,
     ) => {
     const computedButtons=(typeof pageButtons === 'function'? pageButtons() :pageButtons);
     const addonButtons=addons.getPageUserButtons(pagename)
@@ -276,6 +279,7 @@ export const InjectMainMenu=(
                 current={pagename}
                 currentButtons={computedButtons}
                 expandMode={expandMode}
+                cancelCallback={mainCancel}
             />,undefined,{coverClassName:Helper.concatsp('MainNavCover',colClass)})
         }
     },

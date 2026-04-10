@@ -5,7 +5,7 @@
 import {useStoreState} from '../hoc/Dynamic';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-import React, {useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {handleInitialButton, InjectMainMenu} from "./MainNav";
@@ -24,6 +24,31 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     useStoreState(keys.gui.global.addonsChanged);
     const history=useHistory();
     base.log("AddOnPage render",props);
+    const currentButtons=useRef<ButtonDef[]>(null);
+    const showApp=useCallback(()=>{
+        if (! currentButtons.current) return;
+        let hasSet=false;
+        const last = globalStore.getData(keys.gui.addonpage.activeAddOn);
+        if (last) {
+            for (const button of currentButtons.current){
+                if (button.name === last && button.isAddon){
+                    keyhandler.callHandler('button', last);
+                    hasSet=true;
+                    break;
+                }
+            }
+        }
+        if (! hasSet){
+            //no addon select - trigger the first button
+            for (const button of currentButtons.current){
+                if (! button.isAddon) continue;
+                if (button.name && button.onClick){
+                    keyhandler.callHandler('button', button.name);
+                    break;
+                }
+            }
+        }
+    },[])
         const buttonActions:Record<string,Partial<DynamicButtonProps>> = {
             Back: {
                 onClick: () => {
@@ -36,7 +61,11 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
                 }
             }
         }
-    const buttons=InjectMainMenu(PAGE,updateButtons(AddOnPageButtons,buttonActions));
+    const buttons=InjectMainMenu(
+        PAGE,
+        updateButtons(AddOnPageButtons,buttonActions),
+        showApp,
+        );
     const finalButtons:ButtonDef[]=[];
     for (const button of buttons){
         if (buttonActions[button.name]){
@@ -56,8 +85,8 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
             finalButtons.push(button);
         }
     }
-    const currentButtons=useRef<ButtonDef[]>(null);
     currentButtons.current=finalButtons;
+
     useEffect(() => {
         base.log(PAGE,"handleInitialButton")
         const remoteToken=remotechannel.subscribe(COMMANDS.addOn,(addon:string)=>{
@@ -65,27 +94,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         })
         if (currentButtons.current) {
             if (!handleInitialButton(history)) {
-                let hasSet=false;
-                const last = globalStore.getData(keys.gui.addonpage.activeAddOn);
-                if (last) {
-                    for (const button of currentButtons.current){
-                        if (button.name === last && button.isAddon){
-                            keyhandler.callHandler('button', last);
-                            hasSet=true;
-                            break;
-                        }
-                    }
-                }
-                if (! hasSet){
-                    //no addon select - trigger the first button
-                    for (const button of currentButtons.current){
-                        if (! button.isAddon) continue;
-                        if (button.name && button.onClick){
-                            keyhandler.callHandler('button', button.name);
-                            break;
-                        }
-                    }
-                }
+                showApp();
             }
         }
         return ()=>{
@@ -100,7 +109,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         >
         <PageLeft title={PAGE_TITLES.ADDON}>
             <div className="emptyPage">
-                No addons configured
+                No USer App Selected
             </div>
         </PageLeft>
         <ButtonList page={PAGE} itemList={finalButtons} />

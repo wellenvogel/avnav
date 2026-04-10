@@ -548,6 +548,8 @@ export interface UserButtonBase{
 export interface ButtonContext {
     getValue: (key: string) => any,
     setValue: (key: string, value: any) => void,
+    setCleanup:(cleanup:()=>void|Promise<void>)=>void,
+    cleanup:()=>Promise<void>
 }
 export interface UserButton extends UserButtonBase{
     onClick:(event:object)=>void    //if set this function is called instead of invoking the url

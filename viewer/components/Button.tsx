@@ -85,11 +85,27 @@ const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
         return togglev ? " active" : " inactive";
     }
 }
+const CTXRESERVED='__cleanup';
 export const useButtonContext=(initial?:Record<string,any>):ButtonContext=>{
     const ctx=useStateObject(initial||{});
     return {
-        getValue: (key: string) => ctx.getValue(key),
-        setValue: (key: string, value: any) => ctx.setValue(key, value)
+        getValue: (key: string) => {
+            if (key === CTXRESERVED) throw new Error(`cannot use ${CTXRESERVED}`);
+            return ctx.getValue(key)
+        },
+        setValue: (key: string, value: any) => {
+            if (key === CTXRESERVED) throw new Error(`cannot use ${CTXRESERVED}`);
+            ctx.setValue(key, value)
+        },
+        setCleanup:(cleanup:()=>(void|Promise<void>))=>{
+            ctx.setValue(CTXRESERVED,cleanup);
+        },
+        cleanup:async ()=>{
+            const cf=ctx.getValue(CTXRESERVED);
+            if (cf && typeof cf === 'function'){
+                await cf
+            }
+        }
     }
 }
 
@@ -124,6 +140,7 @@ const Button = (sprops:ButtonProps) => {
     });
     useEffect(() => {
         return ()=>{
+            ctx.cleanup();
             base.log("button dismiss",sprops.name,idxRef.current,ctx.getValue('toggle'));
         }
     }, [sprops.name]);

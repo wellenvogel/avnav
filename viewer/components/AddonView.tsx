@@ -74,6 +74,7 @@ export const addonButtonAction=async (
     if (handle){
         await handle();
         ctx.setValue(TOGGLE,undefined);
+        ctx.setCleanup(undefined);
         if (! noToggle) return;
     }
     const newHandle=await showDialog(ev?.avnav?.dialogContext,()=>{
@@ -83,6 +84,8 @@ export const addonButtonAction=async (
         },
         ()=>{
             ctx.setValue(TOGGLE,undefined);
+            ctx.setCleanup(undefined);
         });
     ctx.setValue(TOGGLE,newHandle);
+    ctx.setCleanup(newHandle);
 }
