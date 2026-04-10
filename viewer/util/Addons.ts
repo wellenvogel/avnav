@@ -1,15 +1,15 @@
 import globalStore from './globalstore';
+import globalstore from './globalstore';
 import keys from './keys';
 import Requests from './requests';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
 import Helper from "./helper";
 import {UserApp, UserButton} from "../api/api.interface";
-import globalstore from "./globalstore";
 import {StoreCallback} from "./store";
 import {Page} from "./keyhandler";
 import {PAGEIDS} from "./pageids";
-import {DynamicButtonProps} from "../components/Button";
+import {ButtonAddonType, DynamicButtonProps} from "../components/Button";
 
 export interface PluginAddonProps{
     name: string;
@@ -205,7 +205,8 @@ const getPageUserButtons=(
     for (const k in pluginUserButtons){
         const buttonDef=pluginUserButtons[k];
         if (isOnPage(page,buttonDef.page)){
-            rt.push({...buttonDef.button,overflow:true,isAddon:true});
+            rt.push({...buttonDef.button,overflow:true,isAddon:ButtonAddonType.USER_HANDLER,
+                noDialogsClose:true});
         }
     }
     for (const k in pluginAddOns){
@@ -216,8 +217,9 @@ const getPageUserButtons=(
                 displayName:addon.title || addon.name, //TODO
                 icon:addon.icon,
                 overflow: true,
-                isAddon:true,
-                config: {...addon}
+                isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
+                config: {...addon},
+                noDialogsClose:addon.newWindow
             }
             rt.push(buttonDef);
         }
@@ -232,8 +234,9 @@ const getPageUserButtons=(
                 displayName:addon.title || addon.name,
                 icon:addon.icon,
                 overflow: true,
-                isAddon:true,
-                config: {...addon}
+                isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
+                config: {...addon},
+                noDialogsClose:addon.newWindow
             }
             rt.push(buttonDef);
         }

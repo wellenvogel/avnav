@@ -19,7 +19,12 @@ export interface ButtonEvent extends ButtonEventBase {
     }
 }
 export type ButtonEventHandler=((ev:ButtonEvent)=>void)|((ev:ButtonEvent) => Promise<void>);
-
+export enum ButtonAddonType{
+    NONE=0,
+    USER_HANDLER=1,
+    CONFIG=2,
+    CONFIG_NEW_WINDOW=3
+}
 export interface ButtonProps {
         onClick?: ButtonEventHandler;
         className?: string;
@@ -38,7 +43,7 @@ export interface ButtonProps {
         storeKeys?: StoreKeys;
         updateFunction?: UpdateFunction;
         noDialogsClose?: boolean;
-        isAddon?: boolean;
+        isAddon?: ButtonAddonType;
         dataChanged?:(data:ButtonDescription) => void;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
@@ -73,7 +78,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     localOnly?: boolean;
     displayName?: string;
     noDialogsClose?: boolean;
-    isAddon?: boolean;
+    isAddon?: ButtonAddonType=ButtonAddonType.NONE;
 }
 
 const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {

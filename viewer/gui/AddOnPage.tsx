@@ -10,7 +10,7 @@ import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {handleInitialButton, InjectMainMenu} from "./MainNav";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
-import {ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
+import {ButtonAddonType, ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
 import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
@@ -29,7 +29,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         const last = globalStore.getData(keys.gui.addonpage.activeAddOn);
         if (last) {
             for (const button of currentButtons.current){
-                if (button.name === last && button.isAddon){
+                if (button.name === last && button.isAddon === ButtonAddonType.CONFIG){
                     keyhandler.callHandler('button', last);
                     hasSet=true;
                     break;
@@ -39,7 +39,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         if (! hasSet){
             //no addon select - trigger the first button
             for (const button of currentButtons.current){
-                if (! button.isAddon) continue;
+                if (button.isAddon !== ButtonAddonType.CONFIG) continue;
                 if (button.name && button.onClick){
                     keyhandler.callHandler('button', button.name);
                     break;
