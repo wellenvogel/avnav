@@ -24,7 +24,6 @@ export interface ButtonListProps{
     className?: string;
     buttonsHidden?: boolean;
     shadeCallback?: ()=>void;
-    initialClick?: string;
 }
 
 type ButtonListPropsI=ButtonListProps & Record<keyof typeof storeKeys,any>;
@@ -33,14 +32,6 @@ const ButtonList = (iprops:ButtonListProps) => {
     const sprops:ButtonListPropsI=useStore(iprops,{
         storeKeys: storeKeys})
     const [showOverflow, setShowOverflow] = useState(false);
-    const initialRef=useRef(iprops.initialClick);
-    const isInitial=useCallback((name:string) => {
-        if (! initialRef.current) return false;
-        if (name === initialRef.current){
-            initialRef.current=undefined;
-            return true;
-        }
-    },[])
     const getStateKey = useCallback((iprops:ButtonDescription) => {
         if (!iprops || !iprops.name) return;
         return "button-" + iprops.name;
@@ -127,10 +118,10 @@ const ButtonList = (iprops:ButtonListProps) => {
         const stateKey = getStateKey(button);
         if (!stateKey) continue;
         if (!sprops.buttonsHidden && (visibility[stateKey] === undefined || visibility[stateKey])) {
-            items.push({...button,initialClick:isInitial,dataChanged:buttonChanged});
+            items.push({...button,dataChanged:buttonChanged});
             if (button.overflow) allowedOverflowItems++;
         } else {
-            invisibleItems.push({...button,initialClick:isInitial,dataChanged:buttonChanged});
+            invisibleItems.push({...button,dataChanged:buttonChanged});
         }
     }
     items = itemSort(items);

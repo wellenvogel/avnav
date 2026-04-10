@@ -293,7 +293,7 @@ export const handleInitialButton = (history: IHistory, _pageButtons?: ButtonDef[
                 ...current.options,
                 button: undefined
             });
-        //keyhandler.callHandler('button', bname);
+        keyhandler.callHandler('button', bname);
         return bname;
     }
 }
@@ -305,9 +305,4 @@ export const useInitialButton=(buttonList:RefObject<ButtonDef[]>)=>{
         if (! buttonList.current) return;
         handleInitialButton(history,buttonList.current,dialogContext);
     }, []);
-}
-
-export const useInitialButtonRef=(history:IHistory)=>{
-    const initialRef=useRef(handleInitialButton(history));
-    return initialRef;
 }

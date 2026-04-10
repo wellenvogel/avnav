@@ -8,7 +8,7 @@ import keys from '../util/keys';
 import React, {useEffect, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
-import {handleInitialButton, InjectMainMenu, useInitialButtonRef} from "./MainNav";
+import {handleInitialButton, InjectMainMenu} from "./MainNav";
 import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
 import {ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
@@ -23,7 +23,6 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     useStoreState(keys.gui.global.reloadSequence);
     useStoreState(keys.gui.global.addonsChanged);
     const history=useHistory();
-    const initialRef=useInitialButtonRef(history);
     base.log("AddOnPage render",props);
         const buttonActions:Record<string,Partial<DynamicButtonProps>> = {
             Back: {
@@ -64,7 +63,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         const remoteToken=remotechannel.subscribe(COMMANDS.addOn,(addon:string)=>{
             keyhandler.callHandler('button',addon);
         })
-        if (currentButtons.current && false) {
+        if (currentButtons.current) {
             if (!handleInitialButton(history)) {
                 let hasSet=false;
                 const last = globalStore.getData(keys.gui.addonpage.activeAddOn);
@@ -108,7 +107,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
                 No addons configured
             </div>
         </PageLeft>
-        <ButtonList page={PAGE} itemList={finalButtons} initialClick={initialRef.current} />
+        <ButtonList page={PAGE} itemList={finalButtons} />
     </PageFrame>
 }
 

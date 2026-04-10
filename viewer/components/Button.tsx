@@ -39,7 +39,6 @@ export interface ButtonProps {
         updateFunction?: UpdateFunction;
         noDialogsClose?: boolean;
         isAddon?: boolean;
-        initialClick?:(name:string)=>boolean;
         dataChanged?:(data:ButtonDescription) => void;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
@@ -75,7 +74,6 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     displayName?: string;
     noDialogsClose?: boolean;
     isAddon?: boolean;
-    initialClick?:(name:string)=>boolean;
 }
 
 const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
@@ -125,9 +123,6 @@ const Button = (sprops:ButtonProps) => {
         syntheticClick();
     });
     useEffect(() => {
-        if (sprops.initialClick && sprops.initialClick(sprops.name)){
-            syntheticClick();
-        }
         return ()=>{
             base.log("button dismiss",sprops.name,idxRef.current,ctx.getValue('toggle'));
         }
