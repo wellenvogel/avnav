@@ -8,7 +8,7 @@ import React from 'react';
 import Page from '../components/Page.tsx';
 import Mob from '../components/Mob.ts';
 import Addons from '../util/Addons.ts';
-import UserAppDialog from '../components/UserAppDialog.jsx';
+import UserAppDialog from '../components/UserAppDialog.tsx';
 import {showPromiseDialog} from "../components/OverlayDialog";
 import {avitem, concatsp} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";

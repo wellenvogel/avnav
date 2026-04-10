@@ -26,7 +26,7 @@ export interface EditDialogProps {
     data:string
     title?:string
     language?:string
-    resolveFunction:(data:string) => Promise<void>
+    resolveFunction:(data:string) => Promise<void>|void
     saveFunction?:(data:string) => Promise<void>
     fileName?:string,
     showCollapse?:boolean,

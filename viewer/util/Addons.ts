@@ -69,7 +69,7 @@ class PluginUserButton{
     }
 }
 
-class ServerAddon implements UserApp{
+export class ServerAddon implements UserApp{
     name: string;
     invalid?: boolean;
     canDelete?: boolean;
@@ -151,6 +151,9 @@ class QueryHandler{
     }
 }
 
+export const getServerAddons=()=>{
+    return serverAddOns;
+}
 const addPluginAddOn=(
     {name,pluginName,url,icon,...other}:PluginAddonProps)=>{
     if (!name) throw new Error("name is required");
@@ -298,18 +301,17 @@ const readAddOns = async (
     return addons;
 };
 
-const findAddonByUrl=(addons:any[],url:string,opt_all?:boolean)=>{
+const findAddonByUrl=(addons:ServerAddon[],url:string)=>{
     if (! addons || !(addons instanceof Array)) return;
     if (! url) return;
     const rtall=[];
     for (const i in addons){
         const addon=addons[i];
         if (addon.url == url){
-            if (! opt_all) return addon;
             rtall.push(addon);
         }
     }
-    return opt_all?rtall:undefined;
+    return rtall;
 };
 /**
  * update/add an addon
@@ -359,5 +361,6 @@ export default  {
     addUserButton: addUserButton,
     getPageUserButtons:getPageUserButtons,
     removePluginAddOns:removePluginAddOns,
+    getServerAddons:getServerAddons,
     QueryHandler:QueryHandler,
 }

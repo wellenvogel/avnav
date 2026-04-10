@@ -239,7 +239,7 @@ export interface PromiseResolveHelperProps{
 
 export const promiseResolveHelper = (
     {ok, err}:PromiseResolveHelperProps,
-    resolveFunction:(r:any)=>boolean|Promise<void>,
+    resolveFunction:(r:any)=>boolean|void|Promise<void>,
     args:any) => {
     const rt = resolveFunction(args);
     if (rt instanceof Promise) {

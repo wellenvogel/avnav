@@ -141,7 +141,7 @@ export const Radio=(props:RadioProps)=>{
 };
 
 
-export interface InputReadOnlyProps extends DEFAULT_TYPES{
+export interface InputReadOnlyProps extends Omit<DEFAULT_TYPES,'onChange'> {
     onClick?: (ev:SyntheticEvent)=>void;
     frameClick?: boolean;
 }

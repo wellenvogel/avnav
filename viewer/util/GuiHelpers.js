@@ -119,20 +119,6 @@ const storeHelper=(thisref,dataCanged,storeKeys,opt_callImmediate)=>{
     }
 };
 
-export const useStoreHelper=(callback,storeKeys,callImmediate,beforeRender)=>{
-    const setter=useRef();
-    if (beforeRender){
-        useState(()=>setter.current=globalStore.register(callback,storeKeys));
-    }
-    useEffect(() => {
-        if (! beforeRender){
-            setter.current=globalStore.register(callback,storeKeys);
-        }
-        return ()=>globalStore.deregister(setter.current);
-
-    }, []);
-    if (callImmediate) callback();
-}
 
 /**
  * get some data from the global store into our state

@@ -60,7 +60,8 @@ class AVNUserAppHandler(AVNWorker):
         'title':'',
         'icon':None, #an icon below $datadir/user
         'keepUrl':'', #auto detect
-        'newWindow':''
+        'newWindow':'',
+        'page':''
       }
     if not child is None:
       return None
@@ -265,7 +266,7 @@ class AVNUserAppHandler(AVNWorker):
     return True
 
 
-  def registerAddOn(self,name,url,iconPath,title=None,preventConnectionLost=False,pluginName=None):
+  def registerAddOn(self,name,url,iconPath,title=None,preventConnectionLost=False,pluginName=None,page=None):
     source='plugin' if pluginName is None else 'plugin-'+pluginName
     newAddon = {
       'name': name,
@@ -274,7 +275,8 @@ class AVNUserAppHandler(AVNWorker):
       'title': title,
       'canDelete': False,
       'source':source,
-      'preventConnectionLost': preventConnectionLost
+      'preventConnectionLost': preventConnectionLost,
+      'page': page,
     }
     self.additionalAddOns.append(newAddon)
     self._updateSequence()
@@ -314,12 +316,14 @@ class AVNUserAppHandler(AVNWorker):
           icon = AVNUtil.getHttpRequestParam(requestparam, 'icon', True)
           title = AVNUtil.getHttpRequestParam(requestparam, 'title')
           newWindow = AVNUtil.getHttpRequestParam(requestparam, 'newWindow')
+          page=AVNUtil.getHttpRequestParam(requestparam, 'page')
           param = {}
           param['icon'] = icon
           param['title'] = title
           param['url'] = url
           param['newWindow'] = newWindow
           param['keepUrl'] = url.startswith("http")
+          param['page'] = page
           doAdd = False
           if name is None:
               doAdd = True

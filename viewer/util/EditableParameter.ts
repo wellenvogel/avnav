@@ -28,7 +28,7 @@ export type Values =Record<string, Value>;
 export type Condition=Value|((values:Values,value:Value)=>boolean);
 export type Conditions =Record<string,Condition>;
 export interface SelectListEntry extends Record<string, any>{
-    value:Value,
+    value:any,
     label?:string,
     l?:string,
     displayName?:string,

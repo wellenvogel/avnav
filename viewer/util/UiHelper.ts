@@ -5,6 +5,9 @@ import Requests from './requests';
 import base from "../base";
 // @ts-ignore
 import cloneDeep from "clone-deep";
+import globalstore from "./globalstore";
+import {StoreKeys} from "../hoc/Dynamic";
+import {DataChangedFunction} from "./store";
 
 export type TimerCallback=(sequence:number)=>void
 export interface Timer{
@@ -283,4 +286,19 @@ export const useStateObject=(
             return copy(innerInitial);
         }
     }
+}
+
+export const useStoreHelper=(callback:DataChangedFunction,storeKeys:StoreKeys,callImmediate?:boolean,beforeRender?:boolean)=>{
+    const setter=useRef<DataChangedFunction>();
+    if (beforeRender){
+        useState(()=>setter.current=globalstore.register(callback,storeKeys) as DataChangedFunction);
+    }
+    useEffect(() => {
+        if (! beforeRender){
+            setter.current=globalstore.register(callback,storeKeys) as DataChangedFunction;
+        }
+        return ()=>{globalstore.deregister(setter.current)};
+
+    }, [callback]);
+    if (callImmediate) callback([]);
 }

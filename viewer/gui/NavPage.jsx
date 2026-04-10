@@ -16,16 +16,15 @@ import {
 import Helper, {injectav} from '../util/helper.ts';
 import {
     useKeyEventHandlerPlain,
-    useStoreHelper,
     useTimer
-} from '../util/GuiHelpers.js';
+} from '../util/UiHelper';
+import {useStoreHelper} from "../util/UiHelper";
 import MapHolder, {EventTypes, LOCK_MODES} from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.tsx';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
-import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import {RawButtonDef,createDialog} from '../components/EditPageDialog';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';

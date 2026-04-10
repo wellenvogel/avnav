@@ -1,37 +1,47 @@
 import React, {useEffect, useState} from 'react';
-import PropTypes from 'prop-types';
-import {showPromiseDialog} from './OverlayDialog.tsx';
-import Toast from './Toast.tsx';
-import {Checkbox, Input, InputReadOnly} from './Inputs.tsx';
-import Addons from '../util/Addons.ts';
-import Helper, {unsetOrTrue} from '../util/helper.ts';
+import {showPromiseDialog} from './OverlayDialog';
+import Toast from './Toast';
+import {Checkbox, Input, InputReadOnly, InputSelect} from './Inputs';
+import Addons, {ServerAddon} from '../util/Addons';
+import Helper, {unsetOrTrue} from '../util/helper';
 import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
+// @ts-ignore
 import {IconDialog} from "./IconDialog";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
+// @ts-ignore
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
+// @ts-ignore
 import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
+import {Item} from "../util/itemFunctions";
+import {SelectListEntry} from "../util/EditableParameter";
+import {PLUGINPAGES} from "../util/pageids";
 
+interface SelectHtmlDialogProps{
+    allowUpload?:boolean;
+    current?:string
+    resolveFunction:(url:string) => void
+}
 
-const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
+const SelectHtmlDialog=({allowUpload,resolveFunction,current}:SelectHtmlDialogProps)=>{
     const dialogContext=useDialogContext();
     const [uploadFile,setUploadFile]=useState(undefined);
     const [userFiles,setUserFiles]=useState([]);
-    const listFiles=(name)=>{
+    const listFiles=(name?:string)=>{
         Requests.getJson({
             request:'api',
             type:'user',
             command:'list'
         })
             .then((data) => {
-                let nuserFiles = [];
+                const nuserFiles:Item[] = [];
                 if (data.items) {
-                    data.items.forEach((el) => {
+                    data.items.forEach((el:Item) => {
                         if (Helper.getExt(el.name) === 'html') {
                             el.label = el.name;
                             el.value = el.url;
@@ -45,21 +55,21 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                     });
                     setUserFiles(nuserFiles)
                 }
-            }).catch((error) => {
+            }).catch(() => {
         });
     }
     useEffect(() => {
         listFiles();
     }, []);
     const uploadAction=createItemActions('user').getUploadAction().copy({
-        preCheck: (userData, name)=>{
+        preCheck: (_userData:any, name:string)=>{
             if (! name) throw new Error("no file name");
             if (Helper.getExt(name)!=='html') throw new Error("only HTML files");
             return {name:name};
         },
         withDialog:true
     });
-    const checkNameFunction=(name)=>checkName(name,userFiles)
+    const checkNameFunction=(name:string)=>checkName(name,userFiles)
     return <DialogFrame title={"Select HTML file"}>
         <UploadHandler
             file={uploadFile}
@@ -100,10 +110,10 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                     dialogContext.showDialog(()=><ItemNameDialog
                         iname={""}
                         fixedExt={"html"}
-                        mandatory={(v)=>!v}
+                        mandatory={(v:boolean)=>!v}
                         checkName={checkNameFunction}
-                        resolveFunction={(res)=>{
-                            let name=(res||{}).name;
+                        resolveFunction={(res?:{name:string})=>{
+                            let name=res?.name;
                             if (!name) return;
                             name=name+".html";
                             const data = getTemplate(name);
@@ -127,7 +137,12 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     </DialogFrame>
 }
 
-const TranslateUrlDialog=({resolveFunction,current})=>{
+interface TranslateUrlDialogProps {
+    resolveFunction:(url:string) => void
+    current?:string
+}
+
+const TranslateUrlDialog=({resolveFunction,current}:TranslateUrlDialogProps)=>{
     const dialogContext=useDialogContext();
     useEffect(() => {
         (async ()=> {
@@ -138,7 +153,7 @@ const TranslateUrlDialog=({resolveFunction,current})=>{
                     type:'user'
                 });
                 if (data.items) {
-                    data.items.forEach((el) => {
+                    data.items.forEach((el:Item) => {
                         if (Helper.getExt(el.name) === 'html') {
                             if (el.url === current) {
                                 dialogContext.closeDialog();
@@ -147,18 +162,19 @@ const TranslateUrlDialog=({resolveFunction,current})=>{
                         }
                     });
                 }
-            } catch (error) {
-
-            }
+            } catch (error) { /* empty */ }
             dialogContext.closeDialog();
         })();
     }, []);
     return <DialogFrame title={"loading..."}/>
 }
-
-const SelectExistingDialog=({existingAddons,resolveFunction})=>{
+interface SelectExistingDialogProps{
+    existingAddons:ServerAddon[],
+    resolveFunction:(addon?:ServerAddon) => void
+}
+const SelectExistingDialog=({existingAddons,resolveFunction}:SelectExistingDialogProps)=>{
     const dialogContext=useDialogContext();
-    const selist = [];
+    const selist:SelectListEntry[] = [];
     existingAddons.forEach((addon) => {
         selist.push({value: addon, label: addon.title, icon: addon.icon});
     })
@@ -177,7 +193,7 @@ const SelectExistingDialog=({existingAddons,resolveFunction})=>{
     </DialogFrame>
 }
 
-const checkUrl=(val,isInternal)=>{
+const checkUrl=(val:string,isInternal?:boolean)=>{
     if (! val) return "must not be empty";
     if (isInternal){
         if (val.match(/^http/i)) return "internal urls must not start with http";
@@ -185,45 +201,47 @@ const checkUrl=(val,isInternal)=>{
     }
     if (!val.match(/^https*:\/\//i)) return "external urls must start with http[s]://";
 }
-
-const UserAppDialog = (props) => {
-    const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
+interface UserAppDialogProps{
+    showToasts?:boolean ;
+    addon?:ServerAddon,
+    fixed?:ServerAddon,
+    resolveFunction?:() => void
+}
+const UserAppDialog = (props:UserAppDialogProps) => {
+    const [currentAddon, setCurrentAddon] = useState<ServerAddon>({...props.addon, ...props.fixed});
     const dialogContext = useDialogContext();
-    const fixed = props.fixed || {};
+    const fixed:ServerAddon = props.fixed || new ServerAddon({});
     const shouldFind =  ! fixed.name && ( fixed.url  && ! props.addon);
     const [loaded, setLoaded] = useState(!shouldFind);
     const [internal, setInternal] = useState(!(!shouldFind && (props.addon || {}).keepUrl));
     const fillLists = () => {
-        if (!loaded) Addons.readAddOns()
-            .then((addons) => {
-                let current = Addons.findAddonByUrl(addons, props.fixed.url,true)
-                if (current.length) {
-                    showPromiseDialog(dialogContext, (dprops) =>
-                        <SelectExistingDialog
-                            {...dprops}
-                            existingAddons={current}
-                        />
-                    )
-                        .then((selected) => {
-                            if (selected !== undefined) {
-                                setCurrentAddon({...selected, ...props.fixed});
-                            }
-                        })
-                        .catch(() => {
-                        })
-                }
-                setLoaded(true);
-            })
-            .catch((error) => Toast("unable to load addons: " + error));
+        if (!loaded) {
+            const current = Addons.findAddonByUrl(Addons.getServerAddons(), props.fixed.url)
+            if (current.length) {
+                showPromiseDialog(dialogContext, (dprops) =>
+                    <SelectExistingDialog
+                        {...dprops}
+                        existingAddons={current}
+                    />
+                )
+                    .then((selected) => {
+                        if (selected !== undefined) {
+                            setCurrentAddon({...selected, ...props.fixed});
+                        }
+                    })
+                    .catch(() => {
+                    })
+            }
+            setLoaded(true);
 
+        }
     }
-
     useEffect(() => {
         fillLists();
     }, []);
     let canEdit = unsetOrTrue(currentAddon.canDelete);
     if (!loaded) canEdit = false;
-    let fixedUrl = fixed.url !== undefined;
+    const fixedUrl = fixed.url !== undefined;
     let title = "";
     if (canEdit) title = currentAddon.name ? "Modify " : "Create ";
     return (
@@ -302,7 +320,7 @@ const UserAppDialog = (props) => {
                         dialogContext.showDialog(()=>{
                             return <IconDialog
                                 value={currentAddon.icon}
-                                onChange={(icon)=>setCurrentAddon({...currentAddon,icon:icon.url})}
+                                onChange={(icon:{url:string})=>setCurrentAddon({...currentAddon,icon:icon.url})}
                             />
                         })
                     }}
@@ -318,12 +336,18 @@ const UserAppDialog = (props) => {
                     {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
                 </InputReadOnly>
             }
+            {canEdit && <InputSelect
+                dialogRow={true}
+                label="page"
+                list={Object.values(PLUGINPAGES).map((page)=>{return {label:page,value:page}})}
+                onChange={(nv)=>setCurrentAddon({...currentAddon, page:nv.value})}
+                value={currentAddon.page||PLUGINPAGES.ADDON}/>}
             {canEdit && !internal && <Checkbox
                 dialogRow={true}
                 label={'newWindow'}
-                value={currentAddon.newWindow === 'true'}
+                value={currentAddon.newWindow}
                 onChange={(nv) => {
-                    setCurrentAddon({...currentAddon, newWindow: nv ? 'true' : 'false'});
+                    setCurrentAddon({...currentAddon, newWindow: nv});
                 }}
             />}
 
@@ -368,8 +392,8 @@ const UserAppDialog = (props) => {
                         showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={"really delete User App?"}/>)
                             .then(() => {
                                 Addons.removeAddon(currentAddon.name)
-                                    .then((data) => {
-                                        props.resolveFunction(data);
+                                    .then(() => {
+                                        props.resolveFunction();
                                         dialogContext.closeDialog();
                                     })
                                     .catch((error) => {
@@ -385,9 +409,11 @@ const UserAppDialog = (props) => {
                 DBOk(() => {
                         const addon={...currentAddon, ...props.fixed};
                         if (!addon.title) addon.title = undefined; //avoid empty/null title
-                        Addons.updateAddon(addon.name, addon.url, addon.icon, addon.title, addon.newWindow)
-                            .then((data) => {
-                                props.resolveFunction(data);
+                        Addons.updateAddon(addon.name, addon.url,
+                            addon.icon, addon.title, addon.newWindow,
+                            Array.isArray(addon.page)?addon.page[0]:addon.page)
+                            .then(() => {
+                                props.resolveFunction();
                                 dialogContext.closeDialog();
                         })
                         .catch((error) => {
@@ -402,11 +428,5 @@ const UserAppDialog = (props) => {
         </DialogFrame>
     );
 }
-
-UserAppDialog.propTypes = {
-    fixed: PropTypes.object.isRequired,
-    addon: PropTypes.object,
-    resolveFunction: PropTypes.func.isRequired
-};
 
 export default UserAppDialog;
