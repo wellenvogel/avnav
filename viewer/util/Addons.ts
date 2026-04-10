@@ -20,7 +20,7 @@ export interface PluginAddonProps{
     title?: React.ReactNode;
     newWindow?:boolean;
     preventConnectionLost?:boolean,
-    page?:Page,
+    page?:PluginPage|[PluginPage],
 }
 class PluginAddOn implements UserApp{
     name: string;
@@ -34,7 +34,7 @@ class PluginAddOn implements UserApp{
     canDelete: boolean;
     preventConnectionLost: boolean;
     key: string;
-    page?: Page;
+    page?: PluginPage|[PluginPage];
     constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost,displayName,page}:PluginAddonProps) {
         this.name=name;
         this.pluginName=pluginName;

@@ -310,7 +310,7 @@ class Plugin extends ApiV2{
         this._registerLayout(name, undefined,url);
     }
 
-    override registerUserApp(button:UserButtonBase,app:UserApp,_page?:PluginPage|[PluginPage]):void {
+    override registerUserApp(button:UserButtonBase,app:UserApp,page?:PluginPage|[PluginPage]):void {
         if (! app.url) throw Error("url must not be empty");
         const url=urlToString(app.url,this.getBaseUrl());
         if (! button.icon) throw Error("icon must not be empty");
@@ -320,7 +320,8 @@ class Plugin extends ApiV2{
             url,
             icon,
             title:app.title,
-            newWindow:app.newWindow,});
+            newWindow:app.newWindow,
+            page:page});
     }
     override registerUserButton(button:UserButton, page:PluginPage|[PluginPage]):void {
         const buttonDef={...button};

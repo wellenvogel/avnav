@@ -602,13 +602,14 @@ class ApiImpl(AVNApi):
                                 iconFile = app.get('iconFile')
                                 title = app.get('title')
                                 preventCL = app.get('preventConnectionLost')
+                                page=app.get('page')
                                 if url is None:
                                     raise Exception("plugin %s: user app url cannot be None: %s", self.prefix,
                                                     repr(app))
                                 if iconFile is None:
                                     raise Exception("plugin %s: user app icon file cannot be None: %s", self.prefix,
                                                     repr(app))
-                                self.registerUserApp(url, iconFile, title=title, preventConnectionLost=preventCL)
+                                self.registerUserApp(url, iconFile, title=title, preventConnectionLost=preventCL,page=page)
                             except Exception as e:
                                 AVNLog.error("unable to register user app %s for %s: %s",
                                              repr(app), self.prefix, str(e))
