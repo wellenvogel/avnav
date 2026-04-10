@@ -286,7 +286,6 @@ public class RequestHandler {
         AvnLog.i(LOGPRFX,"Construct");
         this.service = service;
         addHandler(this.service);
-        addHandler(new AssetsRequestHandler(service,"viewer","viewer"));
         addHandler(new AssetsRequestHandler(service,"modules","viewer/modules"));
         this.chartHandler =new ChartHandler(service,this);
         addHandler(chartHandler);
@@ -333,6 +332,8 @@ public class RequestHandler {
                 addHandler(handler);
             }
         }
+        //must be after the icon handler
+        addHandler(new AssetsRequestHandler(service,"viewer","viewer"));
         AvnLog.i(LOGPRFX,"Construct done");
     }
 

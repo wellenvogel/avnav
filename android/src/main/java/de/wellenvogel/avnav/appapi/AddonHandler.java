@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,10 +20,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.worker.GpsService;
 
 public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAware{
 
@@ -33,6 +37,18 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         public String title;
         public String newWindow="false";
         public boolean adaptHttpUrls=false;
+
+        public boolean compare(@Nullable AddonInfo obj) {
+            if (this == obj) return true;
+            if (obj == null ) return false;
+            return Objects.equals(name,obj.name)
+                    && Objects.equals(url,obj.url)
+                    && Objects.equals(icon,obj.icon)
+                    && Objects.equals(title,obj.title)
+                    && Objects.equals(newWindow,obj.newWindow)
+                    && adaptHttpUrls == obj.adaptHttpUrls;
+        }
+
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
@@ -63,12 +79,12 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         }
     }
 
-    private Context context;
+    private GpsService context;
     private RequestHandler handler;
 
     private final HashMap<String,List<AddonInfo>> externalAddons=new HashMap<>();
 
-    public AddonHandler(Context ctx,RequestHandler handler){
+    public AddonHandler(GpsService ctx,RequestHandler handler){
         this.context=ctx;
         this.handler=handler;
     }
@@ -76,8 +92,10 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
     @Override
     public void removePluginItems(String pluginName, boolean finalCleanup) {
         synchronized (externalAddons){
+            if (externalAddons.get(pluginName) == null) return;
             externalAddons.remove(pluginName);
         }
+        context.updateConfigSequence();
     }
 
     @Override
@@ -87,8 +105,24 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             addons.add(AddonInfo.fromJson(pi.toJson()));
         }
         synchronized (externalAddons){
+            List<AddonInfo> old=externalAddons.get(pluginName);
+            //check for changes
+            if (old != null){
+                if (old.size() == addons.size()){
+                    //must also match order
+                    boolean differs=false;
+                    for (int i=0;i<old.size();i++){
+                        if (!old.get(i).compare(addons.get(i))){
+                            differs=true;
+                            break;
+                        }
+                    }
+                    if (! differs) return; //no update
+                }
+            }
             externalAddons.put(pluginName,addons);
         }
+        context.updateConfigSequence();
     }
 
 
@@ -210,6 +244,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         }
         AvnUtil.getSharedPreferences(context).edit()
                 .putString(Constants.ADDON_CONFIG,sv.toString()).apply();
+        context.updateConfigSequence();
     }
 
     private int findAddon(List<AddonInfo> list, String name){

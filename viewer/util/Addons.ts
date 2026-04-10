@@ -83,14 +83,14 @@ class ServerAddon implements UserApp{
     key:string;
     constructor(raw:any) {
         this.name=raw.name;
-        this.invalid=raw.invalid;
-        this.canDelete=raw.canDelete;
+        this.invalid=Helper.toBoolean(raw.invalid);
+        this.canDelete=Helper.toBoolean(raw.canDelete);
         this.source=raw.source;
         this.title=raw.title;
         this.icon=raw.icon;
-        this.keepUrl=raw.keepUrl;
-        this.preventConnectionLost=raw.preventConnectionLost;
-        this.newWindow=raw.newWindow;
+        this.keepUrl=Helper.toBoolean(raw.keepUrl);
+        this.preventConnectionLost=Helper.toBoolean(raw.preventConnectionLost);
+        this.newWindow=Helper.toBoolean(raw.newWindow);
         this.key=raw.key||raw.name;
         this.url=raw.url;
     }

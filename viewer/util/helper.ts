@@ -367,6 +367,11 @@ export const avNavVersion=()=>{
     return version;
 }
 
+export const toBoolean=(obj:any)=>{
+    if (obj == undefined) return false;
+    if (typeof(obj) == "string") return obj.toLowerCase() === "true";
+    return !!obj;
+}
 
 Helper.concat=concat;
 Helper.concatsp=concatsp;
@@ -382,6 +387,7 @@ Helper.setav=setav;
 Helper.isset=isset;
 Helper.urlToString=urlToString;
 Helper.avNavVersion=avNavVersion;
+Helper.toBoolean=toBoolean;
 
 export default Helper;
 

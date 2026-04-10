@@ -319,11 +319,7 @@ export class EditableBooleanParameter extends EditableParameter{
         super(plain,EditableBooleanParameter.TYPE,opt_noFreeze);
     }
     toBool(v:Value):boolean{
-        if (v === undefined) return false;
-        if (typeof(v) === 'string'){
-            return v.toLowerCase() === 'true';
-        }
-        return !!v;
+        return Helper.toBoolean(v)
     }
 
     /**
