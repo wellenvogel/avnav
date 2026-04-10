@@ -103,8 +103,9 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                         mandatory={(v)=>!v}
                         checkName={checkNameFunction}
                         resolveFunction={(res)=>{
-                            const name=(res||{}).name;
+                            let name=(res||{}).name;
                             if (!name) return;
+                            name=name+".html";
                             const data = getTemplate(name);
                             dialogContext.showDialog(() => <EditDialogWithSave
                                 data={data}

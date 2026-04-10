@@ -53,7 +53,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
         });
         //this.flask.addLanguage(language,Prism.languages[language]);
         if (flask.current) {
-            flask.current.updateCode(data, true);
+            flask.current.updateCode(data||'\n', true);
             flask.current.onUpdate(() => setChanged(true));
         }
     }, [data]);
@@ -122,7 +122,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
             }
         })
     }
-    return <DialogFrame fullscreen={fullscreen} title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
+    return <DialogFrame fullscreen={Helper.unsetorTrue(fullscreen)} title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
         <UploadHandler
             file={uploadFile}
             local={true}
