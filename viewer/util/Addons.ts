@@ -7,7 +7,6 @@ import {UserButtonProps} from "./api.impl";
 import Helper from "./helper";
 import {PluginPage, UserApp, UserButton} from "../api/api.interface";
 import {StoreCallback} from "./store";
-import {Page} from "./keyhandler";
 import {PAGEIDS} from "./pageids";
 import {ButtonAddonType, DynamicButtonProps} from "../components/Button";
 
