@@ -227,7 +227,7 @@ class AVNApi(object):
     """
     raise NotImplemented()
 
-  def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False):
+  def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False,name=None,page=None):
     """
     register a user app to be displayed
     this should be called only early - i.e. at the beginning of the run method

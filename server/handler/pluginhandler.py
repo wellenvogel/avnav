@@ -60,10 +60,12 @@ ENV_PREFIX = "AVNAV_HIDE_"
 
 
 class UserApp(object):
-    def __init__(self, url, icon, title):
+    def __init__(self, url, icon, title,name=None,page=None):
         self.url = url
         self.title = title
         self.icon = icon
+        self.name=name
+        self.page=page
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -331,7 +333,7 @@ class ApiImpl(AVNApi):
             return
         self.phandler.setInfo(self.prefix, info, value)
 
-    def registerUserApp(self, url, iconFile, title=None, preventConnectionLost=False):
+    def registerUserApp(self, url, iconFile, title=None, preventConnectionLost=False,name=None,page=None):
         addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
         if addonhandler is None:
             raise Exception("no http server")
@@ -341,7 +343,7 @@ class ApiImpl(AVNApi):
         if not os.path.exists(iconFilePath):
             raise Exception("icon file %s not found" % iconFilePath)
         id = "%s%i" % (self.prefix, self.addonIndex)
-        userApp = UserApp(url, iconFile, title)
+        userApp = UserApp(url, iconFile, title,name=name,page=page)
         if userApp in self.userApps:
             self.log("trying to re-register user app url=%s, ignore", url)
             return
@@ -358,7 +360,7 @@ class ApiImpl(AVNApi):
                     raise Exception("file %s not found" % fn)
                 url = f"{URL_PREFIX}/{self.prefix}/{urllib.parse.quote(url)}"
         addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile)),
-                                   title=title, preventConnectionLost=preventConnectionLost, pluginName=self.prefix)
+                                   title=title, preventConnectionLost=preventConnectionLost, pluginName=self.prefix,page=userApp.page)
         self.addonIndex += 1
         return id
 
