@@ -70,9 +70,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
                 if (last) {
                     for (const button of currentButtons.current){
                         if (button.name === last && button.isAddon){
-                            window.setTimeout(()=> {
-                                keyhandler.callHandler('button', last);
-                            },0);
+                            keyhandler.callHandler('button', last);
                             hasSet=true;
                             break;
                         }
@@ -83,9 +81,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
                     for (const button of currentButtons.current){
                         if (! button.isAddon) continue;
                         if (button.name && button.onClick){
-                            window.setTimeout(()=> {
-                                keyhandler.callHandler('button', button.name);
-                            },0);
+                            keyhandler.callHandler('button', button.name);
                             break;
                         }
                     }
