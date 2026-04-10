@@ -141,10 +141,8 @@ const Button = (sprops:ButtonProps) => {
     useEffect(() => {
         return ()=>{
             ctx.cleanup();
-            base.log("button dismiss",sprops.name,idxRef.current,ctx.getValue('toggle'));
         }
     }, [sprops.name]);
-    base.log("button render",sprops.name,idxRef.current, ctx.getValue('toggle'));
     for (const k of ['visible','icon','className']){
         const v=ctx.getValue(k);
         if (v !== undefined) {

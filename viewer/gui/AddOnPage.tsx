@@ -15,7 +15,6 @@ import {useHistory} from "../components/HistoryProvider";
 import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
 import ButtonList from "../components/ButtonList";
-import base from "../base";
 
 const PAGE=PAGEIDS.ADDON;
 export interface AddOnPageProps extends Partial<PageProps> {}
@@ -23,7 +22,6 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     useStoreState(keys.gui.global.reloadSequence);
     useStoreState(keys.gui.global.addonsChanged);
     const history=useHistory();
-    base.log("AddOnPage render",props);
     const currentButtons=useRef<ButtonDef[]>(null);
     const showApp=useCallback(()=>{
         if (! currentButtons.current) return;
@@ -88,7 +86,6 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     currentButtons.current=finalButtons;
 
     useEffect(() => {
-        base.log(PAGE,"handleInitialButton")
         const remoteToken=remotechannel.subscribe(COMMANDS.addOn,(addon:string)=>{
             keyhandler.callHandler('button',addon);
         })
@@ -98,7 +95,6 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
             }
         }
         return ()=>{
-            base.log("AddOnPage dismiss");
             remotechannel.unsubscribe(remoteToken);
         }
     }, []);
