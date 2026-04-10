@@ -37,6 +37,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         public String title;
         public String newWindow="false";
         public boolean adaptHttpUrls=false;
+        public String page;
 
         public boolean compare(@Nullable AddonInfo obj) {
             if (this == obj) return true;
@@ -46,6 +47,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                     && Objects.equals(icon,obj.icon)
                     && Objects.equals(title,obj.title)
                     && Objects.equals(newWindow,obj.newWindow)
+                    && Objects.equals(page,obj.page)
                     && adaptHttpUrls == obj.adaptHttpUrls;
         }
 
@@ -60,6 +62,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             rt.put("keepUrl",url.startsWith("http") && ! adaptHttpUrls);
             rt.put("icon",icon);
             rt.put("newWindow",newWindow);
+            rt.put("page",page);
             if (title != null) rt.put("title",title);
             return rt;
         }
@@ -74,6 +77,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             rt.url=o.getString("url");
             if (o.has("newWindow")) {
                 rt.newWindow = o.getString("newWindow");
+            }
+            if (o.has("page")){
+                rt.page=o.getString("page");
             }
             return rt;
         }
@@ -305,6 +311,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             String url=AvnUtil.getMandatoryParameter(uri,"url");
             String icon=AvnUtil.getMandatoryParameter(uri,"icon");
             String newWindow=uri.getQueryParameter("newWindow");
+            String page=uri.getQueryParameter("page");
             ArrayList<AddonInfo> addons=getAddons(false);
             int idx=-1;
             if (name == null){
@@ -317,6 +324,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 newAddon.url=url;
                 newAddon.icon=icon;
                 newAddon.title=title;
+                newAddon.page=page;
                 if (newWindow != null) newAddon.newWindow=newWindow;
                 addons.add(newAddon);
             }
@@ -329,6 +337,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 current.icon=icon;
                 current.title=title;
                 current.url=url;
+                current.page=page;
                 if (newWindow != null) current.newWindow=newWindow;
             }
             saveAddons(addons);
