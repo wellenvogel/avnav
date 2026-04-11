@@ -1,10 +1,11 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import Button, {ButtonDef,  DynamicButtonProps} from './Button';
+import Button, {ButtonDef, ButtonEvent, DynamicButtonProps} from './Button';
 import {dynamicWrapper, useStore} from '../hoc/Dynamic';
 import keys from '../util/keys';
 import ItemList from './ItemList';
 import Helper from "../util/helper";
 import {PageType} from "../util/pageids";
+import {addonViewManager} from "./AddonView";
 
 const storeKeys={
     maxButtons: keys.properties.maxButtons,
@@ -96,6 +97,18 @@ const ButtonList = (iprops:ButtonListProps) => {
         if (visibility[stateKey] === visible) return;
         setVisbility(stateKey, visible);
     }
+    const injectConfig=(button:ButtonDescription)=>{
+        return {
+            ...button,
+            dataChanged:buttonChanged,
+            onClick:(ev:ButtonEvent)=>{
+                if (!button.isAddon){
+                    addonViewManager.setPageAddon(iprops.page);
+                }
+                button.onClick(ev);
+            }
+        }
+    }
     useEffect(() => {
         if (!buttonListRef.current) return;
         const rect = buttonListRef.current.getBoundingClientRect();
@@ -119,10 +132,10 @@ const ButtonList = (iprops:ButtonListProps) => {
         const stateKey = getStateKey(button);
         if (!stateKey) continue;
         if (!sprops.buttonsHidden && (visibility[stateKey] === undefined || visibility[stateKey])) {
-            items.push({...button,dataChanged:buttonChanged});
+            items.push(injectConfig(button));
             if (button.overflow) allowedOverflowItems++;
         } else {
-            invisibleItems.push({...button,dataChanged:buttonChanged});
+            invisibleItems.push(injectConfig(button));
         }
     }
     items = itemSort(items);
