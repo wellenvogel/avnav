@@ -26,7 +26,7 @@ import DimHandler from '../util/dimhandler';
 import FullScreen from '../util/Fullscreen';
 import propertyhandler, {SavedSettingsData} from '../util/propertyhandler';
 import Toast from "./Toast";
-import Button, {ButtonEvent} from "./Button";
+import Button, {ButtonEvent, DynamicButtonProps} from "./Button";
 import {EditableStringParameterBase, Properties, SelectListEntry, Value, Values} from "../util/EditableParameter";
 import {
     default as EditableParameterUIFactory,
@@ -560,6 +560,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
 export interface SaveSettingsDialogProps{
     values?:Record<string, PropertyValue>;
     title?:React.ReactNode;
+    additionalButtons?:DynamicButtonProps[]
 }
 export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
     const actions = createItemActions({type:'settings'});
@@ -606,6 +607,7 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                 title={props.title|| "Select Name to save settings"}
                 iname={proposedName}
                 checkName={checkFunction}
+                additionalButtons={props.additionalButtons}
                 />
 }
 

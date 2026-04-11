@@ -167,7 +167,7 @@ export const anchorWatchDialog = (opt_dialogContext,opt_replace)=> {
 };
 export const AnchorWatchKeys={
     watchDistance:keys.nav.anchor.watchDistance,
-    connected:keys.properties.connectedMode
+    connected:keys.gui.global.connectedMode
 };
 export const isWatchActive=(state)=>{
     if (state === undefined){

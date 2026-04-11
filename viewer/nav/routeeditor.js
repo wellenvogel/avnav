@@ -423,7 +423,7 @@ class RouteEdit{
         let data=load(this.storeKeys);
         const route=StateHelper.route(data);
         if (! route) return false;
-        if (route.isServer() && ! globalStore.getData(keys.properties.connectedMode,false)) return false;
+        if (route.isServer() && ! globalStore.getData(keys.gui.global.connectedMode,false)) return false;
         return true;
     }
     hasRoute(){

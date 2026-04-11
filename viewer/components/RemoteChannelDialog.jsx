@@ -52,7 +52,7 @@ const storeKeys={
     channel: keys.properties.remoteChannelName,
     write: keys.properties.remoteChannelWrite,
     read: keys.properties.remoteChannelRead,
-    connected: keys.properties.connectedMode
+    connected: keys.gui.global.connectedMode
 };
 
 export default  (options)=>{

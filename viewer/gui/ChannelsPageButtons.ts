@@ -28,7 +28,7 @@ export const ChannelsPageButtonsPlain=propsToDefs([
     {
         name: 'StatusAdd',
         displayName: "add connection",
-        storeKeys: {visible:keys.properties.connectedMode}
+        storeKeys: {visible:keys.gui.global.connectedMode}
     }
 ])
 export default GeneralButtons.concat(ChannelsPageButtonsPlain);

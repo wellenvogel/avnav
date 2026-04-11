@@ -236,7 +236,7 @@ const isRouteInList=(routeList,route)=>{
 
 const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUpload})=>{
     const dialogContext=useDialogContext();
-    const [,,connectedModeRef]=useStoreState(keys.properties.connectedMode);
+    const [,,connectedModeRef]=useStoreState(keys.gui.global.connectedMode);
     const [wrOnly,setWrOnly,wrOnlyRef]=useStateRef(true);
     const itemActions=createItemActions('route').copy({
         canModify:(item)=>(!item.server || connectedModeRef.current),
@@ -325,7 +325,7 @@ const EditRouteDialog = (props) => {
     const dialogContext = useDialogContext();
     const [route, setRoute] = useState(props.route);
     const [inverted, setInverted] = useState(false);
-    const [connectedMode]=useStoreState(keys.properties.connectedMode)
+    const [connectedMode]=useStoreState(keys.gui.global.connectedMode)
     const isActiveRoute = useCallback(() => {
         return  StateHelper.isSameRoute(activeRouteState,route);
     }, [activeRouteState,route]);
@@ -595,7 +595,7 @@ const EditRoutePage = (props) => {
     const activeState=useStore({storeKeys:activeRoute.getStoreKeys()})
     const [wpButtonsVisible, setWpButtonsVisible] = useState(false);
     const [lastCenteredWp, setLastCenteredWp] = useState();
-    const [connectedMode]=useStoreState(keys.properties.connectedMode);
+    const [connectedMode]=useStoreState(keys.gui.global.connectedMode);
     const hasCentered = useRef(false);
     const showingActiveRoute=isActiveRoute(activeState,editorState);
     const routeWritable=!StateHelper.isServerRoute(showingActiveRoute?activeState:editorState) || connectedMode;

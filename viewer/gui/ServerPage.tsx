@@ -116,7 +116,7 @@ const ServerPage = (iprops: PageBaseProps) => {
     const history = useHistory();
     const props = useStore(iprops, {
         storeKeys: {
-            connected: keys.properties.connectedMode,
+            connected: keys.gui.global.connectedMode,
             android: keys.gui.global.onAndroid,
             config: keys.gui.capabilities.config,
             log: keys.gui.capabilities.log,

@@ -121,7 +121,7 @@ const Router = (props) => {
     const dialogContext = useDialogContext();
     const connectedMode=useRef(false);
     const checkRoutes=useCallback(()=>{
-        const current=globalStore.getData(keys.properties.connectedMode);
+        const current=globalStore.getData(keys.gui.global.connectedMode);
         if (current != connectedMode.current){
             if (current){
                 dialogContext.showDialog(()=><RouteSyncDialog
@@ -132,7 +132,7 @@ const Router = (props) => {
         }
     })
     useEffect(()=>{
-        globalStore.register(checkRoutes,keys.properties.connectedMode);
+        globalStore.register(checkRoutes,keys.gui.global.connectedMode);
         return ()=>globalStore.deregister(checkRoutes);
     })
     useEffect(()=>{
@@ -252,7 +252,7 @@ class App extends React.Component {
             base.log("android integration enabled");
             globalStore.storeData(keys.gui.global.onAndroid, true, true);
             globalStore.storeData(keys.properties.routingServerError, false, true);
-            globalStore.storeData(keys.properties.connectedMode, true, true);
+            globalStore.storeData(keys.gui.global.connectedMode, true, true);
             window.avnavAndroid.applicationStarted();
             const receiveAndroidEvent = (key, id) => {
                 try {

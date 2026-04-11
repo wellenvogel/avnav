@@ -44,7 +44,7 @@ export default GeneralButtons.concat(propsToDefs([
         displayName: 'load settings',
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
-            connected: keys.properties.connectedMode,
+            connected: keys.gui.global.connectedMode,
             allowed: keys.gui.capabilities.uploadSettings
         },
         updateFunction: (state: Record<string, any>) => {
@@ -59,7 +59,7 @@ export default GeneralButtons.concat(propsToDefs([
         displayName: 'save settings',
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
-            connected: keys.properties.connectedMode,
+            connected: keys.gui.global.connectedMode,
             allowed: keys.gui.capabilities.uploadSettings
         },
         updateFunction: (state: Record<string, any>) => {

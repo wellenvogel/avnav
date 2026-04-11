@@ -271,7 +271,7 @@ export const DownloadItemList = (
                 onClick={() => {
                     createAction.action(dialogContext);
                 }}
-                storeKeys={{visible: keys.properties.connectedMode}}
+                storeKeys={{visible: keys.gui.global.connectedMode}}
             />
             :
             null}

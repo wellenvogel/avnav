@@ -44,7 +44,7 @@ interface MainStatusProps{
 
 }
 const MainStatus=(props:MainStatusProps)=>{
-    const canEdit=globalstore.getData(keys.properties.connectedMode);
+    const canEdit=globalstore.getData(keys.gui.global.connectedMode);
     const dialogContext=useDialogContext()
     return <div className="status" >
         <StatusItem name={'Converter'}
@@ -87,7 +87,7 @@ interface ImporterProps extends ChildStatusProps{
 }
 const ImporterItem=(props:ImporterProps)=>{
     if (!props.name || !props.name.match(/^conv:/)) return null;
-    const canEdit=globalstore.getData(keys.properties.connectedMode);
+    const canEdit=globalstore.getData(keys.gui.global.connectedMode);
     const dialogContext=useDialogContext();
     const showEditDialog=useCallback((_handlerId:string|number, _id:string)=> {
                 showDialog(dialogContext, () => <ImportStatusDialog

@@ -53,7 +53,7 @@ const ACTIVE_CLASS='activeEntry';
 // eslint-disable-next-line react/display-name
 export default (props:StatusViewProps)=>{
     const [statusList, setStatusList] = useState<any[]>([]);
-    const connected=globalstore.getData(keys.properties.connectedMode);
+    const connected=globalstore.getData(keys.gui.global.connectedMode);
     const allowEdit=Helper.unsetorTrue(props.allowEdit);
     const [focusItem,setFocusItem]=useState(props.focusItem);
     const lastFocusItem=useRef(null);

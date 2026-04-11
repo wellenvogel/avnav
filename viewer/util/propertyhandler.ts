@@ -452,7 +452,7 @@ class PropertyHandler {
                        data:SavedSettingsData|string,
                        opt_check?:boolean,
                        opt_overwrite?:boolean,){
-        if (!globalStore.getData(keys.properties.connectedMode,false)){
+        if (!globalStore.getData(keys.gui.global.connectedMode,false)){
             return Promise.reject("not in connected mode, cannot upload");
         }
         const upload=(data:SavedSettingsData|string)=>{

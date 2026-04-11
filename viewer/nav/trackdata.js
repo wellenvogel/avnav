@@ -187,7 +187,7 @@ class TrackData {
             globalStore.storeData(keys.nav.track.currentTrack, []);
             return true;
         }
-        if (globalStore.getData(keys.properties.connectedMode)){
+        if (globalStore.getData(keys.gui.global.connectedMode)){
             Requests.getJson({
                 request: 'api',
                 type: 'track',

@@ -28,7 +28,7 @@ import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../util/Fullscreen';
 // @ts-ignore
 import splitsupport from '../util/splitsupport';
-import GeneralButtons, {Connected} from "./GeneralButtons";
+import GeneralButtons from "./GeneralButtons";
 
 export default updateButtons(GeneralButtons.concat(propsToDefs([
     {
@@ -42,7 +42,6 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
         editDisable: true,
         overflow: true
     },
-    Connected,
     {
         name: 'ShowGps',
         displayName: 'dashboard',
@@ -61,7 +60,7 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
         overflow: true,
         storeKeys: {
             visible: keys.gui.capabilities.uploadOverlays,
-            connected: keys.properties.connectedMode
+            connected: keys.gui.global.connectedMode
         },
         updateFunction: (state)=>{
             return {

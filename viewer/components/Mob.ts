@@ -23,7 +23,7 @@ const controlMob=(start:boolean,history: IHistory)=>{
     if (start){
         if (isActive) return;
         if (! globalStore.getData(keys.nav.gps.valid)) return;
-        if (! globalStore.getData(keys.properties.connectedMode)) return;
+        if (! globalStore.getData(keys.gui.global.connectedMode)) return;
         LayoutHandler.resetEditing();
         const target=navobjects.WayPoint.fromPlain(globalStore.getData(keys.nav.gps.position));
         target.name=navobjects.WayPoint.MOB;
@@ -57,7 +57,7 @@ const toggleMob=(history:IHistory)=>{
 const mobDefinition=()=>{return {
     name: "MOB",
     displayName: "MOB",
-    storeKeys: activeRoute.getStoreKeys({visible:keys.properties.connectedMode, hasGps: keys.nav.gps.valid}),
+    storeKeys: activeRoute.getStoreKeys({visible:keys.gui.global.connectedMode, hasGps: keys.nav.gps.valid}),
     updateFunction:(state:Record<string, any>)=>{
         const toggle=StateHelper.targetName(state) === navobjects.WayPoint.MOB
         return {

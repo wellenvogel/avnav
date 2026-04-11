@@ -313,7 +313,7 @@ export const overlayDialog=(dialogContext,opt_chartName,opt_updateCallback)=>{
     if (! current) return;
     let currentChart=MapHolder.getCurrentChartEntry()||{};
     showDialog(dialogContext,(props)=> {
-        let canEdit=globalStore.getData(keys.properties.connectedMode,false) ;
+        let canEdit=globalStore.getData(keys.gui.global.connectedMode,false) ;
         return <EditOverlaysDialog
             {...props}
             chartName={opt_chartName||currentChart.name}

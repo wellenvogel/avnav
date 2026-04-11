@@ -171,13 +171,6 @@ class MainPage extends React.Component {
                     this.props.history.push('downloadpage')
                 }
             },
-            Connected: {
-                onClick: () => {
-                    let con = globalStore.getData(keys.properties.connectedMode, false);
-                    con = !con;
-                    globalStore.storeData(keys.properties.connectedMode, con);
-                }
-            },
             ShowGps: {
                 onClick: () => {
                     this.props.history.push('gpspage')
@@ -232,7 +225,7 @@ class MainPage extends React.Component {
         if (props.selected) cls+=" activeEntry";
         if (props.originalScheme) cls+=" userAction";
         cls+=props.hasOverlay?" withOverlays":" noOverlays";
-        let isConnected=globalStore.getData(keys.properties.connectedMode,false);
+        let isConnected=globalStore.getData(keys.gui.global.connectedMode,false);
         return (
             <div className={cls} onClick={props.onClick}>
                 <img src={getUrlWithBase(props,'icon')||chartImage}/>

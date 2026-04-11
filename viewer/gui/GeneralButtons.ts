@@ -38,7 +38,7 @@ export const Connected:DynamicButtonProps={
     displayName: 'connected',
     storeKeys: {
         onAndroid:keys.gui.global.onAndroid,
-        connected: keys.properties.connectedMode,
+        connected: keys.gui.global.connectedMode,
         canConnect: keys.gui.capabilities.canConnect},
     updateFunction: (state) => {
         return {

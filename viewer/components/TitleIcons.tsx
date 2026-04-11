@@ -37,6 +37,7 @@ import {reloadPage} from "../util/helper";
 import LeaveHandler from "../util/leavehandler"
 import {useDialogContext} from "./DialogContext";
 import {SaveSettingsDialog} from "./Settings";
+import propertyhandler from "../util/propertyhandler";
 
 export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
     const dialogContext=useDialogContext();
@@ -83,12 +84,21 @@ export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
         {!sprops.connected && <span className="disconnectedIcon" onClick={()=>{
             if (globalstore.getData(keys.gui.global.onAndroid) ||  !globalStore.getData(keys.gui.capabilities.canConnect)) return;
             showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={"End disconnected mode?"}/>)
-                .then(()=>globalStore.storeData(keys.properties.connectedMode,true))
+                .then(()=>globalStore.storeData(keys.gui.global.connectedMode,true))
                 .catch(()=>{});
         }}/>}
         {settingsChanged && <span className="settingsChangedIcon" onClick={()=>{
             showDialog(dialogContext,()=><SaveSettingsDialog
                 title={"Settings are changed, select name to save to server"}
+                additionalButtons={[
+                    {
+                        name: 'ignore',
+                        label: 'Ignore',
+                        onClick: () => {
+                            propertyhandler.setChangedFlag(false);
+                        }
+                    }
+                ]}
             />)
         }}/>}
     </div>

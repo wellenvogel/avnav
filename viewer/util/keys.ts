@@ -315,6 +315,7 @@ const keys:Record<string,KeyType>={
             pluginLoadingDone:K,
             settingsChanged:K,
             addonsChanged:K,
+            connectedMode:K
         },
         gpspage:{
             pageNumber:K,
@@ -351,7 +352,6 @@ const keys:Record<string,KeyType>={
         startLastSplit: new Property(false,"start with last split mode",PropertyType.CHECKBOX),
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         alarmVolume: new Property(50,"Alarm Volume (0...100)",PropertyType.RANGE,[0,100]),
-        connectedMode: new SplitProperty(true, "connected", PropertyType.CHECKBOX),
         readOnlyServer: new Property(false),
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
@@ -532,6 +532,7 @@ const keys:Record<string,KeyType>={
         minAISspeed: new Property(0.1,"",PropertyType.DELETED), //minimal speed in m/s that we consider when computing cpa/tcpa
         navUrl: new Property("/api","",PropertyType.DELETED),
         lastLoadedName: new Property('system.default','',PropertyType.DELETED),
+        connectedMode: new Property(true, "connected", PropertyType.DELETED),
     }
 };
 

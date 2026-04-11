@@ -117,7 +117,7 @@ class  RouteData {
          * @private
          * @type {boolean}
          */
-        this.connectMode = !!globalStore.getData(keys.properties.connectedMode);
+        this.connectMode = !!globalStore.getData(keys.gui.global.connectedMode);
 
         /**
          * if set all routes are not from the server....
@@ -163,7 +163,7 @@ class  RouteData {
 
         globalStore.register(() => {
             let oldcon = !!this.connectMode;
-            this.connectMode = !!globalStore.getData(keys.properties.connectedMode);
+            this.connectMode = !!globalStore.getData(keys.gui.global.connectedMode);
             this.readOnlyServer = globalStore.getData(keys.properties.readOnlyServer);
             if (oldcon !== this.connectMode) {
                 //prevent sending anything to the server
@@ -453,7 +453,7 @@ class  RouteData {
         if (!globalStore.getData(keys.gui.capabilities.uploadRoute, false)) {
             return list;
         }
-        let canDelete = globalStore.getData(keys.properties.connectedMode, false);
+        let canDelete = globalStore.getData(keys.gui.global.connectedMode, false);
         const data = await Requests.getJson({
             request: 'api',
             type: 'route',

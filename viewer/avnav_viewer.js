@@ -111,8 +111,11 @@ export default function() {
     }
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
-        globalStore.storeData(keys.properties.connectedMode,false,true);
+        globalStore.storeData(keys.gui.global.connectedMode,false,true);
         globalStore.storeData(keys.gui.capabilities.canConnect,false,true);
+    }
+    else{
+        globalStore.storeData(keys.gui.global.connectedMode,true,true);
     }
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();

@@ -35,7 +35,7 @@ export default GeneralButtons.concat(propsToDefs([
         overflow: true,
         editDisable: true,
         storeKeys: {
-            enabled: keys.properties.connectedMode
+            enabled: keys.gui.global.connectedMode
         },
         updateFunction:(state)=>{
             return {

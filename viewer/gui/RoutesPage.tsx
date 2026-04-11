@@ -96,9 +96,9 @@ const RoutesPage=(props:RoutesPageProps)=>{
          },
          Connected: {
              onClick: () => {
-                 let con = globalstore.getData(keys.properties.connectedMode, false);
+                 let con = globalstore.getData(keys.gui.global.connectedMode, false);
                  con = !con;
-                 globalstore.storeData(keys.properties.connectedMode, con);
+                 globalstore.storeData(keys.gui.global.connectedMode, con);
              }
          },
          ShowSettings:{

@@ -44,7 +44,7 @@ export const nameProposal=(prefix)=>{
     return (prefix||'')+formatter.formatDateTime(dt).replace(/[: /]/g,'');
 }
 
-export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension}) => {
+export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension,additionalButtons}) => {
     const fixedExtRef=useRef(undefined);
     if (keepExtension && fixedExtRef.current === undefined) {
         let [fn,ext] = Helper.getNameAndExt(iname || '');
@@ -117,7 +117,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         }
         cr.then(()=>checkResult(),(err)=>checkResult(err));
     },[checkName,checkResult])
-    const buttonList=[
+    let buttonList=[
         {
           name:'reset',
           label:'Clear',
@@ -144,6 +144,9 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             },
             close:false
         })
+    }
+    if (additionalButtons){
+        buttonList=additionalButtons.concat(buttonList);
     }
     const fixedSuffix=fixedExtRef.current?fixedExtRef.current:fixedExt;
     return <DialogFrame className={"itemNameDialog"} title={titlevalue}>
@@ -177,7 +180,8 @@ ItemNameDialog.propTypes={
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string,  //set a fixed extension (display only)
     fixedPrefix: PropTypes.string, //set a fixed prefix (display only)
-    keepExtension: PropTypes.bool //do not allow to change the extension
+    keepExtension: PropTypes.bool, //do not allow to change the extension
+    additionalButtons: PropTypes.arrayOf(PropTypes.object),
 }
 export const safeName=(name)=>{
     if (! name) return;

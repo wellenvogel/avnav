@@ -189,7 +189,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                 onClick: () => showDialog(undefined, () => <SaveSettingsDialog/>),
                 storeKeys: {
                     editing: keys.gui.global.layoutEditing,
-                    connected: keys.properties.connectedMode,
+                    connected: keys.gui.global.connectedMode,
                     allowed: keys.gui.capabilities.uploadSettings
                 },
                 updateFunction: (state: Record<string, any>) => {

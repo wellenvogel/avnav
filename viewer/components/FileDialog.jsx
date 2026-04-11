@@ -887,7 +887,7 @@ export class ItemActions extends CopyAware {
         return title + `extension ${ext} not allowed, only ` + this.allowedExtensions.join(",");
     }
     isConnected() {
-        return globalStore.getData(keys.properties.connectedMode);
+        return globalStore.getData(keys.gui.global.connectedMode);
     }
     canEditOverlays() {
         return globalStore.getData(keys.gui.capabilities.uploadOverlays) && this.isConnected();
