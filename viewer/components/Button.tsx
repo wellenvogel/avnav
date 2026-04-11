@@ -156,7 +156,7 @@ const Button = (sprops:ButtonProps) => {
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
+    const {noDialogsClose,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
     if (visible !== undefined && ! visible) {
         return null;
     }

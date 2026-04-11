@@ -137,7 +137,6 @@ const fullScreenDefinition={
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...
             // @ts-ignore
             visible: state.visible && fullScreenAvailable() && ! window.avnavAndroid,
-            dummy: state.toggle,
             icon: fullScreenIcon
         }
     },

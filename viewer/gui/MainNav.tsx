@@ -163,9 +163,9 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence,pageref}:PageRowP
                     return <ButtonRow
                             {...bt}
                             key={bt.name}
-                            onClick={(ev) => {
+                            onClick={async (ev) => {
                                 if (isCurrent) {
-                                    dialogContext.closeDialog();
+                                    await dialogContext.closeDialog();
                                     keyhandler.callHandler('button',bt.name);
                                     return;
                                 }
