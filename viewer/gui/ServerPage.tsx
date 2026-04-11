@@ -250,7 +250,7 @@ const ServerPage = (iprops: PageBaseProps) => {
     const title="Server"+(showAll?" [All]":"");
     return (
         <PageFrame id={PAGEIDS.SERVER} className={className}>
-            <PageLeft title={serverError ? "Server Connection lost" : title}>
+            <PageLeft id={PAGEIDS.SERVER} title={serverError ? "Server Connection lost" : title}>
                 <StatusView
                     focusItem={focusId}
                     allowEdit={true}

@@ -77,7 +77,9 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
      buttonListRef.current=updateButtons(AisCfgPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
-        <PageLeft title={TITLE}>
+        <PageLeft
+            id={PAGE}
+            title={TITLE}>
             <MultiView
                 {...scrollProps}
                        views={[

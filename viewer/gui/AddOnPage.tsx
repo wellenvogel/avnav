@@ -15,6 +15,7 @@ import {useHistory} from "../components/HistoryProvider";
 import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
 import ButtonList from "../components/ButtonList";
+import {addonViewManager} from "../components/AddonView";
 
 const PAGE=PAGEIDS.ADDON;
 export interface AddOnPageProps extends Partial<PageProps> {}
@@ -23,30 +24,27 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
     useStoreState(keys.gui.global.addonsChanged);
     const history=useHistory();
     const currentButtons=useRef<ButtonDef[]>(null);
-    const showApp=useCallback(()=>{
-        if (! currentButtons.current) return;
-        let hasSet=false;
+    const showApp = useCallback(() => {
+        if (!currentButtons.current) return;
         const last = globalStore.getData(keys.gui.addonpage.activeAddOn);
         if (last) {
-            for (const button of currentButtons.current){
-                if (button.name === last && button.isAddon === ButtonAddonType.CONFIG){
+            if (addonViewManager.hasPageAddon(props.id, last)) return;
+            for (const button of currentButtons.current) {
+                if (button.name === last && button.isAddon === ButtonAddonType.CONFIG) {
                     keyhandler.callHandler('button', last);
-                    hasSet=true;
-                    break;
+                    return;
                 }
             }
         }
-        if (! hasSet){
-            //no addon select - trigger the first button
-            for (const button of currentButtons.current){
-                if (button.isAddon !== ButtonAddonType.CONFIG) continue;
-                if (button.name && button.onClick){
-                    keyhandler.callHandler('button', button.name);
-                    break;
-                }
+        //no addon select - trigger the first button
+        for (const button of currentButtons.current) {
+            if (button.isAddon !== ButtonAddonType.CONFIG) continue;
+            if (button.name && button.onClick) {
+                keyhandler.callHandler('button', button.name);
+                break;
             }
         }
-    },[])
+    }, [])
         const buttonActions:Record<string,Partial<DynamicButtonProps>> = {
             Back: {
                 onClick: () => {
@@ -103,7 +101,9 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         {...props}
         id={PAGE}
         >
-        <PageLeft title={PAGE_TITLES.ADDON}>
+        <PageLeft
+            id={props.id}
+            title={PAGE_TITLES.ADDON}>
             <div className="emptyPage">
                 No USer App Selected
             </div>

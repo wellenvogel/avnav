@@ -4,6 +4,7 @@ import {dynamicWrapper, useStore} from '../hoc/Dynamic';
 import keys from '../util/keys';
 import ItemList from './ItemList';
 import Helper from "../util/helper";
+import {PageType} from "../util/pageids";
 
 const storeKeys={
     maxButtons: keys.properties.maxButtons,
@@ -18,7 +19,7 @@ const storeKeys={
 }
 export type ButtonDescription=ButtonDef|DynamicButtonProps;
 export interface ButtonListProps{
-    page: string;
+    page: PageType;
     itemList: ButtonDescription[];
     widthChanged?: (width:number)=>void;
     className?: string;

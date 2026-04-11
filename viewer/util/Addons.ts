@@ -239,16 +239,18 @@ const isOnPage=(page:string,pageDef:PluginPage|[PluginPage])=>{
     }
     return false;
 }
+export interface PageUserButton extends DynamicButtonProps{
+    config?:AddonProps
+}
 const getPageUserButtons=(
     page:string,
     includeInvalid?:boolean,
-    ):DynamicButtonProps[]=>{
-    const rt:DynamicButtonProps[]=[];
+    ):PageUserButton[]=>{
+    const rt:PageUserButton[]=[];
     for (const k in pluginUserButtons){
         const buttonDef=pluginUserButtons[k];
         if (isOnPage(page,buttonDef.page)){
-            rt.push({...buttonDef.button,overflow:true,isAddon:ButtonAddonType.USER_HANDLER,
-                noDialogsClose:true});
+            rt.push({...buttonDef.button,overflow:true,isAddon:ButtonAddonType.USER_HANDLER});
         }
     }
     for (const k in pluginAddOns){
@@ -259,8 +261,7 @@ const getPageUserButtons=(
                 name:addon.key||addon.name,
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
-                config: {...addon},
-                noDialogsClose:true
+                config: {...addon}
             }
             rt.push(buttonDef);
         }
@@ -275,8 +276,7 @@ const getPageUserButtons=(
                 name:addon.key||addon.name,
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
-                config: {...addon},
-                noDialogsClose:true
+                config: {...addon}
             }
             rt.push(buttonDef);
         }

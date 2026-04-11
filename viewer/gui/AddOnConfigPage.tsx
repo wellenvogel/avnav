@@ -134,7 +134,7 @@ export const AddonConfigPage=(props:PageProps)=>{
         useInitialButton(currentButtons);
 
         return <PageFrame id={PAGEIDS.ADDCFG}>
-            <PageLeft title={PAGE_TITLES.ADDCFG}>
+            <PageLeft id={PAGEIDS.ADDCFG} title={PAGE_TITLES.ADDCFG}>
                 <MultiView
                     {...scrollProps}
                     maxNumber={props.pageColumns}

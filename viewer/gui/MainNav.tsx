@@ -31,12 +31,12 @@ import MainPageButtons from "./MainPageButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import DownloadPageButtons from "./DownloadPageButtons";
-import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
+import {PAGE_TITLES, PAGEIDS, PageType} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
-import addons from '../util/Addons';
+import addons, {PageUserButton} from '../util/Addons';
 import NavPageButtons from "./NavPageButtons";
 import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
 import RoutesPageButtons from "./RoutesPageButtons";
@@ -49,8 +49,8 @@ import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
 import keyhandler from "../util/keyhandler";
-import {addonButtonAction} from "../components/AddonView";
 import {ButtonContextProps} from "../api/api.interface";
+import {injectAddonButtonAction} from "../components/AddonView";
 
 type PageKind='navigation'|'settings';
 
@@ -250,25 +250,19 @@ export const MainNav = (props:MainNavProps) => {
     </DialogFrame>
 }
 export const InjectMainMenu=(
-    pagename:string,
+    pagename:PageType,
     pageButtons:ButtonDef[]|(()=>ButtonDef[]),
     mainCancel?:()=>void,
     ) => {
     const computedButtons=(typeof pageButtons === 'function'? pageButtons() :pageButtons);
-    const addonButtons=addons.getPageUserButtons(pagename)
+    const addonButtons=addons.getPageUserButtons(pagename);
+    const computedAddonButtons:PageUserButton[]=[];
     for (const addonButton of addonButtons){
-        if (!addonButton.onClick && addonButton.config){
-            const appConfig=addonButton.config;
-            addonButton.onClick=(ev:ButtonEvent)=>{
-                addonButtonAction(ev,appConfig,false)
-            }
-            delete addonButton.config;
-        }
+        computedAddonButtons.push(injectAddonButtonAction(addonButton,pagename));
     }
     return propsToDefs([ {
         name: 'MainNav',
         displayName: 'main menu',
-        noDialogsClose: true,
         onClick: async (ev:ButtonEvent)=>{
             const dialogContext=getav(ev).dialogContext;
             const buttonCtx=ev?.avnav?.context
@@ -300,7 +294,7 @@ export const InjectMainMenu=(
         }
     },
         LayoutFinishedDialog.getButtonDef(),
-    ]).concat(computedButtons,propsToDefs(addonButtons));
+    ]).concat(computedButtons,propsToDefs(computedAddonButtons));
 }
 
 export const handleInitialButton = (history: IHistory, _pageButtons?: ButtonDef[], _dialogContext?: IDialogContext) => {

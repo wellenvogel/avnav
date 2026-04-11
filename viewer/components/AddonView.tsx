@@ -21,15 +21,17 @@
  #
  */
  
-import React, {useEffect} from 'react';
+import React, {ElementType, useEffect} from 'react';
 import {UserApp} from "../api/api.interface";
-import {useStore} from "../hoc/Dynamic";
+import {DynamicProps, useStore} from "../hoc/Dynamic";
 import Helper from "../util/helper";
 import Headline from "./Headline";
-import {ButtonEvent} from "./Button";
-import {DialogFrame, showDialog} from "./OverlayDialog";
 // @ts-ignore
 import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
+import {PageType} from "../util/pageids";
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
+import {PageUserButton} from "../util/Addons";
 export interface AddonViewProps extends UserApp{
     className?:string;
     visible?:boolean;
@@ -58,29 +60,70 @@ export const AddonView = (iprops: AddonViewProps): React.ReactNode => {
     </div>
 }
 
-export const addonButtonAction=async (
-    ev:ButtonEvent,
-    config:AddonViewProps,
-    noToggle?:boolean
-    )=>{
+export const injectAddonButtonAction=(
+    button:PageUserButton,
+    page:PageType
+    ):PageUserButton=>{
+    const config=button.config;
+    if (! config){return button}
+    if (button.onClick) return button;
+    const rt={...button};
     if (config.url && config.newWindow){
-        window.open(config.url,config.name);
-        return;
+        rt.onClick=()=> {
+            window.open(config.url, config.name);
+        }
+        return rt;
     }
-    const ctx=ev?.avnav?.context;
-    if (!ctx) return
-    const handle=ctx.hasCleanup()
-    if (handle){
-        await ctx.cleanup();
-        if (! noToggle) return;
+    rt.onClick=()=> {
+        if (addonViewManager.hasPageAddon(page, config.name)) {
+            addonViewManager.setPageAddon(page);
+            return;
+        }
+        addonViewManager.setPageAddon(page, config.name, () => <AddonView {...config}/>);
     }
-    const newHandle=await showDialog(ev?.avnav?.dialogContext,()=>{
-            return <DialogFrame fullscreen={true}>
-                <AddonView {...config}/>
-            </DialogFrame>
-        },
-        ()=>{
-            ctx.cleanup(true);
-        });
-    ctx.setCleanup(newHandle,true);
+    rt.storeKeys={
+        toggle:keys.gui.global.addonViewChanged
+    }
+    rt.updateFunction=(_state:DynamicProps)=>{
+        return {
+            toggle: !! addonViewManager.hasPageAddon(page, config.name),
+        }
+    }
+    return rt;
 }
+
+class PageAddonView{
+    name:string;
+    element:ElementType;
+    constructor(name: string, element:ElementType) {
+        this.name = name;
+        this.element = element;
+    }
+}
+export class AddonViewManager{
+    private activeViews:Record<PageType,PageAddonView>={}
+    constructor(){
+        globalstore.register(()=>{
+            this.activeViews={};
+            globalstore.storeData(keys.gui.global.addonViewChanged,globalstore.getData(keys.gui.global.addonViewChanged,0)+1);
+        },keys.gui.global.addonsChanged);
+    }
+    setPageAddon(page:PageType,name?:string,display?:ElementType){
+        if (! name || ! display){
+            delete this.activeViews[page];
+        }
+        else {
+            this.activeViews[page] = new PageAddonView(name,display);
+        }
+        globalstore.storeData(keys.gui.global.addonViewChanged,globalstore.getData(keys.gui.global.addonViewChanged,0)+1);
+    }
+    hasPageAddon(page:PageType,name:string){
+        const pageItem=this.activeViews[page];
+        return (pageItem?.name ===name);
+    }
+    getPageAddon(page:PageType){
+        return this.activeViews[page]?.element;
+    }
+}
+
+export const addonViewManager=new AddonViewManager();

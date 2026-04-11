@@ -85,7 +85,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
      useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
-        <PageLeft title={TITLE}>
+        <PageLeft id={PAGE} title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
                     <MvHeadline title={"Server"}/>

@@ -871,7 +871,7 @@ const NavPage=(props)=>{
                 <PageFrame
                     {...pageProperties}
                     >
-                    <PageLeft >
+                    <PageLeft id={pageProperties.id}>
                         <OverlayContainer
                             closeCallback={() => history.pop()}>
                             <DialogFrame title={"Waiting for chart"}>

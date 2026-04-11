@@ -115,7 +115,9 @@ const DownloadPage=(props:DownloadPageProps)=>{
     useInitialButton(buttonListRef);
         return (
             <PageFrame id={PAGEIDS.DOWNLOAD}>
-                <PageLeft title={actions.headline}>
+                <PageLeft
+                    id={PAGEIDS.DOWNLOAD}
+                    title={actions.headline}>
                     <DownloadItemList
                         type={type as ItemType}
                         uploadFile={uploadFile}

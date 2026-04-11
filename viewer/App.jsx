@@ -62,6 +62,7 @@ import AisCfgPage from "./gui/AisCfgPage";
 import LayoutsPage from "./gui/LayoutsPage";
 import ChartsPage from "./gui/ChartsPage";
 import addons from "./util/Addons";
+import {addonViewManager} from "./components/AddonView";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -387,7 +388,10 @@ class App extends React.Component {
             this.history.push(startpage);
         }
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
-        this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
+        this.history.setCallback((topEntry,lastEntry)=>{
+            this.leftHistoryState.setState(topEntry,true);
+            addonViewManager.setPageAddon(lastEntry.location); //reset any shown user app
+        });
         GuiHelpers.keyEventHandler(this,()=>{
             Mob.controlMob(true);
         },'global','mobon');

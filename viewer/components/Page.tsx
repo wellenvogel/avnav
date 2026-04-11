@@ -20,17 +20,19 @@ import KeyHandler from '../util/keyhandler';
 import AlarmHandler from '../nav/alarmhandler';
 import {useTimer} from "../util/UiHelper";
 import Helper from "../util/helper";
-import {useStore} from "../hoc/Dynamic";
+import {useStore, useStoreState} from "../hoc/Dynamic";
 import {DialogDisplay} from "./OverlayDialog";
 import {ButtonDef, DynamicButtonProps} from "./Button";
 import {IHistory} from "../util/history";
+import {PageType} from "../util/pageids";
+import {addonViewManager} from "./AddonView";
 
 export interface PageFrameProps{
     className?: string;
     autoHideButtons?: number;
     hideCallback?: ()=>void;
     editingChanged?: ()=>void;
-    id: string;
+    id: PageType;
     children?: React.ReactNode;
     style?:Record<string, any>;
     title?:React.ReactNode;
@@ -39,6 +41,7 @@ export interface PageLeftProps{
     className?: string;
     title?: string;
     children?: React.ReactNode;
+    id:PageType
 }
 
 export interface PageBaseProps{
@@ -47,7 +50,7 @@ export interface PageBaseProps{
     options?: Record<string, any>;
     location: string;
     small: boolean;
-    id: string;
+    id: PageType;
     windowDimensions?:{width:number,height:number};
     pageColumns: number;
 }
@@ -140,13 +143,15 @@ export const PageFrame=
 
 
 export const PageLeft=
-    ({className,title,children}:PageLeftProps)=>{
+    ({className,title,children,id}:PageLeftProps)=>{
+    useStoreState(keys.gui.global.addonViewChanged);
     const Alarm=useCallback(WidgetFactory.createWidget({name:'Alarm'}),[])
+    const AddOn=addonViewManager.getPageAddon(id);
     return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}
             >
-            {title ? <Headline title={title} connectionLost={true}/> : null}
+            {(title && ! AddOn) ? <Headline title={title} connectionLost={true}/> : null}
             <DialogDisplay/>
-            {children}
+            {AddOn?<AddOn></AddOn>:children}
             <Alarm onClick={alarmClick}/>
 
         </div>
@@ -164,7 +169,9 @@ const Page=
             ref={ref}
             >
             {props.floatContent && props.floatContent}
-            <PageLeft title={props.title}>
+            <PageLeft
+                id={props.id}
+                title={props.title}>
                 {props.mainContent ? props.mainContent : null}
                 {props.bottomContent ? props.bottomContent : null}
             </PageLeft>

@@ -310,7 +310,7 @@ const GpsPage = (props:Partial<PageProps>) => {
             id={props.id}
             autoHideButtons={autohide}
         >
-            <PageLeft>
+            <PageLeft id={props.id} >
                 {titleIcons && <DynamicTitleIcons/>}
                 {panelList.map((panelProps) => {
                     return (

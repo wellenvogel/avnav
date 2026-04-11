@@ -456,7 +456,7 @@ const AisPage =(props:AisPageProps)=>{
                 {...props}
                 id={ID}
                 title="Ais">
-                <PageLeft>
+                <PageLeft id={ID}>
                     <CompleteAisListWithStore
                         sortField={options.sortField}
                         mmsi={options.mmsi}

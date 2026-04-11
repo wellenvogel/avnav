@@ -233,7 +233,7 @@ const MapPage =(iprops)=>{
             >
                 {props.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
                 {props.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} />:null}
-                <PageLeft>
+                <PageLeft id={pageProperties.id}>
                         <div className="leftSection">
                             <WidgetContainer
                                 fontSize={props.widgetFontSize + "px"}

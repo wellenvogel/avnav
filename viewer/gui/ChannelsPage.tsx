@@ -52,7 +52,9 @@ const ChannelsPage=()=>{
      buttonListRef.current=updateButtons(ChannelsPageButtons,buttonActions);
      useInitialButton(buttonListRef);
      return <PageFrame id={PAGEIDS.CHANNELS}>
-        <PageLeft title={PAGE_TITLES.CHANNELS}>
+        <PageLeft
+            id={PAGEIDS.CHANNELS}
+            title={PAGE_TITLES.CHANNELS}>
             <StatusView
                 focusItem={foucsId}
                 kinds={[ChannelKinds.CHANNEL]}

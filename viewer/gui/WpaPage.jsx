@@ -304,7 +304,7 @@ export default (props)=>{
         }
     ];
     return <PageFrame id={PAGEIDS.WPA} className={props.className}>
-        <PageLeft title="Wifi Client connection">
+        <PageLeft id={PAGEIDS.WPA} title="Wifi Client connection">
             <WpaPageContent></WpaPageContent>
         </PageLeft>
         <ButtonList

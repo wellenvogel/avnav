@@ -21,7 +21,7 @@
  #
  */
 import remotechannel, {COMMANDS} from "./remotechannel";
-import {PAGEIDS} from "./pageids";
+import {PAGEIDS, PageType} from "./pageids";
 const REMOTE_CMD=COMMANDS.setPage;
 
 export interface HistoryOptions extends Record<string, any> {
@@ -29,13 +29,13 @@ export interface HistoryOptions extends Record<string, any> {
     button?:string;
 }
 export interface HistoryEntry{
-    location:string;
+    location:PageType;
     options?:HistoryOptions;
 }
 interface HistoryEntryInternal extends HistoryEntry{
     back?:HistoryEntryInternal;
 }
-export type HistoryCallback = (history:HistoryEntry) => void;
+export type HistoryCallback = (history:HistoryEntry,previous:HistoryEntry) => void;
 export interface IHistory{
     //access from useHistory
     replace:(location:string,options?:HistoryOptions)=>void;
@@ -67,9 +67,10 @@ class History implements IHistory{
         this.callback=callback;
     }
     setFromRemote(location:string,options?:HistoryOptions){
+        const last=this.history[this.history.length-1];
         this.history.splice(1, this.history.length);
         this.history.push({location:location,options:{...options,remote:true}});
-        this.updateCallback(false, true);
+        this.updateCallback(last,false, true);
     }
     replace(location:string,options?:HistoryOptions){
         if (this.history.length < 1){
@@ -79,41 +80,31 @@ class History implements IHistory{
         const hentry=this.history[this.history.length - 1];
         this.history.splice(-1,1,{location:location,options:options||{},back:hentry});
         this._tryAnchor();
-        this.updateCallback();
+        this.updateCallback(hentry);
     }
-    backFromReplace(opt_popNotFound?:boolean){
-        if (this.history.length < 1) return false;
-        const hentry=this.history[this.history.length - 1];
-        if (!hentry.back) {
-            if (!opt_popNotFound) return false;
-            this.pop();
-            return true;
-        }
-        hentry.location=hentry.back.location;
-        hentry.options=hentry.back.options;
-        hentry.back=hentry.back.back;
-        this.updateCallback();
-        return true;
-    }
+
     setOptions(options?:HistoryOptions|undefined){
         if (this.history.length < 1){
             return false;
         }
         const hentry=this.history[this.history.length - 1];
         hentry.options={...hentry.options,...options}
-        this.updateCallback();
+        this.updateCallback(undefined);
     }
     push(location:string,options?:HistoryOptions){
+        const last=this.history[this.history.length - 1];
         this.history.push({location:location,options:options||{}});
         this._tryAnchor();
-        this.updateCallback();
+        this.updateCallback(last);
     }
     pop(){
+        let last;
         if (this.history.length > 1) {
+            last=this.history[this.history.length - 1];
             this.history.splice(-1, 1);
         }
         this._tryAnchor();
-        this.updateCallback(true);
+        this.updateCallback(last,true);
     }
 
     /**
@@ -148,8 +139,9 @@ class History implements IHistory{
      * remove all except the first entries
      */
     reset(){
+        const last=this.history[this.history.length - 1];
         this.history.splice(1,this.history.length);
-        this.updateCallback();
+        this.updateCallback(last);
     }
 
     /**
@@ -157,7 +149,7 @@ class History implements IHistory{
      * @param opt_returning - legacy support with returning flag
      * @param opt_noremote
      */
-    updateCallback(opt_returning?:boolean, opt_noremote?:boolean){
+    updateCallback(last:HistoryEntry,opt_returning?:boolean, opt_noremote?:boolean){
         let topEntry:HistoryEntry={location:PAGEIDS.MAIN};
         if (this.history.length > 0){
             topEntry=this.history[this.history.length-1];
@@ -168,7 +160,7 @@ class History implements IHistory{
                 topEntry.options.returning=true;
             }
         }
-        if (this.callback) this.callback(topEntry);
+        if (this.callback) this.callback(topEntry,last);
         if (! opt_noremote){
             this.remoteChannel.sendMessage(REMOTE_CMD+' '+topEntry.location+' '+JSON.stringify(topEntry.options))
         }

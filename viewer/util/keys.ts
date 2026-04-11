@@ -315,7 +315,8 @@ const keys:Record<string,KeyType>={
             pluginLoadingDone:K,
             settingsChanged:K,
             addonsChanged:K,
-            connectedMode:K
+            connectedMode:K,
+            addonViewChanged:K
         },
         gpspage:{
             pageNumber:K,

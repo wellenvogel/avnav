@@ -227,6 +227,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
         {...props}
     >
         <PageLeft
+            id={PAGEIDS.SETTINGS}
             title={title}
         >
             <MultiView {...scrollProps}

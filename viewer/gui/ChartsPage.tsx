@@ -110,7 +110,9 @@ const ChartsPage=(props:ChartsPageProps)=>{
          }
      })
     return <PageFrame id={PAGE}>
-        <PageLeft title={TITLE}>
+        <PageLeft
+            id={PAGE}
+            title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
                     <MvHeadline title={"Server"}/>
