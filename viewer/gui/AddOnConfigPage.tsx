@@ -33,8 +33,9 @@ const AddonItem=(props:AddonItemProps)=>{
     let source=props.source||'user';
     if (props.invalid) source+=", invalid";
     if (props.newWindow) source+=", new window";
-    let url=((props.originalUrl!==undefined)?props.originalUrl:props.url)+"";
+    let url=((props.originalUrl!==undefined)?props.originalUrl:props.url);
     if (! url) url=`[${props.button?.displayName||props.title||props.name}]`;
+    else url=url+"";
     return (
         <ListItem
             className={concatsp("addonItem",
@@ -101,7 +102,7 @@ export const AddonConfigPage=(props:PageProps)=>{
                     history.pop()
                 }
             },
-            AddonConfigAddons: {
+            AddonConfigAddOns: {
                 toggle: visible(0),
                 disabled: props.pageColumns>=numViews,
                 onClick: () => {
@@ -134,7 +135,10 @@ export const AddonConfigPage=(props:PageProps)=>{
 
         return <PageFrame id={PAGEIDS.ADDCFG}>
             <PageLeft title={PAGE_TITLES.ADDCFG}>
-                <MultiView {...scrollProps} views={[
+                <MultiView
+                    {...scrollProps}
+                    maxNumber={props.pageColumns}
+                           views={[
                     <React.Fragment key="0">
                         <MvHeadline title={"Configure"}></MvHeadline>
                         <ItemList

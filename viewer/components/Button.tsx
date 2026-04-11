@@ -185,9 +185,10 @@ const Button = (sprops:ButtonProps) => {
     }
     if (forward.onClick){
         const click=forward.onClick;
-        forward.onClick=(ev:ButtonEvent)=>{
+        forward.onClick=async (ev:ButtonEvent)=>{
+            ev.stopPropagation();
+            ev.preventDefault();
             if (disabledv) {
-                ev.stopPropagation();
                 return;
             }
             const avev=setav(ev,{

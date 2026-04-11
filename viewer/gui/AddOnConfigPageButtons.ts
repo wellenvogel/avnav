@@ -25,7 +25,7 @@ import {propsToDefs} from "../components/Button";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'AddonConfigAddons',
+        name:'AddonConfigAddOns',
         displayName: 'configure',
     },
     {
