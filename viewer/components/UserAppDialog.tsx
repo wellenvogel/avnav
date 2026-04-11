@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {showPromiseDialog} from './OverlayDialog';
 import Toast from './Toast';
 import {Checkbox, Input, InputReadOnly, InputSelect} from './Inputs';
-import Addons, {ServerAddon} from '../util/Addons';
+import Addons, {AddonProps, ServerAddon} from '../util/Addons';
 import Helper, {unsetOrTrue} from '../util/helper';
 import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
@@ -193,24 +193,29 @@ const SelectExistingDialog=({existingAddons,resolveFunction}:SelectExistingDialo
     </DialogFrame>
 }
 
-const checkUrl=(val:string,isInternal?:boolean)=>{
+const checkUrl=(val:string|URL,isInternal?:boolean)=>{
     if (! val) return "must not be empty";
     if (isInternal){
-        if (val.match(/^http/i)) return "internal urls must not start with http";
+        if ((val+"").match(/^http/i)) return "internal urls must not start with http";
         return
     }
-    if (!val.match(/^https*:\/\//i)) return "external urls must start with http[s]://";
+    if (!(val+"").match(/^https*:\/\//i)) return "external urls must start with http[s]://";
 }
-interface UserAppDialogProps{
+export interface UserAppDialogFixed{
+    name?:string,
+    url?:string|URL
+}
+export interface UserAppDialogProps{
     showToasts?:boolean ;
-    addon?:ServerAddon,
-    fixed?:ServerAddon,
+    addon?:AddonProps,
+    fixed?:UserAppDialogFixed,
     resolveFunction?:() => void
 }
 const UserAppDialog = (props:UserAppDialogProps) => {
-    const [currentAddon, setCurrentAddon] = useState<ServerAddon>({...props.addon, ...props.fixed});
+    const [currentAddon, setCurrentAddon] = useState<AddonProps>({...props.addon, ...props.fixed});
+    const [currentIcon,setCurrentIcon]=useState<string|URL>(props.addon?.button?.icon);
     const dialogContext = useDialogContext();
-    const fixed:ServerAddon = props.fixed || new ServerAddon({});
+    const fixed:UserAppDialogFixed = props.fixed || {};
     const shouldFind =  ! fixed.name && ( fixed.url  && ! props.addon);
     const [loaded, setLoaded] = useState(!shouldFind);
     const [internal, setInternal] = useState(!(!shouldFind && (props.addon || {}).keepUrl));
@@ -285,7 +290,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                                         resolveFunction={(url)=>
                                             setCurrentAddon({...currentAddon,url:url})
                                         }
-                                        current={currentAddon.url}
+                                        current={currentAddon.url+""}
                                     />
                                 })
                             }}/>
@@ -314,26 +319,26 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                 <InputReadOnly
                     dialogRow={true}
                     label="icon"
-                    value={currentAddon.icon}
+                    value={currentIcon}
                     mandatory={(v) => !v}
                     onClick={()=>{
                         dialogContext.showDialog(()=>{
                             return <IconDialog
-                                value={currentAddon.icon}
-                                onChange={(icon:{url:string})=>setCurrentAddon({...currentAddon,icon:icon.url})}
+                                value={currentIcon}
+                                onChange={(icon:{url:string})=>setCurrentIcon(icon.url)}
                             />
                         })
                     }}
                 >
-                    {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
+                    {currentIcon && <img className="appIcon" src={currentIcon+""}/>}
                 </InputReadOnly>
                 :
                 <InputReadOnly
                     dialogRow={true}
                     label="icon"
-                    value={currentAddon.icon}
+                    value={currentIcon+""}
                 >
-                    {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
+                    {currentIcon && <img className="appIcon" src={currentIcon+""}/>}
                 </InputReadOnly>
             }
             {canEdit && <InputSelect
@@ -383,7 +388,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                             if (e) Toast(e);
                         }
                     },
-                    visible: !!currentAddon.url && Helper.startsWith(currentAddon.url,"/user/viewer") && currentAddon.canDelete && canEdit && internal
+                    visible: !!currentAddon.url && Helper.startsWith(currentAddon.url+"","/user/viewer") && currentAddon.canDelete && canEdit && internal
                 },
                 {
                     name: 'delete',
@@ -408,9 +413,12 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                 DBCancel(),
                 DBOk(() => {
                         const addon={...currentAddon, ...props.fixed};
-                        if (!addon.title) addon.title = undefined; //avoid empty/null title
+                        let title:string
+                        if (typeof addon.title === 'string') {
+                            if (addon.title) title=addon.title; //avoid empty/null title
+                        }
                         Addons.updateAddon(addon.name, addon.url,
-                            addon.icon, addon.title, addon.newWindow,
+                            currentIcon, title, addon.newWindow,
                             Array.isArray(addon.page)?addon.page[0]:addon.page)
                             .then(() => {
                                 props.resolveFunction();
@@ -422,7 +430,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
 
                     },
                     {
-                        disabled: !currentAddon.icon || !currentAddon.url || !canEdit || checkUrl(currentAddon.url,internal) !== undefined,
+                        disabled: !currentIcon || !currentAddon.url || !canEdit || checkUrl(currentAddon.url,internal) !== undefined,
                         close:false})
             ]}/>
         </DialogFrame>

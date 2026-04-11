@@ -29,16 +29,13 @@ import StatusView, {ChannelKinds} from "../components/StatusView";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {ButtonDef, ButtonEventHandler, updateButtons} from "../components/Button";
+import {ButtonDef, updateButtons} from "../components/Button";
 import ChartsPageButtons from "./ChartsPageButtons";
-import {DownloadItemList} from '../components/DownloadItemList';
+import {DownloadItemList, UploadAction} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {UploadHandlerWithActions, useUploadHelper, useUploadHelperHandler} from "../components/UploadHandler";
-import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
-import DialogButton from "../components/DialogButton";
-import Helper from "../util/helper";
 import {ImporterView} from "../components/ImporterView";
 // @ts-ignore
 import {createItemActions} from '../components/FileDialog';
@@ -47,24 +44,6 @@ const PAGE=PAGEIDS.CHARTS;
 const TITLE=PAGE_TITLES.CHARTS;
 const NUMVIEWS=4
 export type ChartsPageProps = Partial<PageBaseProps>;
-interface UploadActionProps{
-    onClick:ButtonEventHandler,
-    className?:string
-    title:string
-}
-const UploadAction=(props:UploadActionProps)=>{
-    return <ListItem className={Helper.concatsp('uploadAction',props.className)}
-                     onClick={props.onClick}
-    >
-        <ListMainSlot primary={`Upload ${props.title}`}/>
-        <ListSlot>
-            <DialogButton
-                name={'DownloadPageUpload'}
-                displayName={`upload ${props.title}`}
-            />
-        </ListSlot>
-    </ListItem>
-}
 const ChartsPage=(props:ChartsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const [hasImports]=useStoreState(keys.gui.capabilities.uploadImport);

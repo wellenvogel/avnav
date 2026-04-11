@@ -28,7 +28,7 @@ import {UrlFunction} from 'ol/Tile';
 import {Tile} from "ol";
 import {Map as MapLibreMap} from 'maplibre-gl';
 import {MapLibreOptions} from "../map/maplibre/MapLibreLayer";
-import React from 'react';
+import React, {ReactNode} from 'react';
 import ReactDOM from 'react-dom';
 import Htm from "htm";
 import * as OpenLayers from 'ol/index';
@@ -527,7 +527,7 @@ export type Page=PageType;
 export type PluginPage=PluginPageType;
 export interface UserButtonBase{
     name: string;                   //will set the CSS class, unique inside the plugin
-    displayName?: string;           //shown in main nav
+    displayName?: ReactNode;           //shown in main nav
     localOnly?: boolean;            //if set: not shown in main nav
     icon?: string|URL;              //relative to plugin base. If not set use CSS with the name as CSS class
     visible?:boolean;
@@ -565,7 +565,7 @@ export interface UserButton extends UserButtonBase{
 }
 export interface UserApp{
     url?:string|URL;                //absolute URL or relative URL based on your plugin dir
-    title?:string|React.ReactNode;  //if set show a title
+    title?:React.ReactNode;         //if set show a title
     newWindow?:boolean;             //open in a new window
                                     //ignored if renderHtml is set
     renderHtml?:(p:Record<string,any>)=>React.ReactNode;

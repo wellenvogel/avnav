@@ -5,28 +5,37 @@ import Requests from './requests';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
 import Helper from "./helper";
-import {PluginPage, UserApp, UserButton} from "../api/api.interface";
+import {PluginPage, UserApp, UserButton, UserButtonBase} from "../api/api.interface";
 import {StoreCallback} from "./store";
 import {PAGEIDS} from "./pageids";
 import {ButtonAddonType, DynamicButtonProps} from "../components/Button";
+import {StoreKeys} from "../hoc/Dynamic";
+import {ReactNode} from "react";
 
-export interface PluginAddonProps{
+export interface AddonProps extends UserApp {
+    [index:string]:UserButtonBase|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
     name: string;
-    pluginName: string;
-    displayName?: string;
-    url:string;
-    icon: string;
-    title?: React.ReactNode;
-    newWindow?:boolean;
+    key?:string
+    button?:UserButtonBase;
     preventConnectionLost?:boolean,
+    source?:string,
+    invalid?:boolean
     page?:PluginPage|[PluginPage],
+    originalUrl?:string,
+    canDelete?:boolean,
+    keepUrl?:boolean,
 }
-class PluginAddOn implements UserApp{
+export interface PluginAddonProps extends AddonProps{
+    pluginName: string;
+    icon?:string|URL;
+}
+class PluginAddOn implements PluginAddonProps{
+    [index:string]:UserButtonBase|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
     name: string;
     pluginName: string;
-    displayName: string;
-    url: string;
-    icon: string;
+    url: string|URL;
+    button?:UserButtonBase;
+    icon?: string|URL;
     title: React.ReactNode;
     newWindow: boolean;
     source: string;
@@ -34,20 +43,12 @@ class PluginAddOn implements UserApp{
     preventConnectionLost: boolean;
     key: string;
     page?: PluginPage|[PluginPage];
-    constructor({name,pluginName,url,icon,title,newWindow,preventConnectionLost,displayName,page}:PluginAddonProps) {
-        this.name=name;
-        this.pluginName=pluginName;
-        this.url=url;
-        this.icon=icon;
-        this.title=title;
-        this.newWindow=newWindow;
-        this.source="plugin-"+pluginName;
+    constructor(props:PluginAddonProps) {
+        for (const k in props) {
+            this[k] = props[k];
+        }
+        this.source="plugin-"+props.pluginName;
         this.canDelete=false;
-        this.newWindow=newWindow;
-        this.preventConnectionLost=preventConnectionLost;
-        this.key=pluginName+'.'+name;
-        this.displayName=displayName||name;
-        this.page=page;
     }
 }
 
@@ -68,13 +69,13 @@ class PluginUserButton{
     }
 }
 
-export class ServerAddon implements UserApp{
+export class ServerAddon implements AddonProps{
+    [index:string]:UserButtonBase|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
     name: string;
     invalid?: boolean;
     canDelete?: boolean;
     source?: string;
     title?: string;
-    icon?: string;
     keepUrl?: boolean;
     originalUrl?: string;
     url:string;
@@ -82,19 +83,22 @@ export class ServerAddon implements UserApp{
     newWindow?: boolean;
     page?:PluginPage|[PluginPage];
     key:string;
+    button?:UserButtonBase;
     constructor(raw:any) {
         this.name=raw.name;
         this.invalid=Helper.toBoolean(raw.invalid);
         this.canDelete=Helper.toBoolean(raw.canDelete);
         this.source=raw.source;
         this.title=raw.title;
-        this.icon=raw.icon;
         this.keepUrl=Helper.toBoolean(raw.keepUrl);
         this.preventConnectionLost=Helper.toBoolean(raw.preventConnectionLost);
         this.newWindow=Helper.toBoolean(raw.newWindow);
         this.key=raw.key||raw.name;
         this.url=raw.url;
         this.page=raw.page;
+        this.button={name:raw.name,
+            displayName:raw.displayName||raw.title||raw.name,
+            icon:raw.icon};
     }
 }
 const serverAddOns:ServerAddon[]=[]
@@ -150,21 +154,53 @@ class QueryHandler{
     }
 }
 
-export const getServerAddons=()=>{
+export const getServerAddons=():AddonProps[]=>{
     return serverAddOns;
 }
+export interface InternalAddonProps extends AddonProps{
+    type:ButtonAddonType
+}
+export const getAllAddons=():InternalAddonProps[]=>{
+    const rt:InternalAddonProps[]=[];
+    for (const sad of serverAddOns){
+        rt.push({...sad,type:sad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG});
+    }
+    for (const pad of Object.values(pluginAddOns)){
+        const padm={...pad,type:pad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG};
+        if (!padm.source) padm.source="cl-plugin-"+padm.pluginName;
+        padm.canDelete=false;
+        rt.push(padm);
+    }
+    for (const bad of Object.values(pluginUserButtons)){
+        rt.push({
+            name:bad.key,
+            canDelete:false,
+            button:{...bad.button,name:bad.key},
+            type:ButtonAddonType.USER_HANDLER,
+            source:"cl-plugin-"+bad.pluginName
+        })
+    }
+    return rt;
+}
 const addPluginAddOn=(
-    {name,pluginName,url,icon,...other}:PluginAddonProps)=>{
-    if (!name) throw new Error("name is required");
-    if (!pluginName) throw new Error("pluginName is required");
-    if (!url) throw new Error("url is required");
-    if (!icon) throw new Error("icon is required");
-    const completeName=pluginName+"."+name;
+    props:PluginAddonProps)=>{
+    if (!props.name) throw new Error("name is required");
+    if (!props.pluginName) throw new Error("pluginName is required");
+    if (!props.url) throw new Error("url is required");
+    if (!props.button ) throw new Error("button is required");
+    const completeName=props.pluginName+"."+name;
     const existing=pluginAddOns[completeName];
-    if (existing && existing.pluginName!==pluginName) {
+    if (existing && existing.pluginName!==props.pluginName) {
         throw new Error(`AddOn "${name}" already exists from "${existing.pluginName}"`);
     }
-    pluginAddOns[completeName]=new PluginAddOn({name,pluginName,url,icon,...other});
+    pluginAddOns[completeName]=new PluginAddOn(
+        {...props,button: {
+                ...props.button,
+                name:props.name,
+                displayName:props.button.displayName||props.title||props.name,
+            },
+        }
+    );
     addonsChanged();
     return completeName;
 }
@@ -218,9 +254,8 @@ const getPageUserButtons=(
         const addon=pluginAddOns[k];
         if (isOnPage(page,addon.page)){
             const buttonDef={
+                ...addon.button,
                 name:addon.key||addon.name,
-                displayName:addon.title || addon.name, //TODO
-                icon:addon.icon,
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
                 config: {...addon},
@@ -235,9 +270,8 @@ const getPageUserButtons=(
         }
         if (isOnPage(page,addon.page)){
             const buttonDef={
+                ...addon.button,
                 name:addon.key||addon.name,
-                displayName:addon.title || addon.name,
-                icon:addon.icon,
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
                 config: {...addon},
@@ -300,13 +334,13 @@ const readAddOns = async (
     return addons;
 };
 
-const findAddonByUrl=(addons:ServerAddon[],url:string)=>{
+const findAddonByUrl=(addons:AddonProps[],url:string|URL)=>{
     if (! addons || !(addons instanceof Array)) return;
     if (! url) return;
     const rtall=[];
     for (const i in addons){
         const addon=addons[i];
-        if (addon.url == url){
+        if ((addon.url+"") == (url+"")){
             rtall.push(addon);
         }
     }
@@ -319,12 +353,13 @@ const findAddonByUrl=(addons:ServerAddon[],url:string)=>{
  * @param icon
  * @param title
  * @param newWindow
+ * @param page
  * @returns {*}
  */
 const updateAddon=(
     name: string,
-    url:string,
-    icon: string,
+    url:string|URL,
+    icon: string|URL,
     title?:string,
     newWindow?:boolean,
     page?:string)=>{
@@ -352,7 +387,6 @@ const removeAddon=(name:string)=>{
 };
 
 export default  {
-    readAddOns:readAddOns,
     findAddonByUrl:findAddonByUrl,
     updateAddon:updateAddon,
     removeAddon:removeAddon,
@@ -361,5 +395,6 @@ export default  {
     getPageUserButtons:getPageUserButtons,
     removePluginAddOns:removePluginAddOns,
     getServerAddons:getServerAddons,
+    getAllAddons:getAllAddons,
     QueryHandler:QueryHandler,
 }

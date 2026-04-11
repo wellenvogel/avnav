@@ -24,8 +24,8 @@
  */
 
 // @ts-ignore
-import {createItemActions, FileDialog, ItemActions,Action} from "./FileDialog";
-import {avitem, concatsp, setav, valueof} from "../util/helper";
+import {Action, createItemActions, FileDialog, ItemActions} from "./FileDialog";
+import Helper, {avitem, concatsp, setav, valueof} from "../util/helper";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 // @ts-ignore
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
@@ -37,13 +37,14 @@ import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
 import UploadHandler from "./UploadHandler";
-import Button, {ButtonEvent} from "./Button";
+import Button, {ButtonEvent, ButtonEventHandler} from "./Button";
 import keys from "../util/keys";
 import {getItemIconProperties, Item, ItemType, listItems} from "../util/itemFunctions";
 import {useStateRef, useTimer} from "../util/UiHelper";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 import {IDialogContext, useDialogContext} from "./DialogContext";
+import DialogButton from "./DialogButton";
 
 interface SortProps{
     time?:number,
@@ -314,4 +315,24 @@ export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> 
             DBCancel()
         ]}/>
     </DialogFrame>
+}
+
+interface UploadActionProps {
+    onClick: ButtonEventHandler,
+    className?: string
+    title: string
+}
+
+export const UploadAction = (props: UploadActionProps) => {
+    return <ListItem className={Helper.concatsp('uploadAction', props.className)}
+                     onClick={props.onClick}
+    >
+        <ListMainSlot primary={`Upload ${props.title}`}/>
+        <ListSlot>
+            <DialogButton
+                name={'DownloadPageUpload'}
+                displayName={`upload ${props.title}`}
+            />
+        </ListSlot>
+    </ListItem>
 }

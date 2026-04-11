@@ -318,7 +318,7 @@ class Plugin extends ApiV2{
         Addons.addPluginAddOn({name:button.name,
             pluginName:this.name,
             url,
-            icon,
+            button:{...button,icon:icon},
             title:app.title,
             newWindow:app.newWindow,
             page:page});

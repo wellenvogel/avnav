@@ -1,0 +1,227 @@
+/**
+ * Created by andreas on 02.05.14.
+ */
+
+import Button, {ButtonDef, ButtonEventHandler, updateButtons} from '../components/Button';
+import ItemList from '../components/ItemList';
+import React, {useRef} from 'react';
+import {PageFrame, PageLeft, PageProps} from '../components/Page';
+import Addons, {AddonProps} from '../util/Addons';
+import UserAppDialog from '../components/UserAppDialog';
+import {showPromiseDialog} from "../components/OverlayDialog";
+import {avitem, concatsp} from "../util/helper";
+import {useHistory} from "../components/HistoryProvider";
+import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
+import {InjectMainMenu, useInitialButton} from "./MainNav";
+import {PAGE_TITLES, PAGEIDS, PLUGINPAGES} from "../util/pageids";
+import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
+import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
+import ButtonList from "../components/ButtonList";
+import {useStoreState} from "../hoc/Dynamic";
+import keys from "../util/keys";
+import {useUploadHelper} from "../components/UploadHandler";
+import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
+
+
+interface AddonItemProps extends AddonProps {
+    className?: string;
+    onClick?: ButtonEventHandler
+}
+
+const AddonItem=(props:AddonItemProps)=>{
+    const history=useHistory();
+    let source=props.source||'user';
+    if (props.invalid) source+=", invalid";
+    if (props.newWindow) source+=", new window";
+    let url=((props.originalUrl!==undefined)?props.originalUrl:props.url)+"";
+    if (! url) url=`[${props.button?.displayName||props.title||props.name}]`;
+    return (
+        <ListItem
+            className={concatsp("addonItem",
+                props.invalid?"invalid":undefined,
+                props.className)}
+            onClick={props.onClick}>
+            <ListSlot icon={{icon:props.button?.icon+""}}/>
+            <ListMainSlot
+                primary={url+""}
+                secondary={props.title}
+            >
+                <div className="sourceInfo">{source}</div>
+            </ListMainSlot>
+            <ListSlot >
+            {!props.invalid && <Button name="AddonConfigView" className="smallButton"
+                                       onClick={(ev) => {
+                                           ev.preventDefault();
+                                           ev.stopPropagation();
+                                           if (props.newWindow) {
+                                               window.open(props.url, props.name);
+                                               return;
+                                           }
+                                           let page:string;
+                                           const pageList=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON]
+                                           for (const pg of pageList) {
+                                               if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
+                                                   page = pg;
+                                                   break;
+                                               }
+                                           }
+                                           if (!page) page=PAGEIDS.ADDON;
+                                           history.push(page, {button: props.key||props.name})
+                                       }
+                                       }/>}
+            </ListSlot>
+        </ListItem>
+    )
+};
+
+export const AddonConfigPage=(props:PageProps)=>{
+    useStoreState(keys.gui.global.reloadSequence);
+    const history=useHistory();
+    const [addons,setAddons]=React.useState(Addons.getAllAddons());
+    const [scrollProps,scrollTo,visible]=useScrollHelper(0);
+    const [uploadPropsUser,uploadActionUser]=useUploadHelper('user');
+    const [uploadPropsImages,uploadActionImages]=useUploadHelper('images');
+    /*
+    const [uploadedUser,setUploadedUser]=useState(undefined);
+    const [uploadedImage,setUploadedImage]=useState(undefined);
+     */
+    const numViews=3;
+    const currentButtons=useRef<ButtonDef[]>();
+        const buttonActions= {
+            AddonConfigPlus: {
+                onClick: () => {
+                    showPromiseDialog(undefined, UserAppDialog)
+                        .then(() => readAddons())
+                        .catch(() => readAddons());
+                }
+
+            },
+            Cancel: {
+                onClick: () => {
+                    history.pop()
+                }
+            },
+            AddonConfigAddons: {
+                toggle: visible(0),
+                disabled: props.pageColumns>=numViews,
+                onClick: () => {
+                    scrollTo(0);
+                }
+            },
+            DownloadPageUser:{
+                onClick: () => {
+                    scrollTo(1);
+                },
+                toggle: visible(1),
+                disabled: props.pageColumns>=numViews,
+            },
+            DownloadPageImages:{
+                onClick: () => {
+                    scrollTo(2);
+                },
+                toggle: visible(2),
+                disabled: props.pageColumns>=numViews,
+            }
+        }
+
+    const readAddons=()=>{
+        setAddons(Addons.getAllAddons());
+    }
+
+        const buttons=InjectMainMenu(PAGEIDS.ADDCFG, updateButtons(AddOnConfigPageButtons,buttonActions));
+        currentButtons.current=buttons;
+        useInitialButton(currentButtons);
+
+        return <PageFrame id={PAGEIDS.ADDCFG}>
+            <PageLeft title={PAGE_TITLES.ADDCFG}>
+                <MultiView {...scrollProps} views={[
+                    <React.Fragment key="0">
+                        <MvHeadline title={"Configure"}></MvHeadline>
+                        <ItemList
+                            className="addonItems"
+                            scrollable={true}
+                            itemList={addons}
+                            itemClass={AddonItem}
+                            onItemClick={(ev)=>{
+                                const item:AddonProps=avitem(ev);
+                                const itemUrl=(item.originalUrl !== undefined)?item.originalUrl:item.url;
+                                showPromiseDialog(undefined,(props)=>
+                                    <UserAppDialog {...props} fixed={{name:item.name}} addon={{...item,url:itemUrl}}/>
+                                )
+                                    .then(()=>readAddons())
+                                    .catch(()=>readAddons());
+                            }}
+                        />
+                    </React.Fragment>
+                    ,
+                    <React.Fragment key="1">
+                        <MvHeadline title={"User Files"}/>
+                        <UploadAction onClick={uploadActionUser} title={'User File'}></UploadAction>
+                        <MvHeadline title={""} showScroll={false}/>
+                        <DownloadItemList
+                            {...uploadPropsUser}
+                            type={'user'}
+                            autoreload={3000}
+                            scrollSelected={1}
+                            //selectedName={}
+                        />
+                    </React.Fragment>
+                    ,
+                    <React.Fragment key="2">
+                        <MvHeadline title={"Image Files"}/>
+                        <UploadAction onClick={uploadActionImages} title={'Image'}></UploadAction>
+                        <MvHeadline title={""} showScroll={false}/>
+                        <DownloadItemList
+                            {...uploadPropsImages}
+                            type={'images'}
+                            autoreload={3000}
+                            scrollSelected={1}
+                            //selectedName={}
+                        />
+                    </React.Fragment>
+
+                ]}/>
+            </PageLeft>
+            <ButtonList page={PAGEIDS.ADDCFG} itemList={currentButtons.current}/>
+        </PageFrame>
+/*
+        let MainContent = (props)=>
+            <ItemList
+                className="addonItems"
+                scrollable={true}
+                itemList={props.items}
+                itemClass={(iprops)=>{
+                    return <AddonItem
+                        {...iprops}
+                        history={self.props.history}
+                        />
+                }}
+                onItemClick={(ev)=>{
+                    const item=avitem(ev);
+                    let itemUrl=(item.originalUrl !== undefined)?item.originalUrl:item.url;
+                    showPromiseDialog(undefined,(props)=>
+                        <UserAppDialog {...props} fixed={{name:item.name}} addon={{...item,url:itemUrl}}/>
+                    )
+                        .then(()=>self.readAddons())
+                        .catch(()=>self.readAddons());
+                }}
+                />;
+        return (
+            <Page
+                {...self.props}
+                id="addonconfigpage"
+                title="Configure UserApps"
+                mainContent={
+                            <MainContent
+                                items={self.state.addOns}
+                            />
+                        }
+                buttonList={buttons}/>
+        );
+
+    }
+
+ */
+}
+
+export default AddonConfigPage;
