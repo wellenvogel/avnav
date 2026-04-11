@@ -49,8 +49,8 @@ import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
 import keyhandler from "../util/keyhandler";
-import {ButtonContextProps} from "../api/api.interface";
 import {injectAddonButtonAction} from "../components/AddonView";
+
 
 type PageKind='navigation'|'settings';
 
@@ -265,12 +265,10 @@ export const InjectMainMenu=(
         displayName: 'main menu',
         onClick: async (ev:ButtonEvent)=>{
             const dialogContext=getav(ev).dialogContext;
-            const buttonCtx=ev?.avnav?.context
-            const toggle=buttonCtx?.getValue(ButtonContextProps.TOGGLE);
+            const toggle=globalstore.getData(keys.gui.global.mainNavVisible);
             if (toggle){
                 toggle();
-                buttonCtx?.setValue(ButtonContextProps.TOGGLE,undefined);
-                buttonCtx?.setCleanup(undefined);
+                globalstore.storeData(keys.gui.global.mainNavVisible,undefined);
                 if (mainCancel) mainCancel();
                 return;
             }
@@ -286,12 +284,19 @@ export const InjectMainMenu=(
                 expandMode={expandMode}
                 cancelCallback={mainCancel}
             />,()=>{
-                buttonCtx?.setCleanup(undefined);
-                buttonCtx?.setValue(ButtonContextProps.TOGGLE,undefined);
+                globalstore.storeData(keys.gui.global.mainNavVisible,undefined);
             },{coverClassName:Helper.concatsp('MainNavCover',colClass)})
-            buttonCtx?.setCleanup(cleanup);
-            buttonCtx?.setValue(ButtonContextProps.TOGGLE,cleanup);
-        }
+            globalstore.storeData(keys.gui.global.mainNavVisible,cleanup);
+        },
+        storeKeys:{
+            toggle:keys.gui.global.mainNavVisible
+        },
+        updateFunction:props => {
+            return {
+                toggle: !!props.toggle
+            }
+        },
+        noDialogsClose:true
     },
         LayoutFinishedDialog.getButtonDef(),
     ]).concat(computedButtons,propsToDefs(computedAddonButtons));

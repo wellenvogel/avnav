@@ -1,12 +1,11 @@
-import React, {useCallback, useEffect, useRef} from 'react';
-import {useKeyEventHandlerPlain, useStateObject} from '../util/UiHelper';
+import React, {useCallback, useRef} from 'react';
+import {useKeyEventHandlerPlain} from '../util/UiHelper';
 import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
-import {ButtonContext, ButtonContextProps} from "../api/api.interface";
 import base from "../base";
 import {ButtonDescription} from "./ButtonList";
 
@@ -14,7 +13,6 @@ import {ButtonDescription} from "./ButtonList";
 export type ButtonEventBase=Record<string, any>;
 export interface ButtonEvent extends ButtonEventBase {
     avnav?:{
-        context: ButtonContext;
         dialogContext: IDialogContext;
     }
 }
@@ -81,49 +79,10 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     isAddon?: ButtonAddonType=ButtonAddonType.NONE;
 }
 
-const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
-    if (ctxToggle !== undefined) {
-        return ctxToggle?"active":"inactive";
-    }
+const toggleClass=(props:ButtonProps)=> {
     if (props.toggle !== undefined) {
         const togglev = (typeof (props.toggle) === 'function') ? props.toggle() : props.toggle;
         return togglev ? " active" : " inactive";
-    }
-}
-const CTXRESERVED='__cleanup';
-const CTXRESERVED2='__cleanupToggle';
-export const useButtonContext=(initial?:Record<string,any>):ButtonContext=>{
-    const ctx=useStateObject(initial||{});
-    return {
-        hasCleanup(): boolean {
-            return !!ctx.getValue(CTXRESERVED);
-        },
-        getValue: (key: string) => {
-            if (key === CTXRESERVED || key === CTXRESERVED2) throw new Error(`cannot use ${CTXRESERVED} and ${CTXRESERVED2}`);
-            return ctx.getValue(key)
-        },
-        setValue: (key: string, value: any) => {
-            if (key === CTXRESERVED || key === CTXRESERVED2) throw new Error(`cannot use ${CTXRESERVED} and ${CTXRESERVED2}`);
-            ctx.setValue(key, value)
-        },
-        setCleanup:(cleanup:()=>(void|Promise<void>),setToggle?:boolean)=>{
-            ctx.setValue(CTXRESERVED,cleanup);
-            if (setToggle){
-                ctx.setValue(ButtonContextProps.TOGGLE,true);
-                ctx.setValue(CTXRESERVED2,true);
-            }
-        },
-        cleanup:async (noAction?:boolean)=>{
-            const cf=ctx.getValue(CTXRESERVED);
-            if (cf && typeof cf === 'function' && ! noAction){
-                await cf();
-            }
-            if (cf && ctx.getValue(CTXRESERVED2)){
-                ctx.setValue(ButtonContextProps.TOGGLE,false);
-            }
-            ctx.setValue(CTXRESERVED2,false);
-            ctx.setValue(CTXRESERVED,undefined);
-        }
     }
 }
 
@@ -138,16 +97,13 @@ const Button = (sprops:ButtonProps) => {
     const idxRef=useRef(getIdx());
     const dialogContext=useDialogContext();
     const history = useHistory();
-    const ctx =useButtonContext();
-    const disabledv=((typeof (iprops.disabled) === 'function') ? iprops.disabled() : iprops.disabled)||
-        !!ctx.getValue('disabled');
+    const disabledv=((typeof (iprops.disabled) === 'function') ? iprops.disabled() : iprops.disabled);
     const syntheticClick=useCallback(()=>{
         if (sprops.onClick && !disabledv) {
             base.log("synthetic button click",idxRef.current);
             const ev= setav({},{
                 dialogContext:dialogContext,
-                history:history,
-                context:ctx
+                history:history
             });
             if (iprops.noDialogsClose) sprops.onClick(ev);
             else dialogContext.closeDialog().then(()=>sprops.onClick(ev));
@@ -156,18 +112,6 @@ const Button = (sprops:ButtonProps) => {
     useKeyEventHandlerPlain(sprops.name, "button", () => {
         syntheticClick();
     });
-    useEffect(() => {
-        return ()=>{
-            ctx.cleanup();
-        }
-    }, [sprops.name]);
-    for (const k of ['visible','icon','className']){
-        const v=ctx.getValue(k);
-        if (v !== undefined) {
-            // @ts-ignore
-            iprops[k]=v;
-        }
-    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {noDialogsClose,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
     if (visible !== undefined && ! visible) {
@@ -176,7 +120,7 @@ const Button = (sprops:ButtonProps) => {
     const classNamev=Helper.concatsp(className,
         'button',
         name,
-        toggleClass(iprops,ctx.getValue('toggle')),
+        toggleClass(iprops),
         disabled ? 'disabled' : undefined,
     );
     const spanStyle:Record<string, any> = {};
@@ -194,7 +138,6 @@ const Button = (sprops:ButtonProps) => {
             const avev=setav(ev,{
                 dialogContext:dialogContext,
                 history:history,
-                context:ctx
             });
             if (iprops.noDialogsClose){
                 click(avev);

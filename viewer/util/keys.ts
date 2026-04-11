@@ -316,7 +316,8 @@ const keys:Record<string,KeyType>={
             settingsChanged:K,
             addonsChanged:K,
             connectedMode:K,
-            addonViewChanged:K
+            addonViewChanged:K,
+            mainNavVisible:K,
         },
         gpspage:{
             pageNumber:K,

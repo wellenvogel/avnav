@@ -536,29 +536,6 @@ export interface UserButtonBase{
     updateFunction?:(values:object)=>object; //translate store values
 }
 
-/**
- * the ButtonContext can be used to store user values
- * at a button
- * Whenever you change a value (setValue) the button will be re-rendered
- * additionally you can set the button properties:
- * disabled,visible,toggle,icon,className
- * A value that you set at the context will win against values
- * from the Button definition and against the store keys
- */
-export interface ButtonContext {
-    getValue: (key: string) => any,
-    setValue: (key: string, value: any) => void,
-    setCleanup:(cleanup:()=>void|Promise<void>,setToggle?:boolean)=>void,
-    cleanup:(noAction?:boolean)=>Promise<void>
-    hasCleanup:()=>boolean
-}
-export enum ButtonContextProps{
-    DISABLED='disabled',
-    VISIBLE='visible',
-    TOGGLE='toggle',
-    ICON='icon',
-    CLASSNAME='className',
-}
 export interface UserButton extends UserButtonBase{
     onClick:(event:object)=>void    //if set this function is called instead of invoking the url
     toggle?:boolean;

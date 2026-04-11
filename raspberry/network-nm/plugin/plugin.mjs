@@ -542,18 +542,22 @@
     `
  }
 
- const TOGGLE='toggle';
  export default async (api)=>{
-    const showNetworkDialog=async (ev,closeCb)=>{
+    const KVISIBLE=api.getStoreBaseKey()+".visible";
+    api.setStoreData(KVISIBLE,false);
+    let dialogHandle;
+    const showNetworkDialog=async (ev)=>{
         const rt=await api.showDialog({
             html: html`<${NetworkDialog} api=${api}/>`,
             onClose:()=>{
-                closeCb()
+                api.setStoreData(KVISIBLE,false);
+                dialogHandle=undefined;
             },
             fullscreen: true,
             title: 'Wifi',
             className: 'nwmplugin WifiDialog'
         },ev);
+        api.setStoreData(KVISIBLE,true);
         return rt;
     }
     api.registerUserButton({
@@ -561,16 +565,14 @@
         icon:'wifi.svg',
         displayName:'wifi connections',
         onClick:async (ev)=>{
-            const ctx=ev?.avnav?.context;
-            if (! ctx) return;
-            const handle=ctx.getValue(TOGGLE);
-            if (handle){
-                await handle();
-                ctx.setValue(TOGGLE,undefined);
+            if (dialogHandle){
+                dialogHandle();
                 return;
             }
-            const dialogHandle=await showNetworkDialog(ev,()=>ctx.setValue(TOGGLE,undefined));
-            ctx.setValue(TOGGLE,dialogHandle);
-        }
+            dialogHandle=await showNetworkDialog(ev);
+        },
+        storeKeys: {
+                toggle:KVISIBLE
+            },
     },'serverpage');
  }

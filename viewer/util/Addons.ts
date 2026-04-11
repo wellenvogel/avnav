@@ -250,7 +250,11 @@ const getPageUserButtons=(
     for (const k in pluginUserButtons){
         const buttonDef=pluginUserButtons[k];
         if (isOnPage(page,buttonDef.page)){
-            rt.push({...buttonDef.button,overflow:true,isAddon:ButtonAddonType.USER_HANDLER});
+            rt.push({
+                ...buttonDef.button,
+                overflow:true,
+                noDialogsClose:true, //allow toggle handling
+                isAddon:ButtonAddonType.USER_HANDLER});
         }
     }
     for (const k in pluginAddOns){
