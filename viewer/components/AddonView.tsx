@@ -58,7 +58,6 @@ export const AddonView = (iprops: AddonViewProps): React.ReactNode => {
     </div>
 }
 
-const TOGGLE='toggle'
 export const addonButtonAction=async (
     ev:ButtonEvent,
     config:AddonViewProps,
@@ -70,11 +69,9 @@ export const addonButtonAction=async (
     }
     const ctx=ev?.avnav?.context;
     if (!ctx) return
-    const handle=ctx.getValue(TOGGLE)
+    const handle=ctx.hasCleanup()
     if (handle){
-        await handle();
-        ctx.setValue(TOGGLE,undefined);
-        ctx.setCleanup(undefined);
+        await ctx.cleanup();
         if (! noToggle) return;
     }
     const newHandle=await showDialog(ev?.avnav?.dialogContext,()=>{
@@ -83,9 +80,7 @@ export const addonButtonAction=async (
             </DialogFrame>
         },
         ()=>{
-            ctx.setValue(TOGGLE,undefined);
-            ctx.setCleanup(undefined);
+            ctx.cleanup(true);
         });
-    ctx.setValue(TOGGLE,newHandle);
-    ctx.setCleanup(newHandle);
+    ctx.setCleanup(newHandle,true);
 }

@@ -224,7 +224,7 @@ const getPageUserButtons=(
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
                 config: {...addon},
-                noDialogsClose:addon.newWindow
+                noDialogsClose:true
             }
             rt.push(buttonDef);
         }
@@ -241,7 +241,7 @@ const getPageUserButtons=(
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
                 config: {...addon},
-                noDialogsClose:addon.newWindow
+                noDialogsClose:true
             }
             rt.push(buttonDef);
         }

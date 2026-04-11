@@ -1,5 +1,4 @@
 import React, {useCallback, useEffect, useRef} from 'react';
-// @ts-ignore
 import {useKeyEventHandlerPlain, useStateObject} from '../util/UiHelper';
 import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
@@ -7,9 +6,10 @@ import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
-import {ButtonContext} from "../api/api.interface";
+import {ButtonContext, ButtonContextProps} from "../api/api.interface";
 import base from "../base";
 import {ButtonDescription} from "./ButtonList";
+
 
 export type ButtonEventBase=Record<string, any>;
 export interface ButtonEvent extends ButtonEventBase {
@@ -91,25 +91,38 @@ const toggleClass=(props:ButtonProps,ctxToggle?:boolean)=> {
     }
 }
 const CTXRESERVED='__cleanup';
+const CTXRESERVED2='__cleanupToggle';
 export const useButtonContext=(initial?:Record<string,any>):ButtonContext=>{
     const ctx=useStateObject(initial||{});
     return {
+        hasCleanup(): boolean {
+            return !!ctx.getValue(CTXRESERVED);
+        },
         getValue: (key: string) => {
-            if (key === CTXRESERVED) throw new Error(`cannot use ${CTXRESERVED}`);
+            if (key === CTXRESERVED || key === CTXRESERVED2) throw new Error(`cannot use ${CTXRESERVED} and ${CTXRESERVED2}`);
             return ctx.getValue(key)
         },
         setValue: (key: string, value: any) => {
-            if (key === CTXRESERVED) throw new Error(`cannot use ${CTXRESERVED}`);
+            if (key === CTXRESERVED || key === CTXRESERVED2) throw new Error(`cannot use ${CTXRESERVED} and ${CTXRESERVED2}`);
             ctx.setValue(key, value)
         },
-        setCleanup:(cleanup:()=>(void|Promise<void>))=>{
+        setCleanup:(cleanup:()=>(void|Promise<void>),setToggle?:boolean)=>{
             ctx.setValue(CTXRESERVED,cleanup);
+            if (setToggle){
+                ctx.setValue(ButtonContextProps.TOGGLE,true);
+                ctx.setValue(CTXRESERVED2,true);
+            }
         },
-        cleanup:async ()=>{
+        cleanup:async (noAction?:boolean)=>{
             const cf=ctx.getValue(CTXRESERVED);
-            if (cf && typeof cf === 'function'){
+            if (cf && typeof cf === 'function' && ! noAction){
                 await cf();
             }
+            if (cf && ctx.getValue(CTXRESERVED2)){
+                ctx.setValue(ButtonContextProps.TOGGLE,false);
+            }
+            ctx.setValue(CTXRESERVED2,false);
+            ctx.setValue(CTXRESERVED,undefined);
         }
     }
 }

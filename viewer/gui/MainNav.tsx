@@ -260,7 +260,7 @@ export const InjectMainMenu=(
         if (!addonButton.onClick && addonButton.config){
             const appConfig=addonButton.config;
             addonButton.onClick=(ev:ButtonEvent)=>{
-                addonButtonAction(ev,appConfig,true)
+                addonButtonAction(ev,appConfig,false)
             }
             delete addonButton.config;
         }

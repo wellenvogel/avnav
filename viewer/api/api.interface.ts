@@ -548,8 +548,9 @@ export interface UserButtonBase{
 export interface ButtonContext {
     getValue: (key: string) => any,
     setValue: (key: string, value: any) => void,
-    setCleanup:(cleanup:()=>void|Promise<void>)=>void,
-    cleanup:()=>Promise<void>
+    setCleanup:(cleanup:()=>void|Promise<void>,setToggle?:boolean)=>void,
+    cleanup:(noAction?:boolean)=>Promise<void>
+    hasCleanup:()=>boolean
 }
 export enum ButtonContextProps{
     DISABLED='disabled',
