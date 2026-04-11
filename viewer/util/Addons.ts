@@ -62,7 +62,7 @@ class PluginUserButton{
         if (! button) throw new Error("missing button")
         if (! button.name) throw new Error("missing name in button def")
         if ( typeof(button.onClick) !== "function") throw new Error("button.onClick is not a function")
-        this.key=plugin+'.'+button.name
+        this.key=plugin+'-'+button.name
         this.page=page || PAGEIDS.ADDON;
         this.button=Helper.filteredAssign(UserButtonProps,button) as UserButton;
         this.pluginName=plugin;
@@ -252,6 +252,7 @@ const getPageUserButtons=(
         if (isOnPage(page,buttonDef.page)){
             rt.push({
                 ...buttonDef.button,
+                name:buttonDef.key,
                 overflow:true,
                 noDialogsClose:true, //allow toggle handling
                 isAddon:ButtonAddonType.USER_HANDLER});
