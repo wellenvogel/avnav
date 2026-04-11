@@ -169,6 +169,7 @@ export const MultiView = (props: MultiViewProps) => {
     const windowDimensions=useStoreState(keys.gui.global.windowDimensions);
     const [itemWidth,setItemWidth]=React.useState(0);
     const [visibleNumber,setVisibleNumber]=React.useState(props.visibleNumber);
+    const [,setChanged]=React.useState(0);
     const [minVisible,setMinVisible]=React.useState(-1);
     const [maxVisible,setMaxVisible]=React.useState(-1);
     const outerRef = React.useRef<HTMLDivElement>(null);
@@ -178,8 +179,11 @@ export const MultiView = (props: MultiViewProps) => {
     let maxNumber=(props.maxNumber>0)?props.maxNumber:1;
     if (maxNumber>numViews) { maxNumber=numViews;}
     const scrollTo=useCallback((nr:number)=>{
-        if (nr >= 0 && nr < numViews) setVisibleNumber(nr);
-    },[])
+        if (nr >= 0 && nr < numViews) {
+            setVisibleNumber(nr);
+            setChanged((old)=>old+1)
+        }
+    },[numViews])
     useEffect(() => {
         if (! outerRef.current) {
             setItemWidth(0);
@@ -195,6 +199,7 @@ export const MultiView = (props: MultiViewProps) => {
     }, []);
     useEffect(() => {
         setVisibleNumber(props.visibleNumber);
+        setChanged((old)=>old+1);
     }, [props.visibleNumber]);
     const reportVisibility=useCallback(()=>{
         if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
