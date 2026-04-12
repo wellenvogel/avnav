@@ -80,6 +80,7 @@ const AddonItem=(props:AddonItemProps)=>{
 
 export const AddonConfigPage = (props: PageProps) => {
     useStoreState(keys.gui.global.reloadSequence);
+    const [connected] = useStoreState(keys.gui.global.connectedMode);
     const history = useHistory();
     const [addons, setAddons] = React.useState(Addons.getAllAddons());
     const [scrollProps, scrollTo, visible] = useScrollHelper(0);
@@ -151,7 +152,7 @@ export const AddonConfigPage = (props: PageProps) => {
                                 const itemUrl = (item.originalUrl !== undefined) ? item.originalUrl : item.url;
                                 showPromiseDialog(undefined, (props) =>
                                     <UserAppDialog {...props} fixed={{name: item.name}}
-                                                   addon={{...item, url: itemUrl}}/>
+                                                   addon={{...item, url: itemUrl,canDelete: item.canDelete && connected}}/>
                                 )
                                     .then(() => readAddons())
                                     .catch(() => readAddons());

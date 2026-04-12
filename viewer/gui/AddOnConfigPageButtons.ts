@@ -22,6 +22,7 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -40,6 +41,9 @@ export default GeneralButtons.concat(propsToDefs([
         name: 'AddonConfigPlus',
         displayName:'add user app',
         localOnly: true,
+        storeKeys:{
+            visible: keys.gui.global.connectedMode
+        }
     }
 ]))
 
