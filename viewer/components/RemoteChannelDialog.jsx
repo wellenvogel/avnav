@@ -55,6 +55,20 @@ const storeKeys={
     connected: keys.gui.global.connectedMode
 };
 
+export const showRemoteChannelDialog=async (dialogContext)=> {
+    const current=globalStore.getMultiple(storeKeys);
+    await showDialog(dialogContext,()=><RemoteChannelDialog
+        {...current}
+        setCallback={(values)=>{
+            if (! values.read && ! values.write){
+                globalStore.storeMultiple({read:false,write:false},storeKeys,false,true); //omit undefined
+            }
+            else{
+                globalStore.storeMultiple(values,storeKeys,false,true); //omit undefined
+            }
+        }}/>)
+}
+
 export default  (options)=>{
     return assign({
         name: "RemoteChannel",
@@ -67,20 +81,9 @@ export default  (options)=>{
                 visible: enabled
             }
         },
-        onClick: (ev)=>{
-            const current=globalStore.getMultiple(storeKeys);
+        onClick: async (ev)=>{
             const dialogContext=getav(ev).dialogContext;
-            showDialog(dialogContext,()=><RemoteChannelDialog
-                {...current}
-                setCallback={(values)=>{
-                    if (! values.read && ! values.write){
-                        globalStore.storeMultiple({read:false,write:false},storeKeys,false,true); //omit undefined
-                    }
-                    else{
-                        globalStore.storeMultiple(values,storeKeys,false,true); //omit undefined
-                    }
-                }}
-            />)
+            await showRemoteChannelDialog(dialogContext);
         },
         editDisable:true,
         overflow: true

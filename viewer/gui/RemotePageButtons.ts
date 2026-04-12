@@ -22,10 +22,16 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
-// @ts-ignore
-import RemoteChannelDialog from '../components/RemoteChannelDialog';
+import keys from "../util/keys";
+
 
 export default GeneralButtons.concat(propsToDefs([
-    RemoteChannelDialog({overflow:true}),
+    {
+        name:'ShowSettings',
+        displayName: 'remote connection',
+        storeKey: {
+            visible:keys.gui.capabilities.remoteChannel
+        }
+    }
 ]))
 

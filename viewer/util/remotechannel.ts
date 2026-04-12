@@ -136,7 +136,7 @@ class RemoteChannel{
             globalstore.getData(keys.gui.global.remoteChannelActive)
     }
     timerCall(){
-        if (this.websocket === undefined){
+        if (this.websocket === undefined && (this.androidChannel < 0)){
             if (this.isActive()) this.openWebSocket();
         }
         else{
@@ -145,8 +145,11 @@ class RemoteChannel{
             }
         }
         globalstore.storeData(keys.gui.global.remoteChannelState,{
-            connected: this.websocket !== undefined,
-            channel: this.channel
+            connected: this.websocket !== undefined || this.androidChannel >= 0,
+            channel: this.channel,
+            read: globalstore.getData(keys.properties.remoteChannelRead),
+            write: globalstore.getData(keys.properties.remoteChannelWrite),
+
         })
     }
     start(){
@@ -178,9 +181,11 @@ class RemoteChannel{
         if (! this.isActive()) return;
         this.close();
         if (this.android){
+            if (this.androidChannel>=0) return;
             this.androidChannel=this.android.channelOpen("/remotechannels/"+this.channel);
             return;
         }
+        if (this.websocket !== undefined){return}
         this.id++;
         const connectionId=this.id;
         const url='ws://'+window.location.host+
