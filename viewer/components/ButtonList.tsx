@@ -106,7 +106,8 @@ const ButtonList = (iprops:ButtonListProps) => {
                     addonViewManager.setPageAddon(iprops.page);
                 }
                 button.onClick(ev);
-            }
+            },
+            closeDialogs: (button.closeDialogs === undefined)?(iprops.page !== undefined):button.closeDialogs,
         }
     }
     useEffect(() => {

@@ -299,7 +299,7 @@ export const InjectMainMenu=(
                 toggle: !!props.toggle
             }
         },
-        noDialogsClose:true
+        closeDialogs:false
     },
         LayoutFinishedDialog.getButtonDef(),
     ]).concat(computedButtons,propsToDefs(computedAddonButtons));

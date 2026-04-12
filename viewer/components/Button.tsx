@@ -40,7 +40,7 @@ export interface ButtonProps {
         displayName?:React.ReactNode,
         storeKeys?: StoreKeys;
         updateFunction?: UpdateFunction;
-        noDialogsClose?: boolean;
+        closeDialogs?: boolean;
         isAddon?: ButtonAddonType;
         dataChanged?:(data:ButtonDescription) => void;
 }
@@ -75,7 +75,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     children?: React.ReactNode;
     localOnly?: boolean;
     displayName?: string;
-    noDialogsClose?: boolean;
+    closeDialogs?: boolean;
     isAddon?: ButtonAddonType=ButtonAddonType.NONE;
 }
 
@@ -105,7 +105,7 @@ const Button = (sprops:ButtonProps) => {
                 dialogContext:dialogContext,
                 history:history
             });
-            if (iprops.noDialogsClose) sprops.onClick(ev);
+            if (!iprops.closeDialogs) sprops.onClick(ev);
             else dialogContext.closeDialog().then(()=>sprops.onClick(ev));
         }
     },[iprops.name,sprops.onClick,disabledv])
@@ -113,7 +113,7 @@ const Button = (sprops:ButtonProps) => {
         syntheticClick();
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {noDialogsClose,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
+    const {closeDialogs,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
     if (visible !== undefined && ! visible) {
         return null;
     }
@@ -139,7 +139,7 @@ const Button = (sprops:ButtonProps) => {
                 dialogContext:dialogContext,
                 history:history,
             });
-            if (iprops.noDialogsClose){
+            if (!iprops.closeDialogs){
                 click(avev);
             }
             else {

@@ -270,7 +270,7 @@ const getPageUserButtons=(
                 ...buttonDef.button,
                 name:getNameForPluginButton(buttonDef),
                 overflow:true,
-                noDialogsClose:true, //allow toggle handling
+                closeDialogs:false, //allow toggle handling
                 isAddon:ButtonAddonType.USER_HANDLER});
         }
     }
