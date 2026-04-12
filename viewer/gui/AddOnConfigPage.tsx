@@ -13,7 +13,7 @@ import {avitem, concatsp} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {PAGE_TITLES, PAGEIDS, PLUGINPAGES} from "../util/pageids";
+import {getPageTitle, PAGEIDS, PLUGINPAGES} from "../util/pageids";
 import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import ButtonList from "../components/ButtonList";
@@ -132,9 +132,9 @@ export const AddonConfigPage = (props: PageProps) => {
     const buttons = InjectMainMenu(PAGEIDS.ADDCFG, updateButtons(AddOnConfigPageButtons, buttonActions));
     currentButtons.current = buttons;
     useInitialButton(currentButtons);
-
-    return <PageFrame id={PAGEIDS.ADDCFG}>
-        <PageLeft id={PAGEIDS.ADDCFG} title={PAGE_TITLES.ADDCFG}>
+    const PAGE=PAGEIDS.ADDCFG;
+    return <PageFrame id={PAGE}>
+        <PageLeft id={PAGE} title={getPageTitle(PAGE)}>
             <MultiView
                 {...scrollProps}
                 maxNumber={props.pageColumns}
@@ -187,7 +187,7 @@ export const AddonConfigPage = (props: PageProps) => {
 
                 ]}/>
         </PageLeft>
-        <ButtonList page={PAGEIDS.ADDCFG} itemList={currentButtons.current}/>
+        <ButtonList page={PAGE} itemList={currentButtons.current}/>
     </PageFrame>
 }
 

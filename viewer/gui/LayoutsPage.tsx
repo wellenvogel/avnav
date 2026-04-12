@@ -21,7 +21,7 @@
  #
  */
 import React, {useRef} from "react";
-import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -40,7 +40,7 @@ import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import DialogButton from "../components/DialogButton";
 
 const PAGE=PAGEIDS.LAYOUT;
-const TITLE=PAGE_TITLES.LAYOUT;
+const TITLE=getPageTitle(PAGE);
 const ITEM_TYPE='layout';
 export type LayoutsPageProps = Partial<PageBaseProps>;
 const LayoutsPage=(props:LayoutsPageProps)=>{

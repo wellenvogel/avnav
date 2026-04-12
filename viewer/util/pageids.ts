@@ -69,26 +69,31 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
 }
 export type PluginPageType=valueof<typeof PLUGINPAGES>
 
-export const PAGE_TITLES:Record<keyof typeof PAGEIDS, string> = {
-    TRACKS: "Tracks/NMEALogs",
-    ADDCFG: "Configure User Apps",
-    ADDON: "User Apps",
-    ADDR: "",
-    AIS: "",
-    CHANNELS: "Connections/Devices",
-    DOWNLOAD: "",
-    GPS: "Dashboard",
-    INFO: "",
-    MAIN: "Select Chart",
-    NAV: "Navigation",
-    ROUTE: "Route Editor",
-    NROUTE: "Routes",
-    SETTINGS: "Display Settings",
-    SERVER: "Server",
-    WARNING: "",
-    WPA: "",
-    AISCFG: "AIS Config",
-    LAYOUT: "Layouts",
-    CHARTS: "Charts/Overlays"
+const PAGE_TITLES:Record<PageType, string> = {
+    [PAGEIDS.TRACKS]: "Tracks/NMEALogs",
+    [PAGEIDS.ADDCFG]: "Configure User Apps",
+    [PAGEIDS.ADDON]: "User Apps",
+    [PAGEIDS.ADDR]: "",
+    [PAGEIDS.AIS]: "",
+    [PAGEIDS.CHANNELS]: "Connections/Devices",
+    [PAGEIDS.DOWNLOAD]: "",
+    [PAGEIDS.GPS]: "Dashboard",
+    [PAGEIDS.INFO]: "",
+    [PAGEIDS.MAIN]: "Select Chart",
+    [PAGEIDS.NAV]: "Navigation",
+    [PAGEIDS.ROUTE]: "Route Editor",
+    [PAGEIDS.NROUTE]: "Routes",
+    [PAGEIDS.SETTINGS]: "Display Settings",
+    [PAGEIDS.SERVER]: "Server",
+    [PAGEIDS.WARNING]: "",
+    [PAGEIDS.WPA]: "",
+    [PAGEIDS.AISCFG]: "AIS Config",
+    [PAGEIDS.LAYOUT]: "Layouts",
+    [PAGEIDS.CHARTS]: "Charts/Overlays"
+}
+export const getPageTitle=(page:PageType)=>{
+    const rt=PAGE_TITLES[page];
+    if (rt !== undefined){ return rt;}
+    return page;
 }
  

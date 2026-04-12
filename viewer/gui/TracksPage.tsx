@@ -21,7 +21,7 @@
  #
  */
 import React, {useRef} from "react";
-import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
+import {getPageTitle,PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -38,7 +38,7 @@ import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
 
 const PAGE=PAGEIDS.TRACKS;
-const TITLE=PAGE_TITLES.TRACKS;
+const TITLE=getPageTitle(PAGE);
 const ITEM_TYPE="track";
 export type TracksPageProps = Partial<PageBaseProps>;
 const TracksPage=(props:TracksPageProps)=>{

@@ -9,7 +9,7 @@ import React, {useCallback, useEffect, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {handleInitialButton, InjectMainMenu} from "./MainNav";
-import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import {ButtonAddonType, ButtonDef, ButtonEvent, DynamicButtonProps, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
 import AddOnPageButtons from "./AddOnPageButtons";
@@ -103,7 +103,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         >
         <PageLeft
             id={props.id}
-            title={PAGE_TITLES.ADDON}>
+            title={getPageTitle(PAGE)}>
             <div className="emptyPage">
                 No USer App Selected
             </div>

@@ -31,7 +31,7 @@ import MainPageButtons from "./MainPageButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import DownloadPageButtons from "./DownloadPageButtons";
-import {PAGE_TITLES, PAGEIDS, PageType} from "../util/pageids";
+import {getPageTitle, PAGEIDS, PageType} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
@@ -61,13 +61,12 @@ class Page extends CopyAware{
     kind:PageKind;
     options:Record<string, any>;
     constructor(name:string,kind:PageKind,
-                displayName?:string,
                 buttons?:ButtonDef[]|(()=>ButtonDef[]),
                 options?:Record<string, any>
         ){
         super();
         this.name=name;
-        this.displayName=displayName;
+        this.displayName=getPageTitle(name);
         this.buttons=buttons;
         this.kind=kind;
         this.options=options;
@@ -84,34 +83,33 @@ class Page extends CopyAware{
 
 
 const mainTree=[
-    new Page(PAGEIDS.MAIN,'navigation',PAGE_TITLES.MAIN,
+    new Page(PAGEIDS.MAIN,'navigation',
         MainPageButtons),
-    new Page(PAGEIDS.NAV,'navigation',PAGE_TITLES.NAV,
+    new Page(PAGEIDS.NAV,'navigation',
         NavPageButtons),
-    new Page(PAGEIDS.GPS,'navigation',PAGE_TITLES.GPS,
+    new Page(PAGEIDS.GPS,'navigation',
         GpsPageButtons),
-    new Page(PAGEIDS.ADDON,'navigation',PAGE_TITLES.ADDON,
+    new Page(PAGEIDS.ADDON,'navigation',
         []),
-    new Page(PAGEIDS.CHARTS,'settings',PAGE_TITLES.CHARTS,
+    new Page(PAGEIDS.CHARTS,'settings',
         ChartsPageButtons),
-    new Page(PAGEIDS.NROUTE,'settings',PAGE_TITLES.NROUTE,
+    new Page(PAGEIDS.NROUTE,'settings',
         RoutesPageButtons),
-    new Page(PAGEIDS.TRACKS,'settings',PAGE_TITLES.TRACKS,
+    new Page(PAGEIDS.TRACKS,'settings',
         TracksPageButtons),
-    new Page(PAGEIDS.AISCFG,'settings',PAGE_TITLES.AISCFG,
+    new Page(PAGEIDS.AISCFG,'settings',
         AisCfgPageButtons),
-    new Page(PAGEIDS.LAYOUT,'settings',PAGE_TITLES.LAYOUT,
+    new Page(PAGEIDS.LAYOUT,'settings',
         LayoutsPageButtons),
-    new Page(PAGEIDS.CHANNELS,'settings',PAGE_TITLES.CHANNELS,
+    new Page(PAGEIDS.CHANNELS,'settings',
         ChannelsPageButtons),
-    new Page(PAGEIDS.SETTINGS,'settings',PAGE_TITLES.SETTINGS,
+    new Page(PAGEIDS.SETTINGS,'settings',
         SettingsPageButtons),
-    //TODO: only with capabilities + connected mode
-    new Page(PAGEIDS.ADDCFG,'settings',PAGE_TITLES.ADDCFG,
+    new Page(PAGEIDS.ADDCFG,'settings',
         []),
-    new Page(PAGEIDS.SERVER,"settings",PAGE_TITLES.SERVER,
+    new Page(PAGEIDS.SERVER,"settings",
         ServerPageButtons),
-    new Page(PAGEIDS.DOWNLOAD,'settings',PAGE_TITLES.DOWNLOAD,
+    new Page(PAGEIDS.DOWNLOAD,'settings',
         DownloadPageButtons),
 ]
 

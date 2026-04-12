@@ -21,8 +21,8 @@
  #
  */
 import React, {useRef, useState} from "react";
-import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
-import {PageFrame, PageLeft} from "../components/Page";
+import {getPageTitle} from "../util/pageids";
+import {PageFrame, PageLeft, PageProps} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
 import StatusView, {ChannelKinds} from "../components/StatusView";
@@ -33,7 +33,7 @@ import {InjectMainMenu, useInitialButton} from "./MainNav";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import {ButtonDef, updateButtons} from "../components/Button";
 
-const ChannelsPage=()=>{
+const ChannelsPage=(props:PageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const history=useHistory();
      const [foucsId,setFoucsId]=useState<string|number>();
@@ -51,18 +51,18 @@ const ChannelsPage=()=>{
      }
      buttonListRef.current=updateButtons(ChannelsPageButtons,buttonActions);
      useInitialButton(buttonListRef);
-     return <PageFrame id={PAGEIDS.CHANNELS}>
+     return <PageFrame id={props.id}>
         <PageLeft
-            id={PAGEIDS.CHANNELS}
-            title={PAGE_TITLES.CHANNELS}>
+            id={props.id}
+            title={getPageTitle(props.id)}>
             <StatusView
                 focusItem={foucsId}
                 kinds={[ChannelKinds.CHANNEL]}
             ></StatusView>
         </PageLeft>
          <ButtonList
-             page={PAGEIDS.CHANNELS}
-             itemList={InjectMainMenu(PAGEIDS.CHANNELS,
+             page={props.id}
+             itemList={InjectMainMenu(props.id,
                  buttonListRef.current,
                  )}
          ></ButtonList>

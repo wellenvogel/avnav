@@ -21,7 +21,7 @@
  #
  */
 import React, {useRef, useState} from "react";
-import {PAGE_TITLES, PAGEIDS} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -41,7 +41,7 @@ import {ImporterView} from "../components/ImporterView";
 import {createItemActions} from '../components/FileDialog';
 
 const PAGE=PAGEIDS.CHARTS;
-const TITLE=PAGE_TITLES.CHARTS;
+const TITLE=getPageTitle(PAGE);
 const NUMVIEWS=4
 export type ChartsPageProps = Partial<PageBaseProps>;
 const ChartsPage=(props:ChartsPageProps)=>{
