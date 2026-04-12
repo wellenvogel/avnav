@@ -31,7 +31,6 @@ export const PAGEIDS={
     ADDR:'addresspage',
     SERVER:'serverpage',
     WPA:'wpapage',
-    DOWNLOAD:'downloadpage',
     SETTINGS:'settingspage',
     NAV:'navpage',
     ROUTE:'editroutepage',
@@ -44,6 +43,7 @@ export const PAGEIDS={
     LAYOUT:'layoutspage',
     CHARTS:'chartspage',
     PLUGINS:'pluginspage',
+    REMOTE:'remotepage'
 }
 
 export type PageType=valueof<typeof PAGEIDS>;
@@ -68,31 +68,32 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
     SETTINGS: PAGEIDS.SETTINGS,
     TRACKS: PAGEIDS.TRACKS,
     PLUGINS: PAGEIDS.PLUGINS,
+    REMOTE: PAGEIDS.REMOTE,
 }
 export type PluginPageType=valueof<typeof PLUGINPAGES>
 
 const PAGE_TITLES:Record<PageType, string> = {
     [PAGEIDS.TRACKS]: "Tracks/NMEALogs",
-    [PAGEIDS.ADDCFG]: "Configure User Apps",
+    [PAGEIDS.ADDCFG]: "Configure User Apps, JS, CSS",
     [PAGEIDS.ADDON]: "User Apps",
-    [PAGEIDS.ADDR]: "",
-    [PAGEIDS.AIS]: "",
+    [PAGEIDS.ADDR]: "Connect Urls",
+    [PAGEIDS.AIS]: "AIS targets",
     [PAGEIDS.CHANNELS]: "Connections/Devices",
-    [PAGEIDS.DOWNLOAD]: "",
     [PAGEIDS.GPS]: "Dashboard",
-    [PAGEIDS.INFO]: "",
+    [PAGEIDS.INFO]: "Version and License",
     [PAGEIDS.MAIN]: "Select Chart",
     [PAGEIDS.NAV]: "Navigation",
     [PAGEIDS.ROUTE]: "Route Editor",
     [PAGEIDS.NROUTE]: "Routes",
     [PAGEIDS.SETTINGS]: "Display Settings",
     [PAGEIDS.SERVER]: "Server",
-    [PAGEIDS.WARNING]: "",
-    [PAGEIDS.WPA]: "",
+    [PAGEIDS.WARNING]: "Initial Warning",
+    [PAGEIDS.WPA]: "Configure Wifi Clients",
     [PAGEIDS.AISCFG]: "AIS Config",
     [PAGEIDS.LAYOUT]: "Layouts",
     [PAGEIDS.CHARTS]: "Charts/Overlays",
     [PAGEIDS.PLUGINS]: "Configure Plugins",
+    [PAGEIDS.REMOTE]: "Remote Control",
 }
 export const getPageTitle=(page:PageType)=>{
     const rt=PAGE_TITLES[page];

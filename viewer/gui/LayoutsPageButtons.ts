@@ -26,16 +26,6 @@ import keys from "../util/keys";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name: 'SettingsLayout',
-        displayName: 'select/edit layout',
-        storeKeys: {hidden:keys.gui.global.layoutEditing},
-        updateFunction:(state)=>{
-            return {
-                visible:!state.hidden
-            }
-        }
-    },
-    {
         name:'DownloadPageUpload',
         displayName: 'import',
         localOnly:true,

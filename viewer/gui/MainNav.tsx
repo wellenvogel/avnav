@@ -50,6 +50,8 @@ import GpsPageButtons from "./GpsPageButtons";
 import keyhandler from "../util/keyhandler";
 import {injectAddonButtonAction} from "../components/AddonView";
 import PluginsPageButtons from "./PluginsPageButtons";
+import AddOnPageButtons from "./AddOnPageButtons";
+import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 
 
 type PageKind='navigation'|'settings';
@@ -90,7 +92,7 @@ const mainTree=[
     new Page(PAGEIDS.GPS,'navigation',
         GpsPageButtons),
     new Page(PAGEIDS.ADDON,'navigation',
-        []),
+        AddOnPageButtons),
     new Page(PAGEIDS.CHARTS,'settings',
         ChartsPageButtons),
     new Page(PAGEIDS.NROUTE,'settings',
@@ -108,7 +110,7 @@ const mainTree=[
     new Page(PAGEIDS.SETTINGS,'settings',
         SettingsPageButtons),
     new Page(PAGEIDS.ADDCFG,'settings',
-        []),
+        AddOnConfigPageButtons),
     new Page(PAGEIDS.SERVER,"settings",
         ServerPageButtons)
 ]

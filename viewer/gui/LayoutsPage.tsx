@@ -37,6 +37,7 @@ import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import DialogButton from "../components/DialogButton";
+import layouthandler from "../util/layouthandler";
 
 const PAGE=PAGEIDS.LAYOUT;
 const TITLE=getPageTitle(PAGE);
@@ -44,7 +45,9 @@ const ITEM_TYPE='layout';
 export type LayoutsPageProps = Partial<PageBaseProps>;
 const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
-     const [layoutName]=useStoreState(keys.properties.layoutName);
+     useStoreState(keys.properties.layoutName);
+     useStoreState(keys.gui.global.layoutEditing);
+     const layoutName=layouthandler.getName();
      const history=useHistory();
      //we are just prepared for a multi view...
      const [scrollProps,/*scrollTo*/,visible]=useScrollHelper(1);
@@ -60,11 +63,6 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                      category={"General"}
                      title={'General Settings'}
                  />)
-             }
-         },
-         SettingsLayout:{
-             onClick:()=>{
-                 showDialog(undefined, ()=><SelectLayoutDialog/>)
              }
          },
          DownloadPageUpload:{
