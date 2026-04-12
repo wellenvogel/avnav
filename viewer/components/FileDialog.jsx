@@ -1819,9 +1819,7 @@ class PluginItemActions extends ItemActions{
             visible: this.canModify(item),
         }))
         actions.push(standardActions.download.copy({}))
-        if (this.canModify(item)) {
-            actions.push(standardActions.config.copy({}))
-        }
+        actions.push(standardActions.config.copy({}))
     }
 
     build() {
