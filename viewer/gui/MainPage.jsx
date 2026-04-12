@@ -161,11 +161,6 @@ class MainPage extends React.Component {
             }
         )
         this.buttonActions = {
-            ShowStatus: {
-                onClick: () => {
-                    this.props.history.push(PAGEIDS.SERVER)
-                }
-            },
             ShowGps: {
                 onClick: () => {
                     this.props.history.push(PAGEIDS.GPS)

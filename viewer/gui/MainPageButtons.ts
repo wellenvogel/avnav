@@ -32,11 +32,6 @@ import GeneralButtons from "./GeneralButtons";
 
 export default updateButtons(GeneralButtons.concat(propsToDefs([
     {
-        name: 'ShowStatus',
-        displayName: 'status',
-        editDisable: true
-    },
-    {
         name: 'ShowGps',
         displayName: 'dashboard',
     },
