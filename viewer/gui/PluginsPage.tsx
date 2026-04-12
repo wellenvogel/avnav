@@ -46,6 +46,8 @@ export const PluginsPage = (props:PageProps) => {
             <DownloadItemList
                 {...uploadProps}
                 type={'plugins'}
+                autoreload={3000}
+                scrollSelected={1}
             >
 
             </DownloadItemList>

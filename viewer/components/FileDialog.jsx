@@ -196,6 +196,14 @@ class UploadAction extends CopyAware{
         }
         return false;
     }
+    nameToServerNameImpl(name){
+        if (! name) return name;
+        if (! this.fixedPrefix) return name;
+        return this.fixedPrefix+name;
+    }
+    nameToServerName(name){
+        return this.nameToServerNameImpl(name,this.userData)
+    }
 }
 
 class CreateAction extends CopyAware{

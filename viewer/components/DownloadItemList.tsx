@@ -250,9 +250,10 @@ export const DownloadItemList = (
             type={type}
             doneCallback={async (param) => {
                 const rs = await uploadAction.afterUpload();
-                if (uploadDone) uploadDone(param?param.name:undefined);
-                if (param && param.name && scrollSelected) {
-                    setVselectedName(param.name);
+                const name=uploadAction.nameToServerName(param?.name);
+                if (uploadDone) uploadDone(name);
+                if (name && scrollSelected) {
+                    setVselectedName(name);
                 }
                 if (rs) return;
                 readItems();
