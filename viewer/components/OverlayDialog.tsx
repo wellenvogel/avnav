@@ -71,7 +71,11 @@ const OverlayDialog = (
     useInputMonitor();
     return (
         <OverlayContainer
-            onClick={() => dialogContext.closeDialog()}
+            onClick={async (ev:SyntheticEvent) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                await nestedDialogContext.current?.closeDialog()
+            }}
             dialogClassName={dialogClassName}
             coverClassName={coverClassName}
         >
