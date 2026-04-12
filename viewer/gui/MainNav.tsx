@@ -23,7 +23,7 @@
 import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
-import {IDialogContext, useDialogContext} from "../components/DialogContext";
+import {useDialogContext} from "../components/DialogContext";
 import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
@@ -300,7 +300,7 @@ export const InjectMainMenu=(
     ]).concat(computedButtons,propsToDefs(computedAddonButtons));
 }
 
-export const handleInitialButton = (history: IHistory, _pageButtons?: ButtonDef[], _dialogContext?: IDialogContext) => {
+export const handleInitialButton = (history: IHistory) => {
     //check and remove the button from the history
     const current = history.currentLocation(true) as HistoryEntry;
     if (current.options && current.options.button) {
@@ -317,9 +317,8 @@ export const handleInitialButton = (history: IHistory, _pageButtons?: ButtonDef[
 
 export const useInitialButton=(buttonList:RefObject<ButtonDef[]>)=>{
     const history=useHistory()
-    const dialogContext=useDialogContext()
     useEffect(() => {
         if (! buttonList.current) return;
-        handleInitialButton(history,buttonList.current,dialogContext);
+        handleInitialButton(history);
     }, []);
 }

@@ -221,7 +221,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
         }
     buttonListRef.current=InjectMainMenu(PAGE,updateButtons(SettingsPageButtons,
         buttonActions));
-    handleInitialButton(history,buttonListRef.current);
+    handleInitialButton(history);
         const title = layoutEditing ? "LayoutSettings" : "Settings";
     return <PageFrame id={PAGEIDS.SETTINGS}
         {...props}
