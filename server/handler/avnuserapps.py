@@ -110,7 +110,11 @@ class AVNUserAppHandler(AVNWorker):
       self.wait(sleepTime)
 
   def _updateSequence(self):
-      self.navdata.updateChangeCounter(self.navdata.CHANGE_CONFIG)
+      navdata=self.navdata
+      #be robust against registering plugins before start
+      if navdata is None:
+          return
+      navdata.updateChangeCounter(self.navdata.CHANGE_CONFIG)
 
   def computeKey(self,entry):
     md5=hashlib.md5()

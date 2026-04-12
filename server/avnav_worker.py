@@ -586,6 +586,7 @@ class AVNWorker(InfoHandler):
     self.currentThread=None
     self.name=self.getName()
     self.usedResources=[]
+    self.navdata=None
 
 
   def setNameIfEmpty(self,name):
