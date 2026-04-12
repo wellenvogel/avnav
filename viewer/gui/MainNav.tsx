@@ -30,7 +30,6 @@ import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from
 import MainPageButtons from "./MainPageButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
-import DownloadPageButtons from "./DownloadPageButtons";
 import {getPageTitle, PAGEIDS, PageType} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
 import {HistoryEntry, IHistory} from "../util/history";
@@ -111,9 +110,7 @@ const mainTree=[
     new Page(PAGEIDS.ADDCFG,'settings',
         []),
     new Page(PAGEIDS.SERVER,"settings",
-        ServerPageButtons),
-    new Page(PAGEIDS.DOWNLOAD,'settings',
-        DownloadPageButtons),
+        ServerPageButtons)
 ]
 
 

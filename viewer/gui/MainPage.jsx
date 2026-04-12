@@ -166,14 +166,9 @@ class MainPage extends React.Component {
                     this.props.history.push(PAGEIDS.SERVER)
                 }
             },
-            ShowDownload: {
-                onClick: () => {
-                    this.props.history.push('downloadpage')
-                }
-            },
             ShowGps: {
                 onClick: () => {
-                    this.props.history.push('gpspage')
+                    this.props.history.push(PAGEIDS.GPS)
                 }
             },
             Night: {

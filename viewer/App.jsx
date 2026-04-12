@@ -12,7 +12,6 @@ import AddOnPage from './gui/AddOnPage';
 import AddressPage from './gui/AddressPage';
 import ServerPage from './gui/ServerPage';
 import WpaPage from './gui/WpaPage';
-import DownloadPage from './gui/DownloadPage';
 import SettingsPage from './gui/SettingsPage';
 import NavPage from './gui/NavPage';
 import EditRoutePage from './gui/EditRoutePage';
@@ -105,7 +104,6 @@ const pages={
     [PAGEIDS.ADDR]:AddressPage,
     [PAGEIDS.SERVER]:ServerPage,
     [PAGEIDS.WPA]:WpaPage,
-    [PAGEIDS.DOWNLOAD]:DownloadPage,
     [PAGEIDS.SETTINGS]:SettingsPage,
     [PAGEIDS.NAV]: NavPage,
     [PAGEIDS.ROUTE]:EditRoutePage,

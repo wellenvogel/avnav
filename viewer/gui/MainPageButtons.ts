@@ -37,12 +37,6 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
         editDisable: true
     },
     {
-        name: 'ShowDownload',
-        displayName: 'download',
-        editDisable: true,
-        overflow: true
-    },
-    {
         name: 'ShowGps',
         displayName: 'dashboard',
     },
