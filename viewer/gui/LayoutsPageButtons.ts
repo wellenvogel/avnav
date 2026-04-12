@@ -26,14 +26,6 @@ import keys from "../util/keys";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'ServerView',
-        displayName: 'server status',
-    },
-    {
-        name:'ItemsView',
-        displayName: 'manage layouts',
-    },
-    {
         name: 'SettingsLayout',
         displayName: 'select/edit layout',
         storeKeys: {hidden:keys.gui.global.layoutEditing},
@@ -46,7 +38,16 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'DownloadPageUpload',
         displayName: 'import',
-        localOnly:true
+        localOnly:true,
+        storeKeys:{
+            visible: keys.gui.capabilities.uploadLayout,
+            connected: keys.gui.global.connectedMode
+        },
+        updateFunction:(state:any)=>{
+            return {
+                visible:state.visible && state.connected,
+            }
+        }
     },
     {
         name: 'ShowSettings',

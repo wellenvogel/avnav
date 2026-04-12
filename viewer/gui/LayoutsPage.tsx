@@ -25,7 +25,6 @@ import {getPageTitle, PAGEIDS} from "../util/pageids";
 import {PageBaseProps, PageFrame, PageLeft} from "../components/Page";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
-import StatusView, {ChannelKinds} from "../components/StatusView";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
@@ -47,20 +46,11 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
      const [layoutName]=useStoreState(keys.properties.layoutName);
      const history=useHistory();
-     const [scrollProps,scrollTo,visible]=useScrollHelper(1);
+     //we are just prepared for a multi view...
+     const [scrollProps,/*scrollTo*/,visible]=useScrollHelper(1);
      const buttonListRef=useRef<ButtonDef[]>();
      const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
      const buttonActions={
-         ServerView:{
-             onClick:()=>scrollTo(0),
-             disabled:props.pageColumns > 1,
-             toggle: visible(0),
-         },
-         ItemsView:{
-             onClick:()=>scrollTo(1),
-             disabled:props.pageColumns > 1,
-             toggle:visible(1),
-         },
          Cancel:{
              onClick:()=>history.pop()
          },
@@ -79,7 +69,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
          },
          DownloadPageUpload:{
              onClick:uploadAction,
-             disabled:!visible(1),
+             disabled:!visible(0),
          }
      }
      buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
@@ -88,13 +78,6 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
         <PageLeft id={PAGE} title={TITLE}>
             <MultiView {...scrollProps} views={[
                 <React.Fragment key={0}>
-                    <MvHeadline title={"Server"}/>
-                    <StatusView
-                        kinds={[ChannelKinds.LAYOUT]}
-                    ></StatusView>
-                </React.Fragment>
-                ,
-                <React.Fragment key={1}>
                     <MvHeadline
                         title={"Current"}
                     ></MvHeadline>
@@ -109,7 +92,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                             />
                         </ListSlot>
                     </ListItem>
-                    <MvHeadline title={"Layouts"}/>
+                    <MvHeadline title={"Layouts"} showScroll={false}/>
                     <DownloadItemList
                         {...uploadProps}
                         type={"layout"}
