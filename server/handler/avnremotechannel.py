@@ -122,6 +122,10 @@ class AVNRemoteChannelHandler(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def getKind(cls):
+      return 'remote'
+
   def updateConfig(self, param, child=None):
     rt=super().updateConfig(param, child)
     enabled=self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param)

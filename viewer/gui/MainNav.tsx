@@ -52,6 +52,7 @@ import {injectAddonButtonAction} from "../components/AddonView";
 import PluginsPageButtons from "./PluginsPageButtons";
 import AddOnPageButtons from "./AddOnPageButtons";
 import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
+import RemotePageButtons from "./RemotePageButtons";
 
 
 type PageKind='navigation'|'settings';
@@ -112,7 +113,9 @@ const mainTree=[
     new Page(PAGEIDS.ADDCFG,'settings',
         AddOnConfigPageButtons),
     new Page(PAGEIDS.SERVER,"settings",
-        ServerPageButtons)
+        ServerPageButtons),
+    new Page(PAGEIDS.REMOTE,"settings",
+        RemotePageButtons)
 ]
 
 

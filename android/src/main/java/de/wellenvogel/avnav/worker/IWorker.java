@@ -22,7 +22,8 @@ public interface IWorker {
         USER("user"),
         ADDON("addon"),
         OTHER("other"),
-        AIS("ais");
+        AIS("ais"),
+        REMOTE("remote");
         private Kind(String s){
             name=s;
         }
