@@ -94,7 +94,7 @@ export const StatusItem=(props:StatusItemProps)=>{
     if (props.id !== undefined){
         name="["+props.id+"]"+name;
     }
-    const cl=Helper.concatsp("status",props.className);
+    const cl=Helper.concatsp("status",props.className,"border");
     const children=(props.info && props.info.items)?props.info.items:[];
     children.sort((a,b)=>{
         if (a.name>b.name) return 1;
