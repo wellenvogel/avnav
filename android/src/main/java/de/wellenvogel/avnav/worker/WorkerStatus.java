@@ -9,6 +9,8 @@ import java.util.HashMap;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class WorkerStatus implements AvnUtil.IJsonObect {
+    static final String ITEMS="items";
+    static final String INFO="info";
     WorkerStatus(String typeName){
         this.typeName = typeName;
     }
@@ -95,7 +97,7 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         JSONArray cha=new JSONArray();
         JSONObject main=new JSONObject(); //WorkerStatus in python
         main.put("name","main");
-        main.put("info",info);
+        main.put(INFO,info);
         main.put("status",status.toString());
         cha.put(main);
         for (String k :children.keySet()){
@@ -103,14 +105,21 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
             cho.put("name",k);
             cho.put("id",k);
             Child ch=children.get(k);
-            cho.put("info",ch.info);
+            cho.put(INFO,ch.info);
             cho.put("status",ch.status.toString());
             cho.put("canEdit",ch.canEdit);
             cha.put(cho);
         }
-        sto.put("items",cha);
-        rt.put("info",sto);
+        sto.put(ITEMS,cha);
+        rt.put(INFO,sto);
         return rt;
+    }
+    public static JSONArray extractItems(JSONObject status) throws JSONException {
+        if (status == null) return new JSONArray();
+        if (! status.has(INFO)) return new JSONArray();
+        JSONObject info=status.getJSONObject(INFO);
+        if (! info.has(ITEMS)) return new JSONArray();
+        return info.getJSONArray(ITEMS);
     }
 
 }

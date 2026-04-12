@@ -26,7 +26,7 @@
 // @ts-ignore
 import {Action, createItemActions, FileDialog, ItemActions} from "./FileDialog";
 import Helper, {avitem, concatsp, setav, valueof} from "../util/helper";
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {ReactElement, useCallback, useEffect, useRef, useState} from "react";
 // @ts-ignore
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
@@ -64,12 +64,13 @@ export const DownloadItemInfoMode={
     ALL:2
 }
 
-interface DownloadItemProps{
+interface DownloadItemProps extends Item{
     infoMode:valueof<typeof DownloadItemInfoMode>;
     itemActions:ItemActions;
     className?:string;
     selected?:boolean;
     onClick?:(ev:Event)=>void;
+    itemInfoFunction?:(item:Item)=>ReactElement;
 }
 
 const DownloadItem = (props:DownloadItemProps) => {
@@ -77,6 +78,7 @@ const DownloadItem = (props:DownloadItemProps) => {
     if (infoMode === undefined) infoMode=DownloadItemInfoMode.ALL;
     const actions = props.itemActions;
     const iconProperties=getItemIconProperties(props);
+    const Info=props.itemInfoFunction;
     return (
         <ListItem
             className={concatsp(actions.getClassName(props),props.className)}
@@ -90,7 +92,9 @@ const DownloadItem = (props:DownloadItemProps) => {
                     actions.getTimeText(props):
                     undefined
                 }
-            ></ListMainSlot>
+            >
+                {Info && <Info {...props}/>}
+            </ListMainSlot>
             <ListSlot>
                 {(infoMode === DownloadItemInfoMode.ALL ||
                         infoMode === DownloadItemInfoMode.ICONS) &&
@@ -117,12 +121,14 @@ export type DownloadItemListProps = {
     selectedName?:string;
     immediateSelect?:boolean; //if set and selectedName is set - immediately call the selectCallback if found
     scrollSelected?:number;  //if != 0 scroll selected item, repeat scroll on change
+    itemInfoFunction?:(item?:Item)=>ReactElement
+    className?:string
 
 }
 
 export const DownloadItemList = (
     {type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,
-        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect}:DownloadItemListProps) => {
+        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect,itemInfoFunction,className}:DownloadItemListProps) => {
     const [items, setItems] = useState([]);
     const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
     const lastSelectedName=useRef(undefined);
@@ -155,8 +161,8 @@ export const DownloadItemList = (
     if (!itemActions) itemActions = createItemActions(type);
     const item=useCallback((props:Item)=>{
         return <DownloadItem {...props} infoMode={infoMode}
-                             itemActions={itemActions}/>
-    },[itemActions,infoMode]);
+                             itemActions={itemActions} itemInfoFunction={itemInfoFunction}/>
+    },[itemActions,infoMode,itemInfoFunction]);
     const createAction=itemActions.getCreateAction().copy({
         checkName:(name:string,_itemList:Item[],accessor:(item:Item)=>string)=>{
             const rs=itemActions.show({name:name,type:type});
@@ -222,7 +228,7 @@ export const DownloadItemList = (
     return <React.Fragment>
         <ItemList
             keyFunction={(item:Item)=>item.name}
-            className={'DownloadItemList'}
+            className={Helper.concatsp('DownloadItemList',className)}
             itemClass={item}
             scrollable={true}
             itemList={displayList}

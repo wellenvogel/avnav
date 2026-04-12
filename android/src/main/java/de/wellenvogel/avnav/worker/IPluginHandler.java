@@ -77,6 +77,8 @@ public interface IPluginHandler {
      */
     JSONObject getInfo() throws JSONException;
 
+    JSONObject getJsonStatus() throws JSONException;
+
     /**
      * open a file from the plugin
      * @param relativePath - the (OS dependent) relative path - already URL decoded

@@ -726,6 +726,23 @@ public class PluginManager extends DirectoryRequestHandler {
                 return RequestHandler.getReturn(new AvnUtil.KeyValue("data",plugin.currentValues));
             }
         }
+        if ("status".equals(command)){
+            JSONObject stJson=status.toJson();
+            JSONArray items=WorkerStatus.extractItems(stJson);
+            List<IPluginHandler> externals=getExternalPlugins();
+            for (IPluginHandler ph:externals){
+                JSONObject ext=ph.getJsonStatus();
+                JSONArray extItems=WorkerStatus.extractItems(ext);
+                    for (int i=0;i<extItems.length();i++){
+                        JSONObject exto=extItems.getJSONObject(i);
+                        if ("main".equals(exto.optString("name"))){
+                            exto.put("name",ph.getName());
+                            items.put(exto);
+                        }
+                    }
+                }
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",items));
+        }
         return RequestHandler.getErrorReturn("command "+command+" not available");
     }
 

@@ -1138,6 +1138,14 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
                 if api is None:
                     return AVNUtil.getReturnData(error=f"plugin {name} not found")
                 return AVNUtil.getReturnData(data=self.getParam(child=name))
+        if command == 'status':
+            info=self.getInfo()
+            if info is None:
+                return AVNUtil.getReturnData(error=f"no plugin status")
+            items=info.get('items')
+            if items is None:
+                return AVNUtil.getReturnData(error=f"no items for plugin status")
+            return AVNUtil.getReturnData(data=items)
         return AVNUtil.getReturnData(error=f"plugins: command {command} not found")
 
     def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None, **kwargs):
