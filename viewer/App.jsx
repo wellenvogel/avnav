@@ -63,6 +63,7 @@ import LayoutsPage from "./gui/LayoutsPage";
 import ChartsPage from "./gui/ChartsPage";
 import addons from "./util/Addons";
 import {addonViewManager} from "./components/AddonView";
+import {PluginsPage} from "./gui/PluginsPage";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -116,6 +117,7 @@ const pages={
     [PAGEIDS.AISCFG]: AisCfgPage,
     [PAGEIDS.LAYOUT]: LayoutsPage,
     [PAGEIDS.CHARTS]: ChartsPage,
+    [PAGEIDS.PLUGINS]:PluginsPage,
 };
 const Router = (props) => {
     const history = useHistory();

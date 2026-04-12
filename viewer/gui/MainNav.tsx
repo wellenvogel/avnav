@@ -50,6 +50,7 @@ import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
 import keyhandler from "../util/keyhandler";
 import {injectAddonButtonAction} from "../components/AddonView";
+import PluginsPageButtons from "./PluginsPageButtons";
 
 
 type PageKind='navigation'|'settings';
@@ -99,6 +100,8 @@ const mainTree=[
         TracksPageButtons),
     new Page(PAGEIDS.AISCFG,'settings',
         AisCfgPageButtons),
+    new Page(PAGEIDS.PLUGINS,'settings',
+        PluginsPageButtons),
     new Page(PAGEIDS.LAYOUT,'settings',
         LayoutsPageButtons),
     new Page(PAGEIDS.CHANNELS,'settings',

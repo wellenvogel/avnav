@@ -42,7 +42,8 @@ export const PAGEIDS={
     TRACKS: 'trackspage',
     AISCFG: 'aiscfgpage',
     LAYOUT:'layoutspage',
-    CHARTS:'chartspage'
+    CHARTS:'chartspage',
+    PLUGINS:'pluginspage',
 }
 
 export type PageType=valueof<typeof PAGEIDS>;
@@ -65,7 +66,8 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
     ROUTE: PAGEIDS.ROUTE,
     SERVER: PAGEIDS.SERVER,
     SETTINGS: PAGEIDS.SETTINGS,
-    TRACKS: PAGEIDS.TRACKS
+    TRACKS: PAGEIDS.TRACKS,
+    PLUGINS: PAGEIDS.PLUGINS,
 }
 export type PluginPageType=valueof<typeof PLUGINPAGES>
 
@@ -89,7 +91,8 @@ const PAGE_TITLES:Record<PageType, string> = {
     [PAGEIDS.WPA]: "",
     [PAGEIDS.AISCFG]: "AIS Config",
     [PAGEIDS.LAYOUT]: "Layouts",
-    [PAGEIDS.CHARTS]: "Charts/Overlays"
+    [PAGEIDS.CHARTS]: "Charts/Overlays",
+    [PAGEIDS.PLUGINS]: "Configure Plugins",
 }
 export const getPageTitle=(page:PageType)=>{
     const rt=PAGE_TITLES[page];
