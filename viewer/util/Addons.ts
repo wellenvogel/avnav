@@ -158,15 +158,24 @@ export const getServerAddons=():AddonProps[]=>{
     return serverAddOns;
 }
 export interface InternalAddonProps extends AddonProps{
-    type:ButtonAddonType
+    type:ButtonAddonType,
+    buttonClass:string
 }
 export const getAllAddons=():InternalAddonProps[]=>{
     const rt:InternalAddonProps[]=[];
     for (const sad of serverAddOns){
-        rt.push({...sad,type:sad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG});
+        rt.push({
+            ...sad,
+            type:sad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
+            buttonClass: getNameForButton(sad)
+        });
     }
     for (const pad of Object.values(pluginAddOns)){
-        const padm={...pad,type:pad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG};
+        const padm:InternalAddonProps={
+            ...pad,
+            type:pad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
+            buttonClass: getNameForButton(pad)
+        };
         if (!padm.source) padm.source="cl-plugin-"+padm.pluginName;
         padm.canDelete=false;
         rt.push(padm);
@@ -178,7 +187,8 @@ export const getAllAddons=():InternalAddonProps[]=>{
             canDelete:false,
             button:{...bad.button,name:bad.key},
             type:ButtonAddonType.USER_HANDLER,
-            source:"cl-plugin-"+bad.pluginName
+            source:"cl-plugin-"+bad.pluginName,
+            buttonClass: getNameForPluginButton(bad)
         })
     }
     return rt;
@@ -242,6 +252,12 @@ const isOnPage=(page:string,pageDef:PluginPage|[PluginPage])=>{
 export interface PageUserButton extends DynamicButtonProps{
     config?:AddonProps
 }
+const getNameForButton=(addon:AddonProps)=>{
+    return addon?.key||addon?.name;
+}
+const getNameForPluginButton=(button?:PluginUserButton)=>{
+    return button?.key;
+}
 const getPageUserButtons=(
     page:string,
     includeInvalid?:boolean,
@@ -252,7 +268,7 @@ const getPageUserButtons=(
         if (isOnPage(page,buttonDef.page)){
             rt.push({
                 ...buttonDef.button,
-                name:buttonDef.key,
+                name:getNameForPluginButton(buttonDef),
                 overflow:true,
                 noDialogsClose:true, //allow toggle handling
                 isAddon:ButtonAddonType.USER_HANDLER});
@@ -263,7 +279,7 @@ const getPageUserButtons=(
         if (isOnPage(page,addon.page)){
             const buttonDef={
                 ...addon.button,
-                name:addon.key||addon.name,
+                name:getNameForButton(addon),
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
                 config: {...addon}
@@ -278,7 +294,7 @@ const getPageUserButtons=(
         if (isOnPage(page,addon.page)){
             const buttonDef={
                 ...addon.button,
-                name:addon.key||addon.name,
+                name:getNameForButton(addon),
                 overflow: true,
                 isAddon:addon.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
                 config: {...addon}

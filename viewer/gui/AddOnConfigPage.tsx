@@ -6,7 +6,7 @@ import Button, {ButtonDef, ButtonEventHandler, updateButtons} from '../component
 import ItemList from '../components/ItemList';
 import React, {useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
-import Addons, {AddonProps} from '../util/Addons';
+import Addons, {AddonProps, InternalAddonProps} from '../util/Addons';
 import UserAppDialog from '../components/UserAppDialog';
 import {showPromiseDialog} from "../components/OverlayDialog";
 import {avitem, concatsp} from "../util/helper";
@@ -24,7 +24,7 @@ import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
 import {useStoreHelper} from "../util/UiHelper";
 
 
-interface AddonItemProps extends AddonProps {
+interface AddonItemProps extends InternalAddonProps {
     className?: string;
     onClick?: ButtonEventHandler
 }
@@ -37,6 +37,7 @@ const AddonItem=(props:AddonItemProps)=>{
     let url=((props.originalUrl!==undefined)?props.originalUrl:props.url);
     if (! url) url=`[${props.button?.displayName||props.title||props.name}]`;
     else url=url+"";
+    const pages=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON];
     return (
         <ListItem
             className={concatsp("addonItem",
@@ -48,6 +49,7 @@ const AddonItem=(props:AddonItemProps)=>{
                 primary={url+""}
                 secondary={props.title}
             >
+                <div className="pageAndButton">{`Page ${pages.join(",")} Button: ${props.buttonClass}`}</div>
                 <div className="sourceInfo">{source}</div>
             </ListMainSlot>
             <ListSlot >

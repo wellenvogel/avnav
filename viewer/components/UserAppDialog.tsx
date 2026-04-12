@@ -20,7 +20,7 @@ import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
 import {Item} from "../util/itemFunctions";
 import {SelectListEntry} from "../util/EditableParameter";
-import {PLUGINPAGES} from "../util/pageids";
+import {PAGEIDS, PLUGINPAGES} from "../util/pageids";
 
 interface SelectHtmlDialogProps{
     allowUpload?:boolean;
@@ -249,14 +249,20 @@ const UserAppDialog = (props:UserAppDialogProps) => {
     const fixedUrl = fixed.url !== undefined;
     let title = "";
     if (canEdit) title = currentAddon.name ? "Modify " : "Create ";
+    const showUrl=!!currentAddon.url || canEdit;
+    const showTitle=!!currentAddon.title || canEdit;
+    const displayPage=Array.isArray(currentAddon.page) ? currentAddon.page.join(",") : currentAddon.page||PAGEIDS.ADDON;
     return (
         <DialogFrame className="userAppDialog" flex={true} title={title + 'User App'}>
             {(fixedUrl || !canEdit) ?
+                (showUrl?
                 <InputReadOnly
                     dialogRow={true}
                     className="url"
                     label="url"
                     value={currentAddon.url}/>
+                :null
+                )
                 :
                 <React.Fragment>
                     {(canEdit && !fixedUrl) && <Checkbox
@@ -268,7 +274,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                             setCurrentAddon({...currentAddon, url: undefined, newWindow: false});
                         }
                         }/>}
-                    {!internal ?
+                    {showUrl && (!internal ?
                         <Input
                             dialogRow={true}
                             label="external url"
@@ -294,10 +300,11 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                                     />
                                 })
                             }}/>
+                    )
                     }
                 </React.Fragment>
             }
-            {canEdit ?
+            {showTitle && (canEdit ?
                 <Input
                     dialogRow={true}
                     label="title"
@@ -314,6 +321,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     label="title"
                     value={currentAddon.title}
                 />
+            )
             }
             {(canEdit)?
                 <InputReadOnly
@@ -341,12 +349,19 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     {currentIcon && <img className="appIcon" src={currentIcon+""}/>}
                 </InputReadOnly>
             }
-            {canEdit && <InputSelect
+            {canEdit? <InputSelect
                 dialogRow={true}
                 label="page"
                 list={Object.values(PLUGINPAGES).map((page)=>{return {label:page,value:page}})}
                 onChange={(nv)=>setCurrentAddon({...currentAddon, page:nv.value})}
-                value={currentAddon.page||PLUGINPAGES.ADDON}/>}
+                value={displayPage}/>
+                :
+                <InputReadOnly
+                dialogRow={true}
+                label="page"
+                value={displayPage}
+                />
+            }
             {canEdit && !internal && <Checkbox
                 dialogRow={true}
                 label={'newWindow'}
