@@ -28,13 +28,10 @@ import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler.ts';
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog.jsx';
 import {RawButtonDef,createDialog} from '../components/EditPageDialog';
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
-import Mob from '../components/Mob.ts';
 import Dimmer from '../util/dimhandler';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
-import FullScreen from '../util/Fullscreen';
 import DialogButton from "../components/DialogButton";
-import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList from "../components/ItemList";
@@ -57,7 +54,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
 import {PAGEIDS} from "../util/pageids";
 import {useDialogContext} from "../components/DialogContext";
-import {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
+import {propsToDefs, updateFromOld} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import NavPageButtons from "./NavPageButtons";
 
@@ -830,24 +827,7 @@ const NavPage=(props)=>{
                 overflow: true,
                 editDisable: true
             },
-            {
-                name: 'Night',
-                storeKeys: {
-                    toggle: keys.properties.nightMode,
-                    visible: keys.properties.nightModeNavPage
-                },
-                onClick: ()=> {
-                    let mode = globalStore.getData(keys.properties.nightMode, false);
-                    mode = !mode;
-                    globalStore.storeData(keys.properties.nightMode, mode);
-                },
-                overflow: true
-            },
             CenterActionButton,
-            Mob.mobDefinition(history),
-
-            RemoteChannelDialog({overflow:true},dialogCtx),
-            FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {
                 name: 'Cancel',

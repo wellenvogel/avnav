@@ -28,8 +28,6 @@ import RouteEdit,{StateHelper} from "../nav/routeeditor";
 import anchorWatch,{AnchorWatchKeys,isWatchActive} from "../components/AnchorWatchDialog";
 // @ts-ignore
 import {CenterActionButton} from "../components/FeatureInfoDialog";
-import RemoteChannelDialog from '../components/RemoteChannelDialog';
-import FullScreen from '../util/Fullscreen';
 import Dimmer from '../util/dimhandler';
 import GeneralButtons from "./GeneralButtons";
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
@@ -105,20 +103,6 @@ export default GeneralButtons.concat(propsToDefs([
         overflow: true,
         editDisable: true
     },
-    {
-        name: 'Night',
-        displayName:"night mode",
-        storeKeys: {
-            toggle: keys.properties.nightMode,
-            visible: keys.properties.nightModeNavPage
-        },
-        overflow: true
-    },
     CenterActionButton,
-    RemoteChannelDialog({
-        overflow:true,
-        displayName: 'remote control'
-    }),
-    FullScreen.fullScreenDefinition,
     Dimmer.buttonDef(),
 ]))
