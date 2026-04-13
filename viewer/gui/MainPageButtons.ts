@@ -23,20 +23,12 @@
 import {propsToDefs, updateButtons} from "../components/Button";
 import keys from "../util/keys";
 import LayoutHandler from '../util/layouthandler';
-import RemoteChannelDialog from '../components/RemoteChannelDialog';
-import FullScreen from '../util/Fullscreen';
-import splitsupport from '../util/splitsupport';
 import GeneralButtons from "./GeneralButtons";
 
 export default updateButtons(GeneralButtons.concat(propsToDefs([
     {
         name: 'ShowGps',
         displayName: 'dashboard',
-    },
-    {
-        name: 'Night',
-        displayName: 'night mode',
-        storeKeys: {toggle: keys.properties.nightMode},
     },
     LayoutHandler.revertButtonDef(),
 
@@ -54,11 +46,7 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
                 visible: state.visible && state.connected
             }
         }
-    },
-    RemoteChannelDialog({overflow:true}),
-    FullScreen.fullScreenDefinition,
-    splitsupport.buttonDef({overflow:true}),
-
+    }
 ])),{
     Cancel:{
         //@ts-ignore

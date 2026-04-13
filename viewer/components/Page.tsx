@@ -1,7 +1,7 @@
 import React, {
     Children,
     cloneElement,
-    forwardRef,
+    forwardRef, ReactNode,
     SyntheticEvent,
     useCallback,
     useEffect,
@@ -39,7 +39,7 @@ export interface PageFrameProps{
 }
 export interface PageLeftProps{
     className?: string;
-    title?: string;
+    title?: ReactNode;
     children?: React.ReactNode;
     id:PageType
 }

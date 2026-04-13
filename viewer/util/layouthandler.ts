@@ -1124,7 +1124,7 @@ class LayoutHandler{
         return rt;
     }
 
-    revertButtonDef(pageCallback?:(page:LayoutPage)=>void):DynamicButtonProps{
+    revertButtonDef(pageCallback?:(page:PageWithOptions)=>void):DynamicButtonProps{
         const rt:DynamicButtonProps={
             name: 'RevertLayout',
             displayName: 'Undo',
