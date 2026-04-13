@@ -122,7 +122,7 @@ const pages={
 const Router = (props) => {
     const history = useHistory();
     const dialogContext = useDialogContext();
-    const connectedMode=useRef(false);
+    const connectedMode=useRef(true);
     const checkRoutes=useCallback(()=>{
         const current=globalStore.getData(keys.gui.global.connectedMode);
         if (current != connectedMode.current){
