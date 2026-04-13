@@ -64,6 +64,7 @@ import addons from "./util/Addons";
 import {addonViewManager} from "./components/AddonView";
 import {PluginsPage} from "./gui/PluginsPage";
 import {RemotePage} from "./gui/RemotePage";
+import LoadingPage from "./gui/LoadingPage";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -146,7 +147,7 @@ const Router = (props) => {
     useEffect(()=>{
         checkRoutes();
     })
-    let Page = props.location?pages[props.location]:Loading;
+    let Page = props.location?pages[props.location]:LoadingPage;
     if (Page === undefined) {
         Page = Other;
     }
@@ -387,7 +388,7 @@ class App extends React.Component {
             startpage = PAGEIDS.NAV;
         }
         const delayedStart=()=>{
-            this.history.push(startpage);
+            //this.history.push(startpage);
         }
         Promise.all(this.pendingActions)
              .then(()=>delayedStart(),()=>delayedStart());
@@ -578,7 +579,7 @@ class App extends React.Component {
         if (this.props.smallDisplay) appClass+=" smallDisplay";
         if (this.props.nightMode) appClass+=" nightMode";
         let location=this.leftHistoryState.getValue('location');
-        if (location !== PAGEIDS.WARNING) {
+        if (location && location !== PAGEIDS.WARNING) {
             if (! this.titleSet) {
                 document.title = "AVNav-Web";
                 this.titleSet=true;
