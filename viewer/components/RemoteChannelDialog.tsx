@@ -1,24 +1,37 @@
 import React, {useState} from 'react';
-import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
-import globalStore from '../util/globalstore.ts';
-import keys, {KeyHelper} from '../util/keys.ts';
+import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog';
+import globalStore from '../util/globalstore';
+import keys, {KeyHelper} from '../util/keys';
 import {Checkbox, InputSelect} from "./Inputs";
 import DialogButton from "./DialogButton";
-import assign from "object-assign";
 import {getav} from "../util/helper";
+import {SelectListEntry} from "../util/EditableParameter";
+import {IDialogContext} from "./DialogContext";
+import {ButtonEvent, DynamicButtonProps} from "./Button";
+import {useStoreState} from "../hoc/Dynamic";
 
 
-const RemoteChannelDialog=(props)=> {
+export interface RemoteChannelProps {
+    channel?:string
+    read?:boolean
+    write?:boolean
+}
+export interface RemoteChannelDialogProps extends RemoteChannelProps {
+    setCallback:(v:RemoteChannelProps)=>void;
+}
+
+const RemoteChannelDialogImpl=(props:RemoteChannelDialogProps)=> {
     const [channel,setChannel]=useState(props.channel);
     const [read,setRead]=useState(props.read);
     const [write,setWrite]=useState(props.write);
+    const selectList:SelectListEntry[]=KeyHelper.getKeyDescriptions(true)[keys.properties.remoteChannelName].values.map((x:string)=>{return {label:x,value:x}})
     return <DialogFrame className="RemoteChannelDialog" title={"RemoteChannel"}>
         <InputSelect dialogRow={true}
                value={channel}
                onChange={(v)=>setChannel(v)}
                label="Channel"
                changeOnlyValue={true}
-               list={KeyHelper.getKeyDescriptions(true)[keys.properties.remoteChannelName].values.map((x)=>{return {label:x,value:x}})}
+               list={selectList}
                />
         <Checkbox dialogRow={true}
                value={read}
@@ -55,37 +68,45 @@ const storeKeys={
     connected: keys.gui.global.connectedMode
 };
 
-export const showRemoteChannelDialog=async (dialogContext)=> {
-    const current=globalStore.getMultiple(storeKeys);
-    await showDialog(dialogContext,()=><RemoteChannelDialog
-        {...current}
+export const RemoteDialog=()=>{
+    const [read]=useStoreState(keys.properties.remoteChannelRead);
+    const [write]=useStoreState(keys.properties.remoteChannelWrite);
+    const [channel]=useStoreState(keys.properties.remoteChannelName);
+    return <RemoteChannelDialogImpl
         setCallback={(values)=>{
             if (! values.read && ! values.write){
                 globalStore.storeMultiple({read:false,write:false},storeKeys,false,true); //omit undefined
             }
             else{
                 globalStore.storeMultiple(values,storeKeys,false,true); //omit undefined
-            }
-        }}/>)
+            }}
+        }
+        read={read}
+        write={write}
+        channel={channel}/>
 }
 
-export default  (options)=>{
-    return assign({
+export const showRemoteChannelDialog=async (dialogContext?:IDialogContext)=> {
+    await showDialog(dialogContext,()=><RemoteDialog/>)
+}
+
+export default  (options:Partial<DynamicButtonProps>):DynamicButtonProps=>{
+    return {
         name: "RemoteChannel",
         displayName: 'remote control',
         storeKeys: storeKeys,
-        updateFunction:(state)=>{
-            let enabled=state.available && state.connected && state.active;
+        updateFunction:(state:Record<string,any>)=>{
+            const enabled=state.available && state.connected && state.active;
             return {
                 toggle: enabled && (state.read || state.write),
                 visible: enabled
             }
         },
-        onClick: async (ev)=>{
+        onClick: async (ev:ButtonEvent)=>{
             const dialogContext=getav(ev).dialogContext;
             await showRemoteChannelDialog(dialogContext);
         },
         editDisable:true,
         overflow: true
-    },options);
+    ,...options};
 }

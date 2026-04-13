@@ -25,7 +25,6 @@ import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import layouthandler from "../util/layouthandler";
 // @ts-ignore
 import AnchorWatchButton from '../components/AnchorWatchDialog';
-// @ts-ignore
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
 import FullScreen from '../util/Fullscreen';

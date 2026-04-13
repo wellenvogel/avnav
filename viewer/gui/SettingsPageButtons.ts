@@ -71,18 +71,6 @@ export default GeneralButtons.concat(propsToDefs([
         overflow: true
     },
     {
-        name: 'SettingsReload',
-        displayName: 'reload AvNav UI',
-        storeKeys: {
-            visible: keys.gui.global.layoutEditing,
-        },
-        updateFunction: (state: Record<string, any>) => {
-            return {
-                visible: !state.visible
-            }
-        },
-    },
-    {
         name: 'DownloadPageUpload',
         displayName: 'import',
         localOnly: true,

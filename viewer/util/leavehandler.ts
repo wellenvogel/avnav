@@ -1,37 +1,39 @@
-import splitsupport from "./splitsupport";
+
 
 const txt="Really exit AvNav?";
-
+export type LeaveHandlerCallback=(ev:BeforeUnloadEvent)=>boolean;
 class LeaveHandler{
+    private prevent: boolean=true;
+    private subscriptions: Record<number,LeaveHandlerCallback> = {};
+    private subscriptionId: number;
     constructor(){
         this.prevent=true;
-        let self=this;
         this.subscriptions={};
         this.subscriptionId=0;
         window.onbeforeunload=(ev)=>{
             this._callHandlers(ev);
-            if (!self.prevent) return;
+            if (!this.prevent) return;
             (ev || window.event).returnValue =txt;
             if (ev){
                 try{
                     ev.preventDefault();
-                }catch (e){}
+                }catch (e){ /* empty */ }
             }
             return txt;
         }
     }
-    subscribe(callback) {
-        for (let k in this.subscriptions) {
+    subscribe(callback:LeaveHandlerCallback) {
+        for (const k in this.subscriptions) {
             if (this.subscriptions[k] === callback) return k;
         }
-        let id = this.subscriptionId++;
+        const id = this.subscriptionId++;
         this.subscriptions[id] = callback;
         return id;
     }
 
-    _callHandlers(eventData) {
-        for (let k in this.subscriptions) {
-            let rt = this.subscriptions[k](eventData);
+    _callHandlers(eventData:BeforeUnloadEvent) {
+        for (const k in this.subscriptions) {
+            const rt = this.subscriptions[k](eventData);
             if (rt) return rt;
         }
         return false;
@@ -41,7 +43,7 @@ class LeaveHandler{
      * deregister from map events
      * @param token - the value obtained from register
      */
-    unsubscribe(token) {
+    unsubscribe(token:number) {
         if (token === undefined) return;
         delete this.subscriptions[token];
     }
@@ -49,9 +51,8 @@ class LeaveHandler{
     stop(){
         this.prevent=false;
     }
-    activate(delay){
-        let self=this;
-        window.setTimeout(()=>{self.prevent=true},delay||100);
+    activate(delay:number) {
+        window.setTimeout(()=>{this.prevent=true},delay||100);
     }
 
 }

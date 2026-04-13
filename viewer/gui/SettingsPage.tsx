@@ -13,10 +13,7 @@ import {
 } from '../components/OverlayDialog';
 import {layoutLoader} from '../util/layouthandler';
 import PropertyHandler from '../util/propertyhandler';
-// @ts-ignore
-import leavehandler from "../util/leavehandler";
-
-import Helper, {avitem} from "../util/helper";
+import {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {ListItem, ListMainSlot} from "../components/ListItems";
@@ -202,12 +199,6 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
             SettingsLoad: {
                 onClick: () => {
                     showDialog(undefined, () => <LoadSettingsDialog/>);
-                }
-            },
-            SettingsReload: {
-                onClick: () => {
-                    leavehandler.stop();
-                    Helper.reloadPage();
                 }
             },
             Cancel: {

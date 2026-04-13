@@ -1054,7 +1054,7 @@ span.valuePrefix{
 //----------------------------------------------------------------------------------------
 @mainNavItemWidth: 7em;
 @mainNavItemColumns: 3;
-.MainNavCover{
+.MainNavCover,.MainActionDialog{
   &>.dialog {
     width: ( @mainNavItemWidth * @mainNavItemColumns + 2em);
   }
@@ -1121,6 +1121,9 @@ span.valuePrefix{
         overflow: hidden;
       }
     }
+  }
+  .dialogButton{
+    margin-top: unset;
   }
 }
 

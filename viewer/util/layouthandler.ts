@@ -12,6 +12,7 @@ import Helper, {valueof} from "./helper";
 import {PAGEIDS, PageType} from "./pageids";
 import {Item} from "./itemFunctions";
 import {LayoutData} from "../api/api.interface";
+import {DynamicButtonProps} from "../components/Button";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -1123,8 +1124,8 @@ class LayoutHandler{
         return rt;
     }
 
-    revertButtonDef(pageCallback?:(page:LayoutPage)=>void){
-        const rt:Record<string,any>={
+    revertButtonDef(pageCallback?:(page:LayoutPage)=>void):DynamicButtonProps{
+        const rt:DynamicButtonProps={
             name: 'RevertLayout',
             displayName: 'Undo',
             editOnly: true,

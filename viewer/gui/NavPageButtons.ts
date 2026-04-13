@@ -28,7 +28,6 @@ import RouteEdit,{StateHelper} from "../nav/routeeditor";
 import anchorWatch,{AnchorWatchKeys,isWatchActive} from "../components/AnchorWatchDialog";
 // @ts-ignore
 import {CenterActionButton} from "../components/FeatureInfoDialog";
-// @ts-ignore
 import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../util/Fullscreen';
 import Dimmer from '../util/dimhandler';

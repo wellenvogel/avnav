@@ -23,7 +23,6 @@
 import {propsToDefs, updateButtons} from "../components/Button";
 import keys from "../util/keys";
 import LayoutHandler from '../util/layouthandler';
-// @ts-ignore
 import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../util/Fullscreen';
 // @ts-ignore
