@@ -24,16 +24,9 @@ import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "rea
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
 import {useDialogContext} from "../components/DialogContext";
-import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog';
+import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
-import {
-    ButtonDef,
-    ButtonEvent,
-    ButtonEventHandler,
-    ButtonRow,
-    DynamicButtonProps,
-    propsToDefs
-} from "../components/Button";
+import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
 import MainPageButtons from "./MainPageButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
@@ -62,11 +55,8 @@ import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 import RemotePageButtons from "./RemotePageButtons";
 import {EditSettingsCategory} from "../components/Settings";
 import DialogButton from "../components/DialogButton";
-import FullScreen from '../util/Fullscreen';
-// @ts-ignore
-import splitsupport from '../util/splitsupport';
-import RemoteChannelDialog, {RemoteDialog} from '../components/RemoteChannelDialog';
-import leavehandler from '../util/leavehandler';
+import {ActionDialog} from "../components/ActionDialog";
+import {actionButtons} from "./MainActionButtons";
 
 
 type PageKind='navigation'|'settings';
@@ -203,67 +193,6 @@ const PageRow=({
 
     </div>
 }
-const actionButtons:DynamicButtonProps[]=[
-    {
-        name: 'Night',
-        displayName: 'night mode',
-        storeKeys: {toggle: keys.properties.nightMode},
-        onClick: () => {
-            let mode = globalstore.getData(keys.properties.nightMode, false);
-            mode = !mode;
-            globalstore.storeData(keys.properties.nightMode, mode);
-        }
-    },
-    RemoteChannelDialog({
-        onClick:(ev:ButtonEvent)=>{
-            const dialogContext=getav(ev).dialogContext;
-            dialogContext.showDialog(()=><RemoteDialog/>,()=>dialogContext.closeDialog());
-        },
-        close:false
-    }),
-    FullScreen.fullScreenDefinition,
-    splitsupport.buttonDef({
-        overflow:true
-    }),
-    {
-        name: 'SettingsReload',
-        displayName: 'reload AvNav UI',
-        storeKeys: {
-            visible: keys.gui.global.layoutEditing,
-        },
-        updateFunction: (state: Record<string, any>) => {
-            return {
-                visible: !state.visible
-            }
-        },
-        onClick: () => {
-            leavehandler.stop();
-            Helper.reloadPage();
-        }
-    },
-]
-const ActionDialog=()=>{
-    const dialogContext=useDialogContext();
-    return <DialogFrame className={'MainActionDialog'} title={'MainActions'}>
-        <ListFrame className={'ButtonList'}>
-            {actionButtons.map((bt:DynamicButtonProps)=>{
-                return <ButtonRow
-                    key={bt.name}
-                    {...bt}
-                    close={undefined}
-                    onClick={(ev:ButtonEvent)=>{
-                        bt.onClick(ev);
-                        if (bt.close !== false) {
-                            dialogContext.closeDialog();
-                        }
-                    }}
-                />
-                })
-            }
-        </ListFrame>
-        <DialogButtons buttonList={DBCancel()}/>
-    </DialogFrame>
-}
 export interface MainNavProps{
     current:string,
     currentButtons:ButtonDef[],
@@ -291,7 +220,7 @@ export const MainNav = (props:MainNavProps) => {
                     displayName={'Actions'}
                     close={false}
                     onClick={()=>{
-                        dialogContext.replaceDialog(()=><ActionDialog/>,
+                        dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons}/>,
                             ()=>dialogContext.closeDialog());
                     }}
                 >Actions</DialogButton>
