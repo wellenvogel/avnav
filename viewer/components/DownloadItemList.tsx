@@ -327,7 +327,8 @@ export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> 
 interface UploadActionProps {
     onClick: ButtonEventHandler,
     className?: string
-    title: string
+    title: string,
+    disabled?: boolean
 }
 
 export const UploadAction = (props: UploadActionProps) => {
@@ -337,6 +338,7 @@ export const UploadAction = (props: UploadActionProps) => {
         <ListMainSlot primary={`Upload ${props.title}`}/>
         <ListSlot>
             <DialogButton
+                disabled={props.disabled}
                 name={'DownloadPageUpload'}
                 displayName={`upload ${props.title}`}
             />

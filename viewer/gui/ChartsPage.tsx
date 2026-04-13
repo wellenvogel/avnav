@@ -46,6 +46,10 @@ const NUMVIEWS=4
 export type ChartsPageProps = Partial<PageBaseProps>;
 const ChartsPage=(props:ChartsPageProps)=>{
      useStoreState(keys.gui.global.reloadSequence);
+     const [uploadCharts]=useStoreState(keys.gui.capabilities.uploadCharts);
+     const [uploadImport]=useStoreState(keys.gui.capabilities.uploadImport);
+     const [uploadOverlays]=useStoreState(keys.gui.capabilities.uploadOverlays);
+     const [connected]=useStoreState(keys.gui.global.connectedMode);
      const [hasImports]=useStoreState(keys.gui.capabilities.uploadImport);
      const history=useHistory();
      const [scrollProps,scrollTo,visible]=useScrollHelper(1);
@@ -125,7 +129,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                     <MvHeadline
                         title={"Charts"}
                     ></MvHeadline>
-                    <UploadAction onClick={uploadActionCharts} title={'chart'}/>
+                    <UploadAction
+                        disabled={!uploadCharts || ! connected}
+                        onClick={uploadActionCharts}
+                        title={'chart'}/>
                     <DownloadItemList
                         type={'chart'}
                         autoreload={3000}
@@ -137,7 +144,11 @@ const ChartsPage=(props:ChartsPageProps)=>{
                 hasImports ?<React.Fragment key={2}>
                     <MvHeadline title={'Imports'}
                     />
-                    <UploadAction onClick={uploadActionCharts} title={'import'}/>
+                    <UploadAction
+                        disabled={!uploadCharts || ! connected || ! uploadImport}
+                        onClick={uploadActionCharts}
+                        title={'import'}
+                    />
                     <ImporterView
                         selected={uploadedImport}
                     />
@@ -145,7 +156,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                 <React.Fragment key={3}>
                     <MvHeadline title={"Overlays"}
                                 />
-                    <UploadAction onClick={uploadActionOverlays} title={'overlay'}/>
+                    <UploadAction
+                        disabled={!uploadOverlays || ! connected}
+                        onClick={uploadActionOverlays}
+                        title={'overlay'}/>
                     <DownloadItemList
                         {...uploadPropsOverlays}
                         type={'overlay'}

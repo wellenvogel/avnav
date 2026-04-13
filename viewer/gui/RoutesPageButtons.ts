@@ -23,11 +23,22 @@
 import GeneralButtons, {Connected} from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export default GeneralButtons.concat(propsToDefs([
     {
         name:'StatusAdd',
         displayName:'new route',
+        storeKeys: {
+            upload: keys.gui.capabilities.uploadRoute,
+            connected: keys.gui.global.connectedMode
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                disabled: !state.upload && state.connected,
+                connected: undefined
+            }
+        }
     },
     {
         name: 'SyncRoutes',
@@ -35,11 +46,13 @@ export default GeneralButtons.concat(propsToDefs([
         overflow: true,
         editDisable: true,
         storeKeys: {
-            enabled: keys.gui.global.connectedMode
+            enabled: keys.gui.global.connectedMode,
+            visible: keys.gui.capabilities.uploadRoute
         },
         updateFunction:(state)=>{
             return {
-                disabled: !state.enabled
+                disabled: !state.enabled,
+                visible: state.visible
             }
         },
     },
@@ -55,7 +68,18 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'DownloadPageUpload',
         displayName: 'import',
-        localOnly:true
+        localOnly:true,
+        storeKeys: {
+            upload: keys.gui.capabilities.uploadRoute,
+            connected: keys.gui.global.connectedMode
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                disabled: !state.upload && state.connected,
+                connected: undefined
+            }
+        }
+
     },
     {
         name: 'ShowSettings',

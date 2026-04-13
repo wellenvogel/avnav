@@ -36,6 +36,7 @@ export default GeneralButtons.concat(propsToDefs([
         updateFunction:(state:any)=>{
             return {
                 visible:state.visible && state.connected,
+                connected: undefined
             }
         }
     },

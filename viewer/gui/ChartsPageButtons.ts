@@ -23,6 +23,7 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -37,8 +38,16 @@ export default GeneralButtons.concat(propsToDefs([
         name:'ImportsView',
         displayName: 'show imports',
         storeKeys:{
-            visible: keys.gui.capabilities.uploadImport
+            visible: keys.gui.capabilities.uploadImport,
+            connected:keys.gui.global.connectedMode
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.connected,
+                connected:undefined
+            }
         }
+
     },
     {
         name:'OverlaysView',

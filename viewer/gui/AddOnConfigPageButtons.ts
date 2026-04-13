@@ -23,6 +23,7 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -35,14 +36,21 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name:'DownloadPageImages',
-        displayName: 'icon files',
+        displayName: 'image/icon files',
     },
     {
         name: 'AddonConfigPlus',
         displayName:'add user app',
         localOnly: true,
         storeKeys:{
-            visible: keys.gui.global.connectedMode
+            visible: keys.gui.global.connectedMode,
+            capability:keys.gui.capabilities.addons
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.capability,
+                capability:undefined
+            }
         }
     }
 ]))

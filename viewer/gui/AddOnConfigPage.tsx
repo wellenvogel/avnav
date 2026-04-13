@@ -81,6 +81,8 @@ const AddonItem=(props:AddonItemProps)=>{
 export const AddonConfigPage = (props: PageProps) => {
     useStoreState(keys.gui.global.reloadSequence);
     const [connected] = useStoreState(keys.gui.global.connectedMode);
+    const [uploadImages]=useStoreState(keys.gui.capabilities.uploadImages);
+    const [uploadUser]=useStoreState(keys.gui.capabilities.uploadUser);
     const history = useHistory();
     const [addons, setAddons] = React.useState(Addons.getAllAddons());
     const [scrollProps, scrollTo, visible] = useScrollHelper(0);
@@ -162,7 +164,10 @@ export const AddonConfigPage = (props: PageProps) => {
                     ,
                     <React.Fragment key="1">
                         <MvHeadline title={"User Files"}/>
-                        <UploadAction onClick={uploadActionUser} title={'User File'}></UploadAction>
+                        <UploadAction
+                            disabled={!connected || ! uploadUser}
+                            onClick={uploadActionUser}
+                            title={'User File'}></UploadAction>
                         <MvHeadline title={""} showScroll={false}/>
                         <DownloadItemList
                             {...uploadPropsUser}
@@ -175,7 +180,10 @@ export const AddonConfigPage = (props: PageProps) => {
                     ,
                     <React.Fragment key="2">
                         <MvHeadline title={"Image Files"}/>
-                        <UploadAction onClick={uploadActionImages} title={'Image'}></UploadAction>
+                        <UploadAction
+                            disabled={!connected || ! uploadImages}
+                            onClick={uploadActionImages}
+                            title={'Image'}></UploadAction>
                         <MvHeadline title={""} showScroll={false}/>
                         <DownloadItemList
                             {...uploadPropsImages}

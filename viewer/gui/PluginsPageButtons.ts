@@ -23,6 +23,7 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -30,7 +31,14 @@ export default GeneralButtons.concat(propsToDefs([
         displayName: 'import',
         localOnly:true,
         storeKeys:{
-            visible: keys.gui.global.connectedMode
+            visible: keys.gui.global.connectedMode,
+            upload: keys.gui.capabilities.uploadPlugins
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.upload,
+                upload: undefined
+            }
         }
     }
 ]))

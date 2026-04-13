@@ -1819,7 +1819,9 @@ class PluginItemActions extends ItemActions{
             visible: this.canModify(item),
         }))
         actions.push(standardActions.download.copy({}))
-        actions.push(standardActions.config.copy({}))
+        actions.push(standardActions.config.copy({
+            visible:this.isConnected(),
+        }))
     }
 
     build() {

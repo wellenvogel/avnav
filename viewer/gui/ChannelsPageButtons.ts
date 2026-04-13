@@ -23,12 +23,22 @@
  import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export const ChannelsPageButtonsPlain=propsToDefs([
     {
         name: 'StatusAdd',
         displayName: "add connection",
-        storeKeys: {visible:keys.gui.global.connectedMode}
+        storeKeys: {
+            visible:keys.gui.global.connectedMode,
+            config: keys.gui.capabilities.config
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible:state.visible && state.config,
+                config: undefined
+            }
+        }
     }
 ])
 export default GeneralButtons.concat(ChannelsPageButtonsPlain);

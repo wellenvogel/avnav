@@ -21,6 +21,8 @@
  #
  */ import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
+import keys from "../util/keys";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -79,7 +81,17 @@ export default GeneralButtons.concat(propsToDefs([
         name:'StatusDebug',
         displayName:'debug server',
         localOnly:true,
-        overflow: true
+        overflow: true,
+        storeKeys:{
+            visible: keys.gui.capabilities.debugLevel,
+            connected: keys.gui.global.connectedMode
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.connected,
+                connected: undefined
+            }
+        }
     },
     {
         name: 'StatusAdd',

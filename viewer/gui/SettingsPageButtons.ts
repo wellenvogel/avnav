@@ -24,6 +24,7 @@ import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import localStorageManager from "../util/localStorageManager";
+import {DynamicProps} from "../hoc/Dynamic";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -85,6 +86,17 @@ export default GeneralButtons.concat(propsToDefs([
         name: 'DownloadPageUpload',
         displayName: 'import',
         localOnly: true,
+        storeKeys:{
+            visible: keys.gui.capabilities.uploadSettings,
+            connected: keys.gui.global.connectedMode,
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible & state.connected,
+                connected: undefined
+            }
+        }
+
     },
     {
         name: 'SettingsSplitReset',
