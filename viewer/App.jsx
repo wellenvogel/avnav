@@ -92,6 +92,11 @@ const Other=(props)=>{
             >Main</Button>
         </React.Fragment>
 }
+const Loading=(props)=>{
+    return <React.Fragment>
+        <h1>AvNav is Loading...</h1>
+    </React.Fragment>
+}
 
 
 
@@ -141,7 +146,7 @@ const Router = (props) => {
     useEffect(()=>{
         checkRoutes();
     })
-    let Page = pages[props.location];
+    let Page = props.location?pages[props.location]:Loading;
     if (Page === undefined) {
         Page = Other;
     }
@@ -224,8 +229,8 @@ const MainBody = ({ history, nightMode}) => {
                     fontSize: keys.properties.baseFontSize,
                     ...keys.gui.capabilities
                 }}
-                location={location.location}
-                options={location.options}
+                location={location?.location}
+                options={location?.options}
                 history={history}
                 nightMode={nightMode}
             />
@@ -378,21 +383,18 @@ class App extends React.Component {
                 })
         );
         let lastChart=mapholder.getLastChartKey();
-        if (startpage === 'mainpage' && globalStore.getData(keys.properties.startNavPage) && lastChart){
-            const delayedStart=()=>{
-                this.history.push('navpage');
-            }
-            this.history.push(startpage,{noInitial:true});
-            Promise.all(this.pendingActions)
-                .then(()=>delayedStart(),()=>delayedStart());
+        if (startpage === PAGEIDS.MAIN && globalStore.getData(keys.properties.startNavPage) && lastChart) {
+            startpage = PAGEIDS.NAV;
         }
-        else {
+        const delayedStart=()=>{
             this.history.push(startpage);
         }
+        Promise.all(this.pendingActions)
+             .then(()=>delayedStart(),()=>delayedStart());
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
         this.history.setCallback((topEntry,lastEntry)=>{
             this.leftHistoryState.setState(topEntry,true);
-            addonViewManager.setPageAddon(lastEntry.location); //reset any shown user app
+            if (lastEntry) addonViewManager.setPageAddon(lastEntry.location); //reset any shown user app
         });
         GuiHelpers.keyEventHandler(this,()=>{
             Mob.controlMob(true);
@@ -576,7 +578,7 @@ class App extends React.Component {
         if (this.props.smallDisplay) appClass+=" smallDisplay";
         if (this.props.nightMode) appClass+=" nightMode";
         let location=this.leftHistoryState.getValue('location');
-        if (location !== "warningpage") {
+        if (location !== PAGEIDS.WARNING) {
             if (! this.titleSet) {
                 document.title = "AVNav-Web";
                 this.titleSet=true;
