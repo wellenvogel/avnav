@@ -22,7 +22,7 @@
  */
 
 import React from 'react';
-import {concatsp} from "../util/helper";
+import Helper, {concatsp} from "../util/helper";
 import {Icon, IconProps} from "./Icons";
 // @ts-ignore
 import {useAvNavSortable} from "../hoc/Sortable";
@@ -65,7 +65,7 @@ export const ListSlot=({className,icon,text,children,onClick}: ListSlotProps) =>
         onClick={onClick}
         >
         {icon && <Icon {...icon}/>}
-        {(text !== undefined) && <span className="text">{text}</span>}
+        {(text !== undefined) && <span className={Helper.concatsp("text",icon?"afterIcon":undefined)}>{text}</span>}
         {children}
     </div>
 }

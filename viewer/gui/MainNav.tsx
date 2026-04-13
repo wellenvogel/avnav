@@ -53,6 +53,7 @@ import PluginsPageButtons from "./PluginsPageButtons";
 import AddOnPageButtons from "./AddOnPageButtons";
 import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 import RemotePageButtons from "./RemotePageButtons";
+import {EditSettingsCategory} from "../components/Settings";
 
 
 type PageKind='navigation'|'settings';
@@ -125,14 +126,20 @@ interface PageRowProps{
     isCurrent:boolean;
     expanded: boolean;
     expandSequence: number;
+    noExpand?:boolean;
     pageref?:(el:HTMLElement)=>void;
 }
-const PageRow=({page,onClick,isCurrent,expanded,expandSequence,pageref}:PageRowProps)=>{
+const PageRow=({
+                   page,onClick,isCurrent,
+                   expanded,expandSequence,noExpand,
+                   pageref
+}:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
     const [isExpanded,setExpanded]=useState(expanded);
     useEffect(() => {
+        if (noExpand) return;
         setExpanded(expanded);
     }, [expanded,expandSequence]);
     return <div ref={(el:HTMLElement) =>{
@@ -149,7 +156,7 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence,pageref}:PageRowP
         <ListSlot icon={{className:page.kind}}/>
         <ListMainSlot primary={page.getDisplay()}>
         </ListMainSlot>
-        <ListSlot
+            {!noExpand && <ListSlot
             className={'iconSlot'}
             icon={{className:isExpanded?'MNexpanded':'MNcollapsed'}}
             onClick={(ev)=>{
@@ -157,8 +164,9 @@ const PageRow=({page,onClick,isCurrent,expanded,expandSequence,pageref}:PageRowP
                 ev.stopPropagation();
             }}
         ></ListSlot>
+            }
         </ListItem>
-        {isExpanded &&
+        {isExpanded && ! noExpand &&
             <ListFrame className={'ButtonList'}>
                 {page.getButtons().map((bt)=> {
                     if (bt.localOnly && ! isCurrent) return null;
@@ -195,6 +203,7 @@ export const MainNav = (props:MainNavProps) => {
     const [expandSequence,setExpandSequence]=useState(0);
     const pages=mainTree.slice(0);
     const currentEl=useRef<HTMLElement>(null);
+    const noExpand = expandMode === MainExpandMode.NEVER;
     //pages.sort((a)=>(a.name===props.current)?-1:0);
     useEffect(() => {
         if (!currentEl.current) return;
@@ -202,25 +211,28 @@ export const MainNav = (props:MainNavProps) => {
     }, []);
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
-            <ListSlot className={'iconSlot'}
+            { ! noExpand && <ListSlot className={'iconSlot'}
                 icon={{className:'MNcollapsed'}}
                 onClick={()=>{
                     setExpandMode(MainExpandMode.ALL);
                     setExpandSequence((old)=>old+1)
                 }}
-            />
-            <ListSlot className={'iconSlot'}
+            />}
+            { ! noExpand && <ListSlot className={'iconSlot'}
                 icon={{className:'MNexpanded'}}
                 onClick={()=>{
                         setExpandMode(MainExpandMode.NONE);
                         setExpandSequence((old)=>old+1)
                         }}
                 />
+            }
             <ListSlot className={'iconSlot'}
-                icon={{className:'Cancel'}}
+                icon={{className:'MNSettings'}}
                 onClick={()=>{
-                            if (props.cancelCallback) props.cancelCallback();
-                            dialogContext.closeDialog();
+                            dialogContext.replaceDialog(()=><EditSettingsCategory
+                                category={'MainMenu'}
+                                title={'MainMenu Settings'}
+                            />)
                         }}
                 />
         </ListItem>
@@ -232,6 +244,7 @@ export const MainNav = (props:MainNavProps) => {
             const expand=(expandMode == MainExpandMode.ALL)
                 || isCurrent && ( expandMode == MainExpandMode.CURRENT);
             return <PageRow
+                noExpand={noExpand}
                 pageref={isCurrent?(el)=>{
                     currentEl.current=el
                     }
@@ -277,10 +290,11 @@ export const InjectMainMenu=(
             }
             const expandMode=globalstore.getData(keys.properties.mainNavExpand);
             const columns=globalstore.getData(keys.properties.mainNavCols);
+            const noExpand=expandMode == MainExpandMode.NEVER;
             let colClass="";
-            if (columns == MainColumns.five) colClass="col5";
-            else if (columns == MainColumns.seven) colClass="col7";
-            else if (columns == MainColumns.all) colClass="full";
+            if (columns == MainColumns.five && ! noExpand) colClass="col5";
+            else if (columns == MainColumns.seven && ! noExpand) colClass="col7";
+            else if (columns == MainColumns.all && ! noExpand) colClass="full";
             const cleanup=await showDialog(dialogContext,()=><MainNav
                 current={pagename}
                 currentButtons={computedButtons}

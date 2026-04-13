@@ -143,7 +143,8 @@ type KeyType=any;//Nested|Record<string,Nested>|Record<string,Record<string,Nest
 export enum MainExpandMode {
     CURRENT="current",
     NONE="none",
-    ALL="all"
+    ALL="all",
+    NEVER="never"
 }
 export enum MainColumns{
     three="3",
@@ -479,8 +480,14 @@ const keys:Record<string,KeyType>={
         autoHideGpsPage: new Property(false,"auto hide buttons on Dashboard Pages",PropertyType.CHECKBOX),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
         layoutName: new SplitProperty(DEFAULT_LAYOUT_NAME,"Layout name",PropertyType.LAYOUT),
-        mainNavCols: new Property(3,"main nav columns",PropertyType.LIST,Object.values(MainColumns),'number of columns in the main nav menu'),
-        mainNavExpand: new Property('current',"man nav expand",PropertyType.LIST,Object.values(MainExpandMode),"which entries of the main nav menu should be expanded when opening"),
+        mainNavCols: new Property(3,"main nav columns",PropertyType.LIST,Object.values(MainColumns),
+            'number of button columns in the main nav menu when entries are expanded'),
+        mainNavExpand: new Property('current',"man nav expand",PropertyType.LIST,Object.values(MainExpandMode),
+            "Which entries of the main nav menu should be expanded when opening.\n" +
+            "CURRENT: buttons of current page\n" +
+            "NONE: no page\n" +
+            "ALL: all pages\n" +
+            "NEVER: no page, hide buttons"),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20],"the zoom that is automatically set when MOB is activated (except if the zoom was already higher)"),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,"if set the back button will always be on top",true),
