@@ -1,6 +1,5 @@
 import globalStore from './globalstore';
 import keys from './keys';
-// @ts-ignore
 import splitsupport from "./splitsupport";
 import Helper from "./helper";
 import base from "../base";

@@ -21,14 +21,19 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 */
+// @ts-ignore
 import PubSub from "PubSub";
 import base from "../base";
 import globalStore from "./globalstore";
 import keys from "./keys";
 import LeaveHandler from "./leavehandler";
-import assign from 'object-assign';
 import localStorageManager,{UNPREFIXED_NAMES} from "./localStorageManager";
+import {DynamicButtonProps} from "../components/Button";
+
+export type SplitSupportCallback=(data:any,topic:string)=>void;
 class SplitSupport{
+    private pubSub: PubSub;
+    private urlParameters:Record<string,string>;
     constructor() {
         this.pubSub=new PubSub();
         window.addEventListener('message',(ev)=>{
@@ -39,16 +44,16 @@ class SplitSupport{
         })
         this.urlParameters={};
     }
-    addUrlParameter(name,value){
+    addUrlParameter(name:string,value:string){
         this.urlParameters[name]=value;
     }
-    subscribe(type,callback){
+    subscribe(type:string,callback:SplitSupportCallback){
         return this.pubSub.subscribe(type,callback);
     }
-    unsubscribe(token){
+    unsubscribe(token:any){
         this.pubSub.unsubscribe(token);
     }
-    sendToFrame(type,message){
+    sendToFrame(type:string,message?:any){
         if (! globalStore.getData(keys.gui.global.splitMode)) return;
         if (! message) message={};
         message.type=type;
@@ -60,10 +65,10 @@ class SplitSupport{
     }
     activateSplitMode(){
         LeaveHandler.stop();
-        var location=window.location.href+'';
+        let location=window.location.href+'';
         location=location.replace('avnav_viewer','viewer_split').replace(/\?.*/,'');
         let delim='?';
-        for (let k in this.urlParameters){
+        for (const k in this.urlParameters){
             location+=delim+encodeURIComponent(k)+"="+encodeURIComponent(this.urlParameters[k]);
             delim='&';
         }
@@ -85,7 +90,7 @@ class SplitSupport{
     }
 
     setSplitFromLast(){
-        let current=globalStore.getData(keys.gui.global.splitMode);
+        const current=globalStore.getData(keys.gui.global.splitMode);
         if (!globalStore.getData(keys.properties.startLastSplit)){
             if (! current) {
                 localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE, undefined, "off");
@@ -97,7 +102,7 @@ class SplitSupport{
                 return false;
             }
         }
-        let wanted=localStorageManager.getItem(UNPREFIXED_NAMES.SPLITMODE);
+        const wanted=localStorageManager.getItem(UNPREFIXED_NAMES.SPLITMODE);
         if (wanted === 'on' && ! current){
             this.activateSplitMode();
             return true;
@@ -111,9 +116,8 @@ class SplitSupport{
         return false;
     }
 
-    buttonDef(options) {
-        return assign(
-            {
+    buttonDef(options:Partial<DynamicButtonProps>):DynamicButtonProps {
+            return {
                 name: 'Split',
                 displayName: 'split screen',
                 storeKeys: {
@@ -125,7 +129,7 @@ class SplitSupport{
                 onClick: () => {
                     this.toggleSplitMode();
                 }
-            },options);
+            , ...options};
 
     }
 

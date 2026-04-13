@@ -28,7 +28,6 @@ import Helper, {getav} from "../util/helper";
 import FullScreen from "../util/Fullscreen";
 import leavehandler from "../util/leavehandler";
 import React from "react";
-// @ts-ignore
 import splitsupport from '../util/splitsupport';
 
 export const actionButtons: DynamicButtonProps[] = [

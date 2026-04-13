@@ -6,7 +6,6 @@ import keys from './keys';
 import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
 import Requests from './requests';
 import Toast from "../components/Toast";
-// @ts-ignore
 import splitsupport from "../util/splitsupport";
 import Helper from "./helper";
 import {getServerCommand} from "./UiHelper";

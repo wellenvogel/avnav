@@ -25,7 +25,6 @@ import keys from "../util/keys";
 import LayoutHandler from '../util/layouthandler';
 import RemoteChannelDialog from '../components/RemoteChannelDialog';
 import FullScreen from '../util/Fullscreen';
-// @ts-ignore
 import splitsupport from '../util/splitsupport';
 import GeneralButtons from "./GeneralButtons";
 

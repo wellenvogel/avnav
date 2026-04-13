@@ -9,7 +9,6 @@ import base from '../base';
 import LayoutHandler, {layoutLoader} from './layouthandler';
 import Requests from "./requests";
 import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './localStorageManager';
-// @ts-ignore
 import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
 import Helper from "./helper";
