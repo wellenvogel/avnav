@@ -388,7 +388,7 @@ class App extends React.Component {
             startpage = PAGEIDS.NAV;
         }
         const delayedStart=()=>{
-            //this.history.push(startpage);
+            this.history.push(startpage);
         }
         Promise.all(this.pendingActions)
              .then(()=>delayedStart(),()=>delayedStart());
