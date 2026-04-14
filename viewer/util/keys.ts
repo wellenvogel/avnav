@@ -82,8 +82,9 @@ export class SplitProperty extends Property{
     constructor(defaultv:PropertyValue,opt_label?:string,
                 opt_type?:PropertyType,
                 opt_values?:ListEntry[],
+                opt_description?:string,
                 opt_initial?:PropertyValue) {
-        super(defaultv,opt_label,opt_type,opt_values,undefined,opt_initial);
+        super(defaultv,opt_label,opt_type,opt_values,opt_description,opt_initial);
     }
 
     isSplit() {
@@ -510,7 +511,7 @@ const keys:Record<string,KeyType>={
         mapZoomLock: new Property(true,"Lock to int zoom levels with buttons", PropertyType.CHECKBOX,undefined,"If set the zoom will always change to an integer value when using the + and - buttons"),
         mapAlwaysCenter: new Property(true,"Show center cross when locked",PropertyType.CHECKBOX,undefined,"show the cross in the map center also when being locked"),
         mapSaveCenterTimeout: new Property(10,"Min save center interval(s)",PropertyType.RANGE,[5,100,5]),
-        remoteChannelName: new SplitProperty('0','remote control channel',PropertyType.LIST,['0','1','2','3','4'],"the remote control channel that is used by this AvNav display instance"),
+        remoteChannelName: new SplitProperty('0','remote control channel',PropertyType.LIST,['0','1','2','3','4'],"the remote control channel that is used by this AvNav display instance",0),
         remoteChannelRead: new SplitProperty(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new SplitProperty(false,'write to remote channel',PropertyType.CHECKBOX),
         remoteGuardTime: new Property(2,'time(s) to switch read/write',PropertyType.RANGE,[1,10],"Time in seconds to automatically switch between read and write on a remote channel. Any remote messages received within this time after an own send are ignored."),
