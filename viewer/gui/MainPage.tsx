@@ -36,7 +36,6 @@ import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 // @ts-ignore
 import mapholder from "../map/mapholder";
 import LocalStorage from '../util/localStorageManager';
-import LayoutHandler from "../util/layouthandler";
 import Helper, {avitem} from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
 import {getUrlWithBase, Item} from "../util/itemFunctions";
@@ -257,23 +256,10 @@ const MainPage = (props: PageProps) => {
         selectChart(-1);
     })
 
-    //TODO
-    const revertButton = LayoutHandler.revertButtonDef(
-        (pageWithOptions) => {
-            if (pageWithOptions.location !== props.id) {
-                history.push(pageWithOptions.location, pageWithOptions.options);
-            }
-        }
-    )
     const buttonActions = {
         ShowGps: {
             onClick: () => {
                 history.push(PAGEIDS.GPS)
-            }
-        },
-        [revertButton.name]: {
-            onClick: (ev: any) => {
-                revertButton.onClick(ev);
             }
         },
         NavOverlays: {

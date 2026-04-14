@@ -726,12 +726,7 @@ const NavPage=(props)=>{
             editOnly: true,
             overflow: true,
             onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
-        },
-        LayoutHandler.revertButtonDef((pageWithOptions)=>{
-            if (pageWithOptions.location !== props.location){
-                history.replace(pageWithOptions.location,pageWithOptions.options);
-            }
-        })
+        }
         ]);
     const buttons=[
             {

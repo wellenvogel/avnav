@@ -120,7 +120,9 @@ const layoutBaseParam={
     layoutHeight: 600,
     baseWidgetFontSize: 21, //font size for 600x600
 };
-
+interface Panel extends ItemListProps{
+    name:string;
+}
 const GpsPage = (props:Partial<PageProps>) => {
     const history=useHistory();
     useStoreState(keys.gui.global.reloadSequence);
@@ -205,7 +207,7 @@ const GpsPage = (props:Partial<PageProps>) => {
             }
         }
     }
-    const buttons=InjectMainMenu(PAGE,updateButtons(GpsPageButtons(),buttonActions));
+    const buttons=updateButtons(InjectMainMenu(PAGE,updateButtons(GpsPageButtons())),buttonActions);
 
     const onItemClick = useCallback((ev:Event, panelInfo:PanelData) => {
         const avev=injectav(ev);
@@ -262,12 +264,12 @@ const GpsPage = (props:Partial<PageProps>) => {
             }
         }
     }
-    const panelList:(ItemListProps & {name:string})[] = [];
+    const panelList:Panel[] = [];
     PANEL_LIST.forEach((panelName) => {
         const [page,panelData] = getPanelList(panelName, pageNumber);
         if (!panelData.list) return;
         const sum = getWeightSum(panelData.list);
-        const prop = {
+        const prop:Panel  = {
             name: panelData.name,
             dragFrame: panelData.name,
             allowOther: true,

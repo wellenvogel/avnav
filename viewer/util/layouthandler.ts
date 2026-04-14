@@ -8,11 +8,13 @@ import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 import defaultLayout from '../layout/default.json';
 // @ts-ignore
 import cloneDeep from "clone-deep";
-import Helper, {valueof} from "./helper";
+import Helper, {getav, valueof} from "./helper";
 import {PAGEIDS, PageType} from "./pageids";
 import {Item} from "./itemFunctions";
 import {LayoutData} from "../api/api.interface";
 import {DynamicButtonProps} from "../components/Button";
+import {SyntheticEvent} from "react";
+import {IHistory} from "./history";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -1124,7 +1126,7 @@ class LayoutHandler{
         return rt;
     }
 
-    revertButtonDef(pageCallback?:(page:PageWithOptions)=>void):DynamicButtonProps{
+    revertButtonDef():DynamicButtonProps{
         const rt:DynamicButtonProps={
             name: 'RevertLayout',
             displayName: 'Undo',
@@ -1137,10 +1139,23 @@ class LayoutHandler{
               return {
                   disabled: state.reverts < 1
               }
+            },
+            /**
+             * default layout revert
+             * change the page if it does not match the current page
+             * dedicated pages can overwrite the handler - like the dashboard page that needs
+             * to shift to a different sub page
+             * @param ev
+             */
+            onClick:(ev:SyntheticEvent)=>{
+                const history:IHistory=getav(ev).history;
+                if (! history) return;
+                this.revertAction((page:PageWithOptions)=>{
+                    if ( history.currentLocation() !== page.location){
+                        history.replace(page.location,page.options);
+                    }
+                })
             }
-        }
-        if (pageCallback){
-            rt.onClick= ()=>this.revertAction(pageCallback);
         }
         return rt;
     }

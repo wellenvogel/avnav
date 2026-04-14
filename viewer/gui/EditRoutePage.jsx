@@ -991,12 +991,7 @@ const EditRoutePage = (props) => {
             ...RawButtonDef,
             onClick:()=>createDialog(PAGENAME,
             MapPage.PANELS, [LAYOUT_OPTIONS.SMALL], dialogContext)
-        },
-        LayoutHandler.revertButtonDef((pageWithOptions) => {
-            if (pageWithOptions.location !== props.location) {
-                history.replace(pageWithOptions.location, pageWithOptions.options);
-            }
-        })
+        }
     ];
     let overlayContent = (props.small || wpButtonsVisible) ?
         <ButtonList

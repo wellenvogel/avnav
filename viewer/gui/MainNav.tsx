@@ -57,6 +57,7 @@ import {EditSettingsCategory} from "../components/Settings";
 import DialogButton from "../components/DialogButton";
 import {ActionDialog} from "../components/ActionDialog";
 import {actionButtons} from "./MainActionButtons";
+import layouthandler from "../util/layouthandler";
 
 
 type PageKind='navigation'|'settings';
@@ -330,6 +331,7 @@ export const InjectMainMenu=(
         closeDialogs:false
     },
         LayoutFinishedDialog.getButtonDef(),
+        layouthandler.revertButtonDef()
     ]).concat(computedButtons,propsToDefs(computedAddonButtons));
 }
 

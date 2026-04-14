@@ -25,9 +25,7 @@ import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import layouthandler from "../util/layouthandler";
 // @ts-ignore
 import AnchorWatchButton from '../components/AnchorWatchDialog';
-import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
-import FullScreen from '../util/Fullscreen';
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
 
@@ -52,12 +50,7 @@ export default ()=>{
         })
     }
     return GeneralButtons.concat(propsToDefs(btProps.concat([
-        RemoteChannelDialog({
-            overflow:true
-        }),
         EditPageButton,
-        layouthandler.revertButtonDef(),
-        FullScreen.fullScreenDefinition,
         Dimmer.buttonDef()
     ])))
 }
