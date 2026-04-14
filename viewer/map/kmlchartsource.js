@@ -204,7 +204,7 @@ class KmlChartSource extends ChartSourceBase{
                 format: new olKMLFormat({
                     showPointNames: this.styleParameters[supportedStyleParameters.showText],
                 }),
-                wrapX: false,
+                wrapX: true,
                 loader: (extent,resolution,projection)=>{
                     KmlChartSource.fetchMain(this.chartEntry)
                         .then((kml)=>{

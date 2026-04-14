@@ -9,7 +9,7 @@ import {
 } from "./OverlayDialog";
 import CodeFlask from 'codeflask';
 import Prism from "prismjs";
-import UploadHandler from "./UploadHandler";
+import UploadHandler, {uploadClick} from "./UploadHandler";
 import Toast from "./Toast";
 import DownloadButton from "./DownloadButton";
 import PropTypes from "prop-types";
@@ -26,7 +26,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
     const everChanged=useRef(false);
     if (changed)everChanged.current=true;
     const dialogContext = useDialogContext();
-    const [uploadSequence, setUploadSequence] = useState(0);
+    const [uploadFile, setUploadFile] = useState(undefined);
     const languageImpl=language||languageMap[Helper.getExt(fileName)];
     useEffect(() => {
         flask.current = new CodeFlask(editElement.current, {
@@ -46,7 +46,9 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             label: 'Import',
             onClick: () => {
                 setCollapsed(false);
-                setUploadSequence((old) => old + 1)
+                uploadClick((ev)=>{
+                    setUploadFile(ev.target.files[0]);
+                })
             },
             close: false
         },
@@ -93,10 +95,11 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
     }
     return <DialogFrame title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
         <UploadHandler
-            uploadSequence={uploadSequence}
+            file={uploadFile}
             local={true}
             type={'user'}
             doneCallback={(data) => {
+                setUploadFile(undefined);
                 showPromiseDialog(dialogContext, ConfirmDialog,{text:"overwrite with " + data.name + " ?"})
                     .then(() => {
                         flask.current.updateCode(data.data, true);
@@ -107,7 +110,10 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             checkNameCallback={(file) => {
                 return {name: (file||{}).name}
             }}
-            errorCallback={(err) => Toast(err)}
+            errorCallback={(err) => {
+                setUploadFile(undefined);
+                Toast(err)
+            }}
         />
         <div className={"edit"} ref={editElement}></div>
         <DialogButtons buttonList={buttonList}></DialogButtons>

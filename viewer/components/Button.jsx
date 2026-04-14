@@ -1,9 +1,9 @@
-import React, {useCallback} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import {useStore} from "../hoc/Dynamic";
 import Store from "../util/store";
-import {injectav, setav} from "../util/helper";
+import {setav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 
 const Button = (props) => {
@@ -11,25 +11,13 @@ const Button = (props) => {
         if (props.onClick && !props.disabled) props.onClick();
     });
     const dialogContext=useDialogContext();
-    const spanRef = useCallback((item) => {
-        if (!item) return;
-        /* very dirty workaround for button images not showing up
-           on chrome android on some devices
-           was unable to find out about the reason - but it seems that
-           setting the image url again solves the issue
-         */
-        let current = window.getComputedStyle(item).backgroundImage;
-        if (current) {
-            item.style.backgroundImage = current;
-        }
-    },[]);
+    let {toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, dummy, ...forward} = props;
     let className = props.className || "";
     className += " button " + props.name;
-    if (props.toggle !== undefined) {
-        let toggle = (typeof (props.toggle) === 'function') ? props.toggle() : props.toggle;
-        className += toggle ? " active" : " inactive";
+    if (toggle !== undefined) {
+        let togglev = (typeof (toggle) === 'function') ? toggle() : toggle;
+        className += togglev ? " active" : " inactive";
     }
-    let {toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, dummy, ...forward} = props;
     let spanStyle = {};
     if (icon !== undefined) {
         spanStyle.backgroundImage = "url(" + icon + ")";
@@ -46,7 +34,7 @@ const Button = (props) => {
     }
     return (
         <button {...forward} {...add} className={className}>
-            <span style={spanStyle} ref={spanRef}/>
+            <span style={spanStyle}/>
         </button>
     );
 }

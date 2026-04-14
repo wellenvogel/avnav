@@ -175,7 +175,6 @@ export const updateWaypoint=(oldWp, newWp, errorFunction)=> {
 WaypointDialog.propTypes={
     waypoint: PropTypes.instanceOf(navobjects.WayPoint).isRequired,
     okCallback: PropTypes.func.isRequired,
-    closeCallback:PropTypes.func,
     deleteCallback: PropTypes.func,
     startCallback: PropTypes.func,
     readOnly: PropTypes.bool

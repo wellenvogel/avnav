@@ -30,7 +30,7 @@ def NWMCFG="$NWM/conf.d"
 def NWMAVNAV="99-avnav.conf"
 def POLKIT="/etc/polkit-1/rules.d"
 def AVNPOLKIT="00-nmall.rules"
-def CONNECTIONS=["Ethernet.nmconnection","Hotspot.nmconnection"]
+def CONNECTIONS=["Ethernet.nmconnection","EthernetFallback.nmconnection","Hotspot.nmconnection"]
 def TARGET='/usr/lib/avnav/raspberry'
 def PLUGINTARGET='/usr/lib/avnav/server/plugins'
 task build_raspi_network(type:Deb) {

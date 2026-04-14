@@ -640,12 +640,16 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
       return None
 
   def handleDownload(self, name, handler, requestparam):
-      item=self.findSystemOrPluginItem(name)
-      if item is not None:
+      if not name:
+          raise Exception(f"missing name")
+      if name.startswith(self.SCOPE_PLUGIN) or name.startswith(self.SCOPE_SYSTEM):
+        item=self.findSystemOrPluginItem(name)
+        if item is not None:
             sfile=item.getFileName()
             if not os.path.isfile(sfile):
                 raise Exception("%s: %s not found"%(self.type,sfile))
             return AVNFileDownload(sfile)
+        raise Exception("%s: %s not found"%(self.type,name))
       fname=self.checkName(name,scope=self.SCOPE_USER)
       return self._download(fname)
 

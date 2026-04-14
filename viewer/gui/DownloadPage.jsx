@@ -13,16 +13,19 @@ import {useHistory} from "../components/HistoryProvider";
 import ButtonList from "../components/ButtonList";
 import {DownloadItemList} from "../components/DownloadItemList";
 import {PAGEIDS} from "../util/pageids";
+import base from "../base";
+import {extensionListToAccept, uploadClick} from "../components/UploadHandler";
 
 const DownloadPage=(props)=>{
     useStoreState(keys.gui.global.reloadSequence)
     const [type,setType]=useState(
         (props.options && props.options.downloadtype)?
                     props.options.downloadtype:'chart');
-    const [uploadSequence,setUploadSequence]=useState(0);
+    const [uploadFile,setUploadFile]=useState(undefined);
     const history=useHistory();
     const changeType=useCallback((newType)=>{
         if (newType === type) return;
+        setUploadFile(undefined);
         setType(newType);
         //store the new type to have this available if we come back
         history.replace(
@@ -67,8 +70,13 @@ const DownloadPage=(props)=>{
             {
                 name:'DownloadPageUpload',
                 visible: actions.showUpload(),
-                onClick:()=>{
-                    setUploadSequence(uploadSequence+1);
+                onClick:async ()=>{
+                    base.log("upload click");
+                    const allowed=extensionListToAccept(await actions.getAllowedExtensions());
+                    uploadClick((ev)=>{
+                        ev.preventDefault();
+                        setUploadFile(ev.target.files[0]);
+                    },allowed);
                 }
             },
             Mob.mobDefinition(history),
@@ -84,9 +92,10 @@ const DownloadPage=(props)=>{
                 <PageLeft title={actions.headline}>
                     <DownloadItemList
                         type={type}
-                        uploadSequence={uploadSequence}
-                        showUpload={true}
+                        uploadFile={uploadFile}
                         autoreload={5000}
+                        uploadDone={()=>setUploadFile(undefined)}
+                        showCreate={true}
                     />
                 </PageLeft>
                 <ButtonList

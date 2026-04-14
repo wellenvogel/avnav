@@ -1,3 +1,7 @@
+#outdated by 2026/02
+#new split packages avnav-raspi-base, avnav-raspi-network
+#see also https://github.com/wellenvogel/avnav/issues/538#issuecomment-3968726561
+
 raspberry pi installation
 2015/01/28...
 

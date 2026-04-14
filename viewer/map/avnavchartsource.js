@@ -324,12 +324,11 @@ class AvnavChartSource extends ChartSourceBase{
                 let res=this.mapholder.getView().getResolution();
                 let tile=layer.getSource().getTileGrid()
                     .getTileCoordForCoordAndResolution(mapcoordinates,res);
-                let url=layer.getSource().getTileUrlFunction()(tile);
+                const tileUrlFunction=avLayerOptions.tileUrlFunction|| layer.getSource().getTileUrlFunction();
+                let url=tileUrlFunction(tile);
                 let action=new Promise((aresolve,areject)=>{
-                    const computeUrl=avLayerOptions.finalUrl;
                     const layerName=(this.layers.length>1)?": "+(avLayerOptions.name):'';
-                    let finalUrl=computeUrl?computeUrl(url):url;
-                    Requests.getJson(finalUrl,{useNavUrl:false,noCache:false},{
+                    Requests.getJson(url,{useNavUrl:false,noCache:false},{
                         featureInfo:1,
                         lat:lonlat[1],
                         lon:lonlat[0],

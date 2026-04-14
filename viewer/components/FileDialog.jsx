@@ -58,7 +58,7 @@ import {useHistory} from "./HistoryProvider";
 import globalStore from '../util/globalstore';
 import {readTextFile} from "./UploadHandler";
 import routeobjects from "../nav/routeobjects";
-import ImportDialog, {checkExt, readImportExtensions} from "./ImportDialog";
+import ImportDialog, {checkExt, getAcceptedExtensions, readImportExtensions} from "./ImportDialog";
 import PropTypes from "prop-types";
 import {BlobReader, ZipReader} from "@zip.js/zip.js";
 import {fetchItem, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
@@ -765,6 +765,16 @@ export class ItemActions extends CopyAware{
     }
 
     /**
+     * allowed extensions for upload buttons
+     * @returns {Promise<*|*[]>}
+     */
+    async getAllowedExtensions(){
+        if (this.fixedExtension){ return [this.fixedExtension];}
+        if (! this.allowedExtensions){ return;}
+        return this.allowedExtensions;
+    }
+
+    /**
      * convert an item.name into a base name that can be used
      * to upload a new item
      * this will strip the prefix (and if a fixedExtension is there it will also strip this)
@@ -1021,6 +1031,12 @@ class ChartItemActions extends ItemActions{
             close: false,
             visible:item.hasImportLog
         }))
+    }
+
+    async getAllowedExtensions() {
+        const rt=(await super.getAllowedExtensions())||[];
+        const importExtensions = (await readImportExtensions())||[];
+        return rt.concat(getAcceptedExtensions(importExtensions));
     }
 
     getUploadAction() {

@@ -26,6 +26,12 @@ class AlarmHandler{
         this.alarmBlocks[this.blockId]=alarmName;
         return this.blockId;
     }
+    isBlocked(alarmName){
+        for (let k in this.alarmBlocks){
+            if (this.alarmBlocks[k]=== alarmName) return true;
+        }
+        return false;
+    }
     removeBlock(id){
         delete this.alarmBlocks[id];
     }
@@ -95,11 +101,7 @@ class AlarmHandler{
     }
     startLocalAlarm(type,opt_category){
         if (! LOCAL_TYPES[type]) return;
-        for (let k in this.alarmBlocks){
-            if (this.alarmBlocks[k] === type) {
-                return;
-            }
-        }
+        if (this.isBlocked(type))return;
         if (! opt_category) opt_category='info';
         let alarms=assign({},globalStore.getData(keys.nav.alarms.all));
         let alarm={category:opt_category,name:type,isLocal:true,running:true,repeat:1};

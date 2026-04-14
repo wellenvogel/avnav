@@ -143,6 +143,7 @@ export class DialogContextImpl implements IDialogContext {
         //never remove the first entry from the stack
         for (let idx = 1; idx < this.displayStack.length; idx++) {
             if (this.displayStack[idx].id === id) {
+                this.displayStack[idx].setDialog(); //correctly close any dialog
                 this.displayStack.splice(idx, 1);
                 return true;
             }

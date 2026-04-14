@@ -17,5 +17,9 @@
   "AVNAV_STARTX":"Starte einen Firefox Browser im Kiosk Mode für einen lokalen Touchscreen",
   "AVNAV_DPI":"Die pixel/inch für den genutzten Monitor zur Anpassung verschiedener Elemente",
   "AVNAV_KEYHEIGHT":"Die Höhe einer Tastaturzeile des On Screen Keyboards (in mm)",
-  "AVNAV_HIDE_CURSOR":"Verberge den Cursor für den lokalen Touch Screen"
+  "AVNAV_HIDE_CURSOR":"Verberge den Cursor für den lokalen Touch Screen",
+  "AVNAV_WIFI_INTF":"Das WLAN interface für den Hotspot",
+  "AVNAV_WIFI_BAND": "Das WLAN Band für den Hotspot (bg - 2.4Ghz oder a - 5Ghz)",
+  "AVNAV_WIFI_CHANNEL":"Der WLAN Kanal für den Hotspot",
+  "AVNAV_WIFI_ADDRESS": "Die IP Adresse und der DHCP Bereich - Format 192.168.30.10/24"
 }

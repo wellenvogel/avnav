@@ -23,32 +23,20 @@
 
  import html from '/modules/htm.js';
  import {useState,useEffect,useCallback,useRef} from '/modules/react.js';
- import {useDialogContext,ListItem,ListSlot,ListMainSlot} from '/modules/avnavui.js';
- import avnav from '/modules/avnavui.js'
+ import {useDialogContext,ListItem,ListSlot,ListMainSlot,Icon} from '/modules/avnavui.js';
+ import {fetchData,nested} from './helper.mjs';
+ import { IpInfoDialog } from './networkinfo.mjs';
 
  const ZONE_T='trusted';
  const ZONE_B='block';
 
- const fetchData=async (url)=>{
-    const response=await fetch(url);
-    if (! response.ok) throw new Error(`error fetching ${url}: ${response.status}`);
-    const data=await response.json();
-    if (data.status != 'OK') throw new Error(`error fetching ${url}: ${data.status} ${data.error}`);
-    return data;
- }
-
- const nested=(obj,key)=>{
-    const parts=key.split('.')
-    for (let pp of parts){
-        if (typeof(obj) !== 'object') return;
-        if (! (pp in obj )) return;
-        obj=obj[pp];
-    }
-    return obj;
- }
-
+ 
  const Interface=({intf,selected,onClick})=>{
     let className="interface";
+    let zoneClass='_none';
+    const zone=nested(intf,'condata.connection.connection.zone');
+    if (zone == ZONE_B) zoneClass='zblocked';
+    if (zone == ZONE_T) zoneClass='ztrusted';
     return html`
     <${ListItem} className=${className} selected=${selected} onClick=${(ev)=>onClick(ev)}>
         <${ListMainSlot}
@@ -56,16 +44,23 @@
             secondary=${html`<span className="ipaddr">${nested(intf,'condata.ip4config.addressdata.0.address')}</span>
             ${!!intf.condata && html` 
             <span className="bssid">${nested(intf,"condata.hwaddress")}</span>
-            <span className="zone">${nested(intf,'condata.connection.connection.zone')}</span>
             <span className="freq">${nested(intf,'condata.frequency')}MHz</span>
             <span className="ssid">${nested(intf,'condata.connection.802-11-wireless.ssid')}</span>
             `}
             `}
             />
+        <${ListSlot} icon=${{className:zoneClass}}/>
     <//> `;
  }
  const netNeedsPw=(net)=>{
     return !!((net.flags||"").match(/PRIVACY/));
+ }
+ const strengthToClass=(strength)=>{
+    if (isNaN(strength)) return '';
+    if (strength< 25) return 'wifi1';
+    if (strength < 50) return 'wifi2';
+    if (strength < 75) return 'wifi3';
+    return 'wififull';
  }
  const Network=({net,onClick})=>{
     const mbr=(net.maxbitrate||0)/1000;
@@ -78,7 +73,9 @@
     const needsPw=netNeedsPw(net);
     return html`<${ListItem} className="network" onClick=${(ev)=>onClick(ev)}>
         <${ListMainSlot} primary=${net.ssid} secondary=${secondary}/>
-        <${ListSlot}> ${net.condata?"configured":"unknown"},${needsPw?"encr":"open"}<//>
+        <${ListSlot} icon=${{className: strengthToClass(net.strength)}}/>
+        <${ListSlot} icon=${{className:net.condata?'configured':'_none'}}/>
+        <${ListSlot} icon=${{className:needsPw?"encrypted":"open"}}/>
         <//>`
  }
 
@@ -94,24 +91,38 @@
         </div>
     </div>` 
  }
- const InterfaceList=({selectedIdx,items,onChange})=>{
-    let idx=0;
-    if (items.length < 1){
-        return html`<div className="interfaceList nointf">no free network interfaces</div>`
-    }
+ const InterfaceList=({api,selectedPath,items,scanning,onChange})=>{
+    const dialogContext=useDialogContext();
     return html`
+    <${ListItem} className="heading">
+        <${ListMainSlot} primary="Available Interfaces"/>
+        <${ListSlot}>
+        ${scanning && html`<span className="spinner"/>`}
+        <//>
+        <${ListSlot} icon=${{className:'info'}} onClick=${(ev=>
+            api.showDialog({
+                className: 'nwmplugin IpInfoDialog',
+                title: 'NetworkInfo',
+                buttons: [{name:'cancel'}],
+                html: html`<${IpInfoDialog} api=${api}/>`,
+            },dialogContext)
+        )}/>
+    <//>
+    ${(items.length < 1)? html`
+        <div className="interfaceList nointf">no available interfaces</div>`
+        :
+    html`
     <div className="interfaceList">
-        <div className="heading">Available Interfaces<//>
         <div className="itemList">
         ${items.map((item)=>{
-            const ourIdx=idx;
-            const isSel=ourIdx === selectedIdx;
-            idx++;
-            return html`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(ourIdx)} key=${item.path}/>`
+            const path=nested(item,'path');
+            const isSel=path == selectedPath;
+            return html`<${Interface} intf=${item} selected=${isSel} onClick=${(ev)=>onChange(path)} key=${path}/>`
             }
         )}
         </div>
     </div>`
+    }`
  }
  const ConnectionMonitor=({api,intf,activeConnection})=>{
     const [conState,setConState]=useState("Connecting");
@@ -142,11 +153,12 @@
         <//>
     `;
  }
- const showConnectionMonitor=({api,dialogContext,intf,activeConnection})=>{
+ const showConnectionMonitor=({api,dialogContext,intf,activeConnection,onClose})=>{
     api.showDialog({
+        onClose: onClose,
         className:"nwmplugin connectionMonitor",
         title:'Connecting...',
-        text: html`<${ConnectionMonitor} api=${api} activeConnection=${activeConnection} intf=${intf}/>`,
+        html: html`<${ConnectionMonitor} api=${api} activeConnection=${activeConnection} intf=${intf}/>`,
         buttons: [{name:'cancel'}]
     },dialogContext);
  }
@@ -155,7 +167,12 @@
     if (v === undefined) return true;
     return !!v;
  }
- const showConnectDialog=async ({api,dialogContext,network,intf})=>{
+ const sleep=async (ms)=>{
+    return new Promise((resolve)=>{
+        window.setTimeout(()=>resolve(true),ms);
+    })
+ }
+ const showConnectDialog=async ({api,dialogContext,network,intf,onClose,onConnect})=>{
     const connection=network.condata;
     const needsPw=netNeedsPw(network);
     const hasPw=connection && connection.haspsk;
@@ -212,6 +229,7 @@
         title: 'Connect',
         text: `${ssid} via ${intf.interface}`,
         values:initialValues,
+        onClose: onClose,
         buttons: [
             {name: 'delete',
                 visible: !!network.condata,
@@ -233,9 +251,11 @@
                 close:false,
                 onClick:async (ev,values)=>{
                     try{
+                        let mustSleep=false;
                         let zone=values.ext?ZONE_T:ZONE_B;
                         let conPath;
                         if (! connection){
+                            mustSleep=true;
                             if (needsPw && (! values.psk || hasPw)){
                                 api.showToast("network needs a password");
                                 return;
@@ -267,6 +287,7 @@
                                 mustUpdate=true;
                             }
                             if (mustUpdate){
+                                mustSleep=true;
                                 let url=api.getBaseUrl()+"api/updateConnection?path="+
                                     encodeURIComponent(conPath)+
                                     "&zone="+encodeURIComponent(zone)+
@@ -284,6 +305,9 @@
                             "&ap="+encodeURIComponent(network.path)+
                             "&device="+encodeURIComponent(intf.path);
                         const d3=await api.showDialog({text:'Triggering Connection'},ev);
+                        if (mustSleep){
+                            await sleep(500);
+                        }
                         const res=await fetchData(url);
                         d3();
                         if (! res.data){
@@ -291,7 +315,7 @@
                             return;
                         }
                         close();
-                        showConnectionMonitor({api,dialogContext,intf,activeConnection:res.data});
+                        onConnect(res.data);
                         
                     }catch (e){
                         api.showToast(e+"");
@@ -303,6 +327,12 @@
     },dialogContext)
  }
 
+ const itemFromPath=(items,path)=>{
+    if (! path || ! items) return;
+    for (let item of items){
+        if (nested(item,'path') == path) return item;
+    }
+ }
  const NetworkDialog=({api})=>{
     const dialogContext=useDialogContext();
     const [interfaces,setInterfaces]=useState([]);
@@ -310,9 +340,11 @@
     const [connections,setConnections]=useState([]);
     const [networks,setNetworks]=useState([]);
     const [fetchState,setFetchState]=useState(1);
-    const [selected,setSelected]=useState(-1);
+    const [selected,setSelected]=useState(); //path of selected interface
+    const disableFetch=useRef(false);
     const timer=useRef(undefined);
     const fetchItems=useCallback((url,setter,key)=>{
+        if (disableFetch.current) return;
         setFetchState((old)=>old | key);
         fetchData(url)
             .then ((response)=>{
@@ -330,9 +362,6 @@
         const intfUrl=api.getBaseUrl()+"api/devices?full=true&deviceType=Wi-Fi";
         fetchItems(intfUrl,(intf)=>{
             setInterfaces(intf);
-            if (intf.length > 0){
-                setSelected((old)=>(old<0)?0:(old>=intf.length)?old=intf.length-1:old);
-            }
             }
             ,1);
         const acUrl=api.getBaseUrl()+"api/activeConnections?includeIpConfig=true&type=802-11-wireless";
@@ -348,6 +377,7 @@
         return ()=>window.clearInterval(timer);
     },[])
     const scan=useCallback((intf,rescan)=>{
+        if (disableFetch.current) return;
         const key=8;
         setFetchState(key);
         let url=api.getBaseUrl()+"api/scan?path="+encodeURIComponent(intf);
@@ -368,13 +398,13 @@
     useEffect(()=>{
         if (timer.current !== undefined) window.clearInterval(timer.current);
         timer.current=undefined;
-        const device=nested(interfaces[selected],'path');
+        const device=itemFromPath(interfaces,selected);
         if (! device) return;
         let current;
-        scan(device,true);
+        scan(selected,true);
         current=window.setInterval(()=>{
             if (timer.current !== current) return;
-            scan(device);
+            scan(selected);
         },5000)
         timer.current=current;
         return ()=>{
@@ -387,12 +417,23 @@
     const availableInterfaces=[];
     const connectionsInUse={};
     const connectedAps={}; 
+    const ownAps={}; //key: hwaddress-ssid, value: activeConnection
     (interfaces||[]).forEach((intf)=>{
         if (intf.activeconnection){
             //find the connection
             for (let con of activeConnections){
                 if (con.path !== intf.activeconnection) continue;
-                if (nested(con,'connection.802-11-wireless.mode') !== 'infrastructure') return;
+                const mode=nested(con,'connection.802-11-wireless.mode');
+                if (mode !== 'infrastructure'){
+                    if (mode === 'ap'){
+                        //remember hwaddress+ssid of our hotspots
+                        //to omit them from the list
+                        const ssid=nested(con,'connection.802-11-wireless.ssid');
+                        const hwaddr=con.hwaddress;
+                        ownAps[hwaddr+"-"+ssid]=con.path;
+                    }
+                    return;
+                }
                 intf.condata=con;
                 const configured=nested(con,'connection.path');
                 if (configured) connectionsInUse[configured]=con;
@@ -403,13 +444,25 @@
         }
         availableInterfaces.push(intf);
     });
-    const selectedInterface=interfaces[selected];
+    if (! selected && availableInterfaces.length > 0 && fetchState == 0){
+        const path=availableInterfaces[0].path;
+        window.setTimeout(()=>{
+            selectChange(path)
+        },10);
+    }
+    let selectedInterface=itemFromPath(availableInterfaces,selected);
+    if (selected && ! selectedInterface){
+        window.setTimeout(()=>{
+            selectChange('');
+        },10);
+    }
     const seenNetworks=[];
     if (selectedInterface){
         const path=nested(selectedInterface,"path");
         if (path){
             (networks||[]).forEach((network)=>{
                 if (connectedAps[network.hwaddress]) return;
+                if (ownAps[network.hwaddress+"-"+network.ssid]) return;
                 network={...network};
                 if (network.device !== path) return;
                 const ssid=network.ssid;
@@ -423,20 +476,22 @@
             })
         }
     }
-     const selectChange = (id) => {
-         if (id === selected && selectedInterface) {
+     const selectChange = (path) => {
+         if (path === selected && selectedInterface) {
              if (selectedInterface.activeconnection) {
                  const ssid = nested(selectedInterface, 'condata.connection.802-11-wireless.ssid')
+                 disableFetch.current=true;
                  api.showDialog({
                      title: 'Disconnect?',
                      text: `${ssid} on ${selectedInterface.interface}`,
+                     onClose: ()=>disableFetch.current=false,
                      buttons: [
                          { name: 'cancel' },
                          {
                              name: 'ok',
                              onClick: async (ev) => {
                                  const path = selectedInterface.activeconnection;
-                                 if (!path) return;
+                                 if (!path) return;                            
                                  const url = api.getBaseUrl() + 'api/deactivateConnection?path=' + encodeURIComponent(path);
                                  await fetchData(url);
                              }
@@ -445,41 +500,61 @@
                  }, dialogContext)
              }
              else{
-                setSelected(id);
+                setSelected(path);
              }
 
          }
          else {
-             setSelected(id);
+             setSelected(path);
          }
      }
     return html`
-    <${ListItem} className="headline">
-        <${ListMainSlot} primary="Wifi"/>
-        <${ListSlot}>
-        ${fetchState && html`<span className="spinner"/>`}
-        <//>
-    <//>
-    <${InterfaceList} selectedIdx=${selected} items=${availableInterfaces} onChange=${(id)=>selectChange(id)}/>
+    <${InterfaceList} 
+        selectedPath=${selected} 
+        items=${availableInterfaces} 
+        onChange=${(path)=>selectChange(path)}
+        scanning=${fetchState != 0}
+        api=${api}
+        />
     <${NetworkList} items=${seenNetworks} onClick=${(ev,network)=>{
-        showConnectDialog({api,dialogContext,network,intf:availableInterfaces[selected]})
+        disableFetch.current=1;
+        const intf=itemFromPath(availableInterfaces,selected);
+        showConnectDialog({
+            api,
+            dialogContext,
+            network,
+            intf,
+            onClose: ()=>{
+                if (disableFetch.current == 1){
+                    disableFetch.current=false
+                }
+            },
+            onConnect: (activeConnection)=>{
+                disableFetch.current=2;
+                showConnectionMonitor({api,
+                    dialogContext,
+                    intf,
+                    activeConnection,
+                    onClose: ()=>disableFetch.current=false})
+            }
+        })
     }}/>
     `
  }
 
  export default async (api)=>{
-    console.log("avnav",avnav);
     const KVISIBLE=api.getStoreBaseKey()+".visible";
     api.setStoreData(KVISIBLE,false);
     let dialogHandle;
     const showNetworkDialog=async (ev)=>{
         const rt=await api.showDialog({
-            text: html`<${NetworkDialog} api=${api}/>`,
+            html: html`<${NetworkDialog} api=${api}/>`,
             onClose:()=>{
                 api.setStoreData(KVISIBLE,false);
                 dialogHandle=undefined;
             },
             fullscreen: true,
+            title: 'Wifi',
             className: 'nwmplugin WifiDialog'
         },ev);
         api.setStoreData(KVISIBLE,true);

@@ -4,55 +4,13 @@
 
 import React, {useEffect, useRef, useState} from "react";
 import PropTypes from 'prop-types';
-import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
+import ReactHtmlParser from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.ts';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import Helper from "../util/helper";
 import {ErrorBoundary} from "./ErrorBoundary";
+import {UserHtml} from "./UserHtml";
 
-const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
-    ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
-    ' onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave onMouseMove onMouseOut onMouseOver onMouseUp'+
-    ' onPointerDown onPointerMove onPointerUp onPointerCancel onGotPointerCapture onLostPointerCapture onPointerEnter onPointerLeave'+
-    ' onPointerOver onPointerOut onSelect onTouchCancel onTouchEnd onTouchMove onTouchStart onScroll onWheel'+
-    ' onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData' +
-    ' onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend'+
-    ' onTimeUpdate onVolumeChange onWaiting onLoad onError onAnimationStart onAnimationEnd onAnimationIteration onTransitionEnd'+
-    ' onToggle').split(/  */);
-
-let EVENT_TRANSLATIONS={};
-REACT_EVENTS.forEach((name)=>{
-    EVENT_TRANSLATIONS[name.toLowerCase()]=name;
-})
-
-const transform=(self,node,index)=>{
-    if (node && node.attribs){
-        for (let k in node.attribs){
-            if (k.match(/^on../)){
-                let evstring=node.attribs[k];
-                if (!self.eventHandler || ! self.eventHandler[evstring]) {
-                    base.log("external widget, no event handler for "+evstring);
-                    continue;
-                }
-                let translated=EVENT_TRANSLATIONS[k];
-                let nk;
-                if (translated){
-                    nk=translated;
-                }
-                else {
-                    nk = "on" + k.substr(2, 1).toUpperCase() + k.substring(3);
-                }
-                node.attribs[nk]=(ev)=>{
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    self.eventHandler[evstring].call(self,ev);
-                };
-                delete node.attribs[k];
-            }
-        }
-    }
-    return convertNodeToElement(node,index,(node,index)=>{transform(self,node,index)});
-};
 
 export const ExternalWidget =(props)=>{
     let [,setUpdateCount]=useState(1);
@@ -106,28 +64,15 @@ export const ExternalWidget =(props)=>{
                 return null;
             }
         }
-        let userHtml=null;
-        if (innerHtml!=null) {
-            if (typeof (innerHtml) !== 'string') {
-                userHtml = innerHtml;
-                if (! React.isValidElement(userHtml)){
-                    userHtml="invalid user html";
-                }
-            } else {
-                userHtml = ReactHtmlParser(innerHtml,
-                    {
-                        transform: (node, index) => {
-                            transform(userData.current, node, index);
-                        }
-                    });
-            }
-        }
     return (
         <ErrorBoundary fallback={"render error in widget"}>
             <WidgetFrame {...convertedProps} addClass={Helper.concatsp("externalWidget", props.className)}
                          onClick={props.onClick} resizeSequence={resizeSequence.current}>
                 {props.renderCanvas ? <canvas className='widgetData' ref={canvasRef}></canvas> : null}
-                {userHtml}
+                {(innerHtml != null) && <UserHtml
+                context={userData.current}
+                userHtml={innerHtml}
+                />}
             </WidgetFrame>
         </ErrorBoundary>
     );

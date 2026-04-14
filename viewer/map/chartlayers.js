@@ -41,11 +41,10 @@ import Helper, {setav} from "../util/helper";
 import {CHARTBASE} from "./chartsourcebase";
 import CryptHandler from './crypthandler';
 import {ChartFeatureInfo} from "./featureInfo";
-import {featureListFormatter} from "../util/featureFormatter";
 import {getFeatureInfoKeys} from "../util/api.impl";
 import navobjects from "../nav/navobjects";
 import olDataTile,{asImageLike} from "ol/DataTile";
-import {PMTiles,Header,Protocol} from 'pmtiles';
+import {PMTiles} from 'pmtiles';
 import {unByKey} from "ol/Observable.js";
 import {fetchWithTimeout} from "../util/requests";
 import {load as yamlLoad} from 'js-yaml';
@@ -80,8 +79,8 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,minZoom,inversy)=>
             super(tileCoord,state,opt_options);
             this.ownImage = new Image();
             this.ownTileLoadFunction = tileLoadFunction;
-            this.ownSrc = src;
-            this.key=src;
+            this.ownSrc = src;  //src is the value returned from the olSource tileUrlFunction
+                                //we just return the coordinates as we compute "lazily"
             this.listenerKeys = [];
             this.tileUrlFunction=tileUrlFunction;
             this.downZoom=0;
@@ -91,7 +90,7 @@ const tileClassCreator=(tileUrlFunction,maxUpZoom,minZoom,inversy)=>
         }
 
         getModifiedUrl(){
-            let coord=this.tileCoord.slice(0);
+            let coord=this.ownSrc.slice(0);
             let dz=0;
             while (this.downZoom <= maxUpZoom) {
                 for (; dz < this.downZoom; dz++) {
@@ -429,14 +428,11 @@ class LayerConfigXYZ extends LayerConfig{
             return f;
         }
     }
-    finalUrl(url) {
-        return url;
-    }
     tileLoadFunction(imageTile, src){
         if (this.userCallbackData.tileLoadFunction){
             return this.userCallbackData.tileLoadFunction(imageTile, src,this.userContext);
         }
-        imageTile.getImage().src = this.finalUrl(src)
+        imageTile.getImage().src = src
     }
 
     createOL(options) {
@@ -446,7 +442,7 @@ class LayerConfigXYZ extends LayerConfig{
         const tileUrlFunction = this.createTileUrlFunction(options);
         this.source = new olXYZSource({
             tileUrlFunction: (coord) => {
-                return tileUrlFunction(coord);
+                return coord;
             },
             tileLoadFunction: (imageTile, src) => {
                 this.tileLoadFunction(imageTile, src);
@@ -596,7 +592,10 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
             if (this.inversy) {
                 y = (1 << z) - y - 1
             }
-            let tileUrl = "##encrypt##"+ z + '/' + x + '/' + y + ".png";
+            let tileUrl = z + '/' + x + '/' + y + ".png";
+            if (this.encryptFunction){
+                tileUrl=this.encryptFunction(tileUrl);
+            }
             return Helper.endsWith(layerOptions.layerUrl,"/")?(layerOptions.layerUrl+tileUrl):(layerOptions.layerUrl + '/' + tileUrl)
         }
         if (this.userCallbackData.createTileUrlFunction){
@@ -604,19 +603,11 @@ class LayerConfigEncrypt extends LayerConfigXYZ{
         }
         return f;
     }
-    finalUrl(url) {
-        let encryptPart = url.replace(/.*##encrypt##/, "");
-        let basePart = url.replace(/##encrypt##.*/, "");
-        if (! this.encryptFunction) {
-            return basePart+encryptPart;
-        }
-        return basePart + this.encryptFunction(encryptPart);
-    }
-
     createOL(options) {
         const rt=super.createOL(options);
+        const tileUrlFunction=this.createTileUrlFunction(options);
         setav(rt,{
-            finalUrl:(url)=>this.finalUrl(url)
+            tileUrlFunction:(tile)=>tileUrlFunction(tile)
         })
         return rt;
     }

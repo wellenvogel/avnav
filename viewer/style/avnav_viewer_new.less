@@ -40,6 +40,7 @@ body{
   height: 100%;
   overflow: hidden;
   position: relative;
+  z-index: 2;
 }
 .pageFrame{
   background-color: var(--avnav-back-color);
@@ -200,6 +201,12 @@ body{
 //----------------------------------------------------------------------------------------
 //dialogs
 //----------------------------------------------------------------------------------------
+#___uploadInput{
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+}
 .noEvents{
   pointer-events: none;
 }
@@ -237,6 +244,10 @@ body{
     height: 100%;
     border-radius: 0;
     box-shadow: none;
+    padding: 0;
+    .flexInner{
+      width: 100%;
+    }
   }
   & > div {
     min-width: 0;
@@ -265,7 +276,6 @@ body{
   .dialogObjects();
 }
 .dialogObjects{
-  font-size: 1.1em;
   .inputFrame{
     width: 20em;
     min-width: 5em;
@@ -1528,10 +1538,11 @@ span.valuePrefix{
     }
     .sectionList{
       border-right: @normalBorder ;
-      margin-right: 2em;
       border-color: var(--avnav-border-color);
-      width: 10em;
-      .flex-grow(0);
+      flex-basis: 10em;
+      flex-grow: 0;
+      display: flex;
+      flex-direction: column;
       &.expand{
         .flex-grow(1);
         width: 100%;

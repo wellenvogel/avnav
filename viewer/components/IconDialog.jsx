@@ -30,13 +30,14 @@ import React,{useEffect, useState} from "react";
 import Requests from "../util/requests";
 import GuiHelpers from "../util/GuiHelpers";
 import Helper from "../util/helper";
-import UploadHandler from "./UploadHandler";
+import UploadHandler, {extensionListToAccept, uploadClick} from "./UploadHandler";
 import Toast from "./Toast";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {SelectList} from "./BasicDialogs";
 import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
+import {IMAGES} from "../util/itemFunctions";
 
 const IMAGES_FLAG=1;
 const SOURCES=[
@@ -73,7 +74,7 @@ export const IconDialog=(props)=>{
     const onChange=props.resolveFunction||props.onChange;
     const [sources,setSources]=useState(0xff); //all
     const [iconList,setIconList]=useState([]);
-    const [uploadSequence,setUploadSequence]=useState(0);
+    const [uploadFile,setUploadFile]=useState(undefined);
     const loadIcons = (opt_active,opt_activeType) => {
         setIconList(props.addEmpty?[{label:'--- none ---',value:undefined}]:[]);
         SOURCES.forEach((src) => {
@@ -142,7 +143,12 @@ export const IconDialog=(props)=>{
                 {
                     name:'upload',
                     label:'New',
-                    onClick:()=>setUploadSequence(uploadSequence+1),
+                    onClick:()=> {
+                        uploadClick(
+                            (ev)=>setUploadFile(ev.target.files[0]),
+                            extensionListToAccept(IMAGES)
+                        );
+                    },
                     close:false,
                     visible: (props.allowUpload === undefined|| props.allowUpload) && globalStore.getData(keys.gui.capabilities.uploadImages),
                     disabled: ! (sources & IMAGES_FLAG)
@@ -154,11 +160,15 @@ export const IconDialog=(props)=>{
         <UploadHandler
             local={false}
             type={'images'}
-            doneCallback={(param)=>loadIcons(param.name,'images')}
+            doneCallback={(param)=>{
+                setUploadFile(undefined);
+                loadIcons(param.name,'images');
+            }}
             errorCallback={(err) => {
+                setUploadFile(undefined);
                 if (err) Toast(err);
             }}
-            uploadSequence={uploadSequence}
+            file={uploadFile}
             checkNameCallback={(file)=>{
                 const name=file.name;
                 return new Promise((resolve,reject)=>{

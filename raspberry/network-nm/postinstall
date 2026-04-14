@@ -13,5 +13,6 @@ do
     echo "$fn already removed"
   fi
 done
+systemctl disable NetworkManager-wait-online || echo ignore
 "$BASE/set-network.py" -i
 

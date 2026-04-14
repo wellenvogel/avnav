@@ -135,13 +135,19 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         if (path.startsWith("/")) path=path.substring(1);
         if (!path.startsWith(urlPrefix)) return null;
         path = path.substring((urlPrefix.length()+1));
+        if (path.startsWith("__")){
+            int slash=path.indexOf('/');
+            if (slash < 0 || slash >= (path.length()-1)) return null;
+            path=path.substring(slash+1);
+        }
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
-        if (parts.length > 1) return super.handleDirectRequest(uri, handler, method, headers);
+        String fallback=uri.getQueryParameter("fallback");
+        if (parts.length > 1) return super.doHandleDirectRequest(path, handler, method, headers,fallback);
         String name= URLDecoder.decode(parts[0],"UTF-8");
-        if (!name.equals("user.js")) return super.handleDirectRequest(uri, handler, method, headers);
+        if (!name.equals("user.js")) return super.doHandleDirectRequest(path, handler, method, headers,fallback);
         File foundFile=new File(workDir,name);
-        if (! foundFile.exists()) return super.handleDirectRequest(uri, handler, method, headers);
+        if (! foundFile.exists()) return super.doHandleDirectRequest(path, handler, method, headers,fallback);
         String base="/"+urlPrefix;
         byte[] baseUrl=("var AVNAV_BASE_URL=\""+base+"\";\n").getBytes(StandardCharsets.UTF_8);
         JsStream out=new JsStream(foundFile,baseUrl);
@@ -162,6 +168,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
+        if (name.startsWith("__")) throw new Exception("name must not start with __");
         boolean rt=super.handleUpload(postData, name, ignoreExisting, completeName);
         if (rt){
             updateSequence(name);
@@ -178,6 +185,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
 
     @Override
     public boolean handleRename(String oldName, String newName) throws Exception {
+        if (newName.startsWith("__")) throw new Exception("name must not start with __");
         boolean rt=super.handleRename(oldName, newName);
         if (rt){
             if (!updateSequence(oldName)) {

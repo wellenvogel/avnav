@@ -193,8 +193,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
             zf.close();
         }
     }
-    private ExtendedWebResourceResponse tryFallbackOrFail(Uri uri,RequestHandler handler) throws Exception {
-        String fallback=uri.getQueryParameter("fallback");
+    private ExtendedWebResourceResponse tryFallbackOrFail(String fallback,RequestHandler handler) throws Exception {
         if (fallback == null || fallback.isEmpty()) return null;
         if (!fallback.startsWith("/")) {
             fallback=RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/"+fallback;
@@ -211,6 +210,9 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         if (path.startsWith("/")) path = path.substring(1);
         if (!path.startsWith(urlPrefix)) return null;
         path = path.substring((urlPrefix.length() + 1));
+        return doHandleDirectRequest(path,handler,method,headers,uri.getQueryParameter("fallback"));
+    }
+    protected ExtendedWebResourceResponse doHandleDirectRequest(String path, RequestHandler handler, String method, Map<String,String> headers,String fallback) throws Exception{
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
 
@@ -218,7 +220,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
             String name = URLDecoder.decode(parts[0], "UTF-8");
             File foundFile = findLocalFile(name);
             if (foundFile == null)
-                return tryFallbackOrFail(uri, handler);
+                return tryFallbackOrFail(fallback, handler);
             if (method.equalsIgnoreCase("GET")) {
                 ZipFile zf = new ZipFile(foundFile);
                 String entryPath = path.replaceFirst("[^/]*/", "");
@@ -235,7 +237,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
                 }
 
                 if (entry == null)
-                    return tryFallbackOrFail(uri, handler);
+                    return tryFallbackOrFail(fallback, handler);
                 ExtendedWebResourceResponse rt = new ExtendedWebResourceResponse(entry.getSize(),
                         RequestHandler.mimeType(entry.getName()),
                         "", new CloseHelperStream(zf.getInputStream(entry), zf));

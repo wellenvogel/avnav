@@ -784,7 +784,6 @@ EditOverlaysDialog.propTypes = {
     updateCallback: PropTypes.func,
     resetCallback: PropTypes.func,
     editCallback: PropTypes.func,  //only meaningful if preventEdit is set
-    closeCallback: PropTypes.func.isRequired,
     preventEdit: PropTypes.bool,
     addEntry: PropTypes.object, //if this is set, immediately start with appending this entry
     hideErrors: PropTypes.bool //if set do not show items with errors (only with preventEdit = true)

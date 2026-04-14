@@ -1,5 +1,5 @@
 /**
- * # Copyright (c) 2012-2025 Andreas Vogel andreas@wellenvogel.net
+ * # Copyright (c) 2012-2026 Andreas Vogel andreas@wellenvogel.net
  #
  #  Permission is hereby granted, free of charge, to any person obtaining a
  #  copy of this software and associated documentation files (the "Software"),
@@ -20,35 +20,21 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import * as React from 'react';
-import PropTypes from "prop-types";
 
-export class ErrorBoundary extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = { error: undefined };
+export const fetchData=async (url)=>{
+    const response=await fetch(url);
+    if (! response.ok) throw new Error(`error fetching ${url}: ${response.status}`);
+    const data=await response.json();
+    if (data.status != 'OK') throw new Error(`error fetching ${url}: ${data.status} ${data.error}`);
+    return data;
+ }
+
+export  const nested=(obj,key)=>{
+    const parts=key.split('.')
+    for (let pp of parts){
+        if (typeof(obj) !== 'object') return;
+        if (! (pp in obj )) return;
+        obj=obj[pp];
     }
-
-    static getDerivedStateFromError(error) {
-        // Update state so the next render will show the fallback UI.
-        return { error: error };
-    }
-
-    componentDidCatch(error, info) {
-        console.log("component error",error,info)
-    }
-
-    render() {
-        if (this.state.error) {
-            // You can render any custom fallback UI
-            return this.props.fallback||this.state.error+"";
-        }
-
-        return this.props.children;
-    }
-}
-ErrorBoundary.propTypes = {
-    fallback:PropTypes.element,
-    children:PropTypes.any
-}
- 
+    return obj;
+ }

@@ -35,6 +35,7 @@ import Addons from "../components/Addons";
 import {layerFactory} from "../map/chartlayers";
 import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
 import React from 'react';
+import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
 
 
 class PluginApi extends ApiV2 {
@@ -479,8 +480,7 @@ class Pluginmanager{
         const foundPlugins={};
         queries.push(this.query().then((plugins)=>{
             if (!plugins || !(plugins instanceof Array)) {
-                Toast("unable to query plugins");
-                return;
+                throw new Error("no plugins returned")
             }
             for (let plugin of plugins) {
                 const name = plugin.name;
@@ -492,7 +492,14 @@ class Pluginmanager{
         queries.push(this.queryUser().then((userFiles)=>{
             foundPlugins[userFiles.name] = userFiles;
         }));
-        await Promise.all(queries);
+        try {
+            await Promise.all(queries);
+        }catch (e){
+            base.error("unable to query plugins",e);
+            if (alarmhandler.isBlocked(LOCAL_TYPES.connectionLost)) return;
+            Toast("unable to query plugins");
+            return;
+        }
         base.log("got plugin/user info");
         let unloadedJsChanges=false;
         let updatedMjs=false;
@@ -525,7 +532,7 @@ class Pluginmanager{
                                 } else {
                                     updatedMjs = true;
                                 }
-                                await api.loadModule("plugin.mjs", plugin.mjs.timestamp);
+                                await api.loadModule((pluginName === USERNAME)?"user.mjs":"plugin.mjs", plugin.mjs.timestamp);
                                 this.createdApis[pluginName] = api;
                             } catch (e) {
                                 console.error("unable to create api and load module", plugin, e);
@@ -555,6 +562,7 @@ class Pluginmanager{
                     base.log("loading/updating css for " + pluginName);
                     loadOrUpdateCss(plugin.css.url, cssid);
                     this.css[pluginName]=plugin.css.timestamp;
+                    hasUpdates=true
                 }
             }
         }
@@ -570,6 +578,7 @@ class Pluginmanager{
                 base.log("deleting css for " + pname);
                 loadOrUpdateCss(undefined, cssid);
                 delete this.css[pname];
+                hasUpdates=true;
             }
         }
         //for the legacy JS we know that all js entries have been now created

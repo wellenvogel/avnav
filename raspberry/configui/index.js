@@ -1,4 +1,9 @@
 (function(){
+    const selects={
+            AVNAV_HAT: ['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH','MCARTHUR'],
+            IMAGE_VERSION:['bookworm','trixie'],
+            AVNAV_WIFI_BAND:['bg','a']
+       }
     let getToolTips=function(lang){
         let prefix=(lang === 'de' || ! lang)?'':(lang+'_');
         fetch(prefix+'tooltips.json')
@@ -108,6 +113,10 @@
         AVNAV_CONFIG_SEQUENCE: {r:getValue,s:setValue},
         AVNAV_MODULE_RTL8188EU: {r:checkBox,s:setCheckBox},
         AVNAV_MODULE_RTL8192EU: {r:checkBox,s:setCheckBox},
+        AVNAV_WIFI_INTF: {r:getValue,s:setValue},
+        AVNAV_WIFI_BAND: {r:selectValue,s:setSelected},
+        AVNAV_WIFI_CHANNEL: {r:getValue,s:setValue},
+        AVNAV_WIFI_ADDRESS: {r:getValue,s:setValue},
     };
     
     let templateReplace=function(template,replace){
@@ -259,7 +268,27 @@
             field.s(document.getElementById(k),v);
         }
     }
-    
+    const showHide = () => {
+        const type = selectValue(document.getElementById('IMAGE_VERSION'));
+        for (let itype of selects.IMAGE_VERSION) {
+            for (let el of document.querySelectorAll('.' + itype)) {
+                if (el.classList.contains(type)) {
+                    el.style.display = '';
+                }
+                else {
+                    el.style.display = 'none'
+                }
+            }
+        }
+        const name = (type === 'trixie') ? "avnav.conf" : "avnav_legacy.conf";
+        fetch(name)
+            .then(function (r) { return r.text() })
+            .then(function (td) {
+                template = td;
+                fillCurrentValues(template, true);
+            })
+            .catch(function (err) { alert(err) });
+    }
     window.addEventListener('load',function(){
        console.log("loaded");
        let fieldParent=document.getElementById('parameterContainer');
@@ -272,13 +301,6 @@
                 fieldParent.appendChild(nel);
             } 
        }
-       fetch("avnav.conf")
-           .then(function(r){return r.text()})
-           .then(function(td){
-               template=td;
-               fillCurrentValues(template,true);
-            })
-           .catch(function(err){alert(err)});
        fetch("timezones.json")
             .then(function(r){return r.json()})
             .then(function(tzdata){
@@ -318,6 +340,7 @@
                pass.removeAttribute('data-encrypted');
            })
        }
+
         let BASE_BOARDS = {
             MCS: {
                 href: "https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/",
@@ -355,11 +378,17 @@
             setFieldValues(board.parameters);
         })
        }
-       let HATS=['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH','MCARTHUR'];
-       let hats=document.getElementById('AVNAV_HAT');
-       if (hats){
-            fillSelect(hats,HATS);
+       for (let k in selects){
+            fillSelect(document.getElementById(k),selects[k]);
        }
+       const isel=document.getElementById('IMAGE_VERSION');
+       const param=new URLSearchParams(this.window.location.search);
+       const type=param.get("type");
+       if (selects.IMAGE_VERSION.indexOf(type) >= 0){
+            setSelected(isel,type);
+       }
+       isel.addEventListener('change',()=>showHide());
+       showHide();
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){
            if (!template) {
@@ -371,22 +400,52 @@
            for (let k in fields){
                 let el=document.getElementById(k);
                 let value=fields[k].r(el);
+                const error=(txt)=>{
+                    alert(`${k}[${value}]:\n${txt}`);
+                }
                 if (k === 'AVNAV_SSID'){
                     if ( ! value || value.length > 32 || value.match(/ /)){
-                        alert("invalid SSID, 1...32 characters, no space");
+                        error("1...32 characters, no space");
                         return;
                     }
                 }
                 if (k === 'AVNAV_PSK'){
                     if ( ! value || value.length > 63 || value.length < 8){
-                        alert("invalid Wifi Password, 8...63 characters");
+                        error("must be 8...63 characters");
                         return;
                     }
                 }
                 if ( k === 'AVNAV_HOSTNAME'){
                     let allowed=value.replace(/[^a-zA-Z0-9-]/g,'');
                     if (allowed !== value ){
-                        alert("invalid hostname - only a-zA-Z0-9 and -");
+                        error("only a-zA-Z0-9 and -");
+                        return;
+                    }
+                }
+                if ( k=== 'AVNAV_WIFI_ADDRESS'){
+                    let err="";
+                    const ffmt="does not match the requested format like 192.168.30.10/24";
+                    if (! value) err="must not be empty";
+                    else {
+                        let m=value.match(/(^[0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+)/);
+                        if (! m) err=ffmt;
+                        else {
+                            if (m.length != 6)  err=ffmt;
+                            else {
+                                for (let i=1;i<=4;i++){
+                                    if (m[i] < 0 || m[i] > 255) {
+                                        err="address octet must be 0...255";
+                                        break;
+                                    }
+                                }
+                                if (! err && (m[5] < 16 || m[5] > 32)){
+                                    err="mask must be 16...32"
+                                }
+                            }
+                        }
+                    }
+                    if (err) {
+                        error(err);
                         return;
                     }
                 }

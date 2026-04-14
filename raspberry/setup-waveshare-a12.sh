@@ -14,28 +14,20 @@ dtparam=spi=on
 dtoverlay=mcp2515-can0,oscillator=12000000,interrupt=25,spimaxfrequency=1000000
 CFGPAR
 
-#/etc/network/interfaces.d/can0
-read -r -d '' CAN0 << 'CAN0'
-#physical can interfaces
-auto can0
-iface can0 can static
-bitrate 250000
-pre-up /sbin/ip link set $IFACE type can restart-ms 100
-down /sbin/ip link set $IFACE down
-up /sbin/ifconfig $IFACE txqueuelen 10000
-CAN0
 needsReboot=0
 if [ "$1" = $MODE_DIS ] ; then
     removeConfig $BOOTCONFIG "$WS_COMMENT" "$CFGPAR"
     checkRes
+    /usr/bin/systemctl disable can-if@can0.service
+    checkRes
+    `dirname $0`/uart_control default
     exit $needsReboot
 fi
 
 if [ "$1" = "$MODE_EN" ] ; then
     checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
     checkRes
-    can="$BASE/etc/network/interfaces.d/can0"
-    replaceConfig "$can" "$CAN0"
+    /usr/bin/systemctl enable can-if@can0.service
     checkRes
     `dirname $0`/uart_control gpio
     log "needReboot=$needsReboot"

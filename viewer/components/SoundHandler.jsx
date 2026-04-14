@@ -5,6 +5,7 @@ import Toast from '../components/Toast.jsx';
 import compare from '../util/compare.js';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
+import base from "../base";
 
 class SoundHandler extends React.Component{
     audioRef=createRef();
@@ -49,7 +50,14 @@ class SoundHandler extends React.Component{
         if (! this.audioRef.current) return;
         Toast("click to allow sounds",60000,()=>{
             this.setState({initialized:true});
-            this.audioRef.current.play();
+            if (!this.audioRef.current.src){
+                this.audioRef.current.src=globalStore.getData(keys.properties.silenceSound);
+            }
+            const rt=this.audioRef.current.play();
+            if (rt instanceof Promise){
+                rt.then(()=>{base.log("audio allowed")});
+                rt.catch((e)=>base.error("audio play not allowed",e));
+            }
         })
     }
     playerFinished(){
@@ -65,7 +73,7 @@ class SoundHandler extends React.Component{
         let src=enabled?this.props.src:undefined;
         this.repeatCount=this.props.repeat;
         if (! src && ! this.state.initialized && enabled) {
-            src = PropertyHandler.getProperties().silenceSound;
+            src = globalStore.getData(keys.properties.silenceSound);
             this.repeatCount = 10000;
         }
         if (this.repeatCount === undefined) this.repeatCount=10000;

@@ -23,7 +23,7 @@ apply plugin: 'com.netflix.nebula.ospackage-base'
 
 
 def BASE='raspberry'
-def LEGACY="$BASE/raspberry"
+def LEGACY="$BASE/legacy"
 def versionFileName="raspi.version"
 task build_raspi(type: Deb) {
     group taskgroup
@@ -61,7 +61,7 @@ task build_raspi(type: Deb) {
         from(BASE){
             fileMode 0755
             include 'sound.sh'
-            include 'setup-*.sh'
+            include 'setup-helper.sh'
             include 'prestart.sh'
             include 'uart_control'
         }
@@ -76,14 +76,12 @@ task build_raspi(type: Deb) {
             include 'wpa_action.sh'
             include 'rename-interface.sh'
             include 'checkLink.sh'
+            include 'setup-*.sh'
         }
         from (LEGACY){
             include 'hosts'
             include 'avnav_server.xml'
             include 'ntp.conf'
-            fileMode 0644
-        }
-        from(BASE) {
             include 'avnav.conf'
             fileMode 0644
         }

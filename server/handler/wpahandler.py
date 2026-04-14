@@ -310,15 +310,14 @@ class AVNWpaHandler(AVNWorker):
     if command is None:
       raise Exception('missing command for wpa request')
     if command == 'list':
-      rt=json.dumps(self.getList())
+      rt=self.getList()
     if command == 'status':
-      rt=json.dumps(self.getStatus())
+      rt=self.getStatus()
     if command == 'all':
       cmd=self.getStringParam(self.P_FWCOMMAND)
       rt={'status':self.getStatus(),'list':self.getList()}
       if cmd is not None and cmd != "":
         rt['showAccess']=True
-      rt=json.dumps(rt)
     if command == 'enable':
       id=self.getRequestParam(requestparam,'id')
       updateParam={}
@@ -330,13 +329,13 @@ class AVNWpaHandler(AVNWorker):
         updateParam['id_str']=self.PRIVATE_NAME
       else:
         updateParam['id_str']=''
-      rt=json.dumps(self.enableNetwork(id,updateParam))
+      rt=self.enableNetwork(id,updateParam)
     if command == 'disable':
       id=self.getRequestParam(requestparam,'id')
-      rt=json.dumps(self.disableNetwork(id))
+      rt=self.disableNetwork(id)
     if command == 'remove':
       id=self.getRequestParam(requestparam,'id')
-      rt=json.dumps(self.removeNetwork(id))
+      rt=self.removeNetwork(id)
     if command == 'connect':
       param={}
       for k in ['ssid','psk']:
@@ -354,7 +353,7 @@ class AVNWpaHandler(AVNWorker):
         param['id_str']=self.PRIVATE_NAME
       else:
         param['id_str'] = ''
-      rt=json.dumps(self.connect(param))
+      rt=self.connect(param)
     if rt is None:
       raise Exception("unknown command %s"%(command))
     end=time.monotonic()

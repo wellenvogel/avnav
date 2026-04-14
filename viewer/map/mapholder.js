@@ -58,6 +58,7 @@ import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
 import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
 
+
 export const EventTypes = {
     SELECTWP: 2,
     RELOAD: 3,
@@ -67,6 +68,8 @@ export const EventTypes = {
     HIDEMAP: 7
 
 };
+
+const EVENTLOG=false;
 
 class Context {
     constructor() {
@@ -264,7 +267,7 @@ class MapHolder extends DrawingPositionConverter {
          */
         this._lastSequenceQuery = 0;
 
-
+        this.warnings={};
         globalStore.storeData(keys.map.courseUp, this.courseUp);
         this.timer = undefined;
         KeyHandler.registerHandler(() => {
@@ -393,8 +396,35 @@ class MapHolder extends DrawingPositionConverter {
         Leavehandler.subscribe(()=>{
             this.saveCenter(true);
         })
+        /**
+         * remember the currently active touch targets
+         * to ignore pointerevents with pinterType mouse
+         * while touch actions are ongoing.
+         * see https://github.com/wellenvogel/avnav/issues/549
+         * @type {*[]}
+         * @private
+         */
+        this._lastTouches=[];
+        /**
+         * keep the last map viewport that we used to register
+         * our event handlers BEFORE any map handlers
+         * @type {undefined}
+         * @private
+         */
+        this._lastEventDiv=undefined;
     }
-
+    logError(key,...error){
+        if (!error || (Array.isArray(error) && error.length<1)) {
+            if (this.warnings[key]){
+                base.log(`mapholder error ${key} cleared`);
+                delete this.warnings[key];
+            }
+            return;
+        }
+        if (this.warnings[key]){ return}
+        this.warnings[key]=true;
+        base.error(`mapholder ${key}`,...error);
+    }
     updateStoreKeys(newKeys, page, name) {
         if (page !== undefined && name !== undefined) {
             if (newKeys) {
@@ -544,6 +574,7 @@ class MapHolder extends DrawingPositionConverter {
         if (opt_map) {
             this.mapUserAction()
         }
+        return true;
     }
 
     isInUserActionGuard(opt_map) {
@@ -714,6 +745,7 @@ class MapHolder extends DrawingPositionConverter {
                 //new chart - forget all local overlay overrides
                 resetOverrides = true;
             }
+            let newSources = [];
             let prepareAndCreate = (newSources) => {
                 this.prepareSourcesAndCreate(newSources)
                     .then((res) => {
@@ -745,7 +777,6 @@ class MapHolder extends DrawingPositionConverter {
                 this._callHandlers({type: EventTypes.LOAD});
                 resolve(0);
             };
-            let newSources = [];
             if (!globalStore.getData(keys.gui.capabilities.uploadOverlays)) {
                 this.overlayConfig = new OverlayConfig();
                 this.overlayOverrides = this.overlayConfig.copy();
@@ -755,11 +786,8 @@ class MapHolder extends DrawingPositionConverter {
             }
             fetchOverlayConfig(chartSource.chartEntry, true)
                 .then((overlayConfig) => {
-                    if (!overlayConfig) {
-                        this.overlayConfig = new OverlayConfig();
-                        if (resetOverrides) this.overlayOverrides = this.overlayConfig.copy();
-                        checkChanges();
-                        return;
+                    if (! overlayConfig) {
+                        throw new Error("no overlay config");
                     }
                     this.overlayConfig = overlayConfig;
                     if (resetOverrides) {
@@ -854,7 +882,7 @@ class MapHolder extends DrawingPositionConverter {
         const vectorSource = new olVectorSource({
             format: new olGeoJSONFormat(),
             url: 'countries-110m.json',
-            wrapX: false
+            wrapX: true
         });
 
         const vectorLayer = new olVectorLayer({
@@ -875,7 +903,7 @@ class MapHolder extends DrawingPositionConverter {
         });
 
         let source = new olVectorSource({
-            wrapX: false
+            wrapX: true
         });
         let hasExtent = false;
         if (layers && layers.length > 0) {
@@ -961,6 +989,7 @@ class MapHolder extends DrawingPositionConverter {
         this.minzoom = 32;
         this.mapMinZoom = this.minzoom;
         this.maxzoom = 0;
+        this._lastTouches=[];
         IconImageCache.clear();
         //we need to reset the protocol as it has caches for the PMTiles - but they could have changed
         addProtocol(PMTILESPROTO,()=>{throw new Error("no map active")});
@@ -1000,6 +1029,18 @@ class MapHolder extends DrawingPositionConverter {
         if (hasBaseLayers) {
             this.minzoom = 2;
         }
+        const LOGEVENTS=['pointerdown','pointercancel','pointerup',
+            'pointermove','pointerdrag'];
+        const evlog=(type,event)=>{
+            const pt=event.pointerType || (event.originalEvent?event.originalEvent.pointerType:undefined);
+            if (pt == 'mouse'){
+                base.log(`### mouseEvent ${type}`,event);
+            }
+            else{
+                base.log(`Event ${type}`,event)
+            }
+            return true;
+        }
         if (this.olmap) {
             let oldlayers = this.olmap.getLayers();
             if (oldlayers && oldlayers.getArray().length) {
@@ -1031,10 +1072,10 @@ class MapHolder extends DrawingPositionConverter {
             this.renderTo(div);
         } else {
             addProtocol(PMTILESPROTO,(new Protocol()).tile)
-            let base = [];
-            base.push(this.getBaseLayer(hasBaseLayers));
+            let baseWithOutline = [];
+            baseWithOutline.push(this.getBaseLayer(hasBaseLayers));
             if (baseLayers.length > 0) {
-                base.push(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
+                baseWithOutline.push(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
             }
             let pixelRatio = undefined;
             try {
@@ -1048,7 +1089,8 @@ class MapHolder extends DrawingPositionConverter {
             let interactions = olInteraction.defaults({
                 altShiftDragRotate: false,
                 pinchRotate: false,
-                mouseWheelZoom: false
+                mouseWheelZoom: false,
+                //pinchZoom: false,
             });
             interactions.push(new MouseWheelZoom({
                 condition: (ev) => {
@@ -1065,17 +1107,64 @@ class MapHolder extends DrawingPositionConverter {
             this.olmap = new olMap({
                 pixelRatio: pixelRatio,
                 target: div ? div : this.defaultDiv,
-                layers: base.concat(layers),
+                layers: baseWithOutline.concat(layers),
                 interactions: interactions,
                 controls: [],
                 view: new olView({
                     center: this.transformToMap([13.8, 54.1]),
                     zoom: 9,
-                    extent: this.transformToMap([-200, -89, 200, 89]),
+                    extent: this.transformToMap([-359, -89, 359, 89]),
                     constrainRotation: false
                 })
 
             });
+            /**
+             * firefox on touch devices (AvNav touch images) seems
+             * to have a very strange bug: Sometimes it fires mouse events
+             * (pointermove, pointerdrag) additionally to the touch events
+             * This confuses ol - see https://github.com/wellenvogel/avnav/issues/549
+             * To prevent this we will silently ignore pointerxxx events with
+             * pointerType mouse if we have active touch events (we monitor
+             * them by remembering the active targets from
+             * pointerdown and pointerup)
+             * Still no solution if a mouse event occurs outside
+             * of touch actions - but only observed for pointermove
+             * and this gets ignored if no previous pointerdown was there
+             * To register our handlers before any map handlers we overwrite
+             * getViewport as this is used by MapBrowserEventHandler to
+             * obtain the element it uses to register events.
+             * By checking if this viewport element changes
+             * and registering our handlers then we are sure that they run before any map
+             * event handler so that we have the chance to use stopImmediatePropagation
+             * on pointerType mouse
+             */
+            const getViewport=this.olmap.getViewport.bind(this.olmap);
+            this.olmap.getViewport=()=>{
+                const vp=getViewport();
+                if (vp && vp !== this._lastEventDiv){
+                    base.log("setting element event listeners",vp);
+                    for (let ev of LOGEVENTS){
+                        vp.addEventListener(ev, (fe)=>{
+                            if (fe.pointerType === 'mouse'){
+                                if (this._lastTouches !== undefined && this._lastTouches.length > 0){
+                                    base.log("drop mouse event");
+                                    fe.stopImmediatePropagation();
+                                }
+                            }
+                            if (EVENTLOG) {
+                                evlog("RAW" + ev, fe)
+                            }
+                        })
+                    }
+                    this._lastEventDiv=vp;
+                }
+                return vp;
+            }
+            if (EVENTLOG) {
+                this.olmap.addChangeListener('target', (ev) => {
+                    base.log("map target changed", ev);
+                })
+            }
             this.olmap.on('click', (evt) => {
                 this._callGuards('click');
                 this.userAction(true);
@@ -1087,6 +1176,23 @@ class MapHolder extends DrawingPositionConverter {
             this.olmap.getView().on('change:resolution', (evt) => {
                 return this.onZoomChange(evt);
             });
+            if (EVENTLOG) {
+                for (let ev of LOGEVENTS) {
+                    this.olmap.on(ev, (fe) => evlog(ev, fe));
+                }
+            }
+            for (let ev of ['pointerup','pointerdown']) {
+                this.olmap.on(ev,(fe)=>{
+                    this._lastTouches=[];
+                    if (fe.activePointers){
+                        for (let tp of fe.activePointers){
+                            if (tp.pointerType === 'touch'){
+                                this._lastTouches.push(tp);
+                            }
+                        }
+                    }
+                })
+            }
         }
         if (layers.length > 0) {
             layers[layers.length - 1].on('postrender', (evt) => {
@@ -1151,6 +1257,11 @@ class MapHolder extends DrawingPositionConverter {
         let view = this.getView();
         if (!view) return;
         let newCenter = view.getCenter();
+        if (! Array.isArray(newCenter) || newCenter.length < 2 || isNaN(newCenter[0]) || isNaN(newCenter[1])) {
+            this.logError('nan',newCenter);
+            return;
+        }
+        this.logError('nan');
         let newZoom = view.getZoom();
         const centerPoint=this.fromMapToPoint(newCenter);
         globalStore.storeData(keys.map.centerPosition, centerPoint);
@@ -1424,6 +1535,11 @@ class MapHolder extends DrawingPositionConverter {
         if (!this.olmap) return;
         if (!enabled || !(this.gpsLocked || opt_force)) {
             if (this.olmap.getView().getZoom() != this.requiredZoom) {
+                if (this.requiredZoom == null || isNaN(this.requiredZoom)) {
+                    this.logError('requiredZoom','invlaid required zoom',this.requiredZoom);
+                    return;
+                }
+                this.logError('requiredZoom');
                 this.setMapZoom(this.requiredZoom);
             }
             return;
@@ -1757,10 +1873,12 @@ class MapHolder extends DrawingPositionConverter {
                 }
             }
         }
-
-        if (promises.length < 1) {
+        const callResults=()=>{
             this._callGuards('click'); //do this again as some time could have passed
             return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos})
+        }
+        if (promises.length < 1) {
+            return callResults();
         }
         Promise.all(promises)
             .then((promiseFeatures) => {
@@ -1772,12 +1890,11 @@ class MapHolder extends DrawingPositionConverter {
                         }
                     }
                 }
-                this._callGuards('click'); //do this again as some time could have passed
-                this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos});
-                return true;
+                callResults();
             })
             .catch((error) => {
                 base.log("error in query features: " + error);
+                callResults();
             });
         return false;
     }
@@ -1790,6 +1907,11 @@ class MapHolder extends DrawingPositionConverter {
             if (vZoom != this.mapZoom) {
                 vZoom=this.clampZoom(vZoom);
                 base.log("zoom required from map: " + vZoom);
+                if (vZoom == null || isNaN(vZoom)) {
+                    this.logError('zoomChange','invalid zoom in zoomChange',vZoom,this.getView().getZoom(),this.mapZoom);
+                    return;
+                }
+                this.logError('zoomChange');
                 this.requiredZoom = vZoom;
             }
             if (this.isInUserActionGuard()) {
@@ -1843,6 +1965,11 @@ class MapHolder extends DrawingPositionConverter {
      */
     onPostCompose(evt) {
         this.lastRender = (new Date()).getTime();
+        if (evt.context.canvas.width < 1 || evt.context.canvas.height < 1){
+            this.logError('size','invalid canvas w/h',evt.context.canvas.width,evt.context.canvas.height);
+            return;
+        }
+        this.logError('size');
         this.drawing.setContext(evt.context);
         this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
         this.drawing.setPixelTransform(evt.inversePixelTransform);
