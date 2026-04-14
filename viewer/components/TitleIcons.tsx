@@ -57,7 +57,7 @@ export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
     const settingsChanged=sprops.settingsChanged && globalstore.getData(keys.gui.capabilities.uploadSettings);
     const style:Record<string, any> = {};
     if (rightOffset){
-        style.paddingRight=rightOffset+"px";
+        style.marginRight=rightOffset+"px";
     }
     return <div className={cl} style={style} onClick={(ev)=>ev.stopPropagation()}>
         {sprops.measure && <span className="measureIcon" onClick={()=>{

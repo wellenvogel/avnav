@@ -116,14 +116,15 @@ const setBottom=(val:string)=>{
 interface MapOptions{
     mapClass?: string;
     mapOpacity?:number;
+    rightOffset?: number;
 }
-const Map=({mapClass,mapOpacity}:MapOptions)=>{
+const Map=({mapClass,mapOpacity,rightOffset}:MapOptions)=>{
     return <div
         className={mapClass}
         ref={(el)=>{
             mapholder.renderTo(el);
         }}
-        style={{opacity:mapOpacity}}>
+        style={{opacity:mapOpacity,marginRight:rightOffset?rightOffset+"px":undefined}}>
     </div>;
 }
 export type PanelCreator =(name:string)=>{name:string,list:InternalWidgetDefinition[]}  //will be called with the panel name
@@ -198,7 +199,7 @@ const MapPage =(iprops:MapPageProps)=>{
             addon:keys.gui.global.addonViewChanged
         })});
     //reset map float
-    const mapFloat = sprops.mapFloat && ! addonViewManager.getPageAddon(iprops.id);
+    const hasAddon=!!addonViewManager.getPageAddon(iprops.id);
     const [layerTypes,setLayerTypes]=useState([]);
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
@@ -210,7 +211,7 @@ const MapPage =(iprops:MapPageProps)=>{
         if (sprops.mapEventCallback) return sprops.mapEventCallback(evdata);
     },[sprops.mapEventCallback]);
     const computeScalePosition=useCallback(()=>{
-        if (! mapFloat){
+        if (! sprops.mapFloat){
             setBottom('0px');
         }
         else{
@@ -218,7 +219,7 @@ const MapPage =(iprops:MapPageProps)=>{
             const rect=bottomRef.current.getBoundingClientRect();
             setBottom(rect.height+"px");
         }
-    },[mapFloat]);
+    },[sprops.mapFloat]);
     const showMap=useCallback((chartEntry:ChartEntry)=>{
         if (chartEntry.infoMode !== undefined ){
             if (needsToShow(chartEntry.url,INFO_TYPES.info,chartEntry.infoMode)){
@@ -259,7 +260,7 @@ const MapPage =(iprops:MapPageProps)=>{
     }, []);
     useEffect(() => {
         mapholder.updateSize();
-    }, [mapFloat]);
+    }, [sprops.mapFloat,hasAddon]);
     useEffect(()=>computeScalePosition());
         const chartEntry=mapholder.getCurrentChartEntry()||{};
         const mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
@@ -268,7 +269,7 @@ const MapPage =(iprops:MapPageProps)=>{
         const className=Helper.concatsp(
             sprops.className,
             "mapPage",
-            mapFloat?"mapFloat":undefined,
+            (sprops.mapFloat&&!hasAddon)?"mapFloat":undefined,
             layerTypes.join(" "));
         const overlay=sprops.overlayContent || null;
         return (
@@ -281,8 +282,8 @@ const MapPage =(iprops:MapPageProps)=>{
                 }}
                 editingChanged={()=>mapholder.updateSize()}
             >
-                {mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
-                {mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} />:null}
+                {sprops.mapFloat && <DynamicTitleIcons rightOffset={buttonWidth}/> }
+                {sprops.mapFloat?<Map mapClass={mapClass} mapOpacity={mapOpacity} rightOffset={hasAddon?buttonWidth:undefined}/>:null}
                 <PageLeft id={sprops.id}>
                         <div className="leftSection">
                             <WidgetContainer
@@ -301,8 +302,8 @@ const MapPage =(iprops:MapPageProps)=>{
                                 onItemClick={sprops.onItemClick}
                             />
                             <div className={'mapFrame'}>
-                            {!mapFloat && <DynamicTitleIcons /> }
-                            {!mapFloat && <Map mapClass={mapClass} mapOpacity={mapOpacity}/>}
+                            {!sprops.mapFloat && <DynamicTitleIcons /> }
+                            {!sprops.mapFloat && <Map mapClass={mapClass} mapOpacity={mapOpacity}/>}
                             {overlay}
                             </div>
                         </div>
