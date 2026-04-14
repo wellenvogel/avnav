@@ -12,57 +12,52 @@ function pad(num, size, pad='0') {
 /**
  *
  * @param {number} coordinate
- * @param axis
+ * @param {string} axis 'lon' or 'lat'
+ * @param {string} format 'DD' or 'DDM' or 'DMS'
+ * @param {boolean} hemFirst put NSEW first or last
  * @returns {string}
  */
 const formatLonLatsDecimal=function(coordinate,axis,format='DDM',hemFirst=false){
-    if(coordinate==null) {
-      let str="____\u00B0__.___'";
-      if(format=='DD') str="____._____\u00B0"; // use _ to prevent line breaks
-      if(format=='DMS') str="____\u00B0__'__._\"";
-      return hemFirst?'_'+str:str+'_';
+    coordinate = parseFloat(coordinate);
+    if (!isFinite(coordinate)) {
+      let str = "____\u00B0__.___'";
+      if (format == 'DD') str = "____._____\u00B0"; // use _ to prevent line breaks
+      if (format == 'DMS') str = "____\u00B0__'__._\"";
+      return hemFirst ? '_' + str : str + '_';
     }
     coordinate = Helper.to180(coordinate); // normalize to ±180°
     let deg = Math.abs(coordinate);
     let padding = 2;
     let str = '\u00A0';
-    let hem = coordinate < 0 ? "S" :"N";
+    let hem = coordinate < 0 ? "S" : "N";
     if (axis == "lon") {
-        padding = 3;
-        str = '';
-        hem = coordinate < 0 ? "W" :"E";
+      str = '';
+      padding = 3;
+      hem = coordinate < 0 ? "W" : "E";
     }
-    if(format=='DD') {
-      str += pad(deg.toFixed(5),padding+6) + "\u00B0";
-    } else if(format=='DMS') {
-      let DEG = Math.floor(deg);
-      let min = 60*(deg-DEG);
-      let MIN = Math.floor(min);
-      let sec = 60*(min-MIN);
-      if (sec.toFixed(1).startsWith('60.')){
-          MIN+=1;
-          sec=0;
-          if(MIN==60){
-            MIN=0;
-            DEG+=1;
-          }
-      }
-      str += pad(DEG,padding) + "\u00B0" + pad(MIN,2) + "'" + pad(sec.toFixed(1),4) + '"';
+    if (format == 'DD') {
+      str += pad(deg.toFixed(5), padding + 6) + "\u00B0";
+    } else if (format == 'DMS') {
+      let SEC = Math.round(deg * 3600_0) / 10;
+      let sec = SEC % 60;
+      let MIN = Math.floor(SEC / 60);
+      let min = MIN % 60;
+      let DEG = Math.floor(MIN / 60);
+      str += pad(DEG.toFixed(0), padding) + "\u00B0" + pad(min.toFixed(0), 2) + "'" + pad(sec.toFixed(1), 4) + '"';
     } else {
-      let DEG = Math.floor(deg);
-      let min = 60*(deg-DEG);
-      if (min.toFixed(3).startsWith('60.')){
-          DEG+=1;
-          min=0;
-      }
-      str += pad(DEG,padding) + "\u00B0" + pad(min.toFixed(3),6) + "'";
+      let MIN = Math.round(deg * 60_000) / 1000;
+      let min = MIN % 60;
+      let DEG = Math.floor(MIN / 60);
+      str += pad(DEG, padding) + "\u00B0" + pad(min.toFixed(3), 6) + "'";
     }
-    return hemFirst?hem+str:str+hem;
-};
+    return hemFirst ? hem + str : str + hem;
+  };
 
 /**
  *
  * @param {Point} lonlat
+ * @param {string} format 'DD' or 'DDM' or 'DMS'
+ * @param {boolean} hemFirst put NSEW first or last
  * @returns {string}
  */
 const formatLonLats=function(lonlat,format='DDM',hemFirst=false){
@@ -87,17 +82,7 @@ formatLonLats.parameters=[
  */
 
 const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
-    number=parseFloat(number);
-    if (!isFinite(number)) return '-'.repeat(fix)+(fract?'.'+'-'.repeat(fract):'');
-    let sign = addSpace ? ' ' : '';
-    if (number < 0) { number=-number; sign='-'; }
-    let str = number.toFixed(fract); // formatted number w/o sign
-    let n = fix+fract+(fract?1:0); // expected length of string w/o sign
-    if(prefixZero || fix<0) {
-      return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
-    } else {
-      return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // add padding spaces and sign
-    }
+    return formatFloat(number,(addSpace?-1:1)*(fix+fract),-fract,prefixZero);
 };
 formatDecimal.parameters=[
     {name:'fix',type:'NUMBER',description:'number of integer digits (before .)'},
@@ -132,32 +117,37 @@ function clamp(a,x,b) {
  * @param maxFrac = max. number of fractional digits (default = digits-1), negative: fixed value of fractional digits
  * @param leadingZeroes = use leading zeroes instead of spaces
  * returns string with at least digits (+1 if digits<0) (+1 if maxFrac!=0) characters
+ * @param trailingDot = append trailing . to integers if maxFrac>0
+ * @param overflow = if false display --- if resulting string too long
  */
-const formatFloat=function(number, digits, maxFrac, leadingZeroes=false) {
-    if (!digits) digits=3;
-    let signed = digits<0;
+const formatFloat=function(number, digits, maxFrac, leadingZeroes = false, trailingDot=false, overflow=true) {
+    if (!digits) digits = 3;
+    let signed = digits < 0;
     digits = Math.abs(digits);
-    if(maxFrac==null) maxFrac=digits-1;
-    maxFrac=clamp(0,maxFrac,digits-1);
-    number=parseFloat(number); // null-->NaN
-    if(!isFinite(number)) return '-'.repeat(digits+(signed?1:0)-maxFrac)+(maxFrac?'.'+'-'.repeat(maxFrac):'');
-    if(digits==0) return number.toFixed(0);
-    if(number<0 && !signed) digits-=1; // make room for unexpected sign
-    let sign = number<0 ? '-' : signed ? ' ' : '';
+    if (maxFrac == null) maxFrac = digits - 1;
+    const fixed = maxFrac < 0;
+    maxFrac = clamp(0, Math.abs(maxFrac), digits - 1);
+    number = parseFloat(number); // null-->NaN
+    if (!isFinite(number)) return '-'.repeat((signed ? 1 : 0) + digits - maxFrac) + (maxFrac ? '.' + '-'.repeat(maxFrac) : '');
+    if (digits == 0) return number.toFixed(0);
+    if (number < 0 && !signed) digits -= 1; // make room for unexpected sign
+    let sign = number < 0 ? '-' : signed ? ' ' : '';
     number = Math.abs(number);
-    let decPlaces = digits-1-Math.floor(Math.log10(number));
-    decPlaces = clamp(0,decPlaces,maxFrac);
+    let decPlaces = digits - 1 - Math.floor(Math.log10(number));
+    decPlaces = fixed ? maxFrac : clamp(0, decPlaces, maxFrac);
     let str = number.toFixed(decPlaces);
-    let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
-    if(leadingZeroes) {
-        return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // -001.23
+    let n = digits + (str.includes('.') ? 1 : 0); // expected length of string w/o sign
+    if(!overflow && str.length>n) return '-'.repeat((signed ? 1 : 0)+digits)+(trailingDot && maxFrac?'.':'');
+    let dot = trailingDot && maxFrac && !str.includes('.')?'.':'';
+    if (leadingZeroes) {
+      return sign + str.padStart(n, '0')+dot;  // -001.23
     } else {
-        return ' '.repeat(Math.max(0,n-str.length))+sign+str;  // __-1.23
+      return (sign + str).padStart(n + sign.length, ' ')+dot;  // __-1.23
     }
-};
+  }
 formatFloat.parameters=[
     {name:'digits',type:'NUMBER',default:3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
-    {name:'maxFrac',type:'NUMBER',default:2,list:[0,20],description:"max. number of decimal places (after the decimal point, default = digits-1)"},
+    {name:'maxFrac',type:'NUMBER',default:2,list:[0,20],description:"max. number of decimal places (after the decimal point, default = digits-1), negative: fixed number of fractional digits"},
     {name:'leadingZeroes',type:'BOOLEAN',description: "use leading zeroes instead of spaces"}
 ];
 /**
@@ -168,15 +158,17 @@ formatFloat.parameters=[
  * @param opt_fixed if > 0 set this much digits at min
  * @param opt_fillRight if set - extend the fractional part
  */
-const formatDistance=function(distance,opt_unit,digits,maxFrac){
+const formatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
     let number=parseFloat(distance);
-    let factor=unitToFactor(opt_unit||'nm');
-    return formatFloat(number/factor,digits,maxFrac);
+    number/=unitToFactor(opt_unit||'nm');
+    let maxFrac=number<1?2:1;
+    if(opt_fillRight) maxFrac=opt_fixed-1;
+    return formatFloat(number,opt_fixed,maxFrac);
 };
 formatDistance.parameters=[
     {name:'unit',type:'SELECT',list:DEPTH_UNITS,default:'nm'},
-    {name:'digits',type:'NUMBER',default:3,description:"number of (significant) digits in total, negative: padding space is added for sign"},
-    {name:'maxFrac',type:'NUMBER',default:1,description:"max. number of decimal places (after the decimal point, default = digits-1)"},
+    {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits'},
+    {name:'fillRight', type: 'BOOLEAN',default: false, description:'let the fractional part extend to have the requested number of digits (only if numDigits > 0)'}
 ];
 
 /**
@@ -208,8 +200,7 @@ const formatSpeed=function(speed,opt_unit){
     let factor=3600/navcompute.NM;
     if (opt_unit == 'ms' || opt_unit == 'm/s') factor=1;
     if (opt_unit == 'kmh' || opt_unit == 'km/h') factor=3.6;
-    number*=factor;
-    return formatFloat(number,3,1);
+    return formatFloat(number*factor,3,1);
 };
 
 formatSpeed.parameters=[
@@ -255,7 +246,6 @@ formatTime.parameters=[
  * @returns {string}
  */
 const formatDuration = function (value,seconds,factor=1000) {
-  if (value == null) return "--:--"+(seconds?':--':'');
   value = parseInt(value);
   if (!isFinite(value)) return "--:--"+(seconds?':--':'');
   const totalSeconds = Math.floor(Math.abs(value)/factor);
