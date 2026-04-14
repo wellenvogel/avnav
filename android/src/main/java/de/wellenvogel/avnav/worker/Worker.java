@@ -105,7 +105,7 @@ public abstract class Worker implements IWorker {
 
     @Override
     public Kind getKind() {
-        return Kind.REMOTE;
+        return Kind.OTHER;
     }
 
     @Override

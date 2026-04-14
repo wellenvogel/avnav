@@ -29,6 +29,11 @@ public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequ
         status.canEdit=true;
     }
 
+    @Override
+    public Kind getKind() {
+        return Kind.REMOTE;
+    }
+
     private static String channelFromWs(IWebSocket socket){
         String url=socket.getUrl();
         if (! url.startsWith("/"+ TYPE_REMOTE)) return null;
