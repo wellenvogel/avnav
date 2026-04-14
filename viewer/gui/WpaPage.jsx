@@ -18,6 +18,9 @@ import Mob from '../components/Mob.ts';
 import Store from "../util/store";
 import {PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
+import {InjectMainMenu} from "./MainNav";
+import {propsToDefs} from "../components/Button";
+import {useHistory} from "../components/HistoryProvider";
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -296,13 +299,13 @@ class WpaPageContent extends React.Component{
 }
 
 export default (props)=>{
-    const buttons=[
-        Mob.mobDefinition(props.history),
+    const history=useHistory();
+    const buttons=InjectMainMenu(PAGEIDS.WPA, propsToDefs([
         {
             name: 'Cancel',
-            onClick: ()=>{props.history.pop()}
+            onClick: ()=>{history.pop()}
         }
-    ];
+    ]));
     return <PageFrame id={PAGEIDS.WPA} className={props.className}>
         <PageLeft id={PAGEIDS.WPA} title="Wifi Client connection">
             <WpaPageContent></WpaPageContent>
@@ -310,7 +313,6 @@ export default (props)=>{
         <ButtonList
                 page={PAGEIDS.WPA}
                 itemList={buttons}
-                widthChanged={props.buttonWidthChanged}
             />
     </PageFrame>
 };
