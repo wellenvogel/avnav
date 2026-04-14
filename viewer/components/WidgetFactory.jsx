@@ -19,7 +19,7 @@ import editableParameterUI, {EditableParameterListUI, getCommonParam} from "./Ed
 import {Input, InputReadOnly} from "./Inputs";
 import {shallowEqualArrays} from "shallow-equal";
 import Helper from "../util/helper";
-import {SortableProps} from "../hoc/Sortable";
+import {SortablePropsFlags} from "../hoc/Sortable";
 import UndefinedWidget from "./UndefinedWidget";
 
 export const filterByEditables=(editableParameters,values)=>{
@@ -179,7 +179,7 @@ export const getFormatterParameters=(widget)=>{
  * @type {{}}
  */
 const allowedDynamicProps={
-    ...SortableProps,
+    ...SortablePropsFlags,
     mode: true,
     visible: true,
     onClick: true

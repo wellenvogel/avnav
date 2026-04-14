@@ -57,17 +57,9 @@ import {avitem, getav, setav} from "../util/helper";
 import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
 import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
+import {EventTypes} from "./maptypes";
 
 
-export const EventTypes = {
-    SELECTWP: 2,
-    RELOAD: 3,
-    LOAD: 4,
-    FEATURE: 5,
-    SHOWMAP: 6,
-    HIDEMAP: 7
-
-};
 
 const EVENTLOG=false;
 

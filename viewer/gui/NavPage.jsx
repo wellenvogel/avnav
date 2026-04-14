@@ -5,7 +5,7 @@
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import MapPage,{overlayDialog} from '../components/MapPage.jsx';
+import MapPage,{overlayDialog} from '../components/MapPage.tsx';
 import Toast from '../components/Toast.tsx';
 import NavHandler from '../nav/navdata.js';
 import {
@@ -19,7 +19,8 @@ import {
     useTimer
 } from '../util/UiHelper';
 import {useStoreHelper} from "../util/UiHelper";
-import MapHolder, {EventTypes, LOCK_MODES} from '../map/mapholder.js';
+import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
+import {EventTypes} from "../map/maptypes";
 import navobjects from '../nav/navobjects.js';
 import ButtonList from '../components/ButtonList.tsx';
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog.jsx';
@@ -844,7 +845,7 @@ const NavPage=(props)=>{
         if (globalStore.getData(keys.properties.autoHideNavPage) && ! wpButtonsVisible && ! globalStore.getData(keys.gui.global.layoutEditing)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
-        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,props);
+        let pageProperties=props;
         let neededChart=needsChartLoad();
         if (neededChart){
             return (

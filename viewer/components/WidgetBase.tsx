@@ -24,25 +24,30 @@
  Widget Base data
  */
 
-import PropTypes from "prop-types";
-import React from "react";
+import React, {SyntheticEvent} from "react";
 import {useKeyEventHandler} from "../util/UiHelper";
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+// @ts-ignore
 import {ResizeFrame} from "../hoc/Resizable";
 import Helper from "../util/helper";
+import PropTypes from "prop-types";
 
-export const WidgetProps={
-    onClick:    PropTypes.func,
-    style:      PropTypes.object,
-    className:  PropTypes.string,
-    name:       PropTypes.string,
-    mode:       PropTypes.string, //display info side by side if small
-    caption:    PropTypes.string,
-    nightMode:  PropTypes.bool,
-    ...SortableProps
+export interface IWidgetProps extends SortableProps {
+    onClick?: (ev: SyntheticEvent) => void,
+    style?: Record<string, any>,
+    className?: string,
+    name: string,
+    mode?: string, //display info side by side if small
+    caption?: string,
+    nightMode?: boolean,
 }
-
-export const WidgetHead=(props)=> {
+export interface WidgetHeadProps{
+    unit?: string,
+    caption?: string,
+    infoMiddle?: React.ReactNode,
+    disconnect?: boolean,
+}
+export const WidgetHead=(props:WidgetHeadProps)=> {
     if (! Helper.isset(props.unit,true) &&
         ! Helper.isset(props.caption,true)
         && ! Helper.isset(props.infoMiddle,true))return null;
@@ -61,17 +66,19 @@ export const WidgetHead=(props)=> {
     )
 }
 
-WidgetHead.propTypes = {
-    unit: PropTypes.string,
-    caption: PropTypes.string,
-    infoMiddle: PropTypes.element,
-    disconnect: PropTypes.bool
+export interface WidgetFrameProps extends IWidgetProps,WidgetHeadProps{
+    resize?: boolean,
+    resizeSequence?: number,
+    addClass?: string
+    isAverage?:boolean,
+    children?:React.ReactNode,
 }
 
-export const WidgetFrame=(props)=> {
+
+export const WidgetFrame=(props:WidgetFrameProps)=> {
     useKeyEventHandler(props, "widget");
     const sortableProps = useAvNavSortable(props.dragId)
-    let classes = Helper.concatsp(
+    const classes = Helper.concatsp(
         "widget ",
         (props.isAverage)?"average":undefined,
         props.className,
@@ -92,11 +99,17 @@ export const WidgetFrame=(props)=> {
         }
     </div>
 }
-WidgetFrame.propTypes={
-    ...WidgetProps,
-    ...SortableProps,
-    ...WidgetHead.propTypes,
-    resize: PropTypes.bool,
-    resizeSequence: PropTypes.number,
-    addClass: PropTypes.string
-};
+export type InternalWidgetDefinition = Record<string,any>
+export const WidgetProps:Record<keyof IWidgetProps,any>= {
+    dragId: PropTypes.any,
+    name: PropTypes.any,
+    onClick: PropTypes.any,
+    style: PropTypes.any,
+    className: PropTypes.any,
+    mode: PropTypes.any,
+    caption: PropTypes.any,
+    nightMode: PropTypes.any
+}
+
+
+

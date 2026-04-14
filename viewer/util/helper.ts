@@ -213,7 +213,7 @@ export const concatsp=(...args:any[])=>{
 export const unsetOrTrue=(item:any)=>{
     return !!(item === undefined || item);
 }
-export const isset=(item:string|undefined|null,opt_empty?:boolean)=>{
+export const isset=(item:any,opt_empty?:boolean)=>{
     if (item === undefined) return false;
     if (! opt_empty) return true;
     if (item !== '') return true;

@@ -156,7 +156,7 @@ export type KeyCallback=(component:string, action:string)=>void
 export const useKeyEventHandler=(
     props:KeyEventHandlerProps,
     component: string,
-    opt_callback:KeyCallback)=>{
+    opt_callback?:KeyCallback)=>{
     return useEffect(()=>{
         if (! props.name || ! (props.onClick|| opt_callback)) return;
         const handler=(

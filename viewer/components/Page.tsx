@@ -30,7 +30,7 @@ import {addonViewManager} from "./AddonView";
 export interface PageFrameProps{
     className?: string;
     autoHideButtons?: number;
-    hideCallback?: ()=>void;
+    hideCallback?: (hidden:boolean)=>void;
     editingChanged?: ()=>void;
     id: PageType;
     children?: React.ReactNode;
