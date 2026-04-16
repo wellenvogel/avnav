@@ -89,7 +89,7 @@ const OverlayDialog = (
             <DialogContext
                 context={nestedDialogContext.current}
             >
-                <DialogDisplay name={'dialog'}/>
+                <DialogDisplay name={'nested'}/>
                 {Children.map(children,
                     (child) => cloneElement(child, {closeCallback: close}))}
             </DialogContext>

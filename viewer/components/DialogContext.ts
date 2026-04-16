@@ -44,11 +44,15 @@
  * (A) There will be a dialogContext class that implements the methods
  * showDialog, replaceDialog, closeDialog. Additionally it will have
  * the methods setDisplay,resetDisplay that stores/removes a setDialog
- * function in a stack of such functions.
- * All show/replace/close functions will always work with the topmost
- * stack entry. When adding a new entry closeDialog will be called at
- * entry below.
- * The z-Index is alos maintained inside this context class.
+ * function. Each display must have a unique id.
+ * Whenever a setDisplay is called and there is currently another display
+ * already active the dialog at the old display will be closed.
+ * Multiple set/reset calls with the same id will do nothing but just exchange
+ * the setDialog/resetDialog functions.
+ * So at any point in time there is at most one DialogDisplay being active
+ * at a dialog context. Normally this is either the PageLeft or an existing
+ * dialog for nested dialogs.
+ * The z-Index is also maintained inside this context class.
  * (B) An instance of this class is created globally and is used for
  * all showDialog functions without an explicit context.
  * (C) The App will be the first calling setDisplay so that there
@@ -97,12 +101,11 @@ export interface IDialogContext {
     getId():number;
 }
 export class DialogContextImpl implements IDialogContext {
-    displayStack:DialogDisplayEntry[];
+    display:DialogDisplayEntry;
     zIndex:number;
     parent:DialogContextImpl;
-    private idx:number;
+    private readonly idx:number;
     constructor(id:number,parent?:DialogContextImpl) {
-        this.displayStack = [];
         this.idx=id;
         if (!parent) {
             this.zIndex = DIALOG_Z;
@@ -110,9 +113,6 @@ export class DialogContextImpl implements IDialogContext {
             this.zIndex = parent.zIndex + 10;
             this.parent = parent;
         }
-        this.displayStack.push(new DialogDisplayEntry("xxx",() => {
-            return Promise.resolve(()=>{})
-        }));
         this.closeDialog = this.closeDialog.bind(this);
         this.showDialog = this.showDialog.bind(this);
         this.replaceDialog = this.replaceDialog.bind(this);
@@ -122,20 +122,30 @@ export class DialogContextImpl implements IDialogContext {
         return this.idx;
     }
 
-    _getTop() {
-        return this.displayStack[this.displayStack.length - 1];
+    _getDisplay():DialogDisplayEntry {
+        if (this.display) return this.display;
+        return {
+            closeDialog(): Promise<void> | void {
+                return undefined;
+            },
+            id: undefined,
+            setDialog(): Promise<DialogCallback> {
+                return Promise.resolve(undefined);
+            }
+
+        }
     }
 
     showDialog(content:React.ElementType, closeCallback?:DialogCallback, options?:any) {
-        return this._getTop().setDialog(content, closeCallback, options);
+        return this._getDisplay().setDialog(content, closeCallback, options);
     }
 
     async closeDialog() {
         //only go up to first parent
         //we cannot call closeDialog at the parent as this would potentially
         //go up further
-        if (this.parent) await this.parent._getTop().closeDialog();
-        await this._getTop().closeDialog();
+        if (this.parent) await this.parent._getDisplay().closeDialog();
+        await this._getDisplay().closeDialog();
     }
 
     replaceDialog(content:React.ElementType, closeCallback?:DialogCallback, options?:any) {
@@ -144,25 +154,18 @@ export class DialogContextImpl implements IDialogContext {
     }
 
     setDisplay(id:string,setDialogFunction:SetDialogFunction,closeDialog:DialogCallback) {
-        const current = this._getTop();
+        const current = this._getDisplay();
         if (current.id !== id) {
             current.closeDialog(); //cleanup any dialog if we change the display
-            this.displayStack.push(new DialogDisplayEntry(id, setDialogFunction, closeDialog));
         }
-        else{
-            current.setDialog=setDialogFunction;
-            current.closeDialog=closeDialog;
-        }
-        return this._getTop().id;
+        this.display=new DialogDisplayEntry(id, setDialogFunction, closeDialog);
+        return this._getDisplay().id;
     }
 
     removeDisplay(id:string) {
-        //never remove the first entry from the stack
-        for (let idx = 1; idx < this.displayStack.length; idx++) {
-            if (this.displayStack[idx].id === id) {
-                this.displayStack.splice(idx, 1);
-                return true;
-            }
+        if (this.display?.id === id) {
+            this.display=undefined;
+            return true;
         }
         return false;
     }
