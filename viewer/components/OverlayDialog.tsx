@@ -17,7 +17,7 @@ import PropTypes from "prop-types";
 import Helper, {concatsp} from "../util/helper";
 import {
     DialogCallback,
-    DialogContextImpl,
+    DialogContextImpl, dialogManager,
     globalContext,
     IDialogContext,
     ReactDialogContextImpl, SetDialogFunction,
@@ -65,10 +65,16 @@ export interface OverlayDialogProps{
     coverClassName?: string;
     children?: React.ReactElement;
 }
+
+let displayId= globalContext.getId();
+const nextId=()=>{
+    displayId++;
+    return displayId;
+}
 const OverlayDialog = (
     {dialogClassName,coverClassName, children}:OverlayDialogProps) => {
     const dialogContext = useDialogContext();
-    const nestedDialogContext = useRef(new DialogContextImpl(dialogContext));
+    const nestedDialogContext = useRef(new DialogContextImpl(nextId(), dialogContext));
     useInputMonitor();
     return (
         <OverlayContainer
@@ -94,9 +100,10 @@ const OverlayDialog = (
 export const DialogDisplay=({name}:{name?:string})=>{
     const dialogContext=useDialogContext();
     const nameRef=useRef(name);
-    const [Display,setDialog,closeDialog]=useDialog();
+    const idRef=useRef("d"+nextId());
+    const [Display,setDialog,closeDialog]=useDialog(idRef.current);
     useEffect(() => {
-        const id=dialogContext.setDisplay(setDialog,closeDialog);
+        const id=dialogContext.setDisplay(idRef.current,setDialog,closeDialog);
         base.log("set dialog display", nameRef.current,id);
         return ()=>{
             base.log("remove dialog display", nameRef.current,id);
@@ -117,18 +124,16 @@ export const DialogContext=(
 }
 
 export type UseDialogResult=[React.ElementType,SetDialogFunction,DialogCallback];
-const useDialog=(
-    closeCb?:()=>void):UseDialogResult=>{
+const useDialog=(displayId:string):UseDialogResult=>{
+    const dialogContext = useDialogContext();
     const [dialogContent,setDialog]=useState(undefined);
-    const dialogId=useRef(1);
     const lastContent=useRef(undefined);
-    const resetDialog=(opt_id?:string|number):Promise<void>=>{
+    const resetDialog=(opt_id?:number):Promise<void>=>{
         return new Promise(resolve=>{
             window.requestAnimationFrame(() => {
                 const currentContent=lastContent.current;
-                if (currentContent && (opt_id === undefined || currentContent.id === opt_id)) {
-                    if (currentContent.close) currentContent.close();
-                    if (closeCb) closeCb();
+                if (currentContent && (opt_id === undefined ||  currentContent.id === opt_id)) {
+                    dialogManager.resetDialog(dialogContext.getId(),displayId,opt_id);
                     setDialog(undefined)
                     lastContent.current = undefined;
                 }
@@ -142,6 +147,7 @@ const useDialog=(
                         opt_options?:SetDialogOptions,
                         ):Promise<DialogCallback>=>{
         return new Promise((resolve) => {
+            const id=nextId();
             window.requestAnimationFrame(() => {
                 const currentContent = lastContent.current;
                 if (!content) content = () => <div>Empty</div>
@@ -149,11 +155,10 @@ const useDialog=(
                     if (currentContent.close) currentContent.close();
                     //we will not call the global close callback
                 }
-                dialogId.current++;
-                const newValues = {content: content, close: opt_closeCb, id: dialogId.current, options: opt_options};
+                const newValues = {content: content, close: opt_closeCb, id: id, options: opt_options};
                 setDialog(newValues);
+                dialogManager.setDialog(dialogContext.getId(),displayId,id,opt_closeCb);
                 lastContent.current = newValues;
-                const id = dialogId.current;
                 resolve(() => {
                     //as the returned function can be called any time
                     //later we need to check if this is still the expected dialog
@@ -165,7 +170,10 @@ const useDialog=(
     };
     return [
         () => {
-            if (!dialogContent || !dialogContent.content) return null;
+            if (!dialogContent || !dialogContent.content) {
+                dialogManager.resetDialog(dialogContext.getId(),displayId);
+                return null;
+            }
             const {dialogClassName,coverClassName}=dialogContent.options||{}
             return (
                 <OverlayDialog
