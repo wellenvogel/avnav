@@ -77,7 +77,6 @@ const DIALOG_Z = 120;
 
 export type DialogCallback=()=>(Promise<void>|void);
 export interface SetDialogOptions extends Record<string, any> {
-    dialogClassName?: string;
     coverClassName?: string;
 }
 export type SetDialogFunction=(dialog?:React.ElementType,closeCallback?:DialogCallback,options?:SetDialogOptions) => Promise<DialogCallback>;

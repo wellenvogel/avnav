@@ -22,7 +22,7 @@
  */
 
 import React, {useEffect} from 'react';
-import {DBCancel, DialogButtons, DialogFrame} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFlexInner, DialogFrame} from "./OverlayDialog";
 import Helper from "../util/helper";
 // @ts-ignore
 import {createItemActions} from './FileDialog'
@@ -79,8 +79,8 @@ export const ViewDialog=(props:ViewDialogProps)=>{
                 .then((text)=>setViewData(text))
                 .catch((e)=>Toast(e))
     },[props.url,props.useIframe,props.text,props.html]);
-    return <React.Fragment>
-        <DialogFrame fullscreen={Helper.unsetorTrue(props.fullscreen)} title={props.title||`${props.type} ${props.name}`} className={Helper.concatsp('viewDialog')}>
+    return <DialogFrame fullscreen={Helper.unsetorTrue(props.fullscreen)} title={props.title||`${props.type} ${props.name}`} className={Helper.concatsp('viewDialog')}>
+        <DialogFlexInner>
             {(mode === 1) && <div className={"html"} dangerouslySetInnerHTML={{__html: viewData}}></div>}
             {(mode === 0) && <img className="readOnlyImage" src={getUrl()} alt=""/>}
             {(mode === 2) && <div className={"text"}>{viewData}</div>}
@@ -88,12 +88,12 @@ export const ViewDialog=(props:ViewDialogProps)=>{
                 <div className="addOnFrame">
                     <iframe className="viewPageIframe addOn" src={getUrl()}/>
                 </div>}
-    </DialogFrame>
+        </DialogFlexInner>
         <DialogButtons buttonList={[
             DBCancel({
                 visible:!props.omitCancel
             })
         ]}/>
-    </React.Fragment>
+    </DialogFrame>
 }
  

@@ -294,12 +294,10 @@ body{
     border-radius: 0;
     box-shadow: none;
     padding: 0;
-    .flexInner{
-      width: 100%;
-      overflow-y: auto;
-      overflow-x: hidden;
-      flex-grow: 1;
-    }
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-grow: 1;
+
     .dialogTitle{
       .header();
     }
@@ -320,21 +318,17 @@ body{
   &.nested {
     font-size: 1em;
   }
-
+  .flexInner,.inner{
+    display: flex;
+    flex-direction: column;
+    flex:1;
+  }
+  .flexInner{
+    overflow-y: auto;
+  }
   overflow: auto;
   max-height: 100%;
   max-width: 100%;
-  .dialogFrame{
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    flex:1;
-  }
-  .flexInner {
-    display:flex;
-    flex-direction: column;
-    overflow: auto;
-  }
   .dialogObjects();
 }
 .dialogObjects{

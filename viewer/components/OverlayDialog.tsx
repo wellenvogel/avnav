@@ -31,37 +31,32 @@ export interface OverlayContainerProps {
     coverClassName?: string;
     children?: React.ReactNode;
     onClick?: (ev: SyntheticEvent) => void;
-    dialogClassName?: string;
 }
 
 // eslint-disable-next-line react/display-name
-export const OverlayContainer=MapEventGuard(React.forwardRef<any>(
-    (oprops:OverlayContainerProps,ref)=>{
+export const OverlayContainer=MapEventGuard(
+    (oprops:OverlayContainerProps)=>{
+    const ref=useRef<HTMLDivElement>(null);
     const dialogContext=useDialogContext();
     const style={zIndex:dialogContext.zIndex};
     return (
         <div
             className={Helper.concatsp("overlay_cover_active",oprops.coverClassName)}
-            onClick={oprops.onClick}
+            onClick={(ev:SyntheticEvent)=>{
+                if (ev.target===ref.current) {
+                    oprops.onClick(ev);
+                    ev.stopPropagation();
+                }
+            }}
             style={style}
             ref={ref}>
-            <div
-                className={Helper.concatsp("dialog",oprops.dialogClassName)}
-                onClick={
-                    (ev) => {
-                        //ev.preventDefault();
-                        ev.stopPropagation();
-                    }
-                }
-                style={{zIndex:dialogContext.zIndex+1}}
-            >
+            <React.Fragment>
             {oprops.children}
-            </div>
+            </React.Fragment>
         </div>
     )
-}));
+});
 export interface OverlayDialogProps{
-    dialogClassName?: string;
     coverClassName?: string;
     children?: React.ReactElement;
 }
@@ -72,7 +67,7 @@ const nextId=()=>{
     return displayId;
 }
 const OverlayDialog = (
-    {dialogClassName,coverClassName, children}:OverlayDialogProps) => {
+    {coverClassName, children}:OverlayDialogProps) => {
     const dialogContext = useDialogContext();
     const nestedDialogContext = useRef(new DialogContextImpl(nextId(), dialogContext));
     useInputMonitor();
@@ -83,7 +78,6 @@ const OverlayDialog = (
                 ev.preventDefault();
                 await nestedDialogContext.current?.closeDialog()
             }}
-            dialogClassName={dialogClassName}
             coverClassName={coverClassName}
         >
             <DialogContext
@@ -174,10 +168,9 @@ const useDialog=(displayId:string):UseDialogResult=>{
                 dialogManager.resetDialog(dialogContext.getId(),displayId);
                 return null;
             }
-            const {dialogClassName,coverClassName}=dialogContent.options||{}
+            const {coverClassName}=dialogContent.options||{}
             return (
                 <OverlayDialog
-                    dialogClassName={dialogClassName}
                     coverClassName={coverClassName}
                 >
                     <dialogContent.content/>
@@ -279,28 +272,25 @@ export interface DialogFrameProps extends Record<string, any>{
 
 export const DialogFrame=(props:DialogFrameProps)=>{
     const frameRef=useRef<HTMLDivElement>(null);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {title,className,flex,children,...fwprops}=props;
-    useEffect(() => {
-        if (! props.fullscreen) return;
-        if (!frameRef.current) return;
-        const parent=frameRef.current.parentElement;
-        if (!parent) return;
-        if (! parent.classList.contains('fullscreen')) {
-            parent.classList.add('fullscreen');
-        }
-    }, [props.fullscreen]);
     if (props.fullscreen){
-        return <div className={Helper.concatsp(className,'dialogFrame')} ref={frameRef}>
-            {props.title &&<Headline title={props.title} dynamicTitleIcons={false}/>}
-            <div className={Helper.concatsp('inner',(flex !== false)?'flexInner':undefined)}>
-                {props.children}
-            </div>
+        return <div className={Helper.concatsp('dialog',className,'fullscreen')} ref={frameRef}>
+            {title &&<Headline title={title} dynamicTitleIcons={false}/>}
+            {children}
         </div>
     }
-    return <div {...fwprops} className={Helper.concatsp(className,'dialogFrame',(flex !== false)?'flexInner':undefined)}>
+    return <div {...fwprops} className={Helper.concatsp('dialog',className)}>
         {(title)?<h3 className="dialogTitle">{title}</h3>:null}
         {children}
     </div>
+}
+
+export const DialogFlexInner=(props:DialogTextProps)=>{
+    return <div className={Helper.concatsp(props.className,'flexInner')}>
+        {props.children}
+    </div>
+
 }
 export interface DialogTextProps{
     className?:string;
