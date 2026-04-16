@@ -3,7 +3,8 @@
  */
 
 import React from "react";
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 const UndefinedWidget=(props)=>{
     return (

@@ -10,7 +10,7 @@ import Visible from '../hoc/Visible';
 import ItemList from './ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-import React, {ReactNode, SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
+import React, {ReactElement, SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
 
 import {PageFrame, PageLeft, PageProps} from './Page';
 import Toast from './Toast';
@@ -33,11 +33,11 @@ import ButtonList from "./ButtonList";
 import base from "../base";
 import {PageType} from "../util/pageids";
 import {ButtonDef} from "./Button";
-import {InternalWidgetDefinition} from "./WidgetBase";
 import {ChartEntry, MapEvent, MapEventCallback, SHOW_MODE} from "../map/maptypes";
 import {useDialogContext} from "./exports";
 import {IDialogContext} from "./DialogContext";
 import {addonViewManager} from "./AddonView";
+import {InternalWidgetDefinition} from "../util/types";
 
 const INFO_TYPES={
     eula:STORAGE_NAMES.EULAS,
@@ -127,7 +127,7 @@ const Map=({mapClass,mapOpacity,rightOffset}:MapOptions)=>{
         style={{opacity:mapOpacity,marginRight:rightOffset?rightOffset+"px":undefined}}>
     </div>;
 }
-export type PanelCreator =(name:string)=>{name:string,list:InternalWidgetDefinition[]}  //will be called with the panel name
+export type PanelCreator =(name:string)=>{name:string|PageType,list?:InternalWidgetDefinition[]}  //will be called with the panel name
 interface WidgetContainerProps{
     panelCreator:PanelCreator;
     panel:string,
@@ -183,7 +183,7 @@ export interface MapPageProps extends PageProps{
     onItemClick?:        (ev:SyntheticEvent)=>void;  //like ItemList
     mapEventCallback?:   MapEventCallback,
     id:                 PageType,
-    overlayContent?:     ReactNode,               //overlay in the map container
+    overlayContent?:     ReactElement,               //overlay in the map container
     mapLoadCallback?:    ()=>void,
 }
 interface InternalMapPageProps extends MapPageProps{

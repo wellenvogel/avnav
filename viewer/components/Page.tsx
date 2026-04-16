@@ -150,7 +150,7 @@ export const PageLeft=
     return <div className={Helper.concatsp("leftPart","dialogAnchor", className)}
             >
             {(title && ! AddOn) ? <Headline title={title} connectionLost={true}/> : null}
-            <DialogDisplay/>
+            <DialogDisplay name={'page'}/>
             {AddOn?<AddOn></AddOn>:children}
             <Alarm onClick={alarmClick}/>
 

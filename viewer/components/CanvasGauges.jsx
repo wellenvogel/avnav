@@ -7,7 +7,8 @@ import PropTypes from 'prop-types';
 import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.ts';
 import assign from 'object-assign';
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 export const getTicks=(minValue,maxValue,number)=>{
     if (minValue === undefined || maxValue === undefined || number === undefined) return;

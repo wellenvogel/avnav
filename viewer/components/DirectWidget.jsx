@@ -5,8 +5,9 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import Value from './Value.jsx';
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
+import {WidgetProps} from "../util/types";
 
 const DirectWidget=(wprops)=>{
     let props;

@@ -2,7 +2,7 @@
  * Created by andreas on 28.07.19.
  */
 
-import Formatter from '../util/formatter.js';
+import Formatter from '../util/formatter';
 
 export const AIS_CLASSES={
     A:'A',
@@ -11,10 +11,45 @@ export const AIS_CLASSES={
     Aton:'T'
 };
 
-const aisparam={
+export interface AisItem{
+    type:number,
+    name?:string,
+    shipname?:string,
+    mmsi:string,
+    distance?:number,
+    heading?:number,
+    turn?:number,
+    speed?:number,
+    course?:number,
+    headingTo?:number,
+    cpa?:number,
+    tcpa?:number,
+    bcpa?:number,
+    passFront?:number
+    callsign?:string
+    shiptype?:number,
+    status?:number,
+    age?:number,
+    lon?:number,
+    lat?:number,
+    destination?:string,
+    warning?:boolean,
+    nearest?:false
+    length?:number,
+    beam?:number,
+    draught?:number,
+    aid_type?:number,
+}
+interface AisFormatterType{
+    headline?:string,
+    format:((v:AisItem)=>string)|((v:AisItem)=>boolean),
+    unit?:string,
+    classes?:string[]
+}
+const aisparam:Record<string,AisFormatterType> = {
     nameOrmmsi: {
         headline: 'Name/MMSI',
-        format: function (v) {
+        format: function (v:AisItem): string {
             if (v.type == 21){
                 if (v.name && v.name !== 'unknown') return v.name;
             }
@@ -24,7 +59,7 @@ const aisparam={
     },
     distance: {
         headline: 'DST',
-        format: function (v) {
+        format: function (v:AisItem): string {
             return Formatter.formatDistance(v.distance);
         },
         unit: 'nm'
@@ -32,7 +67,7 @@ const aisparam={
     },
     heading: {
         headline: 'HDT',
-        format: function (v) {
+        format: function (v:AisItem): string {
             return Formatter.formatDirection(v.heading);
         },
         unit: '°',
@@ -40,7 +75,7 @@ const aisparam={
     },
     turn: {
         headline: 'ROT',
-        format: function (v) {
+        format: function (v:AisItem): string {
             return Formatter.formatDecimal(v.turn,2,0);
         },
         unit: '°/min',
@@ -48,7 +83,7 @@ const aisparam={
     },
     speed: {
         headline: 'SOG',
-        format: function (v) {
+        format: function (v:AisItem): string {
             return Formatter.formatSpeed(v.speed);
         },
         unit: 'kn',
@@ -56,7 +91,7 @@ const aisparam={
     },
     course: {
         headline: 'COG',
-        format: function (v) {
+        format: function (v:AisItem): string {
             return Formatter.formatDirection(v.course);
         },
         unit: '°',
@@ -64,35 +99,35 @@ const aisparam={
     },
     headingTo:{
         headline: 'BRG',
-        format: function (v) {
+        format: function (v:AisItem): string {
             return Formatter.formatDirection(v.headingTo);
         },
         unit: '°'
     },
     cpa: {
         headline: 'DCPA',
-            format: function (v) {
+            format: function (v:AisItem): string {
             return Formatter.formatDistance(v.cpa);
         },
         unit: 'nm',
     },
     tcpa: {
         headline: 'TCPA',
-            format: function (v) {
+            format: function (v:AisItem) {
               return Formatter.formatDecimal(v.tcpa/60,3,Math.abs(v.tcpa)>60?0:2);
         },
         unit: 'min',
     },
     bcpa: {
         headline: 'BCPA',
-            format: function (v) {
+            format: function (v:AisItem ) {
               return Formatter.formatDirection(v.bcpa);
         },
         unit: '°',
     },
     passFront: {
         headline: 'we pass',
-            format: function (v) {
+            format: function (v:AisItem) {
             if (!v.cpa) return "-";
             if (v.passFront !== undefined) {
                 if (v.passFront > 0) return "Front";
@@ -104,7 +139,7 @@ const aisparam={
     },
     shipname: {
         headline: 'Name',
-            format: function (v) {
+            format: function (v:AisItem) {
             if ((v.shipname === undefined || v.shipname === 'unknown') && v.type == 21) return v.name;
             return v.shipname;
         },
@@ -112,25 +147,24 @@ const aisparam={
     },
     callsign: {
         headline: 'Callsign',
-            format: function (v) {
+            format: function (v:AisItem) {
             return v.callsign;
         },
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]
     },
     mmsi: {
         headline: 'MMSI',
-            format: function (v) {
+            format: function (v:AisItem) {
             return v.mmsi;
         }
     },
     shiptype: {
         headline: 'Type',
-            format: function (v) {
+            format: function (v:AisItem) {
             let t = 0;
             try {
-                t = parseInt(v.shiptype || 0);
-            } catch (e) {
-            }
+                t = parseInt((v.shiptype || 0)+"");
+            } catch (e) { /* empty */ }
             if (t >= 20 && t <= 29) return "WIG";
             if (t == 30) return "Fishing";
             if (t == 31 || t == 32) return "Towing";
@@ -157,9 +191,9 @@ const aisparam={
     },
     status:{
         headline: 'Status',
-        format: function(v){
+        format: function(v:AisItem) {
             if (v.status === undefined) return "----";
-            let st=parseInt(v.status);
+            const st=parseInt(v.status+"");
             switch (st){
                 case 0: return 'Under way using engine';
                 case 1: return 'At anchor';
@@ -183,7 +217,7 @@ const aisparam={
     },
     age: {
         headline: 'Age',
-        format: function(v){
+        format: function(v:AisItem){
             if (v.age === undefined) return '----';
             return Formatter.formatDecimal(v.age,3,0);
         },
@@ -191,14 +225,14 @@ const aisparam={
     },
     position: {
         headline: 'Position',
-            format: function (v) {
+            format: function (v:AisItem) {
             return Formatter.formatLonLats({lon: v.lon, lat: v.lat});
         }
     },
     destination: {
         headline: 'Destination',
-            format: function (v) {
-            let d = v.destination;
+            format: function (v:AisItem) {
+            const d = v.destination;
             if (d) return d;
             return "unknown";
         },
@@ -206,19 +240,19 @@ const aisparam={
     },
     warning: {
         headline: 'Warning',
-            format: function (v) {
+            format: function (v:AisItem) {
             return v.warning || false
         }
     },
     nearest: {
         headline: 'Nearest',
-            format: function (v) {
+            format: function (v:AisItem) {
             return v.nearest || false
         }
     },
     clazz: {
         headline: 'Class',
-        format: function(v){
+        format: function(v:AisItem){
             if (typeof(v) !== 'object') return '';
             if (v.type == 1 || v.type == 2 || v.type == 3) return AIS_CLASSES.A;
             if (v.type == 18 || v.type == 19) return AIS_CLASSES.B;
@@ -229,21 +263,21 @@ const aisparam={
     },
     length: {
         headline: 'Length',
-        format: function(v){
+        format: function(v:AisItem) {
             return Formatter.formatDecimal(v.length,3)
         },
         unit: 'm'
     },
     beam: {
         headline: 'Beam',
-        format: function(v){
+        format: function(v:AisItem){
             return Formatter.formatDecimal(v.beam,3);
         },
         unit: 'm'
     },
     draught: {
         headline: 'Draught',
-        format: function(v){
+        format: function(v:AisItem){
             return Formatter.formatDecimal(v.draught,2,1);
         },
         unit: 'm',
@@ -251,9 +285,9 @@ const aisparam={
     },
     aid_type: {
         headline: 'Type',
-        format: function (v){
+        format: function (v:AisItem){
             if (v.aid_type === undefined) return '---';
-            let type=parseInt(v.aid_type);
+            const type=parseInt(v.aid_type+"");
             switch (type) {
                 case 0:
                     return "not specified";
@@ -328,41 +362,42 @@ const aisparam={
 };
 
 const aisProxyHandlerRo={
-    get(target,prop,receiver){
+    get(target:any,prop:string){
         if (target[prop]!== undefined) return target[prop];
         if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
         if (target.received !== undefined) return target.received[prop];
     },
-    set(target,prop,value){
+    set(_target:any,prop:string,value:any){
       throw new Error("invalid set access to AIS data: "+prop+"="+value);
     },
-    has(target,key){
+    has(target:any,key:string|symbol){
         if (key === Symbol.for("proxy")) return true;
         return key in target || target.hasItem(key);
     }
 };
 const aisProxyHandler={
-    get(target,prop,receiver){
+    get(target:any,prop:string){
         if (target[prop]!== undefined) return target[prop];
         if (target.cpadata !== undefined && target.cpadata[prop] !== undefined) return target.cpadata[prop];
         if (target.received !== undefined) return target.received[prop];
     },
-    has(target,key){
+    has(target:any,key:string|symbol){
         if (key === Symbol.for("proxy")) return true;
         return key in target || target.hasItem(key);
     }
 };
 
-export const isAisProxy=(obj)=>{
+export const isAisProxy=(obj:any)=>{
     if (! (obj instanceof Object)) return false;
     return Symbol.for("proxy") in obj;
 }
 /**
  *
  * @param aisobject
+ * @param opt_writable
  * @returns {Proxy<AISItem>}
  */
-export const aisproxy=(aisobject,opt_writable)=>{
+export const aisproxy=(aisobject:any,opt_writable?:boolean):AisItem=>{
     return opt_writable?new Proxy(aisobject,aisProxyHandler):new Proxy(aisobject,aisProxyHandlerRo);
 }
 
@@ -373,18 +408,18 @@ const AisFormatter={
      * @type {{distance: {headline: string, format: format}, speed: {headline: string, format: format}, course: {headline: string, format: format}, cpa: {headline: string, format: format}, tcpa: {headline: string, format: format}, passFront: {headline: string, format: format}, shipname: {headline: string, format: format}, callsign: {headline: string, format: format}, mmsi: {headline: string, format: format}, shiptype: {headline: string, format: format}, position: {headline: string, format: format}, destination: {headline: string, format: format}}}
      */
 
-    getHeadline:function(key){
-        let d=aisparam[key];
+    getHeadline:function(key:string){
+        const d=aisparam[key];
         if (! d) return ;
         return d.headline;
     },
-    getUnit:function(key){
-        let d=aisparam[key];
+    getUnit:function(key:string){
+        const d=aisparam[key];
         if (! d) return ;
         return d.unit;
     },
-    format(key,aisobject,inlcudeUnit){
-        let d=aisparam[key];
+    format(key:string,aisobject:AisItem,inlcudeUnit?:boolean){
+        const d=aisparam[key];
         if (! d) return ;
         if (aisobject === undefined) return;
         /**
@@ -392,36 +427,36 @@ const AisFormatter={
          * we create a proxy and forward get access to either the cpadata or the received data if not at the base level
          */
 
-        let op=isAisProxy(aisobject)?aisobject:aisproxy(aisobject);
+        const op=isAisProxy(aisobject)?aisobject:aisproxy(aisobject);
         let rt=d.format(op);
         if (inlcudeUnit && d.unit !== undefined){
             rt+=" "+d.unit;
         }
         return rt;
     },
-    getItemFromList(list,mmsi){
+    getItemFromList(list:AisItem[],mmsi:string){
         if (! list) return;
         for (let i=0;i<list.length;i++){
             if (list[i].mmsi == mmsi) return list[i];
         }
     },
     getLabels(){
-        let rt=[];
-        for(let k in aisparam){
+        const rt=[];
+        for(const k in aisparam){
             rt.push({label:aisparam[k].headline,value:k});
         }
         return rt;
     },
-    filterDisplay(list,item){
-        let cl=aisparam.clazz.format(item);
-        let rt=[];
-        for (let idx in list){
-            let inv=list[idx];
-            let name=(typeof(inv) === 'object')?inv.name:inv;
-            let param=aisparam[name];
+    filterDisplay(list:AisItem[],item:AisItem){
+        const cl=aisparam.clazz.format(item);
+        const rt=[];
+        for (const idx in list){
+            const inv=list[idx];
+            const name=(typeof(inv) === 'object')?inv.name:inv;
+            const param=aisparam[name];
             if (! param) continue;
             if (param.classes !== undefined){
-                if (param.classes.indexOf(cl) < 0){
+                if (param.classes.indexOf(cl as string) < 0){
                     continue;
                 }
             }
@@ -429,9 +464,9 @@ const AisFormatter={
         }
         return rt;
     },
-    shouldShow(key,item){
-        let cl=this.format('clazz',item);
-        let param=aisparam[key];
+    shouldShow(key:string,item:AisItem){
+        const cl=this.format('clazz',item);
+        const param=aisparam[key];
         if (! param) return;
         if ( param.classes === undefined) return true;
         return param.classes.indexOf(cl) >= 0;

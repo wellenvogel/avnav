@@ -2,39 +2,39 @@
  * Created by andreas on 04.05.14.
  */
 
-import navcompute, {DEPTH_UNITS, unitToFactor} from '../nav/navcompute.js';
-import Helper from "./helper.ts";
+// @ts-ignore
+import navcompute, {DEPTH_UNITS, unitToFactor} from '../nav/navcompute';
+import Helper, {stringEnumValues} from "./helper";
+import {ParametersWithName} from "../api/api.interface";
 
-function pad(num, size, pad='0') {
-    return (''+num).trim().padStart(size,pad);
-}
-
+export type AxisType='lat'|'lon';
 /**
  *
  * @param {number} coordinate
  * @param axis
  * @returns {string}
  */
-const formatLonLatsDecimal=function(coordinate,axis){
+const formatLonLatsDecimal=function(coordinate:number,axis:AxisType):string{
     coordinate = Helper.to180(coordinate); // normalize to ±180°
 
-    let abscoordinate = Math.abs(coordinate);
-    let coordinatedegrees = Math.floor(abscoordinate);
+    const abscoordinate = Math.abs(coordinate);
+    let coordinatedegrees:number = Math.floor(abscoordinate);
 
     let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-    let numdecimal=2;
+    const numdecimal=2;
     //correctly handle the toFixed(x) - will do math rounding
-    if (coordinateminutes.toFixed(numdecimal) == 60){
+    if (coordinateminutes.toFixed(numdecimal) == '60'){
         coordinatedegrees+=1;
         coordinateminutes=0;
     }
+    let degreesTxt:string=coordinatedegrees+"";
     if( coordinatedegrees < 10 ) {
-        coordinatedegrees = "0" + coordinatedegrees;
+        degreesTxt = "0" + degreesTxt;
     }
     if (coordinatedegrees < 100 && axis == 'lon'){
-        coordinatedegrees = "0" + coordinatedegrees;
+        degreesTxt = "0" + degreesTxt;
     }
-    let str = coordinatedegrees + "\u00B0";
+    let str = degreesTxt + "\u00B0";
 
     if( coordinateminutes < 10 ) {
         str +="0";
@@ -48,17 +48,27 @@ const formatLonLatsDecimal=function(coordinate,axis){
     return str;
 };
 
+export interface LonLatPoint{
+    lon:number;
+    lat:number;
+}
 /**
  *
  * @param {Point} lonlat
  * @returns {string}
  */
-const formatLonLats=function(lonlat){
+export interface FormatterBase{
+    parameters?:ParametersWithName[]
+}
+export type TFormatLonLats = FormatterBase & {
+    (lonlat:LonLatPoint):string
+}
+const formatLonLats:TFormatLonLats=function(lonlat:LonLatPoint):string{
     if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
-    let ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
-    let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
+    const ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
+    const ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
     return ns + ', ' + ew;
 };
 formatLonLats.parameters=[];
@@ -72,10 +82,12 @@ formatLonLats.parameters=[];
  * @param prefixZero if set - use 0 instead of space to fill the fixed digits
  * @returns {string}
  */
-
-const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
+export type TFormatDecimal=FormatterBase & {
+    (number:number|string,fix?:number,fract?:number,addSpace?:boolean,prefixZero?:boolean):string
+}
+const formatDecimal:TFormatDecimal=function(number:number|string,fix:number=0,fract:number=0,addSpace?:boolean,prefixZero?:boolean):string{
     let sign="";
-    number=parseFloat(number);
+    number=parseFloat(number as unknown as string);
     if (isNaN(number)){
         let rt="";
         while (fix > 0) {
@@ -108,8 +120,11 @@ formatDecimal.parameters=[
     {name: 'addSpace',type:'BOOLEAN'},
     {name: 'prefixZero',type:'BOOLEAN'}
 ];
-const formatDecimalOpt=function(number,fix,fract,addSpace,prefixZero){
-    number=parseFloat(number);
+export type TFormatDecimalOpt= FormatterBase & {
+    (number:number|string,fix:number,fract:number,addSpace?:boolean,prefixZero?:boolean):string;
+}
+const formatDecimalOpt:TFormatDecimalOpt=function(number:number|string,fix:number,fract:number,addSpace?:boolean,prefixZero?:boolean):string{
+    number=parseFloat(number as unknown as string);
     if (isNaN(number)) return formatDecimal(number,fix,fract,addSpace,prefixZero);
     if (Math.floor(number) == number){
         return formatDecimal(number,fix,0,addSpace,prefixZero);
@@ -137,20 +152,23 @@ formatDecimalOpt.parameters=[
  * @param leadingZeroes = use leading zeroes instead of spaces
  * returns string with at least digits(+1 if digits<0) characters
  */
-const formatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
+export type TFormatFloat = FormatterBase &{
+    (number:number,digits:number,maxPlaces?:number,leadingZeroes?:boolean):string;
+}
+const formatFloat:TFormatFloat=function(number, digits, maxPlaces, leadingZeroes=false) {
     if (digits == null) digits=3;
-    let signed = digits<0;
+    const signed = digits<0;
     digits = Math.abs(digits);
     if(maxPlaces==null) maxPlaces=digits-1;
     if(isNaN(number)) return '-'.repeat(digits+(signed?1:0)-maxPlaces)+(maxPlaces?'.'+'-'.repeat(maxPlaces):'');
     if(digits==0) return number.toFixed(0);
     if(number<0 && !signed) digits-=1;
-    let sign = number<0 ? '-' : signed ? ' ' : '';
+    const sign = number<0 ? '-' : signed ? ' ' : '';
     number = Math.abs(number);
     let decPlaces = digits-1-Math.floor(Math.log10(Math.abs(number)));
     decPlaces = Math.max(0,Math.min(decPlaces,Math.max(0,maxPlaces)));
-    let str = number.toFixed(decPlaces);
-    let n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
+    const str = number.toFixed(decPlaces);
+    const n = digits+(str.includes('.')?1:0); // expected length of string w/o sign
     if(leadingZeroes) {
         return sign+'0'.repeat(Math.max(0,n-str.length))+str;  // add sign and padding zeroes
     } else {
@@ -170,10 +188,20 @@ formatFloat.parameters=[
  * @param opt_fixed if > 0 set this much digits at min
  * @param opt_fillRight if set - extend the fractional part
  */
-const formatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
-    let number=parseFloat(distance);
+enum TDEPTH_UNITS {
+    NM = 'nm',
+    M='m',
+    KM= 'km',
+    FT='ft',
+    YD='yd'
+}
+type TFormatDistance=FormatterBase &{
+    (distance:number,opt_unit?:TDEPTH_UNITS,opt_fixed?:number,opt_fillRight?:boolean):string
+}
+const formatDistance:TFormatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
+    let number=parseFloat(distance as unknown as string);
     if (isNaN(number)) return "    -"; //4 spaces
-    let factor=unitToFactor(opt_unit||'nm');
+    const factor=unitToFactor(opt_unit||TDEPTH_UNITS.NM);
     number=number/factor;
     let fract=0;
     let fixed=undefined;
@@ -206,7 +234,7 @@ const formatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
     return formatDecimal(number,fixed,fract,false,true);
 };
 formatDistance.parameters=[
-    {name:'unit',type:'SELECT',list:DEPTH_UNITS,default:'nm'},
+    {name:'unit',type:'SELECT',list:stringEnumValues(TDEPTH_UNITS),default:'nm'},
     {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits. Leave at 0 to have this flexible.'},
     {name:'fillRight', type: 'BOOLEAN',default: false, description:'let the fractional part extend to have the requested number of digits (only if numDigits > 0)'}
 ];
@@ -217,13 +245,20 @@ formatDistance.parameters=[
  * @param opt_unit one of kn,ms,kmh
  * @returns {*}
  */
-
-const formatSpeed=function(speed,opt_unit){
-    let number=parseFloat(speed);
+export enum TSPEED_UNITS{
+    KN='kn',
+    MS='ms',
+    KMH='kmh'
+}
+export type TFormatSpeed=FormatterBase &{
+    (speed:number,opt_unit?:TSPEED_UNITS):string
+}
+const formatSpeed:TFormatSpeed=function(speed,opt_unit){
+    let number=parseFloat(speed as unknown as string);
     if (isNaN(number)) return "  -"; //2 spaces
     let factor=3600/navcompute.NM;
-    if (opt_unit == 'ms') factor=1;
-    if (opt_unit == 'kmh') factor=3.6;
+    if (opt_unit == TSPEED_UNITS.MS) factor=1;
+    if (opt_unit == TSPEED_UNITS.KMH) factor=3.6;
     number=number*factor;
     if (number < 100){
         return formatDecimal(number,undefined,1,false);
@@ -232,10 +267,13 @@ const formatSpeed=function(speed,opt_unit){
 };
 
 formatSpeed.parameters=[
-    {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
+    {name:'unit',type:'SELECT',list:stringEnumValues(TSPEED_UNITS),default:TSPEED_UNITS.KN}
 ];
 
-const formatDirection=function(dir,opt_rad,opt_180,opt_lz){
+export type TFormatDirection=FormatterBase &{
+    (dir:number,opt_rad?:boolean,opt_180?:boolean,opt_lz?:boolean):string
+}
+const formatDirection:TFormatDirection=function(dir,opt_rad,opt_180,opt_lz){
     dir=opt_rad ? Helper.degrees(dir) : dir;
     dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
     return formatDecimal(dir,3,0,(!!opt_lz && !!opt_180),!!opt_lz);
@@ -245,8 +283,10 @@ formatDirection.parameters=[
     {name:'range180',type:'BOOLEAN',default:false},
     {name:'leadingZero',type:'BOOLEAN',default: false,description:'show leading zeroes (012)'}
 ];
-
-const formatDirection360=function(dir,opt_lz){
+export type TFormatDirection360 = FormatterBase &{
+    (dir:number,opt_lz?:boolean):string
+}
+const formatDirection360=function(dir:number,opt_lz?:boolean):string{
     return formatDecimal(dir,3,0,false,!!opt_lz);
 };
 formatDirection360.parameters=[
@@ -258,9 +298,12 @@ formatDirection360.parameters=[
  * @param {Date} curDate
  * @returns {string}
  */
-const formatTime=function(curDate){
+export type TFormatTime=FormatterBase &{
+    (curDate:Date):string
+}
+const formatTime:TFormatTime=function(curDate){
     if (! curDate || ! (curDate instanceof Date)) return "--:--:--";
-    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
+    const datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
@@ -271,9 +314,9 @@ formatTime.parameters=[]
  * @param {Date} curDate
  * @returns {string} hh:mm
  */
-const formatClock=function(curDate){
+const formatClock:TFormatTime=function(curDate){
     if (! curDate || ! (curDate instanceof Date)) return "--:--";
-    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
+    const datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
     return datestr;
 };
@@ -283,9 +326,9 @@ formatClock.parameters=[]
  * @param {Date} curDate
  * @returns {string}
  */
-const formatDateTime=function(curDate){
+const formatDateTime:TFormatTime=function(curDate){
     if (! curDate || ! (curDate instanceof Date)) return "----/--/-- --:--:--";
-    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+    const datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0,false,true)+"/"+
         this.formatDecimal(curDate.getDate(),2,0,false,true)+" "+
         this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
@@ -295,50 +338,67 @@ const formatDateTime=function(curDate){
 };
 formatDateTime.parameters=[];
 
-const formatDate=function(curDate){
+const formatDate:TFormatTime=function(curDate){
     if (! curDate || ! (curDate instanceof Date)) return "----/--/--";
-    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+    const datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
         this.formatDecimal(curDate.getDate(),2,0);
     return datestr;
 };
 formatDate.parameters=[];
 
-const formatString=function(data){
+export type TFormatString = FormatterBase &{
+    (data:string):string
+}
+const formatString:TFormatString=function(data){
     return data;
 };
 formatString.parameters=[];
-const formatPressure=function(data,opt_unit){
+export enum TPressure{
+    PA='pa',
+    HPA='hpa',
+    BAR='bar'
+}
+export type TFormatPressure=FormatterBase & {
+    (data:number,opt_unit?:TPressure):string
+}
+const formatPressure:TFormatPressure=function(data,opt_unit){
     try {
-        if (!opt_unit || opt_unit.toLowerCase() === 'pa') return formatDecimal(data);
-        if (opt_unit.toLowerCase() === 'hpa') {
-            return (parseFloat(data)/100).toFixed(2)
+        if (!opt_unit || opt_unit.toLowerCase() === TPressure.PA) return formatDecimal(data);
+        if (opt_unit.toLowerCase() === TPressure.HPA) {
+            return (parseFloat(data as unknown as string)/100).toFixed(2)
         }
-        if (opt_unit.toLowerCase() === 'bar') {
-            return formatDecimal(parseFloat(data)/100000,2,4,false);
+        if (opt_unit.toLowerCase() === TPressure.BAR) {
+            return formatDecimal(parseFloat(data as unknown as string)/100000,2,4,false);
         }
     }catch(e){
         return "-----";
     }
 }
 formatPressure.parameters=[
-    {name:'unit',type:'SELECT',list:['pa','hpa','bar'],default:'pa'}
+    {name:'unit',type:'SELECT',list: stringEnumValues(TPressure),default:TPressure.PA},
 ]
-
-const formatTemperature=function(data,opt_unit){
+export enum TTempUnit{
+    C='celsius',
+    K='kelvin'
+}
+export type TFormatTemperature=FormatterBase &{
+    (data:number,opt_unit?:TTempUnit):string
+}
+const formatTemperature:TFormatTemperature=function(data,opt_unit){
     try{
         if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
             return formatDecimal(data,3,1);
         }
         if (opt_unit.toLowerCase().match(/^c/)){
-            return formatDecimal(parseFloat(data)-273.15,3,1)
+            return formatDecimal(parseFloat(data as unknown as string)-273.15,3,1)
         }
     }catch(e){
         return "-----"
     }
 }
 formatTemperature.parameters=[
-    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'kelvin'}
+    {name:'unit',type:'SELECT',list:stringEnumValues(TTempUnit),default:TTempUnit.K},
 ]
 
 const skTemperature=formatTemperature;

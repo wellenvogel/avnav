@@ -216,7 +216,7 @@ const MainBody = ({ history, nightMode}) => {
     return (
         <HistoryContext history={history}>
         <DialogContext>
-            <DialogDisplay/>
+            <DialogDisplay name={'app'}/>
             <DynamicRouter
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,

@@ -17,8 +17,8 @@ import {StoreCallback} from "../util/store";
 export type StoreKeys=Record<string, string>;
 export interface DynamicProps extends Record<string, any>,Options{
 }
-export type UpdateFunction=(props:DynamicProps, storeKeys:StoreKeys) => DynamicProps;
-interface Options{
+export type UpdateFunction<T=DynamicProps>=(props:DynamicProps, storeKeys:StoreKeys) => T;
+export interface Options{
     storeKeys?:StoreKeys;
     store?:any
     updateFunction?:UpdateFunction;

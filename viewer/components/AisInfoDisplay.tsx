@@ -23,22 +23,28 @@
  ###############################################################################
  * show an AIS item
  */
+// @ts-ignore
 import NavData from "../nav/navdata";
 import keys from "../util/keys";
 import {useStore} from "../hoc/Dynamic";
-import AisFormatter from "../nav/aisformatter";
+import AisFormatter, {AisItem} from "../nav/aisformatter";
 import globalStore from "../util/globalstore";
-import React from "react";
+import React, {SyntheticEvent} from "react";
+// @ts-ignore
 import {Drawing} from "../map/drawing";
-import MapHolder, {LOCK_MODES} from "../map/mapholder";
-import ItemList from "./ItemList";
-import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
-import PropTypes from "prop-types";
+// @ts-ignore
+import mapholder, {LOCK_MODES} from "../map/mapholder";
+import ItemList, {Item} from "./ItemList";
+import {DBCancel, DialogButtonDef, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
-import mapholder from "../map/mapholder";
 
-const displayItems = [
+interface DisplayItem{
+    name?:string,
+    addClass?:string,
+}
+
+const displayItems:DisplayItem[] = [
     {name: 'distance'},
     {name: 'cpa'},
     {name: 'tcpa'},
@@ -64,8 +70,12 @@ const displayItems = [
     {name: 'age'},
 ];
 
-const createUpdateFunction=(config,mmsi)=>{
-    return (state)=>{
+interface FetchedItem extends DisplayItem {
+    current?:AisItem;
+}
+
+const createUpdateFunction=(config:DisplayItem,mmsi:string):()=>FetchedItem=>{
+    return ()=>{
         if (!mmsi) return {current:undefined,...config};
         return {current:NavData.getAisHandler().getAisByMmsi(mmsi),...config};
     }
@@ -73,23 +83,24 @@ const createUpdateFunction=(config,mmsi)=>{
 export const storeKeys={
     aisSequence:keys.nav.ais.updateCount
 };
-const createItem=(config,mmsi)=>{
+const createItem=(config:DisplayItem,mmsi:string)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
-    return (iprops)=> {
-        const props=useStore({...iprops,storeKeys:storeKeys,updateFunction:createUpdateFunction(config,mmsi)});
-        let key = props.name;
-        if (! AisFormatter.shouldShow(key,props.current)){
+    // eslint-disable-next-line react/display-name
+    return (iprops:Item)=> {
+        const sprops:FetchedItem=useStore({...iprops,storeKeys:storeKeys,updateFunction:createUpdateFunction(config,mmsi)});
+        const key = sprops.name;
+        if (! AisFormatter.shouldShow(key,sprops.current)){
             return null;
         }
-        let target = props.current;
+        const target = sprops.current;
         if (typeof(target) == 'undefined') { return null; }
-        let unit = AisFormatter.getUnit(props.name);
+        const unit = AisFormatter.getUnit(sprops.name);
         let clazz = 'aisInfoRow';
-        let warning = target.warning && (key.includes('cpa') || key.includes('pass'));
-        let warningDist = globalStore.getData(keys.properties.aisWarningCpa);
-        let warningTime = globalStore.getData(keys.properties.aisWarningTpa);
-        let hideAge = globalStore.getData(keys.properties.aisLostTime)
+        const warning = target.warning && (key.includes('cpa') || key.includes('pass'));
+        const warningDist = globalStore.getData(keys.properties.aisWarningCpa);
+        const warningTime = globalStore.getData(keys.properties.aisWarningTpa);
+        const hideAge = globalStore.getData(keys.properties.aisLostTime)
         if((key.includes('pass') && warning)
             || (0 < target.tcpa && target.cpa < warningDist && (key=='cpa' || (key=='tcpa' && target.tcpa < warningTime)))
             || (key === 'age' && target.age > hideAge )
@@ -99,50 +110,61 @@ const createItem=(config,mmsi)=>{
         return (
             <div className={clazz}>
                 <div className='label'>{AisFormatter.getHeadline(key)}</div>
-                <div className={cl}>{AisFormatter.format(key, props.current)}{unit && <span className='unit'>&thinsp;{unit}</span>}</div>
+                <div className={cl}>{AisFormatter.format(key, sprops.current)}{unit && <span className='unit'>&thinsp;{unit}</span>}</div>
             </div>
         );
     }
 };
 
-const drawIcon=(canvas,current)=>{
+const drawIcon=(canvas:HTMLCanvasElement,current:AisItem)=>{
     if (! canvas) return;
     if (! current) return;
-    let drawing=new Drawing({
-        coordToPixel:(p)=>{return p;},
-        pixelToCoord:(p)=>{return p;}
+    const drawing=new Drawing({
+        coordToPixel:(p:[number,number])=>{return p;},
+        pixelToCoord:(p:[number,number])=>{return p;}
     },globalStore.getData(keys.properties.style.useHdpi,false));
-    let ctx=canvas.getContext('2d');
+    const ctx=canvas.getContext('2d');
     drawing.setContext(ctx);
-    let rect=canvas.getBoundingClientRect();
+    const rect=canvas.getBoundingClientRect();
     canvas.width=rect.width;
     canvas.height=rect.height;
-    let [style,symbol,scale]=MapHolder.aislayer.getStyleEntry(current);
+    const [style,symbol]=mapholder.aislayer.getStyleEntry(current);
     if (! style || ! symbol) return;
     drawing.drawImageToContext([rect.width/2,rect.height/2],symbol.image,style);
     if (globalStore.getData(keys.properties.aisUseCourseVector) && current.speed > globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.course !== undefined){
-        let rd=Math.PI*current.course/180.0;
-        let ty = rect.height/2-Math.cos(rd)*rect.height;
-        let tx= rect.width/2+Math.sin(rd)*rect.width;
+        const rd=Math.PI*current.course/180.0;
+        const ty = rect.height/2-Math.cos(rd)*rect.height;
+        const tx= rect.width/2+Math.sin(rd)*rect.width;
         drawing.drawLineToContext([[rect.width/2,rect.height/2],[tx,ty]],{...style,color:style.courseVectorColor, width: globalStore.getData(keys.properties.navCircleWidth)})
     }
 }
 
-const AisStatus = (iprops)=> {
-    const props=useStore(iprops,{storeKeys:storeKeys,updateFunction:createUpdateFunction({},iprops.mmsi)});
+interface AisStatusProps{
+    mmsi:string,
+    onClick?:(ev:SyntheticEvent)=>void;
+}
+
+const AisStatus = (iprops:AisStatusProps)=> {
+    const sprops:FetchedItem & AisStatusProps =useStore(iprops,{storeKeys:storeKeys,updateFunction:createUpdateFunction({},iprops.mmsi)});
     return <canvas
         className="status"
-        ref={(ctx)=>{drawIcon(ctx,props.current)}}
-        onClick={props.onClick}
+        ref={(ctx)=>{drawIcon(ctx,sprops.current)}}
+        onClick={sprops.onClick}
     />
 };
+export interface ShowAisItemInfoProps{
+    mmsi: string,
+    onClick?: (ev:SyntheticEvent) => void,
+    className?: string
+    scrollable?: boolean
+}
 
-export const ShowAisItemInfo=(props)=>{
+export const ShowAisItemInfo=(props:ShowAisItemInfoProps)=>{
     return (
     <React.Fragment>
         <AisStatus {...props}/>
         <ItemList
-            itemCreator={(config)=>{return createItem(config,props.mmsi)}}
+            itemCreator={(config:AisItem)=>{return createItem(config,props.mmsi)}}
             itemList={displayItems}
             scrollable={props.scrollable}
             className={Helper.concatsp("infoList",props.className)}
@@ -152,13 +174,15 @@ export const ShowAisItemInfo=(props)=>{
     </React.Fragment>
     )
 }
-ShowAisItemInfo.propTypes={
-    mmsi: PropTypes.string.isRequired,
-    onClick: PropTypes.func,
-    className: PropTypes.string
+
+export interface AisInfoDialogProps{
+    mmsi:string;
+    onClick?:(ev:SyntheticEvent) => void;
+    buttons?:DialogButtonDef[];
+    className?:string
 }
 
-export const AisInfoDialog=({mmsi,onClick,buttons,className})=>{
+export const AisInfoDialog=({mmsi,onClick,buttons,className}:AisInfoDialogProps)=>{
     const dialogContext=useDialogContext();
     if (! onClick) onClick=()=>{
         dialogContext.closeDialog();
@@ -174,30 +198,38 @@ export const AisInfoDialog=({mmsi,onClick,buttons,className})=>{
     </DialogFrame>
 };
 
-AisInfoDialog.propTypes={
-    mmsi: PropTypes.string.isRequired,
-    onClick: PropTypes.func,
-    buttons: PropTypes.array,
-    className: PropTypes.string
-}
 
-const getTarget=(mmsi)=>{
+const getTarget=(mmsi?:string)=>{
     if (! mmsi) return;
     return NavData.getAisHandler().getAisByMmsi(mmsi);
 }
 
-export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
-    const runCb=(action,item)=>{
+export interface AisInfoWithFunctionProps{
+    mmsi:string;
+    actionCb:(kind:string,item:string) => void;
+    buttons?:DialogButtonDef[];
+    className?:string;
+    hidden?:{
+        AisNearest?:boolean;
+        AisInfoLocate?:boolean;
+        AisInfoHide?:boolean;
+        AisInfoList?:boolean;
+    }
+}
+
+export const AisInfoWithFunctions=(
+    {mmsi,actionCb,buttons,hidden,className}:AisInfoWithFunctionProps)=>{
+    const runCb=(action:string,item:string)=>{
         if (actionCb) actionCb(action,item);
     }
     const hiddenButtons=hidden||{};
-    const pButtons=[
+    const pButtons:DialogButtonDef[] = [
         {
             name: 'AisNearest',
             onClick:()=>{
                 NavData.getAisHandler().setTrackedTarget(0);
-                let pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
-                if (pos) MapHolder.setCenter(pos);
+                const pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
+                if (pos) mapholder.setCenter(pos);
                 runCb('AisNearest',mmsi);
             },
             label: 'Nearest',
@@ -208,10 +240,10 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
             name: 'AisInfoLocate',
             onClick: ()=>{
                 NavData.getAisHandler().setTrackedTarget(mmsi);
-                let pos=NavData.getAisHandler().getAisPositionByMmsi(mmsi);
+                const pos=NavData.getAisHandler().getAisPositionByMmsi(mmsi);
                 if (pos) {
-                    MapHolder.setCenter(pos);
-                    MapHolder.setGpsLock(LOCK_MODES.off);
+                    mapholder.setCenter(pos);
+                    mapholder.setGpsLock(LOCK_MODES.off);
                 }
                 runCb('AisInfoLocate',mmsi);
             },
@@ -222,7 +254,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
         {
             name: 'AisInfoHide',
             onClick: () => {
-                let target = getTarget(mmsi);
+                const target = getTarget(mmsi);
                 if (!target) return;
                 if (target.hidden) {
                     NavData.getAisHandler().unsetHidden(target.mmsi);
@@ -234,7 +266,7 @@ export const AisInfoWithFunctions=({mmsi,actionCb,buttons,hidden,className})=>{
             label: 'Hide',
             storeKeys: storeKeys,
             updateFunction: ()=>{
-                let target=getTarget(mmsi)||{};
+                const target=getTarget(mmsi)||{};
                 return {toggle:target.hidden};
             },
             visible: !hiddenButtons.AisInfoHide

@@ -18,7 +18,6 @@ import {
 import Compare from "../util/compare";
 // @ts-ignore
 import navdata from "../nav/navdata";
-// @ts-ignore
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
@@ -32,6 +31,7 @@ import cloneDeep from "clone-deep";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import AisPageButtons from "./AisPageButtons";
 import {ButtonDef, updateButtons} from "../components/Button";
+import {AisItem as AisItemInterface} from '../nav/aisformatter';
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],
@@ -92,7 +92,7 @@ const pad=(val:any,len:number)=>{
     return str;
 }
 
-interface AisItemProps{
+interface AisItemProps extends AisItemInterface {
     addClass?: string;
     initialTarget?:boolean;
     warning?:boolean;
@@ -104,7 +104,7 @@ interface AisItemProps{
 const AisItem=(props:AisItemProps)=>{
     const reduceDetails=globalStore.getData(keys.properties.aisReducedList,false);
     const fmt=AisFormatter;
-    const fb=fmt.format('passFront',props);
+    const fb=fmt.format('passFront',props)+"";
     const style={
         color:PropertyHandler.getAisColor(props)
     };
@@ -140,7 +140,7 @@ const AisItem=(props:AisItemProps)=>{
     txt=txt.replace(/ /g,'\u2003');
     return ( <div className={cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
-                <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
+                <span className="fb1">{fb.substring(0,1)}</span>{fb.substr(1)}
             </div>
             <div className="aisData">
                 <div className="aisData1">

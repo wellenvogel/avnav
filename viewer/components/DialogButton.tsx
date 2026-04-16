@@ -2,11 +2,11 @@ import React from 'react';
 import {useKeyEventHandlerPlain} from '../util/UiHelper';
 import KeyHandler from '../util/keyhandler';
 import {concatsp, setav} from "../util/helper";
-import {useStore} from "../hoc/Dynamic";
+import {Options, useStore} from "../hoc/Dynamic";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {ButtonEvent, ButtonEventHandler} from "./Button";
 
-export interface DialogButtonProps{
+export interface DialogButtonProps extends Options{
     onClick?: ButtonEventHandler;
     onPreClose?: (ev:ButtonEvent,ctx:IDialogContext)=>boolean;
     className?: string;

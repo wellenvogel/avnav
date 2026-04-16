@@ -5,9 +5,10 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.ts';
-import Formatter from '../util/formatter.js';
+import Formatter from '../util/formatter.ts';
 import NavCompute from "../nav/navcompute";
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 
 const CenterDisplayWidget = (props) => {

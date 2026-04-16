@@ -11,7 +11,7 @@ import Requests from "./requests";
 import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './localStorageManager';
 import splitsupport from "./splitsupport";
 import {StoreDataType} from "./store";
-import Helper from "./helper";
+import Helper, {numericEnumValues} from "./helper";
 import localStorageManager from "./localStorageManager";
 
 export interface SavedSettingsData{
@@ -487,7 +487,7 @@ class PropertyHandler {
         for (const dk in descriptions){
             const des=descriptions[dk];
             let found=false;
-            for (const k of Object.values(PropertyType)){
+            for (const k of numericEnumValues(PropertyType)){
                 if (k === des.type && k !== PropertyType.INTERNAL){
                     found=true;
                     break;
@@ -523,7 +523,7 @@ class PropertyHandler {
         for (const dk in descriptions) {
             const des = descriptions[dk];
             let found = false;
-            for (const pk of Object.values(PropertyType)) {
+            for (const pk of numericEnumValues(PropertyType)) {
                 if (pk === des.type && des.type !== PropertyType.INTERNAL) {
                     found = true;
                     break;

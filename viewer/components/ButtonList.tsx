@@ -20,7 +20,7 @@ const storeKeys={
 }
 export type ButtonDescription=ButtonDef|DynamicButtonProps;
 export interface ButtonListProps{
-    page: PageType;
+    page?: PageType;
     itemList: ButtonDescription[];
     widthChanged?: (width:number)=>void;
     className?: string;

@@ -5,7 +5,8 @@
 import React from 'react';
 import Formatter from "../util/formatter";
 import PropTypes from "prop-types";
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 const rad2deg=(rad,inDeg)=>{
     if (inDeg) return parseFloat(rad);

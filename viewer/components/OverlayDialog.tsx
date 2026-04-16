@@ -25,6 +25,7 @@ import {
     useDialogContext
 } from "./DialogContext";
 import Headline from "./Headline";
+import base from "../base";
 
 export interface OverlayContainerProps {
     coverClassName?: string;
@@ -82,7 +83,7 @@ const OverlayDialog = (
             <DialogContext
                 context={nestedDialogContext.current}
             >
-                <DialogDisplay/>
+                <DialogDisplay name={'dialog'}/>
                 {Children.map(children,
                     (child) => cloneElement(child, {closeCallback: close}))}
             </DialogContext>
@@ -90,12 +91,15 @@ const OverlayDialog = (
     );
 }
 
-export const DialogDisplay=()=>{
+export const DialogDisplay=({name}:{name?:string})=>{
     const dialogContext=useDialogContext();
+    const nameRef=useRef(name);
     const [Display,setDialog,closeDialog]=useDialog();
     useEffect(() => {
         const id=dialogContext.setDisplay(setDialog,closeDialog);
+        base.log("set dialog display", nameRef.current,id);
         return ()=>{
+            base.log("remove dialog display", nameRef.current,id);
             dialogContext.removeDisplay(id);
         }
     }, []);
@@ -311,7 +315,7 @@ export const DialogRow=
         {children}
     </div>
 })
-type DialogButtonDef=DialogButtonProps|((props:any) => React.ReactNode)
+export type DialogButtonDef=DialogButtonProps|((props:any) => React.ReactNode)
 export interface DialogButtonListProps extends Record<string, any>{
     className?:string;
     children?:React.ReactNode;

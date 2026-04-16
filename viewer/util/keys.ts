@@ -11,7 +11,6 @@ import redBubble from '../images/RedBubble40.png';
 import greenBubble from '../images/GreenBubble40.png';
 // @ts-ignore
 import yellowBubble from '../images/YellowBubble40.png';
-// @ts-ignore
 import AisFormatter from "../nav/aisformatter";
 import {EditableParameterTypes, ListEntry} from "./EditableParameter";
 // @ts-ignore
@@ -430,9 +429,9 @@ const keys:Record<string,KeyType>={
         aisShowA: new Property(true,"Show class A",PropertyType.CHECKBOX,undefined,"show class A AIS targets"),
         aisShowB: new Property(true,"Show class B",PropertyType.CHECKBOX,undefined,"show class B AIS targets"),
         aisShowOther: new Property(false,"Show other",PropertyType.CHECKBOX,undefined,"show AIS targets that are neither class A nor B - like Atons"),
-        aisFirstLabel: new Property('nameOrmmsi','First label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels()),"First text for AIS targets on the map"),
-        aisSecondLabel: new Property('--none--','Second label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels()),"Second text for AIS targets on the map"),
-        aisThirdLabel: new Property('--none--','Third label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels()),"Third text for AIS targets on the map"),
+        aisFirstLabel: new Property('nameOrmmsi','First label',PropertyType.SELECT,[{label:'--none--',value:undefined}].concat(AisFormatter.getLabels()),"First text for AIS targets on the map"),
+        aisSecondLabel: new Property('--none--','Second label',PropertyType.SELECT,[{label:'--none--',value:undefined}].concat(AisFormatter.getLabels()),"Second text for AIS targets on the map"),
+        aisThirdLabel: new Property('--none--','Third label',PropertyType.SELECT,[{label:'--none--',value:undefined}].concat(AisFormatter.getLabels()),"Third text for AIS targets on the map"),
         statusQueryTimeout: new Property(8000), //ms
         networkTimeout: new Property(8000,"Network timeout(ms)",PropertyType.RANGE,[1000,20000,100]),
         wpaQueryTimeout: new Property(10000), //ms

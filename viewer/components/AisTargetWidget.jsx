@@ -6,10 +6,11 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.ts';
 import PropertyHandler from '../util/propertyhandler';
-import AisFormatter from '../nav/aisformatter.jsx';
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import AisFormatter from '../nav/aisformatter.ts';
+import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 import {setav,concatsp} from "../util/helper";
+import {WidgetProps} from "../util/types";
 
 const AisFullDisplay=(display)=> {
     return <React.Fragment>

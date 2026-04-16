@@ -21,6 +21,7 @@
 */
 
 import React, {createContext, DragEvent, useContext} from 'react';
+import {SortableProps} from "../util/types";
 
 export enum SortModes{
     horizontal=0,
@@ -149,9 +150,6 @@ const DefaultSortContext:SortContextImplProps={
 }
 const SortContextImpl=createContext(DefaultSortContext);
 
-export interface SortableProps{
-    dragId: number
-}
 export const SortablePropsFlags:SortableProps={
     dragId: 1
 }

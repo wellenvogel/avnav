@@ -243,8 +243,8 @@ export interface WidgetParameter{
     type: WidgetParameterType;
     displayName?:string;                        //the label to be shown, defaults to the name
     default?:WidgetParameterValue;
-    list?:[WidgetParameterValue|object]
-        | (() => [WidgetParameterValue|object]);//mandatory for type list
+    list?:(WidgetParameterValue|object)[]
+        | (() => (WidgetParameterValue|object)[]);//mandatory for type list
     description?:string;                        //help to be shown
     condition?: PCondition|[PCondition];        //a condition when to show,
                                                 //and array is an "or" of the elements

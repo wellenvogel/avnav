@@ -15,6 +15,7 @@ import {LayoutData} from "../api/api.interface";
 import {DynamicButtonProps} from "../components/Button";
 import {SyntheticEvent} from "react";
 import {IHistory} from "./history";
+import {InternalWidgetDefinition} from "./types";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -512,7 +513,7 @@ class LayoutHandler{
     private layout: LayoutData;
     private name: string;
     private hiddenPanels:Record<string, Record<string,boolean>>;
-    private temporaryOptions: Record<string, any>;
+    private temporaryOptions: LayoutOptionFlags;
     private actions: LayoutTransaction[];
     private currentTransaction: LayoutTransaction;
     private styleSheet: HTMLStyleElement;
@@ -785,7 +786,7 @@ class LayoutHandler{
     getPanelData(
         pageWithOptions:LayoutPage,
         basename:string,
-        options:LayoutOptionFlags): {name:string|PageType,list?:Record<string,any>[]} {
+        options:LayoutOptionFlags): {name:string|PageType,list?:InternalWidgetDefinition[]} {
         const page=getPagename(pageWithOptions);
         const pageData=this.getPageData(page);
         if (!pageData) return {name:basename};
@@ -1074,11 +1075,11 @@ class LayoutHandler{
      * @param opt_ignoreTemporary
      * @returns {{}}
      */
-    getOptionValues(handledOptions:LAYOUT_OPTIONS[],opt_ignoreTemporary?:boolean){
+    getOptionValues(handledOptions:LAYOUT_OPTIONS[],opt_ignoreTemporary?:boolean):LayoutOptionFlags{
         if (this.isEditing() && ! opt_ignoreTemporary){
             return this.temporaryOptions;
         }
-        const rt:Record<string,any>={};
+        const rt:LayoutOptionFlags={};
         const keys=this.getStoreKeys();
         handledOptions.forEach((option)=>{
             const storeKey=keys['layout'+option];

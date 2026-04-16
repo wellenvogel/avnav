@@ -4,7 +4,7 @@
 import React from 'react';
 import reactCreateClass from 'create-react-class';
 import PropTypes from 'prop-types';
-import Formatter from '../util/formatter.js';
+import Formatter from '../util/formatter.ts';
 const WayPointItem =(props)=>{
         let info;
         if (props.showLatLon){

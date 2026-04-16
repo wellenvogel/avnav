@@ -6,7 +6,8 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.ts';
-import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetHead} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 export const getWindData=(props)=>{
     let kind = props.kind;

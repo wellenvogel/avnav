@@ -8,7 +8,7 @@ import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
-import AisFormatter, {AIS_CLASSES, aisproxy} from '../nav/aisformatter.jsx';
+import AisFormatter, {AIS_CLASSES, aisproxy} from '../nav/aisformatter.ts';
 import Helper from '../util/helper.ts';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";

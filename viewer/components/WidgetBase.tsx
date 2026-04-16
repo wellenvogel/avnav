@@ -24,23 +24,14 @@
  Widget Base data
  */
 
-import React, {SyntheticEvent} from "react";
+import React from "react";
 import {useKeyEventHandler} from "../util/UiHelper";
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {useAvNavSortable} from "../hoc/Sortable";
 // @ts-ignore
 import {ResizeFrame} from "../hoc/Resizable";
 import Helper from "../util/helper";
-import PropTypes from "prop-types";
+import {IWidgetProps} from "../util/types";
 
-export interface IWidgetProps extends SortableProps {
-    onClick?: (ev: SyntheticEvent) => void,
-    style?: Record<string, any>,
-    className?: string,
-    name: string,
-    mode?: string, //display info side by side if small
-    caption?: string,
-    nightMode?: boolean,
-}
 export interface WidgetHeadProps{
     unit?: string,
     caption?: string,
@@ -98,17 +89,6 @@ export const WidgetFrame=(props:WidgetFrameProps)=> {
             </div>
         }
     </div>
-}
-export type InternalWidgetDefinition = Record<string,any>
-export const WidgetProps:Record<keyof IWidgetProps,any>= {
-    dragId: PropTypes.any,
-    name: PropTypes.any,
-    onClick: PropTypes.any,
-    style: PropTypes.any,
-    className: PropTypes.any,
-    mode: PropTypes.any,
-    caption: PropTypes.any,
-    nightMode: PropTypes.any
 }
 
 

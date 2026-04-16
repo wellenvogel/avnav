@@ -9,6 +9,13 @@ import compare from './compare';
 import Version from '../version';
 
 
+export function numericEnumValues<T extends object>(enumObj:T):number[]{
+    return Object.values(enumObj).filter(v=>! isNaN(Number(v)));
+}
+export function stringEnumValues<T extends object>(enumObj:T):string[]{
+    return Object.values(enumObj);
+}
+
 export type valueof<T> = T[keyof T];
 /**
  *

@@ -8,7 +8,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 // @ts-ignore
 import base from '../base';
 // @ts-ignore
-import Formatter from './formatter.js';
+import Formatter from './formatter';
 import Helper from './helper';
 // @ts-ignore
 import Toast from '../components/Toast';

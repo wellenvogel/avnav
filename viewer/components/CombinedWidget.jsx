@@ -23,7 +23,6 @@
 */
 import {useKeyEventHandler} from "../util/UiHelper";
 import {moveItem, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useEffect, useState} from "react";
 import theFactory from "./WidgetFactory";
@@ -36,6 +35,7 @@ import {EditableParameter} from "../util/EditableParameter";
 import Helper, {avitem} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import Layouthandler from "../util/layouthandler";
+import {WidgetProps} from "../util/types";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);

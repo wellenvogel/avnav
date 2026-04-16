@@ -20,12 +20,31 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
+// @ts-ignore
 import navobjects from "../nav/navobjects";
+import {IDialogContext} from "../components/DialogContext";
+import {valueof} from "../util/helper";
 
+export type FiConditionFunction=(fi:FeatureInfo)=>boolean;
+export interface IFeatureAction{
+    name?:string;
+    label?:string;
+    onClick?:(fi:FeatureInfo,ctx:IDialogContext) => void;
+    condition?:FiConditionFunction;
+    close?:boolean;
+    toggle?:boolean|FiConditionFunction
+    onPreClose?:boolean|FiConditionFunction;
+}
 
-
-export class FeatureAction{
-    constructor({name,label,onClick,condition,close,toggle,onPreClose}) {
+export class FeatureAction {
+    name?:string;
+    label?:string;
+    onClickHandler?:(fi:FeatureInfo,ctx:IDialogContext) => void;
+    condition?:FiConditionFunction;
+    close?:boolean;
+    toggleValue?:boolean|FiConditionFunction
+    onPreCloseValue:boolean|FiConditionFunction;
+    constructor({name,label,onClick,condition,close,toggle,onPreClose}:IFeatureAction) {
         this.name=name;
         this.label=label;
         this.onClickHandler=onClick;
@@ -34,16 +53,16 @@ export class FeatureAction{
         this.toggleValue=toggle;
         this.onPreCloseValue=onPreClose
     }
-    shouldShow(featureInfo){
+    shouldShow(featureInfo:FeatureInfo){
         if (! this.condition) return true;
         return this.condition(featureInfo);
     }
-    onClick(featureInfo,dialogCtx){
+    onClick(featureInfo:FeatureInfo,dialogCtx:IDialogContext){
         if (this.shouldShow(featureInfo) && this.onClickHandler){
             this.onClickHandler(featureInfo,dialogCtx);
         }
     }
-    toggle(featureInfo){
+    toggle(featureInfo:FeatureInfo){
         if (this.toggleValue === undefined) return false;
         if (typeof this.toggleValue === 'function') return this.toggleValue(featureInfo);
         return this.toggleValue;
@@ -55,7 +74,7 @@ export class FeatureAction{
      * @returns {*|boolean} return false to threat this as a "cancel" action - i.e. keep the feature list open
      *                      the default is true - i.e. close the feature list when closing the featureinfo
      */
-    onPreClose(featureInfo){
+    onPreClose(featureInfo:FeatureInfo){
         if (this.onPreCloseValue !== undefined) {
             if (typeof this.onPreCloseValue === 'function') return this.onPreCloseValue(featureInfo);
             return this.onPreCloseValue;
@@ -63,7 +82,13 @@ export class FeatureAction{
         return true;
     }
 }
-
+export interface FeatureInfoParameters{
+    point?:navobjects.Point,
+    isOverlay?:boolean,
+    title?:string,
+    icon?:string,
+    name?:string
+}
 export class FeatureInfo{
     static TYPE={
         route:1,
@@ -79,13 +104,20 @@ export class FeatureInfo{
         unknown: 0,
         any: 99 //for additional actions
     }
+    point: navobjects.Point;
+    title: string;
+    isOverlay:boolean=false;
+    urlOrKey:string;
+    icon:string;
+    userInfo:Record<string, string>;
+    overlaySource:any;
 
     /**
      * get the itemType from the FeatureInfo type
      * @param featureType
      * @returns {string} - undefined for other feature infos
      */
-    static featureTypeToItemType(featureType){
+    static featureTypeToItemType(featureType:valueof<typeof FeatureInfo.TYPE>){
         switch(featureType){
             case FeatureInfo.TYPE.route:
                 return 'route';
@@ -98,7 +130,8 @@ export class FeatureInfo{
             //TODOD: base??
         }
     }
-    constructor({point,isOverlay,title,icon,name}) {
+    constructor(
+        {point,isOverlay,title,icon,name}:FeatureInfoParameters) {
         /**
          * goto target
          * @type {navobjects.Point}
@@ -115,7 +148,8 @@ export class FeatureInfo{
         return FeatureInfo.TYPE.unknown;
     }
     typeString(){
-        for (let k in FeatureInfo.TYPE){
+        let k: keyof typeof FeatureInfo.TYPE;
+        for (k in FeatureInfo.TYPE){
             if (this.getType() === FeatureInfo.TYPE[k]) return k;
         }
         return 'unknown';
@@ -150,7 +184,7 @@ export class FeatureInfo{
 }
 
 export class BaseFeatureInfo extends FeatureInfo{
-    constructor({point,title}) {
+    constructor({point,title}:{point:navobjects.Point,title:string}) {
         super({point,title});
     }
     getType(){
@@ -159,7 +193,10 @@ export class BaseFeatureInfo extends FeatureInfo{
 }
 
 export class OverlayFeatureInfo extends FeatureInfo{
-    constructor({title,point,name,userInfo,overlaySource}) {
+    constructor(
+        {title,point,name,userInfo,overlaySource}:
+        FeatureInfoParameters &{overlaySource?:any,userInfo?:Record<string, string>}
+    ) {
         super({title,point,isOverlay:true,name});
         this.userInfo=userInfo;
         this.overlaySource=overlaySource;
@@ -170,7 +207,8 @@ export class OverlayFeatureInfo extends FeatureInfo{
 }
 
 export class RouteFeatureInfo extends FeatureInfo{
-    constructor({point,isOverlay,routeName,title}) {
+    constructor({point,isOverlay,routeName,title}:
+                FeatureInfoParameters & {routeName?:string}) {
         super({point,isOverlay,name:routeName||point.routeName});
         this.title=title||`Route: ${this.urlOrKey}`
     }
@@ -185,7 +223,8 @@ export class RouteFeatureInfo extends FeatureInfo{
     }
 }
 export class AisFeatureInfo extends FeatureInfo{
-    constructor({point,mmsi,title,icon}) {
+    constructor({point,mmsi,title,icon}:
+        Pick<FeatureInfoParameters,'point'|'title'|'icon'> & {mmsi:string}) {
         super({point});
         this.urlOrKey=mmsi;
         this.title=title||`MMSI: ${mmsi}`
@@ -196,7 +235,8 @@ export class AisFeatureInfo extends FeatureInfo{
     }
 }
 export class TrackFeatureInfo extends FeatureInfo{
-    constructor({point,name,title,isOverlay}) {
+    constructor({point,name,title,isOverlay}:
+        Omit<FeatureInfoParameters,'icon'>) {
         super({point,isOverlay,title,name});
     }
     getType(){
@@ -204,7 +244,8 @@ export class TrackFeatureInfo extends FeatureInfo{
     }
 }
 export class ChartFeatureInfo extends FeatureInfo{
-    constructor({point,name,title,isOverlay,overlaySource}) {
+    constructor({point,name,title,isOverlay,overlaySource}:
+        FeatureInfoParameters & {overlaySource?:any}) {
         super({point,isOverlay,title,name});
         this.overlaySource=overlaySource
     }
@@ -217,7 +258,8 @@ export class ChartFeatureInfo extends FeatureInfo{
  * active waypoint
  */
 export class WpFeatureInfo extends FeatureInfo{
-    constructor({point,title}) {
+    constructor({point,title}:
+                Pick<FeatureInfoParameters,'point'|'title'>) {
         super({point});
         this.title=title||`WP ${this.point.name}`;
     }
@@ -227,7 +269,8 @@ export class WpFeatureInfo extends FeatureInfo{
 }
 
 export class BoatFeatureInfo extends FeatureInfo{
-    constructor({point,icon}) {
+    constructor({point,icon}:
+                Pick<FeatureInfoParameters,'point'|'icon'>) {
         super({point,title:'current position',icon});
     }
     getType(){
@@ -235,7 +278,8 @@ export class BoatFeatureInfo extends FeatureInfo{
     }
 }
 export class AnchorFeatureInfo extends FeatureInfo{
-    constructor({point}) {
+    constructor({point}:
+        Pick<FeatureInfoParameters,'point'>) {
         super({point,title:'anchor'});
     }
     getType(){
@@ -243,7 +287,8 @@ export class AnchorFeatureInfo extends FeatureInfo{
     }
 }
 export class MeasureFeatureInfo extends FeatureInfo{
-    constructor({point}) {
+    constructor({point}:
+        Pick<FeatureInfoParameters,'point'>) {
         super({point,title:'measure'});
     }
     getType(){

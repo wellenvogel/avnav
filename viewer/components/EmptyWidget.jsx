@@ -4,7 +4,8 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 const EmptyWidget =(props)=>{
         return (

@@ -18,10 +18,10 @@ export interface ButtonEvent extends ButtonEventBase {
 }
 export type ButtonEventHandler=((ev:ButtonEvent)=>void)|((ev:ButtonEvent) => Promise<void>);
 export enum ButtonAddonType{
-    NONE=0,
-    USER_HANDLER=1,
-    CONFIG=2,
-    CONFIG_NEW_WINDOW=3
+    NONE='none',
+    USER_HANDLER='handler',
+    CONFIG='config',
+    CONFIG_NEW_WINDOW='newWindow'
 }
 export interface ButtonProps {
         onClick?: ButtonEventHandler;

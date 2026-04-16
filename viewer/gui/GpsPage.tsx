@@ -21,7 +21,6 @@ import {createDialog as createEditPageDialog, RawButtonDef as EditPageButton} fr
 import LayoutHandler, {LAYOUT_OPTIONS, LayoutPage} from '../util/layouthandler';
 import {DynamicTitleIcons} from "../components/TitleIcons";
 import {showDialog} from "../components/OverlayDialog";
-// @ts-ignore
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
 import {injectav} from "../util/helper";

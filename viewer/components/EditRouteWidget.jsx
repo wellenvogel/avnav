@@ -5,10 +5,11 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.ts';
-import Formatter from '../util/formatter.js'
+import Formatter from '../util/formatter.ts'
 import routeobjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
+import {WidgetProps} from "../util/types";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 

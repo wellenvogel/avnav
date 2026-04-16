@@ -5,11 +5,12 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.ts';
-import Formatter from '../util/formatter.js';
-import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import Formatter from '../util/formatter.ts';
+import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 import routeobjects from "../nav/routeobjects";
 import Helper from '../util/helper';
+import {WidgetProps} from "../util/types";
 
 const SecondRow=({remain,eta,approach})=>{
     return <div className={"secondRow"}>

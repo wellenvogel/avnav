@@ -109,6 +109,7 @@ export class AddonViewManager{
         },keys.gui.global.addonsChanged);
     }
     setPageAddon(page:PageType,name?:string,display?:ElementType){
+        if (!page) return;
         if (! name || ! display){
             delete this.activeViews[page];
         }
