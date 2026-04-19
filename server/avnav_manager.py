@@ -595,7 +595,8 @@ class AVNHandlerManager(object):
             'debugLevel': True,
             'log': True,
             'remoteChannel': True,
-            'fetchHead': True
+            'fetchHead': True,
+            'chartStatus':False
         }
         return AVNUtil.getReturnData(data=rt)
 

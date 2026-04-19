@@ -29,6 +29,9 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'ServerView',
         displayName: 'server settings',
+        storeKeys:{
+            visible: keys.gui.capabilities.chartStatus
+        }
     },
     {
         name:'ChartsView',

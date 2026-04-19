@@ -282,7 +282,8 @@ const keys:Record<string,KeyType>={
             debugLevel: K,
             log: K,
             remoteChannel: K,
-            fetchHead: K
+            fetchHead: K,
+            chartStatus:K
         },
         global:{
             splitMode: K,

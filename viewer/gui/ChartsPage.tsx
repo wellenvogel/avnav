@@ -51,34 +51,37 @@ const ChartsPage=(props:ChartsPageProps)=>{
      const [uploadOverlays]=useStoreState(keys.gui.capabilities.uploadOverlays);
      const [connected]=useStoreState(keys.gui.global.connectedMode);
      const [hasImports]=useStoreState(keys.gui.capabilities.uploadImport);
+     const [hasChartStatus]=useStoreState(keys.gui.capabilities.chartStatus);
      const history=useHistory();
-     const [scrollProps,scrollTo,visible]=useScrollHelper(1);
+     const [scrollProps,scrollTo,visible]=useScrollHelper(hasChartStatus?1:0);
      const buttonListRef=useRef<ButtonDef[]>();
      const [uploadPropsCharts,uploadActionCharts]=useUploadHelperHandler('chart');
      const [uploadPropsOverlays,uploadActionOverlays]=useUploadHelper('overlay');
      const [uploadedChart,setUploadedChart]=useState(undefined);
      const [uploadedImport,setUploadedImport]=useState(undefined);
-     const numViews=hasImports?NUMVIEWS:NUMVIEWS-1;
+     let numViews=hasImports?NUMVIEWS:NUMVIEWS-1;
+     if (! hasChartStatus)numViews--;
+     const startViewNumber=hasChartStatus?0:-1;
      const buttonActions={
          ServerView:{
-             onClick:()=>scrollTo(0),
+             onClick:()=>scrollTo(startViewNumber),
              disabled:props.pageColumns >= numViews,
-             toggle: visible(0),
+             toggle: visible(startViewNumber),
          },
          ChartsView:{
-             onClick:()=>scrollTo(1),
+             onClick:()=>scrollTo(startViewNumber+1),
              disabled:props.pageColumns >= numViews,
-             toggle:visible(1),
+             toggle:visible(startViewNumber+1),
          },
          ImportsView: {
-             onClick:()=>scrollTo(2),
+             onClick:()=>scrollTo(startViewNumber+2),
              disabled:props.pageColumns >= numViews,
-             toggle:visible(2),
+             toggle:visible(startViewNumber+2),
          },
          OverlaysView:{
-             onClick:()=>scrollTo(hasImports?3:2),
+             onClick:()=>scrollTo(hasImports?startViewNumber+3:startViewNumber+2),
              disabled:props.pageColumns >= numViews,
-             toggle:visible(hasImports?3:2),
+             toggle:visible(hasImports?startViewNumber+3:startViewNumber+2),
          },
          Cancel:{
              onClick:()=>history.pop()
@@ -102,11 +105,11 @@ const ChartsPage=(props:ChartsPageProps)=>{
                  if (userData.name){
                      if (userData.importer){
                          setUploadedImport(userData.name);
-                         scrollTo(2);
+                         scrollTo(startViewNumber+2);
                      }
                      else{
                          setUploadedChart(userData.name);
-                         scrollTo(1);
+                         scrollTo(startViewNumber+1);
                      }
                  }
              }
@@ -118,12 +121,12 @@ const ChartsPage=(props:ChartsPageProps)=>{
             id={PAGE}
             title={TITLE}>
             <MultiView {...scrollProps} views={[
-                <React.Fragment key={0}>
+                hasChartStatus?<React.Fragment key={0}>
                     <MvHeadline title={"Server"}/>
                     <StatusView
                         kinds={[ChannelKinds.CHART]}
                     ></StatusView>
-                </React.Fragment>
+                </React.Fragment>:null
                 ,
                 <React.Fragment key={1}>
                     <MvHeadline

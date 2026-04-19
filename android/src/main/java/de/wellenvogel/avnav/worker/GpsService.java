@@ -255,6 +255,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 //as potentially there are permission dialogs
                 o.put("config", true);
             }
+            o.put("chartStatus",false);
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
         }
         if ("status".equals(command)){
