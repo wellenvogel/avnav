@@ -175,7 +175,12 @@ export const MultiView = (props: MultiViewProps) => {
     const outerRef = React.useRef<HTMLDivElement>(null);
     const scrollTimerRef = React.useRef<number>(undefined);
     const lastReportedRef = React.useRef([-1,-1]);
-    const numViews=props.views?props.views.length:0;
+    let numViews=0;
+    if(props.views && props.views.length){
+        for (const v of props.views){
+            if (v) numViews += 1;
+        }
+    }
     let maxNumber=(props.maxNumber>0)?props.maxNumber:1;
     if (maxNumber>numViews) { maxNumber=numViews;}
     const scrollTo=useCallback((nr:number)=>{
