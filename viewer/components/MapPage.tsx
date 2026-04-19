@@ -7,14 +7,14 @@
 import Dynamic, {useStore} from '../hoc/Dynamic';
 // @ts-ignore
 import Visible from '../hoc/Visible';
-import ItemList from './ItemList';
+import ItemList, {Item} from './ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {ReactElement, SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
 
 import {PageFrame, PageLeft, PageProps} from './Page';
 import Toast from './Toast';
-import {showDialog, showPromiseDialog} from './OverlayDialog';
+import {showPromiseDialog} from './OverlayDialog';
 // @ts-ignore
 import WidgetFactory from '../components/WidgetFactory';
 // @ts-ignore
@@ -38,6 +38,7 @@ import {useDialogContext} from "./exports";
 import {IDialogContext} from "./DialogContext";
 import {addonViewManager} from "./AddonView";
 import {InternalWidgetDefinition} from "../util/types";
+import {ChartSelectDialog} from "./ChartsSelectDialog";
 
 const INFO_TYPES={
     eula:STORAGE_NAMES.EULAS,
@@ -189,14 +190,16 @@ export interface MapPageProps extends PageProps{
 interface InternalMapPageProps extends MapPageProps{
     widgetFontSize:     number,
     mapFloat?:           boolean,
-    reloadSequence: number
+    reloadSequence: number,
+    sequence: number,
 }
 const MapPage =(iprops:MapPageProps)=>{
     const sprops:InternalMapPageProps=useStore(iprops,{storeKeys:LayoutHandler.getStoreKeys({
             widgetFontSize:keys.properties.widgetFontSize,
             mapFloat: keys.properties.mapFloat,
             reloadSequence:keys.gui.global.reloadSequence,
-            addon:keys.gui.global.addonViewChanged
+            addon:keys.gui.global.addonViewChanged,
+            sequence:keys.gui.global.chartEntrySequence
         })});
     //reset map float
     const hasAddon=!!addonViewManager.getPageAddon(iprops.id);
@@ -257,7 +260,7 @@ const MapPage =(iprops:MapPageProps)=>{
             }
         }
         showMap(chartEntry);
-    }, []);
+    }, [sprops.sequence]);
     useEffect(() => {
         mapholder.updateSize();
     }, [sprops.mapFloat,hasAddon]);
@@ -344,8 +347,24 @@ const MapPage =(iprops:MapPageProps)=>{
         );
 }
 
+export const overlayDialog=(
+    dialogCtx:IDialogContext,
+    callback?:(chart:Item)=>void
+    )=>{
+    const current=mapholder.getCurrentChartEntry()||{};
+    dialogCtx.showDialog(()=><ChartSelectDialog
+        resolveFunction={(chartEntry:Item)=>{
+            if (! chartEntry) {
+                return;
+            }
+            mapholder.setChartEntry(chartEntry);
+            if (callback) callback(chartEntry);
+        }}
+        selected={current.name}
+    />);
+}
 
-
+/*
 export const overlayDialog=(
     dialogContext:IDialogContext,
     opt_chartName?:string,opt_updateCallback?:(newConfig:any)=>void)=>{
@@ -382,7 +401,7 @@ export const overlayDialog=(
             />;
     });
 };
-
+*/
 MapPage.PANELS=['left','top','bottomLeft','bottomRight'];
 
 export default MapPage;

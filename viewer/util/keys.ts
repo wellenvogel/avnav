@@ -320,6 +320,7 @@ const keys:Record<string,KeyType>={
             connectedMode:K,
             addonViewChanged:K,
             mainNavVisible:K,
+            chartEntrySequence:K
         },
         gpspage:{
             pageNumber:K,

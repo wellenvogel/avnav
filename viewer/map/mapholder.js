@@ -647,6 +647,8 @@ class MapHolder extends DrawingPositionConverter {
             LocalStorage.setItem(STORAGE_NAMES.LASTCHART, undefined, JSON.stringify({key:this._baseChart.getChartKey(),name:dp}));
         } catch (e) {
         }
+        globalStore.storeData(keys.gui.global.chartEntrySequence,
+            globalStore.getData(keys.gui.global.chartEntrySequence,0)+1);
         if (!opt_noRemote) {
             try {
                 this.remoteChannel.sendMessage(COMMANDS.setChart + " " + JSON.stringify(entry));

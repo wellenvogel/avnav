@@ -1573,6 +1573,10 @@ span.valuePrefix{
 
   }
 
+.icon.MainOverlays{
+  .iconImage('layers-black.svg');
+}
+
 .infoImages {
   padding-left: 0.8em;
 
@@ -1664,6 +1668,12 @@ span.valuePrefix{
     .progressDone{
       height: 100%;
       background-color: var(--avnav-slide-color);
+    }
+  }
+
+  .ChartSelectDialog{
+    .noOverlays .MainOverlays {
+      opacity: 0.4;
     }
   }
 

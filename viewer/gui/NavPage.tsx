@@ -830,11 +830,11 @@ const NavPage=(props:PageProps)=>{
             },
             {
                 name: "NavOverlays",
-                onClick:()=>overlayDialog(dialogCtx),
-                overflow: true,
+                onClick:()=>overlayDialog(dialogCtx,()=>setSequence((old)=>old+1)),
+                /*overflow: true,
                 storeKeys:{
                     visible:keys.gui.capabilities.uploadOverlays
-                }
+                }*/
             },
             {
                 name:'GpsCenter',

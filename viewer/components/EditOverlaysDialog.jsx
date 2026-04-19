@@ -796,7 +796,7 @@ EditOverlaysDialog.propTypes = {
  * @param opt_addEntry if set (itemInfo) start with adding this item
  * @return {boolean}
  */
-EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
+EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry,opt_dialogContext) => {
     if (opt_addEntry) {
         //check for an allowed item that we can add
         if (!opt_addEntry.type) return false;
@@ -810,7 +810,7 @@ EditOverlaysDialog.createDialog = (chartItem, opt_callback, opt_addEntry) => {
     const requestItem=(chartItem && chartItem.name !== DEFAULT_OVERLAY_CONFIG)?chartItem:undefined;
     fetchOverlayConfig(requestItem,false)
         .then((overlayConfig) => {
-                showDialog(undefined, (props) => {
+                showDialog(opt_dialogContext, (props) => {
                     return <EditOverlaysDialog
                         {...props}
                         chartName={requestItem ? (requestItem.displayName || requestItem.name) : 'Default'}
