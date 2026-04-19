@@ -268,10 +268,7 @@ const MainPage = (props: PageProps) => {
             }
         },
         Cancel: {
-            onClick: () => {
-                // @ts-ignore
-                if (window.avnavAndroid) window.avnavAndroid.goBack()
-            }
+            visible: false
         }
     }
 

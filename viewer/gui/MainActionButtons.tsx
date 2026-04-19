@@ -29,6 +29,7 @@ import FullScreen from "../util/Fullscreen";
 import leavehandler from "../util/leavehandler";
 import React from "react";
 import splitsupport from '../util/splitsupport';
+import {exitAndroidApp} from "./MainNav";
 
 export const actionButtons: DynamicButtonProps[] = [
     {
@@ -68,4 +69,14 @@ export const actionButtons: DynamicButtonProps[] = [
             Helper.reloadPage();
         }
     },
+    {
+        name: 'MainExit',
+        displayName: 'exit AvNav',
+        storeKeys:{
+            visible:keys.gui.global.onAndroid
+        },
+        onClick:()=>{
+            exitAndroidApp();
+        }
+    }
 ]

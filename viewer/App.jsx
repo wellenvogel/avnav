@@ -272,7 +272,7 @@ class App extends React.Component {
                 if (key == 'backPressed') {
                     if (! globalStore.getData(keys.gui.global.ignoreAndroidBack)) {
                         let currentPage = this.history.currentLocation()
-                        if (currentPage == "mainpage") {
+                        if (currentPage == PAGEIDS.MAIN) {
                             window.avnavAndroid.goBack();
                             return;
                         }

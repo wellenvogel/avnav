@@ -54,7 +54,6 @@ import AddOnPageButtons from "./AddOnPageButtons";
 import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 import RemotePageButtons from "./RemotePageButtons";
 import {EditSettingsCategory} from "../components/Settings";
-import DialogButton from "../components/DialogButton";
 import {ActionDialog} from "../components/ActionDialog";
 import {actionButtons} from "./MainActionButtons";
 import layouthandler from "../util/layouthandler";
@@ -67,17 +66,14 @@ class Page extends CopyAware{
     displayName?:string;
     buttons:ButtonDef[]|(()=>ButtonDef[]);
     kind:PageKind;
-    options:Record<string, any>;
     constructor(name:string,kind:PageKind,
-                buttons?:ButtonDef[]|(()=>ButtonDef[]),
-                options?:Record<string, any>
+                buttons?:ButtonDef[]|(()=>ButtonDef[])
         ){
         super();
         this.name=name;
         this.displayName=getPageTitle(name);
         this.buttons=buttons;
         this.kind=kind;
-        this.options=options;
     }
     getDisplay(){
         return this.displayName||this.name;
@@ -89,6 +85,18 @@ class Page extends CopyAware{
     }
 }
 
+class ActionPage extends Page{
+    constructor() {
+        super("Actions","navigation");
+        this.displayName="Actions";
+    }
+    override getButtons():ButtonDef[]{
+        return [];
+    }
+
+}
+
+const actionPage=new ActionPage();
 
 const mainTree=[
     new Page(PAGEIDS.MAIN,'navigation',
@@ -194,6 +202,15 @@ const PageRow=({
 
     </div>
 }
+
+export const exitAndroidApp=()=>{
+    // @ts-ignore
+    if (! window.avnavAndroid) return false
+    // @ts-ignore
+    window.avnavAndroid.goBack();
+    return true;
+}
+
 export interface MainNavProps{
     current:string,
     currentButtons:ButtonDef[],
@@ -215,17 +232,6 @@ export const MainNav = (props:MainNavProps) => {
     }, []);
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
-            <ListSlot>
-                <DialogButton
-                    name={'MainActions'}
-                    displayName={'Actions'}
-                    close={false}
-                    onClick={()=>{
-                        dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons}/>,
-                            ()=>dialogContext.closeDialog());
-                    }}
-                >Actions</DialogButton>
-            </ListSlot>
             { ! noExpand && <ListSlot className={'iconSlot'}
                 icon={{className:'MNcollapsed'}}
                 onClick={()=>{
@@ -251,6 +257,15 @@ export const MainNav = (props:MainNavProps) => {
                         }}
                 />
         </ListItem>
+        <PageRow page={actionPage}
+                 noExpand={true}
+                 onClick={() => {
+                     dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons}/>,
+                         ()=>dialogContext.closeDialog());
+                 }}
+                 isCurrent={false}
+                 expanded={false}
+                 expandSequence={0}/>
         {pages.map((page)=>{
             const displayPage=(page.name === props.current)?page.copy({
                 buttons:props.currentButtons
@@ -270,7 +285,7 @@ export const MainNav = (props:MainNavProps) => {
                 dialogContext.closeDialog();
                 const av=getav(ev);
                 if (page.name !== props.current) {
-                    history.push(page.name,{...page.options, button:av.button});
+                    history.push(page.name,{ button:av.button});
                 }
             }}
                  isCurrent={isCurrent}

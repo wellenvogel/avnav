@@ -20,12 +20,12 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import {propsToDefs, updateButtons} from "../components/Button";
+import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import LayoutHandler from '../util/layouthandler';
 import GeneralButtons from "./GeneralButtons";
 
-export default updateButtons(GeneralButtons.concat(propsToDefs([
+export default GeneralButtons.concat(propsToDefs([
     {
         name: 'ShowGps',
         displayName: 'dashboard',
@@ -47,9 +47,4 @@ export default updateButtons(GeneralButtons.concat(propsToDefs([
             }
         }
     }
-])),{
-    Cancel:{
-        //@ts-ignore
-        visible:!!window.avnavAndroid
-    }
-});
+]));
