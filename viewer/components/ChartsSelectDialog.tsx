@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
- import React, {SyntheticEvent} from 'react';
+ import React, {SyntheticEvent, useRef} from 'react';
 import {getItemIconProperties, Item, listItems} from "../util/itemFunctions";
 import {Icon, ListItem, ListMainSlot, ListSlot, useDialogContext, useStoreState} from "./exports";
 import Helper, {avitem, concatsp, setav} from "../util/helper";
@@ -66,6 +66,7 @@ export const ChartItem=(props:ChartItemProps)=>{
         {props.overlayClick &&<ListSlot
             icon={{className:'MainOverlays'}}
             onClick={(ev:SyntheticEvent)=>{
+                setav(ev,{item:props})
                 ev.stopPropagation();
                 props.overlayClick(ev);
             }}
@@ -82,6 +83,7 @@ export interface ChartItemListProps{
 export const ChartItemList=(props:ChartItemListProps)=>{
     const actions=createItemActions(ITEM_TYPE);
     const [selected,setSelected]=React.useState(props.selected);
+    const selectedIndex=useRef(-1);
     const [itemList,setItemList]=React.useState<Item[]>([]);
     const timer=useTimer((seq:number)=>{
         listItems(ITEM_TYPE).then((charts:Item[])=>{
@@ -90,7 +92,12 @@ export const ChartItemList=(props:ChartItemListProps)=>{
 
             }
             else {
+                let idx=-1;
                 for (const chart of charts){
+                    idx++;
+                    if (selected && selected === chart.name){
+                        selectedIndex.current=idx;
+                    }
                     chart.overlayClick=props.overlayClick;
                     chart.actions=actions;
                 }
@@ -107,7 +114,7 @@ export const ChartItemList=(props:ChartItemListProps)=>{
         scrollable={true}
         scrollSelected={1}
         itemList={itemList}
-        selectedKey={selected}
+        selectedIndex={selectedIndex.current}
         itemClass={ChartItem}
         onItemClick={(ev:SyntheticEvent) => {
             if (props.itemClick) props.itemClick(ev);
@@ -129,7 +136,7 @@ export const ChartSelectDialog=(props:ChartSelectDialogProps)=>{
     const dialogContext=useDialogContext();
     const overlayClick=online?(ev:SyntheticEvent) => {
         const item=avitem(ev);
-        if (item){
+        if (item && item.name){
             EditOverlaysDialog.createDialog(item,()=>{
                 //trigger chart reload
                 globalstore.storeData(keys.gui.global.chartEntrySequence,
@@ -161,6 +168,7 @@ export const ChartSelectDialog=(props:ChartSelectDialogProps)=>{
             dialogContext.closeDialog();
         }}
                        overlayClick={overlayClick}
+                       selected={props.selected}
         />
         <DialogButtons
             buttonList={buttonList}
