@@ -33,6 +33,10 @@ import GeneralButtons from "./GeneralButtons";
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 export default GeneralButtons.concat(propsToDefs([
     {
+        name: "NavOverlays",
+        displayName:"select chart",
+    },
+    {
         name:"ZoomIn",
         displayName:"zoom in",
         localOnly: true,
@@ -86,15 +90,6 @@ export default GeneralButtons.concat(propsToDefs([
         displayName:"edit route",
         overflow: true
 
-    },
-    {
-        name: "NavOverlays",
-        displayName:"edit overlays",
-        localOnly:true,
-        overflow: true,
-        storeKeys:{
-            visible:keys.gui.capabilities.uploadOverlays
-        }
     },
     {
         name:'GpsCenter',

@@ -30,7 +30,6 @@ import ItemList from "./ItemList";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
 import {DBCancel, DialogButtons, DialogFrame} from "./OverlayDialog";
-import {ButtonEvent} from "./Button";
 import {DialogButtonProps} from "./DialogButton";
 // @ts-ignore
 import EditOverlaysDialog from "./EditOverlaysDialog";
@@ -139,7 +138,7 @@ export interface ChartSelectDialogProps {
     selected?:string;
     className?:string;
     title?:string;
-    hideAction?:(ev:ButtonEvent) => void;
+    additionalButtons?: DialogButtonProps[];
 }
 export const ChartSelectDialog=(props:ChartSelectDialogProps)=>{
     const [online]=useStoreState(keys.gui.global.connectedMode);
@@ -154,15 +153,9 @@ export const ChartSelectDialog=(props:ChartSelectDialogProps)=>{
             },undefined,dialogContext)
         }
     }:undefined;
-    const buttonList:DialogButtonProps[]=[DBCancel()];
-    if (props.hideAction){
-        buttonList.splice(0,0,{
-            name:'HideOverlays',
-            displayName:'hide all overlays',
-            onClick:(ev:ButtonEvent)=>{
-                props.hideAction(ev);
-            }
-        })
+    let buttonList:DialogButtonProps[]=[DBCancel()];
+    if (props.additionalButtons){
+        buttonList=props.additionalButtons.concat(buttonList);
     }
     return <DialogFrame
         title={props.title||'Select Chart'}

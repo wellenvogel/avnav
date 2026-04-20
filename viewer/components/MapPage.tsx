@@ -361,47 +361,26 @@ export const overlayDialog=(
             if (callback) callback(chartEntry);
         }}
         selected={current.name}
+        additionalButtons={[
+            {
+                name: 'ShowOverlays',
+                label: 'Show Overlays',
+                onClick:() => {
+                    mapholder.showOverlays()
+                }
+            },
+            {
+                name:'HideOverlays',
+                label: 'Hide Overlays',
+                onClick:() => {
+                    mapholder.hideOverlays();
+                }
+            }
+        ]}
     />);
 }
 
-/*
-export const overlayDialog=(
-    dialogContext:IDialogContext,
-    opt_chartName?:string,opt_updateCallback?:(newConfig:any)=>void)=>{
-    const current=mapholder.getCurrentMergedOverlayConfig();
-    if (! current) return;
-    const currentChart=mapholder.getCurrentChartEntry()||{};
-    showDialog(dialogContext,(props)=> {
-        const canEdit=globalStore.getData(keys.gui.global.connectedMode,false) ;
-        return <EditOverlaysDialog
-            {...props}
-            chartName={opt_chartName||currentChart.name}
-            title="Active Overlays"
-            current={current}
-            updateCallback={(newConfig:any)=>{
-                mapholder.updateOverlayConfig(newConfig);
-                if (opt_updateCallback) opt_updateCallback(newConfig);
-                }
-            }
-            resetCallback={()=>{
-                mapholder.resetOverlayConfig();
-            }}
-            editCallback={(canEdit)?()=>{
-                EditOverlaysDialog.createDialog(currentChart,(nv:any)=>{
-                    if (nv) {
-                        mapholder.loadMap().then(()=>{
-                            mapholder.resetOverlayConfig();
-                        })
-                    }
-                });
-                return true;
-            }:undefined}
-            preventEdit={true}
-            hideErrors={true}
-            />;
-    });
-};
-*/
+
 MapPage.PANELS=['left','top','bottomLeft','bottomRight'];
 
 export default MapPage;

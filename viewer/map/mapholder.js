@@ -53,7 +53,7 @@ import {
 } from "./featureInfo";
 import Leavehandler from "../util/leavehandler";
 import {createItemActions} from "../components/FileDialog";
-import {avitem, getav, setav} from "../util/helper";
+import Helper, {avitem, getav, setav} from "../util/helper";
 import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
 import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
@@ -239,12 +239,6 @@ class MapHolder extends DrawingPositionConverter {
          * @type {OverlayConfig}
          */
         this.overlayConfig = new OverlayConfig();
-
-        /**
-         * a map with the name as key and override parameters
-         * @type {OverlayConfig}
-         */
-        this.overlayOverrides = this.overlayConfig.copy();
 
         /**
          * last div used in loadMap
@@ -691,7 +685,7 @@ class MapHolder extends DrawingPositionConverter {
                 throw new Error(source.getName() + " not ready");
             }
         })
-        this.updateOverlayConfig();
+        this.showOverlays();
         this.initMap();
         return true;
     }
@@ -743,7 +737,7 @@ class MapHolder extends DrawingPositionConverter {
             let prepareAndCreate = (newSources) => {
                 this.prepareSourcesAndCreate(newSources)
                     .then((res) => {
-                        this.updateOverlayConfig(); //update all sources with existing config
+                        if (resetOverrides) this.showOverlays(); //update all sources with existing config
                         this._callHandlers({type: EventTypes.RELOAD});
                         resolve(res)
                     })
@@ -773,7 +767,6 @@ class MapHolder extends DrawingPositionConverter {
             };
             if (!globalStore.getData(keys.gui.capabilities.uploadOverlays)) {
                 this.overlayConfig = new OverlayConfig();
-                this.overlayOverrides = this.overlayConfig.copy();
                 newSources.push(chartSource);
                 checkChanges();
                 return;
@@ -784,13 +777,6 @@ class MapHolder extends DrawingPositionConverter {
                         throw new Error("no overlay config");
                     }
                     this.overlayConfig = overlayConfig;
-                    if (resetOverrides) {
-                        this.overlayOverrides = this.overlayConfig.copy();
-                    } else {
-                        let newOverrides = this.overlayConfig.copy();
-                        newOverrides.mergeOverrides(this.overlayOverrides);
-                        this.overlayOverrides = newOverrides;
-                    }
                     let overlays = this.overlayConfig.getOverlayList();
                     overlays.forEach((overlay) => {
                         if (overlay.type === 'base') {
@@ -808,45 +794,21 @@ class MapHolder extends DrawingPositionConverter {
         })
     }
 
-    getCurrentMergedOverlayConfig() {
-        let rt = this.overlayConfig.copy();
-        rt.mergeOverrides(this.overlayOverrides);
-        for (let source of this.sources) {
-            if (source.getError()) {
-                rt.removeItem(source.getConfig(), true);
-            }
-        }
-        return rt;
-    }
 
-    updateOverlayConfig(newOverrides) {
-        if (newOverrides) {
-            this.overlayOverrides = this.overlayConfig.copy();
-            this.overlayOverrides.mergeOverrides(newOverrides);
-        }
-        let merged = this.getCurrentMergedOverlayConfig();
+    showOverlays() {
         for (let i = 0; i < this.sources.length; i++) {
             let source = this.sources[i];
-            let currentConfig = source.getConfig();
-            let newConfig = assign({}, currentConfig, merged.getCurrentItemConfig(currentConfig));
-            if (newConfig) {
-                source.setVisible(newConfig.enabled === undefined || newConfig.enabled);
-            } else {
-                source.resetVisible();
-            }
+            source.resetVisible();
         }
     }
 
-    resetOverlayConfig() {
-        this.overlayOverrides = this.overlayConfig.copy();
-        this.updateOverlayConfig();
+    hideOverlays(){
+        for (let i = 0; i < this.sources.length; i++) {
+            let source = this.sources[i];
+            if (!source.isBaseChart()) source.hide();
+        }
     }
 
-    setEnabled(chartSource, enabled, opt_update) {
-        if (!chartSource) return;
-        let changed = this.overlayOverrides.setEnabled(chartSource.getConfig(), enabled);
-        if (changed && opt_update) this.updateOverlayConfig();
-    }
 
     getBaseLayer(visible) {
         const styles = {

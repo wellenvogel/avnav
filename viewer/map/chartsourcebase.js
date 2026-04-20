@@ -278,16 +278,16 @@ class ChartSourceBase {
         this.removeSequence++;
     }
 
-    setVisible(visible){
+    hide(){
         if (! this.hasValidConfig()) return;
-        this.visible=visible;
+        this.visible=false;
         if (! this.isReady()) return;
-        this.layers.forEach((layer)=>layer.setVisible(visible));
+        this.layers.forEach((layer)=>layer.setVisible(false));
     }
     resetVisible(){
         if (! this.isReady()) return;
         this.visible=this.chartEntry[CHARTBASE.ENABLED];
-        this.layers.forEach((layer)=>layer.setVisible(this.chartEntry[CHARTBASE.ENABLED]));
+        this.layers.forEach((layer)=>layer.setVisible(this.visible));
     }
 
     /**
@@ -394,9 +394,9 @@ class ChartSourceBase {
         return info;
     }
 
-    setEnabled(enabled,opt_update){
-        if (! this.hasValidConfig()) return;
-        this.mapholder.setEnabled(this,enabled,opt_update);
+    setEnabled(enabled){
+        if (enabled) this.resetVisible();
+        else this.hide();
     }
 
     /**

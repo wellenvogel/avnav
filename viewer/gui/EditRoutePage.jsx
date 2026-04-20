@@ -879,6 +879,11 @@ const EditRoutePage = (props) => {
 
     const buttons = [
         {
+            name: "NavOverlays",
+            displayName: "select chart",
+            onClick: () => overlayDialog(dialogContext)
+        },
+        {
             name: "ZoomIn",
             onClick: () => {
                 MapHolder.changeZoom(1)
@@ -892,6 +897,7 @@ const EditRoutePage = (props) => {
         },
         {
             name: "NavAddAfter",
+            displayName: "add after",
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
@@ -909,6 +915,7 @@ const EditRoutePage = (props) => {
         },
         {
             name: "NavAdd",
+            displayName: "add before",
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
@@ -926,6 +933,7 @@ const EditRoutePage = (props) => {
         },
         {
             name: "NavDelete",
+            displayName: "delete current",
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 getCurrentEditor().deleteWaypoint();
@@ -940,6 +948,7 @@ const EditRoutePage = (props) => {
         },
         {
             name: "NavToCenter",
+            displayName: "center to GPS",
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
@@ -953,6 +962,7 @@ const EditRoutePage = (props) => {
         },
         {
             name: "NavGoto",
+            displayName: "start routing",
             onClick: () => {
                 startRouting(dialogContext,undefined,history);
             },
@@ -961,6 +971,7 @@ const EditRoutePage = (props) => {
         },
         {
             name: 'StopNav',
+            displayName: "stop routing",
             onClick:()=>{
                 RouteHandler.routeOff();
                 MapHolder.triggerRender();
@@ -972,19 +983,12 @@ const EditRoutePage = (props) => {
         },
         {
             name: 'Menu',
+            displayName: "route menu",
             onClick: () => {
                 widgetClick(setav(undefined,{item:{name: "EditRoute"}}))
             },
             overflow: true,
             editDisable: true
-        },
-        {
-            name: "NavOverlays",
-            onClick: () => overlayDialog(dialogContext),
-            overflow: true,
-            storeKeys: {
-                visible: keys.gui.capabilities.uploadOverlays
-            }
         },
         CenterActionButton,
         {
