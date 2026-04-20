@@ -83,6 +83,7 @@ export interface ChartItemListProps{
 export const ChartItemList=(props:ChartItemListProps)=>{
     const actions=createItemActions(ITEM_TYPE);
     const [selected,setSelected]=React.useState(props.selected);
+    const [loading,setLoading]=React.useState(true);
     const selectedIndex=useRef(-1);
     const [itemList,setItemList]=React.useState<Item[]>([]);
     const timer=useTimer((seq:number)=>{
@@ -102,6 +103,9 @@ export const ChartItemList=(props:ChartItemListProps)=>{
                     chart.actions=actions;
                 }
                 setItemList(charts);
+                if (charts.length > 0){
+                    setLoading(false);
+                }
             }
             if (props.autoreload){ timer.startTimer(seq)}
         },
@@ -110,6 +114,12 @@ export const ChartItemList=(props:ChartItemListProps)=>{
                 if (props.autoreload){ timer.startTimer(seq)}
             })
     },props.autoreload||3000,true,true);
+    if (loading){
+        return <div className="loading">
+            <div className="spinner"></div>
+            <div className="text">Fetching Chartlist ...</div>
+        </div>
+    }
     return <ItemList
         scrollable={true}
         scrollSelected={1}
