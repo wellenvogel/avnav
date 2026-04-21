@@ -29,7 +29,7 @@ import Toast from "./Toast";
 import ItemList from "./ItemList";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
-import {DBCancel, DialogButtons, DialogFrame} from "./OverlayDialog";
+import {DBCancel, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import {DialogButtonProps} from "./DialogButton";
 // @ts-ignore
 import EditOverlaysDialog from "./EditOverlaysDialog";
@@ -137,7 +137,8 @@ export interface ChartSelectDialogProps {
     resolveFunction:(item:Item)=>void;
     selected?:string;
     className?:string;
-    title?:string;
+    title?:React.ReactNode;
+    text?:React.ReactNode;
     additionalButtons?: DialogButtonProps[];
 }
 export const ChartSelectDialog=(props:ChartSelectDialogProps)=>{
@@ -161,6 +162,7 @@ export const ChartSelectDialog=(props:ChartSelectDialogProps)=>{
         title={props.title||'Select Chart'}
         className={Helper.concatsp("ChartSelectDialog",props.className)}
         >
+        {props.text && <DialogRow>{props.text}</DialogRow>}
         <ChartItemList itemClick={(ev:SyntheticEvent) => {
             const item=avitem(ev);
             if (item){

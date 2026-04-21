@@ -65,7 +65,7 @@ export const useTimer=(
             callbackHandler.current(currentSequence.current);
         }
         if (opt_autostart){
-            startTimer(0); //only start the timer if this is really an initial call
+            startTimer(); //we are symmetrical - stop when done, start here
         }
         return ()=>{
             stopTimer();

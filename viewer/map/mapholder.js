@@ -809,6 +809,19 @@ class MapHolder extends DrawingPositionConverter {
         }
     }
 
+    overlayStatus(){
+        let existing=0;
+        let disabled=0;
+        for (let i = 0; i < this.sources.length; i++) {
+            let source = this.sources[i];
+            if (!source.isBaseChart()) {
+                existing++;
+                if (source.isHidden()) disabled++;
+            }
+        }
+        return [existing,disabled];
+    }
+
 
     getBaseLayer(visible) {
         const styles = {

@@ -10,7 +10,7 @@ import Visible from '../hoc/Visible';
 import ItemList, {Item} from './ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-import React, {ReactElement, SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
+import React, {ReactElement, ReactNode, SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
 
 import {PageFrame, PageLeft, PageProps} from './Page';
 import Toast from './Toast';
@@ -347,11 +347,13 @@ const MapPage =(iprops:MapPageProps)=>{
         );
 }
 
-export const overlayDialog=(
+export const selectChartDialog=(
     dialogCtx:IDialogContext,
-    callback?:(chart:Item)=>void
+    callback?:(chart:Item)=>void,
+    infoText?:ReactNode
     )=>{
     const current=mapholder.getCurrentChartEntry()||{};
+    const [numOverlays,numDisabled]=mapholder.overlayStatus();
     dialogCtx.showDialog(()=><ChartSelectDialog
         resolveFunction={(chartEntry:Item)=>{
             if (! chartEntry) {
@@ -367,16 +369,19 @@ export const overlayDialog=(
                 label: 'Show Overlays',
                 onClick:() => {
                     mapholder.showOverlays()
-                }
+                },
+                disabled: numOverlays === 0 || numDisabled === 0
             },
             {
                 name:'HideOverlays',
                 label: 'Hide Overlays',
                 onClick:() => {
                     mapholder.hideOverlays();
-                }
+                },
+                disabled: numOverlays === 0 || numDisabled === numOverlays
             }
         ]}
+        text={infoText}
     />);
 }
 

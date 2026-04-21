@@ -5,14 +5,14 @@
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
-import MapPage, {overlayDialog, PanelCreator} from '../components/MapPage';
+import MapPage, {selectChartDialog, PanelCreator} from '../components/MapPage';
 import Toast from '../components/Toast';
 // @ts-ignore
 import NavHandler from '../nav/navdata.js';
 import {
     DBCancel,
     DialogButtons, DialogFrame, DialogRow,
-    DialogText, OverlayContainer, showDialog, showPromiseDialog
+    DialogText, showDialog, showPromiseDialog
 } from '../components/OverlayDialog';
 import Helper, {injectav} from '../util/helper';
 import {
@@ -71,7 +71,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
 import {PAGEIDS, PageType} from "../util/pageids";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
-import {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
+import Button, {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import NavPageButtons from "./NavPageButtons";
 import {IHistory} from "../util/history";
@@ -456,12 +456,42 @@ const NavPage=(props:PageProps)=>{
     const [sequence,setSequence]=useState(0);
     const checkChartCount=useRef(30);
     const history=useHistory();
+    const runSelectChart=(info?:string)=>{
+        selectChartDialog(dialogCtx,()=>setSequence(old=>old+1),info);
+    }
+    const initialDialogRef=useRef(undefined);
     const loadTimer = useTimer((seq) => {
-        const neededChart=needsChartLoad();
-        if (!neededChart) return;
+        const neededChart:ChartEntry= MapHolder.getLastChartKey();
+        if (seq === 0){
+            //only called once when page is loaded
+            if (MapHolder.getCurrentChartEntry()) return;
+            if (neededChart){
+                dialogCtx.showDialog(()=>{
+                        return (<DialogFrame title={"Waiting for chart"}>
+                                            <DialogText>{neededChart.displayName||neededChart.name||neededChart.key}</DialogText>
+                                            <DialogButtons buttonList={DBCancel()}/>
+                                        </DialogFrame>
+                        );
+                },()=>{
+                    const runDialog=!!initialDialogRef.current;
+                    initialDialogRef.current=undefined;
+                    if (!MapHolder.getCurrentChartEntry() && runDialog) runSelectChart();
+                }).then ((cancel)=>initialDialogRef.current=cancel);
+            }
+            loadTimer.startTimer(seq);
+            return;
+        }
+        if (!initialDialogRef.current  || !neededChart || MapHolder.getCurrentChartEntry()) {
+            if (initialDialogRef.current){
+                initialDialogRef.current();
+                initialDialogRef.current=undefined;
+            }
+            return;
+        }
         checkChartCount.current--;
         if (checkChartCount.current < 0) {
-            history.pop();
+            initialDialogRef.current=undefined; //do not run the dialog twice
+            runSelectChart(`unable to load ${neededChart.displayName||neededChart.name||neededChart.key}`);
             return;
         }
         Requests.getJson({
@@ -481,7 +511,7 @@ const NavPage=(props:PageProps)=>{
             .catch(() => {
                 loadTimer.startTimer(seq)
             });
-    }, 1000);
+    }, 1000,false,true);
     useEffect(() => {
         globalStore.storeData(keys.map.activeMeasure,undefined);
         activeRoute.setIndexToTarget();
@@ -830,7 +860,7 @@ const NavPage=(props:PageProps)=>{
             },
             {
                 name: "NavOverlays",
-                onClick:()=>overlayDialog(dialogCtx,()=>setSequence((old)=>old+1)),
+                onClick:()=>runSelectChart(),
                 /*overflow: true,
                 storeKeys:{
                     visible:keys.gui.capabilities.uploadOverlays
@@ -863,28 +893,20 @@ const NavPage=(props:PageProps)=>{
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
         const pageProperties=props;
-        const neededChart=needsChartLoad();
-        if (neededChart){
-            return (
-                <PageFrame
-                    {...pageProperties}
-                    >
-                    <PageLeft id={pageProperties.id}>
-                        <OverlayContainer
-                            closeCallback={() => history.pop()}>
-                            <DialogFrame title={"Waiting for chart"}>
-                                <DialogText>{neededChart.name||neededChart.key}</DialogText>
-                                <DialogButtons buttonList={DBCancel({
-                                    onClick:()=>history.pop()
-                                })}/>
-                            </DialogFrame>
-                        </OverlayContainer>
-                    </PageLeft>
-                    <ButtonList page={pageProperties.id} itemList={buttons}/>
-                </PageFrame>
-            );
+        const hasChart=!!MapHolder.getCurrentChartEntry();
+        if (! hasChart){
+            return <PageFrame id={pageProperties.id}>
+                <PageLeft id={pageProperties.id}>
+                    <div className={"noChart"}>No Chart selected</div>
+                    <Button
+                        className={"center"}
+                        name={'NavOverlays'}
+                        displayName={'Select Chart'}
+                        onClick={()=>runSelectChart()}/>
+                </PageLeft>
+                <ButtonList page={pageProperties.id} itemList={buttons}/>
+            </PageFrame>
         }
-
         return (
             <MapPage
                 {...pageProperties}

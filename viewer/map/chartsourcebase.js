@@ -277,6 +277,9 @@ class ChartSourceBase {
         this.layers=[];
         this.removeSequence++;
     }
+    isHidden(){
+        return ! this.visible;
+    }
 
     hide(){
         if (! this.hasValidConfig()) return;

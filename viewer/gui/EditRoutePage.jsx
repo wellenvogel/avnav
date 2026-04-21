@@ -5,7 +5,7 @@
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import MapPage, {overlayDialog} from '../components/MapPage.tsx';
+import MapPage, {selectChartDialog} from '../components/MapPage.tsx';
 import Toast from '../components/Toast.tsx';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
@@ -881,7 +881,7 @@ const EditRoutePage = (props) => {
         {
             name: "NavOverlays",
             displayName: "select chart",
-            onClick: () => overlayDialog(dialogContext)
+            onClick: () => selectChartDialog(dialogContext)
         },
         {
             name: "ZoomIn",
