@@ -4,7 +4,7 @@
  * and widget containers
  */
 
-import Dynamic, {useStore} from '../hoc/Dynamic';
+import Dynamic, {useStore, useStoreState} from '../hoc/Dynamic';
 // @ts-ignore
 import Visible from '../hoc/Visible';
 import ItemList, {Item} from './ItemList';
@@ -32,7 +32,7 @@ import {DynamicTitleIcons} from "./TitleIcons";
 import ButtonList from "./ButtonList";
 import base from "../base";
 import {PageType} from "../util/pageids";
-import {ButtonDef} from "./Button";
+import Button, {ButtonDef} from "./Button";
 import {ChartEntry, MapEvent, MapEventCallback, SHOW_MODE} from "../map/maptypes";
 import {useDialogContext} from "./exports";
 import {IDialogContext} from "./DialogContext";
@@ -120,6 +120,18 @@ interface MapOptions{
     rightOffset?: number;
 }
 const Map=({mapClass,mapOpacity,rightOffset}:MapOptions)=>{
+    useStoreState(keys.gui.global.chartEntrySequence);
+    const dialogContext=useDialogContext();
+    if (!mapholder.getCurrentChartEntry()){
+        return <div className={"noChart"}>
+        <div className={"text"}>No Chart selected</div>
+        <Button
+            className={"center"}
+            name={'NavOverlays'}
+            displayName={'Select Chart'}
+            onClick={()=>selectChartDialog(dialogContext)}/>
+        </div>;
+    }
     return <div
         className={mapClass}
         ref={(el)=>{
@@ -245,7 +257,8 @@ const MapPage =(iprops:MapPageProps)=>{
         return ()=>mapholder.unsubscribe(id);
     }, [mapEvent]);
     useEffect(() => {
-        const chartEntry:ChartEntry=mapholder.getCurrentChartEntry()||{};
+        const chartEntry:ChartEntry=mapholder.getCurrentChartEntry();
+        if (! chartEntry) return;
         if (chartEntry.eulaMode !== undefined){
             if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
                 showPromiseDialog(dialogContext,(dprops)=><EulaDialog {...dprops} eulaUrl={chartEntry.url+"/eula"} name={chartEntry.name}/>)

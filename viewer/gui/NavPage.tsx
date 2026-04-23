@@ -45,7 +45,7 @@ import DialogButton from "../components/DialogButton";
 // @ts-ignore
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList, {Item} from "../components/ItemList";
-import {PageFrame, PageLeft, PageProps} from "../components/Page";
+import {PageProps} from "../components/Page";
 import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 // @ts-ignore
@@ -71,7 +71,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
 import {PAGEIDS, PageType} from "../util/pageids";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
-import Button, {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
+import {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import NavPageButtons from "./NavPageButtons";
 import {IHistory} from "../util/history";
@@ -453,7 +453,7 @@ const NavPage=(props:PageProps)=>{
     const dialogCtx=useDialogContext();
     const [wpButtonsVisible,setWpButtonsVisible]=useState(false);
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
-    const [sequence,setSequence]=useState(0);
+    const [,setSequence]=useState(0);
     const checkChartCount=useRef(30);
     const history=useHistory();
     const runSelectChart=(info?:string)=>{
@@ -465,20 +465,23 @@ const NavPage=(props:PageProps)=>{
         if (seq === 0){
             //only called once when page is loaded
             if (MapHolder.getCurrentChartEntry()) return;
-            if (neededChart){
-                dialogCtx.showDialog(()=>{
-                        return (<DialogFrame title={"Waiting for chart"}>
-                                            <DialogText>{neededChart.displayName||neededChart.name||neededChart.key}</DialogText>
-                                            <DialogButtons buttonList={DBCancel()}/>
-                                        </DialogFrame>
-                        );
-                },()=>{
-                    const runDialog=!!initialDialogRef.current;
-                    initialDialogRef.current=undefined;
+            if (neededChart) {
+                dialogCtx.showDialog(() => {
+                    return (<DialogFrame title={"Waiting for chart"}>
+                            <DialogText>{neededChart.displayName || neededChart.name || neededChart.key}</DialogText>
+                            <DialogButtons buttonList={DBCancel()}/>
+                        </DialogFrame>
+                    );
+                }, () => {
+                    const runDialog = !!initialDialogRef.current;
+                    initialDialogRef.current = undefined;
                     if (!MapHolder.getCurrentChartEntry() && runDialog) runSelectChart();
-                }).then ((cancel)=>initialDialogRef.current=cancel);
+                }).then((cancel) => initialDialogRef.current = cancel);
+                loadTimer.startTimer(seq);
             }
-            loadTimer.startTimer(seq);
+            else{
+                runSelectChart();
+            }
             return;
         }
         if (!initialDialogRef.current  || !neededChart || MapHolder.getCurrentChartEntry()) {
@@ -502,7 +505,7 @@ const NavPage=(props:PageProps)=>{
             (json.items || []).forEach((chartEntry:ChartEntry) => {
                 if (chartEntry.name === neededChart.key) {
                     MapHolder.setChartEntry(chartEntry);
-                    setSequence(sequence + 1);
+                    setSequence((old)=>old+1);
                     return;
                 }
             })
@@ -893,20 +896,6 @@ const NavPage=(props:PageProps)=>{
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
         const pageProperties=props;
-        const hasChart=!!MapHolder.getCurrentChartEntry();
-        if (! hasChart){
-            return <PageFrame id={pageProperties.id}>
-                <PageLeft id={pageProperties.id}>
-                    <div className={"noChart"}>No Chart selected</div>
-                    <Button
-                        className={"center"}
-                        name={'NavOverlays'}
-                        displayName={'Select Chart'}
-                        onClick={()=>runSelectChart()}/>
-                </PageLeft>
-                <ButtonList page={pageProperties.id} itemList={buttons}/>
-            </PageFrame>
-        }
         return (
             <MapPage
                 {...pageProperties}

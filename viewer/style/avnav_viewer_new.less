@@ -1881,22 +1881,24 @@ span.valuePrefix{
         content:"Source: ";
       }
   }
-  #navpage{
+
+  //-------------- pages with map and widgets ----------------------------
+  .mapPage{
     .noChart{
-      flex-basis: 70%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 3em;
+      height: 100%;
+      .text{
+        font-size: 3em;
+        flex-basis: 70%;
+      }
     }
+
     .button.center{
       align-self: center;
     }
-  }
-
-  //-------------- pages with map and widgets ----------------------------
-  .mapPage{
     .iconContainer{
       z-index: 102; //above widgets and shade
     }
