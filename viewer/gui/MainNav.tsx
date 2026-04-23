@@ -32,7 +32,7 @@ import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import {getPageTitle, PAGEIDS, PageType} from "../util/pageids";
 import {CopyAware} from "../util/CopyAware";
-import {HistoryEntry, IHistory} from "../util/history";
+import {IHistory} from "../util/history";
 import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
 import addons, {PageUserButton} from '../util/Addons';
@@ -352,14 +352,8 @@ export const InjectMainMenu=(
 
 export const handleInitialButton = (history: IHistory) => {
     //check and remove the button from the history
-    const current = history.currentLocation(true) as HistoryEntry;
-    if (current.options && current.options.button) {
-        const bname = current.options.button;
-        history.replace(current.location,
-            {
-                ...current.options,
-                button: undefined
-            });
+    const bname=history.fetchOptionValue('button');
+    if (bname){
         keyhandler.callHandler('button', bname);
         return bname;
     }

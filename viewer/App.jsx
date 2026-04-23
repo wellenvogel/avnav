@@ -244,6 +244,14 @@ MainBody.propTypes = {
     nightMode: PropTypes.bool,
 }
 
+const hideSplash=()=>{
+    const spe=document.querySelector("#splash");
+    if (spe){
+        //spe.style.display="none";
+        spe.classList.add('splashHidden');
+    }
+}
+
 class App extends React.Component {
     appRef=createRef();
     constructor(props) {
@@ -301,11 +309,11 @@ class App extends React.Component {
         });
         fullscreen.init();
         Dimmer.init();
-        let startpage="warningpage";
+        let startpage=PAGEIDS.WARNING;
         let firstStart=true;
         if (LocalStorage.hasStorage()){
             if (LocalStorage.getItem(STORAGE_NAMES.LICENSE) === 'true'){
-                startpage="mainpage";
+                startpage=PAGEIDS.NAV;
                 firstStart=false;
             }
         }
@@ -383,15 +391,9 @@ class App extends React.Component {
                     }
                 })
         );
-        let lastChart=mapholder.getLastChartKey();
-        if (startpage === PAGEIDS.MAIN && globalStore.getData(keys.properties.startNavPage) && lastChart) {
-            startpage = PAGEIDS.NAV;
-        }
         const delayedStart=()=>{
-            if (startpage === PAGEIDS.NAV){
-                this.history.push(PAGEIDS.MAIN);
-            }
-            this.history.push(startpage);
+            this.history.push(startpage,{initial:true});
+            hideSplash();
         }
         Promise.all(this.pendingActions)
              .then(()=>delayedStart(),()=>delayedStart());

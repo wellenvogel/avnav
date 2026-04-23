@@ -665,11 +665,13 @@ export const loadSettings = async (props:LoadSettingsProps) => {
 }
 export interface LoadSettingsDialogProps{
     tryName?:string;
+    force?:boolean;
+    title?:React.ReactNode;
 }
 export const LoadSettingsDialog=(props:LoadSettingsDialogProps) => {
     const dialogContext=useDialogContext();
     const [notSaved]=useStoreState(keys.gui.global.settingsChanged);
-    const [notSavedOverride,setNotSavedOverride]=useState(false);
+    const [notSavedOverride,setNotSavedOverride]=useState(props.force);
     if (notSaved && ! notSavedOverride){
         return <DialogFrame title={"Current settings not saved"} >
             <div className="dialogText">{"Your current settings are not saved to the server. OK to save now. Ignore to continue."}</div>
@@ -691,7 +693,7 @@ export const LoadSettingsDialog=(props:LoadSettingsDialogProps) => {
     }
     return <DownloadItemSelectDialog
         type={'settings'}
-        title={'Select settings to activate'}
+        title={props.title||'Select settings to activate'}
         resolveFunction={
         async (item:Item)=>{
             try{

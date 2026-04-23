@@ -33,6 +33,11 @@ class IHistoryImpl implements IHistory {
         this.history = history;
     }
 
+    fetchOptionValue(key: string){
+        if (! this.history) return;
+        return this.history.fetchOptionValue(key);
+    }
+
     currentLocation(opt_includeOptions?: boolean | undefined): string | HistoryEntry {
         if (! this.history) return;
         return this.history.currentLocation(opt_includeOptions);

@@ -26,7 +26,7 @@
 // @ts-ignore
 import {Action, createItemActions, FileDialog, ItemActions} from "./FileDialog";
 import Helper, {avitem, concatsp, setav, valueof} from "../util/helper";
-import React, {ReactElement, useCallback, useEffect, useRef, useState} from "react";
+import React, {ReactElement, ReactNode, useCallback, useEffect, useRef, useState} from "react";
 // @ts-ignore
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
@@ -289,7 +289,7 @@ export const DownloadItemList = (
 export interface DownloadItemSelectDialogProps{
     type:ItemType,
     className?:string,
-    title?:string,
+    title?:ReactNode,
     selectedName?:string,
     immediateSelect?:boolean,
     resolveFunction:((item:Item)=>void)|((item:Item)=>Promise<void>)

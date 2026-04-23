@@ -463,6 +463,7 @@ const NavPage=(props:PageProps)=>{
     const loadTimer = useTimer((seq) => {
         const neededChart:ChartEntry= MapHolder.getLastChartKey();
         if (seq === 0){
+            const initial=history.fetchOptionValue('initial');
             //only called once when page is loaded
             if (MapHolder.getCurrentChartEntry()) return;
             if (neededChart) {
@@ -480,7 +481,7 @@ const NavPage=(props:PageProps)=>{
                 loadTimer.startTimer(seq);
             }
             else{
-                runSelectChart();
+                if (initial) runSelectChart();
             }
             return;
         }

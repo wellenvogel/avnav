@@ -28,7 +28,7 @@ import {layoutLoader} from "./layouthandler";
 import PropertyHandler from "./propertyhandler";
 // @ts-ignore
 import NavHandler from "../nav/navdata";
-import {ListEntry} from "./EditableParameter";
+import {SelectListEntry} from "./EditableParameter";
 import Helper, {urlToString} from "./helper";
 import base from "../base";
 
@@ -101,13 +101,13 @@ export const fetchItemInfo = async (item:Item) => {
     }
 }
 export const itemListToSelectList = (itemList:Item[], opt_selected?:string,opt_filter?:(item:Item)=>boolean) => {
-    const rt:ListEntry[] = [];
+    const rt:SelectListEntry[] = [];
     if (!itemList) return rt;
     itemList.forEach(item => {
         if (opt_filter) {
             if (!opt_filter(item)) return;
         }
-        const sitem:ListEntry = {...item,
+        const sitem:SelectListEntry = {...item,
             value: item.name,
             key: item.name,
             label: item.displayName || item.name,

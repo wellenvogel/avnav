@@ -38,6 +38,7 @@ interface HistoryEntryInternal extends HistoryEntry{
 export type HistoryCallback = (history:HistoryEntry,previous:HistoryEntry) => void;
 export interface IHistory{
     //access from useHistory
+    fetchOptionValue:(key:string)=>any; //fetch and reset an option value
     replace:(location:string,options?:HistoryOptions)=>void;
     push:(location:string,options?:HistoryOptions)=>void;
     pop:()=>void;
@@ -62,6 +63,17 @@ class History implements IHistory{
         if (startlocation){
             this.push(startlocation,startoptions);
         }
+    }
+
+    fetchOptionValue (key: string):any{
+        if (this.history.length<1) return;
+        const current=this.history[this.history.length-1];
+        if (! current || ! current.options){
+            return;
+        }
+        const rt=current.options[key];
+        delete current.options[key];
+        return rt;
     }
     setCallback(callback:HistoryCallback){
         this.callback=callback;

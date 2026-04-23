@@ -41,11 +41,65 @@
       <link rel="manifest" href="manifest.json"/>
       <link rel="icon" sizes="512x512" href="images/WebIcon-512.png"/>
       <link rel="apple-touch-icon" sizes="128x128" href="images/WebIcon-128.png"/>
-	<title>AVNav loading...</title>
+	<title>AVNav is loading...</title>
+      <style type="text/css">
+          #splash{
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              z-index: 999;
+              background-color: #546E7A;
+              color: white;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              overflow: hidden;
+              opacity: 1;
+              scale: 1;
+          }
+          #splash .loading {
+              font-weight: bold;
+              display: inline-block;
+              font-family: monospace;
+              font-size: 30px;
+              clip-path: inset(0 3ch 0 0);
+              animation: l 1s steps(4, jump-none) infinite;
+          }
+          @keyframes l {
+                  to {
+                      clip-path: inset(0)
+                  }
+          }
+          .splashHidden{
+              animation: fadeOut 0.5s linear forwards;
+          }
+          @keyframes fadeOut {
+              from {
+                  opacity: 1;
+              }
+              50%{
+                  opacity: 0;
+                  transform: scale3d(0.3, 0.3, 0.3);
+              }
+              to{
+                  opacity:0;
+                  bottom:unset;
+                  height:0;
+                  z-index:-1;
+              }
+          }
+
+      </style>
 
 	</head>
 
   <body  >
+  <div id="splash">
+      <div class="loading">AvNav is loading ...</div>
+  </div>
   <div id="new_pages"></div>
   <script type="text/javascript">console.log("body loaded")</script>
   </body>
