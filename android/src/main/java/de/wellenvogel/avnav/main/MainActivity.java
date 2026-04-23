@@ -632,12 +632,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             }
 
             @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (pd.isShowing()) pd.dismiss();
-
-            }
-            @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
                     if (url.startsWith(RequestHandler.INTERNAL_URL_PREFIX)){
@@ -1147,6 +1141,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 handleBars();
             }
         });
+    }
+
+    public void hideSpinner(){
+        ProgressDialog d=pd;
+        if (d != null && d.isShowing()) d.dismiss();
     }
 
 

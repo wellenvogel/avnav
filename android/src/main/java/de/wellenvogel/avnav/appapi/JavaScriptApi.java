@@ -265,6 +265,7 @@ public class JavaScriptApi {
     public void applicationStarted(){
         if (detached) return;
         getRequestHandler().getSharedPreferences().edit().putBoolean(Constants.WAITSTART,false).commit();
+        mainActivity.hideSpinner();
     }
     @JavascriptInterface
     public void externalLink(String url){
@@ -374,5 +375,6 @@ public class JavaScriptApi {
         return true;
 
     }
+
 
 }

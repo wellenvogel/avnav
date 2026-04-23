@@ -270,7 +270,6 @@ class App extends React.Component {
             globalStore.storeData(keys.gui.global.onAndroid, true, true);
             globalStore.storeData(keys.properties.routingServerError, false, true);
             globalStore.storeData(keys.gui.global.connectedMode, true, true);
-            window.avnavAndroid.applicationStarted();
             const receiveAndroidEvent = (key, id) => {
                 try {
                     //inform the android part that we noticed the event
@@ -394,6 +393,9 @@ class App extends React.Component {
         const delayedStart=()=>{
             this.history.push(startpage,{initial:true});
             hideSplash();
+            if (window.avnavAndroid){
+                window.avnavAndroid.applicationStarted();
+            }
         }
         Promise.all(this.pendingActions)
              .then(()=>delayedStart(),()=>delayedStart());
