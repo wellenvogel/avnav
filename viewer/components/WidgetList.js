@@ -22,6 +22,7 @@ import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import {CombinedWidget} from "./CombinedWidget";
 import Formatter from "../util/formatter";
 import {DepthBelowKeel, DepthBelowTransducer, DepthBelowWater} from "./DepthWidgetFlex";
+import {NmeaStatusWidget} from "./NmeaStatusWidget";
 let widgetList=[
     {
         name: 'SOG',
@@ -449,6 +450,13 @@ let widgetList=[
     {
         name: 'signalKPitch',
         wclass: SKPitchWidget
+    },
+    {
+        name: 'NmeaStatus',
+        wclass: NmeaStatusWidget,
+        caption:'NmeaStatus',
+        formatter: false,
+        formatterParameters: false
     }
 
 
