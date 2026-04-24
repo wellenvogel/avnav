@@ -113,7 +113,7 @@ class History implements IHistory{
         let last;
         if (this.history.length > 1) {
             last=this.history[this.history.length - 1];
-            this.history.splice(-1, 1);
+            this.history.splice(1, this.history.length-1);
         }
         this._tryAnchor();
         this.updateCallback(last,true);
@@ -126,12 +126,8 @@ class History implements IHistory{
     _tryAnchor(){
         if (this.history.length < 1) return false;
         const current=this.history[this.history.length - 1];
-        if (current.location === PAGEIDS.MAIN){
-            this.history=[current];
-            return true;
-        }
         if (current.location === PAGEIDS.NAV){
-            this.history.splice(1,this.history.length);
+            this.history.splice(0,this.history.length);
             this.history.push(current);
         }
     }

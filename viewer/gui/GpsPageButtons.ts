@@ -32,6 +32,11 @@ import keys from "../util/keys";
 export default ()=>{
     const num=layouthandler.getDashboardNum();
     const btProps:DynamicButtonProps[]=[
+        {
+            name:'Cancel',
+            displayName:'go back',
+            localOnly: true
+        },
         AnchorWatchButton(),
     ];
     for (let idx=1;idx<=num;idx++){
@@ -49,7 +54,8 @@ export default ()=>{
             }
         })
     }
-    return GeneralButtons.concat(propsToDefs(btProps.concat([
+    return GeneralButtons.concat(propsToDefs(
+        btProps.concat([
         EditPageButton,
         Dimmer.buttonDef()
     ])))

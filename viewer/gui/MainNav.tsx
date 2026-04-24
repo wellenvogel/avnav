@@ -27,7 +27,6 @@ import {useDialogContext} from "../components/DialogContext";
 import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
-import MainPageButtons from "./MainPageButtons";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import {getPageTitle, PAGEIDS, PageType} from "../util/pageids";
@@ -99,8 +98,6 @@ class ActionPage extends Page{
 const actionPage=new ActionPage();
 
 const mainTree=[
-    new Page(PAGEIDS.MAIN,'navigation',
-        MainPageButtons),
     new Page(PAGEIDS.NAV,'navigation',
         NavPageButtons),
     new Page(PAGEIDS.GPS,'navigation',

@@ -879,6 +879,12 @@ const EditRoutePage = (props) => {
 
     const buttons = [
         {
+            name:'Cancel',
+            displayName:'go back',
+            localOnly: true,
+            onClick:() => { history.pop()}
+        },
+        {
             name: "NavOverlays",
             displayName: "select chart",
             onClick: () => selectChartDialog(dialogContext)

@@ -25,11 +25,6 @@ import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import mob from '../components/Mob';
 import keys from "../util/keys";
 export default propsToDefs([
-    {
-        name:'Cancel',
-        displayName:'go back',
-        localOnly: true
-    },
     mob.mobDefinition()
 ])
 

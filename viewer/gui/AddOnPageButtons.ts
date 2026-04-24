@@ -25,6 +25,11 @@ import {propsToDefs} from "../components/Button";
 
 export default GeneralButtons.concat(propsToDefs([
     {
+        name:'Cancel',
+        displayName:'go back',
+        localOnly: true,
+    },
+    {
         name:'Back',
         displayName:'Window Back',
         localOnly: true
