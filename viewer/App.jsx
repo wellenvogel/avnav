@@ -4,7 +4,6 @@ import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history';
 import Dynamic from './hoc/Dynamic';
 import keys from './util/keys';
-import MainPage from './gui/MainPage';
 import InfoPage from './gui/InfoPage';
 import GpsPage from './gui/GpsPage';
 import AisPage from './gui/AisPage';
@@ -89,7 +88,7 @@ const Other=(props)=>{
             <h1>Unknown page {'"'+props.id+'"'}</h1>
             <Button
                 name={'main'}
-                onClick={()=>props.history.replace(PAGEIDS.MAIN)}
+                onClick={()=>props.history.replace(PAGEIDS.NAV)}
             >Main</Button>
         </React.Fragment>
 }
@@ -103,7 +102,6 @@ const Loading=(props)=>{
 
 
 const pages={
-    [PAGEIDS.MAIN]: MainPage,
     [PAGEIDS.INFO]: InfoPage,
     [PAGEIDS.GPS]: GpsPage,
     [PAGEIDS.AIS]: AisPage,
@@ -279,7 +277,7 @@ class App extends React.Component {
                 if (key == 'backPressed') {
                     if (! globalStore.getData(keys.gui.global.ignoreAndroidBack)) {
                         let currentPage = this.history.currentLocation()
-                        if (currentPage == PAGEIDS.MAIN) {
+                        if (currentPage == PAGEIDS.NAV) {
                             window.avnavAndroid.goBack();
                             return;
                         }

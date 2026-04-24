@@ -23,7 +23,6 @@ import {valueof} from "./helper";
  #
  */
 export const PAGEIDS={
-    MAIN:'mainpage',
     INFO:'infopage',
     GPS:'gpspage',
     AIS:'aispage',
@@ -62,7 +61,6 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
     CHARTS: PAGEIDS.CHARTS,
     GPS: PAGEIDS.GPS,
     LAYOUT: PAGEIDS.LAYOUT,
-    MAIN: PAGEIDS.MAIN,
     NAV: PAGEIDS.NAV,
     NROUTE: PAGEIDS.NROUTE,
     ROUTE: PAGEIDS.ROUTE,
@@ -85,7 +83,6 @@ const PAGE_TITLES:Record<PageType, string> = {
     [PAGEIDS.CHANNELS]: "Connections/Devices",
     [PAGEIDS.GPS]: "Dashboard",
     [PAGEIDS.INFO]: "Version and License",
-    [PAGEIDS.MAIN]: "Select Chart",
     [PAGEIDS.NAV]: "Navigation",
     [PAGEIDS.ROUTE]: "Route Editor",
     [PAGEIDS.NROUTE]: "Routes",

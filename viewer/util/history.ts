@@ -158,7 +158,7 @@ class History implements IHistory{
      * @param opt_noremote
      */
     updateCallback(last:HistoryEntry,opt_returning?:boolean, opt_noremote?:boolean){
-        let topEntry:HistoryEntry={location:PAGEIDS.MAIN};
+        let topEntry:HistoryEntry={location:PAGEIDS.NAV};
         if (this.history.length > 0){
             topEntry=this.history[this.history.length-1];
             if (opt_returning){
