@@ -108,12 +108,13 @@
       ],
       "right": [
         {
-          "name": "COG",
-          "weight": 1.5
+          "name": "COG"
         },
         {
-          "name": "SOG",
-          "weight": 0.75
+          "name": "SOG"
+        },
+        {
+          "name": "NmeaStatus"
         },
         {
           "name": "DepthBelowTransducer"

@@ -147,15 +147,7 @@
           ]
         },
         {
-          "name": "linGauge_Compass",
-          "caption": "COG",
-          "unit": "°",
-          "storeKeys": {
-            "value": "nav.gps.course"
-          },
-          "formatterParameters": [
-            ""
-          ]
+          "name": "NmeaStatus"
         },
         {
           "name": "radGauge_Compass",

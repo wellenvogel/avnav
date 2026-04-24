@@ -177,11 +177,7 @@
         },
         {
           "className": "modern half",
-          "caption": "COG",
-          "storeKeys": {
-            "value": "nav.gps.course"
-          },
-          "name": "linGauge_Compass"
+          "name": "NmeaStatus"
         },
         {
           "className": "modern half",
