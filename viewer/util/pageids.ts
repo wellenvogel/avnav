@@ -44,7 +44,8 @@ export const PAGEIDS={
     CHARTS:'chartspage',
     PLUGINS:'pluginspage',
     REMOTE:'remotepage',
-    LOADING:'loading'
+    LOADING:'loading',
+    ACTIONS:':actions'
 }
 
 export type PageType=valueof<typeof PAGEIDS>;
@@ -71,6 +72,7 @@ export const PLUGINPAGES:Omit<typeof PAGEIDS,'INFO'|'WPA'|'DOWNLOAD'|'WARNING'>=
     PLUGINS: PAGEIDS.PLUGINS,
     REMOTE: PAGEIDS.REMOTE,
     LOADING: PAGEIDS.LOADING,
+    ACTIONS: PAGEIDS.ACTIONS,
 }
 export type PluginPageType=valueof<typeof PLUGINPAGES>
 
@@ -97,6 +99,7 @@ const PAGE_TITLES:Record<PageType, string> = {
     [PAGEIDS.PLUGINS]: "Configure Plugins",
     [PAGEIDS.REMOTE]: "Remote Control",
     [PAGEIDS.LOADING]: "AvNav is Loading",
+    [PAGEIDS.ACTIONS]: "Actions",
 }
 export const getPageTitle=(page:PageType)=>{
     const rt=PAGE_TITLES[page];

@@ -4,14 +4,12 @@ import globalStore from './globalstore';
 import keys from './keys';
 // @ts-ignore
 import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
-import Requests from './requests';
-import Toast from "../components/Toast";
 import splitsupport from "../util/splitsupport";
 import Helper from "./helper";
-import {getServerCommand} from "./UiHelper";
 
 let fullScreenBlocked=false;
-let fullScreenIcon=defaultFullScreenIcon;
+const fullScreenIcon=defaultFullScreenIcon;
+const fullscreenDisplayName="full screen";
 const userAgent=navigator.userAgent;
 //it seems that fullscreen does not work on older android versions (at least tested to work since 6/chrome44)
 if (userAgent.match(/Chrome/)){
@@ -70,45 +68,7 @@ const init=()=>{
         handleSplitMode();
         const mode=Helper.getParam("fullscreen");
         if (mode) {
-            splitsupport.addUrlParameter("fullscreen", mode);
-            if (mode.match(/^server:/)) {
-                const command = mode.replace(/^server:/, '');
-                getServerCommand(command)
-                    .then((serverCommand) => {
-                        if (serverCommand) {
-
-                            if (serverCommand.icon) fullScreenIcon = serverCommand.icon;
-                            fullScreenAvailable = () => true;
-                        } else {
-                            fullScreenBlocked = true;
-                        }
-
-                        const current = globalStore.getData(keys.gui.global.isFullScreen);
-                        //toggle this to triger button redraw
-                        globalStore.storeData(keys.gui.global.isFullScreen, !current);
-                        globalStore.storeData(keys.gui.global.isFullScreen, current);
-                    })
-                    .catch((e) => {
-                        Toast(e)
-                    });
-                fullScreenAvailable = () => false;
-                isFullScreen = () => {
-                    return undefined
-                };
-                toggleFullscreen = () => {
-                    Requests.getJson({
-                        request: 'api',
-                        type: 'command',
-                        command: 'runCommand',
-                        name: command
-                    })
-                        .then(() => {
-                        })
-                        .catch((e) => Toast(e));
-                }
-            } else {
                 fullScreenBlocked = true;
-            }
         }
         globalStore.storeData(keys.gui.global.isFullScreen, fullScreenAvailable() && !!document.fullscreenElement);
         if (!fullScreenBlocked) {
@@ -123,20 +83,20 @@ const init=()=>{
 
 
 
-const fullScreenDefinition={
+const fullScreenDefinition=()=>{ return {
     name: "FullScreen",
-    displayName:"full screen",
     storeKeys: {
         visible:keys.properties.showFullScreen,
         toggle:keys.gui.global.isFullScreen,
         split: keys.gui.global.splitMode
     },
+    displayName:fullscreenDisplayName,
     updateFunction:(state:Record<string,any>)=>{
         return {
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...
             // @ts-ignore
             visible: state.visible && fullScreenAvailable() && ! window.avnavAndroid,
-            icon: fullScreenIcon
+            icon: fullScreenIcon,
         }
     },
     onClick:()=>{
@@ -144,7 +104,7 @@ const fullScreenDefinition={
     },
     editDisable:true,
     overflow: true
-};
+}};
 
 
 export default {

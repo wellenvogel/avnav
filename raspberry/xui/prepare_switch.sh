@@ -18,7 +18,7 @@ else
   if [ ! -d "$pluginDir" ] ; then
     mkdir -p "$pluginDir" || err "unable to create $pluginDir"
   fi
-  for f in plugin.py switch_desk.sh
+  for f in plugin.py plugin.mjs switch_desk.sh
   do
     cp "$pdir/$f" "$pluginDir/$f"
   done

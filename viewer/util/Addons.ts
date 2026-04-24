@@ -261,6 +261,7 @@ const getNameForPluginButton=(button?:PluginUserButton)=>{
 const getPageUserButtons=(
     page:string,
     includeInvalid?:boolean,
+    onlyUserActions?:boolean
     ):PageUserButton[]=>{
     const rt:PageUserButton[]=[];
     for (const k in pluginUserButtons){
@@ -273,6 +274,9 @@ const getPageUserButtons=(
                 closeDialogs:false, //allow toggle handling
                 isAddon:ButtonAddonType.USER_HANDLER});
         }
+    }
+    if (onlyUserActions){
+        return rt;
     }
     for (const k in pluginAddOns){
         const addon=pluginAddOns[k];

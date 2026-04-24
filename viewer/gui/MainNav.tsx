@@ -260,7 +260,7 @@ export const MainNav = (props:MainNavProps) => {
         <PageRow page={actionPage}
                  noExpand={true}
                  onClick={() => {
-                     dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons}/>,
+                     dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons().concat(addons.getPageUserButtons(PAGEIDS.ACTIONS,false,true))}/>,
                          ()=>dialogContext.closeDialog());
                  }}
                  isCurrent={false}

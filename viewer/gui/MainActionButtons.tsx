@@ -30,8 +30,9 @@ import leavehandler from "../util/leavehandler";
 import React from "react";
 import splitsupport from '../util/splitsupport';
 import {exitAndroidApp} from "./MainNav";
+import dimhandler from "../util/dimhandler";
 
-export const actionButtons: DynamicButtonProps[] = [
+export const actionButtons=(): DynamicButtonProps[] => [
     {
         name: 'Night',
         displayName: 'night mode',
@@ -42,6 +43,8 @@ export const actionButtons: DynamicButtonProps[] = [
             globalstore.storeData(keys.properties.nightMode, mode);
         }
     },
+    dimhandler.buttonDef()
+    ,
     RemoteChannelDialog({
         onClick: (ev: ButtonEvent) => {
             const dialogContext = getav(ev).dialogContext;
@@ -49,7 +52,7 @@ export const actionButtons: DynamicButtonProps[] = [
         },
         close: false
     }),
-    FullScreen.fullScreenDefinition,
+    FullScreen.fullScreenDefinition(),
     splitsupport.buttonDef({
         overflow: true
     }),
