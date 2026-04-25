@@ -699,7 +699,7 @@ const NavPage=(props:PageProps)=>{
                 onClick: (featureInfo:FeatureInfo) => {
                     activeRoute.setNewIndex(activeRoute.getIndexFromPoint(featureInfo.point,true));
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
-                    history.push("editroutepage",{center:true});
+                    history.push(PAGEIDS.ROUTE,{center:true});
                 },
                 condition: (featureInfo:FeatureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && ! featureInfo.isOverlay
             }));
@@ -707,13 +707,17 @@ const NavPage=(props:PageProps)=>{
             additionalActions.push(new FeatureAction({
                 name: 'Delete',
                 label: 'Clean Track',
+                close: false,
                 onClick:()=>{
                     showPromiseDialog(dialogCtx,(dp)=><ConfirmDialog
                         {...dp}
                         title={'Empty Current Track'}
                         text={'Clean current track data and rename files?'}
                     />)
-                    .then(()=>navdata.resetTrack(true),()=>{})
+                    .then(()=>{
+                        navdata.resetTrack(true);
+                        dialogCtx.closeDialog();
+                    },()=>{dialogCtx.closeDialog();})
                 },
                 condition:(featureInfo:FeatureInfo)=>featureInfo.getType() === FeatureInfo.TYPE.track && ! featureInfo.isOverlay && globalStore.getData(keys.gui.global.connectedMode)
             }))
