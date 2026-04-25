@@ -31,6 +31,7 @@ import {useAvNavSortable} from "../hoc/Sortable";
 import {ResizeFrame} from "../hoc/Resizable";
 import Helper from "../util/helper";
 import {IWidgetProps} from "../util/types";
+import {WidgetParameter} from "../api/api.interface";
 
 export interface WidgetHeadProps{
     unit?: string,
@@ -90,6 +91,17 @@ export const WidgetFrame=(props:WidgetFrameProps)=> {
         }
     </div>
 }
-
+export interface IWidgetPredefined extends Record<string,any>{
+    storeKeys?:Record<string,string>,
+    formatter?:string|any, //TODO: common base for formatter
+    caption?:string,
+    unit?:string,
+    editableParameters?:Record<string, boolean|WidgetParameter>,
+}
+export interface IWidgetBase{
+    (props:IWidgetProps):React.ReactNode;
+    editableParameters?:Record<string, boolean|WidgetParameter>;
+    predefined?: IWidgetPredefined;
+}
 
 

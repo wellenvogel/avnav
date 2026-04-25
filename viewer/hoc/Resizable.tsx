@@ -22,8 +22,8 @@
 
 import {createContext, useContext, useEffect, useRef} from "react";
 import React from "react";
+// @ts-ignore
 import GuiHelpers from "../util/GuiHelpers";
-import PropTypes from "prop-types";
 
 const ResizeableImpl = createContext({
     triggerResize: ()=>{}
@@ -32,7 +32,11 @@ export const useResize=()=>{
     const context=useContext(ResizeableImpl);
     return {trigger:context.triggerResize};
 }
-export const ResizeFrame=(props)=>{
+export interface ResizeFrameProps{
+    resizeSequence?:number;
+    children:React.ReactNode;
+}
+export const ResizeFrame=(props:ResizeFrameProps)=>{
     const frame=useRef();
     const resizeFunction=()=>{
         GuiHelpers.resizeElementFont(frame.current);
@@ -48,18 +52,16 @@ export const ResizeFrame=(props)=>{
         </ResizeableImpl.Provider>
     </div>
 }
-ResizeFrame.propTypes={
-    resizeSequence: PropTypes.number
-}
 
-export const usePrevious=(item)=>{
-    const ref=useRef();
+export type ResizeStrings=Record<string,string|number>;
+export const usePrevious=(item:ResizeStrings)=>{
+    const ref=useRef<ResizeStrings>();
     useEffect(() => {
         ref.current=item;
     });
     return ref.current;
 }
-const isChanged=(previous,items)=>{
+const isChanged=(previous:ResizeStrings,items:ResizeStrings)=>{
     try {
         if (previous === undefined && items !== undefined) return true;
         if (items === undefined && previous !== undefined) return true;
@@ -78,7 +80,7 @@ const isChanged=(previous,items)=>{
  * @param canResize {boolean|Object} - you can simply provide the widget props here
  * @returns {boolean}
  */
-export const useStringsChanged=(items,canResize)=>{
+export const useStringsChanged=(items:ResizeStrings,canResize:boolean|{mode?:string})=>{
     const previous=usePrevious(items);
     const sequence=useRef(0);
     if (typeof(canResize) === 'object'){
@@ -86,7 +88,7 @@ export const useStringsChanged=(items,canResize)=>{
         canResize=canResize.mode === 'gps';
     }
     if (canResize === false) return sequence.current;
-    let changed=isChanged(previous,items);
+    const changed=isChanged(previous,items);
     if (changed){
         sequence.current++;
     }

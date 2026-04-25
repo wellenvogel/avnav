@@ -23,11 +23,12 @@
 import React, {useState} from "react";
 import {useTimer} from '../util/UiHelper';
 import Requests from "../util/requests";
-import {WidgetFrame} from "./WidgetBase";
+import {IWidgetBase, WidgetFrame} from "./WidgetBase";
 import {IWidgetProps} from "../util/types";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {useStoreState} from "../hoc/Dynamic";
+import {useStringsChanged} from "../hoc/Resizable";
 
 const getImgSrc=function(color:string){
     if (color == "red") return globalstore.getData(keys.properties.statusErrorImage);
@@ -36,7 +37,8 @@ const getImgSrc=function(color:string){
 };
 
 export interface NmeaStatusWidgetProps extends IWidgetProps{
-
+    showAis?:boolean;
+    showNmea?:boolean;
 }
 interface NmeaStatus{
     nmea?:{
@@ -50,7 +52,7 @@ interface NmeaStatus{
         info:string
     }
 }
-export const NmeaStatusWidget = (props:NmeaStatusWidgetProps) => {
+export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
     const [status,setStatus]=useState<NmeaStatus>({});
     const [connectionLost] = useStoreState(keys.nav.gps.connectionLost);
     const timer=useTimer((seq:number)=>{
@@ -63,53 +65,60 @@ export const NmeaStatusWidget = (props:NmeaStatusWidgetProps) => {
         },
             ()=>timer.startTimer(seq));
     },1000,true,true);
-    let nmeaColor = connectionLost ? "yellow" : "red";
-    let aisColor = connectionLost ? "yellow" : "red";
-    let nmeaInfo = connectionLost ? "" : "server connection lost";
-    let nmeaSource="";
-    let aisInfo = "";
-    let aisSource="";
+    const display= {
+        nmeaColor: connectionLost ? "yellow" : "red",
+        aisColor: connectionLost ? "yellow" : "red",
+        nmeaInfo: connectionLost ? "" : "connection lost",
+        aisInfo: connectionLost ? "" : "connection lost",
+        nmeaSource: "",
+        aisSource: ""
+    }
     if (!connectionLost) {
         if (status && status.nmea) {
-            nmeaColor = status.nmea.status;
-            nmeaSource=status.nmea.source;
-            nmeaInfo = status.nmea.info;
+            display.nmeaColor = status.nmea.status;
+            display.nmeaSource=status.nmea.source;
+            display.nmeaInfo = status.nmea.info;
         }
         if (status && status.ais) {
-            aisColor = status.ais.status;
-            aisSource=status.ais.source;
-            aisInfo = status.ais.info;
+            display.aisColor = status.ais.status;
+            display.aisSource=status.ais.source;
+            display.aisInfo = status.ais.info;
         }
     }
-    return <WidgetFrame {...props}>
-        <div className='widgetData'>
-            <div className={"nmeaStatus"} key={1}>
+    if (! props.showAis && ! props.showNmea){
+        return <WidgetFrame name={props.name} dragId={props.dragId} onClick={props.onClick}></WidgetFrame>
+    }
+    const resizeSequence=useStringsChanged(display,true);
+    return <React.Fragment>
+        { props.showNmea && <WidgetFrame {...props} caption={'NMEA'} className="nmeaStatusWidget" key={1} style={{height:'50%'}} resizeSequence={resizeSequence}>
+            <div className='widgetData nmea'>
                 <div className={"rowBase status"}>
-                    <div className={"label"}>NMEA</div>
-                    <img className='status_image' src={getImgSrc(nmeaColor)}/>
+                    <img className='status_image' src={getImgSrc(display.nmeaColor)}/>
+                    <div className={"source"}>{display.nmeaSource}</div>
                 </div>
                 <div className={"rowBase"}>
-                    <div className={"label"}>Source</div>
-                    <div className={"source"}>{nmeaSource}</div>
+                    <div className={"info"}>{display.nmeaInfo}</div>
                 </div>
-                <div className={"rowBase"}>
-                    <div className={"info"}>{nmeaInfo}</div>
+            </div>
+        </WidgetFrame>}
+        {props.showAis &&
+            <WidgetFrame {...props} className={"nmeaStatusWidget"} caption={'AIS'} key={2} style={{height:'50%'}} resizeSequence={resizeSequence}>
+                <div className={"widgetData ais"}>
+                    <div className={"rowBase status"}>
+                        <img className='status_image' src={getImgSrc(display.aisColor)}/>
+                        <div className={"source"}>{display.aisSource}</div>
+                    </div>
+                    <div className={"rowBase"}>
+                        <div className={"info"}>{display.aisInfo}</div>
+                    </div>
                 </div>
-            </div >
-            {!connectionLost ? <div className={"nmeaStatus"} key={2}>
-                <div className={"rowBase status"}>
-                    <div className={"label"}>AIS</div>
-                    <img className='status_image' src={getImgSrc(aisColor)}/>
-                </div>
-                <div className={"rowBase"}>
-                    <div className={"label"}>Source</div>
-                    <div className={"source"}>{aisSource}</div>
-                </div>
-                <div className={"rowBase"}>
-                    <div className={"info"}>{aisInfo}</div>
-                </div>
-            </div> : null
-            }
-        </div>
-    </WidgetFrame>
+            </WidgetFrame>
+        }
+    </React.Fragment>
+}
+NmeaStatusWidget.predefined={
+    editableParameters:{
+        showNmea:{type:'BOOLEAN',default:true,description:'Show a short nmea sat status'},
+        showAis:{type:'BOOLEAN',default:true,description:'Show an AIS status'},
+    }
 }

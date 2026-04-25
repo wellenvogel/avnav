@@ -154,6 +154,7 @@ class History implements IHistory{
 
     /**
      *
+     * @param last
      * @param opt_returning - legacy support with returning flag
      * @param opt_noremote
      */
