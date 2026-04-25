@@ -56,6 +56,7 @@ DepthDisplayFlex.propTypes = {
     warningd: PropTypes.number,
     digits: PropTypes.number,
     fillRight: PropTypes.bool,
+    formatter: PropTypes.func,
 }
 const unitConverter={
     fromDisplay:(props,value)=>{

@@ -1,7 +1,7 @@
 import React, {
     Children,
     cloneElement,
-    forwardRef, ReactNode,
+    ReactNode,
     SyntheticEvent,
     useCallback,
     useEffect,
@@ -77,10 +77,8 @@ const alarmClick =function(){
 };
 
 export const PageFrame=
-    // eslint-disable-next-line react/display-name
-    forwardRef((iprops:PageFrameProps,ref)=>{
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {autoHideButtons,hideCallback,children,className,isEditing,id,buttonList,small,editingChanged,windowDimensions,pageColumns,...forward}=useStore(iprops,{
+    (iprops:PageFrameProps)=>{
+    const {autoHideButtons,hideCallback,children,className,isEditing,id,editingChanged}=useStore(iprops,{
         storeKeys:{
             isEditing: keys.gui.global.layoutEditing
         }
@@ -123,10 +121,8 @@ export const PageFrame=
         isEditing?"editing":undefined
         )
     return <div
-                ref={ref}
                 className={cl}
                 id={id}
-                {...forward}
                 onClick={userEvent}
                 onTouchMove={userEvent}
                 onTouchStart={userEvent}
@@ -139,7 +135,7 @@ export const PageFrame=
             }
         )}
     </div>
-})
+}
 
 
 export const PageLeft=
@@ -159,14 +155,13 @@ export const PageLeft=
 
 const Page=
     // eslint-disable-next-line react/display-name
-    forwardRef((props:PageProps,ref)=>{
+    (props:PageProps)=>{
         return <PageFrame
             className={props.className}
             id={props.id}
             style={props.style}
             autoHideButtons={props.autoHideButtons}
             hideCallback={props.buttonWidthChanged}
-            ref={ref}
             >
             {props.floatContent && props.floatContent}
             <PageLeft
@@ -181,7 +176,7 @@ const Page=
                 widthChanged={props.buttonWidthChanged}
             />
         </PageFrame>
-});
+};
 
 
 export default Page;
