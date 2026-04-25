@@ -8,6 +8,7 @@ import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
 import base from "../base";
 import {ButtonDescription} from "./ButtonList";
+import {IconBody} from "./Icons";
 
 
 export type ButtonEventBase=Record<string, any>;
@@ -42,6 +43,7 @@ export interface ButtonProps {
         updateFunction?: UpdateFunction;
         closeDialogs?: boolean;
         isAddon?: ButtonAddonType;
+        iconClass?: string;
         dataChanged?:(data:ButtonDescription) => void;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
@@ -66,6 +68,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     toggle?: boolean | (() => boolean);
     name: string;
     icon?: string|URL;
+    iconClass?: string;
     style?: Record<string, any>;
     disabled?: boolean|(() => boolean);
     overflow?: boolean;
@@ -151,7 +154,7 @@ const Button = (sprops:ButtonProps) => {
     }
     return (
         <div {...forward} className={classNamev} title={displayName+""}>
-            <span style={spanStyle}/>
+            <IconBody className={iprops.iconClass} icon={iprops.icon} forceClass={true}/>
             {children}
         </div>
     );

@@ -195,7 +195,8 @@ export const UserButtonProps: Required<UserButton>= {
     },
     visible: false,
     displayName: "",
-    localOnly: false
+    localOnly: false,
+    iconClass: undefined,
 }
 
 export const modules: Modules={

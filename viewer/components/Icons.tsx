@@ -20,21 +20,38 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React from 'react';
-import {concatsp} from "../util/helper";
+import React, {SyntheticEvent} from 'react';
+import Helper, {concatsp} from "../util/helper";
 export interface IconProps{
     className?: string;
-    icon?:string;
+    icon?:string|URL;
     color?:string;
+    onClick?: (ev:SyntheticEvent) => void,
+    forceClass?:boolean,
 }
-export const Icon=({className,icon,color}:IconProps)=>{
-    if (! icon && ! className && ! color)return null;
+const removeIconFromClassName=(cl:string)=>{
+    if (!cl) return cl;
+    if ( typeof cl !== 'string' ) return cl;
+    return cl.replace(/\bicon\b/, '').replace(/^ *$/,'');
+}
+export const IconBody=({className,icon,color,forceClass}:IconProps) => {
+    className = removeIconFromClassName(className);
+    if (! icon && (! className && ! forceClass) && ! color)return null;
     const style:Record<string, string> = {};
     if (color){style.backgroundColor=color}
     if (icon){style.backgroundImage=`url(${icon})`}
-    return <div
-        className={concatsp("icon",className)}
-        style={style}
-        ></div>
+    return <React.Fragment>
+        <span className={Helper.concatsp("icon",className)}></span>
+        {(color || icon) && <span className={Helper.concatsp('iconFix')} style={style}></span>}
+    </React.Fragment>
+}
+export const Icon=({className,icon,color,onClick,forceClass}:IconProps)=>{
+    className = removeIconFromClassName(className);
+    if (! icon && ! className && ! color)return null;
+    return <div onClick={onClick}
+        className={concatsp("iconFrame")}
+        >
+        <IconBody icon={icon} className={className} color={color} forceClass={forceClass}/>
+    </div>
 }
  

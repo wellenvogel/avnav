@@ -38,6 +38,7 @@ import LeaveHandler from "../util/leavehandler"
 import {useDialogContext} from "./DialogContext";
 import {SaveSettingsDialog} from "./Settings";
 import propertyhandler from "../util/propertyhandler";
+import {Icon} from "./Icons";
 
 export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
     const dialogContext=useDialogContext();
@@ -63,8 +64,8 @@ export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
         {sprops.measure && <span className="measureIcon" onClick={()=>{
             globalStore.storeData(keys.map.activeMeasure,undefined);
         }}/> }
-        {anchorWatch && <span className="anchorWatchIcon" onClick={() => anchorWatchDialog(dialogContext)}/>}
-        {jsChange && <span className="jsChangeIcon" onClick={()=>{
+        {anchorWatch && <Icon className="anchorWatchIcon" onClick={() => anchorWatchDialog(dialogContext)}/>}
+        {jsChange && <Icon className="jsChangeIcon" onClick={()=>{
             let rltext=sprops.unloadedJs?
                 "There are changes in plugin java script or user.mjs that are still not loaded.\n"
                 :
@@ -81,13 +82,13 @@ export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
                 },
                     ()=>{})
         }}/>}
-        {!sprops.connected && <span className="disconnectedIcon" onClick={()=>{
+        {!sprops.connected && <Icon className="disconnectedIcon" onClick={()=>{
             if (globalstore.getData(keys.gui.global.onAndroid) ||  !globalStore.getData(keys.gui.capabilities.canConnect)) return;
             showPromiseDialog(dialogContext,(props)=><ConfirmDialog {...props} text={"End disconnected mode?"}/>)
                 .then(()=>globalStore.storeData(keys.gui.global.connectedMode,true))
                 .catch(()=>{});
         }}/>}
-        {settingsChanged && <span className="settingsChangedIcon" onClick={()=>{
+        {settingsChanged && <Icon className="settingsChangedIcon" onClick={()=>{
             showDialog(dialogContext,()=><SaveSettingsDialog
                 title={"Settings are changed, select name to save to server"}
                 additionalButtons={[

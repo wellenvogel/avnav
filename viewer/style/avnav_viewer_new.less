@@ -924,12 +924,13 @@ span.valuePrefix{
 
 //--iconimage
 
-.icon{
+.icon,.iconFix,.iconFrame{
   width:1.5em;
   height:1.5em;
   margin: 0.2em;
   background-size: contain;
   display: inline-block;
+  position: relative;
   background-repeat: no-repeat;
   background-position: center;
   .nightOPacity();
@@ -940,16 +941,22 @@ span.valuePrefix{
   }
   vertical-align: middle;
 }
+.icon,.iconFix{
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+}
+.iconFix{
+  z-index: 2;
+}
 .iconImage(@url){
-  .icon();
   background-image: url("@{iconBase}/@{url}");
 }
 .oldIconImage(@url){
-  .icon();
   background-image: url("@{oldiconBase}/@{url}");
 }
 .maskImage(@url){
-  .icon();
   mask-image: url("@{iconBase}/@{url}");
 }
 
@@ -1079,16 +1086,16 @@ span.valuePrefix{
     border-radius: 4px;
   }
   .icon.navigation{
-    .icon('boat.svg')
+    .iconImage('boat.svg')
   }
   .icon.settings{
-    .icon('build-200.svg')
+    .iconImage('build-200.svg')
   }
   .icon.Cancel{
-    .icon('ic_chevron_right.svg')
+    .iconImage('ic_chevron_right.svg')
   }
   .icon.MNSettings{
-    .icon('ic_settings.svg')
+    .iconImage('ic_settings.svg')
   }
   .heading{
     justify-content: end;

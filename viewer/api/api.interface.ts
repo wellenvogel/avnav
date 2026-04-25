@@ -534,6 +534,7 @@ export interface UserButtonBase{
     disabled?:boolean;
     storeKeys?:Record<string, string>; //can control visible/disabled/toogle
     updateFunction?:(values:object)=>object; //translate store values
+    iconClass?:string;
 }
 
 export interface UserButton extends UserButtonBase{
