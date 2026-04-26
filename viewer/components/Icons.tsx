@@ -22,6 +22,8 @@
  */
 import React, {SyntheticEvent, useEffect, useRef} from 'react';
 import Helper, {concatsp} from "../util/helper";
+// @ts-ignore
+export  * as iconClasses from '../style/icons.less';
 export interface IconProps{
     className?: string;
     icon?:string|URL;
@@ -68,4 +70,3 @@ export const Icon=({className,icon,color,onClick,forceClass,iconImage}:IconProps
         <IconBody icon={icon} className={className} color={color} forceClass={forceClass} iconImage={iconImage}/>
     </div>
 }
- 

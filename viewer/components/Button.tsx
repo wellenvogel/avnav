@@ -116,7 +116,7 @@ const Button = (sprops:ButtonProps) => {
         syntheticClick();
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {closeDialogs,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly, ...forward} = iprops;
+    const {closeDialogs,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly,iconClass, ...forward} = iprops;
     if (visible !== undefined && ! visible) {
         return null;
     }
@@ -154,7 +154,7 @@ const Button = (sprops:ButtonProps) => {
     }
     return (
         <div {...forward} className={classNamev} title={displayName+""}>
-            <Icon className={iprops.iconClass} icon={iprops.icon} forceClass={true}/>
+            <Icon className={iconClass} icon={icon} forceClass={true}/>
             {children}
         </div>
     );

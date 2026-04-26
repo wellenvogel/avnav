@@ -22,6 +22,7 @@ import keys from "../util/keys";
 import {useUploadHelper} from "../components/UploadHandler";
 import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
 import {useStoreHelper} from "../util/UiHelper";
+import {iconClasses} from '../components/Icons';
 
 
 interface AddonItemProps extends InternalAddonProps {
@@ -53,7 +54,7 @@ const AddonItem=(props:AddonItemProps)=>{
                 <div className="sourceInfo">{source}</div>
             </ListMainSlot>
             <ListSlot >
-            {!props.invalid && <Button name="AddonConfigView" className="smallButton"
+            {!props.invalid && <Button name="AddonConfigView" iconClass={iconClasses.View} className="smallButton"
                                        onClick={(ev) => {
                                            ev.preventDefault();
                                            ev.stopPropagation();

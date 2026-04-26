@@ -82,7 +82,7 @@ module.exports = (env, argv) => {
             patterns: copyList
         }),
         new MiniCssExtractPlugin({
-            filename: "avnav_viewer.css",
+            filename: "avnav-[name].css",
         }),
         new GenerateFilePlugin({
             file: 'license.html',
@@ -186,7 +186,7 @@ module.exports = (env, argv) => {
 
 
                 {
-                    test: /avnav_viewer.*\.less$/,
+                    test: /style\/.*\.less$/,
                     use: [
                         {
                             loader: MiniCssExtractPlugin.loader
@@ -194,7 +194,12 @@ module.exports = (env, argv) => {
                         {
                             loader: 'css-loader',
                             options: {
-                                url: true
+                                url: true,
+                                modules: {
+                                    auto: /icons.less$/,
+                                    localIdentName: '[local]',
+                                    namedExport: true
+                                }
                             }
                         },
                         {
