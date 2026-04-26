@@ -21,6 +21,7 @@ import {useDialogContext} from "./DialogContext";
 import {Item} from "../util/itemFunctions";
 import {SelectListEntry} from "../util/EditableParameter";
 import {PAGEIDS, PLUGINPAGES} from "../util/pageids";
+import {Icon} from "./Icons";
 
 interface SelectHtmlDialogProps{
     allowUpload?:boolean;
@@ -338,7 +339,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                         })
                     }}
                 >
-                    {currentIcon && <img className="appIcon" src={currentIcon+""}/>}
+                    {currentIcon && <Icon icon={currentIcon+""}/>}
                 </InputReadOnly>
                 :
                 <InputReadOnly
@@ -346,7 +347,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     label="icon"
                     value={currentIcon+""}
                 >
-                    {currentIcon && <img className="appIcon" src={currentIcon+""}/>}
+                    {currentIcon && <Icon icon={currentIcon+""}/>}
                 </InputReadOnly>
             }
             {canEdit? <InputSelect
