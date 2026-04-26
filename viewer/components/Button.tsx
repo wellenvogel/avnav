@@ -4,11 +4,11 @@ import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic"
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
-import {ListMainSlot} from "./exports";
 import {useHistory} from "./HistoryProvider";
 import base from "../base";
 import {ButtonDescription} from "./ButtonList";
-import {IconBody} from "./Icons";
+import {Icon} from "./Icons";
+import {ListMainSlot} from "./ListItems";
 
 
 export type ButtonEventBase=Record<string, any>;
@@ -154,7 +154,7 @@ const Button = (sprops:ButtonProps) => {
     }
     return (
         <div {...forward} className={classNamev} title={displayName+""}>
-            <IconBody className={iprops.iconClass} icon={iprops.icon} forceClass={true}/>
+            <Icon className={iprops.iconClass} icon={iprops.icon} forceClass={true}/>
             {children}
         </div>
     );

@@ -20,17 +20,12 @@
   outline: none;
   display: block;
   position: relative;
-  span{
-    background-position: center;
-    background-size: 80% 80%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: unset;
-    height: unset;
-    background-repeat: no-repeat;
+  .iconFrame{
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 10%;
+    margin: 0;
   }
   &:disabled span{
     opacity: 0.5;
@@ -148,14 +143,15 @@
   background-color: unset;
   width: unset;
   height: unset;
-}
-.buttonRow > span:first-child{
-  width: 2em;
-  height: 2em;
-  display: block;
-  outline: none;
-  position: unset;
-  margin-right: 0.3em;
+  .iconFrame{
+    width: 2em;
+    height: 2em;
+    left: unset;
+    top: unset;
+    display: block;
+    outline: none;
+    position: relative;
+  }
 }
 
 .button{

@@ -924,31 +924,37 @@ span.valuePrefix{
 
 //--iconimage
 
-.icon,.iconFix,.iconFrame{
-  width:1.5em;
-  height:1.5em;
+.iconFrame {
+  width: 1.5em;
+  height: 1.5em;
   margin: 0.2em;
-  background-size: contain;
   display: inline-block;
   position: relative;
-  background-repeat: no-repeat;
-  background-position: center;
   .nightOPacity();
-  .widgetHead &{
-    margin:0;
+
+  .widgetHead & {
+    margin: 0;
     height: 0.8em;
     width: 0.8em;
   }
+
   vertical-align: middle;
-}
-.icon,.iconFix{
-  position: absolute;
-  top: 0;
-  left: 0;
-  margin: 0;
-}
-.iconFix{
-  z-index: 2;
+
+  .icon, .iconFix {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+
+  .iconFix {
+    z-index: 2;
+  }
 }
 .iconImage(@url){
   background-image: url("@{iconBase}/@{url}");
@@ -1108,6 +1114,8 @@ span.valuePrefix{
     border-bottom: 1px solid var(--avnav-border-color);
     & .listMain{
       flex-basis: unset;
+      margin-left: 0;
+      margin-right: 0;
     }
     & .listEntry{
       padding: 0.5em;
