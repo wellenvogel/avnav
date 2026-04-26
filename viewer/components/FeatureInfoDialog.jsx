@@ -140,19 +140,12 @@ const InfoRowDisplay=({row,data,className})=>{
     if (v === undefined) return null;
     return <InfoItem label={row.label} value={v} className={className}/>
 }
-const ImageIcon=({iconImage,className})=>{
-    const ref=useRef();
-    useEffect(() => {
-        if (ref.current) ref.current.appendChild(iconImage.cloneNode(true));
-    }, []);
-    return <div className={Helper.concatsp(className,'ImageIcon')} ref={ref}/>
-}
+
 
 const FeatureIcon=({feature,showOverlayIcon})=>{
     const overlayIconClass=(feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay))?"overlay":"_none";
     return <React.Fragment>
-        {feature.icon && <ImageIcon className={'icon'} iconImage={feature.icon}/>}
-        {!feature.icon && <Icon className={feature.typeString()}/> }
+        <Icon className={feature.icon?undefined:feature.typeString()} iconImage={feature.icon}/>
         { showOverlayIcon && <Icon className={overlayIconClass}/>}
     </React.Fragment>
 }

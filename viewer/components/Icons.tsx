@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {SyntheticEvent} from 'react';
+import React, {SyntheticEvent, useEffect, useRef} from 'react';
 import Helper, {concatsp} from "../util/helper";
 export interface IconProps{
     className?: string;
@@ -28,13 +28,25 @@ export interface IconProps{
     color?:string;
     onClick?: (ev:SyntheticEvent) => void,
     forceClass?:boolean, //default: true
+    iconImage?:HTMLImageElement,
 }
 const removeIconFromClassName=(cl:string)=>{
     if (!cl) return cl;
     if ( typeof cl !== 'string' ) return cl;
     return cl.replace(/\bicon\b/, '').replace(/^ *$/,'');
 }
-const IconBody=({className,icon,color,forceClass}:IconProps) => {
+interface ImageIconProps{
+    iconImage:HTMLImageElement;
+}
+const ImageIcon=({iconImage}:ImageIconProps)=>{
+    const ref=useRef<HTMLDivElement>();
+    useEffect(() => {
+        if (! iconImage) return;
+        if (ref.current) ref.current.appendChild(iconImage.cloneNode(true));
+    }, []);
+    return <div className={Helper.concatsp('imageIcon')} ref={ref}/>
+}
+const IconBody=({className,icon,color,forceClass,iconImage}:IconProps) => {
     className = removeIconFromClassName(className);
     if (! icon && (! className && ! Helper.unsetorTrue(forceClass)) && ! color)return null;
     const style:Record<string, string> = {};
@@ -43,15 +55,17 @@ const IconBody=({className,icon,color,forceClass}:IconProps) => {
     return <React.Fragment>
         <span className={Helper.concatsp("icon",className?className:'empty')}></span>
         {(color || icon) && <span className={Helper.concatsp('iconFix')} style={style}></span>}
+        {iconImage && <ImageIcon iconImage={iconImage}/>}
     </React.Fragment>
 }
-export const Icon=({className,icon,color,onClick,forceClass}:IconProps)=>{
+
+export const Icon=({className,icon,color,onClick,forceClass,iconImage}:IconProps)=>{
     className = removeIconFromClassName(className);
     if (! icon && (! className && ! Helper.unsetorTrue(forceClass)) && ! color)return null;
     return <div onClick={onClick}
         className={concatsp("iconFrame")}
         >
-        <IconBody icon={icon} className={className} color={color} forceClass={forceClass}/>
+        <IconBody icon={icon} className={className} color={color} forceClass={forceClass} iconImage={iconImage}/>
     </div>
 }
  

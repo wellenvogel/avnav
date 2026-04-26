@@ -619,15 +619,6 @@ body{
     width: 4em;
     display: inline-block;
   }
-  .ImageIcon{
-    .flex-display();
-    .flex-direction(row);
-    img{
-      .flex-grow(1);
-      .flex-shrink(1);
-      min-width: 0;
-    }
-  }
 }
 .featureInfoHtml{
   white-space: pre;
@@ -925,8 +916,8 @@ span.valuePrefix{
 //--iconimage
 
 .iconFrame {
-  width: 1.5em;
-  height: 1.5em;
+  width: var(--avnav-default-icon-size);
+  height: var(--avnav-default-icon-size);
   margin: 0.2em;
   display: inline-block;
   position: relative;
@@ -940,7 +931,7 @@ span.valuePrefix{
 
   vertical-align: middle;
 
-  .icon, .iconFix {
+  .icon, .iconFix,.imageIcon {
     position: absolute;
     top: 0;
     left: 0;
@@ -950,6 +941,13 @@ span.valuePrefix{
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
+    img{
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
   }
 
   .iconFix {

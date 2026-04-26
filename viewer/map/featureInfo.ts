@@ -86,7 +86,6 @@ export interface FeatureInfoParameters{
     point?:navobjects.Point,
     isOverlay?:boolean,
     title?:string,
-    icon?:string,
     name?:string
 }
 export class FeatureInfo{
@@ -108,9 +107,9 @@ export class FeatureInfo{
     title: string;
     isOverlay:boolean=false;
     urlOrKey:string;
-    icon:string;
     userInfo:Record<string, string>;
     overlaySource:any;
+    icon?:HTMLImageElement;
 
     /**
      * get the itemType from the FeatureInfo type
@@ -131,7 +130,7 @@ export class FeatureInfo{
         }
     }
     constructor(
-        {point,isOverlay,title,icon,name}:FeatureInfoParameters) {
+        {point,isOverlay,title,name}:FeatureInfoParameters) {
         /**
          * goto target
          * @type {navobjects.Point}
@@ -140,7 +139,6 @@ export class FeatureInfo{
         this.title=title;
         this.isOverlay=isOverlay||false;
         this.urlOrKey=name;
-        this.icon=icon;
         this.userInfo= {};
         this.overlaySource=undefined;
     }
@@ -224,7 +222,7 @@ export class RouteFeatureInfo extends FeatureInfo{
 }
 export class AisFeatureInfo extends FeatureInfo{
     constructor({point,mmsi,title,icon}:
-        Pick<FeatureInfoParameters,'point'|'title'|'icon'> & {mmsi:string}) {
+        Pick<FeatureInfoParameters,'point'|'title'> & {mmsi:string,icon?:HTMLImageElement}) {
         super({point});
         this.urlOrKey=mmsi;
         this.title=title||`MMSI: ${mmsi}`
@@ -270,8 +268,9 @@ export class WpFeatureInfo extends FeatureInfo{
 
 export class BoatFeatureInfo extends FeatureInfo{
     constructor({point,icon}:
-                Pick<FeatureInfoParameters,'point'|'icon'>) {
-        super({point,title:'current position',icon});
+                Pick<FeatureInfoParameters,'point'> & {icon:HTMLImageElement}) {
+        super({point,title:'current position'});
+        this.icon=icon;
     }
     getType(){
         return FeatureInfo.TYPE.boat;
