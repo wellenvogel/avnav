@@ -392,7 +392,6 @@ class ChartSourceBase {
                 base.log("error in feature info formatter : " + e);
             }
         }
-        info.icon = this.getSymbolUrl(info.sym, '.png');
         info.link = this.getLinkUrl(info.link);
         return info;
     }
