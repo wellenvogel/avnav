@@ -5,6 +5,7 @@ import {concatsp, setav} from "../util/helper";
 import {Options, useStore} from "../hoc/Dynamic";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {ButtonEvent, ButtonEventHandler} from "./Button";
+import {Icon} from "./Icons";
 
 export interface DialogButtonProps extends Options{
     onClick?: ButtonEventHandler;
@@ -12,6 +13,7 @@ export interface DialogButtonProps extends Options{
     className?: string;
     name?: string;
     icon?: string;
+    iconClass?: string;
     style?: Record<string, any>;
     disabled?: boolean;
     toggle?: boolean;
@@ -26,7 +28,7 @@ const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
         KeyHandler.registerDialogComponent(COMPONENT);
     // eslint-disable-next-line prefer-const
-        let {icon,displayName,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,...forward}=useStore(props);
+        let {icon,displayName,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
         const spanStyle:Record<string, any>={};
         if (icon !== undefined) {
             spanStyle.backgroundImage = "url(" + icon + ")";
@@ -61,7 +63,7 @@ const DialogButton=(props:DialogButtonProps)=>{
                 className={concatsp("button dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
                 title={displayName}
             >
-            <span style={spanStyle}/>
+            <Icon icon={icon} className={iconClass}/>
                 {children}
             </button>
         );

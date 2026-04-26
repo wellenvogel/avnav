@@ -27,7 +27,7 @@ export interface IconProps{
     icon?:string|URL;
     color?:string;
     onClick?: (ev:SyntheticEvent) => void,
-    forceClass?:boolean,
+    forceClass?:boolean, //default: true
 }
 const removeIconFromClassName=(cl:string)=>{
     if (!cl) return cl;
@@ -36,7 +36,7 @@ const removeIconFromClassName=(cl:string)=>{
 }
 const IconBody=({className,icon,color,forceClass}:IconProps) => {
     className = removeIconFromClassName(className);
-    if (! icon && (! className && ! forceClass) && ! color)return null;
+    if (! icon && (! className && ! Helper.unsetorTrue(forceClass)) && ! color)return null;
     const style:Record<string, string> = {};
     if (color){style.backgroundColor=color}
     if (icon){style.backgroundImage=`url(${icon})`}
@@ -47,7 +47,7 @@ const IconBody=({className,icon,color,forceClass}:IconProps) => {
 }
 export const Icon=({className,icon,color,onClick,forceClass}:IconProps)=>{
     className = removeIconFromClassName(className);
-    if (! icon && (! className && ! forceClass) && ! color)return null;
+    if (! icon && (! className && ! Helper.unsetorTrue(forceClass)) && ! color)return null;
     return <div onClick={onClick}
         className={concatsp("iconFrame")}
         >

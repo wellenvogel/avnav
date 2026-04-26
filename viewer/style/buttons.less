@@ -89,6 +89,13 @@
 
 .dialogButton{
     .buttonBase();
+    .iconFrame{
+      width: 1em;
+      height: 1em;
+      left:unset;
+      right:unset;
+      margin-right: 0.2em;
+    }
     margin-top: 0.5em;
     margin-left: 0.5em;
     margin-right: 0.5em;
@@ -107,23 +114,11 @@
     &[disabled] {
       opacity: 0.6;
       }
-    > span{
-      position: unset;
-      display: inline-block;
-      width:1em;
-      height: 1em;
-      margin-top: auto;
-      margin-bottom: auto;
-    }
-    &.icon{
-      padding-left: 1.3em;
-      font-size: 0.9em;
-    }
 
 }
 
 .dialogIconButton(@icon){
-  > span{
+  .icon{
     background-image: url("@{iconBase}/@{icon}");
   }
 }
