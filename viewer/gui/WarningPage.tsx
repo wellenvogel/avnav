@@ -115,7 +115,7 @@ const WarningPage = (props: PageProps) => {
                                 okFunction()
                             }
                             }
-                        ></Button>
+                        ><span className={'buttonText'}>Accept/Akzeptieren</span> </Button>
                     </div>
                 </div>
             </PageLeft>

@@ -75,17 +75,6 @@
   }
 }
 
-.textButton(@text,@fontSize:2.3em){
-  span {
-    font-size: @fontSize;
-    text-align: center;
-  }
-  span:after{
-    content: @text;
-  }
-}
-
-
 
 .dialogButton{
     .buttonBase();
@@ -523,10 +512,19 @@
   }
 
   &.WarningOK{
-    .textButton('Accept/Akzeptieren',1.5em);
+    .buttonText{
+      font-size: 1.5em;
+      padding-top: 0.5em;
+      text-align: center;
+      display: block;
+    }
+    .iconFrame{
+      display: none;
+    }
     margin-left: auto;
     margin-right: auto;
     width: auto;
+    max-width: 20em;
   }
   &.View{
     .iconButton('visibility.svg');
