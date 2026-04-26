@@ -20,17 +20,11 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import {iconClasses} from '../components/Icons';
+import {GeneralWithCancel} from "./GeneralButtons";
 
-export default GeneralButtons.concat(propsToDefs([
-    {
-        name:'Cancel',
-        iconClass: iconClasses.Cancel,
-        displayName:'go back',
-        localOnly: true,
-    },
+export default GeneralWithCancel.concat(propsToDefs([
     {
         name:'Back',
         iconClass: iconClasses.Back,

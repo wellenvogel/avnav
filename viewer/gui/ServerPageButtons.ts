@@ -28,28 +28,33 @@ import {iconClasses} from '../components/Icons';
 export default GeneralButtons.concat(propsToDefs([
     {
         name: 'MainInfo',
+        iconClass: iconClasses.Info,
         displayName:'license info',
         overflow:true
     },
     {
         name:'StatusAll',
+        iconClass: iconClasses.Expand,
         displayName:'show all',
         overflow: true
     },
     {
         name: 'StatusWpa',
+        iconClass: iconClasses.Wifi,
         displayName:'wifi connections',
         localOnly: true,
         overflow:true,
     },
     {
         name:'StatusAddresses',
+        iconClass: iconClasses.QRCode,
         displayName: 'own networks',
         localOnly:true,
         overflow:true,
     },
     {
         name: 'StatusAndroid',
+        iconClass: iconClasses.Android,
         displayName:'android',
         //@ts-ignore
         visible:!!window.avnavAndroid
@@ -65,22 +70,26 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name:'StatusShutdown',
+        iconClass: iconClasses.Shutdown,
         displayName:'shutdown server',
         localOnly:true,
     },
     {
         name: 'StatusRestart',
+        iconClass: iconClasses.Reload,
         displayName:'restart avnav',
         localOnly:true,
     },
     {
         name:'StatusLog',
+        iconClass: iconClasses.Log,
         displayName:'show log',
         localOnly:true,
         overflow: true
     },
     {
         name:'StatusDebug',
+        iconClass: iconClasses.Debug,
         displayName:'debug server',
         localOnly:true,
         overflow: true,
@@ -97,6 +106,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'StatusAdd',
+        iconClass: iconClasses.Plus,
         displayName:'add connection',
         localOnly:true,
         visible:false,

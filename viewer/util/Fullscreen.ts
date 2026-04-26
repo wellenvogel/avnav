@@ -2,13 +2,11 @@
 import 'fullscreen-polyfill';
 import globalStore from './globalstore';
 import keys from './keys';
-// @ts-ignore
-import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
 import splitsupport from "../util/splitsupport";
 import Helper from "./helper";
+import {iconClasses} from '../components/Icons';
 
 let fullScreenBlocked=false;
-const fullScreenIcon=defaultFullScreenIcon;
 const fullscreenDisplayName="full screen";
 const userAgent=navigator.userAgent;
 //it seems that fullscreen does not work on older android versions (at least tested to work since 6/chrome44)
@@ -85,6 +83,7 @@ const init=()=>{
 
 const fullScreenDefinition=()=>{ return {
     name: "FullScreen",
+    iconClass: iconClasses.FullScreen,
     storeKeys: {
         visible:keys.properties.showFullScreen,
         toggle:keys.gui.global.isFullScreen,
@@ -96,7 +95,6 @@ const fullScreenDefinition=()=>{ return {
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...
             // @ts-ignore
             visible: state.visible && fullScreenAvailable() && ! window.avnavAndroid,
-            icon: fullScreenIcon,
         }
     },
     onClick:()=>{

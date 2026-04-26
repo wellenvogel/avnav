@@ -24,11 +24,13 @@
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
+import {iconClasses} from '../components/Icons';
 
 export const ChannelsPageButtonsPlain=propsToDefs([
     {
         name: 'StatusAdd',
         displayName: "add connection",
+        iconClass: iconClasses.Plus,
         storeKeys: {
             visible:keys.gui.global.connectedMode,
             config: keys.gui.capabilities.config

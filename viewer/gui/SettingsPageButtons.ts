@@ -25,24 +25,29 @@ import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import localStorageManager from "../util/localStorageManager";
 import {DynamicProps} from "../hoc/Dynamic";
+import {iconClasses} from '../components/Icons';
 
 export default GeneralButtons.concat(propsToDefs([
     {
         name: 'SectionView',
+        iconClass: iconClasses.Section,
         displayName: 'settings sections',
     },
     {
         name: 'ItemsView',
+        iconClass: iconClasses.Items,
         displayName: 'stored settings',
     },
     {
         name: 'SettingsDefaults',
+        iconClass: iconClasses.Reset,
         displayName: 'reset to defaults',
 
     },
     {
         name: 'SettingsLoad',
         displayName: 'load settings',
+        iconClass: iconClasses.Open,
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
             connected: keys.gui.global.connectedMode,
@@ -58,6 +63,7 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'SettingsSave',
         displayName: 'save settings',
+        iconClass: iconClasses.Save,
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
             connected: keys.gui.global.connectedMode,
@@ -72,6 +78,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'DownloadPageUpload',
+        iconClass: iconClasses.Upload,
         displayName: 'import',
         localOnly: true,
         storeKeys:{
@@ -88,6 +95,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'SettingsSplitReset',
+        iconClass: iconClasses.SplitReset,
         displayName: 'reset split settings',
         storeKeys: {
             editing: keys.gui.global.layoutEditing

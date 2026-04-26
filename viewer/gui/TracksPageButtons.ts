@@ -24,18 +24,22 @@ import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
+import {iconClasses} from '../components/Icons';
 
 export default GeneralButtons.concat(propsToDefs([
     {
         name:'ServerView',
+        iconClass: iconClasses.Server,
         displayName: 'server settings',
     },
     {
         name:'ItemsView',
+        iconClass: iconClasses.Items,
         displayName: 'list tracks/logs',
     },
     {
         name:'DownloadPageUpload',
+        iconClass: iconClasses.Upload,
         displayName: 'import',
         localOnly:true,
         storeKeys:{
@@ -52,6 +56,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'ShowSettings',
+        iconClass: iconClasses.Settings,
         displayName:'display settings'
     }
 ]))

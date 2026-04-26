@@ -24,10 +24,12 @@ import GeneralButtons, {Connected} from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
+import {iconClasses} from '../components/Icons';
 
 export default GeneralButtons.concat(propsToDefs([
     {
         name:'StatusAdd',
+        iconClass: iconClasses.Plus,
         displayName:'new route',
         storeKeys: {
             upload: keys.gui.capabilities.uploadRoute,
@@ -43,6 +45,7 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name: 'SyncRoutes',
         displayName:'sync to server',
+        iconClass: iconClasses.Sync,
         overflow: true,
         editDisable: true,
         storeKeys: {
@@ -59,14 +62,17 @@ export default GeneralButtons.concat(propsToDefs([
     Connected,
     {
         name:'ServerView',
+        iconClass: iconClasses.Server,
         displayName: 'server settings',
     },
     {
         name:'ItemsView',
+        iconClass: iconClasses.Items,
         displayName: 'stored routes',
     },
     {
         name:'DownloadPageUpload',
+        iconClass: iconClasses.Upload,
         displayName: 'import',
         localOnly:true,
         storeKeys: {
@@ -83,6 +89,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: 'ShowSettings',
+        iconClass: iconClasses.Settings,
         displayName:'display settings'
     }
 ]))

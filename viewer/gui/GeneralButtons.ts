@@ -24,13 +24,24 @@
 import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import mob from '../components/Mob';
 import keys from "../util/keys";
+import {iconClasses} from '../components/Icons';
 export default propsToDefs([
     mob.mobDefinition()
+])
+export const GeneralWithCancel=propsToDefs([
+    mob.mobDefinition(),
+    {
+        name:'Cancel',
+        displayName:'go back',
+        localOnly: true,
+        iconClass:iconClasses.Cancel
+    }
 ])
 
 export const Connected:DynamicButtonProps={
     name: 'Connected',
     displayName: 'connected',
+    iconClass:iconClasses.Connected,
     storeKeys: {
         onAndroid:keys.gui.global.onAndroid,
         connected: keys.gui.global.connectedMode,

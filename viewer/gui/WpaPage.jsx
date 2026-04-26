@@ -6,21 +6,20 @@ import Dynamic from '../hoc/Dynamic.tsx';
 import ItemList from '../components/ItemList.tsx';
 import React, {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
-import Page, {PageFrame, PageLeft} from '../components/Page.tsx';
+import {PageFrame, PageLeft} from '../components/Page.tsx';
 import Toast from '../components/Toast.tsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests';
 import Helper, {avitem} from '../util/helper.ts';
 import {DBCancel, DialogButtons, DialogFrame, showDialog} from '../components/OverlayDialog.tsx';
 import {Input,Checkbox} from '../components/Inputs.tsx';
-import DB from '../components/DialogButton.tsx';
-import Mob from '../components/Mob.ts';
 import Store from "../util/store";
 import {PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {InjectMainMenu} from "./MainNav";
-import {propsToDefs} from "../components/Button";
+import {propsToDefs, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
+import {GeneralWithCancel} from './GeneralButtons'
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -300,12 +299,13 @@ class WpaPageContent extends React.Component{
 
 export default (props)=>{
     const history=useHistory();
-    const buttons=InjectMainMenu(PAGEIDS.WPA, propsToDefs([
-        {
-            name: 'Cancel',
-            onClick: ()=>{history.pop()}
+    const buttons=InjectMainMenu(PAGEIDS.WPA, updateButtons(propsToDefs(GeneralWithCancel), {
+        Cancel: {
+            onClick: () => {
+                history.pop()
+            }
         }
-    ]));
+    }));
     return <PageFrame id={PAGEIDS.WPA} className={props.className}>
         <PageLeft id={PAGEIDS.WPA} title="Wifi Client connection">
             <WpaPageContent></WpaPageContent>

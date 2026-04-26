@@ -12,7 +12,7 @@ import {getPageTitle} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import GeneralButtons from "./GeneralButtons";
+import {GeneralWithCancel} from "./GeneralButtons";
 
 const InfoPage=(props:PageProps)=> {
     const history = useHistory();
@@ -30,7 +30,7 @@ const InfoPage=(props:PageProps)=> {
             }
         }
     }
-    currentButtons.current=InjectMainMenu(props.id,updateButtons(GeneralButtons,buttonActions));
+    currentButtons.current=InjectMainMenu(props.id,updateButtons(GeneralWithCancel,buttonActions));
     useInitialButton(currentButtons);
     const showLicense=()=>{
         const target=infoRef.current;

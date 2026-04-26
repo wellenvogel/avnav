@@ -30,24 +30,29 @@ import anchorWatch,{AnchorWatchKeys,isWatchActive} from "../components/AnchorWat
 import {CenterActionButton} from "../components/FeatureInfoDialog";
 import Dimmer from '../util/dimhandler';
 import GeneralButtons from "./GeneralButtons";
+import {iconClasses} from '../components/Icons';
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 export default GeneralButtons.concat(propsToDefs([
     {
         name: "NavOverlays",
+        iconClass: iconClasses.SelectChart,
         displayName:"select chart",
     },
     {
         name:"ZoomIn",
+        iconClass:iconClasses.ZoomIn,
         displayName:"zoom in",
         localOnly: true,
     },
     {
         name:"ZoomOut",
+        iconClass:iconClasses.ZoomOut,
         displayName:"zoom out",
         localOnly: true,
     },
     {
         name:'LockPos',
+        iconClass:iconClasses.LockPos,
         localOnly: true,
         displayName:"lock to gps",
         storeKeys:{
@@ -57,6 +62,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: "LockMarker",
+        iconClass:iconClasses.LockMarker,
         displayName:"start wp",
         localOnly: true,
         storeKeys: activeRoute.getStoreKeys(AnchorWatchKeys),
@@ -68,6 +74,7 @@ export default GeneralButtons.concat(propsToDefs([
         anchorWatch(true),
     {
         name: "StopNav",
+        iconClass:iconClasses.NavStop,
         displayName:"end nav",
         storeKeys: activeRoute.getStoreKeys(),
         updateFunction:(state)=>{
@@ -78,6 +85,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: "CourseUp",
+        iconClass:iconClasses.CourseUp,
         displayName:"course up",
         localOnly:true,
         storeKeys:{
@@ -87,6 +95,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         name: "ShowRoutePanel",
+        iconClass:iconClasses.Route,
         displayName:"edit route",
         overflow: true
 
@@ -94,6 +103,7 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name:'GpsCenter',
         displayName:"center to gps",
+        iconClass: iconClasses.Center,
         localOnly:true,
         overflow: true,
         editDisable: true

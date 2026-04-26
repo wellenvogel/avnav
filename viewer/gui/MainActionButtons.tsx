@@ -31,11 +31,13 @@ import React from "react";
 import splitsupport from '../util/splitsupport';
 import {exitAndroidApp} from "./MainNav";
 import dimhandler from "../util/dimhandler";
+import {iconClasses} from '../components/Icons';
 
 export const actionButtons=(): DynamicButtonProps[] => [
     {
         name: 'Night',
         displayName: 'night mode',
+        iconClass: iconClasses.Night,
         storeKeys: {toggle: keys.properties.nightMode},
         onClick: () => {
             let mode = globalstore.getData(keys.properties.nightMode, false);
@@ -58,6 +60,7 @@ export const actionButtons=(): DynamicButtonProps[] => [
     }),
     {
         name: 'SettingsReload',
+        iconClass: iconClasses.Reload,
         displayName: 'reload AvNav UI',
         storeKeys: {
             visible: keys.gui.global.layoutEditing,
@@ -74,6 +77,7 @@ export const actionButtons=(): DynamicButtonProps[] => [
     },
     {
         name: 'MainExit',
+        iconClass: iconClasses.Cancel,
         displayName: 'exit AvNav',
         storeKeys:{
             visible:keys.gui.global.onAndroid

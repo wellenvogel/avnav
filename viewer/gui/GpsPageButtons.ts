@@ -28,12 +28,14 @@ import AnchorWatchButton from '../components/AnchorWatchDialog';
 import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
+import {iconClasses} from '../components/Icons';
 
 export default ()=>{
     const num=layouthandler.getDashboardNum();
     const btProps:DynamicButtonProps[]=[
         {
             name:'Cancel',
+            iconClass:iconClasses.Cancel,
             displayName:'go back',
             localOnly: true
         },
@@ -43,6 +45,7 @@ export default ()=>{
         btProps.push({
             name:'Gps'+idx,
             overflow:true,
+            iconClass:iconClasses['Num'+idx],
             displayName:`dashboard ${idx}`,
             storeKeys: {
                 pageNum: keys.gui.gpspage.pageNumber

@@ -12,6 +12,7 @@ import LayoutHandler from '../util/layouthandler';
 import {getav} from "../util/helper";
 import {IHistory} from "../util/history";
 import {ButtonEvent} from "./Button";
+import {iconClasses} from './Icons';
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -57,6 +58,7 @@ const toggleMob=(history:IHistory)=>{
 const mobDefinition=()=>{return {
     name: "MOB",
     displayName: "MOB",
+    iconClass: iconClasses.MOB,
     storeKeys: activeRoute.getStoreKeys({visible:keys.gui.global.connectedMode, hasGps: keys.nav.gps.valid}),
     updateFunction:(state:Record<string, any>)=>{
         const toggle=StateHelper.targetName(state) === navobjects.WayPoint.MOB

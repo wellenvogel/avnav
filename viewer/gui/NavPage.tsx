@@ -799,9 +799,6 @@ const NavPage=(props:PageProps)=>{
             },
             {
                 name: "LockPos",
-                storeKeys:{
-                    toggle: keys.map.lockPosition
-                },
                 onClick:()=>{
                     const old=globalStore.getData(keys.map.lockPosition);
                     let mapLockMode=LOCK_MODES.center;
@@ -836,25 +833,16 @@ const NavPage=(props:PageProps)=>{
             anchorWatch(true,dialogCtx),
             {
                 name: "StopNav",
-                storeKeys: activeRoute.getStoreKeys(),
-                updateFunction:(state:any)=>{
-                    return {visible:StateHelper.hasActiveTarget(state)};
-                },
-                toggle:true,
                 onClick:()=>{
                     navToWp(false);
-                },
-                editDisable:true
+                }
             },
             {
                 name: "CourseUp",
-                storeKeys:{
-                    toggle: keys.map.courseUp
-                },
                 onClick:()=>{
                     MapHolder.setCourseUp(!globalStore.getData(keys.map.courseUp,false))
-                },
-                editDisable:true
+                }
+
             },
             {
                 name: "ShowRoutePanel",
@@ -863,16 +851,11 @@ const NavPage=(props:PageProps)=>{
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
                     history.push(PAGEIDS.ROUTE);
                 },
-                overflow: true
 
             },
             {
                 name: "NavOverlays",
                 onClick:()=>runSelectChart(),
-                /*overflow: true,
-                storeKeys:{
-                    visible:keys.gui.capabilities.uploadOverlays
-                }*/
             },
             {
                 name:'GpsCenter',

@@ -15,7 +15,7 @@ import {getPageTitle} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {InjectMainMenu} from "./MainNav";
 import {propsToDefs, updateButtons} from "../components/Button";
-import GeneralButtons from "./GeneralButtons";
+import {GeneralWithCancel} from "./GeneralButtons";
 import {iconClasses} from '../components/Icons';
 
 const AddressItem = (props: { value: string }) => {
@@ -89,7 +89,7 @@ const AddressPage = (props: PageProps) => {
         </PageLeft>
         <ButtonList page={props.id}
                     itemList={InjectMainMenu(props.id,
-                        updateButtons(GeneralButtons.concat(propsToDefs(buttons)), {
+                        updateButtons(GeneralWithCancel.concat(propsToDefs(buttons)), {
                             Cancel: {
                                 onClick: () => {
                                     history.pop()
