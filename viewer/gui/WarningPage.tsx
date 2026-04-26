@@ -115,7 +115,7 @@ const WarningPage = (props: PageProps) => {
                                 okFunction()
                             }
                             }
-                        />
+                        ></Button>
                     </div>
                 </div>
             </PageLeft>

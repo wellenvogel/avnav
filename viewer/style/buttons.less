@@ -122,12 +122,6 @@
     background-image: url("@{iconBase}/@{icon}");
   }
 }
-.dialogTextButton(@text){
-  padding-left:1.3em;
-  > span:after{
-    content: @text;
-  }
-}
 
 .buttonRow{
   padding-top: 0;
@@ -338,34 +332,34 @@
   }
 
   &.Gps1{
-    .textButton('1');
+    .iconButton('num-1.svg');
   }
   &.Gps2{
-    .textButton('2');
+    .iconButton('num-2.svg');
   }
   &.Gps3{
-    .textButton('3');
+    .iconButton('num-3.svg');
   }
   &.Gps4{
-    .textButton('4');
+    .iconButton('num-4.svg');
   }
   &.Gps5{
-    .textButton('5');
+    .iconButton('num-5.svg');
   }
   &.Gps6{
-    .textButton('6');
+    .iconButton('num-6.svg');
   }
   &.Gps7{
-    .textButton('7');
+    .iconButton('num-7.svg');
   }
   &.Gps8{
-    .textButton('8');
+    .iconButton('num-8.svg');
   }
   &.Gps9{
-    .textButton('9');
+    .iconButton('num-9.svg');
   }
   &.Gps10{
-    .textButton('10');
+    .iconButton('num-10.svg');
   }
   &.AisNearest {
     .iconButton('ais-nearest.svg');
@@ -477,7 +471,7 @@
   }
 
   &.DownloadPageCreate{
-    .textButton('+');
+    .iconButton('ic_add.svg');
   }
   &.SettingsOK {
     .iconButton('ic_done.svg');
@@ -551,7 +545,7 @@
   }
 
   &.AddonConfigPlus{
-    .textButton('+');
+    .iconButton('ic_add.svg');
   }
   &.AddonConfigAddOns{
     .iconButton('apps.svg');
@@ -765,7 +759,7 @@
     .dialogIconButton('ic_file_upload.svg')
   }
   &.new{
-    .dialogTextButton('+');
+    .dialogIconButton('ic_add.svg');
   }
   &.save{
     .dialogIconButton('save.svg')
