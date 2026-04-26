@@ -29,10 +29,6 @@ const DialogButton=(props:DialogButtonProps)=>{
         KeyHandler.registerDialogComponent(COMPONENT);
     // eslint-disable-next-line prefer-const
         let {icon,displayName,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
-        const spanStyle:Record<string, any>={};
-        if (icon !== undefined) {
-            spanStyle.backgroundImage = "url(" + icon + ")";
-        }
         const add:Record<string, any> = {};
         if (disabled) {
             add.disabled = true;
