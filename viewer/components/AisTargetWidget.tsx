@@ -2,17 +2,27 @@
  * Created by andreas on 23.02.16.
  */
 
-import React from "react";
-import PropTypes from 'prop-types';
-import keys from '../util/keys.ts';
+import React, {SyntheticEvent} from "react";
+import keys from '../util/keys';
 import PropertyHandler from '../util/propertyhandler';
-import AisFormatter from '../nav/aisformatter.ts';
+import AisFormatter, {AisItem} from '../nav/aisformatter';
 import {WidgetFrame} from "./WidgetBase";
-import {useStringsChanged} from "../hoc/Resizable";
-import {setav,concatsp} from "../util/helper";
-import {WidgetProps} from "../util/types";
+import {ResizeStrings, useStringsChanged} from "../hoc/Resizable";
+import {setav} from "../util/helper";
+import {IWidgetProps} from "../util/types";
+import {Icon} from "./Icons";
 
-const AisFullDisplay=(display)=> {
+interface AisItemDisplayProps extends ResizeStrings{
+    iconColor?:string;
+    front?:string
+    distance?:string,
+    name?:string,
+    tcpa?:string,
+    cpa?:string,
+    headingTo?: string
+
+}
+const AisFullDisplay=(display:AisItemDisplayProps)=> {
     return <React.Fragment>
         <div className="aisPart">
             <div className="widgetData">
@@ -25,7 +35,7 @@ const AisFullDisplay=(display)=> {
             </div>
         </div>
     {
-        display.tcpa > 0 &&
+        Number(display.tcpa) > 0 &&
         <div className="aisPart">
             <div className="widgetData">
                 <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
@@ -40,7 +50,7 @@ const AisFullDisplay=(display)=> {
         </div>
     }
     {
-        !(display.tcpa > 0) &&
+        !(Number(display.tcpa) > 0) &&
         <div className="aisPart">
             <div className="widgetData">
                 <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
@@ -54,16 +64,14 @@ const AisFullDisplay=(display)=> {
     }
     <div className="aisPart withIcon">
         {(display.iconColor !== undefined)
-            && <div className={concatsp("icon")}
-                    style={{backgroundColor:display.iconColor}}>
-            </div>}
+            && <Icon color={display.iconColor} />}
         <div className="widgetData">
             <span className='aisFront aisData'>{display.front}</span>
         </div>
     </div>
     </React.Fragment>
 }
-const AisSmallDisplay=(display)=> {
+const AisSmallDisplay=(display:AisItemDisplayProps)=> {
     return <div className="aisSmall">
         <div className={"upper"}>
         <div className="aisPart">
@@ -80,7 +88,7 @@ const AisSmallDisplay=(display)=> {
             </div>
         </div>
         {
-            display.tcpa > 0 &&
+            Number(display.tcpa) > 0 &&
             <div className="aisPart">
                 <div className="widgetData">
                     <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
@@ -90,7 +98,7 @@ const AisSmallDisplay=(display)=> {
             </div>
         }
         {
-            !(display.tcpa > 0) &&
+            !(Number(display.tcpa) > 0) &&
             <div className="aisPart">
                 <div className="widgetData">
                     <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
@@ -102,23 +110,39 @@ const AisSmallDisplay=(display)=> {
         </div>
         </div>
         {(display.iconColor !== undefined) &&<div className="aisPart withIcon">
-            <div className={concatsp("icon")} style={{backgroundColor:display.iconColor}}></div>
+            <Icon color={display.iconColor}/>
         </div>
         }
     </div>
 }
-const AisTargetWidget = (props) => {
-    const click = (ev) => {
+const STORE_KEYS={
+    target: keys.nav.ais.nearest,
+    isEditing: keys.gui.global.layoutEditing,
+    trackedMmsi: keys.nav.ais.trackedMmsi
+}
+const EDITABLE_PARAMETERS={
+    legacy:{type:'BOOLEAN',
+        displayName:'legacy',
+        default:false,
+        description:"color the complete widget depending on the target state instead of only a badge"}
+}
+export interface AisTargetWidgetProps extends IWidgetProps ,
+    Record<keyof typeof STORE_KEYS,any>,
+    Record<keyof typeof EDITABLE_PARAMETERS,boolean>
+{
+}
+const AisTargetWidget = (props:AisTargetWidgetProps) => {
+    const click = (ev:SyntheticEvent) => {
         if (ev && ev.stopPropagation) ev.stopPropagation();
         props.onClick(setav(ev,{mmsi:props.target ? props.target.mmsi : undefined}));
     }
-    let target = props.target || {};
-    let small = (props.mode === "horizontal");
+    const target:AisItem = props.target || {};
+    const small = (props.mode === "horizontal");
     let color = undefined;
     if (target.mmsi && target.mmsi !== "") {
         color = PropertyHandler.getAisColor(target);
     }
-    let display = {};
+    const display:AisItemDisplayProps = {};
     display.front = AisFormatter.format('passFront', target);
     display.name = AisFormatter.format('nameOrmmsi', target);
     if (target.tcpa > 0) {
@@ -160,24 +184,9 @@ const AisTargetWidget = (props) => {
 
 }
 
-AisTargetWidget.storeKeys = {
-    target: keys.nav.ais.nearest,
-    isEditing: keys.gui.global.layoutEditing,
-    trackedMmsi: keys.nav.ais.trackedMmsi
-};
+AisTargetWidget.storeKeys = STORE_KEYS;
 
-AisTargetWidget.propTypes = {
-    ...WidgetProps,
-    isEditing: PropTypes.bool,
-    target: PropTypes.object,
-    trackedMmsi: PropTypes.string,
-    legacy: PropTypes.bool
-};
-AisTargetWidget.editableParameters={
-    'legacy':{type:'BOOLEAN',
-        displayName:'legacy',
-        default:false,
-        description:"color the complete widget depending on the target state instead of only a badge"}
-}
+
+AisTargetWidget.editableParameters=EDITABLE_PARAMETERS;
 
 export default AisTargetWidget;

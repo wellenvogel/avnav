@@ -3,7 +3,7 @@
  */
 import EtaWidget from './EtaWidget.jsx';
 import TimeStatusWidget from './TimeStatusWidget.jsx';
-import AisTargetWidget from './AisTargetWidget.jsx';
+import AisTargetWidget from './AisTargetWidget.tsx';
 import ActiveRouteWidget from './ActiveRouteWidget.jsx';
 import EditRouteWidget from './EditRouteWidget.jsx';
 import CenterDisplayWidget from './CenterDisplayWidget.jsx';

@@ -12,10 +12,10 @@ export const AIS_CLASSES={
 };
 
 export interface AisItem{
-    type:number,
+    type?:number,
     name?:string,
     shipname?:string,
-    mmsi:string,
+    mmsi?:string,
     distance?:number,
     heading?:number,
     turn?:number,
@@ -34,7 +34,7 @@ export interface AisItem{
     lat?:number,
     destination?:string,
     warning?:boolean,
-    nearest?:false
+    nearest?:boolean
     length?:number,
     beam?:number,
     draught?:number,
@@ -42,7 +42,7 @@ export interface AisItem{
 }
 interface AisFormatterType{
     headline?:string,
-    format:((v:AisItem)=>string)|((v:AisItem)=>boolean),
+    format:(v:AisItem)=>string,
     unit?:string,
     classes?:string[]
 }
@@ -241,13 +241,13 @@ const aisparam:Record<string,AisFormatterType> = {
     warning: {
         headline: 'Warning',
             format: function (v:AisItem) {
-            return v.warning || false
+            return (v.warning || false)+""
         }
     },
     nearest: {
         headline: 'Nearest',
             format: function (v:AisItem) {
-            return v.nearest || false
+            return (v.nearest || false)+""
         }
     },
     clazz: {
@@ -418,7 +418,7 @@ const AisFormatter={
         if (! d) return ;
         return d.unit;
     },
-    format(key:string,aisobject:AisItem,inlcudeUnit?:boolean){
+    format(key:string,aisobject:AisItem,inlcudeUnit?:boolean):string{
         const d=aisparam[key];
         if (! d) return ;
         if (aisobject === undefined) return;
