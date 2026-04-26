@@ -264,7 +264,7 @@ class GeoJsonChartSource extends ChartSourceBase{
         param.forEach((p)=>userInfo[p]=feature.get(p));
         this.formatFeatureInfo(this.styleParameters[supportedStyleParameters.featureFormatter], userInfo,feature,rt.point,true);
         if (userInfo.link){
-            userInfo.link=this.getLinkUrl(rt.link);
+            userInfo.link=this.getLinkUrl(userInfo.link);
         }
         rt.userInfo=userInfo;
         return rt;
