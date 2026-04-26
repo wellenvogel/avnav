@@ -38,7 +38,7 @@ import ItemList, {Item} from "./ItemList";
 import {DBCancel, DialogButtonDef, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
-
+import {iconClasses} from './Icons';
 interface DisplayItem{
     name?:string,
     addClass?:string,
@@ -226,6 +226,7 @@ export const AisInfoWithFunctions=(
     const pButtons:DialogButtonDef[] = [
         {
             name: 'AisNearest',
+            iconClass: iconClasses.AisNearest,
             onClick:()=>{
                 NavData.getAisHandler().setTrackedTarget(0);
                 const pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
@@ -238,6 +239,7 @@ export const AisInfoWithFunctions=(
         },
         {
             name: 'AisInfoLocate',
+            iconClass: iconClasses.Center,
             onClick: ()=>{
                 NavData.getAisHandler().setTrackedTarget(mmsi);
                 const pos=NavData.getAisHandler().getAisPositionByMmsi(mmsi);
@@ -253,6 +255,7 @@ export const AisInfoWithFunctions=(
         },
         {
             name: 'AisInfoHide',
+            iconClass: iconClasses.AisInfoHide,
             onClick: () => {
                 const target = getTarget(mmsi);
                 if (!target) return;
@@ -273,6 +276,7 @@ export const AisInfoWithFunctions=(
         },
         {
             name: 'AisInfoList',
+            iconClass: iconClasses.Items,
             onClick:()=>{
                 runCb('AisInfoList',mmsi)
             },

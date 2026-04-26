@@ -16,6 +16,7 @@ import ButtonList from "../components/ButtonList";
 import {InjectMainMenu} from "./MainNav";
 import {propsToDefs, updateButtons} from "../components/Button";
 import GeneralButtons from "./GeneralButtons";
+import {iconClasses} from '../components/Icons';
 
 const AddressItem = (props: { value: string }) => {
     const url = "http://" + props.value;
@@ -36,6 +37,7 @@ const AddressPage = (props: PageProps) => {
     const buttons = [
         {
             name: 'AndroidBrowser',
+            iconClass: iconClasses.Browser,
             visible: globalStore.getData(keys.gui.global.onAndroid),
             onClick: () => { // @ts-ignore
                 window.avnavAndroid.launchBrowser();

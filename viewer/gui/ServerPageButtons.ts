@@ -23,6 +23,7 @@
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
+import {iconClasses} from '../components/Icons';
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -56,6 +57,7 @@ export default GeneralButtons.concat(propsToDefs([
     {
         name: 'AndroidBrowser',
         displayName:'open browser',
+        iconClass: iconClasses.Browser,
         localOnly:true,
         overflow:true,
         //@ts-ignore

@@ -23,21 +23,25 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
+import {iconClasses} from '../components/Icons';
 
 export const AisListButtons=propsToDefs([
     {
         name:"AisNearest",
+        iconClass:iconClasses.AisNearest,
         displayName:"nearest target",
         localOnly:true,
     },
     {
         name:"AisSort",
+        iconClass:iconClasses.Sort,
         displayName:"sort order",
         localOnly:true,
 
     },
     {
         name:"AisLock",
+        iconClass:iconClasses.Lock,
         displayName:"stop update",
         localOnly:true,
         storeKeys: {toggle:keys.properties.aisListLock}
@@ -45,6 +49,7 @@ export const AisListButtons=propsToDefs([
     },
     {
         name:'AisSearch',
+        iconClass:iconClasses.Search,
         displayName:"search",
         localOnly:true,
         storeKeys: {toggle:keys.gui.aispage.searchActive}
