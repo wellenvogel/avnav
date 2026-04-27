@@ -8,7 +8,7 @@ import Requests from '../util/requests';
 // @ts-ignore
 import AvNavVersion from '../version.js';
 import {useHistory} from "../components/HistoryProvider";
-import {getPageTitle} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
@@ -26,8 +26,9 @@ const InfoPage=(props:PageProps)=> {
     const buttonActions = {
         Cancel: {
             onClick: () => {
-                history.pop()
-            }
+                history.replace(PAGEIDS.SERVER);
+            },
+            visible: history.isPrevious(PAGEIDS.SERVER),
         }
     }
     currentButtons.current=InjectMainMenu(props.id,updateButtons(GeneralWithCancel,buttonActions));

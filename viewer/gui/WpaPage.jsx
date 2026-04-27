@@ -302,8 +302,9 @@ export default (props)=>{
     const buttons=InjectMainMenu(PAGEIDS.WPA, updateButtons(propsToDefs(GeneralWithCancel), {
         Cancel: {
             onClick: () => {
-                history.pop()
-            }
+                history.replace(PAGEIDS.SERVER)
+            },
+            visible: history.isPrevious(PAGEIDS.SERVER)
         }
     }));
     return <PageFrame id={PAGEIDS.WPA} className={props.className}>

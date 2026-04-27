@@ -45,6 +45,7 @@ export interface IHistory{
     reset:()=>void;
     setOptions:(options?:HistoryOptions|undefined)=>void;
     currentLocation:(opt_includeOptions?:boolean)=>string|HistoryEntry;
+    isPrevious:(location:string)=>boolean;
 }
 class History implements IHistory{
     private history:HistoryEntryInternal[];
@@ -90,6 +91,28 @@ class History implements IHistory{
             return;
         }
         const hentry=this.history[this.history.length - 1];
+        //try to find the target in the current history
+        //and set this as the topmost entry, update the options
+        for (let idx=0;idx<this.history.length;idx++){
+            if (this.history[idx].location===location){
+                this.history.splice(idx+1,this.history.length)
+                this.history[idx].options=options;
+                this._tryAnchor();
+                this.updateCallback(hentry);
+                return;
+            }
+        }
+        //if there is only one entry we make sure to only allow the navpage
+        if (this.history.length===1){
+            if (location !== PAGEIDS.NAV){
+                //execute a push
+                this.push(location,options);
+                return;
+            }
+            //if the new location is nav we should have handled it above
+            return;
+        }
+        //if not found replace the topmost entry
         this.history.splice(-1,1,{location:location,options:options||{},back:hentry});
         this._tryAnchor();
         this.updateCallback(hentry);
@@ -117,6 +140,10 @@ class History implements IHistory{
         }
         this._tryAnchor();
         this.updateCallback(last,true);
+    }
+    isPrevious(location:string){
+        if (this.history.length < 2) return false;
+        return location === this.history[this.history.length-2].location;
     }
 
     /**

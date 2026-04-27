@@ -11,7 +11,7 @@ import Requests from '../util/requests';
 import QRCode from 'qrcode.react';
 import {useHistory} from "../components/HistoryProvider";
 import {useTimer} from "../util/UiHelper";
-import {getPageTitle} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
 import {InjectMainMenu} from "./MainNav";
 import {propsToDefs, updateButtons} from "../components/Button";
@@ -92,8 +92,9 @@ const AddressPage = (props: PageProps) => {
                         updateButtons(GeneralWithCancel.concat(propsToDefs(buttons)), {
                             Cancel: {
                                 onClick: () => {
-                                    history.pop()
-                                }
+                                    history.replace(PAGEIDS.SERVER)
+                                },
+                                visible: history.isPrevious(PAGEIDS.SERVER),
                             }
                         }))}/>
     </PageFrame>
