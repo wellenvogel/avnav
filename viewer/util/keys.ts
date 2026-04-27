@@ -460,7 +460,6 @@ const keys:Record<string,KeyType>={
         nightFade: new Property(50, "NightDim(%)", PropertyType.RANGE, [1, 99],"Value in % to dim the display for night mode"), //in px
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99],"Value in % to dim the chart display for night mode"), //in %
         dimFade: new Property(0,"Dim Fade(%)",PropertyType.RANGE,[0,60]),
-        showDimButton: new Property(true,"Show Dim Button",PropertyType.CHECKBOX),
         showSplitButton: new Property(true,"Show Split Button", PropertyType.CHECKBOX),
         baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28],"The base font size for all text except for widgets"),
         pageColumnWidth: new Property(350,"Pages Column Width",PropertyType.RANGE,[200,800],"The minimal width for one columns on pages with multiple columns. Show multiple columns if the window width is n x this width."),
@@ -492,11 +491,9 @@ const keys:Record<string,KeyType>={
             "NEVER: no page, hide buttons"),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20],"the zoom that is automatically set when MOB is activated (except if the zoom was already higher)"),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
-        cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,"if set the back button will always be on top",true),
         titleIcons: new Property(true,"red icons in title",PropertyType.CHECKBOX,undefined,"show some red icons in page headers for anchor watch, measure, disconnected mode,..."),
         titleIconsGps: new Property(true,"title icons on dashboard page",PropertyType.CHECKBOX,undefined,"if set the red icons are also shown on dashboard pages"),
         featureInfo: new Property(true,"Feature Info on Click",PropertyType.CHECKBOX,undefined,"bring up the feature list when clicking on the map"),
-        showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
         measureRhumbLine: new Property(true,"Measure rhumb line (false: great circle)",PropertyType.CHECKBOX,undefined,"if set the measure function will use the rhumb line mode"),
         mapUpZoom: new Property(6,"zoom up lower layers",PropertyType.RANGE,[0,8],"If a tile fails to load (typically the server does not have one) AvNav will try lower zoom levels and scale up the tiles."+
             "This can impact performance as more network request are made and the scaling will need computation power in the browser."),
@@ -544,6 +541,9 @@ const keys:Record<string,KeyType>={
         navUrl: new Property("/api","",PropertyType.DELETED),
         lastLoadedName: new Property('system.default','',PropertyType.DELETED),
         connectedMode: new Property(true, "connected", PropertyType.DELETED),
+        cancelTop: new Property(false,"Back button top",PropertyType.DELETED),
+        showDimButton: new Property(true,"Show Dim Button",PropertyType.DELETED),
+        showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.DELETED),
     }
 };
 

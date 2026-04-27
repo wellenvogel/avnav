@@ -14,7 +14,6 @@ const storeKeys={
     buttonSize: keys.properties.style.buttonSize,
     dimensions: keys.gui.global.windowDimForce,
     buttonCols: keys.properties.buttonCols,
-    cancelTop: keys.properties.cancelTop,
     isEditing: keys.gui.global.layoutEditing,
     showShade:keys.properties.showButtonShade
 }
@@ -69,19 +68,6 @@ const ButtonList = (iprops:ButtonListProps) => {
             setVisibilityImpl(computeVisibility(sprops.itemList));
         }
     }, [sprops.itemList]);
-    const itemSort = (items:ButtonDescription[]) => {
-        if (!sprops.cancelTop) return items;
-        const rt:ButtonDescription[] = [];
-        for (let round = 0; round < 2; round++) {
-            items.forEach((item) => {
-                if ((round === 0 && item.name === 'Cancel')
-                    || (round !== 0 && item.name !== 'Cancel')) {
-                    rt.push(item);
-                }
-            })
-        }
-        return rt;
-    }
 
 
     /**
@@ -139,7 +125,6 @@ const ButtonList = (iprops:ButtonListProps) => {
             invisibleItems.push(injectConfig(button));
         }
     }
-    items = itemSort(items);
     let scale = 1;
     let hasOverflow = false;
     let moveToOverflow = 0;

@@ -85,16 +85,15 @@ const fullScreenDefinition=()=>{ return {
     name: "FullScreen",
     iconClass: iconClasses.FullScreen,
     storeKeys: {
-        visible:keys.properties.showFullScreen,
         toggle:keys.gui.global.isFullScreen,
         split: keys.gui.global.splitMode
     },
     displayName:fullscreenDisplayName,
-    updateFunction:(state:Record<string,any>)=>{
+    updateFunction:()=>{
         return {
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...
             // @ts-ignore
-            visible: state.visible && fullScreenAvailable() && ! window.avnavAndroid,
+            visible: fullScreenAvailable() && ! window.avnavAndroid,
         }
     },
     onClick:()=>{

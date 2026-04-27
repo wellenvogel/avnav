@@ -23,7 +23,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/keys";
 import DimHandler from '../util/dimhandler';
-import FullScreen from '../util/Fullscreen';
 import propertyhandler, {SavedSettingsData} from '../util/propertyhandler';
 import Toast from "./Toast";
 import Button, {ButtonEvent, DynamicButtonProps} from "./Button";
@@ -62,7 +61,7 @@ export interface SettingsDefinition extends Omit<Property,'isSplit'>{
 export const settingsSections = {
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
         keys.properties.connectionLostAlarm],
-    Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
+    Buttons:    [keys.properties.style.buttonSize,keys.properties.buttonCols,
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
         keys.properties.showSplitButton],
     General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
@@ -110,8 +109,6 @@ export const settingsConditions:Record<string,Condition>={
 };
 
 settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
-settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
-settingsConditions[keys.properties.showFullScreen]=()=>FullScreen.fullScreenAvailable();
 settingsConditions[keys.properties.boatDirectionVector]=(values)=>{
     const cur=(values||{})
     return cur[keys.properties.boatDirectionMode]!== 'cog';

@@ -157,7 +157,7 @@ class DimmHandler{
         return this.actionFunction !== undefined;
     }
     enabled(){
-        return this.canHandle() && globalStore.getData(keys.properties.showDimButton,false);
+        return this.canHandle();
     }
     buttonDef(){
         return{
