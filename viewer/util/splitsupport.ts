@@ -121,7 +121,7 @@ class SplitSupport{
             return {
                 name: 'Split',
                 displayName: 'split screen',
-                icon: iconClasses.Split,
+                iconClass: iconClasses.Split,
                 storeKeys: {
                     toggle: keys.gui.global.splitMode,
                     visible: keys.properties.showSplitButton
