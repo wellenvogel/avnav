@@ -3,7 +3,7 @@
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history';
 import Dynamic from './hoc/Dynamic';
-import keys from './util/keys';
+import keys, {CL_BUTTON_TEXT, CL_MAINBT_TEXT} from './util/keys';
 import InfoPage from './gui/InfoPage';
 import GpsPage from './gui/GpsPage';
 import AisPage from './gui/AisPage';
@@ -92,12 +92,6 @@ const Other=(props)=>{
             >Main</Button>
         </React.Fragment>
 }
-const Loading=(props)=>{
-    return <React.Fragment>
-        <h1>AvNav is Loading...</h1>
-    </React.Fragment>
-}
-
 
 
 
@@ -149,7 +143,11 @@ const Router = (props) => {
     if (Page === undefined) {
         Page = Other;
     }
-    let className = "pageFrame " + (props.nightMode ? "nightMode" : "");
+    let className = Helper.concatsp("pageFrame",
+        props.nightMode ? "nightMode" : undefined,
+        props.btText? CL_BUTTON_TEXT:undefined,
+        props.mainBtText?CL_MAINBT_TEXT:undefined
+        );
     let style = {};
     if (props.nightMode) style['opacity'] = globalStore.getData(keys.properties.nightFade) / 100;
     let dimStyle = {opacity: 0.5};
@@ -191,6 +189,8 @@ Router.propTypes = {
     pageColumnWidth: PropTypes.number,
     buttonWidth: PropTypes.number,
     fontSize: PropTypes.number,
+    btText: PropTypes.bool,
+    mainBtText: PropTypes.bool,
 }
 
 const DynamicRouter=Dynamic(Router);
@@ -226,6 +226,8 @@ const MainBody = ({ history, nightMode}) => {
                     pageColumnWidth: keys.properties.pageColumnWidth,
                     buttonWidth:keys.gui.global.computedButtonWidth,
                     fontSize: keys.properties.baseFontSize,
+                    btText: keys.properties.buttonText,
+                    mainBtText: keys.properties.mainBtText,
                     ...keys.gui.capabilities
                 }}
                 location={location?.location}

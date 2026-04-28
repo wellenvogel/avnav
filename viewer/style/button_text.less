@@ -1,0 +1,19 @@
+.btTxt(@small){
+  &:after{
+    content: @small
+  }
+}
+.btTxt(@small,@long){
+  .btTxt(@small);
+  .longText&:after{
+    content: @long
+  }
+}
+.button{
+  &.MOB{
+    .btTxt('MOB')
+  }
+  &.Cancel{
+    .btTxt('Cancel','go back')
+  }
+}

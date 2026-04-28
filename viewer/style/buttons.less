@@ -44,14 +44,60 @@
       border-radius: inherit;
     }*/
   }
+  &:after {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 1em;
+    text-align: center;
+  }
 }
+.buttonRow.button:after{
+  position: unset;
+}
+
+//TEMP!
+.buttonRow.button{
+  .listMain{
+    display: none;
+  }
+}
+
+.btText{
+  div:not(.buttonRow).button .iconFrame{
+    height: calc(80% - 0.9em);
+  }
+  .button:after {
+    display: block;
+  }
+}
+.mainBtText .buttonRow.button:after{
+  display: block;
+}
+
 
 .button{
   .buttonBase();
   width: 4em;
   height: 4em;
   font-size: @normalButtonFont;
-
+  .hoverClass&::after {
+    position: absolute;
+    background-color: yellow;
+    border: 1px solid black;
+    padding: 0.2em;
+    right: 3em;
+    top: 1em;
+    width: 10em;
+    height: 1em;
+    left: auto;
+    z-index: 999;
+    .buttonRow&{
+      color:red;
+    }
+  }
 }
 .fab.button {
   position: absolute;

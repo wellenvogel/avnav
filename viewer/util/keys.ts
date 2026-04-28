@@ -15,6 +15,7 @@ import AisFormatter from "../nav/aisformatter";
 import {EditableParameterTypes, ListEntry} from "./EditableParameter";
 // @ts-ignore
 import assign from "object-assign";
+
 export const DEFAULT_LAYOUT_NAME = "system.default";
 
 const K=999; //the real value does not matter
@@ -491,6 +492,8 @@ const keys:Record<string,KeyType>={
             "NEVER: no page, hide buttons"),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20],"the zoom that is automatically set when MOB is activated (except if the zoom was already higher)"),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
+        buttonText: new Property(false,"text on buttons",PropertyType.CHECKBOX,undefined,"show a small text on normal buttons"),
+        mainBtText: new Property(true,"button text main menu",PropertyType.CHECKBOX,undefined,"show a button text in the main menu"),
         titleIcons: new Property(true,"red icons in title",PropertyType.CHECKBOX,undefined,"show some red icons in page headers for anchor watch, measure, disconnected mode,..."),
         titleIconsGps: new Property(true,"title icons on dashboard page",PropertyType.CHECKBOX,undefined,"if set the red icons are also shown on dashboard pages"),
         featureInfo: new Property(true,"Feature Info on Click",PropertyType.CHECKBOX,undefined,"bring up the feature list when clicking on the map"),
@@ -664,3 +667,5 @@ export const KeyHelper = {
 };
 
 export default  keys;
+export const CL_BUTTON_TEXT = 'btText';
+export const CL_MAINBT_TEXT = 'mainBtText';

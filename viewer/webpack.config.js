@@ -196,7 +196,7 @@ module.exports = (env, argv) => {
                             options: {
                                 url: true,
                                 modules: {
-                                    auto: /icons.less$/,
+                                    auto: /icons.less$|button_text.less$/,
                                     localIdentName: '[local]',
                                     namedExport: true
                                 }

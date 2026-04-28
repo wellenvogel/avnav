@@ -33,19 +33,19 @@ import {
     getCommonParam
     // @ts-ignore
 } from "../components/EditableParameterUI";
-import {InputSelect, InputReadOnly} from './Inputs';
+import {InputReadOnly, InputSelect} from './Inputs';
 import globalstore from "../util/globalstore";
 import LayoutHandler, {layoutLoader} from '../util/layouthandler';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
-import {DialogButtons, DialogFrame, DBCancel, DBOk, showPromiseDialog, showDialog} from "./OverlayDialog";
+import {DBCancel, DBOk, DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "./OverlayDialog";
 import {ConfirmDialog} from './BasicDialogs';
 import {useDialogContext, useStoreState} from "./exports";
 import {IDialogContext} from "./DialogContext";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
 // @ts-ignore
-import {ItemNameDialog,checkName} from './ItemNameDialog';
+import {checkName, ItemNameDialog} from './ItemNameDialog';
 // @ts-ignore
 import Formatter from "../util/formatter";
 import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
@@ -53,7 +53,6 @@ import {fetchItem, listItems} from "../util/itemFunctions";
 import {DownloadItemSelectDialog} from "./DownloadItemList";
 import {Item} from "./ItemList";
 import {LayoutData} from "../api/api.interface";
-
 
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
@@ -63,13 +62,13 @@ export const settingsSections = {
         keys.properties.connectionLostAlarm],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.buttonCols,
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
-        keys.properties.showSplitButton],
+        keys.properties.buttonText,keys.properties.mainBtText],
     General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
         keys.properties.allowTwoWidgetRows,keys.properties.dashboardNum,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
         keys.properties.autoUpdateUserCss],
-    MainMenu:[keys.properties.mainNavExpand,keys.properties.mainNavCols],
+    MainMenu:[keys.properties.mainNavExpand,keys.properties.mainNavCols,keys.properties.mainBtText],
     Navigation: [keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,

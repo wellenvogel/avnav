@@ -1,5 +1,5 @@
 import React, {useCallback, useRef} from 'react';
-import {useKeyEventHandlerPlain} from '../util/UiHelper';
+import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
 import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
@@ -45,6 +45,7 @@ export interface ButtonProps {
         isAddon?: ButtonAddonType;
         iconClass?: string;
         dataChanged?:(data:ButtonDescription) => void;
+        noHover?:boolean;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{
@@ -80,6 +81,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     displayName?: string;
     closeDialogs?: boolean;
     isAddon?: ButtonAddonType=ButtonAddonType.NONE;
+    noHover?: boolean;
 }
 
 const toggleClass=(props:ButtonProps)=> {
@@ -97,6 +99,10 @@ const getIdx=()=>{
 
 const Button = (sprops:ButtonProps) => {
     const iprops:ButtonProps=useStore(sprops,{changeCallback:sprops.dataChanged});
+    const [hover,setHover]=React.useState(false);
+    const hoverTimer=useTimer((seq:number)=>{
+        hoverTimer.guardedCall(seq,()=>setHover(true));
+    },1000);
     const idxRef=useRef(getIdx());
     const dialogContext=useDialogContext();
     const history = useHistory();
@@ -125,6 +131,7 @@ const Button = (sprops:ButtonProps) => {
         name,
         toggleClass(iprops),
         disabled ? 'disabled' : undefined,
+        hover ? 'longText hoverClass' : undefined,
     );
     const spanStyle:Record<string, any> = {};
     if (icon !== undefined) {
@@ -153,7 +160,17 @@ const Button = (sprops:ButtonProps) => {
         }
     }
     return (
-        <div {...forward} className={classNamev} title={displayName+""}>
+        <div {...forward}
+             className={classNamev}
+             //title={displayName+""}
+             onMouseEnter={()=>{
+                 if (iprops.noHover) return;
+                 hoverTimer.restart()}}
+             onMouseLeave={()=>{
+                 hoverTimer.stopTimer();
+                 setHover(false);
+             }}
+        >
             <Icon className={iconClass} icon={icon} forceClass={true}/>
             {children}
         </div>
@@ -161,8 +178,8 @@ const Button = (sprops:ButtonProps) => {
 }
 
 export const ButtonRow=(button:DynamicButtonProps) => {
-    const className=Helper.concatsp('buttonRow listEntry',button.className);
-    return <Button {...button} className={className} displayName={undefined}>
+    const className=Helper.concatsp('buttonRow listEntry longText',button.className);
+    return <Button {...button} noHover={true} className={className} displayName={undefined}>
         <ListMainSlot primary={button.displayName||button.name}></ListMainSlot>
     </Button>
 }

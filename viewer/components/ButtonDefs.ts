@@ -20,38 +20,17 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
+// @ts-ignore
+import * as btdef from '../style/button_text.less';
+import {iconClasses} from './Icons';
 
-import {DynamicButtonProps, propsToDefs} from "../components/Button";
-import mob from '../components/Mob';
-import keys from "../util/keys";
-import {iconClasses} from '../components/Icons';
-import {ButtonDefinitions} from "../components/ButtonDefs";
-
-export default propsToDefs([
-    mob.mobDefinition()
-])
-export const GeneralWithCancel=propsToDefs([
-    mob.mobDefinition(),
-    {
-        ...ButtonDefinitions.Cancel,
-        localOnly: true
-    }
-])
-
-export const Connected:DynamicButtonProps={
-    name: 'Connected',
-    displayName: 'connected',
-    iconClass:iconClasses.Connected,
-    storeKeys: {
-        onAndroid:keys.gui.global.onAndroid,
-        connected: keys.gui.global.connectedMode,
-        canConnect: keys.gui.capabilities.canConnect},
-    updateFunction: (state) => {
-        return {
-            visible: !state.onAndroid && state.canConnect,
-            toggle: state.connected
-        }
+export const ButtonDefinitions= {
+    MOB:{
+        name:btdef.MOB,
+        iconClass: iconClasses.MOB,
     },
-    editDisable: true,
-    overflow: true
+    Cancel:{
+        name:btdef.Cancel,
+        iconClass: iconClasses.Cancel,
+    }
 }
