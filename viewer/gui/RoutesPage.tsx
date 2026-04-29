@@ -44,6 +44,7 @@ import globalstore from "../util/globalstore";
 import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
+import ButtonDefs from "../components/ButtonDefs";
 
 const PAGE=PAGEIDS.NROUTE;
 const TITLE=getPageTitle(PAGE)
@@ -58,12 +59,12 @@ const RoutesPage=(props:RoutesPageProps)=>{
      const [uploadProps,uploadAction]=useUploadHelper('route');
      const actions=createItemActions('route');
      const buttonActions={
-         ServerView:{
+         [ButtonDefs.ServerView.name]:{
              onClick:()=>scrollTo(0),
              disabled:props.pageColumns>1,
              toggle: isVisible(0),
          },
-         ItemsView:{
+         [ButtonDefs.StoredRoutes.name]:{
              onClick:()=>scrollTo(1),
              disabled:props.pageColumns>1,
              toggle:isVisible(1),
@@ -71,7 +72,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
          Cancel:{
              onClick:()=>history.pop()
          },
-         StatusAdd:{
+         [ButtonDefs.RouteAdd.name]:{
              onClick:async ()=>{
                  scrollTo(1);
                  try {
@@ -86,7 +87,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
 
              }
          },
-         SyncRoutes:{
+         [ButtonDefs.SyncRoutes.name]:{
              onClick:()=>{
                  showDialog(undefined, ()=><RouteSyncDialog
                      deleteLocal={true}
@@ -94,14 +95,14 @@ const RoutesPage=(props:RoutesPageProps)=>{
                  />)
              }
          },
-         Connected: {
+         [ButtonDefs.Connected.name]: {
              onClick: () => {
                  let con = globalstore.getData(keys.gui.global.connectedMode, false);
                  con = !con;
                  globalstore.storeData(keys.gui.global.connectedMode, con);
              }
          },
-         ShowSettings:{
+         [ButtonDefs.ShowSettings.name]:{
              onClick:()=>{
                  showDialog(undefined, ()=><EditSettingsCategory
                      category={"Route"}
@@ -109,7 +110,7 @@ const RoutesPage=(props:RoutesPageProps)=>{
                  />)
              }
          },
-         DownloadPageUpload:{
+         [ButtonDefs.Upload.name]:{
              onClick:uploadAction,
              disabled:!isVisible(1)
          }

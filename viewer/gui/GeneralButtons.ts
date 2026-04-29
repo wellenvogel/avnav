@@ -24,7 +24,6 @@
 import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import mob from '../components/Mob';
 import keys from "../util/keys";
-import {iconClasses} from '../components/Icons';
 import ButtonDefs from "../components/ButtonDefs";
 
 export default propsToDefs([
@@ -39,9 +38,7 @@ export const GeneralWithCancel=propsToDefs([
 ])
 
 export const Connected:DynamicButtonProps={
-    name: 'Connected',
-    displayName: 'connected',
-    iconClass:iconClasses.Connected,
+    ...ButtonDefs.Connected,
     storeKeys: {
         onAndroid:keys.gui.global.onAndroid,
         connected: keys.gui.global.connectedMode,

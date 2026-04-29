@@ -23,14 +23,12 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'ShowSettings',
-        iconClass: iconClasses.Settings,
-        displayName: 'remote connection',
+        ...ButtonDefs.ShowSettings,
         storeKey: {
             visible:keys.gui.capabilities.remoteChannel
         }

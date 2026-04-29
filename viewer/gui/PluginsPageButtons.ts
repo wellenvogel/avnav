@@ -24,13 +24,11 @@ import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'DownloadPageUpload',
-        iconClass: iconClasses.Upload,
-        displayName: 'import',
+        ...ButtonDefs.Upload,
         localOnly:true,
         storeKeys:{
             visible: keys.gui.global.connectedMode,

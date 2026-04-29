@@ -23,74 +23,54 @@
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name: 'MainInfo',
-        iconClass: iconClasses.Info,
-        displayName:'license info',
+        ...ButtonDefs.MainInfo,
         overflow:true
     },
     {
-        name:'StatusAll',
-        iconClass: iconClasses.Expand,
-        displayName:'show all',
+        ...ButtonDefs.StatusAll,
         overflow: true
     },
     {
-        name: 'StatusWpa',
-        iconClass: iconClasses.Wifi,
-        displayName:'wifi connections',
+        ...ButtonDefs.StatusWpa,
         localOnly: true,
         overflow:true,
     },
     {
-        name:'StatusAddresses',
-        iconClass: iconClasses.QRCode,
-        displayName: 'own networks',
+        ...ButtonDefs.StatusAddresses,
         localOnly:true,
         overflow:true,
     },
     {
-        name: 'StatusAndroid',
-        iconClass: iconClasses.Android,
-        displayName:'android',
+        ...ButtonDefs.StatusAndroid,
         //@ts-ignore
         visible:!!window.avnavAndroid
     },
     {
-        name: 'AndroidBrowser',
-        displayName:'open browser',
-        iconClass: iconClasses.Browser,
+        ...ButtonDefs.AndroidBrowser,
         localOnly:true,
         overflow:true,
         //@ts-ignore
         visible:!!window.avnavAndroid
     },
     {
-        name:'StatusShutdown',
-        iconClass: iconClasses.Shutdown,
-        displayName:'shutdown server',
+        ...ButtonDefs.StatusShutdown,
         localOnly:true,
     },
     {
-        name: 'StatusRestart',
-        iconClass: iconClasses.Reload,
-        displayName:'restart avnav',
+        ...ButtonDefs.StatusRestart,
         localOnly:true,
     },
     {
-        name:'StatusLog',
-        iconClass: iconClasses.Log,
-        displayName:'show log',
+        ...ButtonDefs.StatusLog,
         localOnly:true,
         overflow: true
     },
     {
-        name:'StatusDebug',
-        iconClass: iconClasses.Debug,
-        displayName:'debug server',
+        ...ButtonDefs.StatusDebug,
         localOnly:true,
         overflow: true,
         storeKeys:{
@@ -105,9 +85,7 @@ export default GeneralButtons.concat(propsToDefs([
         }
     },
     {
-        name: 'StatusAdd',
-        iconClass: iconClasses.Plus,
-        displayName:'add connection',
+        ...ButtonDefs.StatusAdd,
         localOnly:true,
         visible:false,
     }

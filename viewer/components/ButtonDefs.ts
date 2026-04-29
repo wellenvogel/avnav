@@ -274,7 +274,64 @@ const ButtonDefinitions= {
         iconClass: iconClasses.MainNav,
         name:btdef.MainNav,
     },
-
+    //routes page
+    RouteAdd:{
+        iconClass: iconClasses.Plus,
+        name:btdef.RouteAdd,
+    },
+    SyncRoutes:{
+        iconClass: iconClasses.Sync,
+        name:btdef.SyncRoutes
+    },
+    Connected:{
+        iconClass: iconClasses.Connected,
+        name:btdef.Connected,
+    },
+    StoredRoutes:{
+        iconClass: iconClasses.Items,
+        name:btdef.StoredRoutes,
+    },
+    //server page
+    MainInfo:{
+        iconClass: iconClasses.Info,
+        name:btdef.MainInfo,
+    },
+    StatusAll:{
+        iconClass: iconClasses.Expand,
+        name:btdef.StatusAll,
+    },
+    StatusWpa:{
+        iconClass: iconClasses.Wifi,
+        name:btdef.StatusWpa,
+    },
+    StatusAddresses:{
+        iconClass: iconClasses.QRCode,
+        name:btdef.StatusAddresses,
+    },
+    StatusAndroid:{
+        iconClass: iconClasses.Android,
+        name:btdef.StatusAndroid,
+    },
+    AndroidBrowser:{
+        iconClass: iconClasses.Browser,
+        name:btdef.AndroidBrowser,
+    },
+    StatusShutdown:{
+        iconClass: iconClasses.Shutdown,
+        name:btdef.StatusShutdown,
+    },
+    StatusRestart:{
+        iconClass: iconClasses.Reload,
+        name:btdef.StatusRestart,
+    },
+    StatusLog:{
+        iconClass: iconClasses.Log,
+        name:btdef.StatusLog,
+    },
+    StatusDebug:{
+        iconClass: iconClasses.Debug,
+        name:btdef.StatusDebug,
+    },
     //layout editing
     EditPage:{
         iconClass: iconClasses.EditPage,
