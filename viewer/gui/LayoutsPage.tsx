@@ -65,7 +65,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                  />)
              }
          },
-         DownloadPageUpload:{
+         Upload:{
              onClick:uploadAction,
              disabled:!visible(0),
          }

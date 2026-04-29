@@ -9,7 +9,7 @@ import {SelectListEntry} from "../util/EditableParameter";
 import {IDialogContext} from "./DialogContext";
 import {ButtonEvent, DynamicButtonProps} from "./Button";
 import {useStoreState} from "../hoc/Dynamic";
-import {iconClasses} from './Icons';
+import ButtonDefs from "./ButtonDefs";
 
 
 export interface RemoteChannelProps {
@@ -93,9 +93,7 @@ export const showRemoteChannelDialog=async (dialogContext?:IDialogContext)=> {
 
 export default  (options:Partial<DynamicButtonProps>):DynamicButtonProps=>{
     return {
-        name: "RemoteChannel",
-        displayName: 'remote control',
-        iconClass: iconClasses.RemoteChannel,
+        ...ButtonDefs.RemoteChannel,
         storeKeys: storeKeys,
         updateFunction:(state:Record<string,any>)=>{
             const enabled=state.available && state.connected && state.active;

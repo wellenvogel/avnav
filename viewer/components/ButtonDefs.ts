@@ -71,6 +71,39 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Settings,
         name:btdef.ShowSettings,
     },
+    Upload:{
+        iconClass: iconClasses.Upload,
+        name:btdef.Upload,
+    },
+    Dim:{
+        iconClass: iconClasses.Dim,
+        name:btdef.Dim,
+    },
+    //actions
+    Night:{
+        iconClass: iconClasses.Night,
+        name:btdef.Night,
+    },
+    RemoteChannel:{
+        iconClass: iconClasses.RemoteChannel,
+        name:btdef.RemoteChannel,
+    },
+    FullScreen:{
+        iconClass: iconClasses.FullScreen,
+        name:btdef.FullScreen,
+    },
+    Split:{
+        iconClass: iconClasses.Split,
+        name:btdef.Split,
+    },
+    Reload:{
+        iconClass: iconClasses.Reload,
+        name:btdef.Reload,
+    },
+    MainExit:{
+        iconClass: iconClasses.Cancel,
+        name:btdef.MainExit,
+    },
     //aispage
     AisNearest:{
         iconClass: iconClasses.AisNearest,
@@ -170,6 +203,76 @@ const ButtonDefinitions= {
     CenterAction:{
         iconClass: iconClasses.CenterAction,
         name:btdef.CenterAction,
+    },
+    AnchorWatch:{
+        iconClasses: iconClasses.Anchor,
+        name:btdef.AnchorWatch,
+    },
+    LockPos:{
+        iconClass: iconClasses.LockPos,
+        name:btdef.LockPos,
+    },
+    LockMarker:{
+        iconClass: iconClasses.LockMarker,
+        name:btdef.LockMarker,
+    },
+    CourseUp:{
+        iconClass: iconClasses.CourseUp,
+        name:btdef.CourseUp,
+    },
+    ShowRoutePanel:{
+        iconClass: iconClasses.Route,
+        name: btdef.ShowRoutePanel,
+    },
+    GpsCenter:{
+        iconClass: iconClasses.Center,
+        name:btdef.GpsCenter,
+    },
+    //dashboard
+    Gps1:{
+        iconClass: iconClasses.Num1,
+        name:btdef.Gps1,
+    },
+    Gps2:{
+        iconClass: iconClasses.Num2,
+        name:btdef.Gps2,
+    },
+    Gps3:{
+        iconClass: iconClasses.Num3,
+        name:btdef.Gps3,
+    },
+    Gps4:{
+        iconClass: iconClasses.Num4,
+        name:btdef.Gps4,
+    },
+    Gps5:{
+        iconClass: iconClasses.Num5,
+        name:btdef.Gps5,
+    },
+    Gps6:{
+        iconClass: iconClasses.Num6,
+        name:btdef.Gps6,
+    },
+    Gps7:{
+        iconClass: iconClasses.Num7,
+        name:btdef.Gps7,
+    },
+    Gps8:{
+        iconClass: iconClasses.Num8,
+        name:btdef.Gps8,
+    },
+    Gps9:{
+        iconClass: iconClasses.Num9,
+        name:btdef.Gps9,
+    },
+    Gps10:{
+        iconClass: iconClasses.Num10,
+        name:btdef.Gps10,
+    },
+    //main nav
+    MainNav:{
+        iconClass: iconClasses.MainNav,
+        name:btdef.MainNav,
     },
 
     //layout editing

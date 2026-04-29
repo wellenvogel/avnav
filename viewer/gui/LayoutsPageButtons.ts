@@ -23,12 +23,10 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'DownloadPageUpload',
-        icon: iconClasses.Upload,
-        displayName: 'import',
+        ...ButtonDefs.Upload,
         localOnly:true,
         storeKeys:{
             visible: keys.gui.capabilities.uploadLayout,
@@ -42,9 +40,7 @@ export default GeneralButtons.concat(propsToDefs([
         }
     },
     {
-        name: 'ShowSettings',
-        iconClass: iconClasses.Settings,
-        displayName:'display settings'
+        ...ButtonDefs.ShowSettings,
     }
 ]))
 

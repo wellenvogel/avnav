@@ -28,8 +28,20 @@ import AnchorWatchButton from '../components/AnchorWatchDialog';
 import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
-import {iconClasses} from '../components/Icons';
 import ButtonDefs from "../components/ButtonDefs";
+
+const pageButtons=[
+    ButtonDefs.Gps1,
+    ButtonDefs.Gps2,
+    ButtonDefs.Gps3,
+    ButtonDefs.Gps4,
+    ButtonDefs.Gps5,
+    ButtonDefs.Gps6,
+    ButtonDefs.Gps7,
+    ButtonDefs.Gps8,
+    ButtonDefs.Gps9,
+    ButtonDefs.Gps10,
+]
 
 export default ()=>{
     const num=layouthandler.getDashboardNum();
@@ -42,10 +54,8 @@ export default ()=>{
     ];
     for (let idx=1;idx<=num;idx++){
         btProps.push({
-            name:'Gps'+idx,
+            ...pageButtons[idx-1],
             overflow:true,
-            iconClass:iconClasses['Num'+idx],
-            displayName:`dashboard ${idx}`,
             storeKeys: {
                 pageNum: keys.gui.gpspage.pageNumber
             },

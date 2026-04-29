@@ -17,6 +17,7 @@ import NavCompute from "../nav/navcompute";
 import {ConfirmDialog} from "./BasicDialogs";
 import PropTypes from "prop-types";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -177,7 +178,7 @@ export const isWatchActive=(state)=>{
 };
 export default  (opt_hide,opt_dialogContext)=>{
     return{
-        name: "AnchorWatch",
+        ...ButtonDefs.AnchorWatch,
         storeKeys: AnchorWatchKeys,
         updateFunction:(state)=>{
             let rt={

@@ -29,7 +29,7 @@ import keys from "./keys";
 import LeaveHandler from "./leavehandler";
 import localStorageManager,{UNPREFIXED_NAMES} from "./localStorageManager";
 import {DynamicButtonProps} from "../components/Button";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 export type SplitSupportCallback=(data:any,topic:string)=>void;
 class SplitSupport{
@@ -119,9 +119,7 @@ class SplitSupport{
 
     buttonDef(options:Partial<DynamicButtonProps>):DynamicButtonProps {
             return {
-                name: 'Split',
-                displayName: 'split screen',
-                iconClass: iconClasses.Split,
+                ...ButtonDefs.Split,
                 storeKeys: {
                     toggle: keys.gui.global.splitMode,
                     visible: keys.properties.showSplitButton

@@ -4,10 +4,9 @@ import globalStore from './globalstore';
 import keys from './keys';
 import splitsupport from "../util/splitsupport";
 import Helper from "./helper";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 let fullScreenBlocked=false;
-const fullscreenDisplayName="full screen";
 const userAgent=navigator.userAgent;
 //it seems that fullscreen does not work on older android versions (at least tested to work since 6/chrome44)
 if (userAgent.match(/Chrome/)){
@@ -82,13 +81,11 @@ const init=()=>{
 
 
 const fullScreenDefinition=()=>{ return {
-    name: "FullScreen",
-    iconClass: iconClasses.FullScreen,
+    ...ButtonDefs.FullScreen,
     storeKeys: {
         toggle:keys.gui.global.isFullScreen,
         split: keys.gui.global.splitMode
     },
-    displayName:fullscreenDisplayName,
     updateFunction:()=>{
         return {
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...

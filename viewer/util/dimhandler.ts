@@ -5,7 +5,7 @@ import Helper from "./helper";
 import base from "../base";
 import RequestHandler from "./requests";
 import {getServerCommand} from "./UiHelper";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 const KEY=keys.gui.global.dimActive;
 const URLPARAM="dimm";
@@ -161,8 +161,7 @@ class DimmHandler{
     }
     buttonDef(){
         return{
-            name: 'Dim',
-            iconClass: iconClasses.Dim,
+            ...ButtonDefs.Dim,
             onClick: ()=>this.activate(),
             visible: this.enabled(),
             overflow: true

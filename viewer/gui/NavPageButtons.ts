@@ -30,40 +30,30 @@ import anchorWatch,{AnchorWatchKeys,isWatchActive} from "../components/AnchorWat
 import {CenterActionButton} from "../components/FeatureInfoDialog";
 import Dimmer from '../util/dimhandler';
 import GeneralButtons from "./GeneralButtons";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 export default GeneralButtons.concat(propsToDefs([
     {
-        name: "NavOverlays",
-        iconClass: iconClasses.SelectChart,
-        displayName:"select chart",
+        ...ButtonDefs.NavOverlays,
     },
     {
-        name:"ZoomIn",
-        iconClass:iconClasses.ZoomIn,
-        displayName:"zoom in",
+        ...ButtonDefs.ZoomIn,
         localOnly: true,
     },
     {
-        name:"ZoomOut",
-        iconClass:iconClasses.ZoomOut,
-        displayName:"zoom out",
+        ...ButtonDefs.ZoomOut,
         localOnly: true,
     },
     {
-        name:'LockPos',
-        iconClass:iconClasses.LockPos,
+        ...ButtonDefs.LockPos,
         localOnly: true,
-        displayName:"lock to gps",
         storeKeys:{
             toggle: keys.map.lockPosition
         },
         editDisable:true
     },
     {
-        name: "LockMarker",
-        iconClass:iconClasses.LockMarker,
-        displayName:"start wp",
+        ...ButtonDefs.LockMarker,
         localOnly: true,
         storeKeys: activeRoute.getStoreKeys(AnchorWatchKeys),
         updateFunction: (state) => {
@@ -73,9 +63,7 @@ export default GeneralButtons.concat(propsToDefs([
     },
         anchorWatch(true),
     {
-        name: "StopNav",
-        iconClass:iconClasses.NavStop,
-        displayName:"end nav",
+        ...ButtonDefs.StopNav,
         storeKeys: activeRoute.getStoreKeys(),
         updateFunction:(state)=>{
             return {visible:StateHelper.hasActiveTarget(state)};
@@ -84,9 +72,7 @@ export default GeneralButtons.concat(propsToDefs([
         editDisable:true
     },
     {
-        name: "CourseUp",
-        iconClass:iconClasses.CourseUp,
-        displayName:"course up",
+        ...ButtonDefs.CourseUp,
         localOnly:true,
         storeKeys:{
             toggle: keys.map.courseUp
@@ -94,16 +80,12 @@ export default GeneralButtons.concat(propsToDefs([
         editDisable:true
     },
     {
-        name: "ShowRoutePanel",
-        iconClass:iconClasses.Route,
-        displayName:"edit route",
+        ...ButtonDefs.ShowRoutePanel,
         overflow: true
 
     },
     {
-        name:'GpsCenter',
-        displayName:"center to gps",
-        iconClass: iconClasses.Center,
+        ...ButtonDefs.GpsCenter,
         localOnly:true,
         overflow: true,
         editDisable: true

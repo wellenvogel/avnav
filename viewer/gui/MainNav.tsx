@@ -56,6 +56,7 @@ import {EditSettingsCategory} from "../components/Settings";
 import {ActionDialog} from "../components/ActionDialog";
 import {actionButtons} from "./MainActionButtons";
 import layouthandler from "../util/layouthandler";
+import ButtonDefs from "../components/ButtonDefs";
 
 
 type PageKind='navigation'|'settings';
@@ -304,8 +305,7 @@ export const InjectMainMenu=(
         computedAddonButtons.push(injectAddonButtonAction(addonButton,pagename));
     }
     return propsToDefs([ {
-        name: 'MainNav',
-        displayName: 'main menu',
+        ...ButtonDefs.MainNav,
         onClick: async (ev:ButtonEvent)=>{
             const dialogContext=getav(ev).dialogContext;
             const toggle=globalstore.getData(keys.gui.global.mainNavVisible);
