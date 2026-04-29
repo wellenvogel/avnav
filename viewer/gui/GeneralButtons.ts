@@ -25,7 +25,7 @@ import {DynamicButtonProps, propsToDefs} from "../components/Button";
 import mob from '../components/Mob';
 import keys from "../util/keys";
 import {iconClasses} from '../components/Icons';
-import {ButtonDefinitions} from "../components/ButtonDefs";
+import ButtonDefs from "../components/ButtonDefs";
 
 export default propsToDefs([
     mob.mobDefinition()
@@ -33,7 +33,7 @@ export default propsToDefs([
 export const GeneralWithCancel=propsToDefs([
     mob.mobDefinition(),
     {
-        ...ButtonDefinitions.Cancel,
+        ...ButtonDefs.Cancel,
         localOnly: true
     }
 ])

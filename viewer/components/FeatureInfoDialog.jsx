@@ -50,6 +50,7 @@ import {Icon} from "./Icons";
 import {useDialogContext} from "./DialogContext";
 import {ViewDialog} from "./ViewDialog";
 import {iconClasses} from './Icons';
+import ButtonDefs from "./ButtonDefs";
 
 NavHandler.getRoutingHandler();
 
@@ -378,8 +379,7 @@ export const linkAction=new FeatureAction({
 })
 
 export const CenterActionButton={
-    name: 'CenterAction',
-    iconClass: iconClasses.CenterAction,
+    ...ButtonDefs.CenterAction,
     storeKeys: {
         toggle: keys.map.activeMeasure,
         locked: keys.map.lockPosition,

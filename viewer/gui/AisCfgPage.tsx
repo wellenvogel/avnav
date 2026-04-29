@@ -50,7 +50,7 @@ const AisCfgPage=(props:AisCfgPageProps)=>{
              disabled:props.pageColumns >1,
              toggle: isVisible(0),
          },
-         ItemsView:{
+         AisItems:{
              onClick:()=>scrollTo(1),
              disabled:props.pageColumns>1,
              toggle:isVisible(1),

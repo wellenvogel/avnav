@@ -23,25 +23,19 @@
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import {AisListButtons} from "./AisPageButtons";
-import {iconClasses} from "../components/Icons";
+import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'ServerView',
-        iconClass:iconClasses.Server,
-        displayName: 'server settings',
+        ...ButtonDefs.ServerView,
     },
     {
-        name:'ItemsView',
-        iconClass:iconClasses.Items,
-        displayName: 'AIS Targets',
+        ...ButtonDefs.AisItems,
     }]),
     AisListButtons,
     propsToDefs([
     {
-        name: 'ShowSettings',
-        iconClass:iconClasses.Settings,
-        displayName:'display settings'
+        ...ButtonDefs.ShowSettings,
     }
 ]))
 

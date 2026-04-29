@@ -21,14 +21,12 @@
  #
  */
 import {propsToDefs} from "../components/Button";
-import {iconClasses} from '../components/Icons';
 import {GeneralWithCancel} from "./GeneralButtons";
+import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralWithCancel.concat(propsToDefs([
     {
-        name:'Back',
-        iconClass: iconClasses.Back,
-        displayName:'Window Back',
+        ...ButtonDefs.Back,
         localOnly: true
     }
 ]))

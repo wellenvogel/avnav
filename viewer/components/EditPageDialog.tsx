@@ -6,7 +6,7 @@ import DB from './DialogButton';
 // @ts-ignore
 import cloneDeep from "clone-deep";
 import {IDialogContext} from "./DialogContext";
-import {iconClasses} from './Icons';
+import ButtonDefs from "./ButtonDefs";
 
 const OPTION_COMBINATIONS=[
     {
@@ -214,8 +214,7 @@ export const createDialog=(pagename:LayoutPage,panelnames:string[],
 };
 
 export const RawButtonDef={
-        name: 'EditPage',
-        iconClass: iconClasses.EditPage,
+        ...ButtonDefs.EditPage,
         editOnly: true,
         visible: true,
 };

@@ -24,7 +24,14 @@
 import * as btdef from '../style/button_text.less';
 import {iconClasses} from './Icons';
 
-export const ButtonDefinitions= {
+/**
+ * list of all used buttons
+ * the key should be similar to the name used in button_text.less
+ * technically not really necessary - but avoids confusion
+ * to allow the ide and webpack to do static checks we cannot use the
+ * syntax [btdef.XXX] for the keys
+ */
+const ButtonDefinitions= {
     MOB:{
         name:btdef.MOB,
         iconClass: iconClasses.MOB,
@@ -32,7 +39,145 @@ export const ButtonDefinitions= {
     Cancel:{
         name:btdef.Cancel,
         iconClass: iconClasses.Cancel,
+    },
+    //addonconfig
+    AddonConfigAddOns:{
+        name:btdef.AddonConfigAddOns,
+        iconClass: iconClasses.AddOns,
+    },
+    AddonConfigUser:{
+        name:btdef.AddonConfigUser,
+        iconClass: iconClasses.User,
+    },
+    AddonConfigImages:{
+        name: btdef.AddonConfigImages,
+        iconClass: iconClasses.Images,
+    },
+    AddonConfigPlus:{
+        iconClass: iconClasses.Plus,
+        name:btdef.AddonConfigPlus,
+    },
+    //addonpage
+    Back:{
+        iconClass: iconClasses.Back,
+        name:btdef.Back,
+    },
+    //general
+    ServerView:{
+        iconClass: iconClasses.Server,
+        name:btdef.ServerView,
+    },
+    ShowSettings:{
+        iconClass: iconClasses.Settings,
+        name:btdef.ShowSettings,
+    },
+    //aispage
+    AisNearest:{
+        iconClass: iconClasses.AisNearest,
+        name: btdef.AisNearest,
+    },
+    AisSort:{
+        iconClass: iconClasses.Sort,
+        name: btdef.AisSort,
+    },
+    AisLock:{
+        iconClass: iconClasses.Lock,
+        name: btdef.AisLock,
+    },
+    AisSearch:{
+        iconClass: iconClasses.Search,
+        name:btdef.AisSearch,
+    },
+    AisItems:{
+        iconClass: iconClasses.Items,
+        name:btdef.AisItems,
+    },
+    //channels
+    StatusAdd:{
+        iconClass: iconClasses.Plus,
+        name:btdef.StatusAdd,
+    },
+    //charts
+    ChartsView:{
+        iconClass: iconClasses.Charts,
+        name:btdef.ChartsView,
+    },
+    ImportsView:{
+        iconClass: iconClasses.Imports,
+        name:btdef.ImportsView,
+    },
+    OverlaysView:{
+        iconClass: iconClasses.Overlays,
+        name: btdef.OverlaysView
+    },
+    //nav/editroute
+    WpLocate:{
+        iconClass: iconClasses.WpLocate,
+        name:btdef.WpLocate,
+    },
+    WpEdit:{
+        iconClass: iconClasses.Edit,
+        name: btdef.WpEdit,
+    },
+    WpNext:{
+        iconClass: iconClasses.WpNext,
+        name:btdef.WpNext,
+    },
+    WpPrevious:{
+        iconClass: iconClasses.WpPrevious,
+        name:btdef.WpPrevious,
+    },
+    NavOverlays:{
+        iconClass: iconClasses.SelectChart,
+        name:btdef.NavOverlays,
+    },
+    ZoomIn:{
+        iconClass: iconClasses.ZoomIn,
+        name:btdef.ZoomIn,
+    },
+    ZoomOut:{
+        iconClass: iconClasses.ZoomOut,
+        name:btdef.ZoomOut,
+    },
+    NavAddAfter:{
+        iconClass: iconClasses.NavAddAfter,
+        name:btdef.NavAddAfter,
+    },
+    NavAdd:{
+        iconClass: iconClasses.NavAdd,
+        name:btdef.NavAdd,
+    },
+    NavDelete:{
+        iconClass: iconClasses.NavDelete,
+        name:btdef.NavDelete,
+    },
+    NavToCenter:{
+        iconClass: iconClasses.WpLocate,
+        name:btdef.NavToCenter,
+    },
+    NavGoto:{
+        iconClass: iconClasses.NavGoto,
+        name: btdef.NavGoto,
+    },
+    StopNav:{
+        iconClass: iconClasses.NavStop,
+        name:btdef.StopNav
+    },
+    RouteMenu:{
+        iconClass: iconClasses.RouteMenu,
+        name:btdef.RouteMenu,
+    },
+    CenterAction:{
+        iconClass: iconClasses.CenterAction,
+        name:btdef.CenterAction,
+    },
+
+    //layout editing
+    EditPage:{
+        iconClass: iconClasses.EditPage,
+        name: btdef.EditPage,
     }
 }
+export default ButtonDefinitions;
 export const CL_BUTTON_TEXT = 'button-text';
 export const CL_MAINBT_TEXT = 'main-button-text';

@@ -51,6 +51,7 @@ import {PAGEIDS} from "../util/pageids";
 import {propsToDefs, updateButtons} from "../components/Button";
 import {GeneralWithCancel} from "./GeneralButtons";
 import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -680,8 +681,7 @@ const EditRoutePage = (props) => {
     };
     const waypointButtons = [
         {
-            name: 'WpLocate',
-            iconClass: iconClasses.WpLocate,
+            ...ButtonDefs.WpLocate,
             onClick: () => {
                 wpTimer.startTimer();
                 let currentEditor = getCurrentEditor();
@@ -690,8 +690,7 @@ const EditRoutePage = (props) => {
             }
         },
         {
-            name: 'WpEdit',
-            iconClass: iconClasses.Edit,
+            ...ButtonDefs.WpEdit,
             onClick: () => {
                 wpTimer.startTimer();
                 let currentEditor = getCurrentEditor();
@@ -700,8 +699,7 @@ const EditRoutePage = (props) => {
             visible: routeWritable
         },
         {
-            name: 'WpNext',
-            iconClass: iconClasses.WpNext,
+            ...ButtonDefs.WpNext,
             storeKeys: getCurrentEditor().getStoreKeys(),
             updateFunction: (state) => {
                 return {disabled: !StateHelper.hasPointAtOffset(state, 1)};
@@ -716,8 +714,7 @@ const EditRoutePage = (props) => {
             visible: routeWritable
         },
         {
-            name: 'WpPrevious',
-            iconClass: iconClasses.WpPrevious,
+            ...ButtonDefs.WpPrevious,
             storeKeys: getCurrentEditor().getStoreKeys(),
             updateFunction: (state) => {
                 return {disabled: !StateHelper.hasPointAtOffset(state, -1)}
@@ -885,36 +882,23 @@ const EditRoutePage = (props) => {
 
     const buttons = [
         {
-            name:'Cancel',
-            iconClass: iconClasses.Cancel,
-            displayName:'go back',
-            localOnly: true,
-            onClick:() => { history.pop()}
-        },
-        {
-            name: "NavOverlays",
-            iconClass: iconClasses.SelectChart,
-            displayName: "select chart",
+            ...ButtonDefs.NavOverlays,
             onClick: () => selectChartDialog(dialogContext)
         },
         {
-            name: "ZoomIn",
-            iconClass: iconClasses.ZoomIn,
+            ...ButtonDefs.ZoomIn,
             onClick: () => {
                 MapHolder.changeZoom(1)
             }
         },
         {
-            name: "ZoomOut",
-            iconClass: iconClasses.ZoomOut,
+            ...ButtonDefs.ZoomOut,
             onClick: () => {
                 MapHolder.changeZoom(-1)
             }
         },
         {
-            name: "NavAddAfter",
-            iconClass: iconClasses.NavAddAfter,
-            displayName: "add after",
+            ...ButtonDefs.NavAddAfter,
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
@@ -931,9 +915,7 @@ const EditRoutePage = (props) => {
             editDisable: true
         },
         {
-            name: "NavAdd",
-            iconClass: iconClasses.NavAdd,
-            displayName: "add before",
+            ...ButtonDefs.NavAdd,
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
@@ -950,9 +932,7 @@ const EditRoutePage = (props) => {
             editDisable: true
         },
         {
-            name: "NavDelete",
-            iconClass: iconClasses.NavDelete,
-            displayName: "delete current",
+            ...ButtonDefs.NavDelete,
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 getCurrentEditor().deleteWaypoint();
@@ -966,9 +946,7 @@ const EditRoutePage = (props) => {
             editDisable: true
         },
         {
-            name: "NavToCenter",
-            iconClass: iconClasses.WpLocate,
-            displayName: "center to GPS",
+            ...ButtonDefs.NavToCenter,
             onClick: () => {
                 if (!checkRouteWritable(dialogContext)) return;
                 let center = MapHolder.getCenter();
@@ -981,9 +959,7 @@ const EditRoutePage = (props) => {
             editDisable: true
         },
         {
-            name: "NavGoto",
-            iconClass: iconClasses.NavGoto,
-            displayName: "start routing",
+            ...ButtonDefs.NavGoto,
             onClick: () => {
                 startRouting(dialogContext,undefined,history);
             },
@@ -991,9 +967,7 @@ const EditRoutePage = (props) => {
             overflow: true
         },
         {
-            name: 'StopNav',
-            iconClass: iconClasses.NavStop,
-            displayName: "stop routing",
+            ...ButtonDefs.StopNav,
             onClick:()=>{
                 RouteHandler.routeOff();
                 MapHolder.triggerRender();
@@ -1004,9 +978,7 @@ const EditRoutePage = (props) => {
             toggle: activeRoute.hasActiveTarget()
         },
         {
-            name: 'Menu',
-            iconClass: iconClasses.RouteMenu,
-            displayName: "route menu",
+            ...ButtonDefs.RouteMenu,
             onClick: () => {
                 widgetClick(setav(undefined,{item:{name: "EditRoute"}}))
             },

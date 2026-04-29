@@ -24,26 +24,20 @@ import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name:'ServerView',
-        iconClass:iconClasses.Server,
-        displayName: 'server settings',
+        ...ButtonDefs.ServerView,
         storeKeys:{
             visible: keys.gui.capabilities.chartStatus
         }
     },
     {
-        name:'ChartsView',
-        iconClass:iconClasses.Charts,
-        displayName: 'list charts',
+        ...ButtonDefs.ChartsView,
     },
     {
-        name:'ImportsView',
-        iconClass:iconClasses.Imports,
-        displayName: 'show imports',
+        ...ButtonDefs.ImportsView,
         storeKeys:{
             visible: keys.gui.capabilities.uploadImport,
             connected:keys.gui.global.connectedMode
@@ -57,14 +51,10 @@ export default GeneralButtons.concat(propsToDefs([
 
     },
     {
-        name:'OverlaysView',
-        iconClass:iconClasses.Overlays,
-        displayName: 'overlays',
+        ...ButtonDefs.OverlaysView,
     },
     {
-        name: 'ShowSettings',
-        iconClass:iconClasses.Settings,
-        displayName:'display settings'
+        ...ButtonDefs.ShowSettings,
     }
 ]))
 

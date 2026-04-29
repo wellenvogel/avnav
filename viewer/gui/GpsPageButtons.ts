@@ -29,14 +29,13 @@ import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
 import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 export default ()=>{
     const num=layouthandler.getDashboardNum();
     const btProps:DynamicButtonProps[]=[
         {
-            name:'Cancel',
-            iconClass:iconClasses.Cancel,
-            displayName:'go back',
+            ...ButtonDefs.Cancel,
             localOnly: true
         },
         AnchorWatchButton(),
