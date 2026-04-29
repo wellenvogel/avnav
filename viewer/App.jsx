@@ -3,7 +3,7 @@
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history';
 import Dynamic from './hoc/Dynamic';
-import keys, {CL_BUTTON_TEXT, CL_MAINBT_TEXT} from './util/keys';
+import keys from './util/keys';
 import InfoPage from './gui/InfoPage';
 import GpsPage from './gui/GpsPage';
 import AisPage from './gui/AisPage';
@@ -64,6 +64,7 @@ import {addonViewManager} from "./components/AddonView";
 import {PluginsPage} from "./gui/PluginsPage";
 import {RemotePage} from "./gui/RemotePage";
 import LoadingPage from "./gui/LoadingPage";
+import {CL_BUTTON_TEXT, CL_MAINBT_TEXT} from "./components/ButtonDefs";
 
 const DynamicSound=Dynamic(SoundHandler);
 

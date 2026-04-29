@@ -667,5 +667,3 @@ export const KeyHelper = {
 };
 
 export default  keys;
-export const CL_BUTTON_TEXT = 'btText';
-export const CL_MAINBT_TEXT = 'mainBtText';

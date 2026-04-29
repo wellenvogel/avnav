@@ -66,10 +66,10 @@
 }
 
 .btText{
-  div:not(.buttonRow).button .iconFrame{
+  div:not(.buttonRow,.smallButton).button .iconFrame{
     height: calc(80% - 0.9em);
   }
-  .button:after {
+  div:not(.smallButton).button:after {
     display: block;
   }
 }
@@ -86,8 +86,8 @@
   .hoverClass&::after {
     display: block;
     position: absolute;
-    background-color: yellow;
-    border: 1px solid black;
+    background-color: var(--avnav-back-color);
+    border: 1px solid var(--avnav-fore-color);
     padding: 0.2em;
     right: 3em;
     top: 1em;
@@ -95,9 +95,16 @@
     height: 1em;
     left: auto;
     z-index: 999;
-    .buttonRow&{
-      color:red;
-    }
+  }
+}
+.buttonRow.button{
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: @mainNavItemWidth;
+  .listMain{
+    max-width: @mainNavItemWidth;
+    overflow: hidden;
   }
 }
 .fab.button {
