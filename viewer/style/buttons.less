@@ -21,6 +21,7 @@
   display: block;
   position: relative;
   .iconFrame{
+    filter: var(--avnav-button-filter);
     width: 80%;
     height: 80%;
     left: 10%;
@@ -125,7 +126,6 @@
 .iconButton(@icon){
   span {
     .icon(@icon);
-    filter: var(--avnav-button-filter);
   }
 }
 
