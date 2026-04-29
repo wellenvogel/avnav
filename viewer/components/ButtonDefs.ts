@@ -34,5 +34,5 @@ export const ButtonDefinitions= {
         iconClass: iconClasses.Cancel,
     }
 }
-export const CL_BUTTON_TEXT = 'btText';
-export const CL_MAINBT_TEXT = 'mainBtText';
+export const CL_BUTTON_TEXT = 'button-text';
+export const CL_MAINBT_TEXT = 'main-button-text';
