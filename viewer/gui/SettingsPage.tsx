@@ -36,6 +36,7 @@ import {DownloadItemList} from "../components/DownloadItemList";
 import propertyhandler from "../util/propertyhandler";
 import globalstore from "../util/globalstore";
 import {ConfirmDialog} from "../components/BasicDialogs";
+import ButtonDefs from "../components/ButtonDefs";
 
 const sectionConditions:Record<string, ()=>boolean> = {};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
@@ -129,17 +130,17 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
     const buttonActions=
         {
-            SectionView:{
+            [ButtonDefs.SectionView.name]:{
               onClick:() =>{scrollTo(0)},
               toggle: visible(0),
               disabled:visible(0) && visible(1),
             },
-            ItemsView:{
+            [ButtonDefs.SettingsItems.name]:{
               onClick:() =>{scrollTo(1)},
               toggle: visible(1),
               disabled:visible(1) && visible(0),
             },
-            SettingsDefaults:{
+            [ButtonDefs.SettingsDefaults.name]:{
                 onClick: async () => {
                     const ok=await showPromiseDialogTrue(dialogContext,(dp)=>
                         <ConfirmDialog {...dp}
@@ -160,7 +161,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     }
                 }
             },
-            SettingsSplitReset: {
+            [ButtonDefs.SettingsSplitReset.name]: {
                 onClick: async () => {
                     const ok=showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog
                         {...dp}
@@ -182,7 +183,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                 },
                 overflow: true
             },
-            SettingsSave: {
+            [ButtonDefs.SettingsSave.name]: {
                 onClick: () => showDialog(undefined, () => <SaveSettingsDialog/>),
                 storeKeys: {
                     editing: keys.gui.global.layoutEditing,
@@ -196,7 +197,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                 },
                 overflow: true
             },
-            SettingsLoad: {
+            [ButtonDefs.SettingsLoad.name]: {
                 onClick: () => {
                     showDialog(undefined, () => <LoadSettingsDialog/>);
                 }
@@ -206,7 +207,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     history.pop();
                 }
             },
-            DownloadPageUpload: {
+            [ButtonDefs.Upload.name]: {
                 onClick:uploadAction
             }
         }

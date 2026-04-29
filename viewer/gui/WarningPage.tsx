@@ -21,6 +21,7 @@ import {useDialogContext} from "../components/exports";
 import {useHistory} from "../components/HistoryProvider";
 import {getPageTitle, PAGEIDS} from "../util/pageids";
 import ButtonList from "../components/ButtonList";
+import ButtonDefs from "../components/ButtonDefs";
 
 const WarningPage = (props: PageProps) => {
     const dialogContext = useDialogContext();
@@ -121,7 +122,7 @@ const WarningPage = (props: PageProps) => {
             </PageLeft>
             <ButtonList itemList={[
                 {
-                    name: 'Cancel',
+                    ...ButtonDefs.MainExit,
                     storeKeys: {visible: keys.gui.global.onAndroid},
                     onClick: () => {
                         // @ts-ignore

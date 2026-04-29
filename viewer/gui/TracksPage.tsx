@@ -36,6 +36,7 @@ import {showDialog} from "../components/OverlayDialog";
 import {EditSettingsCategory} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
+import ButtonDefs from "../components/ButtonDefs";
 
 const PAGE=PAGEIDS.TRACKS;
 const TITLE=getPageTitle(PAGE);
@@ -48,12 +49,12 @@ const TracksPage=(props:TracksPageProps)=>{
      const buttonListRef=useRef<ButtonDef[]>();
      const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
      const buttonActions={
-         ServerView:{
+         [ButtonDefs.ServerView.name]:{
              onClick:()=>scrollTo(0),
              disabled:props.pageColumns > 2,
              toggle: visible(0),
          },
-         ItemsView:{
+         [ButtonDefs.TrackItems.name]:{
              onClick:()=>scrollTo(1),
              disabled:props.pageColumns > 2,
              toggle:visible(1),
@@ -61,7 +62,7 @@ const TracksPage=(props:TracksPageProps)=>{
          Cancel:{
              onClick:()=>history.pop()
          },
-         ShowSettings:{
+         [ButtonDefs.ShowSettings.name]:{
              onClick:()=>{
                  showDialog(undefined, ()=><EditSettingsCategory
                      category={"Track"}
@@ -69,7 +70,7 @@ const TracksPage=(props:TracksPageProps)=>{
                  />)
              }
          },
-         DownloadPageUpload: {
+         [ButtonDefs.Upload.name]: {
              onClick:uploadAction,
              disabled:! visible(1),
          }

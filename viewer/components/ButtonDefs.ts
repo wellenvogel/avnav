@@ -332,6 +332,36 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Debug,
         name:btdef.StatusDebug,
     },
+    //settings
+    SectionView:{
+        iconClass: iconClasses.Section,
+        name:btdef.SectionView,
+    },
+    SettingsItems:{
+        iconClass: iconClasses.Items,
+        name:btdef.SettingsItems,
+    },
+    SettingsDefaults:{
+        iconClass: iconClasses.Reset,
+        name:btdef.SettingsDefaults,
+    },
+    SettingsLoad:{
+        iconClass: iconClasses.Open,
+        name:btdef.SettingsLoad,
+    },
+    SettingsSave:{
+        iconClass: iconClasses.Save,
+        name:btdef.SettingsSave,
+    },
+    SettingsSplitReset:{
+        iconClass: iconClasses.SplitReset,
+        name:btdef.SettingsSplitReset,
+    },
+    //tracks
+    TrackItems:{
+        iconClass: iconClasses.Items,
+        name:btdef.TrackItems,
+    },
     //layout editing
     EditPage:{
         iconClass: iconClasses.EditPage,

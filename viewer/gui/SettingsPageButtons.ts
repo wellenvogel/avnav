@@ -25,29 +25,21 @@ import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import localStorageManager from "../util/localStorageManager";
 import {DynamicProps} from "../hoc/Dynamic";
-import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralButtons.concat(propsToDefs([
     {
-        name: 'SectionView',
-        iconClass: iconClasses.Section,
-        displayName: 'settings sections',
+        ...ButtonDefs.SectionView,
     },
     {
-        name: 'ItemsView',
-        iconClass: iconClasses.Items,
-        displayName: 'stored settings',
+        ...ButtonDefs.SettingsItems,
     },
     {
-        name: 'SettingsDefaults',
-        iconClass: iconClasses.Reset,
-        displayName: 'reset to defaults',
+        ...ButtonDefs.SettingsDefaults,
 
     },
     {
-        name: 'SettingsLoad',
-        displayName: 'load settings',
-        iconClass: iconClasses.Open,
+        ...ButtonDefs.SettingsLoad,
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
             connected: keys.gui.global.connectedMode,
@@ -61,9 +53,7 @@ export default GeneralButtons.concat(propsToDefs([
         overflow: true
     },
     {
-        name:'SettingsSave',
-        displayName: 'save settings',
-        iconClass: iconClasses.Save,
+        ...ButtonDefs.SettingsSave,
         storeKeys: {
             editing: keys.gui.global.layoutEditing,
             connected: keys.gui.global.connectedMode,
@@ -77,9 +67,7 @@ export default GeneralButtons.concat(propsToDefs([
         overflow: true
     },
     {
-        name: 'DownloadPageUpload',
-        iconClass: iconClasses.Upload,
-        displayName: 'import',
+        ...ButtonDefs.Upload,
         localOnly: true,
         storeKeys:{
             visible: keys.gui.capabilities.uploadSettings,
@@ -94,9 +82,7 @@ export default GeneralButtons.concat(propsToDefs([
 
     },
     {
-        name: 'SettingsSplitReset',
-        iconClass: iconClasses.SplitReset,
-        displayName: 'reset split settings',
+        ...ButtonDefs.SettingsSplitReset,
         storeKeys: {
             editing: keys.gui.global.layoutEditing
         },
