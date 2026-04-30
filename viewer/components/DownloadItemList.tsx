@@ -338,10 +338,10 @@ export const UploadAction = (props: UploadActionProps) => {
     >
         <ListMainSlot primary={`Upload ${props.title}`}/>
         <ListSlot>
-            <DialogButton
+            <Button
+                className="smallButton"
+                {...ButtonDefs.Upload}
                 disabled={props.disabled}
-                name={'Upload'}
-                displayName={`upload ${props.title}`}
             />
         </ListSlot>
     </ListItem>
