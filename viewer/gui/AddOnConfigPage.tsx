@@ -170,7 +170,6 @@ export const AddonConfigPage = (props: PageProps) => {
                             disabled={!connected || ! uploadUser}
                             onClick={uploadActionUser}
                             title={'User File'}></UploadAction>
-                        <MvHeadline title={""} showScroll={false}/>
                         <DownloadItemList
                             {...uploadPropsUser}
                             type={'user'}
@@ -186,7 +185,6 @@ export const AddonConfigPage = (props: PageProps) => {
                             disabled={!connected || ! uploadImages}
                             onClick={uploadActionImages}
                             title={'Image'}></UploadAction>
-                        <MvHeadline title={""} showScroll={false}/>
                         <DownloadItemList
                             {...uploadPropsImages}
                             type={'images'}
