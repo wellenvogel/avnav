@@ -366,6 +366,15 @@ const ButtonDefinitions= {
     EditPage:{
         iconClass: iconClasses.EditPage,
         name: btdef.EditPage,
+    },
+    //other
+    Help:{
+        iconClass: iconClasses.Help,
+        name:btdef.Help,
+    },
+    DefaultValue:{
+        iconClass: iconClasses.Reset,
+        name:btdef.DefaultValue,
     }
 }
 export default ButtonDefinitions;

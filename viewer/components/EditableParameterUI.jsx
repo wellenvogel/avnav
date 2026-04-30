@@ -46,6 +46,7 @@ import globalStore from "../util/globalstore";
 import Toast from "./Toast";
 import {Icon} from "./Icons";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 
 
@@ -66,8 +67,9 @@ const InfoDialog = ({description}) => {
 }
 export const HelpButton = ({description}) => {
     const dialogContext = useDialogContext();
+    const config=ButtonDefs.Help;
     return <Button
-        name={'help'}
+        {...config}
         className="Help smallButton"
         onClick={(ev) => {
             ev.stopPropagation();
@@ -104,10 +106,11 @@ const getMinMax=(ep)=>{
 }
 const ItemButtons=({description,onReset,children})=>{
     if (! description && ! onReset) return null;
+    const config=ButtonDefs.DefaultValue;
     return <div className={"paramButtons"}>
         {description && <HelpButton description={description}/> }
         {onReset && <Button
-            name={'Delete'}
+            {...config}
             className={'smallButton'}
             onClick={(ev) => {
                  ev.stopPropagation()
