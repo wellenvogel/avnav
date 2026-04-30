@@ -23,6 +23,7 @@ import {useUploadHelper} from "../components/UploadHandler";
 import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
 import {useStoreHelper} from "../util/UiHelper";
 import {iconClasses} from '../components/Icons';
+import ButtonDefs from "../components/ButtonDefs";
 
 
 interface AddonItemProps extends InternalAddonProps {
@@ -93,7 +94,7 @@ export const AddonConfigPage = (props: PageProps) => {
     const numViews = 3;
     const currentButtons = useRef<ButtonDef[]>();
     const buttonActions = {
-        AddonConfigPlus: {
+        [ButtonDefs.AddonConfigPlus.name]: {
             onClick: () => {
                 showPromiseDialog(undefined, UserAppDialog)
                     .then(() => readAddons())
@@ -106,21 +107,21 @@ export const AddonConfigPage = (props: PageProps) => {
                 history.pop()
             }
         },
-        AddonConfigAddOns: {
+        [ButtonDefs.AddonConfigAddOns.name]: {
             toggle: visible(0),
             disabled: props.pageColumns >= numViews,
             onClick: () => {
                 scrollTo(0);
             }
         },
-        DownloadPageUser: {
+        [ButtonDefs.AddonConfigUser.name]: {
             onClick: () => {
                 scrollTo(1);
             },
             toggle: visible(1),
             disabled: props.pageColumns >= numViews,
         },
-        DownloadPageImages: {
+        [ButtonDefs.AddonConfigImages.name]: {
             onClick: () => {
                 scrollTo(2);
             },
