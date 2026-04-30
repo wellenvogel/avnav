@@ -148,6 +148,8 @@ const Button = (sprops:ButtonProps) => {
         forward.onClick=async (ev:ButtonEvent)=>{
             ev.stopPropagation();
             ev.preventDefault();
+            hoverTimer.stopTimer();
+            setHover(false);
             if (disabledv) {
                 return;
             }
