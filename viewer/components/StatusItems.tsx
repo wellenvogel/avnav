@@ -27,6 +27,7 @@ import keys from "../util/keys";
 import Button, {ButtonEventHandler} from "./Button";
 import React from 'react';
 import Helper from "../util/helper";
+import ButtonDefs from "./ButtonDefs";
 
 export const statusTextToImageUrl=(text:string)=>{
     let rt=globalStore.getData(keys.properties.statusIcons[text]);
@@ -38,7 +39,8 @@ interface EditIconProps{
 }
 export const EditIcon=({onClick}:EditIconProps)=>{
     return <Button
-        name="Edit" className="Edit smallButton editIcon" onClick={onClick}/>
+        {...ButtonDefs.Edit}
+        className="smallButton" onClick={onClick}/>
 
 }
 export interface ChildStatusProps{

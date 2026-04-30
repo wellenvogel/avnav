@@ -375,6 +375,10 @@ const ButtonDefinitions= {
     DefaultValue:{
         iconClass: iconClasses.Reset,
         name:btdef.DefaultValue,
+    },
+    Edit:{
+        iconClass: iconClasses.Edit,
+        name:btdef.Edit,
     }
 }
 export default ButtonDefinitions;
