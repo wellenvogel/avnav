@@ -57,6 +57,10 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Plus,
         name:btdef.AddonConfigPlus,
     },
+    AddonConfigView:{
+        iconClass: iconClasses.View,
+        name:btdef.AddonConfigView,
+    },
     //addonpage
     Back:{
         iconClass: iconClasses.Back,
@@ -356,6 +360,10 @@ const ButtonDefinitions= {
     SettingsSplitReset:{
         iconClass: iconClasses.SplitReset,
         name:btdef.SettingsSplitReset,
+    },
+    SettingsLayoutOff:{
+        iconClass: iconClasses.SettingsLayoutOff,
+        name:btdef.SettingsLayoutOff
     },
     //tracks
     TrackItems:{

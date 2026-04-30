@@ -38,7 +38,7 @@ interface EditIconProps{
     onClick?:ButtonEventHandler;
 }
 export const EditIcon=({onClick}:EditIconProps)=>{
-    return <Button
+    return <  Button
         {...ButtonDefs.Edit}
         className="smallButton" onClick={onClick}/>
 

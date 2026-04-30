@@ -39,6 +39,7 @@ import {IDialogContext} from "./DialogContext";
 import {addonViewManager} from "./AddonView";
 import {InternalWidgetDefinition} from "../util/types";
 import {ChartSelectDialog} from "./ChartsSelectDialog";
+import ButtonDefs from "./ButtonDefs";
 
 const INFO_TYPES={
     eula:STORAGE_NAMES.EULAS,
@@ -126,9 +127,8 @@ const Map=({mapClass,mapOpacity,rightOffset}:MapOptions)=>{
         return <div className={"noChart"}>
         <div className={"text"}>No Chart selected</div>
         <Button
+            {...ButtonDefs.NavOverlays}
             className={"center"}
-            name={'NavOverlays'}
-            displayName={'Select Chart'}
             onClick={()=>selectChartDialog(dialogContext)}/>
         </div>;
     }

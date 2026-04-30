@@ -22,7 +22,6 @@ import keys from "../util/keys";
 import {useUploadHelper} from "../components/UploadHandler";
 import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
 import {useStoreHelper} from "../util/UiHelper";
-import {iconClasses} from '../components/Icons';
 import ButtonDefs from "../components/ButtonDefs";
 
 
@@ -55,7 +54,9 @@ const AddonItem=(props:AddonItemProps)=>{
                 <div className="sourceInfo">{source}</div>
             </ListMainSlot>
             <ListSlot >
-            {!props.invalid && <Button name="AddonConfigView" iconClass={iconClasses.View} className="smallButton"
+            {!props.invalid && <Button
+                {...ButtonDefs.AddonConfigView}
+                className="smallButton"
                                        onClick={(ev) => {
                                            ev.preventDefault();
                                            ev.stopPropagation();

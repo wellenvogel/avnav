@@ -32,6 +32,7 @@ import base from "../base";
 import {createItemActions} from './FileDialog';
 import {ItemType} from "../util/itemFunctions";
 import Toast from "./Toast";
+import ButtonDefs from "./ButtonDefs";
 
 
 const MAXUPLOADSIZE=100000;
@@ -308,7 +309,9 @@ const UploadHandler = (props:UploadHandlerProps) => {
                         <div className="progressDone" style={doneStyle}></div>
                     </div>
                 </div>
-                <Button name="Cancel" className="DownloadPageUploadCancel button" onClick={() => {
+                <Button
+                    {...ButtonDefs.Cancel}
+                    onClick={() => {
                     if (xhdrRef.current) xhdrRef.current.abort();
                     setStateHelper({});
                     error("cancelled");

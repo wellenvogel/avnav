@@ -53,6 +53,7 @@ import {fetchItem, listItems} from "../util/itemFunctions";
 import {DownloadItemSelectDialog} from "./DownloadItemList";
 import {Item} from "./ItemList";
 import {LayoutData} from "../api/api.interface";
+import ButtonDefs from "./ButtonDefs";
 
 export interface SettingsDefinition extends Omit<Property,'isSplit'>{
     name:string;
@@ -292,7 +293,7 @@ export const EditSettingsItems=(props:EditSettingsItemsProps)=>{
             itemchildren={(param:SettingsDefinition) => {
                 if (!(param.name in layoutValues) || !props.layoutEditing) return null;
                 return <Button
-                    name={"SettingsLayoutOff"}
+                    {...ButtonDefs.SettingsLayoutOff}
                     className={"smallButton"}
                     onClick={(ev) => {
                         ev.stopPropagation();

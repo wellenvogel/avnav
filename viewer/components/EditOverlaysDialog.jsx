@@ -33,6 +33,7 @@ import {fetchItemInfo, itemListToSelectList, KNOWN_OVERLAY_EXTENSIONS, listItems
 import {InfoItem, SelectDialog} from "./BasicDialogs";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 const filterOverlayItem=(item)=>{
     const rt={...item};
@@ -351,8 +352,7 @@ const OverlayElement=(props)=>{
                         }}
                     />
                 }
-                {props.type !== 'base' &&
-                    <Button name="Edit"
+                {props.type !== 'base' && <Button {...ButtonDefs.Edit}
                             disabled={props.isDefault || props.preventEdit}
                             className={"smallButton "}
                             onClick={(ev) => {
