@@ -10,19 +10,13 @@ import {PageBaseProps, PageFrame, PageLeft} from '../components/Page';
 import Toast from '../components/Toast';
 // @ts-ignore
 import Requests, {prepareUrl} from '../util/requests';
-import {
-    DBCancel, DBOk,
-    DialogButtons,
-    DialogFrame,
-    showDialog,
-    showPromiseDialog
-} from '../components/OverlayDialog';
+import {DBCancel, DBOk, DialogButtons, DialogFrame, showDialog, showPromiseDialog} from '../components/OverlayDialog';
 import {createAddDialog} from "../components/EditHandlerDialog";
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import Helper from "../util/helper";
-import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
-import {useDialogContext} from  '../components/DialogContext';
+import {ConfirmDialog} from "../components/BasicDialogs";
+import {useDialogContext} from '../components/DialogContext';
 import ButtonList from '../components/ButtonList';
 import {PAGEIDS} from "../util/pageids";
 import StatusView, {ChannelKinds} from "../components/StatusView";
@@ -30,6 +24,7 @@ import {useHistory} from "../components/HistoryProvider";
 import {ButtonDef, updateButtons} from "../components/Button";
 import ServerPageButtons from "./ServerPageButtons";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
+import {ShutdownButton, shutdownServer} from "./MainActionButtons";
 
 interface DebugDialogProps{
     title?: string;
@@ -111,7 +106,6 @@ const restartServer=()=> {
         })
 }
 
-
 const ServerPage = (iprops: PageBaseProps) => {
     const history = useHistory();
     const props = useStore(iprops, {
@@ -127,7 +121,6 @@ const ServerPage = (iprops: PageBaseProps) => {
     const [hasAddresses, setHasAddresses] = React.useState(false);
     const [canRestart, setCanRestart] = React.useState(false);
     const [serverError, setServerError] = React.useState(0);
-    const [shutdown, setShutdown] = React.useState(false);
     const [wpa, setWpa] = React.useState(false);
     const [focusId, setFocusId] = React.useState<string | number>();
     const currentButtons = useRef<ButtonDef[]>();
@@ -174,29 +167,12 @@ const ServerPage = (iprops: PageBaseProps) => {
                 history.push(PAGEIDS.INFO)
             },
         },
-        StatusShutdown: {
-            visible: !props.android && shutdown && props.connected,
+        [ShutdownButton.name]: {
+            //visible: !props.android && shutdown && props.connected,
             onClick: () => {
-                showPromiseDialog(undefined, (props: any) => <ConfirmDialog {...props}
-                                                                            text={"really shutdown the server computer?"}/>).then(function () {
-                    Requests.getJson({
-                        request: 'api',
-                        type: 'command',
-                        command: 'runCommand',
-                        name: 'shutdown'
-                    }).then(
-                        () => {
-                            Toast("shutdown started");
-                        },
-                        (error: any) => {
-                            showDialog(undefined, () => <AlertDialog
-                                text={"unable to trigger shutdown: " + error}/>);
-                        });
-
-                })
-                    .catch(() => {
-                    });
+                shutdownServer();
             }
+
         },
         StatusRestart: {
             visible: canRestart && props.connected,
@@ -265,10 +241,6 @@ const ServerPage = (iprops: PageBaseProps) => {
                         for (const handler of handlerList) {
                             if (handler.properties && handler.properties.addresses) {
                                 setHasAddresses(true);
-                            }
-                            if (handler.configname === "AVNCommandHandler" &&
-                                handler.properties && handler.properties.shutdown) {
-                                setShutdown(true);
                             }
                             if (handler.configname === "AVNWpaHandler") {
                                 setWpa(true);

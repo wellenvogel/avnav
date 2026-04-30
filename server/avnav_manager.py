@@ -577,6 +577,12 @@ class AVNHandlerManager(object):
         return AVNUtil.getReturnData(level=level,filter=filter)
 
     if command == 'capabilities':
+        commands=AVNWorker.findHandlerByName('AVNCommandHandler')
+        hasShutdown=False
+        if commands is not None:
+            configuredCommands=commands.getStatusProperties()
+            if configuredCommands is not None and configuredCommands.get('shutdown') is not None:
+                hasShutdown=True
         rt = {
             'addons': True,
             'uploadCharts': True,
@@ -596,7 +602,8 @@ class AVNHandlerManager(object):
             'log': True,
             'remoteChannel': True,
             'fetchHead': True,
-            'chartStatus':True
+            'chartStatus':True,
+            'shutdown':hasShutdown,
         }
         return AVNUtil.getReturnData(data=rt)
 

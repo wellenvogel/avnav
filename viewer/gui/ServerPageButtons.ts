@@ -19,11 +19,13 @@
  #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  #  DEALINGS IN THE SOFTWARE.
  #
- */ import GeneralButtons from "./GeneralButtons";
+ */
+import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
 import {DynamicProps} from "../hoc/Dynamic";
 import ButtonDefs from "../components/ButtonDefs";
+import {ShutdownButton} from "./MainActionButtons";
 
 export default GeneralButtons.concat(propsToDefs([
     {
@@ -56,10 +58,7 @@ export default GeneralButtons.concat(propsToDefs([
         //@ts-ignore
         visible:!!window.avnavAndroid
     },
-    {
-        ...ButtonDefs.StatusShutdown,
-        localOnly:true,
-    },
+    ShutdownButton,
     {
         ...ButtonDefs.StatusRestart,
         localOnly:true,

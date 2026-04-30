@@ -32,6 +32,11 @@ import splitsupport from '../util/splitsupport';
 import {exitAndroidApp} from "./MainNav";
 import dimhandler from "../util/dimhandler";
 import ButtonDefs from "../components/ButtonDefs";
+import {IDialogContext} from "../components/DialogContext";
+import {showDialog, showPromiseDialog} from "../components/OverlayDialog";
+import {AlertDialog, ConfirmDialog} from "../components/BasicDialogs";
+import Requests from "../util/requests";
+import Toast from "../components/Toast";
 
 export const actionButtons=(): DynamicButtonProps[] => [
     {
@@ -72,6 +77,19 @@ export const actionButtons=(): DynamicButtonProps[] => [
         }
     },
     {
+        ...ShutdownButton,
+        close:false,
+        onClick:(ev:ButtonEvent)=>{
+            const dialogContext=getav(ev).dialogContext;
+            shutdownServer(dialogContext ).then(()=>{
+                dialogContext.closeDialog();
+            },
+                ()=>{
+                dialogContext.closeDialog();
+                })
+        }
+    },
+    {
         ...ButtonDefs.MainExit,
         storeKeys:{
             visible:keys.gui.global.onAndroid
@@ -81,3 +99,37 @@ export const actionButtons=(): DynamicButtonProps[] => [
         }
     }
 ]
+export const shutdownServer = (dialogContext?: IDialogContext) => {
+    return showPromiseDialog(dialogContext, (props: any) => <ConfirmDialog {...props}
+                                                                    text={"really shutdown the server computer?"}/>).then(function () {
+        return Requests.getJson({
+            request: 'api',
+            type: 'command',
+            command: 'runCommand',
+            name: 'shutdown'
+        }).then(
+            () => {
+                Toast("shutdown started");
+            },
+            (error: any) => {
+                showDialog(dialogContext, () => <AlertDialog
+                    text={"unable to trigger shutdown: " + error}/>);
+            });
+
+    })
+        .catch(() => {
+        });
+}
+export const ShutdownButton = {
+    ...ButtonDefs.StatusShutdown,
+    localOnly: true,
+    storeKeys: {
+        visible: keys.gui.capabilities.shutdown,
+        connected: keys.gui.global.connectedMode
+    },
+    updateFunction: (state: Record<string, any>) => {
+        return {
+            visible: state.visible && state.connected
+        }
+    }
+}
