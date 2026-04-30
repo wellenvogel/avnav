@@ -362,7 +362,7 @@ const ButtonDefinitions= {
         name:btdef.SettingsSplitReset,
     },
     SettingsLayoutOff:{
-        iconClass: iconClasses.SettingsLayoutOff,
+        iconClass: iconClasses.LayoutOff,
         name:btdef.SettingsLayoutOff
     },
     //tracks
@@ -374,6 +374,14 @@ const ButtonDefinitions= {
     EditPage:{
         iconClass: iconClasses.EditPage,
         name: btdef.EditPage,
+    },
+    LayoutFinished:{
+      iconClass: iconClasses.Layout,
+        name:btdef.LayoutFinished,
+    },
+    RevertLayout:{
+      iconClass: iconClasses.Undo,
+      name:btdef.RevertLayout,
     },
     //other
     Help:{

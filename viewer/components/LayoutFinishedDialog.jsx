@@ -7,6 +7,7 @@ import {EditDialog} from "./EditDialog";
 import Toast from "./Toast";
 import Helper, {getav} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 const LayoutFinishedDialog=(props)=>{
     const dialogContext=useDialogContext();
@@ -76,7 +77,7 @@ LayoutFinishedDialog.show=(event,callback)=>{
 
 LayoutFinishedDialog.getButtonDef=(callback)=>{
     return {
-        name: 'LayoutFinished',
+        ...ButtonDefs.LayoutFinished,
         editOnly: true,
         onClick: (ev)=>{
             LayoutFinishedDialog.show(ev,callback);

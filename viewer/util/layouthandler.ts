@@ -16,6 +16,7 @@ import {DynamicButtonProps} from "../components/Button";
 import {SyntheticEvent} from "react";
 import {IHistory} from "./history";
 import {InternalWidgetDefinition} from "./types";
+import ButtonDefs from "../components/ButtonDefs";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -1129,8 +1130,7 @@ class LayoutHandler{
 
     revertButtonDef():DynamicButtonProps{
         const rt:DynamicButtonProps={
-            name: 'RevertLayout',
-            displayName: 'Undo',
+            ...ButtonDefs.RevertLayout,
             editOnly: true,
             overflow: true,
             storeKeys:{
