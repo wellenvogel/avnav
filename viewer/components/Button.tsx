@@ -1,6 +1,6 @@
 import React, {useCallback, useRef} from 'react';
 import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
-import {DynamicProps, StoreKeys, UpdateFunction, useStore} from "../hoc/Dynamic";
+import {DynamicProps, StoreKeys, UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
@@ -9,6 +9,7 @@ import base from "../base";
 import {ButtonDescription} from "./ButtonList";
 import {Icon} from "./Icons";
 import {ListMainSlot} from "./ListItems";
+import keys from "../util/keys";
 
 
 export type ButtonEventBase=Record<string, any>;
@@ -99,10 +100,15 @@ const getIdx=()=>{
 
 const Button = (sprops:ButtonProps) => {
     const iprops:ButtonProps=useStore(sprops,{changeCallback:sprops.dataChanged});
+    const [hoverTime]=useStoreState(keys.properties.buttonTitleTime);
     const [hover,setHover]=React.useState(false);
     const hoverTimer=useTimer((seq:number)=>{
         hoverTimer.guardedCall(seq,()=>setHover(true));
+        hoverStopTimer.restart();
     },1000);
+    const hoverStopTimer=useTimer((seq:number)=>{
+        hoverStopTimer.guardedCall(seq,()=>setHover(false));
+    },hoverTime*1000);
     const idxRef=useRef(getIdx());
     const dialogContext=useDialogContext();
     const history = useHistory();
@@ -164,7 +170,7 @@ const Button = (sprops:ButtonProps) => {
              className={classNamev}
              //title={displayName+""}
              onMouseEnter={()=>{
-                 if (iprops.noHover) return;
+                 if (iprops.noHover || hoverTime == 0) return;
                  hoverTimer.restart()}}
              onMouseLeave={()=>{
                  hoverTimer.stopTimer();

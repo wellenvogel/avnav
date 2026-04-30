@@ -494,6 +494,7 @@ const keys:Record<string,KeyType>={
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
         buttonText: new Property(false,"text on buttons",PropertyType.CHECKBOX,undefined,"show a small text on normal buttons"),
         mainBtText: new Property(true,"button text main menu",PropertyType.CHECKBOX,undefined,"show a button text in the main menu"),
+        buttonTitleTime: new Property(4,"tooltip time(s)",PropertyType.RANGE,[0,20],'the time for showing the tooltip, 0 to disable'),
         titleIcons: new Property(true,"red icons in title",PropertyType.CHECKBOX,undefined,"show some red icons in page headers for anchor watch, measure, disconnected mode,..."),
         titleIconsGps: new Property(true,"title icons on dashboard page",PropertyType.CHECKBOX,undefined,"if set the red icons are also shown on dashboard pages"),
         featureInfo: new Property(true,"Feature Info on Click",PropertyType.CHECKBOX,undefined,"bring up the feature list when clicking on the map"),
