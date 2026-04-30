@@ -340,7 +340,7 @@ export const UploadAction = (props: UploadActionProps) => {
         <ListSlot>
             <DialogButton
                 disabled={props.disabled}
-                name={'DownloadPageUpload'}
+                name={'Upload'}
                 displayName={`upload ${props.title}`}
             />
         </ListSlot>

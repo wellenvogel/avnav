@@ -75,6 +75,7 @@ import {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import NavPageButtons from "./NavPageButtons";
 import {IHistory} from "../util/history";
+import ButtonDefs from "../components/ButtonDefs";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -275,7 +276,7 @@ const OverlayContent=(
     const waypointButtons=[
         anchorWatch(false,dialogContext),
         {
-            name:'WpLocate',
+            ...ButtonDefs.WpLocate,
             onClick:()=>{
                 setCenterToTarget();
                 setShowWpButtons(false);
@@ -286,7 +287,7 @@ const OverlayContent=(
             }
         },
         {
-            name:'WpEdit',
+            ...ButtonDefs.WpEdit,
             onClick:()=>{
                 if (activeRoute.hasRoute()){
                     startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogContext);
@@ -303,7 +304,7 @@ const OverlayContent=(
 
         },
         {
-            name:'WpGoto',
+            ...ButtonDefs.WpGoto,
             storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state:any)=> {
                 return {visible: StateHelper.hasActiveTarget(state) &&  !StateHelper.selectedIsActiveTarget(state)}
@@ -317,7 +318,7 @@ const OverlayContent=(
 
         },
         {
-            name:'NavNext',
+            ...ButtonDefs.NavNext,
             storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state:any)=> {
                 return {visible:
@@ -332,7 +333,7 @@ const OverlayContent=(
             }
         },
         {
-            name: 'NavRestart',
+            ...ButtonDefs.NavRestart,
             storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state:any)=> {
                 return {
@@ -345,7 +346,7 @@ const OverlayContent=(
             }
         },
         {
-            name:'WpNext',
+            ...ButtonDefs.WpNext,
             storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state:any)=> {
                 return {
@@ -362,7 +363,7 @@ const OverlayContent=(
             }
         },
         {
-            name:'WpPrevious',
+            ...ButtonDefs.WpPrevious,
             storeKeys:activeRoute.getStoreKeys(),
             updateFunction: (state:any)=> {
                 return {
@@ -782,7 +783,7 @@ const NavPage=(props:PageProps)=>{
                 [LAYOUT_OPTIONS.SMALL, LAYOUT_OPTIONS.ANCHOR])
         },
         {
-            name: 'NavMapWidgets',
+            ...ButtonDefs.NavMapWidgets,
             editOnly: true,
             overflow: true,
             onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
@@ -790,15 +791,15 @@ const NavPage=(props:PageProps)=>{
         ]);
     const buttons=[
             {
-                name: "ZoomIn",
+                name: ButtonDefs.ZoomIn.name,
                 onClick:()=>{MapHolder.changeZoom(1)}
             },
             {
-                name: "ZoomOut",
+                name: ButtonDefs.ZoomOut.name,
                 onClick:()=>{MapHolder.changeZoom(-1)}
             },
             {
-                name: "LockPos",
+                name: ButtonDefs.LockPos.name,
                 onClick:()=>{
                     const old=globalStore.getData(keys.map.lockPosition);
                     let mapLockMode=LOCK_MODES.center;
@@ -820,7 +821,7 @@ const NavPage=(props:PageProps)=>{
                 editDisable:true
             },
             {
-                name: "LockMarker",
+                name: ButtonDefs.LockMarker.name,
                 storeKeys: activeRoute.getStoreKeys(AnchorWatchKeys),
                 updateFunction:(state:any)=>{
                     return {visible:!StateHelper.hasActiveTarget(state) && ! isWatchActive(state)}
@@ -832,20 +833,20 @@ const NavPage=(props:PageProps)=>{
             },
             anchorWatch(true,dialogCtx),
             {
-                name: "StopNav",
+                name: ButtonDefs.StopNav.name,
                 onClick:()=>{
                     navToWp(false);
                 }
             },
             {
-                name: "CourseUp",
+                name: ButtonDefs.CourseUp.name,
                 onClick:()=>{
                     MapHolder.setCourseUp(!globalStore.getData(keys.map.courseUp,false))
                 }
 
             },
             {
-                name: "ShowRoutePanel",
+                name: ButtonDefs.ShowRoutePanel.name,
                 onClick:()=>{
                     if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
@@ -854,11 +855,11 @@ const NavPage=(props:PageProps)=>{
 
             },
             {
-                name: "NavOverlays",
+                name: ButtonDefs.NavOverlays.name,
                 onClick:()=>runSelectChart(),
             },
             {
-                name:'GpsCenter',
+                name: ButtonDefs.GpsCenter.name,
                 onClick:()=>{
                     MapHolder.centerToGps();
 
@@ -868,10 +869,6 @@ const NavPage=(props:PageProps)=>{
             },
             CenterActionButton,
             Dimmer.buttonDef(),
-            {
-                name: 'Cancel',
-                onClick: ()=>{history.pop()}
-            }
         ];
         const currentButtons=useRef<ButtonDef[]>();
         currentButtons.current=

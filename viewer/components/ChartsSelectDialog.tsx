@@ -35,6 +35,7 @@ import {DialogButtonProps} from "./DialogButton";
 import EditOverlaysDialog from "./EditOverlaysDialog";
 import keys from "../util/keys";
 import globalstore from "../util/globalstore";
+import {iconClasses} from './Icons';
 
 
 const ITEM_TYPE='chart'
@@ -63,7 +64,7 @@ export const ChartItem=(props:ChartItemProps)=>{
         >
         </ListMainSlot>
         {props.overlayClick &&<ListSlot
-            icon={{className:'MainOverlays'}}
+            icon={{className: iconClasses.Overlays}}
             onClick={(ev:SyntheticEvent)=>{
                 setav(ev,{item:props})
                 ev.stopPropagation();

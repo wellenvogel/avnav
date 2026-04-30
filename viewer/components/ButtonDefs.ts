@@ -196,6 +196,18 @@ const ButtonDefinitions= {
         iconClass: iconClasses.NavGoto,
         name: btdef.NavGoto,
     },
+    NavNext:{
+        iconClass: iconClasses.NavNext,
+        name:btdef.NavNext,
+    },
+    WpGoto:{
+        iconClass: iconClasses.WpGoto,
+        name:btdef.WpGoto,
+    },
+    NavRestart:{
+        iconClass: iconClasses.WpGoto,
+        name: btdef.NavRestart,
+    },
     StopNav:{
         iconClass: iconClasses.NavStop,
         name:btdef.StopNav
@@ -209,7 +221,7 @@ const ButtonDefinitions= {
         name:btdef.CenterAction,
     },
     AnchorWatch:{
-        iconClasses: iconClasses.Anchor,
+        iconClass: iconClasses.Anchor,
         name:btdef.AnchorWatch,
     },
     LockPos:{
@@ -383,6 +395,10 @@ const ButtonDefinitions= {
       iconClass: iconClasses.Undo,
       name:btdef.RevertLayout,
     },
+    NavMapWidgets:{
+        iconClass: iconClasses.NavMapWidgets,
+        name: btdef.NavMapWidgets,
+    },
     //other
     Help:{
         iconClass: iconClasses.Help,
@@ -399,6 +415,10 @@ const ButtonDefinitions= {
     CreateFile:{
         iconClass: iconClasses.Plus,
         name:btdef.CreateFile,
+    },
+    Overflow:{
+        iconClass: iconClasses.Overflow,
+        name:btdef.Overflow,
     }
 }
 export default ButtonDefinitions;

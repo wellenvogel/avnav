@@ -36,6 +36,7 @@ import {useTimer} from "../util/UiHelper";
 import Requests from "../util/requests";
 import {shallowEqual} from "shallow-equal";
 import {useHistory} from "../components/HistoryProvider";
+import ButtonDefs from "../components/ButtonDefs";
 interface InfoCacheEntry{
     status:ChildStatusProps;
     element: ReactElement
@@ -58,7 +59,7 @@ export const PluginsPage = (props:PageProps) => {
     },1000,true,true)
     const [uploadProps,uploadAction]=useUploadHelper("plugins");
     const buttonActions={
-        DownloadPageUpload:{
+        [ButtonDefs.Upload.name]:{
             onClick:uploadAction,
         },
         Cancel:{

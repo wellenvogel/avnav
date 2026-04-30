@@ -6,6 +6,7 @@ import ItemList from './ItemList';
 import Helper from "../util/helper";
 import {PageType} from "../util/pageids";
 import {addonViewManager} from "./AddonView";
+import ButtonDefs from "./ButtonDefs";
 
 const storeKeys={
     maxButtons: keys.properties.maxButtons,
@@ -110,7 +111,7 @@ const ButtonList = (iprops:ButtonListProps) => {
     const className=Helper.concatsp(sprops.className,"buttonContainer",
         sprops.buttonsHidden?"buttonsHidden":undefined);
     const listHeight = (sprops.dimensions) ? sprops.dimensions.height : 0;
-    let items:ButtonDescription[] = [];
+    const items:ButtonDescription[] = [];
     //we must render all invsible buttons to be sure to get called back
     //if their visibility changes
     let invisibleItems:ButtonDescription[] = [];
@@ -165,7 +166,7 @@ const ButtonList = (iprops:ButtonListProps) => {
         }
         if (overflowItems.length > 0 && !sprops.buttonCols) {
             mainItems.push({
-                name: 'Overflow',
+                ...ButtonDefs.Overflow,
                 toggle: showOverflow,
                 onClick: () => {
                     setShowOverflow((old) => !old)
