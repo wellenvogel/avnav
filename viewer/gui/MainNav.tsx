@@ -26,7 +26,14 @@ import Helper, {getav, setav} from "../util/helper";
 import {useDialogContext} from "../components/DialogContext";
 import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
-import {ButtonDef, ButtonEvent, ButtonEventHandler, ButtonRow, propsToDefs} from "../components/Button";
+import {
+    ButtonDef,
+    ButtonEvent,
+    ButtonEventHandler,
+    ButtonRow,
+    isButtonVisible,
+    propsToDefs
+} from "../components/Button";
 import globalstore from "../util/globalstore";
 import keys, {MainColumns, MainExpandMode} from "../util/keys";
 import {getPageTitle, PAGEIDS, PageType} from "../util/pageids";
@@ -141,17 +148,27 @@ interface PageRowProps{
     expanded: boolean;
     expandSequence: number;
     noExpand?:boolean;
+    onExpand?:()=>void;
     pageref?:(el:HTMLElement)=>void;
 }
 const PageRow=({
                    page,onClick,isCurrent,
                    expanded,expandSequence,noExpand,
-                   pageref
+                   pageref, onExpand
 }:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
     const [isExpanded,setExpanded]=useState(expanded);
+    const buttons=page.getButtons();
+    let hasVisibleButton=false;
+    for (const bt of buttons){
+        if (isButtonVisible(bt)){
+            if (bt.localOnly && ! isCurrent)continue;
+            hasVisibleButton=true;
+            break;
+        }
+    }
     useEffect(() => {
         if (noExpand) return;
         setExpanded(expanded);
@@ -170,19 +187,20 @@ const PageRow=({
         <ListSlot icon={{className:page.kind}}/>
         <ListMainSlot primary={page.getDisplay()}>
         </ListMainSlot>
-            {!noExpand && <ListSlot
+            {!noExpand && hasVisibleButton && <ListSlot
             className={'iconSlot'}
             icon={{className:isExpanded?'MNexpanded':'MNcollapsed'}}
             onClick={(ev)=>{
+                if (! isExpanded && onExpand) onExpand();
                 setExpanded(!isExpanded);
                 ev.stopPropagation();
             }}
         ></ListSlot>
             }
         </ListItem>
-        {isExpanded && ! noExpand &&
+        {isExpanded && hasVisibleButton && ! noExpand &&
             <ListFrame className={'ButtonList'}>
-                {page.getButtons().map((bt)=> {
+                {buttons.map((bt)=> {
                     if (bt.localOnly && ! isCurrent) return null;
                     if (bt.editOnly && ! layoutEditing) return null;
                     return <ButtonRow
@@ -224,6 +242,7 @@ export const MainNav = (props:MainNavProps) => {
     const history=useHistory();
     const [expandMode,setExpandMode]=useState(props.expandMode);
     const [expandSequence,setExpandSequence]=useState(0);
+    const [manualExpanded, setManualExpanded]=useState<string>(undefined);
     const [showAll]=useStoreState(keys.properties.mainAll);
     const pages=mainTree.slice(0);
     const currentEl=useRef<HTMLElement>(null);
@@ -239,6 +258,7 @@ export const MainNav = (props:MainNavProps) => {
                 icon={{className:'MNcollapsed'}}
                 onClick={()=>{
                     setExpandMode(MainExpandMode.ALL);
+                    setManualExpanded(undefined);
                     setExpandSequence((old)=>old+1)
                 }}
             />}
@@ -246,6 +266,7 @@ export const MainNav = (props:MainNavProps) => {
                 icon={{className:'MNexpanded'}}
                 onClick={()=>{
                         setExpandMode(MainExpandMode.NONE);
+                        setManualExpanded(undefined);
                         setExpandSequence((old)=>old+1)
                         }}
                 />
@@ -275,9 +296,16 @@ export const MainNav = (props:MainNavProps) => {
                 buttons:props.currentButtons
             }):page;
             const isCurrent=page.name==props.current;
-            const expand=(expandMode == MainExpandMode.ALL)
+            const expand=manualExpanded?
+                page.name === manualExpanded:
+                (expandMode == MainExpandMode.ALL)
                 || isCurrent && ( expandMode == MainExpandMode.CURRENT);
             return <PageRow
+                onExpand={()=>{
+                    setManualExpanded(page.name);
+                    setExpandMode(MainExpandMode.NONE);
+                    setExpandSequence((old)=>old+1)
+                }}
                 noExpand={noExpand}
                 pageref={isCurrent?(el)=>{
                     currentEl.current=el

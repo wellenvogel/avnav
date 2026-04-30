@@ -1,6 +1,6 @@
 import React, {useCallback, useRef} from 'react';
 import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
-import {DynamicProps, StoreKeys, UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
+import {DynamicProps, dynamicWrapper, StoreKeys, UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
@@ -98,6 +98,15 @@ const getIdx=()=>{
     return idx;
 }
 
+const isVisible=(props:{visible?:boolean})=>{
+    return Helper.unsetorTrue(props.visible);
+}
+
+export const isButtonVisible=(props:ButtonProps) => {
+    const computed=dynamicWrapper(props);
+    return isVisible(computed);
+}
+
 const Button = (sprops:ButtonProps) => {
     const iprops:ButtonProps=useStore(sprops,{changeCallback:sprops.dataChanged});
     const [hoverTime]=useStoreState(keys.properties.buttonTitleTime);
@@ -129,9 +138,7 @@ const Button = (sprops:ButtonProps) => {
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {closeDialogs,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly,iconClass, ...forward} = iprops;
-    if (visible !== undefined && ! visible) {
-        return null;
-    }
+    if (! isVisible(iprops)) return null;
     const classNamev=Helper.concatsp(className,
         'button',
         name,
