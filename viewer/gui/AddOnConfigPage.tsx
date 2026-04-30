@@ -172,6 +172,7 @@ export const AddonConfigPage = (props: PageProps) => {
                             title={'User File'}></UploadAction>
                         <DownloadItemList
                             {...uploadPropsUser}
+                            showCreate={true}
                             type={'user'}
                             autoreload={3000}
                             scrollSelected={1}

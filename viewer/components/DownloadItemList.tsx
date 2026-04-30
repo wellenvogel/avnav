@@ -45,6 +45,7 @@ import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import DialogButton from "./DialogButton";
+import ButtonDefs from "./ButtonDefs";
 
 interface SortProps{
     time?:number,
@@ -274,8 +275,8 @@ export const DownloadItemList = (
         />
         {(type === "user" && showCreate) ?
             <Button
+                {...ButtonDefs.CreateFile}
                 className="fab"
-                name="DownloadPageCreate"
                 onClick={() => {
                     createAction.action(dialogContext);
                 }}

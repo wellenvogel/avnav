@@ -379,6 +379,10 @@ const ButtonDefinitions= {
     Edit:{
         iconClass: iconClasses.Edit,
         name:btdef.Edit,
+    },
+    CreateFile:{
+        iconClass: iconClasses.Plus,
+        name:btdef.CreateFile,
     }
 }
 export default ButtonDefinitions;

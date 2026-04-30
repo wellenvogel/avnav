@@ -28,6 +28,7 @@
   --avnav-slide-color: fade(blue,90%);
   --avnav-button-color: var(--avnav-second-color);
   --avnav-button-filter: unset;         //filter to change the button foreground (images)
+  --avnav-button-filter-inv: brightness(0) saturate(100%) invert(90%) sepia(93%) saturate(27%) hue-rotate(196deg) brightness(107%) contrast(100%);
   --avnav-border-color: @_borderColor;
   --avnav-active-color: @_colorGreen;
   --avnav-night-opacity: 1;
@@ -55,6 +56,7 @@
   --avnav-slide-color: fade(@_colorRed,@_nightFade);
   --avnav-button-color: black;
   --avnav-button-filter: var(--avnav-filter-red);
+  --avnav-button-filter-inv: var(--avnav-filter-red);
   --avnav-border-color: fade(@_nightForeColor,60%);
   --avnav-active-color: @_nightForeColor;
   --avnav-night-opacity: @_nightOpacity;

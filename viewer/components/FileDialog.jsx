@@ -1737,6 +1737,12 @@ class UserItemActions extends ItemActions{
         this.headline='User';
     }
 
+
+    getCreateAction() {
+        return super.getCreateAction().copy({
+            title:'Create new user file'
+        });
+    }
 }
 class ImageItemActions extends ItemActions{
     constructor() {
