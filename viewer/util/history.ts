@@ -86,19 +86,29 @@ class History implements IHistory{
         this.updateCallback(last,false, true);
     }
     replace(location:string,options?:HistoryOptions){
-        if (this.history.length < 1){
-            this.push(location,options);
+        const hentry=(this.history.length >= 1)?
+            this.history[this.history.length - 1]:undefined;
+        const done=()=>{
+            this._tryAnchor();
+            this.updateCallback(hentry);
+        }
+        if (location === PAGEIDS.NAV){
+            this.history=[{location:location,options:{...options}}]
+            done();
             return;
         }
-        const hentry=this.history[this.history.length - 1];
+        if (this.history.length < 1){
+            this.push(location,options);
+            done();
+            return;
+        }
         //try to find the target in the current history
         //and set this as the topmost entry, update the options
         for (let idx=0;idx<this.history.length;idx++){
             if (this.history[idx].location===location){
                 this.history.splice(idx+1,this.history.length)
                 this.history[idx].options=options;
-                this._tryAnchor();
-                this.updateCallback(hentry);
+                done();
                 return;
             }
         }
@@ -107,15 +117,16 @@ class History implements IHistory{
             if (location !== PAGEIDS.NAV){
                 //execute a push
                 this.push(location,options);
+                done();
                 return;
             }
+            done();
             //if the new location is nav we should have handled it above
             return;
         }
         //if not found replace the topmost entry
         this.history.splice(-1,1,{location:location,options:options||{},back:hentry});
-        this._tryAnchor();
-        this.updateCallback(hentry);
+        done();
     }
 
     setOptions(options?:HistoryOptions|undefined){
