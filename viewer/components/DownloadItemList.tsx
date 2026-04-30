@@ -44,7 +44,6 @@ import {useStateRef, useTimer} from "../util/UiHelper";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {Icon} from "./Icons";
 import {IDialogContext, useDialogContext} from "./DialogContext";
-import DialogButton from "./DialogButton";
 import ButtonDefs from "./ButtonDefs";
 
 interface SortProps{
