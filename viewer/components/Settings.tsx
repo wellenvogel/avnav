@@ -68,7 +68,7 @@ export const settingsSections = {
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
         keys.properties.autoUpdateUserCss],
-    MainMenu:[keys.properties.mainNavExpand,keys.properties.mainNavCols,keys.properties.mainBtText],
+    MainMenu:[keys.properties.mainAll,keys.properties.mainNavExpand,keys.properties.mainNavCols, keys.properties.mainBtText],
     Navigation: [keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,

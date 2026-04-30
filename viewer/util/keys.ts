@@ -490,6 +490,7 @@ const keys:Record<string,KeyType>={
             "NONE: no page\n" +
             "ALL: all pages\n" +
             "NEVER: no page, hide buttons"),
+        mainAll: new Property(true,"show all",PropertyType.CHECKBOX,undefined,'Show all items in main menu. When disabled show only the items really necessary while under way (hide most configuration and settings items).'),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20],"the zoom that is automatically set when MOB is activated (except if the zoom was already higher)"),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
         buttonText: new Property(false,"text on buttons",PropertyType.CHECKBOX,undefined,"show a small text on normal buttons"),

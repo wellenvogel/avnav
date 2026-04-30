@@ -57,6 +57,7 @@ import {ActionDialog} from "../components/ActionDialog";
 import {actionButtons} from "./MainActionButtons";
 import layouthandler from "../util/layouthandler";
 import ButtonDefs from "../components/ButtonDefs";
+import {useStoreState} from "../hoc/Dynamic";
 
 
 type PageKind='navigation'|'settings';
@@ -66,14 +67,17 @@ class Page extends CopyAware{
     displayName?:string;
     buttons:ButtonDef[]|(()=>ButtonDef[]);
     kind:PageKind;
+    all:boolean;
     constructor(name:string,kind:PageKind,
-                buttons?:ButtonDef[]|(()=>ButtonDef[])
+                buttons?:ButtonDef[]|(()=>ButtonDef[]),
+                all:boolean=false
         ){
         super();
         this.name=name;
         this.displayName=getPageTitle(name);
         this.buttons=buttons;
         this.kind=kind;
+        this.all=all;
     }
     getDisplay(){
         return this.displayName||this.name;
@@ -114,19 +118,19 @@ const mainTree=[
     new Page(PAGEIDS.AISCFG,'settings',
         AisCfgPageButtons),
     new Page(PAGEIDS.PLUGINS,'settings',
-        PluginsPageButtons),
+        PluginsPageButtons,true),
     new Page(PAGEIDS.LAYOUT,'settings',
-        LayoutsPageButtons),
+        LayoutsPageButtons,true),
     new Page(PAGEIDS.CHANNELS,'settings',
-        ChannelsPageButtons),
+        ChannelsPageButtons,true),
     new Page(PAGEIDS.SETTINGS,'settings',
-        SettingsPageButtons),
+        SettingsPageButtons,true),
     new Page(PAGEIDS.ADDCFG,'settings',
-        AddOnConfigPageButtons),
+        AddOnConfigPageButtons,true),
     new Page(PAGEIDS.SERVER,"settings",
-        ServerPageButtons),
+        ServerPageButtons,true),
     new Page(PAGEIDS.REMOTE,"settings",
-        RemotePageButtons)
+        RemotePageButtons,true)
 ]
 
 
@@ -220,6 +224,7 @@ export const MainNav = (props:MainNavProps) => {
     const history=useHistory();
     const [expandMode,setExpandMode]=useState(props.expandMode);
     const [expandSequence,setExpandSequence]=useState(0);
+    const [showAll]=useStoreState(keys.properties.mainAll);
     const pages=mainTree.slice(0);
     const currentEl=useRef<HTMLElement>(null);
     const noExpand = expandMode === MainExpandMode.NEVER;
@@ -265,6 +270,7 @@ export const MainNav = (props:MainNavProps) => {
                  expanded={false}
                  expandSequence={0}/>
         {pages.map((page)=>{
+            if (page.all && ! showAll) return null;
             const displayPage=(page.name === props.current)?page.copy({
                 buttons:props.currentButtons
             }):page;
