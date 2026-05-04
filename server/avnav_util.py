@@ -922,13 +922,13 @@ class AVNFileDownload(AVNDownload):
 class AVNFileDownloadLB(AVNFileDownload):
     def __init__(self,filename,lastBytes,dlname=None,mimeType=None):
         super().__init__(filename,mimeType=mimeType,dlname=dlname)
-        self.lastBytes=int(lastBytes)
+        self.lastBytes=int(lastBytes) if lastBytes is not None else None
 
     def _openStream(self):
         stream=super()._openStream()
         if not stream:
             return
-        if self.lastBytes >= 0 and self.lastBytes <= self.size:
+        if self.lastBytes is not None and self.lastBytes >= 0 and self.lastBytes <= self.size:
             seekv=self.size-self.lastBytes
             if seekv > 0:
                 stream.seek(seekv)
