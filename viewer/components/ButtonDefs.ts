@@ -383,6 +383,10 @@ const ButtonDefinitions= {
         name:btdef.TrackItems,
     },
     //layout editing
+    Layout:{
+        iconClass: iconClasses.Layout,
+        name:btdef.Layout,
+    },
     EditPage:{
         iconClass: iconClasses.EditPage,
         name: btdef.EditPage,

@@ -28,7 +28,7 @@ import keys from "../util/keys";
 import ButtonList from "../components/ButtonList";
 import {useHistory} from "../components/HistoryProvider";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {ButtonDef, updateButtons} from "../components/Button";
+import Button, {ButtonDef, updateButtons} from "../components/Button";
 import LayoutsPageButtons from "./LayoutsPageButtons";
 import {DownloadItemList} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
@@ -36,8 +36,8 @@ import {EditSettingsCategory, SelectLayoutDialog} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
-import DialogButton from "../components/DialogButton";
 import layouthandler from "../util/layouthandler";
+import ButtonDefs from "../components/ButtonDefs";
 
 const PAGE=PAGEIDS.LAYOUT;
 const TITLE=getPageTitle(PAGE);
@@ -48,30 +48,27 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.properties.layoutName);
      useStoreState(keys.gui.global.layoutEditing);
      const layoutName=layouthandler.getName();
-     const history=useHistory();
-     //we are just prepared for a multi view...
-     const [scrollProps,/*scrollTo*/,visible]=useScrollHelper(1);
-     const buttonListRef=useRef<ButtonDef[]>();
-     const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
-     const buttonActions={
-         Cancel:{
-             onClick:()=>history.pop()
-         },
-         ShowSettings:{
-             onClick:()=>{
-                 showDialog(undefined, ()=><EditSettingsCategory
-                     category={["General","MainMenu"]}
-                     title={'General Settings'}
-                 />)
-             }
-         },
-         Upload:{
-             onClick:uploadAction,
-             disabled:!visible(0),
-         }
-     }
-     buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
-     useInitialButton(buttonListRef);
+    useHistory();
+    //we are just prepared for a multi view...
+    const [scrollProps,/*scrollTo*/,visible]=useScrollHelper(1);
+    const buttonListRef=useRef<ButtonDef[]>();
+    const [uploadProps,uploadAction]=useUploadHelper(ITEM_TYPE);
+    const buttonActions={
+        [ButtonDefs.ShowSettings.name]:{
+            onClick:()=>{
+                showDialog(undefined, ()=><EditSettingsCategory
+                    category={["General","MainMenu"]}
+                    title={'General Settings'}
+                />)
+            }
+        },
+        [ButtonDefs.Upload.name]:{
+            onClick:uploadAction,
+            disabled:!visible(0),
+        }
+    }
+    buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);
+    useInitialButton(buttonListRef);
     return <PageFrame id={PAGE}>
         <PageLeft id={PAGE} title={TITLE}>
             <MultiView {...scrollProps} views={[
@@ -84,9 +81,9 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                     >
                         <ListMainSlot primary={layoutName}/>
                         <ListSlot>
-                            <DialogButton
-                                name={'SettingsLayout'}
-                                displayName={'select/edit layout'}
+                            <Button
+                                className={'smallButton'}
+                                {...ButtonDefs.Layout}
                             />
                         </ListSlot>
                     </ListItem>
@@ -111,5 +108,6 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
         ></ButtonList>
     </PageFrame>
 }
+
 
 export default LayoutsPage;
