@@ -423,8 +423,62 @@ const ButtonDefinitions= {
     Overflow:{
         iconClass: iconClasses.Overflow,
         name:btdef.Overflow,
+    },
+
+    DBOk:{
+        iconClass: iconClasses.Ok,
+        name:btdef.DBOk,
+    },
+    DBCancel:{
+        iconClass: iconClasses.Cancel,
+        name:btdef.DBCancel,
+    },
+    DBDownload:{
+        iconClass: iconClasses.Download,
+        name:btdef.DBDownload,
+    },
+    DBRename:{
+        iconClass: iconClasses.Edit,
+        name:btdef.DBRename,
+    },
+    DBDelete:{
+        iconClass: iconClasses.Delete,
+        name:btdef.DBDelete,
+    },
+    DBSaveAs:{
+        iconClass: iconClasses.SaveAs,
+        name:btdef.DBSaveAs
+    },
+    DBIgnore:{
+        name:btdef.DBIgnore,
+    },
+    DBEmptyRoute:{
+        iconClass: iconClasses.EmptyRoute,
+        name:btdef.DBEmptyRoute,
+    },
+    DBInvertRoute:{
+        iconClass: iconClasses.InvertRoute,
+        name:btdef.DBInvertRoute
+    },
+    DBRenumberRoute:{
+        iconClass: iconClasses.RenumberRoute,
+        name:btdef.DBRenumberRoute,
+    },
+    DBNewRoute:{
+        iconClass: iconClasses.Plus,
+        name:btdef.DBNewRoute
+    }  ,
+    DBLoadRoute:{
+        iconClass: iconClasses.Open,
+        name:btdef.DBLoadRoute,
+    },
+    DBRoutePoints:{
+        iconClass: iconClasses.Route,
+        name:btdef.DBRoutePoints,
     }
+
 }
 export default ButtonDefinitions;
+
 export const CL_BUTTON_TEXT = 'button-text';
 export const CL_MAINBT_TEXT = 'main-button-text';

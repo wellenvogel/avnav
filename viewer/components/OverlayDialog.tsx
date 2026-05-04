@@ -26,6 +26,9 @@ import {
 } from "./DialogContext";
 import Headline from "./Headline";
 import base from "../base";
+import ButtonDefs from "./ButtonDefs";
+// @ts-ignore
+import * as btdef from '../style/button_text.less';
 
 export interface OverlayContainerProps {
     coverClassName?: string;
@@ -331,7 +334,11 @@ export const DialogButtons=(props:DialogButtonListProps)=>{
                 // eslint-disable-next-line react/jsx-key
                 return <El/>
             }
-            const label=button.label?button.label:button.name.substring(0,1).toUpperCase()+button.name.substring(1);
+            let label;
+            //temp: fallback to old style handling if no buttondef yet
+            if (! button.name || ! btdef[button.name]) {
+                label = button.label ? button.label : button.name.substring(0, 1).toUpperCase() + button.name.substring(1);
+            }
             return <DialogButton {...button} key={button.name}>
                 {label}
             </DialogButton>
@@ -347,10 +354,10 @@ DialogButtons.propTypes={
  * helper for dialogButtonList
  */
 export const DBCancel=(props?:DialogButtonProps)=>{
-    return {close: true,name:'cancel',label:'Cancel',...props};
+    return {close: true,...ButtonDefs.DBCancel,...props};
 }
 export const DBOk=(onClick:(ev:SyntheticEvent)=>void,props?:DialogButtonProps)=>{
-    return {close: true,name:'ok',onClick:onClick,label:'Ok',...props};
+    return {close: true,...ButtonDefs.DBOk ,onClick:onClick,...props};
 }
 
 

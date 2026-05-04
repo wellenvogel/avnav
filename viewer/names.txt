@@ -1,0 +1,5 @@
+* Upload in LoadRouteDialog (sub dialog of EditRouteDialog) (Upload)
+  import a local gpx file into the dialog (no server upload yet)
+
+* Load in EditRouteDialog (DBLoadRoute)
+  either load a route fromn the server or import a local gpx file

@@ -21,7 +21,6 @@ export interface DialogButtonProps extends Options{
     close?: boolean;  //default: true
     children?: React.ReactNode;
     label?: React.ReactNode;
-    displayName?:string;
 }
 const COMPONENT="dialogButton";
 const DialogButton=(props:DialogButtonProps)=>{
@@ -35,6 +34,9 @@ const DialogButton=(props:DialogButtonProps)=>{
         }
         if (close === undefined) close=true;
         const clickHandler=(ev:ButtonEvent)=>{
+            if (disabled){
+                return;
+            }
             setav(ev,{dialogContext:dialogContext});
             if (! onClick || close) {
                 let closeDialog=true;
@@ -50,18 +52,17 @@ const DialogButton=(props:DialogButtonProps)=>{
         });
         if (visible === false) return null;
         return (
-            <button
+            <div
                 {...forward}
                 {...add}
                 {...style}
-                name={name}
                 onClick={clickHandler}
                 className={concatsp("button dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
                 title={displayName}
             >
             <Icon icon={icon} className={iconClass}/>
                 {children}
-            </button>
+            </div>
         );
     }
 

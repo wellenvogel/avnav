@@ -677,8 +677,7 @@ export const LoadSettingsDialog=(props:LoadSettingsDialogProps) => {
                     close:false
                 }),
                 {
-                    name:'ignore',
-                    displayName:"Ignore",
+                    ...ButtonDefs.DBIgnore,
                     close:false,
                     onClick:()=>{setNotSavedOverride(true)},
                 },

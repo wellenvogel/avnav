@@ -169,7 +169,7 @@ const EditPointsDialog=(props)=>{
         />
         <DialogButtons buttonList={[
             {
-                name: "empty",
+                ...ButtonDefs.DBEmptyRoute,
                 onClick: () => {
                     let changed=changeRoute((nr) => {
                         nr.points = []
@@ -177,12 +177,11 @@ const EditPointsDialog=(props)=>{
                     if (changed.points.length < 1) setInverted(false);
                 },
                 close: false,
-                label: "Empty",
                 visible: !active,
                 disabled: route.points.length < 1,
             },
             {
-                name: "invert",
+                ...ButtonDefs.DBInvertRoute,
                 onClick: () => {
                     changeRoute((nr) => {
                         nr.swap()
@@ -191,10 +190,9 @@ const EditPointsDialog=(props)=>{
                 },
                 disabled: route.points.length < 1,
                 close: false,
-                label: "Invert"
             },
             {
-                name:"renumber",
+                ...ButtonDefs.DBRenumberRoute,
                 onClick:()=>{
                     showPromiseDialog(dialogContext,(drops)=><ConfirmDialog {...drops} text={"All waypoint names will change"} title={"Renumber points?"}/> )
                         .then(()=>{
@@ -206,7 +204,6 @@ const EditPointsDialog=(props)=>{
                 },
                 disabled: route.points.length < 1,
                 close: false,
-                label: "Renumber"
             },
             DBCancel(),
             DBOk(()=>{
@@ -298,8 +295,7 @@ const LoadRouteDialog=({blacklist,selectedRoute,resolveFunction,title,allowUploa
         />
         <DialogButtons buttonList={[
             {
-                name:'upload',
-                label:'Upload',
+                ...ButtonDefs.Upload,
                 onClick: ()=>uploadClick((ev)=>{
                     setUploadFile(ev.target.files[0]);
                 },".gpx"),
@@ -423,7 +419,7 @@ const EditRouteDialog = (props) => {
         />}
         <InfoItem label={'writable'} value={""+writable}/>
         <DialogButtons>
-            <DB name="new"
+            <DB {...ButtonDefs.DBNewRoute}
                 onClick={() => {
                     createAction.action(dialogContext)
                         .then((newRoute)=>{
@@ -433,18 +429,18 @@ const EditRouteDialog = (props) => {
                         },()=>{});
                 }}
                 close={false}
-            >New</DB>
-            < DB name="load"
+            />
+            < DB {...ButtonDefs.DBLoadRoute}
                  onClick={loadNewRoute}
                  close={false}
-            >Load</DB>
+            />
             <DownloadButton
                 fileName={route.name+".gpx"}
                 localData={()=>route.toXml()}
-                name={'download'}
+                {...ButtonDefs.DBDownload}
                 useDialogButton={true}
-            >Download</DownloadButton>
-            <DB name="edit"
+            />
+            <DB {...ButtonDefs.DBRename}
                 onClick={() => {
                     renameAction.runAction(info,dialogContext)
                     .then(() => {},(e)=>{if (e) Toast(e)});
@@ -452,10 +448,8 @@ const EditRouteDialog = (props) => {
                 close={false}
                 disabled={! writable || (props.route.name === DEFAULT_ROUTE && saveMode === RouteSaveModes.UPDATE) || isActiveRoute()}
                 visible={!!renameAction}
-            >
-                Rename
-            </DB>
-                <DB name="points"
+            />
+                <DB {...ButtonDefs.DBRoutePoints}
                     onClick={() => {
                         showPromiseDialog(dialogContext,EditPointsDialog,{route:route,inverted:inverted})
                             .then((changed)=>{
@@ -465,11 +459,9 @@ const EditRouteDialog = (props) => {
                     }}
                     close={false}
                     disabled={!writable}
-                >
-                    Points
-                </DB>
+                />
             <DB
-                name={'StopNav'}
+                {...ButtonDefs.StopNav}
                 iconClass={iconClasses.NavStop}
                 onClick={()=>{
                     if (! isActiveRoute()) return;
@@ -480,10 +472,10 @@ const EditRouteDialog = (props) => {
                 visible={isActiveRoute()}
                 disabled={!writable}
                 close={false}
-            >Stop</DB>
+            />
         </DialogButtons>
         <DialogButtons>
-            <DB name="delete"
+            <DB {...ButtonDefs.DBDelete}
                 onClick={async () => {
                     try {
                         if (await deleteAction.runAction(info, dialogContext)) {
@@ -499,8 +491,8 @@ const EditRouteDialog = (props) => {
                 close={false}
                 disabled={!canDelete || saveMode === RouteSaveModes.REPLACE_NEW}
                 visible={!!deleteAction }
-            >Delete</DB>
-            <DB name="copy"
+            />
+            <DB {...ButtonDefs.DBSaveAs}
                 onClick={() => {
                     renameAction.copy({
                         execute: (item,newName)=>{
@@ -514,16 +506,12 @@ const EditRouteDialog = (props) => {
                     }).runAction(info,dialogContext);
                 }}
                 close={false}
-            >
-                Save As
-            </DB>
-            <DB name="cancel"
-            >Cancel</DB>
-            <DB name="ok"
+            />
+            <DB {...ButtonDefs.DBCancel}/>
+            <DB {...ButtonDefs.DBOk}
                 onClick={() => save(route.clone(),saveMode)}
                 disabled={!route.differsTo(props.route) || (! writable && saveMode !== RouteSaveModes.REPLACE_EXISTING)}
             >
-                Ok
             </DB>
 
         </DialogButtons>

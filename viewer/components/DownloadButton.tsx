@@ -42,6 +42,7 @@ export interface DownloadButtonProps{
     localData?: any|Promise<any>|(()=>any);
     url?: string|(()=>string);
     className?: string;
+    iconClass?:string;
     useDialogButton?: boolean;
     fileName?:  string;
     onClick?: (ev:ButtonEvent) => void;

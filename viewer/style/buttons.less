@@ -67,7 +67,7 @@
 }
 
 .button-text{
-  div:not(.buttonRow,.smallButton).button .iconFrame{
+  div:not(.buttonRow,.smallButton,.dialogButton).button .iconFrame{
     height: calc(80% - 0.9em);
   }
   div:not(.buttonRow,.smallButton).button:after {
@@ -147,6 +147,12 @@
       left:unset;
       right:unset;
       margin-right: 0.2em;
+    }
+    &:after {
+      display: block;
+      position: unset;
+      font-size: 1em;
+      text-align: center;
     }
     margin-top: 0.5em;
     margin-left: 0.5em;
@@ -393,18 +399,7 @@
   .EditRouteDialog &.points{
     .dialogIconButton('route.svg');
   }
-  .EditRoutePoints &.empty{
-    .dialogIconButton('delete_sweep.svg');
-  }
-  .EditRoutePoints &.invert{
-    .dialogIconButton('invertroute.svg');
-  }
-  .EditRoutePoints &.renumber{
-    .dialogIconButton('format_list_numbered.svg');
-  }
-  .EditRouteDialog &.load{
-    .dialogIconButton('save.svg');
-  }
+
 
   &.reload{
     .dialogIconButton('ic_refresh.svg');
