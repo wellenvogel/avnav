@@ -449,6 +449,10 @@ const ButtonDefinitions= {
         iconClass: iconClasses.SaveAs,
         name:btdef.DBSaveAs
     },
+    DBAdd:{
+        iconClass: iconClasses.Plus,
+        name:btdef.DBAdd,
+    },
     DBIgnore:{
         name:btdef.DBIgnore,
     },
@@ -475,6 +479,22 @@ const ButtonDefinitions= {
     DBRoutePoints:{
         iconClass: iconClasses.Route,
         name:btdef.DBRoutePoints,
+    },
+    DBWpaRemove:{
+        iconClass: iconClasses.Delete,
+        name:btdef.DBRemove,
+    },
+    DBWpaEnable:{
+        iconClass: iconClasses.Wifi,
+        name:btdef.DBEnable
+    },
+    DBWpaDisable:{
+        iconClass: iconClasses.WifiOff,
+        name:btdef.DBDisable
+    },
+    DBWpaConnect:{
+        iconClass: iconClasses.WpaConnect,
+        name:btdef.DBConnect,
     }
 
 }

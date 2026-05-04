@@ -20,6 +20,7 @@ import {InjectMainMenu} from "./MainNav";
 import {propsToDefs, updateButtons} from "../components/Button";
 import {useHistory} from "../components/HistoryProvider";
 import {GeneralWithCancel} from './GeneralButtons'
+import ButtonDefs from "../components/ButtonDefs";
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -85,28 +86,28 @@ const Dialog = (props) => {
     const buttons = [
         DBCancel(),
         {
-            name: 'remove',
+            ...ButtonDefs.DBWpaRemove,
             visible: props.id >= 0,
             onClick: () => {
                 result('remove')
             }
         },
         {
-            name: 'enable',
+            ...ButtonDefs.DBWpaEnable,
             visible: props.id >= 0,
             onClick: () => {
                 result('enable')
             }
         },
         {
-            name: 'disable',
+            ...ButtonDefs.DBWpaDisable,
             visible: props.id >= 0,
             onClick: () => {
                 result('disable')
             }
         },
         {
-            name:'connect',
+            ...ButtonDefs.DBWpaConnect,
             onClick: () => {result('connect')}
         }
     ]

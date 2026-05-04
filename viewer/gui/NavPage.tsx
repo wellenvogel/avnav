@@ -249,7 +249,7 @@ const MapWidgetsDialog =()=> {
             })}
         <DialogButtons buttonList={[
             {
-                name:'add',
+                ...ButtonDefs.DBAdd,
                 onClick:()=>{
                     dialogContext.showDialog(()=><EditWidgetDialogWithFunc
                         widgetItem={undefined}
@@ -261,8 +261,7 @@ const MapWidgetsDialog =()=> {
                 close: false
             },
             {
-                name:'cancel',
-                label:'Close'
+                ...ButtonDefs.DBCancel,
             }
         ]}/>
     </DialogFrame>
