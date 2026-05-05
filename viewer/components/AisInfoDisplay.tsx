@@ -38,7 +38,7 @@ import ItemList, {Item} from "./ItemList";
 import {DBCancel, DialogButtonDef, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
-import {iconClasses} from './Icons';
+import ButtonDefs from "./ButtonDefs";
 interface DisplayItem{
     name?:string,
     addClass?:string,
@@ -225,21 +225,18 @@ export const AisInfoWithFunctions=(
     const hiddenButtons=hidden||{};
     const pButtons:DialogButtonDef[] = [
         {
-            name: 'AisNearest',
-            iconClass: iconClasses.AisNearest,
+            ...ButtonDefs.AisNearest,
             onClick:()=>{
                 NavData.getAisHandler().setTrackedTarget(0);
                 const pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
                 if (pos) mapholder.setCenter(pos);
                 runCb('AisNearest',mmsi);
             },
-            label: 'Nearest',
             disabled: mmsi === undefined,
             visible: ! hiddenButtons.AisNearest && (mapholder.getCurrentChartEntry() !== undefined),
         },
         {
-            name: 'AisInfoLocate',
-            iconClass: iconClasses.Center,
+            ...ButtonDefs.AisInfoLocate,
             onClick: ()=>{
                 NavData.getAisHandler().setTrackedTarget(mmsi);
                 const pos=NavData.getAisHandler().getAisPositionByMmsi(mmsi);
@@ -249,13 +246,11 @@ export const AisInfoWithFunctions=(
                 }
                 runCb('AisInfoLocate',mmsi);
             },
-            label: 'Locate',
             disabled: mmsi === undefined,
             visible: ! hiddenButtons.AisInfoLocate && (mapholder.getCurrentChartEntry() !== undefined)
         },
         {
-            name: 'AisInfoHide',
-            iconClass: iconClasses.AisInfoHide,
+            ...ButtonDefs.AisInfoHide,
             onClick: () => {
                 const target = getTarget(mmsi);
                 if (!target) return;
@@ -266,7 +261,6 @@ export const AisInfoWithFunctions=(
                 }
                 runCb('AisInfoHide',mmsi);
             },
-            label: 'Hide',
             storeKeys: storeKeys,
             updateFunction: ()=>{
                 const target=getTarget(mmsi)||{};
@@ -275,12 +269,10 @@ export const AisInfoWithFunctions=(
             visible: !hiddenButtons.AisInfoHide
         },
         {
-            name: 'AisInfoList',
-            iconClass: iconClasses.Items,
+            ...ButtonDefs.AisItems,
             onClick:()=>{
                 runCb('AisInfoList',mmsi)
             },
-            label: 'List',
             visible: mmsi !== undefined && actionCb !== undefined && ! hiddenButtons.AisInfoList,
             disabled: mmsi === undefined || actionCb === undefined
         },

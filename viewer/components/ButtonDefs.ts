@@ -129,6 +129,14 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Items,
         name:btdef.AisItems,
     },
+    AisInfoLocate:{
+        iconClass: iconClasses.Center,
+        name:btdef.AisInfoLocate,
+    },
+    AisInfoHide:{
+        iconClass: iconClasses.AisInfoHide,
+        name:btdef.AisInfoHide,
+    },
     //channels
     StatusAdd:{
         iconClass: iconClasses.Plus,
@@ -495,7 +503,17 @@ const ButtonDefinitions= {
     DBWpaConnect:{
         iconClass: iconClasses.WpaConnect,
         name:btdef.DBConnect,
+    },
+    //Anchor
+    DBAnchorBoat:{
+        iconClass: iconClasses.Boat,
+        name:btdef.DBAnchorBoat,
+    },
+    DBAnchorCenter:{
+        iconClass: iconClasses.Center,
+        name:btdef.DBAnchorCenter,
     }
+
 
 }
 export default ButtonDefinitions;

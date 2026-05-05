@@ -90,11 +90,11 @@ const WatchDialog=(props)=> {
         />}
         < DialogButtons>
             {hasPosition && <React.Fragment>
-            <DialogButton name={'boat'}
+            <DialogButton {...ButtonDefs.DBAnchorBoat}
                           onClick={()=>{
                               props.setCallback(computeRefPoint(false));
                           }}>Boat</DialogButton>
-                <DialogButton name={'center'}
+                <DialogButton {...ButtonDefs.DBAnchorCenter}
                               onClick={()=>{
                                   props.setCallback(computeRefPoint(true));
                               }}>Center</DialogButton>
