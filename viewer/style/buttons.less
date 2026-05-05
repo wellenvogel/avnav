@@ -39,11 +39,6 @@
     &.MOB{
       border-color: var(--avnav-attention-color);
     }
-    /*& > span:first-child{
-      border-width: var(--avnav-active-button-border-width);
-      border-style: solid ;
-      border-radius: inherit;
-    }*/
   }
   &:after {
     display: none;
@@ -53,6 +48,8 @@
     right: 0;
     font-size: 1em;
     text-align: center;
+    overflow: hidden;
+    max-height: 1.2em;
   }
 }
 .buttonRow.button:after{

@@ -527,7 +527,8 @@ export type Page=PageType;
 export type PluginPage=PluginPageType;
 export interface UserButtonBase{
     name: string;                   //will set the CSS class, unique inside the plugin
-    displayName?: ReactNode;           //shown in main nav
+    label?: React.ReactNode;        //short text
+    displayName?: ReactNode;        //shown in main nav and as tooltip, deprecated: use CSS
     localOnly?: boolean;            //if set: not shown in main nav
     icon?: string|URL;              //relative to plugin base. If not set use CSS with the name as CSS class
     visible?:boolean;

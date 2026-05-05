@@ -31,7 +31,6 @@ export interface ButtonProps {
         toggle?: boolean|(()=>boolean);
         name: string;
         icon?: string|URL;
-        style?: Record<string, any>;
         disabled?:boolean|(()=>boolean);
         overflow?:boolean;
         editDisable?:boolean;
@@ -39,7 +38,6 @@ export interface ButtonProps {
         visible?:boolean;
         children?:React.ReactNode;
         localOnly?:boolean;
-        displayName?:React.ReactNode,
         storeKeys?: StoreKeys;
         updateFunction?: UpdateFunction;
         closeDialogs?: boolean;
@@ -71,7 +69,6 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     name: string;
     icon?: string|URL;
     iconClass?: string;
-    style?: Record<string, any>;
     disabled?: boolean|(() => boolean);
     overflow?: boolean;
     editDisable?:boolean;
@@ -79,7 +76,6 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     visible?: boolean;
     children?: React.ReactNode;
     localOnly?: boolean;
-    displayName?: string;
     closeDialogs?: boolean;
     isAddon?: ButtonAddonType=ButtonAddonType.NONE;
     noHover?: boolean;
@@ -132,27 +128,22 @@ const Button = (sprops:ButtonProps) => {
             if (!iprops.closeDialogs) sprops.onClick(ev);
             else dialogContext.closeDialog().then(()=>sprops.onClick(ev));
         }
-    },[iprops.name,sprops.onClick,disabledv])
+    },[sprops.name,sprops.onClick,disabledv])
     useKeyEventHandlerPlain(sprops.name, "button", () => {
         syntheticClick();
     });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {closeDialogs,dataChanged, isAddon, className,name,displayName,toggle, icon, style, disabled, overflow, editDisable, editOnly, visible, children,localOnly,iconClass, ...forward} = iprops;
     if (! isVisible(iprops)) return null;
-    const classNamev=Helper.concatsp(className,
+    const classNamev=Helper.concatsp(iprops.className,
         'button',
-        name,
+        sprops.name,
         toggleClass(iprops),
-        disabled ? 'disabled' : undefined,
+        iprops.disabled ? 'disabled' : undefined,
         hover ? 'longText hoverClass' : undefined,
     );
-    const spanStyle:Record<string, any> = {};
-    if (icon !== undefined) {
-        spanStyle.backgroundImage = "url(" + icon + ")";
-    }
-    if (forward.onClick){
-        const click=forward.onClick;
-        forward.onClick=async (ev:ButtonEvent)=>{
+    let onClick;
+    if (iprops.onClick){
+        const click=iprops.onClick;
+        onClick=async (ev:ButtonEvent)=>{
             ev.stopPropagation();
             ev.preventDefault();
             hoverTimer.stopTimer();
@@ -175,7 +166,7 @@ const Button = (sprops:ButtonProps) => {
         }
     }
     return (
-        <div {...forward}
+        <div onClick={onClick}
              className={classNamev}
              //title={displayName+""}
              onMouseEnter={()=>{
@@ -186,15 +177,15 @@ const Button = (sprops:ButtonProps) => {
                  setHover(false);
              }}
         >
-            <Icon className={iconClass} icon={icon} forceClass={true}/>
-            {children}
+            <Icon className={iprops.iconClass} /*icon={icon}*/ forceClass={true}/>
+            {sprops.children}
         </div>
     );
 }
 
 export const ButtonRow=(button:DynamicButtonProps) => {
     const className=Helper.concatsp('buttonRow listEntry longText',button.className);
-    return <Button {...button} noHover={true} className={className} displayName={undefined}>
+    return <Button {...button} noHover={true} className={className} >
         <ListMainSlot primary={button.displayName||button.name}></ListMainSlot>
     </Button>
 }

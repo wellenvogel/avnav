@@ -54,6 +54,7 @@ import {
     UserButtonBase,
     UserMapLayerCallback
 } from "../api/api.interface";
+import addons from "./Addons";
 
 
 
@@ -516,6 +517,7 @@ class Pluginmanager{
                 this.triggerUpdate();
         },keys.nav.gps.updateconfig);
         base.log("initializing plugins");
+        addons.updateAddonCss(); //must be created before all plugin and user css
         this.updateRequests=1; //we are running a request right now
         //on startup we really want to wait until the update is finished once
         await this.update();

@@ -4,7 +4,7 @@ import keys from './keys';
 import Requests from './requests';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
-import Helper from "./helper";
+import Helper, {createOrUpdateStyleSheet} from "./helper";
 import {PluginPage, UserApp, UserButton, UserButtonBase} from "../api/api.interface";
 import {StoreCallback} from "./store";
 import {PAGEIDS} from "./pageids";
@@ -96,8 +96,23 @@ export class ServerAddon implements AddonProps{
         this.key=raw.key||raw.name;
         this.url=raw.url;
         this.page=raw.page;
+        let label = raw.title;
+        if (! label){
+            label=raw.name||"";
+            if (raw.source){
+                for (const t of ['user-','system-']) {
+                    if (raw.source.startsWith(`plugin-${t}`)) {
+                        const exp=new RegExp("^"+t)
+                        label = label.replace(exp, '');
+                        break;
+                    }
+                }
+            }
+        }
         this.button={name:raw.name,
-            displayName:raw.displayName||raw.title||raw.name,
+            displayName:raw.displayName||label,
+            label:label,
+            iconClass:raw.iconClass,
             icon:raw.icon};
     }
 }
@@ -107,6 +122,7 @@ const pluginUserButtons:Record<string, PluginUserButton> = {};
 
 const addonsChanged=()=>{
     globalstore.storeData(keys.gui.global.addonsChanged,globalstore.getData(keys.gui.global.addonsChanged,0)+1)
+    updateAddonCss();
 }
 class QueryHandler{
     callback:StoreCallback;
@@ -209,6 +225,7 @@ const addPluginAddOn=(
                 ...props.button,
                 name:props.name,
                 displayName:props.button.displayName||props.title||props.name,
+                label:props.button.label||props.title||props.name
             },
         }
     );
@@ -411,6 +428,42 @@ const removeAddon=(name:string)=>{
             name:name
         })
 };
+const STYLE_NAME='avnav-addon-styles';
+const buildButtonStyles=(button:UserButtonBase,name:string):string=>{
+    let style="";
+    if (button?.displayName){
+        style+=`.longText.${name}::after{\ncontent:"${button.displayName}";\n}\n`;
+    }
+    if (button?.label){
+        style+=`.${name}::after{\ncontent:"${button.label}";\n}\n`;
+    }
+    if (button?.icon){
+        style+=`.${name} .icon{\nbackground-image: url("${button.icon}");\n}\n`;
+    }
+    return style;
+}
+const updateAddonCss=()=>{
+    let rulesTxt='';
+    for (const sadd of serverAddOns){
+        const button=sadd.button;
+        const name=getNameForButton(sadd);
+        const styles=buildButtonStyles(button,name);
+        if (styles) rulesTxt+=styles;
+    }
+    for (const add of Object.values(pluginAddOns)){
+        const button=add.button;
+        const name=getNameForButton(add);
+        const styles=buildButtonStyles(button,name);
+        if (styles) rulesTxt+=styles;
+    }
+    for (const add of Object.values(pluginUserButtons)){
+        const button=add.button;
+        const name=getNameForPluginButton(add);
+        const styles=buildButtonStyles(button,name);
+        if (styles) rulesTxt+=styles;
+    }
+    createOrUpdateStyleSheet(rulesTxt,STYLE_NAME);
+}
 
 export default  {
     findAddonByUrl:findAddonByUrl,
@@ -423,4 +476,5 @@ export default  {
     getServerAddons:getServerAddons,
     getAllAddons:getAllAddons,
     QueryHandler:QueryHandler,
+    updateAddonCss:updateAddonCss,
 }
