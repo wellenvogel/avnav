@@ -62,6 +62,7 @@ import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
 import {loadSettings, LoadSettingsDialog} from "./Settings";
 import {ViewDialog} from "./ViewDialog";
+import ButtonDefs from "./ButtonDefs";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -317,7 +318,6 @@ class DownloadAction extends Action{
                 fileName={this._fhelper('fileName',item)}
                 url={this._fhelper('url',item)}
                 localData={this.localData}
-                name={this.name}
                 useDialogButton={true}
             >{this.label}</DownloadButton>;
         }
@@ -2082,16 +2082,16 @@ const AddRemoveOverlayDialog = (props) => {
                     value={ALLCHARTS.label}
                 />}
             <DialogButtons>
-                <DB name="cancel"
+                <DB {...ButtonDefs.DBCancel}
                     disabled={running}
-                >Cancel</DB>
-                <DB name="ok"
+                />
+                <DB {...ButtonDefs.DBOk}
                     onClick={() => {
                         execute();
                     }}
                     close={false}
                     disabled={running}
-                >Ok</DB>
+                />
             </DialogButtons>
         </DialogFrame>
     )
@@ -2152,10 +2152,7 @@ export const FileDialog = (props) => {
                 return infoRowDisplay(row, extendedInfo);
             })}
             <DialogButtons buttonList={dialogButtons}>
-                <DB name="cancel"
-                >
-                    Cancel
-                </DB>
+                <DB {...ButtonDefs.DBCancel}/>
             </DialogButtons>
         </DialogFrame>
     );

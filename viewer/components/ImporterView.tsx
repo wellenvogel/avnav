@@ -36,6 +36,7 @@ import ItemList from "./ItemList";
 import {useTimer} from "../util/UiHelper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import Helper from "../util/helper";
+import ButtonDefs from "./ButtonDefs";
 
 const HANDLER_NAME='AVNImporter';
 interface MainStatusProps{
@@ -148,7 +149,7 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
             </div>
         }
         <DialogButtons >
-            <DB name="delete"
+            <DB {...ButtonDefs.DBDelete}
                 onClick={() => {
                     Requests.getJson({
                         request:'api',
@@ -162,10 +163,8 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
                         .catch((e:any)=>Toast("unable to delete "+e,5000));
                 }}
                 close={false}
-            >
-                Delete
-            </DB>
-            {!isRunning && <DB name="disable"
+            />
+            {!isRunning && <DB {...ButtonDefs.DBDisable}
                                onClick={() => {
                                    Requests.getJson({
                                        type:'import',
@@ -179,10 +178,8 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
                                        .catch((e:any)=>Toast("unable to disable "+e,5000));
                                }}
                                close={false}
-            >
-                Disable
-            </DB>}
-            {isRunning && <DB name="stop"
+            />}
+            {isRunning && <DB {...ButtonDefs.DBStop}
                               onClick={() => {
                                   Requests.getJson({
                                       type:'import',
@@ -196,10 +193,8 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
                                       .catch((e:any)=>Toast("unable to stop "+e,5000));
                               }}
                               close={false}
-            >
-                Stop
-            </DB>}
-            {!isRunning && <DB name="restart"
+            />}
+            {!isRunning && <DB {...ButtonDefs.DBRestart}
                                onClick={() => {
                                    Requests.getJson({
                                        type:'import',
@@ -213,10 +208,8 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
                                        .catch((e:any)=>Toast("unable to restart "+e,5000));
                                }}
                                close={false}
-            >
-                Restart
-            </DB>}
-            {props.canDownload && <DownloadButton name="download"
+            />}
+            {props.canDownload && <DownloadButton
                                                   close={false}
                                                   useDialogButton={true}
                                                   url={prepareUrl({
@@ -227,7 +220,7 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
             >Download</DownloadButton>
             }
             {props.hasLog &&
-                <DB name="log"
+                <DB {...ButtonDefs.DBLog}
                     onClick={() => {
                         const url= prepareUrl({
                             type: 'import',
@@ -243,10 +236,9 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
                         })
                     }}
                     close={false}
-                >Log</DB>
+                />
             }
-            <DB name="cancel"
-            >Cancel</DB>
+            <DB {...ButtonDefs.DBCancel}/>
         </DialogButtons>
     </DialogFrame>
 }
@@ -319,7 +311,7 @@ const ScannerDialog=(props:ScannerDialogProps)=>{
         </div>
 
         <DialogButtons >
-            <DB name="reload"
+            <DB {...ButtonDefs.DBReload}
                 onClick={()=>{
                     Requests.getJson({
                         type:'import',
@@ -332,9 +324,8 @@ const ScannerDialog=(props:ScannerDialogProps)=>{
                         .catch((e:any)=>Toast("unable to trigger rescan "+e,5000));
                 }}
                 close={false}
-            >Rescan</DB>
-            <DB name="cancel"
-            >Cancel</DB>
+            />
+            <DB {...ButtonDefs.DBCancel}/>
         </DialogButtons>
     </DialogFrame>
 }

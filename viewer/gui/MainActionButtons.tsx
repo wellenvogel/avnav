@@ -62,7 +62,7 @@ export const actionButtons=(): DynamicButtonProps[] => [
         overflow: true
     }),
     {
-        ...ButtonDefs.Reload,
+        ...ButtonDefs.ReloadUI,
         storeKeys: {
             visible: keys.gui.global.layoutEditing,
         },

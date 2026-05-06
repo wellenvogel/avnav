@@ -437,7 +437,6 @@ const EditRouteDialog = (props) => {
             <DownloadButton
                 fileName={route.name+".gpx"}
                 localData={()=>route.toXml()}
-                {...ButtonDefs.DBDownload}
                 useDialogButton={true}
             />
             <DB {...ButtonDefs.DBRename}

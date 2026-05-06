@@ -22,6 +22,7 @@ import {Item} from "../util/itemFunctions";
 import {SelectListEntry} from "../util/EditableParameter";
 import {PAGEIDS, PLUGINPAGES} from "../util/pageids";
 import {Icon} from "./Icons";
+import ButtonDefs from "./ButtonDefs";
 
 interface SelectHtmlDialogProps{
     allowUpload?:boolean;
@@ -96,8 +97,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current}:SelectHtmlDialogPr
         />
         <DialogButtons buttonList={[
             {
-                name: 'upload',
-                label: 'Upload',
+                ...ButtonDefs.Upload,
                 onClick: ()=>{
                     uploadClick((ev)=>setUploadFile(ev.target.files[0]),'.html');
                 },
@@ -105,8 +105,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current}:SelectHtmlDialogPr
                 close: false
             },
             {
-                name: 'new',
-                label: 'New',
+                ...ButtonDefs.DBNew,
                 onClick: () => {
                     dialogContext.showDialog(()=><ItemNameDialog
                         iname={""}
@@ -186,7 +185,7 @@ const SelectExistingDialog=({existingAddons,resolveFunction}:SelectExistingDialo
         }}></SelectList>
         <DialogButtons buttonList={[
             {
-                name:"new",
+                ...ButtonDefs.DBNew,
                 onClick:()=>resolveFunction()
             },
             DBCancel()
@@ -375,7 +374,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
 
             <DialogButtons buttonList={[
                 {
-                    name: 'edit',
+                    ...ButtonDefs.Edit,
                     close: false,
                     onClick:async ()=>{
                         let name;
@@ -407,8 +406,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     visible: !!currentAddon.url && Helper.startsWith(currentAddon.url+"","/user/viewer") && currentAddon.canDelete && canEdit && internal
                 },
                 {
-                    name: 'delete',
-                    label: 'Delete',
+                    ...ButtonDefs.DBDelete,
                     onClick: () => {
                         showPromiseDialog(dialogContext,(dprops)=><ConfirmDialog {...dprops} text={"really delete User App?"}/>)
                             .then(() => {

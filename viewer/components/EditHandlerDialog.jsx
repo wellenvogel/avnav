@@ -34,6 +34,7 @@ import Toast from "./Toast";
 import editableParameterUIFactory, {EditableParameterListUI} from "./EditableParameterUI";
 import {ConfirmDialog, SelectDialog} from "./BasicDialogs";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 const EditHandlerDialog=(props)=>{
     const [loaded,setLoaded]=useState(false);
@@ -169,23 +170,21 @@ const EditHandlerDialog=(props)=>{
                 }
                 <DialogButtons>
                         <DB
-                            name="delete"
+                            {...ButtonDefs.DBDelete}
                             onClick={()=>{
                                 deleteHandler();
                             }}
                             visible={canDelete}
                             close={false}
-                        >
-                            Delete
-                        </DB>
-                    <DB name="cancel" >Cancel</DB>
-                    <DB name="ok"
+                        />
+                    <DB {...ButtonDefs.DBCancel}/>
+                    <DB {...ButtonDefs.DBOk}
                         onClick={()=>{
                             if (! props.addHandler) updateValues();
                             else addHandler();
                         }}
                         disabled={!dataValid}
-                    >Ok</DB>
+                    />
                 </DialogButtons>
             </DialogFrame>
         );

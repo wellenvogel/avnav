@@ -57,10 +57,10 @@ const LayoutFinishedDialog=(props)=>{
         return (
             <DialogFrame title={"Save Layout Changes?"}>
                 <DialogButtons >
-                    <DB name="edit" onClick={()=>buttonFunction(4)}>Edit CSS</DB>
-                    <DB name="delete" onClick={()=>buttonFunction(2)}>Discard Changes</DB>
-                    <DB name="cancel" onClick={()=>buttonFunction(3)}>Cancel</DB>
-                    <DB name="ok" onClick={()=>buttonFunction(1)}>Ok</DB>
+                    <DB {...ButtonDefs.DBEditCss} onClick={()=>buttonFunction(4)}/>
+                    <DB {...ButtonDefs.DBDiscard} onClick={()=>buttonFunction(2)}/>
+                    <DB {...ButtonDefs.DBCancel} onClick={()=>buttonFunction(3)}/>
+                    <DB {...ButtonDefs.DBOk} onClick={()=>buttonFunction(1)}/>
                 </DialogButtons>
             </DialogFrame>
         );

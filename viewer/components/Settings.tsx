@@ -359,7 +359,7 @@ export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{
         <DialogButtons
             buttonList={[
                 {
-                    name:'reset',
+                    ...ButtonDefs.DBReset,
                     onClick:async ()=>{
                         const action=()=>{
                             if (layoutEditing){
@@ -520,11 +520,9 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
             },{
                 disabled:!currentValues.isChanged(),
                 close:false,
-                label:'Load'
             }),
             {
-                name:'editLayout',
-                label:'Edit',
+                ...ButtonDefs.DBEditLayout,
                 onClick: async () => {
                     const layoutName=currentValues.getValue(layoutKey);
                     let layoutAndName = [];

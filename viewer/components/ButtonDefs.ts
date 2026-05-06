@@ -100,9 +100,9 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Split,
         name:btdef.Split,
     },
-    Reload:{
+    ReloadUI:{
         iconClass: iconClasses.Reload,
-        name:btdef.Reload,
+        name:btdef.ReloadUI,
     },
     MainExit:{
         iconClass: iconClasses.Cancel,
@@ -457,9 +457,25 @@ const ButtonDefinitions= {
         iconClass: iconClasses.SaveAs,
         name:btdef.DBSaveAs
     },
+    DBSave:{
+        iconClass: iconClasses.Save,
+        name:btdef.DBSave,
+    },
     DBAdd:{
         iconClass: iconClasses.Plus,
         name:btdef.DBAdd,
+    },
+    DBNew:{
+      iconClass: iconClasses.Plus,
+      name:btdef.DBNew,
+    },
+    DBReload:{
+        iconClass: iconClasses.Reload,
+        name:btdef.DBReload,
+    },
+    DBDisable:{
+        iconClass: iconClasses.Disable,
+        name:btdef.DBDisable,
     },
     DBIgnore:{
         name:btdef.DBIgnore,
@@ -512,9 +528,130 @@ const ButtonDefinitions= {
     DBAnchorCenter:{
         iconClass: iconClasses.Center,
         name:btdef.DBAnchorCenter,
+    },
+    //general
+    DBReset:{
+        iconClass: iconClasses.Reset,
+        name: btdef.DBReset,
+    },
+    DBClear:{
+        iconClass: iconClasses.Delete,
+        name:btdef.DBClear,
+    },
+    //Chart select
+    DBShowOverlays:{
+        iconClass: iconClasses.Overlays,
+        name:btdef.DBShowOverlays,
+    },
+    DBHideOverlays:{
+        iconClass: iconClasses.HideOverlays,
+        name:btdef.DBHideOverlays
+    },
+    //edit overlays
+    DBShowAllOverlays:{
+        iconClass: iconClasses.Overlays,
+        name:btdef.DBShowAllOverlays,
+    },
+    DBHideAllOverlays:{
+        iconClass: iconClasses.HideOverlays,
+        name:btdef.DBHideAllOverlays,
+    },
+    DBInsertBefore:{
+        iconClass: iconClasses.Before,
+        name:btdef.DBInsertBefore,
+    },
+    DBInsertAfter:{
+        iconClass: iconClasses.After,
+        name:btdef.DBInsertAfter,
+    },
+    //color
+    DBColorUnset:{
+        iconClass: iconClasses.ColorReset,
+        name:btdef.DBUnset
+    },
+    //combined widget
+    DBAddSub:{
+        iconClass: iconClasses.Plus,
+        name:btdef.DBAddSub,
+    },
+    //edit dialog
+    DBPreview:{
+        iconClass: iconClasses.View,
+        name:btdef.DBPreview,
+    },
+    //edit widget dialog
+    DBBefore:{
+        iconClass: iconClasses.Before,
+        name:btdef.DBBefore,
+    },
+    DBAfter:{
+        iconClass: iconClasses.After,
+        name:btdef.DBAfter,
+    },
+    DBInsert:{
+        iconClass: iconClasses.After,
+        name:btdef.DBInsert,
+    },
+    DBUpdate:{
+        iconClass: iconClasses.Ok,
+        name:btdef.DBUpdate,
+    },
+    //eula
+    DBAccept:{
+        iconClass: iconClasses.Ok,
+        name:btdef.DBAccept,
+    },
+    //importer
+    DBStop:{
+        iconClass: iconClasses.Stop,
+        name:btdef.DBStop,
+    },
+    DBRestart:{
+        iconClass: iconClasses.Reload,
+        name:btdef.DBRestart,
+    },
+    DBLog:{
+        iconClass: iconClasses.Log,
+        name:btdef.DBLog,
+    },
+    //name dialog
+    DBPropose:{
+        iconClass: iconClasses.Propose,
+        name:btdef.DBPropose,
+    },
+    //layout finishes
+    DBEditCss:{
+        iconClass: iconClasses.Edit,
+        name:btdef.DBEditCss,
+    },
+    DBDiscard:{
+        iconClass: iconClasses.Delete,
+        name:btdef.DBDiscard,
+    },
+    //log dialog
+    DBAutoReload:{
+        name:btdef.DBAutoReload,
+        iconClass: iconClasses.Reload,
+    },
+    //remote channel
+    DBDisconnect:{
+        iconClass: iconClasses.Disconnect,
+        name:btdef.DBDisconnect,
+    },
+    DBConnect:{
+        iconClass: iconClasses.Connect,
+        name:btdef.DBConnect,
+    },
+    //select layout
+    DBEditLayout:{
+        iconClass: iconClasses.Layout,
+        name:btdef.DBEditLayout
+    },
+    //track convert
+    DBCompute:{
+        iconClass: iconClasses.Start,
+        name:btdef.DBCompute,
     }
-
-
 }
 export default ButtonDefinitions;
 

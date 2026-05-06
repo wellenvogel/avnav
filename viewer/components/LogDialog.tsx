@@ -33,6 +33,7 @@ import {useTimer} from "../util/UiHelper";
 // @ts-ignore
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import DownloadButton from "./DownloadButton";
+import ButtonDefs from "./ButtonDefs";
 export interface LogDialogProps{
     baseUrl: string;
     title?: string;
@@ -74,15 +75,14 @@ const LogDialog=(props:LogDialogProps)=> {
                 {log||''}
             </div>
             <DialogButtons>
-                <DB name="autoreload"
+                <DB {...ButtonDefs.DBAutoReload}
                     close={false}
                     onClick={()=>
                         setAutoReload((old)=>!old)
                     }
                     toggle={autoreload}
-                >Auto</DB>
+                />
                 <DownloadButton
-                    name={"download"}
                     useDialogButton={true}
                     url={()=>{
                         const name=props.dlname?props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
@@ -92,16 +92,10 @@ const LogDialog=(props:LogDialogProps)=> {
                 >
                     Download
                 </DownloadButton>
-                <DB name="reload"
+                <DB {...ButtonDefs.DBReload}
                     close={false}
-                    onClick={getLog}>
-                    Reload
-                </DB>
-                <DB
-                    name="ok"
-                >
-                    Ok
-                </DB>
+                    onClick={getLog}/>
+                <DB {...ButtonDefs.DBOk}/>
             </DialogButtons>
         </DialogFrame>
 }

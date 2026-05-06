@@ -21,6 +21,7 @@ import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import {fetchItem, IMAGES, ItemType} from "../util/itemFunctions";
 import {ViewDialog} from "./ViewDialog";
+import ButtonDefs from "./ButtonDefs";
 
 export interface EditDialogProps {
     data:string
@@ -59,8 +60,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
     }, [data]);
     const buttonList:DialogButtonListProps=[
         {
-            name: 'upload',
-            label: 'Import',
+            ...ButtonDefs.Upload,
             onClick: () => {
                 setCollapsed(false);
                 uploadClick((ev)=>{
@@ -73,12 +73,10 @@ export const EditDialog = ({data, title, language, resolveFunction,
             useDialogButton={true}
             localData={() => flask.current.getCode()}
             fileName={fileName}
-            name={"download"}
             close={false}
         >Download</DownloadButton>,
         {
-          name:'view',
-          label: 'Preview',
+          ...ButtonDefs.DBPreview,
           onClick: () => {
             dialogContext.showDialog(()=><ViewDialog
                 html={flask.current.getCode()}
@@ -89,7 +87,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
           close: false
         },
         {
-            name: 'save',
+            ...ButtonDefs.DBSave,
             close: false,
             onClick: () => {
                 setChanged(false);

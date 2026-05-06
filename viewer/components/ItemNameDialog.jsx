@@ -38,6 +38,7 @@ import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import formatter from "../util/formatter";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 export const nameProposal=(prefix)=>{
     const dt=new Date();
@@ -119,8 +120,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     },[checkName,checkResult])
     let buttonList=[
         {
-          name:'reset',
-          label:'Clear',
+            ...ButtonDefs.DBClear,
           onClick: ()=>{
               const nn=fullName('');
               setName(nn);
@@ -135,8 +135,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     ];
     if (proposal){
         buttonList.splice(0,0,{
-            name: 'propose',
-            label: 'Propose',
+            ...ButtonDefs.DBPropose,
             onClick: ()=>{
                 let pname=proposal;
                 setName(pname);

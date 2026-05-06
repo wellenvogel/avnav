@@ -29,14 +29,14 @@ import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import {AlertDialog} from "./BasicDialogs";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 export const ErrorListDialog=({errors,title,className,refresh})=>{
     const [errorList,setErrorList]=useState(errors);
     const btlist=[];
     if (refresh){
         btlist.push({
-            name:'reload',
-            label:'Reload',
+            ...ButtonDefs.DBReload,
             onClick:()=>{
                 const nl=refresh();
                 setErrorList(nl);

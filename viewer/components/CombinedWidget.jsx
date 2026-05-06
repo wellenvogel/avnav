@@ -36,6 +36,7 @@ import Helper, {avitem} from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import Layouthandler from "../util/layouthandler";
 import {WidgetProps} from "../util/types";
+import ButtonDefs from "./ButtonDefs";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);
@@ -102,7 +103,7 @@ const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
         />
         <DialogButtons>
             <DialogButton
-                name={'add'}
+                {...ButtonDefs.DBAddSub}
                 close={false}
                 onClick={()=>{
                     dialogContext.showDialog((props)=>{
@@ -118,7 +119,7 @@ const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
                     })
                 }}
             >
-                +Sub</DialogButton>
+                </DialogButton>
         </DialogButtons>
     </div>
 }

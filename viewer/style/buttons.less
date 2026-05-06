@@ -199,46 +199,6 @@
 }
 
 .button{
-
-  &.Help {
-    .iconButton('ic_help_outline.svg');
-  }
-
-
-  /*- nav page routing panel --*/
-
-  &.NavToCenter {
-    .iconButton('wpcenter.svg');
-  }
-
-  &.Measure{
-    .iconButton('straighten.svg');
-  }
-  &.MeasureOff{
-    .iconButton('straighten-off.svg');
-  }
-
-  &.Delete{
-    .iconButton('ic_delete.svg');
-  }
-  &.Download{
-    .iconButton('ic_file_download.svg');
-  }
-
-  &.rename{
-    .iconButton('ic_edit_name.svg');
-  }
-
-
-
-  &.editLayout{
-    .iconButton('ballot.svg');
-    &.active {
-      .activeColor(var(--avnav-attention-color));
-    }
-  }
-
-
   &.LayoutFinished{
     &.active {
       .activeColor(var(--avnav-attention-color));
@@ -259,14 +219,6 @@
     margin-right: auto;
     width: auto;
     max-width: 20em;
-  }
-
-
-  &.ShowOverlays{
-    .iconButton('layers-black.svg');
-  }
-  &.HideOverlays{
-    .iconButton('layers-black-off.svg');
   }
 }
 
@@ -292,14 +244,7 @@
   &.log{
     .dialogIconButton('ic_text_snippet.svg');
   }
-  &.autoreload{
-    &.active{
-      .dialogIconButton('update_disabled.svg')
-    }
-    &.inactive{
-      .dialogIconButton('ic_refresh.svg')
-    }
-  }
+
   &.view{
     .dialogIconButton('visibility.svg');
   }
@@ -312,26 +257,7 @@
   .fileDialog &.toroute{
     .dialogIconButton('route.svg');
   }
-  .editWidgetDialog &.before{
-    .dialogIconButton('navigate_before.svg');
-  }
-  .editWidgetDialog &.after{
-    .dialogIconButton('navigate_next.svg');
-  }
-  .colorDialog &.unset{
-    .dialogIconButton('format_color_reset.svg');
-  }
 
-  .wpaDialog &.connect{
-    .dialogIconButton('play_arrow.svg');
-  }
-
-  .editOverlaysDialog &.before{
-    .dialogIconButton('navigate_before.svg');
-  }
-  .editOverlaysDialog &.after{
-    .dialogIconButton('navigate_next.svg');
-  }
   &.hide{
     .dialogIconButton('visibility_off.svg');
   }
@@ -409,18 +335,10 @@
   .RemoteChannelDialog &.connect{
     .dialogIconButton('plug.svg')
   }
-  .MapWidgetsDialog &.add{
-    .dialogIconButton('ic_add.svg')
-  }
-  &.stop{
-    .dialogIconButton('stop_circle.svg')
-  }
-  &.restart{
-    .dialogIconButton('ic_refresh.svg')
-  }
-  &.disable{
-    .dialogIconButton('ic_hide.svg')
-  }
+
+
+
+
   &.upload{
     .dialogIconButton('ic_file_upload.svg')
   }
@@ -442,9 +360,7 @@
   &.scheme{
     .dialogIconButton('table_convert.svg');
   }
-  &.propose{
-    .dialogIconButton('prompt_suggestion.svg')
-  }
+
   &.config{
     .dialogIconButton('ic_settings.svg')
   }

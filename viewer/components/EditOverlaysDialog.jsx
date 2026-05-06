@@ -271,10 +271,10 @@ const OverlayItemDialog = (props) => {
                 </React.Fragment>
             }
             <DialogButtons>
-                <DB name="cancel">Cancel</DB>
+                <DB {...ButtonDefs.DBCancel}/>
                 {props.resolveFunction ?
                     <DB
-                        name="ok"
+                        {...ButtonDefs.DBOk}
                         onClick={() => {
                             let changes = {...current};
                             changes.opacity = parseFloat(changes.opacity);
@@ -283,7 +283,7 @@ const OverlayItemDialog = (props) => {
                             props.resolveFunction(changes);
                         }}
                         disabled={(!changed && !props.forceOk) || !current.name||!dataValid || !!getItemError(current)}
-                    >Ok</DB>
+                    />
                     : null}
 
             </DialogButtons>
@@ -653,6 +653,7 @@ const EditOverlaysDialog = (props) => {
     }
     let isEditingDefault = props.current.getName() === DEFAULT_OVERLAY_CONFIG;
     let title = props.title || (isEditingDefault ? 'Edit Default Overlays' : 'Edit Overlays');
+    const saveButtonDef=props.preventEdit?ButtonDefs.DBOk:ButtonDefs.DBSave;
     return (
         <DialogFrame className={Helper.concatsp(
             "selectDialog",
@@ -723,22 +724,18 @@ const EditOverlaysDialog = (props) => {
                 itemList={list}
             />
             <DialogButtons className="insertButtons">
-                <DB name="show"
+                <DB {...ButtonDefs.DBShowAllOverlays}
                     onClick={()=>enableDisableAll(true)}
                     close={false}
-                >
-                    ShowAll
-                </DB>
-                <DB name="hide"
+                />
+                <DB {...ButtonDefs.DBHideAllOverlays}
                     onClick={()=>enableDisableAll(false)}
                     close={false}
-                >
-                    HideAll
-                </DB>
+                />
                 {selectedItem ?
-                    <DB name="delete" close={false} onClick={() => deleteItem(selectedItem)}>Delete</DB> : null}
+                    <DB {...ButtonDefs.DBDelete} close={false} onClick={() => deleteItem(selectedItem)}/>: null}
                 {selectedItem || props.editCallback ?
-                    <DB name="edit" close={false} onClick={() => {
+                    <DB {...ButtonDefs.Edit}close={false} onClick={() => {
                         if (props.editCallback) {
                             if (props.editCallback(selectedItem)) {
                                 dialogContext.closeDialog();
@@ -746,24 +743,23 @@ const EditOverlaysDialog = (props) => {
                         } else {
                             editItem(selectedItem);
                         }
-                    }}>Edit</DB>
+                    }}/>
                     : null
                 }
                 {(hasOverlays && !props.preventEdit && selectedItem) ?
-                    <DB name="before" close={false} onClick={() => insert(true)}>Insert Before</DB> : null}
-                {!props.preventEdit && <DB name="after" close={false} onClick={() => insert(false)}>Insert After</DB>}
+                    <DB {...ButtonDefs.DBInsertBefore} close={false} onClick={() => insert(true)}/> : null}
+                {!props.preventEdit && <DB {...ButtonDefs.DBInsertAfter} close={false} onClick={() => insert(false)}/>}
             </DialogButtons>
             <DialogButtons>
                 <DB
-                    name="reset"
+                    {...ButtonDefs.DBReset}
                     onClick={reset}
                     close={!!props.resetCallback}
-                >Reset
-                </DB>
-                <DB name="cancel">Cancel</DB>
+                />
+                <DB {...ButtonDefs.DBCancel}/>
                 {props.updateCallback ?
                     <DB
-                        name="ok"
+                        {...saveButtonDef}
                         onClick={() => {
                             let updatedOverlays = currentConfig.current;
                             updatedOverlays.writeBack(displayListToOverlays(list));
@@ -771,7 +767,7 @@ const EditOverlaysDialog = (props) => {
                             props.updateCallback(updatedOverlays);
                         }}
                         disabled={!isChanged}
-                    >{props.preventEdit ? "Ok" : "Save"}</DB>
+                    />
                     : null}
             </DialogButtons>
         </DialogFrame>

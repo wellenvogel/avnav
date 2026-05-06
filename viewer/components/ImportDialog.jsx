@@ -31,6 +31,7 @@ import Requests from "../util/requests";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import DB from "./DialogButton";
 import globalStore from "../util/globalstore";
+import ButtonDefs from "./ButtonDefs";
 const ImportDialog =(props)=>{
         const [subdir,setSubdir]=useState(props.subdir);
         const [useSubdir,setUseSubdir]=useState(props.subdir?true:false);
@@ -76,14 +77,12 @@ const ImportDialog =(props)=>{
                         null}
 
                     <DialogButtons className="dialogButtons">
-                        <DB name="cancel"
-                        >Cancel</DB>
-                        <DB name="ok"
+                        <DB {...ButtonDefs.DBCancel}/>
+                        <DB {...ButtonDefs.DBOk}
                             onClick={()=>{
                                 props.resolveFunction({...props,name:name+"."+ext,type:'import',subdir:useSubdir?subdir:undefined});
                             }}
-                            disabled={useSubdir && !subdir}
-                        >OK</DB>
+                            disabled={useSubdir && !subdir}/>
                     </DialogButtons>
                 </DialogFrame>
         );

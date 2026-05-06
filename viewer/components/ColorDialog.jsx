@@ -5,6 +5,7 @@ import keys from '../util/keys.ts';
 import ColorPicker from '../components/ColorPicker.jsx';
 import DB from './DialogButton.tsx';
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
+import ButtonDefs from "./ButtonDefs";
 
 const ColorDialog =(props)=>{
         const [value,setValue]=useState(props.value||"#ffffff");
@@ -44,15 +45,15 @@ const ColorDialog =(props)=>{
                 </div>
                 <DialogButtons>
                     {(props.default !== undefined) ?
-                        <DB name="reset" onClick={()=>setValue(props.default)} close={false}>Reset</DB>
+                        <DB {...ButtonDefs.DBReset} onClick={()=>setValue(props.default)} close={false}/>
                         :
                         null}
                     {(props.showUnset !== undefined) ?
-                        <DB name="unset" onClick={()=>ok()}>Unset</DB>
+                        <DB {...ButtonDefs.DBColorUnset}  onClick={()=>ok()}/>
                         :
                         null}
-                    <DB name="cancel">Cancel</DB>
-                    <DB name="ok" onClick={()=>ok(value)}>Ok</DB>
+                    <DB {...ButtonDefs.DBCancel}/>
+                    <DB {...ButtonDefs.DBOk} onClick={()=>ok(value)}/>
                 </DialogButtons>
             </DialogFrame>
         );

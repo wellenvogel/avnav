@@ -21,7 +21,7 @@
  #
  */
 import React, {useCallback,} from "react";
-import {showDialog, DialogFrame,DialogRow,DialogButtons} from "./OverlayDialog";
+import {showDialog, DialogFrame, DialogRow, DialogButtons, DBOk} from "./OverlayDialog";
 import Helper, {getav, setav} from "../util/helper";
 // @ts-ignore
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
@@ -73,7 +73,7 @@ export const ParameterDialog = (props:TParameterDialog) => {
     }
     if (! dataValid){
         buttons.forEach(button => {
-            if (button.name === 'ok' && button.disabled === undefined){
+            if (button.name === DBOk().name && button.disabled === undefined){
                 button.disabled = true;
             }
         })

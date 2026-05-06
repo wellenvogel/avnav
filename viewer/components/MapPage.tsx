@@ -378,16 +378,14 @@ export const selectChartDialog=(
         selected={current.name}
         additionalButtons={[
             {
-                name: 'ShowOverlays',
-                label: 'Show Overlays',
+                ...ButtonDefs.DBShowOverlays,
                 onClick:() => {
                     mapholder.showOverlays()
                 },
                 disabled: numOverlays === 0 || numDisabled === 0
             },
             {
-                name:'HideOverlays',
-                label: 'Hide Overlays',
+                ...ButtonDefs.DBHideOverlays,
                 onClick:() => {
                     mapholder.hideOverlays();
                 },

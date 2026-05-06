@@ -314,7 +314,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
                         {action.label}
                     </DB>
                 })}
-                <DB name={"cancel"}
+                <DB {...ButtonDefs.DBCancel}
                     onPreClose={()=>{
                         if (cancelAction) {
                             return cancelAction(featureInfo,dialogContext);
@@ -322,7 +322,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
                         return true;
                     }}
                     close={false}
-                >Cancel</DB>
+                />
             </DialogButtons>
         </DialogFrame>
     );

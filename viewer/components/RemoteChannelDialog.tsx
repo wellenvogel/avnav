@@ -45,18 +45,17 @@ const RemoteChannelDialogImpl=(props:RemoteChannelDialogProps)=> {
                label="Write"
         />
         <DialogButtons >
-            <DialogButton name={'disconnect'}
+            <DialogButton {...ButtonDefs.DBDisconnect}
                           disabled={ !props.read && !props.write}
                           onClick={()=>{
                               props.setCallback({});
-                          }}>Disconnect</DialogButton>
-                <DialogButton name={'connect'}
+                          }}/>
+                <DialogButton {...ButtonDefs.DBConnect}
                               disabled={ ! (read|| write)}
                               onClick={()=>{
                                   props.setCallback({channel:channel,read:read,write:write});
-                              }}>Connect</DialogButton>
-                <DialogButton name={'cancel'}
-                          >Cancel</DialogButton>
+                              }}/>
+                <DialogButton {...ButtonDefs.DBCancel}/>
         </DialogButtons>
     </DialogFrame>
 }

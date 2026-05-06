@@ -13,6 +13,8 @@ import Dms from "geodesy/dms";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
 import visible from "../hoc/Visible";
 import {useDialogContext} from "./DialogContext";
+import {ButtonDef} from "./Button";
+import ButtonDefs from "./ButtonDefs";
 
 const strLonToLon=(val)=>{
     if (val === undefined) return;
@@ -112,7 +114,7 @@ const WaypointDialog=(props)=> {
                 value={decimal}
             />
             <DialogButtons>
-                <DB name={'start'}
+                <DB {...ButtonDefs.NavGoto}
                     onClick={()=>{
                         if (props.startCallback(props.waypoint)){
                             dialogContext.closeDialog();
@@ -120,8 +122,8 @@ const WaypointDialog=(props)=> {
                     }}
                     visible={!!props.startCallback}
                     close={false}
-                >Goto</DB>
-                <DB name="delete" onClick={()=>{
+                />
+                <DB {...ButtonDefs.DBDelete} onClick={()=>{
                     if (props.deleteCallback) {
                         if (props.deleteCallback(props.waypoint)) {
                             dialogContext.closeDialog();
@@ -130,8 +132,8 @@ const WaypointDialog=(props)=> {
                 }}
                     visible={props.deleteCallback !== undefined && ! props.readOnly}
                     close={false}>Delete</DB>
-                <DB name="cancel" tabIndex="3" >Cancel</DB>
-                <DB name="ok" tabIndex="4" onClick={okFunction} disabled={!ok || props.readOnly} close={false}>Ok</DB>
+                <DB {...ButtonDefs.DBCancel} tabIndex="3" />
+                <DB {...ButtonDefs.DBOk} tabIndex="4" onClick={okFunction} disabled={!ok || props.readOnly} close={false}/>
             </DialogButtons>
         </DialogFrame>
     )

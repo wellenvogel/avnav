@@ -174,14 +174,14 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                 })}
                 </div>
                 <DialogButtons>
-                    <DB name="cancel" >Cancel</DB>
-                    <DB name="ok" onClick={()=>{
+                    <DB {...ButtonDefs.DBCancel}/>
+                    <DB {...ButtonDefs.DBOk}onClick={()=>{
                         for (const pn in panelList){
                             const panel=panelList[pn];
                             panel.writePanelsToLayout();
                         }
                         LayoutHandler.setTemporaryOptionValues(currentOptions);
-                    }}>Ok</DB>
+                    }}/>
 
                 </DialogButtons>
             </DialogFrame>

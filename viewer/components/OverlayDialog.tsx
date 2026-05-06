@@ -356,7 +356,7 @@ DialogButtons.propTypes={
 export const DBCancel=(props?:DialogButtonProps)=>{
     return {close: true,...ButtonDefs.DBCancel,...props};
 }
-export const DBOk=(onClick:(ev:SyntheticEvent)=>void,props?:DialogButtonProps)=>{
+export const DBOk=(onClick?:(ev:SyntheticEvent)=>void,props?:DialogButtonProps)=>{
     return {close: true,...ButtonDefs.DBOk ,onClick:onClick,...props};
 }
 

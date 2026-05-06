@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Requests from '../util/requests';
 import {DialogButtons, DialogFrame, DialogRow} from './OverlayDialog.tsx';
 import DB from './DialogButton.tsx';
+import ButtonDefs from "./ButtonDefs";
 
 const EulaDialog=(props)=>{
     const [eula,setEula]=useState(undefined);
@@ -26,10 +27,10 @@ const EulaDialog=(props)=>{
 
                 </DialogRow>
                 <DialogButtons>
-                    <DB name="cancel">Cancel</DB>
-                    <DB name="ok" onClick={() => {
+                    <DB {...ButtonDefs.DBCancel}/>
+                    <DB {...ButtonDefs.DBAccept} onClick={() => {
                         props.resolveFunction(1);
-                    }}>Accept</DB>
+                    }}/>
                 </DialogButtons>
             </DialogFrame>
         );

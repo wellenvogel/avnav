@@ -36,6 +36,7 @@ import keys from "../util/keys";
 import {SelectList} from "./BasicDialogs";
 import {useDialogContext} from "./DialogContext";
 import {IMAGES} from "../util/itemFunctions";
+import ButtonDefs from "./ButtonDefs";
 
 
 const IMAGES_FLAG=1;
@@ -140,8 +141,7 @@ export const IconDialog=(props)=>{
         <DialogButtons
             buttonList={[
                 {
-                    name:'upload',
-                    label:'New',
+                    ...ButtonDefs.Upload,
                     onClick:()=> {
                         uploadClick(
                             (ev)=>setUploadFile(ev.target.files[0]),

@@ -35,6 +35,7 @@ import cloneDeep from 'clone-deep';
 import Compare from "../util/compare";
 import {EditableParameterListUI} from "./EditableParameterUI";
 import assign from "object-assign";
+import ButtonDefs from "./ButtonDefs";
 
 
 export const getList = (list, current) => {
@@ -185,19 +186,19 @@ const EditWidgetDialog = (props) => {
             />
             {(widget.name !== undefined && props.insertCallback) ?
                 <DialogButtons className="insertButtons">
-                    {hasCurrent ? <DB name="before" disabled={!validData} onClick={() => insert(true)}>Before</DB> : null}
-                    {hasCurrent ? <DB name="after" disabled={!validData} onClick={() => insert(false)}>After</DB> : null}
-                    {(!hasCurrent) ? <DB name="after" disabled={!validData} onClick={() => insert(false)}>Insert</DB> : null}
+                    {hasCurrent ? <DB {...ButtonDefs.DBBefore} disabled={!validData} onClick={() => insert(true)}/> : null}
+                    {hasCurrent ? <DB {...ButtonDefs.DBAfter} disabled={!validData} onClick={() => insert(false)}/> : null}
+                    {(!hasCurrent) ? <DB {...ButtonDefs.DBInsert} disabled={!validData} onClick={() => insert(false)}/> : null}
                 </DialogButtons>
                 : null}
             <DialogButtons>
                 {(props.removeCallback && (panel === props.panel)) ?
-                    <DB name="delete" onClick={() => {
+                    <DB {...ButtonDefs.DBDelete} onClick={() => {
                         props.removeCallback();
-                    }}>Delete</DB> : null}
-                <DB name="cancel">Cancel</DB>
+                    }}/>: null}
+                <DB {...ButtonDefs.DBCancel}/>
                 {props.updateCallback ?
-                    <DB name="ok" disabled={!validData} onClick={() => {
+                    <DB {...ButtonDefs.DBUpdate} disabled={!validData} onClick={() => {
                         let changes = changedParameters();
                         if (props.weight) {
                             if (changes.weight !== undefined) changes.weight = parseFloat(changes.weight)
@@ -205,7 +206,7 @@ const EditWidgetDialog = (props) => {
                             changes.weight = undefined;
                         }
                         props.updateCallback(changes, panel);
-                    }}>Update</DB>
+                    }}/>
                     : null}
             </DialogButtons>
         </DialogFrame>

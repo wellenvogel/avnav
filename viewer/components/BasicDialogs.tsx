@@ -32,6 +32,7 @@ import {ListFrame, ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import {useDialogContext} from "./DialogContext";
 import {SelectListEntry} from "../util/EditableParameter";
 import {ButtonEvent} from "./Button";
+import ButtonDefs from "./ButtonDefs";
 
 export const defaultSelectSort=(
     a:SelectListEntry,
@@ -98,13 +99,11 @@ export const SelectDialog = (
             }}/>
             <DialogButtons>
                 {optResetCallback && <DB
-                    name="reset"
+                    {...ButtonDefs.DBReset}
                     onClick={(ev) => {
                         optResetCallback(ev);
-                    }}
-                >Reset</DB>}
-                <DB name="cancel"
-                >Cancel</DB>
+                    }}/>}
+                <DB {...ButtonDefs.DBCancel}/>
             </DialogButtons>
         </DialogFrame>
     );
@@ -185,10 +184,10 @@ export const ValueDialog = (
             </div>
             {error !== undefined && <div className={'warning'}>{error}</div>}
             <DialogButtons>
-                {clear && <DB name="reset" close={false}
-                              onClick={() => setValue((typeof clear === "function") ? clear(nvalue) : '')}>Clear</DB>}
-                <DB name="cancel">Cancel</DB>
-                <DB name="ok" onClick={() => resolveFunction && resolveFunction(nvalue)} disabled={error !== undefined}>Ok</DB>
+                {clear && <DB {...ButtonDefs.DBClear} close={false}
+                              onClick={() => setValue((typeof clear === "function") ? clear(nvalue) : '')}></DB>}
+                <DB {...ButtonDefs.DBCancel}/>
+                <DB {...ButtonDefs.DBOk} onClick={() => resolveFunction && resolveFunction(nvalue)} disabled={error !== undefined}/>
             </DialogButtons>
         </DialogFrame>
     );

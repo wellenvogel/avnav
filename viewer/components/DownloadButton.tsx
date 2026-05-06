@@ -26,6 +26,7 @@ import React, {useRef} from 'react';
 import DB from './DialogButton';
 import Button, {ButtonEvent} from './Button';
 import Toast from "./Toast";
+import ButtonDefs from "./ButtonDefs";
 
 const toBase64=(val:any)=>{
     if (typeof(val) === 'string'){
@@ -103,7 +104,7 @@ const DownloadButton=(props:DownloadButtonProps)=>{
                     ref={downloadFrame}/>
                 }
                 <Bt
-                    name={props.name||'download'}
+                    {...ButtonDefs.DBDownload}
                     {...forward}
                     close={useDialogButton?false:undefined}
                     onClick={(ev) => {

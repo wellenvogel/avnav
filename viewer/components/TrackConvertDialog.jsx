@@ -51,6 +51,7 @@ import {InfoItem} from "./BasicDialogs";
 import {useHistory} from "./HistoryProvider";
 import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
+import ButtonDefs from "./ButtonDefs";
 
 const RouteHandler=navdata.getRoutingHandler();
 
@@ -442,19 +443,18 @@ export const TrackConvertDialog=(props)=> {
                     onChange={(nv)=>setMaxXte(nv)}
                     />
                 <DialogButtons>
-                    <DB name="convert"
+                    <DB {...ButtonDefs.DBCompute}
                         onClick={convert}
                         close={false}
-                        >Compute</DB>
+                        />
                 </DialogButtons>
             </div>
             <DialogButtons>
-                <DB name={"cancel"}
-                >Cancel</DB>
-                <DB name={"ok"}
+                <DB {...ButtonDefs.DBCancel}/>
+                <DB {...ButtonDefs.DBSave}
                     onClick={okClicked}
                     close={false}
-                >Save</DB>
+                />
             </DialogButtons>
         </DialogFrame>
 }
