@@ -116,9 +116,20 @@ export class ServerAddon implements AddonProps{
             icon:raw.icon};
     }
 }
+let pluginPageMappings:Record<string, PluginPage|[PluginPage]>={};
 const serverAddOns:ServerAddon[]=[]
 const pluginAddOns:Record<string, PluginAddOn> = {};
 const pluginUserButtons:Record<string, PluginUserButton> = {};
+
+const getPagesForAddon=(addon:AddonProps)=>{
+    const key=addon.key;
+    if (key === undefined) return addon.page;
+    try {
+        const mappings = pluginPageMappings[key];
+        if (mappings) return mappings;
+    }catch(e){ /* empty */ }
+    return addon.page;
+}
 
 const addonsChanged=()=>{
     globalstore.storeData(keys.gui.global.addonsChanged,globalstore.getData(keys.gui.global.addonsChanged,0)+1)
@@ -140,7 +151,21 @@ class QueryHandler{
     stop(){
         globalstore.deregister(this.callback);
     }
+    readUserConfig(){
+        Requests.getHtmlOrText({
+            type:'user',
+            command:'download',
+            name:'pluginmappings.json'
+        })
+        .then(data=>{
+            const raw=JSON.parse(data);
+            if (typeof raw != 'object') throw new Error("invalid pluginmappings");
+            pluginPageMappings=raw;
+        })
+            .catch((e)=>base.error("error fetching pluginmappings",e));
+    }
     fillAddons(){
+        this.readUserConfig();
         base.log("reading addons");
         readAddOns(true,true)
             .then(data=>{
@@ -183,14 +208,16 @@ export const getAllAddons=():InternalAddonProps[]=>{
         rt.push({
             ...sad,
             type:sad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
-            buttonClass: getNameForButton(sad)
+            buttonClass: getNameForButton(sad),
+            page:getPagesForAddon(sad),
         });
     }
     for (const pad of Object.values(pluginAddOns)){
         const padm:InternalAddonProps={
             ...pad,
             type:pad.newWindow?ButtonAddonType.CONFIG_NEW_WINDOW:ButtonAddonType.CONFIG,
-            buttonClass: getNameForButton(pad)
+            buttonClass: getNameForButton(pad),
+            page: getPagesForAddon(pad)
         };
         if (!padm.source) padm.source="cl-plugin-"+padm.pluginName;
         padm.canDelete=false;
@@ -297,7 +324,7 @@ const getPageUserButtons=(
     }
     for (const k in pluginAddOns){
         const addon=pluginAddOns[k];
-        if (isOnPage(page,addon.page)){
+        if (isOnPage(page,getPagesForAddon(addon))){
             const buttonDef={
                 ...addon.button,
                 name:getNameForButton(addon),
@@ -312,7 +339,7 @@ const getPageUserButtons=(
         if (addon.invalid && ! includeInvalid){
             continue;
         }
-        if (isOnPage(page,addon.page)){
+        if (isOnPage(page,getPagesForAddon(addon))){
             const buttonDef={
                 ...addon.button,
                 name:getNameForButton(addon),
