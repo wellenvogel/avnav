@@ -390,6 +390,7 @@ const readAddOns = async (
         for (const e in json.items) {
             const item = json.items[e];
             if (!item.key) item.key = item.name;
+            if (item.key.match(/^[0-9]/)) item.key="s"+item.key;
             if (item.name) {
                 items.push(item);
             }

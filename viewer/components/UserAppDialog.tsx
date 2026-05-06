@@ -20,7 +20,7 @@ import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
 import {Item} from "../util/itemFunctions";
 import {SelectListEntry} from "../util/EditableParameter";
-import {PAGEIDS, PLUGINPAGES} from "../util/pageids";
+import {getPageTitle, PAGEIDS, PageType, PLUGINPAGES} from "../util/pageids";
 import {Icon} from "./Icons";
 import ButtonDefs from "./ButtonDefs";
 
@@ -211,6 +211,9 @@ export interface UserAppDialogProps{
     fixed?:UserAppDialogFixed,
     resolveFunction?:() => void
 }
+const getPageLabel=(page:PageType)=>{
+    return `${page} [${getPageTitle(page)}]`
+}
 const UserAppDialog = (props:UserAppDialogProps) => {
     const [currentAddon, setCurrentAddon] = useState<AddonProps>({...props.addon, ...props.fixed});
     const [currentIcon,setCurrentIcon]=useState<string|URL>(props.addon?.button?.icon);
@@ -352,14 +355,17 @@ const UserAppDialog = (props:UserAppDialogProps) => {
             {canEdit? <InputSelect
                 dialogRow={true}
                 label="page"
-                list={Object.values(PLUGINPAGES).map((page)=>{return {label:page,value:page}})}
+                list={Object.values(PLUGINPAGES).map((page)=>{
+                    const label=getPageLabel(page);
+                    return {label:label,value:page}
+                })}
                 onChange={(nv)=>setCurrentAddon({...currentAddon, page:nv.value})}
-                value={displayPage}/>
+                value={{value:displayPage,label: getPageLabel(displayPage)}}/>
                 :
                 <InputReadOnly
                 dialogRow={true}
                 label="page"
-                value={displayPage}
+                value={getPageLabel(displayPage)}
                 />
             }
             {canEdit && !internal && <Checkbox

@@ -31,6 +31,7 @@ interface AddonItemProps extends InternalAddonProps {
 }
 
 const AddonItem=(props:AddonItemProps)=>{
+    const [fontSize]=useStoreState(keys.properties.style.buttonSize);
     const history=useHistory();
     let source=props.source||'user';
     if (props.invalid) source+=", invalid";
@@ -45,7 +46,32 @@ const AddonItem=(props:AddonItemProps)=>{
                 props.invalid?"invalid":undefined,
                 props.className)}
             onClick={props.onClick}>
-            <ListSlot icon={{icon:props.button?.icon+""}}/>
+            <ListSlot>
+                {props.buttonClass && <Button
+                    name={props.buttonClass}
+                    disabled={props.invalid}
+                    onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (props.newWindow) {
+                            window.open(props.url, props.name);
+                            return;
+                        }
+                        let page:string;
+                        const pageList=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON]
+                        for (const pg of pageList) {
+                            if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
+                                page = pg;
+                                break;
+                            }
+                        }
+                        if (!page) page=PAGEIDS.ADDON;
+                        history.push(page, {button: props.key||props.name})
+                    }
+                    }
+                    iconClass={props.button.iconClass}
+                ></Button>}
+            </ListSlot>
             <ListMainSlot
                 primary={url+""}
                 secondary={props.title}
@@ -53,30 +79,6 @@ const AddonItem=(props:AddonItemProps)=>{
                 <div className="pageAndButton">{`Page ${pages.join(",")} Button: ${props.buttonClass}`}</div>
                 <div className="sourceInfo">{source}</div>
             </ListMainSlot>
-            <ListSlot >
-            {!props.invalid && <Button
-                {...ButtonDefs.AddonConfigView}
-                className="smallButton"
-                                       onClick={(ev) => {
-                                           ev.preventDefault();
-                                           ev.stopPropagation();
-                                           if (props.newWindow) {
-                                               window.open(props.url, props.name);
-                                               return;
-                                           }
-                                           let page:string;
-                                           const pageList=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON]
-                                           for (const pg of pageList) {
-                                               if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
-                                                   page = pg;
-                                                   break;
-                                               }
-                                           }
-                                           if (!page) page=PAGEIDS.ADDON;
-                                           history.push(page, {button: props.key||props.name})
-                                       }
-                                       }/>}
-            </ListSlot>
         </ListItem>
     )
 };
