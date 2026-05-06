@@ -53,7 +53,6 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         ...ButtonDefs.AndroidBrowser,
-        localOnly:true,
         overflow:true,
         //@ts-ignore
         visible:!!window.avnavAndroid
@@ -65,7 +64,9 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         ...ButtonDefs.StatusLog,
-        localOnly:true,
+        storeKeys:{
+            visible: keys.gui.capabilities.log
+        },
         overflow: true
     },
     {

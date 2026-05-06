@@ -122,7 +122,6 @@ export const shutdownServer = (dialogContext?: IDialogContext) => {
 }
 export const ShutdownButton = {
     ...ButtonDefs.StatusShutdown,
-    localOnly: true,
     storeKeys: {
         visible: keys.gui.capabilities.shutdown,
         connected: keys.gui.global.connectedMode

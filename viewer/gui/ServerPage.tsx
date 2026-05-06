@@ -25,6 +25,7 @@ import {ButtonDef, updateButtons} from "../components/Button";
 import ServerPageButtons from "./ServerPageButtons";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import {ShutdownButton, shutdownServer} from "./MainActionButtons";
+import ButtonDefs from "../components/ButtonDefs";
 
 interface DebugDialogProps{
     title?: string;
@@ -138,31 +139,30 @@ const ServerPage = (iprops: PageBaseProps) => {
             .catch((e: any) => Toast(e))
     }, []);
     const buttonConfig = {
-        StatusWpa: {
+        [ButtonDefs.StatusWpa.name]: {
             visible: wpa && props.connected,
             onClick: () => {
                 history.push(PAGEIDS.WPA);
             }
         },
-        StatusAddresses: {
+        [ButtonDefs.StatusAddresses.name]: {
             visible: hasAddresses,
             onClick: () => {
                 history.push(PAGEIDS.ADDR);
             }
         },
-        StatusAndroid: {
-            visible: props.android,
+        [ButtonDefs.StatusAndroid.name]: {
             onClick: () => { // @ts-ignore
                 window.avnavAndroid.showSettings();
             }
         },
-        AndroidBrowser: {
+        [ButtonDefs.AndroidBrowser.name]: {
             visible: props.android && hasAddresses,
             onClick: () => { // @ts-ignore
                 window.avnavAndroid.launchBrowser();
             }
         },
-        MainInfo: {
+        [ButtonDefs.MainInfo.name]: {
             onClick: () => {
                 history.push(PAGEIDS.INFO)
             },
@@ -174,12 +174,11 @@ const ServerPage = (iprops: PageBaseProps) => {
             }
 
         },
-        StatusRestart: {
+        [ButtonDefs.StatusRestart.name]: {
             visible: canRestart && props.connected,
             onClick: () => restartServer()
         },
-        StatusLog: {
-            visible: props.log,
+        [ButtonDefs.StatusLog.name]: {
             onClick: () => {
                 showDialog(undefined, (props: any) => {
                     return <LogDialog
@@ -193,13 +192,12 @@ const ServerPage = (iprops: PageBaseProps) => {
                 });
             },
         },
-        StatusDebug: {
-            visible: props.debugLevel && props.connected,
+        [ButtonDefs.StatusDebug.name]: {
             onClick: () => {
                 showDialog(undefined, DebugDialog);
             },
         },
-        StatusAdd: {
+        [ButtonDefs.StatusAdd.name]: {
             visible: props.config && props.connected && showAll,
             onClick: () => {
                 createAddDialog((id: string | number) => setFocusId(id));
@@ -210,7 +208,7 @@ const ServerPage = (iprops: PageBaseProps) => {
                 history.pop()
             }
         },
-        StatusAll: {
+        [ButtonDefs.StatusAll.name]: {
             toggle: showAll,
             onClick: () => {
                 setShowAll(!showAll);
