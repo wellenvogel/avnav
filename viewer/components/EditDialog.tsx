@@ -74,7 +74,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
             localData={() => flask.current.getCode()}
             fileName={fileName}
             close={false}
-        >Download</DownloadButton>,
+        ></DownloadButton>,
         {
           ...ButtonDefs.DBPreview,
           onClick: () => {

@@ -651,7 +651,41 @@ const ButtonDefinitions= {
     DBCompute:{
         iconClass: iconClasses.Start,
         name:btdef.DBCompute,
+    },
+    //chart actions
+    DBOpenChart:{
+        iconClass: iconClasses.Charts,
+        name:btdef.DBOpen,
+    },
+    DBScheme:{
+        iconClass: iconClasses.DBScheme,
+        name:btdef.DBScheme
+    },
+    DBOverlays:{
+        iconClass: iconClasses.Overlays,
+        name:btdef.DBOverlays
+    },
+    DBCopy:{
+        iconClass: iconClasses.Copy,
+        name:btdef.DBCopy,
+    },
+    DBView:{
+        iconClass: iconClasses.View,
+        name:btdef.DBView,
+    },
+    DBConfig:{
+        iconClass: iconClasses.Edit,
+        name:btdef.DBConfig,
+    },
+    DBActivate:{
+        iconClass: iconClasses.Open,
+        name:btdef.DBActivate,
+    },
+    DBToRoute:{
+        iconClass: iconClasses.Route,
+        name:btdef.DBToRoute,
     }
+
 }
 export default ButtonDefinitions;
 

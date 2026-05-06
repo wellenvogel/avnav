@@ -239,9 +239,9 @@ class CreateAction extends CopyAware{
     }
 }
 class Action extends CopyAware{
-    constructor({label,name,action,visible,close,disabled,fixedExtension,hasScope}) {
+    constructor({iconClass,name,action,visible,close,disabled,fixedExtension,hasScope}) {
         super();
-        this.label=label;
+        this.iconClass=iconClass;
         this.action=action;
         this.visible=visible;
         this.name=name;
@@ -287,7 +287,7 @@ class Action extends CopyAware{
             return <DB
             name={this.name}
             visible={ this._fhelper('visible',item)}
-            label={this.label}
+            iconClass={this.iconClass}
             onClick={ async (ev, dialogContext) => {
                 try {
                     await this._ahelper(ev, item, dialogContext, history);
@@ -297,7 +297,7 @@ class Action extends CopyAware{
             }}
             close= {false}
             disabled={this._fhelper('disabled',item)}
-            >{this.label}</DB>}
+            />}
     }
 
 }
@@ -319,7 +319,7 @@ class DownloadAction extends Action{
                 url={this._fhelper('url',item)}
                 localData={this.localData}
                 useDialogButton={true}
-            >{this.label}</DownloadButton>;
+            ></DownloadButton>;
         }
     }
 }
@@ -551,8 +551,7 @@ const checkForPlugin=async (file)=>{
 }
 const standardActions={
     delete: new Action({
-            label: 'Delete',
-            name: 'delete',
+            ...ButtonDefs.DBDelete,
             action: async (action,item,dialogContext)=>{
                 return await deleteItem(item,dialogContext)
             }
@@ -568,8 +567,7 @@ const standardActions={
      * You can add a preCheck to the action to do some additional name checks before the normal ones.
      */
     rename: new Action({
-        label: 'Rename',
-        name: 'rename',
+        ...ButtonDefs.DBRename,
         action: async (action, item, dialogContext) => {
             let newName = await renameDialog({
                 item,
@@ -594,8 +592,7 @@ const standardActions={
         }
     }),
     copy: new Action({
-        label: 'Copy',
-        name: 'copy',
+        ...ButtonDefs.DBCopy,
         action: async (action, item, dialogContext) => {
             let dname=item.name;
             if (action.nameToBaseName){
@@ -634,8 +631,7 @@ const standardActions={
         }
     }),
     view: new Action({
-        label: 'View',
-        name: 'view',
+        ...ButtonDefs.DBView,
         action: async (action,item,dialogContext,history)=>{
             dialogContext.replaceDialog(()=><ViewDialog
                 type={item.type}
@@ -650,8 +646,7 @@ const standardActions={
         }
     }),
     download:new DownloadAction({
-       label:'Download',
-       name: 'download',
+        ...ButtonDefs.DBDownload,
        visible:  (action,item)=>{
            return item.canDownload
        },
@@ -667,8 +662,7 @@ const standardActions={
 
     }),
     config: new Action({
-        label:'Config',
-        name: 'config',
+        ...ButtonDefs.DBConfig,
         action: async (action,item,dialogContext)   =>{
             dialogContext.replaceDialog((props)=> {
                 return <EditHandlerDialog
@@ -686,8 +680,7 @@ const standardActions={
         }
     }),
     edit: new Action({
-        label: 'Edit',
-        name: 'edit',
+        ...ButtonDefs.Edit,
         action: async (action,item,dialogContext,history)=>{
             dialogContext.replaceDialog(()=> {
                 return <EditDialogWithSaveAndDownload
@@ -702,8 +695,7 @@ const standardActions={
         close: true
     }),
     overlays: new Action({
-        label: 'Overlays',
-        name: 'overlays',
+        ...ButtonDefs.DBOverlays,
         action: async (action,item,dialogContext,history)=>{
             dialogContext.replaceDialog((props) => {
                 return (
@@ -960,8 +952,7 @@ class ChartItemActions extends ItemActions{
     }
     fillActions(item,actions) {
         actions.push(new Action({
-            label: 'Open',
-            name: 'openchart',
+            ...ButtonDefs.DBOpenChart,
             action: (action,item,dialogContext,history)=>{
                 mapholder.setChartEntry(item);
                 history.push('navpage');
@@ -972,8 +963,7 @@ class ChartItemActions extends ItemActions{
             visible: this.canModify(item)
         }));
         actions.push(new Action({
-            name: 'scheme',
-            label: 'Scheme',
+            ...ButtonDefs.DBScheme,
             action: async (action,item, dialogContext) => {
                 let newScheme;
                 try {
@@ -999,8 +989,7 @@ class ChartItemActions extends ItemActions{
         }))
         actions.push(standardActions.download.copy({}))
         actions.push(new Action({
-            name: 'overlays',
-            label: 'Overlays',
+            ...ButtonDefs.DBOverlays,
             action: async (action,item, dialogContext) => {
                 EditOverlaysDialog.createDialog(item,()=>dialogContext.closeDialog());
             },
@@ -1008,8 +997,7 @@ class ChartItemActions extends ItemActions{
             close: false
         }))
         actions.push(new Action({
-            name:'log',
-            label: 'Log',
+            ...ButtonDefs.DBLog,
             action: async (action,item,dialogContext) => {
                 dialogContext.replaceDialog((dprops) => {
                     return <LogDialog {...dprops}
@@ -1200,8 +1188,7 @@ class RouteItemActions extends ItemActions{
         }));
         if (!routeobjects.isServerName(item.name)){
             actions.push(new Action({
-                label:'Upload',
-                name:'upload',
+                ...ButtonDefs.Upload,
                 action: async (action,item,dialogContext,history)=>{
                     const items = await listItems('route');
                     let found=false;
@@ -1425,8 +1412,7 @@ class TrackItemActions extends ItemActions{
             visible:this.canEditOverlays() && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0,
         }))
         actions.push(new Action({
-            name:'toroute',
-            label: 'ToRoute',
+            ...ButtonDefs.DBToRoute,
             action:(action,info,dialogContext)=>{
                 dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
             },
@@ -1551,8 +1537,7 @@ class LayoutItemActions extends ItemActions{
             layouthandler.setLayoutAndName(layout,item.name,true);
         }
         actions.push(new Action({
-            label: 'Activate',
-            name:'open',
+            ...ButtonDefs.DBActivate,
             visible:true,
             action:async (action,item,dialogContext)=>{
                 const res=await showPromiseDialog(dialogContext,(dp)=><ConfirmDialog
@@ -1565,8 +1550,7 @@ class LayoutItemActions extends ItemActions{
             }
         }))
         actions.push(new Action({
-            label: 'Editor',
-            name:'layout',
+            ...ButtonDefs.DBEditLayout,
             visible:this.isConnected() && item.name && item.name.startsWith(layoutLoader.getUserPrefix()),
             action:async (action,item,dialogContext)=>{
                 const res=await showPromiseDialog(dialogContext,(dp)=><ConfirmDialog
@@ -1631,8 +1615,7 @@ class SettingsItemActions extends ItemActions{
             nameToBaseName:(name)=>this.nameToBaseName(name)
         }))
         actions.push(new Action({
-            label:'Activate',
-            name:'open',
+            ...ButtonDefs.DBActivate,
             visible:true
         }).copy({
             action: async (action,item, dialogContext)=>{

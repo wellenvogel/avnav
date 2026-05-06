@@ -89,9 +89,7 @@ const LogDialog=(props:LogDialogProps)=> {
                         return props.baseUrl+"&filename="+encodeURIComponent(name);
                     }}
                     close={false}
-                >
-                    Download
-                </DownloadButton>
+                />
                 <DB {...ButtonDefs.DBReload}
                     close={false}
                     onClick={getLog}/>

@@ -217,7 +217,7 @@ export const ImportStatusDialog=(props:ImporterStatusDialogProps)=>{
                                                       command:'download',
                                                       name: props.name
                                                   })}
-            >Download</DownloadButton>
+            ></DownloadButton>
             }
             {props.hasLog &&
                 <DB {...ButtonDefs.DBLog}
