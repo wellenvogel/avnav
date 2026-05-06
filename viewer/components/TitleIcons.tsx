@@ -39,6 +39,7 @@ import {useDialogContext} from "./DialogContext";
 import {SaveSettingsDialog} from "./Settings";
 import propertyhandler from "../util/propertyhandler";
 import {Icon} from "./Icons";
+import ButtonDefs from "./ButtonDefs";
 
 export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
     const dialogContext=useDialogContext();
@@ -93,8 +94,7 @@ export const DynamicTitleIcons=({rightOffset}:{rightOffset?:number})=>{
                 title={"Settings are changed, select name to save to server"}
                 additionalButtons={[
                     {
-                        name: 'ignore',
-                        label: 'Ignore',
+                        ...ButtonDefs.DBIgnore,
                         onClick: () => {
                             propertyhandler.setChangedFlag(false);
                         }
