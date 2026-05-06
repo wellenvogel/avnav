@@ -658,7 +658,7 @@ const ButtonDefinitions= {
         name:btdef.DBOpen,
     },
     DBScheme:{
-        iconClass: iconClasses.DBScheme,
+        iconClass: iconClasses.ChartScheme,
         name:btdef.DBScheme
     },
     DBOverlays:{
@@ -684,7 +684,58 @@ const ButtonDefinitions= {
     DBToRoute:{
         iconClass: iconClasses.Route,
         name:btdef.DBToRoute,
+    },
+    //feature actions
+    DBFeatureNewRoute:{
+        iconClass: iconClasses.Route,
+        name:btdef.DBFeatureNewRoute
+    },
+    DBCenter:{
+        iconClass: iconClasses.Center,
+        name:btdef.DBCenter,
+    },
+    DBEditRoute:{
+        iconClass: iconClasses.Route,
+        name:btdef.Edit
+    },
+    DBCleanTrack:{
+        iconClass: iconClasses.Delete,
+        name:btdef.DBCleanTrack,
+    },
+    DBMeasure:{
+        iconClass: iconClasses.Measure,
+        name:btdef.DBMeasure,
+    },
+    DBMeasureAdd:{
+        iconClass: iconClasses.Measure,
+        name:btdef.DBMeasureAdd,
+    },
+    DBMeasureOff:{
+        iconClass: iconClasses.MeasureOff,
+        name:btdef.DBMeasureOff,
+    },
+    DBInfo:{
+        iconClass: iconClasses.Info,
+        name:btdef.DBInfo,
+    },
+    DBHide:{
+        iconClass: iconClasses.Hide,
+        name:btdef.DBHide,
+    },
+    DBInsertRouteBefore:{
+        iconClass: iconClasses.NavAdd,
+        name:btdef.DBInsertRouteBefore,
+    },
+    DBInsertRouteAfter:{
+        iconClass: iconClasses.NavAddAfter,
+        name:btdef.DBInsertRouteAfter,
+    },
+    DBStartRoute:{
+        iconClass: iconClasses.NavGoto,
+        name:btdef.DBStartRoute
+
     }
+
 
 }
 export default ButtonDefinitions;

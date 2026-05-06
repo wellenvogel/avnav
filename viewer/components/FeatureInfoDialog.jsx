@@ -218,7 +218,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, l
                     onClick:() => {
                         action.onClick(baseInfo,dialogContext)
                     },
-                    label:action.label,
+                    iconClass: action.iconClass,
                     close: Helper.unsetorTrue(action.close),
                     toggle: action.toggle(baseInfo)
                 });
@@ -297,6 +297,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
                 {additionalActions && additionalActions.map((action) => {
                     if (!action.shouldShow(featureInfo)) return null;
                     return <DB
+                        iconClass={action.iconClass}
                         key={action.name}
                         name={action.name}
                         onClick={() => {
@@ -310,9 +311,7 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
                             }
                             return true;
                         }}
-                        >
-                        {action.label}
-                    </DB>
+                        />
                 })}
                 <DB {...ButtonDefs.DBCancel}
                     onPreClose={()=>{
@@ -335,8 +334,7 @@ FeatureInfoDialog.propTypes={
 }
 
 export const hideAction=new FeatureAction({
-    name:"hide",
-    label: 'Hide',
+    ...ButtonDefs.DBHide,
     onClick:(featureInfo)=>{
         featureInfo.overlaySource.setEnabled(false, true);
         },
@@ -354,8 +352,7 @@ const linkTitle=(featureInfo)=>{
     return featureInfo.title||featureInfo.urlOrKey|featureInfo;
 }
 export const linkAction=new FeatureAction({
-    name:"info",
-    label:'Info',
+    ...ButtonDefs.DBInfo,
     condition: (featureInfo)=>featureInfo.userInfo && (featureInfo.userInfo.link || featureInfo.userInfo.htmlInfo),
     onClick: (featureInfo,dialogContext)=>{
         const userInfo=featureInfo.userInfo||{};

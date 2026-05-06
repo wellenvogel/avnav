@@ -767,7 +767,8 @@ const EditRoutePage = (props) => {
     }
     const pointActions=[new FeatureAction(
         {
-            name: 'insert', label: 'Before', onClick: (info) => {
+            ...ButtonDefs.NavAdd,
+            onClick: (info) => {
                 const target = getTargetFromInfo(info);
                 if (!target) return;
                 let currentEditor = getCurrentEditor();
@@ -779,7 +780,8 @@ const EditRoutePage = (props) => {
         }),
         new FeatureAction(
             {
-                name: 'add', label: 'After', onClick: (info) => {
+                ...ButtonDefs.NavAddAfter,
+                 onClick: (info) => {
                     const target = getTargetFromInfo(info);
                     if (!target) return;
                     let currentEditor = getCurrentEditor();
@@ -791,7 +793,8 @@ const EditRoutePage = (props) => {
             }),
         new FeatureAction(
             {
-                name: 'NavToCenter', label: 'Move', onClick: (info) => {
+                ...ButtonDefs.NavToCenter,
+                onClick: (info) => {
                     const target = getTargetFromInfo(info);
                     if (!target) return;
                     let currentEditor = getCurrentEditor();
@@ -841,7 +844,8 @@ const EditRoutePage = (props) => {
                 }
                 additionalActions.push(new FeatureAction(
                     {
-                        name: 'insert', label: 'RtBefore', onClick: (props) => {
+                        ...ButtonDefs.DBInsertRouteBefore,
+                        onClick: (props) => {
                             insertOtherRoute(props.urlOrKey, props.point, true);
                         },
                         condition: (featureInfo) => routeActionCondition(featureInfo)
@@ -850,7 +854,8 @@ const EditRoutePage = (props) => {
                 if (currentEditor.getIndex() >= 0 && currentEditor.getPointAt()) {
                     additionalActions.push(new FeatureAction(
                         {
-                            name: 'add', label: 'RtAter', onClick: (props) => {
+                            ...ButtonDefs.DBInsertRouteAfter,
+                            onClick: (props) => {
                                 insertOtherRoute(props.urlOrKey, props.point, false);
                             },
                             condition: (featureInfo) => routeActionCondition(featureInfo)

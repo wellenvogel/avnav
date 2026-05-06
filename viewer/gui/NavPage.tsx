@@ -411,9 +411,9 @@ const needsChartLoad=()=>{
     return MapHolder.getLastChartKey()
 }
 const createRouteFeatureAction=(history:IHistory,opt_fromMeasure?:boolean)=>{
+    const button=opt_fromMeasure ? ButtonDefs.DBToRoute : ButtonDefs.DBFeatureNewRoute;
     return new FeatureAction({
-        name:'ShowRoutePanel',
-        label: opt_fromMeasure?'To Route':'New Route',
+        ...button,
         onClick: (featureInfo:FeatureInfo,listCtx:IDialogContext)=>{
             let measure:any;
             if (opt_fromMeasure){
@@ -433,7 +433,7 @@ const createRouteFeatureAction=(history:IHistory,opt_fromMeasure?:boolean)=>{
                     mRoute.setName(newRoute.name);
                     editorRoute.setRouteAndIndex(mRoute, mRoute.getIndexFromPoint(featureInfo.point))
                 }
-                history.push("editroutepage", {center: true});
+                history.push(PAGEIDS.ROUTE, {center: true});
             })
         },
         close:false,
@@ -620,16 +620,14 @@ const NavPage=(props:PageProps)=>{
             const featureList=evdata.feature;
             const additionalActions:FeatureAction[] = [];
             additionalActions.push(new FeatureAction({
-                name:'StopNav',
-                label:'StopNav',
+                ...ButtonDefs.StopNav,
                 onClick:()=>{
                     wpOn();
                 },
                 condition:(featureInfo:FeatureInfo)=>featureInfo instanceof WpFeatureInfo
             }))
             additionalActions.push(new FeatureAction({
-                name: 'goto',
-                label: 'Goto',
+                ...ButtonDefs.NavGoto,
                 onClick: (featureInfo:FeatureInfo) => {
                     gotoFeature(featureInfo,true);
                 },
@@ -640,8 +638,7 @@ const NavPage=(props:PageProps)=>{
                 }
             }));
             additionalActions.push(new FeatureAction({
-                name: 'start',
-                label: 'Start',
+                ...ButtonDefs.DBStartRoute,
                 onClick: (featureInfo:FeatureInfo) => {
                     gotoFeature(featureInfo);
                 },
@@ -653,8 +650,7 @@ const NavPage=(props:PageProps)=>{
                 }
             }));
             additionalActions.push(new FeatureAction({
-                name:'center',
-                label:'Center',
+                ...ButtonDefs.DBCenter,
                 onClick:(featureInfo:FeatureInfo)=>{
                     if (MapHolder.getGpsLock()) return;
                     MapHolder.setCenter(featureInfo.point);
@@ -665,8 +661,7 @@ const NavPage=(props:PageProps)=>{
                 }
             }))
             additionalActions.push(new FeatureAction({
-                name: 'toroute',
-                label: 'Convert',
+                ...ButtonDefs.DBToRoute,
                 onClick: (featureInfo:FeatureInfo) => {
                     dialogCtx.showDialog( () => <TrackConvertDialog history={history}
                                                                     name={featureInfo.urlOrKey}/>)
@@ -676,8 +671,7 @@ const NavPage=(props:PageProps)=>{
                 condition: (featureInfo:FeatureInfo) => featureInfo.getType() === FeatureInfo.TYPE.track
             }));
             additionalActions.push(new FeatureAction({
-                name: 'editRoute',
-                label: 'Edit',
+                ...ButtonDefs.DBEditRoute,
                 onClick: (featureInfo:FeatureInfo) => {
                     const nextTarget = featureInfo.point;
                     if (!nextTarget) return;
@@ -694,8 +688,7 @@ const NavPage=(props:PageProps)=>{
                 condition: (featureInfo:FeatureInfo) => featureInfo.getType() === FeatureInfo.TYPE.route && featureInfo.isOverlay
             }));
             additionalActions.push(new FeatureAction({
-                name: 'editRoute',
-                label: 'Edit',
+                ...ButtonDefs.DBEditRoute,
                 onClick: (featureInfo:FeatureInfo) => {
                     activeRoute.setNewIndex(activeRoute.getIndexFromPoint(featureInfo.point,true));
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
@@ -705,8 +698,7 @@ const NavPage=(props:PageProps)=>{
             }));
             additionalActions.push(createRouteFeatureAction(history,true));
             additionalActions.push(new FeatureAction({
-                name: 'Delete',
-                label: 'Clean Track',
+                ...ButtonDefs.DBCleanTrack,
                 close: false,
                 onClick:()=>{
                     showPromiseDialog(dialogCtx,(dp)=><ConfirmDialog
@@ -725,8 +717,7 @@ const NavPage=(props:PageProps)=>{
             additionalActions.push(linkAction);
             const listActions=[
                 new FeatureAction({
-                    name: 'goto',
-                    label: 'Goto',
+                    ...ButtonDefs.NavGoto,
                     onClick: (featureInfo:FeatureInfo) => {
                         gotoFeature(featureInfo);
                     },
@@ -738,9 +729,9 @@ const NavPage=(props:PageProps)=>{
                 createRouteFeatureAction(history)
             ]
             const measure=globalStore.getData(keys.map.activeMeasure);
+            const measureButton=(measure === undefined)?ButtonDefs.DBMeasure:ButtonDefs.DBMeasureAdd;
             listActions.push(new FeatureAction({
-                name: 'Measure',
-                label: (measure === undefined)?'Measure':'+ Measure',
+                ...measureButton,
                 onClick: (featureInfo:FeatureInfo)=>{
                     if (MapHolder.getGpsLock()) return;
                     let newMeasure;
@@ -757,8 +748,7 @@ const NavPage=(props:PageProps)=>{
                 condition: ()=>!MapHolder.getGpsLock()
             }))
             listActions.push(new FeatureAction({
-                name: 'MeasureOff',
-                label: 'Measure',
+                ...ButtonDefs.DBMeasureOff,
                 onClick: ()=>{
                     globalStore.storeData(keys.map.activeMeasure,undefined)
                 },

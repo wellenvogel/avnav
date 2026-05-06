@@ -28,7 +28,7 @@ import {valueof} from "../util/helper";
 export type FiConditionFunction=(fi:FeatureInfo)=>boolean;
 export interface IFeatureAction{
     name?:string;
-    label?:string;
+    iconClass?:string;
     onClick?:(fi:FeatureInfo,ctx:IDialogContext) => void;
     condition?:FiConditionFunction;
     close?:boolean;
@@ -38,15 +38,15 @@ export interface IFeatureAction{
 
 export class FeatureAction {
     name?:string;
-    label?:string;
+    iconClass?:string;
     onClickHandler?:(fi:FeatureInfo,ctx:IDialogContext) => void;
     condition?:FiConditionFunction;
     close?:boolean;
     toggleValue?:boolean|FiConditionFunction
     onPreCloseValue:boolean|FiConditionFunction;
-    constructor({name,label,onClick,condition,close,toggle,onPreClose}:IFeatureAction) {
+    constructor({name,iconClass,onClick,condition,close,toggle,onPreClose}:IFeatureAction) {
         this.name=name;
-        this.label=label;
+        this.iconClass=iconClass;
         this.onClickHandler=onClick;
         this.condition=condition;
         this.close=close;
