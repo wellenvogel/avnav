@@ -485,7 +485,7 @@ const keys:Record<string,KeyType>={
         layoutName: new SplitProperty(DEFAULT_LAYOUT_NAME,"Layout name",PropertyType.LAYOUT),
         mainNavCols: new Property(3,"main nav columns",PropertyType.LIST,Object.values(MainColumns),
             'number of button columns in the main nav menu when entries are expanded'),
-        mainNavExpand: new Property('current',"man nav expand",PropertyType.LIST,Object.values(MainExpandMode),
+        mainNavExpand: new Property('none',"main nav expand",PropertyType.LIST,Object.values(MainExpandMode),
             "Which entries of the main nav menu should be expanded when opening.\n" +
             "CURRENT: buttons of current page\n" +
             "NONE: no page\n" +
