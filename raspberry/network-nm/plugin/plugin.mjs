@@ -564,6 +564,7 @@
         name:'network',
         icon:'wifi.svg',
         displayName:'wifi connections',
+        label:'Wifi',
         onClick:async (ev)=>{
             if (dialogHandle){
                 dialogHandle();
