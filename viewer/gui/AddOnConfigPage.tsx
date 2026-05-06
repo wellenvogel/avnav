@@ -31,7 +31,6 @@ interface AddonItemProps extends InternalAddonProps {
 }
 
 const AddonItem=(props:AddonItemProps)=>{
-    const [fontSize]=useStoreState(keys.properties.style.buttonSize);
     const history=useHistory();
     let source=props.source||'user';
     if (props.invalid) source+=", invalid";
