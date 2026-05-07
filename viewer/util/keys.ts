@@ -154,6 +154,8 @@ export enum MainColumns{
     all="all"
 }
 
+export const ButtonFontSizeFactor=4.0; //divide button size by this factor for font size
+
 const keys:Record<string,KeyType>={
     nav:{
         gps:{

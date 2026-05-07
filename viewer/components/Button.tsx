@@ -9,7 +9,7 @@ import base from "../base";
 import {ButtonDescription} from "./ButtonList";
 import {Icon} from "./Icons";
 import {ListMainSlot} from "./ListItems";
-import keys from "../util/keys";
+import keys, {ButtonFontSizeFactor} from "../util/keys";
 
 
 export type ButtonEventBase=Record<string, any>;
@@ -45,6 +45,7 @@ export interface ButtonProps {
         iconClass?: string;
         dataChanged?:(data:ButtonDescription) => void;
         noHover?:boolean;
+        setFontSize?:boolean;
 }
 export interface DynamicButtonProps extends ButtonProps,DynamicProps {}
 export class ButtonDef extends CopyAware implements DynamicButtonProps{
@@ -79,6 +80,7 @@ export class ButtonDef extends CopyAware implements DynamicButtonProps{
     closeDialogs?: boolean;
     isAddon?: ButtonAddonType=ButtonAddonType.NONE;
     noHover?: boolean;
+    setFontSize?:boolean;
 }
 
 const toggleClass=(props:ButtonProps)=> {
@@ -106,6 +108,7 @@ export const isButtonVisible=(props:ButtonProps) => {
 const Button = (sprops:ButtonProps) => {
     const iprops:ButtonProps=useStore(sprops,{changeCallback:sprops.dataChanged});
     const [hoverTime]=useStoreState(keys.properties.buttonTitleTime);
+    const [buttonSize]=useStoreState(keys.properties.style.buttonSize);
     const [hover,setHover]=React.useState(false);
     const hoverTimer=useTimer((seq:number)=>{
         hoverTimer.guardedCall(seq,()=>setHover(true));
@@ -165,8 +168,13 @@ const Button = (sprops:ButtonProps) => {
             }
         }
     }
+    const style:Record<string,any>={};
+    if (iprops.setFontSize){
+        style.fontSize=`${buttonSize/ButtonFontSizeFactor}px`;
+    }
     return (
         <div onClick={onClick}
+             style={style}
              className={classNamev}
              //title={displayName+""}
              onMouseEnter={()=>{

@@ -47,6 +47,7 @@ const AddonItem=(props:AddonItemProps)=>{
             onClick={props.onClick}>
             <ListSlot>
                 {props.buttonClass && <Button
+                    setFontSize={true}
                     name={props.buttonClass}
                     disabled={props.invalid}
                     onClick={(ev) => {

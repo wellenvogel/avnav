@@ -3,7 +3,7 @@
 import React, {createRef, useCallback, useEffect, useRef} from 'react';
 import History from './util/history';
 import Dynamic from './hoc/Dynamic';
-import keys from './util/keys';
+import keys, {ButtonFontSizeFactor} from './util/keys';
 import InfoPage from './gui/InfoPage';
 import GpsPage from './gui/GpsPage';
 import AisPage from './gui/AisPage';
@@ -197,7 +197,7 @@ Router.propTypes = {
 const DynamicRouter=Dynamic(Router);
 //show one button (unscaled) to be able to compute button sizes
 const ButtonSizer=(props)=>{
-        let fontSize=props.fontSize/4; //unscaled button font size
+        let fontSize=props.fontSize/ButtonFontSizeFactor; //unscaled button font size
         let style={fontSize:fontSize+"px"};
         return(
             <div className="buttonSizer" style={style} ref={props.refFunction}>

@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Button, {ButtonDef, ButtonEvent, DynamicButtonProps} from './Button';
 import {dynamicWrapper, useStore} from '../hoc/Dynamic';
-import keys from '../util/keys';
+import keys, {ButtonFontSizeFactor} from '../util/keys';
 import ItemList from './ItemList';
 import Helper from "../util/helper";
 import {PageType} from "../util/pageids";
@@ -150,7 +150,7 @@ const ButtonList = (iprops:ButtonListProps) => {
             if (scale > 1) scale = 1;
         }
     }
-    const fontSize = sprops.buttonSize * scale / 4.0;
+    const fontSize = sprops.buttonSize * scale / ButtonFontSizeFactor;
     const mainItems:ButtonDescription[] = [];
     const overflowItems:ButtonDescription[] = [];
     if (!sprops.buttonsHidden) {
