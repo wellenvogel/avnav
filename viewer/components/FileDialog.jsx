@@ -549,7 +549,7 @@ const checkForPlugin=async (file)=>{
     }
     return foundName;
 }
-const standardActions={
+export const standardActions={
     delete: new Action({
             ...ButtonDefs.DBDelete,
             action: async (action,item,dialogContext)=>{

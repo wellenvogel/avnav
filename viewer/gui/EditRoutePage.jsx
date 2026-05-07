@@ -39,7 +39,7 @@ import PropTypes from "prop-types";
 import {useStore, useStoreState} from "../hoc/Dynamic";
 import {ConfirmDialog, InfoItem} from "../components/BasicDialogs";
 import RoutePointsWidget from "../components/RoutePointsWidget";
-import {createItemActions} from "../components/FileDialog";
+import {createItemActions, standardActions} from "../components/FileDialog";
 import UploadHandler, {uploadClick} from "../components/UploadHandler";
 import {FeatureAction, FeatureInfo} from "../map/featureInfo";
 import DownloadButton from "../components/DownloadButton";
@@ -394,13 +394,15 @@ const EditRouteDialog = (props) => {
     let canDelete = !isActiveRoute()  && route.name !== DEFAULT_ROUTE && writable;
     let info = RouteHandler.getInfoFromRoute(route);
     const createAction=itemActions.getCreateAction().copy({title:'Choose name for new route'});
-    const actions=itemActions.getActions(info,['rename','delete']);
-    const renameAction=actions.rename?actions.rename.copy({
+    const renameKey=standardActions.rename?.name;
+    const deleteKey=standardActions.delete?.name;
+    const actions=itemActions.getActions(info,[renameKey,deleteKey]);
+    const renameAction=actions[renameKey]?.copy({
         execute: (item,newName)=>{
             changeRoute((nr)=>{nr.setName(newName)})
         }
-    }):undefined;
-    const deleteAction=actions.delete.copy({
+    });
+    const deleteAction=actions[deleteKey]?.copy({
         close:false
     });
     return <DialogFrame className={Helper.concatsp("EditRouteDialog",isActiveRoute()?"activeRoute":undefined)} title={"Edit Route"}>
@@ -505,6 +507,7 @@ const EditRouteDialog = (props) => {
                     }).runAction(info,dialogContext);
                 }}
                 close={false}
+                visible={!!renameAction}
             />
             <DB {...ButtonDefs.DBCancel}/>
             <DB {...ButtonDefs.DBOk}
