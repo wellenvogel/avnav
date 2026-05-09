@@ -253,6 +253,8 @@ if len(sys.argv) < 1:
 ALL_FORMATS=['plain','table','sparse']
 format=ALL_FORMATS[0]
 
+FILEPRFX='../viewer/'
+
 optlist,args =getopt.getopt(sys.argv[1:],'f:')
 for o, a in optlist:
     if o == '-f':
@@ -285,7 +287,10 @@ if format == 'table' or format == 'sparse':
             icon=''
             short=''
             long=''
-            useStr=f"[{usage.file}]({usage.file}#L{usage.line})"
+            uname=usage.file
+            if uname.startswith(FILEPRFX):
+                uname=uname[len(FILEPRFX):]
+            useStr=f"[{uname}]({usage.file}#L{usage.line})"
             iconStr = ''
             iconFile = ''
             if buttonDef is not None and first:
