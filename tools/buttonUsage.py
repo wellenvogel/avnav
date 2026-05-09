@@ -250,7 +250,7 @@ if len(sys.argv) < 1:
     usage()
     sys.exit(1)
 
-ALL_FORMATS=['plain','table']
+ALL_FORMATS=['plain','table','sparse']
 format=ALL_FORMATS[0]
 
 optlist,args =getopt.getopt(sys.argv[1:],'f:')
@@ -274,20 +274,22 @@ if format == 'plain':
     pprint.pprint(iconDefs)
     pprint.pprint(textDefs)
     sys.exit(0)
-if format == 'table':
+if format == 'table' or format == 'sparse':
     print("|Name|File|IconName|Icon|shortText|longText|")
     print("| --- | --- | --- | --- | --- | --- |")
     for k in sorted(defs.keys()):
         buttonFound=defs[k]
         buttonDef = buttonDefs.get(k)
+        first=True
         for usage in buttonFound.usages:
-            icon=None
-            short=None
-            long=None
+            icon=''
+            short=''
+            long=''
             useStr=f"[{usage.file}]({usage.file}#L{usage.line})"
             iconStr = ''
             iconFile = ''
-            if buttonDef is not None:
+            if buttonDef is not None and first:
+                first=False
                 icon=buttonDef.icon
                 iconDef=iconDefs.get(icon)
                 if iconDef is not None:
