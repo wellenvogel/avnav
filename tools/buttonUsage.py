@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import getopt
 import logging
 import os.path
 import pprint
@@ -31,19 +32,19 @@ def grep(dir:str,args:list=None):
     logger.info(cmd)
     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,encoding="utf-8")
     s1='ButtonDefs'
-    re1=re.compile(r'.*'+s1)
-    re2=re.compile(r'[^.a-zA-Z].*')
+    re1=re.compile(r'ButtonDefs\.(\w+)')
     buttonDefs={}
     for line in proc.stdout:
         line = line.strip()
-        parts=line.split(':')
+        parts=line.split(':',3)
         if len(parts)  < 3:
             continue
-        parts[2]=re1.sub(s1,parts[2])
-        parts[2]=re2.sub("",parts[2])
-        if buttonDefs.get(parts[2]) is None:
-            buttonDefs[parts[2]]=BtDef(parts[2])
-        buttonDefs[parts[2]].add(parts[0],parts[1])
+        match=re1.search(line)
+        if match is not None:
+            for bname in match.groups():
+                if buttonDefs.get(bname) is None:
+                    buttonDefs[bname]=BtDef(bname)
+                buttonDefs[bname].add(parts[0],parts[1])
     return buttonDefs
 
 class Bt:
@@ -236,6 +237,10 @@ def relPath(path=None):
         return os.path.join('..', 'viewer')
     return os.path.join('..','viewer',path)
 
+def iconPath(icon):
+    base=relPath(ICONBASE)
+    return os.path.join(base,icon)
+
 def usage():
     print("usage: python buttonUsage.py [<args>...]",file=sys.stderr)
 def err(msg):
@@ -244,6 +249,18 @@ def err(msg):
 if len(sys.argv) < 1:
     usage()
     sys.exit(1)
+
+ALL_FORMATS=['plain','table']
+format=ALL_FORMATS[0]
+
+optlist,args =getopt.getopt(sys.argv[1:],'f:')
+for o, a in optlist:
+    if o == '-f':
+        if not a in ALL_FORMATS:
+            raise RuntimeError(f'invalid format {a}, allowed formats are {",".join(ALL_FORMATS)}')
+        format=a
+
+
 dir=os.path.dirname(__file__)
 wd=os.path.join(dir,'..','docs')
 os.chdir(wd)
@@ -251,7 +268,38 @@ defs=grep(relPath())
 buttonDefs=readButtons(relPath(TDEFS))
 iconDefs=readIcons(relPath(TICONS))
 textDefs=readTexts(relPath(TTEXTS))
-pprint.pprint(defs)
-pprint.pprint(buttonDefs)
-pprint.pprint(iconDefs)
-pprint.pprint(textDefs)
+if format == 'plain':
+    pprint.pprint(defs)
+    pprint.pprint(buttonDefs)
+    pprint.pprint(iconDefs)
+    pprint.pprint(textDefs)
+    sys.exit(0)
+if format == 'table':
+    print("|Name|File|IconName|Icon|shortText|longText|")
+    print("| --- | --- | --- | --- | --- | --- |")
+    for k in sorted(defs.keys()):
+        buttonFound=defs[k]
+        buttonDef = buttonDefs.get(k)
+        for usage in buttonFound.usages:
+            icon=None
+            short=None
+            long=None
+            useStr=f"[{usage.file}]({usage.file}#L{usage.line})"
+            iconStr = ''
+            iconFile = ''
+            if buttonDef is not None:
+                icon=buttonDef.icon
+                iconDef=iconDefs.get(icon)
+                if iconDef is not None:
+                    iconStr=f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})"
+                    iconFile=f"[{iconDef.icon}]({iconPath(iconDef.icon)})"
+                else:
+                    iconStr=f"{icon}"
+                txt=textDefs.get(buttonDef.name)
+                if txt is not None:
+                    short=f"[{txt.tshort}]({relPath(TTEXTS)}#L{txt.line})"
+                    long=txt.tlong
+            print(f"|{k}|{useStr}|{iconStr}|{iconFile}|{short}|{long}|")
+
+    sys.exit(0)
+raise RuntimeError(f'invalid format {format}')

@@ -1,277 +1,277 @@
-| Datei | Zeile | Inhalt |
-| --- | --- | --- |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L32 ) | 32 |         ...ButtonDefs.SectionView, |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L35 ) | 35 |         ...ButtonDefs.SettingsItems, |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L38 ) | 38 |         ...ButtonDefs.SettingsDefaults, |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L42 ) | 42 |         ...ButtonDefs.SettingsLoad, |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L56 ) | 56 |         ...ButtonDefs.SettingsSave, |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L70 ) | 70 |         ...ButtonDefs.Upload, |
-| [../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L85 ) | 85 |         ...ButtonDefs.SettingsSplitReset, |
-| [../viewer/gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L342 ) | 342 |         ...ButtonDefs.MainNav, |
-| [../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L43 ) | 43 |         ...ButtonDefs.Night, |
-| [../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L65 ) | 65 |         ...ButtonDefs.ReloadUI, |
-| [../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L93 ) | 93 |         ...ButtonDefs.MainExit, |
-| [../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L124 ) | 124 |     ...ButtonDefs.StatusShutdown, |
-| [../viewer/gui/LayoutsPage.tsx](../viewer/gui/LayoutsPage.tsx#L86 ) | 86 |                                 {...ButtonDefs.Layout} |
-| [../viewer/gui/LayoutsPageButtons.ts](../viewer/gui/LayoutsPageButtons.ts#L29 ) | 29 |         ...ButtonDefs.Upload, |
-| [../viewer/gui/LayoutsPageButtons.ts](../viewer/gui/LayoutsPageButtons.ts#L43 ) | 43 |         ...ButtonDefs.ShowSettings, |
-| [../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L89 ) | 89 |             ...ButtonDefs.DBWpaRemove, |
-| [../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L96 ) | 96 |             ...ButtonDefs.DBWpaEnable, |
-| [../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L103 ) | 103 |             ...ButtonDefs.DBWpaDisable, |
-| [../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L110 ) | 110 |             ...ButtonDefs.DBWpaConnect, |
-| [../viewer/gui/ChannelsPageButtons.ts](../viewer/gui/ChannelsPageButtons.ts#L31 ) | 31 |         ...ButtonDefs.StatusAdd, |
-| [../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L31 ) | 31 |         ...ButtonDefs.ServerView, |
-| [../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L34 ) | 34 |         ...ButtonDefs.TrackItems, |
-| [../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L37 ) | 37 |         ...ButtonDefs.Upload, |
-| [../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L52 ) | 52 |         ...ButtonDefs.ShowSettings, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L34 ) | 34 |     ButtonDefs.Gps1, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L35 ) | 35 |     ButtonDefs.Gps2, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L36 ) | 36 |     ButtonDefs.Gps3, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L37 ) | 37 |     ButtonDefs.Gps4, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L38 ) | 38 |     ButtonDefs.Gps5, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L39 ) | 39 |     ButtonDefs.Gps6, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L40 ) | 40 |     ButtonDefs.Gps7, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L41 ) | 41 |     ButtonDefs.Gps8, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L42 ) | 42 |     ButtonDefs.Gps9, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L43 ) | 43 |     ButtonDefs.Gps10, |
-| [../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L50 ) | 50 |             ...ButtonDefs.Cancel, |
-| [../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L31 ) | 31 |         ...ButtonDefs.AddonConfigAddOns, |
-| [../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L34 ) | 34 |         ...ButtonDefs.AddonConfigUser, |
-| [../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L37 ) | 37 |         ...ButtonDefs.AddonConfigImages, |
-| [../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L40 ) | 40 |         ...ButtonDefs.AddonConfigPlus, |
-| [../viewer/gui/AddOnPageButtons.ts](../viewer/gui/AddOnPageButtons.ts#L29 ) | 29 |         ...ButtonDefs.Back, |
-| [../viewer/gui/AisCfgPageButtons.ts](../viewer/gui/AisCfgPageButtons.ts#L30 ) | 30 |         ...ButtonDefs.ServerView, |
-| [../viewer/gui/AisCfgPageButtons.ts](../viewer/gui/AisCfgPageButtons.ts#L33 ) | 33 |         ...ButtonDefs.AisItems, |
-| [../viewer/gui/AisCfgPageButtons.ts](../viewer/gui/AisCfgPageButtons.ts#L38 ) | 38 |         ...ButtonDefs.ShowSettings, |
-| [../viewer/gui/RemotePageButtons.ts](../viewer/gui/RemotePageButtons.ts#L31 ) | 31 |         ...ButtonDefs.ShowSettings, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L172 ) | 172 |                 ...ButtonDefs.DBEmptyRoute, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L184 ) | 184 |                 ...ButtonDefs.DBInvertRoute, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L195 ) | 195 |                 ...ButtonDefs.DBRenumberRoute, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L298 ) | 298 |                 ...ButtonDefs.Upload, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L422 ) | 422 |             <DB {...ButtonDefs.DBNewRoute} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L433 ) | 433 |             < DB {...ButtonDefs.DBLoadRoute} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L442 ) | 442 |             <DB {...ButtonDefs.DBRename} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L451 ) | 451 |                 <DB {...ButtonDefs.DBRoutePoints} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L463 ) | 463 |                 {...ButtonDefs.StopNav} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L477 ) | 477 |             <DB {...ButtonDefs.DBDelete} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L494 ) | 494 |             <DB {...ButtonDefs.DBSaveAs} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L509 ) | 509 |             <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L510 ) | 510 |             <DB {...ButtonDefs.DBOk} |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L671 ) | 671 |             ...ButtonDefs.WpLocate, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L680 ) | 680 |             ...ButtonDefs.WpEdit, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L689 ) | 689 |             ...ButtonDefs.WpNext, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L704 ) | 704 |             ...ButtonDefs.WpPrevious, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L770 ) | 770 |             ...ButtonDefs.NavAdd, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L783 ) | 783 |                 ...ButtonDefs.NavAddAfter, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L796 ) | 796 |                 ...ButtonDefs.NavToCenter, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L847 ) | 847 |                         ...ButtonDefs.DBInsertRouteBefore, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L857 ) | 857 |                             ...ButtonDefs.DBInsertRouteAfter, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L877 ) | 877 |             ...ButtonDefs.NavOverlays, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L881 ) | 881 |             ...ButtonDefs.ZoomIn, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L887 ) | 887 |             ...ButtonDefs.ZoomOut, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L893 ) | 893 |             ...ButtonDefs.NavAddAfter, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L910 ) | 910 |             ...ButtonDefs.NavAdd, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L927 ) | 927 |             ...ButtonDefs.NavDelete, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L941 ) | 941 |             ...ButtonDefs.NavToCenter, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L954 ) | 954 |             ...ButtonDefs.NavGoto, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L962 ) | 962 |             ...ButtonDefs.StopNav, |
-| [../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L973 ) | 973 |             ...ButtonDefs.RouteMenu, |
-| [../viewer/gui/WarningPage.tsx](../viewer/gui/WarningPage.tsx#L125 ) | 125 |                     ...ButtonDefs.MainExit, |
-| [../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L30 ) | 30 |         ...ButtonDefs.AisNearest, |
-| [../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L34 ) | 34 |         ...ButtonDefs.AisSort, |
-| [../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L39 ) | 39 |         ...ButtonDefs.AisLock, |
-| [../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L45 ) | 45 |         ...ButtonDefs.AisSearch, |
-| [../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L31 ) | 31 |         ...ButtonDefs.RouteAdd, |
-| [../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L44 ) | 44 |         ...ButtonDefs.SyncRoutes, |
-| [../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L60 ) | 60 |         ...ButtonDefs.ServerView, |
-| [../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L63 ) | 63 |         ...ButtonDefs.StoredRoutes, |
-| [../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L66 ) | 66 |         ...ButtonDefs.Upload, |
-| [../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L81 ) | 81 |         ...ButtonDefs.ShowSettings, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L252 ) | 252 |                 ...ButtonDefs.DBAdd, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L264 ) | 264 |                 ...ButtonDefs.DBCancel, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L278 ) | 278 |             ...ButtonDefs.WpLocate, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L289 ) | 289 |             ...ButtonDefs.WpEdit, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L306 ) | 306 |             ...ButtonDefs.WpGoto, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L320 ) | 320 |             ...ButtonDefs.NavNext, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L335 ) | 335 |             ...ButtonDefs.NavRestart, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L348 ) | 348 |             ...ButtonDefs.WpNext, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L365 ) | 365 |             ...ButtonDefs.WpPrevious, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L414 ) | 414 |     const button=opt_fromMeasure ? ButtonDefs.DBToRoute : ButtonDefs.DBFeatureNewRoute; |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L623 ) | 623 |                 ...ButtonDefs.StopNav, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L630 ) | 630 |                 ...ButtonDefs.NavGoto, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L641 ) | 641 |                 ...ButtonDefs.DBStartRoute, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L653 ) | 653 |                 ...ButtonDefs.DBCenter, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L664 ) | 664 |                 ...ButtonDefs.DBToRoute, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L674 ) | 674 |                 ...ButtonDefs.DBEditRoute, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L691 ) | 691 |                 ...ButtonDefs.DBEditRoute, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L701 ) | 701 |                 ...ButtonDefs.DBCleanTrack, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L720 ) | 720 |                     ...ButtonDefs.NavGoto, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L732 ) | 732 |             const measureButton=(measure === undefined)?ButtonDefs.DBMeasure:ButtonDefs.DBMeasureAdd; |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L751 ) | 751 |                 ...ButtonDefs.DBMeasureOff, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L775 ) | 775 |             ...ButtonDefs.NavMapWidgets, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L783 ) | 783 |                 name: ButtonDefs.ZoomIn.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L787 ) | 787 |                 name: ButtonDefs.ZoomOut.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L791 ) | 791 |                 name: ButtonDefs.LockPos.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L813 ) | 813 |                 name: ButtonDefs.LockMarker.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L825 ) | 825 |                 name: ButtonDefs.StopNav.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L831 ) | 831 |                 name: ButtonDefs.CourseUp.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L838 ) | 838 |                 name: ButtonDefs.ShowRoutePanel.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L847 ) | 847 |                 name: ButtonDefs.NavOverlays.name, |
-| [../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L851 ) | 851 |                 name: ButtonDefs.GpsCenter.name, |
-| [../viewer/gui/GeneralButtons.ts](../viewer/gui/GeneralButtons.ts#L35 ) | 35 |         ...ButtonDefs.Cancel, |
-| [../viewer/gui/GeneralButtons.ts](../viewer/gui/GeneralButtons.ts#L41 ) | 41 |     ...ButtonDefs.Connected, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L37 ) | 37 |         ...ButtonDefs.NavOverlays, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L40 ) | 40 |         ...ButtonDefs.ZoomIn, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L44 ) | 44 |         ...ButtonDefs.ZoomOut, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L48 ) | 48 |         ...ButtonDefs.LockPos, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L56 ) | 56 |         ...ButtonDefs.LockMarker, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L66 ) | 66 |         ...ButtonDefs.StopNav, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L75 ) | 75 |         ...ButtonDefs.CourseUp, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L83 ) | 83 |         ...ButtonDefs.ShowRoutePanel, |
-| [../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L88 ) | 88 |         ...ButtonDefs.GpsCenter, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L32 ) | 32 |         ...ButtonDefs.MainInfo, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L36 ) | 36 |         ...ButtonDefs.StatusAll, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L40 ) | 40 |         ...ButtonDefs.StatusWpa, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L45 ) | 45 |         ...ButtonDefs.StatusAddresses, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L50 ) | 50 |         ...ButtonDefs.StatusAndroid, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L55 ) | 55 |         ...ButtonDefs.AndroidBrowser, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L62 ) | 62 |         ...ButtonDefs.StatusRestart, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L66 ) | 66 |         ...ButtonDefs.StatusLog, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L73 ) | 73 |         ...ButtonDefs.StatusDebug, |
-| [../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L88 ) | 88 |         ...ButtonDefs.StatusAdd, |
-| [../viewer/gui/PluginsPageButtons.ts](../viewer/gui/PluginsPageButtons.ts#L31 ) | 31 |         ...ButtonDefs.Upload, |
-| [../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L31 ) | 31 |         ...ButtonDefs.ServerView, |
-| [../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L37 ) | 37 |         ...ButtonDefs.ChartsView, |
-| [../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L40 ) | 40 |         ...ButtonDefs.ImportsView, |
-| [../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L54 ) | 54 |         ...ButtonDefs.OverlaysView, |
-| [../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L57 ) | 57 |         ...ButtonDefs.ShowSettings, |
-| [../viewer/util/dimhandler.ts](../viewer/util/dimhandler.ts#L164 ) | 164 |             ...ButtonDefs.Dim, |
-| [../viewer/util/Fullscreen.ts](../viewer/util/Fullscreen.ts#L84 ) | 84 |     ...ButtonDefs.FullScreen, |
-| [../viewer/util/splitsupport.ts](../viewer/util/splitsupport.ts#L122 ) | 122 |                 ...ButtonDefs.Split, |
-| [../viewer/util/layouthandler.ts](../viewer/util/layouthandler.ts#L1133 ) | 1133 |             ...ButtonDefs.RevertLayout, |
-| [../viewer/components/MapPage.tsx](../viewer/components/MapPage.tsx#L130 ) | 130 |             {...ButtonDefs.NavOverlays} |
-| [../viewer/components/MapPage.tsx](../viewer/components/MapPage.tsx#L381 ) | 381 |                 ...ButtonDefs.DBShowOverlays, |
-| [../viewer/components/MapPage.tsx](../viewer/components/MapPage.tsx#L388 ) | 388 |                 ...ButtonDefs.DBHideOverlays, |
-| [../viewer/components/EditHandlerDialog.jsx](../viewer/components/EditHandlerDialog.jsx#L173 ) | 173 |                             {...ButtonDefs.DBDelete} |
-| [../viewer/components/EditHandlerDialog.jsx](../viewer/components/EditHandlerDialog.jsx#L180 ) | 180 |                     <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/EditHandlerDialog.jsx](../viewer/components/EditHandlerDialog.jsx#L181 ) | 181 |                     <DB {...ButtonDefs.DBOk} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L152 ) | 152 |             <DB {...ButtonDefs.DBDelete} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L167 ) | 167 |             {!isRunning && <DB {...ButtonDefs.DBDisable} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L182 ) | 182 |             {isRunning && <DB {...ButtonDefs.DBStop} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L197 ) | 197 |             {!isRunning && <DB {...ButtonDefs.DBRestart} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L223 ) | 223 |                 <DB {...ButtonDefs.DBLog} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L241 ) | 241 |             <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L314 ) | 314 |             <DB {...ButtonDefs.DBReload} |
-| [../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L328 ) | 328 |             <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L63 ) | 63 |             ...ButtonDefs.Upload, |
-| [../viewer/components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L79 ) | 79 |           ...ButtonDefs.DBPreview, |
-| [../viewer/components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L90 ) | 90 |             ...ButtonDefs.DBSave, |
-| [../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L296 ) | 296 |                     {...ButtonDefs.SettingsLayoutOff} |
-| [../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L362 ) | 362 |                     ...ButtonDefs.DBReset, |
-| [../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L525 ) | 525 |                 ...ButtonDefs.DBEditLayout, |
-| [../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L678 ) | 678 |                     ...ButtonDefs.DBIgnore, |
-| [../viewer/components/OverlayDialog.tsx](../viewer/components/OverlayDialog.tsx#L357 ) | 357 |     return {close: true,...ButtonDefs.DBCancel,...props}; |
-| [../viewer/components/OverlayDialog.tsx](../viewer/components/OverlayDialog.tsx#L360 ) | 360 |     return {close: true,...ButtonDefs.DBOk ,onClick:onClick,...props}; |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L274 ) | 274 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L277 ) | 277 |                         {...ButtonDefs.DBOk} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L355 ) | 355 |                 {props.type !== 'base' && <Button {...ButtonDefs.Edit} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L656 ) | 656 |     const saveButtonDef=props.preventEdit?ButtonDefs.DBOk:ButtonDefs.DBSave; |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L727 ) | 727 |                 <DB {...ButtonDefs.DBShowAllOverlays} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L731 ) | 731 |                 <DB {...ButtonDefs.DBHideAllOverlays} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L736 ) | 736 |                     <DB {...ButtonDefs.DBDelete} close={false} onClick={() => deleteItem(selectedItem)}/>: null} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L738 ) | 738 |                     <DB {...ButtonDefs.Edit}close={false} onClick={() => { |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L750 ) | 750 |                     <DB {...ButtonDefs.DBInsertBefore} close={false} onClick={() => insert(true)}/> : null} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L751 ) | 751 |                 {!props.preventEdit && <DB {...ButtonDefs.DBInsertAfter} close={false} onClick={() => insert(false)}/>} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L755 ) | 755 |                     {...ButtonDefs.DBReset} |
-| [../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L759 ) | 759 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L228 ) | 228 |             ...ButtonDefs.AisNearest, |
-| [../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L239 ) | 239 |             ...ButtonDefs.AisInfoLocate, |
-| [../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L253 ) | 253 |             ...ButtonDefs.AisInfoHide, |
-| [../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L272 ) | 272 |             ...ButtonDefs.AisItems, |
-| [../viewer/components/EulaDialog.jsx](../viewer/components/EulaDialog.jsx#L30 ) | 30 |                     <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/EulaDialog.jsx](../viewer/components/EulaDialog.jsx#L31 ) | 31 |                     <DB {...ButtonDefs.DBAccept} onClick={() => { |
-| [../viewer/components/ImportDialog.jsx](../viewer/components/ImportDialog.jsx#L80 ) | 80 |                         <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/ImportDialog.jsx](../viewer/components/ImportDialog.jsx#L81 ) | 81 |                         <DB {...ButtonDefs.DBOk} |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L554 ) | 554 |             ...ButtonDefs.DBDelete, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L570 ) | 570 |         ...ButtonDefs.DBRename, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L595 ) | 595 |         ...ButtonDefs.DBCopy, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L634 ) | 634 |         ...ButtonDefs.DBView, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L649 ) | 649 |         ...ButtonDefs.DBDownload, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L665 ) | 665 |         ...ButtonDefs.DBConfig, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L683 ) | 683 |         ...ButtonDefs.Edit, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L698 ) | 698 |         ...ButtonDefs.DBOverlays, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L955 ) | 955 |             ...ButtonDefs.DBOpenChart, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L966 ) | 966 |             ...ButtonDefs.DBScheme, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L992 ) | 992 |             ...ButtonDefs.DBOverlays, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1000 ) | 1000 |             ...ButtonDefs.DBLog, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1191 ) | 1191 |                 ...ButtonDefs.Upload, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1415 ) | 1415 |             ...ButtonDefs.DBToRoute, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1540 ) | 1540 |             ...ButtonDefs.DBActivate, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1553 ) | 1553 |             ...ButtonDefs.DBEditLayout, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1618 ) | 1618 |             ...ButtonDefs.DBActivate, |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L2068 ) | 2068 |                 <DB {...ButtonDefs.DBCancel} |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L2071 ) | 2071 |                 <DB {...ButtonDefs.DBOk} |
-| [../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L2138 ) | 2138 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/DownloadButton.tsx](../viewer/components/DownloadButton.tsx#L107 ) | 107 |                     {...ButtonDefs.DBDownload} |
-| [../viewer/components/ButtonList.tsx](../viewer/components/ButtonList.tsx#L169 ) | 169 |                 ...ButtonDefs.Overflow, |
-| [../viewer/components/UploadHandler.tsx](../viewer/components/UploadHandler.tsx#L313 ) | 313 |                     {...ButtonDefs.Cancel} |
-| [../viewer/components/EditableParameterUI.jsx](../viewer/components/EditableParameterUI.jsx#L70 ) | 70 |     const config=ButtonDefs.Help; |
-| [../viewer/components/EditableParameterUI.jsx](../viewer/components/EditableParameterUI.jsx#L109 ) | 109 |     const config=ButtonDefs.DefaultValue; |
-| [../viewer/components/LogDialog.tsx](../viewer/components/LogDialog.tsx#L78 ) | 78 |                 <DB {...ButtonDefs.DBAutoReload} |
-| [../viewer/components/LogDialog.tsx](../viewer/components/LogDialog.tsx#L93 ) | 93 |                 <DB {...ButtonDefs.DBReload} |
-| [../viewer/components/LogDialog.tsx](../viewer/components/LogDialog.tsx#L96 ) | 96 |                 <DB {...ButtonDefs.DBOk}/> |
-| [../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L117 ) | 117 |                 <DB {...ButtonDefs.NavGoto} |
-| [../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L126 ) | 126 |                 <DB {...ButtonDefs.DBDelete} onClick={()=>{ |
-| [../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L135 ) | 135 |                 <DB {...ButtonDefs.DBCancel} tabIndex="3" /> |
-| [../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L136 ) | 136 |                 <DB {...ButtonDefs.DBOk} tabIndex="4" onClick={okFunction} disabled={!ok || props.readOnly} close={false}/> |
-| [../viewer/components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L277 ) | 277 |                 {...ButtonDefs.CreateFile} |
-| [../viewer/components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L342 ) | 342 |                 {...ButtonDefs.Upload} |
-| [../viewer/components/TitleIcons.tsx](../viewer/components/TitleIcons.tsx#L97 ) | 97 |                         ...ButtonDefs.DBIgnore, |
-| [../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L48 ) | 48 |                         <DB {...ButtonDefs.DBReset} onClick={()=>setValue(props.default)} close={false}/> |
-| [../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L52 ) | 52 |                         <DB {...ButtonDefs.DBColorUnset}  onClick={()=>ok()}/> |
-| [../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L55 ) | 55 |                     <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L56 ) | 56 |                     <DB {...ButtonDefs.DBOk} onClick={()=>ok(value)}/> |
-| [../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L100 ) | 100 |                 ...ButtonDefs.Upload, |
-| [../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L108 ) | 108 |                 ...ButtonDefs.DBNew, |
-| [../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L188 ) | 188 |                 ...ButtonDefs.DBNew, |
-| [../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L383 ) | 383 |                     ...ButtonDefs.Edit, |
-| [../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L415 ) | 415 |                     ...ButtonDefs.DBDelete, |
-| [../viewer/components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L446 ) | 446 |                     <DB {...ButtonDefs.DBCompute} |
-| [../viewer/components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L453 ) | 453 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L454 ) | 454 |                 <DB {...ButtonDefs.DBSave} |
-| [../viewer/components/IconDialog.jsx](../viewer/components/IconDialog.jsx#L144 ) | 144 |                     ...ButtonDefs.Upload, |
-| [../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L48 ) | 48 |             <DialogButton {...ButtonDefs.DBDisconnect} |
-| [../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L53 ) | 53 |                 <DialogButton {...ButtonDefs.DBConnect} |
-| [../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L58 ) | 58 |                 <DialogButton {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L95 ) | 95 |         ...ButtonDefs.RemoteChannel, |
-| [../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L60 ) | 60 |                     <DB {...ButtonDefs.DBEditCss} onClick={()=>buttonFunction(4)}/> |
-| [../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L61 ) | 61 |                     <DB {...ButtonDefs.DBDiscard} onClick={()=>buttonFunction(2)}/> |
-| [../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L62 ) | 62 |                     <DB {...ButtonDefs.DBCancel} onClick={()=>buttonFunction(3)}/> |
-| [../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L63 ) | 63 |                     <DB {...ButtonDefs.DBOk} onClick={()=>buttonFunction(1)}/> |
-| [../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L80 ) | 80 |         ...ButtonDefs.LayoutFinished, |
-| [../viewer/components/CombinedWidget.jsx](../viewer/components/CombinedWidget.jsx#L106 ) | 106 |                 {...ButtonDefs.DBAddSub} |
-| [../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L189 ) | 189 |                     {hasCurrent ? <DB {...ButtonDefs.DBBefore} disabled={!validData} onClick={() => insert(true)}/> : null} |
-| [../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L190 ) | 190 |                     {hasCurrent ? <DB {...ButtonDefs.DBAfter} disabled={!validData} onClick={() => insert(false)}/> : null} |
-| [../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L191 ) | 191 |                     {(!hasCurrent) ? <DB {...ButtonDefs.DBInsert} disabled={!validData} onClick={() => insert(false)}/> : null} |
-| [../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L196 ) | 196 |                     <DB {...ButtonDefs.DBDelete} onClick={() => { |
-| [../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L199 ) | 199 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L201 ) | 201 |                     <DB {...ButtonDefs.DBUpdate} disabled={!validData} onClick={() => { |
-| [../viewer/components/ErrorListDialog.jsx](../viewer/components/ErrorListDialog.jsx#L39 ) | 39 |             ...ButtonDefs.DBReload, |
-| [../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L316 ) | 316 |                 <DB {...ButtonDefs.DBCancel} |
-| [../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L337 ) | 337 |     ...ButtonDefs.DBHide, |
-| [../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L355 ) | 355 |     ...ButtonDefs.DBInfo, |
-| [../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L379 ) | 379 |     ...ButtonDefs.CenterAction, |
-| [../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L102 ) | 102 |                     {...ButtonDefs.DBReset} |
-| [../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L106 ) | 106 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L187 ) | 187 |                 {clear && <DB {...ButtonDefs.DBClear} close={false} |
-| [../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L189 ) | 189 |                 <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L190 ) | 190 |                 <DB {...ButtonDefs.DBOk} onClick={() => resolveFunction && resolveFunction(nvalue)} disabled={error !== undefined}/> |
-| [../viewer/components/EditPageDialog.tsx](../viewer/components/EditPageDialog.tsx#L177 ) | 177 |                     <DB {...ButtonDefs.DBCancel}/> |
-| [../viewer/components/EditPageDialog.tsx](../viewer/components/EditPageDialog.tsx#L178 ) | 178 |                     <DB {...ButtonDefs.DBOk}onClick={()=>{ |
-| [../viewer/components/EditPageDialog.tsx](../viewer/components/EditPageDialog.tsx#L217 ) | 217 |         ...ButtonDefs.EditPage, |
-| [../viewer/components/ItemNameDialog.jsx](../viewer/components/ItemNameDialog.jsx#L123 ) | 123 |             ...ButtonDefs.DBClear, |
-| [../viewer/components/ItemNameDialog.jsx](../viewer/components/ItemNameDialog.jsx#L138 ) | 138 |             ...ButtonDefs.DBPropose, |
-| [../viewer/components/StatusItems.tsx](../viewer/components/StatusItems.tsx#L42 ) | 42 |         {...ButtonDefs.Edit} |
-| [../viewer/components/AnchorWatchDialog.jsx](../viewer/components/AnchorWatchDialog.jsx#L93 ) | 93 |             <DialogButton {...ButtonDefs.DBAnchorBoat} |
-| [../viewer/components/AnchorWatchDialog.jsx](../viewer/components/AnchorWatchDialog.jsx#L97 ) | 97 |                 <DialogButton {...ButtonDefs.DBAnchorCenter} |
-| [../viewer/components/AnchorWatchDialog.jsx](../viewer/components/AnchorWatchDialog.jsx#L181 ) | 181 |         ...ButtonDefs.AnchorWatch, |
+|Name|File|IconName|Icon|shortText|longText|
+| --- | --- | --- | --- | --- | --- |
+|AddonConfigAddOns|[../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L31)|[AddOns](../viewer/style/icons.less#L131)|[apps.svg](../viewer/images/icons-new/apps.svg)|[Conf](../viewer/style/button_text.less#L39)|configure app|
+|AddonConfigImages|[../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L37)|[Images](../viewer/style/icons.less#L4)|[image-icon.svg](../viewer/images/icons-new/image-icon.svg)|[Images](../viewer/style/button_text.less#L45)|image/icon files|
+|AddonConfigPlus|[../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L40)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[Add](../viewer/style/button_text.less#L48)|add user app|
+|AddonConfigUser|[../viewer/gui/AddOnConfigPageButtons.ts](../viewer/gui/AddOnConfigPageButtons.ts#L34)|[User](../viewer/style/icons.less#L7)|[folder_shared.svg](../viewer/images/icons-new/folder_shared.svg)|[User](../viewer/style/button_text.less#L42)|user files|
+|AisInfoHide|[../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L253)|[AisInfoHide](../viewer/style/icons.less#L128)|[ic_hide.svg](../viewer/images/icons-new/ic_hide.svg)|[Hide](../viewer/style/button_text.less#L90)|hide target|
+|AisInfoLocate|[../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L239)|[Center](../viewer/style/icons.less#L101)|[center.svg](../viewer/images/icons-new/center.svg)|[Locate](../viewer/style/button_text.less#L87)|center to target|
+|AisItems|[../viewer/gui/AisCfgPageButtons.ts](../viewer/gui/AisCfgPageButtons.ts#L33)|[Items](../viewer/style/icons.less#L86)|[list-200.svg](../viewer/images/icons-new/list-200.svg)|[Targets](../viewer/style/button_text.less#L84)|ais targets|
+|AisItems|[../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L272)|[Items](../viewer/style/icons.less#L86)|[list-200.svg](../viewer/images/icons-new/list-200.svg)|[Targets](../viewer/style/button_text.less#L84)|ais targets|
+|AisLock|[../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L39)|[Lock](../viewer/style/icons.less#L95)|[update_disabled.svg](../viewer/images/icons-new/update_disabled.svg)|[Pause](../viewer/style/button_text.less#L78)|pause updates|
+|AisNearest|[../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L30)|[AisNearest](../viewer/style/icons.less#L134)|[ais-nearest.svg](../viewer/images/icons-new/ais-nearest.svg)|[Nearest](../viewer/style/button_text.less#L72)|nearest target|
+|AisNearest|[../viewer/components/AisInfoDisplay.tsx](../viewer/components/AisInfoDisplay.tsx#L228)|[AisNearest](../viewer/style/icons.less#L134)|[ais-nearest.svg](../viewer/images/icons-new/ais-nearest.svg)|[Nearest](../viewer/style/button_text.less#L72)|nearest target|
+|AisSearch|[../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L45)|[Search](../viewer/style/icons.less#L98)|[search.svg](../viewer/images/icons-new/search.svg)|[Search](../viewer/style/button_text.less#L81)|None|
+|AisSort|[../viewer/gui/AisPageButtons.ts](../viewer/gui/AisPageButtons.ts#L34)|[Sort](../viewer/style/icons.less#L92)|[sort.svg](../viewer/images/icons-new/sort.svg)|[Sort](../viewer/style/button_text.less#L75)|None|
+|AnchorWatch|[../viewer/components/AnchorWatchDialog.jsx](../viewer/components/AnchorWatchDialog.jsx#L181)|[Anchor](../viewer/style/icons.less#L192)|[anchor.svg](../viewer/images/icons-new/anchor.svg)|[Anchor](../viewer/style/button_text.less#L162)|anchor watch|
+|AndroidBrowser|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L55)|[Browser](../viewer/style/icons.less#L80)|[internet-web-browser.svg](../viewer/images/icons-new/internet-web-browser.svg)|[Browser](../viewer/style/button_text.less#L245)|external browser|
+|Back|[../viewer/gui/AddOnPageButtons.ts](../viewer/gui/AddOnPageButtons.ts#L29)|[Back](../viewer/style/icons.less#L71)|[ic_arrow_back.svg](../viewer/images/icons-new/ic_arrow_back.svg)|[Back](../viewer/style/button_text.less#L55)|go back|
+|Cancel|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L50)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L16)|leave / cancel|
+|Cancel|[../viewer/gui/GeneralButtons.ts](../viewer/gui/GeneralButtons.ts#L35)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L16)|leave / cancel|
+|Cancel|[../viewer/components/UploadHandler.tsx](../viewer/components/UploadHandler.tsx#L313)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L16)|leave / cancel|
+|CenterAction|[../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L379)|[CenterAction](../viewer/style/icons.less#L186)|[center-action.svg](../viewer/images/icons-new/center-action.svg)|[Action](../viewer/style/button_text.less#L159)|map action|
+|ChartsView|[../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L37)|[Charts](../viewer/style/icons.less#L10)|[map2.svg](../viewer/images/icons-new/map2.svg)|[Charts](../viewer/style/button_text.less#L98)|list charts|
+|Connected|[../viewer/gui/GeneralButtons.ts](../viewer/gui/GeneralButtons.ts#L41)|[Connected](../viewer/style/icons.less#L31)|[plug.svg](../viewer/images/icons-new/plug.svg)|[Conn](../viewer/style/button_text.less#L223)|connected mode|
+|CourseUp|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L831)|[CourseUp](../viewer/style/icons.less#L155)|[compass.svg](../viewer/images/icons-new/compass.svg)|[Course](../viewer/style/button_text.less#L171)|course up|
+|CourseUp|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L75)|[CourseUp](../viewer/style/icons.less#L155)|[compass.svg](../viewer/images/icons-new/compass.svg)|[Course](../viewer/style/button_text.less#L171)|course up|
+|CreateFile|[../viewer/components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L277)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[New](../viewer/style/button_text.less#L313)|create file|
+|DBAccept|[../viewer/components/EulaDialog.jsx](../viewer/components/EulaDialog.jsx#L31)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Accept](../viewer/style/button_text.less#L453)|None|
+|DBActivate|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1540)|[Open](../viewer/style/icons.less#L246)|[ic_open.svg](../viewer/images/icons-new/ic_open.svg)|[Activate](../viewer/style/button_text.less#L505)|None|
+|DBActivate|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1618)|[Open](../viewer/style/icons.less#L246)|[ic_open.svg](../viewer/images/icons-new/ic_open.svg)|[Activate](../viewer/style/button_text.less#L505)|None|
+|DBAdd|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L252)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[Add](../viewer/style/button_text.less#L342)|None|
+|DBAddSub|[../viewer/components/CombinedWidget.jsx](../viewer/components/CombinedWidget.jsx#L106)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[+Sub](../viewer/style/button_text.less#L432)|None|
+|DBAfter|[../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L190)|[After](../viewer/style/icons.less#L279)|[navigate_next.svg](../viewer/images/icons-new/navigate_next.svg)|[After](../viewer/style/button_text.less#L443)|None|
+|DBAnchorBoat|[../viewer/components/AnchorWatchDialog.jsx](../viewer/components/AnchorWatchDialog.jsx#L93)|[Boat](../viewer/style/icons.less#L195)|[boat.svg](../viewer/images/icons-new/boat.svg)|[Boat](../viewer/style/button_text.less#L407)|at boat pos|
+|DBAnchorCenter|[../viewer/components/AnchorWatchDialog.jsx](../viewer/components/AnchorWatchDialog.jsx#L97)|[Center](../viewer/style/icons.less#L101)|[center.svg](../viewer/images/icons-new/center.svg)|[Center](../viewer/style/button_text.less#L410)|at map center|
+|DBAutoReload|[../viewer/components/LogDialog.tsx](../viewer/components/LogDialog.tsx#L78)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Auto](../viewer/style/button_text.less#L477)|None|
+|DBBefore|[../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L189)|[Before](../viewer/style/icons.less#L276)|[navigate_before.svg](../viewer/images/icons-new/navigate_before.svg)|[Before](../viewer/style/button_text.less#L440)|None|
+|DBCancel|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L512)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L264)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/EditHandlerDialog.jsx](../viewer/components/EditHandlerDialog.jsx#L180)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L241)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L328)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/OverlayDialog.tsx](../viewer/components/OverlayDialog.tsx#L357)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L274)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L759)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/EulaDialog.jsx](../viewer/components/EulaDialog.jsx#L30)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/ImportDialog.jsx](../viewer/components/ImportDialog.jsx#L80)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L2068)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L2138)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L135)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L55)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L453)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L58)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L62)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L199)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L316)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L106)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L189)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCancel|[../viewer/components/EditPageDialog.tsx](../viewer/components/EditPageDialog.tsx#L177)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Cancel](../viewer/style/button_text.less#L324)|None|
+|DBCenter|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L653)|[Center](../viewer/style/icons.less#L101)|[center.svg](../viewer/images/icons-new/center.svg)|[Center](../viewer/style/button_text.less#L515)|None|
+|DBCleanTrack|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L701)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Clean track](../viewer/style/button_text.less#L518)|None|
+|DBClear|[../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L187)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Clear](../viewer/style/button_text.less#L363)|None|
+|DBClear|[../viewer/components/ItemNameDialog.jsx](../viewer/components/ItemNameDialog.jsx#L123)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Clear](../viewer/style/button_text.less#L363)|None|
+|DBColorUnset|[../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L52)|[ColorReset](../viewer/style/icons.less#L309)|[format_color_reset.svg](../viewer/images/icons-new/format_color_reset.svg)|None|None|
+|DBCompute|[../viewer/components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L446)|[Start](../viewer/style/icons.less#L288)|[play_arrow.svg](../viewer/images/icons-new/play_arrow.svg)|[Compute](../viewer/style/button_text.less#L489)|None|
+|DBConfig|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L665)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Config](../viewer/style/button_text.less#L502)|None|
+|DBConnect|[../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L53)|[Connect](../viewer/style/icons.less#L320)|[plug.svg](../viewer/images/icons-new/plug.svg)|[Connect](../viewer/style/button_text.less#L351)|None|
+|DBCopy|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L595)|[Copy](../viewer/style/icons.less#L273)|[content_copy.svg](../viewer/images/icons-new/content_copy.svg)|[Copy](../viewer/style/button_text.less#L369)|None|
+|DBDelete|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L479)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/EditHandlerDialog.jsx](../viewer/components/EditHandlerDialog.jsx#L173)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L152)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L736)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L554)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L126)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L415)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDelete|[../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L196)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Delete](../viewer/style/button_text.less#L333)|None|
+|DBDisable|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L167)|[Disable](../viewer/style/icons.less#L282)|[ic_hide.svg](../viewer/images/icons-new/ic_hide.svg)|[Disable](../viewer/style/button_text.less#L384)|None|
+|DBDiscard|[../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L61)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Discard changes](../viewer/style/button_text.less#L474)|None|
+|DBDisconnect|[../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L48)|[Disconnect](../viewer/style/icons.less#L317)|[plug-disconnect.svg](../viewer/images/icons-new/plug-disconnect.svg)|[Disconnect](../viewer/style/button_text.less#L481)|None|
+|DBDownload|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L649)|[Download](../viewer/style/icons.less#L264)|[ic_file_download.svg](../viewer/images/icons-new/ic_file_download.svg)|[Download](../viewer/style/button_text.less#L327)|None|
+|DBDownload|[../viewer/components/DownloadButton.tsx](../viewer/components/DownloadButton.tsx#L107)|[Download](../viewer/style/icons.less#L264)|[ic_file_download.svg](../viewer/images/icons-new/ic_file_download.svg)|[Download](../viewer/style/button_text.less#L327)|None|
+|DBEditCss|[../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L60)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit CSS](../viewer/style/button_text.less#L471)|None|
+|DBEditLayout|[../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L525)|[Layout](../viewer/style/icons.less#L201)|[ballot.svg](../viewer/images/icons-new/ballot.svg)|[Edit](../viewer/style/button_text.less#L485)|None|
+|DBEditLayout|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1553)|[Layout](../viewer/style/icons.less#L201)|[ballot.svg](../viewer/images/icons-new/ballot.svg)|[Edit](../viewer/style/button_text.less#L485)|None|
+|DBEditRoute|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L674)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|None|None|
+|DBEditRoute|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L691)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|None|None|
+|DBEmptyRoute|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L172)|[EmptyRoute](../viewer/style/icons.less#L295)|[delete_sweep.svg](../viewer/images/icons-new/delete_sweep.svg)|[Empty](../viewer/style/button_text.less#L388)|None|
+|DBHide|[../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L337)|[Hide](../viewer/style/icons.less#L291)|[visibility_off.svg](../viewer/images/icons-new/visibility_off.svg)|[Hide](../viewer/style/button_text.less#L533)|None|
+|DBHideAllOverlays|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L731)|[HideOverlays](../viewer/style/icons.less#L19)|[layers-black-off.svg](../viewer/images/icons-new/layers-black-off.svg)|[Hide all](../viewer/style/button_text.less#L424)|None|
+|DBHideOverlays|[../viewer/components/MapPage.tsx](../viewer/components/MapPage.tsx#L388)|[HideOverlays](../viewer/style/icons.less#L19)|[layers-black-off.svg](../viewer/images/icons-new/layers-black-off.svg)|[Hide overlays](../viewer/style/button_text.less#L417)|None|
+|DBIgnore|[../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L678)|None||[Ignore](../viewer/style/button_text.less#L354)|None|
+|DBIgnore|[../viewer/components/TitleIcons.tsx](../viewer/components/TitleIcons.tsx#L97)|None||[Ignore](../viewer/style/button_text.less#L354)|None|
+|DBInfo|[../viewer/components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L355)|[Info](../viewer/style/icons.less#L28)|[ic_info.svg](../viewer/images/icons-new/ic_info.svg)|[Info](../viewer/style/button_text.less#L530)|None|
+|DBInsert|[../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L191)|[After](../viewer/style/icons.less#L279)|[navigate_next.svg](../viewer/images/icons-new/navigate_next.svg)|[Insert](../viewer/style/button_text.less#L446)|None|
+|DBInsertAfter|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L751)|[After](../viewer/style/icons.less#L279)|[navigate_next.svg](../viewer/images/icons-new/navigate_next.svg)|[Insert after](../viewer/style/button_text.less#L378)|None|
+|DBInsertBefore|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L750)|[Before](../viewer/style/icons.less#L276)|[navigate_before.svg](../viewer/images/icons-new/navigate_before.svg)|[Insert before](../viewer/style/button_text.less#L375)|None|
+|DBInsertRouteAfter|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L860)|[NavAddAfter](../viewer/style/icons.less#L161)|[wpplus.svg](../viewer/images/icons-new/wpplus.svg)|[Route after](../viewer/style/button_text.less#L539)|None|
+|DBInsertRouteBefore|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L850)|[NavAdd](../viewer/style/icons.less#L158)|[wpplus.svg](../viewer/images/icons-new/wpplus.svg)|[Route before](../viewer/style/button_text.less#L536)|None|
+|DBInvertRoute|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L184)|[InvertRoute](../viewer/style/icons.less#L298)|[invertroute.svg](../viewer/images/icons-new/invertroute.svg)|[Invert](../viewer/style/button_text.less#L391)|None|
+|DBLoadRoute|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L435)|[Open](../viewer/style/icons.less#L246)|[ic_open.svg](../viewer/images/icons-new/ic_open.svg)|[Load](../viewer/style/button_text.less#L400)|None|
+|DBLog|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L223)|[Log](../viewer/style/icons.less#L222)|[ic_text_snippet.svg](../viewer/images/icons-new/ic_text_snippet.svg)|[Log](../viewer/style/button_text.less#L463)|None|
+|DBLog|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1000)|[Log](../viewer/style/icons.less#L222)|[ic_text_snippet.svg](../viewer/images/icons-new/ic_text_snippet.svg)|[Log](../viewer/style/button_text.less#L463)|None|
+|DBMeasure|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L732)|[Measure](../viewer/style/icons.less#L328)|[straighten.svg](../viewer/images/icons-new/straighten.svg)|[Measure](../viewer/style/button_text.less#L521)|None|
+|DBMeasureOff|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L751)|[MeasureOff](../viewer/style/icons.less#L331)|[straighten-off.svg](../viewer/images/icons-new/straighten-off.svg)|[Measure](../viewer/style/button_text.less#L527)|None|
+|DBNew|[../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L108)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[New](../viewer/style/button_text.less#L366)|None|
+|DBNew|[../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L188)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[New](../viewer/style/button_text.less#L366)|None|
+|DBNewRoute|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L424)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[New](../viewer/style/button_text.less#L397)|None|
+|DBOk|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L513)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/EditHandlerDialog.jsx](../viewer/components/EditHandlerDialog.jsx#L181)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/OverlayDialog.tsx](../viewer/components/OverlayDialog.tsx#L360)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L277)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L656)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/ImportDialog.jsx](../viewer/components/ImportDialog.jsx#L81)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L2071)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/LogDialog.tsx](../viewer/components/LogDialog.tsx#L96)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L136)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L56)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L63)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L190)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOk|[../viewer/components/EditPageDialog.tsx](../viewer/components/EditPageDialog.tsx#L178)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Ok](../viewer/style/button_text.less#L321)|None|
+|DBOpenChart|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L955)|[Charts](../viewer/style/icons.less#L10)|[map2.svg](../viewer/images/icons-new/map2.svg)|None|None|
+|DBOverlays|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L698)|[Overlays](../viewer/style/icons.less#L16)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Overlays](../viewer/style/button_text.less#L499)|None|
+|DBOverlays|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L992)|[Overlays](../viewer/style/icons.less#L16)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Overlays](../viewer/style/button_text.less#L499)|None|
+|DBPreview|[../viewer/components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L79)|[View](../viewer/style/icons.less#L77)|[visibility.svg](../viewer/images/icons-new/visibility.svg)|[Preview](../viewer/style/button_text.less#L436)|None|
+|DBPropose|[../viewer/components/ItemNameDialog.jsx](../viewer/components/ItemNameDialog.jsx#L138)|[Propose](../viewer/style/icons.less#L313)|[prompt_suggestion.svg](../viewer/images/icons-new/prompt_suggestion.svg)|[Propose](../viewer/style/button_text.less#L467)|propose new name|
+|DBReload|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L314)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Reload](../viewer/style/button_text.less#L381)|None|
+|DBReload|[../viewer/components/LogDialog.tsx](../viewer/components/LogDialog.tsx#L93)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Reload](../viewer/style/button_text.less#L381)|None|
+|DBReload|[../viewer/components/ErrorListDialog.jsx](../viewer/components/ErrorListDialog.jsx#L39)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Reload](../viewer/style/button_text.less#L381)|None|
+|DBRename|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L444)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Rename](../viewer/style/button_text.less#L330)|None|
+|DBRename|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L570)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Rename](../viewer/style/button_text.less#L330)|None|
+|DBRenumberRoute|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L195)|[RenumberRoute](../viewer/style/icons.less#L301)|[format_list_numbered.svg](../viewer/images/icons-new/format_list_numbered.svg)|[Renumber](../viewer/style/button_text.less#L394)|None|
+|DBReset|[../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L362)|[Reset](../viewer/style/icons.less#L231)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Reset](../viewer/style/button_text.less#L360)|None|
+|DBReset|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L755)|[Reset](../viewer/style/icons.less#L231)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Reset](../viewer/style/button_text.less#L360)|None|
+|DBReset|[../viewer/components/ColorDialog.jsx](../viewer/components/ColorDialog.jsx#L48)|[Reset](../viewer/style/icons.less#L231)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Reset](../viewer/style/button_text.less#L360)|None|
+|DBReset|[../viewer/components/BasicDialogs.tsx](../viewer/components/BasicDialogs.tsx#L102)|[Reset](../viewer/style/icons.less#L231)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Reset](../viewer/style/button_text.less#L360)|None|
+|DBRestart|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L197)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Restart](../viewer/style/button_text.less#L460)|None|
+|DBRoutePoints|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L453)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|[Points](../viewer/style/button_text.less#L403)|None|
+|DBSave|[../viewer/components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L90)|[Save](../viewer/style/icons.less#L249)|[save.svg](../viewer/images/icons-new/save.svg)|[Save](../viewer/style/button_text.less#L339)|None|
+|DBSave|[../viewer/components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L454)|[Save](../viewer/style/icons.less#L249)|[save.svg](../viewer/images/icons-new/save.svg)|[Save](../viewer/style/button_text.less#L339)|None|
+|DBSaveAs|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L496)|[SaveAs](../viewer/style/icons.less#L270)|[content_copy.svg](../viewer/images/icons-new/content_copy.svg)|[Save As](../viewer/style/button_text.less#L336)|None|
+|DBScheme|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L966)|[ChartScheme](../viewer/style/icons.less#L324)|[table_convert.svg](../viewer/images/icons-new/table_convert.svg)|[Scheme](../viewer/style/button_text.less#L496)|None|
+|DBShowAllOverlays|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L727)|[Overlays](../viewer/style/icons.less#L16)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Show all](../viewer/style/button_text.less#L421)|None|
+|DBShowOverlays|[../viewer/components/MapPage.tsx](../viewer/components/MapPage.tsx#L381)|[Overlays](../viewer/style/icons.less#L16)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Show overlays](../viewer/style/button_text.less#L414)|None|
+|DBStartRoute|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L641)|[NavGoto](../viewer/style/icons.less#L168)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Start route](../viewer/style/button_text.less#L542)|None|
+|DBStop|[../viewer/components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L182)|[Stop](../viewer/style/icons.less#L285)|[stop_circle.svg](../viewer/images/icons-new/stop_circle.svg)|[Stop](../viewer/style/button_text.less#L457)|None|
+|DBToRoute|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L414)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|[To route](../viewer/style/button_text.less#L508)|None|
+|DBToRoute|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L664)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|[To route](../viewer/style/button_text.less#L508)|None|
+|DBToRoute|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1415)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|[To route](../viewer/style/button_text.less#L508)|None|
+|DBUpdate|[../viewer/components/EditWidgetDialog.jsx](../viewer/components/EditWidgetDialog.jsx#L201)|[Ok](../viewer/style/icons.less#L261)|[ic_done.svg](../viewer/images/icons-new/ic_done.svg)|[Update](../viewer/style/button_text.less#L449)|None|
+|DBView|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L634)|[View](../viewer/style/icons.less#L77)|[visibility.svg](../viewer/images/icons-new/visibility.svg)|[View](../viewer/style/button_text.less#L372)|None|
+|DBWpaConnect|[../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L110)|[WpaConnect](../viewer/style/icons.less#L305)|[play_arrow.svg](../viewer/images/icons-new/play_arrow.svg)|None|None|
+|DBWpaDisable|[../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L103)|[WifiOff](../viewer/style/icons.less#L210)|[wifi_off.svg](../viewer/images/icons-new/wifi_off.svg)|None|None|
+|DBWpaEnable|[../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L96)|[Wifi](../viewer/style/icons.less#L207)|[wifi.svg](../viewer/images/icons-new/wifi.svg)|None|None|
+|DBWpaRemove|[../viewer/gui/WpaPage.jsx](../viewer/gui/WpaPage.jsx#L89)|[Delete](../viewer/style/icons.less#L267)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|None|None|
+|DefaultValue|[../viewer/components/EditableParameterUI.jsx](../viewer/components/EditableParameterUI.jsx#L109)|[Reset](../viewer/style/icons.less#L231)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Default](../viewer/style/button_text.less#L307)|default value|
+|Dim|[../viewer/util/dimhandler.ts](../viewer/util/dimhandler.ts#L164)|[Dim](../viewer/style/icons.less#L104)|[brightness_low.svg](../viewer/images/icons-new/brightness_low.svg)|[Dim](../viewer/style/button_text.less#L68)|dim backlight|
+|Edit|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L355)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L310)|edit item|
+|Edit|[../viewer/components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L738)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L310)|edit item|
+|Edit|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L683)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L310)|edit item|
+|Edit|[../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L383)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L310)|edit item|
+|Edit|[../viewer/components/StatusItems.tsx](../viewer/components/StatusItems.tsx#L42)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L310)|edit item|
+|EditPage|[../viewer/components/EditPageDialog.tsx](../viewer/components/EditPageDialog.tsx#L217)|[EditPage](../viewer/style/icons.less#L198)|[tune.svg](../viewer/images/icons-new/tune.svg)|[Config](../viewer/style/button_text.less#L290)|page layout config|
+|FullScreen|[../viewer/util/Fullscreen.ts](../viewer/util/Fullscreen.ts#L84)|[FullScreen](../viewer/style/icons.less#L119)|[fullscreen.svg](../viewer/images/icons-new/fullscreen.svg)|[Full](../viewer/style/button_text.less#L26)|fullscreen|
+|Gps1|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L34)|[Num1](../viewer/style/icons.less#L37)|[num-1.svg](../viewer/images/icons-new/num-1.svg)|[](../viewer/style/button_text.less#L182)|dashboard 1|
+|Gps10|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L43)|[Num10](../viewer/style/icons.less#L64)|[num-10.svg](../viewer/images/icons-new/num-10.svg)|[](../viewer/style/button_text.less#L209)|dashboard 10|
+|Gps2|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L35)|[Num2](../viewer/style/icons.less#L40)|[num-2.svg](../viewer/images/icons-new/num-2.svg)|[](../viewer/style/button_text.less#L185)|dashboard 2|
+|Gps3|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L36)|[Num3](../viewer/style/icons.less#L43)|[num-3.svg](../viewer/images/icons-new/num-3.svg)|[](../viewer/style/button_text.less#L188)|dashboard 3|
+|Gps4|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L37)|[Num4](../viewer/style/icons.less#L46)|[num-4.svg](../viewer/images/icons-new/num-4.svg)|[](../viewer/style/button_text.less#L191)|dashboard 4|
+|Gps5|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L38)|[Num5](../viewer/style/icons.less#L49)|[num-5.svg](../viewer/images/icons-new/num-5.svg)|[](../viewer/style/button_text.less#L194)|dashboard 5|
+|Gps6|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L39)|[Num6](../viewer/style/icons.less#L52)|[num-6.svg](../viewer/images/icons-new/num-6.svg)|[](../viewer/style/button_text.less#L197)|dashboard 6|
+|Gps7|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L40)|[Num7](../viewer/style/icons.less#L55)|[num-7.svg](../viewer/images/icons-new/num-7.svg)|[](../viewer/style/button_text.less#L200)|dashboard 7|
+|Gps8|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L41)|[Num8](../viewer/style/icons.less#L58)|[num-8.svg](../viewer/images/icons-new/num-8.svg)|[](../viewer/style/button_text.less#L203)|dashboard 8|
+|Gps9|[../viewer/gui/GpsPageButtons.ts](../viewer/gui/GpsPageButtons.ts#L42)|[Num9](../viewer/style/icons.less#L61)|[num-9.svg](../viewer/images/icons-new/num-9.svg)|[](../viewer/style/button_text.less#L206)|dashboard 9|
+|GpsCenter|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L851)|[Center](../viewer/style/icons.less#L101)|[center.svg](../viewer/images/icons-new/center.svg)|[GPS](../viewer/style/button_text.less#L177)|center to gps|
+|GpsCenter|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L88)|[Center](../viewer/style/icons.less#L101)|[center.svg](../viewer/images/icons-new/center.svg)|[GPS](../viewer/style/button_text.less#L177)|center to gps|
+|Help|[../viewer/components/EditableParameterUI.jsx](../viewer/components/EditableParameterUI.jsx#L70)|[Help](../viewer/style/icons.less#L255)|[ic_help_outline.svg](../viewer/images/icons-new/ic_help_outline.svg)|[Help](../viewer/style/button_text.less#L304)|None|
+|ImportsView|[../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L40)|[Imports](../viewer/style/icons.less#L13)|[swap_horiz.svg](../viewer/images/icons-new/swap_horiz.svg)|[Imports](../viewer/style/button_text.less#L101)|chart imports|
+|Layout|[../viewer/gui/LayoutsPage.tsx](../viewer/gui/LayoutsPage.tsx#L86)|[Layout](../viewer/style/icons.less#L201)|[ballot.svg](../viewer/images/icons-new/ballot.svg)|[Layout](../viewer/style/button_text.less#L287)|select / edit layout|
+|LayoutFinished|[../viewer/components/LayoutFinishedDialog.jsx](../viewer/components/LayoutFinishedDialog.jsx#L80)|[Layout](../viewer/style/icons.less#L201)|[ballot.svg](../viewer/images/icons-new/ballot.svg)|[Layout](../viewer/style/button_text.less#L293)|finish layout|
+|LockMarker|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L813)|[LockMarker](../viewer/style/icons.less#L152)|[waypoint.svg](../viewer/images/icons-new/waypoint.svg)|[Start](../viewer/style/button_text.less#L168)|start to wp|
+|LockMarker|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L56)|[LockMarker](../viewer/style/icons.less#L152)|[waypoint.svg](../viewer/images/icons-new/waypoint.svg)|[Start](../viewer/style/button_text.less#L168)|start to wp|
+|LockPos|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L791)|[LockPos](../viewer/style/icons.less#L189)|[boat.svg](../viewer/images/icons-new/boat.svg)|[Lock](../viewer/style/button_text.less#L165)|lock to GPS|
+|LockPos|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L48)|[LockPos](../viewer/style/icons.less#L189)|[boat.svg](../viewer/images/icons-new/boat.svg)|[Lock](../viewer/style/button_text.less#L165)|lock to GPS|
+|MainExit|[../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L93)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Exit](../viewer/style/button_text.less#L35)|exit AvNav|
+|MainExit|[../viewer/gui/WarningPage.tsx](../viewer/gui/WarningPage.tsx#L125)|[Cancel](../viewer/style/icons.less#L68)|[ic_clear.svg](../viewer/images/icons-new/ic_clear.svg)|[Exit](../viewer/style/button_text.less#L35)|exit AvNav|
+|MainInfo|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L32)|[Info](../viewer/style/icons.less#L28)|[ic_info.svg](../viewer/images/icons-new/ic_info.svg)|[Info](../viewer/style/button_text.less#L230)|version and license|
+|MainNav|[../viewer/gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L342)|[MainNav](../viewer/style/icons.less#L252)|[menu-200.svg](../viewer/images/icons-new/menu-200.svg)|[Menu](../viewer/style/button_text.less#L213)|main menu|
+|NavAdd|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L773)|[NavAdd](../viewer/style/icons.less#L158)|[wpplus.svg](../viewer/images/icons-new/wpplus.svg)|[+ Before](../viewer/style/button_text.less#L132)|add before current|
+|NavAdd|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L913)|[NavAdd](../viewer/style/icons.less#L158)|[wpplus.svg](../viewer/images/icons-new/wpplus.svg)|[+ Before](../viewer/style/button_text.less#L132)|add before current|
+|NavAddAfter|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L786)|[NavAddAfter](../viewer/style/icons.less#L161)|[wpplus.svg](../viewer/images/icons-new/wpplus.svg)|[+ After](../viewer/style/button_text.less#L129)|add after current|
+|NavAddAfter|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L896)|[NavAddAfter](../viewer/style/icons.less#L161)|[wpplus.svg](../viewer/images/icons-new/wpplus.svg)|[+ After](../viewer/style/button_text.less#L129)|add after current|
+|NavDelete|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L930)|[NavDelete](../viewer/style/icons.less#L165)|[wpminus.svg](../viewer/images/icons-new/wpminus.svg)|[Delete](../viewer/style/button_text.less#L135)|delete current|
+|NavGoto|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L957)|[NavGoto](../viewer/style/icons.less#L168)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Start](../viewer/style/button_text.less#L141)|start routing|
+|NavGoto|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L630)|[NavGoto](../viewer/style/icons.less#L168)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Start](../viewer/style/button_text.less#L141)|start routing|
+|NavGoto|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L720)|[NavGoto](../viewer/style/icons.less#L168)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Start](../viewer/style/button_text.less#L141)|start routing|
+|NavGoto|[../viewer/components/WaypointDialog.jsx](../viewer/components/WaypointDialog.jsx#L117)|[NavGoto](../viewer/style/icons.less#L168)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Start](../viewer/style/button_text.less#L141)|start routing|
+|NavMapWidgets|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L775)|[NavMapWidgets](../viewer/style/icons.less#L240)|[assistant_nav.svg](../viewer/images/icons-new/assistant_nav.svg)|[On Map](../viewer/style/button_text.less#L299)|map widgets|
+|NavNext|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L320)|[NavNext](../viewer/style/icons.less#L149)|[nextwp.svg](../viewer/images/icons-new/nextwp.svg)|[Next](../viewer/style/button_text.less#L144)|goto next wp|
+|NavOverlays|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L880)|[SelectChart](../viewer/style/icons.less#L177)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Charts](../viewer/style/button_text.less#L120)|charts/ overlays|
+|NavOverlays|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L847)|[SelectChart](../viewer/style/icons.less#L177)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Charts](../viewer/style/button_text.less#L120)|charts/ overlays|
+|NavOverlays|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L37)|[SelectChart](../viewer/style/icons.less#L177)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Charts](../viewer/style/button_text.less#L120)|charts/ overlays|
+|NavOverlays|[../viewer/components/MapPage.tsx](../viewer/components/MapPage.tsx#L130)|[SelectChart](../viewer/style/icons.less#L177)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Charts](../viewer/style/button_text.less#L120)|charts/ overlays|
+|NavRestart|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L335)|[WpGoto](../viewer/style/icons.less#L146)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Restart](../viewer/style/button_text.less#L150)|restart routing|
+|NavToCenter|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L799)|[WpLocate](../viewer/style/icons.less#L137)|[center.svg](../viewer/images/icons-new/center.svg)|[Center](../viewer/style/button_text.less#L138)|wp to map center|
+|NavToCenter|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L944)|[WpLocate](../viewer/style/icons.less#L137)|[center.svg](../viewer/images/icons-new/center.svg)|[Center](../viewer/style/button_text.less#L138)|wp to map center|
+|Night|[../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L43)|[Night](../viewer/style/icons.less#L113)|[night.svg](../viewer/images/icons-new/night.svg)|[Night](../viewer/style/button_text.less#L20)|night mode|
+|Overflow|[../viewer/components/ButtonList.tsx](../viewer/components/ButtonList.tsx#L169)|[Overflow](../viewer/style/icons.less#L258)|[more_left.svg](../viewer/images/icons-new/more_left.svg)|[More](../viewer/style/button_text.less#L316)|more buttons|
+|OverlaysView|[../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L54)|[Overlays](../viewer/style/icons.less#L16)|[layers-black.svg](../viewer/images/icons-new/layers-black.svg)|[Overlays](../viewer/style/button_text.less#L104)|overlay files|
+|ReloadUI|[../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L65)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Reload](../viewer/style/button_text.less#L32)|reload AvNav UI|
+|RemoteChannel|[../viewer/components/RemoteChannelDialog.tsx](../viewer/components/RemoteChannelDialog.tsx#L95)|[RemoteChannel](../viewer/style/icons.less#L116)|[settings_remote.svg](../viewer/images/icons-new/settings_remote.svg)|[Remote](../viewer/style/button_text.less#L23)|remote control|
+|RevertLayout|[../viewer/util/layouthandler.ts](../viewer/util/layouthandler.ts#L1133)|[Undo](../viewer/style/icons.less#L243)|[ic_undo.svg](../viewer/images/icons-new/ic_undo.svg)|[Undo](../viewer/style/button_text.less#L296)|undo layout change|
+|RouteAdd|[../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L31)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[Add](../viewer/style/button_text.less#L217)|add route|
+|RouteMenu|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L976)|[RouteMenu](../viewer/style/icons.less#L174)|[menu_open.svg](../viewer/images/icons-new/menu_open.svg)|[Menu](../viewer/style/button_text.less#L156)|route menu|
+|SectionView|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L32)|[Section](../viewer/style/icons.less#L228)|[category-200.svg](../viewer/images/icons-new/category-200.svg)|[Groups](../viewer/style/button_text.less#L261)|settings groups|
+|ServerView|[../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L31)|[Server](../viewer/style/icons.less#L83)|[database-200.svg](../viewer/images/icons-new/database-200.svg)|[Server](../viewer/style/button_text.less#L59)|server settings|
+|ServerView|[../viewer/gui/AisCfgPageButtons.ts](../viewer/gui/AisCfgPageButtons.ts#L30)|[Server](../viewer/style/icons.less#L83)|[database-200.svg](../viewer/images/icons-new/database-200.svg)|[Server](../viewer/style/button_text.less#L59)|server settings|
+|ServerView|[../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L60)|[Server](../viewer/style/icons.less#L83)|[database-200.svg](../viewer/images/icons-new/database-200.svg)|[Server](../viewer/style/button_text.less#L59)|server settings|
+|ServerView|[../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L31)|[Server](../viewer/style/icons.less#L83)|[database-200.svg](../viewer/images/icons-new/database-200.svg)|[Server](../viewer/style/button_text.less#L59)|server settings|
+|SettingsDefaults|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L38)|[Reset](../viewer/style/icons.less#L231)|[ic_delete.svg](../viewer/images/icons-new/ic_delete.svg)|[Defaults](../viewer/style/button_text.less#L267)|reset to defaults|
+|SettingsItems|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L35)|[Items](../viewer/style/icons.less#L86)|[list-200.svg](../viewer/images/icons-new/list-200.svg)|[List](../viewer/style/button_text.less#L264)|stored settings|
+|SettingsLayoutOff|[../viewer/components/Settings.tsx](../viewer/components/Settings.tsx#L296)|[LayoutOff](../viewer/style/icons.less#L237)|[ballot-off.svg](../viewer/images/icons-new/ballot-off.svg)|[Rem](../viewer/style/button_text.less#L279)|remove from layout|
+|SettingsLoad|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L42)|[Open](../viewer/style/icons.less#L246)|[ic_open.svg](../viewer/images/icons-new/ic_open.svg)|[Load](../viewer/style/button_text.less#L270)|load settings|
+|SettingsSave|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L56)|[Save](../viewer/style/icons.less#L249)|[save.svg](../viewer/images/icons-new/save.svg)|[Save](../viewer/style/button_text.less#L273)|save settings|
+|SettingsSplitReset|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L85)|[SplitReset](../viewer/style/icons.less#L234)|[reset_split.svg](../viewer/images/icons-new/reset_split.svg)|[Reset](../viewer/style/button_text.less#L276)|reset split settings|
+|ShowRoutePanel|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L838)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|[Route](../viewer/style/button_text.less#L174)|edit route|
+|ShowRoutePanel|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L83)|[Route](../viewer/style/icons.less#L22)|[route.svg](../viewer/images/icons-new/route.svg)|[Route](../viewer/style/button_text.less#L174)|edit route|
+|ShowSettings|[../viewer/gui/LayoutsPageButtons.ts](../viewer/gui/LayoutsPageButtons.ts#L43)|[Settings](../viewer/style/icons.less#L89)|[ic_settings.svg](../viewer/images/icons-new/ic_settings.svg)|[Display](../viewer/style/button_text.less#L62)|display settings|
+|ShowSettings|[../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L52)|[Settings](../viewer/style/icons.less#L89)|[ic_settings.svg](../viewer/images/icons-new/ic_settings.svg)|[Display](../viewer/style/button_text.less#L62)|display settings|
+|ShowSettings|[../viewer/gui/AisCfgPageButtons.ts](../viewer/gui/AisCfgPageButtons.ts#L38)|[Settings](../viewer/style/icons.less#L89)|[ic_settings.svg](../viewer/images/icons-new/ic_settings.svg)|[Display](../viewer/style/button_text.less#L62)|display settings|
+|ShowSettings|[../viewer/gui/RemotePageButtons.ts](../viewer/gui/RemotePageButtons.ts#L31)|[Settings](../viewer/style/icons.less#L89)|[ic_settings.svg](../viewer/images/icons-new/ic_settings.svg)|[Display](../viewer/style/button_text.less#L62)|display settings|
+|ShowSettings|[../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L81)|[Settings](../viewer/style/icons.less#L89)|[ic_settings.svg](../viewer/images/icons-new/ic_settings.svg)|[Display](../viewer/style/button_text.less#L62)|display settings|
+|ShowSettings|[../viewer/gui/ChartsPageButtons.ts](../viewer/gui/ChartsPageButtons.ts#L57)|[Settings](../viewer/style/icons.less#L89)|[ic_settings.svg](../viewer/images/icons-new/ic_settings.svg)|[Display](../viewer/style/button_text.less#L62)|display settings|
+|Split|[../viewer/util/splitsupport.ts](../viewer/util/splitsupport.ts#L122)|[Split](../viewer/style/icons.less#L122)|[vertical_split.svg](../viewer/images/icons-new/vertical_split.svg)|[Split](../viewer/style/button_text.less#L29)|split display|
+|StatusAdd|[../viewer/gui/ChannelsPageButtons.ts](../viewer/gui/ChannelsPageButtons.ts#L31)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[Add](../viewer/style/button_text.less#L94)|add connection|
+|StatusAdd|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L88)|[Plus](../viewer/style/icons.less#L74)|[ic_add.svg](../viewer/images/icons-new/ic_add.svg)|[Add](../viewer/style/button_text.less#L94)|add connection|
+|StatusAddresses|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L45)|[QRCode](../viewer/style/icons.less#L216)|[qrcode.svg](../viewer/images/icons-new/qrcode.svg)|[Net](../viewer/style/button_text.less#L239)|own networks|
+|StatusAll|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L36)|[Expand](../viewer/style/icons.less#L34)|[expand-all-200.svg](../viewer/images/icons-new/expand-all-200.svg)|[Expand](../viewer/style/button_text.less#L233)|show all|
+|StatusAndroid|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L50)|[Android](../viewer/style/icons.less#L213)|[ic_android.svg](../viewer/images/icons-new/ic_android.svg)|[Android](../viewer/style/button_text.less#L242)|android settings|
+|StatusDebug|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L73)|[Debug](../viewer/style/icons.less#L225)|[bug_report.svg](../viewer/images/icons-new/bug_report.svg)|[Debug](../viewer/style/button_text.less#L257)|enable debug|
+|StatusLog|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L66)|[Log](../viewer/style/icons.less#L222)|[ic_text_snippet.svg](../viewer/images/icons-new/ic_text_snippet.svg)|[Log](../viewer/style/button_text.less#L254)|AvNav log|
+|StatusRestart|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L62)|[Reload](../viewer/style/icons.less#L125)|[ic_refresh.svg](../viewer/images/icons-new/ic_refresh.svg)|[Restart](../viewer/style/button_text.less#L251)|restart AvNav server|
+|StatusShutdown|[../viewer/gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L124)|[Shutdown](../viewer/style/icons.less#L219)|[ic_power.svg](../viewer/images/icons-new/ic_power.svg)|[Halt](../viewer/style/button_text.less#L248)|shutdown server|
+|StatusWpa|[../viewer/gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L40)|[Wifi](../viewer/style/icons.less#L207)|[wifi.svg](../viewer/images/icons-new/wifi.svg)|[Wifi](../viewer/style/button_text.less#L236)|configure Wifi|
+|StopNav|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L465)|[NavStop](../viewer/style/icons.less#L171)|[stop-nav.svg](../viewer/images/icons-new/stop-nav.svg)|[Stop](../viewer/style/button_text.less#L153)|stop routing|
+|StopNav|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L965)|[NavStop](../viewer/style/icons.less#L171)|[stop-nav.svg](../viewer/images/icons-new/stop-nav.svg)|[Stop](../viewer/style/button_text.less#L153)|stop routing|
+|StopNav|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L623)|[NavStop](../viewer/style/icons.less#L171)|[stop-nav.svg](../viewer/images/icons-new/stop-nav.svg)|[Stop](../viewer/style/button_text.less#L153)|stop routing|
+|StopNav|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L825)|[NavStop](../viewer/style/icons.less#L171)|[stop-nav.svg](../viewer/images/icons-new/stop-nav.svg)|[Stop](../viewer/style/button_text.less#L153)|stop routing|
+|StopNav|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L66)|[NavStop](../viewer/style/icons.less#L171)|[stop-nav.svg](../viewer/images/icons-new/stop-nav.svg)|[Stop](../viewer/style/button_text.less#L153)|stop routing|
+|StoredRoutes|[../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L63)|[Items](../viewer/style/icons.less#L86)|[list-200.svg](../viewer/images/icons-new/list-200.svg)|[List](../viewer/style/button_text.less#L226)|list stored routes|
+|SyncRoutes|[../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L44)|[Sync](../viewer/style/icons.less#L110)|[sync.svg](../viewer/images/icons-new/sync.svg)|[Sync](../viewer/style/button_text.less#L220)|sync to server|
+|TrackItems|[../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L34)|[Items](../viewer/style/icons.less#L86)|[list-200.svg](../viewer/images/icons-new/list-200.svg)|[List](../viewer/style/button_text.less#L283)|list tracks / logs|
+|Upload|[../viewer/gui/SettingsPageButtons.ts](../viewer/gui/SettingsPageButtons.ts#L70)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/gui/LayoutsPageButtons.ts](../viewer/gui/LayoutsPageButtons.ts#L29)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/gui/TracksPageButtons.ts](../viewer/gui/TracksPageButtons.ts#L37)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L298)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/gui/RoutesPageButtons.ts](../viewer/gui/RoutesPageButtons.ts#L66)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/gui/PluginsPageButtons.ts](../viewer/gui/PluginsPageButtons.ts#L31)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L63)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1191)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L342)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L100)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|Upload|[../viewer/components/IconDialog.jsx](../viewer/components/IconDialog.jsx#L144)|[Upload](../viewer/style/icons.less#L107)|[ic_file_upload.svg](../viewer/images/icons-new/ic_file_upload.svg)|[Upload](../viewer/style/button_text.less#L65)|import file|
+|WpEdit|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L683)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L111)|edit wp|
+|WpEdit|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L289)|[Edit](../viewer/style/icons.less#L25)|[ic_edit.svg](../viewer/images/icons-new/ic_edit.svg)|[Edit](../viewer/style/button_text.less#L111)|edit wp|
+|WpGoto|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L306)|[WpGoto](../viewer/style/icons.less#L146)|[wpgoto.svg](../viewer/images/icons-new/wpgoto.svg)|[Start](../viewer/style/button_text.less#L147)|start wp routing|
+|WpLocate|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L674)|[WpLocate](../viewer/style/icons.less#L137)|[center.svg](../viewer/images/icons-new/center.svg)|[Locate](../viewer/style/button_text.less#L108)|center to wp|
+|WpLocate|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L278)|[WpLocate](../viewer/style/icons.less#L137)|[center.svg](../viewer/images/icons-new/center.svg)|[Locate](../viewer/style/button_text.less#L108)|center to wp|
+|WpNext|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L692)|[WpNext](../viewer/style/icons.less#L143)|[ic_arrow_forward.svg](../viewer/images/icons-new/ic_arrow_forward.svg)|[Next](../viewer/style/button_text.less#L114)|next wp|
+|WpNext|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L348)|[WpNext](../viewer/style/icons.less#L143)|[ic_arrow_forward.svg](../viewer/images/icons-new/ic_arrow_forward.svg)|[Next](../viewer/style/button_text.less#L114)|next wp|
+|WpPrevious|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L707)|[WpPrevious](../viewer/style/icons.less#L140)|[ic_arrow_back.svg](../viewer/images/icons-new/ic_arrow_back.svg)|[Previous](../viewer/style/button_text.less#L117)|previous wp|
+|WpPrevious|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L365)|[WpPrevious](../viewer/style/icons.less#L140)|[ic_arrow_back.svg](../viewer/images/icons-new/ic_arrow_back.svg)|[Previous](../viewer/style/button_text.less#L117)|previous wp|
+|ZoomIn|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L884)|[ZoomIn](../viewer/style/icons.less#L180)|[ic_zoom_in.svg](../viewer/images/icons-new/ic_zoom_in.svg)|[Zoom +](../viewer/style/button_text.less#L123)|zoom in|
+|ZoomIn|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L783)|[ZoomIn](../viewer/style/icons.less#L180)|[ic_zoom_in.svg](../viewer/images/icons-new/ic_zoom_in.svg)|[Zoom +](../viewer/style/button_text.less#L123)|zoom in|
+|ZoomIn|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L40)|[ZoomIn](../viewer/style/icons.less#L180)|[ic_zoom_in.svg](../viewer/images/icons-new/ic_zoom_in.svg)|[Zoom +](../viewer/style/button_text.less#L123)|zoom in|
+|ZoomOut|[../viewer/gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L890)|[ZoomOut](../viewer/style/icons.less#L183)|[ic_zoom_out.svg](../viewer/images/icons-new/ic_zoom_out.svg)|[Zoom -](../viewer/style/button_text.less#L126)|zoom out|
+|ZoomOut|[../viewer/gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L787)|[ZoomOut](../viewer/style/icons.less#L183)|[ic_zoom_out.svg](../viewer/images/icons-new/ic_zoom_out.svg)|[Zoom -](../viewer/style/button_text.less#L126)|zoom out|
+|ZoomOut|[../viewer/gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L44)|[ZoomOut](../viewer/style/icons.less#L183)|[ic_zoom_out.svg](../viewer/images/icons-new/ic_zoom_out.svg)|[Zoom -](../viewer/style/button_text.less#L126)|zoom out|
