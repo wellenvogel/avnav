@@ -292,7 +292,7 @@ if format == 'table':
                 iconDef=iconDefs.get(icon)
                 if iconDef is not None:
                     iconStr=f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})"
-                    iconFile=f"[{iconDef.icon}]({iconPath(iconDef.icon)})"
+                    iconFile=f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
                 else:
                     iconStr=f"{icon}"
                 txt=textDefs.get(buttonDef.name)
