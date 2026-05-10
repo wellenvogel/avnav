@@ -25,6 +25,7 @@ import Helper from "../util/helper";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
 import {ListSlot} from "./ListItems";
+import {iconClasses} from './Icons';
 
 
 export interface MultiViewProps {
@@ -153,13 +154,13 @@ export const MvHeadline=(props:MvHeadlineProps)=>{
     return <div className={className}>
         <ListSlot
             className={'left'}
-            icon={{className:(showScroll && mvContext.showLeftScroll)?'left':'_undefined'}}
+            icon={{className:(showScroll && mvContext.showLeftScroll)?iconClasses.Left:iconClasses.Empty}}
             onClick={()=>showScroll && mvContext.showLeftScroll && mvContext.scrollTo(mvContext.currentView-1)}
         />
         <ListSlot text={props.title} className={'main'}/>
         <ListSlot
             className={'right'}
-            icon={{className:showScroll && mvContext.showRightScroll?'right':'_undefined'}}
+            icon={{className:showScroll && mvContext.showRightScroll?iconClasses.Right:iconClasses.Empty}}
             onClick={()=>showScroll && mvContext.showRightScroll && mvContext.scrollTo(mvContext.currentView+1)}
         />
     </div>

@@ -120,30 +120,10 @@ body{
   right: 1em;
   top: 1em;
   z-index: 3;
+  .icon{
+    filter: var(--avnav-filter-redlight);
+  }
 }
-.anchorWatchIcon {
-  background-color: var(--avnav-attention-color);
-  .maskImage('anchor.svg');
-}
-
-.disconnectedIcon {
-  background-color: var(--avnav-attention-color);
-  .maskImage('plug-disconnect.svg');
-}
-.measureIcon {
-  background-color: var(--avnav-attention-color);
-  .maskImage('straighten.svg');
-}
-.jsChangeIcon{
-  background-color: var(--avnav-attention-color);
-  .maskImage('javascript.svg');
-  transform: scale(2) translate(0, -0.1em);
-}
-.settingsChangedIcon{
-  background-color: var(--avnav-attention-color);
-  .maskImage('ic_settings.svg');
-}
-
 
 
 .leftPart{
@@ -182,14 +162,6 @@ body{
   clear: both;
 }
 
-.more {
-  float: right;
-  width: 1em;
-  height: 1em;
-  .iconImage('ic_chevron_right.svg');
-  background-size: 100% 100%;
-  opacity: 0.6;
-}
 .hidden{
   display: none;
 }
@@ -238,12 +210,7 @@ body{
         margin:0;
       }
     }
-    .icon.left{
-      .iconImage('navigate_before.svg');
-      filter: var(--avnav-filter-white);
-    }
-    .icon.right{
-      .iconImage('navigate_next.svg');
+    .icon{
       filter: var(--avnav-filter-white);
     }
   }
@@ -595,27 +562,7 @@ body{
 
 }
 .featureListDialog, .FeatureInfoDialog{
-  .icon.route{
-    .iconImage('route.svg')
-  }
-  .icon.track{
-    .iconImage('track.svg')
-  }
-  .icon.chart{
-    .iconImage('map2.svg')
-  }
-  .icon.overlay{
-    .iconImage('layers-black.svg');
-  }
-  .icon.waypoint{
-    .iconImage('waypoint.svg');
-  }
-  .icon.anchor{
-    .iconImage('anchor.svg');
-  }
-  .icon.measure{
-    .iconImage('straighten.svg');
-  }
+
   .icons{
     width: 4em;
     display: inline-block;
@@ -850,28 +797,18 @@ span.valuePrefix{
   border-bottom: @normalBorder;
   border-color: var(--avnav-border-color);
   padding-left: 0.1em;
-  padding-right: 0.3em;
   padding-top: 0.1em;
   margin-bottom: 5px;
   padding-bottom: 0.1em;
   position: relative;
-}
-
-
-//--Checkbox
-
-.checkBox{
-  display: inline-block;
-  width:  1.8em;
-  height: 1.8em;
-  .iconImage('checkbox-blank-outline.svg');
-  background-repeat: no-repeat;
-  background-size: cover;
-  &.checked{
-    background-image: url('../images/icons-new/checkbox-marked-outline.svg');
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  .infoFrame{
+    flex:1;
   }
-  vertical-align: middle;
 }
+
 
 //--Radio button
 .radioFrame {
@@ -883,25 +820,12 @@ span.valuePrefix{
       width: auto;
       margin-left: 1em;
     }
-
-    .radio {
-      display: inline-block;
-      width: 1.8em;
-      height: 1.8em;
-      .iconImage('radio_button_unchecked.svg');
-      background-repeat: no-repeat;
-      background-size: cover;
-
-      &.checked {
-        .iconImage('radio_button_checked.svg');
-      }
-
-      vertical-align: middle;
-    }
-
     .flex-display(inline);
     .flex-direction(row);
     .flex-align-items(center);
+    &.disabled{
+      opacity: .5;
+    }
   }
 }
 
@@ -955,23 +879,7 @@ span.valuePrefix{
     z-index: 2;
   }
 }
-.iconImage(@url){
-  background-image: url("@{iconBase}/@{url}");
-}
-.oldIconImage(@url){
-  background-image: url("@{oldiconBase}/@{url}");
-}
-.maskImage(@url){
-  mask-image: url("@{iconBase}/@{url}");
-}
 
-//-- appIcon
-.appIcon{
-  width: 1.5em;
-  height: 1.5em;
-  display: inline-block;
-  margin-left: 0.5em;
-}
 
 //-- eulaDialog
 .EulaDialog{
@@ -1073,32 +981,12 @@ span.valuePrefix{
   }
   justify-content: end;
   align-items: start;
-  .icon.MNcollapsed{
-    .iconImage('navigate_next.svg');
-    rotate: 90deg;
-  }
-  .icon.MNexpanded{
-    .iconImage('navigate_next.svg');
-    rotate: 270deg;
-  }
   .flexInner{
     width: 100%;
   }
   .iconSlot{
     border: 1px solid var(--avnav-border-color);
     border-radius: 4px;
-  }
-  .icon.navigation{
-    .iconImage('boat.svg')
-  }
-  .icon.settings{
-    .iconImage('build-200.svg')
-  }
-  .icon.Cancel{
-    .iconImage('ic_chevron_right.svg')
-  }
-  .icon.MNSettings{
-    .iconImage('ic_settings.svg')
   }
   .heading{
     justify-content: end;
@@ -1507,66 +1395,13 @@ span.valuePrefix{
 
 .infoImages {
   padding-left: 0.8em;
-
-
-  .icon.server {
-    .iconImage('plug.svg');
-  }
-
-  .icon.edit {
-    .iconImage('ic_edit.svg');
-  }
-
-  .icon.view {
-    .iconImage('visibility.svg');
-  }
-
-  .appimage {
-    .iconImage('apps.svg');
-  }
 }
 
 
   //------ type icons ------
-  .icon.track{
-    .iconImage('track.svg');
-  }
-  .icon.route{
-    .iconImage('route.svg');
-  }
-  .icon.layout{
-    .iconImage('ballot.svg');
-  }
-  .icon.settings{
-    .iconImage('ic_settings.svg');
-  }
-  .icon.images{
-    .iconImage('image-icon.svg')
-  }
-  .icon.overlay{
-    .iconImage('layers-black.svg');
-  }
-  .icon.plugins{
-    .iconImage('extension.svg');
-  }
-  .icon.chart{
-    .oldIconImage('Chart60.png');
-  }
-  .icon.user.special{
-    .iconImage('ic_settings.svg');
-  }
-  .icon.user.html{
-    .iconImage('internet-web-browser.svg');
-  }
-  .icon.user.other{
-    .iconImage('draft.svg');
-  }
-  .icon.text{
-    .iconImage('ic_text_snippet.svg');
-  }
-  .icon.directory{
-    .iconImage('folder_shared.svg');
-  }
+
+
+
 
   .downloadProgress{
     position: absolute;

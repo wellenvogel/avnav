@@ -143,11 +143,20 @@ const InfoRowDisplay=({row,data,className})=>{
     return <InfoItem label={row.label} value={v} className={className}/>
 }
 
+const FeatureIcons={
+    [FeatureInfo.TYPE.route]: iconClasses.Route,
+    [FeatureInfo.TYPE.track]: iconClasses.Track,
+    [FeatureInfo.TYPE.chart]: iconClasses.Charts,
+    [FeatureInfo.TYPE.overlay]: iconClasses.Overlays,
+    [FeatureInfo.TYPE.waypoint]: iconClasses.Waypoint,
+    [FeatureInfo.TYPE.anchor]: iconClasses.Anchor,
+    [FeatureInfo.TYPE.measure]:iconClasses.Measure,
+}
 
 const FeatureIcon=({feature,showOverlayIcon})=>{
-    const overlayIconClass=(feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay))?"overlay":"_none";
+    const overlayIconClass=(feature.isOverlay && (feature.getType() !== FeatureInfo.TYPE.overlay))?iconClasses.Overlays:iconClasses.Empty;
     return <React.Fragment>
-        <Icon className={feature.icon?undefined:feature.typeString()} iconImage={feature.icon}/>
+        <Icon className={feature.icon?undefined:FeatureIcons[feature.getType()]} iconImage={feature.icon}/>
         { showOverlayIcon && <Icon className={overlayIconClass}/>}
     </React.Fragment>
 }

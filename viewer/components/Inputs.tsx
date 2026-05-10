@@ -6,6 +6,7 @@ import {SelectDialog} from "./BasicDialogs";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import {SelectListEntry} from "../util/EditableParameter";
+import {Icon,iconClasses} from "./Icons";
 
 /**
  * input elements
@@ -83,8 +84,6 @@ export interface CheckBoxProps extends Omit<DEFAULT_TYPES,'onChange'>{
 }
 
 export const Checkbox=(props:CheckBoxProps)=>{
-    let className="checkBox";
-    if (props.value) className+=" checked";
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
     const clickFunction=(ev:SyntheticEvent)=>{
@@ -101,7 +100,7 @@ export const Checkbox=(props:CheckBoxProps)=>{
     return <div className={frameClass} onClick={clickFunction} >
         {(! props.hideLabel) && <span className="inputLabel">{props.label}</span>}
         <div className={props.frame?'inputFrame':''}>
-            <span className= {className} ></span>
+            <Icon className= {props.value?iconClasses.Checked:iconClasses.UnChecked} ></Icon>
         </div>
         {props.children}
 
@@ -113,17 +112,14 @@ export interface RadioProps extends DEFAULT_TYPES{
 }
 
 export const Radio=(props:RadioProps)=>{
-    const className="radio";
     const frameClass=Helper.concatsp(props.dialogRow?"dialogRow":undefined,props.className);
     return <div className={frameClass} >
         {props.label&& <span className="inputLabel radioLabel">{props.label}</span>}
         <div className={"radioFrame"}>
         {props.itemList.map((el)=>{
-            let displayClass=className;
-            if (props.value == el.value) displayClass+=" checked";
-            if (el.disabled) displayClass+=" disabled";
+            const checked= (props.value == el.value);
             return(
-                <div className="radioInner" onClick={(ev)=>{
+                <div className={Helper.concatsp("radioInner",el.disabled?'disabled':undefined)} onClick={(ev)=>{
                         ev.stopPropagation();
                         if (el.disabled) return;
                         props.onChange(el.value);
@@ -131,7 +127,7 @@ export const Radio=(props:RadioProps)=>{
                      key={el.label}
                 >
                 <span className="inputLabel">{el.label}</span>
-                <span className= {displayClass} ></span>
+                <Icon className={checked?iconClasses.RadioChecked:iconClasses.RadioUnchecked} ></Icon>
                 </div>
                 )
             })}

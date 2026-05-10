@@ -31,6 +31,8 @@ import NavHandler from "../nav/navdata";
 import {SelectListEntry} from "./EditableParameter";
 import Helper, {urlToString} from "./helper";
 import base from "../base";
+// @ts-ignore
+import * as iconClasses from '../style/icons.less';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 export type ItemType='chart'|'track'|'route'|'layout'|'settings'|'overlay'|'images'|'user'|'plugins';
@@ -139,15 +141,22 @@ export const getUrlWithBase=(item:Record<string, any>,element='url')=>{
 export const KNOWN_OVERLAY_EXTENSIONS = ['gpx', 'kml', 'kmz', 'geojson'];
 export const IMAGES = ['png', 'jpg', 'jpeg', 'svg', 'bmp', 'tiff', 'gif'];
 
-const ICONCLASS_TYPES=['chart',
-    'route',
-    'track',
-    'layout',
-    'settings',
-    'user',
-    'images',
-    'overlay',
-    'plugins'];
+const ICONCLASS_TYPES:Record<string,string>= {
+    chart: iconClasses.Charts,
+    route: iconClasses.Route,
+    track: iconClasses.Track,
+    layout: iconClasses.Layout,
+    settings: iconClasses.Settings,
+    user: iconClasses.User,
+    images: iconClasses.Images,
+    overlay: iconClasses.Overlays,
+    plugins: iconClasses.Plugins,
+    'user special': iconClasses.ITUserSpecial,
+    html: iconClasses.ITHtml,
+    text: iconClasses.ITText,
+    directory: iconClasses.ITDirectory,
+    other: iconClasses.ITOther,
+}
 
 export const getItemIconProperties=(item:Record<string, any>)=>{
     const icon=getUrlWithBase(item,'icon');
@@ -157,15 +166,14 @@ export const getItemIconProperties=(item:Record<string, any>)=>{
             icon:icon
         }
     }
-    if (! item.type || ICONCLASS_TYPES.indexOf(item.type) <0) return;
     let typeClass=item.isDirectory?'directory':item.type;
     if (item.type === 'overlay'){
         const [,ext]=Helper.getNameAndExt(item.name);
-        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(ext) < 0) typeClass="user other"
+        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(ext) < 0) typeClass="other"
     }
     else if (item.type === 'track'){
         const [,ext]=Helper.getNameAndExt(item.name);
-        if (ext !== 'gpx') typeClass="user other"
+        if (ext !== 'gpx') typeClass="other"
     }
     else if (item.type === 'user'){
         const specialNames=['user.mjs','user.mjs','user.css','keys.json','splitkeys.json','images.json'];
@@ -178,17 +186,19 @@ export const getItemIconProperties=(item:Record<string, any>)=>{
                 typeClass= 'images';
             }
             else if (ext === 'html') {
-                typeClass= 'user html'
+                typeClass= 'html'
             }
             else if (ext === 'txt') {
                 typeClass= 'text';
             }
-            else  typeClass= 'user other';
+            else  typeClass= 'other';
         }
     }
     if (! typeClass) return;
+    const iconClass=ICONCLASS_TYPES[typeClass];
+    if (!iconClass) return;
     return {
-        className: Helper.concatsp('icon',typeClass)
+        className: Helper.concatsp('icon',iconClass),
     }
 }
 

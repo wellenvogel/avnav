@@ -42,7 +42,7 @@ import keys from "../util/keys";
 import {getItemIconProperties, Item, ItemType, listItems} from "../util/itemFunctions";
 import {useStateRef, useTimer} from "../util/UiHelper";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
-import {Icon} from "./Icons";
+import {Icon,iconClasses} from "./Icons";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
 
@@ -99,9 +99,9 @@ const DownloadItem = (props:DownloadItemProps) => {
                 {(infoMode === DownloadItemInfoMode.ALL ||
                         infoMode === DownloadItemInfoMode.ICONS) &&
                     <div className="infoImages">
-                        <Icon className={actions.showIsServer(props)?"server":"_none"}/>
-                        <Icon className={actions.canModify(props)?"edit":"_none"}/>
-                        <Icon className={actions.canView(props)?"view":"_none"}/>
+                        <Icon className={actions.showIsServer(props)?iconClasses.ITServer:iconClasses.Empty}/>
+                        <Icon className={actions.canModify(props)?iconClasses.Edit:iconClasses.Empty}/>
+                        <Icon className={actions.canView(props)?iconClasses.View:iconClasses.Empty}/>
                     </div>
                 }
             </ListSlot>

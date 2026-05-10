@@ -2,9 +2,9 @@
  * Created by andreas on 10.10.16.
  */
 import React from 'react';
-import reactCreateClass from 'create-react-class';
 import PropTypes from 'prop-types';
-import Formatter from '../util/formatter.ts';
+import Formatter from '../util/formatter';
+import {iconClasses,Icon} from './Icons';
 const WayPointItem =(props)=>{
         let info;
         if (props.showLatLon){
@@ -17,9 +17,11 @@ const WayPointItem =(props)=>{
         if (props.selected) classNames+=" activeEntry";
         return(
         <div className={classNames} onClick={(ev)=>{if (props.onClick)props.onClick(ev);}}>
+            <div className={'infoFrame'}>
             <div className="info">{props.name}</div>
-            <span className="more"></span>
-            {info}
+                {info}
+            </div>
+            <Icon className={props.selected?iconClasses.More:iconClasses.Empty}/>
         </div>
         );
 };

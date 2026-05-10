@@ -444,23 +444,10 @@
 .value{
   display: inline-block;
 }
-.label {
-  display: inline-block;
-  background-size: 1em 1em;
-  background-repeat: no-repeat;
-  width: 1em;
-  height: 1em;
-  float: left;
-  &.boat {
-    background-image: url(../images/icons-new/boat.svg);
+  .iconFrame{
+    width: 1em;
+    height: 1em;
   }
-  &.marker {
-    background-image: url(../images/icons-new/waypoint.svg);
-  }
-  &.measure{
-    background-image: url(../images/icons-new/outlined_flag.svg);
-  }
-}
 .horizontal &{
   min-width: 10em;
 }
@@ -514,17 +501,8 @@ canvas{
 }
 }
 &.routePointsWidget {
-.more {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 20%;
-}
-.activeEntry .more{
-  display: inline-block;
-}
-overflow: hidden;
-.flex-shrink(1) !important;
+  overflow: hidden;
+  .flex-shrink(1) !important;
 }
 &.alarmWidget{
 position: absolute;

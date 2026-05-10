@@ -65,9 +65,15 @@ import {actionButtons} from "./MainActionButtons";
 import layouthandler from "../util/layouthandler";
 import ButtonDefs from "../components/ButtonDefs";
 import {useStoreState} from "../hoc/Dynamic";
+import {iconClasses} from '../components/Icons';
 
 
 type PageKind='navigation'|'settings';
+
+const KindIcons:Record<PageKind,string>={
+    navigation:iconClasses.MNCatNav,
+    settings:iconClasses.MNCatSet,
+}
 
 class Page extends CopyAware{
     name:string;
@@ -184,12 +190,12 @@ const PageRow=({
         setav(ev,{page:page.name});
         onClick(ev);
     }}>
-        <ListSlot icon={{className:page.kind}}/>
+        <ListSlot icon={{className:KindIcons[page.kind]}} />
         <ListMainSlot primary={page.getDisplay()}>
         </ListMainSlot>
             {!noExpand && hasVisibleButton && <ListSlot
             className={'iconSlot'}
-            icon={{className:isExpanded?'MNexpanded':'MNcollapsed'}}
+            icon={{className:isExpanded?iconClasses.MNExpanded:iconClasses.MNCollapsed}}
             onClick={(ev)=>{
                 if (! isExpanded && onExpand) onExpand();
                 setExpanded(!isExpanded);
@@ -255,7 +261,7 @@ export const MainNav = (props:MainNavProps) => {
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
             { ! noExpand && <ListSlot className={'iconSlot'}
-                icon={{className:'MNcollapsed'}}
+                icon={{className:iconClasses.MNCollapsed}}
                 onClick={()=>{
                     setExpandMode(MainExpandMode.ALL);
                     setManualExpanded(undefined);
@@ -263,7 +269,7 @@ export const MainNav = (props:MainNavProps) => {
                 }}
             />}
             { ! noExpand && <ListSlot className={'iconSlot'}
-                icon={{className:'MNexpanded'}}
+                icon={{className:iconClasses.MNExpanded}}
                 onClick={()=>{
                         setExpandMode(MainExpandMode.NONE);
                         setManualExpanded(undefined);
@@ -272,7 +278,7 @@ export const MainNav = (props:MainNavProps) => {
                 />
             }
             <ListSlot className={'iconSlot'}
-                icon={{className:'MNSettings'}}
+                icon={{className:iconClasses.Settings}}
                 onClick={()=>{
                             dialogContext.replaceDialog(()=><EditSettingsCategory
                                 category={'MainMenu'}

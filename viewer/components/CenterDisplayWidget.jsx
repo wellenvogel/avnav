@@ -9,6 +9,7 @@ import Formatter from '../util/formatter.ts';
 import NavCompute from "../nav/navcompute";
 import {WidgetFrame} from "./WidgetBase";
 import {WidgetProps} from "../util/types";
+import {Icon,iconClasses} from "./Icons";
 
 
 const CenterDisplayWidget = (props) => {
@@ -23,7 +24,7 @@ const CenterDisplayWidget = (props) => {
             {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
             {(measurePosition !== undefined) &&
                 <div className="widgetData">
-                    <div className="label measure"></div>
+                    <Icon className={iconClasses.MeasureFlag}></Icon>
                     <div className="value">
                         <span>{Formatter.formatDirection(measureValues.course)}</span>
                         <span className="unit">&#176;</span>
@@ -38,7 +39,7 @@ const CenterDisplayWidget = (props) => {
                 </div>
             }
             <div className="widgetData">
-                <div className="label marker"></div>
+                <Icon className={iconClasses.Waypoint}></Icon>
                 <div className="value">
                     <span>{Formatter.formatDirection(props.markerCourse)}</span>
                     <span className="unit">&#176;</span>
@@ -52,7 +53,7 @@ const CenterDisplayWidget = (props) => {
                 </div>
             </div>
             <div className="widgetData">
-                <div className="label boat"></div>
+                <Icon className={iconClasses.Boat}></Icon>
                 <div className="value">
                     <span>{Formatter.formatDirection(props.centerCourse)}</span>
                     <span className="unit">&#176;</span>
