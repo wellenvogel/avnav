@@ -47,6 +47,30 @@ def grep(dir:str,args:list=None):
                 buttonDefs[bname].add(parts[0],parts[1])
     return buttonDefs
 
+def grepIcons(dir:str,args:list=None):
+    cmd=["grep","-rHn","--exclude-dir=build","--exclude-dir=.gradle",
+         "--exclude-dir=.idea","--exclude=ButtonDefs.ts","--exclude=icons.less"]
+    if args is not None:
+        cmd=cmd+args
+    cmd.append(r'[^[]iconClasses\.')
+    cmd.append(dir)
+    logger.info(cmd)
+    proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,encoding="utf-8")
+    re1=re.compile(r'iconClasses\.(\w+)')
+    iconDefs={}
+    for line in proc.stdout:
+        line = line.strip()
+        parts=line.split(':',3)
+        if len(parts)  < 3:
+            continue
+        match=re1.search(line)
+        if match is not None:
+            for bname in match.groups():
+                if iconDefs.get(bname) is None:
+                    iconDefs[bname]=BtDef(bname)
+                iconDefs[bname].add(parts[0],parts[1])
+    return iconDefs
+
 class Bt:
     def __init__(self,name:str,txt:str,icon:str,line:int):
         self.name=name
@@ -246,6 +270,27 @@ def usage():
 def err(msg):
     print(msg,file=sys.stderr)
     sys.exit(1)
+
+def usageEntry(file:str,line:str):
+    uname=file
+    if uname.startswith(FILEPRFX):
+        uname = uname[len(FILEPRFX):]
+    return f"[{uname}]({file}#L{line})"
+
+def iconEntry(name,iconDef:IconDef):
+    base=""
+    if name:
+        base=f"{name}|"
+    if iconDef is not None:
+        iconStr = f"[{iconDef.icon}]({relPath(TICONS)}#L{iconDef.line})"
+        iconFile = f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
+        return base+f"{iconStr}|{iconFile}"
+    return base+"|"
+def defEntry(dfile:str,dname:str,dline:str,bold:bool=False):
+    name=dname if not bold else f"__{dname}__"
+    if dline is not None:
+        return f"[{name}]({dfile}#L{dline})"
+    return f"{name}"
 if len(sys.argv) < 1:
     usage()
     sys.exit(1)
@@ -270,43 +315,56 @@ defs=grep(relPath())
 buttonDefs=readButtons(relPath(TDEFS))
 iconDefs=readIcons(relPath(TICONS))
 textDefs=readTexts(relPath(TTEXTS))
+iconGreps=grepIcons(relPath())
 if format == 'plain':
     pprint.pprint(defs)
+    pprint.pprint(iconGreps)
     pprint.pprint(buttonDefs)
     pprint.pprint(iconDefs)
     pprint.pprint(textDefs)
     sys.exit(0)
 if format == 'table' or format == 'sparse':
-    print("|Name|File|IconName|Icon|shortText|longText|")
-    print("| --- | --- | --- | --- | --- | --- |")
+    print("Buttons")
+    print("====")
+    print("|Name|File|IconName|IconFile|Icon|shortText|longText|")
+    print("| --- | --- | --- | --- | --- | --- | --- |")
     for k in sorted(defs.keys()):
         buttonFound=defs[k]
         buttonDef = buttonDefs.get(k)
         first=True
         for usage in buttonFound.usages:
-            icon=''
-            short=''
-            long=''
-            uname=usage.file
-            if uname.startswith(FILEPRFX):
-                uname=uname[len(FILEPRFX):]
-            useStr=f"[{uname}]({usage.file}#L{usage.line})"
-            iconStr = ''
-            iconFile = ''
+            bstr = f"|{defEntry(relPath(TDEFS), k, buttonDef.line if buttonDef else None,True if first and format=='sparse' else False)}|"
+            lstr=bstr+f"{usageEntry(usage.file,usage.line)}"
+            short = ''
+            long = ''
             if buttonDef is not None and first:
-                first=False
-                icon=buttonDef.icon
-                iconDef=iconDefs.get(icon)
-                if iconDef is not None:
-                    iconStr=f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})"
-                    iconFile=f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
-                else:
-                    iconStr=f"{icon}"
+                first=False if format == 'sparse' else True
+                iconDef=iconDefs.get(buttonDef.icon)
+                lstr+="|"+iconEntry(buttonDef.icon,iconDef)
                 txt=textDefs.get(buttonDef.name)
                 if txt is not None:
                     short=f"[{txt.tshort}]({relPath(TTEXTS)}#L{txt.line})"
-                    long=txt.tlong
-            print(f"|{k}|{useStr}|{iconStr}|{iconFile}|{short}|{long}|")
-
+                    long=txt.tlong or ''
+            else:
+                lstr+="||"
+            print(f"{lstr}|{short}|{long}|")
+    print("")
+    print("Icons")
+    print("====")
+    print("|Name|Usage|IconFile|Icon|")
+    print("| --- | --- | --- | --- |")
+    for k in sorted(iconGreps.keys()):
+        iconUsages=iconGreps.get(k)
+        iconDef = iconDefs.get(k)
+        first=True
+        for iconUsage in iconUsages.usages:
+            bstr = f"|{defEntry(relPath(ICONBASE), k, iconDef.line if iconDef else None,True if first and format=='sparse' else False)}|"
+            lstr=bstr+f"{usageEntry(iconUsage.file,iconUsage.line)}"
+            short = ''
+            long = ''
+            if iconDef is not None and first:
+                first=False if format == 'sparse' else True
+                lstr+="|"+iconEntry(None,iconDef)
+            print(f"{lstr}")
     sys.exit(0)
 raise RuntimeError(f'invalid format {format}')
