@@ -277,13 +277,18 @@ def usageEntry(file:str,line:str):
         uname = uname[len(FILEPRFX):]
     return f"[{uname}]({file}#L{line})"
 
-def iconEntry(name,iconDef:IconDef):
+def iconEntry(name,iconDef:IconDef,format='table'):
     base=""
     if name:
         base=f"{name}|"
     if iconDef is not None:
         iconStr = f"[{iconDef.icon}]({relPath(TICONS)}#L{iconDef.line})"
-        iconFile = f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
+        iconFile=''
+        if format == 'pandoc':
+            iconFile = f"![{iconDef.icon}]({iconPath(iconDef.icon)})"+'{width=40px}'
+            pass
+        else:
+            iconFile = f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
         return base+f"{iconStr}|{iconFile}"
     return base+"|"
 def defEntry(dfile:str,dname:str,dline:str,bold:bool=False):
@@ -295,7 +300,10 @@ if len(sys.argv) < 1:
     usage()
     sys.exit(1)
 
-ALL_FORMATS=['plain','table','sparse']
+ALL_FORMATS=['plain','table','sparse','pandoc']
+#after creating the "pandoc" markdow convert to odt
+#from within the docs dir with
+#pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
 format=ALL_FORMATS[0]
 
 FILEPRFX='../viewer/'
@@ -323,7 +331,8 @@ if format == 'plain':
     pprint.pprint(iconDefs)
     pprint.pprint(textDefs)
     sys.exit(0)
-if format == 'table' or format == 'sparse':
+if format == 'table' or format == 'sparse' or format == 'pandoc':
+    handleFirst=format == 'sparse' or format == 'pandoc'
     print("Buttons")
     print("====")
     print("|Name|File|IconName|IconFile|Icon|shortText|longText|")
@@ -333,14 +342,14 @@ if format == 'table' or format == 'sparse':
         buttonDef = buttonDefs.get(k)
         first=True
         for usage in buttonFound.usages:
-            bstr = f"|{defEntry(relPath(TDEFS), k, buttonDef.line if buttonDef else None,True if first and format=='sparse' else False)}|"
+            bstr = f"|{defEntry(relPath(TDEFS), k, buttonDef.line if buttonDef else None,first and handleFirst)}|"
             lstr=bstr+f"{usageEntry(usage.file,usage.line)}"
             short = ''
             long = ''
             if buttonDef is not None and first:
-                first=False if format == 'sparse' else True
+                first=not handleFirst
                 iconDef=iconDefs.get(buttonDef.icon)
-                lstr+="|"+iconEntry(buttonDef.icon,iconDef)
+                lstr+="|"+iconEntry(buttonDef.icon,iconDef,format=format)
                 txt=textDefs.get(buttonDef.name)
                 if txt is not None:
                     short=f"[{txt.tshort}]({relPath(TTEXTS)}#L{txt.line})"
@@ -358,13 +367,13 @@ if format == 'table' or format == 'sparse':
         iconDef = iconDefs.get(k)
         first=True
         for iconUsage in iconUsages.usages:
-            bstr = f"|{defEntry(relPath(ICONBASE), k, iconDef.line if iconDef else None,True if first and format=='sparse' else False)}|"
+            bstr = f"|{defEntry(relPath(ICONBASE), k, iconDef.line if iconDef else None,first and handleFirst)}|"
             lstr=bstr+f"{usageEntry(iconUsage.file,iconUsage.line)}"
             short = ''
             long = ''
             if iconDef is not None and first:
-                first=False if format == 'sparse' else True
-                lstr+="|"+iconEntry(None,iconDef)
+                first=not handleFirst
+                lstr+="|"+iconEntry(None,iconDef,format=format)
             print(f"{lstr}")
     sys.exit(0)
 raise RuntimeError(f'invalid format {format}')
