@@ -324,7 +324,8 @@ const keys:Record<string,KeyType>={
             connectedMode:K,
             addonViewChanged:K,
             mainNavVisible:K,
-            chartEntrySequence:K
+            chartEntrySequence:K,
+            addonFrameVisible:K
         },
         gpspage:{
             pageNumber:K,

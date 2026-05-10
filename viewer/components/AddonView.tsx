@@ -50,12 +50,19 @@ export const AddonView = (iprops: AddonViewProps): React.ReactNode => {
     if (! Helper.unsetorTrue(sprops.visible)) {
         return null
     }
+    const url= sprops.url?new URL(sprops.url,window.location.href):undefined;
+    const isCrossDomain=url?.origin !== window.location.origin;
     return <div className={Helper.concatsp("addOnFrame", sprops.className)}>
         {sprops.title && <Headline dynamicTitleIcons={false} title={sprops.title}/>}
         <div className={'addonInner'}>
             {(!sprops.renderHtml && !sprops.url) && <div>{`no url/html for ${iprops.name}`}</div>}
             {iprops.renderHtml && iprops.renderHtml(iprops)}
-            {sprops.url && <iframe className={"addonIframe"} src={sprops.url}/>}
+            {sprops.url && <iframe className={"addonIframe"} src={sprops.url}
+                                   ref={(el:HTMLIFrameElement) =>{
+                                       if (!isCrossDomain) return;
+                                       globalstore.storeData(keys.gui.global.addonFrameVisible,!!el);
+                                   }}
+            />}
         </div>
     </div>
 }

@@ -23,11 +23,21 @@
 import {propsToDefs} from "../components/Button";
 import {GeneralWithCancel} from "./GeneralButtons";
 import ButtonDefs from "../components/ButtonDefs";
+import keys from "../util/keys";
 
 export default GeneralWithCancel.concat(propsToDefs([
     {
         ...ButtonDefs.Back,
-        localOnly: true
+        localOnly: true,
+        storeKeys: {
+            frame: keys.gui.global.addonFrameVisible
+        },
+        updateFunction:(state)=>{
+            return {
+                disabled: ! state.frame,
+                frame:undefined
+            }
+        }
     }
 ]))
 

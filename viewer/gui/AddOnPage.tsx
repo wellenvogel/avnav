@@ -16,6 +16,7 @@ import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
 import ButtonList from "../components/ButtonList";
 import {addonViewManager} from "../components/AddonView";
+import globalstore from "../util/globalstore";
 
 const PAGE=PAGEIDS.ADDON;
 export interface AddOnPageProps extends Partial<PageProps> {}
@@ -48,6 +49,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         const buttonActions:Record<string,Partial<DynamicButtonProps>> = {
             Back: {
                 onClick: () => {
+                    if (! globalstore.getData(keys.gui.global.addonFrameVisible)) return;
                     window.history.back();
                 }
             },
