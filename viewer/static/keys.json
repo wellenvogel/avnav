@@ -27,7 +27,13 @@
     },
     "dialogButton": {
       "Cancel": "Escape",
-      "cancel": "Escape"
+      "cancel": "Escape",
+      "DBCancel": "Escape"
+    },
+    "chartSelectList":{
+      "previous": "ArrowUp",
+      "next": "ArrowDown",
+      "select":"Enter"
     },
     "addon":{
       "0":"Control-0",
@@ -54,7 +60,8 @@
     "button":{
       "LockMarker":"g",
       "StopNav": "s",
-      "ShowRoutePanel":["Control-r","r"]
+      "ShowRoutePanel":["Control-r","r"],
+      "NavOverlays":["c","Escape"]
     },
     "map":{
       "centerToGps":"c"

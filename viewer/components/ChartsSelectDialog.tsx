@@ -24,7 +24,7 @@
 import {getItemIconProperties, Item, listItems} from "../util/itemFunctions";
 import {Icon, ListItem, ListMainSlot, ListSlot, useDialogContext, useStoreState} from "./exports";
 import Helper, {avitem, concatsp, setav} from "../util/helper";
-import {useTimer} from "../util/UiHelper";
+import {useKeyEventHandlerPlain, useTimer} from "../util/UiHelper";
 import Toast from "./Toast";
 import ItemList from "./ItemList";
 // @ts-ignore
@@ -36,6 +36,7 @@ import EditOverlaysDialog from "./EditOverlaysDialog";
 import keys from "../util/keys";
 import globalstore from "../util/globalstore";
 import {iconClasses} from './Icons';
+import Keyhandler from "../util/keyhandler";
 
 
 const ITEM_TYPE='chart'
@@ -80,12 +81,43 @@ export interface ChartItemListProps{
     autoreload?:number;
     selected?:string;
 }
+const COMPONENT='chartSelectList';
 export const ChartItemList=(props:ChartItemListProps)=>{
+    Keyhandler.registerDialogComponent(COMPONENT);
     const actions=createItemActions(ITEM_TYPE);
     const [selected,setSelected]=React.useState(props.selected);
     const [loading,setLoading]=React.useState(true);
     const selectedIndex=useRef(-1);
     const [itemList,setItemList]=React.useState<Item[]>([]);
+    const selectHandler=useRef(null);
+    selectHandler.current=(change:number)=>{
+        if (selectedIndex.current < 0) return;
+        if (change === 0){
+            //select
+            const current=itemList[selectedIndex.current];
+            if (current && props.itemClick){
+                const avevent=setav({},{item:current});
+                props.itemClick(avevent);
+            }
+        }
+        let next=selectedIndex.current+change;
+        if (next < 0) next =0;
+        if (next >= itemList.length) next=itemList.length-1;
+        if (next < 0) return;
+        const current=itemList[next];
+        if (! current) return;
+        selectedIndex.current=next;
+        setSelected(current.name);
+    }
+    useKeyEventHandlerPlain('previous',COMPONENT,()=>{
+        selectHandler.current(-1);
+    })
+    useKeyEventHandlerPlain('next',COMPONENT,()=>{
+        selectHandler.current(+1);
+    })
+    useKeyEventHandlerPlain('select',COMPONENT,()=>{
+        selectHandler.current(0);
+    })
     const timer=useTimer((seq:number)=>{
         listItems(ITEM_TYPE).then((charts:Item[])=>{
             if (!Array.isArray(charts)){
