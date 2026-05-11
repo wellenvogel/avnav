@@ -132,7 +132,9 @@ class AisData {
                 let storeKeys = {
                     nearestAisTarget: keys.nav.ais.nearest,
                     currentAis: keys.nav.ais.list,
-                    updateCount: keys.nav.ais.updateCount
+                    updateCount: keys.nav.ais.updateCount,
+                    source: keys.nav.ais.source,
+                    numtargets: keys.nav.ais.numtargets,
                 };
                 let nearestAisTarget=data.aisWarning?aisproxy(data.aisWarning):undefined;
                 if (data.data && data.data.length && !nearestAisTarget) {
@@ -151,7 +153,9 @@ class AisData {
                 globalStore.storeMultiple({
                     nearestAisTarget: nearestAisTarget,
                     currentAis: data.data,
-                    updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1
+                    updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1,
+                    source: data.source,
+                    numtargets: data.numtargets,
                 }, storeKeys);
             }
             if (data.type === 'error') {

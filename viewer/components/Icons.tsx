@@ -70,3 +70,14 @@ export const Icon=({className,icon,color,onClick,forceClass,iconImage}:IconProps
         <IconBody icon={icon} className={className} color={color} forceClass={forceClass} iconImage={iconImage}/>
     </div>
 }
+export interface StatusIconProps{
+    type:'red'|'green'|'yellow'|'grey'
+    className?:string
+    onClick?:(ev:SyntheticEvent) => void,
+}
+export const StatusIcon=(props:StatusIconProps)=>{
+    return <div
+        className={Helper.concatsp('statusIcon',props.type,props.className)}
+        onClick={props.onClick}
+        />
+}

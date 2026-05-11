@@ -163,40 +163,56 @@ public class Decoder extends Worker  implements INavRequestHandler {
      * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
      * @throws JSONException
      */
-    private JSONObject getNmeaStatus() throws JSONException {
+    private JSONObject getNmeaStatus(boolean v2) throws JSONException {
         JSONObject nmea = new JSONObject();
         nmea.put("source", "unknown");
         nmea.put("status", "red");
-        nmea.put("info", "disabled");
+        if (! v2) nmea.put("info", "disabled");
         JSONObject ais = new JSONObject();
         ais.put("source", "unknown");
         ais.put("status", "red");
-        ais.put("info", "disabled");
+        if (!v2) ais.put("info", "disabled");
         SatStatus st = getSatStatus();
         nmea.put("source", st.getSource());
+        nmea.put("enabled",st.isGpsEnabled());
         if (st.hasValidPosition()) {
             nmea.put("status", "green");
-            nmea.put("info", "sats: " + st.getNumSat() + " / " + st.getNumUsed());
+            if (v2) {
+                nmea.put("numview",st.getNumSat());
+                nmea.put("numused",st.getNumUsed());
+            }
+            else{
+                nmea.put("info", "sats: " + st.getNumSat() + " / " + st.getNumUsed());
+            }
         } else {
             if (st.isGpsEnabled()) {
-                nmea.put("info", "con, sats: " + st.getNumSat() + " / " + st.getNumUsed());
+                if (v2){
+                    nmea.put("numsat",st.getNumSat());
+                    nmea.put("numused",st.getNumUsed());
+                }
+                else {
+                    nmea.put("info", "con, sats: " + st.getNumSat() + " / " + st.getNumUsed());
+                }
                 nmea.put("status", "yellow");
             } else {
-                nmea.put("info", "disconnected");
+                if (!v2) nmea.put("info", "disconnected");
                 nmea.put("status", "red");
             }
         }
         ais.put("source", getLastAisSource());
         int aisTargets = numAisData();
+        if (v2) ais.put("numtargets",aisTargets);
         if (aisTargets > 0) {
             ais.put("status", "green");
-            ais.put("info", aisTargets + " targets");
+            if (!v2){
+                ais.put("info", aisTargets + " targets");
+            }
         } else {
             if (st.isGpsEnabled()) {
-                ais.put("info", "connected");
+                if (!v2)ais.put("info", "connected");
                 ais.put("status", "yellow");
             } else {
-                ais.put("info", "disconnected");
+                if (!v2) ais.put("info", "disconnected");
                 ais.put("status", "red");
             }
         }
@@ -218,7 +234,10 @@ public class Decoder extends Worker  implements INavRequestHandler {
             return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", o));
         }
         if ("nmeaStatus".equals(command)) {
-            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", getNmeaStatus()));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", getNmeaStatus(false)));
+        }
+        if ("nmeaStatusV2".equals(command)) {
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONObject>("data", getNmeaStatus(true)));
         }
         if ("ais".equals(command)) {
             ArrayList<Location> centers = new ArrayList<Location>();
@@ -242,7 +261,13 @@ public class Decoder extends Worker  implements INavRequestHandler {
                 if (sdistance != null) distance = Double.parseDouble(sdistance);
             } catch (Exception e) {
             }
-            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data", getAisData(centers, distance)));
+            String source=getLastAisSource();
+            int numtargets=numAisData();
+            return RequestHandler.getReturn(
+                    new AvnUtil.KeyValue<JSONArray>("data", getAisData(centers, distance)),
+                    new AvnUtil.KeyValue<String>("source",source),
+                    new AvnUtil.KeyValue<Integer>("numtargets",numtargets)
+            );
         }
         throw new InvalidCommandException("command "+command+" not handled in decoder");
     }

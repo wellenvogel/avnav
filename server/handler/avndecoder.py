@@ -153,7 +153,7 @@ class AVNDecoder(AVNWorker):
                       frt.append(entry)
                   except Exception as e:
                       AVNLog.debug("unable to convert ais data: %s", traceback.format_exc())
-          return AVNUtil.getReturnData(data=frt)
+          return AVNUtil.getReturnData(data=frt,numtargets=self.navdata.getAisCounter(),source=self.navdata.getLastAisSource())
       if command == 'nmeaStatus':
           rtv = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
           # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
@@ -180,6 +180,34 @@ class AVNDecoder(AVNWorker):
               status = "green"
           src = self.navdata.getLastAisSource()
           statusAis = {"status": status, "source": src, "info": "%d targets" % (numAis)}
+          return AVNUtil.getReturnData(data={"nmea": statusNmea, "ais": statusAis})
+      if command == 'nmeaStatusV2':
+          rtv = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
+          # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
+          status = "red"
+          if rtv.get(NMEAParser.K_LAT.key) is not None and rtv.get(NMEAParser.K_LON.key) is not None:
+              status = "green"
+          info = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(),
+                                                    includeInfo=True)  # we just want the last source of position
+          src = 'unknown'
+          if info is not None:
+              src = info.source
+          satInview = rtv.get(NMEAParser.K_SATVIEW.key)
+          if satInview is None:
+              satInview = 0
+          satUsed = rtv.get(NMEAParser.K_SATUSED.key)
+          if satUsed is None:
+              satUsed = 0
+          statusNmea = {"status": status, "source": src,
+                        "numview":int(satInview),
+                        "numused":int(satUsed)}
+
+          status = "red"
+          numAis = self.navdata.getAisCounter()
+          if numAis > 0:
+              status = "green"
+          src = self.navdata.getLastAisSource()
+          statusAis = {"status": status, "source": src, "numtargets": numAis}
           return AVNUtil.getReturnData(data={"nmea": statusNmea, "ais": statusAis})
       raise Exception(f"Unknown command {command} for decoder api")
 

@@ -215,6 +215,41 @@ body{
     }
   }
 }
+
+// status icons
+.statusIcon {
+  margin: 0.2em;
+  height: calc(var(--avnav-default-icon-size) - 0.2em);
+  width: calc(var(--avnav-default-icon-size) - 0.2em);
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: var(--avnav-night-opacity);
+  &.unknown, &.inactive, &.grey  {
+    background-image: radial-gradient(rgba(128, 128, 128,1), rgba(128, 128, 128, 0.6),transparent);
+  }
+  &.green{
+    background-image: radial-gradient(rgba(10, 240, 10,1), rgba(10, 240, 10, 0.6),transparent);
+  }
+  &.running{
+    animation: mpblinker 1.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+    background-image: radial-gradient(rgb(255, 184, 3), rgb(250, 219, 137),transparent);
+  }
+
+  @keyframes mpblinker { to { opacity: 0; } }
+  &.red{
+    background-image: radial-gradient(rgba(240, 10, 10,1), rgba(240, 10, 10, 0.6),transparent);
+  }
+  &.yellow{
+    background-image: radial-gradient(rgb(245, 245, 47,1), rgba(245, 245, 47, 0.6),transparent);
+  }
+  &.grey{
+    background-image: radial-gradient(rgb(67, 67, 67), rgba(129, 129, 129, 0.6),transparent);
+  }
+
+}
+
 //----------------------------------------------------------------------------------------
 //dialogs
 //----------------------------------------------------------------------------------------
@@ -246,12 +281,6 @@ body{
   position: relative;
 }
 
-.rowBase{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-}
 
 @dialogInputLabelWidth:7em;
 
@@ -846,6 +875,7 @@ span.valuePrefix{
   margin: 0.2em;
   display: inline-block;
   position: relative;
+  flex-shrink: 0;
   .nightOPacity();
 
   .widgetHead & {

@@ -118,7 +118,9 @@ const AisSmallDisplay=(display:AisItemDisplayProps)=> {
 const STORE_KEYS={
     target: keys.nav.ais.nearest,
     isEditing: keys.gui.global.layoutEditing,
-    trackedMmsi: keys.nav.ais.trackedMmsi
+    trackedMmsi: keys.nav.ais.trackedMmsi,
+    source: keys.nav.ais.source,
+    numtargets: keys.nav.ais.numtargets,
 }
 const EDITABLE_PARAMETERS={
     legacy:{type:'BOOLEAN',
@@ -168,7 +170,7 @@ const AisTargetWidget = (props:AisTargetWidgetProps) => {
                          resizeSequence={resizeSequence}
                          style={style}
                          onClick={click}
-                         unit={undefined}
+                         unit={`${props.numtargets} ${props.source}`}
                          caption='AIS'>
                 {! small && <AisFullDisplay
                     {...display}

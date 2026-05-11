@@ -11,6 +11,10 @@
 .widgetInfo(){
   font-size: @infoFontSize;
   opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
 }
 .widget{
   position: relative;
@@ -31,7 +35,6 @@
     display: flex;
     .flex-direction(row);
     .flex-justify-content(space-between);
-    height: 0.7em;
     .infoLeft{
       .widgetInfo();
     }
@@ -263,22 +266,23 @@
   }
   &.timeStatusWidget{
     .smallWidget(@size1);
-    .status{
-      width: 1.5em;
-      height: 1.5em;
-      text-align: center;
-      margin-left: auto;
-      margin-right: auto;
-      display: block;
-      .nightMode &{
-        opacity: 0.6;
-      }
+    .resize,.noresize{
+      align-items: center;
     }
-    .widgetData{
-      text-align: center;
-      margin-top: unset;
-      margin-left: auto;
-      margin-right: auto;
+    .iconFrame,.statusIcon{
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 0.9em;
+    }
+    .rowBase{
+      max-width: 90%;
+      overflow: hidden;
+      flex-wrap: nowrap;
+      .value{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
   }
   &.etaWidget{

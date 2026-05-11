@@ -44,12 +44,16 @@ let boatData={
 };
 
 let receivedAisData=[];
+let numtargets=0;
+let source=undefined;
 let options={};
 let aisErrors=0;
 
 const computeAis=()=>{
     if (aisErrors > 10){
         receivedAisData=[];
+        numtargets=0;
+        source=undefined;
         aisErrors=10;
     }
     return handleReceivedAisData(receivedAisData,boatData.position,boatData.course,boatData.speed,options);
@@ -81,7 +85,7 @@ const queryData=async (distance,center,timeout,navUrl)=>{
             aisList.forEach((ais) => {
                 ais.receiveTime = now;
             })
-            return {data:aisList};
+            return {data:aisList,source:data.source,numtargets:data.numtargets};
         },
         (error)=>{
             aisErrors++;
@@ -130,7 +134,9 @@ const computeResponse=(messageData)=>{
         time: done - start,
         sequence: messageData.sequence,
         data: ais,
-        aisWarning: aisWarning
+        aisWarning: aisWarning,
+        source:source,
+        numtargets:numtargets,
     })
 }
 
@@ -173,6 +179,8 @@ self.onmessage=async ({data})=>{
         }
         try {
             receivedAisData = received.data;
+            source=received.source;
+            numtargets=received.numtargets;
             computeResponse(data);
         }catch (e){
             handleError(e,data.sequence,true);

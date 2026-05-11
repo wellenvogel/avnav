@@ -241,7 +241,9 @@ const keys:Record<string,KeyType>={
             nearest: K, //to be displayed
             list:K,
             trackedMmsi: K,
-            updateCount:K
+            updateCount:K,
+            source:K,
+            numtargets:K
         },
         routeHandler:{
             activeName: K,

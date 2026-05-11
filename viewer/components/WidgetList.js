@@ -2,7 +2,7 @@
  * Created by andreas on 20.11.16.
  */
 import EtaWidget from './EtaWidget.jsx';
-import TimeStatusWidget from './TimeStatusWidget.jsx';
+import TimeStatusWidget from './TimeStatusWidget.tsx';
 import AisTargetWidget from './AisTargetWidget.tsx';
 import ActiveRouteWidget from './ActiveRouteWidget.jsx';
 import EditRouteWidget from './EditRouteWidget.jsx';
