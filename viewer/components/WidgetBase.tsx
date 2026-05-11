@@ -32,6 +32,7 @@ import {ResizeFrame} from "../hoc/Resizable";
 import Helper from "../util/helper";
 import {IWidgetProps} from "../util/types";
 import {WidgetParameter} from "../api/api.interface";
+import {KeyComponents} from "../util/keyhandler";
 
 export interface WidgetHeadProps{
     unit?: string,
@@ -68,7 +69,7 @@ export interface WidgetFrameProps extends IWidgetProps,WidgetHeadProps{
 
 
 export const WidgetFrame=(props:WidgetFrameProps)=> {
-    useKeyEventHandler(props, "widget");
+    useKeyEventHandler(props, KeyComponents.WIDGET);
     const sortableProps = useAvNavSortable(props.dragId)
     const classes = Helper.concatsp(
         "widget ",

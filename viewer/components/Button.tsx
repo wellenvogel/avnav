@@ -10,6 +10,7 @@ import {ButtonDescription} from "./ButtonList";
 import {Icon} from "./Icons";
 import {ListMainSlot} from "./ListItems";
 import keys, {ButtonFontSizeFactor} from "../util/keys";
+import {KeyComponents} from "../util/keyhandler";
 
 
 export type ButtonEventBase=Record<string, any>;
@@ -132,7 +133,7 @@ const Button = (sprops:ButtonProps) => {
             else dialogContext.closeDialog().then(()=>sprops.onClick(ev));
         }
     },[sprops.name,sprops.onClick,disabledv])
-    useKeyEventHandlerPlain(sprops.name, "button", () => {
+    useKeyEventHandlerPlain(sprops.name, KeyComponents.BUTTON, () => {
         syntheticClick();
     });
     if (! isVisible(iprops)) return null;

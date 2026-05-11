@@ -6,11 +6,12 @@ import {useCallback, useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import base from "../base";
+import {KeyComponents} from "../util/keyhandler";
 
 
 
 const MapWidget=(props)=>{
-        useKeyEventHandler(props,"widget");
+        useKeyEventHandler(props,KeyComponents.WIDGET);
         const drawing=useRef(null);
         const currentProps=useRef(props);
         currentProps.current=props;

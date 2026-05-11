@@ -41,6 +41,15 @@ export const PageKeyMode = {
     NONE: 'none',
     EXPLICIT: 'explicit'
 }
+export const KeyComponents={
+    DIALOGBUTTON: "dialogButton",
+    CHARTSELECTLIST:'chartSelectList',
+    MAINMENU: 'mainMenu',
+    BUTTON: "button",
+    PAGE:'page',
+    ALARM:'alarm',
+    WIDGET:'widget',
+}
 type Actions=Record<string,ActionFunction[]>
 class KeyHandler{
     static CONFIG='_config'; //entry at page mappings for config values

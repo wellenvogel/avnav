@@ -36,7 +36,7 @@ import EditOverlaysDialog from "./EditOverlaysDialog";
 import keys from "../util/keys";
 import globalstore from "../util/globalstore";
 import {iconClasses} from './Icons';
-import Keyhandler from "../util/keyhandler";
+import Keyhandler, {KeyComponents} from "../util/keyhandler";
 
 
 const ITEM_TYPE='chart'
@@ -81,7 +81,7 @@ export interface ChartItemListProps{
     autoreload?:number;
     selected?:string;
 }
-const COMPONENT='chartSelectList';
+const COMPONENT=KeyComponents.CHARTSELECTLIST;
 export const ChartItemList=(props:ChartItemListProps)=>{
     Keyhandler.registerDialogComponent(COMPONENT);
     const actions=createItemActions(ITEM_TYPE);

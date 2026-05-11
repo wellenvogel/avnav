@@ -76,6 +76,7 @@ import {InjectMainMenu, useInitialButton} from "./MainNav";
 import NavPageButtons from "./NavPageButtons";
 import {IHistory} from "../util/history";
 import ButtonDefs from "../components/ButtonDefs";
+import {KeyComponents} from "../util/keyhandler";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -534,9 +535,9 @@ const NavPage=(props:PageProps)=>{
     const wpTimer=useTimer(()=>{
             setWpButtonsVisible(false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
-    useKeyEventHandlerPlain("centerToTarget",'page', setCenterToTarget);
-    useKeyEventHandlerPlain("navNext",'page',navNext);
-    useKeyEventHandlerPlain("toggleNav",'page',()=>navToWp(!activeRoute.hasActiveTarget()));
+    useKeyEventHandlerPlain("centerToTarget",KeyComponents.PAGE, setCenterToTarget);
+    useKeyEventHandlerPlain("navNext",KeyComponents.PAGE,navNext);
+    useKeyEventHandlerPlain("toggleNav",KeyComponents.PAGE,()=>navToWp(!activeRoute.hasActiveTarget()));
     useEffect(() => {
         if (! globalStore.getData(keys.properties.aisShowErrors)) return;
         if (LayoutHandler.isEditing()) return;

@@ -37,6 +37,7 @@ import {useDialogContext} from "./DialogContext";
 import Layouthandler from "../util/layouthandler";
 import {WidgetProps} from "../util/types";
 import ButtonDefs from "./ButtonDefs";
+import {KeyComponents} from "../util/keyhandler";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);
@@ -147,7 +148,7 @@ const getWeight=(item)=>{
 
 const DEFAULT_NAME="CombinedWidget";
 export const CombinedWidget=(props)=>{
-    useKeyEventHandler(props,"widget")
+    useKeyEventHandler(props,KeyComponents.WIDGET)
     let {wclass,locked,editing,sequence,editableParameters,nightMode,children,onClick,childProperties,dragId,className,vertical,mode,...forwardProps}=props;
     const sortContext=useAvnavSortContext();
     const ddProps = useAvNavSortable(locked?dragId:undefined);

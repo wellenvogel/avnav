@@ -23,7 +23,8 @@
       "dummy": ["Control-g"]
     },
     "button":{
-      "Cancel":"Escape"
+      "Cancel":"Escape",
+      "MainNav" :["Control-m","x"]
     },
     "dialogButton": {
       "Cancel": "Escape",
@@ -34,6 +35,12 @@
       "previous": "ArrowUp",
       "next": "ArrowDown",
       "select":"Enter"
+    },
+    "mainMenu":{
+      "previous":"ArrowUp",
+      "next":"ArrowDown",
+      "select":"Enter",
+      "Cancel":"Escape"
     },
     "addon":{
       "0":"Control-0",

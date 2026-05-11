@@ -1,6 +1,6 @@
 import React from 'react';
 import {useKeyEventHandlerPlain} from '../util/UiHelper';
-import KeyHandler from '../util/keyhandler';
+import KeyHandler, {KeyComponents} from '../util/keyhandler';
 import {concatsp, setav} from "../util/helper";
 import {Options, useStore} from "../hoc/Dynamic";
 import {IDialogContext, useDialogContext} from "./DialogContext";
@@ -22,7 +22,7 @@ export interface DialogButtonProps extends Options{
     children?: React.ReactNode;
     label?: React.ReactNode;
 }
-const COMPONENT="dialogButton";
+const COMPONENT=KeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
         KeyHandler.registerDialogComponent(COMPONENT);

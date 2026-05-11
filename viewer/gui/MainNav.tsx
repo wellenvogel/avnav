@@ -23,7 +23,7 @@
 import React, {RefObject, SyntheticEvent, useEffect, useRef, useState} from "react";
 import {ListFrame, ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import Helper, {getav, setav} from "../util/helper";
-import {useDialogContext} from "../components/DialogContext";
+import {IDialogContext, useDialogContext} from "../components/DialogContext";
 import {DialogFrame, showDialog} from '../components/OverlayDialog';
 import {useHistory} from "../components/HistoryProvider";
 import {
@@ -43,7 +43,7 @@ import ChannelsPageButtons from "./ChannelsPageButtons";
 import ServerPageButtons from "./ServerPageButtons";
 import addons, {PageUserButton} from '../util/Addons';
 import NavPageButtons from "./NavPageButtons";
-import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
+import {ScrollExeMode, scrollInContainer, useKeyEventHandlerPlain} from "../util/UiHelper";
 import RoutesPageButtons from "./RoutesPageButtons";
 import TracksPageButtons from "./TracksPageButtons";
 import AisCfgPageButtons from "./AisCfgPageButtons";
@@ -53,7 +53,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
 import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
-import keyhandler from "../util/keyhandler";
+import keyhandler, {KeyComponents} from "../util/keyhandler";
 import {injectAddonButtonAction} from "../components/AddonView";
 import PluginsPageButtons from "./PluginsPageButtons";
 import AddOnPageButtons from "./AddOnPageButtons";
@@ -243,13 +243,20 @@ export interface MainNavProps{
     expandMode:MainExpandMode
     cancelCallback?:()=>void
 }
+const runActionDialog=(dialogContext:IDialogContext)=>{
+    dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons().concat(addons.getPageUserButtons(PAGEIDS.ACTIONS,false,true))}/>,
+        ()=>dialogContext.closeDialog());
+};
+type keyAction='select'|'previous'|'next'|'cancel';
 export const MainNav = (props:MainNavProps) => {
+    keyhandler.registerDialogComponent(KeyComponents.MAINMENU);
     const dialogContext=useDialogContext();
     const history=useHistory();
     const [expandMode,setExpandMode]=useState(props.expandMode);
     const [expandSequence,setExpandSequence]=useState(0);
     const [manualExpanded, setManualExpanded]=useState<string>(undefined);
     const [showAll]=useStoreState(keys.properties.mainAll);
+    const [selected,setSelected]=useState(props.current);
     const pages=mainTree.slice(0);
     const currentEl=useRef<HTMLElement>(null);
     const noExpand = expandMode === MainExpandMode.NEVER;
@@ -258,6 +265,56 @@ export const MainNav = (props:MainNavProps) => {
         if (!currentEl.current) return;
         scrollInContainer(currentEl.current.parentElement,currentEl.current,ScrollExeMode.vertical)
     }, []);
+    const keyHandler=useRef(null);
+    keyHandler.current=(action:keyAction)=>{
+        if (action === 'cancel'){
+            dialogContext.closeDialog();
+            return;
+        }
+        let current=-2;
+        if (selected === actionPage.name){
+            current=-1;
+        }
+        else {
+            for (let i = 0; i < pages.length; i++) {
+                if (pages[i].name === selected) {
+                    current = i;
+                    break;
+                }
+            }
+        }
+        if (current <= -2) return;
+        if (action === 'select'){
+            if (current === -1){
+                runActionDialog(dialogContext);
+                return;
+            }
+            dialogContext.closeDialog();
+            history.push(selected);
+            return;
+        }
+        if (action === 'next'){
+            current++;
+            if (current >= pages.length) return;
+            setSelected(pages[current].name);
+            return;
+        }
+        if (action === 'previous'){
+            current--;
+            if (current < -1) return;
+            if (current === -1) {
+                setSelected(actionPage.name);
+                return;
+            }
+            setSelected(pages[current].name);
+            return;
+        }
+
+    };
+    useKeyEventHandlerPlain('select',KeyComponents.MAINMENU,()=>keyHandler.current('select'));
+    useKeyEventHandlerPlain('next',KeyComponents.MAINMENU,()=>keyHandler.current('next'));
+    useKeyEventHandlerPlain('previous',KeyComponents.MAINMENU,()=>keyHandler.current('previous'));
+    useKeyEventHandlerPlain('Cancel',KeyComponents.MAINMENU,()=>keyHandler.current('cancel'));
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
             { ! noExpand && <ListSlot className={'iconSlot'}
@@ -290,10 +347,9 @@ export const MainNav = (props:MainNavProps) => {
         <PageRow page={actionPage}
                  noExpand={true}
                  onClick={() => {
-                     dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons().concat(addons.getPageUserButtons(PAGEIDS.ACTIONS,false,true))}/>,
-                         ()=>dialogContext.closeDialog());
+                     runActionDialog(dialogContext);
                  }}
-                 isCurrent={false}
+                 isCurrent={selected === actionPage.name}
                  expanded={false}
                  expandSequence={0}/>
         {pages.map((page)=>{
@@ -301,7 +357,7 @@ export const MainNav = (props:MainNavProps) => {
             const displayPage=(page.name === props.current)?page.copy({
                 buttons:props.currentButtons
             }):page;
-            const isCurrent=page.name==props.current;
+            const isCurrent=page.name==selected;
             const expand=manualExpanded?
                 page.name === manualExpanded:
                 (expandMode == MainExpandMode.ALL)

@@ -8,11 +8,12 @@ import keys from '../util/keys.ts';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import AlarmHandler from '../nav/alarmhandler.js';
 import {WidgetFrame} from "./WidgetBase";
+import {KeyComponents} from "../util/keyhandler";
 
 
 //TODO: compare alarm info correctly
 const AlarmWidget = (props) => {
-    useKeyEventHandler({name: 'stop'}, "alarm", () => {
+    useKeyEventHandler({name: 'stop'}, KeyComponents.ALARM, () => {
         if (props.onClick) props.onClick();
     })
     const onClick = (ev) => {
