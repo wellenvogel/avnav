@@ -29,7 +29,7 @@ def grep(dir:str,args:list=None):
         cmd=cmd+args
     cmd.append(r'[^[]ButtonDefs\.')
     cmd.append(dir)
-    logger.info(cmd)
+    logger.info(" ".join(cmd))
     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,encoding="utf-8")
     s1='ButtonDefs'
     re1=re.compile(r'ButtonDefs\.(\w+)')
@@ -54,7 +54,7 @@ def grepIcons(dir:str,args:list=None):
         cmd=cmd+args
     cmd.append(r'[^[]iconClasses\.')
     cmd.append(dir)
-    logger.info(cmd)
+    logger.info(" ".join(cmd))
     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,encoding="utf-8")
     re1=re.compile(r'iconClasses\.(\w+)')
     iconDefs={}
@@ -300,7 +300,7 @@ if len(sys.argv) < 1:
     usage()
     sys.exit(1)
 
-ALL_FORMATS=['plain','table','sparse','pandoc']
+ALL_FORMATS=['plain','table','sparse','pandoc','button2icon']
 #after creating the "pandoc" markdow convert to odt
 #from within the docs dir with
 #pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
@@ -375,5 +375,18 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
                 first=not handleFirst
                 lstr+="|"+iconEntry(None,iconDef,format=format)
             print(f"{lstr}")
+    sys.exit(0)
+elif format == 'button2icon':
+    '''
+    intersting commands afterwards:
+    #build an sed command to migrate from old def to new icon based
+    #omit the 'p' if you only have the button icons and run the sed without -n
+    tools/buttonUsage.py -f button2icon | sed 's/\(\w*\) *\(.*\)/s?\.button.\1 *span?.icon.\2?p/' > ~x.sed
+    #combine the old style button icon to one line
+    sed -n '/^ *\.button.*span/{x; N; N; s/\n//g; p;}' < plugin.css
+    '''
+    for k in sorted(buttonDefs.keys()):
+        buttonDef = buttonDefs.get(k)
+        print(f"{k} {buttonDef.icon}")
     sys.exit(0)
 raise RuntimeError(f'invalid format {format}')
