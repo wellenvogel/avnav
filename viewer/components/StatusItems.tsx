@@ -22,16 +22,22 @@
  #
  ###############################################################################
  */
-import globalStore from "../util/globalstore";
-import keys from "../util/keys";
 import Button, {ButtonEventHandler} from "./Button";
 import React from 'react';
 import Helper from "../util/helper";
 import ButtonDefs from "./ButtonDefs";
+import {StatusIcon, StatusIconType} from "./Icons";
 
-export const statusTextToImageUrl=(text:string)=>{
-    let rt=globalStore.getData(keys.properties.statusIcons[text]);
-    if (! rt) rt=globalStore.getData(keys.properties.statusIcons.INACTIVE);
+const statusIcons:Record<string, StatusIconType> = {
+    INACTIVE: 'grey',
+    STARTED: 'yellow',
+    RUNNING: 'yellow',
+    NMEA: 'green',
+    ERROR: 'red'
+};
+export const statusTextToImageUrl=(text:string):StatusIconType=>{
+    let rt=statusIcons[text];
+    if (! rt) rt='grey'
     return rt;
 };
 interface EditIconProps{
@@ -66,7 +72,7 @@ export const ChildStatus=(props:ChildStatusProps)=>{
     if (sub) clName+=" sub";
     return (
         <div className={clName} onClick={props.onClick}>
-            <img src={statusTextToImageUrl(props.status)}/>
+            <StatusIcon type={statusTextToImageUrl(props.status)}/>
             <span className="statusName">{name}</span>
             <span className="statusInfo">{props.info}</span>
             {(props.forceEdit || (canEdit && ! sub))  && <EditIcon onClick={

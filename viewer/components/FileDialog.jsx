@@ -60,9 +60,10 @@ import {FileSource, PMTiles, TileType, tileTypeExt} from "pmtiles";
 import base from "../base";
 import {useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
-import {loadSettings, LoadSettingsDialog} from "./Settings";
+import {LoadSettingsDialog} from "./Settings";
 import {ViewDialog} from "./ViewDialog";
 import ButtonDefs from "./ButtonDefs";
+import {StatusIcon} from "./Icons";
 
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -1926,13 +1927,13 @@ class PluginItemActions extends ItemActions{
         return rt;
     }
 
-    getExtendedInfoRows(item) {
+    getExtendedInfoRows() {
         return [
             {label:'version',value:'version'},
             {label:'active',value:'active',formatter:(v)=>v?"true":"false"},
             {label:'parts',value:'files'},
             {label:'status',value:'status',formatter:(v)=>{
-                    return <img className="status_image" src={statusTextToImageUrl(v)}/>
+                    return <StatusIcon type={statusTextToImageUrl(v)}/>
                 }},
             {label:'info',value:'info'},
             {label:'description',value:'description'},
@@ -1968,7 +1969,7 @@ const AddRemoveOverlayDialog = (props) => {
     const [chartList, setChartList] = useState([DEFAULT_OVERLAY_CHARTENTRY]);
     const [chart, setChart] = useState(DEFAULT_OVERLAY_CHARTENTRY.name);
     const [action, setAction] = useState('add');
-    const [changed, setChanged] = useState(false);
+    const [, setChanged] = useState(false);
     const [running,setRunning] = useState(false);
     let titles = {add: "Add to Charts", remove: "Remove from Charts"}
     useEffect(() => {

@@ -37,6 +37,7 @@ import {useTimer} from "../util/UiHelper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import Helper from "../util/helper";
 import ButtonDefs from "./ButtonDefs";
+import {StatusIcon} from "./Icons";
 
 const HANDLER_NAME='AVNImporter';
 interface MainStatusProps{
@@ -253,7 +254,7 @@ const ConverterDialog=(props:ConverterDialogProps)=>{
     const isRunning=props.status === 'NMEA';
     return <DialogFrame className="importConverterDialog" title={'Converter'}>
         <div className="dialogRow childStatus">
-            <img src={statusTextToImageUrl(props.status)}/>
+            <StatusIcon type={statusTextToImageUrl(props.status)}/>
             <span className="itemInfo">{props.info}</span>
         </div>
 
@@ -306,7 +307,7 @@ const ScannerDialog=(props:ScannerDialogProps)=>{
     const dialogContext=useDialogContext();
     return <DialogFrame className="importScannerDialog" title={'Scanner'}>
         <div className="dialogRow childStatus">
-            <img src={statusTextToImageUrl(props.status)}/>
+            <StatusIcon type={statusTextToImageUrl(props.status)}/>
             <span className="itemInfo">{props.info}</span>
         </div>
 

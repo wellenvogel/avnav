@@ -25,16 +25,10 @@ import {useTimer} from '../util/UiHelper';
 import Requests from "../util/requests";
 import {IWidgetBase, WidgetFrame} from "./WidgetBase";
 import {IWidgetProps} from "../util/types";
-import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {useStoreState} from "../hoc/Dynamic";
 import {useStringsChanged} from "../hoc/Resizable";
-
-const getImgSrc=function(color:string){
-    if (color == "red") return globalstore.getData(keys.properties.statusErrorImage);
-    if (color == "green") return globalstore.getData(keys.properties.statusOkImage);
-    if (color == "yellow")return globalstore.getData(keys.properties.statusYellowImage);
-};
+import {StatusIcon} from "./Icons";
 
 export interface NmeaStatusWidgetProps extends IWidgetProps{
     showAis?:boolean;
@@ -65,7 +59,7 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
         },
             ()=>timer.startTimer(seq));
     },1000,true,true);
-    const display= {
+    const display:Record<string,any>= {
         nmeaColor: connectionLost ? "yellow" : "red",
         aisColor: connectionLost ? "yellow" : "red",
         nmeaInfo: connectionLost ? "" : "connection lost",
@@ -93,7 +87,7 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
         { props.showNmea && <WidgetFrame {...props} caption={'NMEA'} className="nmeaStatusWidget" key={1} style={{height:'50%'}} resizeSequence={resizeSequence}>
             <div className='widgetData nmea'>
                 <div className={"rowBase status"}>
-                    <img className='status_image' src={getImgSrc(display.nmeaColor)}/>
+                    <StatusIcon type={display.nmeaColor}/>
                     <div className={"source"}>{display.nmeaSource}</div>
                 </div>
                 <div className={"rowBase"}>
@@ -105,7 +99,7 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
             <WidgetFrame {...props} className={"nmeaStatusWidget"} caption={'AIS'} key={2} style={{height:'50%'}} resizeSequence={resizeSequence}>
                 <div className={"widgetData ais"}>
                     <div className={"rowBase status"}>
-                        <img className='status_image' src={getImgSrc(display.aisColor)}/>
+                        <StatusIcon type={display.aisColor}/>
                         <div className={"source"}>{display.aisSource}</div>
                     </div>
                     <div className={"rowBase"}>

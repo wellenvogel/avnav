@@ -3,14 +3,7 @@
  */
 
 
-// @ts-ignore
-import greyBubble from '../images/GreyBubble40.png';
-// @ts-ignore
-import redBubble from '../images/RedBubble40.png';
-// @ts-ignore
-import greenBubble from '../images/GreenBubble40.png';
-// @ts-ignore
-import yellowBubble from '../images/YellowBubble40.png';
+
 import AisFormatter from "../nav/aisformatter";
 import {EditableParameterTypes, ListEntry} from "./EditableParameter";
 // @ts-ignore
@@ -453,17 +446,6 @@ const keys:Record<string,KeyType>={
         fontShadowWidth: new Property(3,"font shadow width(px)",PropertyType.RANGE,[0,10],"the width in pixel for the shadow of text on the map"),
         fontColor: new Property('#000',"font color",PropertyType.COLOR,undefined,"The color for text on the map"),
         routeCatchRange: new Property(50,"route point snap distance %", PropertyType.RANGE,[0,100]),
-        statusErrorImage: new Property(redBubble),
-        statusOkImage: new Property(greenBubble),
-        statusYellowImage: new Property(yellowBubble),
-        statusUnknownImage: new Property(greyBubble),
-        statusIcons: {
-            INACTIVE: new Property(greyBubble),
-            STARTED: new Property(yellowBubble),
-            RUNNING: new Property(yellowBubble),
-            NMEA: new Property(greenBubble),
-            ERROR: new Property(redBubble)
-        },
         nightFade: new Property(50, "NightDim(%)", PropertyType.RANGE, [1, 99],"Value in % to dim the display for night mode"), //in px
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99],"Value in % to dim the chart display for night mode"), //in %
         dimFade: new Property(0,"Dim Fade(%)",PropertyType.RANGE,[0,60]),
