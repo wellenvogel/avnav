@@ -87,6 +87,7 @@ Buttons
 |[__DBEditRoute__](../viewer/components/ButtonDefs.ts#L697)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L674)|Route|[route.svg](../viewer/style/icons.less#L22)|<img alt="route.svg" src="../viewer/images/icons-new/route.svg" width="40px"/>|||
 |[DBEditRoute](../viewer/components/ButtonDefs.ts#L697)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L691)|||||
 |[__DBEmptyRoute__](../viewer/components/ButtonDefs.ts#L483)|[gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L172)|EmptyRoute|[delete_sweep.svg](../viewer/style/icons.less#L301)|<img alt="delete_sweep.svg" src="../viewer/images/icons-new/delete_sweep.svg" width="40px"/>|[Empty](../viewer/style/button_text.less#L388)||
+|[__DBFeatureNewRoute__](../viewer/components/ButtonDefs.ts#L689)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L414)|Route|[route.svg](../viewer/style/icons.less#L22)|<img alt="route.svg" src="../viewer/images/icons-new/route.svg" width="40px"/>|[New route](../viewer/style/button_text.less#L512)||
 |[__DBHide__](../viewer/components/ButtonDefs.ts#L721)|[components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L346)|Hide|[visibility_off.svg](../viewer/style/icons.less#L297)|<img alt="visibility_off.svg" src="../viewer/images/icons-new/visibility_off.svg" width="40px"/>|[Hide](../viewer/style/button_text.less#L533)||
 |[__DBHideAllOverlays__](../viewer/components/ButtonDefs.ts#L555)|[components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L731)|HideOverlays|[layers-black-off.svg](../viewer/style/icons.less#L19)|<img alt="layers-black-off.svg" src="../viewer/images/icons-new/layers-black-off.svg" width="40px"/>|[Hide all](../viewer/style/button_text.less#L424)||
 |[__DBHideOverlays__](../viewer/components/ButtonDefs.ts#L546)|[components/MapPage.tsx](../viewer/components/MapPage.tsx#L388)|HideOverlays|[layers-black-off.svg](../viewer/style/icons.less#L19)|<img alt="layers-black-off.svg" src="../viewer/images/icons-new/layers-black-off.svg" width="40px"/>|[Hide overlays](../viewer/style/button_text.less#L417)||
@@ -103,6 +104,7 @@ Buttons
 |[__DBLog__](../viewer/components/ButtonDefs.ts#L613)|[components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L223)|Log|[ic_text_snippet.svg](../viewer/style/icons.less#L228)|<img alt="ic_text_snippet.svg" src="../viewer/images/icons-new/ic_text_snippet.svg" width="40px"/>|[Log](../viewer/style/button_text.less#L463)||
 |[DBLog](../viewer/components/ButtonDefs.ts#L613)|[components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L1000)|||||
 |[__DBMeasure__](../viewer/components/ButtonDefs.ts#L705)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L732)|Measure|[straighten.svg](../viewer/style/icons.less#L334)|<img alt="straighten.svg" src="../viewer/images/icons-new/straighten.svg" width="40px"/>|[Measure](../viewer/style/button_text.less#L521)||
+|[__DBMeasureAdd__](../viewer/components/ButtonDefs.ts#L709)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L732)|Measure|[straighten.svg](../viewer/style/icons.less#L334)|<img alt="straighten.svg" src="../viewer/images/icons-new/straighten.svg" width="40px"/>|[+Measure](../viewer/style/button_text.less#L524)||
 |[__DBMeasureOff__](../viewer/components/ButtonDefs.ts#L713)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L751)|MeasureOff|[straighten-off.svg](../viewer/style/icons.less#L337)|<img alt="straighten-off.svg" src="../viewer/images/icons-new/straighten-off.svg" width="40px"/>|[Measure](../viewer/style/button_text.less#L527)||
 |[__DBNew__](../viewer/components/ButtonDefs.ts#L468)|[components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L108)|Plus|[ic_add.svg](../viewer/style/icons.less#L80)|<img alt="ic_add.svg" src="../viewer/images/icons-new/ic_add.svg" width="40px"/>|[New](../viewer/style/button_text.less#L366)||
 |[DBNew](../viewer/components/ButtonDefs.ts#L468)|[components/UserAppDialog.tsx](../viewer/components/UserAppDialog.tsx#L188)|||||
@@ -138,6 +140,7 @@ Buttons
 |[__DBRestart__](../viewer/components/ButtonDefs.ts#L609)|[components/ImporterView.tsx](../viewer/components/ImporterView.tsx#L197)|Reload|[ic_refresh.svg](../viewer/style/icons.less#L131)|<img alt="ic_refresh.svg" src="../viewer/images/icons-new/ic_refresh.svg" width="40px"/>|[Restart](../viewer/style/button_text.less#L460)||
 |[__DBRoutePoints__](../viewer/components/ButtonDefs.ts#L503)|[gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L453)|Route|[route.svg](../viewer/style/icons.less#L22)|<img alt="route.svg" src="../viewer/images/icons-new/route.svg" width="40px"/>|[Points](../viewer/style/button_text.less#L403)||
 |[__DBSave__](../viewer/components/ButtonDefs.ts#L460)|[components/EditDialog.tsx](../viewer/components/EditDialog.tsx#L90)|Save|[save.svg](../viewer/style/icons.less#L255)|<img alt="save.svg" src="../viewer/images/icons-new/save.svg" width="40px"/>|[Save](../viewer/style/button_text.less#L339)||
+|[DBSave](../viewer/components/ButtonDefs.ts#L460)|[components/EditOverlaysDialog.jsx](../viewer/components/EditOverlaysDialog.jsx#L656)|||||
 |[DBSave](../viewer/components/ButtonDefs.ts#L460)|[components/TrackConvertDialog.jsx](../viewer/components/TrackConvertDialog.jsx#L454)|||||
 |[__DBSaveAs__](../viewer/components/ButtonDefs.ts#L456)|[gui/EditRoutePage.jsx](../viewer/gui/EditRoutePage.jsx#L496)|SaveAs|[content_copy.svg](../viewer/style/icons.less#L276)|<img alt="content_copy.svg" src="../viewer/images/icons-new/content_copy.svg" width="40px"/>|[Save As](../viewer/style/button_text.less#L336)||
 |[__DBScheme__](../viewer/components/ButtonDefs.ts#L660)|[components/FileDialog.jsx](../viewer/components/FileDialog.jsx#L966)|ChartScheme|[table_convert.svg](../viewer/style/icons.less#L330)|<img alt="table_convert.svg" src="../viewer/images/icons-new/table_convert.svg" width="40px"/>|[Scheme](../viewer/style/button_text.less#L496)||
@@ -183,6 +186,7 @@ Buttons
 |[LockMarker](../viewer/components/ButtonDefs.ts#L239)|[gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L56)|||||
 |[__LockPos__](../viewer/components/ButtonDefs.ts#L235)|[gui/NavPage.tsx](../viewer/gui/NavPage.tsx#L791)|LockPos|[boat.svg](../viewer/style/icons.less#L195)|<img alt="boat.svg" src="../viewer/images/icons-new/boat.svg" width="40px"/>|[Lock](../viewer/style/button_text.less#L165)|lock to GPS|
 |[LockPos](../viewer/components/ButtonDefs.ts#L235)|[gui/NavPageButtons.ts](../viewer/gui/NavPageButtons.ts#L48)|||||
+|[__MOB__](../viewer/components/ButtonDefs.ts#L35)|[components/Mob.ts](../viewer/components/Mob.ts#L59)|MOB|[drowning.svg](../viewer/style/icons.less#L210)|<img alt="drowning.svg" src="../viewer/images/icons-new/drowning.svg" width="40px"/>|[MOB](../viewer/style/button_text.less#L13)|man over board|
 |[__MainExit__](../viewer/components/ButtonDefs.ts#L107)|[gui/MainActionButtons.tsx](../viewer/gui/MainActionButtons.tsx#L93)|Cancel|[ic_clear.svg](../viewer/style/icons.less#L74)|<img alt="ic_clear.svg" src="../viewer/images/icons-new/ic_clear.svg" width="40px"/>|[Exit](../viewer/style/button_text.less#L35)|exit AvNav|
 |[MainExit](../viewer/components/ButtonDefs.ts#L107)|[gui/WarningPage.tsx](../viewer/gui/WarningPage.tsx#L125)|||||
 |[__MainInfo__](../viewer/components/ButtonDefs.ts#L319)|[gui/ServerPageButtons.ts](../viewer/gui/ServerPageButtons.ts#L32)|Info|[ic_info.svg](../viewer/style/icons.less#L28)|<img alt="ic_info.svg" src="../viewer/images/icons-new/ic_info.svg" width="40px"/>|[Info](../viewer/style/button_text.less#L230)|version and license|
@@ -291,6 +295,13 @@ Icons
 |[__Checked__](../viewer/images/icons-new#L354)|[components/Inputs.tsx](../viewer/components/Inputs.tsx#L103)|[checkbox-marked-outline.svg](../viewer/style/icons.less#L354)|<img alt="checkbox-marked-outline.svg" src="../viewer/images/icons-new/checkbox-marked-outline.svg" width="40px"/>
 |[__Disconnect__](../viewer/images/icons-new#L323)|[components/TitleIcons.tsx](../viewer/components/TitleIcons.tsx#L86)|[plug-disconnect.svg](../viewer/style/icons.less#L323)|<img alt="plug-disconnect.svg" src="../viewer/images/icons-new/plug-disconnect.svg" width="40px"/>
 |[__Edit__](../viewer/images/icons-new#L25)|[components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L103)|[ic_edit.svg](../viewer/style/icons.less#L25)|<img alt="ic_edit.svg" src="../viewer/images/icons-new/ic_edit.svg" width="40px"/>
+|[__Empty__](../viewer/images/icons-new#L345)|[components/WayPointItem.jsx](../viewer/components/WayPointItem.jsx#L24)|[None](../viewer/style/icons.less#L345)|
+|[Empty](../viewer/images/icons-new#L345)|[components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L102)
+|[Empty](../viewer/images/icons-new#L345)|[components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L103)
+|[Empty](../viewer/images/icons-new#L345)|[components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L104)
+|[Empty](../viewer/images/icons-new#L345)|[components/MultiView.tsx](../viewer/components/MultiView.tsx#L157)
+|[Empty](../viewer/images/icons-new#L345)|[components/MultiView.tsx](../viewer/components/MultiView.tsx#L163)
+|[Empty](../viewer/images/icons-new#L345)|[components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L157)
 |[__ITDirectory__](../viewer/images/icons-new#L390)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L157)|[folder_shared.svg](../viewer/style/icons.less#L390)|<img alt="folder_shared.svg" src="../viewer/images/icons-new/folder_shared.svg" width="40px"/>
 |[__ITHtml__](../viewer/images/icons-new#L384)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L155)|[internet-web-browser.svg](../viewer/style/icons.less#L384)|<img alt="internet-web-browser.svg" src="../viewer/images/icons-new/internet-web-browser.svg" width="40px"/>
 |[__ITOther__](../viewer/images/icons-new#L393)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L158)|[draft.svg](../viewer/style/icons.less#L393)|<img alt="draft.svg" src="../viewer/images/icons-new/draft.svg" width="40px"/>
@@ -303,10 +314,10 @@ Icons
 |[__Left__](../viewer/images/icons-new#L398)|[components/MultiView.tsx](../viewer/components/MultiView.tsx#L157)|[navigate_before.svg](../viewer/style/icons.less#L398)|<img alt="navigate_before.svg" src="../viewer/images/icons-new/navigate_before.svg" width="40px"/>
 |[__MNCatNav__](../viewer/images/icons-new#L371)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L74)|[boat.svg](../viewer/style/icons.less#L371)|<img alt="boat.svg" src="../viewer/images/icons-new/boat.svg" width="40px"/>
 |[__MNCatSet__](../viewer/images/icons-new#L374)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L75)|[build-200.svg](../viewer/style/icons.less#L374)|<img alt="build-200.svg" src="../viewer/images/icons-new/build-200.svg" width="40px"/>
-|[__MNCollapsed__](../viewer/images/icons-new#L363)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L264)|[navigate_next.svg](../viewer/style/icons.less#L363)|<img alt="navigate_next.svg" src="../viewer/images/icons-new/navigate_next.svg" width="40px"/>
+|[__MNCollapsed__](../viewer/images/icons-new#L363)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L198)|[navigate_next.svg](../viewer/style/icons.less#L363)|<img alt="navigate_next.svg" src="../viewer/images/icons-new/navigate_next.svg" width="40px"/>
+|[MNCollapsed](../viewer/images/icons-new#L363)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L264)
 |[__MNExpanded__](../viewer/images/icons-new#L367)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L198)|[navigate_next.svg](../viewer/style/icons.less#L367)|<img alt="navigate_next.svg" src="../viewer/images/icons-new/navigate_next.svg" width="40px"/>
 |[MNExpanded](../viewer/images/icons-new#L367)|[gui/MainNav.tsx](../viewer/gui/MainNav.tsx#L272)
-|[__MOB__](../viewer/images/icons-new#L210)|[components/Mob.ts](../viewer/components/Mob.ts#L61)|[drowning.svg](../viewer/style/icons.less#L210)|<img alt="drowning.svg" src="../viewer/images/icons-new/drowning.svg" width="40px"/>
 |[__Measure__](../viewer/images/icons-new#L334)|[components/TitleIcons.tsx](../viewer/components/TitleIcons.tsx#L65)|[straighten.svg](../viewer/style/icons.less#L334)|<img alt="straighten.svg" src="../viewer/images/icons-new/straighten.svg" width="40px"/>
 |[Measure](../viewer/images/icons-new#L334)|[components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L153)
 |[__MeasureFlag__](../viewer/images/icons-new#L340)|[components/CenterDisplayWidget.jsx](../viewer/components/CenterDisplayWidget.jsx#L27)|[outlined_flag.svg](../viewer/style/icons.less#L340)|<img alt="outlined_flag.svg" src="../viewer/images/icons-new/outlined_flag.svg" width="40px"/>
@@ -318,6 +329,7 @@ Icons
 |[Overlays](../viewer/images/icons-new#L16)|[components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L157)
 |[__Plugins__](../viewer/images/icons-new#L37)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L153)|[extension.svg](../viewer/style/icons.less#L37)|<img alt="extension.svg" src="../viewer/images/icons-new/extension.svg" width="40px"/>
 |[__RadioChecked__](../viewer/images/icons-new#L360)|[components/Inputs.tsx](../viewer/components/Inputs.tsx#L130)|[radio_button_checked.svg](../viewer/style/icons.less#L360)|<img alt="radio_button_checked.svg" src="../viewer/images/icons-new/radio_button_checked.svg" width="40px"/>
+|[__RadioUnchecked__](../viewer/images/icons-new#L357)|[components/Inputs.tsx](../viewer/components/Inputs.tsx#L130)|[radio_button_unchecked.svg](../viewer/style/icons.less#L357)|<img alt="radio_button_unchecked.svg" src="../viewer/images/icons-new/radio_button_unchecked.svg" width="40px"/>
 |[__Right__](../viewer/images/icons-new#L401)|[components/MultiView.tsx](../viewer/components/MultiView.tsx#L163)|[navigate_next.svg](../viewer/style/icons.less#L401)|<img alt="navigate_next.svg" src="../viewer/images/icons-new/navigate_next.svg" width="40px"/>
 |[__Route__](../viewer/images/icons-new#L22)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L146)|[route.svg](../viewer/style/icons.less#L22)|<img alt="route.svg" src="../viewer/images/icons-new/route.svg" width="40px"/>
 |[Route](../viewer/images/icons-new#L22)|[components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L147)
@@ -326,6 +338,7 @@ Icons
 |[Settings](../viewer/images/icons-new#L95)|[components/TitleIcons.tsx](../viewer/components/TitleIcons.tsx#L92)
 |[__Track__](../viewer/images/icons-new#L34)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L147)|[track.svg](../viewer/style/icons.less#L34)|<img alt="track.svg" src="../viewer/images/icons-new/track.svg" width="40px"/>
 |[Track](../viewer/images/icons-new#L34)|[components/FeatureInfoDialog.jsx](../viewer/components/FeatureInfoDialog.jsx#L148)
+|[__UnChecked__](../viewer/images/icons-new#L351)|[components/Inputs.tsx](../viewer/components/Inputs.tsx#L103)|[checkbox-blank-outline.svg](../viewer/style/icons.less#L351)|<img alt="checkbox-blank-outline.svg" src="../viewer/images/icons-new/checkbox-blank-outline.svg" width="40px"/>
 |[__User__](../viewer/images/icons-new#L7)|[util/itemFunctions.ts](../viewer/util/itemFunctions.ts#L150)|[folder_shared.svg](../viewer/style/icons.less#L7)|<img alt="folder_shared.svg" src="../viewer/images/icons-new/folder_shared.svg" width="40px"/>
 |[__View__](../viewer/images/icons-new#L83)|[components/DownloadItemList.tsx](../viewer/components/DownloadItemList.tsx#L104)|[visibility.svg](../viewer/style/icons.less#L83)|<img alt="visibility.svg" src="../viewer/images/icons-new/visibility.svg" width="40px"/>
 |[__Waypoint__](../viewer/images/icons-new#L406)|[components/CenterDisplayWidget.jsx](../viewer/components/CenterDisplayWidget.jsx#L42)|[waypoint.svg](../viewer/style/icons.less#L406)|<img alt="waypoint.svg" src="../viewer/images/icons-new/waypoint.svg" width="40px"/>
@@ -364,7 +377,7 @@ IconUsage
 |Download|[ic_file_download.svg](../viewer/style/icons.less#L270)|<img alt="ic_file_download.svg" src="../viewer/images/icons-new/ic_file_download.svg" width="40px"/>|DBDownload|
 |Edit|[ic_edit.svg](../viewer/style/icons.less#L25)|<img alt="ic_edit.svg" src="../viewer/images/icons-new/ic_edit.svg" width="40px"/>|WpEdit,Edit,DBRename,DBEditCss,DBConfig,code|
 |EditPage|[tune.svg](../viewer/style/icons.less#L204)|<img alt="tune.svg" src="../viewer/images/icons-new/tune.svg" width="40px"/>|EditPage|
-|Empty|[None](../viewer/style/icons.less#L345)|||
+|Empty|[None](../viewer/style/icons.less#L345)||code|
 |EmptyRoute|[delete_sweep.svg](../viewer/style/icons.less#L301)|<img alt="delete_sweep.svg" src="../viewer/images/icons-new/delete_sweep.svg" width="40px"/>|DBEmptyRoute|
 |Expand|[expand-all-200.svg](../viewer/style/icons.less#L40)|<img alt="expand-all-200.svg" src="../viewer/images/icons-new/expand-all-200.svg" width="40px"/>|StatusAll|
 |FullScreen|[fullscreen.svg](../viewer/style/icons.less#L125)|<img alt="fullscreen.svg" src="../viewer/images/icons-new/fullscreen.svg" width="40px"/>|FullScreen|
@@ -394,7 +407,7 @@ IconUsage
 |MNCatSet|[build-200.svg](../viewer/style/icons.less#L374)|<img alt="build-200.svg" src="../viewer/images/icons-new/build-200.svg" width="40px"/>|code|
 |MNCollapsed|[navigate_next.svg](../viewer/style/icons.less#L363)|<img alt="navigate_next.svg" src="../viewer/images/icons-new/navigate_next.svg" width="40px"/>|code|
 |MNExpanded|[navigate_next.svg](../viewer/style/icons.less#L367)|<img alt="navigate_next.svg" src="../viewer/images/icons-new/navigate_next.svg" width="40px"/>|code|
-|MOB|[drowning.svg](../viewer/style/icons.less#L210)|<img alt="drowning.svg" src="../viewer/images/icons-new/drowning.svg" width="40px"/>|MOB,code|
+|MOB|[drowning.svg](../viewer/style/icons.less#L210)|<img alt="drowning.svg" src="../viewer/images/icons-new/drowning.svg" width="40px"/>|MOB|
 |MainNav|[menu-200.svg](../viewer/style/icons.less#L258)|<img alt="menu-200.svg" src="../viewer/images/icons-new/menu-200.svg" width="40px"/>|MainNav|
 |Measure|[straighten.svg](../viewer/style/icons.less#L334)|<img alt="straighten.svg" src="../viewer/images/icons-new/straighten.svg" width="40px"/>|DBMeasure,DBMeasureAdd,code|
 |MeasureFlag|[outlined_flag.svg](../viewer/style/icons.less#L340)|<img alt="outlined_flag.svg" src="../viewer/images/icons-new/outlined_flag.svg" width="40px"/>|code|
@@ -427,7 +440,7 @@ IconUsage
 |Propose|[prompt_suggestion.svg](../viewer/style/icons.less#L319)|<img alt="prompt_suggestion.svg" src="../viewer/images/icons-new/prompt_suggestion.svg" width="40px"/>|DBPropose|
 |QRCode|[qrcode.svg](../viewer/style/icons.less#L222)|<img alt="qrcode.svg" src="../viewer/images/icons-new/qrcode.svg" width="40px"/>|StatusAddresses|
 |RadioChecked|[radio_button_checked.svg](../viewer/style/icons.less#L360)|<img alt="radio_button_checked.svg" src="../viewer/images/icons-new/radio_button_checked.svg" width="40px"/>|code|
-|RadioUnchecked|[radio_button_unchecked.svg](../viewer/style/icons.less#L357)|<img alt="radio_button_unchecked.svg" src="../viewer/images/icons-new/radio_button_unchecked.svg" width="40px"/>||
+|RadioUnchecked|[radio_button_unchecked.svg](../viewer/style/icons.less#L357)|<img alt="radio_button_unchecked.svg" src="../viewer/images/icons-new/radio_button_unchecked.svg" width="40px"/>|code|
 |Reload|[ic_refresh.svg](../viewer/style/icons.less#L131)|<img alt="ic_refresh.svg" src="../viewer/images/icons-new/ic_refresh.svg" width="40px"/>|ReloadUI,StatusRestart,DBReload,DBRestart,DBAutoReload|
 |RemoteChannel|[settings_remote.svg](../viewer/style/icons.less#L122)|<img alt="settings_remote.svg" src="../viewer/images/icons-new/settings_remote.svg" width="40px"/>|RemoteChannel|
 |RenumberRoute|[format_list_numbered.svg](../viewer/style/icons.less#L307)|<img alt="format_list_numbered.svg" src="../viewer/images/icons-new/format_list_numbered.svg" width="40px"/>|DBRenumberRoute|
@@ -450,7 +463,7 @@ IconUsage
 |Stop|[stop_circle.svg](../viewer/style/icons.less#L291)|<img alt="stop_circle.svg" src="../viewer/images/icons-new/stop_circle.svg" width="40px"/>|DBStop|
 |Sync|[sync.svg](../viewer/style/icons.less#L116)|<img alt="sync.svg" src="../viewer/images/icons-new/sync.svg" width="40px"/>|SyncRoutes|
 |Track|[track.svg](../viewer/style/icons.less#L34)|<img alt="track.svg" src="../viewer/images/icons-new/track.svg" width="40px"/>|code|
-|UnChecked|[checkbox-blank-outline.svg](../viewer/style/icons.less#L351)|<img alt="checkbox-blank-outline.svg" src="../viewer/images/icons-new/checkbox-blank-outline.svg" width="40px"/>||
+|UnChecked|[checkbox-blank-outline.svg](../viewer/style/icons.less#L351)|<img alt="checkbox-blank-outline.svg" src="../viewer/images/icons-new/checkbox-blank-outline.svg" width="40px"/>|code|
 |Undo|[ic_undo.svg](../viewer/style/icons.less#L249)|<img alt="ic_undo.svg" src="../viewer/images/icons-new/ic_undo.svg" width="40px"/>|RevertLayout|
 |Upload|[ic_file_upload.svg](../viewer/style/icons.less#L113)|<img alt="ic_file_upload.svg" src="../viewer/images/icons-new/ic_file_upload.svg" width="40px"/>|Upload|
 |User|[folder_shared.svg](../viewer/style/icons.less#L7)|<img alt="folder_shared.svg" src="../viewer/images/icons-new/folder_shared.svg" width="40px"/>|AddonConfigUser,code|

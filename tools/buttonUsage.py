@@ -39,9 +39,7 @@ def grep(dir:str,args:list=None):
         parts=line.split(':',3)
         if len(parts)  < 3:
             continue
-        match=re1.search(line)
-        if match is not None:
-            for bname in match.groups():
+        for bname in re1.findall(line):
                 if buttonDefs.get(bname) is None:
                     buttonDefs[bname]=BtDef(bname)
                 buttonDefs[bname].add(parts[0],parts[1])
@@ -63,9 +61,7 @@ def grepIcons(dir:str,args:list=None):
         parts=line.split(':',3)
         if len(parts)  < 3:
             continue
-        match=re1.search(line)
-        if match is not None:
-            for bname in match.groups():
+        for bname in re1.findall(line):
                 if iconDefs.get(bname) is None:
                     iconDefs[bname]=BtDef(bname)
                 iconDefs[bname].add(parts[0],parts[1])
