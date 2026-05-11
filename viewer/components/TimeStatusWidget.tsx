@@ -10,6 +10,7 @@ import {IWidgetProps} from "../util/types";
 import {Icon, StatusIcon,iconClasses} from "./Icons";
 import {useTimer} from "../util/UiHelper";
 import Requests from "../util/requests";
+import {ResizeStrings, useStringsChanged} from "../hoc/Resizable";
 
 const STORE_KEYS={
     time: keys.nav.gps.rtime,
@@ -40,19 +41,26 @@ const TimeStatusWidget = (props:TimeStatusWidgetProps)=> {
                 timer.startTimer(seq)
             })
     },3000,true,true);
-    let time="--:--:--";
+    const display:ResizeStrings={
+        time:"--:--:--",
+        status:status,
+    };
     if (props.time !== undefined){
-        time=Formatter.formatTime(props.time);
+        display.time=Formatter.formatTime(props.time);
     }
+    const dashMode = props.mode === "gps";
+    const resizeSequence = useStringsChanged(display, dashMode);
     return (
-        <WidgetFrame {...props} addClass="timeStatusWidget" unit={undefined}>
+        <WidgetFrame {...props}
+            resizeSequence={resizeSequence}
+                     addClass="timeStatusWidget" unit={undefined}>
             <div className="rowBase">
                 <Icon className={iconClasses.Satellite}/>
-                <div className="value">{status}</div>
+                <div className="value">{display.status}</div>
             </div>
             <div className="rowBase">
                 <StatusIcon type={props.gpsValid?'green':'red'}/>
-                <div className="widgetData">{time}</div>
+                <div className="widgetData">{display.time}</div>
             </div>
         </WidgetFrame>
     );

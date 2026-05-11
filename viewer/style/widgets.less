@@ -275,9 +275,8 @@
       font-size: 0.9em;
     }
     .rowBase{
-      max-width: 90%;
-      overflow: hidden;
       flex-wrap: nowrap;
+      max-width: 100%;
       .value{
         overflow: hidden;
         text-overflow: ellipsis;
@@ -301,13 +300,27 @@
     .smallWidget(@size1);
     .aisFront{
       display: inline-block;
-      font-size: 1.5em;
+      font-weight: bold;
+      &.large{
+        font-size: 1.5em;
+      }
+
     }
     .label{
       width: 2em;
     }
     .widgetData ~ .widgetData{
       padding-top: 0;
+    }
+    .widgetData{
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      align-items: baseline;
+      .label{
+        flex-grow: 1;
+        text-align: left;
+      }
     }
     .aisPart.withIcon{
         display: flex;

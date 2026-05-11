@@ -66,7 +66,7 @@ const AisFullDisplay=(display:AisItemDisplayProps)=> {
         {(display.iconColor !== undefined)
             && <Icon color={display.iconColor} />}
         <div className="widgetData">
-            <span className='aisFront aisData'>{display.front}</span>
+            <span className='aisFront large aisData'>{display.front}</span>
         </div>
     </div>
     </React.Fragment>
@@ -80,20 +80,13 @@ const AisSmallDisplay=(display:AisItemDisplayProps)=> {
             </div>
         </div>
         <div className={"aisParts"}>
-        <div className="aisPart">
-            <div className="widgetData">
-                <span className='label'>{AisFormatter.getHeadline('distance')} </span>
-                <span className="aisData">{display.distance}</span>
-                <span className="unit">{AisFormatter.getUnit('distance')}</span>
-            </div>
-        </div>
         {
             Number(display.tcpa) > 0 &&
             <div className="aisPart">
                 <div className="widgetData">
-                    <span className='label'>{AisFormatter.getHeadline('tcpa')} </span>
-                    <span className="aisData"> {display.tcpa}</span>
-                    <span className="unit">{AisFormatter.getUnit('tcpa')}</span>
+                    <span className='label'>{AisFormatter.getHeadline('dcpa')} </span>
+                    <span className="aisData"> {display.dcpa}</span>
+                    <span className="unit">{AisFormatter.getUnit('dcpa')}</span>
                 </div>
             </div>
         }
@@ -101,9 +94,9 @@ const AisSmallDisplay=(display:AisItemDisplayProps)=> {
             !(Number(display.tcpa) > 0) &&
             <div className="aisPart">
                 <div className="widgetData">
-                    <span className='label'>{AisFormatter.getHeadline('headingTo')} </span>
-                    <span className="aisData">{display.headingTo}</span>
-                    <span className="unit">{AisFormatter.getUnit('headingTo')}</span>
+                    <span className='label'>{AisFormatter.getHeadline('distance')} </span>
+                    <span className="aisData">{display.distance}</span>
+                    <span className="unit">{AisFormatter.getUnit('distance')}</span>
                 </div>
             </div>
         }
