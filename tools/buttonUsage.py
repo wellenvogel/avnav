@@ -284,11 +284,11 @@ def iconEntry(name,iconDef:IconDef,format='table'):
     if iconDef is not None:
         iconStr = f"[{iconDef.icon}]({relPath(TICONS)}#L{iconDef.line})"
         iconFile=''
-        if format == 'pandoc':
-            iconFile = f"![{iconDef.icon}]({iconPath(iconDef.icon)})"+'{width=40px}'
-            pass
-        else:
-            iconFile = f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
+        if iconDef.icon:
+            if format == 'pandoc':
+                iconFile = f"![{iconDef.icon}]({iconPath(iconDef.icon)})"+'{width=40px}'
+            else:
+                iconFile = f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
         return base+f"{iconStr}|{iconFile}"
     return base+"|"
 def defEntry(dfile:str,dname:str,dline:str,bold:bool=False):
@@ -296,11 +296,27 @@ def defEntry(dfile:str,dname:str,dline:str,bold:bool=False):
     if dline is not None:
         return f"[{name}]({dfile}#L{dline})"
     return f"{name}"
+
+def iconUsage(icon:str,buttonDefs,iconGreps):
+    buttons=[]
+    for button in buttonDefs.values():
+        if button.icon == icon:
+            buttons.append(button.name)
+    found=iconGreps.get(icon)
+    if found is not None:
+        code=found.usages
+    else:
+        code = None
+    if code is None:
+        code=[]
+    return(buttons,code)
+
+
 if len(sys.argv) < 1:
     usage()
     sys.exit(1)
 
-ALL_FORMATS=['plain','table','sparse','pandoc','button2icon']
+ALL_FORMATS=['plain','table','sparse','pandoc','button2icon','iconusage']
 #after creating the "pandoc" markdow convert to odt
 #from within the docs dir with
 #pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
@@ -324,6 +340,8 @@ buttonDefs=readButtons(relPath(TDEFS))
 iconDefs=readIcons(relPath(TICONS))
 textDefs=readTexts(relPath(TTEXTS))
 iconGreps=grepIcons(relPath())
+
+
 if format == 'plain':
     pprint.pprint(defs)
     pprint.pprint(iconGreps)
@@ -366,19 +384,33 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
         iconUsages=iconGreps.get(k)
         iconDef = iconDefs.get(k)
         first=True
-        for iconUsage in iconUsages.usages:
+        for usedIcon in iconUsages.usages:
             bstr = f"|{defEntry(relPath(ICONBASE), k, iconDef.line if iconDef else None,first and handleFirst)}|"
-            lstr=bstr+f"{usageEntry(iconUsage.file,iconUsage.line)}"
+            lstr=bstr+f"{usageEntry(usedIcon.file,usedIcon.line)}"
             short = ''
             long = ''
             if iconDef is not None and first:
                 first=not handleFirst
                 lstr+="|"+iconEntry(None,iconDef,format=format)
             print(f"{lstr}")
+    print("")
+    print("IconUsage")
+    print("====")
+    print("|Name|IconFile|Icon|Usage")
+    print("| --- | --- | --- | --- |")
+    for k in sorted(iconDefs.keys()):
+        iconDef=iconDefs.get(k)
+        buttons,code=iconUsage(k,buttonDefs,iconGreps)
+        usage=",".join(buttons)
+        if len(code)>0:
+            usage+=',' if usage else ''
+            usage+="code"
+        bstr = f"|{iconEntry(k,iconDef,format=format)}|{usage}|"
+        print(bstr)
     sys.exit(0)
 elif format == 'button2icon':
     '''
-    intersting commands afterwards:
+    interesting commands afterwards:
     #build an sed command to migrate from old def to new icon based
     #omit the 'p' if you only have the button icons and run the sed without -n
     tools/buttonUsage.py -f button2icon | sed 's/\(\w*\) *\(.*\)/s?\.button.\1 *span?.icon.\2?p/' > ~x.sed
@@ -388,5 +420,15 @@ elif format == 'button2icon':
     for k in sorted(buttonDefs.keys()):
         buttonDef = buttonDefs.get(k)
         print(f"{k} {buttonDef.icon}")
+    sys.exit(0)
+elif format == 'iconusage':
+    for k in sorted(iconDefs.keys()):
+        iconDef = iconDefs.get(k)
+        buttons, code = iconUsage(k, buttonDefs, iconGreps)
+        usage = ",".join(buttons)
+        if len(code) > 0:
+            usage += ',' if usage else ''
+            usage += "code"
+        print(f"{k} {usage}")
     sys.exit(0)
 raise RuntimeError(f'invalid format {format}')
