@@ -4,6 +4,7 @@
 
 import {useStoreState} from '../hoc/Dynamic';
 import globalStore from '../util/globalstore';
+import globalstore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
@@ -16,7 +17,6 @@ import AddOnPageButtons from "./AddOnPageButtons";
 import keyhandler from "../util/keyhandler";
 import ButtonList from "../components/ButtonList";
 import {addonViewManager} from "../components/AddonView";
-import globalstore from "../util/globalstore";
 
 const PAGE=PAGEIDS.ADDON;
 export interface AddOnPageProps extends Partial<PageProps> {}
@@ -70,7 +70,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
             finalButtons.push(button);
             continue;
         }
-        if (button.onClick && button.isAddon) {
+        if (button.onClick && (button.isAddon !== ButtonAddonType.NONE && button.isAddon !== undefined)) {
             const original=button.onClick;
             const modifiedButton=button.copy({onClick:(ev:ButtonEvent) =>{
                 globalStore.storeData(keys.gui.addonpage.activeAddOn,button.name);
@@ -91,7 +91,22 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         })
         if (currentButtons.current) {
             if (!handleInitialButton(history)) {
-                showApp();
+                let runShowApp=true;
+                const oldStyleNumber=history.fetchOptionValue('activeAddOn'); //see App.jsx key handler
+                if (oldStyleNumber !== undefined && currentButtons.current){
+                    let idx=-1;
+                    for (const button of currentButtons.current) {
+                        if (button.isAddon === ButtonAddonType.CONFIG) {
+                            idx++;
+                            if (idx == oldStyleNumber){
+                                keyhandler.callHandler('button', button.name);
+                                runShowApp=false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (runShowApp) showApp();
             }
         }
         return ()=>{

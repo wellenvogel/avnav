@@ -7,7 +7,7 @@ import {UserButtonProps} from "./api.impl";
 import Helper, {createOrUpdateStyleSheet} from "./helper";
 import {PluginPage, UserApp, UserButton, UserButtonBase} from "../api/api.interface";
 import {StoreCallback} from "./store";
-import {PAGEIDS} from "./pageids";
+import {PAGEIDS, PLUGINPAGES} from "./pageids";
 import {ButtonAddonType, DynamicButtonProps} from "../components/Button";
 import {StoreKeys} from "../hoc/Dynamic";
 import {ReactNode} from "react";
@@ -353,6 +353,38 @@ const getPageUserButtons=(
     return rt;
 }
 
+const findPageForAddon=(name:string)=>{
+    let rt:string|string[];
+    for (const pad of Object.values(pluginAddOns)){
+        if (name === getNameForButton(pad)){
+            rt=getPagesForAddon(pad);
+            if (! rt) rt=PAGEIDS.ADDON
+            break;
+        }
+    }
+    if (! rt){
+        for (const sad of Object.values(serverAddOns)){
+            if (name === getNameForButton(sad)){
+                rt=getPagesForAddon(sad);
+                if (! rt) rt=PAGEIDS.ADDON
+                break;
+            }
+        }
+    }
+    if (! rt){
+        return rt;
+    }
+    if (rt == PAGEIDS.ADDON){
+        return rt;
+    }
+    if (!Array.isArray(rt)) rt=[rt];
+    for (const page of rt){
+        if (Object.values(PLUGINPAGES).indexOf(page) >= 0){
+            return page;
+        }
+    }
+    return PAGEIDS.ADDON;
+}
 
 const removePluginAddOns=(pluginName:string)=>{
     let todel=[];
@@ -505,4 +537,5 @@ export default  {
     getAllAddons:getAllAddons,
     QueryHandler:QueryHandler,
     updateAddonCss:updateAddonCss,
+    findPageForAddon:findPageForAddon,
 }
