@@ -32,7 +32,7 @@ const TimeStatusWidget = (props:TimeStatusWidgetProps)=> {
         })
             .then((data)=>{
                 timer.guardedCall(seq,()=>{
-                    setStatus(`${data.data?.nmea?.numused||0}/${data.data?.nmea?.numsat||0} ${data.data?.nmea?.source||''}`);
+                    setStatus(`${data.data?.nmea?.numused||0}/${data.data?.nmea?.numview||0} ${data.data?.nmea?.source||''}`);
                 })
                 timer.startTimer(seq);
             })
