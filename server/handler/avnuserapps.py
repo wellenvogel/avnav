@@ -61,7 +61,8 @@ class AVNUserAppHandler(AVNWorker):
         'icon':None, #an icon below $datadir/user
         'keepUrl':'', #auto detect
         'newWindow':'',
-        'page':''
+        'page':'',
+        'name':''
       }
     if not child is None:
       return None
@@ -132,11 +133,14 @@ class AVNUserAppHandler(AVNWorker):
     alreadyFound=set()
     childlist = self.param.get(self.CHILDNAME)
     if childlist is not None:
-      for child in childlist:
+      for childbase in childlist:
+        child=childbase.copy()
         url=child.get('url')
-        key=self.computeKey(child)
         if url is None:
           child['invalid']=True
+        key=child.get('name')
+        if key is None:
+            key=self.computeKey(child)
         if key in alreadyFound:
           AVNLog.error("duplicate user app found, ignoring %s",url)
           while key in alreadyFound:
@@ -145,7 +149,7 @@ class AVNUserAppHandler(AVNWorker):
           child['invalid']=True
         else:
           child['name']=key
-          alreadyFound.add(key)
+        alreadyFound.add(key)
         item=child.copy()
         item['canDelete']=True
         item['source']='user'

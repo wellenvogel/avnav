@@ -1706,8 +1706,7 @@ class UserItemActions extends ItemActions{
         }))
         actions.push(standardActions.download.copy({}))
         actions.push(new Action({
-            name: 'userApp',
-            label: 'App',
+            ...ButtonDefs.DBUserApp,
             action: async (action,item,dialogContext,history)=>{
                 dialogContext.replaceDialog((props) =>
                     <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={() => {

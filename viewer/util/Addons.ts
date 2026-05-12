@@ -450,12 +450,10 @@ const readAddOns = async (
     return addons;
 };
 
-const findAddonByUrl=(addons:AddonProps[],url:string|URL)=>{
-    if (! addons || !(addons instanceof Array)) return;
+const findAddonByUrl=(url:string|URL)=>{
     if (! url) return;
     const rtall=[];
-    for (const i in addons){
-        const addon=addons[i];
+    for (const addon of getAllAddons()){
         if ((addon.url+"") == (url+"")){
             rtall.push(addon);
         }

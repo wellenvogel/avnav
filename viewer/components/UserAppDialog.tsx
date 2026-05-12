@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {showPromiseDialog} from './OverlayDialog';
 import Toast from './Toast';
 import {Checkbox, Input, InputReadOnly, InputSelect} from './Inputs';
-import Addons, {AddonProps, ServerAddon} from '../util/Addons';
+import Addons, {InternalAddonProps, ServerAddon} from '../util/Addons';
 import Helper, {unsetOrTrue} from '../util/helper';
 import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
@@ -169,14 +169,14 @@ const TranslateUrlDialog=({resolveFunction,current}:TranslateUrlDialogProps)=>{
     return <DialogFrame title={"loading..."}/>
 }
 interface SelectExistingDialogProps{
-    existingAddons:ServerAddon[],
+    existingAddons:InternalAddonProps[],
     resolveFunction:(addon?:ServerAddon) => void
 }
 const SelectExistingDialog=({existingAddons,resolveFunction}:SelectExistingDialogProps)=>{
     const dialogContext=useDialogContext();
     const selist:SelectListEntry[] = [];
     existingAddons.forEach((addon) => {
-        selist.push({value: addon, label: addon.title, icon: addon.icon});
+        selist.push({value: addon, label: addon.title+"", icon: addon.button?.icon});
     })
     return <DialogFrame className="selectDialog" title="Select Addon to Edit">
         <SelectList list={selist} onClick={(elem)=>{
@@ -207,7 +207,7 @@ export interface UserAppDialogFixed{
 }
 export interface UserAppDialogProps{
     showToasts?:boolean ;
-    addon?:AddonProps,
+    addon?:InternalAddonProps,
     fixed?:UserAppDialogFixed,
     resolveFunction?:() => void
 }
@@ -215,7 +215,7 @@ const getPageLabel=(page:PageType)=>{
     return `${page} [${getPageTitle(page)}]`
 }
 const UserAppDialog = (props:UserAppDialogProps) => {
-    const [currentAddon, setCurrentAddon] = useState<AddonProps>({...props.addon, ...props.fixed});
+    const [currentAddon, setCurrentAddon] = useState<InternalAddonProps>({...props.addon, ...props.fixed});
     const [currentIcon,setCurrentIcon]=useState<string|URL>(props.addon?.button?.icon);
     const dialogContext = useDialogContext();
     const fixed:UserAppDialogFixed = props.fixed || {};
@@ -224,7 +224,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
     const [internal, setInternal] = useState(!(!shouldFind && (props.addon || {}).keepUrl));
     const fillLists = () => {
         if (!loaded) {
-            const current = Addons.findAddonByUrl(Addons.getServerAddons(), props.fixed.url)
+            const current = Addons.findAddonByUrl(props.fixed.url)
             if (current.length) {
                 showPromiseDialog(dialogContext, (dprops) =>
                     <SelectExistingDialog
@@ -235,6 +235,7 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     .then((selected) => {
                         if (selected !== undefined) {
                             setCurrentAddon({...selected, ...props.fixed});
+                            setCurrentIcon(selected.button?.icon);
                         }
                     })
                     .catch(() => {
@@ -376,6 +377,12 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     setCurrentAddon({...currentAddon, newWindow: nv});
                 }}
             />}
+            <InputReadOnly dialogRow={true}
+                           label="Button"
+                           value={currentAddon.buttonClass}
+            >
+
+            </InputReadOnly>
 
 
             <DialogButtons buttonList={[
