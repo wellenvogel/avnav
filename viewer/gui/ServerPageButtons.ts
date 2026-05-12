@@ -60,7 +60,16 @@ export default GeneralButtons.concat(propsToDefs([
     ShutdownButton,
     {
         ...ButtonDefs.StatusRestart,
-        localOnly:true,
+        storeKeys:{
+            visible: keys.gui.capabilities.canRestart,
+            connected: keys.gui.global.connectedMode
+        },
+        updateFunction:(state:DynamicProps)=>{
+            return {
+                visible: state.visible && state.connected,
+                connected: undefined
+            }
+        }
     },
     {
         ...ButtonDefs.StatusLog,

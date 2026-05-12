@@ -3,7 +3,6 @@
  */
 
 import {useStore, useStoreState} from '../hoc/Dynamic';
-import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {useEffect, useRef} from 'react';
 import {PageBaseProps, PageFrame, PageLeft} from '../components/Page';
@@ -120,24 +119,11 @@ const ServerPage = (iprops: PageBaseProps) => {
     });
     const [showAll, setShowAll] = React.useState(false);
     const [hasAddresses, setHasAddresses] = React.useState(false);
-    const [canRestart, setCanRestart] = React.useState(false);
     const [serverError, setServerError] = React.useState(0);
     const [wpa, setWpa] = React.useState(false);
     const [focusId, setFocusId] = React.useState<string | number>();
     const currentButtons = useRef<ButtonDef[]>();
     useStoreState(keys.gui.global.reloadSequence);
-    useEffect(() => {
-        if (!globalStore.getData(keys.gui.capabilities.config)) return;
-        Requests.getJson({
-            request: 'api',
-            type: 'config',
-            command: 'canRestart'
-        })
-            .then((data: { canRestart: boolean }) => {
-                setCanRestart(data.canRestart);
-            })
-            .catch((e: any) => Toast(e))
-    }, []);
     const buttonConfig = {
         [ButtonDefs.StatusWpa.name]: {
             visible: wpa && props.connected,
@@ -175,7 +161,6 @@ const ServerPage = (iprops: PageBaseProps) => {
 
         },
         [ButtonDefs.StatusRestart.name]: {
-            visible: canRestart && props.connected,
             onClick: () => restartServer()
         },
         [ButtonDefs.StatusLog.name]: {

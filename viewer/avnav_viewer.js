@@ -66,6 +66,28 @@ function getParam(key)
     return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
 }
 const DEFAULT_NAVURL='/api';
+
+const fetchCapabilities=()=>{
+    let falseCapabilities={};
+    for (let k in keys.gui.capabilities){
+        falseCapabilities[k]=false;
+    }
+    return Requests.getJson({
+        request:'api',
+        type:'config',
+        command:'capabilities'
+    }).then((json)=>{
+        let capabilities={...falseCapabilities,...json.data};
+        return capabilities;
+    },
+        (error)=>{
+        base.log("unable to fetch capabilities",error);
+        return falseCapabilities;
+    })
+        .then((capabilities)=> {
+            globalStore.storeMultiple(capabilities, keys.gui.capabilities);
+        });
+}
 /**
  * main function called when dom is loaded
  *
@@ -181,23 +203,15 @@ export default function() {
     if (splitsupport.setSplitFromLast()){
         return;
     }
-    //check capabilities
-    let falseCapabilities={};
-    for (let k in keys.gui.capabilities){
-        falseCapabilities[k]=false;
-    }
-    Requests.getJson({
-        request:'api',
-        type:'config',
-        command:'capabilities'
-    }).then(async (json)=>{
-        let capabilities=assign({},falseCapabilities,json.data);
-        globalStore.storeMultiple(capabilities,keys.gui.capabilities);
-        await doLateLoads();
-    }).catch(async (error)=>{
-        globalStore.storeMultiple(falseCapabilities,keys.gui.capabilities);
-        await doLateLoads();
-    });
+    fetchCapabilities()
+        .then(()=>{
+            doLateLoads()
+                .then(()=>base.log("load finished"))
+        })
+    globalStore.register(()=>{
+        base.log("fetching capabilities");
+        fetchCapabilities();
+    },keys.nav.gps.updateconfig)
     base.log("avnav loaded");
-};
+}
 
