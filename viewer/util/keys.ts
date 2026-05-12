@@ -282,7 +282,8 @@ const keys:Record<string,KeyType>={
             remoteChannel: K,
             fetchHead: K,
             chartStatus:K,
-            shutdown:K
+            shutdown:K,
+            canRestart:K
         },
         global:{
             splitMode: K,
