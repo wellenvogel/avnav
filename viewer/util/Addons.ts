@@ -385,6 +385,19 @@ const findPageForAddon=(name:string)=>{
     }
     return PAGEIDS.ADDON;
 }
+/**
+ * get the names we should register keyboard handler for
+ */
+const getAddonButtonNames = () => {
+    const rt = [];
+    for (const pad of Object.values(pluginAddOns)) {
+        rt.push(getNameForButton(pad));
+    }
+    for (const sad of Object.values(serverAddOns)) {
+        rt.push(getNameForButton(sad));
+    }
+    return rt;
+}
 
 const removePluginAddOns=(pluginName:string)=>{
     let todel=[];
@@ -538,4 +551,5 @@ export default  {
     QueryHandler:QueryHandler,
     updateAddonCss:updateAddonCss,
     findPageForAddon:findPageForAddon,
+    getAddonButtonNames:getAddonButtonNames,
 }

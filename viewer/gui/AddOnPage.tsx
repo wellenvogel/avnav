@@ -91,22 +91,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
         })
         if (currentButtons.current) {
             if (!handleInitialButton(history)) {
-                let runShowApp=true;
-                const oldStyleNumber=history.fetchOptionValue('activeAddOn'); //see App.jsx key handler
-                if (oldStyleNumber !== undefined && currentButtons.current){
-                    let idx=-1;
-                    for (const button of currentButtons.current) {
-                        if (button.isAddon === ButtonAddonType.CONFIG) {
-                            idx++;
-                            if (idx == oldStyleNumber){
-                                keyhandler.callHandler('button', button.name);
-                                runShowApp=false;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (runShowApp) showApp();
+                showApp();
             }
         }
         return ()=>{

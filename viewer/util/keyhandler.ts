@@ -46,6 +46,7 @@ export const KeyComponents={
     PAGE:'page',
     ALARM:'alarm',
     WIDGET:'widget',
+    ADDON:'addon',
 }
 export const DialogKeyComponents={
     DIALOGBUTTON: "dialogButton",

@@ -24,7 +24,7 @@ import globalStore from './util/globalstore.ts';
 import Requests from './util/requests';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.tsx';
-import KeyHandler from './util/keyhandler.ts';
+import KeyHandler, {KeyComponents} from './util/keyhandler.ts';
 import LayoutHandler from './util/layouthandler.ts';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
@@ -65,6 +65,7 @@ import {PluginsPage} from "./gui/PluginsPage";
 import {RemotePage} from "./gui/RemotePage";
 import LoadingPage from "./gui/LoadingPage";
 import {CL_BUTTON_TEXT, CL_MAINBT_TEXT} from "./components/ButtonDefs";
+import keyhandler from "./util/keyhandler.ts";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -420,15 +421,32 @@ class App extends React.Component {
         GuiHelpers.keyEventHandler(this,()=>{
             NavData.getRoutingHandler().anchorOff();
         },'global','anchoroff');
-        GuiHelpers.keyEventHandler(this,(component,action)=>{
-            let addon=parseInt(action);
-            if (this.history.currentLocation() === "addonpage"){
-                this.history.replace("addonpage",{activeAddOn:addon});
+        const addonKeyHandler=(component,action)=> {
+            const page = addons.findPageForAddon(action);
+            if (!page) return;
+            if (this.history.currentLocation() === page) {
+                keyhandler.callHandler(KeyComponents.BUTTON, action);
+            } else {
+                this.history.push(page, {button: action});
             }
-            else {
-                this.history.push("addonpage", {activeAddOn: addon});
+        }
+        const getAddonButtons=()=>{
+            const rt=addons.getAddonButtonNames();
+            return rt;
+        }
+        GuiHelpers.lifecycleSupport(this,(umount)=>{
+                if (umount) {
+                    keyhandler.deregisterHandler(addonKeyHandler);
+                    return;
+                }
+                keyhandler.registerHandler(addonKeyHandler,KeyComponents.ADDON,getAddonButtons());
             }
-        },'addon',['0','1','2','3','4','5','6','7']);
+        )
+            //we are a bit lazy here and do not deregister old addon buttons
+            //they will not be found later any way from the handler by findPageForAddons
+        globalStore.register(()=>{
+            keyhandler.registerHandler(addonKeyHandler,KeyComponents.ADDON,getAddonButtons());
+        },keys.gui.global.addonsChanged)
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             Dimmer.toggle();
         },'global','toggledimm')

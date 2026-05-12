@@ -41,13 +41,14 @@
       "next":"ArrowDown",
       "select":"Enter",
       "Cancel":"Escape",
-      "page:navpagex": "n",
+      "page:navpage": "n",
       "page:gpspage": "d"
     },
     "addon":{
-      "0":"Control-0",
-      "1":"Control-1",
-      "2":"Control-2",
+      "signalk": "Control-0",
+      "system-ochartsng1":"Control-1",
+      "system-history1":"Control-2",
+      "system-mapproxy1":"Control-3",
       "3":"Control-3",
       "4":"Control-4",
       "5":"Control-5",
