@@ -42,13 +42,15 @@ export const PageKeyMode = {
     EXPLICIT: 'explicit'
 }
 export const KeyComponents={
-    DIALOGBUTTON: "dialogButton",
-    CHARTSELECTLIST:'chartSelectList',
-    MAINMENU: 'mainMenu',
     BUTTON: "button",
     PAGE:'page',
     ALARM:'alarm',
     WIDGET:'widget',
+}
+export const DialogKeyComponents={
+    DIALOGBUTTON: "dialogButton",
+    CHARTSELECTLIST:'chartSelectList',
+    MAINMENU: 'mainMenu'
 }
 type Actions=Record<string,ActionFunction[]>
 class KeyHandler{
@@ -61,7 +63,6 @@ class KeyHandler{
     private page: Page;
     private pageConfig: Record<string,typeof PageKeyMode[keyof typeof PageKeyMode]>;
     private ALLPAGES: string;
-    private dialogComponents: string[];
     constructor(){
         this.keymappings={};
         this.merges={};
@@ -70,17 +71,11 @@ class KeyHandler{
         this.page=undefined;
         this.pageConfig={};
         this.ALLPAGES="all";
-        this.dialogComponents=[]; //components registered here will be handled in dialogs
         remotechannel.subscribe(COMMANDS.key,(msg:string)=>{
             this.handleKey(msg);
         })
     }
 
-    registerDialogComponent(component:string){
-        if (component === KeyHandler.CONFIG) throw new Error("unable to register component "+component);
-        if (this.dialogComponents.indexOf(component)>=0) return;
-        this.dialogComponents.push(component);
-    }
     registerHandler(
         handlerFunction:ActionFunction,
         component:string,
@@ -244,7 +239,7 @@ class KeyHandler{
         if (! mappings[page]) return;
         for (const k in mappings[page]){
             if (opt_inDialog){
-                if (this.dialogComponents.indexOf(k) < 0){
+                if (Object.values(DialogKeyComponents).indexOf(k)< 0){
                     continue;
                 }
             }

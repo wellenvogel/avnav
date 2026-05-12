@@ -21,11 +21,12 @@
  #
  */
 
-import React from 'react';
+import React, {useRef} from 'react';
 import Helper, {concatsp} from "../util/helper";
 import {Icon, IconProps} from "./Icons";
 // @ts-ignore
 import {useAvNavSortable} from "../hoc/Sortable";
+import {ScrollExeMode, scrollInContainer} from "../util/UiHelper";
 
 export interface ListItemProps {
     selected?: boolean;
@@ -36,11 +37,29 @@ export interface ListItemProps {
     noDrag?: boolean;
     noBorder?: boolean;
     ref?: (el:HTMLElement) => void;
+    scrollSequence?:number; //if set or changed scroll the element into view if selected
+    scrollMode?: ScrollExeMode
 }
-export const ListItem = ({selected,className,children,onClick,dragId,noDrag,ref,noBorder }: ListItemProps) => {
+export const ListItem = ({selected,className,children,
+                             onClick,dragId,noDrag,
+                             ref,noBorder,
+                             scrollSequence,scrollMode}: ListItemProps) => {
     const dd=useAvNavSortable(dragId,!!noDrag);
+    const scrollRef=useRef(scrollSequence !== undefined ? scrollSequence -1 : undefined);
     return <div
-        ref={(el:HTMLElement) =>{if(ref) ref(el)}}
+        ref={(el:HTMLElement) =>{
+            if(ref) ref(el)
+            if (el){
+                if (scrollSequence !== scrollRef.current && scrollSequence !== undefined){
+                    scrollRef.current = scrollSequence;
+                    if (selected){
+                        scrollInContainer(el.parentElement,el,
+                            scrollMode !== undefined ? scrollMode :
+                            ScrollExeMode.vertical)
+                    }
+                }
+            }
+        }}
         {...dd}
         className={concatsp(className,
             "listEntry",

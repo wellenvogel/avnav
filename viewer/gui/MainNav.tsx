@@ -53,7 +53,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog';
 import ChartsPageButtons from "./ChartsPageButtons";
 import SettingsPageButtons from "./SettingsPageButtons";
 import GpsPageButtons from "./GpsPageButtons";
-import keyhandler, {KeyComponents} from "../util/keyhandler";
+import keyhandler, {DialogKeyComponents} from "../util/keyhandler";
 import {injectAddonButtonAction} from "../components/AddonView";
 import PluginsPageButtons from "./PluginsPageButtons";
 import AddOnPageButtons from "./AddOnPageButtons";
@@ -153,19 +153,20 @@ interface PageRowProps{
     isCurrent:boolean;
     expanded: boolean;
     expandSequence: number;
+    scrollSequence?:number;
     noExpand?:boolean;
     onExpand?:()=>void;
-    pageref?:(el:HTMLElement)=>void;
 }
 const PageRow=({
                    page,onClick,isCurrent,
                    expanded,expandSequence,noExpand,
-                   pageref, onExpand
+                   onExpand,scrollSequence
 }:PageRowProps)=>{
     const className=Helper.concatsp('Page',page.kind);
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
     const [isExpanded,setExpanded]=useState(expanded);
+    const scrollRef=useRef(scrollSequence !== undefined ? scrollSequence -1: 0);
     const buttons=page.getButtons();
     let hasVisibleButton=false;
     for (const bt of buttons){
@@ -180,7 +181,14 @@ const PageRow=({
         setExpanded(expanded);
     }, [expanded,expandSequence]);
     return <div ref={(el:HTMLElement) =>{
-            if (pageref) pageref(el);
+            if (el) {
+                if (scrollRef.current !== scrollSequence){
+                    scrollRef.current = scrollSequence;
+                    if (isCurrent){
+                        scrollInContainer(el.parentElement,el,ScrollExeMode.vertical)
+                    }
+                }
+            }
             }
         } className={Helper.concatsp('PageRowFrame',page.name?.toLowerCase())}>
         <ListItem
@@ -249,7 +257,6 @@ const runActionDialog=(dialogContext:IDialogContext)=>{
 };
 type keyAction='select'|'previous'|'next'|'cancel';
 export const MainNav = (props:MainNavProps) => {
-    keyhandler.registerDialogComponent(KeyComponents.MAINMENU);
     const dialogContext=useDialogContext();
     const history=useHistory();
     const [expandMode,setExpandMode]=useState(props.expandMode);
@@ -257,6 +264,7 @@ export const MainNav = (props:MainNavProps) => {
     const [manualExpanded, setManualExpanded]=useState<string>(undefined);
     const [showAll]=useStoreState(keys.properties.mainAll);
     const [selected,setSelected]=useState(props.current);
+    const [keySequence,setKeySequence]=useState(1);
     const pages=mainTree.slice(0);
     const currentEl=useRef<HTMLElement>(null);
     const noExpand = expandMode === MainExpandMode.NEVER;
@@ -264,7 +272,7 @@ export const MainNav = (props:MainNavProps) => {
     useEffect(() => {
         if (!currentEl.current) return;
         scrollInContainer(currentEl.current.parentElement,currentEl.current,ScrollExeMode.vertical)
-    }, []);
+    }, [keySequence]);
     const keyHandler=useRef(null);
     keyHandler.current=(action:keyAction)=>{
         if (action === 'cancel'){
@@ -297,6 +305,7 @@ export const MainNav = (props:MainNavProps) => {
             current++;
             if (current >= pages.length) return;
             setSelected(pages[current].name);
+            setKeySequence((old)=>old+1);
             return;
         }
         if (action === 'previous'){
@@ -304,17 +313,19 @@ export const MainNav = (props:MainNavProps) => {
             if (current < -1) return;
             if (current === -1) {
                 setSelected(actionPage.name);
+                setKeySequence((old)=>old+1);
                 return;
             }
             setSelected(pages[current].name);
+            setKeySequence((old)=>old+1);
             return;
         }
 
     };
-    useKeyEventHandlerPlain('select',KeyComponents.MAINMENU,()=>keyHandler.current('select'));
-    useKeyEventHandlerPlain('next',KeyComponents.MAINMENU,()=>keyHandler.current('next'));
-    useKeyEventHandlerPlain('previous',KeyComponents.MAINMENU,()=>keyHandler.current('previous'));
-    useKeyEventHandlerPlain('Cancel',KeyComponents.MAINMENU,()=>keyHandler.current('cancel'));
+    useKeyEventHandlerPlain('select',DialogKeyComponents.MAINMENU,()=>keyHandler.current('select'));
+    useKeyEventHandlerPlain('next',DialogKeyComponents.MAINMENU,()=>keyHandler.current('next'));
+    useKeyEventHandlerPlain('previous',DialogKeyComponents.MAINMENU,()=>keyHandler.current('previous'));
+    useKeyEventHandlerPlain('Cancel',DialogKeyComponents.MAINMENU,()=>keyHandler.current('cancel'));
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
             { ! noExpand && <ListSlot className={'iconSlot'}
@@ -351,7 +362,9 @@ export const MainNav = (props:MainNavProps) => {
                  }}
                  isCurrent={selected === actionPage.name}
                  expanded={false}
-                 expandSequence={0}/>
+                 expandSequence={0}
+                 scrollSequence={keySequence}
+        />
         {pages.map((page)=>{
             if (page.all && ! showAll) return null;
             const displayPage=(page.name === props.current)?page.copy({
@@ -363,16 +376,13 @@ export const MainNav = (props:MainNavProps) => {
                 (expandMode == MainExpandMode.ALL)
                 || isCurrent && ( expandMode == MainExpandMode.CURRENT);
             return <PageRow
+                scrollSequence={keySequence}
                 onExpand={()=>{
                     setManualExpanded(page.name);
                     setExpandMode(MainExpandMode.NONE);
                     setExpandSequence((old)=>old+1)
                 }}
                 noExpand={noExpand}
-                pageref={isCurrent?(el)=>{
-                    currentEl.current=el
-                    }
-                    :undefined}
                 key={page.name}
                 page={displayPage}
                 onClick={(ev: SyntheticEvent)=> {

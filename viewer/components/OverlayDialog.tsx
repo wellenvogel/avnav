@@ -8,12 +8,9 @@
  */
 
 import React, {Children, cloneElement, forwardRef, ReactNode, SyntheticEvent, useEffect, useRef, useState} from 'react';
-// @ts-ignore
-import {useInputMonitor} from '../hoc/InputMonitor';
 import DialogButton, {DialogButtonProps} from './DialogButton';
 // @ts-ignore
 import MapEventGuard from "../hoc/MapEventGuard";
-import PropTypes from "prop-types";
 import Helper, {concatsp} from "../util/helper";
 import {
     DialogCallback,
@@ -29,6 +26,9 @@ import base from "../base";
 import ButtonDefs from "./ButtonDefs";
 // @ts-ignore
 import * as btdef from '../style/button_text.less';
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
+import Store from "../util/store";
 
 export interface OverlayContainerProps {
     coverClassName?: string;
@@ -68,6 +68,19 @@ let displayId= globalContext.getId();
 const nextId=()=>{
     displayId++;
     return displayId;
+}
+const activeInputs:Record<number,boolean>={}
+export const useInputMonitor=(opt_store?:Store)=>{
+    const store=opt_store?opt_store:globalstore;
+    useEffect(() => {
+        const id=nextId();
+        activeInputs[id]=true;
+        store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
+        return ()=>{
+            delete activeInputs[id];
+            store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
+        }
+    }, []);
 }
 const OverlayDialog = (
     {coverClassName, children}:OverlayDialogProps) => {
@@ -345,10 +358,6 @@ export const DialogButtons=(props:DialogButtonListProps)=>{
         })}
         {children}
     </div>
-}
-DialogButtons.propTypes={
-    className: PropTypes.string,
-    buttonList: PropTypes.oneOfType([PropTypes.array,PropTypes.object])
 }
 /**
  * helper for dialogButtonList

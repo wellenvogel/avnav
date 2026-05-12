@@ -1,6 +1,6 @@
 import React from 'react';
 import {useKeyEventHandlerPlain} from '../util/UiHelper';
-import KeyHandler, {KeyComponents} from '../util/keyhandler';
+import {DialogKeyComponents} from '../util/keyhandler';
 import {concatsp, setav} from "../util/helper";
 import {Options, useStore} from "../hoc/Dynamic";
 import {IDialogContext, useDialogContext} from "./DialogContext";
@@ -22,10 +22,9 @@ export interface DialogButtonProps extends Options{
     children?: React.ReactNode;
     label?: React.ReactNode;
 }
-const COMPONENT=KeyComponents.DIALOGBUTTON;
+const COMPONENT=DialogKeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
-        KeyHandler.registerDialogComponent(COMPONENT);
     // eslint-disable-next-line prefer-const
         let {icon,displayName,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
         const add:Record<string, any> = {};

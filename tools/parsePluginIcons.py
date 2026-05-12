@@ -55,6 +55,28 @@ def printRule(rule:CSSStyleRule,regex:re.Pattern,base:str,format:str,useBase:boo
         else:
             printTable(icon, file, base if useBase else None, format)
 
+rebuttontxt=re.compile(r'\.button\.(\w+):after')
+relongbuttontxt = re.compile(r'\.longText\.button\.(\w+):after')
+def textFromRule(rule:CSSStyleRule):
+    if rule.selectorText is None:
+        return [None,None,None]
+    id=0
+    for regexp in [relongbuttontxt,rebuttontxt]:
+        id+=1
+        match = regexp.search(rule.selectorText)
+        if match:
+            rt = [match.group(1),None,None]
+            txt=rule.style.content
+            if txt:
+                if txt.startswith('"'):
+                    txt=txt[1:]
+                if txt.endswith('"'):
+                    txt=txt[:-1]
+            rt[id]=txt
+            return rt
+    return [None,None,None]
+
+
 if __name__=='__main__':
     ALL_FORMATS = ['plain', 'table', 'pandoc', 'button2icon', 'iconusage']
     # after creating the "pandoc" markdow convert to odt
@@ -99,5 +121,28 @@ if __name__=='__main__':
     for rule in data.cssRules:
         if isinstance(rule,css_parser.css.CSSStyleRule):
             printRule(rule,rebutton,dir,format,useBase=usePath)
-
+    buttonTexts={}
+    for rule in data.cssRules:
+        if isinstance(rule,css_parser.css.CSSStyleRule):
+            (name,long,short)=textFromRule(rule)
+            if name:
+                if buttonTexts.get(name) is None:
+                    buttonTexts[name]={'short':short,'long':long}
+                else:
+                    if short:
+                        buttonTexts[name]['short']=short
+                    if long:
+                        buttonTexts[name]['long']=long
+    if format == 'table' or format == 'pandoc':
+        print("")
+        print("ButtonTexts")
+        print("====")
+        print("|Name|Short|Long|")
+        print("| --- | --- | --- |")
+    for button in sorted(buttonTexts.keys()):
+        texts=buttonTexts[button]
+        if format == 'table' or format == 'pandoc':
+            print(f"|{button}|{texts.get('short')}|{texts.get('long')}|")
+        else:
+            print(f"{button},{texts.get('short') or '<None>'},{texts.get('long') or '<None'}")
     #pprint.pprint(data)
