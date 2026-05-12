@@ -157,13 +157,15 @@ export const useKeyEventHandler=(
     props:KeyEventHandlerProps,
     component: string,
     opt_callback?:KeyCallback)=>{
+    const callbackRef=useRef(null);
+    callbackRef.current=opt_callback;
     return useEffect(()=>{
         if (! props.name || ! (props.onClick|| opt_callback)) return;
         const handler=(
             cbComponent:string,
             cbAction:string)=>{
             if (cbComponent === component && cbAction === props.name){
-                if (opt_callback) opt_callback(cbComponent,cbAction);
+                if (callbackRef.current) callbackRef.current(cbComponent,cbAction);
                 else props.onClick();
             }
         };
@@ -174,10 +176,20 @@ export const useKeyEventHandler=(
     },[])
 }
 export const useKeyEventHandlerPlain=(
-    name:string,
+    name:string|string[],
     component:string,
     callback:KeyCallback)=>{
-    return useKeyEventHandler({name:name},component,callback);
+    const callbackRef=useRef(null);
+    callbackRef.current=callback;
+    return useEffect(()=>{
+        const handler=(cbComp:string,cbAction:string)=>{
+            callbackRef.current(cbComp,cbAction);
+        }
+        KeyHandler.registerHandler(handler,component,name);
+        return ()=>{
+            KeyHandler.deregisterHandler(handler);
+        }
+    })
 }
 
 export const getServerCommand=(name:string)=>{

@@ -40,7 +40,9 @@
       "previous":"ArrowUp",
       "next":"ArrowDown",
       "select":"Enter",
-      "Cancel":"Escape"
+      "Cancel":"Escape",
+      "page:navpagex": "n",
+      "page:gpspage": "d"
     },
     "addon":{
       "0":"Control-0",
@@ -56,7 +58,17 @@
   },
   "gpspage":{
     "button":{
-      "Cancel":["d","Escape"]
+      "Cancel":["d","Escape"],
+      "Gps1": ["1"],
+      "Gps2": ["2"],
+      "Gps3": ["3"],
+      "Gps4": ["4"],
+      "Gps5": ["5"],
+      "Gps6": ["6"],
+      "Gps7": ["7"],
+      "Gps8": ["8"],
+      "Gps9": ["9"],
+      "Gps10": ["0"]
     }
   },
   "navpage":{

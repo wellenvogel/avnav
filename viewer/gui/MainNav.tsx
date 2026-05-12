@@ -255,7 +255,14 @@ const runActionDialog=(dialogContext:IDialogContext)=>{
     dialogContext.replaceDialog(()=><ActionDialog actionButtons={actionButtons().concat(addons.getPageUserButtons(PAGEIDS.ACTIONS,false,true))}/>,
         ()=>dialogContext.closeDialog());
 };
-type keyAction='select'|'previous'|'next'|'cancel';
+const KeyActions={
+    Cancel:'Cancel',
+    previous:'previous',
+    next:'next',
+    select:'select'
+}
+const PAGE_PREFIX='page:';
+const keysToHandle=Object.values(KeyActions).concat(mainTree.map((page:Page)=>`${PAGE_PREFIX}${page.name}`))
 export const MainNav = (props:MainNavProps) => {
     const dialogContext=useDialogContext();
     const history=useHistory();
@@ -273,9 +280,17 @@ export const MainNav = (props:MainNavProps) => {
         if (!currentEl.current) return;
         scrollInContainer(currentEl.current.parentElement,currentEl.current,ScrollExeMode.vertical)
     }, [keySequence]);
-    const keyHandler=useRef(null);
-    keyHandler.current=(action:keyAction)=>{
-        if (action === 'cancel'){
+    const keyHandler=(action:string)=>{
+        if (action && action.startsWith('page:')){
+            const page=action.substring(PAGE_PREFIX.length);
+            for (const cpage of pages) {
+                if (cpage.name === page){
+                    dialogContext.closeDialog();
+                    history.push(page);
+                }
+            }
+        }
+        if (action === 'Cancel'){
             dialogContext.closeDialog();
             return;
         }
@@ -322,10 +337,7 @@ export const MainNav = (props:MainNavProps) => {
         }
 
     };
-    useKeyEventHandlerPlain('select',DialogKeyComponents.MAINMENU,()=>keyHandler.current('select'));
-    useKeyEventHandlerPlain('next',DialogKeyComponents.MAINMENU,()=>keyHandler.current('next'));
-    useKeyEventHandlerPlain('previous',DialogKeyComponents.MAINMENU,()=>keyHandler.current('previous'));
-    useKeyEventHandlerPlain('Cancel',DialogKeyComponents.MAINMENU,()=>keyHandler.current('cancel'));
+    useKeyEventHandlerPlain(keysToHandle,DialogKeyComponents.MAINMENU,(_comp,action)=>keyHandler(action));
     return <DialogFrame className={'MainNav'}>
         <ListItem className={'heading'}>
             { ! noExpand && <ListSlot className={'iconSlot'}
