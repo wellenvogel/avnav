@@ -145,7 +145,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     const ok=await showPromiseDialogTrue(dialogContext,(dp)=>
                         <ConfirmDialog {...dp}
                             title={'Reset to Defaults?'}
-                            text={'This will reset all settings to their defaults (including the layout)'}
+                            text={'This will reset all settings to their builtin defaults "system.default" (including the layout)'}
                         />)
                     if (!ok) return;
                     if (layoutEditing) {
@@ -227,7 +227,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                        views={[
                 <React.Fragment key={0}>
                     <MvHeadline
-                    title={'Categories'}
+                    title={'Settings Groups'}
                     />
                     <SectionList onSelect={(ev:Event) =>{
                         const item=avitem(ev);
