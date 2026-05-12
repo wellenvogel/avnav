@@ -182,7 +182,7 @@ const PageRow=({
     return <div ref={(el:HTMLElement) =>{
             if (pageref) pageref(el);
             }
-        } className={'PageRowFrame'}>
+        } className={Helper.concatsp('PageRowFrame',page.name?.toLowerCase())}>
         <ListItem
         className={className}
         selected={isCurrent}
@@ -218,7 +218,7 @@ const PageRow=({
                                     keyhandler.callHandler('button',bt.name);
                                     return;
                                 }
-                                ev.stopPropagation()
+                                if (ev.stopPropagation) ev.stopPropagation()
                                 setav(ev, {page: page.name, button: bt.name})
                                 onClick(ev)
                             }}></ButtonRow>
