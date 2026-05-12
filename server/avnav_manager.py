@@ -604,6 +604,7 @@ class AVNHandlerManager(object):
             'fetchHead': True,
             'chartStatus':True,
             'shutdown':hasShutdown,
+            'canRestart': self.canRestart,
         }
         return AVNUtil.getReturnData(data=rt)
 
