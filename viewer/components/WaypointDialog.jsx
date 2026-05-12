@@ -131,7 +131,7 @@ const WaypointDialog=(props)=> {
                     }
                 }}
                     visible={props.deleteCallback !== undefined && ! props.readOnly}
-                    close={false}>Delete</DB>
+                    close={false}/>
                 <DB {...ButtonDefs.DBCancel} tabIndex="3" />
                 <DB {...ButtonDefs.DBOk} tabIndex="4" onClick={okFunction} disabled={!ok || props.readOnly} close={false}/>
             </DialogButtons>
