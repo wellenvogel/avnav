@@ -6,7 +6,7 @@ import {useStoreState} from '../hoc/Dynamic';
 import ItemList, {ItemListProps} from '../components/ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-import React, {useCallback, useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 // @ts-ignore
 import MapHolder from '../map/mapholder.js';
@@ -192,6 +192,7 @@ const DashboardPanel=(props:DashboardPanelProps)=>{
 const GpsPage = (props:Partial<PageProps>) => {
     const history=useHistory();
     useStoreState(keys.gui.global.reloadSequence);
+    const [sequence]=useStoreState(keys.gui.global.layoutSequence);
     const currentButtons=useRef<ButtonDef[]>(null);
     const maxPage=layouthandler.getDashboardNum();
     const [pageNumber, setPageNumberImpl] = useStoreState(keys.gui.gpspage.pageNumber, (currentNumber:number) => {
@@ -342,15 +343,19 @@ const GpsPage = (props:Partial<PageProps>) => {
     currentButtons.current=buttons;
     useInitialButton(currentButtons);
     const titleIcons = globalStore.getData(keys.properties.titleIconsGps);
-    const views=[];
-    for (let i=0;i<maxPage;i++){
-        views.push(<DashboardPanel
-            pageNumber={i+1}
-            fontSize={fontSize}
-            onItemClick={onItemClick}
-            visible={visible(i) || pageNumber == (i+1)}
-        />)
-    }
+    const views=useMemo(() => {
+        const rt=[];
+        for (let i=0;i<maxPage;i++){
+            rt.push(<DashboardPanel
+                pageNumber={i+1}
+                fontSize={fontSize}
+                onItemClick={onItemClick}
+                visible={visible(i) || pageNumber == (i+1)}
+            />)
+        }
+        return rt;
+    }, [fontSize,pageNumber,onItemClick,sequence]);
+
     return (
         <PageFrame
             id={props.id}
