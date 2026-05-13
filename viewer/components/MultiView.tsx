@@ -252,6 +252,11 @@ export const MultiView = (props: MultiViewProps) => {
     },[itemWidth,numViews,maxNumber]);
     useEffect(() => {
         reportVisibility();
+        return ()=>{
+            if (props.viewChanged){
+                props.viewChanged(-1,-1);
+            }
+        }
     }, [itemWidth,numViews,maxNumber,reportVisibility]);
     const onScroll=useCallback(() => {
         reportVisibility();
