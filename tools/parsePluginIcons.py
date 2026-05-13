@@ -50,7 +50,7 @@ def printRule(rule:CSSStyleRule,regex:re.Pattern,base:str,format:str,useBase:boo
         completeFile=xjoin(base,file)
         if not os.path.exists(completeFile):
             print(f"##{file}: {completeFile} not found",file=sys.stderr)
-        if format == 'plain':
+        if format != 'table' and format != 'pandoc':
             printPlainIcon(icon, file)
         else:
             printTable(icon, file, base if useBase else None, format)
@@ -78,7 +78,7 @@ def textFromRule(rule:CSSStyleRule):
 
 
 if __name__=='__main__':
-    ALL_FORMATS = ['plain', 'table', 'pandoc', 'button2icon', 'iconusage']
+    ALL_FORMATS = ['plain', 'table', 'pandoc', 'icons','buttontext']
     # after creating the "pandoc" markdow convert to odt
     # from within the docs dir with
     # pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
@@ -99,6 +99,25 @@ if __name__=='__main__':
     data=parseFile(filename)
     reicon=re.compile(r'\.icon\.(\w+)')
     rebutton=re.compile(r'\.button\.(\w+)')
+    buttonTexts = {}
+    for rule in data.cssRules:
+        if isinstance(rule, css_parser.css.CSSStyleRule):
+            (name, long, short) = textFromRule(rule)
+            if name:
+                if buttonTexts.get(name) is None:
+                    buttonTexts[name] = {'short': short, 'long': long}
+                else:
+                    if short:
+                        buttonTexts[name]['short'] = short
+                    if long:
+                        buttonTexts[name]['long'] = long
+    if format == 'buttontext':
+        for name in sorted(buttonTexts.keys()):
+            short=buttonTexts[name].get('short') or '---'
+            long=buttonTexts[name].get('long') or '---'
+            print(f"{name},{short},{long}")
+        sys.exit(0)
+
     if format == 'table' or format == 'pandoc':
         print("Icons")
         print("====")
@@ -109,7 +128,8 @@ if __name__=='__main__':
     for rule in data.cssRules:
         if isinstance(rule,css_parser.css.CSSStyleRule):
             printRule(rule,reicon,dir,format,useBase=usePath)
-
+    if format == 'icons':
+        sys.exit(0)
     if format == 'table' or format == 'pandoc':
         print("")
         print("Buttons")
@@ -121,18 +141,6 @@ if __name__=='__main__':
     for rule in data.cssRules:
         if isinstance(rule,css_parser.css.CSSStyleRule):
             printRule(rule,rebutton,dir,format,useBase=usePath)
-    buttonTexts={}
-    for rule in data.cssRules:
-        if isinstance(rule,css_parser.css.CSSStyleRule):
-            (name,long,short)=textFromRule(rule)
-            if name:
-                if buttonTexts.get(name) is None:
-                    buttonTexts[name]={'short':short,'long':long}
-                else:
-                    if short:
-                        buttonTexts[name]['short']=short
-                    if long:
-                        buttonTexts[name]['long']=long
     if format == 'table' or format == 'pandoc':
         print("")
         print("ButtonTexts")

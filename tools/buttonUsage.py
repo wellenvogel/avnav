@@ -312,7 +312,7 @@ if len(sys.argv) < 1:
     usage()
     sys.exit(1)
 
-ALL_FORMATS=['plain','table','sparse','pandoc','button2icon','iconusage']
+ALL_FORMATS=['plain','table','sparse','pandoc','button2icon','iconusage','buttontext']
 #after creating the "pandoc" markdow convert to odt
 #from within the docs dir with
 #pandoc -o buttonUsage.odt --embed-resources=true buttonUsage.md
@@ -426,5 +426,17 @@ elif format == 'iconusage':
             usage += ',' if usage else ''
             usage += "code"
         print(f"{k} {usage}")
+    sys.exit(0)
+elif format == 'buttontext':
+    for k in sorted(buttonDefs.keys()):
+        buttonDef = buttonDefs.get(k)
+        name=buttonDef.name
+        texts=textDefs.get(name)
+        short='---'
+        long='---'
+        if texts is not None:
+            short=texts.tshort
+            long=texts.tlong
+        print(f"{k},{name},{short},{long},")
     sys.exit(0)
 raise RuntimeError(f'invalid format {format}')
