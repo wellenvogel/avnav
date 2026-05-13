@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {createContext, useCallback, useContext, useEffect} from "react";
+import React, {createContext, useCallback, useContext, useEffect, useRef} from "react";
 import Helper from "../util/helper";
 import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
@@ -83,16 +83,23 @@ export type ScrollHelper=[
  *    ...
  *    />
  * @param initialScroll
+ * @param viewChanged if set call this when the view is changing
  */
 
-export const useScrollHelper=(initialScroll:number=0):ScrollHelper=>{
+export const useScrollHelper=(
+    initialScroll:number=0,
+    viewChanged?:(first:number,last:number) => void
+):ScrollHelper=>{
     const [scrollItem,setScrollItem]=React.useState(initialScroll);
     const [sequence,setSequence]=React.useState(0);
     const [minVisible,setMinVisible]=React.useState(0);
     const [maxVisible,setMaxVisible]=React.useState(0);
+    const viewChangedRef=useRef(null);
+    viewChangedRef.current=viewChanged;
     const updateVis=useCallback((min:number,max:number)=>{
        setMinVisible(min);
        setMaxVisible(max);
+       if (viewChangedRef.current){viewChangedRef.current(min,max);}
     },[]);
     const scrollTo=useCallback((nr:number)=>{
        setScrollItem(nr);

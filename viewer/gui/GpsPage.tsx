@@ -23,7 +23,7 @@ import {DynamicTitleIcons} from "../components/TitleIcons";
 import {showDialog} from "../components/OverlayDialog";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 import ButtonList from "../components/ButtonList";
-import {injectav} from "../util/helper";
+import Helper, {injectav} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";
 import {useDialogContext} from "../components/DialogContext";
 import {PAGEIDS, PageType} from "../util/pageids";
@@ -32,6 +32,7 @@ import remotechannel,{COMMANDS} from '../util/remotechannel';
 import {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import GpsPageButtons from "./GpsPageButtons";
+import {MultiView, useScrollHelper} from "../components/MultiView";
 const PAGE=PAGEIDS.GPS;
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -122,6 +123,72 @@ const layoutBaseParam={
 interface Panel extends ItemListProps{
     name:string;
 }
+interface DashboardPanelProps{
+    visible?:boolean;
+    pageNumber:number;
+    fontSize:number;
+    onItemClick:(ev:Event,panelData:PanelData) => void;
+}
+const DashboardPanel=(props:DashboardPanelProps)=>{
+    if (!Helper.unsetorTrue(props.visible)) {
+        return <div className={'GpsPanel hidden'}>
+            <div className={'PageNumber'}>{props.pageNumber}</div>
+            <div className={'loading spinner'}></div>
+        </div>
+    }
+    const dialogContext = useDialogContext();
+    const layoutPage=getLayoutPage(props.pageNumber);
+    const panelList:Panel[] = [];
+    PANEL_LIST.forEach((panelName) => {
+        const [page,panelData] = getPanelList(panelName, props.pageNumber);
+        if (!panelData.list) return;
+        const sum = getWeightSum(panelData.list);
+        const prop:Panel  = {
+            name: panelData.name,
+            dragFrame: panelData.name,
+            allowOther: true,
+            className: 'widgetContainer',
+            itemCreator: (widget:WidgetProps) => {
+                return widgetCreator(widget, sum);
+            },
+            itemList: panelData.list,
+            fontSize: props.fontSize,
+            onItemClick: (ev:Event) => {
+                props.onItemClick(ev, panelData);
+            },
+            onClick: () => {
+                if (LayoutHandler.isEditing()) {
+                    showDialog(dialogContext, () => <EditWidgetDialogWithFunc
+                        pageWithOptions={layoutPage}
+                        panelname={panelData.name}
+                        widgetItem={undefined}
+                        opt_options={{beginning: false, weight: true, types: ["!map"]}}
+                    />);
+                }
+            },
+            dragdrop: LayoutHandler.isEditing(),
+            onSortEnd: (oldIndex:number, newIndex:number, frameId:string, targetFrameId:string) => {
+                LayoutHandler.withTransaction(layoutPage,
+                    (handler) => handler.moveItem(page, frameId, oldIndex, newIndex, targetFrameId));
+            }
+        };
+        panelList.push(prop);
+    });
+    let panelWidth = 100;
+    if (panelList.length) {
+        panelWidth = panelWidth / panelList.length;
+    }
+    return <div className={'GpsPanel'}>
+        {panelList.map((panelProps) => {
+            return (
+                <div className="hfield" style={{width: panelWidth + "%"}} key={panelProps.name}>
+                    <ItemList {...panelProps}/>
+                </div>
+            )
+        })}
+    </div>
+}
+
 const GpsPage = (props:Partial<PageProps>) => {
     const history=useHistory();
     useStoreState(keys.gui.global.reloadSequence);
@@ -141,13 +208,22 @@ const GpsPage = (props:Partial<PageProps>) => {
         return 1;
     }, true);
     const dialogContext = useDialogContext();
-    const setPageNumber = useCallback((num:number, opt_noRemote?:boolean) => {
+    const setPageNumber = useCallback((num:number,
+                                       opt_noRemote?:boolean,
+                                       noScroll?:boolean) => {
         setPageNumberImpl(num);
+        if (! noScroll) scrollTo(num-1);
         dialogContext.closeDialog();
         if (!opt_noRemote) {
             remotechannel.sendMessage(COMMANDS.gpsNum, num);
         }
     }, []);
+    const [scrollProps,scrollTo,visible]=useScrollHelper(pageNumber>0?pageNumber-1:0,
+        (min:number,_max:number)=>{
+            if (min !== (pageNumber-1)){
+                setPageNumber(min+1,false,true);
+            }
+        });
     useEffect(() => {
         const remoteToken = remotechannel.subscribe(COMMANDS.gpsNum, (number:string) => {
             const pn = parseInt(number);
@@ -263,49 +339,18 @@ const GpsPage = (props:Partial<PageProps>) => {
             }
         }
     }
-    const panelList:Panel[] = [];
-    PANEL_LIST.forEach((panelName) => {
-        const [page,panelData] = getPanelList(panelName, pageNumber);
-        if (!panelData.list) return;
-        const sum = getWeightSum(panelData.list);
-        const prop:Panel  = {
-            name: panelData.name,
-            dragFrame: panelData.name,
-            allowOther: true,
-            className: 'widgetContainer',
-            itemCreator: (widget:WidgetProps) => {
-                return widgetCreator(widget, sum);
-            },
-            itemList: panelData.list,
-            fontSize: fontSize,
-            onItemClick: (ev:Event) => {
-                onItemClick(ev, panelData);
-            },
-            onClick: () => {
-                if (LayoutHandler.isEditing()) {
-                    showDialog(dialogContext, () => <EditWidgetDialogWithFunc
-                        pageWithOptions={getLayoutPage(pageNumber)}
-                        panelname={panelData.name}
-                        widgetItem={undefined}
-                        opt_options={{beginning: false, weight: true, types: ["!map"]}}
-                    />);
-                }
-            },
-            dragdrop: LayoutHandler.isEditing(),
-            onSortEnd: (oldIndex:number, newIndex:number, frameId:string, targetFrameId:string) => {
-                LayoutHandler.withTransaction(getLayoutPage(pageNumber),
-                    (handler) => handler.moveItem(page, frameId, oldIndex, newIndex, targetFrameId));
-            }
-        };
-        panelList.push(prop);
-    });
-    let panelWidth = 100;
-    if (panelList.length) {
-        panelWidth = panelWidth / panelList.length;
-    }
     currentButtons.current=buttons;
     useInitialButton(currentButtons);
     const titleIcons = globalStore.getData(keys.properties.titleIconsGps);
+    const views=[];
+    for (let i=0;i<maxPage;i++){
+        views.push(<DashboardPanel
+            pageNumber={i+1}
+            fontSize={fontSize}
+            onItemClick={onItemClick}
+            visible={visible(i) || pageNumber == (i+1)}
+        />)
+    }
     return (
         <PageFrame
             id={props.id}
@@ -313,13 +358,11 @@ const GpsPage = (props:Partial<PageProps>) => {
         >
             <PageLeft id={props.id} >
                 {titleIcons && <DynamicTitleIcons/>}
-                {panelList.map((panelProps) => {
-                    return (
-                        <div className="hfield" style={{width: panelWidth + "%"}} key={panelProps.name}>
-                            <ItemList {...panelProps}/>
-                        </div>
-                    )
-                })}
+                <MultiView
+                    {...scrollProps}
+                    views={views}
+                    maxNumber={1}
+                />
             </PageLeft>
             <ButtonList page={props.id} itemList={currentButtons.current} widthChanged={() => resizeFont()}/>
         </PageFrame>
