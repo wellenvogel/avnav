@@ -54,6 +54,12 @@
       "5":"Control-5",
       "6":"Control-6",
       "7":"Control-7"
+    },
+    "multiview": {
+      "left": "ArrowLeft",
+      "right": "ArrowRight",
+      "first": "Control-ArrowLeft",
+      "last": "Control-ArrowRight"
     }
 
   },

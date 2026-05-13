@@ -26,6 +26,8 @@ import {useStoreState} from "../hoc/Dynamic";
 import keys from "../util/keys";
 import {ListSlot} from "./ListItems";
 import {iconClasses} from './Icons';
+import {useKeyEventHandlerPlain} from "../util/UiHelper";
+import {KeyComponents} from "../util/keyhandler";
 
 
 export interface MultiViewProps {
@@ -197,6 +199,22 @@ export const MultiView = (props: MultiViewProps) => {
             setChanged((old)=>old+1)
         }
     },[numViews])
+    const keyActions:Record<string,(action?:string)=>void>={
+        left: ()=>{
+            if (minVisible > 0) scrollTo(minVisible-1)
+        },
+        right:()=>{
+            if (maxVisible < (numViews-1)) scrollTo(maxVisible+1)
+        },
+        first:()=>scrollTo(0),
+        last:()=>scrollTo(numViews-1),
+    }
+    const keyHandler=(action:string)=>{
+        const actionFunction=keyActions[action];
+        if (! actionFunction) return;
+        actionFunction(action);
+    }
+    useKeyEventHandlerPlain(Object.keys(keyActions),KeyComponents.MULTIVIEW,(_comp:string,action:string)=>{keyHandler(action)});
     useEffect(() => {
         if (! outerRef.current) {
             setItemWidth(0);
