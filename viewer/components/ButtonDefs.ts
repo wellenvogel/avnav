@@ -228,6 +228,10 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Anchor,
         name:btdef.AnchorWatch,
     },
+    StopAnchorWatch:{
+        iconClass: iconClasses.AnchorEnd,
+        name:btdef.StopAnchorWatch,
+    },
     LockPos:{
         iconClass: iconClasses.LockPos,
         name:btdef.LockPos,

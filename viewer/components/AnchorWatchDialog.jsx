@@ -93,13 +93,13 @@ const WatchDialog=(props)=> {
             <DialogButton {...ButtonDefs.DBAnchorBoat}
                           onClick={()=>{
                               props.setCallback(computeRefPoint(false));
-                          }}>Boat</DialogButton>
+                          }}></DialogButton>
                 <DialogButton {...ButtonDefs.DBAnchorCenter}
                               onClick={()=>{
                                   props.setCallback(computeRefPoint(true));
-                              }}>Center</DialogButton>
+                              }}></DialogButton>
             </React.Fragment>}
-            {props.active && <DialogButton name={'stop'}
+            {props.active && <DialogButton {...ButtonDefs.StopAnchorWatch}
                                            close={false}
                                      onClick={() => {
                                          stopAnchorWithConfirm(undefined,dialogContext)
@@ -110,10 +110,10 @@ const WatchDialog=(props)=> {
                                              .catch(() => {
                                              })
 
-                                     }}>Stop</DialogButton>
+                                     }}></DialogButton>
             }
-                <DialogButton name={'cancel'}
-                          >Cancel</DialogButton>
+                <DialogButton {...ButtonDefs.Cancel}
+                          ></DialogButton>
         </DialogButtons>
     </DialogFrame>
 }
