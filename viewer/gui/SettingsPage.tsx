@@ -105,6 +105,7 @@ const SectionList=(props:SectionListProps)=>{
         sectionItems.push(item);
     }
     return <ItemList
+        scrollable={true}
         className={'sectionList'}
         itemList={sectionItems}
         itemClass={SectionItem}
