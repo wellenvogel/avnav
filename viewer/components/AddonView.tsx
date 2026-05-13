@@ -32,6 +32,8 @@ import {PageType} from "../util/pageids";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {PageUserButton} from "../util/Addons";
+import {ButtonAddonType} from "./Button";
+import {ButtonDescription} from "./ButtonList";
 export interface AddonViewProps extends UserApp{
     className?:string;
     visible?:boolean;
@@ -74,6 +76,9 @@ export const injectAddonButtonAction=(
     const config=button.config;
     if (! config){return button}
     if (button.onClick) return button;
+    if (button.isAddon !== ButtonAddonType.CONFIG && button.isAddon !== ButtonAddonType.CONFIG_NEW_WINDOW){
+        return button;
+    }
     const rt={...button};
     if (config.url && config.newWindow){
         rt.onClick=()=> {
@@ -107,7 +112,8 @@ class PageAddonView{
         this.element = element;
     }
 }
-export class AddonViewManager{
+
+class AddonViewManager{
     private activeViews:Record<PageType,PageAddonView>={}
     constructor(){
         globalstore.register(()=>{
@@ -124,6 +130,18 @@ export class AddonViewManager{
             this.activeViews[page] = new PageAddonView(name,display);
         }
         globalstore.storeData(keys.gui.global.addonViewChanged,globalstore.getData(keys.gui.global.addonViewChanged,0)+1);
+    }
+    conditionalResetPageAddon(button:ButtonDescription,page:PageType){
+        if (button.isAddon !== ButtonAddonType.CONFIG &&
+            button.isAddon !== ButtonAddonType.CONFIG_NEW_WINDOW) {
+            //reset any page addon if this is not a button with addonconfig
+            //must match the handling in injectAddonButtonAction
+            //buttons with ButtonAddonType.CONFIG will set/unset the pageAddon by their own
+            //  so we need to keep it for being able to toggle
+            //buttons with ButtonAddonType.CONFIG_NEW_WINDOW will open something
+            //  in a new window - so there is no need to reset anything
+            this.setPageAddon(page);
+        }
     }
     hasPageAddon(page:PageType,name:string){
         const pageItem=this.activeViews[page];

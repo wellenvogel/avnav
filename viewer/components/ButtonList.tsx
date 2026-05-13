@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import Button, {ButtonAddonType, ButtonDef, ButtonEvent, DynamicButtonProps} from './Button';
+import Button, {ButtonDef, ButtonEvent, DynamicButtonProps} from './Button';
 import {dynamicWrapper, useStore} from '../hoc/Dynamic';
 import keys, {ButtonFontSizeFactor} from '../util/keys';
 import ItemList from './ItemList';
@@ -89,9 +89,7 @@ const ButtonList = (iprops:ButtonListProps) => {
             ...button,
             dataChanged:buttonChanged,
             onClick:(ev:ButtonEvent)=>{
-                if (button.isAddon !== ButtonAddonType.NONE && button.isAddon !== undefined){
-                    addonViewManager.setPageAddon(iprops.page);
-                }
+                addonViewManager.conditionalResetPageAddon(button,iprops.page);
                 button.onClick(ev);
             },
             closeDialogs: (button.closeDialogs === undefined)?(iprops.page !== undefined):button.closeDialogs,
