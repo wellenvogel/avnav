@@ -14,7 +14,7 @@ import keys, {KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
 import base from '../base.ts';
 import northImage from '../images/nadel_mit.png';
-import KeyHandler from '../util/keyhandler.ts';
+import KeyHandler, {KeyComponents} from '../util/keyhandler.ts';
 import assign from 'object-assign';
 import AvNavChartSource from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';
@@ -58,6 +58,7 @@ import {checkZoomBounds, PMTILESPROTO} from "./chartlayers";
 import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
 import {EventTypes} from "./maptypes";
+import keyhandler from "../util/keyhandler.ts";
 
 
 
@@ -256,45 +257,8 @@ class MapHolder extends DrawingPositionConverter {
         this.warnings={};
         globalStore.storeData(keys.map.courseUp, this.courseUp);
         this.timer = undefined;
-        KeyHandler.registerHandler(() => {
-            this.changeZoom(+1)
-        }, "map", "zoomIn");
-        KeyHandler.registerHandler(() => {
-            this.changeZoom(-1)
-        }, "map", "zoomOut");
-        KeyHandler.registerHandler(() => {
-            this.userAction();
-            this.setGpsLock(LOCK_MODES.center)
-        }, "map", "lockGps");
-        KeyHandler.registerHandler(() => {
-            this.userAction();
-            this.setGpsLock(LOCK_MODES.off)
-        }, "map", "unlockGps");
-        KeyHandler.registerHandler(() => {
-            this.userAction();
-            this.setGpsLock((this.getGpsLock()===LOCK_MODES.off)?LOCK_MODES.center:LOCK_MODES.off)
-        }, "map", "toggleGps");
-        KeyHandler.registerHandler(() => {
-            this.moveCenterPercentKey(-10, 0)
-        }, "map", "left");
-        KeyHandler.registerHandler(() => {
-            this.moveCenterPercentKey(10, 0)
-        }, "map", "right");
-        KeyHandler.registerHandler(() => {
-            this.moveCenterPercentKey(0, -10)
-        }, "map", "up");
-        KeyHandler.registerHandler(() => {
-            this.moveCenterPercentKey(0, 10)
-        }, "map", "down");
-        KeyHandler.registerHandler(() => {
-            this.userAction();
-            this.setCourseUp(!this.getCourseUp())
-        }, "map", "toggleCourseUp");
-        KeyHandler.registerHandler(() => {
-            this.userAction();
-            this.centerToGps()
-        }, "map", "centerToGps");
-
+        this.registrations=[];
+        this.registerKeyHandler();
         this.remoteChannel = remotechannel;
         this.remoteChannel.subscribe(COMMANDS.setChart, (chartmsg) => {
             try {
@@ -398,6 +362,37 @@ class MapHolder extends DrawingPositionConverter {
          * @private
          */
         this._lastEventDiv=undefined;
+    }
+    registerKeyHandler(){
+        const actions={
+            zoomIn:()=>this.changeZoom(+1),
+            zoomOut:()=>this.changeZoom(-1),
+            lockGps:()=>{this.userAction();this.setGpsLock(LOCK_MODES.center)},
+            unlockGps:()=>{this.userAction();this.setGpsLock(LOCK_MODES.off)},
+            toggleGps:()=>{
+                this.userAction();
+                this.setGpsLock((this.getGpsLock()===LOCK_MODES.off)?LOCK_MODES.center:LOCK_MODES.off)
+            },
+            left:()=>this.moveCenterPercentKey(-10, 0),
+            right:()=>this.moveCenterPercentKey(10, 0),
+            up:()=>this.moveCenterPercentKey(0, -10),
+            down:()=>this.moveCenterPercentKey(0, 10),
+            toggleCourseUp:()=>{
+                this.userAction();
+                this.setCourseUp(!this.getCourseUp())
+            },
+            centerToGps:()=>{
+                this.userAction();
+                this.centerToGps()
+            }
+        }
+        this.registrations= [keyhandler.registerHandlerObject(KeyComponents.MAP,actions)];
+    }
+    deregisterKeyHandler(){
+        for (const reg of this.registrations){
+            keyhandler.deregisterHandler(reg);
+        }
+        this.registrations=[];
     }
     logError(key,...error){
         if (!error || (Array.isArray(error) && error.length<1)) {
@@ -578,6 +573,14 @@ class MapHolder extends DrawingPositionConverter {
         if (this.timer && !div) {
             window.clearInterval(this.timer);
             this.timer = undefined;
+        }
+        if (! div){
+            this.deregisterKeyHandler();
+        }
+        else{
+            if (this.registrations.length === 0){
+                this.registerKeyHandler();
+            }
         }
         this._lastMapDiv = div;
         if (!this.olmap) return;
