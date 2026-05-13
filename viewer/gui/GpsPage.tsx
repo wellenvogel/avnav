@@ -29,10 +29,11 @@ import {useDialogContext} from "../components/DialogContext";
 import {PAGEIDS, PageType} from "../util/pageids";
 import layouthandler from "../util/layouthandler";
 import remotechannel,{COMMANDS} from '../util/remotechannel';
-import {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
+import Button, {ButtonDef, DynamicButtonProps, updateButtons} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import GpsPageButtons from "./GpsPageButtons";
+import GpsPageButtons, {pageButtons} from "./GpsPageButtons";
 import {MultiView, useScrollHelper} from "../components/MultiView";
+
 const PAGE=PAGEIDS.GPS;
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -132,7 +133,11 @@ interface DashboardPanelProps{
 const DashboardPanel=(props:DashboardPanelProps)=>{
     if (!Helper.unsetorTrue(props.visible)) {
         return <div className={'GpsPanel hidden'}>
-            <div className={'PageNumber'}>{props.pageNumber}</div>
+            <div className={'PageNumber'}>
+                <Button
+                    {...pageButtons[props.pageNumber-1]}
+                />
+            </div>
             <div className={'loading spinner'}></div>
         </div>
     }

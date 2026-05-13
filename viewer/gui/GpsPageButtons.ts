@@ -30,7 +30,7 @@ import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
 import ButtonDefs from "../components/ButtonDefs";
 
-const pageButtons=[
+export const pageButtons=[
     ButtonDefs.Gps1,
     ButtonDefs.Gps2,
     ButtonDefs.Gps3,
