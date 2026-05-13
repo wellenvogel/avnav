@@ -254,6 +254,7 @@ export const MultiView = (props: MultiViewProps) => {
         reportVisibility();
         return ()=>{
             if (props.viewChanged){
+                lastReportedRef.current=[-1,-1];
                 props.viewChanged(-1,-1);
             }
         }
