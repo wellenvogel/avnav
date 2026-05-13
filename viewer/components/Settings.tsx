@@ -595,7 +595,7 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                     let settings=propertyhandler.exportSettings();
                     try {
                         const result = await propertyhandler.verifySettingsData(settings, false);
-                        if (result.warnings) {
+                        if (result.warnings && result.warnings.length > 0) {
                             const qs = await showPromiseDialogTrue(dialogContext,
                                 (dprops) => <ConfirmDialog {...dprops}
                                                            title={'Settings Error'}
