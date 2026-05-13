@@ -47,6 +47,8 @@ export const KeyComponents={
     ALARM:'alarm',
     WIDGET:'widget',
     ADDON:'addon',
+    MULTIVIEW:'multiview',
+    MAP:'map'
 }
 export const DialogKeyComponents={
     DIALOGBUTTON: "dialogButton",
@@ -77,6 +79,17 @@ class KeyHandler{
         })
     }
 
+    registerHandlerObject(
+        component:string,
+        actions:Record<string,(action:string)=>void>
+    ){
+        const handler=(_comp:string,caction:string)=>{
+            const af=actions[caction];
+            if (!af) return;
+            af(caction);
+        }
+        return this.registerHandler(handler,component,Object.keys(actions));
+    }
     registerHandler(
         handlerFunction:ActionFunction,
         component:string,
@@ -95,7 +108,7 @@ class KeyHandler{
                 regComponent[action[i]].push(handlerFunction);
             }
         }
-        return true;
+        return handlerFunction;
     }
     deregisterHandler(handlerFunction:ActionFunction){
         for (const k in this.registrations){
