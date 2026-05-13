@@ -38,7 +38,15 @@ import globalstore from "../util/globalstore";
 import LayoutHandler, {layoutLoader} from '../util/layouthandler';
 import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
-import {DBCancel, DBOk, DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "./OverlayDialog";
+import {
+    DBCancel,
+    DBOk,
+    DialogButtons,
+    DialogFrame,
+    showDialog,
+    showPromiseDialog,
+    showPromiseDialogTrue
+} from "./OverlayDialog";
 import {ConfirmDialog} from './BasicDialogs';
 import {useDialogContext, useStoreState} from "./exports";
 import {IDialogContext} from "./DialogContext";
@@ -554,12 +562,12 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
     </DialogFrame>
 }
 export interface SaveSettingsDialogProps{
-    values?:Record<string, PropertyValue>;
     title?:React.ReactNode;
     additionalButtons?:DynamicButtonProps[]
 }
 export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
     const actions = createItemActions({type:'settings'});
+    const dialogContext=useDialogContext();
     let lastName=LocalStorageManager.getItem(PREFIX_NAMES.SETTINGS_NAME);
     if (! lastName) {
         lastName="settings";
@@ -584,11 +592,41 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                         return false;
                     }
                     proposedName = settingsName;
+                    let settings=propertyhandler.exportSettings();
+                    try {
+                        const result = await propertyhandler.verifySettingsData(settings, false);
+                        if (result.warnings) {
+                            const qs = await showPromiseDialogTrue(dialogContext,
+                                (dprops) => <ConfirmDialog {...dprops}
+                                                           title={'Settings Error'}
+                                                           text={'Autocorrect the following errors?\n' + result.warnings.join('\n')}
+                                                           className={'SettingsWarnings'}
+                                />
+                            )
+                            if (qs) {
+                                delete result.warnings;
+                                await propertyhandler.importSettings(result.data, false);
+                                settings = result.data;
+                            } else {
+                                return;
+                            }
+                        }
+                    }catch (e){
+                        const qs = await showPromiseDialogTrue(dialogContext,
+                                (dprops) => <ConfirmDialog {...dprops}
+                                                           title={'Settings Error'}
+                                                           className={'SettingsWarnings'}
+                                                           text={'Uncorrectable Settings Error\n'+e+"\nReset Settings to defaults?"}/>
+                        );
+                        if (! qs) return;
+                        propertyhandler.resetToDefaults();
+                        settings=propertyhandler.exportSettings();
+                    }
                     try {
                         await propertyhandler.uploadSettingsData(
                             proposedName,
-                            propertyhandler.exportSettings(props.values),
-                            true
+                            settings,
+                            false
                         )
                         LocalStorageManager.setItem(PREFIX_NAMES.SETTINGS_NAME, undefined, proposedName);
                         propertyhandler.setChangedFlag(false);

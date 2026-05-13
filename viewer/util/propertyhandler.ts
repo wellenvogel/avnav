@@ -477,7 +477,7 @@ class PropertyHandler {
         }
     }
 
-    exportSettings(current?:Record<string,PropertyValue>){
+    exportSettings(current?:Record<string,PropertyValue>):SavedSettingsData{
         const descriptions = KeyHelper.getKeyDescriptions(true);
         const values:Record<string, PropertyValue> = {};
         if (! current) {
@@ -508,8 +508,9 @@ class PropertyHandler {
      * and store them to the global store
      * will reset the settingsChanged flag
      * @param propertyData
+     * @param resetChanged
      */
-    async importSettings(propertyData: SavedSettingsData) {
+    async importSettings(propertyData: SavedSettingsData,resetChanged:boolean=true) {
         if (propertyData.settingsVersion === undefined) {
             return Promise.reject("missing settingsVersion");
         }
@@ -547,7 +548,9 @@ class PropertyHandler {
             LayoutHandler.setLayoutAndName(layout, newLayout);
         }
         globalStore.storeMultiple(values);
-        this.setChangedFlag(false);
+        if (resetChanged) {
+            this.setChangedFlag(false);
+        }
     }
 
     listSettings(){
