@@ -253,12 +253,32 @@ const ButtonDefinitions= {
         name:btdef.GpsCenter,
     },
     NavActions:{
-        iconClass: iconClasses.MeasureFlag,
+        iconClass: iconClasses.Navigation,
         name:btdef.NavActions,
     },
     ABShowWpButtons:{
         iconClass: iconClasses.Waypoint,
         name:btdef.ABShowWpButtons
+    },
+    ABShowMeasure:{
+        iconClass:iconClasses.Measure,
+        name:btdef.ABShowMeasure,
+    },
+    Measure:{
+        iconClass: iconClasses.Measure,
+        name:btdef.Measure,
+    },
+    MeasureAdd:{
+        iconClass: iconClasses.Measure,
+        name:btdef.MeasureAdd,
+    },
+    MeasureOff:{
+        iconClass: iconClasses.MeasureOff,
+        name:btdef.MeasureOff,
+    },
+    ToRoute:{
+        iconClass: iconClasses.Route,
+        name:btdef.ToRoute,
     },
     //dashboard
     Gps1:{
@@ -689,10 +709,6 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Open,
         name:btdef.DBActivate,
     },
-    DBToRoute:{
-        iconClass: iconClasses.Route,
-        name:btdef.DBToRoute,
-    },
     DBUserApp:{
         iconClass: iconClasses.AddOns,
         name:btdef.DBUserApp
@@ -713,18 +729,6 @@ const ButtonDefinitions= {
     DBCleanTrack:{
         iconClass: iconClasses.Delete,
         name:btdef.DBCleanTrack,
-    },
-    DBMeasure:{
-        iconClass: iconClasses.Measure,
-        name:btdef.DBMeasure,
-    },
-    DBMeasureAdd:{
-        iconClass: iconClasses.Measure,
-        name:btdef.DBMeasureAdd,
-    },
-    DBMeasureOff:{
-        iconClass: iconClasses.MeasureOff,
-        name:btdef.DBMeasureOff,
     },
     DBInfo:{
         iconClass: iconClasses.Info,

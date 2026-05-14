@@ -1413,7 +1413,7 @@ class TrackItemActions extends ItemActions{
             visible:this.canEditOverlays() && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0,
         }))
         actions.push(new Action({
-            ...ButtonDefs.DBToRoute,
+            ...ButtonDefs.ToRoute,
             action:(action,info,dialogContext)=>{
                 dialogContext.replaceDialog(()=><TrackConvertDialog name={item.name}/>);
             },

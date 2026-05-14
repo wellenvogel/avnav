@@ -349,6 +349,7 @@ const buildWaypointButtons = (
             },
             onClick: () => {
                 buttonsOff();
+                buttonsOff();
                 navNext();
 
             }
@@ -400,6 +401,103 @@ const buildWaypointButtons = (
     ]
     }
 }
+
+const startOrAddMeasure=(point:navobjects.Point,center?:boolean)=>{
+    const measure=globalStore.getData(keys.map.activeMeasure);
+    if (MapHolder.getGpsLock()) return;
+    let newMeasure;
+    if (measure){
+        newMeasure=measure.clone();
+    }
+    else{
+        newMeasure=new Measure('default');
+    }
+    newMeasure.addPoint(-99,point);
+    if(center)MapHolder.setCenter(point);
+    globalStore.storeData(keys.map.activeMeasure,newMeasure);
+}
+const measureDisabled=(on:boolean,min2?:boolean) => {
+    return {
+        storeKeys: {
+            measure: keys.map.activeMeasure
+        },
+        updateFunction: (state: any) => {
+            let disabled = !!state.measure === on;
+            if (min2 && ! disabled) {
+               disabled= !(state.measure?.points?.length >= 2);
+            }
+            return {
+                disabled: disabled,
+            }
+        }
+    }
+}
+const buildMeasureButtons=(
+    buttonsOff: () => void,
+    dialogContext: IDialogContext,
+    history:IHistory
+):ActiveOverlayButtons=> {
+    return {
+        kind: 'measure',
+        buttons: [
+            {
+                ...ButtonDefs.Cancel,
+                onClick: () => {
+                    globalStore.storeData(keys.map.activeMeasure,undefined);
+                    buttonsOff();
+                }
+            },
+            {
+                ...ButtonDefs.MeasureOff,
+                onClick: () => {
+                    globalStore.storeData(keys.map.activeMeasure,undefined);
+                },
+                ...measureDisabled(false)
+            },
+            {
+                ...ButtonDefs.Measure,
+                onClick: () => {
+                    startOrAddMeasure(MapHolder.getCenter(),false);
+                },
+                ...measureDisabled(true)
+            },
+            {
+                ...ButtonDefs.MeasureAdd,
+                onClick: () => {
+                    startOrAddMeasure(MapHolder.getCenter(),false);
+                },
+                ...measureDisabled(false)
+            },
+            {
+                ...ButtonDefs.ToRoute,
+                onClick: () => {
+                    const measure=globalStore.getData(keys.map.activeMeasure);
+                    if (!measure) return;
+                    if (measure.points.length < 2) return;
+                    const routeActions=createItemActions('route');
+                    const createAction=routeActions.getCreateAction();
+                    createAction.title='New Route from measure';
+                    createAction.action(dialogContext).then((newRoute:any)=>{
+                        const mRoute=measure.clone();
+                        mRoute.setName(newRoute.name);
+                        const last=mRoute.points[mRoute.points.length - 1];
+                        const current=MapHolder.getCenter();
+                        if (current && last) {
+                            //same handling like add after on editroutepage
+                            const distance = MapHolder.pixelDistance(last, current);
+                            if (distance >= 8) {
+                                mRoute.addPoint(current)
+                            }
+                        }
+                        editorRoute.setRouteAndIndex(mRoute, mRoute.points.length-1);
+                        history.push(PAGEIDS.ROUTE);
+                    });
+                },
+                ...measureDisabled(false,true)
+            }
+        ]
+    }
+}
 interface OverlayContentProps{
     buttons?:DynamicButtonProps[]
 }
@@ -434,7 +532,7 @@ const needsChartLoad=()=>{
     return MapHolder.getLastChartKey()
 }
 const createRouteFeatureAction=(history:IHistory,opt_fromMeasure?:boolean)=>{
-    const button=opt_fromMeasure ? ButtonDefs.DBToRoute : ButtonDefs.DBFeatureNewRoute;
+    const button=opt_fromMeasure ? ButtonDefs.ToRoute : ButtonDefs.DBFeatureNewRoute;
     return new FeatureAction({
         ...button,
         onClick: (featureInfo:FeatureInfo,listCtx:IDialogContext)=>{
@@ -482,6 +580,11 @@ const NavPage=(props:PageProps)=>{
     const runSelectChart=(info?:string)=>{
         selectChartDialog(dialogCtx,()=>setSequence(old=>old+1),info);
     }
+    globalStore.register(()=>{
+        if (MapHolder.getGpsLock()){
+            setOverlayButtonList(null)
+        }
+    },keys.map.lockPosition);
     const initialDialogRef=useRef(undefined);
     const loadTimer = useTimer((seq) => {
         const neededChart:ChartEntry= MapHolder.getLastChartKey();
@@ -679,7 +782,7 @@ const NavPage=(props:PageProps)=>{
                 }
             }))
             additionalActions.push(new FeatureAction({
-                ...ButtonDefs.DBToRoute,
+                ...ButtonDefs.ToRoute,
                 onClick: (featureInfo:FeatureInfo) => {
                     dialogCtx.showDialog( () => <TrackConvertDialog history={history}
                                                                     name={featureInfo.urlOrKey}/>)
@@ -747,26 +850,16 @@ const NavPage=(props:PageProps)=>{
                 createRouteFeatureAction(history)
             ]
             const measure=globalStore.getData(keys.map.activeMeasure);
-            const measureButton=(measure === undefined)?ButtonDefs.DBMeasure:ButtonDefs.DBMeasureAdd;
+            const measureButton=(measure === undefined)?ButtonDefs.Measure:ButtonDefs.MeasureAdd;
             listActions.push(new FeatureAction({
                 ...measureButton,
                 onClick: (featureInfo:FeatureInfo)=>{
-                    if (MapHolder.getGpsLock()) return;
-                    let newMeasure;
-                    if (measure){
-                        newMeasure=measure.clone();
-                    }
-                    else{
-                        newMeasure=new Measure('default');
-                    }
-                    newMeasure.addPoint(-99,featureInfo.point);
-                    MapHolder.setCenter(featureInfo.point);
-                    globalStore.storeData(keys.map.activeMeasure,newMeasure);
+                    startOrAddMeasure(featureInfo.point,true);
                 },
                 condition: ()=>!MapHolder.getGpsLock()
             }))
             listActions.push(new FeatureAction({
-                ...ButtonDefs.DBMeasureOff,
+                ...ButtonDefs.MeasureOff,
                 onClick: ()=>{
                     globalStore.storeData(keys.map.activeMeasure,undefined)
                 },
@@ -884,7 +977,20 @@ const NavPage=(props:PageProps)=>{
                         ...ButtonDefs.ABShowWpButtons,
                         onClick:()=>{showWpButtons(overlayButtonList?.kind !== 'waypoint')},
                         toggle: overlayButtonList?.kind === 'waypoint'
+                    },
+                    CenterActionButton,
+                    {
+                        ...ButtonDefs.ABShowMeasure,
+                        onClick:()=>{if (overlayButtonList?.kind !== 'measure'){
+                            setOverlayButtonList(buildMeasureButtons(()=>setOverlayButtonList(null),dialogCtx,history))
+                        }
+                        else{
+                            setOverlayButtonList(null)
+                        }},
+                        toggle: overlayButtonList?.kind === 'measure',
+                        disabled: !!MapHolder.getGpsLock()
                     }
+
                 ]}/>)
             }
         }
