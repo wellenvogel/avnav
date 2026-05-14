@@ -18,7 +18,7 @@ import {
 import Compare from "../util/compare";
 // @ts-ignore
 import navdata from "../nav/navdata";
-import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
+import {AisInfoWithFunctions, aisNearestAction} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
@@ -416,7 +416,7 @@ export const AisButtonActions = ({nearestAction}:AisButtonActionParam) => {
     return {
         AisNearest: {
             onClick: () => {
-                navdata.getAisHandler().setTrackedTarget(0);
+                aisNearestAction();
                 if (nearestAction) nearestAction();
             }
         },

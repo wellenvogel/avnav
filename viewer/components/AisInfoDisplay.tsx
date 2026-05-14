@@ -217,6 +217,11 @@ export interface AisInfoWithFunctionProps{
     }
 }
 
+export const aisNearestAction=()=>{
+    NavData.getAisHandler().setTrackedTarget(0);
+    const pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
+    if (pos) mapholder.setCenter(pos);
+}
 export const AisInfoWithFunctions=(
     {mmsi,actionCb,buttons,hidden,className}:AisInfoWithFunctionProps)=>{
     const runCb=(action:string,item:string)=>{
@@ -227,9 +232,7 @@ export const AisInfoWithFunctions=(
         {
             ...ButtonDefs.AisNearest,
             onClick:()=>{
-                NavData.getAisHandler().setTrackedTarget(0);
-                const pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
-                if (pos) mapholder.setCenter(pos);
+                aisNearestAction();
                 runCb('AisNearest',mmsi);
             },
             disabled: mmsi === undefined,
