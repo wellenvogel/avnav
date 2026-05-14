@@ -71,82 +71,80 @@ import {useHistory} from "../components/HistoryProvider";
 import {createItemActions} from "../components/FileDialog";
 import {PAGEIDS, PageType} from "../util/pageids";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
-import {ButtonDef, propsToDefs, updateFromOld} from "../components/Button";
+import {ButtonDef, DynamicButtonProps, propsToDefs, updateFromOld} from "../components/Button";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import NavPageButtons from "./NavPageButtons";
 import {IHistory} from "../util/history";
 import ButtonDefs from "../components/ButtonDefs";
 import {KeyComponents} from "../util/keyhandler";
+import {ActionDialog} from "../components/ActionDialog";
 
-const RouteHandler=NavHandler.getRoutingHandler();
+const RouteHandler = NavHandler.getRoutingHandler();
 
-const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+const activeRoute = new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editorRoute = new RouteEdit(RouteEdit.MODES.EDIT);
 
-const PAGENAME=PAGEIDS.NAV;
+const PAGENAME = PAGEIDS.NAV;
 
 
-
-
-const getPanelList:PanelCreator=(panel:string|PageType)=>{
-    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LAYOUT_OPTIONS.SMALL,LAYOUT_OPTIONS.ANCHOR]));
+const getPanelList: PanelCreator = (panel: string | PageType) => {
+    return LayoutHandler.getPanelData(PAGENAME, panel, LayoutHandler.getOptionValues([LAYOUT_OPTIONS.SMALL, LAYOUT_OPTIONS.ANCHOR]));
 };
-const getPanelWidgets=(panel:string)=>{
-    const panelData=getPanelList(panel);
+const getPanelWidgets = (panel: string) => {
+    const panelData = getPanelList(panel);
     if (panelData && panelData.list) {
-        const layoutSequence=globalStore.getData(keys.gui.global.layoutSequence);
-        let idx=0;
-        panelData.list.forEach((item)=>{
-            item.key=layoutSequence+"_"+idx;
+        const layoutSequence = globalStore.getData(keys.gui.global.layoutSequence);
+        let idx = 0;
+        panelData.list.forEach((item) => {
+            item.key = layoutSequence + "_" + idx;
             idx++;
         })
         return panelData;
     }
-    return {name:panel};
+    return {name: panel};
 }
 /**
  *
  * @param item
  * @param idx if undefined - just update the let "to" point
  */
-const startWaypointDialog=(item:navobjects.WayPoint,idx:number,dialogCtx:IDialogContext)=>{
-    if (! item) return;
-    const wpChanged=(newWp:navobjects.WayPoint)=>{
-        const changedWp=updateWaypoint(item,newWp,(err:any)=>{
+const startWaypointDialog = (item: navobjects.WayPoint, idx: number, dialogCtx: IDialogContext) => {
+    if (!item) return;
+    const wpChanged = (newWp: navobjects.WayPoint) => {
+        const changedWp = updateWaypoint(item, newWp, (err: any) => {
             Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {
-            if (idx !== undefined){
-                activeRoute.changeSelectedWaypoint(changedWp,idx);
-            }
-            else{
+            if (idx !== undefined) {
+                activeRoute.changeSelectedWaypoint(changedWp, idx);
+            } else {
                 activeRoute.changeTargetWaypoint(changedWp);
             }
             return true;
         }
         return false;
     };
-    showDialog(dialogCtx,(props)=><WayPointDialog
-            {...props}
-            waypoint={item}
-            okCallback={wpChanged}/>
+    showDialog(dialogCtx, (props) => <WayPointDialog
+        {...props}
+        waypoint={item}
+        okCallback={wpChanged}/>
     );
 };
-const showLockDialog=(dialogContext:IDialogContext)=>{
-    const LockDialog=()=>{
+const showLockDialog = (dialogContext: IDialogContext) => {
+    const LockDialog = () => {
         return <div className={'LockDialog inner'}>
             <h3 className="dialogTitle">{'Lock Boat'}</h3>
             <div className={'dialogButtons'}>
                 <DialogButton
                     name={'current'}
-                    onClick={()=>{
+                    onClick={() => {
                         MapHolder.setGpsLock(LOCK_MODES.current);
                     }}
                 >
                     Current</DialogButton>
                 <DialogButton
                     name={'center'}
-                    onClick={()=>{
+                    onClick={() => {
                         MapHolder.setGpsLock(LOCK_MODES.center);
                     }}
                 >
@@ -160,38 +158,36 @@ const showLockDialog=(dialogContext:IDialogContext)=>{
             </div>
         </div>
     }
-    showDialog(dialogContext,LockDialog);
+    showDialog(dialogContext, LockDialog);
 }
 
-const setCenterToTarget=()=>{
+const setCenterToTarget = () => {
     MapHolder.setGpsLock(LOCK_MODES.off);
-    if (activeRoute.anchorWatch() !== undefined){
+    if (activeRoute.anchorWatch() !== undefined) {
         MapHolder.setCenter(activeRoute.getCurrentFrom());
-    }
-    else {
+    } else {
         MapHolder.setCenter(activeRoute.hasRoute() ? activeRoute.getPointAt() : activeRoute.getCurrentTarget());
     }
 };
 
-const navNext=()=>{
-    if (!activeRoute.hasRoute() ) return;
-    wpOn(activeRoute.getNextWaypoint(),KeepFromMode.OLDTO);
+const navNext = () => {
+    if (!activeRoute.hasRoute()) return;
+    wpOn(activeRoute.getNextWaypoint(), KeepFromMode.OLDTO);
 };
 
-const navToWp=(on?:boolean)=>{
-    if(on){
+const navToWp = (on?: boolean) => {
+    if (on) {
         const center = globalStore.getData(keys.map.centerPosition);
-        const current=activeRoute.getCurrentTarget();
-        const wp=new navobjects.WayPoint();
+        const current = activeRoute.getCurrentTarget();
+        const wp = new navobjects.WayPoint();
         //take over the wp name if this was a normal wp with a name
         //but do not take over if this was part of a route
-        if (current && current.name && current.name !== navobjects.WayPoint.MOB ){
-            wp.name=current.name;
-        }
-        else{
+        if (current && current.name && current.name !== navobjects.WayPoint.MOB) {
+            wp.name = current.name;
+        } else {
             wp.name = globalStore.getData(keys.properties.markerDefaultName);
         }
-        wp.routeName=undefined;
+        wp.routeName = undefined;
         center.assign(wp);
         wpOn(wp);
         return;
@@ -199,66 +195,69 @@ const navToWp=(on?:boolean)=>{
     RouteHandler.routeOff();
     MapHolder.triggerRender();
 };
-const wpOn=(...args:any[])=>{
+const wpOn = (...args: any[]) => {
     RouteHandler.wpOn(...args).then(
-        ()=>{},
-        (e:any)=>{if (e) Toast(e)})
+        () => {
+        },
+        (e: any) => {
+            if (e) Toast(e)
+        })
 }
-const gotoFeature=(featureInfo:FeatureInfo,opt_noRoute?:boolean)=>{
+const gotoFeature = (featureInfo: FeatureInfo, opt_noRoute?: boolean) => {
     let target = featureInfo.point;
     if (!target) return;
     if (opt_noRoute && target instanceof navobjects.WayPoint) {
-        target=target.clone()
+        target = target.clone()
         delete target.routeName;
     }
-    if (! target.name) target.name=globalStore.getData(keys.properties.markerDefaultName);
+    if (!target.name) target.name = globalStore.getData(keys.properties.markerDefaultName);
     wpOn(target);
 }
-const OVERLAYPANEL="overlay";
-const getCurrentMapWidgets=():Item[] =>{
+const OVERLAYPANEL = "overlay";
+const getCurrentMapWidgets = (): Item[] => {
     const current = getPanelWidgets(OVERLAYPANEL);
     let idx = 0;
-    const rt:Item[] = [];
-    if (! current.list) return rt;
+    const rt: Item[] = [];
+    if (!current.list) return rt;
     current.list.forEach((item) => {
-        rt.push({index: idx,... item});
+        rt.push({index: idx, ...item});
         idx++;
     })
     return rt;
 }
-const MapWidgetsDialog =()=> {
-    const dialogContext=useDialogContext();
-    const onItemClick = useCallback((item:Item)=>{
-        dialogContext.showDialog(()=><EditWidgetDialogWithFunc
+const MapWidgetsDialog = () => {
+    const dialogContext = useDialogContext();
+    const onItemClick = useCallback((item: Item) => {
+        dialogContext.showDialog(() => <EditWidgetDialogWithFunc
             widgetItem={item}
             panelname={OVERLAYPANEL}
             pageWithOptions={PAGENAME}
-            opt_options={{fixPanel:true,types:['map']}}
+            opt_options={{fixPanel: true, types: ['map']}}
         />)
-    },[]);
-    const items=getCurrentMapWidgets();
+    }, []);
+    const items = getCurrentMapWidgets();
     return <DialogFrame className={'MapWidgetsDialog'} title={"Map Widgets"}>
-            {items && items.map((item)=>{
-                const theItem=item;
-                return <DialogRow
-                    className={'lisEntry'}
-                    onClick={()=>onItemClick(theItem)}
-                    key={theItem.name}
-                    >
-                    {item.name}
-                </DialogRow>
-            })}
+        {items && items.map((item) => {
+            const theItem = item;
+            return <DialogRow
+                className={'lisEntry'}
+                onClick={() => onItemClick(theItem)}
+                key={theItem.name}
+            >
+                {item.name}
+            </DialogRow>
+        })}
         <DialogButtons buttonList={[
             {
                 ...ButtonDefs.DBAdd,
-                onClick:()=>{
-                    dialogContext.showDialog(()=><EditWidgetDialogWithFunc
+                onClick: () => {
+                    dialogContext.showDialog(() => <EditWidgetDialogWithFunc
                         widgetItem={undefined}
                         pageWithOptions={PAGENAME}
                         panelname={OVERLAYPANEL}
-                        opt_options={{fixPanel:true,types:['map']}}
+                        opt_options={{fixPanel: true, types: ['map']}}
                     />)
-                    },
+                },
                 close: false
             },
             {
@@ -268,50 +267,71 @@ const MapWidgetsDialog =()=> {
     </DialogFrame>
 }
 
-const GuardedAisDialog=MapEventGuard(AisInfoWithFunctions);
-const OverlayContent=(
-    {showWpButtons,setShowWpButtons,dialogContext}:
-    {showWpButtons?:boolean, setShowWpButtons?:(v:boolean)=>void,dialogContext?:IDialogContext,},
-)=>{
-    const waypointButtons=[
-        anchorWatch(false,dialogContext),
+interface OverlayButtonDisplayProps {
+    buttons?: DynamicButtonProps[]
+}
+interface ActiveOverlayButtons {
+    kind?:'waypoint'|'measure',
+    buttons?: DynamicButtonProps[]
+}
+const OverlayButtonDisplay = (props: OverlayButtonDisplayProps) => {
+    if (!props.buttons || !props.buttons.length) return null;
+    return <ButtonList
+        itemList={props.buttons}
+        className="overlayContainer"
+    />
+}
+
+const GuardedAisDialog = MapEventGuard(AisInfoWithFunctions);
+const buildWaypointButtons = (
+        buttonsOff: () => void,
+        dialogContext: IDialogContext
+):ActiveOverlayButtons=> {
+    return {
+        kind:'waypoint',
+        buttons:[
+            {
+                ...ButtonDefs.Cancel,
+                onClick: () => {
+                    buttonsOff();
+                }
+            },
+        anchorWatch(false, dialogContext),
         {
             ...ButtonDefs.WpLocate,
-            onClick:()=>{
+            onClick: () => {
                 setCenterToTarget();
-                setShowWpButtons(false);
+                buttonsOff();
             },
             storeKeys: activeRoute.getStoreKeys(),
-            updateFunction:(state:any)=>{
-                return { visible: StateHelper.hasActiveTarget(state) || StateHelper.anchorWatchDistance(state) !== undefined}
+            updateFunction: (state: any) => {
+                return {visible: StateHelper.hasActiveTarget(state) || StateHelper.anchorWatchDistance(state) !== undefined}
             }
         },
         {
             ...ButtonDefs.WpEdit,
-            onClick:()=>{
-                if (activeRoute.hasRoute()){
-                    startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex(),dialogContext);
+            onClick: () => {
+                if (activeRoute.hasRoute()) {
+                    startWaypointDialog(activeRoute.getPointAt(), activeRoute.getIndex(), dialogContext);
+                } else {
+                    startWaypointDialog(activeRoute.getCurrentTarget(), undefined, dialogContext);
                 }
-                else {
-                    startWaypointDialog(activeRoute.getCurrentTarget(),undefined,dialogContext);
-                }
-                setShowWpButtons(false);
             },
             storeKeys: activeRoute.getStoreKeys(),
-            updateFunction:(state:any)=>{
-                return {visible:StateHelper.hasActiveTarget(state) }
+            updateFunction: (state: any) => {
+                return {visible: StateHelper.hasActiveTarget(state)}
             },
 
         },
         {
             ...ButtonDefs.WpGoto,
-            storeKeys:activeRoute.getStoreKeys(),
-            updateFunction: (state:any)=> {
-                return {visible: StateHelper.hasActiveTarget(state) &&  !StateHelper.selectedIsActiveTarget(state)}
+            storeKeys: activeRoute.getStoreKeys(),
+            updateFunction: (state: any) => {
+                return {visible: StateHelper.hasActiveTarget(state) && !StateHelper.selectedIsActiveTarget(state)}
             },
-            onClick:()=>{
-                const selected=activeRoute.getPointAt();
-                setShowWpButtons(false);
+            onClick: () => {
+                const selected = activeRoute.getPointAt();
+                buttonsOff();
                 if (selected) wpOn(selected);
             },
 
@@ -319,15 +339,16 @@ const OverlayContent=(
         },
         {
             ...ButtonDefs.NavNext,
-            storeKeys:activeRoute.getStoreKeys(),
-            updateFunction: (state:any)=> {
-                return {visible:
-                        StateHelper.hasActiveTarget(state) &&  StateHelper.selectedIsActiveTarget(state)
-                        &&  StateHelper.hasPointAtOffset(state,1)
+            storeKeys: activeRoute.getStoreKeys(),
+            updateFunction: (state: any) => {
+                return {
+                    visible:
+                        StateHelper.hasActiveTarget(state) && StateHelper.selectedIsActiveTarget(state)
+                        && StateHelper.hasPointAtOffset(state, 1)
                 };
             },
-            onClick:()=>{
-                setShowWpButtons(false);
+            onClick: () => {
+                buttonsOff();
                 navNext();
 
             }
@@ -335,56 +356,57 @@ const OverlayContent=(
         {
             ...ButtonDefs.NavRestart,
             storeKeys: activeRoute.getStoreKeys(),
-            updateFunction: (state:any)=> {
+            updateFunction: (state: any) => {
                 return {
-                    visible:  StateHelper.hasActiveTarget(state) &&  StateHelper.selectedIsActiveTarget(state)
+                    visible: StateHelper.hasActiveTarget(state) && StateHelper.selectedIsActiveTarget(state)
                 };
             },
-            onClick:()=>{
-                setShowWpButtons(false);
+            onClick: () => {
+                buttonsOff();
                 RouteHandler.legRestart();
             }
         },
         {
             ...ButtonDefs.WpNext,
-            storeKeys:activeRoute.getStoreKeys(),
-            updateFunction: (state:any)=> {
+            storeKeys: activeRoute.getStoreKeys(),
+            updateFunction: (state: any) => {
                 return {
-                    disabled:!StateHelper.hasPointAtOffset(state,1),
-                    visible: StateHelper.hasRoute(state) && ! StateHelper.anchorWatchDistance(state)
+                    disabled: !StateHelper.hasPointAtOffset(state, 1),
+                    visible: StateHelper.hasRoute(state) && !StateHelper.anchorWatchDistance(state)
                 };
             },
-            onClick:()=>{
-                setShowWpButtons(true);
+            onClick: () => {
                 activeRoute.moveIndex(1);
-                const next=activeRoute.getPointAt();
+                const next = activeRoute.getPointAt();
                 MapHolder.setCenter(next);
 
             }
         },
         {
             ...ButtonDefs.WpPrevious,
-            storeKeys:activeRoute.getStoreKeys(),
-            updateFunction: (state:any)=> {
+            storeKeys: activeRoute.getStoreKeys(),
+            updateFunction: (state: any) => {
                 return {
-                    disabled:!StateHelper.hasPointAtOffset(state,-1),
-                    visible: StateHelper.hasRoute(state) && ! StateHelper.anchorWatchDistance(state)
+                    disabled: !StateHelper.hasPointAtOffset(state, -1),
+                    visible: StateHelper.hasRoute(state) && !StateHelper.anchorWatchDistance(state)
                 }
             },
-            onClick:()=>{
-                setShowWpButtons(true);
+            onClick: () => {
                 activeRoute.moveIndex(-1);
-                const next=activeRoute.getPointAt();
+                const next = activeRoute.getPointAt();
                 MapHolder.setCenter(next);
             }
         }
-    ];
+    ]
+    }
+}
+interface OverlayContentProps{
+    buttons?:DynamicButtonProps[]
+}
+const OverlayContent=(props:OverlayContentProps)=>{
 
     return <React.Fragment>
-        {showWpButtons?<ButtonList
-            itemList={waypointButtons}
-            className="overlayContainer"
-        />:null}
+        <OverlayButtonDisplay buttons={props.buttons}/>
         <ItemList
             className={'mapWidgetContainer widgetContainer'}
             itemCreator={(widget)=>{
@@ -452,7 +474,7 @@ const createRouteFeatureAction=(history:IHistory,opt_fromMeasure?:boolean)=>{
 }
 const NavPage=(props:PageProps)=>{
     const dialogCtx=useDialogContext();
-    const [wpButtonsVisible,setWpButtonsVisible]=useState(false);
+    const [overlayButtonList,setOverlayButtonList]=useState<ActiveOverlayButtons>(null);
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
     const [,setSequence]=useState(0);
     const checkChartCount=useRef(30);
@@ -532,9 +554,6 @@ const NavPage=(props:PageProps)=>{
             globalStore.storeData(keys.map.activeMeasure,undefined);
         }
     }, []);
-    const wpTimer=useTimer(()=>{
-            setWpButtonsVisible(false);
-        },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
     useKeyEventHandlerPlain("centerToTarget",KeyComponents.PAGE, setCenterToTarget);
     useKeyEventHandlerPlain("navNext",KeyComponents.PAGE,navNext);
     useKeyEventHandlerPlain("toggleNav",KeyComponents.PAGE,()=>navToWp(!activeRoute.hasActiveTarget()));
@@ -562,15 +581,13 @@ const NavPage=(props:PageProps)=>{
         })
     },[history]);
     const showWpButtons=useCallback((on?:boolean)=>{
-        if (on) {
-            wpTimer.startTimer();
+        if (on){
+            setOverlayButtonList(buildWaypointButtons(()=>setOverlayButtonList(null),dialogCtx));
         }
-        else {
-            wpTimer.stopTimer();
+        else{
+            setOverlayButtonList(null);
         }
-        if (wpButtonsVisible === on) return;
-        setWpButtonsVisible(on);
-    },[wpButtonsVisible]);
+    },[overlayButtonList]);
     const widgetClick=useCallback((ev:SyntheticEvent)=>{
         const avev=injectav(ev);
         const item=avev.avnav.item||{};
@@ -859,6 +876,18 @@ const NavPage=(props:PageProps)=>{
             },
             CenterActionButton,
             Dimmer.buttonDef(),
+        {
+            name: ButtonDefs.NavActions.name,
+            onClick:()=>{
+                showDialog(dialogCtx,()=><ActionDialog actionButtons={[
+                    {
+                        ...ButtonDefs.ABShowWpButtons,
+                        onClick:()=>{showWpButtons(overlayButtonList?.kind !== 'waypoint')},
+                        toggle: overlayButtonList?.kind === 'waypoint'
+                    }
+                ]}/>)
+            }
+        }
         ];
         const currentButtons=useRef<ButtonDef[]>();
         currentButtons.current=
@@ -867,7 +896,7 @@ const NavPage=(props:PageProps)=>{
                 );
         useInitialButton(currentButtons)
         let autohide=undefined;
-        if (globalStore.getData(keys.properties.autoHideNavPage) && ! wpButtonsVisible && ! globalStore.getData(keys.gui.global.layoutEditing)){
+        if (globalStore.getData(keys.properties.autoHideNavPage) && ! globalStore.getData(keys.gui.global.layoutEditing)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
         const pageProperties=props;
@@ -880,10 +909,7 @@ const NavPage=(props:PageProps)=>{
                 panelCreator={getPanelList}
                 overlayContent={
                     <OverlayContent
-                        showWpButtons={wpButtonsVisible}
-                        setShowWpButtons={(on)=>{
-                            showWpButtons(on);
-                        }}
+                        buttons={overlayButtonList?.buttons}
 
                     />}
                 buttonList={currentButtons.current}

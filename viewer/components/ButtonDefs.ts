@@ -252,6 +252,14 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Center,
         name:btdef.GpsCenter,
     },
+    NavActions:{
+        iconClass: iconClasses.MeasureFlag,
+        name:btdef.NavActions,
+    },
+    ABShowWpButtons:{
+        iconClass: iconClasses.Waypoint,
+        name:btdef.ABShowWpButtons
+    },
     //dashboard
     Gps1:{
         iconClass: iconClasses.Num1,

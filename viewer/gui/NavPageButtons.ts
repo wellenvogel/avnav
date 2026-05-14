@@ -91,5 +91,11 @@ export default GeneralButtons.concat(propsToDefs([
         editDisable: true
     },
     CenterActionButton,
+    {
+        ...ButtonDefs.NavActions,
+        overflow:true,
+        localOnly:true,
+        editDisable:true
+    },
     Dimmer.buttonDef(),
 ]))
