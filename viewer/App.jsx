@@ -610,6 +610,7 @@ class App extends React.Component {
                 document.title = "AVNav-Web";
                 this.titleSet=true;
             }
+            globalStore.storeData(keys.gui.global.soundEnabled,true); //onec we hit the firts "normal page" show the enable sound toast
         }
         else{
             document.title = "AVNav-Warning";
