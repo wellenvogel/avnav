@@ -5,7 +5,7 @@
 import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import MapPage, {selectChartDialog} from '../components/MapPage.tsx';
+import MapPage, {OverlayButtonDisplay, selectChartDialog} from '../components/MapPage.tsx';
 import Toast from '../components/Toast.tsx';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
@@ -52,6 +52,7 @@ import {propsToDefs, updateButtons} from "../components/Button";
 import {GeneralWithCancel} from "./GeneralButtons";
 import {iconClasses} from '../components/Icons';
 import ButtonDefs from "../components/ButtonDefs";
+import {ActionDialog} from "../components/ActionDialog";
 
 const RouteHandler = NavHandler.getRoutingHandler();
 const PAGENAME = "editroutepage";
@@ -59,7 +60,14 @@ const PAGENAME = "editroutepage";
 const editor = new RouteEdit(RouteEdit.MODES.EDIT);
 const activeRoute = new RouteEdit(RouteEdit.MODES.ACTIVE);
 
-
+const mergedStoreKeys={};
+for (const red of [editor,activeRoute]) {
+    const prfx=(editor === red )?'ed':'ac';
+    const keys=red.getStoreKeys();
+    for (const k in keys){
+        mergedStoreKeys[prfx+k] = keys[k];
+    }
+}
 
 
 const isActiveRoute = (activeState,editorState) => {
@@ -579,6 +587,74 @@ const getTargetFromInfo=(featureInfo)=> {
 
 const DEFAULT_ROUTE = "default";
 
+const buildWaypointButtons=(dialogContext,
+                            closeButtons,
+                            setLastCenteredWp,
+                            routeWritable,
+                            opt_omitCancel)=>{
+    return  [
+        {
+            ...ButtonDefs.Cancel,
+            onClick:()=>{
+                closeButtons();
+            },
+            visible: !opt_omitCancel,
+        },
+        {
+            ...ButtonDefs.WpLocate,
+            onClick: () => {
+                let currentEditor = getCurrentEditor();
+                MapHolder.setCenter(currentEditor.getPointAt());
+                setLastCenteredWp(currentEditor.getIndex());
+            }
+        },
+        {
+            ...ButtonDefs.WpEdit,
+            onClick: () => {
+                let currentEditor = getCurrentEditor();
+                startWaypointDialog(currentEditor.getPointAt(), currentEditor.getIndex(), dialogContext);
+            },
+            visible: routeWritable
+        },
+        {
+            ...ButtonDefs.WpNext,
+            storeKeys: mergedStoreKeys,
+            updateFunction: (state) => {
+                //we need to be slightly dirty here
+                //the store keys will be kept from the initiol render
+                //but the active editor could change afterwards
+                //so we use the current editor
+                const editor=getCurrentEditor();
+                const realState=editor.getState();
+                return {disabled: !StateHelper.hasPointAtOffset(realState, 1)};
+            },
+            onClick: () => {
+                let currentEditor = getCurrentEditor();
+                currentEditor.moveIndex(1);
+                MapHolder.setCenter(currentEditor.getPointAt());
+                setLastCenteredWp(currentEditor.getIndex());
+            },
+            visible: routeWritable
+        },
+        {
+            ...ButtonDefs.WpPrevious,
+            storeKeys: mergedStoreKeys,
+            updateFunction: (state) => {
+                const editor=getCurrentEditor();
+                const realState=editor.getState();
+                return {disabled: !StateHelper.hasPointAtOffset(realState, -1)}
+            },
+            onClick: () => {
+                let currentEditor = getCurrentEditor();
+                currentEditor.moveIndex(-1);
+                MapHolder.setCenter(currentEditor.getPointAt());
+                setLastCenteredWp(currentEditor.getIndex());
+            },
+            visible: routeWritable
+        }
+    ];
+}
+
 const EditRoutePage = (props) => {
     const history=useHistory();
     const dialogContext = useDialogContext();
@@ -590,11 +666,7 @@ const EditRoutePage = (props) => {
     const hasCentered = useRef(false);
     const showingActiveRoute=isActiveRoute(activeState,editorState);
     const routeWritable=!StateHelper.isServerRoute(showingActiveRoute?activeState:editorState) || connectedMode;
-    const wpTimer = useTimer(() => {
-        setWpButtonsVisible(false);
-    }, globalStore.getData(keys.properties.wpButtonTimeout) * 1000);
     const showWpButtons = useCallback((on) => {
-        if (on) wpTimer.startTimer();
         if (on === wpButtonsVisible) return;
         setWpButtonsVisible(on);
     }, [wpButtonsVisible]);
@@ -616,7 +688,18 @@ const EditRoutePage = (props) => {
             RouteHandler.unsetCurrentRoutePage(PAGENAME);
         }
     }, []);
-
+    const showRouteDialog=()=>{
+        if (globalStore.getData(keys.gui.global.layoutEditing)) return;
+        let currentEditor = getCurrentEditor();
+        showDialog(dialogContext, () => {
+            return <EditRouteDialog
+                route={currentEditor.getRoute()?currentEditor.getRoute().clone():new routeobjects.Route('empty')}
+            />
+        },()=>{
+            checkEmptyRoute();
+            MapHolder.triggerRender();
+        })
+    }
     const widgetClick = (ev) => {
         const av=injectav(ev);
         const item=av.avnav.item||{};
@@ -624,16 +707,7 @@ const EditRoutePage = (props) => {
         const invertEditDirection=av.avnav.invertEditDirection;
         let currentEditor = getCurrentEditor();
         if (item.name === "EditRoute") {
-            if (globalStore.getData(keys.gui.global.layoutEditing)) return;
-            showDialog(dialogContext, () => {
-                return <EditRouteDialog
-                    route={currentEditor.getRoute()?currentEditor.getRoute().clone():new routeobjects.Route('empty')}
-                />
-            },()=>{
-                checkEmptyRoute();
-                MapHolder.triggerRender();
-            })
-            return;
+            showRouteDialog();
         }
         if (item.name === 'RoutePoints') {
             const point=av.avnav.point;
@@ -669,56 +743,7 @@ const EditRoutePage = (props) => {
         }
 
     };
-    const waypointButtons = [
-        {
-            ...ButtonDefs.WpLocate,
-            onClick: () => {
-                wpTimer.startTimer();
-                let currentEditor = getCurrentEditor();
-                MapHolder.setCenter(currentEditor.getPointAt());
-                setLastCenteredWp(currentEditor.getIndex());
-            }
-        },
-        {
-            ...ButtonDefs.WpEdit,
-            onClick: () => {
-                wpTimer.startTimer();
-                let currentEditor = getCurrentEditor();
-                startWaypointDialog(currentEditor.getPointAt(), currentEditor.getIndex(), dialogContext);
-            },
-            visible: routeWritable
-        },
-        {
-            ...ButtonDefs.WpNext,
-            storeKeys: getCurrentEditor().getStoreKeys(),
-            updateFunction: (state) => {
-                return {disabled: !StateHelper.hasPointAtOffset(state, 1)};
-            },
-            onClick: () => {
-                wpTimer.startTimer();
-                let currentEditor = getCurrentEditor();
-                currentEditor.moveIndex(1);
-                MapHolder.setCenter(currentEditor.getPointAt());
-                setLastCenteredWp(currentEditor.getIndex());
-            },
-            visible: routeWritable
-        },
-        {
-            ...ButtonDefs.WpPrevious,
-            storeKeys: getCurrentEditor().getStoreKeys(),
-            updateFunction: (state) => {
-                return {disabled: !StateHelper.hasPointAtOffset(state, -1)}
-            },
-            onClick: () => {
-                wpTimer.startTimer();
-                let currentEditor = getCurrentEditor();
-                currentEditor.moveIndex(-1);
-                MapHolder.setCenter(currentEditor.getPointAt());
-                setLastCenteredWp(currentEditor.getIndex());
-            },
-            visible: routeWritable
-        }
-    ];
+
 
     const insertOtherRoute = (name, otherStart, opt_before) => {
         let editor = getCurrentEditor();
@@ -962,39 +987,56 @@ const EditRoutePage = (props) => {
             overflow: true
         },
         {
-            ...ButtonDefs.StopNav,
-            onClick:()=>{
-                RouteHandler.routeOff();
-                MapHolder.triggerRender();
-            },
-            editDisable: true,
-            overflow: true,
-            disabled: !activeRoute.hasActiveTarget(),
-            toggle: activeRoute.hasActiveTarget()
-        },
-        {
-            ...ButtonDefs.RouteMenu,
-            onClick: () => {
-                widgetClick(setav(undefined,{item:{name: "EditRoute"}}))
-            },
-            overflow: true,
-            editDisable: true
-        },
-        CenterActionButton,
-        {
             ...RawButtonDef,
             onClick:()=>createDialog(PAGENAME,
             MapPage.PANELS, [LAYOUT_OPTIONS.SMALL], dialogContext)
+        },
+        {
+            ...ButtonDefs.NavActions,
+            editDisable: true,
+            onClick:()=>{
+                showDialog(dialogContext,()=><ActionDialog actionButtons={[
+                    {
+                        ...ButtonDefs.ABShowWpButtons,
+                        onClick:()=>{
+                            showWpButtons(!wpButtonsVisible)},
+                        toggle: wpButtonsVisible,
+                        visible: ! props.small
+                    },
+                    {
+                        ...CenterActionButton,
+                        close:false
+                    },
+                    {
+                        ...ButtonDefs.GpsCenter,
+                        onClick:()=>{
+                            MapHolder.centerToGps();
+
+                        }
+                    },
+                    {
+                        ...ButtonDefs.RouteMenu,
+                        onClick: () => {
+                            showRouteDialog();
+                        },
+                        close:false
+                    },
+                    {
+                        ...ButtonDefs.StopNav,
+                        onClick:()=>{
+                            RouteHandler.routeOff();
+                            MapHolder.triggerRender();
+                        },
+                        editDisable: true,
+                        overflow: true,
+                        disabled: !activeRoute.hasActiveTarget(),
+                        toggle: activeRoute.hasActiveTarget()
+                    },
+
+                ]}/>)
+            }
         }
     ];
-    let overlayContent = (props.small || wpButtonsVisible) ?
-        <ButtonList
-            page={props.id}
-            itemList={waypointButtons}
-            className="overlayContainer"
-        />
-        :
-        null;
     let pageProperties = Helper.filteredAssign(MapPage.propertyTypes, props);
     return (
         <MapPage
@@ -1008,7 +1050,17 @@ const EditRoutePage = (props) => {
                     onClick:()=>{ history.pop()}
                 }
             }).concat(propsToDefs(buttons)))}
-            overlayContent={overlayContent}
+            overlayContent={<OverlayButtonDisplay buttons={
+                (props.small || wpButtonsVisible)?
+                    buildWaypointButtons(
+                        dialogContext,
+                        ()=>setWpButtonsVisible(false),
+                        (last)=>setLastCenteredWp(last),
+                        routeWritable,
+                        props.small)
+                    :
+                    undefined
+            }/>}
         />
     );
 }
