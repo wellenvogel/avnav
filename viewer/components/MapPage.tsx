@@ -32,7 +32,7 @@ import {DynamicTitleIcons} from "./TitleIcons";
 import ButtonList from "./ButtonList";
 import base from "../base";
 import {PageType} from "../util/pageids";
-import Button, {ButtonDef} from "./Button";
+import Button, {ButtonDef, DynamicButtonProps} from "./Button";
 import {ChartEntry, MapEvent, MapEventCallback, SHOW_MODE} from "../map/maptypes";
 import {useDialogContext} from "./exports";
 import {IDialogContext} from "./DialogContext";
@@ -400,3 +400,17 @@ export const selectChartDialog=(
 MapPage.PANELS=['left','top','bottomLeft','bottomRight'];
 
 export default MapPage;
+export interface OverlayButtonDisplayProps {
+    buttons?: DynamicButtonProps[]
+}
+export interface ActiveOverlayButtons {
+    kind?:'waypoint'|'measure',
+    buttons?: DynamicButtonProps[]
+}
+export const OverlayButtonDisplay = (props: OverlayButtonDisplayProps) => {
+    if (!props.buttons || !props.buttons.length) return null;
+    return <ButtonList
+        itemList={props.buttons}
+        className="overlayContainer"
+    />
+}

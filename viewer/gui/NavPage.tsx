@@ -5,35 +5,39 @@
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import React, {SyntheticEvent, useCallback, useEffect, useRef, useState} from 'react';
-import MapPage, {selectChartDialog, PanelCreator} from '../components/MapPage';
+import MapPage, {
+    ActiveOverlayButtons,
+    OverlayButtonDisplay,
+    PanelCreator,
+    selectChartDialog
+} from '../components/MapPage';
 import Toast from '../components/Toast';
 // @ts-ignore
 import NavHandler from '../nav/navdata.js';
 import {
     DBCancel,
-    DialogButtons, DialogFrame, DialogRow,
-    DialogText, showDialog, showPromiseDialog
+    DialogButtons,
+    DialogFrame,
+    DialogRow,
+    DialogText,
+    showDialog,
+    showPromiseDialog
 } from '../components/OverlayDialog';
 import Helper, {injectav} from '../util/helper';
-import {
-    useKeyEventHandlerPlain,
-    useTimer
-} from '../util/UiHelper';
-import {useStoreHelper} from "../util/UiHelper";
+import {useKeyEventHandlerPlain, useStoreHelper, useTimer} from '../util/UiHelper';
 // @ts-ignore
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import {ChartEntry, EventTypes, MapEvent} from "../map/maptypes";
 // @ts-ignore
 import navobjects from '../nav/navobjects.js';
-import ButtonList from '../components/ButtonList';
 // @ts-ignore
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog';
 // @ts-ignore
-import RouteEdit,{StateHelper} from '../nav/routeeditor';
+import RouteEdit, {StateHelper} from '../nav/routeeditor';
 import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler';
 // @ts-ignore
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog';
-import {RawButtonDef,createDialog} from '../components/EditPageDialog';
+import {createDialog, RawButtonDef} from '../components/EditPageDialog';
 // @ts-ignore
 import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog';
 import Dimmer from '../util/dimhandler';
@@ -50,12 +54,7 @@ import Requests from "../util/requests";
 import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 // @ts-ignore
 import MapEventGuard from "../hoc/MapEventGuard";
-import {
-    BoatFeatureInfo,
-    FeatureAction,
-    FeatureInfo, RouteFeatureInfo, WpFeatureInfo
-    // @ts-ignore
-} from "../map/featureInfo";
+import {BoatFeatureInfo, FeatureAction, FeatureInfo, RouteFeatureInfo, WpFeatureInfo} from "../map/featureInfo";
 // @ts-ignore
 import {Measure} from "../nav/routeobjects";
 // @ts-ignore
@@ -267,20 +266,6 @@ const MapWidgetsDialog = () => {
     </DialogFrame>
 }
 
-interface OverlayButtonDisplayProps {
-    buttons?: DynamicButtonProps[]
-}
-interface ActiveOverlayButtons {
-    kind?:'waypoint'|'measure',
-    buttons?: DynamicButtonProps[]
-}
-const OverlayButtonDisplay = (props: OverlayButtonDisplayProps) => {
-    if (!props.buttons || !props.buttons.length) return null;
-    return <ButtonList
-        itemList={props.buttons}
-        className="overlayContainer"
-    />
-}
 
 const GuardedAisDialog = MapEventGuard(AisInfoWithFunctions);
 const buildWaypointButtons = (
@@ -301,7 +286,6 @@ const buildWaypointButtons = (
             ...ButtonDefs.WpLocate,
             onClick: () => {
                 setCenterToTarget();
-                buttonsOff();
             },
             storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state: any) => {
@@ -327,44 +311,39 @@ const buildWaypointButtons = (
             ...ButtonDefs.WpGoto,
             storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state: any) => {
-                return {visible: StateHelper.hasActiveTarget(state) && !StateHelper.selectedIsActiveTarget(state)}
+                return {visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state) && !StateHelper.selectedIsActiveTarget(state)}
             },
             onClick: () => {
                 const selected = activeRoute.getPointAt();
-                buttonsOff();
                 if (selected) wpOn(selected);
             },
 
 
         },
+            {
+                ...ButtonDefs.NavRestart,
+                storeKeys: activeRoute.getStoreKeys(),
+                updateFunction: (state: any) => {
+                    return {
+                        visible: StateHelper.hasActiveTarget(state) && (StateHelper.selectedIsActiveTarget(state) || ! StateHelper.hasRoute(state))
+                    };
+                },
+                onClick: () => {
+                    RouteHandler.legRestart();
+                }
+            },
         {
             ...ButtonDefs.NavNext,
             storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state: any) => {
                 return {
-                    visible:
-                        StateHelper.hasActiveTarget(state) && StateHelper.selectedIsActiveTarget(state)
-                        && StateHelper.hasPointAtOffset(state, 1)
+                    visible:  StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state),
+                    disabled: ! (StateHelper.selectedIsActiveTarget(state) && StateHelper.hasPointAtOffset(state, 1))
                 };
             },
             onClick: () => {
-                buttonsOff();
-                buttonsOff();
                 navNext();
 
-            }
-        },
-        {
-            ...ButtonDefs.NavRestart,
-            storeKeys: activeRoute.getStoreKeys(),
-            updateFunction: (state: any) => {
-                return {
-                    visible: StateHelper.hasActiveTarget(state) && StateHelper.selectedIsActiveTarget(state)
-                };
-            },
-            onClick: () => {
-                buttonsOff();
-                RouteHandler.legRestart();
             }
         },
         {
