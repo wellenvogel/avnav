@@ -170,8 +170,8 @@ const setCenterToTarget = () => {
 };
 
 const navNext = () => {
-    if (!activeRoute.hasRoute()) return;
-    wpOn(activeRoute.getNextWaypoint(), KeepFromMode.OLDTO);
+    if (!activeRoute.hasRoute()) return Promise.reject();
+    return wpOn(activeRoute.getNextWaypoint(), KeepFromMode.OLDTO);
 };
 
 const navToWp = (on?: boolean) => {
@@ -195,7 +195,7 @@ const navToWp = (on?: boolean) => {
     MapHolder.triggerRender();
 };
 const wpOn = (...args: any[]) => {
-    RouteHandler.wpOn(...args).then(
+    return RouteHandler.wpOn(...args).then(
         () => {
         },
         (e: any) => {
@@ -278,6 +278,7 @@ const buildWaypointButtons = (
             {
                 ...ButtonDefs.Cancel,
                 onClick: () => {
+                    activeRoute.setIndexToTarget();
                     buttonsOff();
                 }
             },
@@ -342,8 +343,9 @@ const buildWaypointButtons = (
                 };
             },
             onClick: () => {
-                navNext();
-
+                navNext().then(()=> {
+                    activeRoute.setIndexToTarget();
+                });
             }
         },
         {
@@ -664,6 +666,7 @@ const NavPage=(props:PageProps)=>{
         })
     },[history]);
     const showWpButtons=useCallback((on?:boolean)=>{
+        activeRoute.setIndexToTarget();
         if (on){
             setOverlayButtonList(buildWaypointButtons(()=>setOverlayButtonList(null),dialogCtx));
         }
@@ -707,7 +710,6 @@ const NavPage=(props:PageProps)=>{
             return;
         }
         if (panel && panel.match(/^bottomLeft/)){
-            activeRoute.setIndexToTarget();
             showWpButtons(true);
             return;
         }
@@ -945,7 +947,8 @@ const NavPage=(props:PageProps)=>{
                 showDialog(dialogCtx,()=><ActionDialog actionButtons={[
                     {
                         ...ButtonDefs.ABShowWpButtons,
-                        onClick:()=>{showWpButtons(overlayButtonList?.kind !== 'waypoint')},
+                        onClick:()=>{
+                            showWpButtons(overlayButtonList?.kind !== 'waypoint')},
                         toggle: overlayButtonList?.kind === 'waypoint'
                     },
                     CenterActionButton,
