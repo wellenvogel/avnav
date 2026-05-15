@@ -94,7 +94,7 @@ def readButtons(fname):
     re0=re.compile(r'^ *const +ButtonDefinitions *= *{')
     re1=re.compile(r'^ *(\w+) *: *{')
     reClose=re.compile(r'} *,*')
-    rename=re.compile(r'^ *name *: *btdef\.(\w.+)')
+    rename=re.compile(r'^ *name *: *btdef\.(\w+)')
     reicon=re.compile(r'^ *iconClass *: *iconClasses\.(\w+)')
     with open(fname,'r') as fb:
         for line in fb:
@@ -364,7 +364,7 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
                 first=not handleFirst
                 iconDef=iconDefs.get(buttonDef.icon)
                 lstr+="|"+iconEntry(buttonDef.icon,iconDef,format=format)
-                txt=textDefs.get(buttonDef.name)
+                txt=textDefs.get(buttonDef.txt)
                 if txt is not None:
                     short=f"[{txt.tshort}]({relPath(TTEXTS)}#L{txt.line})"
                     long=txt.tlong or ''
@@ -430,7 +430,7 @@ elif format == 'iconusage':
 elif format == 'buttontext':
     for k in sorted(buttonDefs.keys()):
         buttonDef = buttonDefs.get(k)
-        name=buttonDef.name
+        name=buttonDef.txt
         texts=textDefs.get(name)
         short='---'
         long='---'
