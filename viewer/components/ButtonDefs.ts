@@ -168,9 +168,9 @@ const ButtonDefinitions= {
         iconClass: iconClasses.WpPrevious,
         name:btdef.WpPrevious,
     },
-    NavOverlays:{
+    NavSelectChart:{
         iconClass: iconClasses.SelectChart,
-        name:btdef.NavOverlays,
+        name:btdef.NavSelectChart,
     },
     ZoomIn:{
         iconClass: iconClasses.ZoomIn,

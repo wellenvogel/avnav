@@ -127,7 +127,7 @@ const Map=({mapClass,mapOpacity,rightOffset}:MapOptions)=>{
         return <div className={"noChart"}>
         <div className={"text"}>No Chart selected</div>
         <Button
-            {...ButtonDefs.NavOverlays}
+            {...ButtonDefs.NavSelectChart}
             className={"center"}
             onClick={()=>selectChartDialog(dialogContext)}/>
         </div>;

@@ -955,7 +955,7 @@ const NavPage=(props:PageProps)=>{
 
             },
             {
-                name: ButtonDefs.NavOverlays.name,
+                name: ButtonDefs.NavSelectChart.name,
                 onClick:()=>runSelectChart(),
             },
             {

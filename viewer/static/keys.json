@@ -87,7 +87,7 @@
       "LockMarker":"g",
       "StopNav": "s",
       "ShowRoutePanel":["Control-r","r"],
-      "NavOverlays":["c","Escape"]
+      "NavSelectChart":["c","Escape"]
     },
     "map":{
       "centerToGps":"c"

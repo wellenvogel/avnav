@@ -877,7 +877,7 @@ const EditRoutePage = (props) => {
 
     const buttons = [
         {
-            ...ButtonDefs.NavOverlays,
+            ...ButtonDefs.NavSelectChart,
             onClick: () => selectChartDialog(dialogContext)
         },
         {

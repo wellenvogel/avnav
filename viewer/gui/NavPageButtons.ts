@@ -34,7 +34,7 @@ import ButtonDefs from "../components/ButtonDefs";
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 export default GeneralButtons.concat(propsToDefs([
     {
-        ...ButtonDefs.NavOverlays,
+        ...ButtonDefs.NavSelectChart,
     },
     {
         ...ButtonDefs.ZoomIn,
