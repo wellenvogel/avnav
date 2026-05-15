@@ -554,6 +554,7 @@ const NavPage=(props:PageProps)=>{
     const [overlayButtonList,setOverlayButtonList]=useState<ActiveOverlayButtons>(null);
     useStoreHelper(()=>MapHolder.triggerRender(),keys.gui.global.layoutSequence);
     const [,setSequence]=useState(0);
+    const [buttonsHidden,setButtonsHidden]=useState(false);
     const checkChartCount=useRef(30);
     const history=useHistory();
     const runSelectChart=(info?:string)=>{
@@ -937,16 +938,6 @@ const NavPage=(props:PageProps)=>{
                 name: ButtonDefs.NavSelectChart.name,
                 onClick:()=>runSelectChart(),
             },
-            {
-                name: ButtonDefs.GpsCenter.name,
-                onClick:()=>{
-                    MapHolder.centerToGps();
-
-                },
-                overflow: true,
-                editDisable: true
-            },
-            CenterActionButton,
             Dimmer.buttonDef(),
         {
             name: ButtonDefs.NavActions.name,
@@ -958,6 +949,13 @@ const NavPage=(props:PageProps)=>{
                         toggle: overlayButtonList?.kind === 'waypoint'
                     },
                     CenterActionButton,
+                    {
+                        ...ButtonDefs.GpsCenter,
+                        onClick:()=>{
+                            MapHolder.centerToGps();
+
+                        }
+                    },
                     {
                         ...ButtonDefs.ABShowMeasure,
                         onClick:()=>{if (overlayButtonList?.kind !== 'measure'){
@@ -994,11 +992,12 @@ const NavPage=(props:PageProps)=>{
                 panelCreator={getPanelList}
                 overlayContent={
                     <OverlayContent
-                        buttons={overlayButtonList?.buttons}
+                        buttons={buttonsHidden?undefined:overlayButtonList?.buttons}
 
                     />}
                 buttonList={currentButtons.current}
                 autoHideButtons={autohide}
+                hideCallback={(hidden:boolean) => setButtonsHidden(hidden)}
                 />
         );
 }

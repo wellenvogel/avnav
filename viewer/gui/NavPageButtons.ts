@@ -85,13 +85,6 @@ export default GeneralButtons.concat(propsToDefs([
 
     },
     {
-        ...ButtonDefs.GpsCenter,
-        localOnly:true,
-        overflow: true,
-        editDisable: true
-    },
-    CenterActionButton,
-    {
         ...ButtonDefs.NavActions,
         overflow:true,
         localOnly:true,

@@ -198,6 +198,7 @@ export interface MapPageProps extends PageProps{
     id:                 PageType,
     overlayContent?:     ReactElement,               //overlay in the map container
     mapLoadCallback?:    ()=>void,
+    hideCallback?:     (hidden:boolean) => void,
 }
 interface InternalMapPageProps extends MapPageProps{
     widgetFontSize:     number,
@@ -295,6 +296,7 @@ const MapPage =(iprops:MapPageProps)=>{
                 hideCallback={(hidden)=>{
                     mapholder.updateSize();
                     buttonsHidden.current=hidden;
+                    if (iprops.hideCallback) iprops.hideCallback(hidden);
                 }}
                 editingChanged={()=>mapholder.updateSize()}
             >
