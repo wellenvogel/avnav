@@ -48,10 +48,6 @@ const ColorDialog =(props)=>{
                         <DB {...ButtonDefs.DBReset} onClick={()=>setValue(props.default)} close={false}/>
                         :
                         null}
-                    {(props.showUnset !== undefined) ?
-                        <DB {...ButtonDefs.DBColorUnset}  onClick={()=>ok()}/>
-                        :
-                        null}
                     <DB {...ButtonDefs.DBCancel}/>
                     <DB {...ButtonDefs.DBOk} onClick={()=>ok(value)}/>
                 </DialogButtons>
@@ -63,8 +59,7 @@ ColorDialog.propTypes={
     okCallback: PropTypes.func,
     value: PropTypes.string.isRequired,
     default: PropTypes.string,
-    title: PropTypes.string,
-    showUnset: PropTypes.bool
+    title: PropTypes.string
 };
 
 export default  ColorDialog;

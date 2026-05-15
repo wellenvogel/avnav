@@ -592,11 +592,6 @@ const ButtonDefinitions= {
         iconClass: iconClasses.After,
         name:btdef.DBInsertAfter,
     },
-    //color
-    DBColorUnset:{
-        iconClass: iconClasses.ColorReset,
-        name:btdef.DBUnset
-    },
     //combined widget
     DBAddSub:{
         iconClass: iconClasses.Plus,
