@@ -32,12 +32,13 @@ import Button, {ButtonDef, updateButtons} from "../components/Button";
 import LayoutsPageButtons from "./LayoutsPageButtons";
 import {DownloadItemList} from '../components/DownloadItemList';
 import {showDialog} from "../components/OverlayDialog";
-import {EditSettingsCategory, SelectLayoutDialog} from "../components/Settings";
+import {EditSettingsCategory, newNameForLayoutEdit, SelectLayoutDialog} from "../components/Settings";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import {useUploadHelper} from "../components/UploadHandler";
 import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import layouthandler from "../util/layouthandler";
 import ButtonDefs from "../components/ButtonDefs";
+import Toast from "../components/Toast";
 
 const PAGE=PAGEIDS.LAYOUT;
 const TITLE=getPageTitle(PAGE);
@@ -65,6 +66,22 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
         [ButtonDefs.Upload.name]:{
             onClick:uploadAction,
             disabled:!visible(0),
+        },
+        [ButtonDefs.EditLayout.name]:{
+            onClick: async ()=>{
+                try {
+                    let layoutName=layouthandler.getName();
+                    if (! layouthandler.canEdit(layoutName)) {
+                        const newName=await newNameForLayoutEdit(layoutName);
+                        if (! newName) return;
+                        layoutName=newName;
+                    }
+                    layouthandler.startEditing(layoutName);
+                } catch (e) {
+                    if (e) Toast(e);
+                    return;
+                }
+            }
         }
     }
     buttonListRef.current=updateButtons(LayoutsPageButtons,buttonActions);

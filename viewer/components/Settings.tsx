@@ -436,7 +436,7 @@ export interface SelectLayoutDialogProps{
     className?:string;
 }
 
-const newNameForLayoutEdit=async (currentName:string)=>{
+export const newNameForLayoutEdit=async (currentName:string)=>{
     try {
         const list = await layoutLoader.listLayouts();
         const itemActions = createItemActions({type: 'layout'});

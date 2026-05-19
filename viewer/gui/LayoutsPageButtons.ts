@@ -26,6 +26,10 @@ import keys from "../util/keys";
 import ButtonDefs from "../components/ButtonDefs";
 export default GeneralButtons.concat(propsToDefs([
     {
+        ...ButtonDefs.EditLayout,
+        editDisable: true
+    },
+    {
         ...ButtonDefs.Upload,
         localOnly:true,
         storeKeys:{

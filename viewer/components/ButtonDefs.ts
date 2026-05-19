@@ -435,6 +435,10 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Layout,
         name:btdef.Layout,
     },
+    EditLayout:{
+        iconClass: iconClasses.Layout,
+        name:btdef.EditLayout,
+    },
     EditPage:{
         iconClass: iconClasses.EditPage,
         name: btdef.EditPage,
