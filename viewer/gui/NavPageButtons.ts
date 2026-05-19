@@ -66,7 +66,16 @@ export default GeneralButtons.concat(propsToDefs([
         ...ButtonDefs.StopNav,
         storeKeys: activeRoute.getStoreKeys(),
         updateFunction:(state)=>{
-            return {visible:StateHelper.hasActiveTarget(state)};
+            return {visible:StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state)};
+        },
+        toggle:true,
+        editDisable:true
+    },
+    {
+        ...ButtonDefs.StopWp,
+        storeKeys: activeRoute.getStoreKeys(),
+        updateFunction:(state)=>{
+            return {visible:StateHelper.hasActiveTarget(state) && !StateHelper.hasRoute(state)};
         },
         toggle:true,
         editDisable:true

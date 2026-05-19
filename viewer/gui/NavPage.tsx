@@ -309,10 +309,13 @@ const buildWaypointButtons = (
 
         },
         {
-            ...ButtonDefs.WpGoto,
+            ...ButtonDefs.NavGoto,
             storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state: any) => {
-                return {visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state) && !StateHelper.selectedIsActiveTarget(state)}
+                return {
+                    visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state),
+                    disabled: StateHelper.selectedIsActiveTarget(state)
+                }
             },
             onClick: () => {
                 const selected = activeRoute.getPointAt();
@@ -326,7 +329,20 @@ const buildWaypointButtons = (
                 storeKeys: activeRoute.getStoreKeys(),
                 updateFunction: (state: any) => {
                     return {
-                        visible: StateHelper.hasActiveTarget(state) && (StateHelper.selectedIsActiveTarget(state) || ! StateHelper.hasRoute(state))
+                        visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state),
+                        disabled: !StateHelper.selectedIsActiveTarget(state)
+                    };
+                },
+                onClick: () => {
+                    RouteHandler.legRestart();
+                }
+            },
+            {
+                ...ButtonDefs.WpRestart,
+                storeKeys: activeRoute.getStoreKeys(),
+                updateFunction: (state: any) => {
+                    return {
+                        visible: StateHelper.hasActiveTarget(state) && ! StateHelper.hasRoute(state)
                     };
                 },
                 onClick: () => {
@@ -730,7 +746,7 @@ const NavPage=(props:PageProps)=>{
                 condition:(featureInfo:FeatureInfo)=>featureInfo instanceof WpFeatureInfo
             }))
             additionalActions.push(new FeatureAction({
-                ...ButtonDefs.NavGoto,
+                ...ButtonDefs.LockMarker,
                 onClick: (featureInfo:FeatureInfo) => {
                     gotoFeature(featureInfo,true);
                 },
@@ -820,9 +836,9 @@ const NavPage=(props:PageProps)=>{
             additionalActions.push(linkAction);
             const listActions=[
                 new FeatureAction({
-                    ...ButtonDefs.NavGoto,
+                    ...ButtonDefs.LockMarker,
                     onClick: (featureInfo:FeatureInfo) => {
-                        gotoFeature(featureInfo);
+                        gotoFeature(featureInfo,true);
                     },
                     condition: (featureInfo:FeatureInfo)=>featureInfo.validPoint() &&
                         //could only be base boat or anchor
@@ -916,6 +932,12 @@ const NavPage=(props:PageProps)=>{
             anchorWatch(true,dialogCtx),
             {
                 name: ButtonDefs.StopNav.name,
+                onClick:()=>{
+                    navToWp(false);
+                }
+            },
+            {
+                name: ButtonDefs.StopWp.name,
                 onClick:()=>{
                     navToWp(false);
                 }

@@ -151,7 +151,7 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Overlays,
         name: btdef.OverlaysView
     },
-    //nav/editroute
+    //center the map to the current waypoint
     WpLocate:{
         iconClass: iconClasses.WpLocate,
         name:btdef.WpLocate,
@@ -196,25 +196,35 @@ const ButtonDefinitions= {
         iconClass: iconClasses.WpLocate,
         name:btdef.NavToCenter,
     },
+    //start a route
     NavGoto:{
         iconClass: iconClasses.NavGoto,
         name: btdef.NavGoto,
     },
+    //skip the current target and go to the next target of the route
     NavNext:{
         iconClass: iconClasses.NavNext,
         name:btdef.NavNext,
     },
-    WpGoto:{
-        iconClass: iconClasses.WpGoto,
-        name:btdef.WpGoto,
-    },
+    //restart the routing to the current target (route)
     NavRestart:{
-        iconClass: iconClasses.WpGoto,
+        iconClass: iconClasses.NavRestart,
         name: btdef.NavRestart,
     },
+    //restart the routing to the current target (wp)
+    WpRestart:{
+        iconClass: iconClasses.WpRestart,
+        name:btdef.WpRestart,
+    },
+    //stop the routing of a route
     StopNav:{
         iconClass: iconClasses.NavStop,
         name:btdef.StopNav
+    },
+    //stop waypoint routing
+    StopWp:{
+        iconClass: iconClasses.WpStop,
+        name:btdef.StopWp
     },
     RouteMenu:{
         iconClass: iconClasses.RouteMenu,
@@ -236,6 +246,8 @@ const ButtonDefinitions= {
         iconClass: iconClasses.LockPos,
         name:btdef.LockPos,
     },
+    //start a waypoint routing to the current map center
+    //also in feature info
     LockMarker:{
         iconClass: iconClasses.LockMarker,
         name:btdef.LockMarker,
