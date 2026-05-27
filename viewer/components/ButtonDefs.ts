@@ -54,7 +54,7 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Images,
     },
     AddonConfigPlus:{
-        iconClass: iconClasses.Plus,
+        iconClass: iconClasses.AddonConfigPlus,
         name:btdef.AddonConfigPlus,
     },
     //addonpage
@@ -135,7 +135,7 @@ const ButtonDefinitions= {
     },
     //channels
     StatusAdd:{
-        iconClass: iconClasses.Plus,
+        iconClass: iconClasses.StatusAdd,
         name:btdef.StatusAdd,
     },
     //charts
@@ -193,7 +193,7 @@ const ButtonDefinitions= {
         name:btdef.NavDelete,
     },
     NavToCenter:{
-        iconClass: iconClasses.WpLocate,
+        iconClass: iconClasses.NavToCenter,
         name:btdef.NavToCenter,
     },
     //start a route
@@ -340,7 +340,7 @@ const ButtonDefinitions= {
     },
     //routes page
     RouteAdd:{
-        iconClass: iconClasses.Plus,
+        iconClass: iconClasses.RouteAdd,
         name:btdef.RouteAdd,
     },
     SyncRoutes:{
@@ -385,7 +385,7 @@ const ButtonDefinitions= {
         name:btdef.StatusShutdown,
     },
     StatusRestart:{
-        iconClass: iconClasses.Reload,
+        iconClass: iconClasses.StatusRestart,
         name:btdef.StatusRestart,
     },
     StatusLog:{
