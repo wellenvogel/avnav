@@ -474,6 +474,7 @@ export type StoreData=object|string|boolean|number;
 
 export interface Button{
     name:string;            //the button name and css class
+    iconClass?:string;      //the class name for an icon (set the background image for this class in your plugin.css)
     label?:string;          //the label, fallback: name with 1st letter uppercase
     visible?:boolean;       //just for convinience
     close?:boolean;         //if not set or true close the dialog when clicked

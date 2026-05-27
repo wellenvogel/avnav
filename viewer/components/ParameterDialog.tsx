@@ -27,9 +27,10 @@ import Helper, {getav, setav} from "../util/helper";
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
 import {ErrorBoundary} from "./ErrorBoundary";
 import {IDialogContext, useDialogContext} from "./DialogContext";
-import {Button as TButton, DialogConfig, WidgetParameterValues} from '../api/api.interface';
+import {Button, Button as TButton, DialogConfig, WidgetParameterValues} from '../api/api.interface';
 import {UserHtml} from "./UserHtml";
 import Headline from "./Headline";
+import {iconClasses} from './Icons';
 
 type TEditableParameterUI=Record<string, any>;
 export interface TParameterDialog extends Omit<DialogConfig, "parameters"> {
@@ -115,6 +116,10 @@ export const ParameterDialog = (props:TParameterDialog) => {
  * @param dialogContext
  * @param opt_cancelCb
  */
+const defaultIconClasses:Record<string,string>={
+    ok:iconClasses.Ok,
+    cancel:iconClasses.Cancel,
+}
 export const showParameterDialog = (dialogContext: IDialogContext ,
                                     config: DialogConfig,
                                     opt_cancelCb?:()=>void ) => {
@@ -137,8 +142,18 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
             throw new Error("config.parameters must be an array");
         }
     }
-    if (config.buttons && ! Array.isArray(config.buttons)){
-        throw new Error("config.buttons must be an array");
+    const buttons:Button[]=[];
+    if (config.buttons) {
+        if (! Array.isArray(config.buttons)) {
+            throw new Error("config.buttons must be an array");
+        }
+        for (const button of config.buttons) {
+            let iconClass=button.iconClass;
+            if (iconClass === undefined){
+                iconClass=defaultIconClasses[button.name]||button.name
+            }
+            buttons.push({...button,iconClass:iconClass});
+        }
     }
     let cancel=undefined;
     if (opt_cancelCb || config.onClose){
@@ -148,6 +163,6 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
         }
     }
     return showDialog(dialogContext,
-        (dp:any)=><ParameterDialog {...dp}{...config} parameters={parameters}/>,
+        (dp:any)=><ParameterDialog {...dp}{...config} buttons={buttons} parameters={parameters}/>,
         cancel);
 }
