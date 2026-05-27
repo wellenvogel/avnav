@@ -232,6 +232,7 @@
         onClose: onClose,
         buttons: [
             {name: 'delete',
+                iconClass:'Delete',
                 visible: !!network.condata,
                 onClick: async (ev)=>{
                     const path=nested(network,'condata.path');
