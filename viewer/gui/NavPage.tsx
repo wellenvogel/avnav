@@ -313,8 +313,8 @@ const buildWaypointButtons = (
             storeKeys: activeRoute.getStoreKeys(),
             updateFunction: (state: any) => {
                 return {
-                    visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state),
-                    disabled: StateHelper.selectedIsActiveTarget(state)
+                    visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state)
+                        && ! StateHelper.selectedIsActiveTarget(state)
                 }
             },
             onClick: () => {
@@ -329,8 +329,8 @@ const buildWaypointButtons = (
                 storeKeys: activeRoute.getStoreKeys(),
                 updateFunction: (state: any) => {
                     return {
-                        visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state),
-                        disabled: !StateHelper.selectedIsActiveTarget(state)
+                        visible: StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state) &&
+                            StateHelper.selectedIsActiveTarget(state)
                     };
                 },
                 onClick: () => {
@@ -746,7 +746,7 @@ const NavPage=(props:PageProps)=>{
                 condition:(featureInfo:FeatureInfo)=>featureInfo instanceof WpFeatureInfo
             }))
             additionalActions.push(new FeatureAction({
-                ...ButtonDefs.LockMarker,
+                ...ButtonDefs.WpGoto,
                 onClick: (featureInfo:FeatureInfo) => {
                     gotoFeature(featureInfo,true);
                 },
@@ -836,7 +836,7 @@ const NavPage=(props:PageProps)=>{
             additionalActions.push(linkAction);
             const listActions=[
                 new FeatureAction({
-                    ...ButtonDefs.LockMarker,
+                    ...ButtonDefs.WpGoto,
                     onClick: (featureInfo:FeatureInfo) => {
                         gotoFeature(featureInfo,true);
                     },
@@ -919,7 +919,7 @@ const NavPage=(props:PageProps)=>{
                 editDisable:true
             },
             {
-                name: ButtonDefs.LockMarker.name,
+                name: ButtonDefs.WpGoto.name,
                 storeKeys: activeRoute.getStoreKeys(AnchorWatchKeys),
                 updateFunction:(state:any)=>{
                     return {visible:!StateHelper.hasActiveTarget(state) && ! isWatchActive(state)}
@@ -967,6 +967,10 @@ const NavPage=(props:PageProps)=>{
             name: ButtonDefs.NavActions.name,
             onClick:()=>{
                 showDialog(dialogCtx,()=><ActionDialog actionButtons={[
+                    {
+                        ...anchorWatch(false, dialogCtx),
+                        close: false
+                    },
                     {
                         ...ButtonDefs.ABShowWpButtons,
                         onClick:()=>{

@@ -396,7 +396,7 @@ const keys:Record<string,KeyType>={
         boatSteadyMax: new Property(0.2,'zero SOG detect below (kn)',PropertyType.RANGE,[0.1,1.0,0.05],"Maximal speed in knots that is still considered to be zero"),
         measureColor: new Property('red','Measure display color',PropertyType.COLOR,undefined,"the color being used to draw the measure line"),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1],"default value for the anchor watch distance"),
-        markerDefaultName: new Property('Marker','default SP name',PropertyType.STRING,undefined,"default name for a created waypoint"),
+        markerDefaultName: new Property('Waypoint','default WP name',PropertyType.STRING,undefined,"default name for a waypoint"),
         trackColor: new Property("#942eba", "Color", PropertyType.COLOR,undefined,"color used to draw the current track"),
         trackWidth: new Property(3, "Width", PropertyType.RANGE, [1, 10],"width in pixel for the current track"),
         trackInterval: new Property(30, "Point Dist.(s)", PropertyType.RANGE, [5, 300],"Minimal distance in seconds between 2 drawn track points. Should not be lower then the distance at the server side."), //seconds

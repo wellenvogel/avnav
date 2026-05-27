@@ -208,7 +208,7 @@ const ButtonDefinitions= {
     },
     //restart the routing to the current target (route)
     NavRestart:{
-        iconClass: iconClasses.NavRestart,
+        iconClass: iconClasses.NavGoto,
         name: btdef.NavRestart,
     },
     //restart the routing to the current target (wp)
@@ -248,9 +248,9 @@ const ButtonDefinitions= {
     },
     //start a waypoint routing to the current map center
     //also in feature info
-    LockMarker:{
-        iconClass: iconClasses.LockMarker,
-        name:btdef.LockMarker,
+    WpGoto:{
+        iconClass: iconClasses.WpGoto,
+        name:btdef.WpGoto,
     },
     CourseUp:{
         iconClass: iconClasses.CourseUp,

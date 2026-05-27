@@ -53,7 +53,7 @@ export default GeneralButtons.concat(propsToDefs([
         editDisable:true
     },
     {
-        ...ButtonDefs.LockMarker,
+        ...ButtonDefs.WpGoto,
         localOnly: true,
         storeKeys: activeRoute.getStoreKeys(AnchorWatchKeys),
         updateFunction: (state) => {
