@@ -220,6 +220,7 @@ const MainBody = ({ history, nightMode}) => {
             <DynamicRouter
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,
+                    reloadSequence: keys.gui.global.reloadSequence,
                     windowDimensions: keys.gui.global.windowDimensions,
                     dim: keys.gui.global.dimActive,
                     isEditing: keys.gui.global.layoutEditing,
