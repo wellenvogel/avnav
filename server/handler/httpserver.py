@@ -74,6 +74,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   PATH_VIEWER='viewer'
   PATH_MODULES='modules'
   PATH_CHARTS='charts'
+  P_CHARTBASE=WorkerParameter('chartbase','maps',WorkerParameter.T_STRING)
   CFG_CHARTBASE='chartbase' #the name of a config value to change the chart mapping name
                             #in reality this does not change the chart base URL
                             #but we keep this for compatibilty if someone used this in the past
@@ -112,7 +113,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
                      "navurl":"/api", #those must be absolute with /
                      "navurlCompat":"/viewer/avnav_navi.php",
                      "index":"/viewer/avnav_viewer.html",
-                     cls.CFG_CHARTBASE: "maps", #just to be able to use very old configs
+                     cls.P_CHARTBASE.name:cls.P_CHARTBASE.default, #just to be able to use very old configs
                                           #the chart base now is always /charts
                                           #but potentially someone defined
                                           #an url mapping with maps
@@ -124,7 +125,8 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         }
     return rt
   def __init__(self,cfgparam,RequestHandlerClass):
-    ALLOWED_PREFIXES=[self.PATH_USER,self.PATH_VIEWER,str(cfgparam.get(self.CFG_CHARTBASE) or "maps")]
+    mapprefix=self.P_CHARTBASE.fromDict(cfgparam,False,False)
+    ALLOWED_PREFIXES=[self.PATH_USER,self.PATH_VIEWER,mapprefix]
     replace=AVNHandlerManager.filterBaseParam(cfgparam)
     if cfgparam.get('basedir')== '.':
       #some migration of the older setting - we want to use our global dir function, so consider . to be empty
@@ -139,7 +141,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         prefix=mapping['urlpath']
         if not prefix in ALLOWED_PREFIXES:
             continue
-        if prefix == self.getConfigString(self.CFG_CHARTBASE):
+        if prefix == mapprefix:
             prefix=self.PATH_CHARTS
         pathmappings[prefix]=AVNUtil.prependBase(AVNUtil.replaceParam(os.path.expanduser(mapping['path']),replace),self.basedir)
     self.pathmappings=pathmappings
