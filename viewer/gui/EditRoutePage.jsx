@@ -852,6 +852,11 @@ const EditRoutePage = (props) => {
             hasCentered.current = true;
         }
         if (evdata.type === EventTypes.SELECTWP) {
+            if (evdata.fromButton){
+                //never start the editWaypointDialog
+                //or set the selected waypoint
+                return false;
+            }
             const currentIndex = currentEditor.getIndex();
             const newIndex = currentEditor.getIndexFromPoint(evdata.wp);
             if (currentIndex !== newIndex) currentEditor.setNewIndex(newIndex);
@@ -861,10 +866,11 @@ const EditRoutePage = (props) => {
             return true;
         }
         if (evdata.type === EventTypes.FEATURE) {
+            const fromButton=!!evdata.fromButton;
             let featureList = evdata.feature;
             const additionalActions = [];
             if (routeWritable) {
-                additionalActions.push(...pointActions);
+                if (! fromButton) additionalActions.push(...pointActions);
                 const routeActionCondition = (featureInfo) => {
                     if (featureInfo.getType() !== FeatureInfo.TYPE.route || !featureInfo.isOverlay) return false;
                     if (!featureInfo.validPoint()) return false;
@@ -876,7 +882,8 @@ const EditRoutePage = (props) => {
                         onClick: (props) => {
                             insertOtherRoute(props.urlOrKey, props.point, true);
                         },
-                        condition: (featureInfo) => routeActionCondition(featureInfo)
+                        condition: (featureInfo) => routeActionCondition(featureInfo),
+                        close: false
                     }
                 ));
                 if (currentEditor.getIndex() >= 0 && currentEditor.getPointAt()) {
@@ -886,7 +893,8 @@ const EditRoutePage = (props) => {
                             onClick: (props) => {
                                 insertOtherRoute(props.urlOrKey, props.point, false);
                             },
-                            condition: (featureInfo) => routeActionCondition(featureInfo)
+                            condition: (featureInfo) => routeActionCondition(featureInfo),
+                            close: false
                         }));
                 }
                 additionalActions.push(hideAction);
@@ -895,7 +903,7 @@ const EditRoutePage = (props) => {
             showDialog(dialogContext, (dprops) => <GuardedFeatureListDialog {...dprops}
                                                                     featureList={featureList}
                                                                     additionalActions={additionalActions}
-                                                                    listActions={pointActions}/>)
+                                                                    listActions={fromButton?[]:pointActions}/>)
             return true;
         }
     }

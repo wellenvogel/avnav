@@ -1764,7 +1764,7 @@ class MapHolder extends DrawingPositionConverter {
         const clickPoint = this.fromMapToPoint(this.pixelToCoord(pixel));
         let wp = this.routinglayer.findTarget(pixel);
         if (wp) {
-            let rt = this._callHandlers({type: EventTypes.SELECTWP, wp: wp});
+            let rt = this._callHandlers({type: EventTypes.SELECTWP, wp: wp, fromButton:opt_fromButton});
             if (rt) return false;
         }
         if (! opt_fromButton && ! globalStore.getData(keys.properties.featureInfo)) return false;
@@ -1847,7 +1847,7 @@ class MapHolder extends DrawingPositionConverter {
         }
         const callResults=()=>{
             this._callGuards('click'); //do this again as some time could have passed
-            return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos})
+            return this._callHandlers({type: EventTypes.FEATURE, feature: featureInfos,fromButton:opt_fromButton})
         }
         if (promises.length < 1) {
             return callResults();
