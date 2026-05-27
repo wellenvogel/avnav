@@ -67,21 +67,13 @@ import ButtonDefs from "../components/ButtonDefs";
 import {useStoreState} from "../hoc/Dynamic";
 import {iconClasses} from '../components/Icons';
 
-
-type PageKind='navigation'|'settings';
-
-const KindIcons:Record<PageKind,string>={
-    navigation:iconClasses.MNCatNav,
-    settings:iconClasses.MNCatSet,
-}
-
 class Page extends CopyAware{
     name:string;
     displayName?:string;
     buttons:ButtonDef[]|(()=>ButtonDef[]);
-    kind:PageKind;
+    iconClass:string;
     all:boolean;
-    constructor(name:string,kind:PageKind,
+    constructor(name:string,iconClass:string,
                 buttons?:ButtonDef[]|(()=>ButtonDef[]),
                 all:boolean=false
         ){
@@ -89,7 +81,7 @@ class Page extends CopyAware{
         this.name=name;
         this.displayName=getPageTitle(name);
         this.buttons=buttons;
-        this.kind=kind;
+        this.iconClass=iconClass;
         this.all=all;
     }
     getDisplay(){
@@ -104,7 +96,7 @@ class Page extends CopyAware{
 
 class ActionPage extends Page{
     constructor() {
-        super("Actions","navigation");
+        super("Actions",iconClasses.MNCatNav);
         this.displayName="Actions";
     }
     override getButtons():ButtonDef[]{
@@ -116,33 +108,33 @@ class ActionPage extends Page{
 const actionPage=new ActionPage();
 
 const mainTree=[
-    new Page(PAGEIDS.NAV,'navigation',
+    new Page(PAGEIDS.NAV,iconClasses.MNCatNav,
         NavPageButtons),
-    new Page(PAGEIDS.GPS,'navigation',
+    new Page(PAGEIDS.GPS,iconClasses.MNCatNav,
         GpsPageButtons),
-    new Page(PAGEIDS.ADDON,'navigation',
+    new Page(PAGEIDS.ADDON,iconClasses.MNCatNav,
         AddOnPageButtons),
-    new Page(PAGEIDS.CHARTS,'settings',
+    new Page(PAGEIDS.CHARTS,iconClasses.Charts,
         ChartsPageButtons),
-    new Page(PAGEIDS.NROUTE,'settings',
+    new Page(PAGEIDS.NROUTE,iconClasses.Route,
         RoutesPageButtons),
-    new Page(PAGEIDS.TRACKS,'settings',
+    new Page(PAGEIDS.TRACKS,iconClasses.Track,
         TracksPageButtons),
-    new Page(PAGEIDS.AISCFG,'settings',
+    new Page(PAGEIDS.AISCFG,iconClasses.MNCatSet,
         AisCfgPageButtons),
-    new Page(PAGEIDS.PLUGINS,'settings',
-        PluginsPageButtons,true),
-    new Page(PAGEIDS.LAYOUT,'settings',
-        LayoutsPageButtons,true),
-    new Page(PAGEIDS.CHANNELS,'settings',
-        ChannelsPageButtons,true),
-    new Page(PAGEIDS.SETTINGS,'settings',
+    new Page(PAGEIDS.SETTINGS,iconClasses.Settings,
         SettingsPageButtons,true),
-    new Page(PAGEIDS.ADDCFG,'settings',
+    new Page(PAGEIDS.LAYOUT,iconClasses.Layout,
+        LayoutsPageButtons,true),
+    new Page(PAGEIDS.PLUGINS,iconClasses.Plugins,
+        PluginsPageButtons,true),
+    new Page(PAGEIDS.ADDCFG,iconClasses.MNCatSet,
         AddOnConfigPageButtons,true),
-    new Page(PAGEIDS.SERVER,"settings",
+    new Page(PAGEIDS.CHANNELS,iconClasses.MNCatSet,
+        ChannelsPageButtons,true),
+    new Page(PAGEIDS.SERVER,iconClasses.MNCatSet,
         ServerPageButtons,true),
-    new Page(PAGEIDS.REMOTE,"settings",
+    new Page(PAGEIDS.REMOTE,iconClasses.MNCatSet,
         RemotePageButtons,true)
 ]
 
@@ -162,7 +154,7 @@ const PageRow=({
                    expanded,expandSequence,noExpand,
                    onExpand,scrollSequence
 }:PageRowProps)=>{
-    const className=Helper.concatsp('Page',page.kind);
+    const className=Helper.concatsp('Page');
     const layoutEditing=globalstore.getData(keys.gui.global.layoutEditing);
     const dialogContext=useDialogContext();
     const [isExpanded,setExpanded]=useState(expanded);
@@ -198,7 +190,7 @@ const PageRow=({
         setav(ev,{page:page.name});
         onClick(ev);
     }}>
-        <ListSlot icon={{className:KindIcons[page.kind]}} />
+        <ListSlot icon={{className:page.iconClass}} />
         <ListMainSlot primary={page.getDisplay()}>
         </ListMainSlot>
             {!noExpand && hasVisibleButton && <ListSlot
