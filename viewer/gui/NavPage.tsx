@@ -977,7 +977,10 @@ const NavPage=(props:PageProps)=>{
                             showWpButtons(overlayButtonList?.kind !== 'waypoint')},
                         toggle: overlayButtonList?.kind === 'waypoint'
                     },
-                    CenterActionButton,
+                    {
+                        ...CenterActionButton,
+                        close:false
+                    },
                     {
                         ...ButtonDefs.GpsCenter,
                         onClick:()=>{
