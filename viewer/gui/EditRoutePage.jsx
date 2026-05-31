@@ -1003,7 +1003,9 @@ const EditRoutePage = (props) => {
             ...ButtonDefs.NavActions,
             editDisable: true,
             onClick:()=>{
-                showDialog(dialogContext,()=><ActionDialog actionButtons={[
+                showDialog(dialogContext,()=><ActionDialog
+                    title={'Navigation tools'}
+                    actionButtons={[
                     {
                         ...ButtonDefs.ABShowWpButtons,
                         onClick:()=>{

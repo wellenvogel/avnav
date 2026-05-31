@@ -847,23 +847,6 @@ const NavPage=(props:PageProps)=>{
                 }),
                 createRouteFeatureAction(history)
             ]
-            const measure=globalStore.getData(keys.map.activeMeasure);
-            const measureButton=(measure === undefined)?ButtonDefs.Measure:ButtonDefs.MeasureAdd;
-            listActions.push(new FeatureAction({
-                ...measureButton,
-                onClick: (featureInfo:FeatureInfo)=>{
-                    startOrAddMeasure(featureInfo.point,true);
-                },
-                condition: ()=>!MapHolder.getGpsLock()
-            }))
-            listActions.push(new FeatureAction({
-                ...ButtonDefs.MeasureOff,
-                onClick: ()=>{
-                    globalStore.storeData(keys.map.activeMeasure,undefined)
-                },
-                condition: ()=>globalStore.getData(keys.map.activeMeasure) !== undefined,
-                toggle: true
-            }))
             showDialog(dialogCtx,(dprops)=><GuardedFeatureListDialog
                 {...dprops}
                 featureList={featureList}
@@ -966,7 +949,9 @@ const NavPage=(props:PageProps)=>{
         {
             name: ButtonDefs.NavActions.name,
             onClick:()=>{
-                showDialog(dialogCtx,()=><ActionDialog actionButtons={[
+                showDialog(dialogCtx,()=><ActionDialog
+                    title={'Navigation tools'}
+                    actionButtons={[
                     {
                         ...anchorWatch(false, dialogCtx),
                         close: false

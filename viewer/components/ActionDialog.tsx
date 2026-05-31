@@ -20,7 +20,7 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {ReactElement} from 'react';
+import React, {ReactNode} from 'react';
 import {useDialogContext} from "./DialogContext";
 import {DBCancel, DialogButtons, DialogFrame} from "./OverlayDialog";
 import {ListFrame} from "./ListItems";
@@ -30,7 +30,7 @@ import Helper from "../util/helper";
 export interface ActionDialogProps{
     actionButtons:DynamicButtonProps[]
     className?:string;
-    title?:ReactElement;
+    title?:ReactNode;
 }
 
 export const ActionDialog = (props:ActionDialogProps) => {
