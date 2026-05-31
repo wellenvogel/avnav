@@ -76,7 +76,7 @@ export type PluginPageType=valueof<typeof PLUGINPAGES>
 
 const PAGE_TITLES:Record<PageType, string> = {
     [PAGEIDS.TRACKS]: "Tracks/NMEALogs",
-    [PAGEIDS.ADDCFG]: "Configure User Apps, JS, CSS",
+    [PAGEIDS.ADDCFG]: "CSS, JS, User Apps",
     [PAGEIDS.ADDON]: "User Apps",
     [PAGEIDS.ADDR]: "Connect Urls",
     [PAGEIDS.AIS]: "AIS targets",
