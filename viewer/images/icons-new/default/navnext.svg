@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="52"
+   height="52"
+   viewBox="0 0 24 24"
+   fill="none"
+   stroke="currentColor"
+   stroke-width="1.25"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   class="lucide lucide-map-pin-minus-icon lucide-map-pin-minus"
+   version="1.1"
+   id="svg310"
+   sodipodi:docname="wpgoto.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs314">
+    <marker
+       style="overflow:visible"
+       id="TriangleStart"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="3.25"
+       markerHeight="3.25"
+       viewBox="0 0 4.9916334 5.6666178"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="namedview312"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="12.836708"
+     inkscape:cx="41.794205"
+     inkscape:cy="25.512772"
+     inkscape:window-width="1920"
+     inkscape:window-height="1129"
+     inkscape:window-x="2728"
+     inkscape:window-y="311"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg310" />
+  <path
+     d="M18.977 14C19.6 12.701 20 11.343 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738"
+     id="path304"
+     style="stroke-width:1.66153846;stroke-dasharray:none" />
+  <circle
+     cx="12"
+     cy="10"
+     r="3"
+     id="circle306"
+     style="fill:#ff0000" />
+  <path
+     d="m 15.323392,18.575273 h 4.751732"
+     id="path308"
+     style="stroke-width:1.66154;stroke-dasharray:none;marker-end:url(#TriangleStart)" />
+</svg>
