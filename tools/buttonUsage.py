@@ -130,10 +130,12 @@ def readButtons(fname):
   //general
   &.Images{
     .icon('image-icon.svg');
+    //alt
+    .icon('legacy.svg','default.svg');
   }
 '''
 class IconDef:
-    def __init__(self,name:str,icon:str,line:int):
+    def __init__(self,name:str,icon,line:int):
         self.name=name
         self.icon=icon
         self.line=line
@@ -148,6 +150,7 @@ def readIcons(fname):
     restart=re.compile(r'^ *.icon *{')
     rename=re.compile(r'^ *&\.(\w+) *{')
     reicon=re.compile(r'^ *\.icon *\( *[\'"]([\w.-]+)')
+    reicon2 = re.compile(r'^ *\.icon *\( *[\'"]([\w.-]+) *[\'"] *, *[\'"]([\w.-]+)')
     reClose = re.compile(r'} *,*')
     with open(fname,'r') as fb:
         for line in fb:
@@ -163,9 +166,13 @@ def readIcons(fname):
                     name=match.group(1)
                     state=2
             elif state == 2:
-                match=reicon.match(line)
-                if match is not None and match.group(1) is not None:
-                    icon=match.group(1)
+                match = reicon2.match(line)
+                if match is not None and match.group(1) is not None and match.group(2) is not None:
+                    icon = ['legacy/'+match.group(1), 'default/'+match.group(2)]
+                else:
+                    match=reicon.match(line)
+                    if match is not None and match.group(1) is not None:
+                        icon=['legacy/'+match.group(1)]
                 if reClose.match(line) is not None:
                     state=1
                     icons[name] = IconDef(name, icon, icline)
@@ -274,19 +281,17 @@ def usageEntry(file:str,line:str):
     return f"[{uname}]({file}#L{line})"
 
 def iconEntry(name,iconDef:IconDef,format='table'):
-    base=""
-    if name:
-        base=f"{name}|"
     if iconDef is not None:
-        iconStr = f"[{iconDef.icon}]({relPath(TICONS)}#L{iconDef.line})"
+        iconStr = f"[{iconDef.name}]({relPath(TICONS)}#L{iconDef.line})"
         iconFile=''
         if iconDef.icon:
-            if format == 'pandoc':
-                iconFile = f"![{iconDef.icon}]({iconPath(iconDef.icon)})"+'{width=40px}'
-            else:
-                iconFile = f"<img alt=\"{iconDef.icon}\" src=\"{iconPath(iconDef.icon)}\" width=\"40px\"/>"
-        return base+f"{iconStr}|{iconFile}"
-    return base+"|"
+            for icon in iconDef.icon:
+                if format == 'pandoc':
+                    iconFile += f"|![{icon}]({iconPath(icon)})"+'{width=40px}'
+                else:
+                    iconFile += f"|<img alt=\"{icon}\" src=\"{iconPath(icon)}\" width=\"40px\"/>"
+        return f"{iconStr}{iconFile}"
+    return (name or '')+"||"
 def defEntry(dfile:str,dname:str,dline:str,bold:bool=False):
     name=dname if not bold else f"__{dname}__"
     if dline is not None:
@@ -349,7 +354,7 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
     handleFirst=format == 'sparse' or format == 'pandoc'
     print("Buttons")
     print("====")
-    print("|Name|File|IconName|IconFile|Icon|shortText|longText|")
+    print("|Name|File|IconName|Icon|IconNew|shortText|longText|")
     print("| --- | --- | --- | --- | --- | --- | --- |")
     for k in sorted(defs.keys()):
         buttonFound=defs[k]
@@ -374,8 +379,8 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
     print("")
     print("Icons")
     print("====")
-    print("|Name|Usage|IconFile|Icon|")
-    print("| --- | --- | --- | --- |")
+    print("|Name|Usage|Name|Icon|IconNew|")
+    print("| --- | --- | --- | --- | --- |")
     for k in sorted(iconGreps.keys()):
         iconUsages=iconGreps.get(k)
         iconDef = iconDefs.get(k)
@@ -392,7 +397,7 @@ if format == 'table' or format == 'sparse' or format == 'pandoc':
     print("")
     print("IconUsage")
     print("====")
-    print("|Name|IconFile|Icon|Usage")
+    print("|Name|Icon|IconNew|Usage|")
     print("| --- | --- | --- | --- |")
     for k in sorted(iconDefs.keys()):
         iconDef=iconDefs.get(k)
