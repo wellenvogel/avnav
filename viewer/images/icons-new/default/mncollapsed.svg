@@ -12,7 +12,7 @@
    version="1.1"
    id="svg1"
    sodipodi:docname="mncollapsed.svg"
-   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -29,16 +29,17 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="17.019231"
-     inkscape:cx="26"
-     inkscape:cy="26"
+     inkscape:cx="24.442938"
+     inkscape:cy="26.058757"
      inkscape:window-width="1920"
-     inkscape:window-height="1129"
-     inkscape:window-x="2728"
-     inkscape:window-y="311"
+     inkscape:window-height="1012"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg1" />
+     inkscape:current-layer="svg1"
+     showgrid="false" />
   <path
-     d="m9 18 6-6-6-6"
+     d="m 6,9 6,6 6,-6"
      id="path1"
-     style="stroke-width:1.66153846;stroke-dasharray:none" />
+     style="stroke-width:1.66154;stroke-dasharray:none" />
 </svg>
