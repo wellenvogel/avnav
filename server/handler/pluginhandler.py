@@ -147,7 +147,11 @@ class ApiImpl(AVNApi):
             self.userApps = []
             addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
             for id in range(0, self.addonIndex + 1):
-                addonhandler.unregisterAddOn("%s%i" % (self.prefix, id))
+                try:
+                    addonhandler.unregisterAddOn("%s%i" % (self.prefix, id))
+                except:
+                    pass
+            self.addonIndex=1
         except:
             pass
         try:
