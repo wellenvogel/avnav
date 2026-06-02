@@ -4,7 +4,7 @@
 import EtaWidget from './EtaWidget.jsx';
 import TimeStatusWidget from './TimeStatusWidget.tsx';
 import AisTargetWidget from './AisTargetWidget.tsx';
-import ActiveRouteWidget from './ActiveRouteWidget.jsx';
+import ActiveRouteWidget from './ActiveRouteWidget.tsx';
 import EditRouteWidget from './EditRouteWidget.jsx';
 import CenterDisplayWidget from './CenterDisplayWidget.jsx';
 import WindWidget, {getWindData, WindStoreKeys} from './WindWidget';

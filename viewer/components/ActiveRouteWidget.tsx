@@ -3,31 +3,61 @@
  */
 
 import React from "react";
-import PropTypes from 'prop-types';
-import keys from '../util/keys.ts';
-import Formatter from '../util/formatter.ts';
+import keys from '../util/keys';
+import Formatter from '../util/formatter';
 import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
+// @ts-ignore
 import routeobjects from "../nav/routeobjects";
 import Helper from '../util/helper';
-import {WidgetProps} from "../util/types";
+import {IWidgetProps} from "../util/types";
+import {Icon} from "./Icons";
 
-const SecondRow=({remain,eta,approach})=>{
+const STORE_KEYS={
+    isApproaching: keys.nav.route.isApproaching,
+    routeName: keys.nav.route.name,
+    eta: keys.nav.route.eta,
+    remain: keys.nav.route.remain,
+    nextCourse: keys.nav.route.nextCourse,
+    isEditing: keys.gui.global.layoutEditing,
+};
+const EDITABLE={
+    legacy:{type:'BOOLEAN',
+        displayName:'legacy',
+        default:false,
+        description:"color the complete widget depending on the target state instead of only a badge"}
+}
+
+interface SecondRowProps{
+    remain?:string,
+    eta?:string,
+    approach?:boolean,
+    small?:boolean,
+}
+const SecondRow=({remain,eta,approach,small}:SecondRowProps)=>{
     return <div className={"secondRow"}>
-        {approach && <div className="icon"/>}
+        {(approach && ! small) && <Icon />}
         {(eta !== undefined) && <div className="routeEta">{eta}</div>}
-        <div>
-            <span className="routeRemain">{remain}</span>
-            <span className='unit'>nm</span>
-        </div>
+        {(approach && small) && <Icon />}
+        {
+            (remain !== undefined) && <div>
+                <span className="routeRemain">{remain}</span>
+                <span className='unit'>nm</span>
+            </div>
+        }
     </div>
 }
 
-const ActiveRouteWidget =(props)=>{
+interface ActiveRouteWidgetProps extends IWidgetProps,
+    Record<keyof typeof STORE_KEYS, any>,
+    Record<keyof typeof EDITABLE, boolean>{}
+
+const ActiveRouteWidget =(props:ActiveRouteWidgetProps)=>{
         if (!props.routeName && ! props.isEditing) return null;
         let classes = "activeRouteWidget";
-        if (props.isApproaching && props.legacy) classes += " approach ";
-        let display={
+        const approaching=props.isApproaching;
+        if (approaching && props.legacy) classes += " approach ";
+        const display={
             name:routeobjects.nameToBaseName(props.routeName),
             remain: Formatter.formatDistance(props.remain),
             eta: Formatter.formatTime(props.eta),
@@ -40,13 +70,13 @@ const ActiveRouteWidget =(props)=>{
             <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={!isServer}>
                 <div className={Helper.concatsp("widgetData",small?"small":undefined)}>
                     <div className="routeName">{display.name}</div>
-                    {small && <SecondRow eta={display.eta} remain={display.remain} />}
+                    {small && <SecondRow eta={display.eta} approach={approaching && ! props.legacy} remain={display.remain} small={small} />}
                     {!small && <div className="routeRemain">
                         <span className="routeRemain">{display.remain}</span>
                         <span className='unit'>nm</span>
                     </div>}
-                    {!small && <SecondRow eta={display.eta} approach={props.isApproaching && ! props.legacy} />}
-                    { ! small && ( (props.isApproaching) ?
+                    {!small && <SecondRow eta={display.eta} approach={approaching && ! props.legacy} small={small} />}
+                    { ! small && ( (approaching) ?
                         <div className="routeNext">
                             <span
                                 className="routeNextCourse">{display.next}</span>
@@ -55,36 +85,14 @@ const ActiveRouteWidget =(props)=>{
                         : <div></div>
                     )
                     }
-                    {(small  && props.isApproaching && ! props.legacy) && <div className="icon small"/>}
                 </div>
             </WidgetFrame>
         );
     }
 
 
-ActiveRouteWidget.propTypes={
-    ...WidgetProps,
-    isAproaching: PropTypes.bool,
-    routeName: PropTypes.string,
-    eta: PropTypes.objectOf(Date),
-    remain: PropTypes.number,
-    nextCourse: PropTypes.number,
-    isEditing: PropTypes.bool,
-    legacy: PropTypes.bool,
-};
-ActiveRouteWidget.storeKeys={
-    isApproaching: keys.nav.route.isApproaching,
-    routeName: keys.nav.route.name,
-    eta: keys.nav.route.eta,
-    remain: keys.nav.route.remain,
-    nextCourse: keys.nav.route.nextCourse,
-    isEditing: keys.gui.global.layoutEditing,
-};
-ActiveRouteWidget.editableParameters={
-    'legacy':{type:'BOOLEAN',
-        displayName:'legacy',
-        default:false,
-        description:"color the complete widget depending on the target state instead of only a badge"}
-}
+
+ActiveRouteWidget.storeKeys=STORE_KEYS;
+ActiveRouteWidget.editableParameters= EDITABLE;
 
 export default ActiveRouteWidget;
