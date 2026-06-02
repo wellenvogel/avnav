@@ -4,7 +4,8 @@
 @borderAttention: 2px solid;
 @borderAttentionLarge: 3px solid;
 @normalBorder: 1px solid;
-@iconBase: "../images/icons-new/legacy";
+@iconBase: "../images/icons-new/default";
+@iconBaseLegacy: "../images/icons-new/legacy";
 @oldiconBase: "../images";
 
 @mainNavItemWidth: 7em;
@@ -22,7 +23,13 @@
   opacity: 0.6;
 }
 .icon(@icon){
-    background-image: url("@{iconBase}/@{icon}");
+    background-image: url("@{iconBaseLegacy}/@{icon}");
+}
+.icon(@legacy,@icon){
+  background-image: url("@{iconBase}/@{icon}");
+  .icon-legacy &{
+    background-image: url("@{iconBaseLegacy}/@{legacy}");
+  }
 }
 
 .rowBase{

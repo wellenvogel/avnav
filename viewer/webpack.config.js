@@ -212,10 +212,24 @@ module.exports = (env, argv) => {
                 },
 
                 {
-                    test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
+                    test: /images\/.*\.png$|images\/.*\.svg$/,
                     type: 'asset/resource',
                     generator: {
                         filename: 'images/[name][ext]'
+                    }
+                },
+                {
+                    test: /images\/icons-new\/default\/.*\.png$|images\/icons-new\/default\/.*\.svg$/,
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'images/default/[name][ext]'
+                    }
+                },
+                {
+                    test: /images\/icons-new\/legacy\/.*\.png$|images\/icons-new\/legacy\/.*\.svg$/,
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'images/legacy/[name][ext]'
                     }
                 }
 

@@ -1,448 +1,419 @@
 @import "defines";
-.icon {
-  //general
-  &.Images{
-    .icon('image-icon.svg');
+.icon{
+&.Empty
+    {
+        dummy: 0; // must set something to export    Empty
+    }
+    
+  &.AddOns {
+    .icon('apps.svg','addons.svg');
   }
-  &.User{
-    .icon('folder_shared.svg');
+  &.AddonConfigPlus {
+    .icon('ic_add.svg','addonconfigplus.svg');
   }
-  &.Charts{
-    .icon('map2.svg');
-  }
-  &.Imports{
-    .icon('swap_horiz.svg');
-  }
-  &.Overlays{
-    .icon('layers-black.svg');
-  }
-  &.HideOverlays{
-    .icon('layers-black-off.svg');
-  }
-  &.Route{
-    .icon('route.svg');
-  }
-  &.Edit{
-    .icon('ic_edit.svg');
-  }
-  &.Info{
-    .icon('ic_info.svg');
-  }
-  &.Connected {
-    .icon('plug.svg');
-  }
-  &.Track{
-    .icon('track.svg');
-  }
-  &.Plugins{
-    .icon('extension.svg');
-  }
-  &.Expand{
-    .icon('expand-all-200.svg');
-  }
-  &.Num1{
-    .icon('num-1.svg');
-  }
-  &.Num2{
-    .icon('num-2.svg');
-  }
-  &.Num3{
-    .icon('num-3.svg');
-  }
-  &.Num4{
-    .icon('num-4.svg');
-  }
-  &.Num5{
-    .icon('num-5.svg');
-  }
-  &.Num6{
-    .icon('num-6.svg');
-  }
-  &.Num7{
-    .icon('num-7.svg');
-  }
-  &.Num8{
-    .icon('num-8.svg');
-  }
-  &.Num9{
-    .icon('num-9.svg');
-  }
-  &.Num10{
-    .icon('num-10.svg');
-  }
-  //buttons
-  &.Cancel{
-    .icon('ic_clear.svg');
-  }
-  &.Back{
-    .icon('ic_arrow_back.svg');
-  }
-  &.Plus{
-    .icon('ic_add.svg');
-  }
-  &.RouteAdd{
-    .icon('ic_add.svg');
-  }
-  &.AddonConfigPlus{
-    .icon('ic_add.svg');
-  }
-  &.StatusAdd{
-    .icon('ic_add.svg');
-  }
-  &.View{
-    .icon('visibility.svg');
-  }
-  &.Browser{
-    .icon('internet-web-browser.svg');
-  }
-  &.Server{
-    .icon('database-200.svg');
-  }
-  &.Items{
-    .icon('list-200.svg');
-  }
-  &.Settings{
-    .icon('ic_settings.svg');
-  }
-  &.Sort {
-    .icon('sort.svg');
-  }
-  &.Lock{
-    .icon('update_disabled.svg');
-  }
-  &.Search{
-    .icon('search.svg');
-  }
-  &.Center {
-    .icon('center.svg');
-  }
-  &.Dim{
-    .icon('brightness_low.svg');
-  }
-  &.Upload{
-    .icon('ic_file_upload.svg');
-  }
-  &.Sync{
-    .icon('sync.svg');
-  }
-  &.Night {
-    .icon('night.svg');
-  }
-  &.RemoteChannel{
-    .icon('settings_remote.svg');
-  }
-  &.FullScreen{
-    .icon('fullscreen.svg');
-  }
-  &.Split{
-    .icon('vertical_split.svg');
-  }
-  &.Reload {
-    .icon('ic_refresh.svg');
+  &.After {
+    .icon('navigate_next.svg','after.svg');
   }
   &.AisInfoHide {
-    .icon('ic_hide.svg');
-  }
-  &.AddOns {
-    .icon('apps.svg')
+    .icon('ic_hide.svg','aisinfohide.svg');
   }
   &.AisNearest {
-    .icon('ais-nearest.svg');
-  }
-  &.WpLocate{
-    .icon('center.svg');
-  }
-  &.WpPrevious{
-    .icon('ic_arrow_back.svg');
-  }
-  &.WpNext{
-    .icon('ic_arrow_forward.svg');
-  }
-  &.WpGoto {
-    .icon('wpgoto.svg');
-  }
-  &.NavRestart {
-    .icon('navrestart.svg');
-  }
-  &.WpRestart {
-    .icon('wprestart.svg');
-  }
-  &.NavNext{
-    .icon('nextwp.svg');
-  }
-  &.WpGoto {
-    .icon('waypoint.svg');
-  }
-  &.CourseUp {
-    .icon('compass.svg');
-  }
-  &.NavAdd {
-    .icon('wpplus.svg');
-  }
-  &.NavAddAfter {
-    .icon('wpplus.svg');
-    transform: rotate(180deg);
-  }
-  &.NavDelete {
-    .icon('wpminus.svg');
-  }
-  &.NavToCenter{
-    .icon('center.svg');
-  }
-  &.NavGoto {
-    .icon('wpgoto.svg');
-  }
-  &.NavStop{
-    .icon('stop-nav.svg');
-  }
-  &.WpStop{
-    .icon('stop-wp.svg');
-  }
-  &.RouteMenu{
-    .icon('menu_open.svg');
-  }
-  &.SelectChart{
-    .icon('layers-black.svg');
-  }
-  &.Navigation{
-    .icon('navigation.svg');
-  }
-  &.ZoomIn{
-    .icon('ic_zoom_in.svg');
-  }
-  &.ZoomOut {
-    .icon('ic_zoom_out.svg');
-  }
-  &.CenterAction{
-    .icon('center-action.svg');
-  }
-  &.LockPos  {
-    .icon('boat.svg');
+    .icon('ais-nearest.svg','aisnearest.svg');
   }
   &.Anchor {
-    .icon('anchor.svg');
+    .icon('anchor.svg','anchor.svg');
   }
   &.AnchorEnd {
-    .icon('anchor-end.svg');
+    .icon('anchor-end.svg','anchor.svg');
   }
-  &.Boat{
-    .icon('boat.svg')
+  &.Android {
+    .icon('ic_android.svg','android.svg');
   }
-  &.EditPage{
-    .icon('tune.svg');
+  &.Back {
+    .icon('ic_arrow_back.svg','back.svg');
   }
-  &.Layout{
-    .icon('ballot.svg');
+  &.Before {
+    .icon('navigate_before.svg','before.svg');
   }
-  &.MOB{
-    .icon('drowning.svg');
+  &.Boat {
+    .icon('boat.svg','boat.svg');
   }
-  &.Wifi{
-    .icon('wifi.svg');
+  &.Browser {
+    .icon('internet-web-browser.svg','browser.svg');
   }
-  &.WifiOff{
-    .icon('wifi_off.svg');
+  &.Cancel {
+    .icon('ic_clear.svg','cancel.svg');
   }
-  &.Android{
-    .icon('ic_android.svg');
+  &.Center {
+    .icon('center.svg','center.svg');
   }
-  &.QRCode{
-    .icon('qrcode.svg');
+  &.CenterAction {
+    .icon('center-action.svg','centeraction3.svg');
   }
-  &.Shutdown{
-    .icon('ic_power.svg');
+  &.ChartScheme {
+    .icon('table_convert.svg','chartscheme.svg');
   }
-  &.StatusRestart{
-      .icon('ic_refresh.svg');
+  &.Charts {
+    .icon('map2.svg','charts.svg');
   }
-  &.Log{
-    .icon('ic_text_snippet.svg');
+  &.Checked {
+    .icon('checkbox-marked-outline.svg','checked.svg');
   }
-  &.Debug{
-    .icon('bug_report.svg');
+  &.Connect {
+    .icon('plug.svg','connect.svg');
   }
-  &.Section{
-    .icon('category-200.svg');
+  &.Connected {
+    .icon('plug.svg','connect.svg');
+  }
+  &.Copy {
+    .icon('content_copy.svg','copy.svg');
+  }
+  &.CourseUp {
+    .icon('compass.svg','courseup.svg');
+  }
+  &.Debug {
+    .icon('bug_report.svg','debug.svg');
+  }
+  &.Delete {
+    .icon('ic_delete.svg','delete.svg');
+  }
+  &.Dim {
+    .icon('brightness_low.svg','dim.svg');
+  }
+  &.Disable {
+    .icon('ic_hide.svg','disable.svg');
+  }
+  &.Disconnect {
+    .icon('plug-disconnect.svg','disconnect.svg');
+  }
+  &.Download {
+    .icon('ic_file_download.svg','download.svg');
+  }
+  &.Edit {
+    .icon('ic_edit.svg','edit.svg');
+  }
+  &.EditPage {
+    .icon('tune.svg','editpage.svg');
+  }
+  &.EmptyRoute {
+    .icon('delete_sweep.svg','emptyroute.svg');
+  }
+  &.Expand {
+    .icon('expand-all-200.svg','expand.svg');
+  }
+  &.FullScreen {
+    .icon('fullscreen.svg','fullscreen.svg');
+  }
+  &.Help {
+    .icon('ic_help_outline.svg','help.svg');
+  }
+  &.Hide {
+    .icon('visibility_off.svg','hide.svg');
+  }
+  &.HideOverlays {
+    .icon('layers-black-off.svg','hideoverlays.svg');
+  }
+  &.ITDirectory {
+    .icon('folder_shared.svg','itdirectory.svg');
+  }
+  &.ITHtml {
+    .icon('internet-web-browser.svg','ithtml.svg');
+  }
+  &.ITOther {
+    .icon('draft.svg','itother.svg');
+  }
+  &.ITServer {
+    .icon('plug.svg','connect.svg'); //TODO: separate default?
+  }
+  &.ITText {
+    .icon('ic_text_snippet.svg','ittext.svg');
+  }
+  &.ITUserSpecial {
+    .icon('ic_settings.svg','ituserspecial.svg');
+  }
+  &.Images {
+    .icon('image-icon.svg','images.svg');
+  }
+  &.Imports {
+    .icon('swap_horiz.svg','imports.svg');
+  }
+  &.Info {
+    .icon('ic_info.svg','info.svg');
+  }
+  &.InvertRoute {
+    .icon('invertroute.svg','invertroute.svg');
+  }
+  &.Items {
+    .icon('list-200.svg','items.svg');
+  }
+  &.JSChanged {
+    .icon('javascript.svg','jschanged.svg');
+  }
+  &.Layout {
+    .icon('ballot.svg','layout.svg');
+  }
+  &.LayoutOff {
+    .icon('ballot-off.svg','layoutoff.svg');
+  }
+  &.Left {
+    .icon('navigate_before.svg','left.svg');
+  }
+  &.Lock {
+    .icon('update_disabled.svg','aislock.svg');
+  }
+  &.LockPos {
+    .icon('boat.svg','boat.svg');
+  }
+  &.Log {
+    .icon('ic_text_snippet.svg','serverlog.svg');
+  }
+  &.MNCatNav {
+    .icon('boat.svg','boat.svg');
+  }
+  &.MNCatSet {
+    .icon('build-200.svg','mncatset.svg');
+  }
+  &.MNCollapsed {
+    .icon('navigate_next.svg','mncollapsed.svg');
+  }
+  &.MNExpanded {
+    .icon('navigate_next.svg','mnexpanded.svg');
+  }
+  &.MOB {
+    .icon('drowning.svg','mob.svg');
+  }
+  &.MainNav {
+    .icon('menu-200.svg','mainnav.svg');
+  }
+  &.Measure {
+    .icon('straighten.svg','measure.svg');
+  }
+  &.MeasureFlag {
+    .icon('outlined_flag.svg','measureflag.svg');
+  }
+  &.MeasureOff {
+    .icon('straighten-off.svg','measureoff.svg');
+  }
+  &.More {
+    .icon('ic_chevron_right.svg','more.svg');
+  }
+  &.NavAdd {
+    .icon('wpplus.svg','navadd.svg');
+  }
+  &.NavAddAfter {
+    .icon('wpplus.svg','navaddafter.svg');
+  }
+  &.NavDelete {
+    .icon('wpminus.svg','navdelete.svg');
+  }
+  &.NavGoto {
+    .icon('wpgoto.svg','navgoto.svg');
+  }
+  &.NavMapWidgets {
+    .icon('assistant_nav.svg','navmapwidgets.svg');
+  }
+  &.NavNext {
+    .icon('nextwp.svg','navnext.svg');
+  }
+  &.NavStop {
+    .icon('stop-nav.svg','navstop.svg');
+  }
+  &.NavToCenter {
+    .icon('center.svg','navtocenter.svg');
+  }
+  &.Navigation {
+    .icon('navigation.svg','navactions.svg');
+  }
+  &.Night {
+    .icon('night.svg','night.svg');
+  }
+  &.Num1 {
+    .icon('num-1.svg','num1.svg');
+  }
+  &.Num10 {
+    .icon('num-10.svg','num10.svg');
+  }
+  &.Num2 {
+    .icon('num-2.svg','num2.svg');
+  }
+  &.Num3 {
+    .icon('num-3.svg','num3.svg');
+  }
+  &.Num4 {
+    .icon('num-4.svg','num4.svg');
+  }
+  &.Num5 {
+    .icon('num-5.svg','num5.svg');
+  }
+  &.Num6 {
+    .icon('num-6.svg','num6.svg');
+  }
+  &.Num7 {
+    .icon('num-7.svg','num7.svg');
+  }
+  &.Num8 {
+    .icon('num-8.svg','num8.svg');
+  }
+  &.Num9 {
+    .icon('num-9.svg','num9.svg');
+  }
+  &.Ok {
+    .icon('ic_done.svg','ok.svg');
+  }
+  &.Open {
+    .icon('ic_open.svg','open.svg');
+  }
+  &.Overflow {
+    .icon('more_left.svg','overflow.svg');
+  }
+  &.Overlays {
+    .icon('layers-black.svg','overlays.svg');
+  }
+  &.Plugins {
+    .icon('extension.svg','plugins.svg');
+  }
+  &.Plus {
+    .icon('ic_add.svg','plus.svg');
+  }
+  &.Propose {
+    .icon('prompt_suggestion.svg','propose.svg');
+  }
+  &.QRCode {
+    .icon('qrcode.svg','qrcode.svg');
+  }
+  &.RadioChecked {
+    .icon('radio_button_checked.svg','radiochecked.svg');
+  }
+  &.RadioUnchecked {
+    .icon('radio_button_unchecked.svg','radiounchecked.svg');
+  }
+  &.Reload {
+    .icon('ic_refresh.svg','reload.svg');
+  }
+  &.RemoteChannel {
+    .icon('settings_remote.svg','remotechannel.svg');
+  }
+  &.RenumberRoute {
+    .icon('format_list_numbered.svg','renumberroute.svg');
   }
   &.Reset {
-    .icon('ic_delete.svg');
+    .icon('ic_delete.svg','default.svg');
   }
-  &.SplitReset{
-    .icon('reset_split.svg');
+  &.Right {
+    .icon('navigate_next.svg','right.svg');
   }
-  &.LayoutOff{
-    .icon('ballot-off.svg');
+  &.Route {
+    .icon('route.svg','route.svg');
   }
-  &.NavMapWidgets{
-    .icon('assistant_nav.svg');
+  &.RouteAdd {
+    .icon('ic_add.svg','routeadd.svg');
   }
-  &.Undo{
-    .icon('ic_undo.svg');
+  &.RouteMenu {
+    .icon('menu_open.svg','routemenu.svg');
   }
-  &.Open{
-    .icon('ic_open.svg');
+  &.Satellite {
+    .icon('satellite-alt-200.svg','satellite.svg');
   }
-  &.Save{
-    .icon('save.svg')
+  &.Save {
+    .icon('save.svg','save.svg');
   }
-  &.MainNav{
-    .icon('menu-200.svg');
+  &.SaveAs {
+    .icon('content_copy.svg','saveas.svg');
   }
-  &.Help{
-    .icon('ic_help_outline.svg');
+  &.Search {
+    .icon('search.svg','search.svg');
   }
-  &.Overflow{
-    .icon('more_left.svg');
+  &.Section {
+    .icon('category-200.svg','section.svg');
   }
-  &.Ok{
-    .icon('ic_done.svg');
+  &.SelectChart {
+    .icon('layers-black.svg','selectchart.svg');
   }
-  &.Download{
-    .icon('ic_file_download.svg');
+  &.Server {
+    .icon('database-200.svg','server.svg');
   }
-  &.Delete{
-    .icon('ic_delete.svg');
+  &.Settings {
+    .icon('ic_settings.svg','settings.svg');
   }
-  &.SaveAs{
-    .icon('content_copy.svg');
+  &.Shutdown {
+    .icon('ic_power.svg','shutdown.svg');
   }
-  &.Copy{
-    .icon('content_copy.svg');
+  &.Sort {
+    .icon('sort.svg','sort.svg');
   }
-  &.Before{
-    .icon('navigate_before.svg');
+  &.Split {
+    .icon('vertical_split.svg','split.svg');
   }
-  &.After{
-    .icon('navigate_next.svg');
+  &.SplitReset {
+    .icon('reset_split.svg','splitreset.svg');
   }
-  &.Disable{
-    .icon('ic_hide.svg');
+  &.Start {
+    .icon('play_arrow.svg','start.svg');
   }
-  &.Stop{
-    .icon('stop_circle.svg')
+  &.StatusAdd {
+    .icon('ic_add.svg','statusadd.svg');
   }
-  &.Start{
-    .icon('play_arrow.svg');
+  &.StatusRestart {
+    .icon('ic_refresh.svg','reboot.svg');
   }
-  &.Hide{
-    .icon('visibility_off.svg');
+  &.Stop {
+    .icon('stop_circle.svg','stop.svg');
   }
-  //editroutepoints
-  &.EmptyRoute{
-    .icon('delete_sweep.svg');
+  &.Sync {
+    .icon('sync.svg','sync.svg');
   }
-  &.InvertRoute{
-      .icon('invertroute.svg');
+  &.Track {
+    .icon('track.svg','track.svg');
   }
-  &.RenumberRoute{
-      .icon('format_list_numbered.svg');
+  &.UnChecked {
+    .icon('checkbox-blank-outline.svg','unchecked.svg');
   }
-  //wpa
-  &.WpaConnect{
-    .icon('play_arrow.svg');
+  &.Undo {
+    .icon('ic_undo.svg','undo.svg');
   }
-
-  //name dialog
-  &.Propose{
-    .icon('prompt_suggestion.svg')
+  &.Upload {
+    .icon('ic_file_upload.svg','upload.svg');
   }
-  //remote channel
-  &.Disconnect{
-    .icon('plug-disconnect.svg')
+  &.User {
+    .icon('folder_shared.svg','user.svg');
   }
-  &.Connect{
-    .icon('plug.svg')
+  &.View {
+    .icon('visibility.svg','view.svg');
   }
-  //actions
-  &.ChartScheme{
-    .icon('table_convert.svg');
+  &.Waypoint {
+    .icon('waypoint.svg','waypoint.svg');
   }
-  //feature info
-  &.Measure{
-    .icon('straighten.svg');
+  &.Wifi {
+    .icon('wifi.svg','wifi.svg');
   }
-  &.MeasureOff{
-    .icon('straighten-off.svg');
+  &.WifiOff {
+    .icon('wifi_off.svg','wifioff.svg');
   }
-  &.MeasureFlag{
-    .icon('outlined_flag.svg');
+  &.WpGoto {
+    .icon('waypoint.svg','wpgoto.svg');
   }
-
-  //non button icons
-  &.Empty{
-    dummy:0; //must set something to export Empty
+  &.WpLocate {
+    .icon('center.svg','wplocate.svg');
   }
-  &.More{
-    .icon('ic_chevron_right.svg');
+  &.WpNext {
+    .icon('ic_arrow_forward.svg','wpnext.svg');
   }
-  &.UnChecked{
-    .icon('checkbox-blank-outline.svg');
+  &.WpPrevious {
+    .icon('ic_arrow_back.svg','wpprevious.svg');
   }
-  &.Checked{
-    .icon('checkbox-marked-outline.svg');
+  &.WpRestart {
+    .icon('wprestart.svg','wprestart.svg');
   }
-  &.RadioUnchecked{
-    .icon('radio_button_unchecked.svg');
+  &.WpStop {
+    .icon('stop-wp.svg','wpgotostop.svg');
   }
-  &.RadioChecked{
-    .icon('radio_button_checked.svg');
+  &.WpaConnect {
+    .icon('play_arrow.svg','wpaconnect.svg');
   }
-  &.MNCollapsed{
-    .icon('navigate_next.svg');
-    rotate: 90deg;
+  &.ZoomIn {
+    .icon('ic_zoom_in.svg','zoomin.svg');
   }
-  &.MNExpanded{
-    .icon('navigate_next.svg');
-    rotate: 270deg;
+  &.ZoomOut {
+    .icon('ic_zoom_out.svg','zoomout.svg');
   }
-  &.MNCatNav{
-   .icon('boat.svg')
-  }
-  &.MNCatSet{
-    .icon('build-200.svg')
-  }
-  //item types/infos
-  &.ITServer{
-    .icon('plug.svg');
-  }
-  &.ITUserSpecial{
-    .icon('ic_settings.svg');
-  }
-  &.ITHtml{
-    .icon('internet-web-browser.svg');
-  }
-  &.ITText{
-    .icon('ic_text_snippet.svg');
-  }
-  &.ITDirectory{
-    .icon('folder_shared.svg');
-  }
-  &.ITOther{
-    .icon('draft.svg');
-  }
-
-  //MVHeader
-  &.Left{
-    .icon('navigate_before.svg');
-  }
-  &.Right{
-    .icon('navigate_next.svg');
-  }
-
-  //feature info
-  &.Waypoint{
-    .icon('waypoint.svg');
-  }
-
-  //title
-  &.JSChanged{
-    .icon('javascript.svg');
-  }
-
-  //widgets
-  &.Satellite{
-    .icon('satellite-alt-200.svg');
-  }
-
-
 }

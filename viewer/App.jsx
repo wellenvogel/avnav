@@ -148,7 +148,8 @@ const Router = (props) => {
     let className = Helper.concatsp("pageFrame",
         props.nightMode ? "nightMode" : undefined,
         props.btText? CL_BUTTON_TEXT:undefined,
-        props.mainBtText?CL_MAINBT_TEXT:undefined
+        props.mainBtText?CL_MAINBT_TEXT:undefined,
+        "icon-"+props.iconSet
         );
     let style = {};
     if (props.nightMode) style['opacity'] = globalStore.getData(keys.properties.nightFade) / 100;
@@ -193,6 +194,7 @@ Router.propTypes = {
     fontSize: PropTypes.number,
     btText: PropTypes.bool,
     mainBtText: PropTypes.bool,
+    iconSet: PropTypes.string
 }
 
 const DynamicRouter=Dynamic(Router);
@@ -231,6 +233,7 @@ const MainBody = ({ history, nightMode}) => {
                     fontSize: keys.properties.baseFontSize,
                     btText: keys.properties.buttonText,
                     mainBtText: keys.properties.mainBtText,
+                    iconSet: keys.properties.buttonIconSet,
                     ...keys.gui.capabilities
                 }}
                 location={location?.location}

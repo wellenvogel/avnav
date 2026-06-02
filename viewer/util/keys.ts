@@ -146,6 +146,10 @@ export enum MainColumns{
     seven="7",
     all="all"
 }
+export enum ButtonIconSet{
+    default="default",
+    legacy="legacy",
+}
 
 export const ButtonFontSizeFactor=4.0; //divide button size by this factor for font size
 
@@ -485,6 +489,8 @@ const keys:Record<string,KeyType>={
         buttonText: new Property(true,"text on buttons",PropertyType.CHECKBOX,undefined,"show a small text on normal buttons"),
         mainBtText: new Property(true,"text on main menu buttons",PropertyType.CHECKBOX,undefined,"show a button text in the main menu"),
         buttonTitleTime: new Property(4,"tooltip time(s)",PropertyType.RANGE,[0,20],'the time for showing the tooltip, 0 to disable'),
+        buttonIconSet: new Property(ButtonIconSet.default,"icon set", PropertyType.SELECT,[ButtonIconSet.default,ButtonIconSet.legacy],
+            'Select the icon set to be used for buttons (and at other places)\ndefault: new. modern icon set. Use this also when customizing icons.\nlegacy: AvNav legacy icons'),
         titleIcons: new Property(true,"red icons in title",PropertyType.CHECKBOX,undefined,"show some red icons in page headers for anchor watch, measure, disconnected mode,..."),
         titleIconsGps: new Property(true,"title icons on dashboard page",PropertyType.CHECKBOX,undefined,"if set the red icons are also shown on dashboard pages"),
         featureInfo: new Property(true,"Feature Info on Click",PropertyType.CHECKBOX,undefined,"bring up the feature list when clicking on the map"),
