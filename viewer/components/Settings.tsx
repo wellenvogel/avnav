@@ -435,6 +435,7 @@ export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{
 }
 export interface SelectLayoutDialogProps{
     className?:string;
+    startEditCallback?:(name:string)=>void;
 }
 
 export const newNameForLayoutEdit=async (currentName:string)=>{
@@ -551,6 +552,9 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
                             }
                         }
                         LayoutHandler.startEditing(layoutAndName[0]);
+                        if (props.startEditCallback){
+                            props.startEditCallback(layoutAndName[0]);
+                        }
                     } catch (e) {
                         Toast(e);
                         return;

@@ -49,7 +49,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
      useStoreState(keys.properties.layoutName);
      useStoreState(keys.gui.global.layoutEditing);
      const layoutName=layouthandler.getName();
-    useHistory();
+    const history=useHistory();
     //we are just prepared for a multi view...
     const [scrollProps,/*scrollTo*/,visible]=useScrollHelper(1);
     const buttonListRef=useRef<ButtonDef[]>();
@@ -77,6 +77,7 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                         layoutName=newName;
                     }
                     layouthandler.startEditing(layoutName);
+                    history.push(PAGEIDS.NAV);
                 } catch (e) {
                     if (e) Toast(e);
                     return;
@@ -94,7 +95,9 @@ const LayoutsPage=(props:LayoutsPageProps)=>{
                         title={"Current"}
                     ></MvHeadline>
                     <ListItem className={'activeLayout'}
-                              onClick={()=>showDialog(undefined, ()=><SelectLayoutDialog/>)}
+                              onClick={()=>showDialog(undefined, ()=><SelectLayoutDialog
+                                  startEditCallback={()=>history.push(PAGEIDS.NAV)}
+                              />)}
                     >
                         <ListMainSlot primary={layoutName}/>
                         <ListSlot>
