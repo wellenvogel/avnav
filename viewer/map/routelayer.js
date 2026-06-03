@@ -4,7 +4,7 @@
 
 import keys,{KeyHelper} from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
-import RouteEdit from '../nav/routeeditor.js';
+import RouteEdit from '../nav/routeeditor.ts';
 import orangeMarker from '../images/MarkerOrange.png';
 import NavCompute from "../nav/navcompute";
 

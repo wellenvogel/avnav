@@ -2,14 +2,15 @@
  * Created by andreas on 28.04.16.
  */
 
-import navobjects from './navobjects' ;
+import {PlainPoint, Point, WayPoint} from './navobjects' ;
+// @ts-ignore
 import NavCompute from './navcompute' ;
 import Formatter from '../util/formatter' ;
-import helper from '../util/helper.ts';
-import base from '../base.ts';
+import helper from '../util/helper';
+import base from '../base';
+// @ts-ignore
 import XmlWriter from "xml-writer";
 
-let routeobjects={};
 
 
 export const RoutingMode={
@@ -17,42 +18,52 @@ export const RoutingMode={
     ROUTE:  1,      //route to the currently selected Point of the route
     WPINACTIVE: 2  //set the target waypoint but do not activate routing
 };
-routeobjects.RoutingMode=RoutingMode;
 
-const LOCAL_PREFIX="local@";
-const SERVER_PREFIX="";
-routeobjects.LOCAL_PREFIX=LOCAL_PREFIX;
-routeobjects.SERVER_PREFIX=SERVER_PREFIX;
+export const LOCAL_PREFIX="local@";
+export const SERVER_PREFIX:string="";
 
-const nameToBaseName=(name)=>{
+
+export const nameToBaseName=(name:string)=>{
     if (!name) return;
-    if (LOCAL_PREFIX && helper.startsWith(name,LOCAL_PREFIX)) return name.substr(LOCAL_PREFIX.length);
+    if (LOCAL_PREFIX && helper.startsWith(name,LOCAL_PREFIX)) return name.substring(LOCAL_PREFIX.length);
     if (SERVER_PREFIX && helper.startsWith(name,SERVER_PREFIX)) return name.substring(SERVER_PREFIX.length);
     return name;
 }
-routeobjects.nameToBaseName=nameToBaseName;
 
-const isServerName=(name)=>{
+
+export const isServerName=(name:string)=>{
     if (!name) return false;
     return (!name.startsWith(LOCAL_PREFIX) && name.startsWith(SERVER_PREFIX));
 }
-routeobjects.isServerName=isServerName;
+
+const compareWp=(wp1?:WayPoint,wp2?:WayPoint)=>{
+    if (!wp1) {
+        if (wp2) return false;
+        return true;
+    }
+    return wp1.compare(wp2);
+}
+
 export class Leg {
-    constructor(from, to, active) {
+    from:WayPoint;
+    to:WayPoint;
+    active:boolean;
+    approach:boolean=false;
+    approachDistance:number=0;
+    currentRoute:Route;
+    anchorDistance:number=0;
+    server:boolean=false;
+    constructor(from?:Point|WayPoint, to?:Point|WayPoint, active?:boolean) {
         /**
          * start of leg
-         * @type {navobjects.WayPoint}
+         * @type {WayPoint}
          */
-        this.from = from || new navobjects.WayPoint(0, 0);
-        if (!(this.from instanceof navobjects.WayPoint))
-            this.from = navobjects.WayPoint.fromPlain(this.from);
+        this.from = WayPoint.fromPlain(from)
         /**
          * current target waypoint
-         * @type {navobjects.WayPoint}
+         * @type {WayPoint}
          */
-        this.to = to || new navobjects.WayPoint(0, 0);
-        if (!(this.to instanceof navobjects.WayPoint))
-            this.to = navobjects.WayPoint.fromPlain(this.to);
+        this.to = WayPoint.fromPlain(to);
         /**
          * is the leg active?
          * @type {boolean}
@@ -71,7 +82,7 @@ export class Leg {
 
         /**
          * the current route
-         * @type {routeobjects.Route}
+         * @type {Route}
          */
         this.currentRoute = undefined;
 
@@ -91,7 +102,7 @@ export class Leg {
     }
 
     clone() {
-        let rt = new routeobjects.Leg(this.from ? this.from.clone() : undefined, this.to ? this.to.clone() : undefined, this.active);
+        const rt = new Leg(this.from ? this.from.clone() : undefined, this.to ? this.to.clone() : undefined, this.active);
         rt.approach = this.approach;
         rt.approachDistance = this.approachDistance;
         rt.currentRoute = this.currentRoute ? this.currentRoute.clone() : undefined;
@@ -109,7 +120,7 @@ export class Leg {
     }
 
     toJson() {
-        let rt = {
+        const rt:Record<string,any> = {
             from: this.from,
             to: this.to,
             name: this.getRouteName(),
@@ -128,32 +139,32 @@ export class Leg {
     /**
      * fill a leg object from a json string
      * @param jsonString
-     * @returns {routeobjects.Leg}
+     * @returns {Leg}
      */
-    fromJsonString(jsonString) {
-        let raw = JSON.parse(jsonString);
+    fromJsonString(jsonString:string):Leg {
+        const raw = JSON.parse(jsonString);
         return this.fromJson(raw);
     }
 
     /**
      * fill the leg from json
      * @param raw
-     * @returns {routeobjects.Leg}
+     * @returns {Leg}
      */
-    fromJson(raw) {
-        this.from = navobjects.WayPoint.fromPlain(raw.from);
-        if (raw.to) this.to = navobjects.WayPoint.fromPlain(raw.to);
+    fromJson(raw:Record<string, any>):Leg {
+        this.from = WayPoint.fromPlain(raw.from);
+        if (raw.to) this.to = WayPoint.fromPlain(raw.to);
         this.active = raw.active || false;
         this.approach = raw.approach;
         this.approachDistance = raw.approachDistance;
         if (raw.currentRoute) {
-            this.currentRoute = new routeobjects.Route(raw.currentRoute.name);
+            this.currentRoute = new Route(raw.currentRoute.name);
             this.currentRoute.fromJson(raw.currentRoute);
         }
         if (this.currentRoute) {
             this.to.routeName = this.currentRoute.name;
             if (raw.currentTarget !== undefined) {
-                let rp = this.currentRoute.getPointAtIndex(raw.currentTarget);
+                const rp = this.currentRoute.getPointAtIndex(raw.currentTarget);
                 if (rp) {
                     this.to = rp;
                 } else {
@@ -163,7 +174,7 @@ export class Leg {
                     this.to.routeName = undefined;
                 }
             } else {
-                let idx = this.currentRoute.getIndexFromPoint(this.to);
+                const idx = this.currentRoute.getIndexFromPoint(this.to);
                 if (idx < 0) {
                     base.log("invalid leg, to outside route, deleting route");
                     this.currentRoute = undefined;
@@ -183,35 +194,22 @@ export class Leg {
     /**
      * check if the leg differs from another leg
      * we do not consider the approach distance
-     * @param {routeobjects.Leg} leg2
+     * @param {Leg} leg2
      * @returns {boolean} true if differs
      */
-    differsTo(leg2) {
+    differsTo(leg2:Leg) {
         if (!leg2) return true;
         if (leg2.anchorDistance && !this.anchorDistance) return true;
         if (!leg2.anchorDistance && this.anchorDistance) return true;
         if (leg2.server !== this.server) return true;
         if (this.anchorDistance && leg2.anchorDistance && this.anchorDistance != leg2.anchorDistance) return true;
-        let leg1 = this;
         let changed = false;
-        let i;
-        let wps = ['from', 'to'];
-        for (i in wps) {
-            let wp = wps[i];
-            if (leg1[wp]) {
-                if (!leg2[wp]) changed = true;
-                else {
-                    if (leg1[wp].lat != leg2[wp].lat ||
-                        leg1[wp].lon != leg2[wp].lon ||
-                        leg1[wp].name != leg2[wp].name) changed = true
-                }
-            } else if (leg2[wp]) changed = true;
-        }
-        if (leg1.name != leg2.name) changed = true;
-        if (leg1.active != leg2.active) changed = true;
-        if (leg1.approach != leg2.approach) changed = true;
-        if ((leg1.currentRoute && !leg2.currentRoute) || (!leg1.currentRoute && leg2.currentRoute)) changed = true;
-        if (leg1.currentRoute && leg2.currentRoute && !changed) changed = leg1.currentRoute.differsTo(leg2.currentRoute);
+        if (!compareWp(this.from,leg2.from)) changed = true;
+        if (! changed &&  !compareWp(this.to,leg2.to)) changed = true;
+        if (this.active != leg2.active) changed = true;
+        if (this.approach != leg2.approach) changed = true;
+        if ((this.currentRoute && !leg2.currentRoute) || (!this.currentRoute && leg2.currentRoute)) changed = true;
+        if (this.currentRoute && leg2.currentRoute && !changed) changed = this.currentRoute.differsTo(leg2.currentRoute);
         return changed;
     }
 
@@ -238,15 +236,15 @@ export class Leg {
         return this.currentRoute !== undefined;
     }
 
-    isCurrentTarget(wp) {
+    isCurrentTarget(wp:Point|WayPoint) {
         if (!this.isRouting()) return false;
         if (this.to.compare(wp)) return true;
     }
 
-    setNewTargetIndex(index, opt_from) {
+    setNewTargetIndex(index:number, opt_from?:WayPoint) {
         if (index === undefined || index < 0) return false;
         if (!this.hasRoute()) return false;
-        let newTarget = this.route.getPointAtIndex(index);
+        const newTarget = this.currentRoute.getPointAtIndex(index);
         if (!newTarget) return false;
         this.to = newTarget;
         if (opt_from) this.from = opt_from;
@@ -259,8 +257,8 @@ export class Leg {
     }
 
 
-    setAnchorWatch(start, distance) {
-        this.from = start;
+    setAnchorWatch(start:Point|WayPoint, distance:number) {
+        this.from = WayPoint.fromPlain(start);
         this.to = undefined;
         this.active = false;
         this.approach = false;
@@ -277,7 +275,6 @@ export class Leg {
     }
 }
 
-routeobjects.Leg=Leg;
 
 
 
@@ -285,16 +282,19 @@ routeobjects.Leg=Leg;
 /**
  *
  * @param {string} name
- * @param {Array.<navobjects.WayPoint>} opt_points
+ * @param {Array.<WayPoint>} opt_points
  * @constructor
  */
 export class Route {
+    name:string;
+    points: WayPoint[];
+    time:number;
     static TYPE={
         route:1,
         measure:2,
         points:3
     }
-    constructor(name, opt_points) {
+    constructor(name?:string, opt_points?:WayPoint[]) {
 
         /**
          * the route name
@@ -305,7 +305,7 @@ export class Route {
 
         /**
          * the route points
-         * @type {navobjects.WayPoint[]}
+         * @type {WayPoint[]}
          */
         this.points = opt_points || [];
         /**
@@ -325,8 +325,8 @@ export class Route {
      * @param jsonString
      * @returns {*}
      */
-    fromJsonString(jsonString) {
-        let parsed = JSON.parse(jsonString);
+    fromJsonString(jsonString:string) {
+        const parsed = JSON.parse(jsonString);
         return this.fromJson(parsed);
     }
 
@@ -334,7 +334,7 @@ export class Route {
      * fill the route from json
      * @param parsed
      */
-    fromJson(parsed) {
+    fromJson(parsed:Record<string,any>) {
         this.name = parsed.name || "default";
         this.time = parsed.time || 0;
         this.points = [];
@@ -342,11 +342,11 @@ export class Route {
         let wp;
         if (parsed.points) {
             for (i = 0; i < parsed.points.length; i++) {
-                wp = navobjects.WayPoint.fromPlain(parsed.points[i]);
+                wp = WayPoint.fromPlain(parsed.points[i]);
                 if (!wp.name) {
                     wp.name = this.findFreeName();
                 }
-                if (wp.name == navobjects.WayPoint.MOB) {
+                if (wp.name == WayPoint.MOB) {
                     wp.name = this.findFreeName();
                 }
                 wp.routeName = this.name.slice(0);
@@ -357,13 +357,13 @@ export class Route {
     }
 
     toJson() {
-        let rt = {};
+        const rt:Record<string, any> = {};
         rt.name = this.name;
         rt.time = this.time;
         rt.points = [];
         let i;
         for (i = 0; i < this.points.length; i++) {
-            let rp = this.points[i].clone();
+            const rp = this.points[i].clone();
             rp.routeName = undefined;
             rt.points.push(rp);
         }
@@ -376,10 +376,11 @@ export class Route {
 
     /**
      * check if a route differs to another route (does not consider the server flag)
-     * @param {routeobjects.Route} route2
+     * @param {Route} route2
+     * @param opt_ignoreName
      * @returns {boolean} true if differs
      */
-    differsTo(route2,opt_ignoreName) {
+    differsTo(route2:Route,opt_ignoreName?:boolean) {
         if (!route2) return true;
         if (! opt_ignoreName && this.name != route2.name) return true;
         if (this.points.length != route2.points.length) return true;
@@ -394,11 +395,11 @@ export class Route {
 
     /**
      * deep copy
-     * @returns {routeobjects.Route}
+     * @returns {Route}
      */
     clone() {
-        let str = this.toJsonString();
-        let rt = new routeobjects.Route();
+        const str = this.toJsonString();
+        const rt = new Route();
         rt.fromJsonString(str);
         return rt;
     }
@@ -407,29 +408,30 @@ export class Route {
      * fill a route from an xml doc
      * @param xml
      */
-    fromXml(xml) {
+    fromXml(xml:string) {
         this.name = undefined;
-        let doc = helper.parseXml(xml);
-        let routes = doc.getElementsByTagName('rte');
+        const doc = helper.parseXml(xml);
+        const routes = doc.getElementsByTagName('rte');
         if (routes.length > 0) {
             return this.fromXmlNode(routes[0]);
         }
     }
 
-    fromXmlNode(rte) {
+    fromXmlNode(rte:Element) {
         this.name = undefined;
         this.points = [];
         if (rte) {
-            for (const child of rte.children){
-                if (child.tagName === 'name'){
-                    this.name = child.textContent;
+            const children=rte.children;
+            for (let i=0;i<children.length;i++){
+                if (children[i].tagName === 'name'){
+                    this.name = children[i].textContent;
                 }
             }
             Array.from(rte.getElementsByTagName('rtept')).forEach((el) => {
-                let pt = new navobjects.WayPoint(0, 0);
+                const pt = new WayPoint(0, 0);
                 pt.lon = parseFloat(el.getAttribute('lon'));
                 pt.lat = parseFloat(el.getAttribute('lat'));
-                let pname = el.getElementsByTagName('name')[0];
+                const pname = el.getElementsByTagName('name')[0];
                 if (pname) pt.name = pname.textContent;
                 pt.routeName = this.name?this.name.slice(0):undefined;
                 if (!pt.name) {
@@ -441,12 +443,12 @@ export class Route {
         return this;
     }
 
-    parseRouteXml = (xmltext) => {
-        let doc = helper.parseXml(xmltext);
-        let routes = doc.getElementsByTagName('rte');
-        let rt = [];
+    parseRouteXml = (xmltext:string) => {
+        const doc = helper.parseXml(xmltext);
+        const routes = doc.getElementsByTagName('rte');
+        const rt = [];
         for (let i = 0; i < routes.length; i++) {
-            let route = new routeobjects.Route();
+            const route = new Route();
             route.fromXmlNode(routes[i]);
             rt.push(route);
         }
@@ -454,12 +456,12 @@ export class Route {
     }
 
     toXml() {
-        let writer = new XmlWriter(true);
+        const writer = new XmlWriter(true);
         writer.startDocument('1.0', 'UTF-8');
-        let rte = writer.startElement('gpx').startElement('rte');
+        const rte = writer.startElement('gpx').startElement('rte');
         rte.startElement('name').text(this.name).endElement();
         for (let i = 0; i < this.points.length; i++) {
-            let point = rte.startElement('rtept');
+            const point = rte.startElement('rtept');
             point.writeAttribute('lon', this.points[i].lon);
             point.writeAttribute('lat', this.points[i].lat);
             point.startElement('name').text(this.points[i].name).endElement();
@@ -474,7 +476,7 @@ export class Route {
      * @param idx - the index starting at 0
      * @returns {*}
      */
-    deletePoint(idx) {
+    deletePoint(idx:number) {
         if (idx < 0 || idx >= this.points.length) return undefined;
         this.points.splice(idx, 1);
         if (idx < this.points.length) return this.points[idx];
@@ -486,18 +488,18 @@ export class Route {
      * @param idx
      * @returns {*}
      */
-    getPointAtIndex(idx) {
+    getPointAtIndex(idx:number) {
         if (idx < 0 || idx >= this.points.length) return undefined;
         return this.points[idx];
     }
 
     /**
      * get the index of a wp in the route
-     * @param {navobjects.WayPoint} point
+     * @param {WayPoint} point
      * @param opt_nameOnly {boolean} if set - compare names instead of coords
      * @returns {number} - -1 if not found
      */
-    getIndexFromPoint(point, opt_nameOnly) {
+    getIndexFromPoint(point:WayPoint, opt_nameOnly?:boolean) {
         if (!point || point.name === undefined) return -1;
         if (point.routeName === undefined || point.routeName != this.name) return -1;
         let i;
@@ -513,13 +515,13 @@ export class Route {
 
     /**
      * return a point at a given offset to the current point
-     * @param {navobjects.WayPoint} point
+     * @param {WayPoint} point
      * @param {number} offset
-     * @returns {navobjects.WayPoint}
+     * @returns {WayPoint}
      */
 
-    getPointAtOffset(point, offset) {
-        let idx = this.getIndexFromPoint(point);
+    getPointAtOffset(point:WayPoint, offset:number) {
+        const idx = this.getIndexFromPoint(point);
         if (idx < 0) return undefined;
         if ((idx + offset) < 0 || (idx + offset) >= this.points.length) return undefined;
         return this.points[idx + offset];
@@ -527,25 +529,25 @@ export class Route {
 
     /**
      * change a waypoint in the route
-     * @param {navobjects.WayPoint} oldPoint
-     * @param {navobjects.WayPoint}newPoint
-     * @returns {navobjects.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
+     * @param {WayPoint} oldPoint
+     * @param {WayPoint}newPoint
+     * @returns {WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
      */
-    changePoint(oldPoint, newPoint) {
-        let idx = this.getIndexFromPoint(oldPoint);
+    changePoint(oldPoint:WayPoint, newPoint:WayPoint) {
+        const idx = this.getIndexFromPoint(oldPoint);
         return this.changePointAtIndex(idx, newPoint);
     }
 
     /**
      * change a waypoint in the route
      * @param {number} idx
-     * @param {navobjects.WayPoint}newPoint
-     * @returns {navobjects.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
+     * @param {WayPoint}newPoint
+     * @returns {WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
      */
-    changePointAtIndex(idx, newPoint) {
+    changePointAtIndex(idx:number, newPoint:WayPoint) {
         if (idx < 0 || idx >= this.points.length) return undefined;
         newPoint = this._toWayPoint(newPoint);
-        let oldPoint = this.points[idx].clone();
+        const oldPoint = this.points[idx].clone();
         if (newPoint.name && newPoint.name != oldPoint.name) {
             if (this.checkName(newPoint.name)) return undefined;
         }
@@ -557,12 +559,12 @@ export class Route {
     /**
      *
      * @param idx
-     * @param {navobjects.WayPoint} newWp
+     * @param {WayPoint} newWp
      * @returns {boolean}
      */
-    checkChangePossible(idx, newWp) {
+    checkChangePossible(idx:number, newWp:WayPoint) {
         if (idx < 0 || idx > this.points.length) return false;
-        let current = this.points[idx];
+        const current = this.points[idx];
         if (current.name == newWp.name) return true;
         let i = 0;
         for (i = 0; i < this.points.length; i++) {
@@ -576,7 +578,7 @@ export class Route {
      * check if a given name already exists in the route
      * @param name
      */
-    checkName(name) {
+    checkName(name:string) {
         let i = 0;
         for (i = 0; i < this.points.length; i++) {
             if (this.points[i].name == name) return true;
@@ -584,11 +586,11 @@ export class Route {
         return false;
     }
 
-    _createNameFromId(id) {
+    _createNameFromId(id:number) {
         return "WP" + Formatter.formatDecimal(id, 2, 0);
     }
 
-    renumber(offset) {
+    renumber(offset:number) {
         for (let i = 0; i < this.points.length; i++) {
             this.points[i].name = this._createNameFromId(i + offset);
         }
@@ -600,8 +602,8 @@ export class Route {
         for (j = 0; j < this.points.length; j++) {
             try {
                 if (this.points[j].name) {
-                    let nameVal = this.points[j].name.replace(/^[^0-9]*/, "").replace(/ .*/, "");
-                    let nameNum = parseInt(nameVal);
+                    const nameVal = this.points[j].name.replace(/^[^0-9]*/, "").replace(/ .*/, "");
+                    const nameNum = parseInt(nameVal);
                     if (nameNum > i) i = nameNum;
                 }
             } catch (e) {
@@ -609,7 +611,7 @@ export class Route {
         }
         i++;
         for (j = 0; j < this.points.length + 1; j++) {
-            let name = this._createNameFromId(i);
+            const name = this._createNameFromId(i);
             if (!this.checkName(name)) return name;
             i++;
         }
@@ -617,9 +619,9 @@ export class Route {
         return "no free name found";
     }
 
-    addPoint(idx, point, opt_before) {
-        point = this._toWayPoint(point);
-        let rp = point.clone();
+    addPoint(idx:number, ipoint:Point, opt_before?:boolean) {
+        const point = this._toWayPoint(ipoint);
+        const rp = point.clone();
         if (rp.name) {
             if (this.checkName(rp.name)) {
                 base.log("name " + rp.name + " already exists in route, create a new one");
@@ -640,13 +642,13 @@ export class Route {
         return rt;
     }
 
-    setName(name) {
+    setName(name:string) {
         this.name = name;
         this.points.forEach(function (p) {
             p.routeName = name.slice(0)
         })
     }
-    isSameRoute(other){
+    isSameRoute(other?:Route){
         if (! other) return false;
         return other.name === this.name;
     }
@@ -662,8 +664,8 @@ export class Route {
      */
     swap() {
         for (let i = 0; i < this.points.length / 2; i++) {
-            let swap = this.points.length - i - 1;
-            let old = this.points[i];
+            const swap = this.points.length - i - 1;
+            const old = this.points[i];
             this.points[i] = this.points[swap];
             this.points[swap] = old;
         }
@@ -671,29 +673,29 @@ export class Route {
     }
     /**
      *
-     * @param {navobjects.Point} newPoint
-     * @returns {navobjects.WayPoint}
+     * @param {Point} newPoint
+     * @returns {WayPoint}
      * @private
      */
-    _toWayPoint(newPoint) {
-        if (!(newPoint instanceof navobjects.WayPoint)) newPoint = navobjects.WayPoint.fromPlain(newPoint);
-        return newPoint;
+    _toWayPoint(newPoint:WayPoint|{lat:number,lon:number}):WayPoint {
+        if (newPoint instanceof WayPoint) return newPoint;
+        return  WayPoint.fromPlain(newPoint);
     }
     /**
      * get a list of waypoint info
      * extended by distance, index and course
      * @returns {routeobjects.RoutePoint[]}
      */
-    getRoutePoints(opt_selectedIdx,opt_useRhumbLine){
-        let rt=[];
+    getRoutePoints(opt_selectedIdx?:number,opt_useRhumbLine?:boolean){
+        const rt=[];
         let i=0;
         for (i=0;i<this.points.length;i++){
-            let formatted=new routeobjects.RoutePoint(this.points[i]);
+            const formatted=new RoutePoint(this.points[i]);
             formatted.idx=i;
             formatted.name=this.points[i].name?this.points[i].name:i+"";
             formatted.routeName=this.name;
             if (i>0) {
-                let dst=NavCompute.computeDistance(this.points[i-1],this.points[i],opt_useRhumbLine);
+                const dst=NavCompute.computeDistance(this.points[i-1],this.points[i],opt_useRhumbLine);
                 formatted.course=dst.course;
                 formatted.distance=dst.dts;
             }
@@ -710,15 +712,15 @@ export class Route {
      * @param opt_useRhumbLine - if true - use rhum line computations
      * @returns {number}
      */
-    computeLength(startIdx,opt_useRhumbLine){
+    computeLength(startIdx:number,opt_useRhumbLine?:boolean){
         let rt=0;
         if (startIdx < 0) startIdx=0;
         if (this.points.length < (startIdx+2)) return rt;
         let last=this.points[startIdx];
         startIdx++;
         for (;startIdx<this.points.length;startIdx++){
-            let next=this.points[startIdx];
-            let dst=NavCompute.computeDistance(last,next,opt_useRhumbLine);
+            const next=this.points[startIdx];
+            const dst=NavCompute.computeDistance(last,next,opt_useRhumbLine);
             rt+=dst.dts;
             last=next;
         }
@@ -727,10 +729,10 @@ export class Route {
     /**
      * find the point that is closest to the provided point
      *
-     * @param {navobjects.Point} point
+     * @param {Point} point
      * @returns {number} -1 if there are no points in the route
      */
-    findBestMatchingIdx(point){
+    findBestMatchingIdx(point:Point){
         let idx;
         let mindistance=undefined;
         let bestPoint=-1;
@@ -746,9 +748,8 @@ export class Route {
         return bestPoint;
     }
 }
-routeobjects.Route=Route;
 export class Measure extends Route{
-    constructor(name,opt_points) {
+    constructor(name:string,opt_points?:WayPoint[]) {
         super(name,opt_points);
     }
 
@@ -758,7 +759,21 @@ export class Measure extends Route{
 }
 
 export class RouteInfo {
-    constructor(name, opt_server) {
+    type:string;
+    name:string;
+    server:boolean;
+    length:number;
+    numpoints:number;
+    time:number;
+    active:boolean;
+    extension:string;
+    displayName:string;
+    downloadName:string;
+    canDownload:boolean;
+    canDelete:boolean;
+    isEditing:boolean;
+    checkPrefix:string;
+    constructor(name?:string, opt_server?:boolean) {
         this.type = "route";
         /**
          * the name of the route
@@ -803,30 +818,49 @@ export class RouteInfo {
         if (! this.downloadName) this.downloadName=nameToBaseName(this.name)+this.extension;
         this.checkPrefix=isServerName(this.name)?SERVER_PREFIX:LOCAL_PREFIX;
     }
+    assign(raw:Record<string,any>){
+        if ('name' in raw){this.name=raw.name;}
+        if ('server' in raw){this.server=raw.server;}
+        if ('length' in raw){this.length=raw.length;}
+        if ('numpoints' in raw){this.numpoints=raw.numpoints;}
+        if ('active' in raw){this.active=raw.active;}
+        if ('displayName' in raw){this.displayName=raw.displayName;}
+        if ('downloadName' in raw){this.downloadName=raw.downloadName;}
+        if ('time' in raw){this.time=raw.time;}
+        if ('canDownload' in raw){this.canDownload=raw.canDownload;}
+        if ('canDelete' in raw){this.canDelete=raw.canDelete;}
+        if ('checkPrefix' in raw){this.checkPrefix=raw.checkPrefix;}
+    }
 }
-routeobjects.RouteInfo=RouteInfo;
 
-export class RoutePoint extends navobjects.WayPoint {
-    constructor(waypoint) {
+export class RoutePoint extends WayPoint {
+    idx:number;
+    course:number;
+    distance:number;
+    selected:boolean
+    constructor(waypoint?:PlainPoint) {
         super();
         this.update(waypoint);
-        this.idx = 0;
-        this.course = undefined;
-        this.distance = undefined;
-        if (waypoint) {
-            this.idx = waypoint.idx || 0;
-            this.course = waypoint.course;
-            this.distance = waypoint.distance;
-        }
+        this.idx = waypoint.idx || 0;
+        this.course = waypoint.course;
+        this.distance = waypoint.distance;
         this.selected = false;
     }
 }
-routeobjects.RoutePoint=RoutePoint;
 
-routeobjects.isSameRoute=(route,other)=>{
-    if (!!route !== !!other) return false;
-    if (!route) return false;
-    return (route.name === other.name);
+export default {
+    RoutingMode: RoutingMode,
+    LOCAL_PREFIX:LOCAL_PREFIX,
+    SERVER_PREFIX:SERVER_PREFIX,
+    nameToBaseName:nameToBaseName,
+    isServerName:isServerName,
+    Leg:Leg,
+    RoutePoint:RoutePoint,
+    Route:Route,
+    RouteInfo:RouteInfo,
+    isSameRoute:(route?: { name:string },other?: { name:string })=>{
+        if (!!route !== !!other) return false;
+        if (!route) return false;
+        return (route.name === other.name);
+    }
 }
-
-export default routeobjects;

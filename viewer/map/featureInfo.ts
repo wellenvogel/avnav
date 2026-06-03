@@ -21,7 +21,7 @@
 */
 
 // @ts-ignore
-import navobjects from "../nav/navobjects";
+import navobjects, {Point, WayPoint} from "../nav/navobjects";
 import {IDialogContext} from "../components/DialogContext";
 import {valueof} from "../util/helper";
 
@@ -83,7 +83,7 @@ export class FeatureAction {
     }
 }
 export interface FeatureInfoParameters{
-    point?:navobjects.Point,
+    point?:Point,
     isOverlay?:boolean,
     title?:string,
     name?:string
@@ -103,7 +103,7 @@ export class FeatureInfo{
         unknown: 0,
         any: 99 //for additional actions
     }
-    point: navobjects.Point;
+    point: Point;
     title: string;
     isOverlay:boolean=false;
     urlOrKey:string;
@@ -182,7 +182,7 @@ export class FeatureInfo{
 }
 
 export class BaseFeatureInfo extends FeatureInfo{
-    constructor({point,title}:{point:navobjects.Point,title:string}) {
+    constructor({point,title}:{point:Point,title:string}) {
         super({point,title});
     }
     getType(){
@@ -207,7 +207,12 @@ export class OverlayFeatureInfo extends FeatureInfo{
 export class RouteFeatureInfo extends FeatureInfo{
     constructor({point,isOverlay,routeName,title}:
                 FeatureInfoParameters & {routeName?:string}) {
-        super({point,isOverlay,name:routeName||point.routeName});
+        super({point,isOverlay,name:routeName});
+        if (! this.urlOrKey){
+            if (point instanceof WayPoint){
+                this.urlOrKey=point.routeName;
+            }
+        }
         this.title=title||`Route: ${this.urlOrKey}`
     }
     getType(){
@@ -259,7 +264,8 @@ export class WpFeatureInfo extends FeatureInfo{
     constructor({point,title}:
                 Pick<FeatureInfoParameters,'point'|'title'>) {
         super({point});
-        this.title=title||`WP ${this.point.name}`;
+        this.title=title;
+        if (! this.title && (point instanceof WayPoint)) this.title=`WP ${point.name}`;
     }
     getType(){
         return FeatureInfo.TYPE.waypoint;

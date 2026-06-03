@@ -9,7 +9,7 @@ import globalStore from '../util/globalstore.ts';
 import keys from '../util/keys.ts';
 import Toast from './Toast.tsx';
 import AlarmHandler from '../nav/alarmhandler.js';
-import RouteEdit from '../nav/routeeditor.js';
+import RouteEdit from '../nav/routeeditor.ts';
 import {Input, InputReadOnly} from "./Inputs";
 import DialogButton from "./DialogButton";
 import MapHolder from '../map/mapholder';

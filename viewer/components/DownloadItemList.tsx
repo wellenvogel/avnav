@@ -112,7 +112,7 @@ export type DownloadItemListProps = {
     type: ItemType;
     selectCallback?:((ev:ButtonEvent)=>boolean)|((ev:ButtonEvent) => Promise<boolean>);
     uploadFile?: File;
-    infoMode?: 0|1|2;
+    infoMode?: valueof<typeof DownloadItemInfoMode>;
     noExtra?:boolean;
     showCreate?:boolean;
     itemActions?:any;

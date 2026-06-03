@@ -10,7 +10,7 @@ import NavCompute from './navcompute';
 import navobjects from './navobjects';
 import globalStore from '../util/globalstore.ts';
 import keys,{KeyHelper} from '../util/keys.ts';
-import RouteEdit,{StateHelper} from './routeeditor.js';
+import RouteEdit,{StateHelper} from './routeeditor.ts';
 import assign from 'object-assign';
 import Average, {CourseAverage} from "../util/average.mjs";
 import navcompute from "./navcompute";

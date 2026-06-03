@@ -28,12 +28,11 @@ import {useKeyEventHandlerPlain, useStoreHelper, useTimer} from '../util/UiHelpe
 // @ts-ignore
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import {ChartEntry, EventTypes, MapEvent} from "../map/maptypes";
-// @ts-ignore
-import navobjects from '../nav/navobjects.js';
+import {Point, WayPoint} from '../nav/navobjects';
 // @ts-ignore
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog';
-// @ts-ignore
 import RouteEdit, {StateHelper} from '../nav/routeeditor';
+// @ts-ignore
 import LayoutHandler, {LAYOUT_OPTIONS} from '../util/layouthandler';
 // @ts-ignore
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog';
@@ -55,9 +54,7 @@ import {AisInfoWithFunctions} from "../components/AisInfoDisplay";
 // @ts-ignore
 import MapEventGuard from "../hoc/MapEventGuard";
 import {BoatFeatureInfo, FeatureAction, FeatureInfo, RouteFeatureInfo, WpFeatureInfo} from "../map/featureInfo";
-// @ts-ignore
 import {Measure} from "../nav/routeobjects";
-// @ts-ignore
 import {KeepFromMode} from "../nav/routedata";
 import {ConfirmDialog} from "../components/BasicDialogs";
 // @ts-ignore
@@ -107,9 +104,9 @@ const getPanelWidgets = (panel: string) => {
  * @param item
  * @param idx if undefined - just update the let "to" point
  */
-const startWaypointDialog = (item: navobjects.WayPoint, idx: number, dialogCtx: IDialogContext) => {
+const startWaypointDialog = (item: WayPoint, idx: number, dialogCtx: IDialogContext) => {
     if (!item) return;
-    const wpChanged = (newWp: navobjects.WayPoint) => {
+    const wpChanged = (newWp: WayPoint) => {
         const changedWp = updateWaypoint(item, newWp, (err: any) => {
             Toast(Helper.escapeHtml(err));
         });
@@ -178,10 +175,10 @@ const navToWp = (on?: boolean) => {
     if (on) {
         const center = globalStore.getData(keys.map.centerPosition);
         const current = activeRoute.getCurrentTarget();
-        const wp = new navobjects.WayPoint();
+        const wp = new WayPoint();
         //take over the wp name if this was a normal wp with a name
         //but do not take over if this was part of a route
-        if (current && current.name && current.name !== navobjects.WayPoint.MOB) {
+        if (current && current.name && current.name !== WayPoint.MOB) {
             wp.name = current.name;
         } else {
             wp.name = globalStore.getData(keys.properties.markerDefaultName);
@@ -203,10 +200,9 @@ const wpOn = (...args: any[]) => {
         })
 }
 const gotoFeature = (featureInfo: FeatureInfo, opt_noRoute?: boolean) => {
-    let target = featureInfo.point;
-    if (!target) return;
-    if (opt_noRoute && target instanceof navobjects.WayPoint) {
-        target = target.clone()
+    if (!featureInfo.point) return;
+    const target =  WayPoint.fromPlain(featureInfo.point);
+    if (opt_noRoute) {
         delete target.routeName;
     }
     if (!target.name) target.name = globalStore.getData(keys.properties.markerDefaultName);
@@ -399,7 +395,7 @@ const buildWaypointButtons = (
     }
 }
 
-const startOrAddMeasure=(point:navobjects.Point,center?:boolean)=>{
+const startOrAddMeasure=(point:Point,center?:boolean)=>{
     const measure=globalStore.getData(keys.map.activeMeasure);
     if (MapHolder.getGpsLock()) return;
     let newMeasure;
@@ -809,7 +805,7 @@ const NavPage=(props:PageProps)=>{
             additionalActions.push(new FeatureAction({
                 ...ButtonDefs.DBEditRoute,
                 onClick: (featureInfo:FeatureInfo) => {
-                    activeRoute.setNewIndex(activeRoute.getIndexFromPoint(featureInfo.point,true));
+                    activeRoute.setNewIndex(activeRoute.getBestMatchingIndex(featureInfo.point));
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
                     history.push(PAGEIDS.ROUTE,{center:true});
                 },

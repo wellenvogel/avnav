@@ -166,9 +166,9 @@ class Store {
      * @param keys - an array of keys
      * @param opt_omitHandler e reference to a handler to be omitted
      */
-    callCallbacks(keys:string[], opt_omitHandler:any) {
+    callCallbacks(keys:string[], opt_omitHandler?:StoreCallback|StoreCallback[]|boolean) {
         this.callbacks.forEach(function (cbItem) {
-            if (opt_omitHandler) {
+            if (opt_omitHandler !== undefined) {
                 if (opt_omitHandler === cbItem.callback) return;
                 if (Array.isArray(opt_omitHandler)) {
                     for (const k in opt_omitHandler) {
@@ -219,7 +219,7 @@ class Store {
      * @param keys single key or array or object (keys used and being translated)
      * @param opt_ignoreProvider
      */
-    getMultiple(keys:StoreDataType,opt_ignoreProvider?:boolean) {
+    getMultiple(keys:StoreKeyType,opt_ignoreProvider?:boolean) {
         let storeKeys = keys;
         const rt:Record<string, StoreDataType> = {};
         if (!(storeKeys instanceof Array)) {
@@ -270,7 +270,7 @@ class Store {
      */
     storeMultiple(data: Record<string, StoreDataType>,
                   keyTranslations?: Record<string, string>,
-                  opt_noCallbacks?:boolean,
+                  opt_noCallbacks?:StoreCallback|StoreCallback[]|boolean,
                   opt_omitUndefined?:boolean) {
         let changeKeys: string[] = [];
         if (data === undefined && keyTranslations === undefined) return;
@@ -300,7 +300,7 @@ class Store {
     getKeysByPrefix(prefix:string, opt_simpleValuesOnly?:boolean) {
         const rt:string[]= [];
         if (!prefix) return rt;
-        for (let k in this.data) {
+        for (const k in this.data) {
             if (k.startsWith(prefix)) {
                 if (opt_simpleValuesOnly) {
                     if (typeof (this.data[k]) === 'object') continue;

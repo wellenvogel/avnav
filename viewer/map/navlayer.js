@@ -7,7 +7,7 @@ import navobjects from '../nav/navobjects' ;
 import anchor from '../images/icons-new/anchor.png' ;
 import keys from '../util/keys.ts';
 import globalStore from '../util/globalstore.ts';
-import RouteEdit from '../nav/routeeditor.js';
+import RouteEdit from '../nav/routeeditor.ts';
 import boatImage from '../images/Boat-NoNeedle.png';
 import boatImageHdg from '../images/BoatHdg.png';
 import boatImageSteady from '../images/BoatSteady.png';

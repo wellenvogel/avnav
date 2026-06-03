@@ -2,28 +2,64 @@
  * Created by andreas on 04.05.14.
  */
 
-import routeobjects from './routeobjects';
-import navobjects from './navobjects';
-import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.ts';
-import assign from 'object-assign';
+import routeobjects, {Route} from './routeobjects';
+import navobjects, {WayPoint} from './navobjects';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
+
+// @ts-ignore
 import NavCompute from "./navcompute";
+import {DataChangedFunction} from "../util/store";
+import {Point} from './navobjects'
 
 const ERROR_KEYS="either provide leg or route,index and activeName as keys";
 
 class Callback{
-    constructor(cbFunction){
+    callback:DataChangedFunction;
+    constructor(cbFunction:DataChangedFunction){
         this.callback=cbFunction;
     }
-    dataChanged(keys){
+    dataChanged(keys:string[]){
         this.callback(keys);
     }
 }
+export const EDIT_STOREKEYS={
+    route: keys.nav.routeHandler.editingRoute,
+    index: keys.nav.routeHandler.editingIndex,
+    activeName: keys.nav.routeHandler.activeName,
+    useRhumbLine: keys.nav.routeHandler.useRhumbLine
+}
+export const ACTIVE_STOREKEYS={
+    leg: keys.nav.routeHandler.currentLeg,
+    index: keys.nav.routeHandler.currentIndex,
+    activeName: keys.nav.routeHandler.activeName,
+    useRhumbLine: keys.nav.routeHandler.useRhumbLine
+}
+export type RouteStoreKeyType = Partial<Record<(keyof typeof EDIT_STOREKEYS| keyof typeof ACTIVE_STOREKEYS),string>>;
+export type RouteStoreDataType = Record<string,any>;
+
+export interface RouteEditModeType{
+    storeKeys:RouteStoreKeyType,
+    writable:boolean,
+    writeActiveName?:boolean,
+}
+
+export const MODES:Record<string,RouteEditModeType> = {
+    EDIT:{
+        storeKeys: EDIT_STOREKEYS,
+        writable: true
+    },
+    ACTIVE:{
+        storeKeys: ACTIVE_STOREKEYS,
+        writable:true,
+        writeActiveName: true
+    }
+};
 
 const guard=new Callback((keys)=>{throw new Error("access to "+keys+" outside of route editor")});
 
-const load=(storeKeys,clone)=>{
-    let storeData=globalStore.getMultiple(storeKeys);
+const load=(storeKeys:RouteStoreKeyType,clone?:boolean):RouteStoreDataType=>{
+    const storeData=globalStore.getMultiple(storeKeys);
     if (storeKeys.leg){
         let newLeg=storeData.leg;
         if (clone && newLeg) newLeg=newLeg.clone();
@@ -43,7 +79,7 @@ const load=(storeKeys,clone)=>{
     }
     let route=storeData.route;
     if (clone && route) route=route.clone();
-    let rt={
+    const rt={
         route:route,
         index:storeData.index,
         activeName: storeData.activeName,
@@ -51,14 +87,14 @@ const load=(storeKeys,clone)=>{
     };
     return rt;
 };
-const isActive=(route,activeName)=>{
+const isActive=(route: Route,activeName:string)=>{
     if (!route || ! activeName) return false;
     return (route.name === activeName);
 }
-const write=(storeKeys,data,opt_omitCallbacks)=>{
-    let writeKeys=assign({},storeKeys);
+const write=(storeKeys:RouteStoreKeyType,data:RouteStoreDataType)=>{
+    const writeKeys={...storeKeys};
     delete writeKeys.useRhumbLine;
-    let storeData=globalStore.getMultiple(writeKeys);
+    const storeData=globalStore.getMultiple(writeKeys);
     let hasChanged=false;
     if (writeKeys.leg){
         if (!data.leg) throw new Error("missing leg on write");
@@ -66,7 +102,7 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
         hasChanged=(storeData.index != data.index) || data.leg.differsTo(storeData.leg);
     }
     else {
-        let [route,index,active]=StateHelper.getRouteIndexFlag(storeData);
+        const [route,index,]=StateHelper.getRouteIndexFlag(storeData);
         hasChanged = data.index !== index;
         if (!hasChanged) {
             if (!data.route && route) hasChanged = true;
@@ -74,7 +110,7 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
         }
     }
     if (storeKeys.activeName && data.leg){
-        let newName=data.leg.getRouteName();
+        const newName=data.leg.getRouteName();
         if (newName != data.activeName){
             data.activeName=newName;
         }
@@ -83,11 +119,8 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
         }
     }
     if (hasChanged){
-        if (opt_omitCallbacks === undefined || opt_omitCallbacks === true) {
+        {
             globalStore.storeMultiple(data, writeKeys, guard);
-        }
-        else {
-            globalStore.storeMultiple(data, writeKeys, [guard].concat(opt_omitCallbacks));
         }
     }
 };
@@ -104,10 +137,14 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
  * @constructor
  */
 class RouteEdit{
-    constructor(mode,opt_readOnly){
+    static MODES=MODES;
+    storeKeys:RouteStoreKeyType;
+    writable:boolean;
+    writeKeys:RouteStoreKeyType;
+    constructor(mode:RouteEditModeType,opt_readOnly?:boolean){
         this.storeKeys={};
         if (mode.storeKeys === undefined || mode.writable === undefined) throw new Error("invalid mode spec");
-        let modeKeys=mode.storeKeys;
+        const modeKeys=mode.storeKeys;
         if (modeKeys.leg !== undefined){
             this.storeKeys.leg=modeKeys.leg;
             if (modeKeys.index === undefined || modeKeys.route !== undefined) throw new Error(ERROR_KEYS);
@@ -119,7 +156,7 @@ class RouteEdit{
             this.storeKeys.index=modeKeys.index;
         }
         this.writable=mode.writable && ! opt_readOnly;
-        this.writeKeys=assign({},this.storeKeys);
+        this.writeKeys={...this.storeKeys};
         this.storeKeys.activeName=modeKeys.activeName;
         if (mode.writeActiveName){
             this.writeKeys.activeName=modeKeys.activeName;
@@ -129,16 +166,16 @@ class RouteEdit{
     checkWritable(){
         if (! this.writable) throw new Error("this route editor is not writable");
     }
-    getStoreKeys(opt_merge){
-        return assign({},opt_merge,this.storeKeys);
+    getStoreKeys(opt_merge?:Record<string,string>):Record<string,string>{
+        return {...opt_merge,...this.storeKeys};
     }
     getState(){
         return {...load(this.storeKeys)}
     }
-    addMultipleWaypoints(points,opt_before){
+    addMultipleWaypoints(points?:WayPoint[],opt_before?:boolean){
         if (! points || ! points.length) return;
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
         if (opt_before){
             //start from the end
@@ -153,23 +190,23 @@ class RouteEdit{
         }
         write(this.writeKeys,data);
     }
-    addWaypoint(point,opt_before){
+    addWaypoint(point:WayPoint,opt_before?:boolean){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
         data.index=data.route.addPoint(data.index,point,opt_before);
         write(this.writeKeys,data);
     }
     emptyRoute(){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
         data.route.points=[];
         write(this.writeKeys,data);
     }
     removeRoute(){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
         data.route=undefined;
         data.index=-1;
@@ -177,27 +214,27 @@ class RouteEdit{
     }
     invertRoute(){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
-        let old=data.route.getPointAtIndex(data.index);
+        const old=data.route.getPointAtIndex(data.index);
         data.route.swap();
         if (old) data.index=data.route.getIndexFromPoint(old);
         write(this.writeKeys,data);
     }
-    setNewRoute(route,opt_index,opt_ignoreWpNames){
+    setNewRoute(route?:Route,opt_index?:number,opt_ignoreWpNames?:boolean){
         if (! route) return;
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         let oldTarget=undefined;
         let oldNext=undefined;
         let oldRouteName=undefined;
         if (this.storeKeys.leg && data.route){
             oldRouteName=data.route.name;
             oldTarget=data.leg.to;
-            let oldIndex=data.route.getIndexFromPoint(oldTarget);
+            const oldIndex=data.route.getIndexFromPoint(oldTarget);
             if (oldIndex >= 0)  oldNext=data.route.getPointAtIndex(oldIndex+1);
         }
-        let oldPoint=data.route?data.route.getPointAtIndex(data.index):undefined;
+        const oldPoint=data.route?data.route.getPointAtIndex(data.index):undefined;
         data.route=route.clone();
         if (oldPoint){
             data.index=data.route.findBestMatchingIdx(oldPoint);
@@ -228,7 +265,7 @@ class RouteEdit{
             else{
                 newIndex=data.route.findBestMatchingIdx(oldTarget);
             }
-            let newTarget=data.route.getPointAtIndex(newIndex);
+            const newTarget=data.route.getPointAtIndex(newIndex);
             if (newTarget){
                 data.leg.to=newTarget;
             }
@@ -245,9 +282,9 @@ class RouteEdit{
         }
         write(this.writeKeys,data);
     }
-    changeSelectedWaypoint(newPoint,opt_index){
+    changeSelectedWaypoint(newPoint:WayPoint,opt_index?:number){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
         if (opt_index !== undefined){
             data.index=opt_index;
@@ -256,7 +293,7 @@ class RouteEdit{
         if (this.storeKeys.leg){
             if (data.leg.getCurrentTargetIdx() == data.index) setAsTarget=true;
         }
-        let routePoint=data.route.changePointAtIndex(data.index, newPoint);
+        const routePoint=data.route.changePointAtIndex(data.index, newPoint);
         if (setAsTarget && routePoint){
             data.leg.to=routePoint;
         }
@@ -267,8 +304,8 @@ class RouteEdit{
      * only allowed if there is no route, otherwise ignored
      * @param new_point
      */
-    changeTargetWaypoint(new_point){
-        let data=load(this.storeKeys,true);
+    changeTargetWaypoint(new_point:WayPoint){
+        const data=load(this.storeKeys,true);
         if (! data.leg) return;
         if (data.route) return;
         data.leg.to=new_point;
@@ -276,16 +313,16 @@ class RouteEdit{
     }
 
 
-    deleteWaypoint(idx){
+    deleteWaypoint(idx?:number){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (idx === undefined) idx=data.index;
         if (idx < 0 || ! data.route || idx >= data.route.points.length) return;
         let wasTarget=false;
         if (this.storeKeys.leg){
             wasTarget=data.leg.getCurrentTargetIdx()==idx;
         }
-        let nextPoint=data.route.deletePoint(idx);
+        const nextPoint=data.route.deletePoint(idx);
         if (wasTarget){
             data.leg.to=nextPoint;
             if (!nextPoint) data.leg.active=false;
@@ -296,30 +333,30 @@ class RouteEdit{
         }
         write(this.writeKeys,data);
     }
-    checkChangePossible(newPoint,opt_index){
+    checkChangePossible(newPoint:WayPoint,opt_index?:number){
         if (! this.writable) return false;
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         if (opt_index !== undefined) data.index=opt_index;
         if (data.index < 0 || ! data.route) return false;
         return data.route.checkChangePossible(data.index,newPoint);
     }
-    setNewIndex(newIndex){
+    setNewIndex(newIndex:number){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
         if (data.route.getPointAtIndex(newIndex)){
             data.index=newIndex;
             write(this.writeKeys,data);
         }
     }
-    setRouteAndIndex(newRoute,newIndex){
+    setRouteAndIndex(newRoute:Route,newIndex:number){
         this.setNewRoute(newRoute,newIndex);
     }
-    moveIndex(offset){
+    moveIndex(offset:number){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if (!data.route) return;
-        let start=(data.index >= 0)?data.index:0;
+        const start=(data.index >= 0)?data.index:0;
         if (data.route.getPointAtIndex(start+offset)){
             data.index=start+offset;
             write(this.writeKeys,data);
@@ -327,7 +364,7 @@ class RouteEdit{
     }
     setIndexToTarget(){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
+        const data=load(this.storeKeys,true);
         if ( ! data.leg) {
             data.index=-1;
         }
@@ -342,13 +379,14 @@ class RouteEdit{
      * @param modifyFunction will be called with the data loaded
      *                       from the store (and potentially already cloned)
      *                       return true to update the data in the store
+     * @param omitCallbacks
      */
-    modify(modifyFunction,omitCallbacks){
+    modify(modifyFunction:(data:RouteStoreDataType)=>boolean){
         this.checkWritable();
-        let data=load(this.storeKeys,true);
-        let doUpdate=modifyFunction(data);
+        const data=load(this.storeKeys,true);
+        const doUpdate=modifyFunction(data);
         if (doUpdate){
-            write(this.writeKeys,data,omitCallbacks);
+            write(this.writeKeys,data);
         }
     }
 
@@ -357,25 +395,25 @@ class RouteEdit{
      * this will clone the route and the index
      * @param other {RouteEdit|RouteEdit.MODES}
      */
-    syncTo(other){
-        let otherEdit=other;
-        if (! (other instanceof RouteEdit)){
+    syncTo(other:RouteEdit|RouteEditModeType){
+        let otherEdit:RouteEdit=(other instanceof RouteEdit)?other:undefined;
+        if (! otherEdit){
             otherEdit=new RouteEdit(other)
         }
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         otherEdit.setRouteAndIndex(data.route,data.index);
     }
 
     getIndex(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return data.index;
     }
     /**
      *
      * @param index - if undefined or < 0, use the current index
      */
-    getPointAt(index){
-        let data=load(this.storeKeys);
+    getPointAt(index?:number){
+        const data=load(this.storeKeys);
         if (index === undefined || index < 0){
             return StateHelper.getSelectedWaypoint(data);
         }
@@ -384,30 +422,35 @@ class RouteEdit{
         }
         return data.route.getPointAtIndex(index);
     }
-    getRoutePoints(selectedIndex){
-        let data=load(this.storeKeys);
+    getRoutePoints(selectedIndex:number){
+        const data=load(this.storeKeys);
         if (!data.route) return [];
         return data.route.getRoutePoints(selectedIndex,data.useRhumbLine);
     }
 
     isActiveRoute(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return StateHelper.isActiveRoute(data);
     }
-    isHandling(route){
+    isHandling(route?:{name:string}){
         if (! route)return false;
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return StateHelper.isSameRoute(data,route);
     }
-    isHandlingName(name){
+    isHandlingName(name?:string){
         if (! name) return false;
-        let data=load(this.storeKeys);
-        let [route,,]=StateHelper.getRouteIndexFlag(data);
+        const data=load(this.storeKeys);
+        const [route,,]=StateHelper.getRouteIndexFlag(data);
         if (route && route.name === name) return true;
         return false;
     }
-    getIndexFromPoint(point,opt_bestMatching){
-        let data=load(this.storeKeys);
+    getBestMatchingIndex(point:Point){
+        const data=load(this.storeKeys);
+        if (!data.route) return -1;
+        return data.route.findBestMatchingIdx(point)
+    }
+    getIndexFromPoint(point:WayPoint,opt_bestMatching?:boolean){
+        const data=load(this.storeKeys);
         if (!data.route) return -1;
         if (opt_bestMatching){
             return data.route.findBestMatchingIdx(point)
@@ -415,19 +458,19 @@ class RouteEdit{
         return data.route.getIndexFromPoint(point);
     }
     getRoute(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return StateHelper.route(data);
     }
     isRouteWritable(){
         if (! this.writable) return;
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         const route=StateHelper.route(data);
         if (! route) return false;
         if (route.isServer() && ! globalStore.getData(keys.gui.global.connectedMode,false)) return false;
         return true;
     }
     hasRoute(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return StateHelper.hasRoute(data);
     }
     getRawData(){
@@ -435,64 +478,46 @@ class RouteEdit{
     }
     //the following functions will only return meaningful data if we have a leg...
     hasActiveTarget(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return StateHelper.hasActiveTarget(data);
     }
     isServerLeg(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         return StateHelper.isServerLeg(data);
     }
     getCurrentTarget(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         if (!data.leg || ! data.leg.active) return undefined;
         return data.leg.to;
     }
     getNextWaypoint(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         if (!data.leg || ! data.leg.active) return;
         if (!data.route) return;
-        let currentIdx=data.route.getIndexFromPoint(data.leg.to);
+        const currentIdx=data.route.getIndexFromPoint(data.leg.to);
         if (currentIdx < 0) return;
         return data.route.getPointAtIndex(currentIdx+1);
     }
     getCurrentFrom(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         if (!data.leg ) return undefined;
         return data.leg.from;
     }
     anchorWatch(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         if (!data.leg) return;
         return data.leg.anchorWatch();
     }
     isApproaching(){
-        let data=load(this.storeKeys);
+        const data=load(this.storeKeys);
         if (!data.leg) return false;
         return data.leg.isApproaching();
     }
 }
 
-RouteEdit.MODES={
-    EDIT:{
-        storeKeys: {
-            route: keys.nav.routeHandler.editingRoute,
-            index: keys.nav.routeHandler.editingIndex,
-            activeName: keys.nav.routeHandler.activeName,
-            useRhumbLine: keys.nav.routeHandler.useRhumbLine
-        },
-        writable: true
-    },
-    ACTIVE:{
-        storeKeys: {
-            leg: keys.nav.routeHandler.currentLeg,
-            index: keys.nav.routeHandler.currentIndex,
-            activeName: keys.nav.routeHandler.activeName,
-            useRhumbLine: keys.nav.routeHandler.useRhumbLine
-        },
-        writable:true,
-        writeActiveName: true
-    }
-};
+
+
+
 /**
  * this class provides a couple of helpers
  * that work on an object returned from the store by using the store keys from
@@ -500,7 +525,7 @@ RouteEdit.MODES={
  * you should never directly modify the returned objects!
  */
 export class StateHelper{
-    static getRouteIndexFlag(state){
+    static getRouteIndexFlag(state:RouteStoreDataType){
         if (state.leg) {
             if (state.leg.isRouting()) {
                 return [state.leg.currentRoute, state.index!==undefined?state.index:-1, isActive(state.leg.getRoute(),state.activeName)];
@@ -515,21 +540,21 @@ export class StateHelper{
         return [undefined,-1,false];
 
     }
-    static getPointAtOffset(state,opt_offset){
-        let [route,index]=StateHelper.getRouteIndexFlag(state);
+    static getPointAtOffset(state:RouteStoreDataType,opt_offset?:number){
+        const [route,index]=StateHelper.getRouteIndexFlag(state);
         if (! route) return;
         return route.getPointAtIndex(index+(opt_offset||0));
     }
-    static isActiveRoute(state){
-        let [route,index,active]=StateHelper.getRouteIndexFlag(state);
+    static isActiveRoute(state:RouteStoreDataType){
+        const [,,active]=StateHelper.getRouteIndexFlag(state);
         return active;
     }
-    static hasPointAtOffset(state,offset){
-        let [route,index,active]=StateHelper.getRouteIndexFlag(state);
+    static hasPointAtOffset(state:RouteStoreDataType,offset:number){
+        const [route,index,]=StateHelper.getRouteIndexFlag(state);
         if (!route) return false;
         return route.getPointAtIndex(index+offset) !== undefined;
     }
-    static getSelectedWaypoint(state){
+    static getSelectedWaypoint(state:RouteStoreDataType){
         return StateHelper.getPointAtOffset(state);
     }
 
@@ -537,50 +562,50 @@ export class StateHelper{
      * only meaningfull for keys with a leg
      * @param state
      */
-    static hasActiveTarget(state){
+    static hasActiveTarget(state:RouteStoreDataType){
         if (! state.leg) return false;
         return state.leg.isRouting();
     }
 
-    static activeTarget(state){
+    static activeTarget(state:RouteStoreDataType){
         if (! state.leg) return;
         if (!state.leg.isRouting()) return;
         return state.leg.to;
     }
 
-    static targetName(state){
+    static targetName(state:RouteStoreDataType){
         if (! StateHelper.hasActiveTarget(state)) return;
         if (! state.leg.to) return;
         return state.leg.to.name;
     }
 
-    static selectedIsActiveTarget(state){
+    static selectedIsActiveTarget(state:RouteStoreDataType){
         if (! StateHelper.hasActiveTarget(state)) return false;
         return state.leg.getCurrentTargetIdx() == state.index;
     }
-    static route(state){
+    static route(state:RouteStoreDataType){
         const [route]=StateHelper.getRouteIndexFlag(state);
         return route;
     }
-    static hasRoute(state){
+    static hasRoute(state:RouteStoreDataType){
         return !!StateHelper.route(state);
     }
 
-    static anchorWatchDistance(state){
+    static anchorWatchDistance(state:RouteStoreDataType){
         if (! state.leg) return;
         return state.leg.anchorWatch();
     }
 
-    static isServerRoute(state){
+    static isServerRoute(state:RouteStoreDataType){
         const route=StateHelper.route(state);
         if (!route) return false;
         return route.isServer();
     }
-    static isServerLeg(state){
+    static isServerLeg(state:RouteStoreDataType){
         if (! state.leg) return false;
         return state.leg.server;
     }
-    static isSameRoute(state,route){
+    static isSameRoute(state:RouteStoreDataType,route?: { name:string }){
         const sroute=StateHelper.route(state);
         if (!!sroute !== !!route) return false;
         if (! sroute) return false;
@@ -591,22 +616,22 @@ export class StateHelper{
 }
 
 export default  RouteEdit;
-export const getClosestRoutePoint = (route, waypoint) => {
-    let idx = route.findBestMatchingIdx(waypoint);
-    let useRhumbLine = globalStore.getData(keys.nav.routeHandler.useRhumbLine);
+export const getClosestRoutePoint = (route:Route, waypoint:WayPoint) => {
+    const idx = route.findBestMatchingIdx(waypoint);
+    const useRhumbLine = globalStore.getData(keys.nav.routeHandler.useRhumbLine);
     if (idx >= 0) {
         //now we check if we are somehow between the found point and the next
-        let currentTarget = route.getPointAtIndex(idx);
+        const currentTarget = route.getPointAtIndex(idx);
         if (currentTarget.compare(waypoint)) return currentTarget;
-        let nextTarget = route.getPointAtIndex(idx + 1);
+        const nextTarget = route.getPointAtIndex(idx + 1);
         if (nextTarget && currentTarget) {
-            let nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget, useRhumbLine).dts;
-            let nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget, useRhumbLine).dts;
+            const nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget, useRhumbLine).dts;
+            const nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget, useRhumbLine).dts;
             //if the distance to the next wp is larger then the distance between current and next
             //we stick at current
             //we allow additionally a xx% catch range
             //so we only go to the next if the distance to the nextWp is xx% smaller then the distance between the rp
-            let limit = nextDistanceRt * (100 - globalStore.getData(keys.properties.routeCatchRange, 50)) / 100;
+            const limit = nextDistanceRt * (100 - globalStore.getData(keys.properties.routeCatchRange, 50)) / 100;
             if (nextDistanceWp <= limit) {
                 return nextTarget;
             } else {

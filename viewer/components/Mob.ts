@@ -3,9 +3,9 @@ import NavData from '../nav/navdata.js';
 // @ts-ignore
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 // @ts-ignore
-import navobjects from '../nav/navobjects.js';
+import navobjects from '../nav/navobjects';
 // @ts-ignore
-import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+import RouteEdit,{StateHelper} from '../nav/routeeditor';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import LayoutHandler from '../util/layouthandler';

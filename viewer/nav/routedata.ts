@@ -2,19 +2,21 @@
  * Created by andreas on 04.05.14.
  */
 
-import routeobjects from './routeobjects';
-import navobjects from './navobjects';
+import routeobjects, {isServerName, Leg, Route, RouteInfo, RoutingMode} from './routeobjects';
+import navobjects, {WayPoint} from './navobjects';
 import Formatter from '../util/formatter';
+// @ts-ignore
 import NavCompute from './navcompute';
-import Toast from '../components/Toast.tsx';
-import globalStore from '../util/globalstore.ts';
-import keys from '../util/keys.ts';
-import RoutEdit from './routeeditor.js';
+import Toast from '../components/Toast';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
+import RoutEdit from './routeeditor';
 import Requests from '../util/requests';
-import assign from 'object-assign';
-import base from '../base.ts';
+import base from '../base';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 import LatLon from 'geodesy/latlon-spherical';
+import {valueof} from "../util/helper";
+
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -68,6 +70,20 @@ export const KeepFromMode={
  * @constructor
  */
 class  RouteData {
+    lastReceivedLeg:Leg
+    lastSentLeg:Leg
+    lastReceivedRoute:Route
+    lastSentRoute:Route
+    connectMode:boolean;
+    readOnlyServer:boolean;
+    timer:number;
+    routeErrors:number;
+    lastDistanceToCurrent:number;
+    lastDistanceToNext:number;
+    lastApproachStarted:number;
+    formatter:typeof Formatter;
+    lastLegSequence:number;
+    currentRoutePage:string;
     constructor() {
         /** @private
          * @type {routeobjects.Leg}
@@ -93,7 +109,7 @@ class  RouteData {
                 changed = true;
             }
             try {
-                let raw = LocalStorage.getItem(STORAGE_NAMES.ROUTING);
+                const raw = LocalStorage.getItem(STORAGE_NAMES.ROUTING);
                 if (raw) {
                     data.leg.fromJsonString(raw);
                     changed = true;
@@ -162,7 +178,7 @@ class  RouteData {
         this.formatter = Formatter;
 
         globalStore.register(() => {
-            let oldcon = !!this.connectMode;
+            const oldcon = !!this.connectMode;
             this.connectMode = !!globalStore.getData(keys.gui.global.connectedMode);
             this.readOnlyServer = globalStore.getData(keys.properties.readOnlyServer);
             if (oldcon !== this.connectMode) {
@@ -177,7 +193,7 @@ class  RouteData {
             }
         }, keys.gui.global.propertySequence);
         globalStore.register(()=>{
-            let raw = activeRoute.getRawData();
+            const raw = activeRoute.getRawData();
             if (raw.leg) {
                 if (raw.leg.server){
                     this._sendleg(raw.leg);
@@ -191,7 +207,7 @@ class  RouteData {
             }
         }, activeRoute.getStoreKeys());
         globalStore.register(()=>{
-            let route = editingRoute.getRoute();
+            const route = editingRoute.getRoute();
             if (!route) return;
             if (!route.isServer()) {
                 this._saveRouteLocal(route);
@@ -210,7 +226,7 @@ class  RouteData {
         }, editingRoute.getStoreKeys());
         this.lastLegSequence = globalStore.getData(keys.nav.gps.updateleg);
         this.currentRoutePage = undefined; //only if there is a page that handles a route we will query
-    };
+    }
 
     /*---------------------------------------------------------
      get raw data functions
@@ -222,9 +238,9 @@ class  RouteData {
      * @param {string} routeItem (name,server)
      * @returns {boolean}
      */
-    isActiveRoute(routeItem) {
+    isActiveRoute(routeItem: { name:string }) {
         return activeRoute.isHandling(routeItem);
-    };
+    }
 
 
     /**
@@ -232,7 +248,7 @@ class  RouteData {
      * @param {routeobjects.Route} rte
      * @param opt_overwrite if true - overwrite route
      */
-    async saveRoute(rte, opt_overwrite) {
+    async saveRoute(rte:Route, opt_overwrite?:boolean) {
         if (!rte) throw new Error("no route for save");
         if (!rte.isServer()) {
             if (!opt_overwrite && this._localRouteExists(rte)) throw new Error("local route already exists");
@@ -241,14 +257,14 @@ class  RouteData {
         }
         if (! this.connectMode) throw new Error("cannot save server route while disconnected");
         return await this._sendRoute(rte, opt_overwrite);
-    };
+    }
     /**
      * check if the current route is active
      * @returns {boolean}
      */
     isEditingActiveRoute() {
         return editingRoute.isActiveRoute();
-    };
+    }
 
 
     /*---------------------------------------------------------
@@ -261,14 +277,15 @@ class  RouteData {
      * @param {navobjects.WayPoint} wp
      * @param {number}[opt_keep_from] KeepFromMode
      */
-    async wpOn(wp, opt_keep_from) {
+    async wpOn(wp?:WayPoint, opt_keep_from?:valueof<typeof KeepFromMode>|boolean) {
         if (!wp) {
             this.routeOff();
             return;
         }
-        if (!opt_keep_from) opt_keep_from = KeepFromMode.NONE;
-        if (opt_keep_from === true) opt_keep_from = KeepFromMode.CURRENT;
-        let stwp = new navobjects.WayPoint.fromPlain(wp);
+        let keep_from=KeepFromMode.NONE;
+        if (typeof opt_keep_from === 'boolean') keep_from = opt_keep_from?KeepFromMode.CURRENT:KeepFromMode.NONE;
+        else if (opt_keep_from !== undefined) keep_from = opt_keep_from
+        const stwp = WayPoint.fromPlain(wp);
         stwp.server=this.connectMode;
         let route;
         if (wp.routeName) {
@@ -285,11 +302,11 @@ class  RouteData {
             }
         }
         if (stwp.routeName) {
-            this._startRouting(routeobjects.RoutingMode.ROUTE, stwp, opt_keep_from,route);
+            this._startRouting(routeobjects.RoutingMode.ROUTE, stwp, keep_from,route);
         } else {
-            this._startRouting(routeobjects.RoutingMode.WP, stwp, opt_keep_from);
+            this._startRouting(routeobjects.RoutingMode.WP, stwp, keep_from);
         }
-    };
+    }
 
 
     /**
@@ -299,7 +316,7 @@ class  RouteData {
      * @param {boolean} opt_useCurrent - if true and wp is undef - use current position
      */
 
-    anchorOn(wp, distance, opt_useCurrent) {
+    anchorOn(wp:WayPoint, distance:number, opt_useCurrent?:boolean) {
         if (! this.connectMode) throw new Error("can only start anchor watch when connected");
         if (!wp && opt_useCurrent) {
             if (!globalStore.getData(keys.nav.gps.valid)) return;
@@ -307,7 +324,7 @@ class  RouteData {
         }
         if (!wp) return;
         if (!(wp instanceof navobjects.WayPoint)) {
-            let nwp = new navobjects.WayPoint();
+            const nwp = new navobjects.WayPoint();
             nwp.update(wp);
             wp = nwp;
         }
@@ -318,7 +335,7 @@ class  RouteData {
             if (data.leg) data.leg.setAnchorWatch(wp, distance);
             return true;
         });
-    };
+    }
 
     anchorOff() {
         activeRoute.modify((data) => {
@@ -328,7 +345,7 @@ class  RouteData {
             data.leg.active = false;
             return true;
         });
-    };
+    }
 
     /**
      *
@@ -339,11 +356,11 @@ class  RouteData {
      * @returns {boolean}
      * @private
      */
-    _startRouting(mode, newWp, keep_from,route) {
+    _startRouting(mode:valueof<typeof RoutingMode>, newWp:WayPoint, keep_from:number,route?:Route) {
         activeRoute.modify((data) => {
             let pfrom;
-            let gps = globalStore.getData(keys.nav.gps.position);
-            let center = globalStore.getData(keys.map.centerPosition);
+            const gps = globalStore.getData(keys.nav.gps.position);
+            const center = globalStore.getData(keys.map.centerPosition);
             if (globalStore.getData(keys.nav.gps.valid)) {
                 pfrom = new navobjects.WayPoint(gps.lon, gps.lat);
             } else {
@@ -402,7 +419,7 @@ class  RouteData {
                 if (!newWp || !newWp.routeName) return;
                 if (!route) return;
                 if (route.name !== newWp.routeName) throw new Error("internal error, loaded wrong route");
-                let idx = route.getIndexFromPoint(newWp);
+                const idx = route.getIndexFromPoint(newWp);
                 if (idx < 0) return;
                 data.leg.currentRoute = route;
                 data.route = route;
@@ -415,12 +432,12 @@ class  RouteData {
             }
             return false;
         });
-    };
+    }
 
     legRestart() {
         activeRoute.modify((data) => {
             if (!data.leg || !data.leg.active) return false;
-            let gps = globalStore.getData(keys.nav.gps.position);
+            const gps = globalStore.getData(keys.nav.gps.position);
             if (!globalStore.getData(keys.nav.gps.valid)) return false;
             data.leg.from = new navobjects.WayPoint(gps.lon, gps.lat);
             return true;
@@ -438,7 +455,7 @@ class  RouteData {
             data.route = undefined;
             return true;
         });
-    };
+    }
 
     /*---------------------------------------------------------
      route management functions (list, remove...)
@@ -449,19 +466,19 @@ class  RouteData {
      * works async
      */
     async listRoutes() {
-        let list = this._listRoutesLocal();
+        const list = this._listRoutesLocal();
         if (!globalStore.getData(keys.gui.capabilities.uploadRoute, false)) {
             return list;
         }
-        let canDelete = globalStore.getData(keys.gui.global.connectedMode, false);
+        const canDelete = globalStore.getData(keys.gui.global.connectedMode, false);
         const data = await Requests.getJson({
             request: 'api',
             type: 'route',
             command: 'list'
         });
         for (let i = 0; i < data.items.length; i++) {
-            let ri = new routeobjects.RouteInfo();
-            assign(ri, data.items[i]);
+            const ri = new RouteInfo();
+            ri.assign(data.items[i]);
             ri.server = true;
             if (ri.canDelete !== false) ri.canDelete = canDelete;
             if (editingRoute.isHandling(ri)) {
@@ -472,16 +489,16 @@ class  RouteData {
             list.push(ri);
         }
         return list;
-    };
+    }
 
     /**
      *
      * @param route {routeobjects.Route}
      * @returns {routeobjects.RouteInfo}
      */
-    getInfoFromRoute(route) {
+    getInfoFromRoute(route?:Route) {
         if (!route) return;
-        let rtinfo = new routeobjects.RouteInfo(route.name);
+        const rtinfo = new routeobjects.RouteInfo(route.name);
         try {
             if (route.points) rtinfo.numpoints = route.points.length;
             rtinfo.length = route.computeLength(0, globalStore.getData(keys.nav.routeHandler.useRhumbLine));
@@ -492,8 +509,7 @@ class  RouteData {
                 rtinfo.isEditing = true;
             }
             rtinfo.compute();
-        } catch (e) {
-        }
+        } catch (e) { /* empty */ }
         return rtinfo;
     }
     /**
@@ -502,13 +518,13 @@ class  RouteData {
      * @private
      */
     _listRoutesLocal() {
-        let rt = [];
+        const rt = [];
         let i = 0;
         let key;
-        let routeKeys = LocalStorage.listByPrefix(STORAGE_NAMES.ROUTE);
+        const routeKeys = LocalStorage.listByPrefix(STORAGE_NAMES.ROUTE);
         for (i = 0; i < routeKeys.length; i++) {
             key = routeKeys[i];
-            let routeName = key.substr(STORAGE_NAMES.ROUTE.length);
+            const routeName = key.substr(STORAGE_NAMES.ROUTE.length);
             if (! routeName) continue;
             const rtinfo = this.getInfoFromRoute(this._loadRoute(routeobjects.LOCAL_PREFIX+routeName));
             if (rtinfo) {
@@ -516,9 +532,9 @@ class  RouteData {
             }
         }
         return rt;
-    };
+    }
 
-    async getInfo(routeName) {
+    async getInfo(routeName:string) {
         if (! routeName) return;
         let info;
         if (routeobjects.isServerName(routeName)) {
@@ -531,8 +547,7 @@ class  RouteData {
                 info.server=true;
                 info.type='route';
                 info.checkprefix='';
-            } catch (e) {
-            }
+            } catch (e) { /* empty */ }
             return info;
         }
         return this.getInfoFromRoute(this._loadRoute(routeName,true));
@@ -541,13 +556,12 @@ class  RouteData {
      * delete a route both locally and on server
      * @param name
      */
-    async deleteRoute(name) {
+    async deleteRoute(name:string) {
         if (! name) throw new Error("no route name for delete");
         if (! routeobjects.isServerName(name)) {
             try {
                 LocalStorage.removeItem(STORAGE_NAMES.ROUTE, routeobjects.nameToBaseName(name));
-            } catch (e) {
-            }
+            } catch (e) { /* empty */ }
             if (editingRoute.isHandlingName(name)) editingRoute.removeRoute();
             return true;
         }
@@ -560,30 +574,35 @@ class  RouteData {
             })
         if (editingRoute.isHandlingName(name)) editingRoute.removeRoute();
         return true;
-    };
-    async _downloadRoute(name, opt_returnraw) {
+    }
+    async _downloadRouteImpl(name:string) {
         const response = await Requests.getHtmlOrTextWithResponse({
             request: 'api',
             type: 'route',
             command: 'download',
             name: name
         });
-        if (opt_returnraw) {
-            return response.data;
-        }
-        let newRoute = new routeobjects.Route();
-        newRoute.fromXml(response.data);
+        return response;
+    }
+    async _downloadRouteString(name:string) {
+        const resp=await this._downloadRouteImpl(name);
+        return resp.data;
+    }
+    async _downloadRoute(name:string)   {
+        const routeData=await this._downloadRouteImpl(name);
+        const newRoute = new routeobjects.Route();
+        newRoute.fromXml(routeData.data);
         try{
-            const lm=response.response.headers.get('last-modified');
+            const lm=routeData.response.headers.get('last-modified');
             if (lm){
                 newRoute.time=Date.parse(lm)/1000;
             }
         }catch (e){
             base.log("cannot parse route last modified");
         }
-        let routeName = name;
+        const routeName = name;
         if (newRoute.name !== routeName) {
-            let error = "downloaded route has invalid name expected=" + routeName + ", current=" + newRoute.name;
+            const error = "downloaded route has invalid name expected=" + routeName + ", current=" + newRoute.name;
             throw new Error(error);
         }
         return newRoute;
@@ -593,7 +612,7 @@ class  RouteData {
      * @param name
      * @param opt_returnraw
      */
-    async fetchRoute(name, opt_returnraw) {
+    async fetchRoute(name:string, opt_returnraw?:boolean) {
         let route;
         if (!name) throw new Error("no route name for fetch");
         if (!routeobjects.isServerName(name)) {
@@ -604,14 +623,17 @@ class  RouteData {
             throw new Error("Route " + name + " not found locally");
 
         }
-        const route_1 = await this._downloadRoute(name, opt_returnraw);
+        if (opt_returnraw){
+            return await this._downloadRouteString(name);
+        }
+        const route_1 = await this._downloadRoute(name);
         if (route_1 instanceof routeobjects.Route) {
             route_1.setName(name);
         }
         return route_1;
-    };
+    }
 
-    async renameRoute(routeItem, newName) {
+    async renameRoute(routeItem:{name:string}, newName:string) {
         if (activeRoute.isHandling(routeItem)) throw new Error("cannot rename active route");
         if (routeobjects.isServerName(routeItem.name)) {
             if (! this.connectMode || this.readOnlyServer) throw new Error("cannot rename server route while disconnected");
@@ -625,8 +647,7 @@ class  RouteData {
         if (! route) throw new Error(`local route ${routeItem.name} not found`);
         try {
             LocalStorage.removeItem(STORAGE_NAMES.ROUTE, routeobjects.nameToBaseName(routeItem.name));
-        } catch (e) {
-        }
+        } catch (e) { /* empty */ }
         route.setName(newName);
         this._saveRouteLocal(route,true);
         if (editingRoute.isHandlingName(routeItem.name)) {editingRoute.removeRoute();}
@@ -636,8 +657,8 @@ class  RouteData {
     /*---------------------------------------------------------
      routing (next wp...)
      ----------------------------------------------------------*/
-    _inQuadrant(courseStart, course) {
-        let ranges = [];
+    _inQuadrant(courseStart:number, course:number) {
+        const ranges = [];
         let min = courseStart - 90;
         if (min < 0) {
             ranges.push([360 + min, 360]);
@@ -649,12 +670,12 @@ class  RouteData {
             max = 360;
         }
         ranges.push([min, max]);
-        for (let i in ranges) {
-            let mm = ranges[i];
+        for (const i in ranges) {
+            const mm = ranges[i];
             if (mm[0] <= course && mm[1] > course) return true;
         }
         return false;
-    };
+    }
 
     /**
      * @private
@@ -665,48 +686,48 @@ class  RouteData {
             if (!data.leg) return;
             if (data.leg.server ) return;
             if (!data.leg.isRouting()) return;
-            let lastApproach = data.leg.approach;
+            const lastApproach = data.leg.approach;
             if (data.leg.to && data.leg.to.name == navobjects.WayPoint.MOB) {
                 return;
             }
-            let boat = globalStore.getData(keys.nav.gps.position);
+            const boat = globalStore.getData(keys.nav.gps.position);
             //TODO: switch of routing?!
             if (!globalStore.getData(keys.nav.gps.valid)) return;
-            let useRhumbLine = globalStore.getData(keys.nav.routeHandler.useRhumbLine);
-            let nextWpNum = data.leg.getCurrentTargetIdx() + 1;
-            let nextWp = data.route ? data.route.getPointAtIndex(nextWpNum) : undefined;
-            let approach = data.leg.approachDistance;
-            let tolerance = approach / 10; //we allow some position error...
+            const useRhumbLine = globalStore.getData(keys.nav.routeHandler.useRhumbLine);
+            const nextWpNum = data.leg.getCurrentTargetIdx() + 1;
+            const nextWp = data.route ? data.route.getPointAtIndex(nextWpNum) : undefined;
+            const approach = data.leg.approachDistance;
+            const tolerance = approach / 10; //we allow some position error...
             try {
-                let dst = NavCompute.computeDistance(boat, data.leg.to, useRhumbLine);
+                const dst = NavCompute.computeDistance(boat, data.leg.to, useRhumbLine);
                 //TODO: some handling for approach
                 if (dst.dts <= approach) {
                     data.leg.approach = true;
                     if (!data.leg.hasRoute()) {
                         return data.leg.approach !== lastApproach;
                     }
-                    let now = (new Date()).getTime();
+                    const now = (new Date()).getTime();
                     if (!lastApproach) {
                         this.lastApproachStarted = now;
                     }
-                    let mode = globalStore.getData(keys.nav.routeHandler.nextWpMode, 'late');
+                    const mode = globalStore.getData(keys.nav.routeHandler.nextWpMode, 'late');
                     let doSwitch = false;
                     if (mode === 'early') {
                         if (!this.lastApproachStarted || !nextWp) {
                             return data.leg.approach !== lastApproach;
                         }
-                        let wpTime = globalStore.getData(keys.nav.routeHandler.nextWpTime, 10);
+                        const wpTime = globalStore.getData(keys.nav.routeHandler.nextWpTime, 10);
                         if ((this.lastApproachStarted + 1000 * wpTime) <= now) {
                             doSwitch = true;
                         }
                     }
                     if (mode === '90') {
-                        let start = new LatLon(data.leg.from.lat, data.leg.from.lon);
-                        let cur = new LatLon(boat.lat, boat.lon);
-                        let target = new LatLon(data.leg.to.lat, data.leg.to.lon);
-                        let courseFrom = useRhumbLine ?
+                        const start = new LatLon(data.leg.from.lat, data.leg.from.lon);
+                        const cur = new LatLon(boat.lat, boat.lon);
+                        const target = new LatLon(data.leg.to.lat, data.leg.to.lon);
+                        const courseFrom = useRhumbLine ?
                             target.rhumbBearingTo(start) : target.initialBearingTo(start);
-                        let courseCur = useRhumbLine ?
+                        const courseCur = useRhumbLine ?
                             target.rhumbBearingTo(cur) : target.initialBearingTo(cur);
                         if (!this._inQuadrant(courseFrom, courseCur)) {
                             //90 reached
@@ -725,7 +746,7 @@ class  RouteData {
                             return true;
                         }
                         //check if the distance to own wp increases and to the nex decreases
-                        let diffcurrent = dst.dts - this.lastDistanceToCurrent;
+                        const diffcurrent = dst.dts - this.lastDistanceToCurrent;
                         if (diffcurrent <= tolerance) {
                             //still decreasing
                             if (diffcurrent <= 0) {
@@ -734,7 +755,7 @@ class  RouteData {
                             }
                             return true;
                         }
-                        let diffnext = nextDst.dts - this.lastDistanceToNext;
+                        const diffnext = nextDst.dts - this.lastDistanceToNext;
                         if (nextWp && (diffnext > -tolerance)) {
                             //increases to next
                             if (diffnext > 0) {
@@ -766,11 +787,10 @@ class  RouteData {
                     this.lastApproachStarted = undefined;
                     return data.leg.approach != lastApproach;
                 }
-            } catch (ex) {
-            } //ignore errors
+            } catch (ex) { /* empty */ } //ignore errors
             return true;
         });
-    };
+    }
 
     /*---------------------------------------------------------
      internal helpers
@@ -783,7 +803,7 @@ class  RouteData {
      * @private
      * @return {Boolean} - true if data has changed
      */
-    _handleLegResponse(serverData) {
+    _handleLegResponse(serverData:any) {
         if (!serverData) {
             return false;
         }
@@ -796,7 +816,7 @@ class  RouteData {
         })
         this.routeErrors = 0;
         if (!this.connectMode) return false;
-        let nleg = new routeobjects.Leg();
+        const nleg = new routeobjects.Leg();
         nleg.fromJson(serverData);
         nleg.server=true;
         //store locally if we did not send or if the leg changed
@@ -827,14 +847,14 @@ class  RouteData {
             }
 
         });
-    };
+    }
 
     /**
      * @private
      */
     startQuery() {
         this._checkNextWp();
-        let timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
+        const timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
         if (!this.connectMode) {
             this.lastReceivedLeg = undefined;
             this.lastReceivedRoute = undefined;
@@ -846,7 +866,7 @@ class  RouteData {
             }, timeout);
             return;
         } else {
-            let currentLegSequence = globalStore.getData(keys.nav.gps.updateleg);
+            const currentLegSequence = globalStore.getData(keys.nav.gps.updateleg);
             if (this.lastLegSequence === undefined || this.lastLegSequence !== currentLegSequence || this.lastReceivedLeg === undefined) {
                 this.lastLegSequence = currentLegSequence;
                 Requests.getJson({
@@ -855,7 +875,7 @@ class  RouteData {
                     command: 'getleg'
                 }, {checkOk: false}).then(
                     (data) => {
-                        let change = this._handleLegResponse(data);
+                        const change = this._handleLegResponse(data);
                         base.log("leg data change=" + change);
                         this.timer = window.setTimeout(() => {
                             this.startQuery();
@@ -863,7 +883,7 @@ class  RouteData {
                     }
                 ).catch(
                     (error) => {
-                        base.log("query leg error");
+                        base.error("query leg error",error);
                         this.routeErrors++;
                         if (this.routeErrors > 10) {
                             base.log("lost route");
@@ -888,7 +908,7 @@ class  RouteData {
             this._downloadRoute(editingRoute.getRoute().name)
                 .then((nRoute) => {
                     if (this.isEditingActiveRoute()) return;
-                    let change = nRoute.differsTo(this.lastReceivedRoute);
+                    const change = nRoute.differsTo(this.lastReceivedRoute);
                     base.log("route data change=" + change);
                     if (change) {
                         this.lastReceivedRoute = nRoute;
@@ -896,7 +916,7 @@ class  RouteData {
                             //maybe the editing route has changed in between...
                             if (!data.route || data.route.name != nRoute.name) return;
                             if (nRoute.differsTo(data.route)) {
-                                let oldPoint = data.route.getPointAtIndex(data.index);
+                                const oldPoint = data.route.getPointAtIndex(data.index);
                                 data.route = this.lastReceivedRoute.clone();
                                 data.index = data.route.findBestMatchingIdx(oldPoint);
                                 if (data.index < 0) data.index = 0;
@@ -910,21 +930,21 @@ class  RouteData {
                 }
             );
         }
-    };
+    }
 
 
     /**
      * @private
      */
-    _saveRouteLocal(route, opt_keepTime) {
+    _saveRouteLocal(route:Route, opt_keepTime?:boolean) {
         if (!route) return;
         route=route.clone();
         if (!opt_keepTime || !route.time) route.time = new Date().getTime() / 1000;
         route.setName(routeobjects.nameToBaseName(route.name));
-        let str = route.toJsonString();
+        const str = route.toJsonString();
         LocalStorage.setItem(STORAGE_NAMES.ROUTE, route.name, str);
         return route;
-    };
+    }
 
     /**
      *
@@ -932,14 +952,14 @@ class  RouteData {
      * @returns {boolean}
      * @private
      */
-    _localRouteExists(route) {
+    _localRouteExists(route:Route) {
         if (!route) return false;
-        let name=route.name;
+        const name=route.name;
         if (! name) return false;
-        if (routeobjects.isServerName()) return false;
-        let existing = LocalStorage.getItem(STORAGE_NAMES.ROUTE, routeobjects.nameToBaseName(name));
+        if (isServerName(name)) return false;
+        const existing = LocalStorage.getItem(STORAGE_NAMES.ROUTE, routeobjects.nameToBaseName(name));
         return !!existing;
-    };
+    }
 
     /**
      * load a locally stored route
@@ -949,12 +969,12 @@ class  RouteData {
      * @param opt_returnraw return the raw string
      * @returns {routeobjects.Route}
      */
-    _loadRoute(name, opt_returnUndef, opt_returnraw) {
+    _loadRoute(name:string, opt_returnUndef?:boolean, opt_returnraw?:boolean) {
         if (! name || routeobjects.isServerName(name)) throw new Error("cannot locally load server route "+name);
-        let rt = new routeobjects.Route(name);
+        const rt = new routeobjects.Route(name);
         const loadName=routeobjects.nameToBaseName(name);
         try {
-            let raw = LocalStorage.getItem(STORAGE_NAMES.ROUTE, loadName);
+            const raw = LocalStorage.getItem(STORAGE_NAMES.ROUTE, loadName);
             if (raw) {
                 base.log("route " + name + " successfully loaded");
                 rt.fromJsonString(raw);
@@ -971,7 +991,7 @@ class  RouteData {
             if (opt_returnUndef) return undefined;
         }
         return rt;
-    };
+    }
 
 
     /**
@@ -980,7 +1000,7 @@ class  RouteData {
      * @param {routeobjects.Route} route
      * @param opt_overwrite
      */
-    async _sendRoute(route, opt_overwrite) {
+    async _sendRoute(route:Route, opt_overwrite?:boolean) {
         if (!route) throw new Error("no route")
         if (! route.isServer()) throw new Error("trying to send a non server route "+route.name);
         //send route to server
@@ -991,7 +1011,7 @@ class  RouteData {
             name: route.name,
             overwrite: opt_overwrite
         }, route.toXml())
-    };
+    }
 
 
     /**
@@ -999,25 +1019,25 @@ class  RouteData {
      * @returns {boolean}
      * @private
      */
-    _legChangedLocally(leg) {
+    _legChangedLocally(leg:Leg) {
         if (leg.server) return;
         //reset approach handling
         this.lastDistanceToCurrent = -1;
         this.lastDistanceToNext = -1;
-        let raw = leg.toJsonString();
+        const raw = leg.toJsonString();
         LocalStorage.setItem(STORAGE_NAMES.ROUTING, undefined, raw);
         if (leg.currentRoute) {
             this._saveRouteLocal(leg.currentRoute, true);
         }
     }
 
-    _sendleg(leg){
+    _sendleg(leg?:Leg){
         if (! leg || ! leg.server) return;
         //do not allow to send until we received something
         //this will sync us to the server when we connect (or connect again...)
         if (!this.lastReceivedLeg) return;
         if (!leg.differsTo(this.lastSentLeg)) return;
-        let legJson = leg.toJson();
+        const legJson = leg.toJson();
         if (this.connectMode) {
             if (!globalStore.getData(keys.gui.capabilities.uploadRoute)) {
                 base.log("upload leg disabled by capabilities");
@@ -1035,7 +1055,7 @@ class  RouteData {
                 type: 'route',
                 command: 'setleg'
             }, legJson).then(
-                (data) => {
+                () => {
                     base.log("new leg sent to server");
                 }
             ).catch(
@@ -1046,30 +1066,30 @@ class  RouteData {
             );
         }
         return true;
-    };
+    }
 
-    setCurrentRoutePage(page) {
+    setCurrentRoutePage(page:string) {
         this.currentRoutePage = page;
-    };
+    }
 
-    unsetCurrentRoutePage(page) {
+    unsetCurrentRoutePage(page:string) {
         if (this.currentRoutePage !== page) return;
         this.currentRoutePage = undefined;
-    };
+    }
 
     /**
      * create a list of all local routes by comparing them to the server routes
      * for each route inlude the name and a status ('noserver','equal','different')
      * @return {Promise<void>}
      */
-    async checkLocalRoutes(deleteEqual){
+    async checkLocalRoutes(deleteEqual:boolean) {
         const routes=await this.listRoutes();
         const rt=[];
-        for (let route of routes){
+        for (const route of routes){
             if (routeobjects.isServerName(route.name)) continue;
             const serverName=routeobjects.SERVER_PREFIX+routeobjects.nameToBaseName(route.name);
             const status={...route,status:'noserver',serverName:serverName};
-            for (let other of routes){
+            for (const other of routes){
                 if (other.name === serverName) {
                     try{
                         const localRoute=this._loadRoute(route.name);

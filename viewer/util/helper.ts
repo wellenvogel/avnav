@@ -73,7 +73,7 @@ Helper.escapeHtml=function(string:any) {
     });
 };
 
-Helper.parseXml=function(text:string){
+Helper.parseXml=function(text:string):Document{
     let xmlDoc=undefined;
     if (window.DOMParser) {
         // code for modern browsers
