@@ -77,7 +77,7 @@ const ActiveRouteWidget =(props:ActiveRouteWidgetProps)=>{
                     </div>}
                     {!small && <SecondRow eta={display.eta} approach={approaching && ! props.legacy} small={small} />}
                     { ! small && ( (approaching) ?
-                        <div className="routeNext">
+                        <div className={Helper.concatsp(props.legacy?undefined:"routeNext")}>
                             <span
                                 className="routeNextCourse">{display.next}</span>
                             <span className='unit'>&#176;</span>
