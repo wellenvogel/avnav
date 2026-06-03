@@ -1009,8 +1009,32 @@ const EditRoutePage = (props:PageProps) => {
             onClick: () => {
                 startRouting(dialogContext,undefined,history);
             },
+            storeKeys: mergedStoreKeys,
+            updateFunction:()=>{
+                const state=activeRoute.getState();
+                return {
+                    visible: ! (isActiveRoute(state,editor.getState()) && StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state) &&
+                        StateHelper.selectedIsActiveTarget(state))
+                }
+            },
             editDisable: true,
             overflow: true
+        },
+        {
+            ...ButtonDefs.NavRestart,
+            storeKeys: mergedStoreKeys,
+            updateFunction: () => {
+                const state=activeRoute.getState();
+                return {
+                    visible: isActiveRoute(state,editor.getState()) && StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state) &&
+                        StateHelper.selectedIsActiveTarget(state)
+                };
+            },
+            onClick: () => {
+                RouteHandler.legRestart();
+            },
+            editDisable: true,
+            overflow: true,
         },
         {
             ...RawButtonDef,
