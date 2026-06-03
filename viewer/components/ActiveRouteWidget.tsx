@@ -7,7 +7,6 @@ import keys from '../util/keys';
 import Formatter from '../util/formatter';
 import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
-// @ts-ignore
 import routeobjects from "../nav/routeobjects";
 import Helper from '../util/helper';
 import {IWidgetProps} from "../util/types";

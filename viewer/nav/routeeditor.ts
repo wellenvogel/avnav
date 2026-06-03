@@ -3,14 +3,12 @@
  */
 
 import routeobjects, {Route} from './routeobjects';
-import navobjects, {WayPoint} from './navobjects';
+import {WayPoint,Point} from './navobjects';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
-
 // @ts-ignore
 import NavCompute from "./navcompute";
 import {DataChangedFunction} from "../util/store";
-import {Point} from './navobjects'
 
 const ERROR_KEYS="either provide leg or route,index and activeName as keys";
 
@@ -65,8 +63,8 @@ const load=(storeKeys:RouteStoreKeyType,clone?:boolean):RouteStoreDataType=>{
         if (clone && newLeg) newLeg=newLeg.clone();
         if (!newLeg){
             newLeg=new routeobjects.Leg(
-                new navobjects.WayPoint(),
-                new navobjects.WayPoint(),
+                new WayPoint(),
+                new WayPoint(),
                 false);
         }
         return{

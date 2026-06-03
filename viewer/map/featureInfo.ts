@@ -20,8 +20,7 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
-// @ts-ignore
-import navobjects, {Point, WayPoint} from "../nav/navobjects";
+import {Point, WayPoint} from "../nav/navobjects";
 import {IDialogContext} from "../components/DialogContext";
 import {valueof} from "../util/helper";
 
@@ -133,9 +132,9 @@ export class FeatureInfo{
         {point,isOverlay,title,name}:FeatureInfoParameters) {
         /**
          * goto target
-         * @type {navobjects.Point}
+         * @type {Point}
          */
-        this.point=point||new navobjects.Point();
+        this.point=point||new Point();
         this.title=title;
         this.isOverlay=isOverlay||false;
         this.urlOrKey=name;
@@ -156,7 +155,7 @@ export class FeatureInfo{
         return FeatureInfo.featureTypeToItemType(this.getType());
     }
     validPoint(){
-        return this.point && (this.point instanceof navobjects.Point) && this.point.valid();
+        return this.point && (this.point instanceof Point) && this.point.valid();
     }
 
     /**

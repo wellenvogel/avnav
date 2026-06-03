@@ -560,7 +560,7 @@ const checkEmptyRoute = () => {
                 editor.setRouteAndIndex(route, 0);
             },
             () => {
-                const rt = new routeobjects.Route(DEFAULT_ROUTE);
+                const rt = new Route(DEFAULT_ROUTE);
                 editor.setRouteAndIndex(rt, 0);
             });
 
@@ -710,7 +710,7 @@ const EditRoutePage = (props:PageProps) => {
         const currentEditor = getCurrentEditor();
         showDialog(dialogContext, () => {
             return <EditRouteDialog
-                route={currentEditor.getRoute()?currentEditor.getRoute().clone():new routeobjects.Route('empty')}
+                route={currentEditor.getRoute()?currentEditor.getRoute().clone():new Route('empty')}
             />
         },()=>{
             checkEmptyRoute();

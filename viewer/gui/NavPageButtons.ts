@@ -22,12 +22,9 @@
  */
 import {propsToDefs} from "../components/Button";
 import keys from "../util/keys";
-// @ts-ignore
 import RouteEdit,{StateHelper} from "../nav/routeeditor";
 // @ts-ignore
 import anchorWatch,{AnchorWatchKeys,isWatchActive} from "../components/AnchorWatchDialog";
-// @ts-ignore
-import {CenterActionButton} from "../components/FeatureInfoDialog";
 import Dimmer from '../util/dimhandler';
 import GeneralButtons from "./GeneralButtons";
 import ButtonDefs from "../components/ButtonDefs";
