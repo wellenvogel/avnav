@@ -203,11 +203,15 @@ class AVNUserAppHandler(AVNWorker):
       return None
     if url.startswith("http"):
       return None
-    (path,query)=AVNUtil.pathQueryFromUrl(url)
-    filePath=self.httpServer.tryExternalMappings(path,query)
-    if filePath is None or isinstance(filePath,AVNDownloadError):
-      return None
-    return filePath
+    try:
+        (path,query)=AVNUtil.pathQueryFromUrl(url)
+        filePath=self.httpServer.tryExternalMappings(path,query)
+        if filePath is None or isinstance(filePath,AVNDownloadError):
+            return None
+        return filePath
+    except Exception as e:
+        AVNLog.error("error finding file for url %s: %s",url,e)
+        return None
 
   def findChild(self,name,ignoreInvalid=False):
     children=self.param.get(self.CHILDNAME)
