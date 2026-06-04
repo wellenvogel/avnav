@@ -41,6 +41,16 @@ class ChartEntry(AVNDirectoryListEntry):
         super().__init__(*args,**kwargs)
         self.hasOverlay=hasOverlay
 
+class ErrorChartFile(ChartFile):
+    def __init__(self, filename,error):
+        super().__init__()
+        self.error=error
+        self.filename=filename
+
+    def deleteFiles(self):
+        if os.path.isfile(self.filename):
+            return os.unlink(self.filename)
+
 class XmlChartFile(ChartFile):
   def __init__(self,filename,isDir=False):
     super().__init__()
@@ -384,8 +394,12 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       if chart is None:
           return False
       else:
-        chart.open()
-        itemDescription.setUserData(chart)
+        try:
+            chart.open()
+            itemDescription.setUserData(chart)
+        except Exception as e:
+            itemDescription.setUserData(ErrorChartFile(fullname,str(e)))
+            itemDescription.error=str(e)
         itemDescription.displayName=itemDescription.name[len(self.SCOPE_USER):]
         itemDescription.url=self.getPrefix()+"/"+urllib.parse.quote(itemDescription.name)
         if self.importer is not None:

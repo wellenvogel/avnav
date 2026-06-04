@@ -970,7 +970,8 @@ class ChartItemActions extends ItemActions{
                 mapholder.setChartEntry(item);
                 history.push('navpage');
             },
-            visible: item.name !== DEFAULT_OVERLAY_CONFIG
+            visible: item.name !== DEFAULT_OVERLAY_CONFIG,
+            disabled: !!item.error
         }))
         actions.push(standardActions.delete.copy({
             visible: this.canModify(item)
@@ -998,7 +999,8 @@ class ChartItemActions extends ItemActions{
                     return true;
                 }
             },
-            visible: this.canModify(item) && item.name && item.name.match(/.*\.mbtiles$/)
+            visible: this.canModify(item) && item.name && item.name.match(/.*\.mbtiles$/),
+            disabled: !! item.error
         }))
         actions.push(standardActions.download.copy({}))
         actions.push(new Action({

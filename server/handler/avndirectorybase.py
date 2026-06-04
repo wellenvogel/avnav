@@ -60,6 +60,7 @@ class AVNDirectoryListEntry(object):
                canDelete=False,isDirectory=False,canDownload=True,
                extension=None,scope=None,url=None,filename=None,
                userData=None,displayName=None,downloadName=None,
+               error=None,
                checkPrefix=None,**kwargs):
     self.name=name
     self.displayName=displayName
@@ -76,6 +77,7 @@ class AVNDirectoryListEntry(object):
     self.checkPrefix=checkPrefix #if set this must be added to file names in check before upload
     self._filename=filename
     self._userData=userData
+    self.error=error
 
   def getFileName(self):
       return self._filename
