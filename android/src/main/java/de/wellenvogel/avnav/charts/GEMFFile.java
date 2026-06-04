@@ -172,50 +172,56 @@ public class GEMFFile  extends ChartFile {
 	 */
 	protected void readHeader() throws IOException {
 		if (hasError()) throw new IOException(mError);
-		final AbstractFile baseFile = mFiles.get(0);
+		try {
+			final AbstractFile baseFile = mFiles.get(0);
 
-		// Get file sizes
-		for (final AbstractFile file : mFiles) {
-			mFileSizes.add(file.length());
-		}
+			// Get file sizes
+			for (final AbstractFile file : mFiles) {
+				mFileSizes.add(file.length());
+			}
 
-		// Version
-		final int version = baseFile.readInt();
-		if (version != VERSION) {
-			throw new IOException("Bad file version: " + version);
-		}
+			// Version
+			final int version = baseFile.readInt();
+			if (version != VERSION) {
+				throw new IOException("Bad file version: " + version);
+			}
 
-		// Tile Size
-		final int tile_size = baseFile.readInt();
-		if (tile_size != TILE_SIZE) {
-			throw new IOException("Bad tile size: " + tile_size);
-		}
+			// Tile Size
+			final int tile_size = baseFile.readInt();
+			if (tile_size != TILE_SIZE) {
+				throw new IOException("Bad tile size: " + tile_size);
+			}
 
-		// Read Source List
-		final int sourceCount = baseFile.readInt();
+			// Read Source List
+			final int sourceCount = baseFile.readInt();
 
-		for (int i = 0; i < sourceCount; i++) {
-			final int sourceIndex = baseFile.readInt();
-			final int sourceNameLength = baseFile.readInt();
-			final byte[] nameData = new byte[sourceNameLength];
-			baseFile.read(nameData, 0, sourceNameLength);
+			for (int i = 0; i < sourceCount; i++) {
+				final int sourceIndex = baseFile.readInt();
+				final int sourceNameLength = baseFile.readInt();
+				final byte[] nameData = new byte[sourceNameLength];
+				baseFile.read(nameData, 0, sourceNameLength);
 
-			final String sourceName = new String(nameData);
-			mSources.put(new Integer(sourceIndex), sourceName);
-		}
+				final String sourceName = new String(nameData);
+				mSources.put(new Integer(sourceIndex), sourceName);
+			}
 
-		// Read Ranges
-		final int num_ranges = baseFile.readInt();
-		for (int i = 0; i < num_ranges; i++) {
-			final ChartRange rs = new ChartRange();
-			rs.zoom = baseFile.readInt();
-			rs.xMin = baseFile.readInt();
-			rs.xMax = baseFile.readInt();
-			rs.yMin = baseFile.readInt();
-			rs.yMax = baseFile.readInt();
-			rs.sourceIndex = baseFile.readInt();
-			rs.offset = baseFile.readLong();
-			mRangeData.add(rs);
+			// Read Ranges
+			final int num_ranges = baseFile.readInt();
+			for (int i = 0; i < num_ranges; i++) {
+				final ChartRange rs = new ChartRange();
+				rs.zoom = baseFile.readInt();
+				rs.xMin = baseFile.readInt();
+				rs.xMax = baseFile.readInt();
+				rs.yMin = baseFile.readInt();
+				rs.yMax = baseFile.readInt();
+				rs.sourceIndex = baseFile.readInt();
+				rs.offset = baseFile.readLong();
+				mRangeData.add(rs);
+			}
+		}catch (Exception e){
+			String emgs=e.getMessage();
+			if (emgs == null) emgs=e.toString();
+			throw new IOException("GEMF header error:"+emgs);
 		}
 	}
 
