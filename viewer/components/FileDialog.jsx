@@ -941,10 +941,22 @@ class ChartItemActions extends ItemActions{
         this.hasScope=true;
 
     }
+
+    getClassName(item) {
+        const rt=super.getClassName(item);
+        if (item.error){
+            return Helper.concatsp(rt,'userAction');
+        }
+        return rt;
+    }
+
     getInfoRows(item) {
         let rows=super.getInfoRows(item);
         if (item.scheme){
             rows=rows.concat([{label:'Scheme',value:'scheme'}] );
+        }
+        if (item.error){
+            rows=rows.concat([{label:'Error',value:'error'}])
         }
         return rows;
     }

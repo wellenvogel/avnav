@@ -38,6 +38,7 @@ public class MbTilesFile extends ChartFile {
 
     @Override
     public boolean setScheme(String newScheme) throws Exception {
+        if (hasError()) throw new Exception(mError);
         newScheme=newScheme.toLowerCase();
         if (!newScheme.equals("xyz") && ! newScheme.equals("tms")){
             throw new Exception("invalid scheme");
@@ -147,6 +148,7 @@ public class MbTilesFile extends ChartFile {
 
     @Override
     protected void readHeader() throws Exception {
+        if (hasError()) throw new Exception(mError);
         mSources.put(0,"mbtiles");
         Cursor cu=null;
         if (db != null){
@@ -223,6 +225,7 @@ public class MbTilesFile extends ChartFile {
 
     @Override
     public ChartInputStream getInputStream(int pX, int pY, int pZ, int sourceIndex) throws IOException {
+        if (hasError()) throw new IOException(mError);
         if (db == null) return null;
         synchronized (lock) {
             Tile param=zxyToZoomColRow(pZ,pX,pY);

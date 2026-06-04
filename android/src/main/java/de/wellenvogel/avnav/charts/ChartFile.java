@@ -29,7 +29,7 @@ import java.util.TreeSet;
  */
 public abstract class ChartFile {
 
-
+	protected String mError=null;
 	protected Context mContext;
 	protected DocumentFile mDocument;
 	protected File mRealFile;
@@ -47,6 +47,12 @@ public abstract class ChartFile {
 
 	public abstract long getSequence();
 
+	public boolean hasError(){
+		return mError != null;
+	}
+	public String getError(){
+		return mError;
+	}
 
 	static interface AbstractFile{
 		public void close() throws IOException;
@@ -153,13 +159,17 @@ public abstract class ChartFile {
 	 * @throws IOException
 	 */
 	protected void initialize() throws Exception {
-		if (mDocument != null){
-			openFilesUri();
+		try {
+			if (mDocument != null) {
+				openFilesUri();
+			} else {
+				openFiles();
+			}
+			readHeader();
+		}catch (Exception e){
+			mError=e.getMessage();
+			if (mError == null) mError=e.toString();
 		}
-		else{
-			openFiles();
-		}
-		readHeader();
 	}
 
 

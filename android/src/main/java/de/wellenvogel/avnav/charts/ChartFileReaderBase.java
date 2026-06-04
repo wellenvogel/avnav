@@ -161,4 +161,10 @@ public abstract class ChartFileReaderBase {
             return (o.maxZoom - maxZoom);
         }
     }
+    public boolean hasError(){
+        return false;
+    }
+    public String getError(){
+        return null;
+    }
 }

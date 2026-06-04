@@ -172,4 +172,14 @@ public class ChartFileReader extends ChartFileReaderBase {
     public long getSequence(){
         return chart.getSequence();
     }
+
+    @Override
+    public String getError() {
+        return chart.getError();
+    }
+
+    @Override
+    public boolean hasError() {
+        return chart.hasError();
+    }
 }

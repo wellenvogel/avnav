@@ -122,7 +122,7 @@ public class GEMFFile  extends ChartFile {
 	@Override
 	protected void openFiles() throws FileNotFoundException {
 		// Populate the mFiles array
-
+		if (hasError()) throw new FileNotFoundException(mError);
 		final File base = mRealFile;
 		mFiles.add(new GRandomAcccesFile(base, "r"));
 		mFileNames.add(base.getPath());
@@ -142,6 +142,7 @@ public class GEMFFile  extends ChartFile {
 
 	@Override
 	protected void openFilesUri() throws IOException {
+		if (hasError()) throw new IOException(mError);
 		// Populate the mFiles array
 		mFiles.add(fileFromContentUri(mDocument.getUri()));
 		mFileNames.add(mDocument.getUri().toString());
@@ -170,6 +171,7 @@ public class GEMFFile  extends ChartFile {
 	 * not thread safe!
 	 */
 	protected void readHeader() throws IOException {
+		if (hasError()) throw new IOException(mError);
 		final AbstractFile baseFile = mFiles.get(0);
 
 		// Get file sizes

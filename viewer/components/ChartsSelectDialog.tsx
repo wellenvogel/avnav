@@ -45,9 +45,11 @@ export interface ChartItemProps extends Item{
     actions:any,
     onClick:(ev:SyntheticEvent) => void,
     overlayClick?:(ev:SyntheticEvent) => void,
+    hideErrors?:boolean, //hide chart when error is set , default true
 }
 export const ChartItem=(props:ChartItemProps)=>{
     const iconProperties=getItemIconProperties(props);
+    if (Helper.unsetorTrue(props.hideErrors) && props.error){ return null;}
     return <ListItem
         className={concatsp(
             props.actions.getClassName(props),
@@ -80,6 +82,7 @@ export interface ChartItemListProps{
     itemClick:(ev:SyntheticEvent) => void;
     autoreload?:number;
     selected?:string;
+    hideErrors?:boolean; //hide charts with errors, default true
 }
 const COMPONENT=DialogKeyComponents.CHARTSELECTLIST;
 export const ChartItemList=(props:ChartItemListProps)=>{
@@ -132,6 +135,7 @@ export const ChartItemList=(props:ChartItemListProps)=>{
                     }
                     chart.overlayClick=props.overlayClick;
                     chart.actions=actions;
+                    chart.hideErrors=props.hideErrors;
                 }
                 setItemList(charts);
                 if (charts.length > 0){

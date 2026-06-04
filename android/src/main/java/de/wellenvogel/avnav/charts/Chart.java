@@ -291,20 +291,27 @@ public class Chart implements IChartWithConfig {
         JSONObject e = new JSONObject();
         int numFiles=0;
         long sequence=0;
-        String scheme="";
+        String scheme=null;
         String orignalScheme=null;
+        String error=null;
         try {
             if (isXml()) {
                 numFiles=1;
             }
             else {
-                numFiles= getChartFileReader().numFiles();
-                sequence=getChartFileReader().getSequence();
-                scheme=getChartFileReader().getScheme();
-                orignalScheme=getChartFileReader().getOriginalScheme();
+                ChartFileReaderBase reader=getChartFileReader();
+                if (reader.hasError()){
+                    error=reader.getError();
+                }
+                else {
+                    numFiles = reader.numFiles();
+                    sequence = reader.getSequence();
+                    scheme = reader.getScheme();
+                    orignalScheme = reader.getOriginalScheme();
+                }
             }
         }catch (Exception ex){
-            throw new JSONException(ex.getLocalizedMessage());
+            error=ex.getMessage();
         }
         boolean canDelete=canDelete();
         String displayName=fileName;
@@ -317,10 +324,13 @@ public class Chart implements IChartWithConfig {
         e.put("info",numFiles+" files");
         e.put("canDownload",isXml() || (numFiles == 1));
         e.put("sequence",sequence);
-        e.put("scheme",scheme);
+        if (scheme != null) e.put("scheme",scheme);
         e.put("name",getChartKey());
         if (orignalScheme != null){
             e.put("originalScheme",orignalScheme);
+        }
+        if (error != null){
+            e.put("error",error);
         }
         if (isInternal){
             e.put("checkPrefix",keyPrefix);
