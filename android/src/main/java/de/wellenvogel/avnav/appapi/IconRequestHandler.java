@@ -24,20 +24,28 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
     protected Context context;
     JSONArray iconFiles;
     static final String ICONBASE="viewer/images";
-    public IconRequestHandler(String type, GpsService ctx,String urlPrefrix) throws IOException {
+    static final String[] SUBDIRS=new String[]{"default","legacy"};
+
+    private void addAssetFiles(JSONArray iconFiles,String assetPath,String prefix) throws Exception {
+        for (String name : gpsService.getAssets().list(assetPath)) {
+            JSONObject item = new JSONObject();
+            item.put("name", prefix.isEmpty()?name:prefix+"."+name);
+            item.put("url", "/"+this.urlPrefix+(prefix.isEmpty()?"":"/"+prefix)+"/"+name);
+            item.put("canDelete",false);
+            item.put("mtime", BuildConfig.TIMESTAMP/1000);
+            iconFiles.put(item);
+        }
+    }
+    public IconRequestHandler(String type, GpsService ctx,String urlPrefix) throws IOException {
         super(type,ctx);
         this.type=type;
-        this.urlPrefix=urlPrefrix;
+        this.urlPrefix=urlPrefix;
         this.context=ctx;
         iconFiles=new JSONArray();
         try {
-            for (String name : ctx.getAssets().list(ICONBASE)) {
-                JSONObject item = new JSONObject();
-                item.put("name", name);
-                item.put("url", "/"+urlPrefrix+"/"+name);
-                item.put("canDelete",false);
-                item.put("mtime", BuildConfig.TIMESTAMP/1000);
-                iconFiles.put(item);
+            addAssetFiles(iconFiles,ICONBASE,"");
+            for (String sub:SUBDIRS){
+                addAssetFiles(iconFiles,ICONBASE+"/"+sub,sub);
             }
         }catch(Throwable t){
             AvnLog.e("unable to read system icons");
@@ -113,7 +121,18 @@ public class IconRequestHandler extends Worker implements INavRequestHandler{
         if (path.startsWith("/")) path=path.substring(1);
         if (!path.startsWith(urlPrefix)) return null;
         path = path.substring((urlPrefix.length()+1));
-        if (! isValidName(path)) return null;
+        if (! isValidName(path)) {
+            boolean found=false;
+            for (String sub:SUBDIRS){
+                if (path.startsWith(sub+"/")){
+                    if (isValidName(sub+"."+path.substring(sub.length()+1))){
+                        found=true;
+                        break;
+                    }
+                }
+            }
+            if (! found) return null;
+        }
         return new ExtendedWebResourceResponse(-1,RequestHandler.mimeType(path), "",context.getAssets().open(ICONBASE+"/"+path));
     }
 

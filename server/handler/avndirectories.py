@@ -137,7 +137,7 @@ class AVNImagesHandler(AVNDirectoryHandlerBase):
 
 class AVNOverlayHandler(AVNDirectoryHandlerBase):
   PREFIX = "/overlays"
-  ICONPREFIX=PREFIX+"/icons"
+
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
@@ -179,6 +179,25 @@ class AVNIconHandler(AVNDirectoryHandlerBase):
   def startInstance(self, navdata):
     super().startInstance(navdata)
     self.baseDir=os.path.join(self.httpServer.handlePathmapping(AVNHttpServer.PATH_VIEWER),'images')
+
+  def handlePathRequest(self, path:str, requestparam, server=None, handler=None):
+      try:
+        return super().handlePathRequest(path, requestparam, server, handler)
+      except FileNotFoundError as e:
+          return super().handlePathRequest('legacy/'+path, requestparam, server, handler)
+
+  def listDirectory(self, includeDirs=False, baseDir=None, extension=None, scope=None, entryCallback=None):
+      rt= super().listDirectory(False, baseDir, extension, scope=None, entryCallback=None)
+      for dir in ['default','legacy']:
+          sub=os.path.join(self.baseDir,dir)
+          def updateItem(element):
+              element.url=element.url.replace(self.getPrefix(),self.getPrefix()+"/"+dir)
+              element.name=dir+"."+element.name
+              return True
+          if os.path.isdir(sub):
+            subdata = super().listDirectory(False, sub, extension,entryCallback=updateItem)
+            rt=rt+subdata
+      return rt
 
 
 
