@@ -20,7 +20,7 @@ export interface DialogButtonProps extends Options{
     visible?: boolean;
     close?: boolean;  //default: true
     children?: React.ReactNode;
-    label?: React.ReactNode;
+    label?: string;
 }
 const COMPONENT=DialogKeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{

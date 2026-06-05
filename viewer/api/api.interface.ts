@@ -481,15 +481,15 @@ export interface Button{
                             //otherwise you must implement onClick and call
                             //context.closeDialog()
     /**
-     * the click handler of the butoon
+     * the click handler of the button
      * @param event the original event (pass this e.g. to showDialog as context)
      * @param currentValues the current values of the parameters
      * @param closeFunction can be called to close the dialog
      * @returns {WidgetParameterValues|undefined} if you return a object it is interpreted as new values to be set in the dialog
      */
     onClick?:(event:object,
-              currentValues:WidgetParameterValues,
-              closeFunction:()=>void)=>WidgetParameterValues|undefined;
+              currentValues?:WidgetParameterValues,
+              closeFunction?:()=>void)=>((WidgetParameterValues|void)|Promise<WidgetParameterValues|void>);
 }
 export interface DialogConfig {
     className?: string;
@@ -506,7 +506,7 @@ export interface DialogConfig {
      * @param values only the changed values
      */
     onChange?: (event: object, values: WidgetParameterValues) => WidgetParameterValues | undefined;
-    buttons?: [Button];               //if not provided Cancel is shown
+    buttons?: Button[];               //if not provided Cancel is shown
     /**
      * if provided it will be called when the dialog closes
      *

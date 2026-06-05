@@ -39,7 +39,7 @@ import editableParameterFactory, {
     EditableSelectParameter,
     EditableStringParameter
 } from "../util/EditableParameter";
-import Helper from "../util/helper";
+import Helper, {setav} from "../util/helper";
 import Button from "./Button";
 import {KeyHelper} from "../util/keys";
 import globalStore from "../util/globalstore";
@@ -233,6 +233,37 @@ export class EditableStringParameterUI extends EditableStringParameter{
             checkFunction={(nv)=>checkerHelper(this,nv)}
             onChange={(nv)=>{
                 onChange(this.setValue(undefined,nv))
+            }}
+        />
+    }
+}
+
+export class EditableCustomDialogUI extends EditableStringParameter{
+    constructor(props) {
+        super(props,true);
+        this.onClick=props.onClick;
+        cHelper(this);
+    }
+
+    render({currentValues,initialValues,className,onChange,children}){
+        const dialogContext=useDialogContext();
+        const common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:this.canEdit()?onChange:undefined,children});
+        if (common.value === undefined) common.value='';
+        if (!this.canEdit()){
+            return <InputReadOnly
+                {...common}/>
+        }
+        return <InputReadOnly
+            {...common}
+            type={'text'}
+            onClick={(ev)=>{
+                setav(ev,{
+                    param:this,
+                    valus:currentValues,
+                    initialValues:initialValues,
+                    onChange:onChange,
+                    dialogContext:dialogContext});
+                if (this.onClick) this.onClick(ev);
             }}
         />
     }
@@ -436,7 +467,7 @@ const RenderIcon=({url})=>{
         {url&&<span className={"url"}>{url.replace(/.*\//,'')}</span>}
     </React.Fragment>
 }
-class EditableIconParameterUI extends EditableIconParameter{
+export class EditableIconParameterUI extends EditableIconParameter{
     constructor(props) {
         super(props,true);
         cHelper(this);

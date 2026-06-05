@@ -23,7 +23,6 @@ export interface AddonProps extends UserApp {
     page?:PluginPage|[PluginPage],
     originalUrl?:string,
     canDelete?:boolean,
-    keepUrl?:boolean,
 }
 export interface PluginAddonProps extends AddonProps{
     pluginName: string;
@@ -76,7 +75,6 @@ export class ServerAddon implements AddonProps{
     canDelete?: boolean;
     source?: string;
     title?: string;
-    keepUrl?: boolean;
     originalUrl?: string;
     url:string;
     preventConnectionLost?: boolean;
@@ -90,12 +88,12 @@ export class ServerAddon implements AddonProps{
         this.canDelete=Helper.toBoolean(raw.canDelete);
         this.source=raw.source;
         this.title=raw.title;
-        this.keepUrl=Helper.toBoolean(raw.keepUrl);
         this.preventConnectionLost=Helper.toBoolean(raw.preventConnectionLost);
         this.newWindow=Helper.toBoolean(raw.newWindow);
         this.key=raw.key||raw.name;
         this.url=raw.url;
         this.page=raw.page;
+        this.originalUrl=raw.originalUrl;
         let label = raw.title;
         if (! label){
             label=raw.name||"";

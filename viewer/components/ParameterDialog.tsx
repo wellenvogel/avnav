@@ -62,8 +62,16 @@ export const ParameterDialog = (props:TParameterDialog) => {
             buttons.push({
                 ...button,
                 onClick: (ev:Event) => {
-                    setav(ev, {dialogContext: dialogContext});
-                    if (button.onClick) changeValues(button.onClick(ev, values, dialogContext.closeDialog));
+                    setav(ev, {dialogContext: dialogContext,currentValues:values});
+                    if (button.onClick) {
+                        const res=button.onClick(ev, values, dialogContext.closeDialog);
+                        if (res instanceof Promise) {
+                            res.then((nv)=>changeValues(nv));
+                        }
+                        else {
+                            changeValues(res);
+                        }
+                    }
                 }
             })
         })
@@ -71,7 +79,10 @@ export const ParameterDialog = (props:TParameterDialog) => {
     let dataValid=true;
     if (props.parameters) {
         props.parameters.forEach((parameter) => {
-            if (parameter.hasError(values || {})) dataValid = false;
+            if (!parameter.checkConditions(values,props.parameters)) return;
+            if (parameter.hasError(values || {})) {
+                dataValid = false;
+            }
         })
     }
     if (! dataValid){
@@ -112,7 +123,13 @@ export const ParameterDialog = (props:TParameterDialog) => {
     </ErrorBoundary>
 
 }
-export type ParameterType=ParametersWithName|EditableParameter;
+interface DialogParameter extends ParametersWithName {
+    onClick?: (ev:Event) => void;
+}
+interface DialogEditableParameter extends EditableParameter {
+    onClick?: (ev:Event) => void;
+}
+export type ParameterType=DialogParameter|DialogEditableParameter;
 interface ParameterCacheEntry{
     plain: ParameterType,
     ui: TEditableParameterUI,
@@ -124,9 +141,12 @@ export interface PlainParameterDialogProps extends Omit<DialogConfig, "parameter
 export const PlainParameterDialog=(props:PlainParameterDialogProps)=>{
     const renderParam=useRef<ParameterCache>({})
     if (Array.isArray(props.parameters)){
+        let idx=0;
         props.parameters.forEach(item=>{
             if (! item.name) return;
-            const existing=renderParam.current[item.name];
+            const itemKey=item.name+idx;
+            idx++;
+            const existing=renderParam.current[itemKey];
             if (existing) {
                 if (!shallowEqual(item, existing.plain)) {
                     existing.ui = EditableParameterUIFactory.createEditableParameterUI(item);
@@ -134,7 +154,7 @@ export const PlainParameterDialog=(props:PlainParameterDialogProps)=>{
                 }
             }
             else{
-                renderParam.current[item.name]={
+                renderParam.current[itemKey]={
                     ui: EditableParameterUIFactory.createEditableParameterUI(item),
                     plain: item,
                 }
