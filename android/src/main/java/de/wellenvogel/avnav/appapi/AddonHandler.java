@@ -59,7 +59,6 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             rt.put("canDelete",true);
             rt.put("url",url);
             rt.put("originalUrl",url);
-            rt.put("keepUrl",url.startsWith("http") && ! adaptHttpUrls);
             rt.put("icon",icon);
             rt.put("newWindow",newWindow);
             rt.put("page",page);
@@ -141,7 +140,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting, boolean completeName) throws Exception {
         throw new Exception("not implemented");
     }
-
+    private static boolean hasExternalUrl(JSONObject aj){
+        return aj.optString("url","").toLowerCase().startsWith("http");
+    }
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
         String includeInvalid=uri.getQueryParameter("invalid");
@@ -153,10 +154,8 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         }
         for (AddonInfo addon : addons) {
             JSONObject aj=addon.toJson();
-            if (aj.optBoolean("keepUrl",false)){
-                //external url
-                String url=aj.optString("url","").replace("$HOST",host);
-                aj.put("url",url);
+            if (hasExternalUrl(aj)){
+                aj.put("url",aj.getString("url").replace("$HOST",host));
             }
             rt.put(aj);
         }
@@ -167,9 +166,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 if (extAddons == null) continue;
                 for (AddonInfo addon: extAddons){
                     JSONObject aj=addon.toJson();
-                    if (serverInfo != null) {
+                    if (serverInfo != null && hasExternalUrl(aj)) {
                         for (String rk : REPLACE_KEYS) {
-                            if (aj.optBoolean("keepUrl", false) || !rk.equals("url")) {
+                            if ( !rk.equals("url")) {
                                 //external url
                                 String v = aj.optString(rk, "");
                                 v=serverInfo.replaceHostInUrl(v);

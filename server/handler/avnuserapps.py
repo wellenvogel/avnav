@@ -59,7 +59,6 @@ class AVNUserAppHandler(AVNWorker):
         'url':None, #we replace $HOST...
         'title':'',
         'icon':None, #an icon below $datadir/user
-        'keepUrl':'', #auto detect
         'newWindow':'',
         'page':'',
         'name':''
@@ -175,14 +174,6 @@ class AVNUserAppHandler(AVNWorker):
           addon['invalid']=True
       if addon.get('title') == '':
         del addon['title']
-      keepUrl = False
-      if addon.get('keepUrl') is None or addon.get('keepUrl') == '':
-        if addon.get('url').startswith("http"):
-          keepUrl = True
-      else:
-        if str(addon.get('keepUrl')).lower() == "true":
-          keepUrl = True
-      addon['keepUrl'] = keepUrl
       icon = addon['icon']
       if not icon.startswith("http"):
         if not icon.startswith("/"):
@@ -334,7 +325,6 @@ class AVNUserAppHandler(AVNWorker):
           param['title'] = title
           param['url'] = url
           param['newWindow'] = newWindow
-          param['keepUrl'] = url.startswith("http")
           param['page'] = page
           doAdd = False
           if name is None:

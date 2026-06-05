@@ -104,7 +104,6 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         'url':None, #we replace $HOST...
         'title':'',
         'icon':None, #an icon below $datadir/user
-        'keepUrl':'' #auto detect
       }
     if not child is None:
       return None
