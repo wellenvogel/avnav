@@ -27,7 +27,8 @@ import ButtonDefs from "../components/ButtonDefs";
 
 interface AddonItemProps extends InternalAddonProps {
     className?: string;
-    onClick?: ButtonEventHandler
+    onClick?: ButtonEventHandler,
+    buttonKey?: string,
 }
 
 const AddonItem=(props:AddonItemProps)=>{
@@ -66,7 +67,7 @@ const AddonItem=(props:AddonItemProps)=>{
                             }
                         }
                         if (!page) page=PAGEIDS.ADDON;
-                        history.push(page, {button: props.key||props.name})
+                        history.push(page, {button: props.buttonKey||props.key||props.name})
                     }
                     }
                     iconClass={props.button.iconClass}
@@ -83,13 +84,19 @@ const AddonItem=(props:AddonItemProps)=>{
     )
 };
 
+const getAddons=()=>{
+    return Addons.getAllAddons().map(addon=>{
+        return {...addon,buttonKey:addon.key}
+    })
+}
+
 export const AddonConfigPage = (props: PageProps) => {
     useStoreState(keys.gui.global.reloadSequence);
     const [connected] = useStoreState(keys.gui.global.connectedMode);
     const [uploadImages]=useStoreState(keys.gui.capabilities.uploadImages);
     const [uploadUser]=useStoreState(keys.gui.capabilities.uploadUser);
     const history = useHistory();
-    const [addons, setAddons] = React.useState(Addons.getAllAddons());
+    const [addons, setAddons] = React.useState(getAddons());
     const [scrollProps, scrollTo, visible] = useScrollHelper(0);
     const [uploadPropsUser, uploadActionUser] = useUploadHelper('user');
     const [uploadPropsImages, uploadActionImages] = useUploadHelper('images');
@@ -134,7 +141,7 @@ export const AddonConfigPage = (props: PageProps) => {
     }
 
     const readAddons = () => {
-        setAddons(Addons.getAllAddons());
+        setAddons(getAddons());
     }
 
     const buttons = InjectMainMenu(PAGEIDS.ADDCFG, updateButtons(AddOnConfigPageButtons, buttonActions));
@@ -156,10 +163,9 @@ export const AddonConfigPage = (props: PageProps) => {
                             itemClass={AddonItem}
                             onItemClick={(ev) => {
                                 const item: AddonProps = avitem(ev);
-                                const itemUrl = (item.originalUrl !== undefined) ? item.originalUrl : item.url;
                                 showPromiseDialog(undefined, (props) =>
                                     <UserAppDialog {...props} fixed={{name: item.name}}
-                                                   addon={{...item, url: itemUrl,canDelete: item.canDelete && connected}}/>
+                                                   addon={{...item, canDelete: item.canDelete && connected}}/>
                                 )
                                     .then(() => readAddons())
                                     .catch(() => readAddons());
