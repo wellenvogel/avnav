@@ -330,7 +330,8 @@ body{
 }
 .dialogObjects{
   .inputFrame{
-    width: 20em;
+    //width: 20em;
+    flex: 1;
     min-width: 5em;
     max-width: 100%;
     display: inline-block;
@@ -356,6 +357,8 @@ body{
       outline: @borderAttention;
       outline-color: var(--avnav-border-color);
     }
+    word-break: break-all;
+    overflow: hidden;
   }
   .error input, .error .input{
     border: @borderAttention;
