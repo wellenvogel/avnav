@@ -84,8 +84,10 @@ export interface CheckBoxProps extends Omit<DEFAULT_TYPES,'onChange'>{
 }
 
 export const Checkbox=(props:CheckBoxProps)=>{
-    let frameClass=props.dialogRow?"dialogRow":"";
-    if (props.className) frameClass+=" "+props.className;
+    const frameClass=Helper.concatsp(props.dialogRow?"dialogRow":undefined,
+        props.className?props.className:undefined,
+        props.readOnly?'disabled':undefined
+        );
     const clickFunction=(ev:SyntheticEvent)=>{
         if (props.readOnly) {
             ev.stopPropagation();

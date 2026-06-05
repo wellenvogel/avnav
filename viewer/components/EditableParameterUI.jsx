@@ -228,6 +228,7 @@ export class EditableStringParameterUI extends EditableStringParameter{
                 {...common}/>
         }
         return <Input
+            minSize={20}
             {...common}
             type={'text'}
             checkFunction={(nv)=>checkerHelper(this,nv)}
@@ -478,8 +479,7 @@ export class EditableIconParameterUI extends EditableIconParameter{
         return <InputReadOnly
             {...getCommonParam({ep:this,currentValues,initialValues,className:Helper.concatsp(className,'iconInput'),onChange:this.canEdit()?onChange:undefined,children})}
             value={<RenderIcon url={url}/>}
-            onClick={()=>{
-                if (! this.canEdit()) return;
+            onClick={ this.canEdit()?()=>{
                 showPromiseDialog(dialogContext,(dprops)=>
                     <IconDialog {...dprops}
                                 addEmpty={this.mandatory !== true}
@@ -489,7 +489,7 @@ export class EditableIconParameterUI extends EditableIconParameter{
                         onChange(this.setValue(undefined,selected.url))
                     })
                     .catch(()=>{})
-            }}/>
+            }:undefined}/>
     }
 }
 

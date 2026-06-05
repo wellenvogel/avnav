@@ -322,7 +322,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
             list:Object.values(PLUGINPAGES).map((page)=>{
                     const label=getPageLabel(page);
                     return {label:label,value:page}
-                }),
+                }).concat({label:'--default--',value:undefined}),
             condition:{newWindow:false},
             description:'The page in AvNav to show this user app'
         }))
@@ -409,11 +409,11 @@ const UserAppDialog = (props:UserAppDialogProps) => {
     }, []);
     let canEdit = unsetOrTrue(currentAddon.canDelete);
     if (!loaded) canEdit = false;
-    let title = "";
+    let title = "Show ";
     if (canEdit) title = currentAddon.name ? "Modify " : "Create ";
     const parameters = buildDialogParameters(canEdit);
     return <ParameterDialog
-        title={title + 'User Apps'}
+        title={title + 'User App'}
         parameters={parameters}
         values={currentAddon}
         onChange={(_ev, values) => {
@@ -496,6 +496,9 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                             if (unsetOrTrue(props.showToasts)) Toast("unable to add/update: " + error);
                         });
 
+                },
+                {
+                    visible: canEdit
                 }
             )
         ]}

@@ -4,7 +4,7 @@
 
 import Button, {ButtonDef, ButtonEventHandler, updateButtons} from '../components/Button';
 import ItemList from '../components/ItemList';
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
 import Addons, {AddonProps, InternalAddonProps} from '../util/Addons';
 import UserAppDialog from '../components/UserAppDialog';
@@ -30,6 +30,7 @@ interface AddonItemProps extends InternalAddonProps {
     className?: string;
     onClick?: ButtonEventHandler,
     buttonKey?: string,
+    selected?: boolean;
 }
 
 const AddonItem=(props:AddonItemProps)=>{
@@ -43,6 +44,7 @@ const AddonItem=(props:AddonItemProps)=>{
     const pages=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON];
     return (
         <ListItem
+            selected={props.selected}
             className={concatsp("addonItem",
                 props.invalid?"invalid":undefined,
                 props.className)}
@@ -94,6 +96,7 @@ const getAddons=()=>{
 
 export const AddonConfigPage = (props: PageProps) => {
     useStoreState(keys.gui.global.reloadSequence);
+    const [selectedItem,setSelectedItem]=useState<string>();
     const [connected] = useStoreState(keys.gui.global.connectedMode);
     const [uploadImages]=useStoreState(keys.gui.capabilities.uploadImages);
     const [uploadUser]=useStoreState(keys.gui.capabilities.uploadUser);
@@ -159,12 +162,14 @@ export const AddonConfigPage = (props: PageProps) => {
                     <React.Fragment key="0">
                         <MvHeadline title={"Configure"}></MvHeadline>
                         <ItemList
+                            selectedKey={selectedItem}
                             className="addonItems"
                             scrollable={true}
                             itemList={addons}
                             itemClass={AddonItem}
                             onItemClick={(ev) => {
                                 const item: AddonProps = avitem(ev);
+                                setSelectedItem(item.key||item.name);
                                 showPromiseDialog(undefined, (props) =>
                                     <UserAppDialog {...props} fixed={{name: item.name}}
                                                    addon={{...item, canDelete: item.canDelete && connected}}/>
