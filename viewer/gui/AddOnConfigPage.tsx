@@ -23,6 +23,7 @@ import {useUploadHelper} from "../components/UploadHandler";
 import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
 import {useStoreHelper} from "../util/UiHelper";
 import ButtonDefs from "../components/ButtonDefs";
+import {iconClasses} from '../components/Icons';
 
 
 interface AddonItemProps extends InternalAddonProps {
@@ -80,6 +81,7 @@ const AddonItem=(props:AddonItemProps)=>{
                 <div className="pageAndButton">{`Page ${pages.join(",")} Button: ${props.buttonClass}`}</div>
                 <div className="sourceInfo">{source}</div>
             </ListMainSlot>
+            <ListSlot icon={{className:props.canDelete?iconClasses.Edit:undefined}}/>
         </ListItem>
     )
 };
