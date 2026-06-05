@@ -97,7 +97,7 @@ DepthDisplayFlex.predefined={
             type:'BOOLEAN',
             default: false,
             description: 'let the fractional part extend to have the requested number of digits',
-            condition: {digits:(all,dv)=>dv>0}
+            condition: {digits:(dv)=>dv>0}
         },
         offset: new EditableFloatParameterUI({
             name:'offset',

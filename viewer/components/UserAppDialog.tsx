@@ -17,7 +17,7 @@ import {checkName, ItemNameDialog} from "./ItemNameDialog";
 import {createItemActions} from "./FileDialog";
 import {useDialogContext} from "./DialogContext";
 import {Item} from "../util/itemFunctions";
-import { SelectListEntry} from "../util/EditableParameter";
+import {SelectListEntry, Value} from "../util/EditableParameter";
 import {EditableBooleanParameterUI, EditableStringParameterUI,
     EditableCustomDialogUI,EditableIconParameterUI,
     // @ts-ignore
@@ -244,7 +244,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
             displayName:'url',
             readOnly: true,
             description: 'The url of this user app. Cannot be changed in this mode',
-            condition: {fixedUrl:(_values:any,v:any)=>!!v}
+            condition: {fixedUrl:(v:Value)=>!!v}
         }))
         rt.push(new EditableBooleanParameterUI({
             name: 'internal',
@@ -252,24 +252,31 @@ const buildDialogParameters=(canEdit:boolean)=> {
             defaultValue: true,
             displayName: 'internal',
             description: 'If checked you can select a HTML page from the AvNav user files to be shown as user app. If unchecked you can select an external URL.',
-            condition:{fixedUrl:(_values:any,v:any)=>!v}
+            condition:{fixedUrl:(v:Value)=>!v}
         }))
         rt.push(new EditableStringParameterUI({
             name: 'externalUrl',
             displayName: 'external url',
             readOnly: !canEdit,
-            condition: {internal: false,fixedUrl:(_values:any,v:any)=>!v},
-            checker: (value: string) => checkUrl(value, true),
-            mandatory: true,
+            condition: {
+                internal: false,
+                fixedUrl:(v:Value)=>!v,
+                externalUrl:(v:Value)=>canEdit || !!v
+            },
+            checker: canEdit?(value: string) => checkUrl(value, true):undefined,
+            mandatory: canEdit,
             description: 'An external URL. The URL must start with http[s]. You can use $HOST in the url to let AvNav replace this with the IP of the AvNav server dynamically.',
         }));
         rt.push(new EditableCustomDialogUI({
             name: 'internalUrl',
             displayName: 'internal url',
             readOnly: !canEdit,
-            condition: {internal: true,fixedUrl:(_values:any,v:any)=>!v},
-            checker: (value: string) => checkUrl(value, false),
-            mandatory: true,
+            condition: {internal: true,
+                fixedUrl:(v:Value)=>!v,
+                internalUrl:(v:Value)=>canEdit || !!v
+            },
+            checker: canEdit?(value: string) => checkUrl(value, false):undefined,
+            mandatory: canEdit,
             description: 'An internal URL. The URL must not start with http[s]',
             onClick:(ev:SyntheticEvent) => {
                 const av=getav(ev);
@@ -289,14 +296,15 @@ const buildDialogParameters=(canEdit:boolean)=> {
             displayName:'icon',
             readOnly: !canEdit,
             description:'The button icon to be shown',
-            mandatory: true,
+            mandatory: canEdit,
+            condition: {icon:(v:Value)=>canEdit||!!v}
         }))
         rt.push(new EditableStringParameterUI({
             name:'title',
             displayName:'title',
             readOnly: !canEdit,
-            condition: {title: (_values:any,v:any)=>canEdit || !!v,
-                newWindow:(_values:any,v:any)=>!Helper.unsetorTrue(v)},
+            condition: {title: (v:Value)=>canEdit || !!v,
+                newWindow:(v:Value)=>!Helper.unsetorTrue(v)},
             description:'If set AvNav will show a title bar wit this text'
         }))
         rt.push(new EditableBooleanParameterUI({
@@ -354,7 +362,7 @@ const addonToParam=(addon:InternalAddonProps,fixed?:UserAppDialogFixed)=>{
     }
     if (rt.internal) rt.internalUrl=(merged.originalUrl||merged.url) as string;
     else rt.externalUrl=(merged.originalUrl || merged.url) as string;
-    rt.title=merged.title+"";
+    rt.title=merged.title as string;
     rt.fixedName=fixed?.name;
     rt.fixedUrl=fixed?.url as string;
     rt.icon=merged.button?.icon as string;

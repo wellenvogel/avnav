@@ -25,7 +25,7 @@ import Helper from "./helper";
 export type Properties =Record<string,any>;
 export type Value =string|number|boolean|Record<string,string>;
 export type Values =Record<string, Value>;
-export type Condition=Value|((values:Values,value:Value)=>boolean);
+export type Condition=Value|((value:Value,values:Values)=>boolean);
 export type Conditions =Record<string,Condition>;
 export interface SelectListEntry extends Record<string, any>{
     value:any,
@@ -171,7 +171,7 @@ export class EditableParameter extends Object{
     conditionMatch(values:Values, compare:Condition){
         const value=this.getValue(values);
         if (typeof compare === 'function'){
-            return compare(values,value);
+            return compare(value,values);
         }
         else return compare == value;
     }
@@ -208,7 +208,7 @@ export class EditableParameter extends Object{
                 else {
                     const value = values[k];
                     if (typeof compare === 'function') {
-                        if (!compare(values, value)) {
+                        if (!compare(value, values)) {
                             match = false;
                             break;
                         }
