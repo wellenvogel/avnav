@@ -497,7 +497,7 @@ export interface DialogConfig {
     text?: string;                       //some text to be shown in the dialog
     html?: string|React.ReactNode;       //some html to be shown after the text
     context?: Record<string,any>;        //context for rendering the html, see user widgets
-    parameters?: [ParametersWithName];   //the list of parameters to be shown
+    parameters?: ParametersWithName[];   //the list of parameters to be shown
     values?: WidgetParameterValues;      //the initial values
     fullscreen?: boolean;                //fill the complete page
     /**

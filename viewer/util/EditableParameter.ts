@@ -72,16 +72,16 @@ export type CheckFunction=(value:any,values:Values)=>boolean;
 
 export class EditableParameter extends Object{
     static TYPE=EditableParameterTypes.UNKNOWN
-    protected type: EditableParameterTypes;
-    protected name: string;
-    protected checker?:CheckFunction;
-    protected displayName?: string;
-    protected default?: Value;
-    protected readOnly?: boolean;
-    protected list: ListEntry[]|(()=>ListEntry[]);
-    protected condition?: Conditions|Conditions[];
-    protected mandatory?: boolean;
-    protected existingUnchecked?: boolean;
+    readonly type: EditableParameterTypes;
+    name: string;
+    checker?:CheckFunction;
+    displayName?: string;
+    default?: Value;
+    readOnly?: boolean;
+    list: ListEntry[]|(()=>ListEntry[]);
+    condition?: Conditions|Conditions[];
+    mandatory?: boolean;
+    existingUnchecked?: boolean;
 
     /**
      * @param plain {Object} object with properties from assignableProperties

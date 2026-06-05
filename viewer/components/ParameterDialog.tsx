@@ -20,19 +20,21 @@
  #  DEALINGS IN THE SOFTWARE.
  #
  */
-import React, {useCallback,} from "react";
+import React, {useCallback, useRef,} from "react";
 import {showDialog, DialogFrame, DialogRow, DialogButtons, DBOk} from "./OverlayDialog";
 import Helper, {getav, setav} from "../util/helper";
 // @ts-ignore
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
 import {ErrorBoundary} from "./ErrorBoundary";
 import {IDialogContext, useDialogContext} from "./DialogContext";
-import {Button, Button as TButton, DialogConfig, WidgetParameterValues} from '../api/api.interface';
+import {Button, Button as TButton, DialogConfig, ParametersWithName, WidgetParameterValues} from '../api/api.interface';
 import {UserHtml} from "./UserHtml";
 import Headline from "./Headline";
 import {iconClasses} from './Icons';
+import {shallowEqual} from "shallow-equal";
+import {EditableParameter} from "../util/EditableParameter";
 
-type TEditableParameterUI=Record<string, any>;
+export type TEditableParameterUI=Record<string, any>;
 export interface TParameterDialog extends Omit<DialogConfig, "parameters"> {
     parameters?: TEditableParameterUI[];
 }
@@ -110,6 +112,42 @@ export const ParameterDialog = (props:TParameterDialog) => {
     </ErrorBoundary>
 
 }
+export type ParameterType=ParametersWithName|EditableParameter;
+interface ParameterCacheEntry{
+    plain: ParameterType,
+    ui: TEditableParameterUI,
+}
+type ParameterCache=Record<string, ParameterCacheEntry>;
+export interface PlainParameterDialogProps extends Omit<DialogConfig, "parameters"> {
+    parameters?: ParameterType[];
+}
+export const PlainParameterDialog=(props:PlainParameterDialogProps)=>{
+    const renderParam=useRef<ParameterCache>({})
+    if (Array.isArray(props.parameters)){
+        props.parameters.forEach(item=>{
+            if (! item.name) return;
+            const existing=renderParam.current[item.name];
+            if (existing) {
+                if (!shallowEqual(item, existing.plain)) {
+                    existing.ui = EditableParameterUIFactory.createEditableParameterUI(item);
+                    existing.plain = item;
+                }
+            }
+            else{
+                renderParam.current[item.name]={
+                    ui: EditableParameterUIFactory.createEditableParameterUI(item),
+                    plain: item,
+                }
+            }
+        })
+    }
+    else{
+        if (props.parameters){
+            throw new Error("config.parameters must be an array");
+        }
+    }
+    return <ParameterDialog {...props} parameters={Object.values(renderParam.current).map(entry=>entry.ui)}/>
+}
 /**
  *
  * @param config {DialogConfig}
@@ -129,17 +167,6 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
                 if (evctx && evctx.showDialog) {
                     dialogContext=evctx;
                 }
-        }
-    }
-    const parameters:TEditableParameterUI[]=[];
-    if (Array.isArray(config.parameters)){
-        config.parameters.forEach(item=>{
-            parameters.push(EditableParameterUIFactory.createEditableParameterUI(item));
-        })
-    }
-    else{
-        if (config.parameters){
-            throw new Error("config.parameters must be an array");
         }
     }
     const buttons:Button[]=[];
@@ -163,6 +190,6 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
         }
     }
     return showDialog(dialogContext,
-        (dp:any)=><ParameterDialog {...dp}{...config} buttons={buttons} parameters={parameters}/>,
+        (dp:any)=><PlainParameterDialog {...dp}{...config} buttons={buttons}/>,
         cancel);
 }
