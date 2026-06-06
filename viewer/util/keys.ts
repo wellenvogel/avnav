@@ -358,7 +358,6 @@ const keys:Record<string,KeyType>={
             scale: new Property(true,"Show ScaleLine", PropertyType.CHECKBOX),
             user: new Property(true,"Show User/Plugin objects",PropertyType.CHECKBOX)
         },
-        startNavPage: new Property(false,"start with last map",PropertyType.CHECKBOX),
         startLastSplit: new Property(false,"start with last split mode",PropertyType.CHECKBOX),
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         alarmVolume: new Property(50,"Alarm Volume (0...100)",PropertyType.RANGE,[0,100]),
@@ -544,6 +543,7 @@ const keys:Record<string,KeyType>={
         cancelTop: new Property(false,"Back button top",PropertyType.DELETED),
         showDimButton: new Property(true,"Show Dim Button",PropertyType.DELETED),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.DELETED),
+        startNavPage: new Property(false,"start with last map",PropertyType.DELETED),
     }
 };
 

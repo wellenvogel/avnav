@@ -88,7 +88,6 @@ export const settingsSections = {
         keys.properties.layers.base,
         keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
         keys.properties.layers.user,
-        keys.properties.startNavPage,
         keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
         keys.properties.clickTolerance,keys.properties.featureInfo,
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
