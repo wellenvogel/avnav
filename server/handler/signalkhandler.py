@@ -1043,10 +1043,10 @@ class AVNSignalKHandler(AVNWorker):
     addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
     if addonhandler:
       if self.config.skHost == "localhost":
-        addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,self.ICON)
+        addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,self.ICON,shortText='SignalK',longText='SignalK UI')
       else:
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://%s:%s" %
-                                              (self.config.skHost,self.config.port), self.ICON)
+                                              (self.config.skHost,self.config.port), self.ICON,shortText='SignalK',longText='SignalK UI')
     router=None
     if self.config.write:
       router=self.findHandlerByName(AVNRouter.getConfigName())

@@ -94,22 +94,9 @@ export class ServerAddon implements AddonProps{
         this.url=raw.url;
         this.page=raw.page;
         this.originalUrl=raw.originalUrl;
-        let label = raw.title;
-        if (! label){
-            label=raw.name||"";
-            if (raw.source){
-                for (const t of ['user-','system-']) {
-                    if (raw.source.startsWith(`plugin-${t}`)) {
-                        const exp=new RegExp("^"+t)
-                        label = label.replace(exp, '');
-                        break;
-                    }
-                }
-            }
-        }
         this.button={name:raw.name,
-            displayName:raw.displayName||label,
-            label:label,
+            displayName:raw.longText||'',
+            label:raw.shortText||'',
             iconClass:raw.iconClass,
             icon:raw.icon};
     }
@@ -474,13 +461,13 @@ const updateAddon=(
        type:'addon',
        command:'update',
        url:url,
-       title: title,
-       icon:icon,
+       title: title||'',
+       icon:icon||'',
        name:name,
-       newWindow: newWindow,
-       page:page,
-       shortText:shortText,
-       longText:longText,
+       newWindow: newWindow||false,
+       page:page||'',
+       shortText:shortText||'',
+       longText:longText||'',
    });
 };
 
@@ -494,13 +481,22 @@ const removeAddon=(name:string)=>{
         })
 };
 const STYLE_NAME='avnav-addon-styles';
-const buildButtonStyles=(button:UserButtonBase,name:string):string=>{
+const buildButtonStyles=(button:UserButtonBase,name:string,title?:string):string=>{
+    let label = (button?.label as string)||title;
+    if (! label){
+        label=name||"";
+        for (const t of ['user-','system-']) {
+                    const exp=new RegExp("^"+t)
+                    label = label.replace(exp, '');
+        }
+
+    }
     let style="";
     if (button?.displayName){
         style+=`.longText.${name}::after{\ncontent:"${button.displayName}";\n}\n`;
     }
-    if (button?.label){
-        style+=`.${name}::after{\ncontent:"${button.label}";\n}\n`;
+    if (label){
+        style+=`.${name}::after{\ncontent:"${label}";\n}\n`;
     }
     if (button?.icon){
         style+=`.${name} .icon{\nbackground-image: url("${button.icon}");\n}\n`;
@@ -512,13 +508,13 @@ const updateAddonCss=()=>{
     for (const sadd of serverAddOns){
         const button=sadd.button;
         const name=getNameForButton(sadd);
-        const styles=buildButtonStyles(button,name);
+        const styles=buildButtonStyles(button,name,sadd.title);
         if (styles) rulesTxt+=styles;
     }
     for (const add of Object.values(pluginAddOns)){
         const button=add.button;
         const name=getNameForButton(add);
-        const styles=buildButtonStyles(button,name);
+        const styles=buildButtonStyles(button,name,add.title as string);
         if (styles) rulesTxt+=styles;
     }
     for (const add of Object.values(pluginUserButtons)){

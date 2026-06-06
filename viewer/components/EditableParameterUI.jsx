@@ -222,7 +222,7 @@ export class EditableStringParameterUI extends EditableStringParameter{
 
     render({currentValues,initialValues,className,onChange,children}){
         const common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:this.canEdit()?onChange:undefined,children});
-        if (common.value === undefined) common.value='';
+        if (common.value == null) common.value='';
         if (!this.canEdit()){
             return <InputReadOnly
                 {...common}/>

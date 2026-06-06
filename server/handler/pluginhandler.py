@@ -337,7 +337,11 @@ class ApiImpl(AVNApi):
             return
         self.phandler.setInfo(self.prefix, info, value)
 
-    def registerUserApp(self, url, iconFile, title=None, preventConnectionLost=False,name=None,page=None):
+    def registerUserApp(self, url, iconFile, title=None, preventConnectionLost=False,
+                        name=None,page=None,
+                        shortText=None,
+                        longText=None
+                        ):
         addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
         if addonhandler is None:
             raise Exception("no http server")
@@ -364,7 +368,9 @@ class ApiImpl(AVNApi):
                     raise Exception("file %s not found" % fn)
                 url = f"{URL_PREFIX}/{self.prefix}/{urllib.parse.quote(url)}"
         addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile)),
-                                   title=title, preventConnectionLost=preventConnectionLost, pluginName=self.prefix,page=userApp.page)
+                                   title=title, preventConnectionLost=preventConnectionLost,
+                                   pluginName=self.prefix,page=userApp.page,
+                                   shortText=shortText,longText=longText)
         self.addonIndex += 1
         return id
 

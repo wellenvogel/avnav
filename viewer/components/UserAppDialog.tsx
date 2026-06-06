@@ -250,12 +250,13 @@ export const selectAddonForEdit=(
 }
 
 const checkUrl=(val:string|URL,isInternal?:boolean)=>{
-    if (! val) return "must not be empty";
+    if (! val) return false;
     if (isInternal){
-        if ((val+"").match(/^http/i)) return "internal urls must not start with http";
-        return
+        if ((val+"").match(/^http/i)) return false;
+        return true;
     }
-    if (!(val+"").match(/^https*:\/\//i)) return "external urls must start with http[s]://";
+    if (!(val+"").match(/^https*:\/\//i)) return false;
+    return true;
 }
 
 export interface UserAppDialogProps{
@@ -301,7 +302,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
                 fixedUrl:(v:Value)=>!v,
                 externalUrl:(v:Value)=>canEdit || !!v
             },
-            checker: canEdit?(value: string) => checkUrl(value, true):undefined,
+            checker: canEdit?(value: string) => checkUrl(value, false):undefined,
             mandatory: canEdit,
             description: 'An external URL. The URL must start with http[s]. You can use $HOST in the url to let AvNav replace this with the IP of the AvNav server dynamically.',
         }));
@@ -313,7 +314,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
                 fixedUrl:(v:Value)=>!v,
                 internalUrl:(v:Value)=>canEdit || !!v
             },
-            checker: canEdit?(value: string) => checkUrl(value, false):undefined,
+            checker: canEdit?(value: string) => checkUrl(value, true):undefined,
             mandatory: canEdit,
             description: 'An internal URL. The URL must not start with http[s]',
             onClick:(ev:SyntheticEvent) => {
@@ -360,7 +361,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
             list:Object.values(PLUGINPAGES).map((page)=>{
                     const label=getPageLabel(page);
                     return {label:label,value:page}
-                }).concat({label:'--default--',value:undefined}),
+                }).concat({label:'--default--',value:''}),
             condition:{newWindow:false},
             description:'The page in AvNav to show this user app'
         }))
@@ -368,7 +369,12 @@ const buildDialogParameters=(canEdit:boolean)=> {
             name:'shortText',
             displayName:'shortText',
             readOnly: !canEdit,
-            description: 'The short text to be shown on the button'
+            description: 'The short text to be shown on the button (max 7. characters)',
+            checker: canEdit?(value: string)=>{
+                if (! value) return true;
+                if (value.length > 7) return false;
+                return true;
+            }:undefined
         }))
         rt.push(new EditableStringParameterUI({
             name:'longText',
@@ -401,8 +407,8 @@ const addonToParam=(addon:Partial<InternalAddonProps>)=>{
     rt.title=addon.title as string;
     rt.icon=addon.button?.icon as string;
     rt.displayPage=(Array.isArray(addon.page)?addon.page[0]:addon.page) as string;
-    rt.shortText=addon.shortText as string;
-    rt.longText=addon.longText as string;
+    rt.shortText=addon.button?.label as string;
+    rt.longText=addon.button?.displayName as string;
     rt.buttonClass=addon.buttonClass as string;
     rt.canDelete=addon.canDelete;
     return rt;
@@ -487,9 +493,9 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                     const icon = current.icon;
                     const newWindow = current.newWindow;
                     const page = current.displayPage;
-                    const title = current.title || '';
-                    const shortText=current.shortText || '';
-                    const longText=current.longText || '';
+                    const title = current.title;
+                    const shortText=current.shortText;
+                    const longText=current.longText;
 
                     Addons.updateAddon(name, url,
                         icon, title, newWindow,

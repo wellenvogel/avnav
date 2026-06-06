@@ -51,24 +51,27 @@ class AVNUserAppHandler(AVNWorker):
   @classmethod
   def getPrefix(cls):
     return None
+
+  SIMPLE_CHILDPARAM = ['title', 'newWindow', 'page', 'shortText', 'longText']
   @classmethod
   def getConfigParam(cls, child=None):
     #we add this to the ones configured at HTTPServer
     if child == cls.CHILDNAME:
-      return {
+      rt= {
         'url':None, #we replace $HOST...
-        'title':'',
         'icon':None, #an icon below $datadir/user
-        'newWindow':'',
-        'page':'',
         'name':''
       }
+      for s in cls.SIMPLE_CHILDPARAM:
+          rt[s] = ''
+      return rt
     if not child is None:
       return None
     rt = {
       'interval': '5',
     }
     return rt
+
 
   @classmethod
   def preventMultiInstance(cls):
@@ -125,6 +128,7 @@ class AVNUserAppHandler(AVNWorker):
           md5.update(v.encode('utf-8'))
         except Exception as e:
           AVNLog.error("unable to compute md5 for %s: %s",v,e)
+    md5.update(time.asctime().encode('utf-8'))
     return md5.hexdigest()
 
   def fillList(self):
@@ -174,15 +178,16 @@ class AVNUserAppHandler(AVNWorker):
           addon['invalid']=True
       if addon.get('title') == '':
         del addon['title']
-      icon = addon['icon']
-      if not icon.startswith("http"):
-        if not icon.startswith("/"):
-          icon="/user/"+icon
-          addon['icon']=icon
-        iconpath = self.findFileForUrl(icon)
-        if iconpath is None:
-          AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
-          addon['invalid'] = True
+      icon = addon.get('icon')
+      if icon is not None:
+        if not icon.startswith("http"):
+          if not icon.startswith("/"):
+            icon="/user/"+icon
+            addon['icon']=icon
+          iconpath = self.findFileForUrl(icon)
+          if iconpath is None:
+            AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
+            addon['invalid'] = True
     self.addonList=data
     self.setInfo('main', "active, %d addons"%len(data), WorkerStatus.NMEA)
     self._updateSequence()
@@ -269,7 +274,11 @@ class AVNUserAppHandler(AVNWorker):
     return True
 
 
-  def registerAddOn(self,name,url,iconPath,title=None,preventConnectionLost=False,pluginName=None,page=None):
+  def registerAddOn(self,name,url,iconPath,title=None,preventConnectionLost=False,
+                    pluginName=None,page=None,
+                    shortText=None,
+                    longText=None
+                    ):
     source='plugin' if pluginName is None else 'plugin-'+pluginName
     newAddon = {
       'name': name,
@@ -280,6 +289,8 @@ class AVNUserAppHandler(AVNWorker):
       'source':source,
       'preventConnectionLost': preventConnectionLost,
       'page': page,
+      'shortText': shortText,
+      'longText': longText,
     }
     self.additionalAddOns.append(newAddon)
     self._updateSequence()
@@ -316,16 +327,12 @@ class AVNUserAppHandler(AVNWorker):
           return self.handleList(handler, includeInvalid is not None and includeInvalid.lower() == 'true')
       elif command == 'update':
           url = AVNUtil.getHttpRequestParam(requestparam, 'url', True)
-          icon = AVNUtil.getHttpRequestParam(requestparam, 'icon', True)
-          title = AVNUtil.getHttpRequestParam(requestparam, 'title')
-          newWindow = AVNUtil.getHttpRequestParam(requestparam, 'newWindow')
-          page=AVNUtil.getHttpRequestParam(requestparam, 'page')
+          icon = AVNUtil.getHttpRequestParam(requestparam, 'icon', False)
           param = {}
+          for p in self.SIMPLE_CHILDPARAM:
+            param[p] = AVNUtil.getHttpRequestParam(requestparam, p)
           param['icon'] = icon
-          param['title'] = title
           param['url'] = url
-          param['newWindow'] = newWindow
-          param['page'] = page
           doAdd = False
           if name is None:
               doAdd = True
@@ -335,11 +342,12 @@ class AVNUserAppHandler(AVNWorker):
                   if entry['name'] == name:
                       raise Exception("trying to add an already existing url %s" % url)
           param['name'] = name
-          if not url.startswith("http"):
+          if icon is not None:
+            if not url.startswith("http"):
               userFile = self.findFileForUrl(url)
               if userFile is None:
                   raise Exception("unable to find a local file for %s" % url)
-          if not icon.startswith("http"):
+            if not icon.startswith("http"):
               iconFile = self.findFileForUrl(icon)
               if iconFile is None:
                   raise Exception("unable to find an icon file for %s" % icon)

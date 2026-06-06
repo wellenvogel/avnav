@@ -227,7 +227,11 @@ class AVNApi(object):
     """
     raise NotImplemented()
 
-  def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False,name=None,page=None):
+  def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False,
+                      name=None,page=None,
+                      shortText=None,
+                      longText=None
+                      ):
     """
     register a user app to be displayed
     this should be called only early - i.e. at the beginning of the run method
@@ -235,6 +239,9 @@ class AVNApi(object):
     @param iconFile: a file name for the icon file, relative pathes to this plugin dir
     @param title: if set - show a title bar with this title
     @param preventConnectionLost: if True - disable any connection lost alarm while displaying
+    @param page: the page to display the button for the user app
+    @param shortText: the text to be shown on the button (max 7 characters)
+    @param longText: the text to be shown as tooltip or at the main menu
     @return:
     """
     raise NotImplemented()
