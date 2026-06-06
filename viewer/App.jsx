@@ -223,6 +223,7 @@ const MainBody = ({ history, nightMode}) => {
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,
                     reloadSequence: keys.gui.global.reloadSequence,
+                    addonsChanged: keys.gui.global.addonsChanged,
                     windowDimensions: keys.gui.global.windowDimensions,
                     dim: keys.gui.global.dimActive,
                     isEditing: keys.gui.global.layoutEditing,
