@@ -634,7 +634,9 @@ class ApiImpl(AVNApi):
                                                      preventConnectionLost=app.get('preventConnectionLost'),
                                                      page=app.get('page'),
                                                      shortText=app.get('shortText'),
-                                                     longText=app.get('longText'))
+                                                     longText=app.get('longText'),
+                                                     name=app.get('name'),
+                                                     )
                             except Exception as e:
                                 AVNLog.error("unable to register user app %s for %s: %s",
                                              repr(app), self.prefix, str(e))
