@@ -70,9 +70,9 @@ export const settingsSections = {
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
         keys.properties.connectionLostAlarm],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.buttonCols,
-        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
+        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,
         keys.properties.buttonText,keys.properties.mainBtText,keys.properties.buttonTitleTime,
-        keys.properties.buttonIconSet],
+        keys.properties.buttonIconSet, keys.properties.showDimNavPage, keys.properties.showDimGpsPage],
     General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
         keys.properties.allowTwoWidgetRows,keys.properties.dashboardNum,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
@@ -131,6 +131,8 @@ settingsConditions[keys.properties.aisCpaEstimated]=(values)=>
     !!((values||{})[keys.properties.aisShowEstimated])
 settingsConditions[keys.properties.boatSteadyMax]=(values)=>
     !!((values||{})[keys.properties.boatSteadyDetect])
+settingsConditions[keys.properties.showDimGpsPage]=()=>globalstore.getData(keys.gui.global.onAndroid)
+settingsConditions[keys.properties.showDimNavPage]=()=>globalstore.getData(keys.gui.global.onAndroid)
 
 
 export type SettingsValuesType=Record<string, PropertyValue>;

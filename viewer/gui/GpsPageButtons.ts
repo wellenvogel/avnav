@@ -69,7 +69,7 @@ export default ()=>{
     return GeneralButtons.concat(propsToDefs(
         btProps.concat([
         EditPageButton,
-        Dimmer.buttonDef()
+        Dimmer.buttonDef(keys.properties.showDimGpsPage),
     ])))
 }
 

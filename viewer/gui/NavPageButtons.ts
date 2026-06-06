@@ -96,5 +96,5 @@ export default GeneralButtons.concat(propsToDefs([
         localOnly:true,
         editDisable:true
     },
-    Dimmer.buttonDef(),
+    Dimmer.buttonDef(keys.properties.showDimNavPage),
 ]))

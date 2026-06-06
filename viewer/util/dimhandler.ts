@@ -6,6 +6,7 @@ import base from "../base";
 import RequestHandler from "./requests";
 import {getServerCommand} from "./UiHelper";
 import ButtonDefs from "../components/ButtonDefs";
+import {DynamicButtonProps} from "../components/Button";
 
 const KEY=keys.gui.global.dimActive;
 const URLPARAM="dimm";
@@ -159,13 +160,27 @@ class DimmHandler{
     enabled(){
         return this.canHandle();
     }
-    buttonDef(){
-        return{
+    buttonDef(storeKey?:string){
+
+        const rt:DynamicButtonProps={
             ...ButtonDefs.Dim,
             onClick: ()=>this.activate(),
-            visible: this.enabled(),
-            overflow: true
+            overflow: true,
         }
+        if (storeKey){
+            rt.storeKeys={
+                visible:storeKey
+            }
+            rt.updateFunction=(state:any)=>{
+                return {
+                    visible: state.visible && this.enabled(),
+                }
+            }
+        }
+        else{
+            rt.visible=this.enabled();
+        }
+        return rt;
     }
 
 }

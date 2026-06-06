@@ -467,7 +467,6 @@ const keys:Record<string,KeyType>={
             'The maximum number of dashboard pages. Pages are only shown if widgets are assigned during layout editing'),
         mapClickWorkaroundTime: new Property(300, "time to ignore events map click", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
-        nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.CHECKBOX),
         hideButtonTime: new Property(30,"time(s) to hide buttons on enabled pages",PropertyType.RANGE,[2,90]),
         showButtonShade: new Property(true,"show shade when buttons hidden",PropertyType.CHECKBOX),
         autoHideNavPage: new Property(false,"auto hide buttons on NavPage",PropertyType.CHECKBOX),
@@ -487,6 +486,8 @@ const keys:Record<string,KeyType>={
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX,undefined,"if set there will always be 2 button columns instead of an overflow button"),
         buttonText: new Property(true,"text on buttons",PropertyType.CHECKBOX,undefined,"show a small text on normal buttons"),
         mainBtText: new Property(true,"text on main menu buttons",PropertyType.CHECKBOX,undefined,"show a button text in the main menu"),
+        showDimNavPage: new Property(true,"show dimm on nav page",PropertyType.CHECKBOX,undefined,"show the dimm button on the nav page"),
+        showDimGpsPage: new Property(true,"show dimm on dashboard",PropertyType.CHECKBOX,undefined,"show the dimm button on dashboard pages"),
         buttonTitleTime: new Property(4,"tooltip time(s)",PropertyType.RANGE,[0,20],'the time for showing the tooltip, 0 to disable'),
         buttonIconSet: new Property(ButtonIconSet.default,"icon set", PropertyType.SELECT,[ButtonIconSet.default,ButtonIconSet.legacy],
             'Select the icon set to be used for buttons (and at other places)\ndefault: new. modern icon set. Use this also when customizing icons.\nlegacy: AvNav legacy icons'),
@@ -544,6 +545,7 @@ const keys:Record<string,KeyType>={
         showDimButton: new Property(true,"Show Dim Button",PropertyType.DELETED),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.DELETED),
         startNavPage: new Property(false,"start with last map",PropertyType.DELETED),
+        nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.DELETED),
     }
 };
 
