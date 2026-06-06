@@ -44,7 +44,6 @@ import Dimmer from '../util/dimhandler';
 import {CenterActionButton, GuardedFeatureListDialog, hideAction, linkAction} from "../components/FeatureInfoDialog";
 // @ts-ignore
 import {TrackConvertDialog} from "../components/TrackConvertDialog";
-import DialogButton from "../components/DialogButton";
 // @ts-ignore
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList, {Item} from "../components/ItemList";
@@ -128,31 +127,23 @@ const startWaypointDialog = (item: WayPoint, idx: number, dialogCtx: IDialogCont
 };
 const showLockDialog = (dialogContext: IDialogContext) => {
     const LockDialog = () => {
-        return <div className={'LockDialog inner'}>
-            <h3 className="dialogTitle">{'Lock Boat'}</h3>
-            <div className={'dialogButtons'}>
-                <DialogButton
-                    name={'current'}
-                    onClick={() => {
+        return <DialogFrame className={'LockDialog'} title={'Lock Boat'}>
+            <DialogButtons buttonList={[
+                {
+                    ...ButtonDefs.DBCurrent,
+                    onClick: () => {
                         MapHolder.setGpsLock(LOCK_MODES.current);
-                    }}
-                >
-                    Current</DialogButton>
-                <DialogButton
-                    name={'center'}
-                    onClick={() => {
+                    }
+                },
+                {
+                    ...ButtonDefs.DBCenter,
+                    onClick: () => {
                         MapHolder.setGpsLock(LOCK_MODES.center);
-                    }}
-                >
-                    Center
-                </DialogButton>
-                <DialogButton
-                    name={'cancel'}
-                >
-                    Cancel
-                </DialogButton>
-            </div>
-        </div>
+                    }
+                },
+                DBCancel()
+            ]} />
+        </DialogFrame>
     }
     showDialog(dialogContext, LockDialog);
 }

@@ -724,6 +724,11 @@ const ButtonDefinitions= {
         iconClass: iconClasses.AddOns,
         name:btdef.DBUserApp
     },
+    //Lock Dialog
+    DBCurrent:{
+        iconClass: iconClasses.Boat,
+        name:btdef.DBCurrent,
+    },
     //feature actions
     DBFeatureNewRoute:{
         iconClass: iconClasses.Route,
