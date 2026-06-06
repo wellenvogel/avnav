@@ -611,16 +611,15 @@ class ApiImpl(AVNApi):
                             try:
                                 url = app.get('url')
                                 iconFile = app.get('iconFile')
-                                title = app.get('title')
-                                preventCL = app.get('preventConnectionLost')
-                                page=app.get('page')
                                 if url is None:
                                     raise Exception("plugin %s: user app url cannot be None: %s", self.prefix,
                                                     repr(app))
-                                if iconFile is None:
-                                    raise Exception("plugin %s: user app icon file cannot be None: %s", self.prefix,
-                                                    repr(app))
-                                self.registerUserApp(url, iconFile, title=title, preventConnectionLost=preventCL,page=page)
+                                self.registerUserApp(url, iconFile,
+                                                     title=app.get('title'),
+                                                     preventConnectionLost=app.get('preventConnectionLost'),
+                                                     page=app.get('page'),
+                                                     shortText=app.get('shortText'),
+                                                     longText=app.get('longText'))
                             except Exception as e:
                                 AVNLog.error("unable to register user app %s for %s: %s",
                                              repr(app), self.prefix, str(e))
@@ -728,6 +727,7 @@ class PluginApiProxy():
 
     def __getattr__(self, item):
         if self.__check is None:
+
             raise StoppedException()
         if hasattr(self.__check, item):
             return getattr(self.__impl, item)

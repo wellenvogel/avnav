@@ -406,7 +406,7 @@ const addonToParam=(addon:Partial<InternalAddonProps>)=>{
     else rt.externalUrl=(addon.originalUrl || addon.url) as string;
     rt.title=addon.title as string;
     rt.icon=addon.button?.icon as string;
-    rt.displayPage=(Array.isArray(addon.page)?addon.page[0]:addon.page) as string;
+    rt.displayPage=(Array.isArray(addon.page)?addon.page[0]:addon.page) ||'';
     rt.shortText=addon.button?.label as string;
     rt.longText=addon.button?.displayName as string;
     rt.buttonClass=addon.buttonClass as string;

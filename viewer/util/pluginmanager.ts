@@ -314,8 +314,7 @@ class Plugin extends ApiV2{
     override registerUserApp(button:UserButtonBase,app:UserApp,page?:PluginPage|[PluginPage]):void {
         if (! app.url) throw Error("url must not be empty");
         const url=urlToString(app.url,this.getBaseUrl());
-        if (! button.icon) throw Error("icon must not be empty");
-        const icon=urlToString(button.icon,this.getBaseUrl());
+        const icon=button.icon?urlToString(button.icon,this.getBaseUrl()):undefined;
         Addons.addPluginAddOn({name:button.name,
             pluginName:this.name,
             url,
@@ -329,7 +328,7 @@ class Plugin extends ApiV2{
         for (const k of ['icon']){
             if (k in buttonDef){
                 // @ts-ignore
-                buttonDef[k] = urlToString(buttonDef[k],this.getBaseUrl());
+                if (buttonDef[k] != null) buttonDef[k] = urlToString(buttonDef[k],this.getBaseUrl());
             }
         }
         Addons.addUserButton(this.name,buttonDef,page);

@@ -531,7 +531,12 @@ export interface UserButtonBase{
     label?: React.ReactNode;        //short text
     displayName?: ReactNode;        //shown in main nav and as tooltip
     localOnly?: boolean;            //if set: not shown in main nav
-    icon?: string|URL;              //relative to plugin base. If not set use CSS with the name as CSS class
+    icon?: string|URL;              /*relative to plugin base. If not set use CSS with the name as CSS class
+                                      example for a user plugin named test and the button name bt1:
+                                      .button .user-test-bt1 .icon{
+                                        background-image: url('someicon.svg')
+                                      }
+                                    */
     visible?:boolean;
     disabled?:boolean;
     storeKeys?:Record<string, string>; //can control visible/disabled/toogle

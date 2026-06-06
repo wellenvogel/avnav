@@ -14,9 +14,11 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,38 +33,55 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
 
 
     public static class AddonInfo implements AvnUtil.IJsonObect {
+        public static final String SHORT_TEXT = "shortText";
+        public static final String PAGE = "page";
+        public static final String NEW_WINDOW = "newWindow";
+        public static final String URL = "url";
+        public static final String ICON = "icon";
+        public static final String TITLE = "title";
+        public static final String NAME = "name";
+        public static final String CAN_DELETE = "canDelete";
+        public static final String ORIGINAL_URL = "originalUrl";
+        public static final String KEY = "key";
+        public static final String LONG_TEXT = "longText";
         public String name;
         public String url;
         public String icon;
-        public String title;
-        public String newWindow="false";
         public boolean adaptHttpUrls=false;
-        public String page;
+        HashMap<String,String> stringParameters=new HashMap<>();
+        static final String[] STRING_KEYS=new String[]{
+                TITLE,
+                SHORT_TEXT,
+                LONG_TEXT,
+                PAGE,
+                NEW_WINDOW
+        };
 
         public boolean compare(@Nullable AddonInfo obj) {
             if (this == obj) return true;
             if (obj == null ) return false;
+            for (String k: STRING_KEYS){
+                if (! Objects.equals(stringParameters.get(k),obj.stringParameters.get(k))) return false;
+            }
             return Objects.equals(name,obj.name)
                     && Objects.equals(url,obj.url)
                     && Objects.equals(icon,obj.icon)
-                    && Objects.equals(title,obj.title)
-                    && Objects.equals(newWindow,obj.newWindow)
-                    && Objects.equals(page,obj.page)
                     && adaptHttpUrls == obj.adaptHttpUrls;
         }
 
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
-            rt.put("name",name);
-            rt.put("key",name);
-            rt.put("canDelete",true);
-            rt.put("url",url);
-            rt.put("originalUrl",url);
-            rt.put("icon",icon);
-            rt.put("newWindow",newWindow);
-            rt.put("page",page);
-            if (title != null) rt.put("title",title);
+            rt.put(NAME,name);
+            rt.put(KEY,name);
+            rt.put(CAN_DELETE,true);
+            rt.put(URL,url);
+            rt.put(ORIGINAL_URL,url);
+            rt.put(ICON,icon);
+            for (String k:STRING_KEYS){
+                String v=stringParameters.get(k);
+                if (v != null) rt.put(k,v);
+            }
             return rt;
         }
         public AddonInfo(String name){
@@ -70,16 +89,12 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         }
 
         static AddonInfo fromJson(JSONObject o) throws JSONException {
-            AddonInfo rt=new AddonInfo(o.getString("name"));
-            rt.title=o.optString("title",null);
-            rt.icon=o.getString("icon");
-            rt.url=o.getString("url");
-            if (o.has("newWindow")) {
-                rt.newWindow = o.getString("newWindow");
+            AddonInfo rt=new AddonInfo(o.getString(NAME));
+            for (String k: STRING_KEYS){
+                rt.stringParameters.put(k,o.optString(k,null));
             }
-            if (o.has("page")){
-                rt.page=o.getString("page");
-            }
+            rt.icon=o.getString(ICON);
+            rt.url=o.getString(URL);
             return rt;
         }
     }
@@ -141,7 +156,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         throw new Exception("not implemented");
     }
     private static boolean hasExternalUrl(JSONObject aj){
-        return aj.optString("url","").toLowerCase().startsWith("http");
+        return aj.optString(AddonInfo.URL,"").toLowerCase().startsWith("http");
     }
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
@@ -155,11 +170,11 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         for (AddonInfo addon : addons) {
             JSONObject aj=addon.toJson();
             if (hasExternalUrl(aj)){
-                aj.put("url",aj.getString("url").replace("$HOST",host));
+                aj.put(AddonInfo.URL,aj.getString(AddonInfo.URL).replace("$HOST",host));
             }
             rt.put(aj);
         }
-        String [] REPLACE_KEYS=new String[]{"url","icon"};
+        String [] REPLACE_KEYS=new String[]{AddonInfo.URL,AddonInfo.ICON};
         synchronized (externalAddons){
             for (String k: externalAddons.keySet()){
                 List<AddonInfo> extAddons=externalAddons.get(k);
@@ -214,6 +229,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                     if (check ){
                         boolean ok=true;
                         for (String url : new String[]{info.url, info.icon}) {
+                            if (url == null) continue;
                             if (url.startsWith("http")) continue;
                             if (url.startsWith("/")) url=url.substring(1);
                             else url="viewer/"+url;
@@ -295,6 +311,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
         if (url != null) digest.update(url.getBytes());
         if (icon != null) digest.update(icon.getBytes());
         if (title != null) digest.update(title.getBytes());
+        digest.update((new Date()).toString().getBytes(StandardCharsets.UTF_8));
         String hash = new BigInteger(1, digest.digest()).toString(16);
         return hash;
     }
@@ -305,12 +322,12 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("update")){
-            String name=uri.getQueryParameter("name");
-            String title=uri.getQueryParameter("title");
-            String url=AvnUtil.getMandatoryParameter(uri,"url");
-            String icon=AvnUtil.getMandatoryParameter(uri,"icon");
-            String newWindow=uri.getQueryParameter("newWindow");
-            String page=uri.getQueryParameter("page");
+            String name=uri.getQueryParameter(AddonInfo.NAME);
+            String title=uri.getQueryParameter( AddonInfo.TITLE);
+            String url=AvnUtil.getMandatoryParameter(uri,AddonInfo.URL);
+            String icon=AvnUtil.getMandatoryParameter(uri,AddonInfo.ICON);
+            String newWindow=uri.getQueryParameter(AddonInfo.NEW_WINDOW);
+            String page=uri.getQueryParameter(AddonInfo.PAGE);
             ArrayList<AddonInfo> addons=getAddons(false);
             int idx=-1;
             if (name == null){
@@ -322,9 +339,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 AddonInfo newAddon=new AddonInfo(name);
                 newAddon.url=url;
                 newAddon.icon=icon;
-                newAddon.title=title;
-                newAddon.page=page;
-                if (newWindow != null) newAddon.newWindow=newWindow;
+                for (String k: AddonInfo.STRING_KEYS){
+                    newAddon.stringParameters.put(k,uri.getQueryParameter(k));
+                }
                 addons.add(newAddon);
             }
             else{
@@ -334,10 +351,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 }
                 AddonInfo current=addons.get(idx);
                 current.icon=icon;
-                current.title=title;
-                current.url=url;
-                current.page=page;
-                if (newWindow != null) current.newWindow=newWindow;
+                for (String k: AddonInfo.STRING_KEYS){
+                    current.stringParameters.put(k,uri.getQueryParameter(k));
+                }
             }
             saveAddons(addons);
             return RequestHandler.getReturn();

@@ -148,6 +148,10 @@ public class PluginManager extends DirectoryRequestHandler {
                         for (int i=0;i<apps.length();i++){
                             JSONObject addon=new JSONObject(apps.getJSONObject(i).toString());
                             for (String key: new String[]{"url","iconFile"}) {
+                                if (! addon.has(key)){
+                                    if (key.equals("iconFile")) continue;
+                                    throw new Exception("no url in addon config");
+                                }
                                 String path = addon.getString(key);
                                 if (!path.toLowerCase().matches("^http[s]:") && ! path.startsWith("/")){
                                     //assume a local file
