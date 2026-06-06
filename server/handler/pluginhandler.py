@@ -345,11 +345,12 @@ class ApiImpl(AVNApi):
         addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
         if addonhandler is None:
             raise Exception("no http server")
-        if os.path.isabs(iconFile):
-            raise Exception("only relative pathes for icon files")
-        iconFilePath = os.path.join(os.path.dirname(self.fileName), iconFile)
-        if not os.path.exists(iconFilePath):
-            raise Exception("icon file %s not found" % iconFilePath)
+        if iconFile is not None:
+            if os.path.isabs(iconFile):
+                raise Exception("only relative pathes for icon files")
+            iconFilePath = os.path.join(os.path.dirname(self.fileName), iconFile)
+            if not os.path.exists(iconFilePath):
+                raise Exception("icon file %s not found" % iconFilePath)
         id = "%s%i" % (self.prefix, self.addonIndex)
         userApp = UserApp(url, iconFile, title,name=name,page=page)
         if userApp in self.userApps:
@@ -367,7 +368,7 @@ class ApiImpl(AVNApi):
                 if not os.path.exists(fn):
                     raise Exception("file %s not found" % fn)
                 url = f"{URL_PREFIX}/{self.prefix}/{urllib.parse.quote(url)}"
-        addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile)),
+        addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile) if iconFile else None),
                                    title=title, preventConnectionLost=preventConnectionLost,
                                    pluginName=self.prefix,page=userApp.page,
                                    shortText=shortText,longText=longText)
