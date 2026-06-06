@@ -99,6 +99,7 @@ class ApiImpl(AVNApi):
         self.patterns = []
         self.wildcardPatterns = []
         self.addonIndex = 1
+        self.addons=[]
         self.fileName = moduleFile
         self.requestHandler = None
         self.paramChange = None
@@ -146,12 +147,13 @@ class ApiImpl(AVNApi):
         try:
             self.userApps = []
             addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
-            for id in range(0, self.addonIndex + 1):
+            for id in self.addons:
                 try:
-                    addonhandler.unregisterAddOn("%s%i" % (self.prefix, id))
+                    addonhandler.unregisterAddOn(id)
                 except:
                     pass
             self.addonIndex=1
+            self.addons=[]
         except:
             pass
         try:
@@ -337,14 +339,25 @@ class ApiImpl(AVNApi):
             return
         self.phandler.setInfo(self.prefix, info, value)
 
+    def checkAppName(self,name):
+        if name is None:
+            return
+        if type(name) is not str:
+            raise Exception("%s: invalid app name: %s" % (self.prefix, name))
+        patternstr="^[a-zA-Z][a-zA-Z0-9_-]*$"
+        pattern = re.compile(patternstr)
+        if not pattern.match(name):
+            raise Exception("%s: invalid app name: %s, must match %s" % (self.prefix, name,patternstr))
+
     def registerUserApp(self, url, iconFile, title=None, preventConnectionLost=False,
                         name=None,page=None,
                         shortText=None,
-                        longText=None
+                        longText=None,
                         ):
         addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName(),disabled=True)
         if addonhandler is None:
             raise Exception("no http server")
+        self.checkAppName(name)
         if iconFile is not None:
             if os.path.isabs(iconFile):
                 raise Exception("only relative pathes for icon files")
@@ -368,12 +381,14 @@ class ApiImpl(AVNApi):
                 if not os.path.exists(fn):
                     raise Exception("file %s not found" % fn)
                 url = f"{URL_PREFIX}/{self.prefix}/{urllib.parse.quote(url)}"
-        addonhandler.registerAddOn(id, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile) if iconFile else None),
+        regid=id if userApp.name is None else f"{self.prefix}-{userApp.name}"
+        addonhandler.registerAddOn(regid, url, "%s/%s/%s" % (URL_PREFIX, self.prefix, urllib.parse.quote(iconFile) if iconFile else None),
                                    title=title, preventConnectionLost=preventConnectionLost,
                                    pluginName=self.prefix,page=userApp.page,
                                    shortText=shortText,longText=longText)
+        self.addons.append(regid)
         self.addonIndex += 1
-        return id
+        return regid
 
     def registerCommand(self, name, command, parameters=None, iconFile=None, client=None):
         cmdhandler = AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName(),disabled=True)  # type: AVNCommandHandler

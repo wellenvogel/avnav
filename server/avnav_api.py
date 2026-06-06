@@ -237,6 +237,18 @@ class AVNApi(object):
     this should be called only early - i.e. at the beginning of the run method
     @param url: the url to be used to connect, $HOST will be replaced by the current host
     @param iconFile: a file name for the icon file, relative pathes to this plugin dir
+                     if omitted you must customize the icon with CSS
+    @param name: the name for the button, unique within the plugin
+                 the button will have a class name of the form
+                 user|system-<pluginname>-<name>
+                 so for a user plugin with the name test and a name parameter "ui"  the CSS class will be
+                 user-test-ui
+                 To address the icon via css use
+                 .button .user-test-ui .icon {
+                    background-image: url(./icon.svg)
+                 }
+                 The name must only consist of alphanumeric ASCII characters and -_. It has to
+                 start with a letter.
     @param title: if set - show a title bar with this title
     @param preventConnectionLost: if True - disable any connection lost alarm while displaying
     @param page: the page to display the button for the user app
