@@ -223,11 +223,7 @@ const SelectExistingDialog=({
     </DialogFrame>
 }
 
-export const selectAddonForEdit=(
-    dialogContext:IDialogContext,
-    url:string,
-    ):Promise<void|Partial<InternalAddonProps>> => {
-    if (! url) return Promise.reject();
+export const getAddonsByUrl=(url:string)=>{
     const addons=getAddonsForDisplay();
     const foundAddons:InternalAddonDisplayProps[]=[];
     for (const ao of addons){
@@ -235,6 +231,15 @@ export const selectAddonForEdit=(
             foundAddons.push(ao);
         }
     }
+    return foundAddons;
+}
+
+export const selectAddonForEdit=(
+    dialogContext:IDialogContext,
+    url:string,
+    ):Promise<void|Partial<InternalAddonProps>> => {
+    if (! url) return Promise.reject();
+    const foundAddons:InternalAddonDisplayProps[]=getAddonsByUrl(url);
     if (foundAddons.length < 1){
         return Promise.resolve({url:url});
     }

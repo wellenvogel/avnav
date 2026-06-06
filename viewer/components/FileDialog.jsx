@@ -29,11 +29,20 @@ import DB from "./DialogButton";
 import Requests, {prepareUrl} from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, showDialog, showPromiseDialog} from "./OverlayDialog";
+import {
+    DBCancel,
+    DBOk,
+    DialogButtons,
+    DialogFrame,
+    DialogRow,
+    showDialog,
+    showPromiseDialog,
+    showPromiseDialogTrue
+} from "./OverlayDialog";
 import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
-import UserAppDialog, {selectAddonForEdit} from "./UserAppDialog";
+import UserAppDialog, {getAddonsByUrl, selectAddonForEdit} from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import {getTrackInfo, INFO_ROWS as TRACK_INFO_ROWS, TrackConvertDialog} from "./TrackConvertDialog";
 import {getRouteInfo, INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
@@ -390,8 +399,10 @@ const removeItemFromOverlays=async(item)=>{
     await removeItemsFromOverlays(undefined,[item]);
 }
 
-export const deleteItem=async (item,dialogContext)=> {
-    if (! await deleteItemQuery(item,dialogContext)) return;
+export const deleteItem=async (item,dialogContext,opt_omitQuery)=> {
+    if (! opt_omitQuery) {
+        if (!await deleteItemQuery(item, dialogContext)) return;
+    }
     await deleteRequest(item);
     await removeItemFromOverlays(item);
     return true;
@@ -1702,9 +1713,25 @@ class UserItemActions extends ItemActions{
     }
     fillActions(item, actions) {
         const canModify= this.canModify(item);
-        actions.push(standardActions.delete.copy({
-            visible: canModify,
-        }))
+        actions.push(new Action({
+            ...ButtonDefs.DBDelete,
+            action: async (action,item,dialogContext)=>{
+                if (item.url && Helper.getExt(item.name)==='html'){
+                    const usingAddons=getAddonsByUrl(item.url);
+                    if (usingAddons && usingAddons.length > 0){
+                        const rs= await showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog
+                            {...dp}
+                            title={'Delete used?'}
+                            text={`The file ${item.name} is used by ${usingAddons.length} user app(s). Delete any way?`}
+                        />)
+                        if (! rs) return;
+                        return await deleteItem(item,dialogContext,true);
+                    }
+                }
+                return await deleteItem(item,dialogContext)
+            },
+            visible:canModify,
+        }),)
         actions.push(standardActions.rename.copy({
             visible:canModify,
         }))
