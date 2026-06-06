@@ -235,7 +235,7 @@ export const FeatureListDialog = ({featureList, onSelectCb, additionalActions, l
         })
     }
     buttonList.push(DBCancel());
-    return <DialogFrame className={Helper.concatsp('featureListDialog',className)} title={'FeatureList'}>
+    return <DialogFrame className={Helper.concatsp('featureListDialog',className)} title={'Feature List'}>
         {baseInfo &&
             <InfoRowDisplay row={POS_ROW} data={baseInfo}/>
         }
