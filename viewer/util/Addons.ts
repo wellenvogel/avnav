@@ -448,16 +448,6 @@ const readAddOns = async (
     return addons;
 };
 
-const findAddonByUrl=(url:string|URL)=>{
-    if (! url) return;
-    const rtall=[];
-    for (const addon of getAllAddons()){
-        if ((addon.url+"") == (url+"")){
-            rtall.push(addon);
-        }
-    }
-    return rtall;
-};
 /**
  * update/add an addon
  * @param name - if not set: add this addon
@@ -466,6 +456,8 @@ const findAddonByUrl=(url:string|URL)=>{
  * @param title
  * @param newWindow
  * @param page
+ * @param shortText
+ * @param longText
  * @returns {*}
  */
 const updateAddon=(
@@ -474,7 +466,9 @@ const updateAddon=(
     icon: string|URL,
     title?:string,
     newWindow?:boolean,
-    page?:string)=>{
+    page?:string,
+    shortText?:string,
+    longText?:string)=>{
    return Requests.getJson({
        request:'api',
        type:'addon',
@@ -485,6 +479,8 @@ const updateAddon=(
        name:name,
        newWindow: newWindow,
        page:page,
+       shortText:shortText,
+       longText:longText,
    });
 };
 
@@ -535,7 +531,6 @@ const updateAddonCss=()=>{
 }
 
 export default  {
-    findAddonByUrl:findAddonByUrl,
     updateAddon:updateAddon,
     removeAddon:removeAddon,
     addPluginAddOn:addPluginAddOn,

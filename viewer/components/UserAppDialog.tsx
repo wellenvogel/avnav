@@ -1,12 +1,11 @@
 import React, {SyntheticEvent, useEffect, useState} from 'react';
-import {showPromiseDialog} from './OverlayDialog';
+import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, showPromiseDialog} from './OverlayDialog';
 import Toast from './Toast';
 
-import Addons, {InternalAddonProps, ServerAddon} from '../util/Addons';
-import Helper, {getav, unsetOrTrue} from '../util/helper';
+import Addons, {InternalAddonProps} from '../util/Addons';
+import Helper, {avitem, concatsp, getav, unsetOrTrue} from '../util/helper';
 import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
-import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
@@ -15,19 +14,31 @@ import {ConfirmDialog, SelectList} from "./BasicDialogs";
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
 // @ts-ignore
 import {createItemActions} from "./FileDialog";
-import {useDialogContext} from "./DialogContext";
+import {IDialogContext, useDialogContext} from "./DialogContext";
 import {Item} from "../util/itemFunctions";
-import {SelectListEntry, Value} from "../util/EditableParameter";
-import {EditableBooleanParameterUI, EditableStringParameterUI,
-    EditableCustomDialogUI,EditableIconParameterUI,
+import {Value} from "../util/EditableParameter";
+import {
+    EditableBooleanParameterUI,
+    EditableCustomDialogUI,
+    EditableIconParameterUI,
+    EditableSelectParameterUI,
+    EditableStringParameterUI
     // @ts-ignore
-    EditableSelectParameterUI} from "./EditableParameterUI";
+} from "./EditableParameterUI";
 import {getPageTitle, PAGEIDS, PageType, PLUGINPAGES} from "../util/pageids";
 import ButtonDefs from "./ButtonDefs";
 import {ParameterDialog, ParameterType} from "./ParameterDialog";
 import {WidgetParameterValue} from "../api/api.interface";
 import base from "../base";
+import {useHistory} from "./HistoryProvider";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
+import Button, {ButtonEventHandler} from "./Button";
+import {iconClasses} from './Icons';
+import ItemList from "./ItemList";
 
+export interface InternalAddonDisplayProps extends InternalAddonProps{
+    buttonKey?:string
+}
 interface SelectHtmlDialogProps{
     allowUpload?:boolean;
     current?:string
@@ -173,28 +184,64 @@ const TranslateUrlDialog=({resolveFunction,current}:TranslateUrlDialogProps)=>{
     return <DialogFrame title={"loading..."}/>
 }
 interface SelectExistingDialogProps{
-    existingAddons:InternalAddonProps[],
-    resolveFunction:(addon?:ServerAddon) => void
+    existingAddons:InternalAddonDisplayProps[],
+    resolveFunction:(addon?:Partial<InternalAddonDisplayProps>) => void,
+    showNew?:boolean,
+    url:string,
 }
-const SelectExistingDialog=({existingAddons,resolveFunction}:SelectExistingDialogProps)=>{
+const SelectExistingDialog=({
+                                existingAddons,
+                                resolveFunction,
+                                url,
+                                showNew}:SelectExistingDialogProps)=>{
     const dialogContext=useDialogContext();
-    const selist:SelectListEntry[] = [];
+    const selist:AddonItemProps[] = [];
     existingAddons.forEach((addon) => {
-        selist.push({value: addon, label: addon.title+"", icon: addon.button?.icon});
+        selist.push({...addon,preventButton:true})
     })
-    return <DialogFrame className="selectDialog" title="Select Addon to Edit">
-        <SelectList list={selist} onClick={(elem)=>{
-            dialogContext.closeDialog();
-            resolveFunction(elem.value);
-        }}></SelectList>
+    return <DialogFrame
+        className="selectDialog"
+        title="Select Addon to Edit"
+    >
+        <DialogText>{url}</DialogText>
+        <ItemList
+            itemList={selist}
+            itemClass={AddonItem}
+            onItemClick={(ev)=>{
+                const item: InternalAddonProps = avitem(ev);
+                resolveFunction(item);
+                dialogContext.closeDialog();
+            }}/>
         <DialogButtons buttonList={[
             {
                 ...ButtonDefs.DBNew,
-                onClick:()=>resolveFunction()
+                visible: showNew,
+                onClick:()=>resolveFunction({url:url})
             },
             DBCancel()
         ]}/>
     </DialogFrame>
+}
+
+export const selectAddonForEdit=(
+    dialogContext:IDialogContext,
+    url:string,
+    ):Promise<void|Partial<InternalAddonProps>> => {
+    if (! url) return Promise.reject();
+    const addons=getAddonsForDisplay();
+    const foundAddons:InternalAddonDisplayProps[]=[];
+    for (const ao of addons){
+        if (ao.url === url){
+            foundAddons.push(ao);
+        }
+    }
+    if (foundAddons.length < 1){
+        return Promise.resolve({url:url});
+    }
+    return showPromiseDialog(dialogContext,(dp)=><SelectExistingDialog
+        existingAddons={foundAddons}
+        url={url}
+        {...dp}/>)
 }
 
 const checkUrl=(val:string|URL,isInternal?:boolean)=>{
@@ -205,14 +252,10 @@ const checkUrl=(val:string|URL,isInternal?:boolean)=>{
     }
     if (!(val+"").match(/^https*:\/\//i)) return "external urls must start with http[s]://";
 }
-export interface UserAppDialogFixed{
-    name?:string,
-    url?:string|URL
-}
+
 export interface UserAppDialogProps{
     showToasts?:boolean ;
-    addon?:InternalAddonProps,
-    fixed?:UserAppDialogFixed,
+    addon?:Partial<InternalAddonProps>,
     resolveFunction?:() => void
 }
 const getPageLabel=(page:PageType)=>{
@@ -223,9 +266,7 @@ interface AppDialogValues{
     [key:string]:WidgetParameterValue,
     internalUrl?: string,
     externalUrl?: string,
-    fixedUrl?: string,
     name:string,
-    fixedName?:string,
     icon?:string
     internal:boolean,
     title?:string,
@@ -239,20 +280,12 @@ interface AppDialogValues{
 
 const buildDialogParameters=(canEdit:boolean)=> {
     const rt: ParameterType[] = [];
-        rt.push(new EditableStringParameterUI({
-            name: 'fixedUrl',
-            displayName:'url',
-            readOnly: true,
-            description: 'The url of this user app. Cannot be changed in this mode',
-            condition: {fixedUrl:(v:Value)=>!!v}
-        }))
         rt.push(new EditableBooleanParameterUI({
             name: 'internal',
-            readOnly: !canEdit,
             defaultValue: true,
             displayName: 'internal',
             description: 'If checked you can select a HTML page from the AvNav user files to be shown as user app. If unchecked you can select an external URL.',
-            condition:{fixedUrl:(v:Value)=>!v}
+            condition:{internal:()=> canEdit}
         }))
         rt.push(new EditableStringParameterUI({
             name: 'externalUrl',
@@ -311,7 +344,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
             name:'newWindow',
             displayName:'newWindow',
             readOnly: !canEdit,
-            condition:{internal:false},
+            condition:{internal:false, newWindow:(v:Value)=>canEdit || !!v},
             description:'If set the user app will be shown outside of AvNav in a new window',
         }))
         rt.push(new EditableSelectParameterUI({
@@ -353,62 +386,28 @@ const hasExternalUrl=(item:{url?:string|URL})=>{
     return (url+"").toLowerCase().match('^https*:');
 }
 
-const addonToParam=(addon:InternalAddonProps,fixed?:UserAppDialogFixed)=>{
-    const merged:InternalAddonProps={...addon, ...fixed};
+const addonToParam=(addon:Partial<InternalAddonProps>)=>{
     const rt:AppDialogValues= {
-        internal: !hasExternalUrl(merged),
-        modify: !!merged.name,
-        name:merged.name,
+        internal: !hasExternalUrl(addon),
+        name:addon.name,
     }
-    if (rt.internal) rt.internalUrl=(merged.originalUrl||merged.url) as string;
-    else rt.externalUrl=(merged.originalUrl || merged.url) as string;
-    rt.title=merged.title as string;
-    rt.fixedName=fixed?.name;
-    rt.fixedUrl=fixed?.url as string;
-    rt.icon=merged.button?.icon as string;
-    rt.displayPage=(Array.isArray(merged.page)?merged.page[0]:merged.page) as string;
-    rt.shortText=merged.shortText as string;
-    rt.longText=merged.longText as string;
-    rt.buttonClass=merged.buttonClass as string;
-    rt.canDelete=merged.canDelete;
+    if (rt.internal) rt.internalUrl=(addon.originalUrl||addon.url) as string;
+    else rt.externalUrl=(addon.originalUrl || addon.url) as string;
+    rt.title=addon.title as string;
+    rt.icon=addon.button?.icon as string;
+    rt.displayPage=(Array.isArray(addon.page)?addon.page[0]:addon.page) as string;
+    rt.shortText=addon.shortText as string;
+    rt.longText=addon.longText as string;
+    rt.buttonClass=addon.buttonClass as string;
+    rt.canDelete=addon.canDelete;
     return rt;
 }
 
 
 const UserAppDialog = (props:UserAppDialogProps) => {
-    const [currentAddon, setCurrentAddon] = useState<AppDialogValues>(()=>addonToParam(props.addon,props.fixed));
+    const currentAddon=addonToParam(props.addon||{});
     const dialogContext = useDialogContext();
-    const fixed:UserAppDialogFixed = props.fixed || {};
-    const shouldFind =  ! fixed.name && ( fixed.url  && ! props.addon);
-    const [loaded, setLoaded] = useState(!shouldFind);
-    const fillLists = () => {
-        if (!loaded) {
-            const current = Addons.findAddonByUrl(props.fixed.url)
-            if (current.length) {
-                showPromiseDialog(dialogContext, (dprops) =>
-                    <SelectExistingDialog
-                        {...dprops}
-                        existingAddons={current}
-                    />
-                )
-                    .then((selected) => {
-                        if (selected !== undefined) {
-                            setCurrentAddon(addonToParam(selected, props.fixed));
-
-                        }
-                    })
-                    .catch(() => {
-                    })
-            }
-            setLoaded(true);
-
-        }
-    }
-    useEffect(() => {
-        fillLists();
-    }, []);
-    let canEdit = unsetOrTrue(currentAddon.canDelete);
-    if (!loaded) canEdit = false;
+    const canEdit = unsetOrTrue(currentAddon.canDelete);
     let title = "Show ";
     if (canEdit) title = currentAddon.name ? "Modify " : "Create ";
     const parameters = buildDialogParameters(canEdit);
@@ -473,21 +472,23 @@ const UserAppDialog = (props:UserAppDialogProps) => {
                             });
                 },
                 close: false,
-                visible: !!(currentAddon.name && currentAddon.canDelete && canEdit)
+                visible: !!currentAddon.name && currentAddon.canDelete && canEdit
             },
             DBCancel(),
             DBOk((ev: SyntheticEvent) => {
                     const current: AppDialogValues = getav(ev).currentValues;
-                    const name = props.fixed?.name || current.name;
-                    const url = props.fixed?.url || current.internal ? current.internalUrl : current.externalUrl;
+                    const name = props.addon?.name;
+                    const url = current.internal ? current.internalUrl : current.externalUrl;
                     const icon = current.icon;
                     const newWindow = current.newWindow;
                     const page = current.displayPage;
                     const title = current.title || '';
+                    const shortText=current.shortText || '';
+                    const longText=current.longText || '';
 
                     Addons.updateAddon(name, url,
                         icon, title, newWindow,
-                        page)
+                        page,shortText,longText)
                         .then(() => {
                             props.resolveFunction();
                             dialogContext.closeDialog();
@@ -507,3 +508,72 @@ const UserAppDialog = (props:UserAppDialogProps) => {
 }
 
 export default UserAppDialog;
+
+interface AddonItemProps extends InternalAddonProps {
+    className?: string;
+    onClick?: ButtonEventHandler,
+    buttonKey?: string,
+    selected?: boolean;
+    preventButton?:boolean;
+}
+
+export const AddonItem = (props: AddonItemProps) => {
+    const history = useHistory();
+    let source = props.source || 'user';
+    if (props.invalid) source += ", invalid";
+    if (props.newWindow) source += ", new window";
+    let url = ((props.originalUrl !== undefined) ? props.originalUrl : props.url);
+    if (!url) url = `[${props.button?.displayName || props.title || props.name}]`;
+    else url = url + "";
+    const pages = Array.isArray(props.page) ? props.page : [props.page || PAGEIDS.ADDON];
+    return (
+        <ListItem
+            selected={props.selected}
+            className={concatsp("addonItem",
+                props.invalid ? "invalid" : undefined,
+                props.className)}
+            onClick={props.onClick}>
+            <ListSlot>
+                {props.buttonClass && <Button
+                    setFontSize={true}
+                    name={props.buttonClass}
+                    disabled={props.invalid}
+                    onClick={(ev) => {
+                        if (props.preventButton) return;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (props.newWindow) {
+                            window.open(props.url, props.name);
+                            return;
+                        }
+                        let page: string;
+                        const pageList = Array.isArray(props.page) ? props.page : [props.page || PAGEIDS.ADDON]
+                        for (const pg of pageList) {
+                            if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
+                                page = pg;
+                                break;
+                            }
+                        }
+                        if (!page) page = PAGEIDS.ADDON;
+                        history.push(page, {button: props.buttonKey || props.key || props.name})
+                    }
+                    }
+                    iconClass={props.button.iconClass}
+                ></Button>}
+            </ListSlot>
+            <ListMainSlot
+                primary={url + ""}
+                secondary={props.title}
+            >
+                <div className="pageAndButton">{`Page ${pages.join(",")} Button: ${props.buttonClass}`}</div>
+                <div className="sourceInfo">{source}</div>
+            </ListMainSlot>
+            <ListSlot icon={{className: props.canDelete ? iconClasses.Edit : undefined}}/>
+        </ListItem>
+    )
+};
+export const getAddonsForDisplay = () :InternalAddonDisplayProps[] => {
+    return Addons.getAllAddons().map(addon => {
+        return {...addon, buttonKey: addon.key}
+    })
+}

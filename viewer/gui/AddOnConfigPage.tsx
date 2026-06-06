@@ -2,18 +2,17 @@
  * Created by andreas on 02.05.14.
  */
 
-import Button, {ButtonDef, ButtonEventHandler, updateButtons} from '../components/Button';
+import {ButtonDef, updateButtons} from '../components/Button';
 import ItemList from '../components/ItemList';
 import React, {useRef, useState} from 'react';
 import {PageFrame, PageLeft, PageProps} from '../components/Page';
-import Addons, {AddonProps, InternalAddonProps} from '../util/Addons';
-import UserAppDialog from '../components/UserAppDialog';
+import {AddonProps} from '../util/Addons';
+import UserAppDialog, {AddonItem, getAddonsForDisplay} from '../components/UserAppDialog';
 import {showPromiseDialog} from "../components/OverlayDialog";
-import {avitem, concatsp} from "../util/helper";
+import {avitem} from "../util/helper";
 import {useHistory} from "../components/HistoryProvider";
-import {ListItem, ListMainSlot, ListSlot} from "../components/ListItems";
 import {InjectMainMenu, useInitialButton} from "./MainNav";
-import {getPageTitle, PAGEIDS, PLUGINPAGES} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import AddOnConfigPageButtons from "./AddOnConfigPageButtons";
 import {MultiView, MvHeadline, useScrollHelper} from "../components/MultiView";
 import ButtonList from "../components/ButtonList";
@@ -23,76 +22,7 @@ import {useUploadHelper} from "../components/UploadHandler";
 import {DownloadItemList, UploadAction} from "../components/DownloadItemList";
 import {useStoreHelper} from "../util/UiHelper";
 import ButtonDefs from "../components/ButtonDefs";
-import {iconClasses} from '../components/Icons';
 
-
-interface AddonItemProps extends InternalAddonProps {
-    className?: string;
-    onClick?: ButtonEventHandler,
-    buttonKey?: string,
-    selected?: boolean;
-}
-
-const AddonItem=(props:AddonItemProps)=>{
-    const history=useHistory();
-    let source=props.source||'user';
-    if (props.invalid) source+=", invalid";
-    if (props.newWindow) source+=", new window";
-    let url=((props.originalUrl!==undefined)?props.originalUrl:props.url);
-    if (! url) url=`[${props.button?.displayName||props.title||props.name}]`;
-    else url=url+"";
-    const pages=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON];
-    return (
-        <ListItem
-            selected={props.selected}
-            className={concatsp("addonItem",
-                props.invalid?"invalid":undefined,
-                props.className)}
-            onClick={props.onClick}>
-            <ListSlot>
-                {props.buttonClass && <Button
-                    setFontSize={true}
-                    name={props.buttonClass}
-                    disabled={props.invalid}
-                    onClick={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (props.newWindow) {
-                            window.open(props.url, props.name);
-                            return;
-                        }
-                        let page:string;
-                        const pageList=Array.isArray(props.page)?props.page:[props.page||PAGEIDS.ADDON]
-                        for (const pg of pageList) {
-                            if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
-                                page = pg;
-                                break;
-                            }
-                        }
-                        if (!page) page=PAGEIDS.ADDON;
-                        history.push(page, {button: props.buttonKey||props.key||props.name})
-                    }
-                    }
-                    iconClass={props.button.iconClass}
-                ></Button>}
-            </ListSlot>
-            <ListMainSlot
-                primary={url+""}
-                secondary={props.title}
-            >
-                <div className="pageAndButton">{`Page ${pages.join(",")} Button: ${props.buttonClass}`}</div>
-                <div className="sourceInfo">{source}</div>
-            </ListMainSlot>
-            <ListSlot icon={{className:props.canDelete?iconClasses.Edit:undefined}}/>
-        </ListItem>
-    )
-};
-
-const getAddons=()=>{
-    return Addons.getAllAddons().map(addon=>{
-        return {...addon,buttonKey:addon.key}
-    })
-}
 
 export const AddonConfigPage = (props: PageProps) => {
     useStoreState(keys.gui.global.reloadSequence);
@@ -101,7 +31,7 @@ export const AddonConfigPage = (props: PageProps) => {
     const [uploadImages]=useStoreState(keys.gui.capabilities.uploadImages);
     const [uploadUser]=useStoreState(keys.gui.capabilities.uploadUser);
     const history = useHistory();
-    const [addons, setAddons] = React.useState(getAddons());
+    const [addons, setAddons] = React.useState(getAddonsForDisplay());
     const [scrollProps, scrollTo, visible] = useScrollHelper(0);
     const [uploadPropsUser, uploadActionUser] = useUploadHelper('user');
     const [uploadPropsImages, uploadActionImages] = useUploadHelper('images');
@@ -146,7 +76,7 @@ export const AddonConfigPage = (props: PageProps) => {
     }
 
     const readAddons = () => {
-        setAddons(getAddons());
+        setAddons(getAddonsForDisplay());
     }
 
     const buttons = InjectMainMenu(PAGEIDS.ADDCFG, updateButtons(AddOnConfigPageButtons, buttonActions));
@@ -171,7 +101,7 @@ export const AddonConfigPage = (props: PageProps) => {
                                 const item: AddonProps = avitem(ev);
                                 setSelectedItem(item.key||item.name);
                                 showPromiseDialog(undefined, (props) =>
-                                    <UserAppDialog {...props} fixed={{name: item.name}}
+                                    <UserAppDialog {...props}
                                                    addon={{...item, canDelete: item.canDelete && connected}}/>
                                 )
                                     .then(() => readAddons())

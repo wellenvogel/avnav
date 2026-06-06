@@ -33,7 +33,7 @@ import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, showDialog, showP
 import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
-import UserAppDialog from "./UserAppDialog";
+import UserAppDialog, {selectAddonForEdit} from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import {getTrackInfo, INFO_ROWS as TRACK_INFO_ROWS, TrackConvertDialog} from "./TrackConvertDialog";
 import {getRouteInfo, INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
@@ -1722,9 +1722,12 @@ class UserItemActions extends ItemActions{
         actions.push(new Action({
             ...ButtonDefs.DBUserApp,
             action: async (action,item,dialogContext,history)=>{
-                dialogContext.replaceDialog((props) =>
-                    <UserAppDialog {...props} fixed={{url: item.url}} resolveFunction={() => {
-                    }}/>)
+                try {
+                    const res = await selectAddonForEdit(dialogContext, item.url);
+                    dialogContext.replaceDialog(() =>
+                        <UserAppDialog addon={res} resolveFunction={() => {
+                        }}/>)
+                }catch (e){ /* empty */ }
             },
             visible:this.isConnected() && Helper.getExt(item.name)==='html'
         }))
