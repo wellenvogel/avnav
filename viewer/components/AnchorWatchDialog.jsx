@@ -112,7 +112,7 @@ const WatchDialog=(props)=> {
 
                                      }}></DialogButton>
             }
-                <DialogButton {...ButtonDefs.Cancel}
+                <DialogButton {...ButtonDefs.DBCancel}
                           ></DialogButton>
         </DialogButtons>
     </DialogFrame>
