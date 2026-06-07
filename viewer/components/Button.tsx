@@ -1,6 +1,6 @@
 import React, {useCallback, useRef} from 'react';
 import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
-import {DynamicProps, dynamicWrapper, StoreKeys, UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
+import {DynamicProps, dynamicWrapper, Options, StoreKeys, UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
@@ -11,6 +11,7 @@ import {Icon} from "./Icons";
 import {ListMainSlot} from "./ListItems";
 import keys, {ButtonFontSizeFactor} from "../util/keys";
 import {KeyComponents} from "../util/keyhandler";
+import {ButtonBase} from "../api/api.interface";
 
 
 export type ButtonEventBase=Record<string, any>;
@@ -26,24 +27,18 @@ export enum ButtonAddonType{
     CONFIG='config',
     CONFIG_NEW_WINDOW='newWindow'
 }
-export interface ButtonProps {
+export interface ButtonProps extends ButtonBase,Options {
         onClick?: ButtonEventHandler;
         className?: string;
         toggle?: boolean|(()=>boolean);
-        name: string;
         icon?: string|URL;
-        disabled?:boolean|(()=>boolean);
         overflow?:boolean;
         editDisable?:boolean;
         editOnly?:boolean;
-        visible?:boolean;
         children?:React.ReactNode;
         localOnly?:boolean;
-        storeKeys?: StoreKeys;
-        updateFunction?: UpdateFunction;
         closeDialogs?: boolean;
         isAddon?: ButtonAddonType;
-        iconClass?: string;
         dataChanged?:(data:ButtonDescription) => void;
         noHover?:boolean;
         setFontSize?:boolean;
@@ -195,7 +190,7 @@ const Button = (sprops:ButtonProps) => {
 export const ButtonRow=(button:DynamicButtonProps) => {
     const className=Helper.concatsp('buttonRow listEntry longText',button.className);
     return <Button {...button} noHover={true} className={className} >
-        <ListMainSlot primary={button.displayName||button.name}></ListMainSlot>
+        <ListMainSlot primary={button.longText||button.name}></ListMainSlot>
     </Button>
 }
 

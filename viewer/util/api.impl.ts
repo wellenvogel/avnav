@@ -194,10 +194,10 @@ export const UserButtonProps: Required<UserButton>= {
         return undefined;
     },
     visible: false,
-    displayName: "",
+    longText: "",
     localOnly: false,
     iconClass: undefined,
-    label: undefined,
+    shortText: undefined,
 }
 
 export const modules: Modules={

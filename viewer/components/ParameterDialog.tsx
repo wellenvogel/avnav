@@ -27,7 +27,12 @@ import Helper, {getav, setav} from "../util/helper";
 import EditableParameterUIFactory,{EditableParameterListUI} from './EditableParameterUI';
 import {ErrorBoundary} from "./ErrorBoundary";
 import {IDialogContext, useDialogContext} from "./DialogContext";
-import {Button, Button as TButton, DialogConfig, ParametersWithName, WidgetParameterValues} from '../api/api.interface';
+import {
+    DialogConfig,
+    IDialogButton,
+    ParametersWithName,
+    WidgetParameterValues
+} from '../api/api.interface';
 import {UserHtml} from "./UserHtml";
 import Headline from "./Headline";
 import {iconClasses} from './Icons';
@@ -56,9 +61,9 @@ export const ParameterDialog = (props:TParameterDialog) => {
             setValues({...values,...changedValues});
         }
     },[props.values,props.parameters]);
-    const buttons:Record<string,any>[]=[];
+    const buttons:IDialogButton[]=[];
     if (props.buttons) {
-        props.buttons.forEach((button:TButton) => {
+        props.buttons.forEach((button:IDialogButton) => {
             buttons.push({
                 ...button,
                 onClick: (ev:Event) => {
@@ -189,7 +194,7 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
                 }
         }
     }
-    const buttons:Button[]=[];
+    const buttons:IDialogButton[]=[];
     if (config.buttons) {
         if (! Array.isArray(config.buttons)) {
             throw new Error("config.buttons must be an array");

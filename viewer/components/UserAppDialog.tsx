@@ -407,8 +407,8 @@ const addonToParam=(addon:Partial<InternalAddonProps>)=>{
     rt.title=addon.title as string;
     rt.icon=addon.button?.icon as string;
     rt.displayPage=(Array.isArray(addon.page)?addon.page[0]:addon.page) ||'';
-    rt.shortText=addon.button?.label as string;
-    rt.longText=addon.button?.displayName as string;
+    rt.shortText=addon.button?.shortText as string;
+    rt.longText=addon.button?.longText as string;
     rt.buttonClass=addon.buttonClass as string;
     rt.canDelete=addon.canDelete;
     return rt;
@@ -534,8 +534,7 @@ export const AddonItem = (props: AddonItemProps) => {
     if (props.invalid) source += ", invalid";
     if (props.newWindow) source += ", new window";
     let url = ((props.originalUrl !== undefined) ? props.originalUrl : props.url);
-    if (!url) url = `[${props.button?.displayName || props.title || props.name}]`;
-    else url = url + "";
+    if (url) url = url + "";
     const pages = Array.isArray(props.page) ? props.page : [props.page || PAGEIDS.ADDON];
     return (
         <ListItem

@@ -95,8 +95,8 @@ export class ServerAddon implements AddonProps{
         this.page=raw.page;
         this.originalUrl=raw.originalUrl;
         this.button={name:raw.name,
-            displayName:raw.longText||'',
-            label:raw.shortText||'',
+            longText:raw.longText||'',
+            shortText:raw.shortText||'',
             iconClass:raw.iconClass,
             icon:raw.icon};
     }
@@ -236,8 +236,8 @@ const addPluginAddOn=(
         {...props,button: {
                 ...props.button,
                 name:props.name,
-                displayName:props.button.displayName||props.title||props.name,
-                label:props.button.label||props.title||props.name
+                longText:props.button.longText,
+                shortText:props.button.shortText
             },
         }
     );
@@ -482,10 +482,10 @@ const removeAddon=(name:string)=>{
 };
 const STYLE_NAME='avnav-addon-styles';
 const buildButtonStyles=(button:UserButtonBase,name:string,title?:string):string=>{
-    const label = (button?.label as string)||title;
+    const label = (button?.shortText as string)||title;
     let style="";
-    if (button?.displayName){
-        style+=`.longText.${name}::after{\ncontent:"${button.displayName}";\n}\n`;
+    if (button?.longText){
+        style+=`.longText.${name}::after{\ncontent:"${button.longText}";\n}\n`;
     }
     if (label){
         style+=`.${name}::after{\ncontent:"${label.substring(0,7)}";\n}\n`;

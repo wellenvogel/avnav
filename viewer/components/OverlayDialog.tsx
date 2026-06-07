@@ -350,7 +350,7 @@ export const DialogButtons=(props:DialogButtonListProps)=>{
             let label;
             //temp: fallback to old style handling if no buttondef yet
             if (! button.name || ! btdef[button.name]) {
-                label = button.label ? button.label : button.name.substring(0, 1).toUpperCase() + button.name.substring(1);
+                label = button.shortText ? button.shortText : button.name.substring(0, 1).toUpperCase() + button.name.substring(1);
             }
             return <DialogButton {...button} key={button.name}>
                 {label}

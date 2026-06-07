@@ -6,27 +6,24 @@ import {Options, useStore} from "../hoc/Dynamic";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {ButtonEvent, ButtonEventHandler} from "./Button";
 import {Icon} from "./Icons";
+import {ButtonBase} from "../api/api.interface";
 
-export interface DialogButtonProps extends Options{
+export interface DialogButtonProps extends Options,ButtonBase{
     onClick?: ButtonEventHandler;
     onPreClose?: (ev:ButtonEvent,ctx:IDialogContext)=>boolean;
     className?: string;
-    name?: string;
     icon?: string;
-    iconClass?: string;
     style?: Record<string, any>;
     disabled?: boolean;
     toggle?: boolean;
-    visible?: boolean;
     close?: boolean;  //default: true
     children?: React.ReactNode;
-    label?: string;
 }
 const COMPONENT=DialogKeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{
         const dialogContext=useDialogContext();
     // eslint-disable-next-line prefer-const
-        let {icon,displayName,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
+        let {icon,longText,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
         const add:Record<string, any> = {};
         if (disabled) {
             add.disabled = true;
@@ -57,7 +54,7 @@ const DialogButton=(props:DialogButtonProps)=>{
                 {...style}
                 onClick={clickHandler}
                 className={concatsp("button dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive",className)}
-                title={displayName}
+                title={longText}
             >
             <Icon icon={icon} className={iconClass}/>
                 {children}

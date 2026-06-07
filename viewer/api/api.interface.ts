@@ -472,11 +472,7 @@ export type MapLayerProfiles=MapLayerProfilesRaster|MapLayerProfilesVector
 export type StoreData=object|string|boolean|number;
 
 
-export interface Button{
-    name:string;            //the button name and css class
-    iconClass?:string;      //the class name for an icon (set the background image for this class in your plugin.css)
-    label?:string;          //the label, fallback: name with 1st letter uppercase
-    visible?:boolean;       //just for convinience
+export interface IDialogButton extends ButtonBase{
     close?:boolean;         //if not set or true close the dialog when clicked
                             //otherwise you must implement onClick and call
                             //context.closeDialog()
@@ -506,7 +502,7 @@ export interface DialogConfig {
      * @param values only the changed values
      */
     onChange?: (event: object, values: WidgetParameterValues) => WidgetParameterValues | undefined;
-    buttons?: Button[];               //if not provided Cancel is shown
+    buttons?: IDialogButton[];               //if not provided Cancel is shown
     /**
      * if provided it will be called when the dialog closes
      *
@@ -526,10 +522,15 @@ export interface ProxyOptions{
 }
 export type Page=PageType;
 export type PluginPage=PluginPageType;
-export interface UserButtonBase{
+export interface ButtonBase{
     name: string;                   //will set the CSS class, unique inside the plugin
-    label?: React.ReactNode;        //short text
-    displayName?: ReactNode;        //shown in main nav and as tooltip
+    shortText?: React.ReactNode;        //short text
+    longText?: ReactNode;        //shown in main nav and as tooltip
+    visible?:boolean;
+    disabled?:boolean|(()=>boolean);
+    iconClass?:string;      //the class name for an icon (set the background image for this class in your plugin.css)
+}
+export interface UserButtonBase extends ButtonBase{
     localOnly?: boolean;            //if set: not shown in main nav
     icon?: string|URL;              /*relative to plugin base. If not set use CSS with the name as CSS class
                                       example for a user plugin named test and the button name bt1:
@@ -537,11 +538,8 @@ export interface UserButtonBase{
                                         background-image: url('someicon.svg')
                                       }
                                     */
-    visible?:boolean;
-    disabled?:boolean;
     storeKeys?:Record<string, string>; //can control visible/disabled/toogle
     updateFunction?:(values:object)=>object; //translate store values
-    iconClass?:string;
 }
 
 export interface UserButton extends UserButtonBase{
