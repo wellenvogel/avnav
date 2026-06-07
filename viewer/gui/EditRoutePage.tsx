@@ -70,10 +70,11 @@ const activeRoute = new RouteEdit(RouteEdit.MODES.ACTIVE);
 const mergedStoreKeys:Record<string,string>={};
 for (const red of [editor,activeRoute]) {
     const prfx=(editor === red )?'ed':'ac';
-    const keys=red.getStoreKeys();
-    for (const k in keys){
-        mergedStoreKeys[prfx+k] = keys[k];
+    const keysm=red.getStoreKeys();
+    for (const k in keysm){
+        mergedStoreKeys[prfx+k] = keysm[k];
     }
+    mergedStoreKeys.connected=keys.gui.global.connectedMode;
 }
 
 
@@ -579,11 +580,12 @@ const startRouting=(dialogContext?:IDialogContext,optIdx?:number,opt_history?:IH
         });
 }
 
-const checkRouteWritable = (dialogContext?:IDialogContext) => {
+const checkRouteWritable = (dialogContext?:IDialogContext,actionText?:string) => {
     const currentEditor = getCurrentEditor();
     if (currentEditor.isRouteWritable()) return true;
     if (!dialogContext) return false;
-    showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={"you cannot edit this route as you are disconnected. OK to save as new local route."}/>)
+    const action=actionText?actionText:'edit';
+    showPromiseDialog(dialogContext, (dprops)=><ConfirmDialog {...dprops} text={`you cannot ${action} this route as you are disconnected. OK to start a SaveAs dialog to copy to a new local route.`}/>)
         .then(() => {
             showDialog(dialogContext,(props)=><EditRouteDialog
                 {...props}
@@ -1007,6 +1009,7 @@ const EditRoutePage = (props:PageProps) => {
         {
             ...ButtonDefs.NavGoto,
             onClick: () => {
+                if (!checkRouteWritable(dialogContext,'start')) return;
                 startRouting(dialogContext,undefined,history);
             },
             storeKeys: mergedStoreKeys,
@@ -1023,11 +1026,12 @@ const EditRoutePage = (props:PageProps) => {
         {
             ...ButtonDefs.NavRestart,
             storeKeys: mergedStoreKeys,
-            updateFunction: () => {
+            updateFunction: (storeData:any) => {
                 const state=activeRoute.getState();
                 return {
                     visible: isActiveRoute(state,editor.getState()) && StateHelper.hasActiveTarget(state) && StateHelper.hasRoute(state) &&
-                        StateHelper.selectedIsActiveTarget(state)
+                        StateHelper.selectedIsActiveTarget(state) ,
+                    disabled: StateHelper.isServerRoute(state) && ! storeData.connected
                 };
             },
             onClick: () => {
