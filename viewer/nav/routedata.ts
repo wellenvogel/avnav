@@ -191,7 +191,7 @@ class  RouteData {
                 this.routeOff();
                 this.anchorOff()
             }
-        }, keys.gui.global.propertySequence);
+        }, [keys.gui.global.connectedMode,keys.properties.readOnlyServer]);
         globalStore.register(()=>{
             const raw = activeRoute.getRawData();
             if (raw.leg) {
@@ -286,16 +286,17 @@ class  RouteData {
         if (typeof opt_keep_from === 'boolean') keep_from = opt_keep_from?KeepFromMode.CURRENT:KeepFromMode.NONE;
         else if (opt_keep_from !== undefined) keep_from = opt_keep_from
         const stwp = WayPoint.fromPlain(wp);
-        stwp.server=this.connectMode;
         let route;
         if (wp.routeName) {
             //if the waypoint seems to be part of a route
             //check if this is our current active/editing one - if yes, start routing mode
             stwp.routeName = wp.routeName;
-            if (routeobjects.isServerName(stwp.routeName) !== stwp.server) {
-                if (!stwp.server) throw new Error("can only start routing with a server route in connected mode");
+            const isServerRoute= routeobjects.isServerName(stwp.routeName);
+            if (isServerRoute !== this.connectMode) {
+                if (isServerRoute) throw new Error("can only start routing with a server route in connected mode");
                 throw new Error("can only start routing with a local route in disconnected mode");
             }
+            stwp.server=isServerRoute;
             route = await this.fetchRoute(wp.routeName);
             if (!(route && route.getIndexFromPoint(stwp) >= 0)) {
                 stwp.routeName = undefined;
@@ -304,6 +305,7 @@ class  RouteData {
         if (stwp.routeName) {
             this._startRouting(routeobjects.RoutingMode.ROUTE, stwp, keep_from,route);
         } else {
+            stwp.server=this.connectMode;
             this._startRouting(routeobjects.RoutingMode.WP, stwp, keep_from);
         }
     }

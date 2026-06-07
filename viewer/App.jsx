@@ -271,12 +271,12 @@ class App extends React.Component {
         this.history=new History();
         this.buttonSizer=null;
         this.serverVersion=globalStore.getData(keys.nav.gps.version); //maybe we should start with the compiled version
-        globalStore.storeData(keys.gui.global.onAndroid,false,true);
+        globalStore.storeData(keys.gui.global.onAndroid,false);
         if (window.avnavAndroid) {
             base.log("android integration enabled");
-            globalStore.storeData(keys.gui.global.onAndroid, true, true);
-            globalStore.storeData(keys.properties.routingServerError, false, true);
-            globalStore.storeData(keys.gui.global.connectedMode, true, true);
+            globalStore.storeData(keys.gui.global.onAndroid, true, );
+            globalStore.storeData(keys.properties.routingServerError, false);
+            globalStore.storeData(keys.gui.global.connectedMode, true);
             const receiveAndroidEvent = (key, id) => {
                 try {
                     //inform the android part that we noticed the event

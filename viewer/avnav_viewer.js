@@ -124,20 +124,20 @@ export default function() {
     if (getParam('log')) window.avnav.debugMode=true;
     let navurl=getParam('navurl');
     if (navurl){
-        globalStore.storeData(keys.gui.global.navUrl,navurl,true);
-        globalStore.storeData(keys.properties.routingServerError,false,true);
+        globalStore.storeData(keys.gui.global.navUrl,navurl);
+        globalStore.storeData(keys.properties.routingServerError,false);
     }
     else {
-        globalStore.storeData(keys.properties.routingServerError,true,true);
-        globalStore.storeData(keys.gui.global.navUrl,DEFAULT_NAVURL,true);
+        globalStore.storeData(keys.properties.routingServerError,true);
+        globalStore.storeData(keys.gui.global.navUrl,DEFAULT_NAVURL);
     }
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
-        globalStore.storeData(keys.gui.global.connectedMode,false,true);
-        globalStore.storeData(keys.gui.capabilities.canConnect,false,true);
+        globalStore.storeData(keys.gui.global.connectedMode,false);
+        globalStore.storeData(keys.gui.capabilities.canConnect,false);
     }
     else{
-        globalStore.storeData(keys.gui.global.connectedMode,true,true);
+        globalStore.storeData(keys.gui.global.connectedMode,true);
     }
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();

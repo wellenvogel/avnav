@@ -80,8 +80,8 @@ const RouteState=({name,action,setAction,allowUpload,status})=>{
             label={STATE_TEXT[status]+ name}
             itemList={[
                 {label:'delete',value:'delete'},
-                {label:'upload',value:'upload',disabled:!!allowUpload},
-                {label:'keep',value:'keep'}
+                {label:'upload',value:'upload',disabled:!allowUpload},
+                {label:'keep local',value:'keep'}
             ]}
             value={action}
             onChange={(nv)=>setAction(nv)}
