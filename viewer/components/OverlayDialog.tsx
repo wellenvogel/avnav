@@ -362,10 +362,10 @@ export const DialogButtons=(props:DialogButtonListProps)=>{
 /**
  * helper for dialogButtonList
  */
-export const DBCancel=(props?:DialogButtonProps)=>{
+export const DBCancel=(props?:Partial<DialogButtonProps>)=>{
     return {close: true,...ButtonDefs.DBCancel,...props};
 }
-export const DBOk=(onClick?:(ev:SyntheticEvent)=>void,props?:DialogButtonProps)=>{
+export const DBOk=(onClick?:(ev:SyntheticEvent)=>void,props?:Partial<DialogButtonProps>)=>{
     return {close: true,...ButtonDefs.DBOk ,onClick:onClick,...props};
 }
 

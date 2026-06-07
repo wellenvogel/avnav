@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from "react";
 import {
     DBCancel,
     DBOk,
-    DialogButtonListProps,
     DialogButtons,
     DialogFrame,
     promiseResolveHelper,
@@ -22,6 +21,7 @@ import {useDialogContext} from "./DialogContext";
 import {fetchItem, IMAGES, ItemType} from "../util/itemFunctions";
 import {ViewDialog} from "./ViewDialog";
 import ButtonDefs from "./ButtonDefs";
+import {DialogButtonProps} from "./DialogButton";
 
 export interface EditDialogProps {
     data:string
@@ -58,7 +58,7 @@ export const EditDialog = ({data, title, language, resolveFunction,
             flask.current.onUpdate(() => setChanged(true));
         }
     }, [data]);
-    const buttonList:DialogButtonListProps=[
+    const buttonList:DialogButtonProps[]=[
         {
             ...ButtonDefs.Upload,
             onClick: () => {

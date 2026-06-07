@@ -14,7 +14,6 @@ export interface DialogButtonProps extends Options,ButtonBase{
     className?: string;
     icon?: string;
     style?: Record<string, any>;
-    disabled?: boolean;
     toggle?: boolean;
     close?: boolean;  //default: true
     children?: React.ReactNode;
@@ -25,6 +24,9 @@ const DialogButton=(props:DialogButtonProps)=>{
     // eslint-disable-next-line prefer-const
         let {icon,longText,style,disabled,visible,name,className,toggle,children,onClick,close,onPreClose,iconClass,...forward}=useStore(props);
         const add:Record<string, any> = {};
+        if (typeof disabled === 'function') {
+            disabled=disabled();
+        }
         if (disabled) {
             add.disabled = true;
         }
