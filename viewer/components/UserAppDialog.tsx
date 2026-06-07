@@ -357,7 +357,7 @@ const buildDialogParameters=(canEdit:boolean)=> {
             name:'displayPage',
             displayName:'page',
             readOnly: !canEdit,
-            defaultValue:PAGEIDS.ADDON,
+            default:PAGEIDS.ADDON,
             list:Object.values(PLUGINPAGES).map((page)=>{
                     const label=getPageLabel(page);
                     return {label:label,value:page}
