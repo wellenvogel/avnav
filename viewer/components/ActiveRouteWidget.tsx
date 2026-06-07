@@ -66,7 +66,7 @@ const ActiveRouteWidget =(props:ActiveRouteWidgetProps)=>{
         const resizeSequence=useStringsChanged(display,props);
         const small = (props.mode === "horizontal");
         return (
-            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} resizeSequence={resizeSequence} disconnect={!isServer}>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={isServer?'server':'local'} resizeSequence={resizeSequence} disconnect={!isServer}>
                 <div className={Helper.concatsp("widgetData",small?"small":undefined)}>
                     <div className="routeName">{display.name}</div>
                     {small && <SecondRow eta={display.eta} approach={approaching && ! props.legacy} remain={display.remain} small={small} />}

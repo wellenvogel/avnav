@@ -29,8 +29,9 @@ const EditRouteWidget = (props) => {
     let len = route.computeLength(0, props.useRhumbLine);
     let remain = isActive ? props.remain : undefined;
     let eta = isActive ? props.eta : undefined;
+    const isServer=routeobjects.isServerName(route.name);
     return (
-        <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined} disconnect={!route.isServer()}>
+        <WidgetFrame {...props} addClass={classes} caption="RTE" unit={isServer?'server':'local'} disconnect={!route.isServer()}>
             <div className="routeName widgetData">{route.displayName()}</div>
             <div className="widgetData">
                 <span className="label">PTS:</span>
