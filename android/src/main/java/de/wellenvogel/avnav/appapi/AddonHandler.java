@@ -122,7 +122,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
     public void setPluginItems(String pluginName, List<PluginItem> items) throws Exception {
         ArrayList<AddonInfo> addons=new ArrayList<>();
         for (PluginItem pi:items){
-            addons.add(AddonInfo.fromJson(pi.toJson()));
+            JSONObject piJson=pi.toJson();
+            piJson.put(AddonInfo.NAME,pluginName+"-"+pi.name);
+            addons.add(AddonInfo.fromJson(piJson));
         }
         synchronized (externalAddons){
             List<AddonInfo> old=externalAddons.get(pluginName);
