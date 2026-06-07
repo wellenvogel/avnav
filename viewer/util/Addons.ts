@@ -482,21 +482,13 @@ const removeAddon=(name:string)=>{
 };
 const STYLE_NAME='avnav-addon-styles';
 const buildButtonStyles=(button:UserButtonBase,name:string,title?:string):string=>{
-    let label = (button?.label as string)||title;
-    if (! label){
-        label=name||"";
-        for (const t of ['user-','system-']) {
-                    const exp=new RegExp("^"+t)
-                    label = label.replace(exp, '');
-        }
-
-    }
+    const label = (button?.label as string)||title;
     let style="";
     if (button?.displayName){
         style+=`.longText.${name}::after{\ncontent:"${button.displayName}";\n}\n`;
     }
     if (label){
-        style+=`.${name}::after{\ncontent:"${label}";\n}\n`;
+        style+=`.${name}::after{\ncontent:"${label.substring(0,7)}";\n}\n`;
     }
     if (button?.icon){
         style+=`.${name} .icon{\nbackground-image: url("${button.icon}");\n}\n`;
