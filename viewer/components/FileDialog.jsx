@@ -233,7 +233,7 @@ class CreateAction extends CopyAware{
         const accessor=this.accessor?(item)=>this.accessor(item):(item)=>item.name;
         const itemList=await listItems(this.type);
         const fixedExtension=this._fhelper('fixedExtension');
-        const lcheckName=this.checkName?(name)=>this.checkName(name,accessor,itemList):checkName(name,itemList,accessor);
+        const lcheckName=this.checkName?(name)=>this.checkName(name,itemList,accessor):checkName(name,itemList,accessor);
         const res=await showPromiseDialog(dialogContext,(dp)=><ItemNameDialog
             {...dp}
             iname={this._fhelper('proposal')||''}

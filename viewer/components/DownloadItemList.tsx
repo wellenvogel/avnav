@@ -37,7 +37,7 @@ import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";
 import ItemList from "./ItemList";
 import UploadHandler from "./UploadHandler";
-import Button, {ButtonEvent, ButtonEventHandler} from "./Button";
+import Button, {ButtonEvent, ButtonEventHandler, ButtonLongText, buttonVisibleAndDisabled} from "./Button";
 import keys from "../util/keys";
 import {getItemIconProperties, Item, ItemType, listItems} from "../util/itemFunctions";
 import {useStateRef, useTimer} from "../util/UiHelper";
@@ -123,12 +123,12 @@ export type DownloadItemListProps = {
     scrollSelected?:number;  //if != 0 scroll selected item, repeat scroll on change
     itemInfoFunction?:(item?:Item)=>ReactElement
     className?:string
-
+    triggerCreateSequence?:number; //whenever set to != 0 or changed to !=0 a create dialog is triggered
 }
 
 export const DownloadItemList = (
     {type, selectCallback, uploadFile,infoMode,noExtra,showCreate,itemActions,
-        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect,itemInfoFunction,className}:DownloadItemListProps) => {
+        autoreload,uploadDone,selectedName,scrollSelected,immediateSelect,itemInfoFunction,className,triggerCreateSequence}:DownloadItemListProps) => {
     const [items, setItems] = useState([]);
     const [vselectedName, setVselectedName,vSelectedNameRef] = useStateRef(selectedName);
     const lastSelectedName=useRef(undefined);
@@ -174,6 +174,11 @@ export const DownloadItemList = (
                 }
                 return {
                     error: 'invalid name for '+type
+                }
+            }
+            if (! name){
+                return {
+                    error:'must not be empty'
                 }
             }
             return checkName(name, items, accessor);
@@ -225,6 +230,11 @@ export const DownloadItemList = (
             setVselectedName(selectedName);
         }
     },[selectedName,scrollSelected]);
+    useEffect(() => {
+        if (triggerCreateSequence){
+            createAction.action(dialogContext);
+        }
+    }, [triggerCreateSequence]);
     return <React.Fragment>
         <ItemList
             keyFunction={(item:Item)=>item.name}
@@ -327,21 +337,40 @@ export const DownloadItemSelectDialog = (props:DownloadItemSelectDialogProps)=> 
 interface UploadActionProps {
     onClick: ButtonEventHandler,
     className?: string
-    title: string,
     disabled?: boolean
+    children?: React.ReactNode
 }
-
+const uploadButton={
+    ...ButtonDefs.Upload,
+    storeKeys: {
+        enabled:keys.gui.global.connectedMode,
+    },
+    updateFunction:(state:any)=>{
+        return {
+            disabled:!state.enabled
+        }
+}
+}
 export const UploadAction = (props: UploadActionProps) => {
-    return <ListItem className={Helper.concatsp('uploadAction', props.className)}
-                     onClick={props.onClick}
+    const vd=buttonVisibleAndDisabled(uploadButton);
+    return <ListItem className={Helper.concatsp('uploadAction', props.className,vd.disabled?'disabled':undefined)}
+                     onClick={(ev:any)=>{
+                         if (vd.disabled||props.disabled) return;
+                         props.onClick(ev)}
+                     }
     >
-        <ListMainSlot primary={`Upload ${props.title}`}/>
+        <ListMainSlot
+            className={vd.disabled?'disabled':''}
+        >
+            <ButtonLongText {...ButtonDefs.Upload}/>
+        </ListMainSlot>
         <ListSlot>
             <Button
                 className="smallButton"
-                {...ButtonDefs.Upload}
-                disabled={props.disabled}
+                {...uploadButton}
+                disabled={props.disabled||vd.disabled}
             />
         </ListSlot>
+        {props.children}
     </ListItem>
 }

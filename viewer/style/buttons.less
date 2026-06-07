@@ -56,12 +56,6 @@
   position: unset;
 }
 
-//TEMP!
-.buttonRow.button{
-  .listMain{
-    display: none;
-  }
-}
 
 .button-text{
   div:not(.buttonRow,.smallButton,.dialogButton).button .iconFrame{
@@ -104,10 +98,15 @@
   align-items: center;
   text-align: center;
   width: @mainNavItemWidth;
-  .listMain{
-    max-width: @mainNavItemWidth;
-    overflow: hidden;
+  &.buttonText{
+    width: unset;
   }
+  &.buttonText:after{
+    font-size: unset;
+  }
+}
+.disabled>.buttonText{
+  .mdText2();
 }
 .fab.button {
   position: absolute;

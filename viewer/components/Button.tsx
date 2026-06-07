@@ -8,7 +8,6 @@ import {useHistory} from "./HistoryProvider";
 import base from "../base";
 import {ButtonDescription} from "./ButtonList";
 import {Icon} from "./Icons";
-import {ListMainSlot} from "./ListItems";
 import keys, {ButtonFontSizeFactor} from "../util/keys";
 import {KeyComponents} from "../util/keyhandler";
 import {ButtonBase} from "../api/api.interface";
@@ -100,6 +99,15 @@ export const isButtonVisible=(props:ButtonProps) => {
     const computed=dynamicWrapper(props);
     return isVisible(computed);
 }
+export const buttonVisibleAndDisabled=(props:ButtonProps) => {
+    const computed=dynamicWrapper(props);
+    const visible=Helper.unsetorTrue(computed.visible);
+    const disabled=(typeof computed.disabled === 'function') ? computed.disabled() : !!computed.disabled;
+    return {
+        visible:visible,
+        disabled:disabled,
+    }
+}
 
 const Button = (sprops:ButtonProps) => {
     const iprops:ButtonProps=useStore(sprops,{changeCallback:sprops.dataChanged});
@@ -190,8 +198,11 @@ const Button = (sprops:ButtonProps) => {
 export const ButtonRow=(button:DynamicButtonProps) => {
     const className=Helper.concatsp('buttonRow listEntry longText',button.className);
     return <Button {...button} noHover={true} className={className} >
-        <ListMainSlot primary={button.longText||button.name}></ListMainSlot>
     </Button>
+}
+export const ButtonLongText=(button:DynamicButtonProps) => {
+    const className=Helper.concatsp('buttonText buttonRow longText button',button.className,button.name);
+    return <div className={className} ></div>
 }
 
 

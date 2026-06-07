@@ -133,9 +133,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                         title={"Charts"}
                     ></MvHeadline>
                     <UploadAction
+                        className={'topRow'}
                         disabled={!uploadCharts || ! connected}
                         onClick={uploadActionCharts}
-                        title={'chart'}/>
+                        />
                     <DownloadItemList
                         type={'chart'}
                         autoreload={3000}
@@ -148,9 +149,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                     <MvHeadline title={'Imports'}
                     />
                     <UploadAction
+                        className={'topRow'}
                         disabled={!uploadCharts || ! connected || ! uploadImport}
                         onClick={uploadActionCharts}
-                        title={'import'}
+
                     />
                     <ImporterView
                         selected={uploadedImport}
@@ -160,9 +162,10 @@ const ChartsPage=(props:ChartsPageProps)=>{
                     <MvHeadline title={"Overlays"}
                                 />
                     <UploadAction
+                        className={'topRow'}
                         disabled={!uploadOverlays || ! connected}
                         onClick={uploadActionOverlays}
-                        title={'overlay'}/>
+                        />
                     <DownloadItemList
                         {...uploadPropsOverlays}
                         type={'overlay'}

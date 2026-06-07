@@ -22,8 +22,6 @@
  */
 import GeneralButtons from "./GeneralButtons";
 import {propsToDefs} from "../components/Button";
-import keys from "../util/keys";
-import {DynamicProps} from "../hoc/Dynamic";
 import ButtonDefs from "../components/ButtonDefs";
 
 export default GeneralButtons.concat(propsToDefs([
@@ -35,20 +33,6 @@ export default GeneralButtons.concat(propsToDefs([
     },
     {
         ...ButtonDefs.AddonConfigImages,
-    },
-    {
-        ...ButtonDefs.AddonConfigPlus,
-        localOnly: true,
-        storeKeys:{
-            visible: keys.gui.global.connectedMode,
-            capability:keys.gui.capabilities.addons
-        },
-        updateFunction:(state:DynamicProps)=>{
-            return {
-                visible: state.visible && state.capability,
-                capability:undefined
-            }
-        }
     }
 ]))
 
