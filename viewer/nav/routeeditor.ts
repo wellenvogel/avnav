@@ -581,7 +581,7 @@ export class StateHelper{
         if (! StateHelper.hasActiveTarget(state)) return false;
         return state.leg.getCurrentTargetIdx() == state.index;
     }
-    static route(state:RouteStoreDataType){
+    static route(state:RouteStoreDataType):Route{
         const [route]=StateHelper.getRouteIndexFlag(state);
         return route;
     }

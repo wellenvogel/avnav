@@ -673,7 +673,18 @@ const buildWaypointButtons=(dialogContext:IDialogContext,
         }
     ];
 }
-
+const hasMinPixelDistance=(point:Point,currentEditor?:RouteEdit)=>{
+    if (! currentEditor) currentEditor = getCurrentEditor();
+    const route=currentEditor.getRoute();
+    if (! route) return true;
+    for (const current of route.points) {
+        if (current) {
+            const distance = mapholder.pixelDistance(point, current);
+            if (distance < 8) return false;
+        }
+    }
+    return true;
+}
 const EditRoutePage = (props:PageProps) => {
     const history=useHistory();
     const dialogContext = useDialogContext();
@@ -820,11 +831,12 @@ const EditRoutePage = (props:PageProps) => {
                 const target = getTargetFromInfo(info);
                 if (!target) return;
                 const currentEditor = getCurrentEditor();
+                if (! hasMinPixelDistance(target,currentEditor)) return;
                 mapholder.setCenter(target);
                 currentEditor.addWaypoint(target, true);
                 setLastCenteredWp(currentEditor.getIndex());
             },
-            condition: (featureInfo) => featureInfo.validPoint()
+            condition: (featureInfo) => featureInfo.validPoint() && hasMinPixelDistance(getTargetFromInfo(featureInfo))
         }),
         new FeatureAction(
             {
@@ -833,11 +845,14 @@ const EditRoutePage = (props:PageProps) => {
                     const target = getTargetFromInfo(info);
                     if (!target) return;
                     const currentEditor = getCurrentEditor();
+                    if (! hasMinPixelDistance(target,currentEditor)) return;
                     mapholder.setCenter(target);
                     currentEditor.addWaypoint(target);
                     setLastCenteredWp(currentEditor.getIndex());
                 },
-                condition: (featureInfo) => featureInfo.validPoint()
+                condition: (featureInfo) => {
+                    return featureInfo.validPoint() && hasMinPixelDistance(getTargetFromInfo(featureInfo));
+                }
             }),
         new FeatureAction(
             {
@@ -952,10 +967,9 @@ const EditRoutePage = (props:PageProps) => {
                 const center = mapholder.getCenter();
                 if (!center) return;
                 const currentEditor = getCurrentEditor();
-                const current = currentEditor.getPointAt();
-                if (current) {
-                    const distance = mapholder.pixelDistance(center, current);
-                    if (distance < 8) return;
+                if (! hasMinPixelDistance(center,currentEditor)) {
+                    Toast('too close to existing point');
+                    return;
                 }
                 currentEditor.addWaypoint(center);
                 setLastCenteredWp(currentEditor.getIndex());
@@ -969,10 +983,9 @@ const EditRoutePage = (props:PageProps) => {
                 const center = mapholder.getCenter();
                 if (!center) return;
                 const currentEditor = getCurrentEditor();
-                const current = currentEditor.getPointAt();
-                if (current) {
-                    const distance = mapholder.pixelDistance(center, current);
-                    if (distance < 8) return;
+                if (! hasMinPixelDistance(center,currentEditor)) {
+                    Toast('too close to existing point');
+                    return;
                 }
                 currentEditor.addWaypoint(center, true);
                 setLastCenteredWp(currentEditor.getIndex());
