@@ -707,7 +707,7 @@ public class PluginManager extends DirectoryRequestHandler {
                             if (po.has(k)) {
                                 JSONObject finfo=po.getJSONObject(k);
                                 String relativePath = finfo.getString(IPluginHandler.IK_FURL);
-                                finfo.put(IPluginHandler.IK_FURL, getUrlFromName(ph.getName() + "/" + relativePath));
+                                finfo.put(IPluginHandler.IK_FURL, getUrlFromName(ph.getName()) + "/" + URLEncoder.encode(relativePath,"utf-8"));
                             }
                         }catch (Exception e){
                             AvnLog.e("invalid structure of getFiles from "+ph.getName(),e);

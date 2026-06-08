@@ -6,28 +6,49 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.zip.ZipFile;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.charts.Chart;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 public class ExternalPluginWorker extends Worker implements IPluginHandler{
 
+    static class UrlWTimestamp{
+        public String url;
+        public long timestamp;
+        public UrlWTimestamp(String url, long timestamp){
+            this.url=url;
+            this.timestamp=timestamp;
+        }
+    }
     private final Object pijLock=new Object();
     private JSONObject pluginJson;
+
+    private HashMap<String,UrlWTimestamp> piFiles= new HashMap<>();
+
     private long lastModified=0;
 
-    private void setPluginJson(JSONObject no){
+    private void setPluginJson(JSONObject no,Intent received){
         boolean hasChanged=false;
         synchronized (pijLock) {
             if (no != null) {
@@ -42,6 +63,20 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             if (hasChanged || lastModified == 0){
                 lastModified = SystemClock.uptimeMillis();
             }
+            if (received == null){
+                piFiles.clear();
+            }
+            else {
+                for (String k: new String[]{FT_CSS,FT_MJS}){
+                    AvnUtil.KeyValue<String> fname=PLUGINFILES.get(k);
+                    if (fname == null) continue;
+                    String url= received.getStringExtra(fname.value);
+                    long ts=received.getLongExtra(fname.value+"-time",0);
+                    if (url != null) {
+                        piFiles.put(k, new UrlWTimestamp(url, ts));
+                    }
+                }
+            }
         }
 
     }
@@ -55,14 +90,27 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
     public JSONObject getFiles() throws JSONException {
         long lm=lastModified;
         JSONObject piJson=pluginJson;
-        //for now only plugin.json
         JSONObject rt=new JSONObject();
         rt.put(K_NAME, getKey());
-        if (piJson != null && ENABLED_PARAMETER.fromJson(parameters)) {
-            JSONObject finfo=new JSONObject();
-            finfo.put(IK_FURL,PLUGINFILES.get(FT_CFG).value);
-            finfo.put(IK_FTS,lm);
-            rt.put(FT_CFG,finfo);
+        if (ENABLED_PARAMETER.fromJson(parameters)) {
+            synchronized (pijLock) {
+                if (piJson != null) {
+                    JSONObject finfo = new JSONObject();
+                    finfo.put(IK_FURL, PLUGINFILES.get(FT_CFG).value);
+                    finfo.put(IK_FTS, lm);
+                    rt.put(FT_CFG, finfo);
+                }
+                for (String k:piFiles.keySet()){
+                    UrlWTimestamp fentry=piFiles.get(k);
+                    AvnUtil.KeyValue<String> urlV = PLUGINFILES.get(k);
+                    if (urlV != null) {
+                        JSONObject finfo = new JSONObject();
+                        finfo.put(IK_FURL,urlV.value );
+                        finfo.put(IK_FTS, fentry.timestamp);
+                        rt.put(k, finfo);
+                    }
+                }
+            }
             rt.put(K_ACTIVE,true);
         }
         else{
@@ -81,15 +129,72 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         rt.put(IK_ACTIVE,(piJson != null) && ENABLED_PARAMETER.fromJson(parameters));
         return rt;
     }
+    static class CloseHelperStream extends InputStream {
+        private InputStream is;
+        private HttpURLConnection zf;
+        public CloseHelperStream(InputStream zi,HttpURLConnection zf){
+            this.is=zi;
+            this.zf=zf;
+        }
+        @Override
+        public int read() throws IOException {
+            return is.read();
+        }
 
+        @Override
+        public int read(@NonNull byte[] b) throws IOException {
+            return is.read(b);
+        }
+
+        @Override
+        public int read(@NonNull byte[] b, int off, int len) throws IOException {
+            return is.read(b, off, len);
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            zf.disconnect();
+        }
+    }
     @Override
     public ExtendedWebResourceResponse openFile(String relativePath) throws Exception {
-        String cfgName=PLUGINFILES.get(FT_CFG).value;
         if (relativePath == null) throw new Exception("empty path");
-        JSONObject piJson=pluginJson;
-        if (!relativePath.equals(cfgName) || piJson == null) throw new Exception("file "+relativePath+" not found");
-        ByteArrayInputStream is=new ByteArrayInputStream(piJson.toString().getBytes(StandardCharsets.UTF_8));
-        return new ExtendedWebResourceResponse(is.available(),"application/json","UTF-8",is);
+        String cfgName=PLUGINFILES.get(FT_CFG).value;
+        if (relativePath.equals(cfgName)) {
+            JSONObject piJson = pluginJson;
+            if (piJson == null) throw new Exception("file " + relativePath + " not found");
+            ByteArrayInputStream is = new ByteArrayInputStream(piJson.toString().getBytes(StandardCharsets.UTF_8));
+            return new ExtendedWebResourceResponse(is.available(), "application/json", "UTF-8", is);
+        }
+        UrlWTimestamp found=null;
+        synchronized (pijLock) {
+            for (String k :piFiles.keySet()){
+                AvnUtil.KeyValue<String> fname=PLUGINFILES.get(k);
+                if (fname == null) continue;
+                if (fname.value.equals(relativePath)){
+                    found=piFiles.get(k);
+                    break;
+                }
+            }
+        }
+        if (found == null){
+            throw new Exception("file "+relativePath+" not found");
+        }
+        URL rurl=new URL(found.url);
+        HttpURLConnection urlConnection = (HttpURLConnection) rurl.openConnection();
+        try {
+            InputStream in = urlConnection.getInputStream();
+            String ct=urlConnection.getContentType();
+            String ce=urlConnection.getContentEncoding();
+            int len=urlConnection.getContentLength();
+            ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(len,ct,ce,new CloseHelperStream(in,urlConnection));
+            rt.setDateHeader("last-modified", new Date(found.timestamp));
+            return rt;
+        } catch (Throwable t) {
+            urlConnection.disconnect();
+            throw t;
+        }
     }
 
     @Override
@@ -220,21 +325,21 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             if ( (last + 1000 *TIMEOUT_PARAMETER.fromJson(parameters)) < SystemClock.uptimeMillis()){
                 setStatus(WorkerStatus.Status.INACTIVE,"timeout");
                 phBase.onStop(true);
-                setPluginJson(null);
+                setPluginJson(null,null);
             }
             else{
                 setStatus(WorkerStatus.Status.NMEA,"plugin available");
             }
         }
         phBase.onStop(false);
-        setPluginJson(null);
+        setPluginJson(null,null);
     }
 
     @Override
     public void stop() {
         super.stop();
         phBase.onStop(false);
-        setPluginJson(null);
+        setPluginJson(null,null);
     }
 
     public void update(Intent intent){
@@ -251,11 +356,16 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             long maxSeconds=(new Date("3000/01/01")).getTime()/1000;
             boolean updatedCharts = false;
             boolean updatedAddons = false;
-            String pluginString = intent.getStringExtra("plugin.json");
+            /*
+            string extras: plugin.json: the content of a plugin.json
+                           plugin.mjs: the URL of a plugin.mjs
+                           plugin.css: the URL of a plugin.css
+             */
+            String pluginString = intent.getStringExtra(PLUGINFILES.get(FT_CFG).value);
+            JSONObject piJson=null;
             if (pluginString != null) {
                 try {
-                    JSONObject piJson = new JSONObject(pluginString);
-                    setPluginJson(piJson);
+                    piJson = new JSONObject(pluginString);
                     if (piJson.has("charts")) {
                         JSONArray charts = piJson.getJSONArray("charts");
                         for (int i=0;i<charts.length();i++){
@@ -292,9 +402,9 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
                     Log.d(Constants.LOGPRFX, "unable to handle plugin.json", t);
                 }
             }
-            else{
-                setPluginJson(null);
-            }
+            setPluginJson(piJson,
+                    intent
+            );
             if (! updatedCharts){
                 phBase.unregisterCharts(true);
             }

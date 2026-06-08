@@ -1803,7 +1803,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }
         if (existing != null){
-            existing.update(intent);
+            try {
+                existing.update(intent);
+            }catch (Throwable t){
+                AvnLog.e("error updating "+existing.pluginName,t);
+            }
             return;
         }
         //not found
