@@ -185,12 +185,10 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                     JSONObject aj=addon.toJson();
                     if (serverInfo != null && hasExternalUrl(aj)) {
                         for (String rk : REPLACE_KEYS) {
-                            if ( !rk.equals("url")) {
                                 //external url
                                 String v = aj.optString(rk, "");
                                 v=serverInfo.replaceHostInUrl(v);
                                 aj.put(rk, v);
-                            }
                         }
                     }
                     aj.put("canDelete","false");

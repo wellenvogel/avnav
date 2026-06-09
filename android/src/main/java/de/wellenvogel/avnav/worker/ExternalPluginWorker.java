@@ -28,6 +28,7 @@ import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.charts.Chart;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -63,18 +64,24 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             if (hasChanged || lastModified == 0){
                 lastModified = SystemClock.uptimeMillis();
             }
-            if (received == null){
-                piFiles.clear();
-            }
-            else {
-                for (String k: new String[]{FT_CSS,FT_MJS}){
-                    AvnUtil.KeyValue<String> fname=PLUGINFILES.get(k);
-                    if (fname == null) continue;
-                    String url= received.getStringExtra(fname.value);
-                    long ts=received.getLongExtra(fname.value+"-time",0);
-                    if (url != null) {
-                        piFiles.put(k, new UrlWTimestamp(url, ts));
+            piFiles.clear();
+            if (received != null){
+                try{
+                    String pluginfiles=received.getStringExtra("pluginfiles");
+                    if (pluginfiles != null) {
+                        JSONArray piFilesJson = new JSONArray(pluginfiles);
+                        for (int i=0;i<piFilesJson.length();i++){
+                            JSONObject fileInfo=piFilesJson.getJSONObject(i);
+                            String fileName=fileInfo.optString("filename",null);
+                            String url=fileInfo.optString("url",null);
+                            long timestamp=fileInfo.optLong("timestamp",0);
+                            if (fileName != null && url != null && ! Objects.equals(PLUGINFILES.get(FT_CFG).value,fileName)){
+                                piFiles.put(fileName,new UrlWTimestamp(url,timestamp));
+                            }
+                        }
                     }
+                } catch (Throwable t){
+                    AvnLog.e("error reading pluginfiles for "+this.pluginName,t);
                 }
             }
         }
@@ -94,20 +101,24 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         rt.put(K_NAME, getKey());
         if (ENABLED_PARAMETER.fromJson(parameters)) {
             synchronized (pijLock) {
-                if (piJson != null) {
-                    JSONObject finfo = new JSONObject();
-                    finfo.put(IK_FURL, PLUGINFILES.get(FT_CFG).value);
-                    finfo.put(IK_FTS, lm);
-                    rt.put(FT_CFG, finfo);
-                }
-                for (String k:piFiles.keySet()){
-                    UrlWTimestamp fentry=piFiles.get(k);
-                    AvnUtil.KeyValue<String> urlV = PLUGINFILES.get(k);
-                    if (urlV != null) {
-                        JSONObject finfo = new JSONObject();
-                        finfo.put(IK_FURL,urlV.value );
-                        finfo.put(IK_FTS, fentry.timestamp);
-                        rt.put(k, finfo);
+                for (String type:PLUGINFILES.keySet()){
+                    String name=PLUGINFILES.get(type).value;
+                    if (FT_CFG.equals(type)){
+                        if (piJson != null) {
+                            JSONObject finfo = new JSONObject();
+                            finfo.put(IK_FURL, name);
+                            finfo.put(IK_FTS, lm);
+                            rt.put(type, finfo);
+                        }
+                    }
+                    else{
+                        UrlWTimestamp fentry=piFiles.get(name);
+                        if (fentry != null){
+                            JSONObject finfo = new JSONObject();
+                            finfo.put(IK_FURL,name );
+                            finfo.put(IK_FTS, fentry.timestamp);
+                            rt.put(type, finfo);
+                        }
                     }
                 }
             }
@@ -169,14 +180,7 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
         }
         UrlWTimestamp found=null;
         synchronized (pijLock) {
-            for (String k :piFiles.keySet()){
-                AvnUtil.KeyValue<String> fname=PLUGINFILES.get(k);
-                if (fname == null) continue;
-                if (fname.value.equals(relativePath)){
-                    found=piFiles.get(k);
-                    break;
-                }
-            }
+            found=piFiles.get(relativePath);
         }
         if (found == null){
             throw new Exception("file "+relativePath+" not found");
