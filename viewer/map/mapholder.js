@@ -818,7 +818,9 @@ class MapHolder extends DrawingPositionConverter {
         for (let i = 0; i < this.sources.length; i++) {
             let source = this.sources[i];
             if (!source.isBaseChart()) {
-                existing++;
+                if (source.isConfiguredVisible()) {
+                    existing++;
+                }
                 if (source.isHidden()) disabled++;
             }
         }

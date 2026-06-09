@@ -368,7 +368,6 @@ export const selectChartDialog=(
     infoText?:ReactNode
     )=>{
     const current=mapholder.getCurrentChartEntry()||{};
-    const [numOverlays,numDisabled]=mapholder.overlayStatus();
     dialogCtx.showDialog(()=><ChartSelectDialog
         resolveFunction={(chartEntry:Item)=>{
             if (! chartEntry) {
@@ -384,14 +383,20 @@ export const selectChartDialog=(
                 onClick:() => {
                     mapholder.showOverlays()
                 },
-                disabled: numOverlays === 0 || numDisabled === 0
+                disabled: ()=>{
+                    const [numOverlays,numDisabled]=mapholder.overlayStatus();
+                    return numOverlays === 0 || numDisabled === 0
+                }
             },
             {
                 ...ButtonDefs.DBHideOverlays,
                 onClick:() => {
                     mapholder.hideOverlays();
                 },
-                disabled: numOverlays === 0 || numDisabled === numOverlays
+                disabled: ()=>{
+                    const [numOverlays,numDisabled]=mapholder.overlayStatus();
+                    return numOverlays === 0 || numDisabled === numOverlays
+                }
             }
         ]}
         text={infoText}

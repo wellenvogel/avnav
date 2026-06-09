@@ -292,6 +292,9 @@ class ChartSourceBase {
         this.visible=this.chartEntry[CHARTBASE.ENABLED];
         this.layers.forEach((layer)=>layer.setVisible(this.visible));
     }
+    isConfiguredVisible(){
+        return this.chartEntry[CHARTBASE.ENABLED]
+    }
 
     /**
      * get the list of all detected features for this source
