@@ -668,7 +668,8 @@ public class PluginManager extends DirectoryRequestHandler {
         boolean rt= AvnUtil.deleteRecursive(pdir);
         if (rt) {
             try {
-                gpsService.updateWorkerConfig(this,null,null);
+                //delete child config
+                gpsService.updateWorkerConfig(this,name,null);
             } catch (Exception e) {
                 AvnLog.e("unable to update plugin config",e);
             }
@@ -813,6 +814,16 @@ public class PluginManager extends DirectoryRequestHandler {
     private final static String CHILD_PARAM_NAME="children";
     @Override
     public synchronized void setParameters(String child, JSONObject newParam, boolean replace, boolean check) throws JSONException, IOException {
+        if (newParam == null && child != null){
+            //delete child
+            synchronized (createLock) {
+                JSONObject nv=new JSONObject();
+                childParameterValues.remove(child);
+                nv.put(CHILD_PARAM_NAME, childParameterValues);
+                super.setParameters(null,nv,false,false);
+                return;
+            }
+        }
         if (newParam == null) return;
         if (child != null){
             JSONObject nv=new JSONObject();
