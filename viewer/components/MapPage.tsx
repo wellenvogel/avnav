@@ -216,6 +216,8 @@ const MapPage =(iprops:MapPageProps)=>{
         })});
     //reset map float
     const hasAddon=!!addonViewManager.getPageAddon(iprops.id);
+    const [loading,setLoading]=useState<string>(null);
+    const [loadingError,setLoadingError]=useState<string>(null);
     const [layerTypes,setLayerTypes]=useState([]);
     const [buttonWidth,setButtonWidth]=useState(undefined);
     const buttonsHidden=useRef(false);
@@ -237,6 +239,8 @@ const MapPage =(iprops:MapPageProps)=>{
         }
     },[sprops.mapFloat]);
     const showMap=useCallback((chartEntry:ChartEntry)=>{
+        setLoadingError(null);
+        setLoading(`loading ${chartEntry.displayName||chartEntry.name}`);
         if (chartEntry.infoMode !== undefined ){
             if (needsToShow(chartEntry.url,INFO_TYPES.info,chartEntry.infoMode)){
                 Toast("Chart "+chartEntry.info);
@@ -247,8 +251,12 @@ const MapPage =(iprops:MapPageProps)=>{
         then(()=>{
             computeScalePosition();
             setLayerTypes(mapholder.getMapLayerNames());
+            setLoading(null);
         }).
-        catch((error:any)=>{Toast(error)});
+        catch((error:any)=>{
+            setLoadingError(error);
+            Toast(error)}
+        );
     },[]);
     //we rely on map events being only triggered by load map when a promise resolves (i.e. async to this code)
     //this way the order of our effects does not really matter (although the subscribe effect will run AFTER the next one that triggers loadMap) -
@@ -281,8 +289,9 @@ const MapPage =(iprops:MapPageProps)=>{
     useEffect(()=>computeScalePosition());
         const chartEntry=mapholder.getCurrentChartEntry()||{};
         const mapClass=concatsp("map",chartEntry.name?chartEntry.name.replace(/[^a-zA-Z0-9_@]/g,"").replace('@',' '):undefined);
-        const mapOpacity=globalStore.getData(keys.properties.nightMode) ?
+        let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
+        if (loading || loadingError) mapOpacity=0;
         const className=Helper.concatsp(
             sprops.className,
             "mapPage",
@@ -319,6 +328,11 @@ const MapPage =(iprops:MapPageProps)=>{
                                 panelCreator={sprops.panelCreator}
                                 onItemClick={sprops.onItemClick}
                             />
+                            {(!!loading || !! loadingError) && <div className="loading">
+                                {!!loading && ! loadingError && <div className={"spinner"}></div>}
+                                <div className={"loadingName"}>{loading}</div>
+                                {!!loadingError && <div className={"error"}>{loadingError+""}</div>}
+                            </div>}
                             <div className={'mapFrame'}>
                             {!sprops.mapFloat && <DynamicTitleIcons /> }
                             {!sprops.mapFloat && <Map mapClass={mapClass} mapOpacity={mapOpacity}/>}

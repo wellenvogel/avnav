@@ -41,6 +41,7 @@ export enum SHOW_MODE {
     session = 2
 }
 export interface ChartEntry extends Record<string,any>{
+    displayName?:string
     name:string,
     url?:string,
     infoMode?:SHOW_MODE,
