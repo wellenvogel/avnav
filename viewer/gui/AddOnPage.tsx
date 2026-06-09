@@ -55,7 +55,8 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
             },
             Cancel: {
                 onClick: () => {
-                    history.pop()
+                    if (! history.isPrevious(PAGEIDS.ADDCFG)) history.pop()
+                    history.replace(PAGEIDS.ADDCFG);
                 }
             }
         }
