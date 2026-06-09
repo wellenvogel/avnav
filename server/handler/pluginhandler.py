@@ -1353,6 +1353,15 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             except:
                 pass
         self.deleteInfo(name)
+        if not forUpdate:
+            with self.configLock:
+                childconfig=self.param.get(name)
+                if childconfig is not None and isinstance(childconfig, list):
+                    num=len(childconfig)
+                    for k in range(num):
+                        self.configChanger.removeChild(name,0,delayUpdate=True)
+                    del self.param[name]
+                    self.writeConfigChanges()
         self.navdata.updateChangeCounter(self.CHANGE_COUNTER_NAME)
 
 
