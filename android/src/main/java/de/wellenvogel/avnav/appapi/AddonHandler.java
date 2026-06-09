@@ -326,8 +326,6 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
             String title=uri.getQueryParameter( AddonInfo.TITLE);
             String url=AvnUtil.getMandatoryParameter(uri,AddonInfo.URL);
             String icon=AvnUtil.getMandatoryParameter(uri,AddonInfo.ICON);
-            String newWindow=uri.getQueryParameter(AddonInfo.NEW_WINDOW);
-            String page=uri.getQueryParameter(AddonInfo.PAGE);
             ArrayList<AddonInfo> addons=getAddons(false);
             int idx=-1;
             if (name == null){
@@ -351,6 +349,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl,IPluginAwar
                 }
                 AddonInfo current=addons.get(idx);
                 current.icon=icon;
+                current.url=url;
                 for (String k: AddonInfo.STRING_KEYS){
                     current.stringParameters.put(k,uri.getQueryParameter(k));
                 }
