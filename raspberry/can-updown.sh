@@ -14,7 +14,8 @@ case "$2" in
       /sbin/ip link add dev "$IF" type vcan 2>/dev/null || true
       /sbin/ip link set "$IF" up
     else
-      /sbin/ip link set "$IF" type can bitrate "$BITRATE" restart-ms 100 txqueuelen 10000
+      /sbin/ip link set "$IF" type can bitrate "$BITRATE" restart-ms 100
+      /sbin/ip link set "$IF" txqueuelen 10000
       /sbin/ip link set "$IF" up
     fi
     ;;
