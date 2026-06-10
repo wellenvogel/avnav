@@ -964,6 +964,7 @@ const NavPage=(props:PageProps)=>{
                         ...ButtonDefs.ABShowMeasure,
                         onClick:()=>{if (overlayButtonList?.kind !== 'measure'){
                             setOverlayButtonList(buildMeasureButtons(()=>setOverlayButtonList(null),dialogCtx,history))
+                            startOrAddMeasure(MapHolder.getCenter(),false);
                         }
                         else{
                             setOverlayButtonList(null)
