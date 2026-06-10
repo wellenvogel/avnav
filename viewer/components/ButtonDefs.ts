@@ -281,7 +281,7 @@ const ButtonDefinitions= {
         name:btdef.Measure,
     },
     MeasureAdd:{
-        iconClass: iconClasses.Measure,
+        iconClass: iconClasses.MeasureAdd,
         name:btdef.MeasureAdd,
     },
     MeasureOff:{
