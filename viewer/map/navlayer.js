@@ -74,7 +74,8 @@ const NavLayer=function(mapholder){
     this.circleStyle={};
     this.anchorCircleStyle={};
     this.measureLineStyle={};
-    this.measureTextStyle={};
+    this.measureTextStyle={}
+    this.centerMeasureTextStyle={}
 
 
     /**
@@ -129,7 +130,7 @@ NavLayer.prototype.setStyle=function() {
         color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
         width: globalStore.getData(keys.properties.navCircleWidth)
     }
-    this.measureTextStyle={
+    this.centerMeasureTextStyle={
         stroke: globalStore.getData(keys.properties.fontShadowColor),
         color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
         width: globalStore.getData(keys.properties.fontShadowWidth),
@@ -137,6 +138,7 @@ NavLayer.prototype.setStyle=function() {
         fontBase: globalStore.getData(keys.properties.fontBase),
         offsetY: -20
     }
+    this.measureTextStyle={...this.centerMeasureTextStyle,offsetY:20};
 
 };
 
@@ -235,6 +237,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
         let measure=globalStore.getData(keys.map.activeMeasure);
         let measurePos;
+        let lastMeasurePos;
         if (!globalStore.getData(keys.map.lockPosition,false) && measure && measure.points.length > 0) {
             let centerPoint = new navobjects.Point();
             centerPoint.fromCoord(this.mapholder.transformFromMap(center));
@@ -248,6 +251,16 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
                     let measure = this.mapholder.transformToMap(measurePos.toCoord());
                     let next=this.mapholder.transformToMap(nextPos.toCoord());
                     drawing.drawImageToContext(measure, this.measureStyle.image, this.measureStyle);
+                    if (lastMeasurePos){
+                        let distance = NavCompute.computeDistance(
+                            lastMeasurePos,
+                            measurePos
+                            , measureRhumbLine);
+                        let text = Formatter.formatDirection(distance.course) + "°\n" +
+                            Formatter.formatDistance(distance.dts) + "nm";
+                        drawing.drawTextToContext(measure, text, this.measureTextStyle);
+                    }
+                    lastMeasurePos=measurePos;
                     if (measureRhumbLine) {
                         this.measurePixel.push(...drawing.drawLineToContext([measure, next], this.measureLineStyle));
                     } else {
@@ -268,8 +281,9 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
                 , measureRhumbLine);
             let len=this.drawnMeasure.computeLength(0,measureRhumbLine);
             let text = Formatter.formatDirection(distance.course) + "°\n" +
-            Formatter.formatDistance(len) + "nm";
-            drawing.drawTextToContext(center, text, this.measureTextStyle);
+                Formatter.formatDistance(distance.dts)+
+                ((drawnLength > 2)?"/"+Formatter.formatDistance(len):'') + "nm";
+            drawing.drawTextToContext(center, text, this.centerMeasureTextStyle);
         }
     }
     if (anchorDistance){
