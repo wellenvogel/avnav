@@ -304,7 +304,7 @@ let widgetList=[
     {
         name: 'WpPosition',
         default: "-------------",
-        caption: 'MRK',
+        caption: 'WP',
         storeKeys:{
             value:keys.nav.wp.position,
             server: keys.nav.wp.server
