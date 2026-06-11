@@ -36,6 +36,7 @@ import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, DialogText} from 
 import {Checkbox, Radio} from "./Inputs";
 import ItemList from "./ItemList";
 import {useDialogContext} from "./DialogContext";
+import navcompute from "../nav/navcompute";
 
 let RouteHandler=navdata.getRoutingHandler();
 
@@ -48,7 +49,11 @@ export const INFO_ROWS=[
     {label:'remain',value:'remain',formatter:(v)=>{
             return Formatter.formatDistance(v)+" nm";
         }},
-    {label:'next point',value:'nextTarget',formatter:(v)=>v.name}
+    {label:'next point',value:'nextTarget',formatter:(v)=>v.name},
+    {label:'leg from',value:'legfrom',formatter:(v)=>v.name},
+    {label:'leg to',value:'legto',formatter:(v)=>v.name},
+    {label: 'leg brg',value:'legbrg',formatter:(v)=>Formatter.formatDirection(v)+"°"},
+    {label: 'leg len',value:'legdst',formatter:(v)=>Formatter.formatDistance(v)+" nm"},
     ];
 export const getRouteInfo = async (routeItem, opt_point) => {
     if (!routeItem || ! routeItem.name) throw new Error("missing route name");
@@ -59,9 +64,21 @@ export const getRouteInfo = async (routeItem, opt_point) => {
         numPoints: info.numpoints,
     }
     if (opt_point instanceof navobjects.Point) {
+        const rhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
         const idx = route.getIndexFromPoint(opt_point);
         if (idx >= 0) {
-            rt.remain = route.computeLength(idx, globalStore.getData(keys.nav.routeHandler.useRhumbLine));
+            rt.remain = route.computeLength(idx,rhumbLine );
+            if (idx >= 1){
+                const distance=navcompute.computeDistance(
+                    route.points[idx-1],
+                    route.points[idx],
+                    rhumbLine
+                )
+                rt.legbrg=distance.course;
+                rt.legdst=distance.dts;
+                rt.legfrom=route.points[idx-1];
+                rt.legto=route.points[idx];
+            }
         }
     }
     return rt;
