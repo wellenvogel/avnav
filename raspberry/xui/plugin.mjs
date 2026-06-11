@@ -13,7 +13,8 @@ export default async (api)=>{
             if (cmd.name === CMD){
                 api.registerUserButton({
                     name:'Desk2',
-                    displayName:'desk 2',
+                    longText:'Second desktop',
+                    shortText: 'Desk2',
                     icon: cmd.icon,
                     onClick:()=>{
                         fetch("/api/command/runCommand?name="+encodeURIComponent(CMD));

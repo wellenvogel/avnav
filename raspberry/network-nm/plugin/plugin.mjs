@@ -564,8 +564,8 @@
     api.registerUserButton({
         name:'network',
         icon:'wifi.svg',
-        displayName:'wifi connections',
-        label:'Wifi',
+        longText:'Wifi connections',
+        shortText:'Wifi',
         onClick:async (ev)=>{
             if (dialogHandle){
                 dialogHandle();
