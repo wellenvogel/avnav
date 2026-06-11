@@ -11,7 +11,6 @@ import RouteEdit from '../nav/routeeditor.ts';
 import boatImage from '../images/Boat-NoNeedle.png';
 import boatImageHdg from '../images/BoatHdg.png';
 import boatImageSteady from '../images/BoatSteady.png';
-import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
@@ -80,16 +79,9 @@ const NavLayer=function(mapholder){
 
     /**
      * the properties for the center marker
-     * @private
-     * @type {{anchor: number[], size: number[], anchorXUnits: string, anchorYUnits: string, opacity: number, src: string, image:Image}}
      */
     this.centerStyle={
-        anchor: [20, 20],
-        size: [40, 40],
-        src: markerImage,
-        image: new Image()
     };
-    this.centerStyle.image.src=this.centerStyle.src;
 
     this.anchorStyle={
         anchor: [20, 20],
@@ -139,6 +131,10 @@ NavLayer.prototype.setStyle=function() {
         offsetY: -20
     }
     this.measureTextStyle={...this.centerMeasureTextStyle,offsetY:20};
+    this.centerStyle={
+        color:globalStore.getData(keys.properties.centerColor),
+        width: globalStore.getData(keys.properties.centerWidth)
+    }
 
 };
 
@@ -234,7 +230,15 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         }
     }
     if (!globalStore.getData(keys.map.lockPosition,false) || globalStore.getData(keys.properties.mapAlwaysCenter)) {
-        drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
+        const centerSize=globalStore.getData(keys.properties.centerSize);
+        let centerline=[
+            drawing.pointAtPixelOffset(center,-centerSize/2,0),
+            drawing.pointAtPixelOffset(center,centerSize/2,0)];
+        drawing.drawLineToContext(centerline, this.centerStyle);
+        centerline=[
+            drawing.pointAtPixelOffset(center,0,-centerSize/2),
+            drawing.pointAtPixelOffset(center,0,centerSize/2)];
+        drawing.drawLineToContext(centerline, this.centerStyle);
         let measure=globalStore.getData(keys.map.activeMeasure);
         let measurePos;
         let lastMeasurePos;

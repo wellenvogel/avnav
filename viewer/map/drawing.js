@@ -94,6 +94,10 @@ Drawing.prototype.getUseHdpi=function(){
     return this.useHdpi;
 };
 
+Drawing.prototype.pointAtPixelOffset=function(point,xoffset,yoffset){
+    const cssPoint=this.pointToCssPixel(point);
+    return this.converter.pixelToCoord([cssPoint[0]+xoffset,cssPoint[1]+yoffset]);
+}
 /**
  * draw a circle determined by a center point an one other point
  * @param {olCoordinate} center

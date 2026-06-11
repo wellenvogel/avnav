@@ -93,7 +93,8 @@ export const settingsSections = {
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
         keys.properties.mapOnlineUpZoom,
         keys.properties.mapLockMode,keys.properties.mapLockMove,keys.properties.mapAlwaysCenter,keys.properties.mapScaleBarText,keys.properties.mapZoomLock,
-        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor
+        keys.properties.fontBase,keys.properties.fontColor,keys.properties.fontShadowWidth,keys.properties.fontShadowColor,
+        keys.properties.centerColor,keys.properties.centerSize,keys.properties.centerWidth
     ],
     AIS:        [keys.properties.layers.ais,keys.properties.aisDistance,keys.properties.aisCenterMode,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
         keys.properties.aisShowEstimated,keys.properties.aisEstimatedOpacity,keys.properties.aisCpaEstimated,
