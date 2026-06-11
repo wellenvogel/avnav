@@ -463,6 +463,7 @@ export const editableOverlayParameters={
                     formatters.push({label: f, value: f,name:f});
                 }
             }
+            formatters.sort(EditableSelectParameter.sort)
             return formatters;
         },description:'a function to format the feature info (refer to the doc)'}),
     overwriteLineStyle: new EditableBooleanParameter({name:'style.overwriteLine',displayName:'own line style',default: false,description:'ignore line styles from document'}),

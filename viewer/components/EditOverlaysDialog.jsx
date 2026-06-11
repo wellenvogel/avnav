@@ -28,7 +28,7 @@ import editableParameterUI, {EditableParameterListUI} from "./EditableParameterU
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
 import Mapholder from "../map/mapholder";
-import {EditableParameterTypes} from "../util/EditableParameter";
+import {EditableParameterTypes, EditableSelectParameter} from "../util/EditableParameter";
 import {fetchItemInfo, itemListToSelectList, KNOWN_OVERLAY_EXTENSIONS, listItems} from "../util/itemFunctions";
 import {InfoItem, SelectDialog} from "./BasicDialogs";
 import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
@@ -133,6 +133,7 @@ const OverlayItemDialog = (props) => {
                 }
                 ifiles.push({label:ovlitem.displayName||ovlitem.name,value:ovlitem.url})
             })
+            ifiles.sort(EditableSelectParameter.sort)
             setIconFiles(ifiles);
         },()=>{})
     }, []);

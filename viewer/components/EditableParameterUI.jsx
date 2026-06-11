@@ -375,13 +375,6 @@ export class EditableSelectParameterUI extends EditableSelectParameter{
             const value=EditableSelectParameter.getValueFromListEntry(item);
             displayList.push({label:label,value:value,selected:value === current});
         })
-        displayList.sort((a,b)=>{
-            const na=(typeof a.label === 'string')?a.label.toLowerCase():a.label;
-            const nb=(typeof b.label === 'string')?b.label.toLowerCase():b.label;
-            if (na<nb) return -1;
-            if (na>nb) return 1;
-            return 0;
-        })
         return <InputSelect
             {...getCommonParam({ep:this,currentValues,initialValues,className,onChange,children})}
             list={displayList}

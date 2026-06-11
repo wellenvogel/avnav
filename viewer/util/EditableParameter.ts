@@ -442,6 +442,13 @@ export class EditableSelectParameter extends EditableParameter{
         if ('displayName' in listEntry) return listEntry.displayName+'';
         return listEntry.value+'';
     }
+    static sort(a:Partial<SelectListEntry>,b:Partial<SelectListEntry>){
+        const na=(typeof a.label === 'string')?a.label.toLowerCase():a.label;
+        const nb=(typeof b.label === 'string')?b.label.toLowerCase():b.label;
+        if (na<nb) return -1;
+        if (na>nb) return 1;
+        return 0;
+    }
     constructor(plain:Properties,opt_noFreeze?:boolean) {
         super(plain,EditableSelectParameter.TYPE,opt_noFreeze);
         const theList=super.getList();
