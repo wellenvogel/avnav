@@ -355,6 +355,13 @@ class SKAlarm(object):
       return True
     return self.source == other.source
 
+  def getMessage(self):
+      if type(self.skValue) is dict:
+          msg=self.skValue.get('message')
+          return msg
+      return None
+
+
   def copy(self,**kwargs):
     rt=SKAlarm(self.stype,self.skPath,self.source,self.skValue,
                    timestamp=self.timestamp,
@@ -1337,7 +1344,7 @@ class AVNSignalKHandler(AVNWorker):
             #SK other on
             if not runningAny:
               AVNLog.info("own alarm on %s (sk: other on, local: nothing on)",skAlarm.skPath)
-              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.copy())
+              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.copy(),external=True)
           else:
             #SK other off
             if runningOwn:

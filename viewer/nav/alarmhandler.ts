@@ -1,15 +1,33 @@
 import Requests, {prepareUrl} from '../util/requests';
-import keys from '../util/keys.ts';
-import globalStore from '../util/globalstore.ts';
-import base from '../base.ts';
-import assign from 'object-assign';
+import keys from '../util/keys';
+import globalStore from '../util/globalstore';
+import base from '../base';
 import Helper from "../util/helper";
 
 export const LOCAL_TYPES=Helper.keysToStr({
     connectionLost:1
 });
+export interface Alarm{
+    alarm:string;
+    repeat?:number,
+    running?:boolean,
+    category:string,
+    isLocal?:boolean,
+    message?:string
+}
 
+interface SoundConfig{
+    src:string,
+    repeat?:number,
+    enabled?:boolean
+}
 class AlarmHandler{
+    private timer:number;
+    private lastSequence:number;
+    private localAlarms:Record<string, Alarm>;
+    private sounds:Record<string,Blob>;
+    private alarmBlocks:Record<number, string>;
+    private blockId:number;
     constructor(){
         this.timerFunction=this.timerFunction.bind(this);
         this.startTimer=this.startTimer.bind(this);
@@ -21,48 +39,48 @@ class AlarmHandler{
         this.blockId=1;
     }
 
-    addBlock(alarmName){
+    addBlock(alarmName:string){
         this.blockId++;
         this.alarmBlocks[this.blockId]=alarmName;
         return this.blockId;
     }
-    isBlocked(alarmName){
-        for (let k in this.alarmBlocks){
+    isBlocked(alarmName:string){
+        for (const k in this.alarmBlocks){
             if (this.alarmBlocks[k]=== alarmName) return true;
         }
         return false;
     }
-    removeBlock(id){
+    removeBlock(id:number){
         delete this.alarmBlocks[id];
     }
     start(){
         this.startTimer();
-        for (let alarm in LOCAL_TYPES){
+        for (const alarm in LOCAL_TYPES){
             if (this.sounds[alarm]) continue;
-            let cfg=this.getAlarmSound({name:alarm},true);
+            const cfg=this.getAlarmSound({alarm:alarm},true);
             try {
                 if (cfg && cfg.src) {
                     fetch(new Request(cfg.src))
                         .then((r) => r.blob())
                         .then((bl) => this.sounds[alarm] = bl)
-                        .catch((e) => {
+                        .catch(() => {
                         })
                 }
-            }catch(e){}
+            }catch(e){ /* empty */ }
         }
     }
-    compareAlarms(a,b){
+    compareAlarms(a:Record<string,Alarm>,b:Record<string,Alarm>){
         if (!a !== !b) return false;
         if (! (a instanceof Object) || ! (b instanceof Object)) return false;
-        let foundKeys={};
-        for (let k in a){
+        const foundKeys:Record<string, boolean>={};
+        for (const k in a){
             if (! b[k]) return false;
-            if (a[k].name !== b[k].name) return false;
+            if (a[k].alarm !== b[k].alarm) return false;
             if (a[k].running !== b[k].running) return false;
             if (a[k].category !== b[k].category) return false;
             foundKeys[k]=true;
         }
-        for (let k in b){
+        for (const k in b){
             if (!foundKeys[k]) return false;
         }
         return true;
@@ -71,11 +89,11 @@ class AlarmHandler{
     startTimer(){
         if (this.timer) window.clearTimeout(this.timer);
         this.timer=undefined;
-        let interval=globalStore.getData(keys.properties.positionQueryTimeout);
+        const interval=globalStore.getData(keys.properties.positionQueryTimeout);
         window.setTimeout(this.timerFunction,interval);
     }
     timerFunction(){
-        let currentSequence=globalStore.getData(keys.nav.gps.updatealarm);
+        const currentSequence=globalStore.getData(keys.nav.gps.updatealarm);
         if (this.lastSequence === undefined || this.lastSequence != currentSequence) {
             this.lastSequence=currentSequence;
             Requests.getJson({
@@ -86,9 +104,9 @@ class AlarmHandler{
             })
                 .then((json)=> {
                     this.startTimer();
-                    let old = globalStore.getData(keys.nav.alarms.all);
+                    const old = globalStore.getData(keys.nav.alarms.all);
                     if (this.compareAlarms(old, json.data)) return;
-                    globalStore.storeData(keys.nav.alarms.all,assign({}, json.data,this.localAlarms));
+                    globalStore.storeData(keys.nav.alarms.all,{... json.data,...this.localAlarms});
                 })
                 .catch((error)=> {
                     this.startTimer();
@@ -99,18 +117,18 @@ class AlarmHandler{
             this.startTimer();
         }
     }
-    startLocalAlarm(type,opt_category){
+    startLocalAlarm(type:string,opt_category?:string):Alarm{
         if (! LOCAL_TYPES[type]) return;
         if (this.isBlocked(type))return;
         if (! opt_category) opt_category='info';
-        let alarms=assign({},globalStore.getData(keys.nav.alarms.all));
-        let alarm={category:opt_category,name:type,isLocal:true,running:true,repeat:1};
+        const alarms={...globalStore.getData(keys.nav.alarms.all)};
+        const alarm:Alarm={category:opt_category,alarm:type,isLocal:true,running:true,repeat:1};
         this.localAlarms[type]=alarm;
         alarms[type]=alarm;
         globalStore.storeData(keys.nav.alarms.all,alarms);
     }
-    stopAlarm(type){
-        let alarms=assign({},globalStore.getData(keys.nav.alarms.all));
+    stopAlarm(type:string){
+        const alarms={...globalStore.getData(keys.nav.alarms.all)};
         delete alarms[type];
         globalStore.storeData(keys.nav.alarms.all,alarms);
         if ( LOCAL_TYPES[type]) {
@@ -123,20 +141,20 @@ class AlarmHandler{
             command:'manage',
             stop:type
         }).then(
-            (json)=>{
+            ()=>{
 
             }
         ).catch(
-            (error)=>{
-                base.log("unable to stop alarm "+type);
+            (error:any)=>{
+                base.log("unable to stop alarm "+type,error);
             }
         );
     }
 
-    getAlarmSound(alarmConfig,opt_ignoreLocal){
-        if (! opt_ignoreLocal && this.sounds[alarmConfig.name]){
+    getAlarmSound(alarmConfig:Partial<Alarm>,opt_ignoreLocal?:boolean):SoundConfig{
+        if (! opt_ignoreLocal && this.sounds[alarmConfig.alarm]){
             return {
-                src: URL.createObjectURL(this.sounds[alarmConfig.name]),
+                src: URL.createObjectURL(this.sounds[alarmConfig.alarm]),
                 repeat: alarmConfig.repeat,
                 enabled: true
             }
@@ -145,19 +163,19 @@ class AlarmHandler{
             src: prepareUrl({
                 command:'download',
                 type:'alarm',
-                name:alarmConfig.name
+                name:alarmConfig.alarm
             }),
             repeat: alarmConfig.repeat,
             enabled: true
         };
     }
 
-    sortedActiveAlarms(allAlarms){
-        let rt=[];
-        for(let k in allAlarms){
-            let alarm=allAlarms[k];
+    sortedActiveAlarms(allAlarms:Record<string,Alarm>){
+        const rt:Alarm[]=[];
+        for(const k in allAlarms){
+            const alarm=allAlarms[k];
             if (! alarm.running) continue;
-            rt.push({name:k,category:alarm.category,repeat:alarm.repeat})
+            rt.push({...alarm})
         }
         rt.sort((a,b)=>{
             if (a.category === b.category) return 0;

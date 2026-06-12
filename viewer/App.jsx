@@ -26,7 +26,7 @@ import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.tsx';
 import KeyHandler, {KeyComponents} from './util/keyhandler.ts';
 import LayoutHandler from './util/layouthandler.ts';
-import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
+import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.ts';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.ts';
 import Dimmer from './util/dimhandler';
@@ -39,7 +39,7 @@ import base from "./base";
 import propertyHandler from "./util/propertyhandler";
 import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
-import alarmhandler from "./nav/alarmhandler.js";
+import alarmhandler from "./nav/alarmhandler.ts";
 import LocalStorage, {STORAGE_NAMES} from './util/localStorageManager';
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode

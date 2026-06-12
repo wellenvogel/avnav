@@ -13,7 +13,7 @@ import EmptyWidget from './EmptyWidget';
 import WindGraphics from './WindGraphics';
 import ZoomWidget from './ZoomWidget.jsx';
 import keys from '../util/keys.ts';
-import AlarmWidget from './AlarmWidget.jsx';
+import AlarmWidget from './AlarmWidget.tsx';
 import RoutePointsWidget from './RoutePointsWidget.jsx';
 import DateTimeWidget from './DateTimeWidget.jsx';
 import {GaugeRadial} from './CanvasGauges.jsx';

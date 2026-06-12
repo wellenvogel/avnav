@@ -531,7 +531,7 @@ canvas{
 position: absolute;
 right: 0;
 bottom: 0;
-height: 3em;
+height: unset;
 font-size: @timeFont;
 background-color: var(--avnav-attention-color);
 padding: 1.5em;
@@ -546,6 +546,9 @@ border-radius: 4px;
   width: 4em;
   margin: inherit;
 }
+  .alarmInfo{
+    white-space: pre;
+  }
 }
 &.CombinedWidget {
 .icon.locked {

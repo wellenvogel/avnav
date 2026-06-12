@@ -33,6 +33,11 @@ from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
+class SimpleInfo:
+    def __init__(self,message):
+        self.message=message
+    def getMessage(self):
+        return self.message
 
 class AlarmConfig:
   C_INFO='info'
@@ -43,7 +48,8 @@ class AlarmConfig:
     for k in list(rt.__dict__.keys()):
       setattr(rt,k,dct.get(k))
     return rt
-  def __init__(self,name=None,command="sound", parameter=None, repeat="1",category=None,sound=None,autoclean=False):
+  def __init__(self,name=None,command="sound", parameter=None, repeat="1",
+               category=None,sound=None,autoclean=False,message=None):
     self.name=name
     self.command=command
     self.parameter=parameter
@@ -51,17 +57,22 @@ class AlarmConfig:
     self.category=category
     self.sound=sound
     self.autoclean=autoclean
+    self.message=message
   def toDict(self):
     return {k:v for k,v in self.__dict__.items() if v is not None}
 
 
 class RunningAlarm:
-  def __init__(self,config,commandId=None,running=True,info=None):
+  def __init__(self,config,commandId=None,running=True,info=None,external=False):
     self.config=config
     self.commandId=commandId
     self.running=running
     self.info=info
+    self.external=external
+    if info is None and config.message is not None:
+        self.info=SimpleInfo(config.message)
     self.commandFinished=False
+
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
@@ -113,11 +124,11 @@ class AVNAlarmHandler(AVNWorker):
 
 
   DEFAULT_ALARMS=[
-    		AlarmConfig(name="waypoint",category=AlarmConfig.C_INFO,repeat="1"),
-  		  AlarmConfig("anchor",category=AlarmConfig.C_CRITICAL,repeat="20000"),
-  		  AlarmConfig(name="gps",category=AlarmConfig.C_CRITICAL, repeat="20000"),
-  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2"),
-        AlarmConfig(name="connectionLost", category=AlarmConfig.C_INFO) #client only...
+    		AlarmConfig(name="waypoint",category=AlarmConfig.C_INFO,repeat="1",message="Waypoint reached"),
+  		  AlarmConfig("anchor",category=AlarmConfig.C_CRITICAL,repeat="20000",message="Anchor dragging"),
+  		  AlarmConfig(name="gps",category=AlarmConfig.C_CRITICAL, repeat="20000",message="GPS lost"),
+  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2",message="Person over board"),
+        AlarmConfig(name="connectionLost", category=AlarmConfig.C_INFO,message="Server connection lost") #client only...
   ]
   """a handler for alarms"""
   def __init__(self,param):
@@ -161,7 +172,8 @@ class AVNAlarmHandler(AVNWorker):
         'autoclean':'false',
         'sound':'',
         'repeat':'1',
-        'parameter':''
+        'parameter':'',
+        'message':'',
       }
   @classmethod
   def preventMultiInstance(cls):
@@ -349,14 +361,20 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
     return True
 
-  def startAlarm(self,name,defaultCategory=None,caller=None,info=None):
-    """start a named alarm"""
+  def startAlarm(self,name,defaultCategory=None,caller=None,info=None,external=False):
+    """start a named alarm
+    @param name: the name of the alarm
+    @param defaultCategory: the default category of the alarm
+    @param caller: the caller of the alarm
+    @param info: the info of the alarm. If it has an attribute 'getMessage' this must be a function
+                 returning a string that should be shown in the UI
+    """
     cmd=self.findAlarm(name,defaultCategory)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
-    running=RunningAlarm(cmd,info=info)
+    running=RunningAlarm(cmd,info=info,external=external)
     with self.__runningAlarmsLock:
       if self.runningAlarms.get(name) is not None:
         return True
@@ -378,7 +396,7 @@ class AVNAlarmHandler(AVNWorker):
     running=None
     with self.__runningAlarmsLock:
       running=self.runningAlarms.get(name)
-      if running and ownOnly and running.info is not None:
+      if running and ownOnly and running.external:
         return
       try:
         del self.runningAlarms[name]
@@ -397,7 +415,7 @@ class AVNAlarmHandler(AVNWorker):
       al=self.runningAlarms.get(name)
       if al is None:
         return False
-      if ownOnly and al.info is not None:
+      if ownOnly and al.external:
         return False
       return True
 
@@ -466,6 +484,8 @@ class AVNAlarmHandler(AVNWorker):
       stop=name,name {status: ok|err}
       media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
       '''
+    if self.navdata is None:
+        raise Exception("not initialized")
     if command =="download":
       name = AVNUtil.getHttpRequestParam(requestparam, "name",mantadory=True)
       AVNLog.debug("download alarm %s",name)
@@ -494,10 +514,14 @@ class AVNAlarmHandler(AVNWorker):
       for name,item in all.items():
         if not name in status and not 'all' in status :
           continue
+        msg=None
+        if item.info is not None and hasattr(item.info,'getMessage'):
+            msg=item.info.getMessage()
         rt[name]={'alarm':item.config.name,
                   'running':item.running,
                   'repeat': item.config.repeat,
-                  'category':item.config.category
+                  'category':item.config.category,
+                  'message':msg
                   }
       return {"status":"OK","data":rt}
     mode="start"
@@ -510,8 +534,10 @@ class AVNAlarmHandler(AVNWorker):
         return rt
     rt={'status':'ok'}
     if mode == "start":
+      message=AVNUtil.getHttpRequestParam(requestparam,"message")
       category=AVNUtil.getHttpRequestParam(requestparam,'defaultCategory')
-      if not self.startAlarm(alarm,defaultCategory=category):
+      info = SimpleInfo(message) if message is not None else None
+      if not self.startAlarm(alarm,defaultCategory=category,info=info):
         rt['status']='error'
       return rt
     if not self.stopAlarm(alarm):

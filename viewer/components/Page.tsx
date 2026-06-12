@@ -16,8 +16,6 @@ import WidgetFactory from './WidgetFactory';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 import KeyHandler from '../util/keyhandler';
-// @ts-ignore
-import AlarmHandler from '../nav/alarmhandler';
 import {useTimer} from "../util/UiHelper";
 import Helper from "../util/helper";
 import {useStore, useStoreState} from "../hoc/Dynamic";
@@ -66,15 +64,6 @@ export interface PageProps extends PageBaseProps{
     history: IHistory
 }
 
-
-const alarmClick =function(){
-    const alarms=globalStore.getData(keys.nav.alarms.all,"");
-    if (! alarms) return;
-    for (const k in alarms){
-        if (!alarms[k].running)continue;
-        AlarmHandler.stopAlarm(k);
-    }
-};
 
 export const PageFrame=
     (iprops:PageFrameProps)=>{
@@ -148,7 +137,7 @@ export const PageLeft=
             {(title && ! AddOn) ? <Headline title={title} connectionLost={true}/> : null}
             <DialogDisplay name={'page'}/>
             {AddOn?<AddOn></AddOn>:children}
-            <Alarm onClick={alarmClick}/>
+            <Alarm/>
 
         </div>
 }

@@ -76,6 +76,7 @@ export const settingsSections = {
     General:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.widgetFontSize,
         keys.properties.allowTwoWidgetRows,keys.properties.dashboardNum,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.alarmVolume ,
+        keys.properties.alarmShowMode,
         keys.properties.titleIcons, keys.properties.titleIconsGps, keys.properties.startLastSplit,
         keys.properties.autoUpdateUserCss],
     MainMenu:[keys.properties.mainAll,keys.properties.mainNavExpand,keys.properties.mainNavCols, keys.properties.mainBtText],

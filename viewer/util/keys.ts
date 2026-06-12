@@ -146,6 +146,11 @@ export enum MainColumns{
     seven="7",
     all="all"
 }
+export enum AlarmShowMode{
+    both="both",
+    path="path",
+    message="message"
+}
 export enum ButtonIconSet{
     default="default",
     legacy="legacy",
@@ -361,6 +366,8 @@ const keys:Record<string,KeyType>={
         startLastSplit: new Property(false,"start with last split mode",PropertyType.CHECKBOX),
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         alarmVolume: new Property(50,"Alarm Volume (0...100)",PropertyType.RANGE,[0,100]),
+        alarmShowMode: new Property(AlarmShowMode.both,"Alarm info",PropertyType.SELECT,Object.values(AlarmShowMode),
+            "Type of information to be shown in the alarm widget:\nboth: show path and message\npath: show path\nmessage: show message"),
         readOnlyServer: new Property(false),
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
         maxZoom: new Property(21),  //only allow upscaling up to this zom level

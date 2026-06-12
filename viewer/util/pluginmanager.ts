@@ -38,7 +38,6 @@ import Addons from "./Addons";
 import {layerFactory} from "../map/chartlayers";
 import LocalStorageManager, {UNPREFIXED_NAMES} from "./localStorageManager";
 import React from 'react';
-// @ts-ignore
 import alarmhandler, {LOCAL_TYPES} from "../nav/alarmhandler";
 import {
     DialogConfig,
