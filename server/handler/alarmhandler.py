@@ -33,11 +33,6 @@ from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
-class SimpleInfo:
-    def __init__(self,message):
-        self.message=message
-    def getMessage(self):
-        return self.message
 
 class AlarmConfig:
   C_INFO='info'
@@ -63,14 +58,12 @@ class AlarmConfig:
 
 
 class RunningAlarm:
-  def __init__(self,config,commandId=None,running=True,info=None,external=False):
+  def __init__(self,config,commandId=None,running=True,message=None,info=None):
     self.config=config
     self.commandId=commandId
     self.running=running
     self.info=info
-    self.external=external
-    if info is None and config.message is not None:
-        self.info=SimpleInfo(config.message)
+    self.message=message
     self.commandFinished=False
 
 
@@ -361,23 +354,27 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
     return True
 
-  def startAlarm(self,name,defaultCategory=None,caller=None,info=None,external=False):
+  def startAlarm(self,name,defaultCategory=None,caller=None,message=None,info=None):
     """start a named alarm
     @param name: the name of the alarm
     @param defaultCategory: the default category of the alarm
     @param caller: the caller of the alarm
-    @param info: the info of the alarm. If it has an attribute 'getMessage' this must be a function
-                 returning a string that should be shown in the UI
+    @param info: the info of the alarm - if this is set the alarm is considered to be external (SK)
     """
     cmd=self.findAlarm(name,defaultCategory)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
-    running=RunningAlarm(cmd,info=info,external=external)
+    running=RunningAlarm(cmd,info=info,message=message if message is not None else cmd.message)
     with self.__runningAlarmsLock:
-      if self.runningAlarms.get(name) is not None:
-        return True
+      existing=self.runningAlarms.get(name)
+      if existing is not None:
+        if (existing.info is None) != (info is None):
+            AVNLog.error("alarm %s cannot be changed from / to external ", name)
+            return False
+        if existing.message == message:
+            return True
       self.runningAlarms[name]=running
     self.callHandlers(running,True,caller)
     self.navdata.updateChangeCounter(self.CHANGE_KEY)
@@ -396,7 +393,7 @@ class AVNAlarmHandler(AVNWorker):
     running=None
     with self.__runningAlarmsLock:
       running=self.runningAlarms.get(name)
-      if running and ownOnly and running.external:
+      if running and ownOnly and running.info:
         return
       try:
         del self.runningAlarms[name]
@@ -415,7 +412,7 @@ class AVNAlarmHandler(AVNWorker):
       al=self.runningAlarms.get(name)
       if al is None:
         return False
-      if ownOnly and al.external:
+      if ownOnly and al.info:
         return False
       return True
 
@@ -429,7 +426,7 @@ class AVNAlarmHandler(AVNWorker):
       for cmd in commands:
         config=self.expandAlarmConfig(AlarmConfig.fromDict(cmd))
         if config is not None and not config.name in rt:
-          rt[config.name]=RunningAlarm(config,running=False)
+          rt[config.name]=RunningAlarm(config,running=False,message=config.message)
     return rt
 
   def getStatusProperties(self):
@@ -514,14 +511,11 @@ class AVNAlarmHandler(AVNWorker):
       for name,item in all.items():
         if not name in status and not 'all' in status :
           continue
-        msg=None
-        if item.info is not None and hasattr(item.info,'getMessage'):
-            msg=item.info.getMessage()
         rt[name]={'alarm':item.config.name,
                   'running':item.running,
                   'repeat': item.config.repeat,
                   'category':item.config.category,
-                  'message':msg
+                  'message':item.message
                   }
       return {"status":"OK","data":rt}
     mode="start"
@@ -536,8 +530,7 @@ class AVNAlarmHandler(AVNWorker):
     if mode == "start":
       message=AVNUtil.getHttpRequestParam(requestparam,"message")
       category=AVNUtil.getHttpRequestParam(requestparam,'defaultCategory')
-      info = SimpleInfo(message) if message is not None else None
-      if not self.startAlarm(alarm,defaultCategory=category,info=info):
+      if not self.startAlarm(alarm,defaultCategory=category,message=message):
         rt['status']='error'
       return rt
     if not self.stopAlarm(alarm):

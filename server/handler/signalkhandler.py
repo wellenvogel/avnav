@@ -1344,7 +1344,7 @@ class AVNSignalKHandler(AVNWorker):
             #SK other on
             if not runningAny:
               AVNLog.info("own alarm on %s (sk: other on, local: nothing on)",skAlarm.skPath)
-              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.copy(),external=True)
+              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.copy(),message=skAlarm.getMessage())
           else:
             #SK other off
             if runningOwn:

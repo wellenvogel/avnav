@@ -16,10 +16,22 @@ import ButtonDefs from "./ButtonDefs";
 import {useDialogContext, useStoreState} from "./exports";
 import globalstore from "../util/globalstore";
 import Button from "./Button";
+import {StatusIcon, StatusIconType} from "./Icons";
 
+const alarmStatus=(alarm?:Alarm):StatusIconType=>{
+    if (alarm?.category === 'critical') return 'red'
+    if (alarm?.category === 'info') return 'yellow';
+    return 'grey';
+}
 
 const ActiveAlarm=(props:Alarm)=>{
-    return <ListItem>
+    return <ListItem
+        onClick={()=>{
+            clearAlarms(props.alarm);
+        }}>
+        <ListSlot>
+            <StatusIcon type={alarmStatus(props)}/>
+        </ListSlot>
         <ListMainSlot
             primary={props.alarm}
             secondary={props.message}
@@ -27,10 +39,6 @@ const ActiveAlarm=(props:Alarm)=>{
         <ListSlot>
             <Button className={'smallButton'}
                     {...ButtonDefs.DBClear}
-                onClick={()=>{
-                    clearAlarms(props.alarm);
-                }
-                }
             ></Button>
         </ListSlot>
     </ListItem>
@@ -76,6 +84,24 @@ const clearAlarms=(name?:string)=>{
         if (!name || alarm.alarm == name) AlarmHandler.stopAlarm(alarm.alarm)
     }
 }
+interface ContentProps{
+    alarmText:string;
+    status:StatusIconType
+}
+const Content = (props:ContentProps) => {
+    if (!props.alarmText) return null;
+    const dialogContext=useDialogContext();
+    return <div className={'rowBase'}
+                onClick={(event ) =>{
+                    event.stopPropagation();
+                    showDialog(dialogContext,()=><AlarmDialog clearFunction={
+                        ()=>clearAlarms()
+                    }/>);
+                }}>
+        <StatusIcon type={props.status}/>
+        <div className="alarmInfo">{props.alarmText}</div>
+    </div>
+}
 //TODO: compare alarm info correctly
 const AlarmWidget = (props:AlarmWidgetProps) => {
     useKeyEventHandler({name: 'stop'}, KeyComponents.ALARM,()=>{
@@ -106,17 +132,9 @@ const AlarmWidget = (props:AlarmWidgetProps) => {
     if (! alarmText){
         if (! props.isEditing || ! props.mode) return null;
     }
-    const Content = () => {
-        if (!alarmText) return null;
-        const dialogContext=useDialogContext();
-        return <div onClick={(event ) =>{
-            event.stopPropagation();
-            showDialog(dialogContext,()=><AlarmDialog clearFunction={
-                ()=>clearAlarms()
-            }/>);
-        }}>
-            <span className="alarmInfo">{alarmText}</span>
-        </div>
+    let status:StatusIconType='grey';
+    if (list && list.length > 0) {
+        status=alarmStatus(list[0]);
     }
     return (
         <WidgetFrame
@@ -125,7 +143,7 @@ const AlarmWidget = (props:AlarmWidgetProps) => {
             caption="Alarm"
             unit={undefined}
         >
-            <Content/>
+            <Content alarmText={alarmText} status={status}/>
         </WidgetFrame>
     );
 }
