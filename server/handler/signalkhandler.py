@@ -92,6 +92,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from functools import reduce
+from wsgiref.util import request_uri
 
 from alarmhandler import AVNAlarmHandler, AlarmConfig
 from avnav_nmea import NMEAParser
@@ -346,10 +347,16 @@ class SKAlarm(object):
     self.remoteId=remoteId
     self.shouldSend=False
     self.fromDelta=False
+    if skValue is not None:
+        self.skId=skValue.get('id')
+    else:
+        self.skId=None
 
   def isSame(self, other : 'SKAlarm'):
     if other is None:
       return False
+    if self.skId is not None and other.skId is not None:
+        return self.skId == other.skId
     if self.skPath != other.skPath:
       return False
     if self.isOwnSource and other.isOwnSource:
@@ -371,6 +378,7 @@ class SKAlarm(object):
                    )
     rt.shouldSend=self.shouldSend
     rt.fromDelta=self.fromDelta
+    rt.skId=self.skId
     for k in list(rt.__dict__.keys()):
       if k in kwargs:
         setattr(rt,k,kwargs.get(k))
@@ -428,6 +436,9 @@ class SKAlarmList(object):
       except:
         pass
   def handleNotification(self,path,value,source,timestamp,fromDelta=False):
+    if type(value) is dict:
+        if value.get('state') == 'normal':
+            return
     skAlarm=SKAlarm(SKAlarm.T_RECV,path,source,value,
                     timestamp=timestamp,
                     remoteId=self.remoteId,
@@ -648,6 +659,47 @@ def getFromDict(dataDict, keystr):
   return reduce(getItem, mapList, dataDict)
 
 
+class NotificationV2Handler:
+    def __init__(self,url,tokenProvider):
+        self.url=url
+        self._token=None
+        self.tokenProvider=tokenProvider
+        self._lastToken=0
+    def getToken(self):
+        if self._token is not None:
+            return self._token
+        self._token=self.tokenProvider()
+        self._lastToken=time.monotonic()
+        return self._token
+    def _error(self):
+        now=time.monotonic()
+        if (now-self._lastToken) > 60:
+            self._token=None
+    def executeRequest(self,path=None,method='GET',jsonData=None):
+        url=self.url
+        if path is not None:
+            url+=path
+        request=urllib.request.Request(url,method=method, data=json.dumps(jsonData).encode('utf-8') if jsonData is not None else None)
+        if method != 'GET':
+            request.add_header('Authorization','Bearer '+self.getToken())
+        if jsonData is not None:
+            request.add_header('Content-Type','application/json')
+        try:
+            rt=urllib.request.urlopen(request)
+            self._lastToken=time.monotonic()
+            return rt
+        except Exception as e:
+            AVNLog.error(f"error for notification request {method} {url} %s",e)
+            self._error()
+            raise
+    def sendDelete(self,id):
+        response=self.executeRequest(path="/"+id,method='DELETE')
+        jsdata=json.loads(response.read())
+        #TODO read response
+    def sendUpdate(self,id,jsonData):
+        response = self.executeRequest(path="/" + id, method='PUT', jsonData=jsonData)
+        jsdata = json.loads(response.read())
+
 
 
 class AVNSignalKHandler(AVNWorker):
@@ -788,6 +840,7 @@ class AVNSignalKHandler(AVNWorker):
     self.ownWpOffSent=False #set if we have sent the own WP off to SK (great Circle)
     self.ownWpOffSentRl=False #last wp off rhumb line
     self.ownMMSI=None
+    self.notificationV2Handler=None # type NotificationV2Handler
 
 
 
@@ -1012,7 +1065,20 @@ class AVNSignalKHandler(AVNWorker):
             update=self.buildUpdateRequest({
               alarm.skPath:alarm.skValue
             })
-            self.writeSocket.send(json.dumps(update))
+            v2Handler=self.notificationV2Handler
+            skId=alarm.skId
+            done=False
+            if alarm.skValue is None and v2Handler is not None and skId is not None:
+                AVNLog.info(f"clearing alarm {skId} via notification api")
+                try:
+                    v2Handler.sendDelete(skId)
+                    done=True
+                except Exception as e:
+                    pass
+            if not done:
+                self.writeSocket.send(json.dumps(update))
+
+
       except Exception as e:
         self.setInfo(self.I_ALARM,"error %s"%str(e),WorkerStatus.ERROR)
         errorTS=time.time()
@@ -1071,6 +1137,7 @@ class AVNSignalKHandler(AVNWorker):
       expiryPeriod=self.navdata.getExpiryPeriod()
       apiUrl=None
       websocketUrl=None
+      version=None
       self.closeWebSockets()
       while apiUrl is None :
         if sequence != self.configSequence:
@@ -1096,6 +1163,8 @@ class AVNSignalKHandler(AVNWorker):
                 errorReported=False
             if websocketUrl is None:
               websocketUrl=ep.get("signalk-ws")
+            if version is None:
+              version=ep.get("version")
         except:
           if not errorReported:
             self.setInfo(self.I_MAIN, "unable to connect at %s" % baseUrl,WorkerStatus.ERROR)
@@ -1107,6 +1176,14 @@ class AVNSignalKHandler(AVNWorker):
           self.wait(1)
         else:
           AVNLog.info("found api url %s",apiUrl)
+      hasNotifications=False
+      if version is not None:
+          try:
+            parts=version.split(".")
+            if len(parts) > 0:
+              hasNotifications=int(parts[0])>=2
+          except Exception as e:
+            AVNLog.error("unable to obtain api version",e)
       selfUrl=apiUrl+"vessels/self"
       self.connected = True
       useWebsockets = hasWebsockets and websocketUrl is not None
@@ -1118,6 +1195,8 @@ class AVNSignalKHandler(AVNWorker):
         self.setInfo(self.I_WEBSOCKET,'disabled',WorkerStatus.INACTIVE)
         self.setInfo(self.I_TIME,'disabled',WorkerStatus.INACTIVE)
       try:
+        def tokenProvider():
+            return self.getAuthentication(apiUrl)
         lastChartQuery=0
         lastQuery=0
         lastWebsocket=0
@@ -1148,6 +1227,8 @@ class AVNSignalKHandler(AVNWorker):
                 self.webSocket.open()
                 lastWebsocket=now
           if self.config.write:
+            if hasNotifications and self.notificationV2Handler is None:
+                self.notificationV2Handler=NotificationV2Handler(baseUrl+"/v2/api/notifications",tokenProvider)
             if not useWebsockets:
               self.setInfo(self.I_WRITE,"websockets disabled",WorkerStatus.INACTIVE)
             else:
@@ -1155,7 +1236,7 @@ class AVNSignalKHandler(AVNWorker):
                 if (now - lastWriteSocket) > self.config.wsRetry:
                   lastWriteSocket=now
                   if token is None:
-                    token=self.getAuthentication(apiUrl)
+                    token=tokenProvider()
                   if token is None:
                     self.setInfo(self.I_WRITE,"unable to get token",WorkerStatus.ERROR)
                   else:
@@ -1206,7 +1287,7 @@ class AVNSignalKHandler(AVNWorker):
               AVNLog.debug("read: %s",json.dumps(data))
               oldestDeltas=time.monotonic() - 2 *self.config.period
               self.deltas.cleanup(oldestDeltas)
-              self.storeData(data,self.config.priority)
+              self.storeData(data,self.config.priority,hasNotifications)
               name=data.get('name')
               if name is not None:
                 self.setValue("name",name)
@@ -1214,6 +1295,24 @@ class AVNSignalKHandler(AVNWorker):
               if mmsi != self.ownMMSI:
                 AVNLog.info("set own mmsi to %s",str(mmsi))
                 self.ownMMSI=mmsi
+            #query notifications
+            if self.notificationV2Handler is not None:
+                try:
+                    response = self.notificationV2Handler.executeRequest()
+                    if response is None:
+                        raise Exception("empty notification response")
+                    data = json.loads(response.read())
+                    AVNLog.debug("notification response: %s",json.dumps(data))
+                    skAlarms={}
+                    for alarm in data.values():
+                        skAlarm = self.deltas.handleNotification(alarm.get('path'), alarm.get('value'), 'notificationApi', None, True)
+                        if skAlarm is not None:
+                            skAlarms[skAlarm.psKey()] = skAlarm
+                    if len(skAlarms.keys()) :
+                        self.handleNotifications(skAlarms,False)
+                except Exception as e:
+                    AVNLog.error("unable to fetch notifications: %s"%str(e))
+
 
           else:
             pass
@@ -1311,7 +1410,7 @@ class AVNSignalKHandler(AVNWorker):
           state=skAlarm.skValue.get('state')
           if state == 'emergency':
             category=AlarmConfig.C_CRITICAL
-          if state == 'normal':
+          if state == 'info':
             category=AlarmConfig.C_INFO
         if skAlarm.isOwnSource:
           if skAlarm.isInState(True):
@@ -1538,7 +1637,7 @@ class AVNSignalKHandler(AVNWorker):
     'waypoint':{
       'path': 'arrivalCircleEntered',
       'value':{
-        'state': 'normal',
+        'state': 'info',
         'method': ['visual','sound'],
         'message': 'arrival circle entered'
       }
@@ -1595,6 +1694,7 @@ class AVNSignalKHandler(AVNWorker):
       #see handleNotifications SK other on
       skAlarm.timestamp=info.timestamp
       skAlarm.source=info.source
+      skAlarm.skId=info.skId
     with self.__alarmCondition:
       self.deleteAndActivateActions.add(skAlarm)
       self.__alarmCondition.notifyAll()
@@ -1657,19 +1757,22 @@ class AVNSignalKHandler(AVNWorker):
     self.skCharts = newList
     self.setInfo(self.I_CHARTS,'read %d charts'%len(newList),WorkerStatus.NMEA)
 
-  def iterateToValue(self,node,prefix,callback):
+  def iterateToValue(self,node,prefix,callback,recurse=False):
     if not type(node) is dict:
       return
     if 'value' in node and 'timestamp' in node and '$source' in node:
       callback(prefix,node.get('value'),node.get('$source'),node.get('timestamp'))
-      return
+      if not recurse:
+          return
     for k,v in node.items():
+      if k in ['value','timestamp','$source','meta']:
+          continue
       if type(v) is dict:
         path=k if prefix is None else prefix+"."+k
-        self.iterateToValue(v,path,callback)
+        self.iterateToValue(v,path,callback,recurse=recurse)
 
 
-  def storeData(self,node,priority):
+  def storeData(self,node,priority,hasNotfications):
     if 'notifications' in node:
       def storeNotification(path,value,source,timestampstr):
         timestamp=self.timestampToMonotonic(timestampstr)
@@ -1678,7 +1781,7 @@ class AVNSignalKHandler(AVNWorker):
       item = node.get('notifications')
       if item is not None:
         for k,v in item.items():
-          self.iterateToValue(v,'notifications.'+k,storeNotification)
+          self.iterateToValue(v,'notifications.'+k,storeNotification,recurse=True)
       self.handleNotifications(alarmList.skList,True)
     def store(path,value,source,timestampstr):
       timestamp=self.timestampToMonotonic(timestampstr) if not self.config.ignoreTs else time.monotonic()
