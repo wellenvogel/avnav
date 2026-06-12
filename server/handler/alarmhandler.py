@@ -270,7 +270,7 @@ class AVNAlarmHandler(AVNWorker):
       if h == caller:
         continue
       try:
-        h.handleAlarm(alarm.config.name,on,alarm.info)
+        h.handleAlarm(alarm.config.name,on,alarm.info,alarm.message)
       except Exception as e:
         AVNLog.debug("alarm handler error: %s",str(e))
 
@@ -368,7 +368,8 @@ class AVNAlarmHandler(AVNWorker):
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
-    message=message if not ignoreMessage else None
+    if ignoreMessage and cmd.message is not None:
+        message=None
     running=RunningAlarm(cmd,info=info,message=message if message is not None else cmd.message)
     with self.__runningAlarmsLock:
       existing=self.runningAlarms.get(name)

@@ -1365,15 +1365,15 @@ class AVNSignalKHandler(AVNWorker):
               AVNLog.info("own alarm off %s (sk: other off, local: other on")
               self.alarmhandler.stopAlarm(name,caller=self)
       if isFull:
+        ownRunningAlarms=self.alarmhandler.getRunningAlarms()
         #now handle alarms not found at all
-        ownAlarmNames=self.alarmhandler.getRunningAlarmNames()
-        for name in ownAlarmNames:
-          skAlarm=self.getSkAlarmFromOwn(name,False)
+        for name,alarm in ownRunningAlarms.items():
+          skAlarm=self.getSkAlarmFromOwn(name,False,message=alarm.message)
           if skAlarm is None:
             continue
           if handledPathes.get(skAlarm.skPath):
             continue
-          runningOwn=self.alarmhandler.isAlarmActive(name,True)
+          runningOwn=alarm.running and alarm.info is None
           if not runningOwn:
             AVNLog.info("switch off local alarm %s (sk: none, local: other on",name)
             self.alarmhandler.stopAlarm(name,caller=self)
@@ -1563,11 +1563,17 @@ class AVNSignalKHandler(AVNWorker):
       return None
     return "sk:"+skpath[len(self.NPRFX):]
 
-  def getSkAlarmFromOwn(self,name,on) -> SKAlarm:
+  def getSkAlarmFromOwn(self,name,on,message=None) -> SKAlarm:
     rt=self.ALARMS.get(name)
     if rt is not None:
+      if on:
+        value=rt['value'].copy()
+        if message is not None:
+            value['message']=message
+      else:
+        value=None
       return SKAlarm(SKAlarm.T_SEND,self.NPRFX+rt['path'],'local.'+self.config.skSource,
-                     rt['value'] if on else None,isOwnSource=True,remoteId=self.config.remoteId)
+                     value,isOwnSource=True,remoteId=self.config.remoteId)
     else:
       if on:
         return None
@@ -1576,10 +1582,10 @@ class AVNSignalKHandler(AVNWorker):
       return SKAlarm(SKAlarm.T_SEND,self.NPRFX+name[3:],'local.'+self.config.skSource,
                      None,isOwnSource=True,remoteId=self.config.remoteId)
 
-  def handleAlarm(self,name,on,info):
+  def handleAlarm(self,name,on,info,message=None):
     if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notifyWrite:
       return
-    skAlarm=self.getSkAlarmFromOwn(name,on)
+    skAlarm=self.getSkAlarmFromOwn(name,on,message)
     if skAlarm is None:
       return
     skAlarm.shouldSend=True
