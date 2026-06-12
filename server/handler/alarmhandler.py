@@ -354,11 +354,13 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
     return True
 
-  def startAlarm(self,name,defaultCategory=None,caller=None,message=None,info=None):
+  def startAlarm(self,name,defaultCategory=None,caller=None,message=None,ignoreMessage=False,info=None):
     """start a named alarm
     @param name: the name of the alarm
     @param defaultCategory: the default category of the alarm
     @param caller: the caller of the alarm
+    @param message: the message of the alarm
+    @param ignoreMessage: ignore the message if there is a message configured in Avnav
     @param info: the info of the alarm - if this is set the alarm is considered to be external (SK)
     """
     cmd=self.findAlarm(name,defaultCategory)
@@ -366,6 +368,7 @@ class AVNAlarmHandler(AVNWorker):
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
+    message=message if not ignoreMessage else None
     running=RunningAlarm(cmd,info=info,message=message if message is not None else cmd.message)
     with self.__runningAlarmsLock:
       existing=self.runningAlarms.get(name)

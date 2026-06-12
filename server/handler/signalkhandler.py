@@ -294,6 +294,7 @@ class Config(object):
     self.ignoreTs=AVNSignalKHandler.P_IGNORE_TS.fromDict(param)
     self.wsRetry=AVNSignalKHandler.P_WEBSOCKETRETRY.fromDict(param)
     self.remoteId=self.skHost+":"+str(self.port)
+    self.ignoreMsg=AVNSignalKHandler.P_NOTIFY_IGNMSG.fromDict(param)
     self.blackList=set()
     blStr=AVNSignalKHandler.P_NOTIFY_BLACK.fromDict(param)
     for be in blStr.split(','):
@@ -704,6 +705,9 @@ class AVNSignalKHandler(AVNWorker):
                                  description='a comma separated list of notifications that should not be received\n'+
                                             'e.g. server.newVersion,navigation.arrivalCircleEntered',
                                  condition={P_NOTIFY_RECEIVE.name:True})
+  P_NOTIFY_IGNMSG=WorkerParameter('notifyIgnoreMsg',False,type=WorkerParameter.T_BOOLEAN,
+                                  description='Ignore the message field in notifications coming from SignalK if there'
+                                              ' is a message configured in AvNav for this notification')
   P_IGNORE_TS=WorkerParameter('ignoreTimestamp',False, type=WorkerParameter.T_BOOLEAN,
                               description='Ignore the timestamp that SignalK sets.\n'+
                               'Normally data being to old will be ignored.\n'+
@@ -730,7 +734,7 @@ class AVNSignalKHandler(AVNWorker):
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
             cls.P_UUID,cls.P_IGNORE_TS]
     if hasWebsockets:
-      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_WEBSOCKETRETRY]
+      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_NOTIFY_IGNMSG, cls.P_WEBSOCKETRETRY]
     return rt
 
   @classmethod
@@ -1344,7 +1348,10 @@ class AVNSignalKHandler(AVNWorker):
             #SK other on
             if not runningAny:
               AVNLog.info("own alarm on %s (sk: other on, local: nothing on)",skAlarm.skPath)
-              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.copy(),message=skAlarm.getMessage())
+              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,
+                                           info=skAlarm.copy(),message=skAlarm.getMessage(),
+                                           ignoreMessage=self.config.ignoreMsg
+                                           )
           else:
             #SK other off
             if runningOwn:
