@@ -106,6 +106,7 @@ from wsgiref.util import request_uri
 from alarmhandler import AVNAlarmHandler, AlarmConfig
 from avnav_nmea import NMEAParser
 from avnrouter import AVNRouter, WpData
+from tiler_functions import version
 
 hasWebsockets=False
 try:
@@ -1109,8 +1110,36 @@ class AVNSignalKHandler(AVNWorker):
       except Exception as e:
           self.setInfo(self.I_ALARM, "error %s" % str(e), WorkerStatus.ERROR)
 
+  def _queryBase(self,baseUrl):
+      response = urllib.request.urlopen(baseUrl)
+      if response is None:
+          raise Exception("no response on %s" % baseUrl)
+      responseData = json.loads(response.read())
+      if responseData is None:
+          raise Exception("no response on %s" % baseUrl)
+      # {"endpoints":{"v1":{"version":"1.20.0","signalk-http":"http://localhost:3000/signalk/v1/api/","signalk-ws":"ws://localhost:3000/signalk/v1/stream","signalk-tcp":"tcp://localhost:8375"}},"server":{"id":"signalk-server-node","version":"1.20.0"}}
+      endpoints = responseData.get('endpoints')
+      if endpoints is None:
+          raise Exception("no endpoints in response to %s" % baseUrl)
+      apiUrl=None
+      websocketUrl=None
+      version=None
+      for k in list(endpoints.keys()):
+          ep = endpoints[k]
+          if apiUrl is None:
+              apiUrl = ep.get('signalk-http')
+              if apiUrl is not None:
+                  errorReported = False
+          if websocketUrl is None:
+              websocketUrl = ep.get("signalk-ws")
+          if version is None:
+              version = ep.get("version")
+      return [apiUrl,websocketUrl,version]
+
   def _runI(self):
     sequence=self.configSequence
+    self.token=None
+    self.notificationV2Handler=None
     self.firstResponse=True
     self.config=Config(self.param)
     self.createMappings()
@@ -1155,36 +1184,17 @@ class AVNSignalKHandler(AVNWorker):
     self.setInfo(self.I_MAIN,"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:
       expiryPeriod=self.navdata.getExpiryPeriod()
-      apiUrl=None
-      websocketUrl=None
-      version=None
       self.closeWebSockets()
+      apiUrl=None
+      version=None
+      websocketUrl=None
       while apiUrl is None :
         if sequence != self.configSequence:
           return
         self.connected=False
         responseData=None
         try:
-          response=urllib.request.urlopen(baseUrl)
-          if response is None:
-            raise Exception("no response on %s"%baseUrl)
-          responseData=json.loads(response.read())
-          if responseData is None:
-            raise Exception("no response on %s"%baseUrl)
-          #{"endpoints":{"v1":{"version":"1.20.0","signalk-http":"http://localhost:3000/signalk/v1/api/","signalk-ws":"ws://localhost:3000/signalk/v1/stream","signalk-tcp":"tcp://localhost:8375"}},"server":{"id":"signalk-server-node","version":"1.20.0"}}
-          endpoints = responseData.get('endpoints')
-          if endpoints is None:
-            raise Exception("no endpoints in response to %s"%baseUrl)
-          for k in list(endpoints.keys()):
-            ep=endpoints[k]
-            if apiUrl is None:
-              apiUrl=ep.get('signalk-http')
-              if apiUrl is not None:
-                errorReported=False
-            if websocketUrl is None:
-              websocketUrl=ep.get("signalk-ws")
-            if version is None:
-              version=ep.get("version")
+          [apiUrl,websocketUrl,version]=self._queryBase(baseUrl)
         except:
           if not errorReported:
             self.setInfo(self.I_MAIN, "unable to connect at %s" % baseUrl,WorkerStatus.ERROR)
@@ -1232,9 +1242,8 @@ class AVNSignalKHandler(AVNWorker):
                 self.webSocket.open()
 
         def retryWriteSocket():
-            if self.token is None or self.writeSocket is None or not self.webSocket.isConnected():
-                if self.token is None:
-                    self.token = tokenProvider()
+            if self.token is None or self.writeSocket is None or not self.writeSocket.isConnected():
+                self.token = tokenProvider()
                 if self.token is None:
                     self.setInfo(self.I_WRITE, "unable to get token", WorkerStatus.ERROR)
                 else:
@@ -1287,34 +1296,19 @@ class AVNSignalKHandler(AVNWorker):
                     if mmsi != self.ownMMSI:
                         AVNLog.info("set own mmsi to %s", str(mmsi))
                         self.ownMMSI = mmsi
-        def notificationV2():
-            # query notifications
-            if self.notificationV2Handler is not None and False:
-                try:
-                    response = self.notificationV2Handler.executeRequest()
-                    if response is None:
-                        raise Exception("empty notification response")
-                    data = json.loads(response.read())
-                    AVNLog.debug("notification response: %s", json.dumps(data))
-                    skAlarms = {}
-                    for alarm in data.values():
-                        skAlarm = self.deltas.handleNotification(alarm.get('path'), alarm.get('value'),
-                                                                 'notificationApi', None, True)
-                        if skAlarm is not None:
-                            skAlarms[skAlarm.psKey()] = skAlarm
-                    if len(skAlarms.keys()):
-                        self.handleNotifications(skAlarms, False)
-                except Exception as e:
-                    AVNLog.error("unable to fetch notifications: %s" % str(e))
         def queryAis():
             try:
               self.fetchAisData(apiUrl)
             except Exception as e:
               self.setInfo(self.I_AIS,'error in fetch %s'%str(e),WorkerStatus.ERROR)
+        def checkVersion():
+            [_,_,newversion]=self._queryBase(baseUrl)
+            if newversion != version:
+                AVNLog.info("new SK server version %s", str(newversion))
+                self.connected=False
         timers=[]
         timers.append(TimerHelper(0.5,self.sendAlarms,"sendAlarms"))
         timers.append(TimerHelper(self.config.period,mainQuery,'mainQuery',{}))
-        timers.append(TimerHelper(self.config.period,notificationV2,'notificationV2'))
         if useWebsockets:
             timers.append(TimerHelper(self.config.wsRetry,retryWebSocket,'retryWebsocket'))
         if self.config.write:
@@ -1326,6 +1320,7 @@ class AVNSignalKHandler(AVNWorker):
                 timers.append(TimerHelper(self.config.wsRetry,retryWriteSocket,'retryWriteSocket'))
         timers.append(TimerHelper(self.config.aisFetchPeriod,queryAis,'queryAis'))
         timers.append(TimerHelper(self.config.chartQueryPeriod,queryCharts,'queryCharts'))
+        timers.append(TimerHelper(self.config.wsRetry,checkVersion,'checkVersion'))
         while self.connected and self.configSequence == sequence:
           for timer in timers:
               timer.periodic()
