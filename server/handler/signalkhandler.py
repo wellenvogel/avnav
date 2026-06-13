@@ -1041,74 +1041,59 @@ class AVNSignalKHandler(AVNWorker):
       self.setInfo(self.I_AIS,'error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
 
   def sendAlarms(self):
-    '''
-    send out notifications towards SK
-    a notification will be send if the send flag is set and the sendTs is not set
-    retry handling:
-    after retry time if:
-    ack flag not set and no other alarm of the same path in correct state
-    otherwise we will reset the send flag
-    ?should we remove in this case?
-    @return:
-    '''
-    sequence=self.configSequence
-    errorTS=0
-    while(sequence == self.configSequence):
+      '''
+      send out notifications towards SK
+      a notification will be send if the send flag is set and the sendTs is not set
+      retry handling:
+      after retry time if:
+      ack flag not set and no other alarm of the same path in correct state
+      otherwise we will reset the send flag
+      ?should we remove in this case?
+      @return:
+      '''
       try:
-        if self.config.notifyWrite or self.config.notifyReceive:
-          if self.writeSocket is None or not self.writeSocket.isConnected():
-            self.setInfo(self.I_ALARM,"write socket not connected",WorkerStatus.ERROR)
-            errorTS=0
-            with self.__alarmCondition:
-              self.__alarmCondition.wait(1)
-            continue
-          if errorTS < (time.time() - 10):
-            self.setInfo(self.I_ALARM,"sender ready",WorkerStatus.NMEA)
-          alarms=[]
-          cleanups=[]
-          now=time.monotonic()
-          with self.__alarmCondition:
-            for k,alarm in self.deleteAndActivateActions.skList.items():
-              if alarm.shouldDo():
-                if alarm.isInState(True):
-                  if self.config.notifyWrite:
-                    alarms.append(alarm)
-                  cleanups.append(k)
-                else:
-                  alarms.append(alarm)
-                  alarm.shouldSend=False
-            for k in cleanups:
-              try:
-                del self.deleteAndActivateActions.skList[k]
-              except:
-                pass
-          #outside lock
-          for alarm in alarms:
-            AVNLog.info("send alarm to SK %s=%s",alarm.skPath,alarm.skValue)
-            update=self.buildUpdateRequest({
-              alarm.skPath:alarm.skValue
-            })
-            v2Handler=self.notificationV2Handler
-            skId=alarm.skId
-            done=False
-            if alarm.skValue is None and v2Handler is not None and skId is not None:
-                AVNLog.info(f"clearing alarm {skId} via notification api")
-                try:
-                    v2Handler.sendDelete(skId)
-                    done=True
-                except Exception as e:
-                    pass
-            if not done:
-                self.writeSocket.send(json.dumps(update))
-
-
+          if self.config.notifyWrite or self.config.notifyReceive:
+              if self.writeSocket is None or not self.writeSocket.isConnected():
+                  self.setInfo(self.I_ALARM, "write socket not connected", WorkerStatus.ERROR)
+                  return
+              self.setInfo(self.I_ALARM, "sender ready", WorkerStatus.NMEA)
+              alarms = []
+              cleanups = []
+              with self.__alarmCondition:
+                  for k, alarm in self.deleteAndActivateActions.skList.items():
+                      if alarm.shouldDo():
+                          if alarm.isInState(True):
+                              if self.config.notifyWrite:
+                                  alarms.append(alarm)
+                              cleanups.append(k)
+                          else:
+                              alarms.append(alarm)
+                              alarm.shouldSend = False
+                  for k in cleanups:
+                      try:
+                          del self.deleteAndActivateActions.skList[k]
+                      except:
+                          pass
+              # outside lock
+              for alarm in alarms:
+                  AVNLog.info("send alarm to SK %s=%s", alarm.skPath, alarm.skValue)
+                  update = self.buildUpdateRequest({
+                      alarm.skPath: alarm.skValue
+                  })
+                  v2Handler = self.notificationV2Handler
+                  skId = alarm.skId
+                  done = False
+                  if alarm.skValue is None and v2Handler is not None and skId is not None:
+                      AVNLog.info(f"clearing alarm {skId} via notification api")
+                      try:
+                          v2Handler.sendDelete(skId)
+                          done = True
+                      except Exception as e:
+                          pass
+                  if not done:
+                      self.writeSocket.send(json.dumps(update))
       except Exception as e:
-        self.setInfo(self.I_ALARM,"error %s"%str(e),WorkerStatus.ERROR)
-        errorTS=time.time()
-      with self.__alarmCondition:
-        self.__alarmCondition.wait(5)
-
-
+          self.setInfo(self.I_ALARM, "error %s" % str(e), WorkerStatus.ERROR)
 
   def _runI(self):
     sequence=self.configSequence
@@ -1153,8 +1138,6 @@ class AVNSignalKHandler(AVNWorker):
     if self.config.write:
       router=self.findHandlerByName(AVNRouter.getConfigName())
     errorReported=False
-    sendAlarmThread=threading.Thread(target=self.sendAlarms,daemon=True,name="SKSendAlarms")
-    sendAlarmThread.start()
     self.setInfo(self.I_MAIN,"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:
       expiryPeriod=self.navdata.getExpiryPeriod()
@@ -1314,10 +1297,8 @@ class AVNSignalKHandler(AVNWorker):
               self.fetchAisData(apiUrl)
             except Exception as e:
               self.setInfo(self.I_AIS,'error in fetch %s'%str(e),WorkerStatus.ERROR)
-        def sendAlarms():
-            pass
         timers=[]
-        timers.append(TimerHelper(0.5,sendAlarms,"sendAlarms"))
+        timers.append(TimerHelper(0.5,self.sendAlarms,"sendAlarms"))
         timers.append(TimerHelper(self.config.period,mainQuery,'mainQuery',{}))
         timers.append(TimerHelper(self.config.period,notificationV2,'notificationV2'))
         if useWebsockets:
