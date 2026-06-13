@@ -66,6 +66,9 @@ class RunningAlarm:
     self.message=message
     self.commandFinished=False
 
+  def isOwn(self):
+      return self.info is None
+
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
@@ -410,15 +413,9 @@ class AVNAlarmHandler(AVNWorker):
       self.wakeUp()
     return True
 
-  def isAlarmActive(self,name,ownOnly=False):
-    '''return True if the named alarm is running'''
-    with self.__runningAlarmsLock:
-      al=self.runningAlarms.get(name)
-      if al is None:
-        return False
-      if ownOnly and al.info:
-        return False
-      return True
+  def getRunningAlarm(self,name):
+     with self.__runningAlarmsLock:
+        return self.runningAlarms.get(name)
 
   def getAllAlarms(self):
     rt={}
