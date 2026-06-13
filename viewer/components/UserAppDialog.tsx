@@ -411,6 +411,7 @@ const addonToParam=(addon:Partial<InternalAddonProps>)=>{
     rt.longText=addon.button?.longText as string;
     rt.buttonClass=addon.buttonClass as string;
     rt.canDelete=addon.canDelete;
+    rt.newWindow=addon.newWindow;
     return rt;
 }
 
