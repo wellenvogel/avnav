@@ -1,10 +1,7 @@
 {
-  "description": "The system default layout. No keys and no properties.",
+  "description": "A more modern layout with enlarged captions and no heading color",
   "layoutVersion": 1,
   "properties": {
-    "layers": {
-      "ais": true
-    }
   },
   "widgets": {
     "gpspage1": {
