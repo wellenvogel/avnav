@@ -29,6 +29,7 @@ import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
 import ButtonDefs from "../components/ButtonDefs";
+import {PAGEIDS} from "../util/pageids";
 
 export const pageButtons=[
     ButtonDefs.Gps1,
@@ -57,11 +58,14 @@ export default ()=>{
             ...pageButtons[idx-1],
             overflow:true,
             storeKeys: {
-                pageNum: keys.gui.gpspage.pageNumber
+                pageNum: keys.gui.gpspage.pageNumber,
+                editing: keys.gui.global.layoutEditing
             },
             updateFunction:(state:Record<string,any>)=>{
+                const panels=layouthandler.getPagePanels(PAGEIDS.GPS+idx);
                 return {
                     toggle: state.pageNum === idx,
+                    visible: panels?.length > 0 || state.editing
                 }
             }
         })

@@ -33,6 +33,7 @@ import Button, {ButtonDef, DynamicButtonProps, updateButtons} from "../component
 import {InjectMainMenu, useInitialButton} from "./MainNav";
 import GpsPageButtons, {pageButtons} from "./GpsPageButtons";
 import {MultiView, useScrollHelper} from "../components/MultiView";
+import ButtonDefs from "../components/ButtonDefs";
 
 const PAGE=PAGEIDS.GPS;
 const PANEL_LIST=['left','m1','m2','m3','right'];
@@ -244,7 +245,7 @@ const GpsPage = (props:Partial<PageProps>) => {
         remotechannel.sendMessage(COMMANDS.gpsNum, pageNumber);
     }, []);
     const buttonActions:Record<string, Partial<DynamicButtonProps>> = {
-        GpsCenter: {
+        [ButtonDefs.GpsCenter.name]: {
             onClick: () => {
                 MapHolder.centerToGps();
                 history.pop();
@@ -275,7 +276,7 @@ const GpsPage = (props:Partial<PageProps>) => {
                 })
             }
         },
-        Cancel: {
+        [ButtonDefs.Cancel.name]: {
             onClick: () => {
                 history.pop();
             }
