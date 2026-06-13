@@ -701,6 +701,28 @@ class NotificationV2Handler:
         jsdata = json.loads(response.read())
 
 
+class TimerHelper:
+    def __init__(self,interval,callback,title=None,data=None):
+        self.interval=interval
+        self.callback=callback
+        self.last=0
+        self.title=title
+        self.data=data
+    def reset(self):
+        self.last=0
+    def periodic(self):
+        now=time.monotonic()
+        if (self.last+self.interval) < now:
+            self.last=now
+            AVNLog.debug("periodic %s", self.title)
+            try:
+                if self.data is not None:
+                    self.callback(self.data)
+                else:
+                    self.callback()
+            except Exception as e:
+                AVNLog.error(f"error for timer callback {self.title} %s",e)
+
 
 class AVNSignalKHandler(AVNWorker):
   P_MIGRATED=WorkerParameter('migrated',type=WorkerParameter.T_BOOLEAN,editable=False,default=False)
@@ -841,6 +863,7 @@ class AVNSignalKHandler(AVNWorker):
     self.ownWpOffSentRl=False #last wp off rhumb line
     self.ownMMSI=None
     self.notificationV2Handler=None # type NotificationV2Handler
+    self.token=None
 
 
 
@@ -1197,138 +1220,123 @@ class AVNSignalKHandler(AVNWorker):
       try:
         def tokenProvider():
             return self.getAuthentication(apiUrl)
-        lastChartQuery=0
-        lastQuery=0
-        lastWebsocket=0
-        lastWriteSocket=0
-        first=True # when we newly connect, just query everything once
-        token=None
-        errorReported=False
-        lastAisFetch=0
-        while self.connected and self.configSequence == sequence:
-          now = time.monotonic()
-          #handle time shift backward
-          if lastChartQuery > now:
-            lastChartQuery=0
-          if lastQuery > now:
-            lastQuery=0
-          if lastAisFetch > now:
-            lastAisFetch=0
-          if lastWebsocket > now:
-            lastWebsocket=0
-          if lastWriteSocket > now:
-            lastWriteSocket=0
-          if useWebsockets:
+        def queryCharts():
+            try:
+              self.queryCharts(apiUrl,self.config.port)
+            except Exception as e:
+              self.skCharts=[]
+              AVNLog.debug("exception while reading chartlist %s",traceback.format_exc())
+        def retryWebSocket():
             if self.webSocket is None or not self.webSocket.isConnected():
-              if (now-lastWebsocket) > self.config.wsRetry:
                 if self.webSocket is None:
                   self.webSocket=WebSocketHandler(InfoSetter(self.I_WEBSOCKET,self),
                                                   websocketUrl,self.webSocketMessage)
+                AVNLog.debug("trying to open SK Websocket %s",websocketUrl)
                 self.webSocket.open()
-                lastWebsocket=now
-          if self.config.write:
-            if hasNotifications and self.notificationV2Handler is None:
-                self.notificationV2Handler=NotificationV2Handler(baseUrl+"/v2/api/notifications",tokenProvider)
-            if not useWebsockets:
-              self.setInfo(self.I_WRITE,"websockets disabled",WorkerStatus.INACTIVE)
-            else:
-              if token is None or self.writeSocket is None or not self.webSocket.isConnected():
-                if (now - lastWriteSocket) > self.config.wsRetry:
-                  lastWriteSocket=now
-                  if token is None:
-                    token=tokenProvider()
-                  if token is None:
-                    self.setInfo(self.I_WRITE,"unable to get token",WorkerStatus.ERROR)
-                  else:
-                    url=websocketUrl+"?subscribe=none&token="+urllib.parse.quote(token)
-                    if self.writeSocket is not None:
-                      self.writeSocket.close()
-                    self.writeSocket=WebSocketHandler(InfoSetter(self.I_WRITE,self),url,
-                                                      self.writeChannelMessage)
-                    self.writeSocket.open()
 
-            if self.config.sendWp and self.writeSocket is not None and self.writeSocket.isConnected():
-              self.sendCurrentLeg(router)
-          if (now - lastQuery) > self.config.period or first:
-            first=False
-            lastQuery=now
-            if useWebsockets:
-              try:
-                url=websocketUrl+"?subscribe=none"
-                if self.timeSocket is not None:
-                  if not self.timeSocket.isConnected():
-                    self.setInfo(self.I_TIME,"time channel not connected",WorkerStatus.ERROR)
-                  self.timeSocket.close()
-                self.timeSocket=WebSocketHandler(DummyInfoSetter(),url,
-                                                self.timeChannelMessage,omitLog=True)
-                self.timeSocket.open()
-              except Exception as e:
-                self.setInfo(self.I_TIME,"unable to create: %s"%str(e),WorkerStatus.ERROR)
-            response=None
-            try:
-              response=urllib.request.urlopen(selfUrl)
-              if response is None:
-                self.skCharts = []
-                self.setInfo(self.I_CHARTS,"unable to fetch from %s: None"%selfUrl,WorkerStatus.ERROR)
-                if not errorReported:
-                  AVNLog.error("unable to fetch from %s: None", selfUrl)
-                  errorReported=True
-            except Exception as e:
-              self.skCharts=[]
-              self.setInfo(self.I_CHARTS,"unable to fetch from %s: %s"%(selfUrl,str(e)),WorkerStatus.ERROR)
-              if not errorReported:
-                AVNLog.error("unable to fetch from %s:%s",selfUrl,str(e))
-                errorReported=True
-            if response is not None:
-              errorReported=False
-              if not first:
-                self.setInfo(self.I_MAIN, "connected at %s" % apiUrl,WorkerStatus.NMEA)
-              data=json.loads(response.read())
-              AVNLog.debug("read: %s",json.dumps(data))
-              oldestDeltas=time.monotonic() - 2 *self.config.period
-              self.deltas.cleanup(oldestDeltas)
-              self.storeData(data,self.config.priority,hasNotifications)
-              name=data.get('name')
-              if name is not None:
-                self.setValue("name",name)
-              mmsi=data.get('mmsi')
-              if mmsi != self.ownMMSI:
-                AVNLog.info("set own mmsi to %s",str(mmsi))
-                self.ownMMSI=mmsi
-            #query notifications
+        def retryWriteSocket():
+            if self.token is None or self.writeSocket is None or not self.webSocket.isConnected():
+                if self.token is None:
+                    self.token = tokenProvider()
+                if self.token is None:
+                    self.setInfo(self.I_WRITE, "unable to get token", WorkerStatus.ERROR)
+                else:
+                    url = websocketUrl + "?subscribe=none&token=" + urllib.parse.quote(self.token)
+                    if self.writeSocket is not None:
+                        self.writeSocket.close()
+                    self.writeSocket = WebSocketHandler(InfoSetter(self.I_WRITE, self), url,
+                                                        self.writeChannelMessage)
+                    self.writeSocket.open()
+        def mainQuery(data):
+                if useWebsockets:
+                    try:
+                        url = websocketUrl + "?subscribe=none"
+                        if self.timeSocket is not None:
+                            if not self.timeSocket.isConnected():
+                                self.setInfo(self.I_TIME, "time channel not connected", WorkerStatus.ERROR)
+                            self.timeSocket.close()
+                        self.timeSocket = WebSocketHandler(DummyInfoSetter(), url,
+                                                           self.timeChannelMessage, omitLog=True)
+                        self.timeSocket.open()
+                    except Exception as e:
+                        self.setInfo(self.I_TIME, "unable to create: %s" % str(e), WorkerStatus.ERROR)
+                response = None
+                try:
+                    response = urllib.request.urlopen(selfUrl)
+                    if response is None:
+                        self.skCharts = []
+                        self.setInfo(self.I_CHARTS, "unable to fetch from %s: None" % selfUrl, WorkerStatus.ERROR)
+                        if not data.get('errorReported'):
+                            AVNLog.error("unable to fetch from %s: None", selfUrl)
+                            data['errorReported'] = True
+                except Exception as e:
+                    self.skCharts = []
+                    self.setInfo(self.I_CHARTS, "unable to fetch from %s: %s" % (selfUrl, str(e)), WorkerStatus.ERROR)
+                    if not data.get('errorReported'):
+                        AVNLog.error("unable to fetch from %s:%s", selfUrl, str(e))
+                        data['errorReported'] = True
+                if response is not None:
+                    data['errorReported'] = False
+                    self.setInfo(self.I_MAIN, "connected at %s" % apiUrl, WorkerStatus.NMEA)
+                    data = json.loads(response.read())
+                    AVNLog.debug("read: %s", json.dumps(data))
+                    oldestDeltas = time.monotonic() - 2 * self.config.period
+                    self.deltas.cleanup(oldestDeltas)
+                    self.storeData(data, self.config.priority, hasNotifications)
+                    name = data.get('name')
+                    if name is not None:
+                        self.setValue("name", name)
+                    mmsi = data.get('mmsi')
+                    if mmsi != self.ownMMSI:
+                        AVNLog.info("set own mmsi to %s", str(mmsi))
+                        self.ownMMSI = mmsi
+        def notificationV2():
+            # query notifications
             if self.notificationV2Handler is not None:
                 try:
                     response = self.notificationV2Handler.executeRequest()
                     if response is None:
                         raise Exception("empty notification response")
                     data = json.loads(response.read())
-                    AVNLog.debug("notification response: %s",json.dumps(data))
-                    skAlarms={}
+                    AVNLog.debug("notification response: %s", json.dumps(data))
+                    skAlarms = {}
                     for alarm in data.values():
-                        skAlarm = self.deltas.handleNotification(alarm.get('path'), alarm.get('value'), 'notificationApi', None, True)
+                        skAlarm = self.deltas.handleNotification(alarm.get('path'), alarm.get('value'),
+                                                                 'notificationApi', None, True)
                         if skAlarm is not None:
                             skAlarms[skAlarm.psKey()] = skAlarm
-                    if len(skAlarms.keys()) :
-                        self.handleNotifications(skAlarms,False)
+                    if len(skAlarms.keys()):
+                        self.handleNotifications(skAlarms, False)
                 except Exception as e:
-                    AVNLog.error("unable to fetch notifications: %s"%str(e))
-
-
-          else:
-            pass
-          if self.config.chartQueryPeriod > 0 and lastChartQuery < (now - self.config.chartQueryPeriod):
-            lastChartQuery=now
-            try:
-              self.queryCharts(apiUrl,self.config.port)
-            except Exception as e:
-              self.skCharts=[]
-              AVNLog.debug("exception while reading chartlist %s",traceback.format_exc())
-          if self.config.aisFetchPeriod > 0 and lastAisFetch < (now - self.config.aisFetchPeriod):
+                    AVNLog.error("unable to fetch notifications: %s" % str(e))
+        def queryAis():
             try:
               self.fetchAisData(apiUrl)
             except Exception as e:
               self.setInfo(self.I_AIS,'error in fetch %s'%str(e),WorkerStatus.ERROR)
-            lastAisFetch=now
+        def sendAlarms():
+            pass
+        timers=[]
+        timers.append(TimerHelper(0.5,sendAlarms,"sendAlarms"))
+        timers.append(TimerHelper(self.config.period,mainQuery,'mainQuery',{}))
+        timers.append(TimerHelper(self.config.period,notificationV2,'notificationV2'))
+        if useWebsockets:
+            timers.append(TimerHelper(self.config.wsRetry,retryWebSocket,'retryWebsocket'))
+        if self.config.write:
+            if hasNotifications and self.notificationV2Handler is None:
+                    self.notificationV2Handler = NotificationV2Handler(baseUrl + "/v2/api/notifications", tokenProvider)
+            if not useWebsockets:
+                self.setInfo(self.I_WRITE, "websockets disabled", WorkerStatus.INACTIVE)
+            else:
+                timers.append(TimerHelper(self.config.wsRetry,retryWriteSocket,'retryWriteSocket'))
+        timers.append(TimerHelper(self.config.aisFetchPeriod,queryAis,'queryAis'))
+        timers.append(TimerHelper(self.config.chartQueryPeriod,queryCharts,'queryCharts'))
+        while self.connected and self.configSequence == sequence:
+          for timer in timers:
+              timer.periodic()
+          if self.config.write:
+            if self.config.sendWp and self.writeSocket is not None and self.writeSocket.isConnected():
+              self.sendCurrentLeg(router)
           sleepTime=1 if self.config.period > 1 else self.config.period
           self.wait(sleepTime)
         self.closeWebSockets()
