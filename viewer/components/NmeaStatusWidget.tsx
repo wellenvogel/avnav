@@ -29,6 +29,7 @@ import keys from "../util/keys";
 import {useStoreState} from "../hoc/Dynamic";
 import {useStringsChanged} from "../hoc/Resizable";
 import {StatusIcon} from "./Icons";
+import Helper from "../util/helper";
 
 export interface NmeaStatusWidgetProps extends IWidgetProps{
     showAis?:boolean;
@@ -80,11 +81,11 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
         }
     }
     if (! props.showAis && ! props.showNmea){
-        return <WidgetFrame name={props.name} dragId={props.dragId} onClick={props.onClick}></WidgetFrame>
+        return <WidgetFrame name={props.name} dragId={props.dragId} onClick={props.onClick} className={props.className}></WidgetFrame>
     }
     const resizeSequence=useStringsChanged(display,true);
     return <React.Fragment>
-        { props.showNmea && <WidgetFrame {...props} caption={'NMEA'} className="nmeaStatusWidget" key={1} style={{height:'50%'}} resizeSequence={resizeSequence}>
+        { props.showNmea && <WidgetFrame {...props} caption={'NMEA'} className={Helper.concatsp("nmeaStatusWidget",props.className)} key={1} style={{height:'50%'}} resizeSequence={resizeSequence}>
             <div className='widgetData nmea'>
                 <div className={"rowBase status"}>
                     <StatusIcon type={display.nmeaColor}/>
@@ -96,7 +97,7 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
             </div>
         </WidgetFrame>}
         {props.showAis &&
-            <WidgetFrame {...props} className={"nmeaStatusWidget"} caption={'AIS'} key={2} style={{height:'50%'}} resizeSequence={resizeSequence}>
+            <WidgetFrame {...props} className={Helper.concatsp("nmeaStatusWidget",props.className)} caption={'AIS'} key={2} style={{height:'50%'}} resizeSequence={resizeSequence}>
                 <div className={"widgetData ais"}>
                     <div className={"rowBase status"}>
                         <StatusIcon type={display.aisColor}/>
