@@ -33,9 +33,10 @@ const ActiveAlarm=(props:Alarm)=>{
             <StatusIcon type={alarmStatus(props)}/>
         </ListSlot>
         <ListMainSlot
-            primary={props.alarm}
-            secondary={props.message}
+            primary={props.message||props.alarm}
+            secondary={props.message?props.alarm:''}
         />
+        <ListSlot text={props.external?"External":"AvNav"}/>
         <ListSlot>
             <Button className={'smallButton'}
                     {...ButtonDefs.DBClear}

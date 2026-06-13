@@ -516,7 +516,8 @@ class AVNAlarmHandler(AVNWorker):
                   'running':item.running,
                   'repeat': item.config.repeat,
                   'category':item.config.category,
-                  'message':item.message
+                  'message':item.message,
+                  'external':item.info is not None
                   }
       return {"status":"OK","data":rt}
     mode="start"

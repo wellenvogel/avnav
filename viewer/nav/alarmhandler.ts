@@ -13,7 +13,8 @@ export interface Alarm{
     running?:boolean,
     category:string,
     isLocal?:boolean,
-    message?:string
+    message?:string,
+    external?:boolean
 }
 
 interface SoundConfig{
