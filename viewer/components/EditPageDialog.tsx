@@ -5,9 +5,13 @@ import {Checkbox} from './Inputs';
 import DB from './DialogButton';
 // @ts-ignore
 import cloneDeep from "clone-deep";
+// @ts-ignore
+import {HelpButton} from './EditableParameterUI';
 import {IDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
 import Helper from "../util/helper";
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
 
 const OPTION_COMBINATIONS=[
     {
@@ -27,6 +31,8 @@ const OPTION_COMBINATIONS=[
         options: [LAYOUT_OPTIONS.ANCHOR,LAYOUT_OPTIONS.SMALL]
     }
 ];
+
+const DEFAULT_OPTION_COMBINATION_INDEX=0; //this will always be returned from getFilteredOptions as first entry
 
 const getFilteredOptions=(handledOptions:LAYOUT_OPTIONS[])=>{
     const rt=[];
@@ -114,6 +120,29 @@ export interface EditPageDialogProps{
     panelNames: string[],
     handledOptions?: LAYOUT_OPTIONS[]
 };
+
+const buildHelp=(options:LAYOUT_OPTIONS[])=>{
+    const conditionHelp={
+        [LAYOUT_OPTIONS.SMALL]:'Layout if in portrait mode. This mode is assumed when the width is below '+
+                        globalstore.getData(keys.properties.smallBreak)+"px. You can change this in the Display settings (general).",
+        [LAYOUT_OPTIONS.ANCHOR]:'Layout if the anchor watch is active'
+    }
+    let rt= 'In this dialog you can define which panels should be visible in which conditions '+
+        'and whether they have a common layout or a different layout for each condition.\n'+
+        'In the conditions section you select for which condition you would like to modify the layout.\n'+
+        'Remark: During layout editing those conditions will not automatically being set - you need to change them in this dialog.\n'+
+        'Below at the Panel section you select for which of the condition combinations you will have a different layout.\n'+
+        'The combination that will be used for the current conditions is marked grey.\n'+
+        '\nConditions and their meaning:\n';
+    for (const opt of options){
+        const ohelp=conditionHelp[opt];
+        if (ohelp){
+            rt+=`${opt}:  ${ohelp}\n\n`;
+        }
+    }
+    return rt;
+
+}
 const EditPageDialog=(props:EditPageDialogProps)=>{
         const [currentOptions,setCurrentOptions]=useState(LayoutHandler.getOptionValues(props.handledOptions));
         const [panelList,setPanelList]=useState(getPanelList(props.page,props.panelNames,props.handledOptions));
@@ -137,6 +166,25 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
         nv[panel.basename].foundCombinations[index]=!nv[panel.basename].foundCombinations[index];
         setPanelList(nv);
     }
+    const combinations=getFilteredOptions(props.handledOptions);
+    //find the current active option combination index
+    let activeIndex:number;
+    combinations.forEach((combination,index)=>{
+        const required=optionListToObject(combination.options);
+        let match=true;
+        for (const k of props.handledOptions) {
+            if (!!required[k] != !!currentOptions[k]){
+                match=false;
+                break;
+            }
+        }
+        if (match){
+            activeIndex = index;
+        }
+    })
+    if (activeIndex===undefined){
+        activeIndex=0;
+    }
         return (
             <DialogFrame className="selectDialog editPageDialog" title={props.title}>
                 <div className="info"><span className="label">Page:</span>{props.page}</div>
@@ -155,26 +203,20 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                                 )
                             }
                     )}
+                        <HelpButton description={buildHelp(props.handledOptions)}/>
                     </div>
                 </div>
                 <div className="panelList">
                     <div className="panelHeadline">Panel Configurations</div>
                 {getPanelsAsArray().map((panel)=>{
+                    const activePanelIndex=panel.foundCombinations[activeIndex]?activeIndex:
+                        (panel.foundCombinations[DEFAULT_OPTION_COMBINATION_INDEX]?DEFAULT_OPTION_COMBINATION_INDEX:undefined);
                     return <div className={"editPanel "+panel.basename} key={panel.basename.replace(/  */,'')}>
                         <span className="label">{panel.basename}</span>
                         <div className="combinationFrame">
                         { getFilteredOptions(props.handledOptions).map((combination,index)=>{
-                            let isActive=true;
-                            for (const o of props.handledOptions){
-                                const current=currentOptions[o];
-                                const isRequired=combination.options.indexOf(o)>=0;
-                                if (isRequired !== current){
-                                    isActive=false;
-                                    break;
-                                }
-                            }
                             return(
-                                <Checkbox className={Helper.concatsp("combinationSelect",isActive?'selectedItem':undefined)}
+                                <Checkbox className={Helper.concatsp("combinationSelect",(activePanelIndex == index)?'selectedItem':undefined)}
                                           onClick={()=>{setCombination(panel,index)}}
                                           key={combination.display}
                                           label={combination.display}
