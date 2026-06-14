@@ -11,7 +11,7 @@ import cloneDeep from "clone-deep";
 import Helper, {createOrUpdateStyleSheet, CSSPRIORITIES, getav, valueof} from "./helper";
 import {PAGEIDS, PageType} from "./pageids";
 import {Item} from "./itemFunctions";
-import {LayoutData} from "../api/api.interface";
+import {LayoutData, LayoutOptions} from "../api/api.interface";
 import {DynamicButtonProps} from "../components/Button";
 import {SyntheticEvent} from "react";
 import {IHistory} from "./history";
@@ -600,19 +600,19 @@ class LayoutHandler{
         this.resetActions();
         globalStore.storeData(keys.gui.global.layoutEditing,on);
     }
-    _configToCss(layout:LayoutData){
+    _optionsToCss(layout:LayoutData){
         let rt='';
-        const buttons=layout?.settings?.buttons;
-        if (buttons && Array.isArray(buttons)){
-            for (const button of buttons){
-                rt+=buildButtonStyles(button);
+        const buttons=layout?.options?.buttons;
+        if (buttons && typeof buttons == 'object'){
+            for (const k in buttons){
+                rt+=buildButtonStyles(buttons[k],k);
             }
         }
         return rt;
     }
     _setLayout(layout:LayoutData){
         this.layout=layout;
-        let css=this._configToCss(layout);
+        let css=this._optionsToCss(layout);
         if (layout && layout.css){
             css+=layout.css;
         }
@@ -665,6 +665,23 @@ class LayoutHandler{
     updateCss(css:string){
         if (! this.layout) return;
         this.layout.css=css;
+        this._setLayout(this.layout);
+    }
+    getLayoutOptions():LayoutOptions{
+        if (! this.layout) return;
+        return cloneDeep(this.layout.options);
+    }
+    updateLayoutOtions(options:LayoutOptions):boolean{
+        if (! this.layout) return;
+        if (! options) return;
+        if (! this.layout.options) this.layout.options={};
+        const buttons=options?.buttons;
+        if (buttons && typeof buttons == 'object'){
+            if (! this.layout.options.buttons) this.layout.options.buttons={};
+            for (const k in buttons){
+                this.layout.options.buttons[k] = {... this.layout.options.buttons[k],...buttons[k]};
+            }
+        }
         this._setLayout(this.layout);
     }
     hasLoaded(layoutName:string){

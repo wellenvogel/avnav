@@ -31,7 +31,7 @@ import keys from "../util/keys";
 import ButtonDefs from "../components/ButtonDefs";
 import {PAGEIDS} from "../util/pageids";
 
-export const pageButtons=[
+export const pageButtons:Partial<DynamicButtonProps>&{name:string}[] = [
     ButtonDefs.Gps1,
     ButtonDefs.Gps2,
     ButtonDefs.Gps3,

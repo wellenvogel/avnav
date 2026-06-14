@@ -744,8 +744,8 @@ export interface ApiV2 extends Api{
     modules():Modules;
 }
 
-export interface LayoutSettings{
-    buttons?: (Partial<DynamicButtonProps> &{name:string})[]
+export interface LayoutOptions {
+    buttons?: Record<string,(Partial<DynamicButtonProps> &{name:string})>
 }
 export interface LayoutData {
     keys?: KeyMappings;
@@ -753,5 +753,5 @@ export interface LayoutData {
     layoutVersion: string | number;
     widgets?: Record<string, any>;
     properties?: Record<string, PropertyValue>;
-    settings?: LayoutSettings;
+    options?: LayoutOptions;
 }

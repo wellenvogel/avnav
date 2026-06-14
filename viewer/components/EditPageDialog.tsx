@@ -6,12 +6,13 @@ import DB from './DialogButton';
 // @ts-ignore
 import cloneDeep from "clone-deep";
 // @ts-ignore
-import {HelpButton} from './EditableParameterUI';
+import {HelpButton,EditableParameterListUI} from './EditableParameterUI';
 import {IDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
 import Helper from "../util/helper";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
+import {TEditableParameterUI} from "./ParameterDialog";
 
 const OPTION_COMBINATIONS=[
     {
@@ -118,7 +119,10 @@ export interface EditPageDialogProps{
     title?: string,
     page: string,
     panelNames: string[],
-    handledOptions?: LAYOUT_OPTIONS[]
+    handledOptions?: LAYOUT_OPTIONS[],
+    parameters?: TEditableParameterUI[],
+    pvalues?:Record<string, any>,
+    updateValues?:(values:Record<string, any>) => void,
 };
 
 const buildHelp=(options:LAYOUT_OPTIONS[])=>{
@@ -146,6 +150,7 @@ const buildHelp=(options:LAYOUT_OPTIONS[])=>{
 const EditPageDialog=(props:EditPageDialogProps)=>{
         const [currentOptions,setCurrentOptions]=useState(LayoutHandler.getOptionValues(props.handledOptions));
         const [panelList,setPanelList]=useState(getPanelList(props.page,props.panelNames,props.handledOptions));
+        const [values,setValues]=useState(props.pvalues||{});
             
     const getPanelsAsArray=()=>{
         const rt=[];
@@ -185,9 +190,27 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
     if (activeIndex===undefined){
         activeIndex=0;
     }
+    let dataValid=true;
+    if (props.parameters) {
+        props.parameters.forEach((parameter) => {
+            if (!parameter.checkConditions(values,props.parameters)) return;
+            if (parameter.hasError(values || {})) {
+                dataValid = false;
+            }
+        })
+    }
         return (
             <DialogFrame className="selectDialog editPageDialog" title={props.title}>
                 <div className="info"><span className="label">Page:</span>{props.page}</div>
+                {props.parameters && <EditableParameterListUI
+                    values={values}
+                    parameters={props.parameters}
+                    initialValues={props.pvalues||{}}
+                    onChange={(nv:any)=>{
+                        setValues({...values,...nv});
+                    }}
+                />
+                }
                 <div className="selectCurrent" >
                     <div className="currentHeadline">Current Conditions</div>
                     <div className={'dialogRow'}>
@@ -230,13 +253,17 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                 </div>
                 <DialogButtons>
                     <DB {...ButtonDefs.DBCancel}/>
-                    <DB {...ButtonDefs.DBOk}onClick={()=>{
+                    <DB {...ButtonDefs.DBOk}
+                        onClick={()=>{
                         for (const pn in panelList){
                             const panel=panelList[pn];
                             panel.writePanelsToLayout();
                         }
                         LayoutHandler.setTemporaryOptionValues(currentOptions);
-                    }}/>
+                        if (props.updateValues) props.updateValues(values);
+                    }}
+                        disabled={!dataValid}
+                    />
 
                 </DialogButtons>
             </DialogFrame>

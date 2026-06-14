@@ -17,7 +17,8 @@ import WidgetFactory from '../components/WidgetFactory';
 // @ts-ignore
 import {EditWidgetDialogWithFunc} from '../components/EditWidgetDialog';
 // @ts-ignore
-import {createDialog as createEditPageDialog, RawButtonDef as EditPageButton} from '../components/EditPageDialog';
+import {EditableStringParameterUI} from '../components/EditableParameterUI';
+import EditPageDialog, { RawButtonDef as EditPageButton} from '../components/EditPageDialog';
 import LayoutHandler, {LAYOUT_OPTIONS, LayoutPage} from '../util/layouthandler';
 import {DynamicTitleIcons} from "../components/TitleIcons";
 import {showDialog} from "../components/OverlayDialog";
@@ -194,6 +195,23 @@ const DashboardPanel=(props:DashboardPanelProps)=>{
         })}
     </div>
 }
+const editPageparameters=[
+    new EditableStringParameterUI({
+        name:'shortText',
+        displayName:'button short text',
+        description: 'The short text to be shown on the button for this dashboard page (max 7. characters)',
+        checker: (value: string)=>{
+            if (! value) return true;
+            if (value.length > 7) return false;
+            return true;
+        }
+    }),
+    new EditableStringParameterUI({
+        name:'longText',
+        displayName:'button long text',
+        description: 'The long text for this dashboard page to be shown on tool tips or in the main menu'
+    }),
+]
 
 const GpsPage = (props:Partial<PageProps>) => {
     const history=useHistory();
@@ -253,11 +271,26 @@ const GpsPage = (props:Partial<PageProps>) => {
         },
         [EditPageButton.name]: {
             onClick: () => {
-                createEditPageDialog(
-                    getLayoutPage(pageNumber).layoutPage,
-                    PANEL_LIST,
-                    [LAYOUT_OPTIONS.ANCHOR],
-                    dialogContext);
+                const config=layouthandler.getLayoutOptions();
+                const pageButton=pageButtons[pageNumber-1];
+                const buttonOptions=config?.buttons||{};
+                const currentValues:Record<string, any> =buttonOptions[pageButton.name];
+                dialogContext.showDialog(()=><EditPageDialog
+                {...props}
+                title="Edit Page Layout"
+                page={getLayoutPage(pageNumber).layoutPage}
+                panelNames={PANEL_LIST}
+                handledOptions={[LAYOUT_OPTIONS.ANCHOR]}
+                pvalues={currentValues}
+                updateValues={(nv:Record<string, any>)=>{
+                    const newOptions:Record<string, any> = {
+                        buttons:{}
+                    }
+                    newOptions.buttons[pageButton.name] = nv;
+                    layouthandler.updateLayoutOtions(newOptions);
+                }}
+                parameters={editPageparameters}
+                />)
             }
         },
         [LayoutHandler.revertButtonDef().name]: {
