@@ -36,7 +36,7 @@ const ActiveAlarm=(props:Alarm)=>{
             primary={props.message||props.alarm}
             secondary={props.message?props.alarm:''}
         />
-        <ListSlot text={props.external?"External":"AvNav"}/>
+        <ListSlot text={props.external?props.external+"":"AvNav"}/>
         <ListSlot>
             <Button className={'smallButton'}
                     {...ButtonDefs.DBClear}

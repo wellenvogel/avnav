@@ -66,9 +66,6 @@ class RunningAlarm:
     self.message=message
     self.commandFinished=False
 
-  def isOwn(self):
-      return self.info is None
-
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
@@ -248,13 +245,16 @@ class AVNAlarmHandler(AVNWorker):
           break
     return config
 
-  def findAlarm(self,name,defaultCategory=None):
+  def findAlarm(self,name,defaultCategory=None,command=None):
     definedAlarms=self.param.get('Alarm')
     if definedAlarms is not None:
       for cmd in definedAlarms:
         if cmd.get('name') is not None and cmd.get('name') == name:
-          return self.expandAlarmConfig(AlarmConfig.fromDict(cmd))
-    return self.expandAlarmConfig(AlarmConfig(category=defaultCategory,name=name))
+          rt=self.expandAlarmConfig(AlarmConfig.fromDict(cmd))
+          if command is not None:
+              rt.command=command
+          return rt
+    return self.expandAlarmConfig(AlarmConfig(category=defaultCategory,name=name,command=command))
 
   def _startAlarmCmd(self,alarmdef:AlarmConfig):
     if alarmdef.command is None:
@@ -357,7 +357,7 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
     return True
 
-  def startAlarm(self,name,defaultCategory=None,caller=None,message=None,ignoreMessage=False,info=None):
+  def startAlarm(self,name,defaultCategory=None,caller=None,message=None,ignoreMessage=False,info=None,command=None):
     """start a named alarm
     @param name: the name of the alarm
     @param defaultCategory: the default category of the alarm
@@ -366,7 +366,7 @@ class AVNAlarmHandler(AVNWorker):
     @param ignoreMessage: ignore the message if there is a message configured in Avnav
     @param info: the info of the alarm - if this is set the alarm is considered to be external (SK)
     """
-    cmd=self.findAlarm(name,defaultCategory)
+    cmd=self.findAlarm(name,defaultCategory,command=command)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
@@ -470,6 +470,32 @@ class AVNAlarmHandler(AVNWorker):
   def getApiType(self):
     return "alarm"
 
+  def getAlarmsForApi(self, names=None,runningOnly=False):
+      rt = {}
+      all = self.getAllAlarms()
+      if all is None:
+          return rt
+      for name, item in all.items():
+          if names is not None:
+              if not name in names and not 'all' in names:
+                  continue
+          if runningOnly and not item.running:
+              continue
+          source = None
+          if item.info is not None:
+              if hasattr(item.info, 'alarmSource'):
+                  source = item.info.alarmSource
+              else:
+                  source = 'External'
+          rt[name] = {'alarm': item.config.name,
+                      'running': item.running,
+                      'repeat': item.config.repeat,
+                      'category': item.config.category,
+                      'message': item.message,
+                      'external': source
+                      }
+      return rt
+
   def handleApiRequest(self, command, requestparam, handler=None, **kwargs):
     '''
       handle the URL based requests
@@ -505,20 +531,7 @@ class AVNAlarmHandler(AVNWorker):
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')
-      rt={}
-      all=self.getAllAlarms()
-      if all is None:
-        return rt
-      for name,item in all.items():
-        if not name in status and not 'all' in status :
-          continue
-        rt[name]={'alarm':item.config.name,
-                  'running':item.running,
-                  'repeat': item.config.repeat,
-                  'category':item.config.category,
-                  'message':item.message,
-                  'external':item.info is not None
-                  }
+      rt=self.getAlarmsForApi(status)
       return {"status":"OK","data":rt}
     mode="start"
     alarm=AVNUtil.getHttpRequestParam(requestparam,"start")

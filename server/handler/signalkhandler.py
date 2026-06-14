@@ -344,6 +344,7 @@ class DummyInfoSetter(InfoSetter):
 class SKAlarm(object):
   def __init__(self,skPath,source,skValue,
                timestamp=None,isOwnSource=False,remoteId=None):
+    self.alarmSource='SignalK'
     self.skPath=skPath
     self.skValue=skValue
     self.source=source
@@ -1395,7 +1396,7 @@ class AVNSignalKHandler(AVNWorker):
         name=self.skAlarmToOur(skAlarm.skPath)
         ourAlarm=self.alarmhandler.getRunningAlarm(name)
         runningAny=ourAlarm is not None
-        runningOwn=runningAny and ourAlarm.isOwn()
+        runningOwn=runningAny and isinstance(ourAlarm.info,SKAlarm)
         runningOther=False if runningOwn else runningAny
         category=None
         if type(skAlarm.skValue) is dict:
@@ -1469,7 +1470,7 @@ class AVNSignalKHandler(AVNWorker):
             continue
           if handledPathes.get(skAlarm.skPath):
             continue
-          runningOwn=alarm.running and alarm.isOwn()
+          runningOwn=alarm.running and isinstance(alarm.info,SKAlarm)
           if not runningOwn:
             AVNLog.info("switch off local alarm %s (sk: none, local: other on",name)
             self.alarmhandler.stopAlarm(name,caller=self)

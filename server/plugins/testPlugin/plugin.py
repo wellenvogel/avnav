@@ -1,5 +1,7 @@
 #the following import is optional
 #it only allows "intelligent" IDEs (like PyCharm) to support you in using it
+import time
+
 from avnav_api import AVNApi
 
 
@@ -60,7 +62,24 @@ class Plugin(object):
     seq=0
     self.api.log("started")
     self.api.setStatus('NMEA','running')
+    lastAlarm=0
+    alarmCount=0
+    alarmName="testPlugin"
     while not self.api.shouldStopMainThread():
+      now=time.monotonic()
+      if False:
+        if (now-lastAlarm) > 30:
+          lastAlarm=now
+          alarmCount+=1
+          self.api.startAlarm(alarmName,
+                              defaultCategory='critical',
+                              message=f"Test alarm #{alarmCount}")
+        if (now-lastAlarm) > 20:
+          alarms=self.api.getRunningAlarms()
+          for alarm in alarms:
+              if alarm.get('alarm') == alarmName:
+                  self.api.log(f"Alarm #{alarmName} detected, clearing it")
+                  self.api.clearAlarm(alarmName)
       seq,data=self.api.fetchFromQueue(seq,10)
       if len(data) > 0:
         for line in data:

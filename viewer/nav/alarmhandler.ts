@@ -14,7 +14,7 @@ export interface Alarm{
     category:string,
     isLocal?:boolean,
     message?:string,
-    external?:boolean
+    external?:string
 }
 
 interface SoundConfig{

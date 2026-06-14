@@ -77,6 +77,9 @@ def normalizedName(name):
     except:
         return name
 
+class AlarmInfo:
+    def __init__(self,prefix):
+        self.alarmSource=prefix
 
 class ApiImpl(AVNApi):
     CFGTYPE = 'cfg'
@@ -569,12 +572,34 @@ class ApiImpl(AVNApi):
         self.converters.remove(name)
         importer.deregisterConverter(name)
 
-    def clearAlarms(self):
+    def _getAlarmHandler(self):
         alarmhandler = AVNWorker.findHandlerByName(AVNAlarmHandler.getConfigName())  # type: AVNAlarmHandler
         if alarmhandler is None:
             raise Exception("cannot find alarm handler")
+        return alarmhandler
+    def clearAlarms(self):
+        alarmhandler = self._getAlarmHandler()
         self.log("clearing all alarms")
         alarmhandler.stopAll()
+
+    def clearAlarm(self, name):
+        alarmhandler = self._getAlarmHandler()
+        self.log("clearing alarm %s",name)
+        alarmhandler.stopAlarm(name)
+
+    def getOwnName(self):
+        return self.prefix
+
+    def getRunningAlarms(self):
+        alarmhandler = self._getAlarmHandler()
+        return list(alarmhandler.getAlarmsForApi(runningOnly=True).values())
+    def startAlarm(self, name, defaultCategory='critical', message=None, command=None):
+        alarmhandler = self._getAlarmHandler()
+        return alarmhandler.startAlarm(name,
+                                       defaultCategory=defaultCategory,
+                                       message=message,
+                                       command=command,
+                                       info=AlarmInfo(self.prefix))
 
     def getCfgJsonName(self):
         cfgName = self.CLIENTFILES.get(self.CFGTYPE)
