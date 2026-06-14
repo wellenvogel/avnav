@@ -247,7 +247,7 @@ const MapWidgetsDialog = () => {
                 close: false
             },
             {
-                ...ButtonDefs.DBCancel,
+                ...ButtonDefs.DBOk,
             }
         ]}/>
     </DialogFrame>
@@ -854,6 +854,17 @@ const NavPage=(props:PageProps)=>{
             ...ButtonDefs.NavMapWidgets,
             editOnly: true,
             overflow: true,
+            storeKeys:{
+                sequence: keys.gui.global.layoutSequence
+            },
+            updateFunction:()=>{
+                const current=getCurrentMapWidgets();
+                const available=WidgetFactory.getAvailableWidgets(['map']);
+                const active=current?.length> 0 || available?.length>0;
+                return {
+                    disabled:!active
+                }
+            },
             onClick: ()=>showDialog(dialogCtx,(props)=><MapWidgetsDialog {...props}/>)
         }
         ]);
