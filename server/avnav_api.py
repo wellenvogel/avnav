@@ -493,7 +493,12 @@ class AVNApi(object):
       :return:
       '''
       raise NotImplemented()
-  def startAlarm(self,name,defaultCategory='critical',message=None,command=None):
+  def startAlarm(self,name,
+                 defaultCategory='critical',
+                 message=None,
+                 command=None,
+                 parameter=None,
+                 repeat=None):
       '''
       start an alarm
       :param name: the name for the alarm
@@ -504,6 +509,8 @@ class AVNApi(object):
       :param message: an arbitrary text message
       :param command: if set trigger this command instead of the one configured at the alarm handler. Must be known by AvNav - i.e. either already
                       configured at the AVNCommandHandler or registered by registerCommand
+      :param parameter: if set use this as a command parameter
+      :param repeat: if set use this as the number of repeats for the command
       :return: True if started
       '''
   def getRunningAlarms(self):

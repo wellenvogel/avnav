@@ -26,15 +26,13 @@
 ###############################################################################
 import importlib.util
 import inspect
-import json
-import shutil
 import urllib.parse
 from typing import Dict
 from zipfile import ZipFile
 
 import avnav_handlerList
 import avnav_util
-from alarmhandler import AVNAlarmHandler
+from alarmhandler import AVNAlarmHandler, AlarmConfig, AlarmInfo
 from avnav_api import AVNApi, ConverterApi
 from avnav_manager import AVNHandlerManager
 from avnav_util import *
@@ -77,9 +75,6 @@ def normalizedName(name):
     except:
         return name
 
-class AlarmInfo:
-    def __init__(self,prefix):
-        self.alarmSource=prefix
 
 class ApiImpl(AVNApi):
     CFGTYPE = 'cfg'
@@ -593,13 +588,20 @@ class ApiImpl(AVNApi):
     def getRunningAlarms(self):
         alarmhandler = self._getAlarmHandler()
         return list(alarmhandler.getAlarmsForApi(runningOnly=True).values())
-    def startAlarm(self, name, defaultCategory='critical', message=None, command=None):
+    def startAlarm(self, name,
+                   defaultCategory=AlarmConfig.C_CRITICAL,
+                   message=None,
+                   command=None,
+                   parameter=None,
+                   repeat=None):
         alarmhandler = self._getAlarmHandler()
         return alarmhandler.startAlarm(name,
                                        defaultCategory=defaultCategory,
                                        message=message,
                                        command=command,
-                                       info=AlarmInfo(self.prefix))
+                                       info=AlarmInfo(self.prefix),
+                                       parameter=parameter,
+                                       repeat=repeat)
 
     def getCfgJsonName(self):
         cfgName = self.CLIENTFILES.get(self.CFGTYPE)

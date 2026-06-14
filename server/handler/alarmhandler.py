@@ -34,6 +34,10 @@ from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
 
+class AlarmInfo:
+    def __init__(self,prefix):
+        self.alarmSource=prefix
+
 class AlarmConfig:
   C_INFO='info'
   C_CRITICAL='critical'
@@ -48,7 +52,7 @@ class AlarmConfig:
     self.name=name
     self.command=command
     self.parameter=parameter
-    self.repeat=int(repeat)
+    self.repeat=int(repeat) if repeat is not None else 1
     self.category=category
     self.sound=sound
     self.autoclean=autoclean
@@ -245,7 +249,7 @@ class AVNAlarmHandler(AVNWorker):
           break
     return config
 
-  def findAlarm(self,name,defaultCategory=None,command=None):
+  def findAlarm(self,name,defaultCategory=None,command=None,parameter=None,repeat=None):
     definedAlarms=self.param.get('Alarm')
     if definedAlarms is not None:
       for cmd in definedAlarms:
@@ -253,8 +257,16 @@ class AVNAlarmHandler(AVNWorker):
           rt=self.expandAlarmConfig(AlarmConfig.fromDict(cmd))
           if command is not None:
               rt.command=command
+          if parameter is not None:
+              rt.parameter=parameter
+          if repeat is not None:
+              rt.repeat=repeat
           return rt
-    return self.expandAlarmConfig(AlarmConfig(category=defaultCategory,name=name,command=command))
+    return self.expandAlarmConfig(AlarmConfig(category=defaultCategory,
+                                              name=name,
+                                              command=command,
+                                              parameter=parameter,
+                                              repeat=repeat))
 
   def _startAlarmCmd(self,alarmdef:AlarmConfig):
     if alarmdef.command is None:
@@ -357,7 +369,14 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
     return True
 
-  def startAlarm(self,name,defaultCategory=None,caller=None,message=None,ignoreMessage=False,info=None,command=None):
+  def startAlarm(self,name,defaultCategory=None,
+                 caller=None,
+                 message=None,
+                 ignoreMessage=False,
+                 info=None,
+                 command=None,
+                 parameter=None,
+                 repeat=None):
     """start a named alarm
     @param name: the name of the alarm
     @param defaultCategory: the default category of the alarm
@@ -365,28 +384,34 @@ class AVNAlarmHandler(AVNWorker):
     @param message: the message of the alarm
     @param ignoreMessage: ignore the message if there is a message configured in Avnav
     @param info: the info of the alarm - if this is set the alarm is considered to be external (SK)
+    @param command: the command to be called
+    @param parameter: the parameter for the command
+    @param repeat: the # of repetitions of the command
     """
-    cmd=self.findAlarm(name,defaultCategory,command=command)
-    if cmd is None:
-      AVNLog.error("no alarm \"%s\" configured", name)
-      self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
-      return False
-    if ignoreMessage and cmd.message is not None:
-        message=None
-    running=RunningAlarm(cmd,info=info,message=message if message is not None else cmd.message)
-    with self.__runningAlarmsLock:
-      existing=self.runningAlarms.get(name)
-      if existing is not None:
-        if (existing.info is None) != (info is None):
-            AVNLog.error("alarm %s cannot be changed from / to external ", name)
-            return False
-        if existing.message == message:
-            return True
-      self.runningAlarms[name]=running
-    self.callHandlers(running,True,caller)
-    self.navdata.updateChangeCounter(self.CHANGE_KEY)
-    self.wakeUp()
-    return True
+    try:
+        cmd=self.findAlarm(name,defaultCategory,command=command,parameter=parameter,repeat=repeat)
+        if cmd is None:
+          AVNLog.error("no alarm \"%s\" configured", name)
+          self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
+          return False
+        if ignoreMessage and cmd.message is not None:
+            message=None
+        running=RunningAlarm(cmd,info=info,message=message if message is not None else cmd.message)
+        with self.__runningAlarmsLock:
+          existing=self.runningAlarms.get(name)
+          if existing is not None:
+            if (existing.info is None) != (info is None):
+                if info is not None:
+                    AVNLog.error("alarm %s cannot be changed to external ", name)
+                    return False
+          self.runningAlarms[name]=running
+        self.callHandlers(running,True,caller)
+        self.navdata.updateChangeCounter(self.CHANGE_KEY)
+        self.wakeUp()
+        return True
+    except Exception as e:
+        AVNLog.error("error starting alarm %s: %s", name, e)
+        return False
 
   def stopAll(self,caller=None,ownOnly=False):
     '''stop all alarms'''
@@ -543,9 +568,15 @@ class AVNAlarmHandler(AVNWorker):
         return rt
     rt={'status':'ok'}
     if mode == "start":
-      message=AVNUtil.getHttpRequestParam(requestparam,"message")
-      category=AVNUtil.getHttpRequestParam(requestparam,'defaultCategory')
-      if not self.startAlarm(alarm,defaultCategory=category,message=message):
+      addParam={}
+      PARAMETERS=['message','defaultCategory','command','parameter','repeat']
+      for param in PARAMETERS:
+          addParam[param]=AVNUtil.getHttpRequestParam(requestparam,param)
+      source=AVNUtil.getHttpRequestParam(requestparam,"source")
+      if source is not None:
+          addParam['info']=AlarmInfo(source)
+      if not self.startAlarm(alarm,
+                             **addParam):
         rt['status']='error'
       return rt
     if not self.stopAlarm(alarm):
@@ -554,6 +585,3 @@ class AVNAlarmHandler(AVNWorker):
 
 
 avnav_handlerList.registerHandler(AVNAlarmHandler)
-
-
-
