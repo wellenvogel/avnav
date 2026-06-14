@@ -101,12 +101,10 @@ import urllib.parse
 import urllib.request
 import uuid
 from functools import reduce
-from wsgiref.util import request_uri
 
 from alarmhandler import AVNAlarmHandler, AlarmConfig
 from avnav_nmea import NMEAParser
 from avnrouter import AVNRouter, WpData
-from tiler_functions import version
 
 hasWebsockets=False
 try:
