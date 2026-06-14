@@ -7,6 +7,7 @@ import DB from './DialogButton';
 import cloneDeep from "clone-deep";
 import {IDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
+import Helper from "../util/helper";
 
 const OPTION_COMBINATIONS=[
     {
@@ -141,9 +142,11 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                 <div className="info"><span className="label">Page:</span>{props.page}</div>
                 <div className="selectCurrent" >
                     <div className="currentHeadline">Current Conditions</div>
+                    <div className={'dialogRow'}>
                     {props.handledOptions.map((option)=>{
                             return(
                                 <Checkbox className="modeSelect"
+                                          dialogRow={true}
                                           onClick={()=>{setMode(option)}}
                                           key={option}
                                           label={option}
@@ -152,6 +155,7 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                                 )
                             }
                     )}
+                    </div>
                 </div>
                 <div className="panelList">
                     <div className="panelHeadline">Panel Configurations</div>
@@ -160,8 +164,17 @@ const EditPageDialog=(props:EditPageDialogProps)=>{
                         <span className="label">{panel.basename}</span>
                         <div className="combinationFrame">
                         { getFilteredOptions(props.handledOptions).map((combination,index)=>{
+                            let isActive=true;
+                            for (const o of props.handledOptions){
+                                const current=currentOptions[o];
+                                const isRequired=combination.options.indexOf(o)>=0;
+                                if (isRequired !== current){
+                                    isActive=false;
+                                    break;
+                                }
+                            }
                             return(
-                                <Checkbox className="combinationSelect"
+                                <Checkbox className={Helper.concatsp("combinationSelect",isActive?'selectedItem':undefined)}
                                           onClick={()=>{setCombination(panel,index)}}
                                           key={combination.display}
                                           label={combination.display}

@@ -506,11 +506,14 @@ body{
 
 
   .editPanel {
-    margin-top: 0.3em;
+    display: flex;
+    align-items: center;
     border-bottom: @normalBorder;
     border-color: var(--avnav-border-color);
-    & >div{
-      display: inline-block;
+    .combinationFrame{
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
     }
     & >.label {
       text-align: left;
@@ -520,7 +523,7 @@ body{
   }
   .combinationSelect,.modeSelect{
       .label, .inputLabel {
-        width: 4em;
+        width: unset;
         word-break: break-word;
       }
   }
