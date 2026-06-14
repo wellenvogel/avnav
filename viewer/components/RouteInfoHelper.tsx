@@ -26,8 +26,9 @@
 
 import React, {useEffect, useState} from "react";
 import Formatter from '../util/formatter';
+// @ts-ignore
 import navdata from "../nav/navdata";
-import navobjects from "../nav/navobjects";
+import navobjects, {WayPoint} from "../nav/navobjects";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {useStateRef} from "../util/UiHelper";
@@ -36,30 +37,53 @@ import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogRow, DialogText} from 
 import {Checkbox, Radio} from "./Inputs";
 import ItemList from "./ItemList";
 import {useDialogContext} from "./DialogContext";
+// @ts-ignore
 import navcompute from "../nav/navcompute";
+import {IRouteInfoWithStatus, RoutePoint} from "../nav/routeobjects";
+import RouteEdit, {StateHelper} from "../nav/routeeditor";
 
-let RouteHandler=navdata.getRoutingHandler();
+const RouteHandler=navdata.getRoutingHandler();
+const activeRoute = new RouteEdit(RouteEdit.MODES.ACTIVE);
 
 export const INFO_ROWS=[
     {label:'name',value:'name'},
     {label:'points',value:'numPoints'},
-    {label:'length',value:'length',formatter:(v)=>{
+    {label:'length',value:'length',formatter:(v:number)=>{
         return Formatter.formatDistance(v)+" nm";
         }},
-    {label:'remain',value:'remain',formatter:(v)=>{
+    {label:'remain',value:'remain',formatter:(v:number)=>{
             return Formatter.formatDistance(v)+" nm";
         }},
-    {label:'next point',value:'nextTarget',formatter:(v)=>v.name},
-    {label:'leg from',value:'legfrom',formatter:(v)=>v.name},
-    {label:'leg to',value:'legto',formatter:(v)=>v.name},
-    {label: 'leg brg',value:'legbrg',formatter:(v)=>Formatter.formatDirection(v)+"°"},
-    {label: 'leg len',value:'legdst',formatter:(v)=>Formatter.formatDistance(v)+" nm"},
+    {label:'next point',value:'nextTarget',formatter:(v:any)=>v.name},
+    {label:'leg from',value:'legfrom',formatter:(v:any)=>v.name},
+    {label:'leg to',value:'legto',formatter:(v:any)=>v.name},
+    {label: 'leg brg',value:'legbrg',formatter:(v:any)=>Formatter.formatDirection(v)+"°"},
+    {label: 'leg len',value:'legdst',formatter:(v:any)=>Formatter.formatDistance(v)+" nm"},
+    {label: 'remain leg end',value: 'remainIdx',formatter:(v:any)=>Formatter.formatDistance(v)+" nm"},
+    {label: 'ttgo vmg',value:'ttgovmg',formatter:(v:any)=>Formatter.formatTimeDiff(v)},
+    {label: 'ttgo sog',value:'ttgosog',formatter:(v:any)=>Formatter.formatTimeDiff(v)}
     ];
-export const getRouteInfo = async (routeItem, opt_point) => {
+export interface RouteItem{
+    name:string;
+
+}
+export interface RouteInfo{
+    remain?: number;
+    length?: number;
+    numPoints?: number;
+    legbrg?: number;
+    legdst?: number;
+    legto?: RoutePoint;
+    legfrom?: RoutePoint;
+    remainIdx?: number;
+    ttgovmg?:number; //ttgo to idx in sec based on vmg
+    ttgosog?:number;
+}
+export const getRouteInfo = async (routeItem:RouteItem, opt_point:WayPoint) => {
     if (!routeItem || ! routeItem.name) throw new Error("missing route name");
     const route = await RouteHandler.fetchRoute(routeItem.name);
-    let info = RouteHandler.getInfoFromRoute(route);
-    let rt = {
+    const info = RouteHandler.getInfoFromRoute(route);
+    const rt:RouteInfo = {
         length: info.length,
         numPoints: info.numpoints,
     }
@@ -80,17 +104,42 @@ export const getRouteInfo = async (routeItem, opt_point) => {
                 rt.legto=route.points[idx];
             }
         }
+        const activeState=activeRoute.getState();
+        if (StateHelper.isActiveRoute(activeState) && StateHelper.isSameRoute(activeState,route)) {
+            const target=StateHelper.activeTarget(activeState);
+            const targetIdx=route.getIndexFromPoint(target);
+            if (idx >= targetIdx && targetIdx >= 0){
+                const targetToIdx=route.computeLength(targetIdx,rhumbLine,idx);
+                const toTarget=globalStore.getData(keys.nav.wp.distance);
+                rt.remainIdx=toTarget+targetToIdx;
+                const vmg=globalStore.getData(keys.nav.wp.vmg);
+                if (vmg && vmg >0){
+                    rt.ttgovmg=rt.remainIdx/vmg;
+                }
+                const sog=globalStore.getData(keys.nav.gps.speed);
+                if (sog && sog >0){
+                    rt.ttgosog=rt.remainIdx/sog;
+                }
+            }
+        }
     }
     return rt;
 
 }
 
-const STATE_TEXT={
+const STATE_TEXT:Record<string, string> = {
     'noserver':'[new] ',
     'equal': '[equ] ',
     'different':'[mod] '
 }
-const RouteState=({name,action,setAction,allowUpload,status})=>{
+interface RouteStateProps{
+    name:string,
+    allowUpload?:boolean,
+    action:string,
+    setAction:(nv:string)=>void,
+    status?:string,
+}
+const RouteState=({name,action,setAction,allowUpload,status}:RouteStateProps)=>{
     return <DialogRow>
         <Radio
             dialogRow={true}
@@ -101,19 +150,23 @@ const RouteState=({name,action,setAction,allowUpload,status})=>{
                 {label:'keep local',value:'keep'}
             ]}
             value={action}
-            onChange={(nv)=>setAction(nv)}
+            onChange={(nv:string)=>setAction(nv)}
         ></Radio>
     </DialogRow>
 }
 
-export const RouteSyncDialog=({deleteLocal,showEmpty})=>{
+export interface RouteSyncDialogProps{
+    deleteLocal?:boolean;
+    showEmpty?:boolean;
+}
+export const RouteSyncDialog=({deleteLocal,showEmpty}:RouteSyncDialogProps)=>{
     const [list,setList,listRef]=useStateRef([]);
     const [loading,setLoading]=useState(true);
     const [overwrite,setOverwrite]=useState(false);
-    const [itemActions,setItemActions]=useState({});
+    const [itemActions,setItemActions]=useState<Record<string, string>>({});
     const dialogContext = useDialogContext();
-    const setDefaults=(items,allowOv)=>{
-        setItemActions((old)=> {
+    const setDefaults=(items:IRouteInfoWithStatus[],allowOv:boolean)=>{
+        setItemActions((old:Record<string,string>)=> {
             const rt={...old};
             (items || []).forEach((item) => {
                 const ov=rt[item.name];
@@ -138,7 +191,7 @@ export const RouteSyncDialog=({deleteLocal,showEmpty})=>{
     }
     useEffect(() => {
         RouteHandler.checkLocalRoutes(deleteLocal)
-            .then((rtlist)=>{
+            .then((rtlist:IRouteInfoWithStatus[])=>{
                 setLoading(false);
                 if (! rtlist || rtlist.length<1) {
                     if (! showEmpty) dialogContext.closeDialog();
@@ -148,7 +201,7 @@ export const RouteSyncDialog=({deleteLocal,showEmpty})=>{
                     setDefaults(rtlist,overwrite);
                 }
             })
-            .catch((err)=>{
+            .catch((err:any)=>{
                 Toast(err);
                 setLoading(false);
             })
@@ -199,7 +252,7 @@ export const RouteSyncDialog=({deleteLocal,showEmpty})=>{
                 DBCancel(),
                 DBOk(async ()=>{
                     const errors=[];
-                    for (let route of listRef.current) {
+                    for (const route of listRef.current) {
                         try {
                             const action = itemActions[route.name] || 'delete';
                             if (action === 'delete') {

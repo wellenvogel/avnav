@@ -51,6 +51,7 @@ import {useDialogContext} from "./DialogContext";
 import {ViewDialog} from "./ViewDialog";
 import {iconClasses} from './Icons';
 import ButtonDefs from "./ButtonDefs";
+import {useTimer} from "../util/UiHelper";
 
 NavHandler.getRoutingHandler();
 
@@ -270,7 +271,12 @@ GuardedFeatureListDialog.propTypes=FeatureListDialog.propTypes;
 const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
     const [extendedInfo, setExtendedInfo] = useState({});
     const dialogContext = useDialogContext();
-    useEffect(() => {
+    const hasExtended=INFO_FUNCTIONS[featureInfo?.getType()]
+    const timer=useTimer((seq)=>{
+        fillExtendedInfo(false);
+        timer.startTimer(seq);
+    },1000,hasExtended,hasExtended);
+    const fillExtendedInfo=(withToast)=>{
         if (! featureInfo) return;
         let infoFunction = INFO_FUNCTIONS[featureInfo.getType()]
         let infoCoordinates = featureInfo.point;
@@ -282,8 +288,13 @@ const FeatureInfoDialog = ({featureInfo,additionalActions,cancelAction}) => {
                 .then((info) => {
                     setExtendedInfo(info)
                 })
-                .catch((error) => Toast(error));
+                .catch((error) => {
+                    if (withToast)Toast(error)
+                });
         }
+    }
+    useEffect(() => {
+        fillExtendedInfo(true);
     }, []);
     if (! featureInfo){
         dialogContext.closeDialog();

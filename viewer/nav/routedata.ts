@@ -2,7 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 
-import routeobjects, {isServerName, Leg, Route, RouteInfo, RoutingMode} from './routeobjects';
+import routeobjects, {IRouteInfoWithStatus, isServerName, Leg, Route, RouteInfo, RoutingMode} from './routeobjects';
 import navobjects, {WayPoint} from './navobjects';
 import Formatter from '../util/formatter';
 // @ts-ignore
@@ -1082,7 +1082,7 @@ class  RouteData {
     /**
      * create a list of all local routes by comparing them to the server routes
      * for each route inlude the name and a status ('noserver','equal','different')
-     * @return {Promise<void>}
+     * @return {Promise<IRouteInfoWithStatus>}
      */
     async checkLocalRoutes(deleteEqual:boolean) {
         const routes=await this.listRoutes();
@@ -1090,7 +1090,7 @@ class  RouteData {
         for (const route of routes){
             if (routeobjects.isServerName(route.name)) continue;
             const serverName=routeobjects.SERVER_PREFIX+routeobjects.nameToBaseName(route.name);
-            const status={...route,status:'noserver',serverName:serverName};
+            const status:IRouteInfoWithStatus={...route,status:'noserver',serverName:serverName};
             for (const other of routes){
                 if (other.name === serverName) {
                     try{

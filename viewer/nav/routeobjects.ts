@@ -712,13 +712,17 @@ export class Route {
      * @param opt_useRhumbLine - if true - use rhum line computations
      * @returns {number}
      */
-    computeLength(startIdx:number,opt_useRhumbLine?:boolean){
+    computeLength(startIdx:number,opt_useRhumbLine?:boolean,opt_endIdx?:number):number {
         let rt=0;
         if (startIdx < 0) startIdx=0;
         if (this.points.length < (startIdx+2)) return rt;
+        let end=this.points.length-1;
+        if (opt_endIdx && opt_endIdx >0 && opt_endIdx < this.points.length) {
+            end=opt_endIdx;
+        }
         let last=this.points[startIdx];
         startIdx++;
-        for (;startIdx<this.points.length;startIdx++){
+        for (;startIdx<=end;startIdx++){
             const next=this.points[startIdx];
             const dst=NavCompute.computeDistance(last,next,opt_useRhumbLine);
             rt+=dst.dts;
@@ -757,8 +761,27 @@ export class Measure extends Route{
         return Route.TYPE.measure;
     }
 }
-
-export class RouteInfo {
+export interface IRouteInfo{
+    type:string;
+    name:string;
+    server:boolean;
+    length:number;
+    numpoints:number;
+    time:number;
+    active:boolean;
+    extension:string;
+    displayName:string;
+    downloadName:string;
+    canDownload:boolean;
+    canDelete:boolean;
+    isEditing:boolean;
+    checkPrefix:string;
+}
+export interface IRouteInfoWithStatus extends IRouteInfo{
+    status?:string,
+    serverName?:string
+}
+export class RouteInfo implements IRouteInfo {
     type:string;
     name:string;
     server:boolean;
