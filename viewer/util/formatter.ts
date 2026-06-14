@@ -3,7 +3,7 @@
  */
 
 // @ts-ignore
-import navcompute, {DEPTH_UNITS, unitToFactor} from '../nav/navcompute';
+import navcompute, { unitToFactor} from '../nav/navcompute';
 import Helper, {stringEnumValues} from "./helper";
 import {ParametersWithName} from "../api/api.interface";
 
@@ -347,6 +347,19 @@ const formatDate:TFormatTime=function(curDate){
 };
 formatDate.parameters=[];
 
+export type TFormatTimeDiff=FormatterBase &{
+    (tdiff:number):string;  //tdiff in seconds
+}
+const formatTimeDiff:TFormatTimeDiff=function (tdiff:number):string{
+    const invalid= "--:--:--";
+    if (tdiff == null) return invalid;
+    if (isNaN(tdiff)) tdiff=Number(tdiff);
+    if (isNaN(tdiff)) return invalid;
+    const hrs=Math.floor(tdiff/3600);
+    const min=Math.floor((tdiff-3600*hrs)/60);
+    const sec=Math.floor((tdiff-3600*hrs-60*min));
+    return formatDecimal(hrs)+":"+formatDecimal(min,2,0,false,true)+":"+formatDecimal(sec,2,0,false,true);
+}
 export type TFormatString = FormatterBase &{
     (data:string):string
 }
@@ -421,5 +434,6 @@ export default {
     formatPressure,
     formatTemperature,
     skTemperature,
-    skPressure
+    skPressure,
+    formatTimeDiff
 };
