@@ -12,9 +12,9 @@ import React, {Children, cloneElement, MutableRefObject, useEffect, useRef, useS
 import {KeyHelper} from "../util/keys";
 import {useStateRef} from "../util/UiHelper";
 import {StoreCallback} from "../util/store";
+import {StoreKeys} from "../api/api.interface";
 
 
-export type StoreKeys=Record<string, string>;
 export interface DynamicProps extends Record<string, any>,Options{
 }
 export type UpdateFunction<T=DynamicProps>=(props:DynamicProps, storeKeys:StoreKeys) => T;

@@ -329,7 +329,56 @@ export const loadJs=(url:string|URL)=>{
     fileref.setAttribute("src", nUrl);
     document.head.appendChild(fileref);
 }
-export const loadOrUpdateCss=(url?:string|URL,id?:string)=>{
+const DATA_NAME='data-avnavcssprio';
+/**
+ * find the latest CSS element with lower or similar priority
+ * @param type
+ * @param priority
+ * @returns [element,before]
+ */
+const findCss=(priority?:number):[Element,boolean]=>{
+    const elements=document.head.querySelectorAll(`[${DATA_NAME}]`);
+    const elementsForSort=[];
+    for (let i=0; i<elements.length;i++){
+        const el=elements[i];
+        const prio=el.getAttribute(DATA_NAME);
+        if (prio == undefined) continue;
+        const nPrio=Number(prio);
+        if (isNaN(nPrio)) continue;
+        elementsForSort.push({el:el,prio:nPrio});
+    }
+    if (elementsForSort.length <1){
+        return [undefined,false]
+    }
+    //sort higher prio first (lowest prio at the end)
+    elementsForSort.sort((a, b) => b.prio - a.prio);
+    //with no prio we insert at the beginning (i.e. least important)
+    if (priority == undefined){
+        return [elementsForSort[0].el,true];
+    }
+    for (const se of elementsForSort){
+        if (se.prio < priority){
+            return [se.el,true]; //before this one
+        }
+    }
+    //we did not find any lower priority - so we inject at the end
+    return [elementsForSort[elementsForSort.length-1].el,false];
+}
+const injectHeadElement=(element:Element,priority?:number)=>{
+    const [existing,before]=findCss(priority);
+    if (! existing) {
+        document.head.appendChild(element);
+    }
+    else{
+        if (before){
+            existing.before(element);
+        }
+        else{
+            existing.after(element);
+        }
+    }
+}
+export const loadOrUpdateCss=(url?:string|URL,id?:string,priority?:number)=>{
     if (id){
         const existing= document.head.querySelector('#' + id) as HTMLLinkElement;
         if (existing && existing.href){
@@ -350,10 +399,13 @@ export const loadOrUpdateCss=(url?:string|URL,id?:string)=>{
     const nUrl=injectDateIntoUrl(new URL(url,window.location.href));
     fileref.setAttribute("href", nUrl);
     if (id) fileref.setAttribute("id",id);
-    document.head.appendChild(fileref);
+    if (priority !== undefined) {
+        fileref.setAttribute(DATA_NAME, priority+"");
+    }
+    injectHeadElement(fileref,priority);
     return true;
 }
-export const createOrUpdateStyleSheet=(txt:string,id:string)=>{
+export const createOrUpdateStyleSheet=(txt:string,id:string,priority?:number)=>{
     if (! id) return;
     const existing=document.head.querySelector('#'+id);
     if (existing){
@@ -363,9 +415,18 @@ export const createOrUpdateStyleSheet=(txt:string,id:string)=>{
         const sheet=document.createElement('style');
         sheet.setAttribute("id",id);
         sheet.setAttribute("type","text/css");
+        if (priority !== undefined){
+            sheet.setAttribute(DATA_NAME, priority+"");
+        }
         sheet.innerHTML=txt;
-        document.head.appendChild(sheet);
+        injectHeadElement(sheet,priority);
     }
+}
+export const CSSPRIORITIES={
+    USER:10,
+    LAYOUT: 20,
+    PLUGIN: 30,
+    ADDON: 40,
 }
 export const avNavVersion=()=>{
     let version=Version;

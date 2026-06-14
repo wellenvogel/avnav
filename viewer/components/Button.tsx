@@ -1,6 +1,6 @@
 import React, {useCallback, useRef} from 'react';
 import {useKeyEventHandlerPlain, useTimer} from '../util/UiHelper';
-import {DynamicProps, dynamicWrapper, Options, StoreKeys, UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
+import {DynamicProps, dynamicWrapper, Options,UpdateFunction, useStore, useStoreState} from "../hoc/Dynamic";
 import Helper, {setav} from "../util/helper";
 import {IDialogContext, useDialogContext} from "./DialogContext";
 import {CopyAware} from "../util/CopyAware";
@@ -10,7 +10,7 @@ import {ButtonDescription} from "./ButtonList";
 import {Icon} from "./Icons";
 import keys, {ButtonFontSizeFactor} from "../util/keys";
 import {KeyComponents} from "../util/keyhandler";
-import {ButtonBase} from "../api/api.interface";
+import {ButtonBase, StoreKeys} from "../api/api.interface";
 
 
 export type ButtonEventBase=Record<string, any>;

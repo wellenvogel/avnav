@@ -35,6 +35,7 @@ import * as OpenLayers from 'ol/index';
 import {PageType, PluginPageType} from "../util/pageids";
 import {KeyMappings} from "../util/keyhandler";
 import {PropertyValue} from "../util/keys";
+import { DynamicButtonProps} from "../components/Button";
 
 
 export type FormatterFunction=(value:any,...args: any[])=>string;
@@ -82,6 +83,7 @@ export interface LatLon{
     lon:number;
 }
 
+export type StoreKeys=Record<string, string>;
 
 
 
@@ -187,7 +189,7 @@ export interface WidgetDefinition{
      * keys in the store (e.g. "nav.gps.position") - they
      * will be replaced by the values in the store
      */
-    storeKeys?:Record<string,string>;
+    storeKeys?:StoreKeys;
     /**
      * default caption for the widget
      */
@@ -538,8 +540,8 @@ export interface UserButtonBase extends ButtonBase{
                                         background-image: url('someicon.svg')
                                       }
                                     */
-    storeKeys?:Record<string, string>; //can control visible/disabled/toogle
-    updateFunction?:(values:object)=>object; //translate store values
+    storeKeys?:StoreKeys; //can control visible/disabled/toogle
+    updateFunction?:(values:object,storeKeys:StoreKeys)=>object; //translate store values
 }
 
 export interface UserButton extends UserButtonBase{
@@ -555,7 +557,7 @@ export interface UserApp{
                                     //if set the url is ignored but the window is populated
                                     //with this html
                                     //the return can be an HTML string
-    storeKeys?:Record<string, string>;
+    storeKeys?:StoreKeys;
                                     //if set the parameters for the html function
                                     //will be read from the store
                                     //and it is called again if those values change
@@ -742,11 +744,14 @@ export interface ApiV2 extends Api{
     modules():Modules;
 }
 
-
+export interface LayoutSettings{
+    buttons?: (Partial<DynamicButtonProps> &{name:string})[]
+}
 export interface LayoutData {
     keys?: KeyMappings;
     css?: string;
     layoutVersion: string | number;
     widgets?: Record<string, any>;
     properties?: Record<string, PropertyValue>;
+    settings?: LayoutSettings;
 }

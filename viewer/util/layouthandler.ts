@@ -8,7 +8,7 @@ import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 import defaultLayout from '../layout/default.json';
 // @ts-ignore
 import cloneDeep from "clone-deep";
-import Helper, {getav, valueof} from "./helper";
+import Helper, {createOrUpdateStyleSheet, CSSPRIORITIES, getav, valueof} from "./helper";
 import {PAGEIDS, PageType} from "./pageids";
 import {Item} from "./itemFunctions";
 import {LayoutData} from "../api/api.interface";
@@ -17,6 +17,7 @@ import {SyntheticEvent} from "react";
 import {IHistory} from "./history";
 import {InternalWidgetDefinition} from "./types";
 import ButtonDefs from "../components/ButtonDefs";
+import {buildButtonStyles} from "./Addons";
 
 export enum ACTIONS {
     ACTION_MOVE = 1,
@@ -517,7 +518,6 @@ class LayoutHandler{
     private temporaryOptions: LayoutOptionFlags;
     private actions: LayoutTransaction[];
     private currentTransaction: LayoutTransaction;
-    private styleSheet: HTMLStyleElement;
     private savedLayout: LayoutAndName;
     storeProviderId: number;
     private allowedLayoutProperties: Record<string,boolean>;
@@ -530,9 +530,6 @@ class LayoutHandler{
         this.temporaryOptions={}; //options being set during edit
         this.actions=[];
         this.currentTransaction=undefined;
-        this.styleSheet=document.createElement("style");
-        this.styleSheet.setAttribute("id","layoutStyle");
-        document.head.appendChild(this.styleSheet);
         this.savedLayout=undefined;
         this.storeProviderId = globalStore.registerProvider(
             (key) => {
@@ -603,14 +600,23 @@ class LayoutHandler{
         this.resetActions();
         globalStore.storeData(keys.gui.global.layoutEditing,on);
     }
+    _configToCss(layout:LayoutData){
+        let rt='';
+        const buttons=layout?.settings?.buttons;
+        if (buttons && Array.isArray(buttons)){
+            for (const button of buttons){
+                rt+=buildButtonStyles(button);
+            }
+        }
+        return rt;
+    }
     _setLayout(layout:LayoutData){
         this.layout=layout;
+        let css=this._configToCss(layout);
         if (layout && layout.css){
-            this.styleSheet.textContent=layout.css;
+            css+=layout.css;
         }
-        else{
-            this.styleSheet.textContent="";
-        }
+        createOrUpdateStyleSheet(css,'layoutStyle',CSSPRIORITIES.LAYOUT);
     }
     setLayoutAndName(layout:LayoutData,name:string,opt_activate?:boolean){
         this.name=name;

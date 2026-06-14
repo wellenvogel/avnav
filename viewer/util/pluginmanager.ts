@@ -26,7 +26,7 @@ import Toast from "../components/Toast";
 import globalstore from "./globalstore";
 import keys from "./keys";
 import {ApiV2} from "./api.impl";
-import {Index, loadJs, loadOrUpdateCss, urlToString} from "./helper";
+import {CSSPRIORITIES, Index, loadJs, loadOrUpdateCss, urlToString} from "./helper";
 // @ts-ignore
 import widgetFactory from "../components/WidgetFactory";
 import {listItems} from "./itemFunctions";
@@ -614,7 +614,7 @@ class Pluginmanager{
                 const exixstingCss = this.css[pluginName];
                 if (exixstingCss !== plugin.css.timestamp){
                     base.log("loading/updating css for " + pluginName);
-                    loadOrUpdateCss(plugin.css.url, cssid);
+                    loadOrUpdateCss(plugin.css.url, cssid,pluginName===USERNAME?CSSPRIORITIES.USER:CSSPRIORITIES.PLUGIN);
                     this.css[pluginName]=plugin.css.timestamp;
                     hasUpdates=true
                 }

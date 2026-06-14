@@ -4,12 +4,12 @@ import keys from './keys';
 import Requests from './requests';
 import base from "../base";
 import {UserButtonProps} from "./api.impl";
-import Helper, {createOrUpdateStyleSheet} from "./helper";
+import Helper, {createOrUpdateStyleSheet, CSSPRIORITIES} from "./helper";
 import {PluginPage, UserApp, UserButton, UserButtonBase} from "../api/api.interface";
 import {StoreCallback} from "./store";
 import {PAGEIDS, PLUGINPAGES} from "./pageids";
 import {ButtonAddonType, DynamicButtonProps} from "../components/Button";
-import {StoreKeys} from "../hoc/Dynamic";
+import {StoreKeys} from '../api/api.interface'
 import {ReactNode} from "react";
 
 export interface AddonProps extends UserApp {
@@ -481,17 +481,18 @@ const removeAddon=(name:string)=>{
         })
 };
 const STYLE_NAME='avnav-addon-styles';
-const buildButtonStyles=(button:UserButtonBase,name:string,title?:string):string=>{
+export const buildButtonStyles=(button:UserButtonBase,name?:string,title?:string):string=>{
+    if (! name) name=button.name;
     const label = (button?.shortText as string)||title;
     let style="";
     if (button?.longText){
-        style+=`.longText.${name}::after{\ncontent:"${button.longText}";\n}\n`;
+        style+=`.button.longText.${name}::after{\ncontent:"${button.longText}";\n}\n`;
     }
     if (label){
-        style+=`.${name}::after{\ncontent:"${label.substring(0,7)}";\n}\n`;
+        style+=`.button.${name}::after{\ncontent:"${label.substring(0,7)}";\n}\n`;
     }
     if (button?.icon){
-        style+=`.${name} .icon{\nbackground-image: url("${button.icon}");\n}\n`;
+        style+=`.button.${name} .icon{\nbackground-image: url("${button.icon}");\n}\n`;
     }
     return style;
 }
@@ -515,7 +516,7 @@ const updateAddonCss=()=>{
         const styles=buildButtonStyles(button,name);
         if (styles) rulesTxt+=styles;
     }
-    createOrUpdateStyleSheet(rulesTxt,STYLE_NAME);
+    createOrUpdateStyleSheet(rulesTxt,STYLE_NAME,CSSPRIORITIES.ADDON);
 }
 
 export default  {

@@ -2,7 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import {StoreKeys, UpdateFunction, useStore, useStoreState} from '../hoc/Dynamic';
+import {UpdateFunction, useStore, useStoreState} from '../hoc/Dynamic';
 import ItemList, {ItemListProps} from '../components/ItemList';
 import globalStore from '../util/globalstore';
 import keys from '../util/keys';
@@ -16,8 +16,6 @@ import {
     showPromiseDialog
 } from '../components/OverlayDialog';
 import Compare from "../util/compare";
-// @ts-ignore
-import navdata from "../nav/navdata";
 import {AisInfoWithFunctions, aisNearestAction} from "../components/AisInfoDisplay";
 import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
@@ -32,6 +30,7 @@ import {InjectMainMenu, useInitialButton} from "./MainNav";
 import AisPageButtons from "./AisPageButtons";
 import {ButtonDef, updateButtons} from "../components/Button";
 import {AisItem as AisItemInterface} from '../nav/aisformatter';
+import {StoreKeys} from "../api/api.interface";
 
 const aisInfos=[
     [ 'cpa', 'tcpa', 'bcpa', 'age'],

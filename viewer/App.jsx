@@ -379,6 +379,10 @@ class App extends React.Component {
                 console.log("splitkeys.json: "+error);
             }
         ));
+        //ensure addonreader before layouthandler
+        //to have layout css after addoncss
+        this.addonReader=new addons.QueryHandler();
+        this.addonReader.start();
         this.pendingActions.push(
             new Promise(resolve => {
                 const action=()=>LayoutHandler.loadStoredLayout(true)
@@ -494,8 +498,6 @@ class App extends React.Component {
             this.checkReload();
         },[keys.nav.gps.version])
         this.titleSet=false;
-        this.addonReader=new addons.QueryHandler();
-        this.addonReader.start();
     }
     newDeviceHandler(){
         try{

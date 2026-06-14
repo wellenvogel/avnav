@@ -6,7 +6,7 @@ import base from "../base";
 // @ts-ignore
 import cloneDeep from "clone-deep";
 import globalstore from "./globalstore";
-import {StoreKeys} from "../hoc/Dynamic";
+import {StoreKeys} from "../api/api.interface";
 import {DataChangedFunction} from "./store";
 
 export type TimerCallback=(sequence:number)=>void
