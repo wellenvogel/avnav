@@ -191,12 +191,17 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
             }
             // TODO: This is actually VMC not VMG
             rt.markerVmg = gps.speed * Math.cos(Math.PI / 180 * (rt.markerCourse - gps.course));
-            if (gps.rtime && rt.markerVmg > 0) {
-                let targetTime = gps.rtime.getTime() + rt.markerDistance / rt.markerVmg * 1000;
-                let targetDate = new Date(Math.round(targetTime));
-                rt.markerEta = targetDate;
-            } else {
-                rt.markerEta = null;
+            rt.markerEta=undefined;
+            if ( rt.markerVmg > 0) {
+                let targetTime = rt.markerDistance / rt.markerVmg;
+                rt.markerTtgVmg=targetTime;
+                if (gps.epochms != null) {
+                    let targetDate = new Date(Math.round((gps.epochms+targetTime)*1000));
+                    rt.markerEta = targetDate;
+                }
+            }
+            if (gps.speed != null && gps.speed > 0) {
+                rt.markerTtgSog=rt.markerDistance/gps.speed;
             }
             if (opt_start) {
                 rt.markerXte = useRhumbLine ?

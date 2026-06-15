@@ -128,7 +128,11 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     if (status) {
         gpsdata.valid=(data.lat !== null && data.lat !== undefined && data.lon !== null && data.lon !== undefined );
         gpsdata.rtime = undefined;
-        if (data.time !== null && data.time !== undefined) gpsdata.rtime = new Date(data.time);
+        gpsdata.epochms=undefined;
+        if (data.time !== null && data.time !== undefined) {
+            gpsdata.rtime = new Date(data.time);
+            gpsdata.epochms=gpsdata.rtime.getTime();
+        }
         delete data.time;
         gpsdata.course = data.course;
         delete data.course;

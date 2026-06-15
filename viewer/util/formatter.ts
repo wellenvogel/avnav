@@ -358,7 +358,7 @@ const formatTimeDiff:TFormatTimeDiff=function (tdiff:number):string{
     const hrs=Math.floor(tdiff/3600);
     const min=Math.floor((tdiff-3600*hrs)/60);
     const sec=Math.floor((tdiff-3600*hrs-60*min));
-    return formatDecimal(hrs)+":"+formatDecimal(min,2,0,false,true)+":"+formatDecimal(sec,2,0,false,true);
+    return formatDecimal(hrs,2,0,false,true)+":"+formatDecimal(min,2,0,false,true)+":"+formatDecimal(sec,2,0,false,true);
 }
 export type TFormatString = FormatterBase &{
     (data:string):string

@@ -166,7 +166,8 @@ const keys:Record<string,KeyType>={
             position: new D("an instance of navobjects.Point"),
             course: V,
             speed: V,
-            rtime: V,
+            rtime: V, //Date object
+            epochms:V, //received GPS time in ms
             valid: K,
             windAngle: V,
             windSpeed: V,
@@ -217,8 +218,10 @@ const keys:Record<string,KeyType>={
             distance: V,
             distanceRhumbLine: V,
             distanceGreatCircle: V,
-            eta: V,
+            eta: V, //based on vmg
             xte: V,
+            ttgvmg: V, //seconds
+            ttgsog: V,
             vmg: V,
             position: V,
             name: V,
@@ -234,7 +237,9 @@ const keys:Record<string,KeyType>={
             numPoints: V,
             len:V,
             remain: V,
-            eta: V,
+            eta: V, //based on vmg
+            ttgvmg: V,
+            ttgsog: V,
             nextCourse: V,
             isApproaching: V
         },

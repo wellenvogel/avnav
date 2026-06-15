@@ -62,8 +62,7 @@ const NavData=function(){
         this.mapAverageHdt.reset(globalStore.getData(keys.properties.courseAverageLength));
         this.mapAverageHdm.reset(globalStore.getData(keys.properties.courseAverageLength));
     },[keys.gui.global.propertiesLoaded])
-    let self=this;
-    this.changeCallback=new Callback((keys)=>{self.computeValues();});
+    this.changeCallback=new Callback((keys)=>{this.computeValues();});
     globalStore.register(this.changeCallback,
         KeyHelper.flattenedKeys(activeRoute.getStoreKeys())
             .concat(
@@ -97,6 +96,8 @@ NavData.prototype.computeValues=function() {
             markerEta: keys.nav.wp.eta,
             markerXte: keys.nav.wp.xte,
             markerVmg: keys.nav.wp.vmg,
+            markerTtgVmg: keys.nav.wp.ttgvmg,
+            markerTtgSog: keys.nav.wp.ttgsog,
             markerWp: keys.nav.wp.position,
             markerServer: keys.nav.wp.server,
             anchorDirection: keys.nav.anchor.direction,
@@ -109,6 +110,8 @@ NavData.prototype.computeValues=function() {
             routeLen: keys.nav.route.len,
             routeRemain: keys.nav.route.remain,
             routeEta: keys.nav.route.eta,
+            routeTtgVmg: keys.nav.route.ttgvmg,
+            routeTtgSog: keys.nav.route.ttgsog,
             routeNextCourse: keys.nav.route.nextCourse,
             isApproaching: keys.nav.route.isApproaching,
             wpName: keys.nav.wp.name
@@ -163,20 +166,23 @@ NavData.prototype.computeValues=function() {
         let currentIndex = curRoute.getIndexFromPoint(data.markerWp);
         if (currentIndex < 0) currentIndex = 0;
         data.routeRemain = curRoute.computeLength(currentIndex,useRhumbLine) + data.markerDistance;
-        let routetime = gps.rtime ? gps.rtime.getTime() : 0;
-        if (data.markerVmg && data.markerVmg > 0) {
-            routetime += data.routeRemain / data.markerVmg  * 1000; //time in ms
+        let routetime = gps.epochms;
+        if (data.markerVmg && data.markerVmg > 0 && routetime != null) {
+            data.routeTtgVmg=data.routeRemain / data.markerVmg;
+            routetime += data.routeTtgVmg * 1000;
             let routeDate = new Date(Math.round(routetime));
             data.routeEta = routeDate;
         }
         if (gps.valid) {
+            if (gps.speed != null && gps.speed > 0) {
+                data.routeTtgSog = data.routeRemain/gps.speed;
+            }
             if (data.routeNextWp) {
                 let dst = NavCompute.computeDistance(gps, data.routeNextWp);
                 data.routeNextCourse = dst.course;
             }
         }
     }
-    let self=this;
     data.wpName=data.markerWp ? data.markerWp.name : '';
     data.directionMode='cog';
     data.isSteady=false;
@@ -235,7 +241,7 @@ NavData.prototype.computeValues=function() {
         globalStore.storeMultiple(
             data,
             storeWriteKeys
-            , self.changeCallback);
+            , this.changeCallback);
     }, 0);
 };
 
