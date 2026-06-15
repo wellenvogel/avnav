@@ -15,6 +15,9 @@ import {Icon} from "./Icons";
 const STORE_KEYS={
     isApproaching: keys.nav.route.isApproaching,
     routeName: keys.nav.route.name,
+    ttgsog: keys.nav.route.ttgsog,
+    ttgvmg: keys.nav.route.ttgvmg,
+    epochms: keys.nav.gps.epochms,
     eta: keys.nav.route.eta,
     remain: keys.nav.route.remain,
     nextCourse: keys.nav.route.nextCourse,
@@ -24,7 +27,13 @@ const EDITABLE={
     legacy:{type:'BOOLEAN',
         displayName:'legacy',
         default:false,
-        description:"color the complete widget depending on the target state instead of only a badge"}
+        description:"color the complete widget depending on the target state instead of only a badge"},
+    sog:{
+        type:'BOOLEAN',
+        displayName:'use sog',
+        default:false,
+        description: "use SOG to compute the ETA (use VMG if unchecked)"
+    }
 }
 
 interface SecondRowProps{
@@ -32,10 +41,11 @@ interface SecondRowProps{
     eta?:string,
     approach?:boolean,
     small?:boolean,
+    sog?:boolean,
 }
-const SecondRow=({remain,eta,approach,small}:SecondRowProps)=>{
+const SecondRow=({remain,eta,approach,small,sog}:SecondRowProps)=>{
     return <div className={"secondRow"}>
-        {(approach && ! small) && <Icon />}
+        {(! small) && (approach?<Icon />:<div className={"eta label"}>{sog?'ETA-SOG':'ETA-VMG'}</div>)}
         {(eta !== undefined) && <div className="routeEta">{eta}</div>}
         {(approach && small) && <Icon />}
         {
@@ -56,10 +66,16 @@ const ActiveRouteWidget =(props:ActiveRouteWidgetProps)=>{
         let classes = "activeRouteWidget";
         const approaching=props.isApproaching;
         if (approaching && props.legacy) classes += " approach ";
+        let eta='--:--:--';
+        const ttg=props.sog?props.ttgsog:props.ttgvmg;
+        if (props.epochms != null && ttg != null && ttg > 0){
+            const dt=new Date(props.epochms+ttg*1000);
+            eta=Formatter.formatTime(dt);
+        }
         const display={
             name:routeobjects.nameToBaseName(props.routeName),
             remain: Formatter.formatDistance(props.remain),
-            eta: Formatter.formatTime(props.eta),
+            eta: eta,
             next: Formatter.formatDirection(props.nextCourse),
         };
         const isServer=routeobjects.isServerName(props.routeName);
@@ -69,12 +85,12 @@ const ActiveRouteWidget =(props:ActiveRouteWidgetProps)=>{
             <WidgetFrame {...props} addClass={classes} caption="RTE" unit={isServer?'server':'local'} resizeSequence={resizeSequence} disconnect={!isServer}>
                 <div className={Helper.concatsp("widgetData",small?"small":undefined)}>
                     <div className="routeName">{display.name}</div>
-                    {small && <SecondRow eta={display.eta} approach={approaching && ! props.legacy} remain={display.remain} small={small} />}
+                    {small && <SecondRow eta={display.eta} sog={props.sog} approach={approaching && ! props.legacy} remain={display.remain} small={small} />}
                     {!small && <div className="routeRemain">
                         <span className="routeRemain">{display.remain}</span>
                         <span className='unit'>nm</span>
                     </div>}
-                    {!small && <SecondRow eta={display.eta} approach={approaching && ! props.legacy} small={small} />}
+                    {!small && <SecondRow eta={display.eta} sog={props.sog} approach={approaching && ! props.legacy} small={small} />}
                     { ! small && ( (approaching) ?
                         <div className={Helper.concatsp(props.legacy?undefined:"routeNext")}>
                             <span

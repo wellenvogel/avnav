@@ -1,11 +1,11 @@
 /**
  * Created by andreas on 20.11.16.
  */
-import EtaWidget from './EtaWidget.jsx';
+import EtaWidget from './EtaWidget.tsx';
 import TimeStatusWidget from './TimeStatusWidget.tsx';
 import AisTargetWidget from './AisTargetWidget.tsx';
 import ActiveRouteWidget from './ActiveRouteWidget.tsx';
-import EditRouteWidget from './EditRouteWidget.jsx';
+import EditRouteWidget from './EditRouteWidget.tsx';
 import CenterDisplayWidget from './CenterDisplayWidget.jsx';
 import WindWidget, {getWindData, WindStoreKeys} from './WindWidget';
 import XteWidget from './XteWidget';
@@ -97,7 +97,6 @@ let widgetList=[
     },
     {
         name: 'ETA',
-        caption: 'ETA',
         wclass: EtaWidget,
         storeKeys: EtaWidget.storeKeys
     },
