@@ -570,7 +570,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new Proxy(TYPE_PROXY,ctx);
         }
     };
-    private static final WorkerConfig WAIS= new WorkerConfig("Ais",11) {
+    private static final WorkerConfig WAIS= new WorkerConfig("Ais",12) {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             return new AisWorker(typeName,ctx);
