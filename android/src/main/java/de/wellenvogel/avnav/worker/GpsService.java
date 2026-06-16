@@ -564,7 +564,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
     };
 
-    private static final WorkerConfig WPROXY=new WorkerConfig("Proxy",10) {
+    private static final WorkerConfig WPROXY=new WorkerConfig("Proxy",11) {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             return new Proxy(TYPE_PROXY,ctx);

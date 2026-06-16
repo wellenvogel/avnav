@@ -61,6 +61,7 @@ public class TcpServiceReader extends SingleConnectionHandler {
                 return gpsService.discoveredServices(serviceType);
             }
         };
+        servicesParameter.existingUnchecked=true;
         parameterDescriptions.insertParams(servicesParameter);
         parameterDescriptions.addParams(
                 WRITE_TIMEOUT_PARAMETER,

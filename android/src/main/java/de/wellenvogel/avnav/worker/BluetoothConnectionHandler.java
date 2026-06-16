@@ -43,6 +43,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
                 return filterByClaims(CLAIM_BLUETOOTH,getBluetoothDevices(),false);
             }
         };
+        deviceSelect.existingUnchecked=true;
         parameterDescriptions.add(deviceSelect);
     }
     public static class Creator extends WorkerFactory.Creator{

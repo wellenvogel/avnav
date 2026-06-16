@@ -277,6 +277,7 @@ public class EditableParameter {
         public StringListParameter(StringListParameter stringListParameter) {
             super(stringListParameter);
             list=stringListParameter.list;
+            listBuilder= stringListParameter.listBuilder;
         }
 
 
