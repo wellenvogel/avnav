@@ -255,6 +255,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                 return filterByClaims(CLAIM_USB,rt,true);
             }
         };
+        deviceSelect.existingUnchecked=true;
         parameterDescriptions.insertParams(deviceSelect,BAUDRATE_PARAMETER,FLOW_CONTROL);
         this.ctx=ctx;
     }
