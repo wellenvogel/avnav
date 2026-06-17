@@ -1,4 +1,4 @@
-/**
+ /**
  * Created by andreas on 23.02.16.
  */
 
@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import Value from './Value.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
+import {concatsp} from "../util/helper";
 
 const DirectWidget=(wprops)=>{
     let props;
@@ -16,22 +17,31 @@ const DirectWidget=(wprops)=>{
         props={...wprops,value:'Error: '+e}
     }
     let val;
-    let vdef=props.default||'0';
-    if (props.value !== undefined) {
-        if (props.minValue != null && parseFloat(props.value) < props.minValue)val=vdef;
-        else if(props.maxValue != null && parseFloat(props.value) > props.maxValue)val=vdef;
-        else val=props.formatter?props.formatter(props.value):vdef+"";
-    }
-    else{
-        if (! isNaN(vdef) && props.formatter) val=props.formatter(vdef);
-        else val=vdef+"";
+    let vdef=props.default||'---';
+    try {
+      if (props.value != null) {
+          let outOfRange=0;
+          if(parseFloat(props.value) < props.minValue) outOfRange=-1;
+          if(parseFloat(props.value) > props.maxValue) outOfRange=+1;
+          if(outOfRange) {
+            vdef=props.formatter?props.formatter(null):vdef; // placeholder with correct with
+            if (outOfRange<0) vdef=vdef.replace(/./g,'<'); // underflow
+            if (outOfRange>0) vdef=vdef.replace(/./g,'>'); // overflow
+            throw new Error();
+          }
+      }
+      val=props.formatter?props.formatter(props.value):props.value;
+      val=(val==null?'':''+val)||vdef;
+    }catch(error){
+      val=vdef;
     }
     const display={
         value:val
     };
     const resizeSequence=useStringsChanged(display,wprops.mode==='gps')
+    if(props.addClass) props.addClass=concatsp(props.addClass,'DirectWidget');
     return (
-        <WidgetFrame {...props} addClass="DirectWidget" resizeSequence={resizeSequence} >
+        <WidgetFrame {...props} resizeSequence={resizeSequence} >
             <div className='widgetData'>
                 <Value value={val}/>
             </div>
