@@ -1078,8 +1078,10 @@ class LayoutHandler{
         let rt=0;
         for (let idx=1;idx<=max;idx++){
             const name=PAGEIDS.GPS+idx;
-            const widgets=this.getPageData(name);
-            if (widgets) rt++;
+            const panels=this.getPagePanels(name);
+            if(panels?.length > 0){
+                rt++;
+            }
         }
         if (rt < 1) rt=1;
         return rt;

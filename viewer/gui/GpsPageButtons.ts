@@ -59,7 +59,8 @@ export default ()=>{
             overflow:true,
             storeKeys: {
                 pageNum: keys.gui.gpspage.pageNumber,
-                editing: keys.gui.global.layoutEditing
+                editing: keys.gui.global.layoutEditing,
+                sequence: keys.gui.global.layoutSequence
             },
             updateFunction:(state:Record<string,any>)=>{
                 const panels=layouthandler.getPagePanels(PAGEIDS.GPS+idx);
