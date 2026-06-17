@@ -18,10 +18,11 @@ else
   if [ ! -d "$pluginDir" ] ; then
     mkdir -p "$pluginDir" || err "unable to create $pluginDir"
   fi
-  for f in plugin.py plugin.mjs switch_desk.sh
+  for f in plugin.py plugin.mjs switch_desk.sh plugin.css
   do
     cp "$pdir/$f" "$pluginDir/$f"
   done
   cp "$pdir/../../viewer/images/rpi.png" "$pluginDir"
+  cp "$pdir/../../viewer/images/rpi-bw.svg" "$pluginDir"
 fi
 exit 0
