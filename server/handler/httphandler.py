@@ -197,6 +197,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
           except Exception as e:
               self._handleException(e)
       else:
+          if response == True:
+              self.requestDone=True
           if not self.requestDone:
               self.send_error(404, path+ ": no response")
               self.requestDone=True
