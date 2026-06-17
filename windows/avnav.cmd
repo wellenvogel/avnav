@@ -7,6 +7,7 @@ set "_AVNMAIN=%_AVNROOT%\server\avnav_server.py"
 set "GDAL_DATA=%_AVNROOT%\gdal\PFiles\GDAL\gdal-data"
 set "PYTHONPATH=%_AVNROOT%\gdal\Lib\site-packages"
 set "PATH=%PATH%;%_AVNROOT%\gdal\PFiles\GDAL"
+set "USE_PATH_FOR_GDAL_PYTHON=YES"
 setlocal enableextensions
 set "_AVNXML=%_AVNDATADIR%\avnav_server.xml"
 set "_AVNTMPL=%~dp0\avnav_server_win.xml"

@@ -10,36 +10,52 @@ try {
     }
     $downloadDir = $targetBase + "\download"
     $pythonDir = "python"
-
     $actions = @(
-        [PSCustomObject]@{"urlBase" = "https://www.python.org/ftp/python/3.7.9";
-            name                    = "python-3.7.9-embed-amd64.zip";
+        [PSCustomObject]@{"urlBase" = "https://www.python.org/ftp/python/3.9.13";
+            name                    = "python-3.9.13-embed-amd64.zip";
             target                  = "$targetBase\$pythonDir";
             exe                     = "python3.dll";
             installCmd              = "python";
-            pathFile                = "python37._pth"
+            pathFile                = "python39._pth"
         }
-        [PSCustomObject]@{"urlBase" = "https://bootstrap.pypa.io/pip/3.7";
+        [PSCustomObject]@{"urlBase" = "https://bootstrap.pypa.io/pip/3.9";
             name                    = "get-pip.py";
             exe                     = "$pythonDir\Scripts\pip.exe";
         }        
+        #[PSCustomObject]@{"urlBase" = "https://www.wellenvogel.net/software/avnav/downloads/supplement";
+        #    "name"                  = "mapserver-7.4.3-1900-x64-core.msi";
+        #    target                  = "$targetBase\gdal";
+        #    installCmd              = "gdal";
+        #    "exe"                   = "PFiles\GDAL\gdal204.dll"
+        #}
         [PSCustomObject]@{"urlBase" = "https://www.wellenvogel.net/software/avnav/downloads/supplement";
-            "name"                  = "mapserver-7.4.3-1900-x64-core.msi";
+            "name"                  = "gdal-3.8.4-1916-x64-core.msi";
             target                  = "$targetBase\gdal";
             installCmd              = "gdal";
             "exe"                   = "PFiles\GDAL\gdal204.dll"
         }
         #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/mapserver-7.6.1-1900-x64-core.msi
-        [PSCustomObject]@{"urlBase" = "http://build2.gisinternals.com/sdk/downloads/release-1900-x64-gdal-2-4-4-mapserver-7-4-3";
-            "name" = "GDAL-2.4.4.win-amd64-py3.7.msi"; target = "$targetBase\gdal"; "exe" = "Lib\site-packages\osgeo\gdal.py"
+        #[PSCustomObject]@{"urlBase" = "http://build2.gisinternals.com/sdk/downloads/release-1900-x64-gdal-2-4-4-mapserver-7-4-3";
+        #    "name" = "GDAL-2.4.4.win-amd64-py3.7.msi"; target = "$targetBase\gdal"; "exe" = "Lib\site-packages\osgeo\gdal.py"
+        #}
+        [PSCustomObject]@{"urlBase" = "https://www.wellenvogel.net/software/avnav/downloads/supplement";
+            name = "GDAL-3.8.4.win-amd64-py3.9-vc17.msi";
+            target = "$targetBase\gdal"; 
+            exe = "Lib\site-packages\osgeo\gdal.py"
+            installCmd = "gdalpython"
         }
+
         #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/GDAL-3.2.0.win-amd64-py3.7.msi"  
         [PSCustomObject]@{
-            name       = "Pillow==7.2.0"
+            name       = "Pillow==10.2.0"
             installCmd = "pip"
         }
         [PSCustomObject]@{
             name       = "pyserial==3.5"
+            installCmd = "pip"
+        }
+        [PSCustomObject]@{
+            name       = "numpy==1.26.4"
             installCmd = "pip"
         }
     )
@@ -81,7 +97,7 @@ try {
                 $res = $null
                 if ($target) {
                     if ($installCmd) {
-                        if ($installCmd -match '^python') {
+                        if ($installCmd -eq 'python') {
                             if ($null = Test-Path $target) {
                                 Write-Host "removing existing $target"
                                 Remove-Item -Path "$target" -Recurse -Force
@@ -92,7 +108,7 @@ try {
                             if ($pathFile) {
                                 $pathFile = $target + "\" + $pathFile
                                 if (! ($null = Test-Path $pathFile)) {
-                                    Write-Host "$pathFile not found"
+                                    throw  "ERROR $pathFile not found"
                                 }
                                 else {
                                     Write-Host "removing $pathFile"
@@ -101,7 +117,7 @@ try {
                             }
                     
                         }
-                        elseif ($installCmd -match '^gdal') {
+                        elseif ($installCmd -eq 'gdal') {
                             if ($null = Test-Path $target) {
                                 Write-Host "removing existing $target"
                                 Remove-Item -Path "$target" -Recurse -Force
@@ -111,8 +127,24 @@ try {
                             if ($res.ExitCode -ne 0) {
                                 throw "ERROR installing $name $code"
                             }
-                            Rename-Item "$target\PFiles\MapServer" "$target\PFiles\GDAL"
-                            Copy-Item -Path "$target\System64\*.dll" -Destination "$target\PFiles\GDAL"                   
+                            if ($null = Test-Path "$target\PFiles\MapServer") {
+                                Rename-Item "$target\PFiles\MapServer" "$target\PFiles\GDAL"
+                            }
+                            Copy-Item -Path "$target\System64\*.dll" -Destination "$target\PFiles\GDAL"            
+                        }
+                        elseif ($installCmd -eq 'gdalpython'){
+                            $res = (Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a", $name, "-qb", "TARGETDIR=$target", "INSTALLDIR=$target" -PassThru -Wait)
+                            if ($res.ExitCode -ne 0) {
+                                throw "ERROR installing $name $code"
+                            }
+                            if (!($null = Test-Path $exe -PathType Leaf )) {
+                                    throw "ERROR : $exe not found"
+                            }
+                            #we must ensure that gdal sepecific libs are loaded before
+                            #any libs that directly come with python (esepcially sqlite3)
+                            #refering to https://bugs.python.org/issue43173
+                            #the module directory is searched at first place
+                            Copy-Item -Path "$target\PFiles\GDAL\*.dll" -Destination "$target\Lib\site-packages\osgeo"
                         }
                         else {
                             throw "unknown install command $installCmd"
