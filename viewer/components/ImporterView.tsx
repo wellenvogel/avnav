@@ -25,7 +25,7 @@ import React, {useCallback, useRef, useState} from 'react';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {ChildStatus, ChildStatusProps, StatusItem, statusTextToImageUrl} from "./StatusItems";
-import {useDialogContext} from "./exports";
+import {ListItem, ListMainSlot, ListSlot, useDialogContext} from "./exports";
 import {DialogButtons, DialogFrame, showDialog} from "./OverlayDialog";
 import DB from './DialogButton';
 import Requests, {prepareUrl} from "../util/requests";
@@ -35,7 +35,8 @@ import LogDialog from "./LogDialog";
 import ItemList from "./ItemList";
 import {useTimer} from "../util/UiHelper";
 import EditHandlerDialog from "../components/EditHandlerDialog";
-import Helper from "../util/helper";
+//import Helper from "../util/helper";
+import {iconClasses} from './Icons';
 import ButtonDefs from "./ButtonDefs";
 import {StatusIcon} from "./Icons";
 
@@ -48,7 +49,7 @@ interface MainStatusProps{
 const MainStatus=(props:MainStatusProps)=>{
     const canEdit=globalstore.getData(keys.gui.global.connectedMode);
     const dialogContext=useDialogContext()
-    return <div className="status" >
+    return <ListItem className="status" >
         <StatusItem name={'Converter'}
                     canEdit={true}
                     allowEdit={true}
@@ -65,7 +66,7 @@ const MainStatus=(props:MainStatusProps)=>{
             {...props.main}
             name='scanner'
             forceEdit={true}
-            sub={true}
+            sub={false}
             showEditDialog={()=>showDialog(dialogContext,
                 ()=><ScannerDialog {...(props.main as ScannerDialogProps)}/>)}
         />}
@@ -75,9 +76,9 @@ const MainStatus=(props:MainStatusProps)=>{
             forceEdit={canEdit}
             showEditDialog={()=>showDialog(dialogContext,
             ()=><ConverterDialog {...(props.main as ConverterDialogProps)}/>)}
-            sub={true}
+            sub={false}
         />}
-    </div>
+    </ListItem>
 }
 interface ImporterProps extends ChildStatusProps{
     name:string,
@@ -91,12 +92,36 @@ const ImporterItem=(props:ImporterProps)=>{
     if (!props.name || !props.name.match(/^conv:/)) return null;
     const canEdit=globalstore.getData(keys.gui.global.connectedMode);
     const dialogContext=useDialogContext();
-    const showEditDialog=useCallback((_handlerId:string|number, _id:string)=> {
+    const showEditDialog=useCallback(()=> {
                 showDialog(dialogContext, () => <ImportStatusDialog
                     {...props}
                 />);
     },[]);
-    return <div className={Helper.concatsp("status",props.className,props.selected?'activeEntry':undefined)} >
+    return <ListItem selected={props.selected} className={props.className} onClick={()=>showEditDialog()} >
+        <ListSlot>
+            <StatusIcon type={statusTextToImageUrl(props.status)}></StatusIcon>
+        </ListSlot>
+        <ListMainSlot primary={props.name.replace(/^conv:/,'')}
+                      secondary={props.info}
+        >
+            {props.converter &&
+                <div className="itemInfo">
+                    <span className="label">converter:</span>
+                    <span className="value">{props.converter}</span>
+                </div>
+            }
+            {(props.realname !== undefined) &&
+                <div className="itemInfo">
+                    <span className="label">linked name:</span>
+                    <span className="value">{props.realname}</span>
+                </div>
+
+            }
+        </ListMainSlot>
+        <ListSlot icon={{className:canEdit?iconClasses.Edit:undefined}}></ListSlot>
+    </ListItem>
+    /*
+    <div className={Helper.concatsp("status",props.className,props.selected?'activeEntry':undefined)} >
         <ChildStatus
             showEditDialog={showEditDialog}
             {...props}
@@ -120,6 +145,7 @@ const ImporterItem=(props:ImporterProps)=>{
 
         }
     </div>
+     */
 };
 
 interface ImporterStatusDialogProps{
@@ -259,7 +285,7 @@ const ConverterDialog=(props:ConverterDialogProps)=>{
         </div>
 
         <div className="dialogButtons">
-            {isRunning && <DB name="stop"
+            {isRunning && <DB {...ButtonDefs.DBStop}
                               onClick={() => {
                                   Requests.getJson({
                                       type:'import',
@@ -273,10 +299,9 @@ const ConverterDialog=(props:ConverterDialogProps)=>{
                               }}
                               close={false}
             >
-                Stop
             </DB>}
             {isRunning &&
-                <DB name="log"
+                <DB {...ButtonDefs.DBLog}
                     onClick={() => {
                         const url= prepareUrl({
                             type:'import',
@@ -292,10 +317,9 @@ const ConverterDialog=(props:ConverterDialogProps)=>{
                         })
                     }}
                     close={false}
-                >Log</DB>
+                ></DB>
             }
-            <DB name="cancel"
-            >Cancel</DB>
+            <DB {...ButtonDefs.DBCancel}/>
         </div>
     </DialogFrame>
 }
