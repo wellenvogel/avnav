@@ -178,6 +178,11 @@ body{
   .selectedItem();
 }
 .combinedView,.multiView{
+  &::-webkit-scrollbar{
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   display: flex;
   flex-direction: row;
   overflow-y: hidden;
