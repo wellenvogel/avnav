@@ -112,8 +112,9 @@ export const EditDialog = ({data, title, language, resolveFunction,
         )
     ];
     if (showCollapse) {
+        const def=collapsed?ButtonDefs.DBShow:ButtonDefs.DBHide;
         buttonList.splice(0,0,{
-            name: collapsed?'show':'hide',
+            ...def,
             close: false,
             onClick: () => {
                 setCollapsed(!collapsed);

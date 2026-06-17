@@ -754,6 +754,10 @@ const ButtonDefinitions= {
         iconClass: iconClasses.Hide,
         name:btdef.DBHide,
     },
+    DBShow:{
+        iconClass: iconClasses.View,
+        name:btdef.DBShow,
+    },
     DBInsertRouteBefore:{
         iconClass: iconClasses.NavAdd,
         name:btdef.DBInsertRouteBefore,
