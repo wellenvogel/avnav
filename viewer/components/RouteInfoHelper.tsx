@@ -60,8 +60,10 @@ export const INFO_ROWS=[
     {label: 'leg brg',value:'legbrg',formatter:(v:any)=>Formatter.formatDirection(v)+"°"},
     {label: 'leg len',value:'legdst',formatter:(v:any)=>Formatter.formatDistance(v)+" nm"},
     {label: 'remain leg end',value: 'remainIdx',formatter:(v:any)=>Formatter.formatDistance(v)+" nm"},
-    {label: 'ttgo vmg',value:'ttgovmg',formatter:(v:any)=>Formatter.formatTimeDiff(v)},
-    {label: 'ttgo sog',value:'ttgosog',formatter:(v:any)=>Formatter.formatTimeDiff(v)}
+    {label: 'vmg ttg/eta',value:'ttgovmg',formatter:(v:any)=>{
+        return Formatter.formatTimeDiff(v) + " / " + Formatter.formatTime(navcompute.etaFromDiff(v));
+        }},
+    {label: 'sog ttg/eta',value:'ttgosog',formatter:(v:any)=>Formatter.formatTimeDiff(v)+" / "+Formatter.formatTime(navcompute.etaFromDiff(v))}
     ];
 export interface RouteItem{
     name:string;

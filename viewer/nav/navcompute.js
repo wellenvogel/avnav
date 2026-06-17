@@ -216,6 +216,12 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
     }
     return rt;
 };
+
+NavCompute.etaFromDiff=function(tdiff){
+    const eta=globalstore.getData(keys.nav.gps.epochms)+tdiff*1000;
+    if (eta == null || isNaN(eta)) return undefined;
+    return new Date(eta);
+}
 NavCompute.NM=1852; //m per NM
 
 export const unitToFactor=(unit)=>{
