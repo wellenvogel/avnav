@@ -1401,10 +1401,8 @@ class AVNSignalKHandler(AVNWorker):
         category=None
         if type(skAlarm.skValue) is dict:
           state=skAlarm.skValue.get('state')
-          if state == 'emergency':
-            category=AlarmConfig.C_CRITICAL
-          if state == 'info':
-            category=AlarmConfig.C_INFO
+          if state is not None:
+              category=self.CATEGORY_MAP.get(state.lower())
         if skAlarm.isOwnSource:
           if skAlarm.isInState(True):
             #SK own on
@@ -1622,6 +1620,8 @@ class AVNSignalKHandler(AVNWorker):
       return False
     return src == self.config.skSource or src.endswith('.'+self.config.skSource)
 
+  #keep the states in our defined alarms
+  #in sync with the CATEGORY_MAP below
   ALARMS={
     'mob': {
       'path':'mob',
@@ -1634,7 +1634,7 @@ class AVNSignalKHandler(AVNWorker):
     'waypoint':{
       'path': 'arrivalCircleEntered',
       'value':{
-        'state': 'info',
+        'state': 'alert',
         'method': ['visual','sound'],
         'message': 'arrival circle entered'
       }
@@ -1647,6 +1647,13 @@ class AVNSignalKHandler(AVNWorker):
         'message': 'anchor drags'
       }
     }
+  }
+  CATEGORY_MAP = {
+      'normal': None,
+      'emergency': AlarmConfig.C_CRITICAL,
+      'alert': AlarmConfig.C_INFO,
+      'warn': AlarmConfig.C_ALARM,
+      'alarm': AlarmConfig.C_ALARM,
   }
   NPRFX='notifications.'
   def skAlarmToOur(self, skpath, generic=True):

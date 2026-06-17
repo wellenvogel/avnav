@@ -21,6 +21,7 @@ import {StatusIcon, StatusIconType} from "./Icons";
 const alarmStatus=(alarm?:Alarm):StatusIconType=>{
     if (alarm?.category === 'critical') return 'red'
     if (alarm?.category === 'info') return 'yellow';
+    if (alarm?.category === 'alarm') return 'orange';
     return 'grey';
 }
 
@@ -36,7 +37,9 @@ const ActiveAlarm=(props:Alarm)=>{
             primary={props.message||props.alarm}
             secondary={props.message?props.alarm:''}
         />
-        <ListSlot text={props.external?props.external+"":"AvNav"}/>
+        <ListSlot text={props.external?props.external+"":"AvNav"} className={'alarmSource'}>
+            <div className={"alarmCategory"}>{props.category}</div>
+        </ListSlot>
         <ListSlot>
             <Button className={'smallButton'}
                     {...ButtonDefs.DBClear}
@@ -87,6 +90,7 @@ const clearAlarms=(name?:string)=>{
 }
 interface ContentProps{
     alarmText:string;
+    more?:boolean;
     status:StatusIconType
 }
 const Content = (props:ContentProps) => {
@@ -100,7 +104,10 @@ const Content = (props:ContentProps) => {
                     }/>);
                 }}>
         <StatusIcon type={props.status}/>
-        <div className="alarmInfo">{props.alarmText}</div>
+        <div className="alarmInfo">
+            <span className={'value'}> {props.alarmText}</span>
+            {props.more && <span className={'more'}>...</span> }
+        </div>
     </div>
 }
 //TODO: compare alarm info correctly
@@ -110,12 +117,13 @@ const AlarmWidget = (props:AlarmWidgetProps) => {
     });
     if (props.disabled) return null;
     let alarmText:string = undefined;
+    let more:boolean = false;
     let list:Alarm[]=[]
     if (props.alarmInfo) {
         list = AlarmHandler.sortedActiveAlarms(props.alarmInfo)
         for (const al of list){
             if (alarmText) {
-                alarmText += "\n...";
+                more=true;
                 break;
             } else {
                 if (props.showMode === AlarmShowMode.both){
@@ -144,7 +152,7 @@ const AlarmWidget = (props:AlarmWidgetProps) => {
             caption="Alarm"
             unit={undefined}
         >
-            <Content alarmText={alarmText} status={status}/>
+            <Content alarmText={alarmText} status={status} more={more}/>
         </WidgetFrame>
     );
 }

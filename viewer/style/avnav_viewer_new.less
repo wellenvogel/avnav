@@ -239,7 +239,10 @@ body{
   }
   &.running{
     animation: mpblinker 1.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
-    background-image: radial-gradient(rgb(255, 184, 3), rgb(250, 219, 137),transparent);
+    background-image: radial-gradient(rgb(255, 146, 3), rgb(250, 219, 137),transparent);
+  }
+  &.orange{
+    background-image: radial-gradient(rgb(255, 146, 3), rgb(250, 219, 137),transparent);
   }
 
   @keyframes mpblinker { to { opacity: 0; } }
@@ -456,6 +459,14 @@ body{
   }
   &.defaultValue{
     font-style: italic;
+  }
+}
+.AlarmDialog{
+  .listSlot.alarmSource{
+    flex-direction: column;
+    .alarmCategory{
+      .mdText2();
+    }
   }
 }
 

@@ -70,7 +70,7 @@ export const Icon=({className,icon,color,onClick,forceClass,iconImage}:IconProps
         <IconBody icon={icon} className={className} color={color} forceClass={forceClass} iconImage={iconImage}/>
     </div>
 }
-export type StatusIconType='red'|'green'|'yellow'|'grey';
+export type StatusIconType='red'|'green'|'yellow'|'grey'|'orange';
 export interface StatusIconProps{
     type:StatusIconType;
     className?:string

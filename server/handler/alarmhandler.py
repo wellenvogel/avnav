@@ -41,6 +41,12 @@ class AlarmInfo:
 class AlarmConfig:
   C_INFO='info'
   C_CRITICAL='critical'
+  C_ALARM='alarm'
+  SEVERITY={
+      C_INFO:1,
+      C_ALARM: 2,
+      C_CRITICAL:3,
+  }
   @classmethod
   def fromDict(cls,dct):
     rt=AlarmConfig()
@@ -57,6 +63,14 @@ class AlarmConfig:
     self.sound=sound
     self.autoclean=autoclean
     self.message=message
+  @classmethod
+  def isHigher(cls,cat1,cat2):
+      if cat1 == cat2:
+          return False
+      s1=cls.SEVERITY.get(cat1) or 0
+      s2=cls.SEVERITY.get(cat2) or 0
+      return s1 > s2
+
   def toDict(self):
     return {k:v for k,v in self.__dict__.items() if v is not None}
 
@@ -76,6 +90,9 @@ class AVNAlarmHandler(AVNWorker):
   P_INFOSOUND=WorkerParameter('infoSound',type=WorkerParameter.T_SELECT,default='waypointAlarm.mp3',
                               description='sound to be played for info Alarms (only if no explicit config)',
                               rangeOrList=[])
+  P_ALARMSOUND = WorkerParameter('alarmSound', type=WorkerParameter.T_SELECT, default='generalAlarm.mp3',
+                                description='sound to be played for Alarms if neither info nor critical (only if no explicit config)',
+                                rangeOrList=[])
   P_CRITICALSOUND=WorkerParameter('criticalSound',type=WorkerParameter.T_SELECT,default='anchorAlarm.mp3',
                               description='sound to be played for critical Alarms (only if no explicit config)',
                               rangeOrList=[])
@@ -127,6 +144,11 @@ class AVNAlarmHandler(AVNWorker):
   		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2",message="Person over board"),
         AlarmConfig(name="connectionLost", category=AlarmConfig.C_INFO,message="Server connection lost") #client only...
   ]
+  SOUND_MAP={
+      AlarmConfig.C_INFO: P_INFOSOUND,
+      AlarmConfig.C_CRITICAL: P_CRITICALSOUND,
+      AlarmConfig.C_ALARM: P_ALARMSOUND,
+  }
   """a handler for alarms"""
   def __init__(self,param):
     AVNWorker.__init__(self, param)
@@ -158,6 +180,7 @@ class AVNAlarmHandler(AVNWorker):
     if child is None:
       rt=[cls.P_INFOSOUND.copy(rangeOrList=cls.listAlarmSounds),
           cls.P_CRITICALSOUND.copy(rangeOrList=cls.listAlarmSounds),
+          cls.P_ALARMSOUND.copy(rangeOrList=cls.listAlarmSounds),
           cls.P_DEFAULTCOMMAND.copy(rangeOrList=cls.listCommands),
           cls.P_DEFAULTPARAM]
       return rt
@@ -225,9 +248,9 @@ class AVNAlarmHandler(AVNWorker):
       return None
     if config.name is None:
       return None
-    ALL_CAT=[AlarmConfig.C_INFO,AlarmConfig.C_CRITICAL]
+    ALL_CAT=[AlarmConfig.C_INFO,AlarmConfig.C_CRITICAL,AlarmConfig.C_ALARM]
     if config.category not in ALL_CAT:
-      config.category=None
+      config.category=AlarmConfig.C_ALARM
     if config.parameter == '':
       config.parameter=None
     if config.parameter is not None:
@@ -235,9 +258,9 @@ class AVNAlarmHandler(AVNWorker):
     if config.command is None or config.command == '':
       config.command=self.P_DEFAULTCOMMAND.fromDict(self.param,rangeOrListCheck=False)
     if config.sound is None or config.sound == '':
-      if config.category in ALL_CAT:
-        config.sound=self.P_INFOSOUND.fromDict(self.param,rangeOrListCheck=False) if config.category==AlarmConfig.C_INFO \
-          else self.P_CRITICALSOUND.fromDict(self.param,rangeOrListCheck=False)
+      param=self.SOUND_MAP.get(config.category)
+      if param is not None:
+          config.sound=param.fromDict(self.param,rangeOrListCheck=False)
       else:
         config.sound=config.parameter
     if config.parameter is None and config.sound is not None:
@@ -294,11 +317,8 @@ class AVNAlarmHandler(AVNWorker):
       return True
     if entry2 is None:
       return False
-    if entry1.config.category is None:
-      return entry2.config.category is not None
-    if entry1.config.category == AlarmConfig.C_INFO:
-      return entry2.config.category == AlarmConfig.C_CRITICAL
-    return False
+    return AlarmConfig.isHigher(entry1.config.category,entry2.config.category)
+
 
   def setInfoFromRunning(self,running:RunningAlarm,active,error=None):
     if error is not None:
