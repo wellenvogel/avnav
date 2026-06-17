@@ -1009,7 +1009,15 @@ class AVNJsDownload(AVNFileDownload):
             try{{
             let handler = {{
                 get(target, key, descriptor) {{
-                  if (key != 'avnav') return target[key];
+                  if (key != 'avnav') {{
+                        const rt=target[key];
+                        if (rt instanceof Function) {{
+                          return function(...args) {{
+                            return rt.apply(this === descriptor ? target:this,args);
+                          }}
+                        }}
+                        return rt;
+                  }}
                   return {{
                     api:target.avnavLegacy
                   }}
