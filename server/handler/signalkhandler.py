@@ -1171,11 +1171,11 @@ class AVNSignalKHandler(AVNWorker):
     if addonhandler:
       if self.config.skHost == "localhost":
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,
-                                   self.ICON,shortText='SignalK',longText='SignalK UI')
+                                   self.ICON,shortText='SignalK',longText='SignalK')
       else:
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://%s:%s" %
                                               (self.config.skHost,self.config.port), self.ICON,
-                                   shortText='SignalK',longText='SignalK UI')
+                                   shortText='SignalK',longText='SignalK')
     router=None
     if self.config.write:
       router=self.findHandlerByName(AVNRouter.getConfigName())
