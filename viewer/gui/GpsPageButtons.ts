@@ -29,7 +29,7 @@ import {RawButtonDef as EditPageButton} from "../components/EditPageDialog";
 import Dimmer from '../util/dimhandler';
 import keys from "../util/keys";
 import ButtonDefs from "../components/ButtonDefs";
-import {PAGEIDS} from "../util/pageids";
+import globalstore from "../util/globalstore";
 
 export const pageButtons:Partial<DynamicButtonProps>&{name:string}[] = [
     ButtonDefs.Gps1,
@@ -45,7 +45,7 @@ export const pageButtons:Partial<DynamicButtonProps>&{name:string}[] = [
 ]
 
 export default ()=>{
-    const num=layouthandler.getDashboardNum();
+    const num=globalstore.getData(keys.properties.dashboardNum);
     const btProps:DynamicButtonProps[]=[
         {
             ...ButtonDefs.Cancel,
@@ -63,10 +63,9 @@ export default ()=>{
                 sequence: keys.gui.global.layoutSequence
             },
             updateFunction:(state:Record<string,any>)=>{
-                const panels=layouthandler.getPagePanels(PAGEIDS.GPS+idx);
                 return {
                     toggle: state.pageNum === idx,
-                    visible: panels?.length > 0 || state.editing
+                    visible: layouthandler.hasDashboard(idx)
                 }
             }
         })

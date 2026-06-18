@@ -79,17 +79,6 @@ const getPanelList=(panel:string,pageNum:number):[
 
 };
 
-const hasPageEntries=(pageNum:number)=>{
-    const layoutPage=getLayoutPage(pageNum);
-    const page=LayoutHandler.getPageData(layoutPage);
-    if (! page) return false;
-    const panels=PANEL_LIST;
-    for (const panel of panels){
-        const panelData=LayoutHandler.getPanelData(layoutPage,panel,LayoutHandler.getAllOptions());
-        if (panelData.list && panelData.list.length > 0) return true;
-    }
-    return false;
-};
 
 const getWeightSum=(list:WidgetProps[])=>{
     let sum=0;
@@ -103,7 +92,7 @@ const getWeightSum=(list:WidgetProps[])=>{
 const findPageWithWidget=(name:string)=>{
     const panels=PANEL_LIST;
     if (! name) return ;
-    for (let pnum=0;pnum<=layouthandler.getDashboardNum();pnum++){
+    for (let pnum=0;pnum<=globalStore.getData(keys.properties.dashboardNum);pnum++){
         for (const idx in panels){
             const [,list]=getPanelList(panels[idx],pnum);
             if (! list || ! list.list) continue;
@@ -216,9 +205,10 @@ const editPageparameters=[
 const GpsPage = (props:Partial<PageProps>) => {
     const history=useHistory();
     useStoreState(keys.gui.global.reloadSequence);
+    useStoreState(keys.properties.dashboardNum);
     const [sequence]=useStoreState(keys.gui.global.layoutSequence);
     const currentButtons=useRef<ButtonDef[]>(null);
-    const maxPage=layouthandler.getDashboardNum();
+    const usedDashboards= layouthandler.getUsedDashboards();
     const [pageNumber, setPageNumberImpl] = useStoreState(keys.gui.gpspage.pageNumber, (currentNumber:number) => {
         if (props.options && props.options.widget && !props.options.returning) {
             const pagenNum = findPageWithWidget(props.options.widget);
@@ -227,34 +217,34 @@ const GpsPage = (props:Partial<PageProps>) => {
             }
         }
         if (props.options && props.options.pageNumber !== undefined) {
-            if (hasPageEntries(props.options.pageNumber)) return props.options.pageNumber
+            if (usedDashboards.indexOf(props.options.pageNumber)>=0) return props.options.pageNumber
         }
-        if (currentNumber >0 && currentNumber <= maxPage && hasPageEntries(currentNumber)) return currentNumber;
+        if (usedDashboards.indexOf(currentNumber)>=0) return currentNumber;
         return 1;
     }, true);
+    const currentIndex=usedDashboards.indexOf(pageNumber);
     const dialogContext = useDialogContext();
     const setPageNumber = useCallback((num:number,
                                        opt_noRemote?:boolean,
                                        noScroll?:boolean) => {
         setPageNumberImpl(num);
-        if (! noScroll) scrollTo(num-1);
+        if (! noScroll) scrollTo(usedDashboards.indexOf(num));
         dialogContext.closeDialog();
         if (!opt_noRemote) {
             remotechannel.sendMessage(COMMANDS.gpsNum, num);
         }
-    }, []);
-    const [scrollProps,scrollTo,visible]=useScrollHelper(pageNumber>0?pageNumber-1:0,
+    }, [usedDashboards]);
+    const [scrollProps,scrollTo,visible]=useScrollHelper(currentIndex>=0?currentIndex:0,
         (min:number,_max:number)=>{
-            if (min !== (pageNumber-1)){
-                setPageNumber(min+1,false,true);
+            if (min !== currentIndex){
+                setPageNumber(usedDashboards[min],false,true);
             }
         });
     useEffect(() => {
         const remoteToken = remotechannel.subscribe(COMMANDS.gpsNum, (number:string) => {
             const pn = parseInt(number);
-            if (pn < 0 || pn > maxPage) return;
-            if (!hasPageEntries(pn)) return;
-            if (pn === pageNumber) return;
+            const used=layouthandler.getUsedDashboards();
+            if (used.indexOf(pn)<0) return;
             setPageNumber(pn, true);
         })
         return () => remotechannel.unsubscribe(remoteToken);
@@ -315,7 +305,7 @@ const GpsPage = (props:Partial<PageProps>) => {
             }
         }
     };
-    for (let i=1;i<=maxPage;i++){
+    for (let i=1 ;i<= pageButtons.length;i++) {
         buttonActions['Gps' + i]={
             onClick: () => {
                 setPageNumber(i);
@@ -384,12 +374,13 @@ const GpsPage = (props:Partial<PageProps>) => {
     const titleIcons = globalStore.getData(keys.properties.titleIconsGps);
     const views=useMemo(() => {
         const rt=[];
-        for (let i=0;i<maxPage;i++){
+        for (let i=0;i<usedDashboards.length;i++) {
+            const dp=usedDashboards[i];
             rt.push(<DashboardPanel
-                pageNumber={i+1}
+                pageNumber={dp}
                 fontSize={fontSize}
                 onItemClick={onItemClick}
-                visible={visible(i) || pageNumber == (i+1)}
+                visible={visible(i) || pageNumber == dp}
             />)
         }
         return rt;

@@ -1072,14 +1072,39 @@ class LayoutHandler{
         }
         return rt;
     }
+
+    /**
+     * get a list of used dashboard numbers
+     * starting at 1
+     */
+    getUsedDashboards():number[]{
+        const rt:number[]=[];
+        const max=globalStore.getData(keys.properties.dashboardNum);
+        for (let idx=1;idx<=max;idx++){
+            if (this.hasDashboard(idx)){
+                rt.push(idx)
+            }
+        }
+        return rt;
+    }
+    hasDashboard(num:number){
+        if (num > globalStore.getData(keys.properties.dashboardNum) || num < 1) return false;
+        if (this.isEditing()) return true;
+        const name=PAGEIDS.GPS+num;
+        const panels=this.getPagePanels(name);
+        if (panels?.length > 0){
+            for (const panel of panels){
+                const panelData=this.getPanelData(name,panel,this.getAllOptions());
+                if (panelData.list && panelData.list.length > 0) return true;
+            }
+        }
+        return false;
+    }
     getDashboardNum(){
         const max=globalStore.getData(keys.properties.dashboardNum);
-        if (this.editing) return max;
         let rt=0;
         for (let idx=1;idx<=max;idx++){
-            const name=PAGEIDS.GPS+idx;
-            const panels=this.getPagePanels(name);
-            if(panels?.length > 0){
+            if (this.hasDashboard(idx)){
                 rt++;
             }
         }
