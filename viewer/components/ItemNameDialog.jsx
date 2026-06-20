@@ -158,6 +158,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             className={error?'error':undefined}
             mandatory={mandatoryFunction}
             label={fixedPrefix?fixedPrefix:''}
+            autoFocus={true}
         >
             {fixedSuffix && <span className={"ext"}>.{fixedSuffix}</span>}
         </Input>
