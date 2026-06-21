@@ -45,7 +45,7 @@ export const AddonView = (iprops: AddonViewProps): React.ReactNode => {
     const sprops = useStore(iprops);
     useEffect(() => {
         if (iprops.preventConnectionLost){
-            const id=alarmhandler.addBlock(LOCAL_TYPES.preventConnectionLost);
+            const id=alarmhandler.addBlock(LOCAL_TYPES.connectionLost);
             return ()=>alarmhandler.removeBlock(id);
         }
     }, []);
@@ -91,7 +91,7 @@ export const injectAddonButtonAction=(
             addonViewManager.setPageAddon(page);
             return;
         }
-        addonViewManager.setPageAddon(page, config.name, () => <AddonView {...config}/>);
+        addonViewManager.setPageAddon(page, config.name,config.preventConnectionLost, () => <AddonView {...config}/>);
     }
     rt.storeKeys={
         toggle:keys.gui.global.addonViewChanged
@@ -107,9 +107,11 @@ export const injectAddonButtonAction=(
 class PageAddonView{
     name:string;
     element:ElementType;
-    constructor(name: string, element:ElementType) {
+    keepActive:boolean
+    constructor(name: string, keepActive:boolean,element:ElementType) {
         this.name = name;
         this.element = element;
+        this.keepActive=keepActive;
     }
 }
 
@@ -117,17 +119,25 @@ class AddonViewManager{
     private activeViews:Record<PageType,PageAddonView>={}
     constructor(){
         globalstore.register(()=>{
-            this.activeViews={};
+            const toDelete=[]
+            for (const pg in this.activeViews){
+                if (!this.activeViews[pg].keepActive){
+                    toDelete.push(pg);
+                }
+            }
+            for (const pg of toDelete){
+                delete this.activeViews[pg];
+            }
             globalstore.storeData(keys.gui.global.addonViewChanged,globalstore.getData(keys.gui.global.addonViewChanged,0)+1);
         },keys.gui.global.addonsChanged);
     }
-    setPageAddon(page:PageType,name?:string,display?:ElementType){
+    setPageAddon(page:PageType,name?:string,keepActive?:boolean,display?:ElementType){
         if (!page) return;
         if (! name || ! display){
             delete this.activeViews[page];
         }
         else {
-            this.activeViews[page] = new PageAddonView(name,display);
+            this.activeViews[page] = new PageAddonView(name,keepActive,display);
         }
         globalstore.storeData(keys.gui.global.addonViewChanged,globalstore.getData(keys.gui.global.addonViewChanged,0)+1);
     }

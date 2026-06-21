@@ -118,12 +118,12 @@ class AlarmHandler{
             this.startTimer();
         }
     }
-    startLocalAlarm(type:string,opt_category?:string):Alarm{
+    startLocalAlarm(type:string,message?:string,opt_category?:string):Alarm{
         if (! LOCAL_TYPES[type]) return;
         if (this.isBlocked(type))return;
         if (! opt_category) opt_category='info';
         const alarms={...globalStore.getData(keys.nav.alarms.all)};
-        const alarm:Alarm={category:opt_category,alarm:type,isLocal:true,running:true,repeat:1};
+        const alarm:Alarm={category:opt_category,alarm:type,isLocal:true,running:true,repeat:1,message:message};
         this.localAlarms[type]=alarm;
         alarms[type]=alarm;
         globalStore.storeData(keys.nav.alarms.all,alarms);

@@ -209,6 +209,11 @@ export default function() {
                 .then(()=>base.log("load finished"))
         })
     globalStore.register(()=>{
+        const currentConfigCounter=globalStore.getData(keys.nav.gps.updateconfig);
+        if (currentConfigCounter == null){
+            base.log("current config invalid, skipping fetch capabilities");
+            return;
+        }
         base.log("fetching capabilities");
         fetchCapabilities();
     },keys.nav.gps.updateconfig)

@@ -96,6 +96,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
 
 
   def do_GET(self):
+      if self.server.isStopping:
+          raise Exception("stopping")
       if super().do_GET():
           #ws request
           return
@@ -139,6 +141,8 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.requestDone = True
 
   def handleRequest(self,method=None):
+      if self.server.isStopping:
+          raise Exception("stopping")
       self.requestDone=False
       (path, query) = AVNUtil.pathQueryFromUrl(self.path)
       if path=="" or path=="/":

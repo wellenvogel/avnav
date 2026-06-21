@@ -129,6 +129,11 @@ class QueryHandler{
         serverAddOns.length=0;
         addonsChanged();
         this.callback=globalstore.register(()=>{
+            const currentConfigCounter=globalStore.getData(keys.nav.gps.updateconfig);
+            if (currentConfigCounter == null){
+                base.log("current config invalid, skipping reading addons");
+                return;
+            }
             this.fillAddons()
         },keys.nav.gps.updateconfig);
         this.fillAddons();

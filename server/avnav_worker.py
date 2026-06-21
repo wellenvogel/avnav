@@ -39,6 +39,7 @@ from avnav_util import Enum, AVNLog
 import sys
 import os
 
+
 class ParamValueError(Exception):
   pass
 
@@ -559,7 +560,14 @@ class AVNWorker(InfoHandler):
 
   @classmethod
   def shutdownServer(cls):
+    #first stop the http server
+    #to avoid any strange responses
+    httpserver=cls.findHandlerByName("AVNHttpServer")
+    if httpserver is not None:
+        httpserver.stop()
     for handler in cls.allHandlers:
+      if handler == httpserver:
+          continue
       try:
         AVNLog.info("stopping handler %s",handler.getName())
         handler.stop()

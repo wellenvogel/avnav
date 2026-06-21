@@ -489,7 +489,7 @@ class App extends React.Component {
             let lost=data.connectionLost;
             if (lost) {
                 if (globalStore.getData(keys.properties.connectionLostAlarm)) {
-                    alarmhandler.startLocalAlarm(LOCAL_TYPES.connectionLost);
+                    alarmhandler.startLocalAlarm(LOCAL_TYPES.connectionLost,"Server connection lost");
                 }
             }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);

@@ -163,6 +163,7 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     self.externalHandlers={} #type: dict[str,AVNWorker | StaticPathHandler] #prefixes that will be handled externally
     self.webSocketHandlers={} #type: dict[str,AVNWorker]
     self.requestHandler=RequestHandlerClass
+    self.isStopping=False
 
   def updatePathMappings(self,mappings:dict):
       '''
@@ -200,6 +201,12 @@ class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       self.interfaceReader.daemon=True
       self.interfaceReader.start()
     self.serve_forever()
+
+  def stop(self):
+      self.isStopping=True
+      super().stop()
+      self.shutdown()
+
 
   def isNavUrl(self,url):
       '''
