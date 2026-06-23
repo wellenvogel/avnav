@@ -140,7 +140,8 @@ WindWidget.predefined= {
         formatter: true,
         formatterParameters: true
     },
-    formatter :'formatSpeed'
+    formatter :'formatSpeed',
+    description: 'Show wind speed and wind direction/angle numerically'
 }
 
 export default WindWidget;

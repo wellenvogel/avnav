@@ -354,7 +354,8 @@ let widgetList=[
         formatterParameters: [3,1,true],
         editableParameters: {
             maxValue: {type:'NUMBER',default:12000,description:'consider any value above this (in meters) as invalid'}
-        }
+        },
+        description:'Show depthBelowTransducer. Legacy, use DepthBelowTransducer, DepthBelowKeel or DepthBelowWater.'
     },
     {
       name: 'DepthBelowTransducer',

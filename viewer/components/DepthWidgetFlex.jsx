@@ -45,7 +45,7 @@ const DepthDisplayFlex=(props)=>{
         iprops.className=concatsp(iprops.className,"critical");
     }
     iprops.default="-".repeat(iprops.digits>2?iprops.digits:3);
-    return <DirectWidget {...iprops}/>
+    return <DirectWidget {...iprops} className={concatsp(iprops.className,'DepthDisplayFlex')}/>
 }
 
 DepthDisplayFlex.displayName="DepthDisplayFlex";
@@ -155,5 +155,5 @@ DepthBelowWater.predefined={
     storeKeys:{
         value: keys.nav.gps.depthBelowWaterline
     },
-    caption:'DBW'
+    caption:'DBS'
 }

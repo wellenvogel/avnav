@@ -216,3 +216,4 @@ CombinedWidget.storeKeys={
     editing: keys.gui.global.layoutEditing,
     sequence: keys.gui.global.layoutSequence
 }
+CombinedWidget.description='A widget that works as a container for other widgets. You can add children to this widget to get a flexible order of rows and columns for your widgets.'

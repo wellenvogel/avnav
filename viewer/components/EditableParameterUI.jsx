@@ -104,7 +104,7 @@ const getMinMax=(ep)=>{
     }
     return {}
 }
-const ItemButtons=({description,onReset,children})=>{
+export const ItemButtons=({description,onReset,children})=>{
     if (! description && ! onReset) return null;
     const config=ButtonDefs.DefaultValue;
     return <div className={"paramButtons"}>

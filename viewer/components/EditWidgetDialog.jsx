@@ -33,7 +33,7 @@ import {Input, InputSelect} from './Inputs.tsx';
 import DB from './DialogButton.tsx';
 import cloneDeep from 'clone-deep';
 import Compare from "../util/compare";
-import {EditableParameterListUI} from "./EditableParameterUI";
+import {EditableParameterListUI, ItemButtons} from "./EditableParameterUI";
 import assign from "object-assign";
 import ButtonDefs from "./ButtonDefs";
 
@@ -145,6 +145,11 @@ const EditWidgetDialog = (props) => {
             validData=false;
         }
     })
+    let description;
+    const widgetData=WidgetFactory.findWidget(widget);
+    if (widgetData){
+        description = widgetData.description || widgetData.wclass?.description;
+    }
     return (
         <DialogFrame className="selectDialog editWidgetDialog" title={props.title || 'Select Widget'}>
             {(props.panelList !== undefined) && <InputSelect className={panelClass}
@@ -177,7 +182,9 @@ const EditWidgetDialog = (props) => {
                          }}
                          list={() => getList(WidgetFactory.getAvailableWidgets(props.types))}
                          value={widget.name || '-Select Widget-'}
-            />
+            >
+                {description&& <ItemButtons description={description}/>}
+            </InputSelect>
             <EditableParameterListUI
                 parameters={parameters}
                 values={completeWidgetData}
