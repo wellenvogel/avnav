@@ -19,6 +19,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
@@ -183,7 +185,20 @@ public class ExternalPluginWorker extends Worker implements IPluginHandler{
             found=piFiles.get(relativePath);
         }
         if (found == null){
-            throw new Exception("file "+relativePath+" not found");
+            synchronized (pijLock){
+                for(String k:piFiles.keySet()){
+                    //simple widlcard match - only at the end for now
+                    if (k.endsWith("*")){
+                        String fixed=k.substring(0,k.length()-1);
+                        if (relativePath.startsWith(fixed)){
+                            String remain=relativePath.substring(fixed.length());
+                            found=new UrlWTimestamp(piFiles.get(k).url+remain,piFiles.get(k).timestamp);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (found == null) throw new Exception("file "+relativePath+" not found");
         }
         URL rurl=new URL(found.url);
         HttpURLConnection urlConnection = (HttpURLConnection) rurl.openConnection();
