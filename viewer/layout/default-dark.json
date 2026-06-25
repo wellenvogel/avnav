@@ -26,6 +26,7 @@
           "name": "ETA"
         },
         {
+          "className": "half",
           "name": "RteCombine"
         }
       ],
@@ -64,6 +65,7 @@
           "name": "Position"
         },
         {
+          "className": "half",
           "name": "AisTarget"
         }
       ]
@@ -89,6 +91,7 @@
           "name": "ETA"
         },
         {
+          "className": "half",
           "name": "RteCombine"
         }
       ],
@@ -124,6 +127,7 @@
           "name": "DateTime"
         },
         {
+          "className": "half",
           "name": "AisTarget"
         }
       ]
@@ -340,5 +344,5 @@
       ]
     }
   },
-  "css": ":root{\n--avnav-widget-color: black;\n--avnav-widget-fore-color: white;\n--avnav-widget-head-color: #242323;\n}\n.nightMode{\n--avnav-widget-fore-color: rgb(252 11 11 / 60%)\n}"
+  "css": ":root{\n--avnav-widget-color: black;\n--avnav-widget-fore-color: white;\n--avnav-widget-head-color: #242323;\n}\n.nightMode{\n--avnav-widget-fore-color: rgb(252 11 11 / 60%)\n}\n.buttonContainer.main{\n  background-color: var(--avnav-widget-color);\n}\n\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 2.3em;\n}\n\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget .widgetHead {\n    border-bottom: unset;\n    border-top: 2px solid;\n    background-color: unset;\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used for smaller caption and unit */\n.hfield .widgetContainer .widget.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n\n \n/* a CSS class \"centered\" for centered text in widgets */\n.widget.centered .widgetData{\n  margin-right: auto;\n}\n "
 }
