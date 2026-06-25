@@ -35,7 +35,7 @@ import {Drawing} from "../map/drawing";
 // @ts-ignore
 import mapholder, {LOCK_MODES} from "../map/mapholder";
 import ItemList, {Item} from "./ItemList";
-import {DBCancel, DialogButtonDef, DialogButtons, DialogFrame, DialogRow} from "./OverlayDialog";
+import {DBCancel, DialogButtonDef, DialogButtons, DialogFlexInner, DialogFrame, DialogRow} from "./OverlayDialog";
 import Helper from "../util/helper";
 import {useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
@@ -108,10 +108,10 @@ const createItem=(config:DisplayItem,mmsi:string)=>{
             clazz += ' aisWarning';
         }
         return (
-            <div className={clazz}>
+            <DialogRow className={clazz}>
                 <div className='label'>{AisFormatter.getHeadline(key)}</div>
                 <div className={cl}>{AisFormatter.format(key, sprops.current)}{unit && <span className='unit'>&thinsp;{unit}</span>}</div>
-            </div>
+            </DialogRow>
         );
     }
 };
@@ -162,7 +162,9 @@ export interface ShowAisItemInfoProps{
 export const ShowAisItemInfo=(props:ShowAisItemInfoProps)=>{
     return (
     <React.Fragment>
+        <DialogRow>
         <AisStatus {...props}/>
+        </DialogRow>
         <ItemList
             itemCreator={(config:AisItem)=>{return createItem(config,props.mmsi)}}
             itemList={displayItems}
@@ -189,11 +191,9 @@ export const AisInfoDialog=({mmsi,onClick,buttons,className}:AisInfoDialogProps)
     }
     const buttonList=buttons?buttons.concat([DBCancel()]):[DBCancel()];
     return <DialogFrame className={Helper.concatsp("aisInfoDialog",className)}>
-        <DialogRow ref={(el)=>{
-            if (el) el.scrollTop=-el.scrollHeight;
-        }}>
+        <DialogFlexInner className={"aisInfoFrame"} >
             <ShowAisItemInfo mmsi={mmsi} onClick={onClick}/>
-        </DialogRow>
+        </DialogFlexInner>
         <DialogButtons buttonList={buttonList}></DialogButtons>
     </DialogFrame>
 };
