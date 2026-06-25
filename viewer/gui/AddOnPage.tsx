@@ -108,7 +108,7 @@ export const AddOnPage =(props:AddOnPageProps) :React.ReactNode => {
             id={props.id}
             title={getPageTitle(PAGE)}>
             <div className="emptyPage">
-                No USer App Selected
+                No user app selected
             </div>
         </PageLeft>
         <ButtonList page={PAGE} itemList={finalButtons} />
