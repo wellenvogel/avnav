@@ -150,17 +150,12 @@
           "name": "NmeaStatus"
         },
         {
-          "name": "radGauge_Compass",
           "caption": "COG",
-          "unit": "°",
           "storeKeys": {
             "value": "nav.gps.course"
           },
-          "formatterParameters": [
-            ""
-          ],
-          "drawValue": true,
-          "valueFontFactor": 12,
+          "colorText": "#ffffff",
+          "name": "radGauge_Compass",
           "weight": 3
         }
       ],
@@ -190,23 +185,20 @@
           ]
         },
         {
-          "name": "radGauge_Speed",
+          "caption": "SOG",
+          "unit": "kn",
           "storeKeys": {
             "value": "nav.gps.speed"
           },
+          "colorPlate": "rgba(255, 255, 255, 0.01)",
+          "colorText": "#ffffff",
+          "maxValue": 10,
+          "startHighlight": 6,
           "formatterParameters": [
             ""
           ],
-          "drawValue": true,
-          "valueFontFactor": 12,
-          "colorPlate": "#fff",
-          "minValue": 0,
-          "maxValue": "10",
-          "colorHighlight": "rgba(200, 50, 50, .75)",
-          "startHighlight": "6",
-          "weight": 3,
-          "caption": "SOG",
-          "unit": "kn"
+          "name": "radGauge_Speed",
+          "weight": 3
         }
       ]
     },
