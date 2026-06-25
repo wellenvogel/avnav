@@ -31,7 +31,6 @@ import React, {ReactElement, ReactNode, useCallback, useEffect, useRef, useState
 import {DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import Toast from "./Toast";
 import {DBCancel, DialogButtons, DialogFrame, showDialog, showPromiseDialog} from "./OverlayDialog";
-// @ts-ignore
 import {checkName} from "./ItemNameDialog";
 import {EditDialogWithSave, getTemplate} from "./EditDialog";
 import Requests from "../util/requests";

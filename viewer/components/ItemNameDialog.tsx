@@ -33,7 +33,7 @@ import {
     DialogRow,
     promiseResolveHelper
 } from "./OverlayDialog";
-import {Input, valueMissing} from "./Inputs";
+import {Checkbox, Input, valueMissing} from "./Inputs";
 import Helper from "../util/helper";
 import formatter from "../util/formatter";
 import {useDialogContext} from "./DialogContext";
@@ -51,7 +51,7 @@ export type CheckNameResult= {
     info?:string;
     name?:string;
 }
-export type CheckNameFunction=(name:string) => (CheckNameResult|Promise<CheckNameResult>);
+export type CheckNameFunction=(name:string,allowOverwrite?:boolean) => (CheckNameResult|Promise<CheckNameResult>);
 export interface ItemNameDialogResult{
     name?:string
 }
@@ -64,10 +64,13 @@ export interface ItemNameDialogProps {
     mandatory?:boolean| ((name?:string)=>boolean), //true if it is mandatory but not yet 
     checkName?:CheckNameFunction,
     keepExtension?:boolean,
-    additionalButtons?:DialogButtonDef[]
+    additionalButtons?:DialogButtonDef[],
+    showAllowOverwrite?:boolean,
 }
 
-export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension,additionalButtons}:ItemNameDialogProps) => {
+export const ItemNameDialog = ({iname, resolveFunction, fixedExt,
+                                   fixedPrefix,title, mandatory, checkName,
+                                   keepExtension,additionalButtons,showAllowOverwrite}:ItemNameDialogProps) => {
     const fixedExtRef=useRef(undefined);
     if (keepExtension && fixedExtRef.current === undefined) {
         const [,ext] = Helper.getNameAndExt(iname || '');
@@ -87,6 +90,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     const [error, setError] = useState<string>();
     const [proposal,setProposal]=useState<string>();
     const [info,setInfo]=useState<string>();
+    const [allowOverwrite,setAllowOverwrite]=useState<boolean>(false);
     const dialogContext = useDialogContext();
     const parametersFromCheck=useRef<CheckNameResult>();
     const titlevalue = title ? title : (iname ? "Modify FileName" : "Create FileName");
@@ -96,7 +100,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         else mandatoryFunction=(name:string)=>(name === undefined || name === null || ! name);
     }
     useEffect(() => {
-        checkNameAndSet(name);
+        checkNameAndSet(name,allowOverwrite);
     }, []);
     const checkResult=useCallback((res?:CheckNameResult)=>{
         if (! res){
@@ -128,25 +132,25 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         }
 
     },[]);
-    const checkNameAndSet=useCallback((name:string)=>{
+    const checkNameAndSet=useCallback((name:string,allowOv:boolean)=>{
         if (!checkName) {
             checkResult();
             return;
         }
-        const cr=checkName(name);
+        const cr=checkName(name,allowOv);
         if (! (cr instanceof Promise)){
             checkResult(cr);
             return;
         }
         cr.then(()=>checkResult(),(err)=>checkResult(err));
-    },[checkName,checkResult])
+    },[checkName,checkResult]);
     let buttonList:DialogButtonDef[]=[
         {
             ...ButtonDefs.DBClear,
           onClick: ()=>{
               const nn=fullName('');
               setName(nn);
-              checkNameAndSet(nn);
+              checkNameAndSet(nn,allowOverwrite);
           },
           close: false
         },
@@ -161,7 +165,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
             onClick: ()=>{
                 const pname=proposal;
                 setName(pname);
-                checkNameAndSet(pname);
+                checkNameAndSet(pname,allowOverwrite);
             },
             close:false
         })
@@ -172,12 +176,13 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     const fixedSuffix=fixedExtRef.current?fixedExtRef.current:fixedExt;
     return <DialogFrame className={"itemNameDialog"} title={titlevalue}>
         <Input
+            minSize={10}
             dialogRow={true}
             value={removeFixedExt(name)}
             onChange={(nv) => {
                 nv=fullName(nv);
                 setName(nv);
-                checkNameAndSet(nv);
+                checkNameAndSet(nv,allowOverwrite);
             }}
             className={error?'error':undefined}
             mandatory={mandatoryFunction}
@@ -187,6 +192,11 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         </Input>
         {error && <DialogRow className={"errorText"}><span className={'inputLabel'}></span>{error}</DialogRow>}
         {info && <DialogRow className={"info"}><span className={'inputLabel'}>{info}</span> </DialogRow>}
+        {showAllowOverwrite && <Checkbox
+            label={'allow overwrite'}
+            dialogRow={true}
+            onChange={(nv:boolean) => {setAllowOverwrite(nv); checkNameAndSet(name,nv)}}
+            value={allowOverwrite}/>}
         <DialogButtons buttonList={buttonList}/>
     </DialogFrame>
 };

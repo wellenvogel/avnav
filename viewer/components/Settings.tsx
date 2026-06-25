@@ -52,7 +52,6 @@ import {useDialogContext, useStoreState} from "./exports";
 import {IDialogContext} from "./DialogContext";
 // @ts-ignore
 import {createItemActions} from './FileDialog';
-// @ts-ignore
 import {checkName, ItemNameDialog} from './ItemNameDialog';
 import Formatter from "../util/formatter";
 import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
@@ -467,7 +466,7 @@ export const newNameForLayoutEdit=async (currentName:string)=>{
                 if (cr && cr.error) return cr;
                 cr = checkName(newName, list, itemActions.nameForCheck);
                 if (cr && cr.error) {
-                        return cr;
+                    return cr;
                 } else {
                     return {
                         info: "new"
@@ -584,8 +583,17 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
     const suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
     let proposedName = oldName + "-" + suffix;
     const [settingsList,setSettingsList]=useState<Item[]>();
-    const checkFunction = (newName:string) => {
-        return checkName(newName, settingsList||[], actions.nameForCheck,true,true);
+    const checkFunction = (newName:string,allowOverwrite?:boolean) => {
+        const rs=checkName(newName,undefined,undefined,true,true);
+        if (rs && rs.error) return rs;
+        const rs2= checkName(newName, settingsList||[], actions.nameForCheck,true,true);
+        if (rs2?.error){
+            if (allowOverwrite) {
+                delete rs2.error;
+                rs2.info="existing";
+            }
+        }
+        return rs2;
     }
     useEffect(()=>{
         listItems('settings')
@@ -593,6 +601,7 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
             .catch(()=>{})
     },[])
     return <ItemNameDialog
+                showAllowOverwrite={true}
                 resolveFunction={async (res:{name:string}):Promise<void>=>{
                     const settingsName=res.name;
                     if (!settingsName || settingsName === 'user.') {
@@ -633,7 +642,8 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                         await propertyhandler.uploadSettingsData(
                             proposedName,
                             settings,
-                            false
+                            false,
+                            true
                         )
                         LocalStorageManager.setItem(PREFIX_NAMES.SETTINGS_NAME, undefined, proposedName);
                         propertyhandler.setChangedFlag(false);

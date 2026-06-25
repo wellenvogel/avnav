@@ -10,7 +10,6 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import {EditDialog, EditDialogWithSave, getTemplate, uploadFromEdit} from "./EditDialog";
 import {ConfirmDialog, SelectList} from "./BasicDialogs";
-// @ts-ignore
 import {checkName, ItemNameDialog} from "./ItemNameDialog";
 // @ts-ignore
 import {createItemActions} from "./FileDialog";
