@@ -25,7 +25,7 @@ import keys, {KeyHelper, Property, PropertyType, PropertyValue} from "../util/ke
 import DimHandler from '../util/dimhandler';
 import propertyhandler, {SavedSettingsData} from '../util/propertyhandler';
 import Toast from "./Toast";
-import Button, {ButtonEvent, DynamicButtonProps} from "./Button";
+import Button, {ButtonEvent} from "./Button";
 import {EditableStringParameterBase, Properties, SelectListEntry, Value, Values} from "../util/EditableParameter";
 import {
     default as EditableParameterUIFactory,
@@ -40,7 +40,7 @@ import Helper, {unsetOrTrue} from "../util/helper";
 import {useStateObject} from "../util/UiHelper";
 import {
     DBCancel,
-    DBOk,
+    DBOk, DialogButtonDef,
     DialogButtons,
     DialogFrame,
     showDialog,
@@ -54,12 +54,11 @@ import {IDialogContext} from "./DialogContext";
 import {createItemActions} from './FileDialog';
 // @ts-ignore
 import {checkName, ItemNameDialog} from './ItemNameDialog';
-// @ts-ignore
 import Formatter from "../util/formatter";
 import LocalStorageManager, {PREFIX_NAMES} from "../util/localStorageManager";
 import {fetchItem, listItems} from "../util/itemFunctions";
 import {DownloadItemSelectDialog} from "./DownloadItemList";
-import {Item} from "./ItemList";
+import {Item} from "../util/itemFunctions";
 import {LayoutData} from "../api/api.interface";
 import ButtonDefs from "./ButtonDefs";
 
@@ -571,7 +570,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
 }
 export interface SaveSettingsDialogProps{
     title?:React.ReactNode;
-    additionalButtons?:DynamicButtonProps[]
+    additionalButtons?:DialogButtonDef[]
 }
 export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
     const actions = createItemActions({type:'settings'});
@@ -584,20 +583,20 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
     const oldName = actions.nameToBaseName(lastName).replace(/-*[0-9]*$/, '');
     const suffix = Formatter.formatDateTime(new Date()).replace(/[: /]/g, '').replace(/--/g, '');
     let proposedName = oldName + "-" + suffix;
-    const [settingsList,setSettingsList]=useState<string[]>();
+    const [settingsList,setSettingsList]=useState<Item[]>();
     const checkFunction = (newName:string) => {
         return checkName(newName, settingsList||[], actions.nameForCheck,true,true);
     }
     useEffect(()=>{
         listItems('settings')
-            .then((settings:string[])=>setSettingsList(settings))
+            .then((settings:Item[])=>setSettingsList(settings))
             .catch(()=>{})
     },[])
     return <ItemNameDialog
-                resolveFunction={async (res:{name:string})=>{
+                resolveFunction={async (res:{name:string}):Promise<void>=>{
                     const settingsName=res.name;
                     if (!settingsName || settingsName === 'user.') {
-                        return false;
+                        throw new Error();
                     }
                     proposedName = settingsName;
                     let settings=propertyhandler.exportSettings();
@@ -639,11 +638,12 @@ export const SaveSettingsDialog=(props:SaveSettingsDialogProps)=>{
                         LocalStorageManager.setItem(PREFIX_NAMES.SETTINGS_NAME, undefined, proposedName);
                         propertyhandler.setChangedFlag(false);
                         Toast("settings saved");
-                        return true;
+                        return;
                     }catch(e){
                         Toast(e);
+                        throw new Error();
                     }
-                    return false;
+                    return;
                 }}
                 fixedPrefix={'user.'}
                 title={props.title|| "Select Name to save settings"}

@@ -24,66 +24,88 @@
  * generic dialog to select an item name
  */
 
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {ReactNode, useCallback, useEffect, useRef, useState} from "react";
 import {
     DBCancel,
-    DBOk,
+    DBOk, DialogButtonDef,
     DialogButtons,
     DialogFrame,
     DialogRow,
     promiseResolveHelper
 } from "./OverlayDialog";
 import {Input, valueMissing} from "./Inputs";
-import PropTypes from "prop-types";
 import Helper from "../util/helper";
 import formatter from "../util/formatter";
 import {useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
+import {Item} from "../util/itemFunctions";
 
-export const nameProposal=(prefix)=>{
+export const nameProposal=(prefix?:string)=>{
     const dt=new Date();
     return (prefix||'')+formatter.formatDateTime(dt).replace(/[: /]/g,'');
 }
 
-export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension,additionalButtons}) => {
+export type CheckNameResult= {
+    error?:string;
+    proposal?:string;
+    info?:string;
+    name?:string;
+}
+export type CheckNameFunction=(name:string) => (CheckNameResult|Promise<CheckNameResult>);
+export interface ItemNameDialogResult{
+    name?:string
+}
+export interface ItemNameDialogProps {
+    iname: string,
+    resolveFunction: (res:ItemNameDialogResult)=>(boolean|Promise<void>),
+    fixedExt?:string, 
+    fixedPrefix?: string,
+    title?: ReactNode, 
+    mandatory?:boolean| ((name?:string)=>boolean), //true if it is mandatory but not yet 
+    checkName?:CheckNameFunction,
+    keepExtension?:boolean,
+    additionalButtons?:DialogButtonDef[]
+}
+
+export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,title, mandatory, checkName,keepExtension,additionalButtons}:ItemNameDialogProps) => {
     const fixedExtRef=useRef(undefined);
     if (keepExtension && fixedExtRef.current === undefined) {
-        let [fn,ext] = Helper.getNameAndExt(iname || '');
+        const [,ext] = Helper.getNameAndExt(iname || '');
         fixedExtRef.current = ext||'';
     }
-    const removeFixedExt=useCallback((name)=>{
+    const removeFixedExt=useCallback((name:string)=>{
         if (! name || ! keepExtension) return name;
         if (! fixedExtRef.current) return name;
         if (Helper.getExt(name) !== fixedExtRef.current) return name;
         return name.substring(0,name.length-fixedExtRef.current.length-1);
     },[keepExtension]);
-    const fullName=useCallback((name)=>{
+    const fullName=useCallback((name:string)=>{
         if (!fixedExtRef.current ) return name;
         return name+'.'+fixedExtRef.current;
     },[])
     const [name, setName] = useState(iname ||'');
-    const [error, setError] = useState();
-    const [proposal,setProposal]=useState();
-    const [info,setInfo]=useState();
+    const [error, setError] = useState<string>();
+    const [proposal,setProposal]=useState<string>();
+    const [info,setInfo]=useState<string>();
     const dialogContext = useDialogContext();
-    const parametersFromCheck=useRef();
+    const parametersFromCheck=useRef<CheckNameResult>();
     const titlevalue = title ? title : (iname ? "Modify FileName" : "Create FileName");
-    let mandatoryFunction=false;
+    let mandatoryFunction:(name:string)=>boolean;
     if (mandatory){
         if (typeof(mandatory) === 'function') mandatoryFunction=mandatory;
-        else mandatoryFunction=(name)=>(name === undefined || name === null || ! name);
+        else mandatoryFunction=(name:string)=>(name === undefined || name === null || ! name);
     }
     useEffect(() => {
         checkNameAndSet(name);
     }, []);
-    const checkResult=useCallback((res)=>{
+    const checkResult=useCallback((res?:CheckNameResult)=>{
         if (! res){
             setError(undefined);
             setProposal(undefined);
             setInfo(undefined);
         }
         else{
-            if (res instanceof Object) {
+            if (typeof(res) ==='object') {
                 setInfo(res.info);
                 if (! res.error){
                     setError(undefined);
@@ -106,7 +128,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         }
 
     },[]);
-    const checkNameAndSet=useCallback((name)=>{
+    const checkNameAndSet=useCallback((name:string)=>{
         if (!checkName) {
             checkResult();
             return;
@@ -118,7 +140,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         }
         cr.then(()=>checkResult(),(err)=>checkResult(err));
     },[checkName,checkResult])
-    let buttonList=[
+    let buttonList:DialogButtonDef[]=[
         {
             ...ButtonDefs.DBClear,
           onClick: ()=>{
@@ -137,7 +159,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
         buttonList.splice(0,0,{
             ...ButtonDefs.DBPropose,
             onClick: ()=>{
-                let pname=proposal;
+                const pname=proposal;
                 setName(pname);
                 checkNameAndSet(pname);
             },
@@ -169,20 +191,7 @@ export const ItemNameDialog = ({iname, resolveFunction, fixedExt, fixedPrefix,ti
     </DialogFrame>
 };
 
-ItemNameDialog.propTypes={
-    iname: PropTypes.string,
-    resolveFunction: PropTypes.func, //must return true to close the dialog
-    checkName: PropTypes.func, //if provided: return an error text if the name is invalid
-                               //can also return an object with error, proposal to propose a new name
-                               //can return a promise - resolve means ok, reject like return object/string
-    title: PropTypes.string, //use this as dialog title
-    mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
-    fixedExt: PropTypes.string,  //set a fixed extension (display only)
-    fixedPrefix: PropTypes.string, //set a fixed prefix (display only)
-    keepExtension: PropTypes.bool, //do not allow to change the extension
-    additionalButtons: PropTypes.arrayOf(PropTypes.object),
-}
-export const safeName=(name)=>{
+export const safeName=(name:string)=>{
     if (! name) return;
     return name.replace(/[\u0000-\u001f\u007f"*/:<>?\\|]/g,'');
 }
@@ -197,14 +206,18 @@ export const TMP_PRFX="__avn.";
  * @param opt_notEmpty error if empty
  * @returns {{proposal: *, error: string}} - returns an object with name only if ok
  */
-export const checkName=(name,itemList,opt_idx,opt_checkAllowed,opt_notEmpty)=>{
+export const checkName=(name:string,
+                        itemList?:Item[],
+                        opt_idx?:string|((item:Item) => string),
+                        opt_checkAllowed?:boolean,
+                        opt_notEmpty?:boolean): CheckNameResult=>{
     if (opt_notEmpty){
         if (!name || name.match(/^ *$/)) return {
             error:"must not be empty"
         }
     }
     if (! name) return;
-    let rt=undefined;
+    let rt:CheckNameResult=undefined;
     if (opt_checkAllowed !== false){
         if (Helper.startsWith(name,TMP_PRFX)){
             rt= {
@@ -236,25 +249,31 @@ export const checkName=(name,itemList,opt_idx,opt_checkAllowed,opt_notEmpty)=>{
     return rt;
 }
 
-const checkNameList=(name,itemList,opt_idxfct)=>{
+const checkNameList=(name:string,itemList?:Item[],opt_idxfct?:((item:Item)=>string)|string):CheckNameResult=>{
     if (! (itemList instanceof Array)) return;
     let exists=false;
     let maxNum=1;
     const [fn,ext]=Helper.getNameAndExt(name);
     if (! fn) return;
-    if (! opt_idxfct) opt_idxfct=(data)=>data?data.name:data;
+    let idfct:(item:Item)=>string;
+    if (!opt_idxfct) {
+        idfct = ((data: Item) => data ? data.name : undefined)
+    }
     else{
-        if (typeof(opt_idxfct) !== "function"){
-            opt_idxfct=(data)=>data?data[opt_idxfct]:data;
+        if (typeof(opt_idxfct) === "string"){
+            idfct=(data)=>data?data[opt_idxfct]:data;
+        }
+        else{
+            idfct=opt_idxfct;
         }
     }
     let prfx=fn.replace(/\d*$/,'');
     if (! prfx) prfx=fn;
     for (let i=0;i<itemList.length;i++) {
-        const v=opt_idxfct(itemList[i]);
+        const v=idfct(itemList[i]);
         if (! v) continue;
         if (Helper.startsWith(v,prfx) && Helper.endsWith(v,ext)){
-            let n=parseInt(v.substring(prfx.length));
+            const n=parseInt(v.substring(prfx.length));
             if (!isNaN(n) && n >= maxNum) maxNum=n+1;
         }
         if (v ===name) exists=true;

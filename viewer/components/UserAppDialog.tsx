@@ -125,7 +125,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current}:SelectHtmlDialogPr
                     dialogContext.showDialog(()=><ItemNameDialog
                         iname={""}
                         fixedExt={"html"}
-                        mandatory={(v:boolean)=>!v}
+                        mandatory={(v:string)=>!v}
                         checkName={checkNameFunction}
                         resolveFunction={(res?:{name:string})=>{
                             let name=res?.name;
@@ -140,6 +140,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current}:SelectHtmlDialogPr
                                 }}
                                 type={'user'}
                             />)
+                            return false;
                         }}/>
                     )
                 },
