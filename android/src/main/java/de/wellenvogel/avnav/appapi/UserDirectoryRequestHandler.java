@@ -118,6 +118,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
                     "      return function(...args) {",
                     "         return rt.apply(this === descriptor ? target:this,args);",
                     "      }",
+                    "    }",
                     "    return rt;",
                     "}",
                     "return {",
