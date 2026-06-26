@@ -699,6 +699,7 @@ export const standardActions={
                     fullscreen={true}
                     type={item.type}
                     fileName={item.name}
+                    showColorDialog={item.type === 'user' && (item.name||'').toLowerCase().endsWith('.css')}
                     resolveFunction={()=>dialogContext.closeDialog()}/>
             })
             return false;

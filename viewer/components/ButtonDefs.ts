@@ -770,7 +770,12 @@ const ButtonDefinitions= {
         iconClass: iconClasses.NavGoto,
         name:btdef.DBStartRoute
 
+    },
+    DBColor:{
+        iconClass: iconClasses.Color,
+        name:btdef.DBColor
     }
+
 
 
 }

@@ -22,6 +22,8 @@ import {fetchItem, IMAGES, ItemType} from "../util/itemFunctions";
 import {ViewDialog} from "./ViewDialog";
 import ButtonDefs from "./ButtonDefs";
 import {DialogButtonProps} from "./DialogButton";
+// @ts-ignore
+import ColorDialog from './ColorDialog';
 
 export interface EditDialogProps {
     data:string
@@ -32,9 +34,10 @@ export interface EditDialogProps {
     fileName?:string,
     showCollapse?:boolean,
     fullscreen?:boolean,
+    showColorDialog?:boolean,
 }
 export const EditDialog = ({data, title, language, resolveFunction,
-                               saveFunction, fileName,showCollapse,fullscreen}:EditDialogProps) => {
+                               saveFunction, fileName,showCollapse,fullscreen,showColorDialog}:EditDialogProps) => {
     const flask = useRef<typeof CodeFlask>();
     const editElement = useRef();
     const [changed, setChanged] = useState(false);
@@ -120,6 +123,28 @@ export const EditDialog = ({data, title, language, resolveFunction,
                 setCollapsed(!collapsed);
             }
         })
+    }
+    if (showColorDialog){
+        buttonList.splice(0,0,
+            {
+                ...ButtonDefs.DBColor,
+                onClick:() => {
+                    if (! flask.current) return;
+                    const el=flask.current.elTextarea;
+                    const [start, end] = [el.selectionStart, el.selectionEnd];
+                    const current=flask.current.getCode();
+                    const selected=current.substring(start, end);
+                    dialogContext.showDialog(()=><ColorDialog
+                        value={selected}
+                        resolveFunction={(color:string)=>{
+                            if (!color) return;
+                            const newString=current.substring(0,start)+color+current.substring(end);
+                            flask.current.updateCode(newString,true);
+                        }}
+                    ></ColorDialog>)
+                },
+                close: false
+            })
     }
     return <DialogFrame fullscreen={Helper.unsetorTrue(fullscreen)} title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
         <UploadHandler
