@@ -573,10 +573,11 @@ export const AddonItem = (props: AddonItemProps) => {
                 ></Button>}
             </ListSlot>
             <ListMainSlot
-                primary={url + ""}
+                primary={url?(url + ""):undefined}
                 secondary={props.title}
             >
-                <div className="pageAndButton">{`Page ${pages.join(",")} Button: ${props.buttonClass}`}</div>
+                <div className="pageInfo">{`Page ${pages.join(",")}`}</div>
+                <div className="buttonInfo">{`Button: ${props.buttonClass}`}</div>
                 <div className="sourceInfo">{source}</div>
             </ListMainSlot>
             <ListSlot icon={{className: props.canDelete ? iconClasses.Edit : undefined}}/>
