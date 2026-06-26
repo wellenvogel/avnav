@@ -38,10 +38,17 @@ import Headline from "./Headline";
 import {iconClasses} from './Icons';
 import {shallowEqual} from "shallow-equal";
 import {EditableParameter} from "../util/EditableParameter";
+import ButtonDefs from "./ButtonDefs";
 
 export type TEditableParameterUI=Record<string, any>;
 export interface TParameterDialog extends Omit<DialogConfig, "parameters"> {
     parameters?: TEditableParameterUI[];
+}
+const findButtonDef=(name:string)=>{
+    if (! name) return;
+    for (const bt of Object.values(ButtonDefs)){
+        if (bt.name === name) return bt;
+    }
 }
 export const ParameterDialog = (props:TParameterDialog) => {
     const [values, setValues] = React.useState(props.values||{});
@@ -200,11 +207,9 @@ export const showParameterDialog = (dialogContext: IDialogContext ,
             throw new Error("config.buttons must be an array");
         }
         for (const button of config.buttons) {
-            let iconClass=button.iconClass;
-            if (iconClass === undefined){
-                iconClass=defaultIconClasses[button.name]||button.name
-            }
-            buttons.push({...button,iconClass:iconClass});
+            const iconClass=defaultIconClasses[button.name];
+            const knownButton=findButtonDef(button?.name);
+            buttons.push({iconClass:iconClass,...knownButton,...button});
         }
     }
     let cancel=undefined;
