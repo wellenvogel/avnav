@@ -59,6 +59,7 @@ import {addProtocol} from "maplibre-gl";
 import {Protocol} from "pmtiles";
 import {EventTypes} from "./maptypes";
 import keyhandler from "../util/keyhandler.ts";
+import propertyhandler from "../util/propertyhandler";
 
 
 
@@ -658,6 +659,12 @@ class MapHolder extends DrawingPositionConverter {
         let rt;
         try {
             rt = LocalStorage.getItem(STORAGE_NAMES.LASTCHART);
+            if (! rt && LocalStorage.hasPrefix()) {
+                rt=LocalStorage.getItem(STORAGE_NAMES.LASTCHART,undefined,true);
+                if (rt){
+                    LocalStorage.setItem(STORAGE_NAMES.LASTCHART,undefined,rt);
+                }
+            }
             if (rt){
                 rt=JSON.parse(rt);
             }
