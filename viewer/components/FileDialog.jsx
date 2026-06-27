@@ -42,7 +42,12 @@ import {
 import layouthandler, {layoutLoader} from "../util/layouthandler";
 import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
-import UserAppDialog, {getAddonsByUrl, selectAddonForEdit} from "./UserAppDialog";
+import UserAppDialog, {
+    getAddonsByPluginName,
+    getAddonsByUrl,
+    selectAddonForEdit,
+    selectAddonForPlugin
+} from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import {getTrackInfo, INFO_ROWS as TRACK_INFO_ROWS, TrackConvertDialog} from "./TrackConvertDialog";
 import {getRouteInfo, INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoHelper";
@@ -1850,6 +1855,15 @@ class PluginItemActions extends ItemActions{
         actions.push(standardActions.download.copy({}))
         actions.push(standardActions.config.copy({
             visible:this.isConnected(),
+        }))
+        actions.push(new Action({
+            ...ButtonDefs.DBUserApp,
+            action: async (action,item,dialogContext,history)=>{
+                try {
+                    selectAddonForPlugin(dialogContext,history, item.name);
+                }catch (e){ /* empty */ }
+            },
+            visible:this.isConnected() && getAddonsByPluginName(item.name).length > 0
         }))
     }
 

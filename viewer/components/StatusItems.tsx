@@ -63,6 +63,7 @@ export interface ChildStatusProps{
     canEdit?: boolean;
     showEditDialog?:(handlerId: string|number, id: string, finishCallback: (id:number|string)=>void)=>void;
     finishCallback?:(id:string|number)=>void ;
+    hideName?: boolean;
 }
 export const ChildStatus=(props:ChildStatusProps)=>{
     const canEdit=props.canEdit && props.connected && props.allowEdit;
@@ -73,7 +74,7 @@ export const ChildStatus=(props:ChildStatusProps)=>{
     return (
         <div className={clName} onClick={props.onClick}>
             <StatusIcon type={statusTextToImageUrl(props.status)}/>
-            <span className="statusName">{name}</span>
+            {! props.hideName && <span className="statusName">{name}</span>}
             <span className="statusInfo">{props.info}</span>
             {(props.forceEdit || (canEdit && ! sub))  && <EditIcon onClick={
                 ()=>props.showEditDialog(props.handlerId,props.id,props.finishCallback)

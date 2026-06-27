@@ -82,7 +82,7 @@ export interface SelectDialogProps{
     resolveFunction?:(el:SelectListEntry) => void;
     title?:React.ReactNode;
     list:SelectListEntry[];
-    optResetCallback:(ev:ButtonEvent) => void;
+    optResetCallback?:(ev:ButtonEvent) => void;
     okCallback?:(el:SelectListEntry) => void;
     className?:string;
     sort?:(a:SelectListEntry, b:SelectListEntry)=>number;

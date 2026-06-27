@@ -2,7 +2,7 @@ import React, {SyntheticEvent, useEffect, useState} from 'react';
 import {DBCancel, DBOk, DialogButtons, DialogFrame, DialogText, showPromiseDialog} from './OverlayDialog';
 import Toast from './Toast';
 
-import Addons, {InternalAddonProps} from '../util/Addons';
+import Addons, {getAllAddons, InternalAddonProps} from '../util/Addons';
 import Helper, {avitem, concatsp, getav, unsetOrTrue} from '../util/helper';
 import Requests from '../util/requests';
 import UploadHandler, {uploadClick} from "./UploadHandler";
@@ -34,6 +34,7 @@ import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 import Button, {ButtonEventHandler} from "./Button";
 import {iconClasses} from './Icons';
 import ItemList from "./ItemList";
+import {IHistory} from "../util/history";
 
 export interface InternalAddonDisplayProps extends InternalAddonProps{
     buttonKey?:string
@@ -232,6 +233,41 @@ export const getAddonsByUrl=(url:string)=>{
         }
     }
     return foundAddons;
+}
+export const getAddonsByPluginName=(name:string):InternalAddonProps[]=>{
+    if (! name) return []
+    const key="plugin-"+name; //TODO: should get the prefix from somewhere
+    const altKey="cl-plugin-"+name;
+    const all=getAllAddons();
+    const rt:InternalAddonProps[]=[];
+    for (const addon of all){
+        if (addon.source === key || addon.source === altKey){
+            rt.push(addon);
+        }
+    }
+    return rt;
+}
+
+export const selectAddonForPlugin=(dialogContext:IDialogContext,history:IHistory,pluginName:string)=>{
+    if (! pluginName) return;
+    const pluginAddons=getAddonsByPluginName(pluginName);
+    if (!pluginAddons?.length) return;
+    if (pluginAddons.length === 1){
+        runAddonAction(pluginAddons[0],history);
+        return;
+    }
+    dialogContext.showDialog(()=><DialogFrame title={"Select App/Button"}>
+            <ItemList
+                itemList={pluginAddons}
+                itemClass={(item)=><AddonItem {...item} preventButton={true}/>}
+                onItemClick={(ev)=>{
+                    const item=avitem(ev);
+                    runAddonAction(item,history);
+                }}
+                />
+        <DialogButtons buttonList={[DBCancel()]}/>
+        </DialogFrame>
+        );
 }
 
 export const selectAddonForEdit=(
@@ -529,6 +565,23 @@ interface AddonItemProps extends InternalAddonProps {
     preventButton?:boolean;
 }
 
+const runAddonAction=(props:AddonItemProps,history:IHistory)=>{
+    if (props.newWindow) {
+        window.open(props.url, props.name);
+        return;
+    }
+    let page: string;
+    const pageList = Array.isArray(props.page) ? props.page : [props.page || PAGEIDS.ADDON]
+    for (const pg of pageList) {
+        if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
+            page = pg;
+            break;
+        }
+    }
+    if (!page) page = PAGEIDS.ADDON;
+    history.push(page, {button: props.buttonKey || props.key || props.name})
+}
+
 export const AddonItem = (props: AddonItemProps) => {
     const history = useHistory();
     let source = props.source || 'user';
@@ -553,20 +606,7 @@ export const AddonItem = (props: AddonItemProps) => {
                         if (props.preventButton) return;
                         ev.preventDefault();
                         ev.stopPropagation();
-                        if (props.newWindow) {
-                            window.open(props.url, props.name);
-                            return;
-                        }
-                        let page: string;
-                        const pageList = Array.isArray(props.page) ? props.page : [props.page || PAGEIDS.ADDON]
-                        for (const pg of pageList) {
-                            if (Object.values(PLUGINPAGES).indexOf(pg) >= 0) {
-                                page = pg;
-                                break;
-                            }
-                        }
-                        if (!page) page = PAGEIDS.ADDON;
-                        history.push(page, {button: props.buttonKey || props.key || props.name})
+                        runAddonAction(props, history);
                     }
                     }
                     iconClass={props.button.iconClass}

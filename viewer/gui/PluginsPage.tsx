@@ -75,7 +75,7 @@ export const PluginsPage = (props:PageProps) => {
                 if (current && shallowEqual(current.status,st)) {
                     return current.element;
                 }
-                const rt= <ChildStatus id={st.name} handlerId={-1} {...st}/>
+                const rt= <ChildStatus hideName={true} id={st.name} handlerId={-1} {...st}/>
                 infoCache.current[st.name]={
                     status:st,
                     element:rt
