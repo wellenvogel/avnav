@@ -172,7 +172,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     if (!ok) return;
                     const masterValues = PropertyHandler.getMasterValues();
                     const promises = [];
-                    const loadLayout=async (name)=>{
+                    const loadLayout=async (name:string)=>{
                         const layout=await layoutLoader.loadLayout(name)
                         return new LayoutAndName(name,layout);
                     }
