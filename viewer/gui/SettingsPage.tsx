@@ -11,7 +11,7 @@ import Toast from '../components/Toast';
 import {
     showDialog, showPromiseDialogTrue
 } from '../components/OverlayDialog';
-import {layoutLoader} from '../util/layouthandler';
+import Layouthandler, {LayoutAndName, layoutLoader} from '../util/layouthandler';
 import PropertyHandler from '../util/propertyhandler';
 import {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
@@ -164,7 +164,7 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
             },
             [ButtonDefs.SettingsSplitReset.name]: {
                 onClick: async () => {
-                    const ok=showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog
+                    const ok=await showPromiseDialogTrue(dialogContext,(dp)=><ConfirmDialog
                         {...dp}
                         title={'Reset Split Settings to Defaults?'}
                         text={'This will reset all settings for this side (left/right) to the values used when not in split mode.'}
@@ -172,14 +172,25 @@ const SettingsPage = (props:Partial<PageBaseProps>) => {
                     if (!ok) return;
                     const masterValues = PropertyHandler.getMasterValues();
                     const promises = [];
+                    const loadLayout=async (name)=>{
+                        const layout=await layoutLoader.loadLayout(name)
+                        return new LayoutAndName(name,layout);
+                    }
                     for (const key in masterValues) {
                         const description = KeyHelper.getKeyDescriptions()[key];
                         if (description.type === PropertyType.LAYOUT) {
-                            promises.push(layoutLoader.loadLayout(masterValues[key] as string));
+                            promises.push(loadLayout(masterValues[key] as string));
                         }
                     }
                     Promise.all(promises)
-                        .then(() => globalStore.storeMultiple(masterValues))
+                        .then((results:any[]) => {
+                            globalStore.storeMultiple(masterValues);
+                            for (const res of results) {
+                                if (res instanceof LayoutAndName) {
+                                    Layouthandler.setLayoutAndName(res.layout, res.name,true);
+                                }
+                            }
+                        })
                         .catch((e) => Toast(e));
                 },
                 overflow: true
