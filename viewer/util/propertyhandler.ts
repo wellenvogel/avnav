@@ -147,6 +147,21 @@ class PropertyHandler {
         }
         return obj;
     }
+    deleteItem(obj:UserData,path:string,opt_skip?:number) {
+        if (! obj) return;
+        let current=obj;
+        const parts=path.split('.');
+        for (let i=opt_skip||0; i < parts.length ;i++){
+            const pk=parts[i];
+            if (i < (parts.length-1)){
+                if (typeof(current[pk]) !== 'object') return;
+                current=current[pk];
+                continue;
+            }
+            delete current[pk];
+        }
+        return obj;
+    }
     savePrefixedValues(){
         const saveDataSplit:UserData={}
         const hasPrefix=LocalStorage.hasPrefix();
@@ -161,9 +176,10 @@ class PropertyHandler {
         this.saveUserData(saveDataSplit, true);
     }
     dataChanged(){
-        const saveData:UserData={};
         const saveDataSplit:UserData={}
         const hasPrefix=LocalStorage.hasPrefix();
+        //if we are in split mode we must keep the prefix keys from the current values
+        const saveData:UserData=hasPrefix?this.loadUserData():{};
         for (const dk in this.propertyDescriptions){
             const v=globalStore.getData(dk);
             if (this.vprefixKeys.indexOf(dk) >= 0 && hasPrefix){
@@ -173,6 +189,9 @@ class PropertyHandler {
             else{
                 if (v !== this.propertyDescriptions[dk].defaultv){
                     this.setItem(saveData,dk,v,1);
+                }
+                else{
+                    this.deleteItem(saveData,dk,1);
                 }
             }
         }
