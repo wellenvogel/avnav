@@ -1567,11 +1567,6 @@ class LayoutItemActions extends ItemActions{
             ...ButtonDefs.DBActivate,
             visible:true,
             action:async (action,item,dialogContext)=>{
-                const res=await showPromiseDialog(dialogContext,(dp)=><ConfirmDialog
-                    {...dp}
-                    text={"activate layout "+item.name+"?"}
-                />);
-                if (! res) return;
                 await loadAndActivate(item);
                 dialogContext.closeDialog();
             }
