@@ -82,7 +82,7 @@
  const NetworkList=({items,onClick})=>{
     return html`
     <div className="networkList">
-        <div className="heading">Available Networks<//>
+        <div className="heading">Available Wifi Networks<//>
         <div className="itemList">
         ${items.map((item)=>{
             return html`<${Network} net=${item} onClick=${(ev)=>onClick(ev,item)} key=${item.path}/>`
@@ -95,7 +95,7 @@
     const dialogContext=useDialogContext();
     return html`
     <${ListItem} className="heading">
-        <${ListMainSlot} primary="Available Interfaces"/>
+        <${ListMainSlot} primary="Available Wifi Interfaces"/>
         <${ListSlot}>
         ${scanning && html`<span className="spinner"/>`}
         <//>
