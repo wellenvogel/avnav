@@ -437,6 +437,9 @@ export const EditSettingsCategory=(props:EditSettingsCategoryProps)=>{
 export interface SelectLayoutDialogProps{
     className?:string;
     startEditCallback?:(name:string)=>void;
+    okCallback?:(name:string)=>void;
+    noEdit?: boolean;
+    title?:React.ReactNode;
 }
 
 export const newNameForLayoutEdit=async (currentName:string)=>{
@@ -505,7 +508,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
             return;
         }
     }
-    return <DialogFrame title={'Select/Edit Layout'} className={Helper.concatsp(props.className,'selectLayout')}>
+    return <DialogFrame title={props.title||'Select/Edit Layout'} className={Helper.concatsp(props.className,'selectLayout')}>
         <EditableParameterListUI
             values={currentValues.getState()}
             parameters={[layoutParameter]}
@@ -528,6 +531,9 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
                     return;
                 }
                 await dialogContext.closeDialog();
+                if (props.okCallback){
+                    props.okCallback(layoutAndName[0]);
+                }
             },{
                 disabled:!currentValues.isChanged(),
                 close:false,
@@ -560,7 +566,8 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
                         Toast(e);
                         return;
                     }
-                }
+                },
+                visible:!props.noEdit
 
             }
 

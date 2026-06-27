@@ -564,7 +564,7 @@ class PropertyHandler {
         }
         if (newLayout) {
             const layout = await layoutLoader.loadLayout(newLayout)
-            LayoutHandler.setLayoutAndName(layout, newLayout);
+            LayoutHandler.setLayoutAndName(layout, newLayout,true);
         }
         globalStore.storeMultiple(values);
         if (resetChanged) {
