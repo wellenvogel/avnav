@@ -39,6 +39,7 @@ const LayoutFinishedDialog=(props)=>{
             case 4:
                 dialogContext.replaceDialog((dprops)=><EditDialog
                     {...dprops}
+                    showColorDialog={true}
                     data={LayoutHandler.getCss()||""}
                     language="css"
                     saveFunction={(data)=>{
