@@ -125,10 +125,10 @@ export default function() {
     let navurl=getParam('navurl');
     if (navurl){
         globalStore.storeData(keys.gui.global.navUrl,navurl);
-        globalStore.storeData(keys.properties.routingServerError,false);
+        globalStore.storeData(keys.gui.global.routingServerError,false);
     }
     else {
-        globalStore.storeData(keys.properties.routingServerError,true);
+        globalStore.storeData(keys.gui.global.routingServerError,true);
         globalStore.storeData(keys.gui.global.navUrl,DEFAULT_NAVURL);
     }
     let ro="readOnlyServer";

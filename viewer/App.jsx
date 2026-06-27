@@ -275,7 +275,7 @@ class App extends React.Component {
         if (window.avnavAndroid) {
             base.log("android integration enabled");
             globalStore.storeData(keys.gui.global.onAndroid, true, );
-            globalStore.storeData(keys.properties.routingServerError, false);
+            globalStore.storeData(keys.gui.global.routingServerError, false);
             globalStore.storeData(keys.gui.global.connectedMode, true);
             const receiveAndroidEvent = (key, id) => {
                 try {

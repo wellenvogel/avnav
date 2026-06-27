@@ -335,7 +335,8 @@ const keys:Record<string,KeyType>={
             addonViewChanged:K,
             mainNavVisible:K,
             chartEntrySequence:K,
-            addonFrameVisible:K
+            addonFrameVisible:K,
+            routingServerError:K
         },
         gpspage:{
             pageNumber:K,
@@ -458,7 +459,6 @@ const keys:Record<string,KeyType>={
         wpaQueryTimeout: new Property(10000), //ms
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
-        routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         fontBase: new Property("Arial","Font Base",PropertyType.SELECT,["Arial","Verdana","Tahoma","Times New Roman","Georgia","Garamond"],"The font to be used for any text on the map"),
         fontShadowColor: new Property('#fff',"Font Shadow Color", PropertyType.COLOR,undefined,"A color for the shadow of text on the map"),
@@ -561,6 +561,7 @@ const keys:Record<string,KeyType>={
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.DELETED),
         startNavPage: new Property(false,"start with last map",PropertyType.DELETED),
         nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.DELETED),
+        routingServerError: new Property(true, "ServerError", PropertyType.DELETED), //notify comm errors to server
     }
 };
 

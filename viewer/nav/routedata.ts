@@ -1063,7 +1063,7 @@ class  RouteData {
             ).catch(
                 (error) => {
                     this.lastSentLeg = undefined;
-                    if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send leg to server:" + error);
+                    if (globalStore.getData(keys.gui.global.routingServerError)) Toast("unable to send leg to server:" + error);
                 }
             );
         }
