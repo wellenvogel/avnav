@@ -110,6 +110,7 @@ const RenderChildParam=({currentValues,initialValues,onChange,className})=>{
                     dialogContext.showDialog((props)=>{
                         return <EditWidgetDialog
                             {...props}
+                            useOk={true}
                             title="Add Sub"
                             current={{}}
                             weight={true}
@@ -161,13 +162,20 @@ export const CombinedWidget=(props)=>{
     if (props.name !== DEFAULT_NAME) className+=" "+DEFAULT_NAME;
     if (vertical) className+=" vertical";
     let weightSum=0;
+    if (! children || !  Array.isArray(children) || ! children.length) {
+        if (editing) {
+            children = [{
+                name:'Empty'
+            }]
+        }
+    }
     (children||[]).forEach((child)=>{
         weightSum+=getWeight(child);
     });
     const dragFrame=Layouthandler.subPanelName(sortContext.id,dragId);
     const itemClick=editing?undefined:cl;
     return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl}>
-        { (editing && locked) && <div className="icon locked">Locked</div>}
+        { (editing) && <div className="locked">{locked?'Locked':'Combined'}</div>}
         <ItemList
             dragdrop={editing && ! locked}
             dragFrame={dragFrame}

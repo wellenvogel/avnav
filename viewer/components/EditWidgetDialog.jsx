@@ -150,6 +150,7 @@ const EditWidgetDialog = (props) => {
     if (widgetData){
         description = widgetData.description || widgetData.wclass?.description;
     }
+    const insertButton=props.useOk?ButtonDefs.DBOk:ButtonDefs.DBInsert;
     return (
         <DialogFrame className="selectDialog editWidgetDialog" title={props.title || 'Select Widget'}>
             {(props.panelList !== undefined) && <InputSelect className={panelClass}
@@ -195,7 +196,7 @@ const EditWidgetDialog = (props) => {
                 <DialogButtons className="insertButtons">
                     {hasCurrent ? <DB {...ButtonDefs.DBBefore} disabled={!validData} onClick={() => insert(true)}/> : null}
                     {hasCurrent ? <DB {...ButtonDefs.DBAfter} disabled={!validData} onClick={() => insert(false)}/> : null}
-                    {(!hasCurrent) ? <DB {...ButtonDefs.DBInsert} disabled={!validData} onClick={() => insert(false)}/> : null}
+                    {(!hasCurrent) ? <DB {...insertButton} disabled={!validData} onClick={() => insert(false)}/> : null}
                 </DialogButtons>
                 : null}
             <DialogButtons>
@@ -229,7 +230,8 @@ EditWidgetDialog.propTypes = {
     insertCallback: PropTypes.func,
     updateCallback: PropTypes.func,
     removeCallback: PropTypes.func,
-    types: PropTypes.array
+    types: PropTypes.array,
+    useOk: PropTypes.bool, //show OK instead of "Insert" if no others are there
 };
 
 const filterObject=(data)=>{
