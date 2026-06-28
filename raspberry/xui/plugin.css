@@ -11,9 +11,12 @@
 set the icon url for the plugin running as user plugin
 and as system plugin
 */
-.button.user-switch-desk-Desk2 .icon {
+.button.user-switchDesk-Desk2 .icon {
     background-image: var(--avnav-xui-switchdesk-icon);
 }
-.button.system-switch-desk-Desk2 .icon {
+.button.system-switchDesk-Desk2 .icon {
+    background-image: var(--avnav-xui-switchdesk-icon);
+}
+.button.builtin-switchDesk-Desk2 .icon {
     background-image: var(--avnav-xui-switchdesk-icon);
 }
