@@ -37,7 +37,7 @@
      inkscape:deskcolor="#d1d1d1"
      showguides="true"
      inkscape:zoom="12.04"
-     inkscape:cx="23.754153"
+     inkscape:cx="23.795681"
      inkscape:cy="29.194352"
      inkscape:window-width="1920"
      inkscape:window-height="1129"
@@ -70,10 +70,12 @@
        orientation="0,-1"
        id="guide8"
        inkscape:locked="false" /></sodipodi:namedview><g
-     style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"
+     style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
      id="g6"
      transform="matrix(1.1538462,0,0,1.1538462,-2.3066699,-2.2238688)"><path
        d="M 12,19 5,12 12,5"
-       id="path1-5" /><path
+       id="path1-5"
+       style="stroke-width:2;stroke-dasharray:none" /><path
        d="M 19,12 H 5"
-       id="path2" /></g></svg>
+       id="path2"
+       style="stroke-width:2;stroke-dasharray:none" /></g></svg>
