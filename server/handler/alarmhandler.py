@@ -141,7 +141,7 @@ class AVNAlarmHandler(AVNWorker):
     		AlarmConfig(name="waypoint",category=AlarmConfig.C_INFO,repeat="1",message="Waypoint reached"),
   		  AlarmConfig("anchor",category=AlarmConfig.C_CRITICAL,repeat="20000",message="Anchor dragging"),
   		  AlarmConfig(name="gps",category=AlarmConfig.C_CRITICAL, repeat="20000",message="GPS lost"),
-  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2",message="Person over board"),
+  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="20",message="Person over board"),
         AlarmConfig(name="connectionLost", category=AlarmConfig.C_INFO,message="Server connection lost") #client only...
   ]
   SOUND_MAP={
