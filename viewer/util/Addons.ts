@@ -13,10 +13,10 @@ import {StoreKeys} from '../api/api.interface'
 import {ReactNode} from "react";
 
 export interface AddonProps extends UserApp {
-    [index:string]:UserButtonBase|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
+    [index:string]:UserButton|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
     name: string;
     key?:string
-    button?:UserButtonBase;
+    button?:UserButton;
     preventConnectionLost?:boolean,
     source?:string,
     invalid?:boolean
@@ -29,11 +29,11 @@ export interface PluginAddonProps extends AddonProps{
     icon?:string|URL;
 }
 class PluginAddOn implements PluginAddonProps{
-    [index:string]:UserButtonBase|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
+    [index:string]:UserButton|string|boolean|StoreKeys|PluginPage|PluginPage[]|ReactNode|URL;
     name: string;
     pluginName: string;
     url: string|URL;
-    button?:UserButtonBase;
+    button?:UserButton;
     icon?: string|URL;
     title: React.ReactNode;
     newWindow: boolean;

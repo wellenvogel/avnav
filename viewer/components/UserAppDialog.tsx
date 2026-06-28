@@ -254,6 +254,7 @@ export const selectAddonForPlugin=(dialogContext:IDialogContext,history:IHistory
     if (!pluginAddons?.length) return;
     if (pluginAddons.length === 1){
         runAddonAction(pluginAddons[0],history);
+        dialogContext.closeDialog();
         return;
     }
     dialogContext.showDialog(()=><DialogFrame title={"Select App/Button"}>
@@ -263,6 +264,7 @@ export const selectAddonForPlugin=(dialogContext:IDialogContext,history:IHistory
                 onItemClick={(ev)=>{
                     const item=avitem(ev);
                     runAddonAction(item,history);
+                    dialogContext.closeDialog();
                 }}
                 />
         <DialogButtons buttonList={[DBCancel()]}/>
@@ -579,6 +581,12 @@ const runAddonAction=(props:AddonItemProps,history:IHistory)=>{
         }
     }
     if (!page) page = PAGEIDS.ADDON;
+    if (page === PAGEIDS.ACTIONS) {
+        if (props.button?.onClick){
+            props.button.onClick(new Event("click"));
+        }
+        return;
+    }
     history.push(page, {button: props.buttonKey || props.key || props.name})
 }
 

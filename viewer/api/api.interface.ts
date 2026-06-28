@@ -545,7 +545,7 @@ export interface UserButtonBase extends ButtonBase{
 }
 
 export interface UserButton extends UserButtonBase{
-    onClick:(event:object)=>void    //if set this function is called instead of invoking the url
+    onClick?:(event:object)=>void    //if set this function is called instead of invoking the url
     toggle?:boolean;
 }
 export interface UserApp{
