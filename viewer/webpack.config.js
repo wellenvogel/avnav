@@ -42,6 +42,7 @@ module.exports = (env, argv) => {
         {context: './demo', from: '*.xml', to: 'demo/'},
         {context: './images', from: 'ais-default*png', to: 'images/'},
         {context: './images', from: 'ais-aton*png', to: 'images/'},
+        {context: './images', from: 'rpi*', to: 'images/'},
         {context: './exportmodules', from: '*.js',to:'modules/'}
     ];
     var images = [
