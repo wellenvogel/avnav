@@ -323,6 +323,7 @@ const keys:Record<string,KeyType>={
             isFullScreen: K,
             remoteChannelState:K,
             preventAlarms: K,
+            preventAlarmSound: K,
             ignoreAndroidBack: K,
             remoteChannelActive: K,
             navUrl: K,

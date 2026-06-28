@@ -622,6 +622,10 @@ class App extends React.Component {
         else{
             document.title = "AVNav-Warning";
         }
+        const hasAlarmSounds=! (window.avnavAndroid ||
+            globalStore.getData(keys.gui.global.preventAlarms) ||
+            globalStore.getData(keys.gui.global.preventAlarmSound)
+        ) && globalStore.getData(keys.properties.localAlarmSound)
         return <div
             className={appClass}
             ref={this.appRef}
@@ -634,7 +638,7 @@ class App extends React.Component {
                 history={this.history}
                 nightMode={this.props.nightMode}
                 />
-            { ! (window.avnavAndroid || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
+            { hasAlarmSounds?<DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
                 />:

@@ -145,6 +145,9 @@ export default function() {
     if (getParam('preventAlarms') === 'true'){
         globalStore.storeData(keys.gui.global.preventAlarms,true);
     }
+    if (getParam('preventAlarmSound') === 'true'){
+        globalStore.storeData(keys.gui.global.preventAlarmSound,true);
+    }
     if (getParam('ignoreAndroidBack') === 'true'){
         globalStore.storeData(keys.gui.global.ignoreAndroidBack,true);
     }

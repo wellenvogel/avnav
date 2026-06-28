@@ -133,6 +133,8 @@ settingsConditions[keys.properties.boatSteadyMax]=(values)=>
     !!((values||{})[keys.properties.boatSteadyDetect])
 settingsConditions[keys.properties.showDimGpsPage]=()=>globalstore.getData(keys.gui.global.onAndroid)
 settingsConditions[keys.properties.showDimNavPage]=()=>globalstore.getData(keys.gui.global.onAndroid)
+settingsConditions[keys.properties.alarmVolume]=()=>!globalstore.getData(keys.gui.global.preventAlarmSound)
+settingsConditions[keys.properties.localAlarmSound]=()=>!globalstore.getData(keys.gui.global.preventAlarmSound)
 
 
 export type SettingsValuesType=Record<string, PropertyValue>;
@@ -439,6 +441,7 @@ export interface SelectLayoutDialogProps{
     startEditCallback?:(name:string)=>void;
     okCallback?:(name:string)=>void;
     noEdit?: boolean;
+    allowUnchanged?: boolean;
     title?:React.ReactNode;
 }
 
@@ -535,7 +538,7 @@ export const SelectLayoutDialog=(props:SelectLayoutDialogProps)=>{
                     props.okCallback(layoutAndName[0]);
                 }
             },{
-                disabled:!currentValues.isChanged(),
+                disabled:! props.allowUnchanged && !currentValues.isChanged(),
                 close:false,
             }),
             {
