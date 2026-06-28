@@ -66,6 +66,7 @@ const loadSettingsOrLayouts=async (dialogContext:IDialogContext,history:IHistory
     }
     //only default settings, select the layout
     await dialogContext.showDialog(()=><SelectLayoutDialog
+        allowUnchanged={true}
         okCallback={() => gotoNav()}
         noEdit={true}
         title={'Select Layout to use'}
