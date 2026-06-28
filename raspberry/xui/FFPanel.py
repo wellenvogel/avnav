@@ -90,12 +90,13 @@ class ResetDialog(Gtk.Dialog):
         self.show_all()
 
 class BDef():
-    def __init__(self,action,icon,toTarget=True,command=None) -> None:
+    def __init__(self,action,icon,toTarget=True,command=None,imageSub=None) -> None:
         self.action=action
         self.icon=icon
         self.command=command
-        self.iconBase=None
+        self.iconBase=BASE_DIR
         self.toTarget=toTarget
+        self.imageSub=imageSub
     def run(self,*args):
         if self.command is None:
             return
@@ -103,15 +104,18 @@ class BDef():
     def getImage(self,baseDir=None,resolution=160,size=SIZE):
         if baseDir is None:
             baseDir=self.iconBase
+        if self.imageSub is not None:
+            baseDir=os.path.join(baseDir,self.imageSub)
         return getImage(self.icon,baseDir,resolution=resolution,size=size)    
 
 
+IMAGE_SUB='legacy'
 
 BUTTONS=[
-    BDef(['Escape','ctrl+w'],'ic_clear.svg'), #close
-    BDef('ctrl+bracketleft','ic_arrow_back.svg'), #back
-    BDef('ctrl+bracketright','ic_arrow_forward.svg'), #forward
-    BDef('F5','ic_refresh.svg'), #reload
+    BDef(['Escape','ctrl+w'],'ic_clear.svg',imageSub=IMAGE_SUB), #close
+    BDef('ctrl+bracketleft','ic_arrow_back.svg',imageSub=IMAGE_SUB), #back
+    BDef('ctrl+bracketright','ic_arrow_forward.svg',imageSub=IMAGE_SUB), #forward
+    BDef('F5','ic_refresh.svg',imageSub=IMAGE_SUB), #reload
     BDef('Super_L+2','rpi.png',toTarget=False),
     BDef('##restart','SailBoatRed96.png')
 ]
