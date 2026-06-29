@@ -124,7 +124,7 @@ const Map=({mapClass,mapOpacity,rightOffset}:MapOptions)=>{
     useStoreState(keys.gui.global.chartEntrySequence);
     const dialogContext=useDialogContext();
     if (!mapholder.getCurrentChartEntry()){
-        return <div className={"noChart"}>
+        return <div className={"noChart map"}>
         <div className={"text"}>No Chart selected</div>
         <Button
             {...ButtonDefs.NavSelectChart}
