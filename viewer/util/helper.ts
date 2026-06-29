@@ -7,6 +7,8 @@
 import compare from './compare';
 // @ts-ignore
 import Version from '../version';
+import tinycolor from 'tinycolor2';
+
 
 
 export function numericEnumValues<T extends object>(enumObj:T):number[]{
@@ -441,6 +443,22 @@ export const toBoolean=(obj:any)=>{
     return !!obj;
 }
 
+export const getColor=(element:HTMLElement,
+                       defaultv?:string,
+                       omitOpacity?:boolean)=> {
+    if (! element) return defaultv;
+    const color=window.getComputedStyle(element).color;
+    if (omitOpacity) return color;
+    const opacity=window.getComputedStyle(element).opacity;
+    if (opacity == '') return color;
+    const onumber=Number(opacity);
+    if (onumber == 1) return color;
+    const cv=tinycolor(color);
+    const newAlpha=cv.getAlpha()*onumber;
+    cv.setAlpha(newAlpha);
+    if (newAlpha == 1) return cv.toHexString();
+    return cv.toRgbString();
+}
 Helper.concat=concat;
 Helper.concatsp=concatsp;
 Helper.unsetorTrue=unsetOrTrue;
@@ -456,6 +474,7 @@ Helper.isset=isset;
 Helper.urlToString=urlToString;
 Helper.avNavVersion=avNavVersion;
 Helper.toBoolean=toBoolean;
+Helper.getColor=getColor;
 
 export default Helper;
 

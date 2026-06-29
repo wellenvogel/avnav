@@ -34,6 +34,7 @@ export interface IWidgetProps extends SortableProps {
     mode?: string, //display info side by side if small
     caption?: string,
     nightMode?: boolean,
+    unit?: string,
 }
 
 export const WidgetProps: Record<keyof IWidgetProps, any> = {
@@ -44,7 +45,8 @@ export const WidgetProps: Record<keyof IWidgetProps, any> = {
     className: PropTypes.any,
     mode: PropTypes.any,
     caption: PropTypes.any,
-    nightMode: PropTypes.any
+    nightMode: PropTypes.any,
+    unit: PropTypes.string,
 }
 
 export interface SortableProps {

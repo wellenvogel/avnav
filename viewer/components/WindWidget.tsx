@@ -3,13 +3,12 @@
  */
 
 import React from "react";
-import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
-import keys from '../util/keys.ts';
+import keys from '../util/keys';
 import {WidgetFrame, WidgetHead} from "./WidgetBase";
-import {WidgetProps} from "../util/types";
+import {IWidgetProps} from "../util/types";
 
-export const getWindData=(props)=>{
+export const getWindData=(props:WindProps)=>{
     let kind = props.kind;
     let windSpeed;
     let windAngle;
@@ -55,7 +54,17 @@ export const getWindData=(props)=>{
         suffix: suffix
     }
 }
-
+const EDITABLES={
+    show360: {type: 'BOOLEAN', default: false},
+    kind: {
+        type: 'SELECT',
+        list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],
+        default: 'auto',
+        description: 'which wind data to be shown\nauto will try apparent, trueAngle, trueDirection and display the first found data'
+    },
+    formatter: true,
+    formatterParameters: true
+}
 export const WindStoreKeys={
     windAngle: keys.nav.gps.windAngle,
     windSpeed: keys.nav.gps.windSpeed,
@@ -63,17 +72,23 @@ export const WindStoreKeys={
     windSpeedTrue: keys.nav.gps.trueWindSpeed,
     windDirectionTrue: keys.nav.gps.trueWindDirection
 }
-export const WindProps={
-    windAngle:  PropTypes.number,
-    windSpeed:  PropTypes.number,
-    windAngleTrue:  PropTypes.number,
-    windSpeedTrue:  PropTypes.number,
-    kind: PropTypes.string //true,apparent,auto,
+export interface WindProps{
+    windAngle?:  number,
+    windSpeed?:  number,
+    windAngleTrue?:  number,
+    windSpeedTrue?:  number,
+    windDirectionTrue?:  number,
+    kind: string //'true'|'apparent'|'auto'
+}
+export interface WindWidgetProps extends IWidgetProps,
+    WindProps,
+    Omit<Record<keyof typeof EDITABLES, any>,'kind'>
+{
 }
 
-const WindWidget = (props) => {
-    let wind = getWindData(props);
-    const names = {
+const WindWidget = (props:WindWidgetProps) => {
+    const wind = getWindData(props);
+    const names:Record<string,any> = {
         A: {
             speed: 'AWS',
             angle: 'AWA'
@@ -87,7 +102,7 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
-    let windSpeedStr = props.formatter(wind.windSpeed);
+    const windSpeedStr = props.formatter(wind.windSpeed);
     let show180=false;
     if (!props.show360 && wind.suffix !== 'TD') {
         show180=true;
@@ -107,10 +122,12 @@ const WindWidget = (props) => {
                 </React.Fragment>
                 :
                 <React.Fragment>
-                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode} caption={names[wind.suffix].angle} unit='°'>
+                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode}
+                                     caption={names[wind.suffix].angle} unit='°' name={""} dragId={0}>
                             <div className='widgetData'>{Formatter.formatDirection(wind.windAngle,undefined,show180)}</div>
                         </WidgetFrame>
-                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode} caption={names[wind.suffix].speed} unit={props.unit}>
+                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode}
+                                     caption={names[wind.suffix].speed} unit={props.unit} name={""} dragId={0}>
                             <div className='widgetData'>{windSpeedStr}</div>
                         </WidgetFrame>
                 </React.Fragment>
@@ -120,26 +137,9 @@ const WindWidget = (props) => {
     );
 }
 
-
-WindWidget.propTypes={
-    ...WidgetProps,
-    ...WindProps,
-    show360: PropTypes.bool,
-};
-
 WindWidget.predefined= {
     storeKeys: WindStoreKeys,
-    editableParameters: {
-        show360: {type: 'BOOLEAN', default: false},
-        kind: {
-            type: 'SELECT',
-            list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],
-            default: 'auto',
-            description: 'which wind data to be shown\nauto will try apparent, trueAngle, trueDirection and display the first found data'
-        },
-        formatter: true,
-        formatterParameters: true
-    },
+    editableParameters: EDITABLES,
     formatter :'formatSpeed',
     description: 'Show wind speed and wind direction/angle numerically'
 }

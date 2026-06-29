@@ -500,6 +500,24 @@ canvas{
 }
 }
 &.windGraphics{
+ .colors{
+   color: var(--avnav-widget-fore-color);
+   display: none;
+   .left{
+     color: rgba(255, 20, 7, 0.54);
+   }
+   .right{
+     color: rgba(5, 128, 30, 0.57);
+   }
+   .bottom{
+     color: var(--avnav-widget-fore-color);
+     opacity: 0.4;
+   }
+   .circle{
+     color: var(--avnav-widget-fore-color);
+     opacity: 0.8;
+   }
+ }
 .smallWidget(@size2);
 .windSpeed {
   text-align: right;
