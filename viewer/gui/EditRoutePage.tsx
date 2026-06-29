@@ -24,7 +24,6 @@ import {useStateRef} from '../util/UiHelper';
 // @ts-ignore
 import mapholder, {LOCK_MODES} from '../map/mapholder';
 import {EventTypes, MapEvent} from '../map/maptypes';
-// @ts-ignore
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog';
 import RouteEdit, {RouteStoreDataType, StateHelper} from '../nav/routeeditor';
 // @ts-ignore
@@ -104,6 +103,7 @@ const startWaypointDialog = (item:WayPoint, index:number, dialogContext?:IDialog
         return <WayPointDialog
             readOnly={!canWrite}
             waypoint={item}
+            mapCenter={mapholder.getCenter()}
             okCallback={wpChanged}
             deleteCallback={()=>{
                 getCurrentEditor().deleteWaypoint(index);

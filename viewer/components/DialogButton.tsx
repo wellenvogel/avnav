@@ -17,6 +17,7 @@ export interface DialogButtonProps extends Options,ButtonBase{
     toggle?: boolean;
     close?: boolean;  //default: true
     children?: React.ReactNode;
+    tabIndex?: number|string;
 }
 const COMPONENT=DialogKeyComponents.DIALOGBUTTON;
 const DialogButton=(props:DialogButtonProps)=>{

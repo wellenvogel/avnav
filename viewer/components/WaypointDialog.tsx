@@ -4,44 +4,42 @@
  */
 
 import React, {useState} from 'react';
-import PropTypes from 'prop-types';
-import navobjects from '../nav/navobjects';
-import assign from 'object-assign';
-import DB from './DialogButton.tsx';
-import {Checkbox, Input} from './Inputs.tsx';
+import navobjects, {Point, WayPoint} from '../nav/navobjects';
+import DB from './DialogButton';
+import {Checkbox, Input} from './Inputs';
 import Dms from "geodesy/dms";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
-import visible from "../hoc/Visible";
 import {useDialogContext} from "./DialogContext";
-import {ButtonDef} from "./Button";
 import ButtonDefs from "./ButtonDefs";
+// @ts-ignore
+import navcompute from '../nav/navcompute';
 
-const strLonToLon=(val)=>{
+const strLonToLon=(val:string|number)=>{
     if (val === undefined) return;
     if (typeof(val) === 'string') return Dms.parse(val.replace(/o/i, 'e'))
     return Dms.parse(val);
 }
-const strLatToLat=(val)=>{
+const strLatToLat=(val:string|number)=>{
     if (val === undefined) return;
     return Dms.parse(val);
 }
-const lonCheck=(val)=>{
-    let dv=(typeof(val) === "string" )?strLonToLon(val):val;
+const lonCheck=(val:string|number)=>{
+    const dv=(typeof(val) === "string" )?strLonToLon(val):val;
     return (-180<= dv && dv <= 180) ;
 }
-const latCheck=(val)=>{
-    let dv=(typeof(val) === "string" )?strLatToLat(val):val;
+const latCheck=(val:string|number)=>{
+    const dv=(typeof(val) === "string" )?strLatToLat(val):val;
     return (-90 <= dv && dv <= 90);
 }
-const formatLon=(val,keep)=>{
+const formatLon=(val:number|string,keep?:boolean)=>{
     if (val === undefined) return "";
-    if (keep) return val.toFixed(8);
-    return  Dms.toLon(val, 'dm', 4);
+    if (keep) return Number(val).toFixed(8);
+    return  Dms.toLon(Number(val), 'dm', 4);
 }
-const formatLat=(val,keep)=>{
+const formatLat=(val:number|string,keep?:boolean)=>{
     if (val === undefined) return "";
-    if (keep) return val.toFixed(8);
-    return Dms.toLat(val, 'dm', 4);
+    if (keep) return Number(val).toFixed(8);
+    return Dms.toLat(Number(val), 'dm', 4);
 }
 /**
  * a waypoint dialog
@@ -49,31 +47,52 @@ const formatLat=(val,keep)=>{
  *           okCallback: function to be called ok ok with the new waypoint as parameter, return true to close
  *           hideCallback: function to be called when the dialog is hidden (but not on unmount)
  */
-const WaypointDialog=(props)=> {
+export interface WaypointDialogProps{
+    waypoint: WayPoint,
+    mapCenter?: Point,
+    okCallback: (wp:WayPoint)=>boolean,
+    deleteCallback?: (wp:WayPoint)=>boolean,
+    startCallback?: (wp:WayPoint)=>boolean,
+    readOnly?: boolean,
+    showDecimal?:boolean,
+}
+
+const WaypointDialog=(props:WaypointDialogProps)=> {
     const dialogContext = useDialogContext();
-    const waypoint=props.waypoint||{};
+    const waypoint:WayPoint=props.waypoint||new WayPoint();
     const [name, setName] = useState(waypoint.name);
-    const [lat, setLat] = useState(formatLat(waypoint.lat));
-    const [lon, setLon] = useState(formatLon(waypoint.lon));
+    const [lat, setLat] = useState<number|string>(formatLat(waypoint.lat));
+    const [lon, setLon] = useState<number|string>(formatLon(waypoint.lon));
     const [decimal, setDecimal] = useState(props.showDecimal || false);
     if (!props.waypoint) return null;
 
-    const okFunction = () => {
-        let data = {
+    const okFunction = (plat?:number,plon?:number) => {
+        const data = {
             name: name,
-            lat: strLatToLat(lat),
-            lon: strLonToLon(lon)
+            lat: (plat !== undefined)?plat: strLatToLat(lat),
+            lon: (plon !== undefined)?plon: strLonToLon(lon)
         };
         if (!lonCheck(data.lon) || !latCheck(data.lat)) {
             return;
         }
-        let wp = props.waypoint.clone();
-        assign(wp, data);
+        const wp = props.waypoint.clone();
+        wp.update(data);
         if(props.okCallback(wp)){
             dialogContext.closeDialog();
         }
     }
-    let ok = lonCheck(lon) && latCheck(lat);
+    const ok = lonCheck(lon) && latCheck(lat);
+    const hasCenterDistance=()=>{
+        if (! props.mapCenter) return false;
+        try {
+            const vlon = strLonToLon(lon);
+            const vlat = strLatToLat(lat);
+            if (!lonCheck(vlon) || !latCheck(vlat)) return true;
+            const dst = navcompute.computeDistance(new Point(vlon, vlat), props.mapCenter);
+            return dst.dts > 20;
+        }catch (e){ /* empty */ }
+        return true;
+    }
     return (
         <DialogFrame className={"WaypointDialog"} title={"Edit Waypoint"}>
             <Input
@@ -114,6 +133,23 @@ const WaypointDialog=(props)=> {
                 value={decimal}
             />
             <DialogButtons>
+                <DB
+                    {...ButtonDefs.NavToCenter}
+                    visible={hasCenterDistance() && ! props.readOnly}
+                    onClick={()=>{
+                        //set the values any way to have them if the okFunction fails
+                        if (decimal) {
+                            setLat(props.mapCenter.lat);
+                            setLon(props.mapCenter.lon);
+                        }
+                        else {
+                            setLat(formatLat(props.mapCenter.lat));
+                            setLon(formatLon(props.mapCenter.lon));
+                        }
+                        //directly call the okFunction with the new values
+                        okFunction(props.mapCenter.lat,props.mapCenter.lon);
+                    }}
+                />
                 <DB {...ButtonDefs.NavGoto}
                     onClick={()=>{
                         if (props.startCallback(props.waypoint)){
@@ -133,15 +169,17 @@ const WaypointDialog=(props)=> {
                     visible={props.deleteCallback !== undefined && ! props.readOnly}
                     close={false}/>
                 <DB {...ButtonDefs.DBCancel} tabIndex="3" />
-                <DB {...ButtonDefs.DBOk} tabIndex="4" onClick={okFunction} disabled={!ok || props.readOnly} close={false}/>
+                <DB {...ButtonDefs.DBOk} tabIndex="4" onClick={()=>okFunction()} disabled={!ok || props.readOnly} close={false}/>
             </DialogButtons>
         </DialogFrame>
     )
 
 }
-export const updateWaypoint=(oldWp, newWp, errorFunction)=> {
-            let wp = oldWp.clone();
-            let data = newWp;
+export const updateWaypoint=(oldWp:WayPoint,
+                             newWp:WayPoint,
+                             errorFunction?:(error:string)=>void)=> {
+            const wp = oldWp.clone();
+            const data = newWp;
             if (!data) return;
             wp.name = data.name;
             let doChange = true;
@@ -160,7 +198,6 @@ export const updateWaypoint=(oldWp, newWp, errorFunction)=> {
                 if (errorFunction) errorFunction("invalid coordinate, cannot convert");
                 doChange = false;
             }
-            let ok = false;
             if (wp.routeName && wp.routeName != oldWp.routeName) {
                 if (errorFunction) errorFunction("internal error, route name changed");
                 doChange = false;
@@ -174,12 +211,5 @@ export const updateWaypoint=(oldWp, newWp, errorFunction)=> {
         }
 
 
-WaypointDialog.propTypes={
-    waypoint: PropTypes.instanceOf(navobjects.WayPoint).isRequired,
-    okCallback: PropTypes.func.isRequired,
-    deleteCallback: PropTypes.func,
-    startCallback: PropTypes.func,
-    readOnly: PropTypes.bool
-};
 
 export default WaypointDialog;

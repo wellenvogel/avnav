@@ -87,9 +87,9 @@ export interface PlainPoint{
  * @constructor
  */
 export class WayPoint extends Point {
-    name: string;
-    routeName: string;
-    server:boolean=false;
+    name?: string;
+    routeName?: string;
+    server?:boolean=false;
     constructor(lon?: number, lat?: number, opt_name?: string,opt_routeName?:string) {
         super(lon, lat);
         this.name = opt_name;

@@ -29,7 +29,6 @@ import {useKeyEventHandlerPlain, useStoreHelper, useTimer} from '../util/UiHelpe
 import MapHolder, {LOCK_MODES} from '../map/mapholder.js';
 import {ChartEntry, EventTypes, MapEvent} from "../map/maptypes";
 import {Point, WayPoint} from '../nav/navobjects';
-// @ts-ignore
 import WayPointDialog, {updateWaypoint} from '../components/WaypointDialog';
 import RouteEdit, {StateHelper} from '../nav/routeeditor';
 // @ts-ignore
@@ -122,6 +121,7 @@ const startWaypointDialog = (item: WayPoint, idx: number, dialogCtx: IDialogCont
     showDialog(dialogCtx, (props) => <WayPointDialog
         {...props}
         waypoint={item}
+        mapCenter={MapHolder.getCenter()}
         okCallback={wpChanged}/>
     );
 };
