@@ -104,7 +104,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const current = getWindData(props);
         const windSpeed = props.formatter(current.windSpeed);
         // Create random value for wind direction and wind speed
-        let winddirection = Number(current.windAngle);
+        const angle= Number(current.windAngle);
+        let winddirection=angle
         let show180=false;
         if (!props.show360 && current.suffix !== 'TD') {
             if (winddirection > 180) winddirection -= 360;
@@ -113,12 +114,12 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const directionTxt = Formatter.formatDirection(winddirection,undefined,show180,true);
         const outerTxt=(props.centerDisplay!=='direction')?directionTxt+"°":windSpeed;
         const innerTxt=(props.centerDisplay!=='direction')?windSpeed:directionTxt;
-        return [current,outerTxt,innerTxt,winddirection];
+        return [current,outerTxt,innerTxt,angle];
     }
     const drawWind = () => {
         const canvas=canvasref.current;
         if (!canvas) return;
-        const [current,,centerText,winddirection]=compute();
+        const [current,,centerText,angle]=compute();
         const colors=getColors(props.nightMode);
         const ctx = canvas.getContext('2d');
         // Set scale factor for all values
@@ -144,17 +145,10 @@ const WindGraphics = (props:WindGraphicsProps) => {
         // Settings
         const radius = 100;			// Radius of control
         const segmentWidth = 15;
-        //const pointer_lenght = 33;	// Pointer lenght
-        const pointer_linewidth = 6;	// Pointer lenght
+        const pointer_linewidth = 6;
         const circle_linewidth = 1;
-        const value_min = 0;			// Minimum of value
-        const value_max = 360;		// Maximum of value
-        const angle_scala = 360;		// Angle of scala
-        const angle_offset = 0;		// Angle offset for scala, Center 0° is north
         const maxTextRadius=45;
 
-        // Calculation of pointer rotation
-        const angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
         // Create text
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2, height / 2);
