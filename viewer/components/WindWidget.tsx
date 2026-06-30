@@ -8,7 +8,12 @@ import keys from '../util/keys';
 import {WidgetFrame, WidgetHead} from "./WidgetBase";
 import {IWidgetProps} from "../util/types";
 
-export const getWindData=(props:WindProps)=>{
+export interface ComputedWindData{
+    windSpeed: number;
+    windAngle: number;
+    suffix:string;
+}
+export const getWindData=(props:WindProps):ComputedWindData=>{
     let kind = props.kind;
     let windSpeed;
     let windAngle;

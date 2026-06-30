@@ -10,6 +10,7 @@ import {WidgetFrame} from "./WidgetBase";
 import globalstore from "../util/globalstore";
 import {IWidgetProps} from "../util/types";
 import Helper from "../util/helper";
+
 const EDITABLES={
     scaleStart: {default: 20, type:'NUMBER',displayName:'red/green start',
         list:[1, 90],
@@ -28,6 +29,16 @@ const EDITABLES={
         list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],
         default: 'auto',
         description:'which wind data to be shown\nauto will try apparent, trueAngle, trueDirection and display the first found data'
+    },
+    centerDisplay:{
+        type: 'SELECT',
+        displayName:'show in center',
+        list: ['direction', 'speed'],
+        default: 'direction',
+        description:'What to show in the center of the widget\n'+
+            'The other value will be shown at the lower right\n'+
+            'direction: wind angle or wind direction\n'+
+            'speed: wind speed'
     },
     formatter: true,
     formatterParameters: true,
@@ -86,10 +97,25 @@ const WindGraphics = (props:WindGraphicsProps) => {
         }
         return rt
     }
+    const compute=()=>{
+        const current = getWindData(props);
+        const windSpeed = props.formatter(current.windSpeed);
+        // Create random value for wind direction and wind speed
+        let winddirection = Number(current.windAngle);
+        let show180=false;
+        if (!props.show360 && current.suffix !== 'TD') {
+            if (winddirection > 180) winddirection -= 360;
+            show180=true;
+        }
+        const directionTxt = Formatter.formatDirection(winddirection,undefined,show180,true);
+        const outerTxt=(props.centerDisplay!=='direction')?directionTxt+"°":windSpeed;
+        const innerTxt=(props.centerDisplay!=='direction')?windSpeed:directionTxt;
+        return [current,outerTxt,innerTxt,winddirection];
+    }
     const drawWind = () => {
         const canvas=canvasref.current;
-        const current = getWindData(props);
         if (!canvas) return;
+        const [current,,centerText,winddirection]=compute();
         const colors=getColors(props.nightMode);
         const ctx = canvas.getContext('2d');
         // Set scale factor for all values
@@ -112,7 +138,6 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const scaleStart=Number(props.scaleStart || 20);
         const sternAngle=Number(props.sternAngle || 50);
 
-
         // Settings
         const radius = 100;			// Radius of control
         const segmentWidth = 15;
@@ -124,23 +149,14 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const angle_scala = 360;		// Angle of scala
         const angle_offset = 0;		// Angle offset for scala, Center 0° is north
 
-        // Create random value for wind direction and wind speed
-        let winddirection = Number(current.windAngle);
-
         // Calculation of pointer rotation
         const angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
         // Create text
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2, height / 2);
         ctx.font = fontSize + "px "+globalstore.getData(keys.properties.fontBase);
-        let show180=false;
-        if (!props.show360 && current.suffix !== 'TD') {
-            if (winddirection > 180) winddirection -= 360;
-            show180=true;
-        }
-        const txt = Formatter.formatDirection(winddirection,undefined,show180,true);
         ctx.fillStyle = colors.text;
-        let txtDim=ctx.measureText(txt);
+        let txtDim=ctx.measureText(centerText);
         let txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
         let txtRadius=Math.sqrt((txtHeight/2*txtHeight/2)+(txtDim.width/2*txtDim.width/2));
         if (txtRadius > 40){
@@ -148,10 +164,10 @@ const WindGraphics = (props:WindGraphicsProps) => {
             const fontScale= 40/txtRadius;
             ctx.font = (Number(fontSize) *fontScale) + "px "+globalstore.getData(keys.properties.fontBase);;
             txtRadius = txtRadius*fontScale;
-            txtDim=ctx.measureText(txt);
+            txtDim=ctx.measureText(centerText);
             txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
         }
-        ctx.fillText(txt, -txtDim.width/2, txtHeight/2);
+        ctx.fillText(centerText, -txtDim.width/2, txtHeight/2);
         // Write inner circle in center position
         const circleMiddle=radius-circle_linewidth;
         ctx.beginPath();
@@ -215,9 +231,9 @@ const WindGraphics = (props:WindGraphicsProps) => {
         canvasref.current = item;
         setTimeout(drawWind, 0);
     }
+
     setTimeout(drawWind, 0);
-    const current = getWindData(props);
-    const windSpeed = props.formatter(current.windSpeed);
+    const [current,outerTxt]=compute();
     return (
         <WidgetFrame {...props} addClass="windGraphics"  caption={props.caption} resize={false}>
             <div className={'widgetData hidden colors'} ref={hiddenRef}>
@@ -227,7 +243,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
                 <span className={'circle'} ref={circleRef}></span>
             </div>
             <canvas className='widgetData' ref={canvasRef}></canvas>
-            <div className="windSpeed">{windSpeed}</div>
+            <div className="windSpeed">{outerTxt}</div>
             <div className="windReference">{current.suffix}</div>
         </WidgetFrame>
 
