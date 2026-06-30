@@ -25,6 +25,9 @@ const EDITABLES={
         description: 'angle(+/- from 180°) for the grey area astern for apparent display, 0 to disable'
     },
     show360: {type: 'BOOLEAN', default: false},
+    useArrow: {type: 'BOOLEAN', default: true,
+        displayName:'arrow',
+        description:'use arrow instead of line for the needle'},
     kind: {type: 'SELECT',
         list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],
         default: 'auto',
@@ -221,12 +224,24 @@ const WindGraphics = (props:WindGraphicsProps) => {
         ctx.rotate(angle * Math.PI / 180);
         // Write pointer
         ctx.beginPath();
-        ctx.lineWidth = pointer_linewidth;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = colors.pointer;
-        ctx.moveTo(0, -txtRadius-2);
-        ctx.lineTo(0, -(segmentMiddle-segmentWidth/2-4));
-        ctx.stroke();
+        if (!props.useArrow) {
+            ctx.lineWidth = pointer_linewidth;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = colors.pointer;
+            ctx.moveTo(0, -txtRadius - 2);
+            ctx.lineTo(0, -(segmentMiddle - segmentWidth / 2 - 4));
+            ctx.stroke();
+        }
+        else {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = colors.pointer;
+            ctx.fillStyle = colors.pointer;
+            ctx.moveTo(-10, -txtRadius - 2);
+            ctx.lineTo(0, -(segmentMiddle - segmentWidth / 2 - 4));
+            ctx.lineTo(10, -txtRadius - 2);
+            //ctx.stroke();
+            ctx.fill();
+        }
     }
     const canvasRef = (item:HTMLCanvasElement) => {
         canvasref.current = item;
