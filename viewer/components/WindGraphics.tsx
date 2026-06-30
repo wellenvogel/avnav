@@ -129,7 +129,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const f1 = w / width;
         const f2 = h / height;
         const f = Math.min(f1, f2);
-        const fontSize = f * height / 6; //initial guess
+        const fontSize = f * height / 3; //initial guess
         const mvx = (w - width * f) / 2;
         const mvy = (h - height * f) / 2;
         ctx.translate(mvx > 0 ? 0.9 * mvx : 0, mvy > 0 ? mvy : 0); //move the drawing to the middle
@@ -148,6 +148,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const value_max = 360;		// Maximum of value
         const angle_scala = 360;		// Angle of scala
         const angle_offset = 0;		// Angle offset for scala, Center 0° is north
+        const maxTextRadius=45;
 
         // Calculation of pointer rotation
         const angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
@@ -159,9 +160,9 @@ const WindGraphics = (props:WindGraphicsProps) => {
         let txtDim=ctx.measureText(centerText);
         let txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
         let txtRadius=Math.sqrt((txtHeight/2*txtHeight/2)+(txtDim.width/2*txtDim.width/2));
-        if (txtRadius > 40){
+        if (txtRadius > maxTextRadius) {
             //scale down
-            const fontScale= 40/txtRadius;
+            const fontScale= maxTextRadius/txtRadius;
             ctx.font = (Number(fontSize) *fontScale) + "px "+globalstore.getData(keys.properties.fontBase);;
             txtRadius = txtRadius*fontScale;
             txtDim=ctx.measureText(centerText);
