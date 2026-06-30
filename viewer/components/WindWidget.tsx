@@ -81,8 +81,7 @@ export interface WindProps{
     kind: string //'true'|'apparent'|'auto'
 }
 export interface WindWidgetProps extends IWidgetProps,
-    WindProps,
-    Omit<Record<keyof typeof EDITABLES, any>,'kind'>
+    Record<keyof typeof EDITABLES, any>
 {
 }
 

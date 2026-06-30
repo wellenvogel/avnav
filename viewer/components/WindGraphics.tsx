@@ -5,13 +5,24 @@
 import React, {useRef} from "react";
 import Formatter from '../util/formatter';
 import keys from '../util/keys';
-import {getWindData, WindProps, WindStoreKeys} from "./WindWidget";
+import {getWindData, WindStoreKeys} from "./WindWidget";
 import {WidgetFrame} from "./WidgetBase";
 import globalstore from "../util/globalstore";
 import {IWidgetProps} from "../util/types";
 import Helper from "../util/helper";
 const EDITABLES={
-    scaleAngle: {default:50, displayName: "red/green Angle", type:'NUMBER', list:[5, 90]},
+    scaleStart: {default: 20, type:'NUMBER',displayName:'red/green start',
+        list:[1, 90],
+        description: 'start angle  (from north) for the red/green area for apparent display'
+    },
+    scaleAngle: {default:50, displayName: "red/green end",
+        type:'NUMBER', list:[5, 90],
+        description: 'end angle  (from north) for the red/green area for apparent display'
+    },
+    sternAngle: {default:50, displayName: "stern Angle",
+        type:'NUMBER', list:[0, 90],
+        description: 'angle(+/- from 180°) for the grey area astern for apparent display, 0 to disable'
+    },
     show360: {type: 'BOOLEAN', default: false},
     kind: {type: 'SELECT',
         list: ['auto', 'trueAngle', 'trueDirection', 'apparent'],
@@ -23,8 +34,7 @@ const EDITABLES={
     caption: true
 }
 export interface WindGraphicsProps extends IWidgetProps,
-    WindProps ,
-    Omit<Record<keyof typeof EDITABLES, any>,('kind'|'caption')>{
+    Omit<Record<keyof typeof EDITABLES, any>,'caption'>{
 }
 interface DrawingColors{
     green:string,
@@ -98,8 +108,9 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const mvy = (h - height * f) / 2;
         ctx.translate(mvx > 0 ? 0.9 * mvx : 0, mvy > 0 ? mvy : 0); //move the drawing to the middle
         ctx.scale(f, f);
-        let scaleAngle = props.scaleAngle || 50;
-        scaleAngle = parseFloat(scaleAngle);
+        const scaleAngle = Number(props.scaleAngle || 50);
+        const scaleStart=Number(props.scaleStart || 20);
+        const sternAngle=Number(props.sternAngle || 50);
 
 
         // Settings
@@ -155,15 +166,17 @@ const WindGraphics = (props:WindGraphicsProps) => {
             ctx.beginPath();
             ctx.strokeStyle = colors.red; // red
             ctx.lineWidth = segmentWidth;
+            //must subtract 90° as canvas has 0° east
             start = 270 - scaleAngle;
-            end = 250;
+            end = 270 - scaleStart;
             ctx.arc(0, 0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
             ctx.stroke();
             // Write right partial circle
             ctx.beginPath();
             ctx.strokeStyle = colors.green; // green
             ctx.lineWidth = segmentWidth;
-            start = 290;
+            //must subtract 90° as canvas has 0° east
+            start = 270 +scaleStart;
             end = 270 + scaleAngle;
             ctx.arc(0,0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
             ctx.stroke();
@@ -171,8 +184,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
             ctx.beginPath();
             ctx.strokeStyle = colors.bottom; // gray
             ctx.lineWidth = segmentWidth;
-            start = 40;
-            end = 140;
+            start = 90-sternAngle;
+            end = 90+sternAngle;
             ctx.arc(0,0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
             ctx.stroke();
         }
