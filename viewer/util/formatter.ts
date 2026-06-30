@@ -102,10 +102,11 @@ const formatDecimal:TFormatDecimal=function(number:number|string,fix:number=0,fr
         sign="-";
     }
     let rt=(prefixZero?"":sign)+number.toFixed(fract);
+    const cmp=Math.round(number);
     let v=10;
     fix-=1;
     while (fix > 0){
-        if (number < v){
+        if (cmp < v){
             if (prefixZero) rt="0"+rt;
             else  rt=" "+rt;
         }

@@ -93,7 +93,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const f1 = w / width;
         const f2 = h / height;
         const f = Math.min(f1, f2);
-        const fontSize = f * height / 6;
+        const fontSize = f * height / 6; //initial guess
         const mvx = (w - width * f) / 2;
         const mvy = (h - height * f) / 2;
         ctx.translate(mvx > 0 ? 0.9 * mvx : 0, mvy > 0 ? mvy : 0); //move the drawing to the middle
@@ -104,7 +104,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
 
         // Settings
         const radius = 100;			// Radius of control
-        const pointer_lenght = 33;	// Pointer lenght
+        const segmentWidth = 15;
+        //const pointer_lenght = 33;	// Pointer lenght
         const pointer_linewidth = 6;	// Pointer lenght
         const circle_linewidth = 1;
         const value_min = 0;			// Minimum of value
@@ -117,50 +118,6 @@ const WindGraphics = (props:WindGraphicsProps) => {
 
         // Calculation of pointer rotation
         const angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
-
-        // Write inner circle in center position
-        ctx.beginPath();
-        ctx.strokeStyle=colors.circle;
-        ctx.lineWidth = circle_linewidth;
-        ctx.arc(width / 2, height / 2, radius * 0.97, 0, 2 * Math.PI);
-        ctx.stroke();
-        let start, end;
-        if (current.suffix === 'A') {
-            // Write left partial circle
-            ctx.beginPath();
-            ctx.strokeStyle = colors.red; // red
-            ctx.lineWidth = 15;
-            start = 270 - scaleAngle;
-            end = 250;
-            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
-            ctx.stroke();
-            // Write right partial circle
-            ctx.beginPath();
-            ctx.strokeStyle = colors.green; // green
-            ctx.lineWidth = 15;
-            start = 290;
-            end = 270 + scaleAngle;
-            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
-            ctx.stroke();
-            // Write partial circle
-            ctx.beginPath();
-            ctx.strokeStyle = colors.bottom; // gray
-            ctx.lineWidth = 15;
-            start = 40;
-            end = 140;
-            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
-            ctx.stroke();
-        }
-        // Write scale
-        for (let i = 0; i < 12; i++) {
-            ctx.beginPath();
-            ctx.strokeStyle = colors.circle; // dark gray
-            ctx.lineWidth = 10;
-            start = i * 30 - 1;
-            end = i * 30 + 1;
-            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
-            ctx.stroke();
-        }
         // Create text
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2, height / 2);
@@ -171,10 +128,65 @@ const WindGraphics = (props:WindGraphicsProps) => {
             show180=true;
         }
         const txt = Formatter.formatDirection(winddirection,undefined,show180,true);
-        let xFactor = -1.0;
-        if (winddirection < 0) xFactor = -1.0;
         ctx.fillStyle = colors.text;
-        ctx.fillText(txt, xFactor * fontSize, 0.4 * fontSize);
+        let txtDim=ctx.measureText(txt);
+        let txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
+        let txtRadius=Math.sqrt((txtHeight/2*txtHeight/2)+(txtDim.width/2*txtDim.width/2));
+        if (txtRadius > 40){
+            //scale down
+            const fontScale= 40/txtRadius;
+            ctx.font = (Number(fontSize) *fontScale) + "px "+globalstore.getData(keys.properties.fontBase);;
+            txtRadius = txtRadius*fontScale;
+            txtDim=ctx.measureText(txt);
+            txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
+        }
+        ctx.fillText(txt, -txtDim.width/2, txtHeight/2);
+        // Write inner circle in center position
+        const circleMiddle=radius-circle_linewidth;
+        ctx.beginPath();
+        ctx.strokeStyle=colors.circle;
+        ctx.lineWidth = circle_linewidth;
+        ctx.arc(0,0, circleMiddle, 0, 2 * Math.PI);
+        ctx.stroke();
+        let start, end;
+        const segmentMiddle=circleMiddle-circle_linewidth/2-segmentWidth/2;
+        if (current.suffix === 'A') {
+            // Write left partial circle
+            ctx.beginPath();
+            ctx.strokeStyle = colors.red; // red
+            ctx.lineWidth = segmentWidth;
+            start = 270 - scaleAngle;
+            end = 250;
+            ctx.arc(0, 0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            ctx.stroke();
+            // Write right partial circle
+            ctx.beginPath();
+            ctx.strokeStyle = colors.green; // green
+            ctx.lineWidth = segmentWidth;
+            start = 290;
+            end = 270 + scaleAngle;
+            ctx.arc(0,0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            ctx.stroke();
+            // Write partial circle
+            ctx.beginPath();
+            ctx.strokeStyle = colors.bottom; // gray
+            ctx.lineWidth = segmentWidth;
+            start = 40;
+            end = 140;
+            ctx.arc(0,0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            ctx.stroke();
+        }
+        // Write scale
+        const scaleLen=segmentWidth-4;
+        for (let i = 0; i < 12; i++) {
+            ctx.rotate(2*Math.PI/12)
+            ctx.beginPath();
+            ctx.strokeStyle = colors.circle; // dark gray
+            ctx.lineWidth = 2
+            ctx.moveTo(0,-(circleMiddle-circle_linewidth/2-2-scaleLen));
+            ctx.lineTo(0,-(circleMiddle-circle_linewidth/2-2));
+            ctx.stroke();
+        }
         // Rotate
         ctx.rotate(angle * Math.PI / 180);
         // Write pointer
@@ -182,8 +194,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
         ctx.lineWidth = pointer_linewidth;
         ctx.lineCap = 'round';
         ctx.strokeStyle = colors.pointer;
-        ctx.moveTo(0, -60);
-        ctx.lineTo(0, -60 - pointer_lenght);
+        ctx.moveTo(0, -txtRadius-2);
+        ctx.lineTo(0, -(segmentMiddle-segmentWidth/2-4));
         ctx.stroke();
     }
     const canvasRef = (item:HTMLCanvasElement) => {
