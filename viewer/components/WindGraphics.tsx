@@ -76,6 +76,109 @@ const nightColors:DrawingColors = {
     text: 'rgba(252, 11, 11, 0.6)'
 };
 
+interface DrawParameters{
+    centerText:string;
+    colors:DrawingColors;
+    textRadius: number
+    circleMiddle:number,
+    segmentMiddle:number,
+    scaleAngle:number,
+    scaleStart:number,
+    sternAngle:number,
+}
+class AnimAngle{
+    last: number=0;
+    private target: number=0;
+    private end:number=0;
+    private add:number=0;
+    private lastTime:number=0;
+    private period:number;
+    private computeValue:(increment:number)=>boolean;
+    constructor(period:number,target:number){
+        this.last=0
+        this.period=period;
+        this.init(target);
+    }
+    clamp(value:number):number{
+        if (isNaN(value)){ return value}
+        return value%360;
+    }
+    computeClockwise(increment:number){
+        if (increment < 0.5) increment = 0.5;
+        const nv=this.last+increment;
+        if (nv >= this.end){
+            this.last=this.target;
+            return false;
+        }
+        this.last=nv;
+        return true;
+    }
+    computeCounterClockwise(increment:number){
+        if (increment > -0.5) increment = -0.5;
+        const nv=this.last+increment;
+        if (nv <= this.end){
+            this.last=this.target;
+            return false;
+        }
+        this.last=nv;
+        return true;
+    }
+    init(target:number){
+        this.target=this.clamp(target);
+        this.last=this.clamp(this.last);
+        if (isNaN(target)){
+            this.last=target;
+        }
+        else if (isNaN(this.last)){
+            this.last=this.target;
+        }
+        this.lastTime=(new Date()).getTime();
+        const diff=target-this.last;
+        if (Math.abs(diff) <= 1){
+            this.last=target;
+            return false;
+        }
+        const aval=diff/this.period;
+        //target >= last
+        if (0 < diff && diff <= 180){
+            this.computeValue=this.computeClockwise.bind(this);
+            this.add=aval;
+            this.end=this.target;
+            return true;
+        }
+        if (diff > 180){
+            this.computeValue=this.computeCounterClockwise.bind(this);
+            this.add=-aval;
+            this.end=this.target-360;
+            return true;
+        }
+        //target < last
+        if (diff >= -180){ //-180<=tdiff<0
+            this.computeValue=this.computeCounterClockwise.bind(this);
+            this.add=aval;
+            this.end=this.target;
+            return true;
+        }
+        //tdiff < -180
+        this.computeValue=this.computeClockwise.bind(this);
+        this.add=-aval;
+        this.end=this.target+360;
+        return true;
+    }
+
+    next():[number,boolean]{
+        const now=new Date().getTime();
+        const tdiff=now-this.lastTime;
+        this.lastTime=now;
+        if (tdiff > this.period || this.last === this.target){
+            this.last=this.target;
+            return [this.target,false]
+        }
+        const more=this.computeValue(tdiff*this.add);
+        return[this.clamp(this.last),more]
+    }
+}
+
 const WindGraphics = (props:WindGraphicsProps) => {
     const canvasref=useRef<HTMLCanvasElement>(null);
     const hiddenRef=useRef<HTMLDivElement>(null);
@@ -83,6 +186,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
     const rightRef=useRef<HTMLSpanElement>(null);
     const circleRef=useRef<HTMLSpanElement>(null);
     const bottomRef=useRef<HTMLSpanElement>(null);
+    const drawParameters=useRef<DrawParameters>(undefined);
+    const animAngle=useRef<AnimAngle>(undefined);
     const getColors=(night?:boolean)=>{
         const defaults=night?nightColors:normalColors;
         const red:string=Helper.getColor(leftRef.current,defaults.red);
@@ -116,20 +221,32 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const innerTxt=(props.centerDisplay!=='direction')?windSpeed:directionTxt;
         return [current,outerTxt,innerTxt,angle];
     }
-    const drawWind = () => {
+    // Settings
+    const radius = 100;			// Radius of control
+    const segmentWidth = 15;
+    const pointer_linewidth = 6;
+    const circle_linewidth = 1;
+    const maxTextRadius=45;
+    const width = 200;			// Control width
+    const height = 200;			// Control height
+    const animationTime=500;
+    const initialDraw  =()=>{
+        drawParameters.current=undefined;
         const canvas=canvasref.current;
         if (!canvas) return;
-        const [current,,centerText,angle]=compute();
+        const [,,centerText,angle]=compute();
+        if (! animAngle.current) animAngle.current=new AnimAngle(animationTime,angle);
+        else animAngle.current.init(angle);
         const colors=getColors(props.nightMode);
         const ctx = canvas.getContext('2d');
+        ctx.resetTransform();
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         // Set scale factor for all values
         const crect = canvas.getBoundingClientRect();
         const w = crect.width;
         const h = crect.height;
         canvas.width = w;
         canvas.height = h;
-        const width = 200;			// Control width
-        const height = 200;			// Control height
         const f1 = w / width;
         const f2 = h / height;
         const f = Math.min(f1, f2);
@@ -142,65 +259,80 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const scaleStart=Number(props.scaleStart || 20);
         const sternAngle=Number(props.sternAngle || 50);
 
-        // Settings
-        const radius = 100;			// Radius of control
-        const segmentWidth = 15;
-        const pointer_linewidth = 6;
-        const circle_linewidth = 1;
-        const maxTextRadius=45;
-
         // Create text
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2, height / 2);
         ctx.font = fontSize + "px "+globalstore.getData(keys.properties.fontBase);
-        ctx.fillStyle = colors.text;
-        let txtDim=ctx.measureText(centerText);
-        let txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        const txtDim=ctx.measureText(centerText);
+        const txtHeight=txtDim.fontBoundingBoxAscent+txtDim.fontBoundingBoxDescent;
         let txtRadius=Math.sqrt((txtHeight/2*txtHeight/2)+(txtDim.width/2*txtDim.width/2));
         if (txtRadius > maxTextRadius) {
             //scale down
             const fontScale= maxTextRadius/txtRadius;
-            ctx.font = (Number(fontSize) *fontScale) + "px "+globalstore.getData(keys.properties.fontBase);;
+            ctx.font = (Number(fontSize) *fontScale) + "px "+globalstore.getData(keys.properties.fontBase);
             txtRadius = txtRadius*fontScale;
-            txtDim=ctx.measureText(centerText);
-            txtHeight=txtDim.actualBoundingBoxAscent+txtDim.actualBoundingBoxDescent;
         }
-        ctx.fillText(centerText, -txtDim.width/2, txtHeight/2);
-        // Write inner circle in center position
         const circleMiddle=radius-circle_linewidth;
+        const segmentMiddle=circleMiddle-circle_linewidth/2-segmentWidth/2;
+        const rt:DrawParameters={
+            centerText:centerText,
+            scaleAngle:scaleAngle,
+            scaleStart:scaleStart,
+            sternAngle:sternAngle,
+            colors:colors,
+            textRadius:txtRadius,
+            circleMiddle:circleMiddle,
+            segmentMiddle:segmentMiddle
+        }
+        drawParameters.current=rt;
+        requestAnimationFrame(drawWind);
+    }
+    const drawWind = () => {
+        const canvas=canvasref.current;
+        if (!canvas) return;
+        const currentParam=drawParameters.current;
+        if (! currentParam) return;
+        if (! animAngle.current) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(-width/2,-height/2,width,height);
+        ctx.save();
+        ctx.fillStyle = currentParam.colors.text;
+        ctx.fillText(currentParam.centerText, 0, 0);
+        // Write inner circle in center position
         ctx.beginPath();
-        ctx.strokeStyle=colors.circle;
+        ctx.strokeStyle=currentParam.colors.circle;
         ctx.lineWidth = circle_linewidth;
-        ctx.arc(0,0, circleMiddle, 0, 2 * Math.PI);
+        ctx.arc(0,0, currentParam.circleMiddle, 0, 2 * Math.PI);
         ctx.stroke();
         let start, end;
-        const segmentMiddle=circleMiddle-circle_linewidth/2-segmentWidth/2;
         if (current.suffix === 'A') {
             // Write left partial circle
             ctx.beginPath();
-            ctx.strokeStyle = colors.red; // red
+            ctx.strokeStyle = currentParam.colors.red; // red
             ctx.lineWidth = segmentWidth;
             //must subtract 90° as canvas has 0° east
-            start = 270 - scaleAngle;
-            end = 270 - scaleStart;
-            ctx.arc(0, 0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            start = 270 - currentParam.scaleAngle;
+            end = 270 - currentParam.scaleStart;
+            ctx.arc(0, 0, currentParam.segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
             ctx.stroke();
             // Write right partial circle
             ctx.beginPath();
-            ctx.strokeStyle = colors.green; // green
+            ctx.strokeStyle = currentParam.colors.green; // green
             ctx.lineWidth = segmentWidth;
             //must subtract 90° as canvas has 0° east
-            start = 270 +scaleStart;
-            end = 270 + scaleAngle;
-            ctx.arc(0,0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            start = 270 +currentParam.scaleStart;
+            end = 270 + currentParam.scaleAngle;
+            ctx.arc(0,0, currentParam.segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
             ctx.stroke();
             // Write partial circle
             ctx.beginPath();
-            ctx.strokeStyle = colors.bottom; // gray
+            ctx.strokeStyle = currentParam.colors.bottom; // gray
             ctx.lineWidth = segmentWidth;
-            start = 90-sternAngle;
-            end = 90+sternAngle;
-            ctx.arc(0,0, segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            start = 90-currentParam.sternAngle;
+            end = 90+currentParam.sternAngle;
+            ctx.arc(0,0, currentParam.segmentMiddle, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
             ctx.stroke();
         }
         // Write scale
@@ -208,41 +340,49 @@ const WindGraphics = (props:WindGraphicsProps) => {
         for (let i = 0; i < 12; i++) {
             ctx.rotate(2*Math.PI/12)
             ctx.beginPath();
-            ctx.strokeStyle = colors.circle; // dark gray
+            ctx.strokeStyle = currentParam.colors.circle; // dark gray
             ctx.lineWidth = 2
-            ctx.moveTo(0,-(circleMiddle-circle_linewidth/2-2-scaleLen));
-            ctx.lineTo(0,-(circleMiddle-circle_linewidth/2-2));
+            ctx.moveTo(0,-(currentParam.circleMiddle-circle_linewidth/2-2-scaleLen));
+            ctx.lineTo(0,-(currentParam.circleMiddle-circle_linewidth/2-2));
             ctx.stroke();
         }
         // Rotate
-        ctx.rotate(angle * Math.PI / 180);
-        // Write pointer
-        ctx.beginPath();
-        if (!props.useArrow) {
-            ctx.lineWidth = pointer_linewidth;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = colors.pointer;
-            ctx.moveTo(0, -txtRadius - 2);
-            ctx.lineTo(0, -(segmentMiddle - segmentWidth / 2 - 4));
-            ctx.stroke();
+        const [angle,more]=animAngle.current.next();
+        if (! isNaN(angle)) {
+            console.log("anim", angle, more);
+            ctx.rotate(angle * Math.PI / 180);
+            // Write pointer
+            ctx.beginPath();
+            if (!props.useArrow) {
+                ctx.lineWidth = pointer_linewidth;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = currentParam.colors.pointer;
+                ctx.moveTo(0, -currentParam.textRadius - 2);
+                ctx.lineTo(0, -(currentParam.segmentMiddle - segmentWidth / 2 - 4));
+                ctx.stroke();
+            } else {
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = currentParam.colors.pointer;
+                ctx.fillStyle = currentParam.colors.pointer;
+                ctx.moveTo(-10, -currentParam.textRadius - 2);
+                ctx.lineTo(0, -(currentParam.segmentMiddle - segmentWidth / 2 - 4));
+                ctx.lineTo(10, -currentParam.textRadius - 2);
+                //ctx.stroke();
+                ctx.fill();
+            }
         }
-        else {
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = colors.pointer;
-            ctx.fillStyle = colors.pointer;
-            ctx.moveTo(-10, -txtRadius - 2);
-            ctx.lineTo(0, -(segmentMiddle - segmentWidth / 2 - 4));
-            ctx.lineTo(10, -txtRadius - 2);
-            //ctx.stroke();
-            ctx.fill();
+        ctx.restore();
+        if (more) {
+            requestAnimationFrame(drawWind);
         }
     }
     const canvasRef = (item:HTMLCanvasElement) => {
         canvasref.current = item;
-        setTimeout(drawWind, 0);
+        drawParameters.current=undefined;
+        setTimeout(initialDraw, 0);
     }
-
-    setTimeout(drawWind, 0);
+    drawParameters.current=undefined;
+    setTimeout(initialDraw, 0);
     const [current,outerTxt]=compute();
     return (
         <WidgetFrame {...props} addClass="windGraphics"  caption={props.caption} resize={false}>
