@@ -43,6 +43,16 @@ const EDITABLES={
             'direction: wind angle or wind direction\n'+
             'speed: wind speed'
     },
+    animationTime:{
+        type:'NUMBER',
+        displayName:'animation time',
+        default:500,
+        description:'Smooth the needle movement.'+
+            'When set > 0 the needle will move smoothly to reach the final value within that much ms.'+
+            'This will emulate the behavior of an analogue instrument.'+
+            'Setting the value to 0 will disable this function' ,
+        list:[0,5000]
+    },
     formatter: true,
     formatterParameters: true,
     caption: true
@@ -96,8 +106,7 @@ class AnimAngle{
     private computeValue:(increment:number)=>boolean;
     constructor(period:number,target:number){
         this.last=0
-        this.period=period;
-        this.init(target);
+        this.init(period,target);
     }
     clamp(value:number):number{
         if (isNaN(value)){ return value}
@@ -123,7 +132,8 @@ class AnimAngle{
         this.last=nv;
         return true;
     }
-    init(target:number){
+    init(period:number,target:number){
+        this.period=period;
         this.target=this.clamp(target);
         this.last=this.clamp(this.last);
         if (isNaN(target)){
@@ -131,6 +141,10 @@ class AnimAngle{
         }
         else if (isNaN(this.last)){
             this.last=this.target;
+        }
+        if (this.period < 1){
+            this.last=target;
+            return false;
         }
         this.lastTime=(new Date()).getTime();
         const diff=target-this.last;
@@ -229,14 +243,13 @@ const WindGraphics = (props:WindGraphicsProps) => {
     const maxTextRadius=45;
     const width = 200;			// Control width
     const height = 200;			// Control height
-    const animationTime=500;
     const initialDraw  =()=>{
         drawParameters.current=undefined;
         const canvas=canvasref.current;
         if (!canvas) return;
         const [,,centerText,angle]=compute();
-        if (! animAngle.current) animAngle.current=new AnimAngle(animationTime,angle);
-        else animAngle.current.init(angle);
+        if (! animAngle.current) animAngle.current=new AnimAngle(props.animationTime,angle);
+        else animAngle.current.init(props.animationTime,angle);
         const colors=getColors(props.nightMode);
         const ctx = canvas.getContext('2d');
         ctx.resetTransform();
