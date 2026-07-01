@@ -5,7 +5,7 @@
 
 import React, {useState} from 'react';
 import navobjects, {Point, WayPoint} from '../nav/navobjects';
-import DB from './DialogButton';
+import {DialogButtonProps} from './DialogButton';
 import {Checkbox, Input} from './Inputs';
 import Dms from "geodesy/dms";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
@@ -13,6 +13,7 @@ import {useDialogContext} from "./DialogContext";
 import ButtonDefs from "./ButtonDefs";
 // @ts-ignore
 import navcompute from '../nav/navcompute';
+import {setav} from "../util/helper";
 
 const strLonToLon=(val:string|number)=>{
     if (val === undefined) return;
@@ -52,7 +53,7 @@ export interface WaypointDialogProps{
     mapCenter?: Point,
     okCallback: (wp:WayPoint)=>boolean,
     deleteCallback?: (wp:WayPoint)=>boolean,
-    startCallback?: (wp:WayPoint)=>boolean,
+    addonButtons?:DialogButtonProps[],
     readOnly?: boolean,
     showDecimal?:boolean,
 }
@@ -66,7 +67,7 @@ const WaypointDialog=(props:WaypointDialogProps)=> {
     const [decimal, setDecimal] = useState(props.showDecimal || false);
     if (!props.waypoint) return null;
 
-    const okFunction = (plat?:number,plon?:number) => {
+    const okFunction = (plat?:number,plon?:number,doClose?:boolean) => {
         const data = {
             name: name,
             lat: (plat !== undefined)?plat: strLatToLat(lat),
@@ -78,7 +79,8 @@ const WaypointDialog=(props:WaypointDialogProps)=> {
         const wp = props.waypoint.clone();
         wp.update(data);
         if(props.okCallback(wp)){
-            dialogContext.closeDialog();
+            if (doClose)dialogContext.closeDialog();
+            return wp;
         }
     }
     const ok = lonCheck(lon) && latCheck(lat);
@@ -93,6 +95,62 @@ const WaypointDialog=(props:WaypointDialogProps)=> {
         }catch (e){ /* empty */ }
         return true;
     }
+    const addonButtons:DialogButtonProps[]=[];
+    if (props.addonButtons){
+        for (const bt of props.addonButtons){
+            addonButtons.push({
+                ...bt,
+                onClick:(ev)=>{
+                    if (! bt.onClick) return;
+                    const wp=okFunction(); //do not close
+                    if (! wp) return;
+                    setav(ev,{waypoint:wp,dialogContext:dialogContext});
+                    bt.onClick(ev);
+                }
+            })
+        }
+    }
+    let buttons:DialogButtonProps[]=[
+        {
+            ...ButtonDefs.NavToCenter,
+            visible: hasCenterDistance() && !props.readOnly,
+            onClick: () => {
+                //set the values any way to have them if the okFunction fails
+                if (decimal) {
+                    setLat(props.mapCenter.lat);
+                    setLon(props.mapCenter.lon);
+                } else {
+                    setLat(formatLat(props.mapCenter.lat));
+                    setLon(formatLon(props.mapCenter.lon));
+                }
+                //directly call the okFunction with the new values
+                okFunction(props.mapCenter.lat, props.mapCenter.lon,true);
+            }
+        }];
+        buttons=buttons.concat(addonButtons,[
+            {
+                ...ButtonDefs.DBDelete,
+                onClick: () => {
+                    if (props.deleteCallback) {
+                        if (props.deleteCallback(props.waypoint)) {
+                            dialogContext.closeDialog();
+                        }
+                    }
+                },
+                visible: props.deleteCallback !== undefined && !props.readOnly,
+                close: false
+            },
+            {
+                ...ButtonDefs.DBCancel
+            },
+
+            {
+                ...ButtonDefs.DBOk,
+                onClick: () => okFunction(undefined,undefined,true),
+                disabled: !ok || props.readOnly,
+                close: false
+            }
+        ])
     return (
         <DialogFrame className={"WaypointDialog"} title={"Edit Waypoint"}>
             <Input
@@ -132,45 +190,8 @@ const WaypointDialog=(props:WaypointDialogProps)=> {
                 }}
                 value={decimal}
             />
-            <DialogButtons>
-                <DB
-                    {...ButtonDefs.NavToCenter}
-                    visible={hasCenterDistance() && ! props.readOnly}
-                    onClick={()=>{
-                        //set the values any way to have them if the okFunction fails
-                        if (decimal) {
-                            setLat(props.mapCenter.lat);
-                            setLon(props.mapCenter.lon);
-                        }
-                        else {
-                            setLat(formatLat(props.mapCenter.lat));
-                            setLon(formatLon(props.mapCenter.lon));
-                        }
-                        //directly call the okFunction with the new values
-                        okFunction(props.mapCenter.lat,props.mapCenter.lon);
-                    }}
-                />
-                <DB {...ButtonDefs.NavGoto}
-                    onClick={()=>{
-                        if (props.startCallback(props.waypoint)){
-                            dialogContext.closeDialog();
-                        }
-                    }}
-                    visible={!!props.startCallback}
-                    close={false}
-                />
-                <DB {...ButtonDefs.DBDelete} onClick={()=>{
-                    if (props.deleteCallback) {
-                        if (props.deleteCallback(props.waypoint)) {
-                            dialogContext.closeDialog();
-                        }
-                    }
-                }}
-                    visible={props.deleteCallback !== undefined && ! props.readOnly}
-                    close={false}/>
-                <DB {...ButtonDefs.DBCancel} tabIndex="3" />
-                <DB {...ButtonDefs.DBOk} tabIndex="4" onClick={()=>okFunction()} disabled={!ok || props.readOnly} close={false}/>
-            </DialogButtons>
+            <DialogButtons
+                buttonList={buttons}/>
         </DialogFrame>
     )
 

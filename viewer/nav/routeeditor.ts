@@ -425,6 +425,12 @@ class RouteEdit{
         if (!data.route) return [];
         return data.route.getRoutePoints(selectedIndex,data.useRhumbLine);
     }
+    getActiveIndex(){
+        const data=load(this.storeKeys);
+        if (! StateHelper.isActiveRoute(data)) return;
+        if (!data.leg) return;
+        return data.leg.getCurrentTargetIdx();
+    }
 
     isActiveRoute(){
         const data=load(this.storeKeys);

@@ -98,6 +98,12 @@ const startWaypointDialog = (item:WayPoint, index:number, dialogContext?:IDialog
         return false;
     };
     const canWrite=checkRouteWritable();
+    const editor=getCurrentEditor();
+    let active=false;
+    if (editor.getActiveIndex() === index ){
+        active=true;
+    }
+    const startButton=active?ButtonDefs.NavRestart:ButtonDefs.NavGoto;
     const RenderDialog = ()=> {
         const history = useHistory();
         return <WayPointDialog
@@ -109,10 +115,12 @@ const startWaypointDialog = (item:WayPoint, index:number, dialogContext?:IDialog
                 getCurrentEditor().deleteWaypoint(index);
                 return true;
             }}
-            startCallback={()=>{
-                startRouting(dialogContext,index,history);
-                return true;
-            }}
+            addonButtons={[{
+                ...startButton,
+                onClick: ()=>{
+                    startRouting(dialogContext,index,history);
+                }
+            }]}
         />
     };
     showDialog(dialogContext, RenderDialog);
