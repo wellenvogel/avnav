@@ -21,7 +21,7 @@ import Helper, {avitem} from "../util/helper";
 import ButtonList from "../components/ButtonList";
 import {SelectDialog, ValueDialog} from "../components/BasicDialogs";
 import {useHistory} from "../components/HistoryProvider";
-import {PAGEIDS} from "../util/pageids";
+import {getPageTitle, PAGEIDS} from "../util/pageids";
 import {IDialogContext, useDialogContext} from "../components/DialogContext";
 import {scrollInContainer} from "../util/UiHelper";
 // @ts-ignore
@@ -438,14 +438,13 @@ export const AisButtonActions = ({nearestAction}:AisButtonActionParam) => {
     }
 }
 
-const ID=PAGEIDS.AIS;
 export interface AisPageProps extends PageProps{}
 const AisPage =(props:AisPageProps)=>{
         const options=props.options||{};
         const currentButtons=useRef<ButtonDef[]>();
         const history=useHistory();
     useDialogContext();
-    currentButtons.current=InjectMainMenu(PAGEIDS.AIS,
+    currentButtons.current=InjectMainMenu(props.id,
         updateButtons(AisPageButtons,AisButtonActions({
             nearestAction: ()=>history.push(PAGEIDS.NAV)
         })));
@@ -453,15 +452,15 @@ const AisPage =(props:AisPageProps)=>{
         return (
             <PageFrame
                 {...props}
-                id={ID}
-                title="Ais">
-                <PageLeft id={ID}>
+                id={props.id}
+                >
+                <PageLeft id={props.id} title={getPageTitle(props.id)}>
                     <CompleteAisListWithStore
                         sortField={options.sortField}
                         mmsi={options.mmsi}
                     />
                 </PageLeft>
-                <ButtonList page={ID} itemList={currentButtons.current}/>
+                <ButtonList page={props.id} itemList={currentButtons.current}/>
             </PageFrame>
         );
 }
