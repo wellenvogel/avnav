@@ -46,9 +46,9 @@
     },
     "addon":{
       "signalk": "Control-0",
-      "system-ochartsng1":"Control-1",
-      "system-history1":"Control-2",
-      "system-mapproxy1":"Control-3",
+      "system-ochartsng-ui":"Control-1",
+      "system-history-ui":"Control-2",
+      "system-mapproxy-ui":"Control-3",
       "3":"Control-3",
       "4":"Control-4",
       "5":"Control-5",
@@ -96,19 +96,6 @@
       "centerToTarget":"w",
       "navNext": ["n","Control-n"],
       "toggleNav": ["Control-g"]
-    }
-  },
-  "mainpage":{
-    "page":{
-      "selectChart":"Enter",
-      "nextChart":["Tab","ArrowDown"],
-      "previousChart":"ArrowUp"
-    },
-    "button":{
-      "ShowSettings":"Control-+",
-      "ShowStatus":"Control-s",
-      "ShowGps": "d",
-      "Night":["c","Control-c","Control-g"]
     }
   }
 }
