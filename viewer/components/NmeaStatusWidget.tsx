@@ -30,6 +30,7 @@ import {useStoreState} from "../hoc/Dynamic";
 import {useStringsChanged} from "../hoc/Resizable";
 import {StatusIcon} from "./Icons";
 import Helper from "../util/helper";
+import {ListItem, ListMainSlot, ListSlot} from "./ListItems";
 
 export interface NmeaStatusWidgetProps extends IWidgetProps{
     showAis?:boolean;
@@ -84,32 +85,29 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
         return <WidgetFrame name={props.name} dragId={props.dragId} onClick={props.onClick} className={props.className}></WidgetFrame>
     }
     const resizeSequence=useStringsChanged(display,true);
-    return <React.Fragment>
-        { props.showNmea && <WidgetFrame {...props} caption={'NMEA'} className={Helper.concatsp("nmeaStatusWidget",props.className)} key={1} style={{height:'50%'}} resizeSequence={resizeSequence}>
-            <div className='widgetData nmea'>
-                <div className={"rowBase status"}>
+    return <WidgetFrame {...props} caption={'NMEA status'} className={Helper.concatsp("nmeaStatusWidget",props.className)} resizeSequence={resizeSequence}>
+            { props.showNmea &&<ListItem className='nmea'>
+                <ListSlot text={'GPS'} className={'kind'}></ListSlot>
+                <ListSlot className={"status"}>
                     <StatusIcon type={display.nmeaColor}/>
-                    <div className={"source"}>{display.nmeaSource}</div>
-                </div>
-                <div className={"rowBase"}>
-                    <div className={"info"}>{display.nmeaInfo}</div>
-                </div>
-            </div>
-        </WidgetFrame>}
-        {props.showAis &&
-            <WidgetFrame {...props} className={Helper.concatsp("nmeaStatusWidget",props.className)} caption={'AIS'} key={2} style={{height:'50%'}} resizeSequence={resizeSequence}>
-                <div className={"widgetData ais"}>
-                    <div className={"rowBase status"}>
-                        <StatusIcon type={display.aisColor}/>
-                        <div className={"source"}>{display.aisSource}</div>
-                    </div>
-                    <div className={"rowBase"}>
-                        <div className={"info"}>{display.aisInfo}</div>
-                    </div>
-                </div>
-            </WidgetFrame>
+                </ListSlot>
+                <ListMainSlot className={"status"}
+                              primary={display.nmeaSource}
+                              secondary={display.nmeaInfo}
+                />
+            </ListItem>}
+        {props.showAis && <ListItem className='ais' noBorder={true}>
+            <ListSlot text={'AIS'} className={'kind'}></ListSlot>
+            <ListSlot className={"status"}>
+                <StatusIcon type={display.aisColor}/>
+            </ListSlot>
+            <ListMainSlot className={"status"}
+                          primary={display.aisSource}
+                          secondary={display.aisInfo}
+            />
+        </ListItem>
         }
-    </React.Fragment>
+    </WidgetFrame>
 }
 NmeaStatusWidget.predefined={
     editableParameters:{
