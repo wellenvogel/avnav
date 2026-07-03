@@ -1,0 +1,373 @@
+{
+  "description": "The system default layout. No keys and no properties.",
+  "layoutVersion": 1,
+  "properties": {
+    "layers": {
+      "ais": true
+    }
+  },
+  "widgets": {
+    "gpspage1": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5,
+          "className": "aqua"
+        },
+        {
+          "name": "DST",
+          "className": "light-red",
+          "weight": 1.5
+        },
+        {
+          "name": "XteDisplay",
+          "compareState": true,
+          "weight": 1
+        },
+        {
+          "className": "yellow",
+          "name": "ETA"
+        },
+        {
+          "className": "half",
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "className": "orange",
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "className": "lime",
+          "name": "SOG",
+          "weight": 1.5
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        },
+        {
+          "className": "half",
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage2": {
+      "left": [
+        {
+          "name": "BRG",
+          "className": "aqua",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "className": "light-red",
+          "weight": 0.75
+        },
+        {
+          "className": "lime",
+          "name": "SOG",
+          "weight": 0.75
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "className": "yellow",
+          "name": "ETA"
+        },
+        {
+          "className": "half",
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "className": "orange",
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "WindGraphics",
+          "weight": 2.5
+        },
+        {
+          "name": "DateTime"
+        },
+        {
+          "className": "half",
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage3": {
+      "left": [
+        {
+          "name": "BRG",
+          "className": "aqua",
+          "caption": "BRG",
+          "unit": "°",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "COG",
+          "className": "orange",
+          "caption": "COG",
+          "unit": "°",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "className": "half",
+          "name": "NmeaStatus"
+        },
+        {
+          "caption": "COG",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "colorText": "#ffffff",
+          "name": "radGauge_Compass",
+          "weight": 3
+        }
+      ],
+      "right": [
+        {
+          "name": "DST",
+          "className": "light-red",
+          "caption": "DST",
+          "unit": "nm",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "VMG",
+          "caption": "VMG",
+          "unit": "kn",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "className": "lime",
+          "name": "SOG",
+          "caption": "SOG",
+          "unit": "kn",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "caption": "SOG",
+          "unit": "kn",
+          "storeKeys": {
+            "value": "nav.gps.speed"
+          },
+          "colorPlate": "rgba(255, 255, 255, 0.01)",
+          "colorText": "#ffffff",
+          "maxValue": 10,
+          "startHighlight": 6,
+          "formatterParameters": [
+            ""
+          ],
+          "name": "radGauge_Speed",
+          "weight": 3
+        }
+      ]
+    },
+    "navpage": {
+      "left": [
+        {
+          "name": "CenterDisplay"
+        },
+        {
+          "name": "Zoom"
+        },
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "ActiveRoute"
+        },
+        {
+          "name": "LargeTime"
+        }
+      ],
+      "left_small": [
+        {
+          "name": "ActiveRoute"
+        }
+      ],
+      "top_small": [
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthBelowTransducer"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "LargeTime"
+        },
+        {
+          "name": "Zoom"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "className": "aqua",
+          "name": "BRG"
+        },
+        {
+          "className": "light-red",
+          "name": "DST"
+        },
+        {
+          "className": "yellow",
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "className": "orange",
+          "name": "COG"
+        },
+        {
+          "className": "lime",
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ],
+      "bottomLeft_anchor": [
+        {
+          "name": "AnchorBearing",
+          "caption": "ACHR-BRG",
+          "unit": "°"
+        },
+        {
+          "name": "AnchorDistance",
+          "caption": "ACHR-DST",
+          "unit": "m",
+          "formatterParameters": [
+            "m"
+          ]
+        },
+        {
+          "name": "AnchorWatchDistance"
+        }
+      ]
+    },
+    "editroutepage": {
+      "left": [
+        {
+          "name": "EditRoute"
+        },
+        {
+          "name": "RoutePoints"
+        }
+      ],
+      "left_small": [],
+      "top_small": [
+        {
+          "name": "EditRoute"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG",
+          "className": "aqua"
+        },
+        {
+          "name": "DST",
+          "className": "light-red"
+        },
+        {
+          "className": "yellow",
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "className": "orange",
+          "name": "COG"
+        },
+        {
+          "className": "lime",
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ]
+    }
+  },
+  "css": ":root{\n--avnav-widget-color: black;\n--avnav-widget-fore-color: white;\n--avnav-widget-head-color: #242323;\n--layout-dark-icon-filter: var(--avnav-filter-white);\n}\n/* must be more specific then the color definitions below */\n.nightMode{\n--avnav-widget-fore-color: rgb(252 11 11 / 60%);\n--layout-dark-icon-filter: var(--avnav-filter-red);\n}\n\n/*\n  be sure to have a night mode definition that is more specific\n  then the color classes below\n  This ensures red color for all widgets in night mode\n  If you do not want this, remove the rule\n*/\n.app.nightMode .widget{\n  --avnav-widget-fore-color: rgb(252 11 11 / 60%);\n}\n\n.buttonContainer.main{\n  background-color: var(--avnav-widget-color);\n}\n/* color classes for the widgets\n   assign one of those classes to a widget to use the color a the widget foreground color\n   if you want new colors just add classes for them here\n   */\n.orange {\n  --avnav-widget-fore-color: rgba(255, 165, 0, 1);\n}\n.maroon {\n  --avnav-widget-fore-color: maroon;\n}\n.red {\n  --avnav-widget-fore-color: red;\n}\n.light-red {\n  --avnav-widget-fore-color: #ff8c8c;\n}\n.purple{\n  --avnav-widget-fore-color: purple;\n}\n.light-purple{\n  --avnav-widget-fore-color: #fb90fb;\n}   \n.fuchsia{\n  --avnav-widget-fore-color: fuchsia;\n}\n.green{\n  --avnav-widget-fore-color: green;\n}\n.lime{\n  --avnav-widget-fore-color: lime;\n}\n.olive{\n  --avnav-widget-fore-color: olive;\n}\n.yellow{\n  --avnav-widget-fore-color: yellow;\n}\n.navy{\n  --avnav-widget-fore-color: navy;\n}\n.blue{\n  --avnav-widget-fore-color: blue;\n}\n.light-blue{\n  --avnav-widget-fore-color: #8484ff;\n}\n.teal{\n  --avnav-widget-fore-color: teal;\n}\n.aqua{\n  --avnav-widget-fore-color: aqua;\n}\n\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 2.3em;\n}\n\n.widget .icon{\n  filter: var(--layout-dark-icon-filter);\n}\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget .widgetHead {\n    border-bottom: unset;\n    border-top: 2px solid;\n    background-color: unset;\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used for smaller caption and unit */\n.hfield .widgetContainer .widget.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n\n \n/* a CSS class \"centered\" for centered text in widgets */\n.widget.centered .widgetData{\n  margin-right: auto;\n}\n "
+}
