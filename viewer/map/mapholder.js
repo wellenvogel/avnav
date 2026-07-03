@@ -1294,6 +1294,7 @@ class MapHolder extends DrawingPositionConverter {
                             }
                         })
                         .catch((error) => {
+                            base.error("check sequence error",error);
                         })
                 }
             }

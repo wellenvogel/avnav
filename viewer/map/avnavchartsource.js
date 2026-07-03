@@ -263,7 +263,8 @@ class AvnavChartSource extends ChartSourceBase{
                 newSequence = await Requests.getLastModified(this.getOverviewUrl());
             }
             else{
-                newSequence=0;
+                if (e) throw e;
+                else throw new Error("unable to query sequence");
             }
         }
         return newSequence;
@@ -272,17 +273,22 @@ class AvnavChartSource extends ChartSourceBase{
         //prevent from triggering a reload if we already have been destroyed
         let destroySequence = this.destroySequence;
         if ((!this.isReady() &&! force)|| destroySequence !== this.destroySequence) return false;
-        let newSequence=await this._fetchChartSequence();
-        newSequence = await this.addLayerSequences(newSequence, this.layers);
-        if (this.destroySequence !== destroySequence) {
+        try {
+            let newSequence = await this._fetchChartSequence();
+            newSequence = await this.addLayerSequences(newSequence, this.layers);
+            if (this.destroySequence !== destroySequence) {
+                return false;
+            }
+            if (newSequence !== this.sequence) {
+                base.log("Sequence changed from " + this.sequence + " to " + newSequence + " reload map");
+                this.sequence = newSequence;
+                return true;
+            }
             return false;
+        }catch (error){
+            this.sequence = undefined;
+            throw error||new Error("sequence fetch error");
         }
-        if (newSequence !== this.sequence) {
-            base.log("Sequence changed from " + this.sequence + " to " + newSequence + " reload map");
-            this.sequence = newSequence;
-            return true;
-        }
-        return false;
     }
 
     async destroy() {
