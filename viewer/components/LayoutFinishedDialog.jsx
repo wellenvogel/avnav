@@ -44,6 +44,7 @@ const LayoutFinishedDialog=(props)=>{
                     language="css"
                     saveFunction={(data)=>{
                         LayoutHandler.updateCss(data);
+                        return true;
                     }}
                     resolveFunction={(data)=>{
                         LayoutHandler.updateCss(data);

@@ -138,8 +138,10 @@ export const EditDialog = ({data, title, language, resolveFunction,
                         value={selected}
                         resolveFunction={(color:string)=>{
                             if (!color) return;
+                            if (color === selected) return;
                             const newString=current.substring(0,start)+color+current.substring(end);
                             flask.current.updateCode(newString,true);
+                            setChanged(true);
                         }}
                     ></ColorDialog>)
                 },
