@@ -1,7 +1,7 @@
 import React, {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler, {layoutLoader} from '../util/layouthandler.ts';
-import {DialogButtons, DialogFrame, showDialog} from './OverlayDialog.tsx';
+import {DialogButtons, DialogFrame, DialogText, showDialog} from './OverlayDialog.tsx';
 import DB from './DialogButton.tsx';
 import {EditDialog} from "./EditDialog";
 import Toast from "./Toast";
@@ -57,6 +57,7 @@ const LayoutFinishedDialog=(props)=>{
     },[]);
         return (
             <DialogFrame title={"Save Layout Changes?"}>
+                <DialogText>{LayoutHandler.getName()}</DialogText>
                 <DialogButtons >
                     <DB {...ButtonDefs.DBEditCss} onClick={()=>buttonFunction(4)}/>
                     <DB {...ButtonDefs.DBDiscard} onClick={()=>buttonFunction(2)}/>
