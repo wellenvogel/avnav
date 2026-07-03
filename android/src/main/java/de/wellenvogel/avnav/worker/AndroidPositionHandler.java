@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.*;
 import android.os.Build;
@@ -27,6 +28,7 @@ import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.MovingSum;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 import org.json.JSONException;
@@ -63,7 +65,22 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
     private boolean stopped=true;
     private Thread satStatusProvider;
-    private GnssStatus.Callback gnssStatus;
+
+    MovingSum receiveCounter=new MovingSum(10);
+    private synchronized void addNmea(String nmea){
+        nmea=nmea.trim();
+        if (nmea.length()>= 6){
+            if (nmea.substring(3,6).equals("RMC")){
+                //we assume RMC means valid location
+                lastValidLocation=SystemClock.uptimeMillis();
+            }
+        }
+        receiveCounter.add(1);
+        int priority=getPriority(PRIORITY_PARAMETER);
+        queue.add(nmea,getSourceName(),priority);
+    }
+    private OnNmeaMessageListener onNmeaListener;
+    private GpsStatus.NmeaListener nmeaListener;
     private LocationListener locationListener=new LocationListener() {
         @Override
         public void onLocationChanged(@NonNull Location location) {
@@ -97,66 +114,21 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 PRIORITY_PARAMETER
                 );
         status.canEdit=true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            this.gnssStatus=new GnssStatus.Callback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            this.onNmeaListener= new OnNmeaMessageListener() {
                 @Override
-                public void onStarted() {
-                    AndroidPositionHandler.this.tryEnableLocation();
+                public void onNmeaMessage(String message, long timestamp) {
+                    AvnLog.i("ANDROID NMEA",message);
+                    AndroidPositionHandler.this.addNmea(message);
                 }
-
+            };
+        }
+        else{
+            this.nmeaListener=new GpsStatus.NmeaListener() {
                 @Override
-                public void onStopped() {
-                }
-
-                @Override
-                public void onFirstFix(int ttffMillis) {
-                }
-
-                @Override
-                public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
-                    SentenceFactory sf=SentenceFactory.getInstance();
-                    int priority=getPriority(PRIORITY_PARAMETER);
-                        try {
-                            int numSat = 0;
-                            ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
-                            ArrayList<String> fixSats = new ArrayList<String>();
-                            for (int idx=0;idx < status.getSatelliteCount();idx++) {
-                                numSat++;
-                                if (status.usedInFix(idx) && fixSats.size() < 12) fixSats.add(String.format("%02d", status.getSvid(idx)));
-                                SatelliteInfo sat = new SatelliteInfo(String.format("%02d", status.getSvid(idx)),
-                                        (int) Math.round(status.getElevationDegrees(idx)),
-                                        (int) Math.round(status.getAzimuthDegrees(idx)),
-                                        (int) Math.round(status.getCn0DbHz(idx))
-                                );
-                                sats.add(sat);
-                            }
-                            int numGsv = (numSat + 3) / 4;
-                            for (int i = 0; i < numGsv; i++) {
-                                GSVSentence gsv = (GSVSentence) sf.createParser(TalkerId.GP, "GSV");
-                                gsv.setSentenceCount(numGsv);
-                                gsv.setSentenceIndex(i + 1);
-                                gsv.setSatelliteCount(numSat);
-                                ArrayList<SatelliteInfo> glist = new ArrayList<SatelliteInfo>();
-                                for (int j = i * 4; j < (i + 1) * 4 && j < numSat; j++) {
-                                    glist.add(sats.get(j));
-                                }
-                                gsv.setSatelliteInfo(glist);
-                                queue.add(gsv.toSentence(), getSourceName(), priority);
-                            }
-                            Location loc = location;
-                            if (loc != null && (SystemClock.uptimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
-                                GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
-                                gsa.setMode(FaaMode.AUTOMATIC);
-                                gsa.setFixStatus(GpsFixStatus.GPS_3D);
-                                String[] fsats = new String[fixSats.size()];
-                                fsats = fixSats.toArray(fsats);
-                                gsa.setSatelliteIds(fsats);
-                                //TODO: XDOP
-                                queue.add(gsa.toSentence(), getSourceName(),priority);
-                            }
-                        }catch (Throwable t){
-                            AvnLog.e("error in sat status loop",t);
-                        }
+                public void onNmeaReceived(long timestamp, String nmea) {
+                    AvnLog.i("ANDROID NMEA",nmea);
+                    AndroidPositionHandler.this.addNmea(nmea);
                 }
             };
         }
@@ -189,7 +161,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
         tryEnableLocation();
         checkBackgroundGps();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             satStatusProvider = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -198,7 +170,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                     while (!shouldStop(startSequence)) {
                         try {
                             int numSat = 0;
-                            GpsStatus status = locationService.getGpsStatus(null);
+                            GpsStatus status = null;
+                            status=locationService.getGpsStatus(null);
                             ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
                             ArrayList<String> fixSats = new ArrayList<String>();
                             for (GpsSatellite s : status.getSatellites()) {
@@ -248,24 +221,28 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             satStatusProvider.start();
         }
         while (! shouldStop(startSequence)){
-            if (!sleep(5000)) break;
+            receiveCounter.add(0);
+            boolean hasData = receiveCounter.val() > 0;
+            String info=String.format("rcv=%.2f/s ", receiveCounter.avg());
+            status.setChildStatus("NMEA",hasData? WorkerStatus.Status.NMEA: WorkerStatus.Status.RUNNING,info);
+            if (!sleep(1000)) break;
             checkBackgroundGps();
         }
     }
 
 
+    @SuppressLint("MissingPermission")
     public void check(){
         if (stopped) return;
         if (! isRegistered) tryEnableLocation();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if ((lastValidLocation+CHECKTIME) < SystemClock.uptimeMillis()) {
+                setStatus(WorkerStatus.Status.RUNNING,"waiting for location");
                 try {
                     locationService.getCurrentLocation(LocationManager.GPS_PROVIDER, null, executor, new Consumer<Location>() {
                         @Override
                         public void accept(Location location) {
-                            if (location != null) {
-                                onLocationChanged(location);
-                            }
+                            onLocationChanged(location);
                         }
                     });
                 } catch (Throwable t) {
@@ -275,7 +252,12 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     }
 
     @Override
-    public synchronized void onLocationChanged(Location location) {
+    public synchronized void onLocationChanged(@NonNull Location location) {
+        if (location == null){
+            this.location=null;
+            setStatus(WorkerStatus.Status.RUNNING,"waiting for location");
+            return;
+        }
         AvnLog.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
@@ -315,11 +297,12 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 @Override
                 public void run() {
                     locationService.removeUpdates(locationListener);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        locationService.unregisterGnssStatusCallback(AndroidPositionHandler.this.gnssStatus);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        locationService.removeNmeaListener(AndroidPositionHandler.this.onNmeaListener);
                     }
                     else {
                         locationService.removeGpsStatusListener(AndroidPositionHandler.this);
+                        locationService.removeNmeaListener(AndroidPositionHandler.this.nmeaListener);
                     }
                     isRegistered=false;
                 }
@@ -344,14 +327,17 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                     }
                 }
                 handler.post(new Runnable() {
+                    @SuppressLint("MissingPermission")
                     @Override
                     public void run() {
                         locationService.requestLocationUpdates(currentProvider, CHECKTIME/2, 0, locationListener);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                locationService.registerGnssStatusCallback(AndroidPositionHandler.this.gpsService.getMainExecutor(), AndroidPositionHandler.this.gnssStatus);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            locationService.addNmeaListener(AndroidPositionHandler.this.onNmeaListener,null);
+                                //locationService.registerGnssStatusCallback(AndroidPositionHandler.this.gpsService.getMainExecutor(), AndroidPositionHandler.this.gnssStatus);
                         }
                         else {
-                            locationService.addGpsStatusListener(AndroidPositionHandler.this);
+                            locationService.addNmeaListener(AndroidPositionHandler.this.nmeaListener);
+                            //locationService.addGpsStatusListener(AndroidPositionHandler.this);
                         }
                     }
                 });

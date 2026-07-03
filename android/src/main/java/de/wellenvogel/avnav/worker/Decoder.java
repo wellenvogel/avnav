@@ -6,6 +6,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Pair;
 
 import net.sf.marineapi.nmea.parser.DataNotAvailableException;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
@@ -34,6 +35,7 @@ import net.sf.marineapi.nmea.sentence.VWRSentence;
 import net.sf.marineapi.nmea.sentence.XDRSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.Direction;
+import net.sf.marineapi.nmea.util.GpsFixStatus;
 import net.sf.marineapi.nmea.util.Measurement;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.SatelliteInfo;
@@ -87,12 +89,19 @@ public class Decoder extends Worker  implements INavRequestHandler {
     public static final String K_COURSE ="course";
     public static final String K_SPEED="speed";
     public static final String K_TIME ="time";
+    public static final String K_FIX_TYPE="fixType"; // 'GNSS fix type (1=none, 2=2D, 3=3D)')
+    public static final String K_FIX_QUALITY="fixQuality";//'GNSS fix quality (0=invalid, 1=nonRTK, 2=SBAS/diff, 4=RTK fixed, 5=RTK float, 6=dead reckoning)')
+    public static final String K_PDOP="PDOP"; //'Position Dilution of Precision')
+    public static final String K_HDOP="HDOP"; //'Horizontal Dilution of Precision')
+    public static final String K_VDOP="VDOP"; //'Vertical Dilution of Precision')
+    public static final String K_SATUSED="satUsed"; //'number of Sats in use',signalK='navigation.gnss.satellites')
+    public static final String K_SATVIEW="satInview";//'number of Sats in view',signalK='navigation.gnss.satellitesInView.count')
 
     public static final String IK_TIME="_time";
     public static final String IK_DATE="_date";
     public SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     private long lastAisCleanup=0;
-    private AisStore store=null;
+    private AisStore store=new AisStore();
     private GSVStores gsvStores=new GSVStores();
     public static final String LOGPRFX="AvNav:Decoder";
     private NmeaQueue queue;
@@ -402,13 +411,24 @@ public class Decoder extends Worker  implements INavRequestHandler {
             if (!e.valid(now)) continue;
             e.toJson(json);
         }
+        //the entries from a filled GSV store will overwrite entries from GGA
+        Pair<GSVStore,Boolean> gsv=getValidGsv(false);
+        if (gsv.first != null){
+            gsv.first.mergeToNmea(json);
+        }
     }
 
     static class GSVStore {
+        private GpsFixStatus fixStatus;
+        private long lastGsa=0;
+        private double pdop;
+        private double hdop;
+        private double vdop;
+
         static class Sat {
             public int number;
             public String talker = "";
-            long lastSeen;
+            long lastSeen=0;
 
             public Sat(int number, String talker) {
                 this.number = number;
@@ -487,6 +507,22 @@ public class Decoder extends Worker  implements INavRequestHandler {
                 existing.update(gsa.getTalkerId().toString());
             }
             cleanupUsed();
+            this.lastGsa=SystemClock.uptimeMillis();
+            this.fixStatus=gsa.getFixStatus();
+            this.pdop=gsa.getPositionDOP();
+            this.hdop=gsa.getHorizontalDOP();
+            this.vdop=gsa.getVerticalDOP();
+
+        }
+        public synchronized void mergeToNmea(JSONObject o) throws JSONException {
+            o.put(K_SATUSED,getNumUsed());
+            o.put(K_SATVIEW,getSatCount());
+            if ((this.lastGsa + this.expiryTime) >= SystemClock.uptimeMillis()){
+                o.put(K_VDOP,this.vdop);
+                o.put(K_HDOP,this.hdop);
+                o.put(K_PDOP,this.pdop);
+                o.put(K_FIX_TYPE,this.fixStatus);
+            }
         }
 
     }
@@ -515,6 +551,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
             }
             return found;
         }
+
 
         public synchronized void cleanup(boolean force) {
             if (force) {
@@ -911,8 +948,15 @@ public class Decoder extends Worker  implements INavRequestHandler {
                                             GGASentence gga=(GGASentence) s;
                                             try {
                                                 int qual = gga.getFixQuality().toInt();
+                                                addNmeaData(K_FIX_QUALITY,qual,entry,posAge);
                                                 isValid = qual > 0;
                                                 AvnLog.dfs("%s: GGA sentence, quality=%d, valid=%s", getTypeName(), qual, isValid);
+                                            }catch (DataNotAvailableException i){}
+                                            try{
+                                                addNmeaData(K_SATUSED,gga.getSatelliteCount(),entry,posAge);
+                                            }catch (DataNotAvailableException i){}
+                                            try{
+                                                addNmeaData(K_HDOP,gga.getHorizontalDOP(),entry,posAge);
                                             }catch (DataNotAvailableException i){}
                                         }
                                     } catch (DataNotAvailableException ignored) {
@@ -1049,8 +1093,7 @@ public class Decoder extends Worker  implements INavRequestHandler {
         }
         super.setParameters(child, newParam, replace,check);
     }
-
-    SatStatus getSatStatus() {
+    Pair<GSVStore,Boolean> getValidGsv(boolean returnEmpty){
         List<NmeaEntry> pos=getEntries(K_LAT,K_LON);
         String pSource=null;
         boolean posValid=true;
@@ -1065,15 +1108,12 @@ public class Decoder extends Worker  implements INavRequestHandler {
         else{
             gsv=gsvStores.getHPStore();
         }
-        SatStatus rt=null;
-        if (gsv != null){
-            gsv.cleanup();
-            rt=new SatStatus(gsv.getSatCount(),gsv.getNumUsed(),fetcher.hasData(),gsv.source,posValid);
-        }
-        else {
-            rt = new SatStatus(0, 0, fetcher.hasData(),pSource,posValid);
-        }
-        return rt;
+        if (gsv == null && returnEmpty) gsv=new GSVStore(pSource,0,0);
+        return new Pair<>(gsv,posValid);
+    }
+    SatStatus getSatStatus() {
+        Pair<GSVStore,Boolean> validGsv=getValidGsv(true);
+        return new SatStatus(validGsv.first.getSatCount(),validGsv.first.getNumUsed(),fetcher.hasData(),validGsv.first.source,validGsv.second);
     }
 
 
