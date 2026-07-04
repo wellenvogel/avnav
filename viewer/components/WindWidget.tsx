@@ -21,21 +21,13 @@ export const getWindData=(props:WindProps):ComputedWindData=>{
     if (kind !== 'true' && kind !== 'apparent' && kind !== 'trueAngle' && kind !== 'trueDirection') kind='auto';
     if (kind === 'auto'){
         if (props.windAngle !== undefined && props.windSpeed !== undefined){
-            windAngle=props.windAngle;
-            windSpeed=props.windSpeed;
-            suffix='A';
-        }
-        else{
-            if (props.windAngleTrue !== undefined){
-                windAngle=props.windAngleTrue;
-                windSpeed=props.windSpeedTrue;
-                suffix="TA";
-            }
-            else{
-                windAngle=props.windDirectionTrue;
-                windSpeed=props.windSpeedTrue;
-                suffix="TD";
-            }
+            kind = 'apparent';
+        } else if (props.windAngleTrue !== undefined && props.windSpeedTrue !== undefined){
+            kind = 'trueAngle';
+        } else if (props.windDirectionTrue !== undefined && props.windSpeedTrue !== undefined){
+            kind = 'trueDirection';
+        } else {
+            kind = 'apparent';
         }
     }
     if (kind === 'apparent'){
@@ -126,11 +118,11 @@ const WindWidget = (props:WindWidgetProps) => {
                 </React.Fragment>
                 :
                 <React.Fragment>
-                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode}
+                        <WidgetFrame style={{height:"50%"}} addClass="windInner" resize={true} mode={props.mode}
                                      caption={names[wind.suffix].angle} unit='°' name={""} dragId={0}>
                             <div className='widgetData'>{Formatter.formatDirection(wind.windAngle,undefined,show180)}</div>
                         </WidgetFrame>
-                        <WidgetFrame addClass="windInner" resize={true} mode={props.mode}
+                        <WidgetFrame addClass="windInner" style={{height:"50%"}} resize={true} mode={props.mode}
                                      caption={names[wind.suffix].speed} unit={props.unit} name={""} dragId={0}>
                             <div className='widgetData'>{windSpeedStr}</div>
                         </WidgetFrame>
