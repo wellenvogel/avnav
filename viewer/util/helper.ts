@@ -159,9 +159,7 @@ Helper.getParam=(key:string)=>{
 };
 
 Helper.to360=(a:number)=>{
-    while (a < 360) {
-        a += 360;
-    }
+    while (a < 0) { a += 360; }
     return a % 360;
 };
 
@@ -212,13 +210,8 @@ export const concat=(...args:any[])=>{
     });
     return rt;
 }
-export const concatsp=(...args:any[])=>{
-    let rt="";
-    args.forEach((a)=>{
-        if (a !== undefined) rt+=" "+a;
-    });
-    return rt;
-}
+export const concatsp=(...args:any[])=>args.filter(i=>i!=null).join(' ');
+
 export const unsetOrTrue=(item:any)=>{
     return !!(item === undefined || item);
 }
