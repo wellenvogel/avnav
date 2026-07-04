@@ -58,6 +58,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private Location location=null;
     private String currentProvider=LocationManager.GPS_PROVIDER;
     private long lastValidLocation=0;
+    private long lastRmc=0;
     private boolean isRegistered=false;
     private Handler handler=new Handler(Looper.getMainLooper());
 
@@ -65,14 +66,18 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
     private boolean stopped=true;
     private Thread satStatusProvider;
-
+    private String[] nmeaFilter=new String[0];
     MovingSum receiveCounter=new MovingSum(10);
     private synchronized void addNmea(String nmea){
+        String[] filter=nmeaFilter; //atomic
         nmea=nmea.trim();
+        if (!AvnUtil.matchesNmeaFilter(nmea,filter)) return;
         if (nmea.length()>= 6){
             if (nmea.substring(3,6).equals("RMC")){
                 //we assume RMC means valid location
-                lastValidLocation=SystemClock.uptimeMillis();
+                long now=SystemClock.uptimeMillis();
+                lastValidLocation=now;
+                lastRmc=now;
             }
         }
         receiveCounter.add(1);
@@ -104,14 +109,17 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     };
 
     private final Executor executor= Executors.newFixedThreadPool(1);
-
+    private EditableParameter.StringParameter filterParameter;
     private static EditableParameter.IntegerParameter PRIORITY_PARAMETER= SOURCE_PRIORITY_PARAMETER.clone(40);
     AndroidPositionHandler(String name, GpsService ctx, NmeaQueue queue) {
         super(name,ctx,queue);
+        filterParameter= FILTER_PARAM.clone("$RMC,$GGA,$GSV,$GSA,$GLL");
+        filterParameter.description=filterParameter.description+"\nThis filter allows only the mentioned sentences to pass from Android to AvNav";
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,
-                PRIORITY_PARAMETER
+                PRIORITY_PARAMETER,
+                filterParameter
                 );
         status.canEdit=true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -157,6 +165,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
 
     @Override
     public void run(int startSequence) throws JSONException, IOException {
+        nmeaFilter=AvnUtil.splitNmeaFilter(filterParameter.fromJson(parameters));
         stopped=false;
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
         tryEnableLocation();
@@ -236,7 +245,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         if (stopped) return;
         if (! isRegistered) tryEnableLocation();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if ((lastValidLocation+CHECKTIME) < SystemClock.uptimeMillis()) {
+            if ((lastValidLocation+CHECKTIME*2) < SystemClock.uptimeMillis()) {
                 setStatus(WorkerStatus.Status.RUNNING,"waiting for location");
                 try {
                     locationService.getCurrentLocation(LocationManager.GPS_PROVIDER, null, executor, new Consumer<Location>() {
@@ -263,9 +272,14 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         this.location=new Location(location);
         setStatus(WorkerStatus.Status.NMEA,"location available, acc="+location.getAccuracy());
             try {
-                //build an NMEA RMC record and write out
-                RMCSentence rmc=positionToRmc(location);
-                queue.add(rmc.toSentence(),getSourceName(),getPriority(PRIORITY_PARAMETER));
+                long now=SystemClock.uptimeMillis();
+                //slightly shorter then check interval
+                if (now > (lastRmc+CHECKTIME*1.8)) {
+                    //build an NMEA RMC record and write out
+                    RMCSentence rmc = positionToRmc(location);
+                    queue.add(rmc.toSentence(), getSourceName(), getPriority(PRIORITY_PARAMETER));
+                    lastRmc=now;
+                }
             }catch(Exception e){
                 AvnLog.e("unable to create RMC from position: "+e);
             }
