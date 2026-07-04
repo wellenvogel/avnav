@@ -169,6 +169,13 @@ const keys:Record<string,KeyType>={
             rtime: V, //Date object
             epochms:V, //received GPS time in ms
             valid: K,
+            fixType: K,
+            satUsed: K,
+            satInview: K,
+            fixQuality: K,
+            PDOP: K,
+            HDOP: K,
+            VDOP: K,
             windAngle: V,
             windSpeed: V,
             trueWindAngle: V,
