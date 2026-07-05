@@ -1,8 +1,7 @@
 {
   "description": "A more modern layout with enlarged captions and no heading color",
   "layoutVersion": 1,
-  "properties": {
-  },
+  "properties": {},
   "widgets": {
     "gpspage1": {
       "left": [
@@ -71,7 +70,12 @@
           "name": "TimeStatus"
         },
         {
-          "className": "half",
+          "className": "half mono",
+          "formatterParameters": [
+            null,
+            null,
+            true
+          ],
           "name": "Position"
         },
         {
@@ -259,33 +263,45 @@
       ],
       "bottomLeft": [
         {
-          "className": "centered",
+          "className": "center",
           "name": "BRG"
         },
         {
-          "className": "centered",
+          "className": "center",
           "name": "DST"
         },
         {
           "name": "ETA"
         },
         {
+          "className": "mono",
+          "formatterParameters": [
+            null,
+            null,
+            true
+          ],
           "name": "WpPosition"
         }
       ],
       "bottomRight": [
         {
-          "className": "centered",
+          "className": "center",
           "name": "COG"
         },
         {
-          "className": "centered",
+          "className": "center",
           "name": "SOG"
         },
         {
           "name": "TimeStatus"
         },
         {
+          "className": "mono",
+          "formatterParameters": [
+            null,
+            null,
+            true
+          ],
           "name": "Position"
         }
       ],
@@ -355,5 +371,5 @@
     "gpspage4": {},
     "gpspage5": {}
   },
-  "css": "/*\n  CSS classes that can be used for widgets:\n  modern\n  half (together with modern)\n  centered\n  \n  for documentation refer below\n*/\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 2.6em;\n}\n\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget .widgetHead {\n    border-bottom: unset;\n    border-top: 2px solid;\n    background-color: unset;\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used for smaller caption and unit */\n.hfield .widgetContainer .widget.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n\n \n/* a CSS class \"centered\" for centered text in widgets */\n.widget.centered .widgetData{\n  margin-right: auto;\n}\n "
+  "css": "/*\n  CSS classes that can be used for widgets:\n  modern\n  half (together with modern)\n  center\n  \n  for documentation refer below\n*/\n/* a base value for the font-size of caption and unit\n   the em refer to a base value of 21px being scaled down \n   if height or width are lower 600px. \n   Additionally AvNav sets a factor from the head \n   font size to caption and unit.\n   */\n:root{\n  --head-base-fs: 2.6em;\n  --avnav-widget-head-color: rgba(36, 35, 35, 0);\n}\n.nightMode{\n  --avnav-widget-head-color: rgba(36, 35, 35, 0);\n}\n\n\n/* a \"modern\" CSS class for widgets on dashboard pages\n   that avoids the color and frame for the head\n   and has much larger caption and unit */\n.hfield .widgetContainer .widget .widgetHead {\n    height: unset ;\n    font-size: var(--head-base-fs);\n    font-weight: 600;\n}\n.hfield .widgetContainer .widget .widgetData {\n    font-weight: 600;\n}\n\n/* an additional CSS class \"half\" to be used for smaller caption and unit */\n.hfield .widgetContainer .widget.half .widgetHead {\n    font-size: calc(var(--head-base-fs) / 2);\n}\n"
 }
