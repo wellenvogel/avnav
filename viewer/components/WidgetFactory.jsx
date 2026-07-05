@@ -110,11 +110,12 @@ class FormatterParameterUI extends EditableParameter {
             const pdef=this.getDefault(idx);
             const cv=current[idx];
             let parameter;
+            const displayName='fmt:'+(dp.displayName||dp.name);
             if (pdef !== undefined){
-                parameter=editableParameterUI.createEditableParameterUI({...dp,default:pdef,readonly: this.readonly,displayName: "fmt:"+dp.name});
+                parameter=editableParameterUI.createEditableParameterUI({...dp,default:pdef,readonly: this.readonly,displayName: displayName});
             }
             else{
-                parameter=editableParameterUI.createEditableParameterUI({...dp,readonly:this.readonly,displayName: "fmt:"+dp.name});
+                parameter=editableParameterUI.createEditableParameterUI({...dp,readonly:this.readonly,displayName: displayName});
             }
             nameToIdx[parameter.name]=idx;
             currentAsDict[parameter.name]=cv;
