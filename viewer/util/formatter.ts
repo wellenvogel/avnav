@@ -13,6 +13,24 @@ export type CoordinateFormat='DDM'|'DD'|'DMS';
 function pad(num:number|string, size:number, pad:string='0') {
     return (''+num).trim().padStart(size,pad);
 }
+export function findUnitParameter(parameters:ParametersWithName[]):number {
+    if (!parameters?.length){
+        return -1;
+    }
+    for (let i=0;i<parameters.length;i++){
+        if (parameters[i].name === 'unit'){
+            return i;
+        }
+    }
+    return -1;
+}
+export function getUnitParameterValue(parameters:ParametersWithName[],paramValues:any[]):string{
+    const idx=findUnitParameter(parameters);
+    if (idx < 0) return;
+    const v=paramValues[idx] as string;
+    if (v !== undefined) return v;
+    return parameters[idx].default as string;
+}
 /**
  *
  * @param {number} coordinate
@@ -75,6 +93,7 @@ export interface LonLatPoint{
  */
 export interface FormatterBase{
     parameters?:ParametersWithName[]
+    unitFromParameters?:(paramValues:any[])=>string;
 }
 export type TFormatLonLats = FormatterBase & {
     (lonlat:LonLatPoint):string
@@ -431,6 +450,11 @@ formatTemperature.parameters=[
     {name:'unit',type:'SELECT',list:stringEnumValues(TTempUnit),default:TTempUnit.K},
     {name:'fract',type:'NUMBER',list:[0,4],default:1,description:'number of fractional digits'},
 ]
+formatTemperature.unitFromParameters=(paramValues:any[])=>{
+    const v=getUnitParameterValue(formatTemperature.parameters,paramValues);
+    if (v == null) return;
+    return '°'+v.toUpperCase()[0];
+}
 
 const skTemperature=formatTemperature;
 const skPressure=formatPressure;

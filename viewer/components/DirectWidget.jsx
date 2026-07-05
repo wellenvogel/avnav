@@ -9,6 +9,7 @@ import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 import {WidgetProps} from "../util/types";
 
+const finalDefault='---';
 const DirectWidget=(wprops)=>{
     let props;
     try {
@@ -17,15 +18,20 @@ const DirectWidget=(wprops)=>{
         props={...wprops,value:'Error: '+e}
     }
     let val;
-    let vdef=props.default||'0';
+    let vdef=props.default;
     if (props.value !== undefined) {
-        if (props.minValue != null && parseFloat(props.value) < props.minValue)val=vdef;
-        else if(props.maxValue != null && parseFloat(props.value) > props.maxValue)val=vdef;
-        else val=props.formatter?props.formatter(props.value):vdef+"";
+        const nval=Number(props.value);
+        if (props.minValue != null && nval < props.minValue) {
+            val=(props.formatter?props.formatter(vdef):vdef||finalDefault)?.replace(/./g,'<');
+        }
+        else if(props.maxValue != null && nval > props.maxValue){
+            val=(props.formatter?props.formatter(vdef):vdef||finalDefault)?.replace(/./g,'>');
+        }
+        else val=props.formatter?props.formatter(props.value):nval+"";
     }
     else{
-        if (! isNaN(vdef) && props.formatter) val=props.formatter(vdef);
-        else val=vdef+"";
+        if (props.formatter) val=props.formatter(vdef);
+        else val=(vdef != null)?(vdef+""):finalDefault;
     }
     const display={
         value:val
