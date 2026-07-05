@@ -484,23 +484,29 @@ export class EditableSelectParameter extends EditableParameter{
     }
     setValue(values:Values, value:Value,check?:boolean) {
         if (check){
-            const list=this.getList();
-            if (!(list instanceof Promise)) {
-                let found = false;
-                for (let i = 0; i < list.length; i++) {
-                    const lv = EditableSelectParameter.getValueFromListEntry(list[i]);
-                    //intentionally allow to convert e.g. strings to numbers
-                    if (lv == value) {
-                        value = lv;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) throw new Error("value " + value + " for " + this.name + " not in list");
+            if (value == null && this.default != null){
+                //check ok
             }
-            else{
-                //silent resolve
-                list.then(()=>{},()=>{});
+            else {
+                const list = this.getList();
+                if (!(list instanceof Promise)) {
+                    let found = false;
+                    for (let i = 0; i < list.length; i++) {
+                        const lv = EditableSelectParameter.getValueFromListEntry(list[i]);
+                        //intentionally allow to convert e.g. strings to numbers
+                        if (lv == value) {
+                            value = lv;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) throw new Error("value " + value + " for " + this.name + " not in list");
+                } else {
+                    //silent resolve
+                    list.then(() => {
+                    }, () => {
+                    });
+                }
             }
         }
         return super.setValue(values, value,check);

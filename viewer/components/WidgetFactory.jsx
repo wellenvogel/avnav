@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useRef} from "react";
 import assign from "object-assign";
 import widgetList from './WidgetList';
 import {useStore} from '../hoc/Dynamic.tsx';
@@ -17,7 +17,7 @@ import editableParameterFactory, {
 } from "../util/EditableParameter";
 import editableParameterUI, {EditableParameterListUI, getCommonParam} from "./EditableParameterUI";
 import {Input, InputReadOnly} from "./Inputs";
-import {shallowEqualArrays} from "shallow-equal";
+import {shallowEqual, shallowEqualArrays} from "shallow-equal";
 import Helper from "../util/helper";
 import {SortablePropsFlags} from "../hoc/Sortable";
 import UndefinedWidget from "./UndefinedWidget";
@@ -48,7 +48,38 @@ class FormatterParameterUI extends EditableParameter {
         this.render=this.render.bind(this);
         Object.freeze(this);
     }
-
+    valueAsDict(value,parameters){
+        if (! Array.isArray(parameters)) return;
+        if (! value) return {};
+        if (! (value instanceof Array)) value=(value+"").split(",");
+        const rt={};
+        for (let i=0;i<parameters.length;i++){
+            rt[parameters[i].name] = value[i];
+        }
+        return rt;
+    }
+    valueError(value,parameters){
+        const pdict=this.valueAsDict(value,parameters);
+        if (!pdict || ! parameters) return false; //we cannot check
+        for (const p of parameters){
+            if (p.hasError(pdict)) return true;
+        }
+        return false;
+    }
+    /**
+     * check if a vlaue is ok
+     * @param values
+     * @param [opt_old]
+     */
+    hasError(values, opt_old) {
+        const cv = this.getValue(values);
+        if (opt_old && this.existingUnchecked) {
+            const ov = this.getValue(opt_old)
+            if (ov == cv) return false;
+        }
+        const parameters=getFormatterParameters(values);
+        return this.valueError(cv,parameters);
+    }
     setValue(currentValues, value,check) {
         if (! currentValues) currentValues={};
         if (value === undefined) {
@@ -59,8 +90,8 @@ class FormatterParameterUI extends EditableParameter {
         if (! (value instanceof Array)) value=(value+"").split(",");
         if (check){
             const definedParameters=getFormatterParameters(currentValues);
-            if (definedParameters){
-
+            if (this.valueError(value,definedParameters)){
+                throw new Error("invalid value");
             }
         }
         if (this.readonly) return currentValues;
@@ -84,6 +115,17 @@ class FormatterParameterUI extends EditableParameter {
     render({currentValues,initialValues,className,onChange}) {
         const common=getCommonParam({ep:this,currentValues,initialValues,className,onChange:this.readonly?undefined:onChange});
         const definedParameter=getFormatterParameters(currentValues);
+        const uiCache=useRef({});
+        const getUiParam=(plain)=>{
+            const existing=uiCache.current[plain?.name];
+            if (existing){
+                if (shallowEqual(existing.plain,plain)) return existing.ui;
+            }
+            const parameter=editableParameterUI.createEditableParameterUI(plain);
+            uiCache.current[plain?.name]={plain:plain,ui:parameter};
+            return parameter;
+
+        }
         if (! definedParameter) {
             if (common.value instanceof Array) common.value=common.value.join(',');
             else if (common.value == undefined) common.value="";
@@ -109,18 +151,18 @@ class FormatterParameterUI extends EditableParameter {
         definedParameter.forEach((dp)=>{
             const pdef=this.getDefault(idx);
             const cv=current[idx];
-            let parameter;
             const displayName='fmt:'+(dp.displayName||dp.name);
+            let plainParam;
             if (pdef !== undefined){
-                parameter=editableParameterUI.createEditableParameterUI({...dp,default:pdef,readonly: this.readonly,displayName: displayName});
+                plainParam={...dp,default:pdef,readonly: this.readonly,displayName: displayName};
             }
             else{
-                parameter=editableParameterUI.createEditableParameterUI({...dp,readonly:this.readonly,displayName: displayName});
+                plainParam={...dp,readonly:this.readonly,displayName: displayName};
             }
-            nameToIdx[parameter.name]=idx;
-            currentAsDict[parameter.name]=cv;
-            if (initialAsDict) initialAsDict[parameter.name]=initial[idx];
-            parameterList.push(parameter);
+            nameToIdx[plainParam.name]=idx;
+            currentAsDict[plainParam.name]=cv;
+            if (initialAsDict) initialAsDict[plainParam.name]=initial[idx];
+            parameterList.push(getUiParam(plainParam));
             idx++;
         })
 
@@ -178,8 +220,12 @@ export const getFormatterParameters=(widget)=>{
         if (typeof (formatter) !== 'function') {
             formatter = Formatter[formatter];
         }
-        if (formatter && formatter.parameters) {
-            return formatter.parameters;
+        if (formatter && Array.isArray(formatter.parameters)) {
+            const rt=[];
+            for (const p of formatter.parameters){
+                rt.push(editableParameterFactory.createParameterFromPlain(p));
+            }
+            return rt;
         }
     }
 }
