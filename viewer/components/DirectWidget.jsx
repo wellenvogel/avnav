@@ -4,7 +4,7 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import Value from './Value.jsx';
+import Value from './Value';
 import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 import {WidgetProps} from "../util/types";

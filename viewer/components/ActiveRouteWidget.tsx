@@ -11,6 +11,7 @@ import routeobjects from "../nav/routeobjects";
 import Helper from '../util/helper';
 import {IWidgetProps} from "../util/types";
 import {Icon} from "./Icons";
+import Value from "./Value";
 
 const STORE_KEYS={
     isApproaching: keys.nav.route.isApproaching,
@@ -46,7 +47,7 @@ interface SecondRowProps{
 const SecondRow=({remain,eta,approach,small,sog}:SecondRowProps)=>{
     return <div className={"secondRow"}>
         {(! small) && (approach?<Icon />:<div className={"eta label"}>{sog?'ETA-SOG':'ETA-VMG'}</div>)}
-        {(eta !== undefined) && <div className="routeEta">{eta}</div>}
+        {(eta !== undefined) && <div className="routeEta"><Value value={eta}/></div>}
         {(approach && small) && <Icon />}
         {
             (remain !== undefined) && <div>

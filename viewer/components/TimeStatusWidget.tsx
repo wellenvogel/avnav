@@ -11,6 +11,7 @@ import {Icon, StatusIcon,iconClasses} from "./Icons";
 import {useTimer} from "../util/UiHelper";
 import Requests from "../util/requests";
 import {ResizeStrings, useStringsChanged} from "../hoc/Resizable";
+import Value from "./Value";
 
 const STORE_KEYS={
     time: keys.nav.gps.rtime,
@@ -60,7 +61,7 @@ const TimeStatusWidget = (props:TimeStatusWidgetProps)=> {
             </div>
             <div className="rowBase">
                 <StatusIcon type={props.gpsValid?'green':'red'}/>
-                <div className="widgetData">{display.time}</div>
+                <div className="widgetData"><Value value={display.time}/></div>
             </div>
         </WidgetFrame>
     );

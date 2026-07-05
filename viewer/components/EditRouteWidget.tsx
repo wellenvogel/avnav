@@ -9,6 +9,7 @@ import routeobjects from '../nav/routeobjects';
 import RouteEdit,{StateHelper} from '../nav/routeeditor';
 import {WidgetFrame} from "./WidgetBase";
 import {IWidgetProps} from "../util/types";
+import Value from "./Value";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -74,7 +75,7 @@ const EditRouteWidget = (props:EditingRouteWidgetProps) => {
             {props.mode !== "horizontal" && eta != null &&
                 <div className="widgetData">
                     <span className="label">{props.sog?'ETAS:':'ETAV:'}</span>
-                    <span className="routeInfo">{eta}</span>
+                    <span className="routeInfo"><Value value={eta}/></span>
                 </div>}
         </WidgetFrame>
     );

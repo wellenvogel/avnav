@@ -1,15 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+export interface ValueProps {
+    value: number|string;
+}
 /**
  * value display with replacing all leading spaces with invisible "0"
  * @param props
  * @constructor
  */
-const Value=function(props){
+const Value=function(props:ValueProps){
     if (! props.value) return null;
-    let prefix=(props.value+"").replace(/[^ ].*/,'');
-    let remain=(props.value+"").replace(/^ */,'');
+    let val=''+props.value;
+    val=val.replace(/[-]/g,'\u2012'); // replace - by digit wide hyphen (figure dash)
+    val=val.replace(/:/g,'\uA789'); // replace : with raised colon, looks better in time format 00:00
+    const prefix=val.replace(/[^ ].*/,'');
+    const remain=val.replace(/^ */,'');
     return(
         <React.Fragment>
             <span className='valuePrefix'>{prefix.replace(/ /g,'0')}</span>

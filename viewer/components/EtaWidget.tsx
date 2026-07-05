@@ -8,6 +8,7 @@ import Formatter from '../util/formatter';
 import {WidgetFrame} from "./WidgetBase";
 import {useStringsChanged} from "../hoc/Resizable";
 import {IWidgetProps} from "../util/types";
+import Value from "./Value";
 
 const STORE_KEYS={
     ttgvmg: keys.nav.wp.ttgvmg,
@@ -57,7 +58,7 @@ const EtaWidget = (props:EtaWidgetProps) => {
     const disconnect=(props.server===false);
     return (
         <WidgetFrame {...props} caption={props.sog?props.captionSog:props.captionVmg} addClass="etaWidget" resizeSequence={resizeSequence} disconnect={disconnect}>
-            <div className="widgetData markerEta">{display.eta}</div>
+            <div className="widgetData markerEta"><Value value={display.eta}/></div>
             <div className="widgetData markerName">{display.name}</div>
         </WidgetFrame>
     );
