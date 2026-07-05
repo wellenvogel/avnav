@@ -14,11 +14,11 @@ const Value=function(props:ValueProps){
     let val=''+props.value;
     val=val.replace(/[-]/g,'\u2012'); // replace - by digit wide hyphen (figure dash)
     val=val.replace(/:/g,'\uA789'); // replace : with raised colon, looks better in time format 00:00
-    const prefix=val.replace(/[^ ].*/,'');
     const remain=val.replace(/^ */,'');
+    const prfxlen=val.length-remain.length;
     return(
         <React.Fragment>
-            <span className='valuePrefix'>{prefix.replace(/ /g,'0')}</span>
+            <span className='valuePrefix'>{''.padEnd(prfxlen,'0')}</span>
             <span className='valueData'>{remain}</span>
         </React.Fragment>
     )
