@@ -84,8 +84,7 @@
   },
   "navpage":{
     "widget":{
-      "AisTarget":"a",
-      "COG":"d"
+      "AisTarget":"a"
     },
     "button":{
       "LockMarker":"g",

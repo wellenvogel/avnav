@@ -227,7 +227,7 @@ const GpsPage = (props:Partial<PageProps>) => {
     const setPageNumber = useCallback((num:number,
                                        opt_noRemote?:boolean,
                                        noScroll?:boolean) => {
-        setPageNumberImpl(num);
+        if (num != null) setPageNumberImpl(num); //only store the last used page if it is valid
         if (! noScroll) scrollTo(usedDashboards.indexOf(num));
         dialogContext.closeDialog();
         if (!opt_noRemote) {
