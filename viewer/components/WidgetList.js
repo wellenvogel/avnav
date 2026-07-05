@@ -35,7 +35,8 @@ let widgetList=[
         editableParameters: {
             unit:false
         },
-        formatter:'formatSpeed'
+        formatter:'formatSpeed',
+        formatterParameters: ['kn',3]
     },
     {
         name: 'COG',
@@ -178,6 +179,7 @@ let widgetList=[
             }
         },
         formatter: 'formatDistance',
+        formatterParameters: ['nm',3],
         editableParameters: {
             unit: false
         }
@@ -211,7 +213,8 @@ let widgetList=[
         editableParameters: {
             unit:false
         },
-        formatter:'formatSpeed'
+        formatter:'formatSpeed',
+        formatterParameters: ['kn',3]
 
     },
     {
@@ -223,7 +226,8 @@ let widgetList=[
         editableParameters: {
             unit:false
         },
-        formatter: 'formatSpeed'
+        formatter: 'formatSpeed',
+        formatterParameters: ['kn',3]
     },
     {
         name: 'WindAngle',
@@ -265,6 +269,7 @@ let widgetList=[
         caption: 'Wind Speed',
         storeKeys:WindStoreKeys,
         formatter: 'formatSpeed',
+        formatterParameters: ['kn',3],
         editableParameters: {
             value: false,
             caption: false,
@@ -317,7 +322,7 @@ let widgetList=[
             unit:false
         },
         formatter: 'formatDistance',
-        formatterParameters: ['m']
+        formatterParameters: ['m',3]
     },
     {
         name: 'AnchorWatchDistance',
@@ -329,7 +334,7 @@ let widgetList=[
             unit:false
         },
         formatter: 'formatDistance',
-        formatterParameters: ['m'],
+        formatterParameters: ['m',3],
     },
 
     {
@@ -343,6 +348,7 @@ let widgetList=[
             unit:false
         },
         formatter: 'formatDistance',
+        formatterParameters: ['nm',3],
         translateFunction: (props)=>{
             return {
               disconnect: props.server === false,

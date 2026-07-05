@@ -3,7 +3,7 @@ import assign from "object-assign";
 import widgetList from './WidgetList';
 import {useStore} from '../hoc/Dynamic.tsx';
 import DirectWidget from './DirectWidget.jsx';
-import Formatter, {findUnitParameter} from '../util/formatter';
+import Formatter, {findParamValue} from '../util/formatter';
 import ExternalWidget from './ExternalWidget.jsx';
 import keys from '../util/keys.ts';
 import base from '../base.ts';
@@ -459,7 +459,7 @@ class WidgetFactory{
                         mergedProps.unit=ff.unitFromParameters(param);
                     }
                     else {
-                        const unitp = findUnitParameter(fmtParamDef);
+                        const unitp = findParamValue(fmtParamDef);
                         if (unitp >= 0) {
                             let punit = param[unitp];
                             if (punit === undefined) punit = fmtParamDef[unitp]?.default;

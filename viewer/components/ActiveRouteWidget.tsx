@@ -88,7 +88,7 @@ const ActiveRouteWidget =(props:ActiveRouteWidgetProps)=>{
                     <div className="routeName">{display.name}</div>
                     {small && <SecondRow eta={display.eta} sog={props.sog} approach={approaching && ! props.legacy} remain={display.remain} small={small} />}
                     {!small && <div className="routeRemain">
-                        <span className="routeRemain">{display.remain}</span>
+                        <span className="value">{display.remain}</span>
                         <span className='unit'>nm</span>
                     </div>}
                     {!small && <SecondRow eta={display.eta} sog={props.sog} approach={approaching && ! props.legacy} small={small} />}

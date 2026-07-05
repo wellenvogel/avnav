@@ -13,19 +13,19 @@ export type CoordinateFormat='DDM'|'DD'|'DMS';
 function pad(num:number|string, size:number, pad:string='0') {
     return (''+num).trim().padStart(size,pad);
 }
-export function findUnitParameter(parameters:ParametersWithName[]):number {
+export function findParamValue(parameters:ParametersWithName[],name='unit'):number {
     if (!parameters?.length){
         return -1;
     }
     for (let i=0;i<parameters.length;i++){
-        if (parameters[i].name === 'unit'){
+        if (parameters[i].name === name){
             return i;
         }
     }
     return -1;
 }
-export function getUnitParameterValue(parameters:ParametersWithName[],paramValues:any[]):string{
-    const idx=findUnitParameter(parameters);
+export function getParameterValue(parameters:ParametersWithName[], paramValues:any[],name='unit'):string{
+    const idx=findParamValue(parameters,name);
     if (idx < 0) return;
     const v=paramValues[idx] as string;
     if (v !== undefined) return v;
@@ -37,6 +37,7 @@ export function getUnitParameterValue(parameters:ParametersWithName[],paramValue
  * @param axis
  * @returns {string}
  */
+const coordPrfx='\u00A0';
 const formatLonLatsDecimal=function(coordinate:number,axis:AxisType,format:CoordinateFormat='DDM',hemFirst:boolean=false){
     if(coordinate==null) {
       let str="____\u00B0__.___'";
@@ -47,7 +48,7 @@ const formatLonLatsDecimal=function(coordinate:number,axis:AxisType,format:Coord
     coordinate = Helper.to180(coordinate); // normalize to ±180°
     const deg = Math.abs(coordinate);
     let padding = 2;
-    let str = '\u00A0';
+    let str = coordPrfx;
     let hem = coordinate < 0 ? "S" :"N";
     if (axis == "lon") {
         padding = 3;
@@ -96,11 +97,12 @@ export interface FormatterBase{
     unitFromParameters?:(paramValues:any[])=>string;
 }
 export type TFormatLonLats = FormatterBase & {
-    (lonlat:LonLatPoint):string
+    (lonlat:LonLatPoint,format?:CoordinateFormat,hemFirst?:boolean,breakRow?:boolean):string
 }
-const formatLonLats:TFormatLonLats=function(lonlat:LonLatPoint,format:CoordinateFormat='DDM',hemFirst:boolean=false):string{
+const formatLonLats:TFormatLonLats=function(lonlat:LonLatPoint,format:CoordinateFormat='DDM',hemFirst:boolean=false,breakRow:boolean=false):string{
     const ns=this.formatLonLatsDecimal(lonlat?.lat, 'lat',format,hemFirst);
     const ew=this.formatLonLatsDecimal(lonlat?.lon, 'lon',format,hemFirst);
+    if (breakRow) return ns+'\n'+ew;
     return ns + ' ' + ew;
 };
 formatLonLats.parameters=[
@@ -111,7 +113,13 @@ formatLonLats.parameters=[
     {name:'hemFirst',type:'BOOLEAN',
         default:false,
         description: 'Write the hemisphere (N/S/E/W) in front of the position',
+    },
+    {name:'breakRow',type:'BOOLEAN',
+        displayName: '2 rows',
+        default:false,
+        description: 'break the position into 2 rows',
     }
+
 ];
 
 /**
@@ -224,10 +232,10 @@ enum TDEPTH_UNITS {
     YD='yd'
 }
 type TFormatDistance=FormatterBase &{
-    (distance:number,opt_unit?:TDEPTH_UNITS,opt_fixed?:number,opt_fillRight?:boolean):string
+    (distance:number,opt_unit?:TDEPTH_UNITS,opt_fixed?:number,opt_fillRight?:boolean,opt_prefixZero?:boolean):string
 }
-const formatDistance:TFormatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight){
-    let number=parseFloat(distance as unknown as string);
+const formatDistance:TFormatDistance=function(distance,opt_unit,opt_fixed,opt_fillRight,opt_prefixZero){
+    let number=Number(distance);
     if (isNaN(number)) return "    -"; //4 spaces
     const factor=unitToFactor(opt_unit||TDEPTH_UNITS.NM);
     number=number/factor;
@@ -259,12 +267,13 @@ const formatDistance:TFormatDistance=function(distance,opt_unit,opt_fixed,opt_fi
             fixed+=opt_fixed-(fixed+fract);
         }
     }
-    return formatDecimal(number,fixed,fract,false,true);
+    return formatDecimal(number,fixed,fract,false,opt_prefixZero);
 };
 formatDistance.parameters=[
     {name:'unit',type:'SELECT',list:stringEnumValues(TDEPTH_UNITS),default:'nm'},
     {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits. Leave at 0 to have this flexible.'},
-    {name:'fillRight', type: 'BOOLEAN',default: false, description:'let the fractional part extend to have the requested number of digits (only if numDigits > 0)'}
+    {name:'fillRight', type: 'BOOLEAN',default: false, description:'let the fractional part extend to have the requested number of digits (only if numDigits > 0)'},
+    {name:'prefixZero', type: 'BOOLEAN',default: false, description:'Prefix the value with zeros instead of spaces.'},
 ];
 
 /**
@@ -279,23 +288,26 @@ export enum TSPEED_UNITS{
     KMH='kmh'
 }
 export type TFormatSpeed=FormatterBase &{
-    (speed:number,opt_unit?:TSPEED_UNITS):string
+    (speed:number,opt_unit?:TSPEED_UNITS,opt_numdigits?:number,opt_zeros?:boolean):string
 }
-const formatSpeed:TFormatSpeed=function(speed,opt_unit){
+const formatSpeed:TFormatSpeed=function(speed,opt_unit,opt_numdigits,opt_zeros){
     let number=parseFloat(speed as unknown as string);
     if (isNaN(number)) return "  -"; //2 spaces
     let factor=3600/navcompute.NM;
     if (opt_unit == TSPEED_UNITS.MS) factor=1;
     if (opt_unit == TSPEED_UNITS.KMH) factor=3.6;
     number=number*factor;
+    const numDigits=(opt_numdigits != null)?opt_numdigits:undefined;
     if (number < 100){
-        return formatDecimal(number,undefined,1,false);
+        return formatDecimal(number,numDigits?Number(numDigits)-1:undefined,1,false,opt_zeros);
     }
-    return formatDecimal(number,undefined,0,false);
+    return formatDecimal(number,numDigits,0,false,opt_zeros);
 };
 
 formatSpeed.parameters=[
-    {name:'unit',type:'SELECT',list:stringEnumValues(TSPEED_UNITS),default:TSPEED_UNITS.KN}
+    {name:'unit',type:'SELECT',list:stringEnumValues(TSPEED_UNITS),default:TSPEED_UNITS.KN},
+    {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits. Leave at 0 to have this flexible.'},
+    {name:'prefixZero', type: 'BOOLEAN',default: false, description:'Prefix the value with zeros instead of spaces.'},
 ];
 
 export type TFormatDirection=FormatterBase &{
@@ -451,7 +463,7 @@ formatTemperature.parameters=[
     {name:'fract',type:'NUMBER',list:[0,4],default:1,description:'number of fractional digits'},
 ]
 formatTemperature.unitFromParameters=(paramValues:any[])=>{
-    const v=getUnitParameterValue(formatTemperature.parameters,paramValues);
+    const v=getParameterValue(formatTemperature.parameters,paramValues);
     if (v == null) return;
     return '°'+v.toUpperCase()[0];
 }

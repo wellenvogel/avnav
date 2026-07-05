@@ -42,7 +42,7 @@
   .flex-justify-content(flex-start);
   .widgetHead {
     margin: 0;
-    padding: 0 0.2em;
+    padding: 0.1em 0.2em 0;
     display: flex;
     column-gap: 0.5em;
     .flex-direction(row);
@@ -107,7 +107,6 @@
   .widgetData{
     padding-top: 0;
     display: block;
-    white-space: pre;
   }
   .centeredWidget {
     .widgetData{
@@ -202,11 +201,11 @@
   color: var(--avnav-widget-fore-color);
   .widgetData {
     line-height: 1em;
+    white-space: pre-wrap;
   }
   .bigWidget(){
     .widgetData{
       font-size: @bigFont;
-      white-space: nowrap;
     }
     .vertical &{
       .widgetData{
@@ -217,7 +216,6 @@
   .medWidget(){
     .widgetData{
       font-size: @timeFont;
-      white-space: normal;
     }
     .horizontal & .widgetData {
       padding-top: 0.5em;
@@ -227,7 +225,6 @@
     .widgetData{
       font-size: @smallFont;
       line-height: 1.2em;
-      white-space: normal;
     }
     .horizontal & .widgetData {
       padding-top: 0.2em;
@@ -388,6 +385,7 @@
     }
     .routeRemain{
       font-size: 1.5em;
+      line-height: 1.1em;
     }
     .small .routeRemain{
       font-size: unset;
