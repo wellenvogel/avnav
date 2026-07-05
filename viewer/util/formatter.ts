@@ -25,6 +25,7 @@ export function findParamValue(parameters:ParametersWithName[],name='unit'):numb
     return -1;
 }
 export function getParameterValue(parameters:ParametersWithName[], paramValues:any[],name='unit'):string{
+    if (! Array.isArray(paramValues)) return;
     const idx=findParamValue(parameters,name);
     if (idx < 0) return;
     const v=paramValues[idx] as string;
@@ -285,14 +286,31 @@ formatDistance.parameters=[
 export enum TSPEED_UNITS{
     KN='kn',
     MS='ms',
-    KMH='kmh'
+    KMH='kmh',
+    BFT='bft'
 }
 export type TFormatSpeed=FormatterBase &{
     (speed:number,opt_unit?:TSPEED_UNITS,opt_numdigits?:number,opt_zeros?:boolean):string
 }
 const formatSpeed:TFormatSpeed=function(speed,opt_unit,opt_numdigits,opt_zeros){
-    let number=parseFloat(speed as unknown as string);
+    let number=Number(speed);
     if (isNaN(number)) return "  -"; //2 spaces
+    if (opt_unit == 'bft') {
+        const v=number*3600/navcompute.NM;
+        if(v<=1)  return ' 0';
+        if(v<=3)  return ' 1';
+        if(v<=6)  return ' 2';
+        if(v<=10) return ' 3';
+        if(v<=16) return ' 4';
+        if(v<=21) return ' 5';
+        if(v<=27) return ' 6';
+        if(v<=33) return ' 7';
+        if(v<=40) return ' 8';
+        if(v<=47) return ' 9';
+        if(v<=55) return '10';
+        if(v<=63) return '11';
+        return '12';
+    }
     let factor=3600/navcompute.NM;
     if (opt_unit == TSPEED_UNITS.MS) factor=1;
     if (opt_unit == TSPEED_UNITS.KMH) factor=3.6;
@@ -309,6 +327,14 @@ formatSpeed.parameters=[
     {name:'numDigits', type: 'NUMBER',default: 0, description:'Always show at least this number of digits. Leave at 0 to have this flexible.'},
     {name:'prefixZero', type: 'BOOLEAN',default: false, description:'Prefix the value with zeros instead of spaces.'},
 ];
+formatSpeed.unitFromParameters=(paramValues:any[]):string=>{
+    const uv= getParameterValue(formatSpeed.parameters,paramValues);
+    if (! uv) return;
+    if (uv == TSPEED_UNITS.KMH) return 'km/h';
+    if (uv == TSPEED_UNITS.MS) return 'm/s';
+    if (uv == TSPEED_UNITS.KN) return 'kn';
+    if (uv == TSPEED_UNITS.BFT) return 'bft';
+}
 
 export type TFormatDirection=FormatterBase &{
     (dir:number,opt_rad?:boolean,opt_180?:boolean,opt_lz?:boolean):string
