@@ -65,7 +65,7 @@ import {PluginsPage} from "./gui/PluginsPage";
 import {RemotePage} from "./gui/RemotePage";
 import LoadingPage from "./gui/LoadingPage";
 import {CL_BUTTON_TEXT, CL_MAINBT_TEXT} from "./components/ButtonDefs";
-import keyhandler from "./util/keyhandler.ts";
+import GpsPageButtons, {pageButtons} from "./gui/GpsPageButtons";
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -434,7 +434,7 @@ class App extends React.Component {
             const page = addons.findPageForAddon(action);
             if (!page) return;
             if (this.history.currentLocation() === page) {
-                keyhandler.callHandler(KeyComponents.BUTTON, action);
+                KeyHandler.callHandler(KeyComponents.BUTTON, action);
             } else {
                 this.history.push(page, {button: action});
             }
@@ -445,28 +445,53 @@ class App extends React.Component {
         }
         GuiHelpers.lifecycleSupport(this,(umount)=>{
                 if (umount) {
-                    keyhandler.deregisterHandler(addonKeyHandler);
+                    KeyHandler.deregisterHandler(addonKeyHandler);
                     return;
                 }
-                keyhandler.registerHandler(addonKeyHandler,KeyComponents.ADDON,getAddonButtons());
+                KeyHandler.registerHandler(addonKeyHandler,KeyComponents.ADDON,getAddonButtons());
             }
         )
             //we are a bit lazy here and do not deregister old addon buttons
             //they will not be found later any way from the handler by findPageForAddons
         globalStore.register(()=>{
-            keyhandler.registerHandler(addonKeyHandler,KeyComponents.ADDON,getAddonButtons());
+            KeyHandler.registerHandler(addonKeyHandler,KeyComponents.ADDON,getAddonButtons());
         },keys.gui.global.addonsChanged)
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             Dimmer.toggle();
-        },'global','toggledimm')
+        },KeyComponents.GLOBAL,'toggledimm')
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             Dimmer.activate();
-        },'global','dimmon');
+        },KeyComponents.GLOBAL,'dimmon');
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             Dimmer.trigger();
-        },'global','dimmoff');
+        },KeyComponents.GLOBAL,'dimmoff');
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+            if (Object.values(PAGEIDS).indexOf(action) >=0){
+                this.history.push(action);
+            }
+            },
+            KeyComponents.VIEW,Object.values(PAGEIDS));
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+                if (this.history.isPrevious(PAGEIDS.GPS)){
+                    this.history.replace(PAGEIDS.GPS);
+                }
+                else{
+                    this.history.pop();
+                }
+            },
+            KeyComponents.VIEW,'Cancel');
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+                if (! action) return;
+                const [page,button]=action.split(':');
+                if (!page || ! button) return;
+                if (Object.values(PAGEIDS).indexOf(page) >=0){
+                    this.history.push(action,{button:button});
+                }
+            },
+            KeyComponents.VIEW,pageButtons.map(v=>PAGEIDS.GPS+":"+v.name));
+
         //an action to ensure keys are grabbed away even if not really used
-        GuiHelpers.keyEventHandler(this,()=>{},'global','dummy');
+        GuiHelpers.keyEventHandler(this,()=>{},KeyComponents.GLOBAL,'dummy');
         this.newDeviceHandler=this.newDeviceHandler.bind(this);
         this.subscription=AndroidEventHandler.subscribe('deviceAdded',this.newDeviceHandler);
         this.remoteChannel=remotechannel;

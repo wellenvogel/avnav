@@ -48,7 +48,9 @@ export const KeyComponents={
     WIDGET:'widget',
     ADDON:'addon',
     MULTIVIEW:'multiview',
-    MAP:'map'
+    MAP:'map',
+    GLOBAL:'global',
+    VIEW:'view', //select page
 }
 export const DialogKeyComponents={
     DIALOGBUTTON: "dialogButton",

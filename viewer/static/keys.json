@@ -22,8 +22,12 @@
       "toggledimm": ["z"],
       "dummy": ["Control-g"]
     },
+    "view": {
+      "Cancel": "Escape",
+      "gpspage": "d",
+      "navpage": "n"
+    },
     "button":{
-      "Cancel":"Escape",
       "MainNav" :["Control-m","x"]
     },
     "dialogButton": {
@@ -40,7 +44,7 @@
       "previous":"ArrowUp",
       "next":"ArrowDown",
       "select":"Enter",
-      "Cancel":"Escape",
+      "Cancel":"x",
       "page:navpage": "n",
       "page:gpspage": "d"
     },
