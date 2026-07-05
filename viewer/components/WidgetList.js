@@ -161,7 +161,8 @@ let widgetList=[
             unit:false,
             useSog:{type:'BOOLEAN',default:false,displayName:'use sog',
                 description:'If set use SOG instead of VMG to compute the time'}
-        }
+        },
+        className: 'med',
     },
     {
         name: 'DST',
@@ -385,7 +386,8 @@ let widgetList=[
             unit: false,
             useSog:{type:'BOOLEAN',default:false,displayName:'use sog',
                 description:'If set use SOG instead of VMG to compute the time'}
-        }
+        },
+        className:'med'
     },
     {
         name: 'LargeTime',

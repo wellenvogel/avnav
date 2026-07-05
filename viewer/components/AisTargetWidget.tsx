@@ -12,27 +12,32 @@ import {setav} from "../util/helper";
 import {IWidgetProps} from "../util/types";
 import {Icon} from "./Icons";
 
-interface AisItemDisplayProps extends ResizeStrings{
+interface AisItemDisplayProps{
     iconColor?:string;
     front?:string
     distance?:string,
     name?:string,
     tcpa?:string,
     cpa?:string,
-    headingTo?: string
+    headingTo?: string,
+    dashboard?:boolean
 
+}
+const Name=(props:{name:string})=>{
+    return <div className="widgetData">
+        <span className="aisData">{props.name}</span>
+    </div>
 }
 const AisFullDisplay=(display:AisItemDisplayProps)=> {
     return <React.Fragment>
         <div className="aisPart">
-            <div className="widgetData">
-                <span className="aisData">{display.name}</span>
-            </div>
+            {!display.dashboard && <Name name={display.name}/>}
             <div className="widgetData">
                 <span className='label'>{AisFormatter.getHeadline('distance')} </span>
                 <span className="aisData">{display.distance}</span>
                 <span className="unit">{AisFormatter.getUnit('distance')}</span>
             </div>
+            {display.dashboard && <Name name={display.name}/>}
         </div>
     {
         Number(display.tcpa) > 0 &&
@@ -84,8 +89,8 @@ const AisSmallDisplay=(display:AisItemDisplayProps)=> {
             Number(display.tcpa) > 0 &&
             <div className="aisPart">
                 <div className="widgetData">
-                    <span className='label'>{AisFormatter.getHeadline('dcpa')} </span>
-                    <span className="aisData"> {display.dcpa}</span>
+                    <span className='label'>{AisFormatter.getHeadline('cpa')} </span>
+                    <span className="aisData"> {display.cpa}</span>
                     <span className="unit">{AisFormatter.getUnit('dcpa')}</span>
                 </div>
             </div>
@@ -137,7 +142,7 @@ const AisTargetWidget = (props:AisTargetWidgetProps) => {
     if (target.mmsi && target.mmsi !== "") {
         color = PropertyHandler.getAisColor(target);
     }
-    const display:AisItemDisplayProps = {};
+    const display:ResizeStrings = {};
     display.front = AisFormatter.format('passFront', target);
     display.name = AisFormatter.format('nameOrmmsi', target);
     if (target.tcpa > 0) {
@@ -166,6 +171,7 @@ const AisTargetWidget = (props:AisTargetWidgetProps) => {
                          unit={`${props.numtargets} ${props.source}`}
                          caption='AIS'>
                 {! small && <AisFullDisplay
+                    dashboard={props.mode==='gps'}
                     {...display}
                 />}
                 { small && <AisSmallDisplay
