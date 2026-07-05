@@ -151,9 +151,15 @@ const defaultWidgetParameters={
     value: new EditableKeyParameter({name:'value',description:'The value from the internal data store to be used.\nBe sure to select a matching formatter for this item.',mandatory: true}),
     className: new EditableStringParameter({name:'className',
         description:'Add a CSS class to your widget to be able to style it.\n'+
-                     'You can use predefined classes like small/medium/big or center\n'+
+                     'You can use predefined classes\n'+
                      'or classes defined in your user.css, in a layout or by a plugin.\n'+
-                     'Multiple classes can be separated by a space.'}),
+                     'Multiple classes can be separated by a space.\n' +
+                     'Predefined:\n'+
+                     'small: small font\n'+
+                     'medium: medium font\n'+
+                     'large: large font\n'+
+                     'mono: monospace font\n'+
+                     'center: center text in widget'}),
     formatter: new EditableSelectParameter({name:'formatter',description:'the formatter to convert your value into the display string',list:()=>{
         let rt=[];
         for (let k in Formatter){

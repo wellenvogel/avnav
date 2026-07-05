@@ -236,11 +236,17 @@
   .bigWidget();
   // shortcuts for manual use
   &.big { .bigWidget(); }
-  &.med { .medWidget(); }
+  &.large { .bigWidget(); }
+  &.medium { .medWidget(); }
   &.small { .smallWidget(); }
   &.center {
     .widgetData {
       text-align: center;
+    }
+  }
+  &.mono {
+    .widgetData {
+      font-family: monospace;
     }
   }
 
