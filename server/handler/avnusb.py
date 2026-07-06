@@ -223,6 +223,10 @@ class AVNUsbSerialReader(AVNWorker):
   def getKind(cls):
       return WorkerKind.CHANNEL
 
+  @classmethod
+  def autoInstantiate(cls):
+      return hasUdev
+
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()

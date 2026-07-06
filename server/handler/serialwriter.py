@@ -104,7 +104,7 @@ class SerialWriter(SerialReader):
       pass
 
   
-  def openDevice(self,iname,baud,autobaud,init=False):
+  def tryAuto(self, iname, baud, autobaud, init=False):
     INAME=iname
     self.buffer=''
     f=None
@@ -168,7 +168,7 @@ class SerialWriter(SerialReader):
       portname=self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
       porttimeout=timeout*10
       baud=self.P_BAUD.fromDict(self.param)
-      self.device=self.openDevice(INAME,baud,False,init=init)
+      self.device=self.tryAuto(INAME, baud, False, init=init)
       init=False
       if self.doStop:
         AVNLog.info("handler stopped, leaving")

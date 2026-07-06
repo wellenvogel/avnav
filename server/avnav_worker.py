@@ -65,7 +65,8 @@ class WorkerParameter(object):
                editable=True,
                mandatory=None,
                condition=None,
-               valuetype=None):
+               valuetype=None,
+               existingUnchecked=False):
     self.name=name
     self.type=type if type is not None else self.T_STRING
     if self.type not in self.ALL_TYPES:
@@ -84,7 +85,7 @@ class WorkerParameter(object):
         raise ParamValueError("invalid valuetype %s"%self.valuetype)
     else:
       self.valuetype=self.type if self.type != self.T_FILTER else self.T_STRING
-    self.existingUnchecked=False #allow to keep existing values in the UI
+    self.existingUnchecked=existingUnchecked #allow to keep existing values in the UI
   def _getValue(self,val):
     if self.valuetype == self.T_NUMBER:
       return int(val)
