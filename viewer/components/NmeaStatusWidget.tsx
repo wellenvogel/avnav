@@ -40,12 +40,13 @@ interface NmeaStatus{
     nmea?:{
         status:string,
         source:string,
-        info: string
+        numview?:number,
+        numused?:number,
     },
     ais?:{
         status:string,
         source:string,
-        info:string
+        numtargets?:number
     }
 }
 export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
@@ -54,7 +55,7 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
     const timer=useTimer((seq:number)=>{
         Requests.getJson({
             type:'decoder',
-            command:'nmeaStatus'
+            command:'nmeaStatusV2'
         }).then((json)=>{
             setStatus(json?.data);
             timer.startTimer(seq)
@@ -62,23 +63,19 @@ export const NmeaStatusWidget:IWidgetBase = (props:NmeaStatusWidgetProps) => {
             ()=>timer.startTimer(seq));
     },1000,true,true);
     const display:Record<string,any>= {
-        nmeaColor: connectionLost ? "yellow" : "red",
-        aisColor: connectionLost ? "yellow" : "red",
-        nmeaInfo: connectionLost ? "" : "connection lost",
-        aisInfo: connectionLost ? "" : "connection lost",
-        nmeaSource: "",
-        aisSource: ""
+        nmeaColor: connectionLost ? "yellow" : status?.nmea?.status||'grey',
+        aisColor: connectionLost ? "yellow" : status?.ais?.status||'grey',
+        nmeaInfo: connectionLost ? "connection lost":'',
+        aisInfo: connectionLost ? "connection lost":'',
+        nmeaSource: status?.nmea?.source||'',
+        aisSource: status?.ais?.source||'',
     }
     if (!connectionLost) {
         if (status && status.nmea) {
-            display.nmeaColor = status.nmea.status;
-            display.nmeaSource=status.nmea.source;
-            display.nmeaInfo = status.nmea.info;
+            display.nmeaInfo = `${status.nmea.numview} visible/${status.nmea.numused} used`;
         }
         if (status && status.ais) {
-            display.aisColor = status.ais.status;
-            display.aisSource=status.ais.source;
-            display.aisInfo = status.ais.info;
+            display.aisInfo = `${status.ais.numtargets} targets`;
         }
     }
     if (! props.showAis && ! props.showNmea){

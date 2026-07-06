@@ -46,9 +46,7 @@ const TimeStatusWidget = (props:TimeStatusWidgetProps)=> {
         time:"--:--:--",
         status:status,
     };
-    if (props.time !== undefined){
-        display.time=Formatter.formatTime(props.time);
-    }
+    display.time=Formatter.formatTime(props.time);
     const dashMode = props.mode === "gps";
     const resizeSequence = useStringsChanged(display, dashMode);
     return (
