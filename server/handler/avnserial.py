@@ -376,6 +376,7 @@ class SerialReader(object):
       AVNLog.info("exception in receiver %s" % traceback.format_exc())
     AVNLog.info("stopping handler")
     self.infoHandler.setInfo(INAME,"stopped", WorkerStatus.INACTIVE)
+    self.infoHandler.deleteInfo('reader')
 
 #a Worker to directly read from a serial line using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5
