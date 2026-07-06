@@ -1327,6 +1327,7 @@ class AVNPluginHandler(AVNDirectoryHandlerBase):
             if not hasEntries:
                 raise Exception(f"no files in zip {name}")
             zip.extractall(self.baseDir)
+            zip.close()
             now = time.time()
             os.utime(plugindir, (now, now))
             self.updatePlugin(name)
