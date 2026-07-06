@@ -1,5 +1,10 @@
 ﻿
 $code = 0
+#the next line has a version
+#if we need to reinstall all python related parts - increment this version
+#the check is a simple string compare - so any string is a valid version
+$VERSION="3.9.13"
+$VERSIONFILE="version"
 try {
     $targetBase = $null
     if ($null -eq $env:AVNAVBASE) {
@@ -62,6 +67,20 @@ try {
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
     $null = [Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
+    $completeVersionFile=$targetBase +"\" +$VERSIONFILE
+    $mustLoad=1
+    if ($null = Test-Path $completeVersionFile -PathType Leaf ) {
+        $readVersion = (Get-Content $completeVersionFile | Select-Object -First 1)
+        Write-Host "version from $completeVersionFile = $readVersion, required=$VERSION"
+        Remove-Item -Path $completeVersionFile
+        if ($readVersion -eq $VERSION){
+            Write-Host "can update"
+            $mustLoad=0
+        }
+    }
+    if ($mustLoad -eq 1){
+            Write-Host "must load all"
+        }
     Write-Host "Installing into $targetBase"
     foreach ($program in $actions) {
         $exe = ""
@@ -82,7 +101,7 @@ try {
         }
         else {
             echo "checking $name : $exe"
-            if ($null = Test-Path $exe -PathType Leaf ) {
+            if (($null = Test-Path $exe -PathType Leaf) -And ($mustLoad -eq 0)) {
                 Write-Host "$name : $exe found"
             }
             else {
@@ -161,18 +180,21 @@ try {
                     }
                     
                 }
-                if (($res -ne $null) -And ($res.ExitCode -ne 0)) {
-                    $code = $res.ExitCode
-                    throw "ERROR installing $name $code"
-                }
-                Write-Host "installing $name finished"
-
             }
         }
+        if (($res -ne $null) -And ($res.ExitCode -ne 0)) {
+            $code = $res.ExitCode
+            throw "ERROR installing $name $code"
+        }
+        Write-Host "installing $name finished"
+    }
+    if ($code -eq 0) {
+        echo "$VERSION" > $completeVersionFile
     }
 }
 catch {
-    Write-Host "Downlod/Install failed:"+$_.Exception.Message
+    Write-Host "Downlod/Install failed:"
+    Write-Host $_.Exception.Message
     $code = 1
 }
 exit($code)
