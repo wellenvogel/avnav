@@ -162,12 +162,18 @@ class AVNDecoder(AVNWorker):
               status = "green"
           info = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(),
                                                     includeInfo=True)  # we just want the last source of position
-          src = 'unknown'
+          src = None
           if info is not None:
               src = info.source
-          satInview = rtv.get(NMEAParser.K_SATVIEW.key)
-          if satInview is None:
+          svData = self.navdata.getSingleValue(NMEAParser.K_SATVIEW.getKey(),includeInfo=True)
+          if svData is None:
               satInview = 0
+          else:
+              satInview = svData.value
+              if src is None:
+                  src = svData.source
+          if src is None:
+              src='unknown'
           satUsed = rtv.get(NMEAParser.K_SATUSED.key)
           if satUsed is None:
               satUsed = 0
@@ -189,15 +195,21 @@ class AVNDecoder(AVNWorker):
               status = "green"
           info = self.navdata.getSingleValue(NMEAParser.K_LON.getKey(),
                                                     includeInfo=True)  # we just want the last source of position
-          src = 'unknown'
+          src = None
           if info is not None:
               src = info.source
-          satInview = rtv.get(NMEAParser.K_SATVIEW.key)
-          if satInview is None:
+          svData = self.navdata.getSingleValue(NMEAParser.K_SATVIEW.getKey())
+          if svData is None:
               satInview = 0
-          satUsed = rtv.get(NMEAParser.K_SATUSED.key)
+          else:
+              satInview = svData.value
+              if src is None:
+                  src=svData.source
+          satUsed=rtv.get(NMEAParser.K_SATUSED.key)
           if satUsed is None:
               satUsed = 0
+          if src is None:
+              src= 'unknown'
           statusNmea = {"status": status, "source": src,
                         "numview":int(satInview),
                         "numused":int(satUsed)}
