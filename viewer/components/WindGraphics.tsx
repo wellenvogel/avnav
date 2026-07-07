@@ -243,6 +243,7 @@ const WindGraphics = (props:WindGraphicsProps) => {
     const maxTextRadius=45;
     const width = 200;			// Control width
     const height = 200;			// Control height
+    const spare = 2;
     const initialDraw  =()=>{
         drawParameters.current=undefined;
         const canvas=canvasref.current;
@@ -260,8 +261,8 @@ const WindGraphics = (props:WindGraphicsProps) => {
         const h = crect.height;
         canvas.width = w;
         canvas.height = h;
-        const f1 = w / width;
-        const f2 = h / height;
+        const f1 = (w-spare) / width;
+        const f2 = (h-spare) / height;
         const f = Math.min(f1, f2);
         const fontSize = f * height / 3; //initial guess
         const mvx = (w - width * f) / 2;
@@ -416,7 +417,10 @@ const WindGraphics = (props:WindGraphicsProps) => {
 
 
 WindGraphics.predefined= {
-    storeKeys: WindStoreKeys,
+    storeKeys: {...WindStoreKeys,
+        dim: keys.gui.global.windowDimensions,
+        layout: keys.gui.global.layoutSequence
+    },
     editableParameters: EDITABLES,
     formatter: 'formatSpeed',
     caption: 'Wind'
